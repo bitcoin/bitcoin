@@ -91,13 +91,9 @@ bool IsFeatureSupported(int wallet_version, int feature_version)
 
 WalletFeature GetClosestWalletFeature(int version)
 {
-    if (version >= FEATURE_LATEST) return FEATURE_LATEST;
-    if (version >= FEATURE_PRE_SPLIT_KEYPOOL) return FEATURE_PRE_SPLIT_KEYPOOL;
-    if (version >= FEATURE_NO_DEFAULT_KEY) return FEATURE_NO_DEFAULT_KEY;
-    if (version >= FEATURE_HD_SPLIT) return FEATURE_HD_SPLIT;
-    if (version >= FEATURE_HD) return FEATURE_HD;
-    if (version >= FEATURE_COMPRPUBKEY) return FEATURE_COMPRPUBKEY;
-    if (version >= FEATURE_WALLETCRYPT) return FEATURE_WALLETCRYPT;
-    if (version >= FEATURE_BASE) return FEATURE_BASE;
+    const std::array<WalletFeature, 8> wallet_features{{FEATURE_LATEST, FEATURE_PRE_SPLIT_KEYPOOL, FEATURE_NO_DEFAULT_KEY, FEATURE_HD_SPLIT, FEATURE_HD, FEATURE_COMPRPUBKEY, FEATURE_WALLETCRYPT, FEATURE_BASE}};
+    for (const WalletFeature& wf : wallet_features) {
+        if (version >= wf) return wf;
+    }
     return static_cast<WalletFeature>(0);
 }

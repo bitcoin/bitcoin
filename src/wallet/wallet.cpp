@@ -4111,9 +4111,8 @@ bool CWallet::UpgradeWallet(int version, bilingual_str& error)
     } else {
         WalletLogPrintf("Allowing wallet upgrade up to %i\n", version);
     }
-    if (version < prev_version)
-    {
-        error = _("Cannot downgrade wallet");
+    if (version < prev_version) {
+        error = strprintf(_("Cannot downgrade wallet from version %i to version %i. Wallet version unchanged."), prev_version, version);
         return false;
     }
 
@@ -4121,7 +4120,7 @@ bool CWallet::UpgradeWallet(int version, bilingual_str& error)
 
     // Do not upgrade versions to any version between HD_SPLIT and FEATURE_PRE_SPLIT_KEYPOOL unless already supporting HD_SPLIT
     if (!CanSupportFeature(FEATURE_HD_SPLIT) && version >= FEATURE_HD_SPLIT && version < FEATURE_PRE_SPLIT_KEYPOOL) {
-        error = _("Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use version 169900 or no version specified.");
+        error = strprintf(_("Cannot upgrade a non HD split wallet from version %i to version %i without upgrading to support pre-split keypool. Please use version %i or no version specified."), prev_version, version, FEATURE_PRE_SPLIT_KEYPOOL);
         return false;
     }
 

@@ -4234,7 +4234,7 @@ static RPCHelpMan sethdseed()
 
     // Do not do anything to non-HD wallets
     if (!pwallet->CanSupportFeature(FEATURE_HD)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot set a HD seed on a non-HD wallet. Use the upgradewallet RPC in order to upgrade a non-HD wallet to HD");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot set an HD seed on a non-HD wallet. Use the upgradewallet RPC in order to upgrade a non-HD wallet to HD");
     }
 
     EnsureWalletIsUnlocked(pwallet);
@@ -4465,14 +4465,18 @@ static RPCHelpMan walletcreatefundedpsbt()
 static RPCHelpMan upgradewallet()
 {
     return RPCHelpMan{"upgradewallet",
-        "\nUpgrade the wallet. Upgrades to the latest version if no version number is specified\n"
+        "\nUpgrade the wallet. Upgrades to the latest version if no version number is specified.\n"
         "New keys may be generated and a new wallet backup will need to be made.",
         {
-            {"version", RPCArg::Type::NUM, /* default */ strprintf("%d", FEATURE_LATEST), "The version number to upgrade to. Default is the latest wallet version"}
+            {"version", RPCArg::Type::NUM, /* default */ strprintf("%d", FEATURE_LATEST), "The version number to upgrade to. Default is the latest wallet version."}
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
+                {RPCResult::Type::STR, "wallet_name", "Name of wallet this operation was performed on"},
+                {RPCResult::Type::NUM, "previous_version", "Version of wallet before this operation"},
+                {RPCResult::Type::NUM, "current_version", "Version of wallet after this operation"},
+                {RPCResult::Type::STR, "result", /* optional */ true, "Description of result, if no error"},
                 {RPCResult::Type::STR, "error", /* optional */ true, "Error message (if there is one)"}
             },
         },
@@ -4495,11 +4499,27 @@ static RPCHelpMan upgradewallet()
         version = request.params[0].get_int();
     }
     bilingual_str error;
-    if (!pwallet->UpgradeWallet(version, error)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
+    const int previous_version{pwallet->GetVersion()};
+    const bool wallet_upgraded{pwallet->UpgradeWallet(version, error)};
+    const int current_version{pwallet->GetVersion()};
+    std::string result;
+
+    if (wallet_upgraded) {
+        if (previous_version == current_version) {
+            result = "Already at latest version. Wallet version unchanged.";
+        } else {
+            result = strprintf("Wallet upgraded successfully from version %i to version %i.", previous_version, current_version);
+        }
     }
+
     UniValue obj(UniValue::VOBJ);
-    if (!error.empty()) {
+    obj.pushKV("wallet_name", pwallet->GetName());
+    obj.pushKV("previous_version", previous_version);
+    obj.pushKV("current_version", current_version);
+    if (!result.empty()) {
+        obj.pushKV("result", result);
+    } else {
+        CHECK_NONFATAL(!error.empty());
         obj.pushKV("error", error.original);
     }
     return obj;

@@ -456,7 +456,7 @@ bool LegacyScriptPubKeyMan::Upgrade(int prev_version, int new_version, bilingual
         hd_upgrade = true;
     }
     // Upgrade to HD chain split if necessary
-    if (IsFeatureSupported(new_version, FEATURE_HD_SPLIT)) {
+    if (!IsFeatureSupported(prev_version, FEATURE_HD_SPLIT) && IsFeatureSupported(new_version, FEATURE_HD_SPLIT)) {
         WalletLogPrintf("Upgrading wallet to use HD chain split\n");
         m_storage.SetMinVersion(FEATURE_PRE_SPLIT_KEYPOOL);
         split_upgrade = FEATURE_HD_SPLIT > prev_version;

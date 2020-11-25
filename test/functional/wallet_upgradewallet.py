@@ -22,9 +22,7 @@ from test_framework.messages import deser_compact_size, deser_string
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    assert_greater_than,
     assert_is_hex_string,
-    assert_raises_rpc_error,
     sha256sum_file,
 )
 
@@ -92,6 +90,32 @@ class UpgradeWalletTest(BitcoinTestFramework):
             v16_3_node.submitblock(b)
         assert_equal(v16_3_node.getblockcount(), to_height)
 
+    def test_upgradewallet(self, wallet, previous_version, requested_version=None, expected_version=None):
+        unchanged = expected_version == previous_version
+        new_version = previous_version if unchanged else expected_version if expected_version else requested_version
+        assert_equal(wallet.getwalletinfo()["walletversion"], previous_version)
+        assert_equal(wallet.upgradewallet(requested_version),
+            {
+                "wallet_name": "",
+                "previous_version": previous_version,
+                "current_version": new_version,
+                "result": "Already at latest version. Wallet version unchanged." if unchanged else "Wallet upgraded successfully from version {} to version {}.".format(previous_version, new_version),
+            }
+        )
+        assert_equal(wallet.getwalletinfo()["walletversion"], new_version)
+
+    def test_upgradewallet_error(self, wallet, previous_version, requested_version, msg):
+        assert_equal(wallet.getwalletinfo()["walletversion"], previous_version)
+        assert_equal(wallet.upgradewallet(requested_version),
+            {
+                "wallet_name": "",
+                "previous_version": previous_version,
+                "current_version": previous_version,
+                "error": msg,
+            }
+        )
+        assert_equal(wallet.getwalletinfo()["walletversion"], previous_version)
+
     def run_test(self):
         self.nodes[0].generatetoaddress(101, self.nodes[0].getnewaddress())
         self.dumb_sync_blocks()
@@ -158,14 +182,8 @@ class UpgradeWalletTest(BitcoinTestFramework):
         self.restart_node(0)
         copy_v16()
         wallet = node_master.get_wallet_rpc(self.default_wallet_name)
-        old_version = wallet.getwalletinfo()["walletversion"]
-
-        # calling upgradewallet without version arguments
-        # should return nothing if successful
-        assert_equal(wallet.upgradewallet(), {})
-        new_version = wallet.getwalletinfo()["walletversion"]
-        # upgraded wallet version should be greater than older one
-        assert_greater_than(new_version, old_version)
+        self.log.info("Test upgradewallet without a version argument")
+        self.test_upgradewallet(wallet, previous_version=159900, expected_version=169900)
         # wallet should still contain the same balance
         assert_equal(wallet.getbalance(), v16_3_balance)
 
@@ -173,32 +191,28 @@ class UpgradeWalletTest(BitcoinTestFramework):
         wallet = node_master.get_wallet_rpc(self.default_wallet_name)
         # should have no master key hash before conversion
         assert_equal('hdseedid' in wallet.getwalletinfo(), False)
-        # calling upgradewallet with explicit version number
-        # should return nothing if successful
-        assert_equal(wallet.upgradewallet(169900), {})
-        new_version = wallet.getwalletinfo()["walletversion"]
-        # upgraded wallet should have version 169900
-        assert_equal(new_version, 169900)
+        self.log.info("Test upgradewallet with explicit version number")
+        self.test_upgradewallet(wallet, previous_version=60000, requested_version=169900)
         # after conversion master key hash should be present
         assert_is_hex_string(wallet.getwalletinfo()['hdseedid'])
 
-        self.log.info('Intermediary versions don\'t effect anything')
+        self.log.info("Intermediary versions don't effect anything")
         copy_non_hd()
         # Wallet starts with 60000
         assert_equal(60000, wallet.getwalletinfo()['walletversion'])
         wallet.unloadwallet()
         before_checksum = sha256sum_file(node_master_wallet)
         node_master.loadwallet('')
-        # Can "upgrade" to 129999 which should have no effect on the wallet
-        wallet.upgradewallet(129999)
-        assert_equal(60000, wallet.getwalletinfo()['walletversion'])
+        # Test an "upgrade" from 60000 to 129999 has no effect, as the next version is 130000
+        self.test_upgradewallet(wallet, previous_version=60000, requested_version=129999, expected_version=60000)
         wallet.unloadwallet()
         assert_equal(before_checksum, sha256sum_file(node_master_wallet))
         node_master.loadwallet('')
 
         self.log.info('Wallets cannot be downgraded')
         copy_non_hd()
-        assert_raises_rpc_error(-4, 'Cannot downgrade wallet', wallet.upgradewallet, 40000)
+        self.test_upgradewallet_error(wallet, previous_version=60000, requested_version=40000,
+            msg="Cannot downgrade wallet from version 60000 to version 40000. Wallet version unchanged.")
         wallet.unloadwallet()
         assert_equal(before_checksum, sha256sum_file(node_master_wallet))
         node_master.loadwallet('')
@@ -208,8 +222,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         orig_kvs = dump_bdb_kv(node_master_wallet)
         assert b'\x07hdchain' not in orig_kvs
         # Upgrade to HD, no split
-        wallet.upgradewallet(130000)
-        assert_equal(130000, wallet.getwalletinfo()['walletversion'])
+        self.test_upgradewallet(wallet, previous_version=60000, requested_version=130000)
         # Check that there is now a hd chain and it is version 1, no internal chain counter
         new_kvs = dump_bdb_kv(node_master_wallet)
         assert b'\x07hdchain' in new_kvs
@@ -236,16 +249,13 @@ class UpgradeWalletTest(BitcoinTestFramework):
         assert_equal('m/0\'/0\'/1\'', info['hdkeypath'])
 
         self.log.info('Cannot upgrade to HD Split, needs Pre Split Keypool')
-        assert_raises_rpc_error(-4, 'Cannot upgrade a non HD split wallet without upgrading to support pre split keypool', wallet.upgradewallet, 139900)
-        assert_equal(130000, wallet.getwalletinfo()['walletversion'])
-        assert_raises_rpc_error(-4, 'Cannot upgrade a non HD split wallet without upgrading to support pre split keypool', wallet.upgradewallet, 159900)
-        assert_equal(130000, wallet.getwalletinfo()['walletversion'])
-        assert_raises_rpc_error(-4, 'Cannot upgrade a non HD split wallet without upgrading to support pre split keypool', wallet.upgradewallet, 169899)
-        assert_equal(130000, wallet.getwalletinfo()['walletversion'])
+        for version in [139900, 159900, 169899]:
+            self.test_upgradewallet_error(wallet, previous_version=130000, requested_version=version,
+                msg="Cannot upgrade a non HD split wallet from version {} to version {} without upgrading to "
+                    "support pre-split keypool. Please use version 169900 or no version specified.".format(130000, version))
 
         self.log.info('Upgrade HD to HD chain split')
-        wallet.upgradewallet(169900)
-        assert_equal(169900, wallet.getwalletinfo()['walletversion'])
+        self.test_upgradewallet(wallet, previous_version=130000, requested_version=169900)
         # Check that the hdchain updated correctly
         new_kvs = dump_bdb_kv(node_master_wallet)
         hd_chain = new_kvs[b'\x07hdchain']
@@ -271,8 +281,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
 
         self.log.info('Upgrade non-HD to HD chain split')
         copy_non_hd()
-        wallet.upgradewallet(169900)
-        assert_equal(169900, wallet.getwalletinfo()['walletversion'])
+        self.test_upgradewallet(wallet, previous_version=60000, requested_version=169900)
         # Check that the hdchain updated correctly
         new_kvs = dump_bdb_kv(node_master_wallet)
         hd_chain = new_kvs[b'\x07hdchain']
@@ -333,14 +342,15 @@ class UpgradeWalletTest(BitcoinTestFramework):
         # Check the wallet has a default key initially
         old_kvs = dump_bdb_kv(node_master_wallet)
         defaultkey = old_kvs[b'\x0adefaultkey']
-        # Upgrade the wallet. Should still have the same default key
-        wallet.upgradewallet(159900)
+        self.log.info("Upgrade the wallet. Should still have the same default key.")
+        self.test_upgradewallet(wallet, previous_version=139900, requested_version=159900)
         new_kvs = dump_bdb_kv(node_master_wallet)
         up_defaultkey = new_kvs[b'\x0adefaultkey']
         assert_equal(defaultkey, up_defaultkey)
         # 0.16.3 doesn't have a default key
         v16_3_kvs = dump_bdb_kv(v16_3_wallet)
         assert b'\x0adefaultkey' not in v16_3_kvs
+
 
 if __name__ == '__main__':
     UpgradeWalletTest().main()
