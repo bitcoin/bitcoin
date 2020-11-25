@@ -677,7 +677,8 @@ UniValue getpopparams(const JSONRPCRequest& req)
         .Check(req);
     // clang-format on
 
-    auto ret = altintegration::ToJSON<UniValue>(*VeriBlock::GetPop().config->alt);
+    auto& config = *VeriBlock::GetPop().config;
+    auto ret = altintegration::ToJSON<UniValue>(*config.alt);
 
     auto* vbkfirst = vbk().getBestChain().first();
     auto* btcfirst = btc().getBestChain().first();
@@ -687,10 +688,12 @@ UniValue getpopparams(const JSONRPCRequest& req)
     auto _vbk = UniValue(UniValue::VOBJ);
     _vbk.pushKV("hash", vbkfirst->getHash().toHex());
     _vbk.pushKV("height", vbkfirst->getHeight());
+    _vbk.pushKV("network", config.vbk.params->networkName());
 
     auto _btc = UniValue(UniValue::VOBJ);
     _btc.pushKV("hash", btcfirst->getHash().toHex());
     _btc.pushKV("height", btcfirst->getHeight());
+    _btc.pushKV("network", config.btc.params->networkName());
 
     ret.pushKV("vbkBootstrapBlock", _vbk);
     ret.pushKV("btcBootstrapBlock", _btc);
