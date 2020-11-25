@@ -40,7 +40,7 @@ def main():
     rpcauth = f'{args.username}:{salt}${password_hmac}'
 
     if args.output:
-        file = open(args.output, "x")
+        file = open(args.output, "x", encoding="utf8")
         file.write(rpcauth)
 
     if args.json:
