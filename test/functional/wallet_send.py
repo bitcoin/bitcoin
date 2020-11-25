@@ -260,17 +260,16 @@ class WalletSendTest(BitcoinTestFramework):
         res2 = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=1, add_to_wallet=False)
         assert_equal(self.nodes[1].decodepsbt(res1["psbt"])["fee"], self.nodes[1].decodepsbt(res2["psbt"])["fee"])
 
-        # Passing conf_target 0, estimate_mode "" as placeholder arguments should allow fee_rate to apply.
-        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0, estimate_mode="", fee_rate=7, add_to_wallet=False)
+        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=7, add_to_wallet=False)
         fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
         assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00007"))
 
-        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=2, add_to_wallet=False)
+        # "unset" and None are treated the same for estimate_mode
+        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=2, estimate_mode="unset", add_to_wallet=False)
         fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
         assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00002"))
 
-        # Passing conf_target 0, estimate_mode "" as placeholder arguments should allow fee_rate to apply.
-        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=0, arg_estimate_mode="", arg_fee_rate=4.531, add_to_wallet=False)
+        res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=4.531, add_to_wallet=False)
         fee = self.nodes[1].decodepsbt(res["psbt"])["fee"]
         assert_fee_amount(fee, Decimal(len(res["hex"]) / 2), Decimal("0.00004531"))
 

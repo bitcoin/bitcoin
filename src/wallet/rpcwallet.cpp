@@ -197,25 +197,23 @@ static std::string LabelFromValue(const UniValue& value)
 /**
  * Update coin control with fee estimation based on the given parameters
  *
- * @param[in]     pwallet           Wallet pointer
+ * @param[in]     wallet            Wallet reference
  * @param[in,out] cc                Coin control to be updated
  * @param[in]     conf_target       UniValue integer; confirmation target in blocks, values between 1 and 1008 are valid per policy/fees.h;
- *                                      if a fee_rate is present, 0 is allowed here as a no-op positional placeholder
  * @param[in]     estimate_mode     UniValue string; fee estimation mode, valid values are "unset", "economical" or "conservative";
- *                                      if a fee_rate is present, "" is allowed here as a no-op positional placeholder
  * @param[in]     fee_rate          UniValue real; fee rate in sat/vB;
- *                                      if a fee_rate is present, both conf_target and estimate_mode must either be null, or no-op
+ *                                      if present, both conf_target and estimate_mode must either be null, or "unset"
  * @param[in]     override_min_fee  bool; whether to set fOverrideFeeRate to true to disable minimum fee rate checks and instead
  *                                      verify only that fee_rate is greater than 0
  * @throws a JSONRPCError if conf_target, estimate_mode, or fee_rate contain invalid values or are in conflict
  */
-static void SetFeeEstimateMode(const CWallet* pwallet, CCoinControl& cc, const UniValue& conf_target, const UniValue& estimate_mode, const UniValue& fee_rate, bool override_min_fee)
+static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const UniValue& conf_target, const UniValue& estimate_mode, const UniValue& fee_rate, bool override_min_fee)
 {
     if (!fee_rate.isNull()) {
-        if (!conf_target.isNull() && conf_target.get_int() > 0) {
+        if (!conf_target.isNull()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.");
         }
-        if (!estimate_mode.isNull() && !estimate_mode.get_str().empty()) {
+        if (!estimate_mode.isNull() && estimate_mode.get_str() != "unset") {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and fee_rate");
         }
         cc.m_feerate = CFeeRate(AmountFromValue(fee_rate), COIN);
@@ -228,7 +226,7 @@ static void SetFeeEstimateMode(const CWallet* pwallet, CCoinControl& cc, const U
         throw JSONRPCError(RPC_INVALID_PARAMETER, InvalidEstimateModeErrorMessage());
     }
     if (!conf_target.isNull()) {
-        cc.m_confirm_target = ParseConfirmTarget(conf_target, pwallet->chain().estimateMaxBlocks());
+        cc.m_confirm_target = ParseConfirmTarget(conf_target, wallet.chain().estimateMaxBlocks());
     }
 }
 
@@ -466,8 +464,8 @@ static RPCHelpMan sendtoaddress()
                     + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1") +
                     "\nSend 0.1 BTC with a confirmation target of 6 blocks in economical fee estimate mode using positional arguments\n"
                     + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1 \"donation\" \"sean's outpost\" false true 6 economical") +
-                    "\nSend 0.1 BTC with a fee rate of 1 " + CURRENCY_ATOM + "/vB, subtract fee from amount, BIP125-replaceable, using positional arguments\n"
-                    + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1 \"drinks\" \"room77\" true true 0 \"\" 1") +
+                    "\nSend 0.1 BTC with a fee rate of 1.1 " + CURRENCY_ATOM + "/vB, subtract fee from amount, BIP125-replaceable, using positional arguments\n"
+                    + HelpExampleCli("sendtoaddress", "\"" + EXAMPLE_ADDRESS[0] + "\" 0.1 \"drinks\" \"room77\" true true null \"unset\" null 1.1") +
                     "\nSend 0.2 BTC with a confirmation target of 6 blocks in economical fee estimate mode using named arguments\n"
                     + HelpExampleCli("-named sendtoaddress", "address=\"" + EXAMPLE_ADDRESS[0] + "\" amount=0.2 conf_target=6 estimate_mode=\"economical\"") +
                     "\nSend 0.5 BTC with a fee rate of 25 " + CURRENCY_ATOM + "/vB using named arguments\n"
@@ -507,7 +505,7 @@ static RPCHelpMan sendtoaddress()
     // We also enable partial spend avoidance if reuse avoidance is set.
     coin_control.m_avoid_partial_spends |= coin_control.m_avoid_address_reuse;
 
-    SetFeeEstimateMode(pwallet, coin_control, /* conf_target */ request.params[6], /* estimate_mode */ request.params[7], /* fee_rate */ request.params[9], /* override_min_fee */ false);
+    SetFeeEstimateMode(*pwallet, coin_control, /* conf_target */ request.params[6], /* estimate_mode */ request.params[7], /* fee_rate */ request.params[9], /* override_min_fee */ false);
 
     EnsureWalletIsUnlocked(pwallet);
 
@@ -935,7 +933,7 @@ static RPCHelpMan sendmany()
         coin_control.m_signal_bip125_rbf = request.params[5].get_bool();
     }
 
-    SetFeeEstimateMode(pwallet, coin_control, /* conf_target */ request.params[6], /* estimate_mode */ request.params[7], /* fee_rate */ request.params[8], /* override_min_fee */ false);
+    SetFeeEstimateMode(*pwallet, coin_control, /* conf_target */ request.params[6], /* estimate_mode */ request.params[7], /* fee_rate */ request.params[8], /* override_min_fee */ false);
 
     std::vector<CRecipient> recipients;
     ParseRecipients(sendTo, subtractFeeFromAmount, recipients);
@@ -3159,7 +3157,7 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
         if (options.exists("replaceable")) {
             coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
         }
-        SetFeeEstimateMode(pwallet, coinControl, options["conf_target"], options["estimate_mode"], options["fee_rate"], override_min_fee);
+        SetFeeEstimateMode(*pwallet, coinControl, options["conf_target"], options["estimate_mode"], options["fee_rate"], override_min_fee);
       }
     } else {
         // if options is null and not a bool
@@ -3487,7 +3485,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
         if (options.exists("replaceable")) {
             coin_control.m_signal_bip125_rbf = options["replaceable"].get_bool();
         }
-        SetFeeEstimateMode(pwallet, coin_control, conf_target, options["estimate_mode"], options["fee_rate"], /* override_min_fee */ false);
+        SetFeeEstimateMode(*pwallet, coin_control, conf_target, options["estimate_mode"], options["fee_rate"], /* override_min_fee */ false);
     }
 
     // Make sure the results are valid at least up to the most recent block
@@ -4076,10 +4074,10 @@ static RPCHelpMan send()
         RPCExamples{""
         "\nSend 0.1 BTC with a confirmation target of 6 blocks in economical fee estimate mode\n"
         + HelpExampleCli("send", "'{\"" + EXAMPLE_ADDRESS[0] + "\": 0.1}' 6 economical\n") +
-        "Send 0.2 BTC with a fee rate of 1 " + CURRENCY_ATOM + "/vB using positional arguments\n"
-        + HelpExampleCli("send", "'{\"" + EXAMPLE_ADDRESS[0] + "\": 0.2}' 0 \"\" 1\n") +
+        "Send 0.2 BTC with a fee rate of 1.1 " + CURRENCY_ATOM + "/vB using positional arguments\n"
+        + HelpExampleCli("send", "'{\"" + EXAMPLE_ADDRESS[0] + "\": 0.2}' null \"unset\" 1.1\n") +
         "Send 0.2 BTC with a fee rate of 1 " + CURRENCY_ATOM + "/vB using the options argument\n"
-        + HelpExampleCli("send", "'{\"" + EXAMPLE_ADDRESS[0] + "\": 0.2}' '{\"fee_rate\": 1}'\n") +
+        + HelpExampleCli("send", "'{\"" + EXAMPLE_ADDRESS[0] + "\": 0.2}' null \"unset\" null '{\"fee_rate\": 1}'\n") +
         "Send 0.3 BTC with a fee rate of 25 " + CURRENCY_ATOM + "/vB using named arguments\n"
         + HelpExampleCli("-named send", "outputs='{\"" + EXAMPLE_ADDRESS[0] + "\": 0.3}' fee_rate=25\n") +
         "Create a transaction that should confirm the next block, with a specific input, and return result without adding to wallet or broadcasting to the network\n"
