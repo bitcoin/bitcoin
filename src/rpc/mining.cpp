@@ -1042,6 +1042,7 @@ static RPCHelpMan estimatesmartfee()
                     RPCResult::Type::OBJ, "", "",
                     {
                         {RPCResult::Type::NUM, "feerate", /* optional */ true, "estimate fee rate in " + CURRENCY_UNIT + "/kB (only present if no errors were encountered)"},
+                        {RPCResult::Type::NUM, "fee_rate", /* optional */ true, "estimate fee rate in " + CURRENCY_ATOM + "/vB (only present if no errors were encountered)"},
                         {RPCResult::Type::ARR, "errors", /* optional */ true, "Errors encountered during processing (if there are any)",
                             {
                                 {RPCResult::Type::STR, "", "error"},
@@ -1076,6 +1077,7 @@ static RPCHelpMan estimatesmartfee()
     CFeeRate feeRate = ::feeEstimator.estimateSmartFee(conf_target, &feeCalc, conservative);
     if (feeRate != CFeeRate(0)) {
         result.pushKV("feerate", ValueFromAmount(feeRate.GetFeePerK()));
+        result.pushKV("fee_rate", ValueFromFeeRate(feeRate));
     } else {
         errors.push_back("Insufficient data or no feerate found");
         result.pushKV("errors", errors);
