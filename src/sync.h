@@ -256,7 +256,22 @@ using DebugLock = UniqueLock<typename std::remove_reference<typename std::remove
 //!
 //!   int val = WITH_LOCK(cs, return shared_val);
 //!
-#define WITH_LOCK(cs, code) [&] { LOCK(cs); code; }()
+//! Note:
+//!
+//! Since the return type deduction follows that of decltype(auto), while the
+//! deduced type of:
+//!
+//!   WITH_LOCK(cs, return {int i = 1; return i;});
+//!
+//! is int, the deduced type of:
+//!
+//!   WITH_LOCK(cs, return {int j = 1; return (j);});
+//!
+//! is &int, a reference to a local variable
+//!
+//! The above is detectable at compile-time with the -Wreturn-local-addr flag in
+//! gcc and the -Wreturn-stack-address flag in clang, both enabled by default.
+#define WITH_LOCK(cs, code) [&]() -> decltype(auto) { LOCK(cs); code; }()
 
 class CSemaphore
 {
