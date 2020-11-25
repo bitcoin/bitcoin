@@ -1655,6 +1655,16 @@ bool TryCreateDirectories(const fs::path& p)
     // create_directories didn't create the directory, it had to have existed already
     return false;
 }
+// SYSCOIN
+bool ExistsOldAssetDir()
+{
+    const fs::path p =  GetDataDir() / "assets";
+    return (fs::exists(p) && fs::is_directory(p));
+}
+void DeleteOldAssetDir()
+{
+    fs::remove_all(GetDataDir() / "assets");
+}
 
 bool FileCommit(FILE *file)
 {

@@ -117,6 +117,8 @@ std::streampos GetFileSize(const char* path, std::streamsize max = std::numeric_
 void ReleaseDirectoryLocks();
 
 bool TryCreateDirectories(const fs::path& p);
+bool ExistsOldAssetDir();
+void DeleteOldAssetDir();
 fs::path GetDefaultDataDir();
 // The blocks directory is always net specific.
 const fs::path &GetBlocksDir();

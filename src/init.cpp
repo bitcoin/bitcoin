@@ -1807,7 +1807,6 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     
     fReindex = args.GetBoolArg("-reindex", false);
     bool fReindexChainState = args.GetBoolArg("-reindex-chainstate", false);
-
     // cache size calculations
     int64_t nTotalCache = (args.GetArg("-dbcache", nDefaultDbCache) << 20);
     nTotalCache = std::max(nTotalCache, nMinDbCache << 20); // total cache cannot be less than nMinDbCache
@@ -1835,6 +1834,15 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         LogPrintf("* Using %.1f MiB for transaction index database\n", nTxIndexCache * (1.0 / 1024 / 1024));
     }
     // SYSCOIN
+    if(ExistsOldAssetDir()) {
+        CAssetOldDB* oldAssetDB = new CAssetOldDB(nCoinDBCache, false, fReindex || fReindexChainState);
+        if(oldAssetDB && !oldAssetDB->IsEmpty()) {
+            LogPrintf("Legacy SPTs exist, reindexing to migrate to new SPT database...\n");
+            fReindex = true;
+        }
+        delete oldAssetDB;
+        DeleteOldAssetDir();
+    }
     fLoaded = false;
     for (BlockFilterType filter_type : g_enabled_filter_types) {
         LogPrintf("* Using %.1f MiB for %s block filter index database\n",
@@ -1875,8 +1883,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                 deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
                 llmq::InitLLMQSystem(*evoDb, false, *node.connman, *node.banman, *node.peerman, fReset || fReindexChainState);
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset || fReindexChainState));    
-                // we don't need to ever reset the txroots db because it is an external chain not related to syscoin chain
-                pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, false));
+                pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, fReset || fReindexChainState));
                 pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, fReset || fReindexChainState));
                 pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, fReset || fReindexChainState));
                 // new CBlockTreeDB tries to delete the existing file, which

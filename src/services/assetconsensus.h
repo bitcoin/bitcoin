@@ -49,7 +49,7 @@ public:
 
 class CAssetDB : public CDBWrapper {
 public:
-    CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe) {}
+    CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "asset", nCacheSize, fMemory, fWipe) {}
     bool EraseAsset(const uint32_t& nAsset) {
         return Erase(nAsset);
     }   
@@ -57,6 +57,11 @@ public:
         return Read(nAsset, asset);
     }  
     bool Flush(const AssetMap &mapAssets);
+};
+class CAssetOldDB : public CDBWrapper {
+public:
+    CAssetOldDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe) {}
+    bool Empty();
 };
 extern std::unique_ptr<CAssetDB> passetdb;
 extern std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
