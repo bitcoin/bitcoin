@@ -235,8 +235,7 @@ class WalletTest(BitcoinTestFramework):
         fee_rate_btc_kvb = fee_rate_sat_vb * 1e3 / 1e8
         explicit_fee_rate_btc_kvb = Decimal(fee_rate_btc_kvb) / 1000
 
-        # Passing conf_target 0, estimate_mode "" as placeholder arguments should allow fee_rate to apply.
-        txid = self.nodes[2].sendmany(amounts={address: 10}, conf_target=0, estimate_mode="", fee_rate=fee_rate_sat_vb)
+        txid = self.nodes[2].sendmany(amounts={address: 10}, fee_rate=fee_rate_sat_vb)
         self.nodes[2].generate(1)
         self.sync_all(self.nodes[0:3])
         balance = self.nodes[2].getbalance()
@@ -407,8 +406,7 @@ class WalletTest(BitcoinTestFramework):
             fee_rate_sat_vb = 2
             fee_rate_btc_kvb = fee_rate_sat_vb * 1e3 / 1e8
 
-            # Passing conf_target 0, estimate_mode "" as placeholder arguments should allow fee_rate to apply.
-            txid = self.nodes[2].sendtoaddress(address=address, amount=amount, conf_target=0, estimate_mode="", fee_rate=fee_rate_sat_vb)
+            txid = self.nodes[2].sendtoaddress(address=address, amount=amount, fee_rate=fee_rate_sat_vb)
             tx_size = self.get_vsize(self.nodes[2].gettransaction(txid)['hex'])
             self.nodes[0].generate(1)
             self.sync_all(self.nodes[0:3])
