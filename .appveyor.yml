@@ -24,6 +24,7 @@ install:
       git pull origin master > $null
       git -c advice.detachedHead=false checkout $env:VCPKG_COMMIT_ID
       .\bootstrap-vcpkg.bat > $null
+      Add-Content "C:\tools\vcpkg\triplets\$env:PLATFORM-windows-static.cmake" "set(VCPKG_BUILD_TYPE release)"
       cd "$env:APPVEYOR_BUILD_FOLDER"
 before_build:
 # Powershell block below is to download and extract the Qt static libraries. The pseudo code is:
