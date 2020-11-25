@@ -2993,10 +2993,6 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>¡%s esta configurado muy alto!</translation>
     </message>
     <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Error cargando el monedero %s. Se ha especificado un nombre de fichero -wallet duplicado.</translation>
-    </message>
-    <message>
         <source>Starting network threads...</source>
         <translation>Iniciando procesos de red...</translation>
     </message>

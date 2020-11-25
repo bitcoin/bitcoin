@@ -831,7 +831,7 @@ Försök igen.</translation>
         <source>Create</source>
         <translation>Skapa</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -3631,10 +3631,6 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
     <message>
         <source>%s is set very high!</source>
         <translation>%s är satt väldigt högt!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Fel vid inläsningen av plånbok %s. Dublett -wallet filnamn angavs.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

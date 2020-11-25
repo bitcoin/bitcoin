@@ -830,7 +830,7 @@
         <source>Create</source>
         <translation>Membuat</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -3448,10 +3448,6 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
     <message>
         <source>%s is set very high!</source>
         <translation>%s diset sangat tinggi!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Terjadi kesalahan saat memuat dompet %s duplikat -wallet  nama file yang diterapkan</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>

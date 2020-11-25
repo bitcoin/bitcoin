@@ -884,6 +884,10 @@ Il n’est possible de signer qu’avec les adresses de type « legacy ».</tr
         <source>Create</source>
         <translation>Créer</translation>
     </message>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>Compilé sans prise en charge de sqlite (requis pour les porte-monnaie de descripteurs)</translation>
+    </message>
 </context>
 <context>
     <name>EditAddressDialog</name>
@@ -3704,6 +3708,10 @@ Accédez à Fichier &gt; Ouvrir un porte-monnaie pour en charger un.
         <translation>Échec de vérification de la base de données</translation>
     </message>
     <message>
+        <source>Ignoring duplicate -wallet %s.</source>
+        <translation>Ignore -wallet %s en double.</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>Importation…</translation>
     </message>
@@ -4016,10 +4024,6 @@ Accédez à Fichier &gt; Ouvrir un porte-monnaie pour en charger un.
     <message>
         <source>%s is set very high!</source>
         <translation>La valeur %s est très élevée.</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Erreur de chargement du porte-monnaie %s. Le nom de fichier -wallet indiqué est un doublon.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

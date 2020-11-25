@@ -885,7 +885,7 @@ Dit is ideaal voor alleen-lezen portommonees.</translation>
         <source>Create</source>
         <translation>Creëer</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -3777,10 +3777,6 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     <message>
         <source>%s is set very high!</source>
         <translation>%s is zeer hoog ingesteld!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Fout bij laden van portemonnee %s. Duplicaat -wallet bestandsnaam opgegeven.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

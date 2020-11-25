@@ -552,7 +552,7 @@
         <source>Create</source>
         <translation>สร้าง</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>

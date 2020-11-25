@@ -519,6 +519,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Zavřít peněženku</translation>
     </message>
     <message>
+        <source>Close all wallets</source>
+        <translation>Zavřít všechny peněženky</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Seznam argumentů Bitcoinu pro příkazovou řádku získáš v nápovědě %1</translation>
     </message>
@@ -835,7 +839,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Create</source>
         <translation>Vytvořit</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -3174,6 +3178,10 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Zavření peněženky na příliš dlouhou dobu může vyústit v potřebu resynchronizace celého blockchainu pokud je zapnuté prořezávání.</translation>
     </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Zavřít všechny peněženky</translation>
+    </message>
     </context>
 <context>
     <name>WalletFrame</name>
@@ -3679,10 +3687,6 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
     <message>
         <source>%s is set very high!</source>
         <translation>%s je nastaveno velmi vysoko!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Chyba při načítání peněženky %s. Udán duplicitní název souboru -wallet.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

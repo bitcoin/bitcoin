@@ -830,7 +830,7 @@
         <source>Create</source>
         <translation>Opret</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -3670,10 +3670,6 @@ Note: Siden gebyret er kalkuleret på en per-byte basis, et gebyr på "100 satos
     <message>
         <source>%s is set very high!</source>
         <translation>%s er meget højt sat!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Fejl under indlæsning af tegnebog %s. -wallet filnavn angivet mere end én gang.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

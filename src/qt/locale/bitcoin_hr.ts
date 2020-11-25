@@ -817,7 +817,7 @@
         <source>Create</source>
         <translation>Stvorite</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -3582,10 +3582,6 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message>
         <source>%s is set very high!</source>
         <translation>%s je postavljen preveliko!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Greška kod učitavanja novčanika %s. Duplikat imena novčanika zadan.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

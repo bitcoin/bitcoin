@@ -70,6 +70,12 @@
         <translation>Estes são os seus endereços Bitcoin para enviar pagamentos. Verifique sempre o valor e o endereço de receção antes de enviar moedas.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation>Estes são seus novos endereços Bitcoin para o recebimento de pagamentos. Use o botão "Criar novo endereço de recebimento" na aba "Receber"  para criar novos endereços.
+Assinar só é possível com endereços do tipo "legado".</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Copiar Endereço</translation>
     </message>
@@ -478,6 +484,10 @@
         <translation>Atualizado</translation>
     </message>
     <message>
+        <source>&amp;Load PSBT from file...</source>
+        <translation>&amp;Carregar Transação Bitcoin Parcialmente Assinada (TBPA/PSBT) do arquivo...</translation>
+    </message>
+    <message>
         <source>Load Partially Signed Bitcoin Transaction</source>
         <translation>Carregar transação de Bitcoin parcialmente assinada</translation>
     </message>
@@ -536,6 +546,14 @@
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Mostrar a mensagem de ajuda %1 para obter uma lista com possíveis opções a usar na linha de comandos.</translation>
+    </message>
+    <message>
+        <source>&amp;Mask values</source>
+        <translation>&amp;Valores de Máscara</translation>
+    </message>
+    <message>
+        <source>Mask the values in the Overview tab</source>
+        <translation>Mascare os valores na aba de visão geral</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -649,7 +667,11 @@
         <source>Original message:</source>
         <translation>Mensagem original:</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation>Um erro fatal ocorreu. %1 não pode mais continuar de maneira segura e será terminada.</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -851,8 +873,20 @@
         <translation>Fazer Carteira em Branco</translation>
     </message>
     <message>
+        <source>Use descriptors for scriptPubKey management</source>
+        <translation>Use descritores para o gerenciamento de chaves públicas de script</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation>Carteira de descritor</translation>
+    </message>
+    <message>
         <source>Create</source>
         <translation>Criar</translation>
+    </message>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>Compilado sem suporte para sqlite (requerido para carteiras de descritor)</translation>
     </message>
 </context>
 <context>
@@ -1328,6 +1362,10 @@
         <translation>Escolha se deve mostrar as funcionalidades de controlo de moedas ou não.</translation>
     </message>
     <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation>Conecte-se a rede Bitcoin através de um proxy SOCKS5 separado para serviços Tor Onion</translation>
+    </message>
+    <message>
         <source>&amp;Third party transaction URLs</source>
         <translation>URLs de transação de &amp;terceiros</translation>
     </message>
@@ -1462,7 +1500,11 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Saldo disponível em endereços de apenas vigiar</translation>
     </message>
-    </context>
+    <message>
+        <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
+        <translation>Modo de privacidade ativado para a aba de visão geral. para desmascarar os valores, desmarque nas Configurações -&gt; Valores de máscara</translation>
+    </message>
+</context>
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
@@ -1932,6 +1974,10 @@ ID transação: %1</translation>
     <message>
         <source>Node window</source>
         <translation>Janela do nó</translation>
+    </message>
+    <message>
+        <source>Current block height</source>
+        <translation>Altura atual do bloco</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -3640,6 +3686,10 @@ Ir para o arquivo &gt; Abrir carteira para carregar a carteira
         <translation>Reexaminação da carteira falhou durante a inicialização</translation>
     </message>
     <message>
+        <source>Failed to verify database</source>
+        <translation>Falha ao verificar base de dados</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>A importar...</translation>
     </message>
@@ -3666,6 +3716,10 @@ Ir para o arquivo &gt; Abrir carteira para carregar a carteira
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>Valor inválido para -fallbackfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to read database verification error: %s</source>
+        <translation>SQLiteDatabase: Falha ao ler base de dados erro de verificação %s</translation>
     </message>
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
@@ -3929,10 +3983,6 @@ A pasta de blocos especificados "%s" não existe.</translation>
     <message>
         <source>%s is set very high!</source>
         <translation>%s está demasiado elevado!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Erro ao carregar a carteira %s. Especificado nome de fichero -wallet em duplicado.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

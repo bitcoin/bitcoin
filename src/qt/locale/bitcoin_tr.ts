@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Adres veya etiketi düzenlemek için sağ tıklayın</translation>
+        <translation>Adres veya etiketi düzenlemek için sağ tıklayınız.</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -90,7 +90,11 @@ Gönderim yapmadan önce her zaman tutarı ve alıcı adresi kontrol ediniz.</tr
         <source>Exporting Failed</source>
         <translation>Dışa Aktarım Başarısız Oldu</translation>
     </message>
-    </context>
+    <message>
+        <source>There was an error trying to save the address list to %1. Please try again.</source>
+        <translation>Adres listesinin %1 konumuna kaydedilmesi sırasında bir hata meydana geldi. Lütfen tekrar deneyin.</translation>
+    </message>
+</context>
 <context>
     <name>AddressTableModel</name>
     <message>
@@ -484,7 +488,7 @@ Cüzdan kilidini aç.</translation>
         <source>Create</source>
         <translation>Oluştur</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -915,5 +919,53 @@ Cüzdan kilidini aç.</translation>
     </context>
 <context>
     <name>bitcoin-core</name>
-    </context>
+    <message>
+        <source>Verifying wallet(s)...</source>
+        <translation>Cüzdan(lar) kontrol ediliyor...</translation>
+    </message>
+    <message>
+        <source>%s is set very high!</source>
+        <translation>%s çok yüksek ayarlanmış!</translation>
+    </message>
+    <message>
+        <source>Starting network threads...</source>
+        <translation>Ağ dizisi başlatılıyor...</translation>
+    </message>
+    <message>
+        <source>The wallet will avoid paying less than the minimum relay fee.</source>
+        <translation>Cüzdan en az aktarma ücretinden daha az ödeme yapmaktan sakınacaktır.</translation>
+    </message>
+    <message>
+        <source>This is the minimum transaction fee you pay on every transaction.</source>
+        <translation>Bu her işlemde ödeceğiniz en düşük işlem ücretidir.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>Eğer bir gönderme işlemi yaparsanız ödeyeceğiniz işlem ücreti budur.</translation>
+    </message>
+    <message>
+        <source>Transaction amounts must not be negative</source>
+        <translation>İşlem tutarı negatif olmamalıdır.</translation>
+    </message>
+    <message>
+        <source>Transaction must have at least one recipient</source>
+        <translation>İşlem en az bir adet alıcıya sahip olmalı.</translation>
+    </message>
+    <message>
+        <source>Insufficient funds</source>
+        <translation>Yetersiz bakiye</translation>
+    </message>
+    <message>
+        <source>Loading wallet...</source>
+        <translation>Cüzdan yükleniyor...</translation>
+    </message>
+    <message>
+        <source>Rescanning...</source>
+        <translation>Yeniden taranıyor...</translation>
+    </message>
+    <message>
+        <source>Done loading</source>
+        <translation>Yükleme tamamlandı.</translation>
+    </message>
+</context>
 </TS>

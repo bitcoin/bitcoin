@@ -885,7 +885,7 @@ Això és ideal per a carteres de mode només lectura.</translation>
         <source>Create</source>
         <translation>Crear</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1528,6 +1528,26 @@ Això és ideal per a carteres de mode només lectura.</translation>
         <translation>Desa...</translation>
     </message>
     <message>
+        <source>Could not sign any more inputs.</source>
+        <translation>No s'han pogut firmar més entrades.</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation>Error desconnegut al processar la transacció.</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Guarda Dades de Transacció</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>Transacció Parcialment Firmada (Binari) (*.psbt)</translation>
+    </message>
+    <message>
+        <source>Pays transaction fee: </source>
+        <translation>Paga comissió de transacció:</translation>
+    </message>
+    <message>
         <source>Total Amount</source>
         <translation>Import total</translation>
     </message>
@@ -1535,7 +1555,27 @@ Això és ideal per a carteres de mode només lectura.</translation>
         <source>or</source>
         <translation>o</translation>
     </message>
-    </context>
+    <message>
+        <source>Transaction has %1 unsigned inputs.</source>
+        <translation>La transacció té %1 entrades no firmades.</translation>
+    </message>
+    <message>
+        <source>Transaction is missing some information about inputs.</source>
+        <translation>La transacció manca d'informació en algunes entrades.</translation>
+    </message>
+    <message>
+        <source>Transaction still needs signature(s).</source>
+        <translation>La transacció encara necessita una o vàries firmes.</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation>La transacció està completament firmada i a punt per emetre's.</translation>
+    </message>
+    <message>
+        <source>Transaction status is unknown.</source>
+        <translation>L'estat de la transacció és desconegut.</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1699,6 +1739,10 @@ Això és ideal per a carteres de mode només lectura.</translation>
     <message>
         <source>Error: %1</source>
         <translation>Avís: %1</translation>
+    </message>
+    <message>
+        <source>Error initializing settings: %1</source>
+        <translation>Error a l'inicialitzar la configuració: %1</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
@@ -1879,6 +1923,10 @@ Això és ideal per a carteres de mode només lectura.</translation>
         <translation>Finestra node</translation>
     </message>
     <message>
+        <source>Current block height</source>
+        <translation>Altura actual de bloc</translation>
+    </message>
+    <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Obre el fitxer de registre de depuració %1 del directori de dades actual. Això pot trigar uns segons en fitxers de registre grans.</translation>
     </message>
@@ -1889,6 +1937,10 @@ Això és ideal per a carteres de mode només lectura.</translation>
     <message>
         <source>Increase font size</source>
         <translation>Augmenta la mida de la lletra</translation>
+    </message>
+    <message>
+        <source>Permissions</source>
+        <translation>Permisos</translation>
     </message>
     <message>
         <source>Services</source>
@@ -2145,12 +2197,28 @@ Això és ideal per a carteres de mode només lectura.</translation>
         <source>Could not unlock wallet.</source>
         <translation>No s'ha pogut desblocar la cartera.</translation>
     </message>
-    </context>
+    <message>
+        <source>Could not generate new %1 address</source>
+        <translation>No s'ha pogut generar una nova %1 direcció</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Request payment to ...</source>
+        <translation>Sol·licita el pagament a ...</translation>
+    </message>
+    <message>
+        <source>Address:</source>
+        <translation>Direcció:</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>Import:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Etiqueta:</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -2425,6 +2493,14 @@ Nota: Com que la comissió es calcula en funció dels bytes, una comissió de "1
     <message>
         <source>Are you sure you want to send?</source>
         <translation>Esteu segur que ho voleu enviar?</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Guarda Dades de Transacció</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>Transacció Parcialment Firmada (Binari) (*.psbt)</translation>
     </message>
     <message>
         <source>or</source>
@@ -3757,10 +3833,6 @@ Nota: Com que la comissió es calcula en funció dels bytes, una comissió de "1
     <message>
         <source>%s is set very high!</source>
         <translation>%s està especificat molt alt!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>S'ha produït un error en carregar la cartera %s. S'ha especificat un nom de fitxer duplicat -wallet.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

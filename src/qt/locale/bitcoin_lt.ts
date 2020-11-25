@@ -790,7 +790,7 @@
         <source>Create</source>
         <translation>Sukurti</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -3216,10 +3216,6 @@ Pastaba: Kadangi mokestis apskaičiuojamas pagal baitą, mokestis už „100 sat
     <message>
         <source>%s is set very high!</source>
         <translation>%s labai aukštas!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Įkeliant piniginę %s įvyko klaida. Dvigubo -wallet pavadinimas.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

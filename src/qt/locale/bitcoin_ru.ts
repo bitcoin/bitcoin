@@ -885,6 +885,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Create</source>
         <translation>Создать</translation>
     </message>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>Скомпилирован без поддержки sqlite (необходимо для кошельков с дескриптором)</translation>
+    </message>
 </context>
 <context>
     <name>EditAddressDialog</name>
@@ -3705,6 +3709,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Не удалось проверить базу данных</translation>
     </message>
     <message>
+        <source>Ignoring duplicate -wallet %s.</source>
+        <translation>Игнорировать повторы -wallet %s.</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>Выполняется импорт...</translation>
     </message>
@@ -4017,10 +4025,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>%s is set very high!</source>
         <translation>%s задан слишком высоким!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Ошибка загрузки кошелька %s. Задано повторяющееся имя файла.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

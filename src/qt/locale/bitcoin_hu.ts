@@ -882,7 +882,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Create</source>
         <translation>Létrehozás</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -3966,10 +3966,6 @@ A Fájl &gt; Megnyitás menüben lehet megnyitni.
     <message>
         <source>%s is set very high!</source>
         <translation>%s étéke nagyon magas!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Hiba történt a %s tárca betöltésekor, mert duplikált tárca-fájlnevet adott meg.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

@@ -871,7 +871,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Create</source>
         <translation>產生</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -3883,10 +3883,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>%s is set very high!</source>
         <translation>%s 的設定值異常大！</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>載入錢包檔 %s 失敗。-wallet 參數指定了重複的檔名。</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

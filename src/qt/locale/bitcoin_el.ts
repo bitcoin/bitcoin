@@ -514,6 +514,14 @@
         <translation>Κλείσιμο πορτοφολιού</translation>
     </message>
     <message>
+        <source>Close All Wallets...</source>
+        <translation>Κλείσιμο όλων των πορτοφολιών...</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Κλείσιμο όλων των πορτοφολιών</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Εμφάνισε το %1 βοηθητικό μήνυμα για λήψη μιας λίστας με διαθέσιμες επιλογές για Bitcoin εντολές </translation>
     </message>
@@ -624,6 +632,10 @@
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Το πορτοφόλι είναι &lt;b&gt;κρυπτογραφημένο&lt;/b&gt; και &lt;b&gt;κλειδωμένο&lt;/b&gt;</translation>
+    </message>
+    <message>
+        <source>Original message:</source>
+        <translation>Αρχικό Μήνυμα:</translation>
     </message>
     </context>
 <context>
@@ -830,7 +842,7 @@
         <source>Create</source>
         <translation>Δημιουργία</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1442,8 +1454,32 @@
         <translation>Αποθήκευση...</translation>
     </message>
     <message>
+        <source>Failed to load transaction: %1</source>
+        <translation>Αποτυχία φόρτωσης μεταφοράς: %1</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation>Άγνωστο λάθος  επεξεργασίας μεταφοράς.</translation>
+    </message>
+    <message>
+        <source>PSBT copied to clipboard.</source>
+        <translation>PSBT αντιγράφηκε στο πρόχειρο.</translation>
+    </message>
+    <message>
         <source>Save Transaction Data</source>
         <translation>Αποθήκευση Δεδομένων Συναλλαγής</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk.</source>
+        <translation>PSBT αποθηκεύτηκε στο δίσκο.</translation>
+    </message>
+    <message>
+        <source> * Sends %1 to %2</source>
+        <translation>* Στέλνει %1 προς  %2</translation>
+    </message>
+    <message>
+        <source>Pays transaction fee: </source>
+        <translation>Πληρωμή τέλους συναλλαγής:</translation>
     </message>
     <message>
         <source>Total Amount</source>
@@ -1453,7 +1489,11 @@
         <source>or</source>
         <translation>ή</translation>
     </message>
-    </context>
+    <message>
+        <source>Transaction status is unknown.</source>
+        <translation>Η κατάσταση της συναλλαγής είναι άγνωστη.</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1793,6 +1833,10 @@
         <translation>Κόμβος παράθυρο</translation>
     </message>
     <message>
+        <source>Current block height</source>
+        <translation>Τωρινό ύψος block</translation>
+    </message>
+    <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Ανοίξτε το αρχείο καταγραφής εντοπισμού σφαλμάτων %1 από τον τρέχοντα κατάλογο δεδομένων. Αυτό μπορεί να διαρκέσει μερικά δευτερόλεπτα για τα μεγάλα αρχεία καταγραφής.</translation>
     </message>
@@ -1803,6 +1847,10 @@
     <message>
         <source>Increase font size</source>
         <translation>Αύξηση μεγέθους γραμματοσειράς</translation>
+    </message>
+    <message>
+        <source>Permissions</source>
+        <translation>Αδειες</translation>
     </message>
     <message>
         <source>Services</source>
@@ -2063,6 +2111,14 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Request payment to ...</source>
+        <translation>Αίτημα πληρωμής προς ...</translation>
+    </message>
+    <message>
+        <source>Address:</source>
+        <translation>Διεύθυνση:</translation>
+    </message>
     <message>
         <source>Amount:</source>
         <translation>Ποσό:</translation>
@@ -3160,6 +3216,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Το κλείσιμο του πορτοφολιού για πολύ μεγάλο χρονικό διάστημα μπορεί να οδηγήσει στην επανασύνδεση ολόκληρης της αλυσίδας αν είναι ενεργοποιημένη η περικοπή.</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Κλείσιμο όλων των πορτοφολιών</translation>
     </message>
     </context>
 <context>

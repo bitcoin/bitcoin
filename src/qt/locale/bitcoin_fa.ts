@@ -835,7 +835,7 @@
         <source>Create</source>
         <translation>ایجاد</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -3011,6 +3011,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
         <translation>این کمترین فی تراکنش است که در هر تراکنش پرداخت می‌نمایید.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you will pay if you send a transaction.</source>
+        <translation>این میزان کارمزد پرداختی شما در صورت ایجاد تراکنش انتقال میباشد.</translation>
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>

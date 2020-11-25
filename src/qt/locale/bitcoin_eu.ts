@@ -616,7 +616,7 @@
         <source>Create</source>
         <translation>Sortu</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
