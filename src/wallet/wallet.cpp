@@ -4877,6 +4877,7 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, interfaces::C
 
 bool CWallet::UpgradeWallet(int version, bilingual_str& error)
 {
+    int prev_version = GetVersion();
     int nMaxVersion = version;
     auto nMinVersion = DEFAULT_USE_HD_WALLET ? FEATURE_LATEST : FEATURE_COMPRPUBKEY;
     if (nMaxVersion == 0) {
@@ -4888,13 +4889,14 @@ bool CWallet::UpgradeWallet(int version, bilingual_str& error)
     }
 
     if (nMaxVersion < GetVersion()) {
-        error = Untranslated("Cannot downgrade wallet");
+        error = strprintf(_("Cannot downgrade wallet from version %i to version %i. Wallet version unchanged."), prev_version, version);
         return false;
     }
 
     // TODO: consider discourage users to skip passphrase for HD wallets for v21
     if (false && nMaxVersion >= FEATURE_HD && !IsHDEnabled()) {
         error = Untranslated("You should use upgradetohd RPC to upgrade non-HD wallet to HD");
+        error = strprintf(_("Cannot upgrade a non HD wallet from version %i to version %i which is non-HD wallet. Use upgradetohd RPC"), prev_version, version);
         return false;
     }
 
