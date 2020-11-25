@@ -61,7 +61,13 @@ CBlockIndex* compareTipToBlock(CBlockIndex* candidate)
         return tip;
     }
 
-    int result = compareForks(*tip, *candidate);
+   int result = 0;
+    if (Params().isPopActive(tip->nHeight)) {
+        result = compareForks(*tip, *candidate);
+    } else {
+        result = CBlockIndexWorkComparator()(tip, candidate) ? -1 : 1;
+    }
+
     if (result < 0) {
         // candidate has higher POP score
         return candidate;
@@ -146,10 +152,14 @@ altintegration::PopData getPopData() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 }
 
 // PoP rewards are calculated for the current tip but are paid in the next block
-PoPRewards getPopRewards(const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+PoPRewards getPopRewards(const CBlockIndex& pindexPrev, const CChainParams& params) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    const auto& pop = GetPop();
     AssertLockHeld(cs_main);
+    const auto& pop = GetPop();
+
+    if (!params.isPopActive(pindexPrev.nHeight)) {
+        return {};
+    }
 
     auto& cfg = *pop.config;
     if (pindexPrev.nHeight < (int)cfg.alt->getEndorsementSettlementInterval()) {
@@ -166,26 +176,25 @@ PoPRewards getPopRewards(const CBlockIndex& pindexPrev, const Consensus::Params&
 
     auto blockHash = pindexPrev.GetBlockHash();
     auto rewards = pop.altTree->getPopPayout(blockHash.asVector());
-    int halvings = (pindexPrev.nHeight + 1) / consensusParams.nSubsidyHalvingInterval;
+    int halvings = (pindexPrev.nHeight + 1) / params.GetConsensus().nSubsidyHalvingInterval;
     PoPRewards btcRewards{};
-    auto& param = Params();
     //erase rewards, that pay 0 satoshis and halve rewards
     for (const auto& r : rewards) {
         auto rewardValue = r.second;
         rewardValue >>= halvings;
         if ((rewardValue != 0) && (halvings < 64)) {
             CScript key = CScript(r.first.begin(), r.first.end());
-            btcRewards[key] = param.PopRewardCoefficient() * rewardValue;
+            btcRewards[key] = params.PopRewardCoefficient() * rewardValue;
         }
     }
 
     return btcRewards;
 }
 
-void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev, const CChainParams& params) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    PoPRewards rewards = getPopRewards(pindexPrev, consensusParams);
+    PoPRewards rewards = getPopRewards(pindexPrev, params);
     assert(coinbaseTx.vout.size() == 1 && "at this place we should have only PoW payout here");
     for (const auto& itr : rewards) {
         CTxOut out;
@@ -195,10 +204,10 @@ void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIn
     }
 }
 
-bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& nFees, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& nFees, const CBlockIndex& pindexPrev, const CChainParams& params, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    PoPRewards rewards = getPopRewards(pindexPrev, consensusParams);
+    PoPRewards rewards = getPopRewards(pindexPrev, params);
     CAmount nTotalPopReward = 0;
 
     if (tx.vout.size() < rewards.size()) {
@@ -247,7 +256,7 @@ bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& nFees,
     }
 
     CAmount PoWBlockReward =
-        GetBlockSubsidy(pindexPrev.nHeight, consensusParams);
+        GetBlockSubsidy(pindexPrev.nHeight, params);
 
     if (tx.GetValueOut() > nTotalPopReward + PoWBlockReward + nFees) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
@@ -389,9 +398,15 @@ int compareForks(const CBlockIndex& leftForkTip, const CBlockIndex& rightForkTip
     return pop.altTree->comparePopScore(left.hash, right.hash);
 }
 
-CAmount getCoinbaseSubsidy(const CAmount& subsidy)
+CAmount getCoinbaseSubsidy(const CAmount& subsidy, int32_t height, const CChainParams& params)
 {
-    return subsidy * (100 - Params().PopRewardPercentage()) / 100;
+    if (!params.isPopActive(height)) {
+        return subsidy;
+    }
+
+    int64_t powRewardPercentage = 100 - params.PopRewardPercentage();
+    CAmount newSubsidy = powRewardPercentage * subsidy;
+    return newSubsidy / 100;
 }
 
 void updatePopMempoolForReorg() EXCLUSIVE_LOCKS_REQUIRED(cs_main)

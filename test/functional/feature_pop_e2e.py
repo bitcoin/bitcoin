@@ -11,6 +11,7 @@ Test with multiple nodes, and multiple PoP endorsements, checking to make sure n
 import time
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.pop import mine_until_pop_enabled
 from test_framework.util import (
     connect_nodes,
 )
@@ -31,10 +32,11 @@ class PopE2E(BitcoinTestFramework):
 
     def setup_network(self):
         self.setup_nodes()
+        mine_until_pop_enabled(self.nodes[0])
 
         for i in range(self.num_nodes - 1):
             connect_nodes(self.nodes[i + 1], i)
-            self.sync_all()
+        self.sync_all()
 
     def _test_case(self):
         from pypopminer import PublicationData
@@ -43,6 +45,7 @@ class PopE2E(BitcoinTestFramework):
         assert self.nodes[0].getpeerinfo()[0]['banscore'] == 0
         assert len(self.nodes[1].getpeerinfo()) == 1
         assert self.nodes[1].getpeerinfo()[0]['banscore'] == 0
+        lastblock = self.nodes[0].getblockcount()
 
         vbk_blocks_amount = 200
         self.log.info("generate vbk blocks on node0, amount {}".format(vbk_blocks_amount))
@@ -58,11 +61,13 @@ class PopE2E(BitcoinTestFramework):
             self.apm.endorseVbkBlock(self.apm.vbkTip, self.apm.btcTip.getHash(), 1)
 
         self.nodes[0].generate(nblocks=10)
+        lastblock = self.nodes[0].getblockcount()
 
-        self.log.info("endorse 5 alt block")    
+        assert lastblock >= 5
+        self.log.info("endorse {} alt block".format(lastblock - 5))
         p = PublicationData()
         p.identifier = NETWORK_ID
-        p.header = self.nodes[0].getpopdata(5)['block_header']
+        p.header = self.nodes[0].getpopdata(lastblock - 5)['block_header']
         p.payoutInfo = "0014aaddff"
 
         pop_data = self.apm.endorseAltBlock(p, vbk_blocks[0].getHash())
@@ -82,10 +87,11 @@ class PopE2E(BitcoinTestFramework):
         assert len(containingblock['pop']['data']['vtbs']) == vtbs_amount
         assert len(containingblock['pop']['data']['vbkblocks']) == vbk_blocks_amount + vtbs_amount + 1
 
-        self.log.info("endorse 6 alt block")
+        assert lastblock >= 6
+        self.log.info("endorse {} alt block".format(lastblock - 6))
         p = PublicationData()
         p.identifier = NETWORK_ID
-        p.header = self.nodes[0].getpopdata(6)['block_header']
+        p.header = self.nodes[0].getpopdata(lastblock - 6)['block_header']
         p.payoutInfo = "0014aaddff"
 
         pop_data = self.apm.endorseAltBlock(p, vbk_blocks[0].getHash())

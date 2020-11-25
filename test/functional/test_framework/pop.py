@@ -231,3 +231,12 @@ def sync_pop_mempools(rpc_connections, *, wait=1, timeout=60, flush_scheduler=Tr
         "".join("\n  {!r}".format(m) for m in vtbs),
         "".join("\n  {!r}".format(m) for m in vbkblocks)
     ))
+
+def mine_until_pop_enabled(node):
+    existing = node.getblockcount()
+    activate = node.getblockchaininfo()['softforks']['pop_security']['height']
+    assert activate >= 0, "POP security should be able to activate"
+    if existing < activate:
+        assert activate - existing < 1000, "POP security activates on height {}. Will take too long to activate".format(activate)
+        node.generate(nblocks=(activate - existing))
+        node.waitforblockheight(activate)

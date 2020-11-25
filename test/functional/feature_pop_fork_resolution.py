@@ -7,21 +7,21 @@
 
 """
 Start 4 nodes.
-Stop node[3] at 0 blocks.
+Stop node[3] at 200 blocks.
 Mine 103 blocks on node0.
 Disconnect node[2].
-node[2] mines 97 blocks, total height is 200 (fork B)
-node[0] mines 10 blocks, total height is 113 (fork A)
-node[0] endorses block 113 (fork A tip).
-node[0] mines pop tx in block 114 (fork A tip)
+node[2] mines 97 blocks, total height is 400 (fork B)
+node[0] mines 10 blocks, total height is 313 (fork A)
+node[0] endorses block 313 (fork A tip).
+node[0] mines pop tx in block 314 (fork A tip)
 node[0] mines 9 more blocks
 node[2] is connected to nodes[0,1]
 node[3] started with 0 blocks.
 
-After sync has been completed, expect all nodes to be on same height (fork A, block 123)
+After sync has been completed, expect all nodes to be on same height (fork A, block 323)
 """
 
-from test_framework.pop import endorse_block, create_endorsed_chain
+from test_framework.pop import endorse_block, create_endorsed_chain, mine_until_pop_enabled
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     connect_nodes,
@@ -42,11 +42,12 @@ class PopFr(BitcoinTestFramework):
 
     def setup_network(self):
         self.setup_nodes()
+        mine_until_pop_enabled(self.nodes[0])
 
         # all nodes connected and synced
         for i in range(self.num_nodes - 1):
             connect_nodes(self.nodes[i + 1], i)
-            self.sync_all()
+        self.sync_all()
 
     def get_best_block(self, node):
         hash = node.getbestblockhash()
@@ -54,32 +55,33 @@ class PopFr(BitcoinTestFramework):
 
     def _shorter_endorsed_chain_wins(self):
         self.log.warning("starting _shorter_endorsed_chain_wins()")
+        lastblock = self.nodes[3].getblockcount()
 
         # stop node3
         self.stop_node(3)
-        self.log.info("node3 stopped with block height 0")
+        self.log.info("node3 stopped with block height %d", lastblock)
 
-        # all nodes start with 103 blocks
+        # all nodes start with lastblock + 103 blocks
         self.nodes[0].generate(nblocks=103)
         self.log.info("node0 mined 103 blocks")
         self.sync_blocks([self.nodes[0], self.nodes[1], self.nodes[2]], timeout=20)
-        assert self.get_best_block(self.nodes[0])['height'] == 103
-        assert self.get_best_block(self.nodes[1])['height'] == 103
-        assert self.get_best_block(self.nodes[2])['height'] == 103
-        self.log.info("nodes[0,1,2] synced are at block 103")
+        assert self.get_best_block(self.nodes[0])['height'] == lastblock + 103
+        assert self.get_best_block(self.nodes[1])['height'] == lastblock + 103
+        assert self.get_best_block(self.nodes[2])['height'] == lastblock + 103
+        self.log.info("nodes[0,1,2] synced are at block %d", lastblock + 103)
 
         # node2 is disconnected from others
         disconnect_nodes(self.nodes[2], 0)
         disconnect_nodes(self.nodes[2], 1)
         self.log.info("node2 is disconnected")
 
-        # node2 mines another 97 blocks, so total height is 200
+        # node2 mines another 97 blocks, so total height is lastblock + 200
         self.nodes[2].generate(nblocks=97)
 
-        # fork A is at 103
-        # fork B is at 200
-        self.nodes[2].waitforblockheight(200)
-        self.log.info("node2 mined 97 more blocks, total height is 200")
+        # fork A is at 303 (lastblock = 200)
+        # fork B is at 400
+        self.nodes[2].waitforblockheight(lastblock + 200)
+        self.log.info("node2 mined 97 more blocks, total height is %d", lastblock + 200)
 
         bestblocks = [self.get_best_block(x) for x in self.nodes[0:3]]
 
@@ -90,16 +92,16 @@ class PopFr(BitcoinTestFramework):
         # mine 10 more blocks to fork A
         self.nodes[0].generate(nblocks=10)
         self.sync_all(self.nodes[0:2])
-        self.log.info("nodes[0,1] are in sync and are at fork A (103...113 blocks)")
+        self.log.info("nodes[0,1] are in sync and are at fork A (%d...%d blocks)", lastblock + 103, lastblock + 113)
 
-        # fork B is at 200
-        assert bestblocks[2]['height'] == 200, "unexpected tip: {}".format(bestblocks[2])
-        self.log.info("node2 is at fork B (103...200 blocks)")
+        # fork B is at 400
+        assert bestblocks[2]['height'] == lastblock + 200, "unexpected tip: {}".format(bestblocks[2])
+        self.log.info("node2 is at fork B (%d...%d blocks)", lastblock + 103, lastblock + 200)
 
-        # endorse block 113 (fork A tip)
+        # endorse block 313 (fork A tip)
         addr0 = self.nodes[0].getnewaddress()
-        txid = endorse_block(self.nodes[0], self.apm, 113, addr0)
-        self.log.info("node0 endorsed block 113 (fork A tip)")
+        txid = endorse_block(self.nodes[0], self.apm, lastblock + 113, addr0)
+        self.log.info("node0 endorsed block %d (fork A tip)", lastblock + 113)
         # mine pop tx on node0
         containinghash = self.nodes[0].generate(nblocks=10)
         self.log.info("node0 mines 10 more blocks")
@@ -156,6 +158,7 @@ class PopFr(BitcoinTestFramework):
                 disconnect_nodes(node, i)
 
         self.log.info("all nodes disconnected")
+        lastblock = self.nodes[3].getblockcount()
 
         # node[i] creates endorsed chain
         toMine = 15
@@ -164,10 +167,10 @@ class PopFr(BitcoinTestFramework):
             addr = node.getnewaddress()
             create_endorsed_chain(node, self.apm, toMine, addr)
 
-        # all nodes have different tips at height 223
+        # all nodes have different tips at height 323
         bestblocks = [self.get_best_block(x) for x in self.nodes]
         for b in bestblocks:
-            assert b['height'] == 123 + toMine
+            assert b['height'] == lastblock + toMine
         assert len(set([x['hash'] for x in bestblocks])) == len(bestblocks)
         self.log.info("all nodes have different tips")
 

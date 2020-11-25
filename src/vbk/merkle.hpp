@@ -27,7 +27,7 @@ KeystoneArray getKeystoneHashesForTheNextBlock(const CBlockIndex* pindexPrev);
 
 uint256 TopLevelMerkleRoot(const CBlockIndex* prevIndex, const CBlock& block, bool* mutated = nullptr);
 
-bool VerifyTopLevelMerkleRoot(const CBlock& block, BlockValidationState& state, const CBlockIndex* pprevIndex);
+bool VerifyTopLevelMerkleRoot(const CBlock& block, const CBlockIndex* pprevIndex, BlockValidationState& state);
 
 CTxOut addPopDataRootIntoCoinbaseCommitment(const CBlock& block);
 

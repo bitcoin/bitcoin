@@ -160,8 +160,7 @@ class WalletBackupTest(BitcoinTestFramework):
 
         # At this point, there are 214 blocks (103 for setup, then 10 rounds, then 101.)
         # 114 are mature, so the sum of all wallets should be 114 * 50 = 5700.
-        # VeriBlock: payout changed 50->30, so 114 * 30 = 3420
-        assert_equal(total, 3420)
+        assert_equal(total, 5700)
 
         ##
         # Test restoring spender wallets from backups

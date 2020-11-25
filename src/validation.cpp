@@ -1206,16 +1206,16 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
     return ReadRawBlockFromDisk(block, block_pos, message_start);
 }
 
-CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
+CAmount GetBlockSubsidy(int nHeight, const CChainParams& params)
 {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
+    int halvings = nHeight / params.GetConsensus().nSubsidyHalvingInterval;
     // Force block reward to zero when right shift is undefined.
     if (halvings >= 64)
         return 0;
 
     CAmount nSubsidy = 50 * COIN;
     // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
-    nSubsidy = VeriBlock::getCoinbaseSubsidy(nSubsidy);
+    nSubsidy = VeriBlock::getCoinbaseSubsidy(nSubsidy, nHeight, params);
 
     nSubsidy >>= halvings;
     return nSubsidy;
@@ -2150,7 +2150,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs - 1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
 
     assert(pindex->pprev && "previous block ptr is nullptr");
-    if (!VeriBlock::checkCoinbaseTxWithPopRewards(*block.vtx[0], nFees, *pindex->pprev, chainparams.GetConsensus(), state)) {
+    if (!VeriBlock::checkCoinbaseTxWithPopRewards(*block.vtx[0], nFees, *pindex->pprev, chainparams, state)) {
         return false;
     }
 
@@ -2648,7 +2648,17 @@ CBlockIndex* CChainState::FindBestChain()
             continue;
         }
 
-        int popComparisonResult = VeriBlock::compareForks(*bestCandidate, *pindexNew);
+        int popComparisonResult = 0;
+
+        if (Params().isPopActive(bestCandidate->nHeight))
+        {
+            popComparisonResult = VeriBlock::compareForks(*bestCandidate, *pindexNew);
+        }
+        else
+        {
+            popComparisonResult = CBlockIndexWorkComparator()(bestCandidate, pindexNew) ? -1 : 1;
+        }
+
         // even if next candidate is pop equal to current pindexNew, it is likely to have higher work
         if (popComparisonResult <= 0) {
             // candidate is either has POP or WORK better
@@ -3556,6 +3566,15 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, strprintf("bad-version(0x%08x)", block.nVersion),
             strprintf("rejected nVersion=0x%08x block", block.nVersion));
 
+    // VeriBlock validation
+    if ((block.nVersion & VeriBlock::POP_BLOCK_VERSION_BIT) && !params.isPopActive(nHeight)) {
+        return state.Invalid(
+            BlockValidationResult::BLOCK_INVALID_HEADER,
+            strprintf("bad-pop-version(0x%08x)", block.nVersion),
+            strprintf(
+                "block contains PopData before PopSecurity has been enabled"));
+    }
+
     return true;
 }
 
@@ -3571,7 +3590,7 @@ bool ContextualCheckBlock(const CBlock& block, BlockValidationState& state, cons
     }
 
     // VeriBlock: merkle tree verification is moved from CheckBlock here, because it requires correct CBlockIndex
-    if (fCheckMerkleRoot && !VeriBlock::VerifyTopLevelMerkleRoot(block, state, pindexPrev)) {
+    if (fCheckMerkleRoot && !VeriBlock::VerifyTopLevelMerkleRoot(block, pindexPrev, state)) {
         // state is already set with error message
         return false;
     }

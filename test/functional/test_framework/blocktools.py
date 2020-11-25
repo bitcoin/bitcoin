@@ -44,7 +44,7 @@ from .script import (
 from .test_node import TestNode
 from .util import assert_equal
 from io import BytesIO
-from .pop_const import POW_PAYOUT
+from .pop_const import POW_PAYOUT, POP_ACTIVATION_HEIGHT, POW_REWARD_PERCENTAGE
 
 MAX_BLOCK_SIGOPS = 20000
 
@@ -117,6 +117,8 @@ def create_coinbase(height, pubkey=None):
     coinbase.vin.append(CTxIn(COutPoint(0, 0xffffffff), script_BIP34_coinbase_height(height), 0xffffffff))
     coinbaseoutput = CTxOut()
     coinbaseoutput.nValue = POW_PAYOUT * COIN
+    if height >= POP_ACTIVATION_HEIGHT:
+        coinbaseoutput.nValue = int(coinbaseoutput.nValue * POW_REWARD_PERCENTAGE / 100)
     halvings = int(height / 150)  # regtest
     coinbaseoutput.nValue >>= halvings
     if (pubkey is not None):

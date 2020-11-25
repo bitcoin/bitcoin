@@ -40,8 +40,9 @@ CTxIn MineBlock(const CScript& coinbase_scriptPubKey)
 
 std::shared_ptr<CBlock> PrepareBlock(const CScript& coinbase_scriptPubKey)
 {
+    const auto& params = Params();
     auto block = std::make_shared<CBlock>(
-        BlockAssembler{Params()}
+        BlockAssembler{params}
             .CreateNewBlock(coinbase_scriptPubKey)
             ->block);
 

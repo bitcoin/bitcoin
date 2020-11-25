@@ -23,7 +23,6 @@ from test_framework.wallet_util import (
 )
 from test_framework.pop_const import POW_PAYOUT
 
-
 class WalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4

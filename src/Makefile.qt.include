@@ -307,7 +307,7 @@ qt_vbitcoin_qt_SOURCES = qt/main.cpp
 if TARGET_WINDOWS
   qt_vbitcoin_qt_SOURCES += $(BITCOIN_RC)
 endif
-qt_vbitcoin_qt_LDADD = qt/libbitcoinqt.a $(LIBBITCOIN_SERVER)
+qt_vbitcoin_qt_LDADD = qt/libbitcoinqt.a $(VERIBLOCK_POP_CPP_LIBS) $(LIBBITCOIN_SERVER)
 if ENABLE_WALLET
 qt_vbitcoin_qt_LDADD += $(LIBBITCOIN_UTIL) $(LIBBITCOIN_WALLET)
 endif

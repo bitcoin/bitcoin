@@ -752,7 +752,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
 
     // pop rewards
     UniValue popRewardsArray(UniValue::VARR);
-    VeriBlock::PoPRewards popRewards = VeriBlock::getPopRewards(*pindexPrev, Params().GetConsensus());
+    VeriBlock::PoPRewards popRewards = VeriBlock::getPopRewards(*pindexPrev, Params());
     for (const auto& itr : popRewards) {
         UniValue popRewardValue(UniValue::VOBJ);
         popRewardValue.pushKV("payout_info", HexStr(itr.first.begin(), itr.first.end()));

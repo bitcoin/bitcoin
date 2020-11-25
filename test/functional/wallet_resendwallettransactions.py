@@ -11,6 +11,7 @@ from test_framework.messages import ToHex
 from test_framework.mininode import P2PInterface, mininode_lock
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, wait_until
+from test_framework.pop import mine_until_pop_enabled
 
 class P2PStoreTxInvs(P2PInterface):
     def __init__(self):
@@ -32,6 +33,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
+        mine_until_pop_enabled(self.nodes[0])
         node = self.nodes[0]  # alias
 
         node.add_p2p_connection(P2PStoreTxInvs())
@@ -55,6 +57,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         # Create and submit a block without the transaction.
         # Transactions are only rebroadcast if there has been a block at least five minutes
         # after the last time we tried to broadcast. Use mocktime and give an extra minute to be sure.
+        assert self.nodes[0].getblockchaininfo()['softforks']['pop_security']['active'], "POP is not activated"
         block_time = int(time.time()) + 6 * 60
         node.setmocktime(block_time)
         block = create_block(self.nodes[0], int(node.getbestblockhash(), 16), create_coinbase(node.getblockcount() + 1), block_time)

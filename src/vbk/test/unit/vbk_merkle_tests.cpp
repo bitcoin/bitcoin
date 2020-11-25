@@ -29,7 +29,7 @@ BOOST_FIXTURE_TEST_CASE(genesis_block_hash_is_valid, MerkleFixture)
         "VeriBlock");
     BlockValidationState state;
 
-    bool result = VeriBlock::VerifyTopLevelMerkleRoot(block, state, nullptr);
+    bool result = VeriBlock::VerifyTopLevelMerkleRoot(block, nullptr, state);
     BOOST_CHECK(result);
     BOOST_CHECK(state.IsValid());
 }
@@ -44,7 +44,7 @@ BOOST_FIXTURE_TEST_CASE(TestChain100Setup_has_valid_merkle_roots, MerkleFixture)
         CBlockIndex* index = ChainActive()[i];
         BOOST_REQUIRE_MESSAGE(index != nullptr, "can not find block at given height");
         BOOST_REQUIRE_MESSAGE(ReadBlockFromDisk(block, index, Params().GetConsensus()), "can not read block");
-        BOOST_CHECK_MESSAGE(VeriBlock::VerifyTopLevelMerkleRoot(block, state, index->pprev), strprintf("merkle root of block %d is invalid", i));
+        BOOST_CHECK_MESSAGE(VeriBlock::VerifyTopLevelMerkleRoot(block, index->pprev, state), strprintf("merkle root of block %d is invalid", i));
     }
 }
 
@@ -59,7 +59,7 @@ BOOST_FIXTURE_TEST_CASE(addPopTransactionRootIntoCoinbaseCommitment_test, Merkle
     CBlockIndex* index = ChainActive().Tip();
 
     BlockValidationState state;
-    BOOST_CHECK(VeriBlock::VerifyTopLevelMerkleRoot(block, state, index->pprev));
+    BOOST_CHECK(VeriBlock::VerifyTopLevelMerkleRoot(block, index->pprev, state));
 
     // change pop merkle root
     int commitpos = VeriBlock::GetPopMerkleRootCommitmentIndex(block);
@@ -74,13 +74,13 @@ BOOST_FIXTURE_TEST_CASE(addPopTransactionRootIntoCoinbaseCommitment_test, Merkle
     tx.vout[0].scriptPubKey[10] = 0xff;
     block.vtx[0] = MakeTransactionRef(tx);
 
-    BOOST_CHECK(!VeriBlock::VerifyTopLevelMerkleRoot(block, state, index->pprev));
+    BOOST_CHECK(!VeriBlock::VerifyTopLevelMerkleRoot(block, index->pprev, state));
 
     // erase commitment
     tx.vout.erase(tx.vout.begin() + commitpos);
     block.vtx[0] = MakeTransactionRef(tx);
 
-    BOOST_CHECK(!VeriBlock::VerifyTopLevelMerkleRoot(block, state, index->pprev));
+    BOOST_CHECK(!VeriBlock::VerifyTopLevelMerkleRoot(block, index->pprev, state));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

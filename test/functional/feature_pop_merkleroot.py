@@ -7,6 +7,7 @@
 """Test VeriBlock PoP merkle root calculation"""
 
 # Avoid wildcard * imports
+from test_framework.pop import mine_until_pop_enabled
 from test_framework.blocktools import (create_block, create_coinbase)
 from test_framework.mininode import (
     P2PInterface,
@@ -24,9 +25,12 @@ class PoPMerkleRootTest(BitcoinTestFramework):
     def setup_network(self):
         self.add_nodes(self.num_nodes)
         self.start_node(0)
+        # POP should be enabled because merkle root calculation differs for non-POP blocks
+        mine_until_pop_enabled(self.nodes[0])
 
     def run_test(self):
         """Main test logic"""
+        lastblock = self.nodes[0].getblockcount()
         self.nodes[0].add_p2p_connection(P2PInterface())
 
         # Generating a block on one of the nodes will get us out of IBD
@@ -36,12 +40,13 @@ class PoPMerkleRootTest(BitcoinTestFramework):
         blocktime = block['time']
 
         # create a block
+        assert self.nodes[0].getblockchaininfo()['softforks']['pop_security']['active'], "POP is not activated"
         block = create_block(self.nodes[0], int(blockhashhex, 16), create_coinbase(height + 1), blocktime + 1)
         block.solve()
         block_message = msg_block(block)
         # Send message is used to send a P2P message to the node over our P2PInterface
         self.nodes[0].p2p.send_message(block_message)
-        self.nodes[0].waitforblockheight(2)
+        self.nodes[0].waitforblockheight(lastblock + 2)
         newbest = self.nodes[0].getbestblockhash()
         assert newbest == block.hash, "bad tip. \n\tExpected : {}\n\tGot      : {}".format(block, newbest)
 

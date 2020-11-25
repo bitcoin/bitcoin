@@ -19,7 +19,7 @@ BOOST_FIXTURE_TEST_CASE(addPopPayoutsIntoCoinbaseTx_test, PopRewardsTestFixture)
     auto tip = ChainActive().Tip();
     BOOST_CHECK(tip != nullptr);
     std::vector<uint8_t> payoutInfo{scriptPubKey.begin(), scriptPubKey.end()};
-    CBlock block = endorseAltBlockAndMine(tip->GetAncestor(100)->GetBlockHash(), ChainActive().Tip()->GetBlockHash(), payoutInfo, 0);
+    CBlock block = endorseAltBlockAndMine(tip->GetBlockHash(), tip->GetBlockHash(), payoutInfo, 0);
     {
         LOCK(cs_main);
         BOOST_CHECK(ChainActive().Tip()->GetBlockHash() == block.GetHash());

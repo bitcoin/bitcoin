@@ -16,6 +16,7 @@ class CBlockTreeDB;
 class CBlockIndex;
 class CDBIterator;
 class CDBWrapper;
+class CChainParams;
 
 namespace Consensus {
 struct Params;
@@ -37,9 +38,9 @@ bool popdataStatelessValidation(const altintegration::PopData& popData, altinteg
 bool addAllBlockPayloads(const CBlock& block, BlockValidationState& state);
 bool setState(const uint256& block, altintegration::ValidationState& state);
 
-PoPRewards getPopRewards(const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams);
-void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams);
-bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& nFees, const CBlockIndex& pindexPrev, const Consensus::Params& consensusParams, BlockValidationState& state);
+PoPRewards getPopRewards(const CBlockIndex& pindexPrev, const CChainParams& params);
+void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIndex& pindexPrev, const CChainParams& params);
+bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& nFees, const CBlockIndex& pindexPrev, const CChainParams& params, BlockValidationState& state);
 
 std::vector<BlockBytes> getLastKnownVBKBlocks(size_t blocks);
 std::vector<BlockBytes> getLastKnownBTCBlocks(size_t blocks);
@@ -54,7 +55,7 @@ void removePayloadsFromMempool(const altintegration::PopData& popData);
 
 int compareForks(const CBlockIndex& left, const CBlockIndex& right);
 
-CAmount getCoinbaseSubsidy(const CAmount& subsidy);
+CAmount getCoinbaseSubsidy(const CAmount& subsidy, int32_t height, const CChainParams& params);
 
 void updatePopMempoolForReorg();
 

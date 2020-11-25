@@ -47,6 +47,15 @@ struct E2eFixture : public TestChain100Setup {
     {
         altintegration::SetLogger<TestLogger>();
         altintegration::GetLogger().level = altintegration::LogLevel::warn;
+
+        // create N blocks necessary to start POP fork resolution
+        CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;   
+        while (!Params().isPopActive(ChainActive().Tip()->nHeight))
+        {
+            CBlock b = CreateAndProcessBlock({}, scriptPubKey);
+            m_coinbase_txns.push_back(b.vtx[0]);
+        }
+
         pop = &VeriBlock::GetPop();
     }
 
@@ -132,14 +141,18 @@ struct E2eFixture : public TestChain100Setup {
         altintegration::ValidationState state;
         for (const auto& atv : atvs) {
             pop_mempool.submit(atv, state);
+            // do not check the submit result - expect statefully invalid data for testing purposes
         }
 
         for (const auto& vtb : vtbs) {
             pop_mempool.submit(vtb, state);
+            // do not check the submit result - expect statefully invalid data for testing purposes
         }
 
         bool isValid = false;
-        return CreateAndProcessBlock({}, prevBlock, cbKey, &isValid);
+        const auto& block = CreateAndProcessBlock({}, prevBlock, cbKey, &isValid);
+        BOOST_CHECK(isValid);
+        return block;
     }
 
     CBlock endorseAltBlockAndMine(uint256 hash, uint256 prevBlock, const std::vector<uint8_t>& payoutInfo, size_t generateVtbs = 0)

@@ -9,7 +9,7 @@
 Test with multiple nodes, and multiple PoP endorsements, checking to make sure nodes stay in sync.
 """
 
-from test_framework.pop import KEYSTONE_INTERVAL, endorse_block, sync_pop_mempools
+from test_framework.pop import KEYSTONE_INTERVAL, endorse_block, sync_pop_mempools, mine_until_pop_enabled
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     connect_nodes,
@@ -29,14 +29,15 @@ class PoPSync(BitcoinTestFramework):
 
     def setup_network(self):
         self.setup_nodes()
+        mine_until_pop_enabled(self.nodes[0])
 
         for i in range(self.num_nodes - 1):
             connect_nodes(self.nodes[i + 1], i)
-            self.sync_all()
+        self.sync_all()
 
     def _check_pop_sync(self):
         self.log.info("running _check_pop_sync()")
-        height = 1
+        height = self.nodes[0].getblockcount()
         addr0 = self.nodes[0].getnewaddress()
         addr1 = self.nodes[1].getnewaddress()
         addr2 = self.nodes[2].getnewaddress()

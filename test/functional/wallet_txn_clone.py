@@ -42,7 +42,7 @@ class TxnMallTest(BitcoinTestFramework):
         else:
             output_type = "legacy"
 
-        # All nodes should start with 750 vBTC:
+        # All nodes should start with 1250 vBTC:
         starting_balance = (POW_PAYOUT*25)
         for i in range(4):
             assert_equal(self.nodes[i].getbalance(), starting_balance)
@@ -51,11 +51,11 @@ class TxnMallTest(BitcoinTestFramework):
         self.nodes[0].settxfee(.001)
 
         node0_address1 = self.nodes[0].getnewaddress(address_type=output_type)
-        node0_txid1 = self.nodes[0].sendtoaddress(node0_address1, ((POW_PAYOUT*25)-29))
+        node0_txid1 = self.nodes[0].sendtoaddress(node0_address1, ((POW_PAYOUT*25)-31))
         node0_tx1 = self.nodes[0].gettransaction(node0_txid1)
 
         node0_address2 = self.nodes[0].getnewaddress(address_type=output_type)
-        node0_txid2 = self.nodes[0].sendtoaddress(node0_address2, (POW_PAYOUT-21))
+        node0_txid2 = self.nodes[0].sendtoaddress(node0_address2, (POW_PAYOUT-29))
         node0_tx2 = self.nodes[0].gettransaction(node0_txid2)
 
         assert_equal(self.nodes[0].getbalance(),
@@ -95,7 +95,7 @@ class TxnMallTest(BitcoinTestFramework):
         tx1 = self.nodes[0].gettransaction(txid1)
         tx2 = self.nodes[0].gettransaction(txid2)
 
-        # Node0's balance should be starting balance, plus 30 vBTC for another
+        # Node0's balance should be starting balance, plus 50 vBTC for another
         # matured block, minus tx1 and tx2 amounts, and minus transaction fees:
         expected = starting_balance + node0_tx1["fee"] + node0_tx2["fee"]
         if self.options.mine_block:

@@ -80,6 +80,9 @@ struct Params {
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
+
+    // VeriBlock
+    uint64_t VeriBlockPopSecurityHeight;
 };
 } // namespace Consensus
 
