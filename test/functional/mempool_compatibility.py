@@ -29,7 +29,7 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
 
     def setup_network(self):
         self.add_nodes(self.num_nodes, versions=[
-            150200, # oldest version supported by the test framework
+            190100,  # oldest version with getmempoolinfo.loaded (used to avoid intermittent issues)
             None,
         ])
         self.start_nodes()
@@ -71,6 +71,7 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
         self.start_node(0, ['-nowallet'])
         assert old_tx_hash in old_node.getrawmempool()
         assert unbroadcasted_tx_hash in old_node.getrawmempool()
+
 
 if __name__ == "__main__":
     MempoolCompatibilityTest().main()
