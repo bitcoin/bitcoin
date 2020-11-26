@@ -101,7 +101,7 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
     {
         LOCK(cs);
         enforced = isEnforced;
-        if (!seenChainLocks.emplace(hash, GetTimeMillis()).second) {
+        if (!seenChainLocks.try_emplace(hash, GetTimeMillis()).second) {
             return;
         }
 

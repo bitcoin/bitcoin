@@ -191,7 +191,7 @@ private:
         }
 
         std::promise<T> p;
-        cache.emplace(cacheKey, p.get_future());
+        cache.try_emplace(cacheKey, p.get_future());
         cacheCs.unlock();
 
         T v = builder();

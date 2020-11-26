@@ -30,8 +30,8 @@ CSporkManager sporkManager;
 CSporkManager::CSporkManager()
 {
     for (auto& sporkDef : sporkDefs) {
-        sporkDefsById.emplace(sporkDef.sporkId, &sporkDef);
-        sporkDefsByName.emplace(sporkDef.name, &sporkDef);
+        sporkDefsById.try_emplace(sporkDef.sporkId, &sporkDef);
+        sporkDefsByName.try_emplace(sporkDef.name, &sporkDef);
     }
 }
 

@@ -130,7 +130,7 @@ void DeserializeHDKeypaths(Stream& s, const std::vector<unsigned char>& key, std
     }
 
     // Add to map
-    hd_keypaths.emplace(pubkey, std::move(keypath));
+    hd_keypaths.try_emplace(pubkey, std::move(keypath));
 }
 
 // Serialize HD keypaths to a stream from a map

@@ -45,7 +45,7 @@ public:
     void Register(std::shared_ptr<CValidationInterface> callbacks)
     {
         LOCK(m_mutex);
-        auto inserted = m_map.emplace(callbacks.get(), m_list.end());
+        auto inserted = m_map.try_emplace(callbacks.get(), m_list.end());
         if (inserted.second) inserted.first->second = m_list.emplace(m_list.end());
         inserted.first->second->callbacks = std::move(callbacks);
     }

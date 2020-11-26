@@ -1424,7 +1424,7 @@ static RPCHelpMan assetallocationsendmany()
 
         CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
         mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
-        auto it = mapAssetTotals.emplace(nAsset, nAmount);
+        auto it = mapAssetTotals.try_emplace(nAsset, nAmount);
         if(!it.second) {
             it.first->second += nAmount;
         }
@@ -1455,7 +1455,7 @@ static RPCHelpMan assetallocationsendmany()
             CTxOut change_prototype_txout(0, scriptPubKey);
             CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
-            auto it = mapAssetTotals.emplace(nAsset, nAuxFee);
+            auto it = mapAssetTotals.try_emplace(nAsset, nAuxFee);
             if(!it.second) {
                 it.first->second += nAuxFee;
             }

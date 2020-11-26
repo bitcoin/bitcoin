@@ -684,7 +684,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                     // neither are its ancestors, they will be locked in as soon as you have a ZDAG tx because ZDAG isn't compliant with RBF.
                     if(IsZTx){
                         // allow the first time this outpoint was found in conflict
-                        auto it = mapAssetAllocationConflicts.emplace(txin.prevout, std::make_pair(ptx, MakeTransactionRef(*ptxConflicting)));
+                        auto it = mapAssetAllocationConflicts.try_emplace(txin.prevout, ptx, MakeTransactionRef(*ptxConflicting));
                         // if was inserted (not found)
                         if(it.second) {
                             // if just testing, and this is the first conflict for this prevout then let it go through but just don't add it to the global mapAssetAllocationConflicts

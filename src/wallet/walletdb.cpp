@@ -492,7 +492,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 }
 
                 // Insert a new CHDChain, or get the one that already exists
-                auto ins = wss.m_hd_chains.emplace(keyMeta.hd_seed_id, CHDChain());
+                auto ins = wss.m_hd_chains.try_emplace(keyMeta.hd_seed_id, CHDChain());
                 CHDChain& chain = ins.first->second;
                 if (ins.second) {
                     // For new chains, we want to default to VERSION_HD_BASE until we see an internal

@@ -342,7 +342,7 @@ bool CSigSharesManager::ProcessMessageSigSesAnn(CNode* pfrom, const CSigSesAnn& 
     nodeState.sessionByRecvId.erase(ann.sessionId);
     session.recvSessionId = ann.sessionId;
     session.quorum = quorum;
-    nodeState.sessionByRecvId.emplace(ann.sessionId, &session);
+    nodeState.sessionByRecvId.try_emplace(ann.sessionId, &session);
 
     return true;
 }
@@ -625,7 +625,7 @@ void CSigSharesManager::CollectPendingSigSharesToVerify(
 
             CQuorumCPtr quorum = quorumManager->GetQuorum(llmqType, sigShare.quorumHash);
             assert(quorum != nullptr);
-            retQuorums.emplace(k, quorum);
+            retQuorums.try_emplace(k, quorum);
         }
     }
     
@@ -1009,7 +1009,7 @@ void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, std::u
                     // only create the map if we actually add a batched sig
                     sigSharesToSend2 = &sigSharesToSend[nodeId];
                 }
-                (*sigSharesToSend2).emplace(signHash, std::move(batchedSigShares));
+                (*sigSharesToSend2).try_emplace(signHash, std::move(batchedSigShares));
             }
         }
     }
@@ -1071,7 +1071,7 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
         if (it == quorumNodesMap.end()) {
             std::set<NodeId> nodeIds;
             connman.GetMasternodeQuorumNodes(quorumKey.first, quorumKey.second, nodeIds);
-            it = quorumNodesMap.emplace(std::piecewise_construct, std::forward_as_tuple(quorumKey), std::forward_as_tuple(nodeIds.begin(), nodeIds.end())).first;
+            it = quorumNodesMap.try_emplace(quorumKey, nodeIds.begin(), nodeIds.end()).first;
         }
 
         auto& quorumNodes = it->second;
@@ -1139,7 +1139,7 @@ bool CSigSharesManager::SendMessages()
         if (pnode->verifiedProRegTxHash.IsNull()) {
             continue;
         }
-        proTxToNode.emplace(pnode->verifiedProRegTxHash, pnode);
+        proTxToNode.try_emplace(pnode->verifiedProRegTxHash, pnode);
     }
     {
         LOCK(cs);
@@ -1317,7 +1317,7 @@ void CSigSharesManager::Cleanup()
     {
         LOCK(cs);
         sigShares.ForEach([&](const SigShareKey& k, const CSigShare& sigShare) {
-            quorums.emplace(std::make_pair(sigShare.llmqType, sigShare.quorumHash), nullptr);
+            quorums.try_emplace(std::make_pair(sigShare.llmqType, sigShare.quorumHash), nullptr);
         });
     }
 

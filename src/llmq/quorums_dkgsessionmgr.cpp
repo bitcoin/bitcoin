@@ -26,9 +26,7 @@ CDKGSessionManager::CDKGSessionManager(CDBWrapper& _llmqDb, CBLSWorker& _blsWork
     peerman(_peerman)
 {
     for (const auto& qt : Params().GetConsensus().llmqs) {
-        dkgSessionHandlers.emplace(std::piecewise_construct,
-                std::forward_as_tuple(qt.first),
-                std::forward_as_tuple(qt.second, blsWorker, *this));
+        dkgSessionHandlers.try_emplace(qt.first, qt.second, blsWorker, *this);
     }
 }
 
@@ -250,7 +248,7 @@ bool CDKGSessionManager::GetVerifiedContribution(uint8_t llmqType, const uint256
     }
     llmqDb.Read(std::make_tuple(DB_SKCONTRIB, llmqType, hashQuorum, proTxHash), skContribution);
 
-    it = contributionsCache.emplace(cacheKey, ContributionsCacheEntry{GetTimeMillis(), vvecPtr, skContribution}).first;
+    it = contributionsCache.try_emplace(cacheKey, ContributionsCacheEntry{GetTimeMillis(), vvecPtr, skContribution}).first;
 
     vvecRet = it->second.vvec;
     skContributionRet = it->second.skContribution;

@@ -103,7 +103,7 @@ public:
     BerkeleyDatabase(std::shared_ptr<BerkeleyEnvironment> env, std::string filename) :
         WalletDatabase(), env(std::move(env)), strFile(std::move(filename))
     {
-        auto inserted = this->env->m_databases.emplace(strFile, std::ref(*this));
+        auto inserted = this->env->m_databases.try_emplace(strFile, std::ref(*this));
         assert(inserted.second);
     }
 

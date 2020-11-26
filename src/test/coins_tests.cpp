@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(updatecoins_simulation_test)
             utxoset.insert(outpoint);
 
             // Track this tx and undo info to use later
-            utxoData.emplace(outpoint, std::make_tuple(tx,undo,old_coin));
+            utxoData.try_emplace(outpoint, tx,undo,old_coin);
         } else if (utxoset.size()) {
             //1/20 times undo a previous transaction
             auto utxod = FindRandomFrom(utxoset);
@@ -590,7 +590,7 @@ static size_t InsertCoinsMapEntry(CCoinsMap& map, CAmount value, char flags)
     CCoinsCacheEntry entry;
     entry.flags = flags;
     SetCoinsValue(value, entry.coin);
-    auto inserted = map.emplace(OUTPOINT, std::move(entry));
+    auto inserted = map.try_emplace(OUTPOINT, std::move(entry));
     assert(inserted.second);
     return inserted.first->second.coin.DynamicMemoryUsage();
 }

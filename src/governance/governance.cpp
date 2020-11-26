@@ -291,7 +291,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
 
     // INSERT INTO OUR GOVERNANCE OBJECT MEMORY
     // IF WE HAVE THIS OBJECT ALREADY, WE DON'T WANT ANOTHER COPY
-    auto objpair = mapObjects.emplace(nHash, govobj);
+    auto objpair = mapObjects.try_emplace(nHash, govobj);
 
     if (!objpair.second) {
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- already have governance object %s\n", nHash.ToString());
@@ -464,12 +464,12 @@ std::vector<CGovernanceVote> CGovernanceManager::GetCurrentVotes(const uint256& 
     std::map<COutPoint, CDeterministicMNCPtr> mapMasternodes;
     if (mnCollateralOutpointFilter.IsNull()) {
         mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
-            mapMasternodes.emplace(dmn->collateralOutpoint, dmn);
+            mapMasternodes.try_emplace(dmn->collateralOutpoint, dmn);
         });
     } else {
         auto dmn = mnList.GetMNByCollateral(mnCollateralOutpointFilter);
         if (dmn) {
-            mapMasternodes.emplace(dmn->collateralOutpoint, dmn);
+            mapMasternodes.try_emplace(dmn->collateralOutpoint, dmn);
         }
     }
 

@@ -1011,11 +1011,11 @@ bool AddOrphanTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRE
         return false;
     }
 
-    auto ret = mapOrphanTransactions.emplace(hash, COrphanTx{tx, peer, GetTime() + ORPHAN_TX_EXPIRE_TIME, g_orphan_list.size()});
+    auto ret = mapOrphanTransactions.try_emplace(hash, COrphanTx{tx, peer, GetTime() + ORPHAN_TX_EXPIRE_TIME, g_orphan_list.size()});
     assert(ret.second);
     g_orphan_list.push_back(ret.first);
     // Allow for lookups in the orphan pool by wtxid, as well as txid
-    g_orphans_by_wtxid.emplace(tx->GetWitnessHash(), ret.first);
+    g_orphans_by_wtxid.try_emplace(tx->GetWitnessHash(), ret.first);
     for (const CTxIn& txin : tx->vin) {
         mapOrphanTransactionsByPrev[txin.prevout].insert(ret.first);
     }
@@ -3658,7 +3658,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             // block that is in flight from some other peer.
             {
                 LOCK(cs_main);
-                mapBlockSource.emplace(pblock->GetHash(), std::make_pair(pfrom.GetId(), false));
+                mapBlockSource.try_emplace(pblock->GetHash(), pfrom.GetId(), false);
             }
             bool fNewBlock = false;
             // Setting fForceProcessing to true means that we bypass some of
@@ -3749,7 +3749,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
                 // BIP 152 permits peers to relay compact blocks after validating
                 // the header only; we should not punish peers if the block turns
                 // out to be invalid.
-                mapBlockSource.emplace(resp.blockhash, std::make_pair(pfrom.GetId(), false));
+                mapBlockSource.try_emplace(resp.blockhash, pfrom.GetId(), false);
             }
         } // Don't hold cs_main when we call into ProcessNewBlock
         if (fBlockRead) {
@@ -3819,7 +3819,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             // mapBlockSource is only used for punishing peers and setting
             // which peers send us compact blocks, so the race between here and
             // cs_main in ProcessNewBlock is fine.
-            mapBlockSource.emplace(hash, std::make_pair(pfrom.GetId(), true));
+            mapBlockSource.try_emplace(hash, pfrom.GetId(), true);
         }
         bool fNewBlock = false;
         m_chainman.ProcessNewBlock(m_chainparams, pblock, forceProcessing, &fNewBlock);
@@ -4815,12 +4815,12 @@ bool PeerManager::SendMessages(CNode* pto)
                                 vRelayExpiration.pop_front();
                             }
 
-                            auto ret = mapRelay.emplace(txid, std::move(txinfo.tx));
+                            auto ret = mapRelay.try_emplace(txid, std::move(txinfo.tx));
                             if (ret.second) {
                                 vRelayExpiration.emplace_back(count_microseconds(current_time + std::chrono::microseconds{RELAY_TX_CACHE_TIME}), ret.first);
                             }
                             // Add wtxid-based lookup into mapRelay as well, so that peers can request by wtxid
-                            auto ret2 = mapRelay.emplace(wtxid, ret.first->second);
+                            auto ret2 = mapRelay.try_emplace(wtxid, ret.first->second);
                             if (ret2.second) {
                                 vRelayExpiration.emplace_back(count_microseconds(current_time + std::chrono::microseconds{RELAY_TX_CACHE_TIME}), ret2.first);
                             }

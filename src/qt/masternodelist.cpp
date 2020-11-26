@@ -166,7 +166,7 @@ void MasternodeList::updateDIP3List()
             CTxDestination collateralDest;
             Coin coin;
             if (GetUTXOCoin(dmn->collateralOutpoint, coin) && ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
-                mapCollateralDests.emplace(dmn->proTxHash, collateralDest);
+                mapCollateralDests.try_emplace(dmn->proTxHash, collateralDest);
             }
         });
     }
@@ -185,7 +185,7 @@ void MasternodeList::updateDIP3List()
     std::map<uint256, int> nextPayments;
     for (size_t i = 0; i < projectedPayees.size(); i++) {
         const auto& dmn = projectedPayees[i];
-        nextPayments.emplace(dmn->proTxHash, mnList.GetHeight() + (int)i + 1);
+        nextPayments.try_emplace(dmn->proTxHash, mnList.GetHeight() + (int)i + 1);
     }
 
     std::set<COutPoint> setOutpts;

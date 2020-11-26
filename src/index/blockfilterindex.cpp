@@ -406,7 +406,7 @@ bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint25
     if (is_checkpoint &&
         m_headers_cache.size() < CF_HEADERS_CACHE_MAX_SZ) {
         // Add to the headers cache if this is a checkpoint height.
-        m_headers_cache.emplace(block_index->GetBlockHash(), entry.header);
+        m_headers_cache.try_emplace(block_index->GetBlockHash(), entry.header);
     }
 
     header_out = entry.header;
@@ -464,10 +464,7 @@ void ForEachBlockFilterIndex(std::function<void (BlockFilterIndex&)> fn)
 bool InitBlockFilterIndex(BlockFilterType filter_type,
                           size_t n_cache_size, bool f_memory, bool f_wipe)
 {
-    auto result = g_filter_indexes.emplace(std::piecewise_construct,
-                                           std::forward_as_tuple(filter_type),
-                                           std::forward_as_tuple(filter_type,
-                                                                 n_cache_size, f_memory, f_wipe));
+    auto result = g_filter_indexes.try_emplace(filter_type, filter_type, n_cache_size, f_memory, f_wipe);
     return result.second;
 }
 

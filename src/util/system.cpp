@@ -182,8 +182,8 @@ bool LockDirectory(const fs::path& directory, const std::string lockfile_name, b
         return error("Error while attempting to lock directory %s: %s", directory.string(), lock->GetReason());
     }
     if (!probe_only) {
-        // Lock successful and we're not just probing, put it into the map
-        dir_locks.emplace(pathLockFile.string(), std::move(lock));
+        // SYSCOIN Lock successful and we're not just probing, put it into the map
+        dir_locks[pathLockFile.string()] = std::move(lock);
     }
     return true;
 }
@@ -594,7 +594,7 @@ void ArgsManager::AddArg(const std::string& name, const std::string& help, unsig
 
     LOCK(cs_args);
     std::map<std::string, Arg>& arg_map = m_available_args[cat];
-    auto ret = arg_map.emplace(arg_name, Arg{name.substr(eq_index, name.size() - eq_index), help, flags});
+    auto ret = arg_map.try_emplace(arg_name, Arg{name.substr(eq_index, name.size() - eq_index), help, flags});
     assert(ret.second); // Make sure an insertion actually happened
 
     if (flags & ArgsManager::NETWORK_ONLY) {

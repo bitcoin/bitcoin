@@ -2179,7 +2179,7 @@ void CConnman::ThreadOpenMasternodeConnections()
         ForEachNode([&](const CNode* pnode) {
             connectedNodes.emplace(pnode->addr);
             if (!pnode->verifiedProRegTxHash.IsNull()) {
-                connectedProRegTxHashes.emplace(pnode->verifiedProRegTxHash, pnode->IsInboundConn());
+                connectedProRegTxHashes.try_emplace(pnode->verifiedProRegTxHash, pnode->IsInboundConn());
             }
         });
         CDeterministicMNList mnList;
@@ -2946,7 +2946,7 @@ std::vector<CAddress> CConnman::GetAddresses(CNode& requestor, size_t max_addres
         .Write(local_socket_bytes.data(), local_socket_bytes.size())
         .Finalize();
     const auto current_time = GetTime<std::chrono::microseconds>();
-    auto r = m_addr_response_caches.emplace(cache_id, CachedAddrResponse{});
+    auto r = m_addr_response_caches.try_emplace(cache_id, CachedAddrResponse{});
     CachedAddrResponse& cache_entry = r.first->second;
     if (cache_entry.m_cache_entry_expiration < current_time) { // If emplace() added new one it has expiration 0.
         cache_entry.m_addrs_response_cache = GetAddresses(max_addresses, max_pct);
@@ -3016,7 +3016,7 @@ bool CConnman::AddPendingMasternode(const uint256& proTxHash)
 void CConnman::SetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes)
 {
     LOCK(cs_vPendingMasternodes);
-    auto it = masternodeQuorumNodes.emplace(std::make_pair(llmqType, quorumHash), proTxHashes);
+    auto it = masternodeQuorumNodes.try_emplace(std::make_pair(llmqType, quorumHash), proTxHashes);
     if (!it.second) {
         it.first->second = proTxHashes;
     }

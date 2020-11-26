@@ -48,7 +48,7 @@ public:
     {
         assert(sig.IsValid() && pubKey.IsValid());
 
-        auto it = messages.emplace(msgId, Message{msgId, msgHash, sig, pubKey}).first;
+        auto it = messages.try_emplace(msgId, Message{msgId, msgHash, sig, pubKey}).first;
         messagesBySource[sourceId].emplace_back(it);
 
         if (subBatchSize != 0 && messages.size() >= subBatchSize) {

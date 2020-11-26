@@ -98,7 +98,7 @@ bool CDKGSession::Init(const CBlockIndex* _pindexQuorum, const std::vector<CDete
 
     for (size_t i = 0; i < mns.size(); i++) {
         members[i] = std::make_unique<CDKGMember>(mns[i], i);
-        membersMap.emplace(members[i]->dmn->proTxHash, i);
+        membersMap.try_emplace(members[i]->dmn->proTxHash, i);
         memberIds[i] = members[i]->id;
     }
 
@@ -279,7 +279,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGContribution& qc
             return;
         }
 
-        contributions.emplace(hash, qc);
+        contributions.try_emplace(hash, qc);
         member->contributions.emplace(hash);
 
         CInv inv(MSG_QUORUM_CONTRIB, hash);
@@ -463,7 +463,7 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions()
         if (pnode->verifiedProRegTxHash.IsNull()) {
             return;
         }
-        protoMap.emplace(pnode->verifiedProRegTxHash, pnode->nVersion);
+        protoMap.try_emplace(pnode->verifiedProRegTxHash, pnode->nVersion);
     });
 
     for (auto& m : members) {
@@ -591,7 +591,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGComplaint& qc, b
             return;
         }
 
-        complaints.emplace(hash, qc);
+        complaints.try_emplace(hash, qc);
         member->complaints.emplace(hash);
 
         CInv inv(MSG_QUORUM_COMPLAINT, hash);
@@ -804,7 +804,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGJustification& q
             return;
         }
 
-        justifications.emplace(hash, qj);
+        justifications.try_emplace(hash, qj);
         member->justifications.emplace(hash);
 
         // we always relay, even if further verification fails
@@ -1128,7 +1128,7 @@ void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGPrematureCommitm
 
         // keep track of ALL commitments but only relay valid ones (or if we couldn't build the vvec)
         // relaying is done further down
-        prematureCommitments.emplace(hash, qc);
+        prematureCommitments.try_emplace(hash, qc);
         member->prematureCommitments.emplace(hash);
     }
 
@@ -1219,7 +1219,7 @@ std::vector<CFinalCommitment> CDKGSession::FinalizeCommitments()
 
         auto it = commitmentsMap.find(qc.validMembers);
         if (it == commitmentsMap.end()) {
-            it = commitmentsMap.emplace(qc.validMembers, std::vector<CDKGPrematureCommitment>()).first;
+            it = commitmentsMap.try_emplace(qc.validMembers, std::vector<CDKGPrematureCommitment>()).first;
         }
 
         it->second.emplace_back(qc);

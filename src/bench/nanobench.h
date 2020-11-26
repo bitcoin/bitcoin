@@ -2495,7 +2495,7 @@ bool LinuxPerformanceCounters::monitor(uint32_t type, uint64_t eventid, Target t
     }
 
     // insert into map, rely on the fact that map's references are constant.
-    mIdToTarget.emplace(id, target);
+    mIdToTarget.try_emplace(id, target);
 
     // prepare readformat with the correct size (after the insert)
     auto size = 3 + 2 * mIdToTarget.size();

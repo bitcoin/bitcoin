@@ -191,7 +191,7 @@ struct PSBTInput
                     s >> sig;
 
                     // Add to list
-                    partial_sigs.emplace(pubkey.GetID(), SigPair(pubkey, std::move(sig)));
+                    partial_sigs.try_emplace(pubkey.GetID(), SigPair(pubkey, std::move(sig)));
                     break;
                 }
                 case PSBT_IN_SIGHASH:
@@ -255,7 +255,7 @@ struct PSBTInput
                     // Read in the value
                     std::vector<unsigned char> val_bytes;
                     s >> val_bytes;
-                    unknown.emplace(std::move(key), std::move(val_bytes));
+                    unknown.try_emplace(std::move(key), std::move(val_bytes));
                     break;
             }
         }
@@ -369,7 +369,7 @@ struct PSBTOutput
                     // Read in the value
                     std::vector<unsigned char> val_bytes;
                     s >> val_bytes;
-                    unknown.emplace(std::move(key), std::move(val_bytes));
+                    unknown.try_emplace(std::move(key), std::move(val_bytes));
                     break;
                 }
             }
@@ -504,7 +504,7 @@ struct PartiallySignedTransaction
                     // Read in the value
                     std::vector<unsigned char> val_bytes;
                     s >> val_bytes;
-                    unknown.emplace(std::move(key), std::move(val_bytes));
+                    unknown.try_emplace(std::move(key), std::move(val_bytes));
                 }
             }
         }

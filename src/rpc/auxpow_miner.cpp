@@ -90,7 +90,7 @@ AuxpowMiner::getCurrentBlock (const CTxMemPool& mempool,
 
         /* Save in our map of constructed blocks.  */
         pblockCur = &newBlock->block;
-        curBlocks.emplace(scriptID, pblockCur);
+        curBlocks.try_emplace(scriptID, pblockCur);
         blocks[pblockCur->GetHash ()] = pblockCur;
         templates.push_back (std::move (newBlock));
       }

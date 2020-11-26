@@ -596,7 +596,7 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
                     continue;
                 }
 
-                retQuorums.emplace(quorumKey, quorum);
+                retQuorums.try_emplace(quorumKey, quorum);
             }
 
             ++it;
@@ -759,9 +759,7 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& re
 void CSigningManager::PushReconstructedRecoveredSig(const llmq::CRecoveredSig& recoveredSig, const llmq::CQuorumCPtr& quorum)
 {
     LOCK(cs);
-    pendingReconstructedRecoveredSigs.emplace(std::piecewise_construct,
-            std::forward_as_tuple(recoveredSig.GetHash()),
-            std::forward_as_tuple(recoveredSig, quorum));
+    pendingReconstructedRecoveredSigs.try_emplace(recoveredSig.GetHash(), recoveredSig, quorum);
 }
 
 void CSigningManager::TruncateRecoveredSig(uint8_t llmqType, const uint256& id)

@@ -241,7 +241,7 @@ static RPCHelpMan gobject_vote_many()
 
         CKey key;
         if (spk_man.GetKey(dmn->pdmnState->keyIDVoting, key)) {
-            votingKeys.emplace(dmn->proTxHash, key);
+            votingKeys.try_emplace(dmn->proTxHash, key);
         }
     });
 
@@ -317,7 +317,7 @@ static RPCHelpMan gobject_vote_alias()
     }
 
     std::map<uint256, CKey> votingKeys;
-    votingKeys.emplace(proTxHash, key);
+    votingKeys.try_emplace(proTxHash, key);
 
     return VoteWithMasternodes(votingKeys, hash, eVoteSignal, eVoteOutcome, *node.connman);
 },

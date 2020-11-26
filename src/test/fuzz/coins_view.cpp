@@ -132,7 +132,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
                     }
                     coins_cache_entry.coin = *opt_coin;
                 }
-                coins_map.emplace(random_out_point, std::move(coins_cache_entry));
+                coins_map.try_emplace(random_out_point, std::move(coins_cache_entry));
             }
             bool expected_code_path = false;
             try {

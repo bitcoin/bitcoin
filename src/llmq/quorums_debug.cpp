@@ -157,7 +157,7 @@ void CDKGDebugManager::InitLocalSessionStatus(uint8_t llmqType, const uint256& q
 
     auto it = localStatus.sessions.find(llmqType);
     if (it == localStatus.sessions.end()) {
-        it = localStatus.sessions.emplace(llmqType, CDKGDebugSessionStatus()).first;
+        it = localStatus.sessions.try_emplace(llmqType, CDKGDebugSessionStatus()).first;
     }
 
     auto& params = Params().GetConsensus().llmqs.at(llmqType);

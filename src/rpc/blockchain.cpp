@@ -2192,7 +2192,7 @@ bool FindScriptPubKey(std::atomic<int>& scan_progress, const std::atomic<bool>& 
             scan_progress = (int)(high * 100.0 / 65536.0 + 0.5);
         }
         if (needles.count(coin.out.scriptPubKey)) {
-            out_results.emplace(key, coin);
+            out_results.try_emplace(key, coin);
         }
         cursor->Next();
     }
@@ -2327,7 +2327,7 @@ static RPCHelpMan scantxoutset()
             for (const auto& script : scripts) {
                 std::string inferred = InferDescriptor(script, provider)->ToString();
                 needles.emplace(script);
-                descriptors.emplace(std::move(script), std::move(inferred));
+                descriptors.try_emplace(std::move(script), std::move(inferred));
             }
         }
 

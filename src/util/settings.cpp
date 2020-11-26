@@ -84,7 +84,7 @@ bool ReadSettings(const fs::path& path, std::map<std::string, SettingsValue>& va
     const std::vector<std::string>& in_keys = in.getKeys();
     const std::vector<SettingsValue>& in_values = in.getValues();
     for (size_t i = 0; i < in_keys.size(); ++i) {
-        auto inserted = values.emplace(in_keys[i], in_values[i]);
+        auto inserted = values.try_emplace(in_keys[i], in_values[i]);
         if (!inserted.second) {
             errors.emplace_back(strprintf("Found duplicate key %s in settings file %s", in_keys[i], path.string()));
         }

@@ -360,7 +360,7 @@ CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const CBlockIndex* pinde
     }
     {
         LOCK(quorumsCacheCs);
-        quorumsCache.emplace(std::make_pair(llmqType, quorumHash), quorum);
+        quorumsCache.try_emplace(std::make_pair(llmqType, quorumHash), quorum);
     }
     return quorum;
 }

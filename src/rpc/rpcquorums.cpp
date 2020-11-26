@@ -189,7 +189,7 @@ static RPCHelpMan quorum_dkgstatus()
             node.connman->ForEachNode([&](CNode* pnode) {
                 LOCK(pnode->cs_mnauth);
                 if (!pnode->verifiedProRegTxHash.IsNull() && allConnections.count(pnode->verifiedProRegTxHash)) {
-                    foundConnections.emplace(pnode->verifiedProRegTxHash, pnode->addr);
+                    foundConnections.try_emplace(pnode->verifiedProRegTxHash, pnode->addr);
                 }
             });
             UniValue arr(UniValue::VARR);

@@ -189,7 +189,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }
     else {
         // ensure eth tx not already spent in current processing block or mempool(mapMintKeysMempool passed in)
-        auto itMap = mapMintKeys.emplace(nBridgeTransferID, txHash);
+        auto itMap = mapMintKeys.try_emplace(nBridgeTransferID, txHash);
         if(!itMap.second) {
             return FormatSyscoinErrorMessage(state, "mint-duplicate-transfer", bSanityCheck);
         }
@@ -312,7 +312,7 @@ bool DisconnectMintAsset(const CTransaction &tx, const uint256& txHash, Ethereum
         LogPrint(BCLog::SYS,"DisconnectMintAsset: Cannot unserialize data inside of this transaction relating to an assetallocationmint\n");
         return false;
     }
-    mapMintKeys.emplace(mintSyscoin.nBridgeTransferID, txHash);
+    mapMintKeys.try_emplace(mintSyscoin.nBridgeTransferID, txHash);
     return true;
 }
 

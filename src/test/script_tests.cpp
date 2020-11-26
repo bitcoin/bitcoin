@@ -1255,11 +1255,11 @@ BOOST_AUTO_TEST_CASE(script_combineSigs)
     CScript complete13 = CScript() << OP_0 << sig1 << sig3;
     CScript complete23 = CScript() << OP_0 << sig2 << sig3;
     SignatureData partial1_sigs;
-    partial1_sigs.signatures.emplace(keys[0].GetPubKey().GetID(), SigPair(keys[0].GetPubKey(), sig1));
+    partial1_sigs.signatures.try_emplace(keys[0].GetPubKey().GetID(), SigPair(keys[0].GetPubKey(), sig1));
     SignatureData partial2_sigs;
-    partial2_sigs.signatures.emplace(keys[1].GetPubKey().GetID(), SigPair(keys[1].GetPubKey(), sig2));
+    partial2_sigs.signatures.try_emplace(keys[1].GetPubKey().GetID(), SigPair(keys[1].GetPubKey(), sig2));
     SignatureData partial3_sigs;
-    partial3_sigs.signatures.emplace(keys[2].GetPubKey().GetID(), SigPair(keys[2].GetPubKey(), sig3));
+    partial3_sigs.signatures.try_emplace(keys[2].GetPubKey().GetID(), SigPair(keys[2].GetPubKey(), sig3));
 
     combined = CombineSignatures(txFrom.vout[0], txTo, partial1_sigs, partial1_sigs);
     BOOST_CHECK(combined.scriptSig == partial1a);

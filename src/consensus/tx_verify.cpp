@@ -176,7 +176,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         }
         if (!coin.out.assetInfo.IsNull()) {
             const bool &zeroVal = coin.out.assetInfo.nValue == 0;
-            auto inRes = mapAssetIn.emplace(coin.out.assetInfo.nAsset, std::make_pair(zeroVal, coin.out.assetInfo.nValue));
+            auto inRes = mapAssetIn.try_emplace(coin.out.assetInfo.nAsset, zeroVal, coin.out.assetInfo.nValue);
             if (!inRes.second) {
                 inRes.first->second.second += coin.out.assetInfo.nValue;
                 if (!inRes.first->second.first) {

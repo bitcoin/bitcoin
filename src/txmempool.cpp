@@ -419,24 +419,24 @@ void CTxMemPool::addUnchecked(const CTxMemPoolEntry &entry, setEntries &setAnces
             if (!proTx.collateralOutpoint.hash.IsNull()) {
                 mapProTxRefs.emplace(tx.GetHash(), proTx.collateralOutpoint.hash);
             }
-            mapProTxAddresses.emplace(proTx.addr, tx.GetHash());
-            mapProTxPubKeyIDs.emplace(proTx.keyIDOwner, tx.GetHash());
-            mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
+            mapProTxAddresses.try_emplace(proTx.addr, tx.GetHash());
+            mapProTxPubKeyIDs.try_emplace(proTx.keyIDOwner, tx.GetHash());
+            mapProTxBlsPubKeyHashes.try_emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
             if (!proTx.collateralOutpoint.hash.IsNull()) {
-                mapProTxCollaterals.emplace(proTx.collateralOutpoint, tx.GetHash());
+                mapProTxCollaterals.try_emplace(proTx.collateralOutpoint, tx.GetHash());
             }
         }
     } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE) {
         CProUpServTx proTx;
         if(GetTxPayload(tx, proTx)) {
             mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
-            mapProTxAddresses.emplace(proTx.addr, tx.GetHash());
+            mapProTxAddresses.try_emplace(proTx.addr, tx.GetHash());
         }
     } else if (tx.nVersion == SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR) {
         CProUpRegTx proTx;
         if(GetTxPayload(tx, proTx)) {
             mapProTxRefs.emplace(proTx.proTxHash, tx.GetHash());
-            mapProTxBlsPubKeyHashes.emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
+            mapProTxBlsPubKeyHashes.try_emplace(proTx.pubKeyOperator.GetHash(), tx.GetHash());
             CDeterministicMNList mnList;
             if(deterministicMNManager)
                 deterministicMNManager->GetListAtChainTip(mnList);

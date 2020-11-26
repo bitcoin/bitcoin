@@ -64,7 +64,7 @@ std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& wallet_path, s
     fs::path env_directory;
     SplitWalletPath(wallet_path, env_directory, database_filename);
     LOCK(cs_db);
-    auto inserted = g_dbenvs.emplace(env_directory.string(), std::weak_ptr<BerkeleyEnvironment>());
+    auto inserted = g_dbenvs.try_emplace(env_directory.string());
     if (inserted.second) {
         auto env = std::make_shared<BerkeleyEnvironment>(env_directory.string());
         inserted.first->second = env;

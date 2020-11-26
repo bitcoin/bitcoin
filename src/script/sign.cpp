@@ -77,10 +77,10 @@ static bool CreateSig(const BaseSignatureCreator& creator, SignatureData& sigdat
     }
     KeyOriginInfo info;
     if (provider.GetKeyOrigin(keyid, info)) {
-        sigdata.misc_pubkeys.emplace(keyid, std::make_pair(pubkey, std::move(info)));
+        sigdata.misc_pubkeys.try_emplace(keyid, pubkey, std::move(info));
     }
     if (creator.CreateSig(provider, sig_out, keyid, scriptcode, sigversion)) {
-        auto i = sigdata.signatures.emplace(keyid, SigPair(pubkey, sig_out));
+        auto i = sigdata.signatures.try_emplace(keyid, SigPair(pubkey, sig_out));
         assert(i.second);
         return true;
     }
@@ -265,7 +265,7 @@ public:
     {
         if (checker.CheckECDSASignature(scriptSig, vchPubKey, scriptCode, sigversion)) {
             CPubKey pubkey(vchPubKey);
-            sigdata.signatures.emplace(pubkey.GetID(), SigPair(pubkey, scriptSig));
+            sigdata.signatures.try_emplace(pubkey.GetID(), SigPair(pubkey, scriptSig));
             return true;
         }
         return false;

@@ -34,7 +34,7 @@ public:
         truncate_if_needed();
         auto it = cacheMap.find(key);
         if (it == cacheMap.end()) {
-            cacheMap.emplace(key, std::make_pair(std::forward<Value2>(v), accessCounter++));
+            cacheMap.try_emplace(key, std::forward<Value2>(v), accessCounter++);
         } else {
             it->second.first = std::forward<Value2>(v);
             it->second.second = accessCounter++;

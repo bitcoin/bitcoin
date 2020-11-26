@@ -99,7 +99,7 @@ void PSBTInput::FillSignatureData(SignatureData& sigdata) const
         sigdata.witness_script = witness_script;
     }
     for (const auto& key_pair : hd_keypaths) {
-        sigdata.misc_pubkeys.emplace(key_pair.first.GetID(), key_pair);
+        sigdata.misc_pubkeys.try_emplace(key_pair.first.GetID(), key_pair);
     }
 }
 
@@ -159,7 +159,7 @@ void PSBTOutput::FillSignatureData(SignatureData& sigdata) const
         sigdata.witness_script = witness_script;
     }
     for (const auto& key_pair : hd_keypaths) {
-        sigdata.misc_pubkeys.emplace(key_pair.first.GetID(), key_pair);
+        sigdata.misc_pubkeys.try_emplace(key_pair.first.GetID(), key_pair);
     }
 }
 

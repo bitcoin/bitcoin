@@ -422,7 +422,7 @@ bool CTransaction::GetAssetValueOut(CAssetsMap &mapAssetOut, std::string &err) c
                 return false;
             }
         }
-        auto itRes = mapAssetOut.emplace(nAsset, std::make_pair(zeroVal, nTotal));
+        auto itRes = mapAssetOut.try_emplace(nAsset, zeroVal, nTotal);
         if(!itRes.second) {
             err = "bad-txns-asset-not-unique";
             return false;

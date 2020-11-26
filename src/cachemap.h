@@ -109,7 +109,7 @@ public:
             PruneLast();
         }
         listItems.push_front(item_t(key, value));
-        mapIndex.emplace(key, listItems.begin());
+        mapIndex.try_emplace(key, listItems.begin());
         return true;
     }
 
@@ -179,7 +179,7 @@ private:
     {
         mapIndex.clear();
         for(list_it it = listItems.begin(); it != listItems.end(); ++it) {
-            mapIndex.emplace(it->key, it);
+            mapIndex.try_emplace(it->key, it);
         }
     }
 };

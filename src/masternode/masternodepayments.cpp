@@ -223,7 +223,7 @@ std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEnd
             if(deterministicMNManager)
                 deterministicMNManager->GetListForBlock(::ChainActive()[h - 1], payeeList);
             CDeterministicMNCPtr payee = payeeList.GetMNPayee();
-            mapPayments.emplace(h, GetRequiredPaymentsString(h, payee));
+            mapPayments.try_emplace(h, GetRequiredPaymentsString(h, payee));
         } else {
             doProjection = true;
             break;
@@ -238,7 +238,7 @@ std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEnd
         for (size_t i = 0; i < projection.size(); i++) {
             auto payee = projection[i];
             size_t h = nChainTipHeight + 1 + i;
-            mapPayments.emplace(h, GetRequiredPaymentsString(h, payee));
+            mapPayments.try_emplace(h, GetRequiredPaymentsString(h, payee));
         }
     }
 

@@ -307,7 +307,7 @@ bool CQuorumBlockProcessor::GetCommitmentsFromBlock(const CBlock& block, const u
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-dup");
             }
 
-            ret.emplace(commitment.llmqType, std::move(commitment));
+            ret.try_emplace(commitment.llmqType, std::move(commitment));
         }
     }
     
@@ -373,7 +373,7 @@ bool CQuorumBlockProcessor::HasMinedCommitment(uint8_t llmqType, const uint256& 
     bool ret = evoDb.Exists(key);
     {
         LOCK(minableCommitmentsCs);
-        hasMinedCommitmentCache.emplace(cacheKey, ret);
+        hasMinedCommitmentCache.try_emplace(cacheKey, ret);
     }
     return ret;
 }
@@ -457,9 +457,9 @@ void CQuorumBlockProcessor::AddMinableCommitment(const CFinalCommitment& fqc)
         LOCK(minableCommitmentsCs);
 
         auto k = std::make_pair(fqc.llmqType, fqc.quorumHash);
-        auto ins = minableCommitmentsByQuorum.emplace(k, commitmentHash);
+        auto ins = minableCommitmentsByQuorum.try_emplace(k, commitmentHash);
         if (ins.second) {
-            minableCommitments.emplace(commitmentHash, fqc);
+            minableCommitments.try_emplace(commitmentHash, fqc);
             relay = true;
         } else {
             auto& oldFqc = minableCommitments.at(ins.first->second);
@@ -467,7 +467,7 @@ void CQuorumBlockProcessor::AddMinableCommitment(const CFinalCommitment& fqc)
                 // new commitment has more signers, so override the known one
                 ins.first->second = commitmentHash;
                 minableCommitments.erase(ins.first->second);
-                minableCommitments.emplace(commitmentHash, fqc);
+                minableCommitments.try_emplace(commitmentHash, fqc);
                 relay = true;
             }
         }

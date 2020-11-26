@@ -505,7 +505,7 @@ void RPCRunLater(const std::string& name, std::function<void()> func, int64_t nS
     LOCK(g_deadline_timers_mutex);
     deadlineTimers.erase(name);
     LogPrint(BCLog::RPC, "queue run of timer %s in %i seconds (using %s)\n", name, nSeconds, timerInterface->Name());
-    deadlineTimers.emplace(name, std::unique_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000)));
+    deadlineTimers.try_emplace(name, std::unique_ptr<RPCTimerBase>(timerInterface->NewTimer(func, nSeconds*1000)));
 }
 
 int RPCSerializationFlags()
