@@ -383,7 +383,7 @@ public:
             // nTime.
             READWRITE(obj.nTime);
         }
-        if (nVersion & ADDRV2_FORMAT) {
+        if (s.GetVersion() & ADDRV2_FORMAT) {
             uint64_t services_tmp;
             SER_WRITE(obj, services_tmp = obj.nServices);
             READWRITE(Using<CompactSizeFormatter<false>>(services_tmp));
