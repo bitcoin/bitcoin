@@ -139,7 +139,7 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
     throw std::logic_error(strprintf("potential deadlock detected: %s -> %s -> %s", mutex_b, mutex_a, mutex_b));
 }
 
-static void double_lock_detected(const void* mutex, LockStack& lock_stack)
+static void double_lock_detected(const void* mutex, const LockStack& lock_stack)
 {
     LogPrintf("DOUBLE LOCK DETECTED\n");
     LogPrintf("Lock order:\n");
