@@ -49,6 +49,12 @@ bool GetAsset(const uint32_t &nAsset,
         return false;
     return true;
 }
+bool GetAssetNotaryKeyID(const uint32_t &nAsset,
+        std::vector<unsigned char>& keyID) {
+    if (!passetdb || !passetdb->ReadAssetNotaryKeyID(nAsset, keyID))
+        return false;
+    return true;
+}
 // mapAssetIn needs to be copied by value because its modified to check for equality with mapAssetOut if isNoInput is true, we reuse mapAssetIn in CheckSyscoinInputs
 // and do not want to pollute consensus checks elsewhere so therefor we don't modify the reference to mapAssetIn
 bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const uint32_t &nAsset, CAssetsMap mapAssetIn, const CAssetsMap &mapAssetOut) {

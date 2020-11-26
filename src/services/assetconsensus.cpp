@@ -370,10 +370,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
     // fill notary signatures for every asset that requires it
     for(const auto& vecOut: tx.voutAssets) {
         // get asset
-        CAsset theAsset;
+        std::vector<unsigned char> vchNotaryKeyID;
         // if asset has notary signature requirement set
-        if(GetAsset(vecOut.key, theAsset) && !theAsset.vchNotaryKeyID.empty()) {
-            if (!CHashSigner::VerifyHash(GetNotarySigHash(tx, vecOut), CKeyID(uint160(theAsset.vchNotaryKeyID)), vecOut.vchNotarySig)) {
+        if(GetAssetNotaryKeyID(vecOut.key, vchNotaryKeyID)) {
+            if (!CHashSigner::VerifyHash(GetNotarySigHash(tx, vecOut), CKeyID(uint160(vchNotaryKeyID)), vecOut.vchNotarySig)) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-notary-sig", fJustCheck);
             }
         }
@@ -477,12 +477,7 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, const CTxU
         LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not get asset input from mapAssetIn %d\n",nAsset);
         return false;               
     } 
-    #if __cplusplus > 201402 
-    auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
-    #else
-    auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-    #endif   
-   
+    auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset)); 
     auto mapAsset = result.first;
     const bool& mapAssetNotFound = result.second;
     if(mapAssetNotFound) {
@@ -514,12 +509,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
     }
     auto it = tx.voutAssets.begin();
     const uint32_t &nAsset = it->key;
-    #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
-    #else
-    auto result = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-    #endif     
-
     auto mapAsset = result.first;
     const bool &mapAssetNotFound = result.second;
     if(mapAssetNotFound) {
@@ -580,11 +570,7 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
     auto it = tx.voutAssets.begin();
     const uint32_t &nAsset = it->key;
-    #if __cplusplus > 201402 
     mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
-    #else
-    mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-    #endif 
     return true;  
 }
 
@@ -622,11 +608,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         return FormatSyscoinErrorMessage(state, "asset-output-zeroval", bSanityCheck);
     }
     CAsset dbAsset;
-    #if __cplusplus > 201402 
     auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
-    #else
-    auto result  = mapAssets.emplace(std::piecewise_construct,  std::forward_as_tuple(nAsset),  std::forward_as_tuple(std::move(emptyAsset)));
-    #endif  
     auto mapAsset = result.first;
     const bool & mapAssetNotFound = result.second;    
     if (mapAssetNotFound) {
@@ -1063,12 +1045,7 @@ void CEthereumTxRootsDB::AuditTxRootDB(std::vector<std::pair<uint32_t, uint32_t>
             }
             EthereumTxRoot txRoot;
             pcursor->GetValue(txRoot);
-            #if __cplusplus > 201402 
-            mapTxRoots.try_emplace(std::move(nKey), std::move(txRoot));
-            #else
-            mapTxRoots.emplace(std::piecewise_construct,  std::forward_as_tuple(nKey), std::forward_as_tuple(txRoot));
-            #endif            
-            
+            mapTxRoots.try_emplace(std::move(nKey), std::move(txRoot));        
             pcursor->Next();
         }
         catch (std::exception &e) {
@@ -1178,11 +1155,19 @@ bool CAssetDB::Flush(const AssetMap &mapAssets) {
 		if (key.second.IsNull()) {
 			erase++;
 			batch.Erase(key.first);
+            // erase keyID field copy
+            batch.Erase(std::make_pair(key.first, true));
 		}
 		else {
 			write++;
             // int32 (guid) -> CAsset
 			batch.Write(key.first, key.second);
+            // for optimization on lookups store the keyID seperately
+            if(key.second.vchNotaryKeyID.empty()) {
+                batch.Erase(std::make_pair(key.first, true));
+            } else {
+                batch.Write(std::make_pair(key.first, true), key.second.vchNotaryKeyID);
+            }
 		}
     }
     LogPrint(BCLog::SYS, "Flushing %d assets (erased %d, written %d)\n", mapAssets.size(), erase, write);

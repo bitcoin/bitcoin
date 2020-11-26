@@ -55,7 +55,14 @@ public:
     }   
     bool ReadAsset(const uint32_t& nAsset, CAsset& asset) {
         return Read(nAsset, asset);
+    } 
+    bool ReadAssetNotaryKeyID(const uint32_t& nAsset, std::vector<unsigned char>& keyID) {
+        const auto& pair = std::make_pair(nAsset, true);
+        return Exists(pair) && Read(pair, keyID);
     }  
+    bool WriteAssetNotaryKeyID(const uint32_t& nAsset, std::vector<unsigned char>& keyID) {
+        return Write(std::make_pair(nAsset, true), keyID);
+    }
     bool Flush(const AssetMap &mapAssets);
 };
 class CAssetOldDB : public CDBWrapper {
