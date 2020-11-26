@@ -50,10 +50,8 @@ void TestDoubleLock(bool should_throw)
     MutexType m;
     ENTER_CRITICAL_SECTION(m);
     if (should_throw) {
-        BOOST_CHECK_EXCEPTION(
-            TestDoubleLock2(m), std::logic_error, [](const std::logic_error& e) {
-                return strcmp(e.what(), "double lock detected") == 0;
-            });
+        BOOST_CHECK_EXCEPTION(TestDoubleLock2(m), std::logic_error,
+                              HasReason("double lock detected"));
     } else {
         BOOST_CHECK_NO_THROW(TestDoubleLock2(m));
     }
