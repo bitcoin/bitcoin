@@ -337,8 +337,7 @@ Setting `descriptors` to `true` will create a Descriptor Wallet instead of a Leg
 In the GUI, a checkbox has been added to the Create Wallet Dialog to indicate that a
 Descriptor Wallet should be created.
 
-Without those options being set, a Legacy Wallet will be created instead. Additionally the
-Default Wallet created upon first startup of Bitcoin Core will be a Legacy Wallet.
+Without those options being set, a Legacy Wallet will be created instead.
 
 #### `IsMine` Semantics
 
