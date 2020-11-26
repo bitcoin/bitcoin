@@ -23,7 +23,7 @@ bool SerializeDB(Stream& stream, const Data& data)
 {
     // Write and commit header, data
     try {
-        CHashWriter hasher(SER_DISK, CLIENT_VERSION);
+        CHashWriter hasher(SER_DISK, stream.GetVersion());
         stream << Params().MessageStart() << data;
         hasher << Params().MessageStart() << data;
         stream << hasher.GetHash();
@@ -35,7 +35,7 @@ bool SerializeDB(Stream& stream, const Data& data)
 }
 
 template <typename Data>
-bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data& data)
+bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data& data, int version = CLIENT_VERSION)
 {
     // Generate random temporary filename
     uint16_t randv = 0;
@@ -45,7 +45,7 @@ bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data
     // open temp output file, and associate with CAutoFile
     fs::path pathTmp = GetDataDir() / tmpfn;
     FILE *file = fsbridge::fopen(pathTmp, "wb");
-    CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
+    CAutoFile fileout(file, SER_DISK, version);
     if (fileout.IsNull()) {
         fileout.fclose();
         remove(pathTmp);
@@ -106,11 +106,11 @@ bool DeserializeDB(Stream& stream, Data& data, bool fCheckSum = true)
 }
 
 template <typename Data>
-bool DeserializeFileDB(const fs::path& path, Data& data)
+bool DeserializeFileDB(const fs::path& path, Data& data, int version = CLIENT_VERSION)
 {
     // open input file, and associate with CAutoFile
     FILE *file = fsbridge::fopen(path, "rb");
-    CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
+    CAutoFile filein(file, SER_DISK, version);
     if (filein.IsNull())
         return error("%s: Failed to open file %s", __func__, path.string());
 
@@ -161,13 +161,13 @@ bool CAddrDB::Read(CAddrMan& addr, CDataStream& ssPeers)
 void DumpAnchors(const fs::path& anchors_db_path, const std::vector<CAddress>& anchors)
 {
     LOG_TIME_SECONDS(strprintf("Flush %d outbound block-relay-only peer addresses to anchors.dat", anchors.size()));
-    SerializeFileDB("anchors", anchors_db_path, anchors);
+    SerializeFileDB("anchors", anchors_db_path, anchors, ADDRV2_FORMAT);
 }
 
 std::vector<CAddress> ReadAnchors(const fs::path& anchors_db_path)
 {
     std::vector<CAddress> anchors;
-    if (DeserializeFileDB(anchors_db_path, anchors)) {
+    if (DeserializeFileDB(anchors_db_path, anchors, ADDRV2_FORMAT)) {
         LogPrintf("Loaded %i addresses from %s\n", anchors.size(), anchors_db_path.filename());
     } else {
         anchors.clear();
