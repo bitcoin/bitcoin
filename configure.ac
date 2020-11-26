@@ -384,25 +384,10 @@ if test "x$enable_werror" = "xyes"; then
   if test "x$CXXFLAG_WERROR" = "x"; then
     AC_MSG_ERROR("enable-werror set but -Werror is not usable")
   fi
-  AX_CHECK_COMPILE_FLAG([-Werror=gnu],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=gnu"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=vla],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=vla"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=shadow-field],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=shadow-field"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=switch],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=switch"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=thread-safety],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=thread-safety"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=range-loop-analysis],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=range-loop-analysis"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=unused-variable],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=unused-variable"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=date-time],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=date-time"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=return-type],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=return-type"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=conditional-uninitialized],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=conditional-uninitialized"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=sign-compare],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=sign-compare"],,[[$CXXFLAG_WERROR]])
-  dnl -Wsuggest-override is broken with GCC before 9.2
-  dnl https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78010
-  AX_CHECK_COMPILE_FLAG([-Werror=suggest-override],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=suggest-override"],,[[$CXXFLAG_WERROR]],
-                        [AC_LANG_SOURCE([[struct A { virtual void f(); }; struct B : A { void f() final; };]])])
-  AX_CHECK_COMPILE_FLAG([-Werror=unreachable-code-loop-increment],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=unreachable-code-loop-increment"],,[[$CXXFLAG_WERROR]])
+  ERROR_CXXFLAGS=$CXXFLAG_WERROR
 fi
 
-if test "x$CXXFLAGS_overridden" = "xno"; then
+if test "x$depends_prefix" != "x" || test "x$CXXFLAGS_overridden" = "xno"; then
   AX_CHECK_COMPILE_FLAG([-Wall],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wall"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wextra],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wextra"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wgnu],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wgnu"],,[[$CXXFLAG_WERROR]])
@@ -422,6 +407,8 @@ if test "x$CXXFLAGS_overridden" = "xno"; then
   AX_CHECK_COMPILE_FLAG([-Wduplicated-cond],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wduplicated-cond"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wlogical-op],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wlogical-op"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Woverloaded-virtual],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Woverloaded-virtual"],,[[$CXXFLAG_WERROR]])
+  dnl -Wsuggest-override is broken with GCC before 9.2
+  dnl https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78010
   AX_CHECK_COMPILE_FLAG([-Wsuggest-override],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wsuggest-override"],,[[$CXXFLAG_WERROR]],
                         [AC_LANG_SOURCE([[struct A { virtual void f(); }; struct B : A { void f() final; };]])])
   AX_CHECK_COMPILE_FLAG([-Wunreachable-code-loop-increment],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wunreachable-code-loop-increment"],,[[$CXXFLAG_WERROR]])
@@ -435,6 +422,16 @@ if test "x$CXXFLAGS_overridden" = "xno"; then
   AX_CHECK_COMPILE_FLAG([-Wdeprecated-register],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-deprecated-register"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wimplicit-fallthrough],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-implicit-fallthrough"],,[[$CXXFLAG_WERROR]])
   AX_CHECK_COMPILE_FLAG([-Wdeprecated-copy],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-deprecated-copy"],,[[$CXXFLAG_WERROR]])
+
+  dnl This is a temporary workaround. See https://github.com/bitcoin/bitcoin/pull/17919#issuecomment-674404780
+  AX_CHECK_COMPILE_FLAG([-Wunused-command-line-argument],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-unused-command-line-argument"],,[[$CXXFLAG_WERROR]])
+
+  dnl -Wmissing-braces is broken for aggregate initialization of std::array in Clang (where it is enabled by -Wall) before 5.0
+  dnl https://reviews.llvm.org/rL314838
+  dnl As AX_CHECK_COMPILE_FLAG caches its result, a flag-shuffle hack is required.
+  AX_CHECK_COMPILE_FLAG([$CXXFLAG_WERROR -Wmissing-braces],
+                        [AX_CHECK_COMPILE_FLAG([-Wmissing-braces],, [NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-missing-braces"], [$CXXFLAG_WERROR],
+                                               [AC_LANG_PROGRAM([[#include <array>]], [[std::array a{1, 2, 3}]])])])
 fi
 
 dnl Don't allow extended (non-ASCII) symbols in identifiers. This is easier for code review.
