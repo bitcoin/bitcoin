@@ -1,16 +1,18 @@
 version: '{branch}.{build}'
 skip_tags: true
-image: Previous Visual Studio 2019
+image: Visual Studio 2019
 configuration: Release
 platform: x64
 clone_depth: 5
 environment:
   PATH: 'C:\Python37-x64;C:\Python37-x64\Scripts;%PATH%'
   PYTHONUTF8: 1
-  QT_DOWNLOAD_URL: 'https://github.com/sipsorcery/qt_win_binary/releases/download/v1.6/Qt5.9.8_x64_static_vs2019.zip'
-  QT_DOWNLOAD_HASH: '9a8c6eb20967873785057fdcd329a657c7f922b0af08c5fde105cc597dd37e21'
+  QT_DOWNLOAD_URL: 'https://github.com/sipsorcery/qt_win_binary/releases/download/qt598x64_vs2019_v1681/qt598_x64_vs2019_1681.zip'
+  QT_DOWNLOAD_HASH: '00cf7327818c07d74e0b1a4464ffe987c2728b00d49d4bf333065892af0515c3'
   QT_LOCAL_PATH: 'C:\Qt5.9.8_x64_static_vs2019'
-  VCPKG_INSTALL_PATH: 'C:\tools\vcpkg\installed'
+  VCPKG_DEPS_DOWNLOAD_URL: 'https://github.com/sipsorcery/qt_win_binary/releases/download/vcpkg_vs2019_v1681/vcpkg_installed_vs2019_1681.zip'
+  VCPKG_DEPS_DOWNLOAD_HASH: 'e94161b23f9ac0622ffce5754218f8f08fc6bf6a73450e770d29ad2e18459637'
+  VCPKG_DEPS_LOCAL_PATH: 'build_msvc\vcpkg_installed'
   VCPKG_COMMIT_ID: '40230b8e3f6368dcb398d649331be878ca1e9007'
 install:
 # Disable zmq test for now since python zmq library on Windows would cause Access violation sometimes.
@@ -43,9 +45,22 @@ before_build:
         Write-Host "ERROR: Qt binary download did not match the expected hash.";
         Exit-AppveyorBuild;
       }
+- ps: |
+      Write-Host "Downloading vcpkg dependencies.";
+      Invoke-WebRequest -Uri $env:VCPKG_DEPS_DOWNLOAD_URL -Out vcpkg-deps.zip;
+      Write-Host "vcpkg dependencies successfully downloaded, checking hash against $env:VCPKG_DEPS_DOWNLOAD_HASH...";
+      if((Get-FileHash vcpkg-deps.zip).Hash -eq $env:VCPKG_DEPS_DOWNLOAD_HASH) {
+        Write-Host "vcpkg dependencies download matched the expected hash."
+        Write-Host "Extracting to $env:APPVEYOR_BUILD_FOLDER\$env:VCPKG_DEPS_LOCAL_PATH...";
+        Expand-Archive vcpkg-deps.zip -DestinationPath "$env:APPVEYOR_BUILD_FOLDER\$env:VCPKG_DEPS_LOCAL_PATH";
+        dir "$env:APPVEYOR_BUILD_FOLDER\$env:VCPKG_DEPS_LOCAL_PATH"
+      }
+      else {
+        Write-Host "ERROR: vcpkg dependencies download did not match the expected hash.";
+      }
 - cmd: python build_msvc\msvc-autogen.py
 build_script:
-- cmd: msbuild /p:TrackFileAccess=false build_msvc\bitcoin.sln /m /v:q /nologo
+- cmd: msbuild /m build_msvc\bitcoin.sln /p:Configuration=Release /p:Platform=x64 /v:q
 after_build:
 #- 7z a bitcoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
 test_script:
