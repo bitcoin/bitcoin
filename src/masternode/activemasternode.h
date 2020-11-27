@@ -50,7 +50,7 @@ private:
 public:
     CActiveMasternodeManager(CConnman& _connman): connman(_connman) {}
     virtual ~CActiveMasternodeManager() {}
-    void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload);
+    void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override;
 
     void Init(const CBlockIndex* pindex);
 
