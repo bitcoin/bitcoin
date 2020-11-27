@@ -1200,6 +1200,11 @@ bool DownloadFile(const std::string &url, const std::string &dest, const std::st
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
         CURLcode res = curl_easy_perform(curl);
+        /* Check for errors */ 
+        if(res != CURLE_OK) {
+            LogPrintf("%s curl_easy_perform() failed: %s\n", __func__, curl_easy_strerror(res));
+            return false;
+        } 
         /* always cleanup */
         curl_easy_cleanup(curl);
         fclose(fp);
