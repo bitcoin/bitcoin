@@ -231,8 +231,8 @@ public:
     static CBLSId FromHash(const uint256& hash);
 
 protected:
-    bool InternalSetBuf(const void* buf);
-    bool InternalGetBuf(void* buf) const;
+    bool InternalSetBuf(const void* buf) override;
+    bool InternalGetBuf(void* buf) const override;
 };
 
 class CBLSSecretKey : public CBLSWrapper<bls::PrivateKey, BLS_CURVE_SECKEY_SIZE, CBLSSecretKey>
@@ -257,8 +257,8 @@ public:
     CBLSSignature Sign(const uint256& hash) const;
 
 protected:
-    bool InternalSetBuf(const void* buf);
-    bool InternalGetBuf(void* buf) const;
+    bool InternalSetBuf(const void* buf) override;
+    bool InternalGetBuf(void* buf) const override;
 };
 
 class CBLSPublicKey : public CBLSWrapper<bls::PublicKey, BLS_CURVE_PUBKEY_SIZE, CBLSPublicKey>
@@ -279,8 +279,8 @@ public:
     bool DHKeyExchange(const CBLSSecretKey& sk, const CBLSPublicKey& pk);
 
 protected:
-    bool InternalSetBuf(const void* buf);
-    bool InternalGetBuf(void* buf) const;
+    bool InternalSetBuf(const void* buf) override;
+    bool InternalGetBuf(void* buf) const override;
 };
 
 class CBLSSignature : public CBLSWrapper<bls::InsecureSignature, BLS_CURVE_SIG_SIZE, CBLSSignature>
@@ -309,8 +309,8 @@ public:
 
     bool Recover(const std::vector<CBLSSignature>& sigs, const std::vector<CBLSId>& ids);
 protected:
-    bool InternalSetBuf(const void* buf);
-    bool InternalGetBuf(void* buf) const;
+    bool InternalSetBuf(const void* buf) override;
+    bool InternalGetBuf(void* buf) const override;
 };
 
 #ifndef BUILD_SYSCOIN_INTERNAL
