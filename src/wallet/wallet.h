@@ -23,6 +23,7 @@
 #include <wallet/walletdb.h>
 #include <wallet/rpcwallet.h>
 
+#include <governance/governance-object.h>
 #include <privatesend/privatesend.h>
 
 #include <algorithm>
@@ -850,6 +851,9 @@ public:
     // Map from Script ID to key metadata (for watch-only keys).
     std::map<CScriptID, CKeyMetadata> m_script_metadata;
 
+    // Map from governance object hash to governance object, they are added by gobject_prepare.
+    std::map<uint256, CGovernanceObject> m_gobjects;
+
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID = 0;
@@ -1233,6 +1237,13 @@ public:
 
     void NotifyTransactionLock(const CTransaction &tx, const llmq::CInstantSendLock& islock) override;
     void NotifyChainLock(const CBlockIndex* pindexChainLock, const llmq::CChainLockSig& clsig) override;
+
+    /** Load a CGovernanceObject into m_gobjects. */
+    bool LoadGovernanceObject(const CGovernanceObject& obj);
+    /** Store a CGovernanceObject in the wallet database. This should only be used by governance objects that are created by this wallet via `gobject prepare`. */
+    bool WriteGovernanceObject(const CGovernanceObject& obj);
+    /** Returns a vector containing pointers to the governance objects in m_gobjects */
+    std::vector<const CGovernanceObject*> GetGovernanceObjects();
 
     /**
      * Blocks until the wallet state is up-to-date to /at least/ the current

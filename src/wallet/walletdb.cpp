@@ -10,6 +10,7 @@
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <fs.h>
+#include <governance/governance-object.h>
 #include <protocol.h>
 #include <serialize.h>
 #include <sync.h>
@@ -176,6 +177,11 @@ bool WalletBatch::ReadPrivateSendSalt(uint256& salt)
 bool WalletBatch::WritePrivateSendSalt(const uint256& salt)
 {
     return WriteIC(std::string("ps_salt"), salt);
+}
+
+bool WalletBatch::WriteGovernanceObject(const CGovernanceObject& obj)
+{
+    return WriteIC(std::make_pair(std::string("gobject"), obj.GetHash()), obj, false);
 }
 
 CAmount WalletBatch::GetAccountCreditDebit(const std::string& strAccount)
@@ -545,6 +551,21 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
             if (!pwallet->LoadHDPubKey(hdPubKey))
             {
                 strErr = "Error reading wallet database: LoadHDPubKey failed";
+                return false;
+            }
+        } else if (strType == "gobject") {
+            uint256 nObjectHash;
+            CGovernanceObject obj;
+            ssKey >> nObjectHash;
+            ssValue >> obj;
+
+            if (obj.GetHash() != nObjectHash) {
+                strErr = "Invalid governance object: Hash mismatch";
+                return false;
+            }
+
+            if (!pwallet->LoadGovernanceObject(obj)) {
+                strErr = "Invalid governance object: LoadGovernanceObject";
                 return false;
             }
         }

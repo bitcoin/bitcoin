@@ -5492,6 +5492,30 @@ void CWallet::NotifyChainLock(const CBlockIndex* pindexChainLock, const llmq::CC
     NotifyChainLockReceived(pindexChainLock->nHeight);
 }
 
+bool CWallet::LoadGovernanceObject(const CGovernanceObject& obj)
+{
+    AssertLockHeld(cs_wallet);
+    return m_gobjects.emplace(obj.GetHash(), obj).second;
+}
+
+bool CWallet::WriteGovernanceObject(const CGovernanceObject& obj)
+{
+    AssertLockHeld(cs_wallet);
+    WalletBatch batch(*database);
+    return batch.WriteGovernanceObject(obj) && LoadGovernanceObject(obj);
+}
+
+std::vector<const CGovernanceObject*> CWallet::GetGovernanceObjects()
+{
+    AssertLockHeld(cs_wallet);
+    std::vector<const CGovernanceObject*> vecObjects;
+    vecObjects.reserve(m_gobjects.size());
+    for (auto& obj : m_gobjects) {
+        vecObjects.push_back(&obj.second);
+    }
+    return vecObjects;
+}
+
 CKeyPool::CKeyPool()
 {
     nTime = GetTime();
