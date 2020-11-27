@@ -2422,12 +2422,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     }, DUMP_BANS_INTERVAL);
     // SYSCOIN
     if(!fRegTest && !fSigNet && (fMasternodeMode || gArgs.IsArgSet("-gethsyncmode"))) {
-        const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
-        if(mode == "disabled") {
-            LogPrintf("%s: Geth is disabled, user chose to deploy their own Geth instance!\n", __func__);
-        } else {
-            node.scheduler->scheduleEvery([&] { DoGethMaintenance(); }, std::chrono::seconds{15});
-        }
+        node.scheduler->scheduleEvery([&] { DoGethMaintenance(); }, std::chrono::seconds{15});
     } 
 #if HAVE_SYSTEM
     StartupNotify(args);
