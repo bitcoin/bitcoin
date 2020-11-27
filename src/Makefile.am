@@ -817,7 +817,6 @@ endif
 syscoin_cli_LDADD = \
   $(LIBSYSCOIN_CLI) \
   $(LIBUNIVALUE) \
-  $(LIBSYSCOIN_UTIL) \
   $(LIBSYSCOIN_COMMON) \
   $(LIBCHIABLS) \
   $(LIBSYSCOIN_CONSENSUS) \
@@ -826,7 +825,8 @@ syscoin_cli_LDADD = \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
-  $(LIBETHEREUM)
+  $(LIBETHEREUM) \
+  $(LIBSYSCOIN_UTIL)
 
 syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
 #
