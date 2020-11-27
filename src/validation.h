@@ -1003,6 +1003,11 @@ public:
 extern std::unique_ptr<CBlockIndexDB> pblockindexdb;
 bool PruneSyscoinDBs() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 void DoGethMaintenance();
+bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websocketport=8646, int ethrpcport=8645, const std::string & mode="light");
+bool StopGethNode(pid_t &pid);
+bool StartRelayerNode(const std::string &relayerDescriptorURL, pid_t &pid, int rpcport, int websocketport=8646, int ethrpcport=8645);
+bool StopRelayerNode(pid_t &pid);
+void KillProcess(const pid_t& pid);
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().
  * While checking, GetBestBlock() refers to the parent block. (protected by cs_main)

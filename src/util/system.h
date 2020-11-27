@@ -59,7 +59,6 @@ extern bool fAssetIndex;
 extern int32_t DEFAULT_MN_COLLATERAL_REQUIRED;
 extern int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE;
 extern CAmount nMNCollateralRequired;
-extern std::vector<JSONRPCRequest> vecTPSRawTransactions;
 typedef struct {
     // Values from /proc/meminfo, in KiB or converted to MiB.
     long MemTotalKiB;
@@ -74,7 +73,6 @@ typedef struct {
 } meminfo_t;
 
 meminfo_t parse_meminfo();
-
 class UniValue;
 
 // Application startup time (used for uptime calculation)
@@ -125,15 +123,10 @@ const fs::path &GetBlocksDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
 // SYSCOIN
 fs::path GetGethPidFile();
-void KillProcess(const pid_t& pid);
-std::string GetGethFilename();
 bool CheckSpecs(std::string &errMsg, bool bMiner = false);
-bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websocketport=8646, int ethrpcport=8645, const std::string & mode="light");
-bool StopGethNode(pid_t &pid);
 fs::path GetRelayerPidFile();
-std::string GeteRelayerFilename();
-bool StartRelayerNode(const std::string &relayerDescriptorURL, pid_t &pid, int rpcport, int websocketport=8646, int ethrpcport=8645);
-bool StopRelayerNode(pid_t &pid);
+std::string GetRelayerFilename();
+std::string GetGethFilename();
 // Return true if -datadir option points to a valid directory or is not specified.
 bool CheckDataDirOption();
 /** Tests only */

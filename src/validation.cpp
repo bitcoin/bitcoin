@@ -54,18 +54,25 @@
 
 #include <boost/algorithm/string/replace.hpp>
 // SYSCOIN
-#include <bech32.h>
 #include <key_io.h>
-#include <outputtype.h>
 #include <masternode/masternodepayments.h>
 #include <evo/specialtx.h>
-#include <evo/providertx.h>
-#include <evo/deterministicmns.h>
-#include <evo/cbtx.h>
 #include <llmq/quorums_chainlocks.h>
 #include <services/assetconsensus.h>
 #include <services/asset.h>
-#include <algorithm> // std::unique
+#include <curl/curl.h>
+#include <messagesigner.h>
+#include <rpc/request.h>
+#include <signal.h>
+// SYSCOIN
+RecursiveMutex cs_relayer;
+RecursiveMutex cs_geth;
+struct DescriptorDetails {
+    std::string version;
+    std::string binURL;
+    std::string sha256Sum;
+    std::string signature;
+};
 extern RecursiveMutex cs_setethstatus;
 EthereumMintTxMap mapMintKeysMempool;
 std::unordered_map<COutPoint, std::pair<CTransactionRef, CTransactionRef>, SaltedOutpointHasher> mapAssetAllocationConflicts;
@@ -5838,7 +5845,506 @@ void recursive_copy(const fs::path &src, const fs::path &dst)
     throw std::runtime_error(dst.generic_string() + " not dir or file");
   }
 }
+#ifdef WIN32
+    #include <windows.h>
+    #include <winnt.h>
+    #include <winternl.h>
+    #include <stdio.h>
+    #include <errno.h>
+    #include <assert.h>
+    #include <process.h>
+    pid_t fork(std::string app, std::string arg)
+    {
+        std::string appQuoted = "\"" + app + "\"";
+        PROCESS_INFORMATION pi;
+        STARTUPINFOW si;
+        ZeroMemory(&pi, sizeof(pi));
+        ZeroMemory(&si, sizeof(si));
+        GetStartupInfoW (&si);
+        si.cb = sizeof(si); 
+        size_t start_pos = 0;
+        //Prepare CreateProcess args
+        std::wstring appQuoted_w(appQuoted.length(), L' '); // Make room for characters
+        std::copy(appQuoted.begin(), appQuoted.end(), appQuoted_w.begin()); // Copy string to wstring.
 
+        std::wstring app_w(app.length(), L' '); // Make room for characters
+        std::copy(app.begin(), app.end(), app_w.begin()); // Copy string to wstring.
+
+        std::wstring arg_w(arg.length(), L' '); // Make room for characters
+        std::copy(arg.begin(), arg.end(), arg_w.begin()); // Copy string to wstring.
+
+        std::wstring input = appQuoted_w + L" " + arg_w;
+        wchar_t* arg_concat = const_cast<wchar_t*>( input.c_str() );
+        const wchar_t* app_const = app_w.c_str();
+        LogPrintf("CreateProcessW app %s %s\n",app,arg);
+        int result = CreateProcessW(app_const, arg_concat, NULL, NULL, FALSE, 
+              CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
+        if(!result)
+        {
+            LogPrintf("CreateProcess failed (%d)\n", GetLastError());
+            return 0;
+        }
+        pid_t pid = (pid_t)pi.dwProcessId;
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        return pid;
+    }
+#endif
+size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
+    size_t written = fwrite(ptr, size, nmemb, stream);
+    return written;
+}
+bool DownloadFile(const std::string &url, const std::string &dest, const std::string &mode="wb", const std::string &checksum="", const std::string &signature="") {
+    CURL *curl;
+    FILE *fp;
+    CURLcode res;
+    const std::string destTmp = dest + "tmp";
+    curl = curl_easy_init();
+    if (curl) {
+        fp = fopen(destTmp.c_str(),mode.c_str());
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+        curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
+        res = curl_easy_perform(curl);
+        /* Check for errors */ 
+        if(res != CURLE_OK) {
+            LogPrintf("%s curl_easy_perform() failed: %s\n", __func__, curl_easy_strerror(res));
+            return false;
+        } 
+        /* always cleanup */
+        curl_easy_cleanup(curl);
+        fclose(fp);
+        if(fs::exists(destTmp) && mode == "wb")
+            fs::permissions(destTmp,
+                    fs::perms::owner_exe | fs::perms::group_exe |
+                    fs::perms::others_exe | fs::perms::owner_read | fs::perms::group_read |
+                    fs::perms::others_read);
+    }
+    if(!checksum.empty()) {
+        LogPrintf("%s: Checking file checksum of %s\n", __func__, destTmp);
+        fsbridge::ifstream file(destTmp, std::ios_base::binary);
+        if (!file.is_open())
+            return false;
+        std::string fileBuffer;
+        while (file.good()) {
+            std::string input_buffer;
+            file >> input_buffer;
+            fileBuffer += input_buffer;
+        }
+        file.close();
+        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        ss << fileBuffer;
+        const uint256& calcHash = ss.GetSHA256();
+        bool checksumMatched = calcHash.ToString() == checksum;
+        if(!checksumMatched) {
+            LogPrintf("%s: Checksum mismatch calculated: %s vs expected: %s\n", __func__, calcHash.ToString(), checksum);
+        }
+        const std::vector<std::string> &vSporkAddresses = Params().SporkAddresses();
+        bool sigVerified = false;
+        // any of the spork addresses can sign on the binaries
+        for(const auto& sporkAddress: vSporkAddresses) {
+            CTxDestination txdest = DecodeDestination(sporkAddress);
+            CKeyID keyID;
+            if (auto witness_id = boost::get<WitnessV0KeyHash>(&txdest)) {	
+                keyID = ToKeyID(*witness_id);
+            }	
+            else if (auto key_id = boost::get<PKHash>(&txdest)) {	
+                keyID = ToKeyID(*key_id);
+            }	
+            if (keyID.IsNull()) {
+                LogPrintf("DownloadFile -- Failed to parse spork address\n");
+                return false;
+            }
+            const std::vector<unsigned char> &vchSig = DecodeBase64(signature.c_str());
+            sigVerified = CMessageSigner::VerifyMessage(keyID, vchSig, checksum);
+            if(sigVerified) {
+                break;
+            }
+        }
+        // everything OK so rename to dest so it can be run
+        if(checksumMatched && sigVerified) {
+            if(fs::exists(dest)) {
+                fs::remove(dest);
+            }
+            fs::rename(destTmp, dest);
+            return true;
+        }
+        // was an issue verifying so delete temporary
+        if(fs::exists(destTmp)) {
+            fs::remove(destTmp);
+        }
+        return false;
+    }
+    // no checksum check required so rename file to dest
+    if(fs::exists(dest)) {
+        fs::remove(dest);
+    }
+    fs::rename(destTmp, dest);
+    return true;
+}
+bool GetDescriptorStats(const fs::path filePath, DescriptorDetails& details) {
+    fsbridge::ifstream file(filePath);
+    if (!file.is_open())
+        return false;
+    std::string fileBuffer;
+    while (file.good()) {
+        std::string input_buffer;
+        file >> input_buffer;
+        fileBuffer += input_buffer;
+    }
+    file.close();
+    UniValue json(UniValue::VOBJ);
+    std::string binArchitectureTag = "linux";
+    #ifdef WIN32
+        binArchitectureTag = "windows";
+    #endif    
+    #ifdef MAC_OSX
+        binArchitectureTag = "darwin";
+    #endif
+    if(json.read(fileBuffer) && json.isObject()) {
+        const UniValue& jsonObj = json.get_obj();
+        const UniValue& versionValue = find_value(jsonObj, "version");
+        const UniValue& architectureValue = find_value(jsonObj, "bins");
+        if(architectureValue.isObject() && versionValue.isStr()) {
+            const UniValue& binValue = find_value(architectureValue.get_obj(), binArchitectureTag);
+            if(binValue.isObject()) {
+                const UniValue& binURLValue = find_value(binValue, "url");
+                if(binURLValue.isStr()) {
+                    const UniValue& binChecksumValue = find_value(binValue, "sha256sum");
+                    const UniValue& signatureValue = find_value(binValue, "signature");
+                    if(binChecksumValue.isStr() && signatureValue.isStr()) {
+                        details.version = versionValue.get_str();
+                        details.binURL = binURLValue.get_str();
+                        details.sha256Sum = binChecksumValue.get_str();
+                        details.signature = signatureValue.get_str();
+                        return true;
+                    }
+                }
+            }
+        }  
+    }
+    return false;
+}
+bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const std::string& binaryDestPath, const std::string& descriptorURL) {
+    DescriptorDetails descriptorDetailsLocal, descriptorDetailsRemote;
+    GetDescriptorStats(descriptorDestPath, descriptorDetailsLocal);
+    // always download remote descriptor to check checksum, if remote doesn't exist use local. Both local and remote cannot be missing.
+    if(!DownloadFile(descriptorURL, descriptorDestPath, "w"))
+        return false;
+    if(!GetDescriptorStats(descriptorDestPath, descriptorDetailsRemote)) {
+        if(!descriptorDetailsLocal.binURL.empty()) {
+            LogPrintf("%s: Could not download descriptor from %s but found local descriptor so using that...\n", __func__, descriptorURL);
+            return true;
+        }
+        LogPrintf("%s: Could not download descriptor from %s\n", __func__, descriptorURL);
+        return false;
+    }
+    if(descriptorDetailsLocal.sha256Sum.empty() || descriptorDetailsLocal.sha256Sum != descriptorDetailsRemote.sha256Sum) {
+         LogPrintf("%s: Checksum mismatch, version local (%s) vs remote version (%s)! Downloading from %s and saving to %s\n", __func__, descriptorDetailsLocal.version, descriptorDetailsRemote.version, descriptorDetailsRemote.binURL, binaryDestPath);
+         if(!DownloadFile(descriptorDetailsRemote.binURL, binaryDestPath, "wb", descriptorDetailsRemote.sha256Sum, descriptorDetailsRemote.signature)) {
+             LogPrintf("%s: Could not download binary %s or checksum failed\n", __func__, descriptorDetailsRemote.binURL);
+             return false;
+         }
+    }
+    LogPrintf("%s: Version (%s) is up-to-date!\n", __func__, descriptorDetailsRemote.version);
+    return true;
+}
+bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websocketport, int ethrpcport, const std::string &mode)
+{
+    if(mode == "disabled") {
+        LogPrintf("%s: Geth is disabled, user chose to deploy their own Geth instance!\n", __func__);
+        return true;
+    }
+    LOCK(cs_geth);
+    // stop any geth nodes before starting
+    StopGethNode(pid);
+
+    LogPrintf("%s: Downloading Geth descriptor from %s\n", __func__, gethDescriptorURL);
+    fs::path descriptorPath = GetDataDir(false) / "gethdescriptor.json";
+    fs::path binaryURL = GetDataDir(false) / GetGethFilename();
+    // if either bin or descriptor not existing remove both files to download from scratch
+    if (!fs::exists(binaryURL.string()) || !fs::exists(descriptorPath.string())) {
+        if(fs::exists(binaryURL.string()))
+            fs::remove(binaryURL.string());
+        if(fs::exists(descriptorPath.string()))
+            fs::remove(descriptorPath.string());          
+    }
+    if(!DownloadBinaryFromDescriptor(descriptorPath.string(), binaryURL.string(), gethDescriptorURL)) {
+        if (fs::exists(descriptorPath.string())) {
+            fs::remove(descriptorPath.string());
+        }
+        if (fs::exists(binaryURL.string())) {
+            fs::remove(binaryURL.string());
+        }
+        return false;
+    }
+    LogPrintf("%s: Starting geth on wsport %d rpcport %d (testnet=%d)...\n", __func__, websocketport, ethrpcport, bGethTestnet? 1:0);
+    
+
+    fs::path attempt1 = binaryURL.string();
+    attempt1 = attempt1.make_preferred();
+
+    fs::path dataDir = GetDataDir(true) / "geth";
+    #ifndef WIN32
+    // Prevent killed child-processes remaining as "defunct"
+    struct sigaction sa;
+    sa.sa_handler = SIG_DFL;
+    sa.sa_flags = SA_NOCLDWAIT;
+        
+    sigaction( SIGCHLD, &sa, NULL ) ;
+        
+    // Duplicate ("fork") the process. Will return zero in the child
+    // process, and the child's PID in the parent (or negative on error).
+    pid = fork() ;
+    if( pid < 0 ) {
+        LogPrintf("Could not start Geth, pid < 0 %d\n", pid);
+        return false;
+    }
+	// TODO: sanitize environment variables as per
+	// https://wiki.sei.cmu.edu/confluence/display/c/ENV03-C.+Sanitize+the+environment+when+invoking+external+programs
+    if( pid == 0 ) {
+        std::string portStr = itostr(websocketport);
+        std::string rpcportStr = itostr(ethrpcport);
+        char * argvAttempt1[20] = {(char*)attempt1.string().c_str(), 
+                (char*)"--ws", (char*)"--ws.port", (char*)portStr.c_str(),
+                (char*)"--http", (char*)"--http.api", (char*)"personal,eth", (char*)"--http.port", (char*)rpcportStr.c_str(),
+                (char*)"--ws.origins", (char*)"*",
+                (char*)"--syncmode", (char*)mode.c_str(), 
+                (char*)"--datadir", (char*)dataDir.c_str(),
+                (char*)"--allow-insecure-unlock",
+                bGethTestnet?(char*)"--rinkeby": NULL,
+                (char*)"--http.corsdomain",(char*)"*",
+                NULL };                                                              
+        execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
+        if (errno != 0) {
+            LogPrintf("Geth not found at %s\n", argvAttempt1[0]);
+        }
+    } else {
+        boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
+        ofs << pid;
+    }
+    #else
+        std::string portStr = itostr(websocketport);
+        std::string rpcportStr = itostr(ethrpcport);
+        std::string args =  std::string("--http --http.api personal,eth --http.corsdomain * --http.port ") + rpcportStr + std::string(" --ws --ws.port ") + portStr + std::string(" --ws.origins * --syncmode ") + mode + std::string(" --datadir ") +  dataDir.string();
+        if(bGethTestnet) {
+            args += std::string(" --rinkeby");
+        }
+        pid = fork(attempt1.string(), args);
+        if( pid <= 0 ) {
+            LogPrintf("Geth not found at %s\n", attempt1.string());
+        }  
+        boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
+        ofs << pid;
+    #endif
+    if(pid > 0)
+        LogPrintf("%s: Geth Started with pid %d\n", __func__, pid);
+    return true;
+}
+void KillProcess(const pid_t& pid){
+    if(pid <= 0)
+        return;
+    LogPrintf("%s: Trying to kill pid %d\n", __func__, pid);
+    #ifdef WIN32
+        HANDLE handy;
+        handy =OpenProcess(SYNCHRONIZE|PROCESS_TERMINATE, TRUE,pid);
+        TerminateProcess(handy,0);
+    #endif  
+    #ifndef WIN32
+        int result = 0;
+        for(int i =0;i<10;i++){
+            UninterruptibleSleep(std::chrono::milliseconds(500));
+            result = kill( pid, SIGINT ) ;
+            if(result == 0){
+                LogPrintf("%s: Killing with SIGINT %d\n", __func__, pid);
+                continue;
+            }  
+            LogPrintf("%s: Killed with SIGINT\n", __func__);
+            return;
+        }
+        for(int i =0;i<10;i++){
+            UninterruptibleSleep(std::chrono::milliseconds(500));
+            result = kill( pid, SIGTERM ) ;
+            if(result == 0){
+                LogPrintf("%s: Killing with SIGTERM %d\n", __func__, pid);
+                continue;
+            }  
+            LogPrintf("%s: Killed with SIGTERM\n", __func__);
+            return;
+        }
+        for(int i =0;i<10;i++){
+            UninterruptibleSleep(std::chrono::milliseconds(500));
+            result = kill( pid, SIGKILL ) ;
+            if(result == 0){
+                LogPrintf("%s: Killing with SIGKILL %d\n", __func__, pid);
+                continue;
+            }  
+            LogPrintf("%s: Killed with SIGKILL\n", __func__);
+            return;
+        }  
+        LogPrintf("%s: Done trying to kill with SIGINT-SIGTERM-SIGKILL\n", __func__);            
+    #endif 
+}
+bool StopRelayerNode(pid_t &pid)
+{
+    if(pid < 0)
+        return false;
+    if(pid){
+        try{
+            KillProcess(pid);
+            LogPrintf("%s: Relayer successfully exited from pid %d\n", __func__, pid);
+        }
+        catch(...){
+            LogPrintf("%s: Relayer failed to exit from pid %d\n", __func__, pid);
+        }
+    }
+    {
+        boost::filesystem::ifstream ifs(GetRelayerPidFile(), std::ios::in);
+        pid_t pidFile = 0;
+        while(ifs >> pidFile){
+            if(pidFile && pidFile != pid){
+                try{
+                    KillProcess(pidFile);
+                    LogPrintf("%s: Relayer successfully exited from pid %d(from relayer.pid)\n", __func__, pidFile);
+                }
+                catch(...){
+                    LogPrintf("%s: Relayer failed to exit from pid %d(from relayer.pid)\n", __func__, pidFile);
+                }
+            } 
+        }  
+    }
+    boost::filesystem::remove(GetRelayerPidFile());
+    pid = -1;
+    return true;
+}
+bool StopGethNode(pid_t &pid)
+{
+    if(pid < 0)
+        return false;
+    if(pid){
+        try{
+            KillProcess(pid);
+            LogPrintf("%s: Geth successfully exited from pid %d\n", __func__, pid);
+        }
+        catch(...){
+            LogPrintf("%s: Geth failed to exit from pid %d\n", __func__, pid);
+        }
+    }
+    {
+        boost::filesystem::ifstream ifs(GetGethPidFile(), std::ios::in);
+        pid_t pidFile = 0;
+        while(ifs >> pidFile){
+            if(pidFile && pidFile != pid){
+                try{
+                    KillProcess(pidFile);
+                    LogPrintf("%s: Geth successfully exited from pid %d(from geth.pid)\n", __func__, pidFile);
+                }
+                catch(...){
+                    LogPrintf("%s: Geth failed to exit from pid %d(from geth.pid)\n", __func__, pidFile);
+                }
+            } 
+        }  
+    }
+    boost::filesystem::remove(GetGethPidFile());
+    pid = -1;
+    return true;
+}
+bool StartRelayerNode(const std::string &relayerDescriptorURL, pid_t &pid, int rpcport, int websocketport, int ethrpcport)
+{   
+    LOCK(cs_relayer);
+    // stop any relayer process  before starting
+    StopRelayerNode(pid);
+
+    // Get RPC credentials
+    std::string strRPCUserColonPass;
+    if (gArgs.GetArg("-rpcpassword", "") != "" || !GetAuthCookie(&strRPCUserColonPass)) {
+        strRPCUserColonPass = gArgs.GetArg("-rpcuser", "") + ":" + gArgs.GetArg("-rpcpassword", "");
+    }
+
+    LogPrintf("%s: Downloading Relayer descriptor from %s\n", __func__, relayerDescriptorURL);
+    fs::path descriptorPath = GetDataDir(false) / "relayerdescriptor.json";
+    fs::path binaryURL = GetDataDir(false) / GetRelayerFilename();
+    if (!fs::exists(binaryURL.string()) || !fs::exists(descriptorPath.string())) {
+        if(fs::exists(binaryURL.string()))
+            fs::remove(binaryURL.string());
+        if(fs::exists(descriptorPath.string()))
+            fs::remove(descriptorPath.string());          
+    }
+    if(!DownloadBinaryFromDescriptor(descriptorPath.string(), binaryURL.string(), relayerDescriptorURL)) {
+        if (fs::exists(descriptorPath.string())) {
+            fs::remove(descriptorPath.string());
+        }
+        if (fs::exists(binaryURL.string())) {
+            fs::remove(binaryURL.string());
+        }
+        return false;
+    }
+    LogPrintf("%s: Starting relayer on port %d, RPC credentials %s, wsport %d ethrpcport %d...\n", __func__, rpcport, strRPCUserColonPass, websocketport, ethrpcport);
+    
+    // stop any geth nodes before starting
+    StopGethNode(pid);
+
+    fs::path attempt1 = binaryURL.string();
+    attempt1 = attempt1.make_preferred();
+    fs::path dataDir = GetDataDir(true) / "geth";
+
+    #ifndef WIN32
+        // Prevent killed child-processes remaining as "defunct"
+        struct sigaction sa;
+        sa.sa_handler = SIG_DFL;
+        sa.sa_flags = SA_NOCLDWAIT;
+      
+        sigaction( SIGCHLD, &sa, NULL ) ;
+		// Duplicate ("fork") the process. Will return zero in the child
+        // process, and the child's PID in the parent (or negative on error).
+        pid = fork() ;
+        if( pid < 0 ) {
+            LogPrintf("Could not start Relayer, pid < 0 %d\n", pid);
+            return false;
+        }
+
+        if( pid == 0 ) {
+            std::string portStr = itostr(websocketport);
+            std::string rpcEthPortStr = itostr(ethrpcport);
+            std::string rpcSysPortStr = itostr(rpcport);
+            char * argvAttempt1[] = {(char*)attempt1.string().c_str(), 
+					(char*)"--ethwsport", (char*)portStr.c_str(),
+                    (char*)"--ethrpcport", (char*)rpcEthPortStr.c_str(),
+                    (char*)"--datadir", (char*)dataDir.string().c_str(),
+					(char*)"--sysrpcusercolonpass", (char*)strRPCUserColonPass.c_str(),
+					(char*)"--sysrpcport", (char*)rpcSysPortStr.c_str(),  NULL };
+            execv(argvAttempt1[0], &argvAttempt1[0]); // current directory
+	        if (errno != 0) {
+		        LogPrintf("Relayer not found at %s\n", argvAttempt1[0]);
+	        }
+        } else {
+            boost::filesystem::ofstream ofs(GetRelayerPidFile(), std::ios::out | std::ios::trunc);
+            ofs << pid;
+        }
+    #else
+		std::string portStr = itostr(websocketport);
+        std::string rpcEthPortStr = itostr(ethrpcport);
+        std::string rpcSysPortStr = itostr(rpcport);
+        std::string args =
+				std::string("--ethwsport ") + portStr +
+                std::string(" --ethrpcport ") + rpcEthPortStr +
+                std::string(" --datadir ") + dataDir.string() +
+				std::string(" --sysrpcusercolonpass ") + strRPCUserColonPass +
+				std::string(" --sysrpcport ") + rpcSysPortStr; 
+        pid = fork(attempt1.string(), args);
+        if( pid <= 0 ) {
+            LogPrintf("Relayer not found at %s\n", attempt1.string());
+        }                         
+        boost::filesystem::ofstream ofs(GetRelayerPidFile(), std::ios::out | std::ios::trunc);
+        ofs << pid;
+	#endif
+    if(pid > 0)
+        LogPrintf("%s: Relayer started with pid %d\n", __func__, pid);
+    return true;
+}
 void DoGethMaintenance() {
     if(ShutdownRequested()) {
         return;
