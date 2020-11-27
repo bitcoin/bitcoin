@@ -54,7 +54,8 @@ const TrafficGraphData::GraphRange INITIAL_TRAFFIC_GRAPH_SETTING = TrafficGraphD
 
 // Repair parameters
 const QString SALVAGEWALLET("-salvagewallet");
-const QString RESCAN("-rescan");
+const QString RESCAN1("-rescan=1");
+const QString RESCAN2("-rescan=2");
 const QString ZAPTXES1("-zapwallettxes=1 -persistmempool=0");
 const QString ZAPTXES2("-zapwallettxes=2 -persistmempool=0");
 const QString UPGRADEWALLET("-upgradewallet");
@@ -499,7 +500,8 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
     // connect(ui->btn_salvagewallet, SIGNAL(clicked()), this, SLOT(walletSalvage()));
     // Disable salvage option in GUI, it's way too powerful and can lead to funds loss
     ui->btn_salvagewallet->setEnabled(false);
-    connect(ui->btn_rescan, SIGNAL(clicked()), this, SLOT(walletRescan()));
+    connect(ui->btn_rescan1, SIGNAL(clicked()), this, SLOT(walletRescan1()));
+    connect(ui->btn_rescan2, SIGNAL(clicked()), this, SLOT(walletRescan2()));
     connect(ui->btn_zapwallettxes1, SIGNAL(clicked()), this, SLOT(walletZaptxes1()));
     connect(ui->btn_zapwallettxes2, SIGNAL(clicked()), this, SLOT(walletZaptxes2()));
     connect(ui->btn_upgradewallet, SIGNAL(clicked()), this, SLOT(walletUpgrade()));
@@ -803,10 +805,16 @@ void RPCConsole::walletSalvage()
     buildParameterlist(SALVAGEWALLET);
 }
 
-/** Restart wallet with "-rescan" */
-void RPCConsole::walletRescan()
+/** Restart wallet with "-rescan=1" */
+void RPCConsole::walletRescan1()
 {
-    buildParameterlist(RESCAN);
+    buildParameterlist(RESCAN1);
+}
+
+/** Restart wallet with "-rescan=2" */
+void RPCConsole::walletRescan2()
+{
+    buildParameterlist(RESCAN2);
 }
 
 /** Restart wallet with "-zapwallettxes=1" */
@@ -842,7 +850,8 @@ void RPCConsole::buildParameterlist(QString arg)
 
     // Remove existing repair-options
     args.removeAll(SALVAGEWALLET);
-    args.removeAll(RESCAN);
+    args.removeAll(RESCAN1);
+    args.removeAll(RESCAN2);
     args.removeAll(ZAPTXES1);
     args.removeAll(ZAPTXES2);
     args.removeAll(UPGRADEWALLET);

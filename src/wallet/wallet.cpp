@@ -463,6 +463,12 @@ void CWallet::UpdateTimeFirstKey(int64_t nCreateTime)
     }
 }
 
+int64_t CWallet::GetTimeFirstKey() const
+{
+    AssertLockHeld(cs_wallet);
+    return nTimeFirstKey;
+}
+
 bool CWallet::AddCScript(const CScript& redeemScript)
 {
     if (!CCryptoKeyStore::AddCScript(redeemScript))
@@ -1247,9 +1253,10 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBlockI
              * the mostly recently created transactions from newer versions of the wallet.
              */
 
+            WalletBatch batch(*database);
             // loop though all outputs
             for (const CTxOut& txout: tx.vout) {
-                // extract addresses and check if they match with an unused keypool key
+                // extract addresses, check if they match with an unused keypool key, update metadata if needed
                 std::vector<CKeyID> vAffected;
                 CAffectedKeysVisitor(*this, vAffected).Process(txout.scriptPubKey);
                 for (const CKeyID &keyid : vAffected) {
@@ -1261,6 +1268,15 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBlockI
                         if (!TopUpKeyPool()) {
                             LogPrintf("%s: Topping up keypool failed (locked wallet)\n", __func__);
                         }
+                    }
+                    if (pIndex != nullptr && mapKeyMetadata[keyid].nCreateTime > pIndex->nTime) {
+                        LogPrintf("%s: Found a key which appears to be used earlier than we expected, updating metadata\n", __func__);
+                        CPubKey vchPubKey;
+                        bool res = GetPubKey(keyid, vchPubKey);
+                        assert(res); // this should never fail
+                        mapKeyMetadata[keyid].nCreateTime = pIndex->nTime;
+                        batch.WriteKeyMeta(vchPubKey, mapKeyMetadata[keyid]);
+                        UpdateTimeFirstKey(pIndex->nTime);
                     }
                 }
             }
@@ -5261,8 +5277,11 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
 
         // No need to read and scan block if block was created before
         // our wallet birthday (as adjusted for block time variability)
-        while (pindexRescan && walletInstance->nTimeFirstKey && (pindexRescan->GetBlockTime() < (walletInstance->nTimeFirstKey - TIMESTAMP_WINDOW))) {
-            pindexRescan = chainActive.Next(pindexRescan);
+        // unless a full rescan was requested
+        if (gArgs.GetArg("-rescan", 0) != 2) {
+            while (pindexRescan && walletInstance->nTimeFirstKey && (pindexRescan->GetBlockTime() < (walletInstance->nTimeFirstKey - TIMESTAMP_WINDOW))) {
+                pindexRescan = chainActive.Next(pindexRescan);
+            }
         }
 
         nStart = GetTimeMillis();
@@ -5315,6 +5334,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
         LogPrintf("setInternalKeyPool.size() = %u\n",   walletInstance->KeypoolCountInternalKeys());
         LogPrintf("mapWallet.size() = %u\n",            walletInstance->mapWallet.size());
         LogPrintf("mapAddressBook.size() = %u\n",       walletInstance->mapAddressBook.size());
+        LogPrintf("nTimeFirstKey = %u\n",               walletInstance->nTimeFirstKey);
     }
 
     return walletInstance;
