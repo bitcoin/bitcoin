@@ -1190,7 +1190,6 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
 bool DownloadFile(const std::string &url, const std::string &dest, const std::string &mode="wb", const std::string &checksum="") {
     CURL *curl;
     FILE *fp;
-    CURLcode res;
     curl = curl_easy_init();
     if (curl) {
         fp = fopen(dest.c_str(),mode.c_str());
@@ -1200,7 +1199,7 @@ bool DownloadFile(const std::string &url, const std::string &dest, const std::st
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-        res = curl_easy_perform(curl);
+        CURLcode res = curl_easy_perform(curl);
         /* always cleanup */
         curl_easy_cleanup(curl);
         fclose(fp);

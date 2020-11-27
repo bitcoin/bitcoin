@@ -82,7 +82,6 @@ WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
  
 char* curl_fetch_url(CURL *curl, const char *url, const char* payload, std::string& strError)
 {
-  CURLcode res;
   struct MemoryStruct chunk;
   struct curl_slist *headers = NULL;                      /* http headers to send with request */
   chunk.memory = (char*)malloc(1);  /* will be grown as needed by realloc above */ 
@@ -115,7 +114,7 @@ char* curl_fetch_url(CURL *curl, const char *url, const char* payload, std::stri
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(payload));
  
     /* Perform the request, res will get the return code */ 
-    res = curl_easy_perform(curl);
+    CURLcode res = curl_easy_perform(curl);
     /* Check for errors */ 
     if(res != CURLE_OK) {
       strError = strprintf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
