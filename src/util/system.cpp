@@ -107,6 +107,7 @@ const char * const SYSCOIN_SETTINGS_FILENAME = "settings.json";
 ArgsManager gArgs;
 // SYSCOIN
 struct DescriptorDetails {
+    std::string version;
     std::string binURL;
     std::string sha256Sum;
 };
@@ -1165,14 +1166,16 @@ bool GetDescriptorStats(const fs::path filePath, DescriptorDetails& details) {
     #endif
     if(json.read(fileBuffer) && json.isObject()) {
         const UniValue& jsonObj = json.get_obj();
+        const UniValue& versionValue = find_value(jsonObj, "version");
         const UniValue& architectureValue = find_value(jsonObj, "bins");
-        if(architectureValue.isObject()) {
+        if(architectureValue.isObject() && versionValue.isStr()) {
             const UniValue& binValue = find_value(architectureValue.get_obj(), binArchitectureTag);
             if(binValue.isObject()) {
                 const UniValue& binURLValue = find_value(binValue, "url");
                 if(binURLValue.isStr()) {
                     const UniValue& binChecksumValue = find_value(binValue, "sha256sum");
                     if(binChecksumValue.isStr()) {
+                        details.version = versionValue.get_str();
                         details.binURL = binURLValue.get_str();
                         details.sha256Sum = binChecksumValue.get_str();
                         return true;
@@ -1190,6 +1193,7 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
 bool DownloadFile(const std::string &url, const std::string &dest, const std::string &mode="wb", const std::string &checksum="") {
     CURL *curl;
     FILE *fp;
+    CURLcode res;
     curl = curl_easy_init();
     if (curl) {
         fp = fopen(dest.c_str(),mode.c_str());
@@ -1199,7 +1203,7 @@ bool DownloadFile(const std::string &url, const std::string &dest, const std::st
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_data);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, fp);
-        CURLcode res = curl_easy_perform(curl);
+        res = curl_easy_perform(curl);
         /* Check for errors */ 
         if(res != CURLE_OK) {
             LogPrintf("%s curl_easy_perform() failed: %s\n", __func__, curl_easy_strerror(res));
@@ -1229,7 +1233,11 @@ bool DownloadFile(const std::string &url, const std::string &dest, const std::st
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << fileBuffer;
         const uint256& calcHash = ss.GetSHA256();
-        return calcHash.ToString() == checksum;
+        bool checksumMatched = calcHash.ToString() == checksum;
+        if(!checksumMatched) {
+            LogPrintf("%s: Checksum mismatch calculated: %s vs expected: %s\n", __func__, calcHash.ToString(), checksum);
+        }
+        return checksumMatched;
     }
     return true;
 }
@@ -1248,13 +1256,13 @@ bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const s
         return false;
     }
     if(descriptorDetailsLocal.sha256Sum.empty() || descriptorDetailsLocal.sha256Sum != descriptorDetailsRemote.sha256Sum) {
-         LogPrintf("%s: New version available! Downloading from %s and saving to %s\n", __func__, descriptorDetailsRemote.binURL, binaryDestPath);
+         LogPrintf("%s: Checksum mismatch, version local (%s) vs remote version (%s)! Downloading from %s and saving to %s\n", __func__, descriptorDetailsLocal.version, descriptorDetailsRemote.version, descriptorDetailsRemote.binURL, binaryDestPath);
          if(!DownloadFile(descriptorDetailsRemote.binURL, binaryDestPath, "wb", descriptorDetailsRemote.sha256Sum)) {
              LogPrintf("%s: Could not download binary %s or checksum failed\n", __func__, descriptorDetailsRemote.binURL);
              return false;
          }
     }
-    LogPrintf("%s: Version is up-to-date!\n", __func__);
+    LogPrintf("%s: Version (%s) is up-to-date!\n", __func__, descriptorDetailsRemote.version);
     return true;
 }
 bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websocketport, int ethrpcport, const std::string &mode)
@@ -1268,8 +1276,8 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websock
     StopGethNode(pid);
 
     LogPrintf("%s: Downloading Geth descriptor from %s\n", __func__, gethDescriptorURL);
-    fs::path descriptorPath = GetDataDir() / "gethdescriptor.json";
-    fs::path binaryURL = GetDataDir() / GetGethFilename();
+    fs::path descriptorPath = GetDataDir(false) / "gethdescriptor.json";
+    fs::path binaryURL = GetDataDir(false) / GetGethFilename();
     // if either bin or descriptor not existing remove both files to download from scratch
     if (!fs::exists(binaryURL.string()) || !fs::exists(descriptorPath.string())) {
         if(fs::exists(binaryURL.string()))
@@ -1414,8 +1422,8 @@ bool StartRelayerNode(const std::string &relayerDescriptorURL, pid_t &pid, int r
     }
 
     LogPrintf("%s: Downloading Relayer descriptor from %s\n", __func__, relayerDescriptorURL);
-    fs::path descriptorPath = GetDataDir() / "relayerdescriptor.json";
-    fs::path binaryURL = GetDataDir() / GetRelayerFilename();
+    fs::path descriptorPath = GetDataDir(false) / "relayerdescriptor.json";
+    fs::path binaryURL = GetDataDir(false) / GetRelayerFilename();
     if (!fs::exists(binaryURL.string()) || !fs::exists(descriptorPath.string())) {
         if(fs::exists(binaryURL.string()))
             fs::remove(binaryURL.string());
