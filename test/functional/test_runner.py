@@ -96,6 +96,7 @@ BASE_SCRIPTS= [
     'feature_reindex.py',
     # vv Tests less than 30s vv
     'wallet_keypool_topup.py',
+    'interface_zmq_dash.py',
     'interface_zmq.py',
     'interface_bitcoin_cli.py',
     'mempool_resurrect.py',

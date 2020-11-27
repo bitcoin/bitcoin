@@ -879,6 +879,101 @@ class CFinalCommitment:
         return r
 
 
+class CGovernanceObject:
+    def __init__(self):
+        self.nHashParent = 0
+        self.nRevision = 0
+        self.nTime = 0
+        self.nCollateralHash = 0
+        self.vchData = []
+        self.nObjectType = 0
+        self.masternodeOutpoint = COutPoint()
+        self.vchSig = []
+
+    def deserialize(self, f):
+        self.nHashParent = deser_uint256(f)
+        self.nRevision = struct.unpack("<i", f.read(4))[0]
+        self.nTime = struct.unpack("<q", f.read(8))[0]
+        self.nCollateralHash = deser_uint256(f)
+        size = deser_compact_size(f)
+        if size > 0:
+            self.vchData = f.read(size)
+        self.nObjectType = struct.unpack("<i", f.read(4))[0]
+        self.masternodeOutpoint.deserialize(f)
+        size = deser_compact_size(f)
+        if size > 0:
+            self.vchSig = f.read(size)
+
+    def serialize(self):
+        r = b""
+        r += ser_uint256(self.nParentHash)
+        r += struct.pack("<i", self.nRevision)
+        r += struct.pack("<q", self.nTime)
+        r += deser_uint256(self.nCollateralHash)
+        r += deser_compact_size(len(self.vchData))
+        r += self.vchData
+        r += struct.pack("<i", self.nObjectType)
+        r += self.masternodeOutpoint.serialize()
+        r += deser_compact_size(len(self.vchSig))
+        r += self.vchSig
+        return r
+
+
+class CGovernanceVote:
+    def __init__(self):
+        self.masternodeOutpoint = COutPoint()
+        self.nParentHash = 0
+        self.nVoteOutcome = 0
+        self.nVoteSignal = 0
+        self.nTime = 0
+        self.vchSig = []
+
+    def deserialize(self, f):
+        self.masternodeOutpoint.deserialize(f)
+        self.nParentHash = deser_uint256(f)
+        self.nVoteOutcome = struct.unpack("<i", f.read(4))[0]
+        self.nVoteSignal = struct.unpack("<i", f.read(4))[0]
+        self.nTime = struct.unpack("<q", f.read(8))[0]
+        size = deser_compact_size(f)
+        if size > 0:
+            self.vchSig = f.read(size)
+
+    def serialize(self):
+        r = b""
+        r += self.masternodeOutpoint.serialize()
+        r += ser_uint256(self.nParentHash)
+        r += struct.pack("<i", self.nVoteOutcome)
+        r += struct.pack("<i", self.nVoteSignal)
+        r += struct.pack("<q", self.nTime)
+        r += ser_compact_size(len(self.vchSig))
+        r += self.vchSig
+        return r
+
+
+class CRecoveredSig:
+    def __init__(self):
+        self.llmqType = 0
+        self.quorumHash = 0
+        self.id = 0
+        self.msgHash = 0
+        self.sig = b'\\x0' * 96
+
+    def deserialize(self, f):
+        self.llmqType = struct.unpack("<B", f.read(1))[0]
+        self.quorumHash = deser_uint256(f)
+        self.id = deser_uint256(f)
+        self.msgHash = deser_uint256(f)
+        self.sig = f.read(96)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.llmqType)
+        r += ser_uint256(self.quorumHash)
+        r += ser_uint256(self.id)
+        r += ser_uint256(self.msgHash)
+        r += self.sig
+        return r
+
 # Objects that correspond to messages on the wire
 class msg_version():
     command = b"version"
