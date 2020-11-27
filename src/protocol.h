@@ -449,6 +449,13 @@ public:
     uint32_t nTime{TIME_INIT};
     //! Serialized as uint64_t in V1, and as CompactSize in V2.
     ServiceFlags nServices{NODE_NONE};
+
+    friend bool operator==(const CAddress& a, const CAddress& b)
+    {
+        return a.nTime == b.nTime &&
+               a.nServices == b.nServices &&
+               static_cast<const CService&>(a) == static_cast<const CService&>(b);
+    }
 };
 
 /** getdata message type flags */
