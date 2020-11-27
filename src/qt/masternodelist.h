@@ -35,6 +35,21 @@ public:
     explicit MasternodeList(QWidget* parent = 0);
     ~MasternodeList();
 
+    enum {
+        COLUMN_SERVICE,
+        COLUMN_STATUS,
+        COLUMN_POSE,
+        COLUMN_REGISTERED,
+        COLUMN_LAST_PAYMENT,
+        COLUMN_NEXT_PAYMENT,
+        COLUMN_PAYOUT_ADDRESS,
+        COLUMN_OPERATOR_REWARD,
+        COLUMN_COLLATERAL_ADDRESS,
+        COLUMN_OWNER_ADDRESS,
+        COLUMN_VOTING_ADDRESS,
+        COLUMN_PROTX_HASH,
+    };
+
     void setClientModel(ClientModel* clientModel);
     void setWalletModel(WalletModel* walletModel);
 
