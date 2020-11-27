@@ -4687,7 +4687,6 @@ static const CRPCCommand commands[] =
     { "wallet",             &setfeerate,                     },
     { "wallet",             &sethdseed,                      },
     { "wallet",             &setlabel,                       },
-    { "wallet",             &settxfee,                       },
     { "wallet",             &setwalletflag,                  },
     { "wallet",             &signmessage,                    },
     { "wallet",             &signrawtransactionwithwallet,   },
@@ -4698,6 +4697,7 @@ static const CRPCCommand commands[] =
     { "wallet",             &walletpassphrase,               },
     { "wallet",             &walletpassphrasechange,         },
     { "wallet",             &walletprocesspsbt,              },
+    { "hidden",             &settxfee,                       },
 };
 // clang-format on
     return MakeSpan(commands);

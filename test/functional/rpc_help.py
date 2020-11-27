@@ -53,6 +53,7 @@ class HelpRpcTest(BitcoinTestFramework):
         self.dump_help()
         if self.is_wallet_compiled():
             self.wallet_help()
+            self.test_hidden_wallet_rpcs()
 
     def test_client_conversion_table(self):
         file_conversion_table = os.path.join(self.config["environment"]["SRCDIR"], 'src', 'rpc', 'client.cpp')
@@ -127,6 +128,11 @@ class HelpRpcTest(BitcoinTestFramework):
         self.restart_node(0, extra_args=['-nowallet=1'])
         assert 'getnewaddress ( "label" "address_type" )' in self.nodes[0].help('getnewaddress')
         assert "setfeerate amount" in self.nodes[0].help("setfeerate")
+
+    def test_hidden_wallet_rpcs(self):
+        self.log.info("Test hidden wallet RPCs")
+        assert "settxfee" not in self.nodes[0].help()  # settxfee help is hidden from general help...
+        assert "settxfee amount" in self.nodes[0].help("settxfee")  # ...but can be called directly
 
 
 if __name__ == '__main__':
