@@ -49,6 +49,8 @@ static const unsigned int MAX_STANDARD_P2WSH_SCRIPT_SIZE = 3600;
 /** The maximum size of a standard ZDAG transaction. Dessimation has to happen in timely manner and it is an
  * interactive protocol so we ensure a transaction or its ancestors abide by the size restriction */
 static const unsigned int MAX_STANDARD_ZDAG_TX_SIZE = 1100;
+/** The maximum size of a standard ScriptSig */
+static const unsigned int MAX_STANDARD_SCRIPTSIG_SIZE = 1650;
 /** Min feerate for defining dust. Historically this has been based on the
  * minRelayTxFee, however changing the dust limit changes which transactions are
  * standard and should be done with care and ideally rarely. It makes sense to
