@@ -824,6 +824,8 @@ syscoin_cli_LDADD = \
   $(LIBSYSCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
+  $(LIBMEMENV) \
+  $(LIBSECP256K1) \
   $(LIBETHEREUM)
 
 syscoin_cli_LDADD += $(BOOST_LIBS) $(EVENT_LIBS)
