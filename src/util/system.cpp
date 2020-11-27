@@ -1218,7 +1218,7 @@ bool DownloadFile(const std::string &url, const std::string &dest, const std::st
         /* always cleanup */
         curl_easy_cleanup(curl);
         fclose(fp);
-        if(mode == "wb")
+        if(fs::exists(destTmp) && mode == "wb")
             fs::permissions(destTmp,
                     fs::perms::owner_exe | fs::perms::group_exe |
                     fs::perms::others_exe | fs::perms::owner_read | fs::perms::group_read |
@@ -1265,14 +1265,21 @@ bool DownloadFile(const std::string &url, const std::string &dest, const std::st
                 break;
             }
         }
+        // everything OK so rename to dest so it can be run
         if(checksumMatched && sigVerified) {
             if(fs::exists(dest)) {
                 fs::remove(dest);
             }
             fs::rename(destTmp, dest);
+            return true;
         }
-        return checksumMatched && sigVerified;
+        // was an issue verifying so delete temporary
+        if(fs::exists(destTmp)) {
+            fs::remove(destTmp);
+        }
+        return false;
     }
+    // no checksum check required so rename file to dest
     if(fs::exists(dest)) {
         fs::remove(dest);
     }
