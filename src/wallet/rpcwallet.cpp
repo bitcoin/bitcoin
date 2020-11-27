@@ -4601,15 +4601,15 @@ static RPCHelpMan upgradewallet()
             result = strprintf("Wallet upgraded successfully from version %i to version %i.", previous_version, current_version);
         }
     }
+    CHECK_NONFATAL(result.empty() != error.empty());
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("wallet_name", pwallet->GetName());
     obj.pushKV("previous_version", previous_version);
     obj.pushKV("current_version", current_version);
-    if (!result.empty()) {
+    if (error.empty()) {
         obj.pushKV("result", result);
     } else {
-        CHECK_NONFATAL(!error.empty());
         obj.pushKV("error", error.original);
     }
     return obj;

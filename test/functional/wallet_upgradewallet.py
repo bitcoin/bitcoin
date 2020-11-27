@@ -90,7 +90,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
             v16_3_node.submitblock(b)
         assert_equal(v16_3_node.getblockcount(), to_height)
 
-    def test_upgradewallet(self, wallet, previous_version, requested_version=None, expected_version=None):
+    def test_upgradewallet(self, wallet, *, previous_version, requested_version=None, expected_version=None):
         unchanged = expected_version == previous_version
         new_version = previous_version if unchanged else expected_version if expected_version else requested_version
         assert_equal(wallet.getwalletinfo()["walletversion"], previous_version)
@@ -104,7 +104,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         )
         assert_equal(wallet.getwalletinfo()["walletversion"], new_version)
 
-    def test_upgradewallet_error(self, wallet, previous_version, requested_version, msg):
+    def test_upgradewallet_error(self, wallet, *, previous_version, requested_version, msg):
         assert_equal(wallet.getwalletinfo()["walletversion"], previous_version)
         assert_equal(wallet.upgradewallet(requested_version),
             {
