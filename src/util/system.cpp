@@ -74,6 +74,8 @@
 #include <ctpl.h>
 #include <random.h>
 #include <curl/curl.h>
+#include <key_io.h>
+#include <messagesigner.h>
 bool fMasternodeMode = false;
 bool bGethTestnet = false;
 bool fDisableGovernance = false;
@@ -110,6 +112,7 @@ struct DescriptorDetails {
     std::string version;
     std::string binURL;
     std::string sha256Sum;
+    std::string signature;
 };
 #ifdef WIN32
     #include <windows.h>
@@ -1174,10 +1177,12 @@ bool GetDescriptorStats(const fs::path filePath, DescriptorDetails& details) {
                 const UniValue& binURLValue = find_value(binValue, "url");
                 if(binURLValue.isStr()) {
                     const UniValue& binChecksumValue = find_value(binValue, "sha256sum");
-                    if(binChecksumValue.isStr()) {
+                    const UniValue& signatureValue = find_value(binValue, "signature");
+                    if(binChecksumValue.isStr() && signatureValue.isStr()) {
                         details.version = versionValue.get_str();
                         details.binURL = binURLValue.get_str();
                         details.sha256Sum = binChecksumValue.get_str();
+                        details.signature = signatureValue.get_str();
                         return true;
                     }
                 }
@@ -1190,13 +1195,14 @@ size_t write_data(void *ptr, size_t size, size_t nmemb, FILE *stream) {
     size_t written = fwrite(ptr, size, nmemb, stream);
     return written;
 }
-bool DownloadFile(const std::string &url, const std::string &dest, const std::string &mode="wb", const std::string &checksum="") {
+bool DownloadFile(const std::string &url, const std::string &dest, const std::string &mode="wb", const std::string &checksum="", const std::string &signature="") {
     CURL *curl;
     FILE *fp;
     CURLcode res;
+    const std::string destTmp = dest + "tmp";
     curl = curl_easy_init();
     if (curl) {
-        fp = fopen(dest.c_str(),mode.c_str());
+        fp = fopen(destTmp.c_str(),mode.c_str());
         curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
         curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
@@ -1213,14 +1219,14 @@ bool DownloadFile(const std::string &url, const std::string &dest, const std::st
         curl_easy_cleanup(curl);
         fclose(fp);
         if(mode == "wb")
-            fs::permissions(dest,
+            fs::permissions(destTmp,
                     fs::perms::owner_exe | fs::perms::group_exe |
                     fs::perms::others_exe | fs::perms::owner_read | fs::perms::group_read |
                     fs::perms::others_read);
     }
     if(!checksum.empty()) {
-        LogPrintf("%s: Checking file checksum of %s\n", __func__, dest);
-        fsbridge::ifstream file(dest, std::ios_base::binary);
+        LogPrintf("%s: Checking file checksum of %s\n", __func__, destTmp);
+        fsbridge::ifstream file(destTmp, std::ios_base::binary);
         if (!file.is_open())
             return false;
         std::string fileBuffer;
@@ -1237,8 +1243,40 @@ bool DownloadFile(const std::string &url, const std::string &dest, const std::st
         if(!checksumMatched) {
             LogPrintf("%s: Checksum mismatch calculated: %s vs expected: %s\n", __func__, calcHash.ToString(), checksum);
         }
-        return checksumMatched;
+        const std::vector<std::string> &vSporkAddresses = Params().SporkAddresses();
+        bool sigVerified = false;
+        // any of the spork addresses can sign on the binaries
+        for(const auto& sporkAddress: vSporkAddresses) {
+            CTxDestination txdest = DecodeDestination(sporkAddress);
+            CKeyID keyID;
+            if (auto witness_id = boost::get<WitnessV0KeyHash>(&txdest)) {	
+                keyID = ToKeyID(*witness_id);
+            }	
+            else if (auto key_id = boost::get<PKHash>(&txdest)) {	
+                keyID = ToKeyID(*key_id);
+            }	
+            if (keyID.IsNull()) {
+                LogPrintf("DownloadFile -- Failed to parse spork address\n");
+                return false;
+            }
+            const std::vector<unsigned char> &vchSig = DecodeBase64(signature.c_str());
+            sigVerified = CMessageSigner::VerifyMessage(keyID, vchSig, checksum);
+            if(sigVerified) {
+                break;
+            }
+        }
+        if(checksumMatched && sigVerified) {
+            if(fs::exists(dest)) {
+                fs::remove(dest);
+            }
+            fs::rename(destTmp, dest);
+        }
+        return checksumMatched && sigVerified;
     }
+    if(fs::exists(dest)) {
+        fs::remove(dest);
+    }
+    fs::rename(destTmp, dest);
     return true;
 }
 bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const std::string& binaryDestPath, const std::string& descriptorURL) {
@@ -1257,7 +1295,7 @@ bool DownloadBinaryFromDescriptor(const std::string &descriptorDestPath, const s
     }
     if(descriptorDetailsLocal.sha256Sum.empty() || descriptorDetailsLocal.sha256Sum != descriptorDetailsRemote.sha256Sum) {
          LogPrintf("%s: Checksum mismatch, version local (%s) vs remote version (%s)! Downloading from %s and saving to %s\n", __func__, descriptorDetailsLocal.version, descriptorDetailsRemote.version, descriptorDetailsRemote.binURL, binaryDestPath);
-         if(!DownloadFile(descriptorDetailsRemote.binURL, binaryDestPath, "wb", descriptorDetailsRemote.sha256Sum)) {
+         if(!DownloadFile(descriptorDetailsRemote.binURL, binaryDestPath, "wb", descriptorDetailsRemote.sha256Sum, descriptorDetailsRemote.signature)) {
              LogPrintf("%s: Could not download binary %s or checksum failed\n", __func__, descriptorDetailsRemote.binURL);
              return false;
          }
