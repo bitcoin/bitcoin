@@ -78,7 +78,7 @@ public:
     void UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload);
     void CheckActiveState();
     void TrySignChainTip(const CBlockIndex* pindexNew);
-    virtual void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
+    virtual void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig) override;
 
     bool HasChainLock(int nHeight, const uint256& blockHash);
     bool HasConflictingChainLock(int nHeight, const uint256& blockHash);
