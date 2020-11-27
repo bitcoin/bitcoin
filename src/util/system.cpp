@@ -1452,12 +1452,6 @@ bool StartRelayerNode(const std::string &relayerDescriptorURL, pid_t &pid, int r
         }
 
         if( pid == 0 ) {
-            // Order of looking for the relayer binary:
-            // 1. current executable directory
-            // 2. current executable directory/bin/[os]/syscoin_relayer
-            // 3. $path
-            // 4. $path/bin/[os]/syscoin_relayer
-            // 5. /usr/local/bin/syscoin_relayer
             std::string portStr = itostr(websocketport);
             std::string rpcEthPortStr = itostr(ethrpcport);
             std::string rpcSysPortStr = itostr(rpcport);
