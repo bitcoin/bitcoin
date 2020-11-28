@@ -26,6 +26,7 @@ from .descriptors import descsum_create
 from .p2p import P2P_SUBVERSION
 from .util import (
     MAX_NODES,
+    assert_equal,
     append_config,
     delete_cookie_file,
     get_auth_cookie,
@@ -544,6 +545,11 @@ class TestNode():
             # So syncing here is redundant when we only want to send a message, but the cost is low (a few milliseconds)
             # in comparison to the upside of making tests less fragile and unexpected intermittent errors less likely.
             p2p_conn.sync_with_ping()
+
+            # Consistency check that the Bitcoin Core has received our user agent string. This checks the
+            # node's newest peer. It could be racy if another Bitcoin Core node has connected since we opened
+            # our connection, but we don't expect that to happen.
+            assert_equal(self.getpeerinfo()[-1]['subver'], P2P_SUBVERSION)
 
         return p2p_conn
 
