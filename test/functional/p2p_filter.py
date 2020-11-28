@@ -221,11 +221,11 @@ class FilterTest(BitcoinTestFramework):
         self.log.info('Test BIP 37 for a node with fRelay = False')
         # Add peer but do not send version yet
         filter_peer_without_nrelay = self.nodes[0].add_p2p_connection(P2PBloomFilter(), send_version=False, wait_for_verack=False)
-        # Send version with fRelay=False
+        # Send version with relay=False
         version_without_fRelay = msg_version()
         version_without_fRelay.nVersion = P2P_VERSION
         version_without_fRelay.strSubVer = P2P_SUBVERSION
-        version_without_fRelay.nRelay = 0
+        version_without_fRelay.relay = 0
         filter_peer_without_nrelay.send_message(version_without_fRelay)
         filter_peer_without_nrelay.wait_for_verack()
         assert not self.nodes[0].getpeerinfo()[0]['relaytxes']
