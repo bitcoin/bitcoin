@@ -79,6 +79,8 @@ MIN_P2P_VERSION_SUPPORTED = 60001
 # The P2P version that this test framework implements and sends in its `version` message
 # Version 70016 supports wtxid relay
 P2P_VERSION = 70016
+# The P2P user agent string that this test framework sends in its `version` message
+P2P_SUBVERSION = b"/python-p2p-tester:0.0.3/"
 
 MESSAGEMAP = {
     b"addr": msg_addr,
@@ -321,6 +323,7 @@ class P2PInterface(P2PConnection):
             # Send a version msg
             vt = msg_version()
             vt.nVersion = P2P_VERSION
+            vt.strSubVer = P2P_SUBVERSION
             vt.nServices = services
             vt.addrTo.ip = self.dstaddr
             vt.addrTo.port = self.dstport
