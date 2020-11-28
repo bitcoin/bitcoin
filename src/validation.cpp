@@ -161,6 +161,8 @@ uint256 g_best_block;
 bool g_parallel_script_checks{false};
 std::atomic_bool fImporting(false);
 std::atomic_bool fReindex(false);
+// SYSCOIN
+std::atomic_bool fReindexGeth(false);
 bool fHavePruned = false;
 bool fPruneMode = false;
 bool fRequireStandard = true;
@@ -6355,7 +6357,7 @@ void DoGethMaintenance() {
         ibd = ::ChainstateActive().IsInitialBlockDownload();
     }
     // hasn't started yet so start
-    if(gethPID == 0 || relayerPID == 0) {
+    if(!fReindexGeth && (gethPID == 0 || relayerPID == 0)) {
         gethPID = relayerPID = -1;
         LogPrintf("%s: Starting Geth and Relayer because PID's were uninitialized\n", __func__);
         int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
@@ -6372,10 +6374,11 @@ void DoGethMaintenance() {
         nRandomResetSec = GetRandInt(600);
         nLastGethHeaderTime = GetSystemTimeInSeconds();
     // if not syncing chain restart geth/relayer if its been long enough since last blocks from relayer
-    } else if(!ibd){
+    } else if(!ibd || fReindexGeth){
         const int64_t nTimeSeconds = (int64_t)GetSystemTimeInSeconds();
         // it's been >= 10 minutes (+ some minutes for randomization up to another 10 min) since an Ethereum block so clean data dir and resync
-        if((nTimeSeconds - nLastGethHeaderTime) > (600 + nRandomResetSec)) {
+        if(fReindexGeth || (nTimeSeconds - nLastGethHeaderTime) > (600 + nRandomResetSec)) {
+            fReindexGeth = false;
             LogPrintf("%s: Last header time not received in sufficient time, trying to resync...\n", __func__);
             // reset timer so it will only do this check at least once every interval (around 10 mins average) if geth seems stuck
             nLastGethHeaderTime = nTimeSeconds;

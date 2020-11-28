@@ -224,7 +224,7 @@ void Shutdown(NodeContext& node)
     TRY_LOCK(g_shutdown_mutex, lock_shutdown);
     if (!lock_shutdown) return;
     LogPrintf("%s: In progress...\n", __func__);
-    Assert(node.args);
+    //Assert(node.args);
 
     /// Note: Shutdown() must be able to handle cases in which initialization failed part of the way,
     /// for example if the data directory was found to be locked.
@@ -291,7 +291,8 @@ void Shutdown(NodeContext& node)
             flatdb3.Dump(governance);
         }
     }
-    if (node.mempool && node.mempool->IsLoaded() && node.args->GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
+    // SYSCOIN
+    if (node.mempool && node.mempool->IsLoaded() && node.args && node.args->GetArg("-persistmempool", DEFAULT_PERSIST_MEMPOOL)) {
         DumpMempool(*node.mempool);
     }
 
@@ -395,8 +396,9 @@ void Shutdown(NodeContext& node)
     activeMasternodeInfo.blsKeyOperator.reset();
     activeMasternodeInfo.blsPubKeyOperator.reset();
     activeMasternodeManager.reset();
+    // SYSCOIN
     try {
-        if (!fs::remove(GetPidFile(*node.args))) {
+        if (node.args && !fs::remove(GetPidFile(*node.args))) {
             LogPrintf("%s: Unable to remove PID file: File does not exist\n", __func__);
         }
     } catch (const fs::filesystem_error& e) {
@@ -1807,6 +1809,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     
     fReindex = args.GetBoolArg("-reindex", false);
     bool fReindexChainState = args.GetBoolArg("-reindex-chainstate", false);
+    fReindexGeth = fReindex || fReindexChainState;
     // cache size calculations
     int64_t nTotalCache = (args.GetArg("-dbcache", nDefaultDbCache) << 20);
     nTotalCache = std::max(nTotalCache, nMinDbCache << 20); // total cache cannot be less than nMinDbCache
@@ -1883,7 +1886,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                 deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
                 llmq::InitLLMQSystem(*evoDb, false, *node.connman, *node.banman, *node.peerman, fReset || fReindexChainState);
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset || fReindexChainState));    
-                pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, fReset || fReindexChainState));
+                pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache, false, fReindexGeth));
                 pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, fReset || fReindexChainState));
                 pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, fReset || fReindexChainState));
                 // new CBlockTreeDB tries to delete the existing file, which
