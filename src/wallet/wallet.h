@@ -38,8 +38,10 @@
 
 #include <boost/signals2/signal.hpp>
 // SYSCOIN
+#include <governance/governanceobject.h>
 class CAssetCoinInfo;
 class CAuxFeeDetails;
+
 using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
 
 struct bilingual_str;
@@ -760,6 +762,9 @@ public:
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID = 0;
 
+    // SYSCOIN Map from governance object hash to governance object, they are added by gobject_prepare.
+    std::map<uint256, CGovernanceObject> m_gobjects;
+
     /** Construct wallet with specified name and database implementation. */
     CWallet(interfaces::Chain* chain, const std::string& name, std::unique_ptr<WalletDatabase> database)
         : m_chain(chain),
@@ -1180,6 +1185,13 @@ public:
 
     /* Returns true if the wallet can give out new addresses. This means it has keys in the keypool or can generate new keys */
     bool CanGetAddresses(bool internal = false) const;
+    // SYSCOIN
+    /** Load a CGovernanceObject into m_gobjects. */
+    bool LoadGovernanceObject(const CGovernanceObject& obj) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    /** Store a CGovernanceObject in the wallet database. This should only be used by governance objects that are created by this wallet via `gobject prepare`. */
+    bool WriteGovernanceObject(const CGovernanceObject& obj) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    /** Returns a vector containing pointers to the governance objects in m_gobjects */
+    std::vector<const CGovernanceObject*> GetGovernanceObjects() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Blocks until the wallet state is up-to-date to /at least/ the current

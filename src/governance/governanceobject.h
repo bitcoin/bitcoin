@@ -295,7 +295,8 @@ public:
     int GetAbstainCount(vote_signal_enum_t eVoteSignalIn) const;
 
     bool GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint, vote_rec_t& voteRecord) const;
-
+    UniValue ToJson() const;
+    
     // FUNCTIONS FOR DEALING WITH DATA STRING
 
     std::string GetDataAsHexString() const;

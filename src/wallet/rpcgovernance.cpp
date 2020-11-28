@@ -76,6 +76,51 @@ UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
     return returnObj;
 }
 
+static RPCHelpMan gobject_list_prepared()
+{
+    return RPCHelpMan{"gobject_list_prepared",
+        "\nReturns a list of governance objects prepared by this wallet with \"gobject_prepare\" sorted by their creation time.\n",
+        {      
+            {"count", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Maximum number of objects to return."},                                                               
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+                HelpExampleCli("gobject_list_prepared", "")
+            + HelpExampleRpc("gobject_list_prepared", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{   
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
+    EnsureWalletIsUnlocked(pwallet);
+
+    int64_t nCount = request.params.size() > 1 ? request.params[1].get_int64() : 10;
+    if (nCount < 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
+    }
+    // Get a list of all prepared governance objects stored in the wallet
+    LOCK(pwallet->cs_wallet);
+    std::vector<const CGovernanceObject*> vecObjects = pwallet->GetGovernanceObjects();
+    // Sort the vector by the object creation time/hex data
+    std::sort(vecObjects.begin(), vecObjects.end(), [](const CGovernanceObject* a, const CGovernanceObject* b) {
+        bool fGreater = a->GetCreationTime() > b->GetCreationTime();
+        bool fEqual = a->GetCreationTime() == b->GetCreationTime();
+        bool fHexGreater = a->GetDataAsHexString() > b->GetDataAsHexString();
+        return fGreater || (fEqual && fHexGreater);
+    });
+
+    UniValue jsonArray(UniValue::VARR);
+    auto it = vecObjects.rbegin() + std::max<int>(0, vecObjects.size() - nCount);
+    while (it != vecObjects.rend()) {
+        jsonArray.push_back((*it++)->ToJson());
+    }
+
+    return jsonArray;
+},
+    };
+}
+
 static RPCHelpMan gobject_prepare()
 {
     return RPCHelpMan{"gobject_prepare",
@@ -168,6 +213,10 @@ static RPCHelpMan gobject_prepare()
             err += "Please verify your specified output is valid and is enough for the combined proposal fee and transaction fee.";
         }
         throw JSONRPCError(RPC_INTERNAL_ERROR, err);
+    }
+
+    if (!pwallet->WriteGovernanceObject({hashParent, nRevision, nTime, tx->GetHash(), strDataHex})) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "WriteGovernanceObject failed");
     }
 
     // -- send the tx to the network
@@ -333,7 +382,7 @@ static const CRPCCommand commands[] =
     { "governancewallet",               "gobject_vote_alias",     &gobject_vote_alias,      {"governanceHash","vote","voteOutome","protxHash"} },
     { "governancewallet",               "gobject_vote_many",      &gobject_vote_many,       {"governanceHash","vote","voteOutome"} },
     { "governancewallet",               "gobject_prepare",        &gobject_prepare,         {"parentHash","revision","time","dataHex","outputHash","outputIndex"} },
-
+    { "governancewallet",               "gobject_list_prepared",  &gobject_list_prepared,   {"count"} },
 };
 // clang-format on
     return MakeSpan(commands);

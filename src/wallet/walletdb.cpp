@@ -24,7 +24,8 @@
 
 #include <atomic>
 #include <string>
-
+// SYSCOIN
+#include <governance/governanceobject.h>
 namespace DBKeys {
 const std::string ACENTRY{"acentry"};
 const std::string ACTIVEEXTERNALSPK{"activeexternalspk"};
@@ -55,6 +56,8 @@ const std::string WALLETDESCRIPTORCKEY{"walletdescriptorckey"};
 const std::string WALLETDESCRIPTORKEY{"walletdescriptorkey"};
 const std::string WATCHMETA{"watchmeta"};
 const std::string WATCHS{"watchs"};
+// SYSCOIN
+const std::string GOBJECT{"gobject"};
 } // namespace DBKeys
 
 //
@@ -238,6 +241,11 @@ bool WalletBatch::WriteDescriptorDerivedCache(const CExtPubKey& xpub, const uint
     std::vector<unsigned char> ser_xpub(BIP32_EXTKEY_SIZE);
     xpub.Encode(ser_xpub.data());
     return WriteIC(std::make_pair(std::make_pair(DBKeys::WALLETDESCRIPTORCACHE, desc_id), std::make_pair(key_exp_index, der_index)), ser_xpub);
+}
+// SYSCOIN
+bool WalletBatch::WriteGovernanceObject(const CGovernanceObject& obj)
+{
+    return WriteIC(std::make_pair(DBKeys::GOBJECT, obj.GetHash()), obj, false);
 }
 
 bool WalletBatch::WriteDescriptorParentCache(const CExtPubKey& xpub, const uint256& desc_id, uint32_t key_exp_index)
@@ -660,6 +668,22 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
 
             wss.m_descriptor_crypt_keys.insert(std::make_pair(std::make_pair(desc_id, pubkey.GetID()), std::make_pair(pubkey, privkey)));
             wss.fIsEncrypted = true;
+        // SYSCOIN
+        } else if (strType == DBKeys::GOBJECT) {
+            uint256 nObjectHash;
+            CGovernanceObject obj;
+            ssKey >> nObjectHash;
+            ssValue >> obj;
+
+            if (obj.GetHash() != nObjectHash) {
+                strErr = "Invalid governance object: Hash mismatch";
+                return false;
+            }
+
+            if (!pwallet->LoadGovernanceObject(obj)) {
+                strErr = "Invalid governance object: LoadGovernanceObject";
+                return false;
+            }
         } else if (strType != DBKeys::BESTBLOCK && strType != DBKeys::BESTBLOCK_NOMERKLE &&
                    strType != DBKeys::MINVERSION && strType != DBKeys::ACENTRY &&
                    strType != DBKeys::VERSION && strType != DBKeys::SETTINGS) {

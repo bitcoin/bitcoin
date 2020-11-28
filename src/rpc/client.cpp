@@ -269,6 +269,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "gobject_getcurrentvotes", 2, "vout" },
     { "gobject_submit", 1, "revision" },
     { "gobject_submit", 2, "time" },
+    { "gobject_list_prepared", 0, "count" },
     { "masternode_winners", 0, "count" },
 
 };

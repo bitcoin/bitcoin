@@ -38,7 +38,8 @@ class CWallet;
 class CWalletTx;
 class uint160;
 class uint256;
-
+// SYSCOIN
+class CGovernanceObject;
 /** Error statuses for the wallet database */
 enum class DBErrors
 {
@@ -79,6 +80,8 @@ extern const std::string WALLETDESCRIPTORCKEY;
 extern const std::string WALLETDESCRIPTORKEY;
 extern const std::string WATCHMETA;
 extern const std::string WATCHS;
+// SYSCOIN
+extern const std::string GOBJECT;
 } // namespace DBKeys
 
 /* simple HD chain data model */
@@ -270,6 +273,9 @@ public:
     bool TxnCommit();
     //! Abort current transaction
     bool TxnAbort();
+    // SYSCOIN
+    //! Write a CGovernanceObject to the database
+    bool WriteGovernanceObject(const CGovernanceObject& obj);
 private:
     std::unique_ptr<DatabaseBatch> m_batch;
     WalletDatabase& m_database;

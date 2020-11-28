@@ -45,6 +45,7 @@
 #include <evo/deterministicmns.h>
 #include <rpc/util.h>
 #include <core_io.h>
+#include <governance/governance.h>
 using interfaces::FoundBlock;
 
 const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS{
@@ -4825,6 +4826,30 @@ void CWallet::postInitProcess()
 bool CWallet::BackupWallet(const std::string& strDest) const
 {
     return GetDatabase().Backup(strDest);
+}
+// SYSCOIN
+bool CWallet::LoadGovernanceObject(const CGovernanceObject& obj)
+{
+    AssertLockHeld(cs_wallet);
+    return m_gobjects.emplace(obj.GetHash(), obj).second;
+}
+
+bool CWallet::WriteGovernanceObject(const CGovernanceObject& obj)
+{
+    AssertLockHeld(cs_wallet);
+    WalletBatch batch(GetDatabase());
+    return batch.WriteGovernanceObject(obj) && LoadGovernanceObject(obj);
+}
+
+std::vector<const CGovernanceObject*> CWallet::GetGovernanceObjects()
+{
+    AssertLockHeld(cs_wallet);
+    std::vector<const CGovernanceObject*> vecObjects;
+    vecObjects.reserve(m_gobjects.size());
+    for (auto& obj : m_gobjects) {
+        vecObjects.push_back(&obj.second);
+    }
+    return vecObjects;
 }
 
 CKeyPool::CKeyPool()
