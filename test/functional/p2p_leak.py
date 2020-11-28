@@ -20,6 +20,7 @@ from test_framework.messages import (
 from test_framework.p2p import (
     P2PInterface,
     P2P_SUBVERSION,
+    P2P_SERVICES,
     P2P_VERSION_RELAY,
 )
 from test_framework.test_framework import BitcoinTestFramework
@@ -152,6 +153,7 @@ class P2PLeakTest(BitcoinTestFramework):
         p2p_old_peer = self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
         old_version_msg = msg_version()
         old_version_msg.nVersion = 31799
+        old_version_msg.nServices = P2P_SERVICES
         old_version_msg.strSubVer = P2P_SUBVERSION
         old_version_msg.relay = P2P_VERSION_RELAY
         with self.nodes[0].assert_debug_log(['peer=4 using obsolete version 31799; disconnecting']):
