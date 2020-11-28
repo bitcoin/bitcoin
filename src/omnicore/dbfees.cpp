@@ -264,7 +264,7 @@ void COmniFeeCache::PruneCache(const uint32_t &propertyId, int block)
             }
             if (!newValue.empty()) newValue += ",";
             newValue += strprintf("%d:%d", tempItem.first, tempItem.second);
-            if (msc_debug_fees) PrintToLog("      Reading immature entry: block %d amount %d\n", tempItem.first, tempItem.second);
+            if (msc_debug_fees) PrintToLog("      Readding immature entry: block %d amount %d\n", tempItem.first, tempItem.second);
         }
         // make sure the pruned cache isn't completely empty, if it is, prune down to just the most recent entry
         if (newValue.empty()) {

@@ -27,7 +27,7 @@ bool CheckFee(interfaces::Wallet& iWallet, const std::string& fromAddress, size_
 bool CheckInput(const CTxOut& txOut, int nHeight, CTxDestination& dest);
 
 /** IsMine wrapper to determine whether the address is in the wallet. */
-int IsMyAddress(const std::string& address, interfaces::Wallet* iWallet = nullptr);
+int IsMyAddress(const std::string& address, interfaces::Wallet* iWallet);
 
 /** IsMine wrapper to determine whether the address is in the wallet. */
 int IsMyAddressAllWallets(const std::string& address, const bool matchAny = false, const isminefilter& filter = ISMINE_SPENDABLE);

@@ -38,7 +38,7 @@ if __name__ == '__main__':
     client_shutdown = False
     try:
         OmniClientExpiry().main()
-    except AssertionError:
+    except:
         client_shutdown = True
     finally:
         if not client_shutdown:

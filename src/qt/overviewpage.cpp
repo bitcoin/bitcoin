@@ -77,12 +77,22 @@ Q_DECLARE_METATYPE(interfaces::WalletBalances)
 class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
+
+    WalletModel *walletModel;
+
 public:
     explicit TxViewDelegate(const PlatformStyle *_platformStyle, QObject *parent=nullptr):
-        QAbstractItemDelegate(parent), unit(BitcoinUnits::BTC),
+        QAbstractItemDelegate(parent),
+        walletModel(nullptr),
+        unit(BitcoinUnits::BTC),
         platformStyle(_platformStyle)
     {
 
+    }
+
+    void setWalletModel(WalletModel *model)
+    {
+        this->walletModel = model;
     }
 
     inline void paint(QPainter *painter, const QStyleOptionViewItem &option,
@@ -161,13 +171,14 @@ public:
                             CMPTransaction mp_obj;
                             int parseRC = ParseTransaction(*wtx, blockHeight, 0, mp_obj);
                             if (0 < parseRC) { //positive RC means DEx payment
+                                valid = true;
                                 std::string tmpBuyer, tmpSeller;
                                 uint64_t total = 0, tmpVout = 0, tmpNValue = 0, tmpPropertyId = 0;
                                 {
                                     LOCK(cs_tally);
                                     pDbTransactionList->getPurchaseDetails(hash,1,&tmpBuyer,&tmpSeller,&tmpVout,&tmpPropertyId,&tmpNValue);
                                 }
-                                bool bIsBuy = IsMyAddress(tmpBuyer);
+                                bool bIsBuy = IsMyAddress(tmpBuyer, &walletModel->wallet());
                                 LOCK(cs_tally);
                                 int numberOfPurchases=pDbTransactionList->getNumberOfSubRecords(hash);
                                 if (0<numberOfPurchases) { // calculate total bought/sold
@@ -194,9 +205,9 @@ public:
                                         omniAmountStr = QString::fromStdString(FormatIndivisibleMP(omniAmount) + getTokenLabel(omniPropertyId));
                                     }
                                     if (!mp_obj.getReceiver().empty()) {
-                                        if (IsMyAddress(mp_obj.getReceiver())) {
+                                        if (IsMyAddress(mp_obj.getReceiver(), &walletModel->wallet())) {
                                             omniOutbound = false;
-                                            if (IsMyAddress(mp_obj.getSender())) omniSendToSelf = true;
+                                            if (IsMyAddress(mp_obj.getSender(), &walletModel->wallet())) omniSendToSelf = true;
                                         }
                                         address = QString::fromStdString(mp_obj.getReceiver());
                                     } else {
@@ -554,6 +565,7 @@ void OverviewPage::setClientModel(ClientModel *model)
 void OverviewPage::setWalletModel(WalletModel *model)
 {
     this->walletModel = model;
+    txdelegate->setWalletModel(model);
     if(model && model->getOptionsModel())
     {
         // Set up transaction list

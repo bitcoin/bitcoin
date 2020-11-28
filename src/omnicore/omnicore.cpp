@@ -530,6 +530,11 @@ bool mastercore::update_tally_map(const std::string& who, uint32_t propertyId, i
  */
 static int64_t calculate_and_update_devmsc(unsigned int nTime, int block)
 {
+    // Allow disable of Dev MSC for fee cache test on regtest only
+    if (Params().NetworkIDString() == CBaseChainParams::REGTEST && gArgs.GetBoolArg("-disabledevmsc", false)) {
+        return 0;
+    }
+
     // do nothing if before end of fundraiser
     if (nTime < 1377993874) return 0;
 
@@ -583,8 +588,8 @@ uint32_t mastercore::GetNextPropertyId(bool maineco)
 // Perform any actions that need to be taken when the total number of tokens for a property ID changes
 void NotifyTotalTokensChanged(uint32_t propertyId, int block)
 {
+    pDbFeeCache->UpdateDistributionThresholds(propertyId);
     if (IsFeatureActivated(FEATURE_FEES, block)) {
-        pDbFeeCache->UpdateDistributionThresholds(propertyId);
         pDbFeeCache->EvalCache(propertyId, block);
     }
 }
