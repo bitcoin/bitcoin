@@ -273,11 +273,11 @@ UniValue help(const JSONRPCRequest& jsonRequest)
 {
     if (jsonRequest.fHelp || jsonRequest.params.size() > 2)
         throw std::runtime_error(
-            "help ( \"command\" ) (\"subCommand\")\n"
+            "help ( \"command\" \"subcommand\" )\n"
             "\nList all commands, or get help for a specified command.\n"
             "\nArguments:\n"
             "1. \"command\"     (string, optional) The command to get help on\n"
-            "2. \"subCommand\"  (string, optional) The subcommand to get help on. Please not that not all subcommands support this at the moment\n"
+            "2. \"subcommand\"  (string, optional) The subcommand to get help on. Please note that not all subcommands support this at the moment\n"
             "\nResult:\n"
             "\"text\"     (string) The help text\n"
         );
@@ -334,7 +334,7 @@ static const CRPCCommand vRPCCommands[] =
 { //  category              name                      actor (function)         argNames
   //  --------------------- ------------------------  -----------------------  ----------
     /* Overall control/query calls */
-    { "control",            "help",                   &help,                   {"command"}  },
+    { "control",            "help",                   &help,                   {"command","subcommand"}  },
     { "control",            "stop",                   &stop,                   {"wait"}  },
     { "control",            "uptime",                 &uptime,                 {}  },
 };
