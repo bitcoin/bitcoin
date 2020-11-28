@@ -1022,7 +1022,7 @@ class msg_version:
 
     def __init__(self):
         self.nVersion = 0
-        self.nServices = NODE_NETWORK | NODE_WITNESS
+        self.nServices = 0
         self.nTime = int(time.time())
         self.addrTo = CAddress()
         self.addrFrom = CAddress()
