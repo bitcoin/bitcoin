@@ -31,7 +31,6 @@ import time
 from test_framework.siphash import siphash256
 from test_framework.util import hex_str_to_bytes, assert_equal
 
-MIN_VERSION_SUPPORTED = 60001
 MY_VERSION = 70016  # past wtxid relay
 MY_SUBVERSION = "/python-p2p-tester:0.0.3/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)

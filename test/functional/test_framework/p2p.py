@@ -31,7 +31,6 @@ import threading
 from test_framework.messages import (
     CBlockHeader,
     MAX_HEADERS_RESULTS,
-    MIN_VERSION_SUPPORTED,
     msg_addr,
     msg_addrv2,
     msg_block,
@@ -78,6 +77,9 @@ from test_framework.util import (
 )
 
 logger = logging.getLogger("TestFramework.p2p")
+
+# The minimum P2P version that this test framework supports
+MIN_P2P_VERSION_SUPPORTED = 60001
 
 MESSAGEMAP = {
     b"addr": msg_addr,
@@ -417,7 +419,7 @@ class P2PInterface(P2PConnection):
         pass
 
     def on_version(self, message):
-        assert message.nVersion >= MIN_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_VERSION_SUPPORTED)
+        assert message.nVersion >= MIN_P2P_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_P2P_VERSION_SUPPORTED)
         if message.nVersion >= 70016 and self.wtxidrelay:
             self.send_message(msg_wtxidrelay())
         if self.support_addrv2:
