@@ -82,7 +82,7 @@ P2P_VERSION = 70016
 # The services that this test framework offers in its `version` message
 P2P_SERVICES = NODE_NETWORK | NODE_WITNESS
 # The P2P user agent string that this test framework sends in its `version` message
-P2P_SUBVERSION = b"/python-p2p-tester:0.0.3/"
+P2P_SUBVERSION = "/python-p2p-tester:0.0.3/"
 # Value for relay that this test framework sends in its `version` message
 P2P_VERSION_RELAY = 1
 
@@ -328,7 +328,7 @@ class P2PInterface(P2PConnection):
             # Send a version msg
             vt = msg_version()
             vt.nVersion = P2P_VERSION
-            vt.strSubVer = P2P_SUBVERSION
+            vt.strSubVer = P2P_SUBVERSION.encode('utf-8')
             vt.relay = P2P_VERSION_RELAY
             vt.nServices = services
             vt.addrTo.ip = self.dstaddr

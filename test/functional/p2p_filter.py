@@ -227,7 +227,7 @@ class FilterTest(BitcoinTestFramework):
         version_without_fRelay = msg_version()
         version_without_fRelay.nVersion = P2P_VERSION
         version_without_fRelay.nServices = P2P_SERVICES
-        version_without_fRelay.strSubVer = P2P_SUBVERSION
+        version_without_fRelay.strSubVer = P2P_SUBVERSION.encode('utf-8')
         version_without_fRelay.relay = 0
         filter_peer_without_nrelay.send_message(version_without_fRelay)
         filter_peer_without_nrelay.wait_for_verack()
