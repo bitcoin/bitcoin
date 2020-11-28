@@ -109,21 +109,9 @@ jobs:
         FILE_ENV="./ci/test/00_setup_env_native_qt5.sh"
 
     - stage: test
-      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [OmniJ and functional tests]'
+      name: 'x86_64 Linux  [GOAL: install]  [bionic]  [OmniJ tests]'
       env: >-
-<<<<<<< HEAD
-        HOST=x86_64-unknown-linux-gnu
-        PPA="ppa:openjdk-r/ppa"
-        PACKAGES="python3-zmq protobuf-compiler libprotobuf-dev openjdk-11-jdk"
-        DEP_OPTS="NO_QT=1 NO_UPNP=1"
-        RUN_UNIT_TESTS=false
-        RUN_OMNIJ_TESTS=true
-        RUN_FUNCTIONAL_TESTS=true
-        GOAL="install"
-        BITCOIN_CONFIG="--with-gui=no --without-tests --without-bench"
-=======
         FILE_ENV="./ci/test/00_setup_env_native_omnij.sh"
->>>>>>> experimental-0.20
 
     - stage: test
       name: 'x86_64 Linux  [GOAL: install]  [xenial]  [no depends, only system libs, sanitizers: thread (TSan), no wallet]'
