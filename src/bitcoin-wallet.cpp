@@ -24,6 +24,7 @@ static void SetupWalletToolArgs(ArgsManager& argsman)
     SetupHelpOptions(argsman);
     SetupChainParamsBaseOptions(argsman);
 
+    argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-wallet=<wallet-name>", "Specify wallet name", ArgsManager::ALLOW_ANY | ArgsManager::NETWORK_ONLY, OptionsCategory::OPTIONS);
     argsman.AddArg("-debug=<category>", "Output debugging information (default: 0).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
@@ -42,16 +43,18 @@ static bool WalletAppInit(int argc, char* argv[])
         tfm::format(std::cerr, "Error parsing command line arguments: %s\n", error_message);
         return false;
     }
-    if (argc < 2 || HelpRequested(gArgs)) {
-        std::string usage = strprintf("%s bitcoin-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n\n" +
-                                      "bitcoin-wallet is an offline tool for creating and interacting with " PACKAGE_NAME " wallet files.\n" +
-                                      "By default bitcoin-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n" +
-                                      "To change the target wallet, use the -datadir, -wallet and -testnet/-regtest arguments.\n\n" +
-                                      "Usage:\n" +
-                                     "  bitcoin-wallet [options] <command>\n\n" +
-                                     gArgs.GetHelpMessage();
-
-        tfm::format(std::cout, "%s", usage);
+    if (argc < 2 || HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
+        std::string strUsage = strprintf("%s bitcoin-wallet version", PACKAGE_NAME) + " " + FormatFullVersion() + "\n";
+            if (!gArgs.IsArgSet("-version")) {
+                strUsage += "\n"
+                    "bitcoin-wallet is an offline tool for creating and interacting with " PACKAGE_NAME " wallet files.\n"
+                    "By default bitcoin-wallet will act on wallets in the default mainnet wallet directory in the datadir.\n"
+                    "To change the target wallet, use the -datadir, -wallet and -testnet/-regtest arguments.\n\n"
+                    "Usage:\n"
+                    "  bitcoin-wallet [options] <command>\n";
+                strUsage += "\n" + gArgs.GetHelpMessage();
+            }
+        tfm::format(std::cout, "%s", strUsage);
         return false;
     }
 
