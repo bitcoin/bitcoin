@@ -17,7 +17,10 @@ from test_framework.messages import (
     msg_ping,
     msg_version,
 )
-from test_framework.p2p import P2PInterface
+from test_framework.p2p import (
+    P2PInterface,
+    P2P_SUBVERSION,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -131,6 +134,7 @@ class P2PLeakTest(BitcoinTestFramework):
         p2p_old_peer = self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
         old_version_msg = msg_version()
         old_version_msg.nVersion = 31799
+        old_version_msg.strSubVer = P2P_SUBVERSION
         with self.nodes[0].assert_debug_log(['peer=3 using obsolete version 31799; disconnecting']):
             p2p_old_peer.send_message(old_version_msg)
             p2p_old_peer.wait_for_disconnect()
