@@ -694,10 +694,12 @@ void BitcoinGUI::addWallet(WalletModel* walletModel)
     setWalletActionsEnabled(true);
     rpcConsole->addWallet(walletModel);
     m_wallet_selector->addItem(display_name, QVariant::fromValue(walletModel));
+    /* Disable multiwallet support in main window until update properly for tokens
     if (m_wallet_selector->count() == 2) {
         m_wallet_selector_label_action->setVisible(true);
         m_wallet_selector_action->setVisible(true);
     }
+    */
 }
 
 void BitcoinGUI::removeWallet(WalletModel* walletModel)
