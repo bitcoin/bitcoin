@@ -67,8 +67,12 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     feeRate = CFeeRate(1000);
     altFeeRate = CFeeRate(feeRate);
     BOOST_CHECK_EQUAL(feeRate.GetFee(100), altFeeRate.GetFee(100));
+}
 
-    // Check full constructor
+BOOST_AUTO_TEST_CASE(CFeeRateConstructorTest)
+{
+    // Test CFeeRate(CAmount fee_rate, size_t bytes) constructor
+    // full constructor
     BOOST_CHECK(CFeeRate(CAmount(-1), 0) == CFeeRate(0));
     BOOST_CHECK(CFeeRate(CAmount(0), 0) == CFeeRate(0));
     BOOST_CHECK(CFeeRate(CAmount(1), 0) == CFeeRate(0));
@@ -84,6 +88,31 @@ BOOST_AUTO_TEST_CASE(GetFeeTest)
     BOOST_CHECK(CFeeRate(CAmount(27), 789) == CFeeRate(34));
     // Maximum size in bytes, should not crash
     CFeeRate(MAX_MONEY, std::numeric_limits<size_t>::max() >> 1).GetFeePerK();
+}
+
+BOOST_AUTO_TEST_CASE(CFeeRateNamedConstructorsTest)
+{
+    // Test CFeerate(CAmount fee_rate, FeeEstimatemode mode) constructor
+    // with BTC/kvB, returns same values as CFeeRate(amount) or CFeeRate(amount, 1000)
+    BOOST_CHECK(CFeeRate::FromBtcKb(CAmount(-1)) == CFeeRate(-1));
+    BOOST_CHECK(CFeeRate::FromBtcKb(CAmount(-1)) == CFeeRate(-1, 1000));
+    BOOST_CHECK(CFeeRate::FromBtcKb(CAmount(0)) == CFeeRate(0));
+    BOOST_CHECK(CFeeRate::FromBtcKb(CAmount(1)) == CFeeRate(1));
+    BOOST_CHECK(CFeeRate::FromBtcKb(CAmount(1)) == CFeeRate(1, 1000));
+    BOOST_CHECK(CFeeRate::FromBtcKb(CAmount(26)) == CFeeRate(26));
+    BOOST_CHECK(CFeeRate::FromBtcKb(CAmount(26)) == CFeeRate(26, 1000));
+    BOOST_CHECK(CFeeRate::FromBtcKb(CAmount(123)) == CFeeRate(123));
+    BOOST_CHECK(CFeeRate::FromBtcKb(CAmount(123)) == CFeeRate(123, 1000));
+    // with sat/vB, returns values that are 1e5 smaller
+    BOOST_CHECK(CFeeRate::FromSatB(CAmount(-100000)) == CFeeRate(-1));
+    BOOST_CHECK(CFeeRate::FromSatB(CAmount(-99999)) == CFeeRate(0));
+    BOOST_CHECK(CFeeRate::FromSatB(CAmount(0)) == CFeeRate(0));
+    BOOST_CHECK(CFeeRate::FromSatB(CAmount(99999)) == CFeeRate(0));
+    BOOST_CHECK(CFeeRate::FromSatB(CAmount(100000)) == CFeeRate(1));
+    BOOST_CHECK(CFeeRate::FromSatB(CAmount(100001)) == CFeeRate(1));
+    BOOST_CHECK(CFeeRate::FromSatB(CAmount(2690000)) == CFeeRate(26));
+    BOOST_CHECK(CFeeRate::FromSatB(CAmount(123456789)) == CFeeRate(1234));
+    BOOST_CHECK(CFeeRate::FromSatB(CAmount(123456789)) == CFeeRate(1234, 1000));
 }
 
 BOOST_AUTO_TEST_CASE(BinaryOperatorTest)
