@@ -186,8 +186,6 @@ bool CSporkManager::UpdateSpork(SporkId nSporkID, int64_t nValue, CConnman& conn
 {
     CSporkMessage spork = CSporkMessage(nSporkID, nValue, GetAdjustedTime());
 
-    LOCK(cs);
-
     if (!spork.Sign(sporkPrivKey)) {
         LogPrintf("CSporkManager::%s -- ERROR: signing failed for spork %d\n", __func__, nSporkID);
         return false;
@@ -201,8 +199,11 @@ bool CSporkManager::UpdateSpork(SporkId nSporkID, int64_t nValue, CConnman& conn
 
     LogPrintf("CSporkManager::%s -- signed %d %s\n", __func__, nSporkID, spork.GetHash().ToString());
 
-    mapSporksByHash[spork.GetHash()] = spork;
-    mapSporksActive[nSporkID][keyIDSigner] = spork;
+    {
+        LOCK(cs);
+        mapSporksByHash[spork.GetHash()] = spork;
+        mapSporksActive[nSporkID][keyIDSigner] = spork;
+    }
 
     spork.Relay(connman);
     return true;

@@ -458,7 +458,10 @@ bool CInstantSendManager::ProcessTx(const CTransaction& tx, bool allowReSigning,
     for (size_t i = 0; i < tx.vin.size(); i++) {
         auto& in = tx.vin[i];
         auto& id = ids[i];
-        inputRequestIds.emplace(id);
+        {
+            LOCK(cs);
+            inputRequestIds.emplace(id);
+        }
         LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: trying to vote on input %s with id %s. allowReSigning=%d\n", __func__,
                  tx.GetHash().ToString(), in.prevout.ToStringShort(), id.ToString(), allowReSigning);
         if (quorumSigningManager->AsyncSignIfMember(llmqType, id, tx.GetHash(), allowReSigning)) {
@@ -1119,6 +1122,7 @@ void CInstantSendManager::RemoveConflictedTx(const CTransaction& tx)
 
 void CInstantSendManager::TruncateRecoveredSigsForInputs(const llmq::CInstantSendLock& islock)
 {
+    AssertLockHeld(cs);
     auto& consensusParams = Params().GetConsensus();
 
     for (auto& in : islock.inputs) {
