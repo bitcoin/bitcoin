@@ -100,6 +100,9 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
         {"reason",
             "%d. reason                     (numeric, optional) The reason for masternode service revocation.\n"
         },
+        {"submit",
+            "%d. submit                     (bool, optional, default=true) If true, the resulting transaction is sent to the network.\n"
+        },
         {"votingAddress_register",
             "%d. \"votingAddress\"            (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
             "                              It has to match the private key which is later used when voting on proposals.\n"
@@ -264,7 +267,7 @@ static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxP
     payload.sig = key.Sign(hash);
 }
 
-static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
+static std::string SignAndSendSpecialTx(const CMutableTransaction& tx, bool fSubmit = true)
 {
     {
     LOCK(cs_main);
@@ -283,6 +286,10 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
     signRequest.params.push_back(HexStr(ds.begin(), ds.end()));
     UniValue signResult = signrawtransaction(signRequest);
 
+    if (!fSubmit) {
+        return signResult["hex"].get_str();
+    }
+
     JSONRPCRequest sendRequest;
     sendRequest.params.setArray();
     sendRequest.params.push_back(signResult["hex"].get_str());
@@ -292,7 +299,7 @@ static std::string SignAndSendSpecialTx(const CMutableTransaction& tx)
 void protx_register_fund_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
-            "protx register_fund \"collateralAddress\" \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"fundAddress\" )\n"
+            "protx register_fund \"collateralAddress\" \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"fundAddress\" submit )\n"
             "\nCreates, funds and sends a ProTx to the network. The resulting transaction will move 1000 Dash\n"
             "to the address specified by collateralAddress and will then function as the collateral of your\n"
             "masternode.\n"
@@ -307,9 +314,12 @@ void protx_register_fund_help(CWallet* const pwallet)
             + GetHelpString(5, "votingAddress_register")
             + GetHelpString(6, "operatorReward")
             + GetHelpString(7, "payoutAddress_register")
-            + GetHelpString(8, "fundAddress") +
-            "\nResult:\n"
+            + GetHelpString(8, "fundAddress")
+            + GetHelpString(9, "submit") +
+            "\nResult (if \"submit\" is not set or set to true):\n"
             "\"txid\"                        (string) The transaction id.\n"
+            "\nResult (if \"submit\" is set to false):\n"
+            "\"hex\"                         (string) The serialized signed ProTx in hex format.\n"
             "\nExamples:\n"
             + HelpExampleCli("protx", "register_fund \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\" \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\"")
     );
@@ -318,7 +328,7 @@ void protx_register_fund_help(CWallet* const pwallet)
 void protx_register_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
-            "protx register \"collateralHash\" collateralIndex \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"feeSourceAddress\" )\n"
+            "protx register \"collateralHash\" collateralIndex \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"feeSourceAddress\" submit )\n"
             "\nSame as \"protx register_fund\", but with an externally referenced collateral.\n"
             "The collateral is specified through \"collateralHash\" and \"collateralIndex\" and must be an unspent\n"
             "transaction output spendable by this wallet. It must also not be used by any other masternode.\n"
@@ -332,9 +342,12 @@ void protx_register_help(CWallet* const pwallet)
             + GetHelpString(6, "votingAddress_register")
             + GetHelpString(7, "operatorReward")
             + GetHelpString(8, "payoutAddress_register")
-            + GetHelpString(9, "feeSourceAddress") +
-            "\nResult:\n"
+            + GetHelpString(9, "feeSourceAddress")
+            + GetHelpString(10, "submit") +
+            "\nResult (if \"submit\" is not set or set to true):\n"
             "\"txid\"                        (string) The transaction id.\n"
+            "\nResult (if \"submit\" is set to false):\n"
+            "\"hex\"                         (string) The serialized signed ProTx in hex format.\n"
             "\nExamples:\n"
             + HelpExampleCli("protx", "register \"0123456701234567012345670123456701234567012345670123456701234567\" 0 \"1.2.3.4:1234\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" \"93746e8731c57f87f79b3620a7982924e2931717d49540a85864bd543de11c43fb868fd63e501a1db37e19ed59ae6db4\" \"Xt9AMWaYSz7tR7Uo7gzXA3m4QmeWgrR3rr\" 0 \"XrVhS9LogauRJGJu2sHuryjhpuex4RNPSb\"")
     );
@@ -394,9 +407,9 @@ UniValue protx_register(const JSONRPCRequest& request)
     bool isFundRegister = request.params[0].get_str() == "register_fund";
     bool isPrepareRegister = request.params[0].get_str() == "register_prepare";
 
-    if (isFundRegister && (request.fHelp || (request.params.size() != 8 && request.params.size() != 9))) {
+    if (isFundRegister && (request.fHelp || (request.params.size() < 8 || request.params.size() > 10))) {
         protx_register_fund_help(pwallet);
-    } else if (isExternalRegister && (request.fHelp || (request.params.size() != 9 && request.params.size() != 10))) {
+    } else if (isExternalRegister && (request.fHelp || (request.params.size() < 9 || request.params.size() > 11))) {
         protx_register_help(pwallet);
     } else if (isPrepareRegister && (request.fHelp || (request.params.size() != 9 && request.params.size() != 10))) {
         protx_register_prepare_help();
@@ -493,6 +506,11 @@ UniValue protx_register(const JSONRPCRequest& request)
     FundSpecialTx(pwallet, tx, ptx, fundDest);
     UpdateSpecialTxInputsHash(tx, ptx);
 
+    bool fSubmit{true};
+    if ((isExternalRegister || isFundRegister) && !request.params[paramIdx + 7].isNull()) {
+        fSubmit = request.params[paramIdx + 7].get_bool();
+    }
+
     if (isFundRegister) {
         uint32_t collateralIndex = (uint32_t) -1;
         for (uint32_t i = 0; i < tx.vout.size(); i++) {
@@ -505,7 +523,7 @@ UniValue protx_register(const JSONRPCRequest& request)
         ptx.collateralOutpoint.n = collateralIndex;
 
         SetTxPayload(tx, ptx);
-        return SignAndSendSpecialTx(tx);
+        return SignAndSendSpecialTx(tx, fSubmit);
     } else {
         // referencing external collateral
 
@@ -538,7 +556,7 @@ UniValue protx_register(const JSONRPCRequest& request)
             }
             SignSpecialTxPayloadByString(tx, ptx, key);
             SetTxPayload(tx, ptx);
-            return SignAndSendSpecialTx(tx);
+            return SignAndSendSpecialTx(tx, fSubmit);
         }
     }
 }

@@ -575,12 +575,20 @@ class DashTestFramework(BitcoinTestFramework):
         rewardsAddr = self.nodes[0].getnewaddress()
 
         port = p2p_port(len(self.nodes) + idx)
-        if (idx % 2) == 0:
+        submit = (idx % 4) < 2
+
+        if (idx % 2) == 0 :
             self.nodes[0].lockunspent(True, [{'txid': txid, 'vout': collateral_vout}])
-            proTxHash = self.nodes[0].protx('register_fund', address, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
+            protx_result = self.nodes[0].protx('register_fund', address, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address, submit)
         else:
             self.nodes[0].generate(1)
-            proTxHash = self.nodes[0].protx('register', txid, collateral_vout, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
+            protx_result = self.nodes[0].protx('register', txid, collateral_vout, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address, submit)
+
+        if submit:
+            proTxHash = protx_result
+        else:
+            proTxHash = self.nodes[0].sendrawtransaction(protx_result)
+
         self.nodes[0].generate(1)
 
         self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
