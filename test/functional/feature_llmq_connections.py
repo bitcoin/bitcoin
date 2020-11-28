@@ -22,7 +22,7 @@ class LLMQConnections(DashTestFramework):
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
-        q = self.mine_quorum(expected_connections=2)
+        q = self.mine_quorum()
 
         self.log.info("checking for old intra quorum connections")
         total_count = 0
@@ -44,7 +44,7 @@ class LLMQConnections(DashTestFramework):
             self.wait_for_mnauth(mn.node, 4)
 
         self.log.info("mine a new quorum and verify that all members connect to each other")
-        q = self.mine_quorum(expected_connections=4)
+        q = self.mine_quorum()
 
         self.log.info("checking that all MNs got probed")
         for mn in self.get_quorum_masternodes(q):
@@ -56,7 +56,7 @@ class LLMQConnections(DashTestFramework):
             wait_until(lambda: self.get_mn_probe_count(mn.node, q, False) == 0)
 
         self.log.info("mine a new quorum and re-check probes")
-        q = self.mine_quorum(expected_connections=4)
+        q = self.mine_quorum()
         for mn in self.get_quorum_masternodes(q):
             wait_until(lambda: self.get_mn_probe_count(mn.node, q, True) == 4)
 

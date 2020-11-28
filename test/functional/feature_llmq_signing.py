@@ -26,13 +26,11 @@ class LLMQSigningTest(DashTestFramework):
     def run_test(self):
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
-        expected_connections = 2
         if self.options.spork21:
             self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
-            expected_connections = 4
         self.wait_for_sporks_same()
 
-        self.mine_quorum(expected_connections=expected_connections)
+        self.mine_quorum()
 
         id = "0000000000000000000000000000000000000000000000000000000000000001"
         msgHash = "0000000000000000000000000000000000000000000000000000000000000002"
@@ -69,12 +67,12 @@ class LLMQSigningTest(DashTestFramework):
         recsig_time = self.mocktime
 
         # Mine one more quorum, so that we have 2 active ones, nothing should change
-        self.mine_quorum(expected_connections=expected_connections)
+        self.mine_quorum()
         assert_sigs_nochange(True, False, True, 3)
 
         # Mine 2 more quorums, so that the one used for the the recovered sig should become inactive, nothing should change
-        self.mine_quorum(expected_connections=expected_connections)
-        self.mine_quorum(expected_connections=expected_connections)
+        self.mine_quorum()
+        self.mine_quorum()
         assert_sigs_nochange(True, False, True, 3)
 
         # fast forward until 0.5 days before cleanup is expected, recovered sig should still be valid

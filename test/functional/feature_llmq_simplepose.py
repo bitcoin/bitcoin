@@ -26,7 +26,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.wait_for_sporks_same()
 
         # check if mining quorums with all nodes being online succeeds without punishment/banning
-        self.test_no_banning(expected_connections=2)
+        self.test_no_banning()
 
         # Now lets isolate MNs one by one and verify that punishment/banning happens
         self.test_banning(self.isolate_mn, 1)
@@ -39,7 +39,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.reset_probe_timeouts()
 
         # Make sure no banning happens with spork21 enabled
-        self.test_no_banning(expected_connections=4)
+        self.test_no_banning()
 
         # Lets restart masternodes with closed ports and verify that they get banned even though they are connected to other MNs (via outbound connections)
         self.test_banning(self.close_mn_port, 3)
@@ -72,9 +72,9 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.reset_probe_timeouts()
         return False
 
-    def test_no_banning(self, expected_connections):
+    def test_no_banning(self):
         for i in range(3):
-            self.mine_quorum(expected_connections=expected_connections)
+            self.mine_quorum()
         for mn in self.mninfo:
             assert(not self.check_punished(mn) and not self.check_banned(mn))
 
