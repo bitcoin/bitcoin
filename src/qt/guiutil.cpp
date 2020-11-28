@@ -1576,12 +1576,16 @@ void updateFonts()
     std::map<QWidget*, QFont> mapWidgetFonts;
     // Loop through all widgets
     for (QWidget* w : qApp->allWidgets()) {
-        std::vector<QString> vecIgnore{
+        std::vector<QString> vecIgnoreClasses{
             "QWidget", "QDialog", "QFrame", "QStackedWidget", "QDesktopWidget", "QDesktopScreenWidget",
             "QTipLabel", "QMessageBox", "QMenu", "QComboBoxPrivateScroller", "QComboBoxPrivateContainer",
             "QScrollBar", "QListView", "BitcoinGUI", "WalletView", "WalletFrame"
         };
-        if (std::find(vecIgnore.begin(), vecIgnore.end(), w->metaObject()->className()) != vecIgnore.end()) {
+        std::vector<QString> vecIgnoreObjects{
+            "messagesWidget"
+        };
+        if (std::find(vecIgnoreClasses.begin(), vecIgnoreClasses.end(), w->metaObject()->className()) != vecIgnoreClasses.end() ||
+            std::find(vecIgnoreObjects.begin(), vecIgnoreObjects.end(), w->objectName()) != vecIgnoreObjects.end()) {
             continue;
         }
         ++nUpdatable;

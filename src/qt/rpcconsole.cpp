@@ -31,6 +31,7 @@
 #include <QButtonGroup>
 #include <QDir>
 #include <QDesktopWidget>
+#include <QFontDatabase>
 #include <QKeyEvent>
 #include <QMenu>
 #include <QMessageBox>
@@ -527,7 +528,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, QWidget* parent, Qt::WindowFlags 
 
     ui->peerHeading->setText(tr("Select a peer to view detailed information."));
 
-    consoleFontSize = settings.value(fontSizeSettingsKey, QFontInfo(GUIUtil::getFontNormal()).pointSize()).toInt();
+    setFontSize(settings.value(fontSizeSettingsKey, QFontInfo(QFontDatabase::systemFont(QFontDatabase::FixedFont)).pointSize()).toInt());
 
     pageButtons = new QButtonGroup(this);
     pageButtons->addButton(ui->btnInfo, pageButtons->buttons().size());
@@ -778,9 +779,7 @@ void RPCConsole::setFontSize(int newSize)
 {
     QSettings settings;
 
-    //don't allow an insane font size
-    if (newSize < FONT_RANGE.width() || newSize > FONT_RANGE.height())
-        return;
+    newSize = std::min(std::max(newSize, FONT_RANGE.width()), FONT_RANGE.height());
 
     // temp. store the console content
     QString str = ui->messagesWidget->toHtml();
@@ -876,15 +875,15 @@ void RPCConsole::clear(bool clearHistory)
     ui->lineEdit->setFocus();
 
     // Set default style sheet
-    QFontInfo fixedFontInfo(GUIUtil::getFontNormal());
+    ui->messagesWidget->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
     ui->messagesWidget->document()->setDefaultStyleSheet(
         QString(
                 "table { }"
-                "td.time { " + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_SECONDARY) + " font-size: %2; } "
-                "td.message { " + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_PRIMARY) + " font-family: %1; font-size: %2; white-space:pre-wrap; } "
+                "td.time { " + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_SECONDARY) + " font-size: %1pt; } "
+                "td.message { " + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_PRIMARY) + " font-size: %1pt; white-space:pre-wrap; } "
                 "td.cmd-request, b { " + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_COMMAND) + " } "
                 "td.cmd-error, .secwarning { " + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + " }"
-            ).arg(fixedFontInfo.family(), QString("%1pt").arg(consoleFontSize))
+            ).arg(consoleFontSize)
         );
 
 #ifdef Q_OS_MAC
