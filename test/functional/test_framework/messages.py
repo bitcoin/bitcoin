@@ -31,7 +31,6 @@ import time
 from test_framework.siphash import siphash256
 from test_framework.util import hex_str_to_bytes, assert_equal
 
-MY_VERSION = 70016  # past wtxid relay
 MY_SUBVERSION = "/python-p2p-tester:0.0.3/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
@@ -325,22 +324,20 @@ class CBlockLocator:
     __slots__ = ("nVersion", "vHave")
 
     def __init__(self):
-        self.nVersion = MY_VERSION
         self.vHave = []
 
     def deserialize(self, f):
-        self.nVersion = struct.unpack("<i", f.read(4))[0]
+        struct.unpack("<i", f.read(4))[0]  # Ignore version field.
         self.vHave = deser_uint256_vector(f)
 
     def serialize(self):
         r = b""
-        r += struct.pack("<i", self.nVersion)
+        r += struct.pack("<i", 0)  # Bitcoin Core ignores version field. Set it to 0.
         r += ser_uint256_vector(self.vHave)
         return r
 
     def __repr__(self):
-        return "CBlockLocator(nVersion=%i vHave=%s)" \
-            % (self.nVersion, repr(self.vHave))
+        return "CBlockLocator(vHave=%s)" % (repr(self.vHave))
 
 
 class COutPoint:
@@ -1027,7 +1024,7 @@ class msg_version:
     msgtype = b"version"
 
     def __init__(self):
-        self.nVersion = MY_VERSION
+        self.nVersion = 0
         self.nServices = NODE_NETWORK | NODE_WITNESS
         self.nTime = int(time.time())
         self.addrTo = CAddress()

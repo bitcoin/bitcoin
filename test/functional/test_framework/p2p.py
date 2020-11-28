@@ -80,6 +80,9 @@ logger = logging.getLogger("TestFramework.p2p")
 
 # The minimum P2P version that this test framework supports
 MIN_P2P_VERSION_SUPPORTED = 60001
+# The P2P version that this test framework implements and sends in its `version` message
+# Version 70016 supports wtxid relay
+P2P_VERSION = 70016
 
 MESSAGEMAP = {
     b"addr": msg_addr,
@@ -329,6 +332,7 @@ class P2PInterface(P2PConnection):
     def peer_connect_send_version(self, services):
         # Send a version msg
         vt = msg_version()
+        vt.nVersion = P2P_VERSION
         vt.nServices = services
         vt.addrTo.ip = self.dstaddr
         vt.addrTo.port = self.dstport
