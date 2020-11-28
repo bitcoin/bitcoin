@@ -1,0 +1,67 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          bitcoind
+# Required-Start:    $remote_fs $network
+# Required-Stop:     $remote_fs $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+### END INIT INFO
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
+
+# you can override defaults in /etc/default/bitcoind, see below
+if [ -f /etc/default/bitcoind ]; then
+    . /etc/default/bitcoind
+fi
+
+RETVAL=0
+
+prog=bitcoind
+# you can override the lockfile via BITCOIND_LOCKFILE in /etc/sysconfig/bitcoind
+lockfile=${BITCOIND_LOCKFILE-/var/lock/bitcoind}
+
+# bitcoind datadir, override with BITCOIND_DATADIR
+bitcoind_datadir=${BITCOIND_DATADIR-$HOME/.bitcoin/}
+
+# bitcoind options, override with BITCOIND_OPTS
+bitcoind_opts=${BITCOIND_OPTS}
+
+start() {
+    if [ ! -f $lockfile ]; then
+        echo -n "Starting $prog: "
+        bitcoind -daemon -datadir=$bitcoind_datadir $bitcoin_opts
+        RETVAL=$?
+        echo
+        [ $RETVAL -eq 0 ] && touch $lockfile
+        return $RETVAL
+    else
+        echo $prog is already running
+    fi
+}
+
+stop() {
+    if [ -f $lockfile ]; then
+        echo -n "Stopping $prog: "
+        bitcoin-cli -datadir=$bitcoind_datadir stop
+        tail --pid=$(pidof bitcoind) -f /dev/null
+        RETVAL=$?
+        echo
+        [ $RETVAL -eq 0 ] && rm -f $lockfile
+        return $RETVAL
+    else
+        echo $prog is not running
+    fi
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    *)
+        echo "Usage: service $prog {start|stop}"
+        exit 1
+        ;;
+esac
