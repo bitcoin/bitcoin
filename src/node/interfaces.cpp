@@ -64,7 +64,7 @@ namespace {
 class NodeImpl : public Node
 {
 public:
-    NodeImpl(NodeContext* context) { setContext(context); }
+    explicit NodeImpl(NodeContext* context) { setContext(context); }
     void initLogging() override { InitLogging(*Assert(m_context->args)); }
     void initParameterInteraction() override { InitParameterInteraction(*Assert(m_context->args)); }
     bilingual_str getWarnings() override { return GetWarnings(true); }

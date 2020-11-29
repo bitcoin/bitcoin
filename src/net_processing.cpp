@@ -451,7 +451,7 @@ struct Peer {
     /** Work queue of items requested by this peer **/
     std::deque<CInv> m_getdata_requests GUARDED_BY(m_getdata_requests_mutex);
 
-    Peer(NodeId id) : m_id(id) {}
+    explicit Peer(NodeId id) : m_id(id) {}
 };
 
 using PeerRef = std::shared_ptr<Peer>;

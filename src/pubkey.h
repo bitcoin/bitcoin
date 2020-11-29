@@ -223,7 +223,7 @@ private:
 
 public:
     /** Construct an x-only pubkey from exactly 32 bytes. */
-    XOnlyPubKey(Span<const unsigned char> bytes);
+    explicit XOnlyPubKey(Span<const unsigned char> bytes);
 
     /** Verify a Schnorr signature against this public key.
      *

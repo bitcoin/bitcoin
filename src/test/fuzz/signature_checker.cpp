@@ -24,7 +24,7 @@ class FuzzedSignatureChecker : public BaseSignatureChecker
     FuzzedDataProvider& m_fuzzed_data_provider;
 
 public:
-    FuzzedSignatureChecker(FuzzedDataProvider& fuzzed_data_provider) : m_fuzzed_data_provider(fuzzed_data_provider)
+    explicit FuzzedSignatureChecker(FuzzedDataProvider& fuzzed_data_provider) : m_fuzzed_data_provider(fuzzed_data_provider)
     {
     }
 
