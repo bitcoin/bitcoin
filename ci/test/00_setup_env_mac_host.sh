@@ -12,7 +12,6 @@ export GOAL="install"
 export SYSCOIN_CONFIG="--with-gui --enable-reduce-exports --enable-werror --with-boost-process"
 export CI_OS_NAME="macos"
 export NO_DEPENDS=1
-export TEST_RUNNER_EXTRA="--exclude feature_block"
 export OSX_SDK=""
 export CCACHE_SIZE=300M
 

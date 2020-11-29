@@ -20,7 +20,7 @@ export CONTAINER_NAME=ci_arm_linux
 # Use debian to avoid 404 apt errors when cross compiling
 export DOCKER_NAME_TAG="debian:buster"
 export USE_BUSY_BOX=true
-export RUN_UNIT_TESTS=false # SYSCOIN TODO see why tests won't work
+export RUN_UNIT_TESTS=true
 export RUN_FUNCTIONAL_TESTS=false
 export GOAL="install"
 # -Wno-psabi is to disable ABI warnings: "note: parameter passing for argument of type ... changed in GCC 7.1"

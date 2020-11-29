@@ -12,6 +12,5 @@ export HOST=x86_64-w64-mingw32
 export PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine-binfmt wine64 file"
 export RUN_FUNCTIONAL_TESTS=false
 export RUN_SECURITY_TESTS="true"
-export RUN_UNIT_TESTS=false # SYSCOIN TODO see why tests won't work
 export GOAL="deploy"
 export SYSCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests --without-boost-process"
