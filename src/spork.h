@@ -161,6 +161,7 @@ public:
         // we don't serialize pubkey ids because pubkeys should be
         // hardcoded or be set with cmdline or options, should
         // not reuse pubkeys from previous syscoind run
+        LOCK(cs);
         s << mapSporksByHash;
         s << mapSporksActive;
         // we don't serialize private key to prevent its leakage
@@ -177,6 +178,7 @@ public:
         // we don't serialize pubkey ids because pubkeys should be
         // hardcoded or be set with cmdline or options, should
         // not reuse pubkeys from previous syscoind run
+        LOCK(cs);
         s >> mapSporksByHash;
         s >> mapSporksActive;
         // we don't serialize private key to prevent its leakage
