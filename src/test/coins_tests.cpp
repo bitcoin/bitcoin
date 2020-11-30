@@ -38,7 +38,7 @@ class CCoinsViewTest : public CCoinsView
     std::map<COutPoint, Coin> map_;
 
 public:
-    NODISCARD bool GetCoin(const COutPoint& outpoint, Coin& coin) const override
+    [[nodiscard]] bool GetCoin(const COutPoint& outpoint, Coin& coin) const override
     {
         std::map<COutPoint, Coin>::const_iterator it = map_.find(outpoint);
         if (it == map_.end()) {
