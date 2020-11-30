@@ -318,8 +318,11 @@ public:
         consensus.BIP66Height = 1;
         consensus.CSVHeight = 1;
         consensus.SegwitHeight = 1;
-        consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
-        consensus.nPowTargetSpacing = 10 * 60;
+
+        // ITCOIN_SPECIFIC
+        consensus.nPowTargetTimespan = 24 * 60 * 60; // every day
+        consensus.nPowTargetSpacing = 60; // one minute
+
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
