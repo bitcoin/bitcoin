@@ -772,7 +772,7 @@ RPCHelpMan assetnew()
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
     // 150 SYS fee for new asset
-    opreturnRecipient.nAmount = 150*COIN;
+    opreturnRecipient.nAmount = COST_ASSET;
     
     mtx.vout.push_back(CTxOut(opreturnRecipient.nAmount, opreturnRecipient.scriptPubKey));
     CAmount nFeeRequired = 0;
@@ -796,7 +796,7 @@ RPCHelpMan assetnew()
     scriptData << OP_RETURN << data;
     CreateFeeRecipient(scriptData, opreturnRecipient);
     // 150 SYS fee for new asset
-    opreturnRecipient.nAmount = 150*COIN;
+    opreturnRecipient.nAmount = COST_ASSET;
     mtx.vout.clear();
     mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
     mtx.vout.push_back(CTxOut(opreturnRecipient.nAmount, opreturnRecipient.scriptPubKey));

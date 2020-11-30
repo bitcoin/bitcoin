@@ -643,10 +643,10 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if(itOut->second.second != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-zeroval", bSanityCheck);
             }
-            if (tx.vout[nOut].nValue < 150*COIN) {
+            if (tx.vout[nOut].nValue < COST_ASSET) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
             }
-            if (nAsset <= (SYSCOIN_TX_VERSION_ALLOCATION_SEND*10)) {
+            if (nAsset <= SYSCOIN_TX_MIN_ASSET_GUID) {
                 return FormatSyscoinErrorMessage(state, "asset-guid-too-low", bSanityCheck);
             }
             if (storedAssetRef.nPrecision > 8) {
