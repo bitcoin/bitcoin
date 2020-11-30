@@ -70,7 +70,7 @@ class DashZMQTest (DashTestFramework):
             self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
             self.wait_for_sporks_same()
             force_finish_mnsync(self.nodes[0])
-            # Create a LLMQ for testing
+            # Create an LLMQ for testing
             self.quorum_type = 100  # llmq_test
             self.quorum_hash = self.mine_quorum()
             self.sync_blocks()
@@ -89,17 +89,17 @@ class DashZMQTest (DashTestFramework):
             self.zmq_context.destroy(linger=None)
 
     def subscribe(self, publishers):
-        # Subscribe a list of ZMQPublisher
+        # Subscribe to a list of ZMQPublishers
         for pub in publishers:
             self.socket.subscribe(pub.value)
 
     def unsubscribe(self, publishers):
-        # Unsubscribe a list of ZMQPublisher
+        # Unsubscribe from a list of ZMQPublishers
         for pub in publishers:
             self.socket.unsubscribe(pub.value)
 
     def receive(self, publisher):
-        # Receive a ZMQ message and validate its sent from the correct ZMQPublisher
+        # Receive a ZMQ message and validate it's sent from the correct ZMQPublisher
         topic, body, seq = self.socket.recv_multipart()
         # Topic should match the publisher value
         assert_equal(topic.decode(), publisher.value)
@@ -127,7 +127,7 @@ class DashZMQTest (DashTestFramework):
             ZMQPublisher.raw_recovered_sig
         ]
         self.log.info("Testing %d recovered signature publishers" % len(recovered_sig_publishers))
-        # Subscribe recovered signature messages
+        # Subscribe to recovered signature messages
         self.subscribe(recovered_sig_publishers)
         # Generate a ChainLock and make sure this leads to valid recovered sig ZMQ messages
         rpc_last_block_hash = self.nodes[0].generate(1)[0]
@@ -141,7 +141,7 @@ class DashZMQTest (DashTestFramework):
         for mn in self.get_quorum_masternodes(self.quorum_hash):
             mn.node.quorum("sign", self.quorum_type, sign_id, sign_msg_hash)
         validate_recovered_sig(sign_id, sign_msg_hash)
-        # Unsubscribe recovered signature messages
+        # Unsubscribe from recovered signature messages
         self.unsubscribe(recovered_sig_publishers)
 
     def test_chainlock_publishers(self):
@@ -151,7 +151,7 @@ class DashZMQTest (DashTestFramework):
             ZMQPublisher.raw_chain_lock_sig
         ]
         self.log.info("Testing %d ChainLock publishers" % len(chain_lock_publishers))
-        # Subscribe ChainLock messages
+        # Subscribe to ChainLock messages
         self.subscribe(chain_lock_publishers)
         # Generate ChainLock
         generated_hash = self.nodes[0].generate(1)[0]
@@ -183,7 +183,7 @@ class DashZMQTest (DashTestFramework):
         assert_equal(uint256_to_string(zmq_chain_lock.blockHash), rpc_chain_lock_hash)
         assert_equal(zmq_chain_locked_block.hash, rpc_chain_lock_hash)
         assert_equal(bytes_to_hex_str(zmq_chain_lock.sig), rpc_best_chain_lock_sig)
-        # Unsubscribe ChainLock messages
+        # Unsubscribe from ChainLock messages
         self.unsubscribe(chain_lock_publishers)
 
     def test_instantsend_publishers(self):
@@ -195,7 +195,7 @@ class DashZMQTest (DashTestFramework):
             ZMQPublisher.raw_instantsend_doublespend
         ]
         self.log.info("Testing %d InstantSend publishers" % len(instantsend_publishers))
-        # Subscribe InstantSend messages
+        # Subscribe to InstantSend messages
         self.subscribe(instantsend_publishers)
         # Make sure all nodes agree
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
@@ -239,7 +239,7 @@ class DashZMQTest (DashTestFramework):
         zmq_double_spend_tx_1.deserialize(self.receive(ZMQPublisher.raw_instantsend_doublespend))
         assert(zmq_double_spend_tx_1.is_valid())
         assert_equal(zmq_double_spend_tx_1.hash, rpc_raw_tx_1['txid'])
-        # Unsubscribe InstantSend messages
+        # Unsubscribe from InstantSend messages
         self.unsubscribe(instantsend_publishers)
 
     def test_governance_publishers(self):
@@ -250,7 +250,7 @@ class DashZMQTest (DashTestFramework):
             ZMQPublisher.raw_governance_vote
         ]
         self.log.info("Testing %d governance publishers" % len(governance_publishers))
-        # Subscribe governance messages
+        # Subscribe to governance messages
         self.subscribe(governance_publishers)
         # Create a proposal and submit it to the network
         proposal_rev = 1
@@ -312,7 +312,7 @@ class DashZMQTest (DashTestFramework):
         assert_equal(zmq_governance_vote_raw.nTime, int(rpc_vote_parts[1]))
         assert_equal(map_vote_outcomes[zmq_governance_vote_raw.nVoteOutcome], rpc_vote_parts[2])
         assert_equal(map_vote_signals[zmq_governance_vote_raw.nVoteSignal], rpc_vote_parts[3])
-        # Unsubscribe governance messages
+        # Unsubscribe from governance messages
         self.unsubscribe(governance_publishers)
 
 
