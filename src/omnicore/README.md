@@ -1,7 +1,7 @@
 Omni Core (beta) integration/staging tree
 =========================================
 
-[![Build Status](https://travis-ci.org/OmniLayer/omnicore.svg?branch=omnicore-0.0.10)](https://travis-ci.org/OmniLayer/omnicore)
+[![Build Status](https://travis-ci.org/OmniLayer/omnicore.svg?branch=develop)](https://travis-ci.org/OmniLayer/omnicore)
 
 What is the Omni Layer
 ----------------------
@@ -12,7 +12,7 @@ http://www.omnilayer.org
 What is Omni Core
 -----------------
 
-Omni Core is a fast, portable Omni Layer implementation that is based off the Bitcoin Core codebase (currently 0.13.2). This implementation requires no external dependencies extraneous to Bitcoin Core, and is native to the Bitcoin network just like other Bitcoin nodes. It currently supports a wallet mode and is seamlessly available on three platforms: Windows, Linux and Mac OS. Omni Layer extensions are exposed via the UI and the JSON-RPC interface. Development has been consolidated on the Omni Core product, and it is the reference client for the Omni Layer.
+Omni Core is a fast, portable Omni Layer implementation that is based off the Bitcoin Core codebase (currently 0.20.1). This implementation requires no external dependencies extraneous to Bitcoin Core, and is native to the Bitcoin network just like other Bitcoin nodes. It currently supports a wallet mode and is seamlessly available on three platforms: Windows, Linux and Mac OS. Omni Layer extensions are exposed via the UI and the JSON-RPC interface. Development has been consolidated on the Omni Core product, and it is the reference client for the Omni Layer.
 
 Disclaimer, warning
 -------------------
