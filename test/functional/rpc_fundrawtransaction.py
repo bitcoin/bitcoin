@@ -94,6 +94,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_address_reuse()
         self.test_option_subtract_fee_from_outputs()
         self.test_subtract_fee_with_presets()
+        self.test_transaction_too_large()
 
     def test_change_position(self):
         """Ensure setting changePosition in fundraw with an exact match is handled properly."""
@@ -906,6 +907,25 @@ class RawTransactionsTest(BitcoinTestFramework):
         fundedtx = self.nodes[0].fundrawtransaction(rawtx, {'subtractFeeFromOutputs': [0]})
         signedtx = self.nodes[0].signrawtransactionwithwallet(fundedtx['hex'])
         self.nodes[0].sendrawtransaction(signedtx['hex'])
+
+    def test_transaction_too_large(self):
+        self.log.info("Test fundrawtx where BnB solution would result in a too large transaction, but Knapsack would not")
+
+        self.nodes[0].createwallet("large")
+        wallet = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+        recipient = self.nodes[0].get_wallet_rpc("large")
+        outputs = {}
+        rawtx = recipient.createrawtransaction([], {wallet.getnewaddress(): 147.99899260})
+
+        # Make 1500 0.1 BTC outputs
+        # The amount that we target for funding is in the BnB range when these outputs are used.
+        # However if these outputs are selected, the transaction will end up being too large, so it shouldn't use BnB and instead fallback to Knapsack
+        # but that behavior is not implemented yet. For now we just check that we get an error.
+        for i in range(0, 1500):
+            outputs[recipient.getnewaddress()] = 0.1
+        wallet.sendmany("", outputs)
+        self.nodes[0].generate(10)
+        assert_raises_rpc_error(-4, "Transaction too large", recipient.fundrawtransaction, rawtx)
 
 if __name__ == '__main__':
     RawTransactionsTest().main()
