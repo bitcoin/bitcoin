@@ -162,8 +162,8 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
 
     // ITCOIN_SPECIFIC
-    CAmount blockSubsidy = gArgs.GetArg("-blocksubsidy", 100);
-    coinbaseTx.vout[0].nValue = nFees + blockSubsidy * COIN;
+    CAmount blockSubsidy = gArgs.GetArg("-blocksubsidy", 100 * COIN);
+    coinbaseTx.vout[0].nValue = nFees + blockSubsidy;
 
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
