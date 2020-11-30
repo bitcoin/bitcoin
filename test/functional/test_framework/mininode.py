@@ -105,7 +105,7 @@ MESSAGEMAP = {
 # Edit these parameters to match src/chainparams.cpp
 VBK_GAMMA = 0xb1
 VBK_1 = 0xc0
-VBK_NETWORK = (VBK_GAMMA + 0x1)
+VBK_NETWORK = (VBK_1 + 0x1)
 
 
 def calculate_network_magic(index):
