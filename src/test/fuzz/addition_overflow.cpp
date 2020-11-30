@@ -14,7 +14,7 @@
 #if __has_builtin(__builtin_add_overflow)
 #define HAVE_BUILTIN_ADD_OVERFLOW
 #endif
-#elif defined(__GNUC__) && (__GNUC__ >= 5)
+#elif defined(__GNUC__)
 #define HAVE_BUILTIN_ADD_OVERFLOW
 #endif
 
