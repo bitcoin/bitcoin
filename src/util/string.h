@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-NODISCARD inline std::string TrimString(const std::string& str, const std::string& pattern = " \f\n\r\t\v")
+[[nodiscard]] inline std::string TrimString(const std::string& str, const std::string& pattern = " \f\n\r\t\v")
 {
     std::string::size_type front = str.find_first_not_of(pattern);
     if (front == std::string::npos) {
@@ -59,7 +59,7 @@ inline std::string Join(const std::vector<std::string>& list, const std::string&
 /**
  * Check if a string does not contain any embedded NUL (\0) characters
  */
-NODISCARD inline bool ValidAsCString(const std::string& str) noexcept
+[[nodiscard]] inline bool ValidAsCString(const std::string& str) noexcept
 {
     return str.size() == strlen(str.c_str());
 }
@@ -80,7 +80,7 @@ std::string ToString(const T& t)
  * Check whether a container begins with the given prefix.
  */
 template <typename T1, size_t PREFIX_LEN>
-NODISCARD inline bool HasPrefix(const T1& obj,
+[[nodiscard]] inline bool HasPrefix(const T1& obj,
                                 const std::array<uint8_t, PREFIX_LEN>& prefix)
 {
     return obj.size() >= PREFIX_LEN &&
