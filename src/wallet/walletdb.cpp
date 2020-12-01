@@ -945,7 +945,7 @@ void MaybeCompactWalletDB()
     }
 
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
-        WalletDatabase& dbh = pwallet->GetDBHandle();
+        WalletDatabase& dbh = pwallet->GetDatabase();
 
         unsigned int nUpdateCounter = dbh.nUpdateCounter;
 
