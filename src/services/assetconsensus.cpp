@@ -655,6 +655,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (storedAssetRef.strSymbol.size() > MAX_SYMBOL_SIZE || storedAssetRef.strSymbol.size() < MIN_SYMBOL_SIZE) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-symbol", bSanityCheck);
             }
+            // must be init and cannot update supply (only when doing assetsend)
             if(!(storedAssetRef.nUpdateMask & ASSET_INIT) || (storedAssetRef.nUpdateMask & ASSET_UPDATE_SUPPLY)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-mask", bSanityCheck);
             }
@@ -771,6 +772,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (theAsset.auxFeeDetails.vecAuxFees.size() > MAX_AUXFEES) {
                  return FormatSyscoinErrorMessage(state, "asset-invalid-auxfees", bSanityCheck);
             }
+            // cannot init or send supply
             if((theAsset.nUpdateMask & ASSET_INIT) || (theAsset.nUpdateMask & ASSET_UPDATE_SUPPLY)) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-mask", bSanityCheck);
             }
@@ -920,7 +922,6 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if (!itIn->second.first) {
                 return FormatSyscoinErrorMessage(state, "asset-input-zeroval", bSanityCheck);
             }
-
             if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_SUPPLY)) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-supply-privileges", bSanityCheck);
             }
