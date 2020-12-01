@@ -132,7 +132,7 @@ CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, con
     CScript dummyScript;
     {
         LOCK(pwallet->cs_wallet);
-        WalletBatch dummyBatch(pwallet->GetDBHandle(), false);
+        WalletBatch dummyBatch(pwallet->GetDatabase(), false);
         dummyBatch.TxnBegin();
         CKey secret;
         secret.MakeNewKey(pwallet->CanSupportFeature(FEATURE_COMPRPUBKEY));
