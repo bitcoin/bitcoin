@@ -898,7 +898,9 @@ static void ThreadImport(std::vector<fs::path> vImportFiles)
             fs::path pathBootstrapOld = GetDataDir() / "bootstrap.dat.old";
             LogPrintf("Importing bootstrap.dat...\n");
             LoadExternalBlockFile(chainparams, file);
-            RenameOver(pathBootstrap, pathBootstrapOld);
+            if (!RenameOver(pathBootstrap, pathBootstrapOld)) {
+                throw std::runtime_error("Rename failed");
+            }
         } else {
             LogPrintf("Warning: Could not open bootstrap file %s\n", pathBootstrap.string());
         }
