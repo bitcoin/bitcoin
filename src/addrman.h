@@ -523,12 +523,25 @@ public:
             s >> serialized_asmap_version;
         }
 
+        // The file is compatible if asmap and the constant haven't changed.
+        // asmap has changed in two cases:
+        // - either it wasn't supported by the addr file, but now asmap is supplied;
+        // - or it was supported, but we have a different asmap now (the lack of asmap counts as well)
+        const bool compatible_file = serialized_asmap_version == supplied_asmap_version && nUBuckets == ADDRMAN_NEW_BUCKET_COUNT;
+
         for (int n = 0; n < nNew; n++) {
             CAddrInfo &info = mapInfo[n];
             int bucket = entryToBucket[n];
             int nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
-            if (nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && vvNew[bucket][nUBucketPos] == -1 &&
-                info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS && serialized_asmap_version == supplied_asmap_version) {
+
+            // We already checked that the file format is not "too new" and we can parse it (see lowest_compatible above).
+            // Here, check that the file is compatible by other means:
+            // - the file is compatible (asmap and the constant haven't changed)
+            // - bucket/position assignment hasn't changed incompatibly
+            // If the file is incompatible, reassign buckets/positions.
+            const bool compatible_assignment = vvNew[bucket][nUBucketPos] == -1 && info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS;
+
+            if (compatible_file && compatible_assignment) {
                 // Bucketing has not changed, using existing bucket positions for the new table
                 vvNew[bucket][nUBucketPos] = n;
                 info.nRefCount++;
