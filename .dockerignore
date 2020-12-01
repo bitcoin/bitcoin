@@ -39,6 +39,7 @@
 **/bitcoin-cli
 **/bitcoind
 **/bitcoin-tx
+**/bitcoin-util
 **/bitcoin-wallet
 **/*.a
 **/*.la

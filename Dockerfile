@@ -52,6 +52,7 @@ RUN make install
 RUN strip \
     target/bin/bitcoind \
     target/bin/bitcoin-tx \
+    target/bin/bitcoin-util \
     target/bin/bitcoin-wallet \
     target/lib/libbitcoinconsensus.a
 
@@ -86,6 +87,7 @@ COPY --from=build-stage \
 RUN \
     ln -s /opt/itcoin-core/bin/bitcoin-cli    /usr/local/bin/ && \
     ln -s /opt/itcoin-core/bin/bitcoin-tx     /usr/local/bin/ && \
+    ln -s /opt/itcoin-core/bin/bitcoin-util   /usr/local/bin/ && \
     ln -s /opt/itcoin-core/bin/bitcoin-wallet /usr/local/bin/ && \
     ln -s /opt/itcoin-core/bin/bitcoind       /usr/local/bin/ && \
     echo "The bitcoin* programs are in the PATH: they can be executed from anywhere, even outside the container"
