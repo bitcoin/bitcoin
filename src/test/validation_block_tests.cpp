@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
         initial_tip = ::ChainActive().Tip();
     }
     auto sub = std::make_shared<TestSubscriber>(initial_tip->GetBlockHash());
-    RegisterSharedValidationInterface(sub);
+    RegisterValidationInterface(sub);
 
     // create a bunch of threads that repeatedly process a block generated above at random
     // this will create parallelism and randomness inside validation - the ValidationInterface
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(processnewblock_signals_ordering)
     }
     SyncWithValidationInterfaceQueue();
 
-    UnregisterSharedValidationInterface(sub);
+    UnregisterValidationInterface(sub);
 
     LOCK(cs_main);
     BOOST_CHECK_EQUAL(sub->m_expected_tip, ::ChainActive().Tip()->GetBlockHash());

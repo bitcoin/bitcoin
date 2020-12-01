@@ -188,4 +188,4 @@ void CZMQNotificationInterface::BlockDisconnected(const std::shared_ptr<const CB
     });
 }
 
-CZMQNotificationInterface* g_zmq_notification_interface = nullptr;
+std::shared_ptr<CZMQNotificationInterface> g_zmq_notification_interface;

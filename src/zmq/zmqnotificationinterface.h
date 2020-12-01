@@ -39,6 +39,6 @@ private:
     std::list<std::unique_ptr<CZMQAbstractNotifier>> notifiers;
 };
 
-extern CZMQNotificationInterface* g_zmq_notification_interface;
+extern std::shared_ptr<CZMQNotificationInterface> g_zmq_notification_interface;
 
 #endif // BITCOIN_ZMQ_ZMQNOTIFICATIONINTERFACE_H

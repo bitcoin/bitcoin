@@ -251,7 +251,7 @@ public:
     };
 
     //! Register handler for notifications.
-    virtual std::unique_ptr<Handler> handleNotifications(std::shared_ptr<Notifications> notifications) = 0;
+    virtual std::unique_ptr<Handler> handleNotifications(std::weak_ptr<Notifications> notifications) = 0;
 
     //! Wait for pending notifications to be processed unless block hash points to the current
     //! chain tip.

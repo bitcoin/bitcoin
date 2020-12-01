@@ -37,7 +37,7 @@ public:
     explicit TxIndex(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
 
     // Destructor is declared because this class contains a unique_ptr to an incomplete type.
-    virtual ~TxIndex() override;
+    ~TxIndex() override;
 
     /// Look up a transaction by hash.
     ///
@@ -49,6 +49,6 @@ public:
 };
 
 /// The global transaction index, used in GetTransaction. May be null.
-extern std::unique_ptr<TxIndex> g_txindex;
+extern std::shared_ptr<TxIndex> g_txindex;
 
 #endif // BITCOIN_INDEX_TXINDEX_H

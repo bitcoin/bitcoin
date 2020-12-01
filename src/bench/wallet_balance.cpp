@@ -26,16 +26,16 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
 
     NodeContext node;
     std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain(node);
-    CWallet wallet{chain.get(), "", CreateMockWalletDatabase()};
+    auto wallet = std::make_shared<CWallet>(chain.get(), "", CreateMockWalletDatabase());
     {
-        wallet.SetupLegacyScriptPubKeyMan();
+        wallet->SetupLegacyScriptPubKeyMan();
         bool first_run;
-        if (wallet.LoadWallet(first_run) != DBErrors::LOAD_OK) assert(false);
+        if (wallet->LoadWallet(first_run) != DBErrors::LOAD_OK) assert(false);
     }
-    auto handler = chain->handleNotifications({&wallet, [](CWallet*) {}});
+    auto handler = chain->handleNotifications(wallet);
 
-    const Optional<std::string> address_mine{add_mine ? Optional<std::string>{getnewaddress(wallet)} : nullopt};
-    if (add_watchonly) importaddress(wallet, ADDRESS_WATCHONLY);
+    const Optional<std::string> address_mine{add_mine ? Optional<std::string>{getnewaddress(*wallet)} : nullopt};
+    if (add_watchonly) importaddress(*wallet, ADDRESS_WATCHONLY);
 
     for (int i = 0; i < 100; ++i) {
         generatetoaddress(test_setup.m_node, address_mine.get_value_or(ADDRESS_WATCHONLY));
@@ -43,11 +43,11 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
     }
     SyncWithValidationInterfaceQueue();
 
-    auto bal = wallet.GetBalance(); // Cache
+    auto bal = wallet->GetBalance(); // Cache
 
     bench.run([&] {
-        if (set_dirty) wallet.MarkDirty();
-        bal = wallet.GetBalance();
+        if (set_dirty) wallet->MarkDirty();
+        bal = wallet->GetBalance();
         if (add_mine) assert(bal.m_mine_trusted > 0);
         if (add_watchonly) assert(bal.m_watchonly_trusted > 0);
     });

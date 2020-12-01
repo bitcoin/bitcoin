@@ -205,7 +205,7 @@ public:
         int nMaxFeeler = 0;
         int nBestHeight = 0;
         CClientUIInterface* uiInterface = nullptr;
-        NetEventsInterface* m_msgproc = nullptr;
+        std::shared_ptr<NetEventsInterface> m_msgproc;
         BanMan* m_banman = nullptr;
         unsigned int nSendBufferMaxSize = 0;
         unsigned int nReceiveFloodSize = 0;
@@ -565,7 +565,7 @@ private:
     bool m_use_addrman_outgoing;
     std::atomic<int> nBestHeight;
     CClientUIInterface* clientInterface;
-    NetEventsInterface* m_msgproc;
+    std::shared_ptr<NetEventsInterface> m_msgproc;
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
     BanMan* m_banman;
 
@@ -631,7 +631,7 @@ protected:
      * Protected destructor so that instances can only be deleted by derived classes.
      * If that restriction is no longer desired, this should be made public and virtual.
      */
-    ~NetEventsInterface() = default;
+    virtual ~NetEventsInterface() = default;
 };
 
 enum

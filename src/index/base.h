@@ -102,7 +102,7 @@ protected:
 
 public:
     /// Destructor interrupts sync thread if running and blocks until it exits.
-    virtual ~BaseIndex();
+    ~BaseIndex() override;
 
     /// Blocks the current thread until the index is caught up to the current
     /// state of the block chain. This only blocks if the index has gotten in

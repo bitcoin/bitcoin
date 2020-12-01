@@ -34,8 +34,8 @@ BOOST_AUTO_TEST_CASE(unregister_validation_interface_race)
         // keep going for about 1 sec, which is 250k iterations
         for (int i = 0; i < 250000; i++) {
             auto sub = std::make_shared<TestSubscriberNoop>();
-            RegisterSharedValidationInterface(sub);
-            UnregisterSharedValidationInterface(sub);
+            RegisterValidationInterface(sub);
+            UnregisterValidationInterface(sub);
         }
         // tell the other thread we are done
         generate = false;
@@ -53,7 +53,7 @@ public:
         : m_on_call(std::move(on_call)), m_on_destroy(std::move(on_destroy))
     {
     }
-    virtual ~TestInterface()
+    ~TestInterface() override
     {
         if (m_on_destroy) m_on_destroy();
     }
@@ -77,7 +77,7 @@ public:
 BOOST_AUTO_TEST_CASE(unregister_all_during_call)
 {
     bool destroyed = false;
-    RegisterSharedValidationInterface(std::make_shared<TestInterface>(
+    RegisterValidationInterface(std::make_shared<TestInterface>(
         [&] {
             // First call should decrements reference count 2 -> 1
             UnregisterAllValidationInterfaces();

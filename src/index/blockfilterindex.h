@@ -81,10 +81,10 @@ public:
  * Get a block filter index by type. Returns nullptr if index has not been initialized or was
  * already destroyed.
  */
-BlockFilterIndex* GetBlockFilterIndex(BlockFilterType filter_type);
+std::shared_ptr<BlockFilterIndex> GetBlockFilterIndex(BlockFilterType filter_type);
 
 /** Iterate over all running block filter indexes, invoking fn on each. */
-void ForEachBlockFilterIndex(std::function<void (BlockFilterIndex&)> fn);
+void ForEachBlockFilterIndex(std::function<void (std::shared_ptr<BlockFilterIndex>)> fn);
 
 /**
  * Initialize a block filter index for the given type if one does not already exist. Returns true if

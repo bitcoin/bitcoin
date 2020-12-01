@@ -172,7 +172,9 @@ void Interrupt(NodeContext& node)
     if (g_txindex) {
         g_txindex->Interrupt();
     }
-    ForEachBlockFilterIndex([](BlockFilterIndex& index) { index.Interrupt(); });
+    ForEachBlockFilterIndex([](std::shared_ptr<BlockFilterIndex> index) {
+        index->Interrupt();
+    });
 }
 
 void Shutdown(NodeContext& node)
@@ -201,7 +203,7 @@ void Shutdown(NodeContext& node)
 
     // Because these depend on each-other, we make sure that neither can be
     // using the other before destroying them.
-    if (node.peerman) UnregisterValidationInterface(node.peerman.get());
+    if (node.peerman) UnregisterValidationInterface(node.peerman);
     // Follow the lock order requirements:
     // * CheckForStaleTipAndEvictPeers locks cs_main before indirectly calling GetExtraOutboundCount
     //   which locks cs_vNodes.
@@ -264,10 +266,14 @@ void Shutdown(NodeContext& node)
 
     // Stop and delete all indexes only after flushing background callbacks.
     if (g_txindex) {
+        UnregisterValidationInterface(g_txindex);
         g_txindex->Stop();
         g_txindex.reset();
     }
-    ForEachBlockFilterIndex([](BlockFilterIndex& index) { index.Stop(); });
+    ForEachBlockFilterIndex([](std::shared_ptr<BlockFilterIndex> index) {
+        UnregisterValidationInterface(index);
+        index->Stop();
+    });
     DestroyAllBlockFilterIndexes();
 
     // Any future callbacks will be dropped. This should absolutely be safe - if
@@ -293,12 +299,10 @@ void Shutdown(NodeContext& node)
 #if ENABLE_ZMQ
     if (g_zmq_notification_interface) {
         UnregisterValidationInterface(g_zmq_notification_interface);
-        delete g_zmq_notification_interface;
-        g_zmq_notification_interface = nullptr;
+        g_zmq_notification_interface.reset();
     }
 #endif
 
-    node.chain_clients.clear();
     UnregisterAllValidationInterfaces();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     globalVerifyHandle.reset();
@@ -306,7 +310,7 @@ void Shutdown(NodeContext& node)
     node.mempool.reset();
     node.chainman = nullptr;
     node.scheduler.reset();
-
+    node.chain_clients.clear();
     try {
         if (!fs::remove(GetPidFile(*node.args))) {
             LogPrintf("%s: Unable to remove PID file: File does not exist\n", __func__);
@@ -1405,7 +1409,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     ChainstateManager& chainman = *Assert(node.chainman);
 
     node.peerman.reset(new PeerManager(chainparams, *node.connman, node.banman.get(), *node.scheduler, chainman, *node.mempool));
-    RegisterValidationInterface(node.peerman.get());
+    RegisterValidationInterface(node.peerman);
 
     // sanitize comments per BIP-0014, format user agent and check total size
     std::vector<std::string> uacomments;
@@ -1519,7 +1523,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     }
 
 #if ENABLE_ZMQ
-    g_zmq_notification_interface = CZMQNotificationInterface::Create();
+    g_zmq_notification_interface.reset(CZMQNotificationInterface::Create());
 
     if (g_zmq_notification_interface) {
         RegisterValidationInterface(g_zmq_notification_interface);
@@ -1801,14 +1805,19 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
     // ********************************************************* Step 8: start indexers
     if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX)) {
-        g_txindex = MakeUnique<TxIndex>(nTxIndexCache, false, fReindex);
+        g_txindex = std::make_shared<TxIndex>(nTxIndexCache, false, fReindex);
+        RegisterValidationInterface(g_txindex);
         g_txindex->Start();
     }
 
     for (const auto& filter_type : g_enabled_filter_types) {
         InitBlockFilterIndex(filter_type, filter_index_cache, false, fReindex);
-        GetBlockFilterIndex(filter_type)->Start();
     }
+
+    ForEachBlockFilterIndex([](std::shared_ptr<BlockFilterIndex> index) {
+        RegisterValidationInterface(index);
+        index->Start();
+    });
 
     // ********************************************************* Step 9: load wallet
     for (const auto& client : node.chain_clients) {
@@ -1935,7 +1944,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     connOptions.nBestHeight = chain_active_height;
     connOptions.uiInterface = &uiInterface;
     connOptions.m_banman = node.banman.get();
-    connOptions.m_msgproc = node.peerman.get();
+    connOptions.m_msgproc = node.peerman;
     connOptions.nSendBufferMaxSize = 1000 * args.GetArg("-maxsendbuffer", DEFAULT_MAXSENDBUFFER);
     connOptions.nReceiveFloodSize = 1000 * args.GetArg("-maxreceivebuffer", DEFAULT_MAXRECEIVEBUFFER);
     connOptions.m_added_nodes = args.GetArgs("-addnode");
