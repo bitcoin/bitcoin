@@ -1103,9 +1103,9 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, int64_t nTime)
             nonce, strSubVersion, nNodeStartingHeight, tx_relay));
 
     if (fLogIPs) {
-        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, txrelay=%d, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, CService().ToString(), addr_you.ToString(), tx_relay, nodeid);
+        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, them=%s, txrelay=%d, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addr_you.ToString(), tx_relay, nodeid);
     } else {
-        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, txrelay=%d, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, CService().ToString(), tx_relay, nodeid);
+        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, txrelay=%d, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, tx_relay, nodeid);
     }
 }
 
