@@ -25,8 +25,6 @@ CQuorumBlockProcessor* quorumBlockProcessor;
 static const std::string DB_MINED_COMMITMENT = "q_mc";
 static const std::string DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT = "q_mcih";
 
-static const std::string DB_BEST_BLOCK_UPGRADE = "q_bbu2";
-
 void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman)
 {
     if (strCommand == NetMsgType::QFCOMMITMENT) {
@@ -172,7 +170,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
         }
     }
 
-    auto blockHash = block.GetHash();
+    const auto &blockHash = block.GetHash();
 
     for (auto& p : qcs) {
         auto& qc = p.second;
@@ -180,9 +178,6 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
             return false;
         }
     }
-
-    evoDb.Write(DB_BEST_BLOCK_UPGRADE, blockHash);
-
     return true;
 }
 
@@ -282,9 +277,6 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pi
         // if a reorg happened, we should allow to mine this commitment later
         AddMinableCommitment(qc);
     }
-
-    evoDb.Write(DB_BEST_BLOCK_UPGRADE, pindex->pprev->GetBlockHash());
-
     return true;
 }
 
