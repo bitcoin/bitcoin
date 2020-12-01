@@ -11,6 +11,7 @@
 
 #include <QDateTime>
 #include <QList>
+#include <QLocale>
 #include <QModelIndex>
 #include <QVariant>
 
@@ -126,7 +127,7 @@ QVariant BanTableModel::data(const QModelIndex &index, int role) const
         case Bantime:
             QDateTime date = QDateTime::fromMSecsSinceEpoch(0);
             date = date.addSecs(rec->banEntry.nBanUntil);
-            return date.toString(Qt::SystemLocaleLongDate);
+            return QLocale::system().toString(date, QLocale::LongFormat);
         }
     }
 

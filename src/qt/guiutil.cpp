@@ -59,6 +59,7 @@
 #include <QKeyEvent>
 #include <QLineEdit>
 #include <QList>
+#include <QLocale>
 #include <QMouseEvent>
 #include <QPointer>
 #include <QProgressDialog>
@@ -247,7 +248,7 @@ void setIcon(QAbstractButton* button, const QString& strIcon, const ThemedColor 
 
 QString dateTimeStr(const QDateTime &date)
 {
-    return date.date().toString(Qt::SystemLocaleShortDate) + QString(" ") + date.toString("hh:mm");
+    return QLocale::system().toString(date.date(), QLocale::ShortFormat) + QString(" ") + date.toString("hh:mm");
 }
 
 QString dateTimeStr(qint64 nTime)
