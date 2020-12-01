@@ -536,7 +536,7 @@ CAsset::CAsset(const CTransaction &tx) {
 bool CAsset::UnserializeFromData(const std::vector<unsigned char> &vchData) {
     try {
 		CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
-		Unserialize(dsAsset);
+		UnserializeTx(dsAsset);
     } catch (std::exception &e) {
 		SetNull();
         return false;
@@ -658,6 +658,6 @@ void CBurnSyscoin::SerializeData( std::vector<unsigned char> &vchData) {
 }
 void CAsset::SerializeData( std::vector<unsigned char> &vchData) {
     CDataStream dsAsset(SER_NETWORK, PROTOCOL_VERSION);
-    Serialize(dsAsset);
+    SerializeTx(dsAsset);
 	vchData = std::vector<unsigned char>(dsAsset.begin(), dsAsset.end());
 }

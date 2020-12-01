@@ -736,7 +736,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                     return FormatSyscoinErrorMessage(state, "asset-reserved-symbol-sysx", bSanityCheck);
                 }
             }
-            if(storedAssetRef.nUpdateCapabilityFlags & ASSET_INIT) {
+            if(storedAssetRef.nUpdateCapabilityFlags > ASSET_CAPABILITY_ALL) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-capabilityflags", bSanityCheck);
             }
             // activate not allowed to use RBF because GUID is deterministic of first input which cannot be reused       
@@ -897,7 +897,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 if(theAsset.nPrevUpdateCapabilityFlags != storedAssetRef.nUpdateCapabilityFlags) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-prevflags", bSanityCheck);
                 }
-                if(theAsset.nUpdateCapabilityFlags & ASSET_INIT) {
+                if(theAsset.nUpdateCapabilityFlags > ASSET_CAPABILITY_ALL) {
                     return FormatSyscoinErrorMessage(state, "asset-invalid-capabilityflags", bSanityCheck);
                 }
                 storedAssetRef.nUpdateCapabilityFlags = std::move(theAsset.nUpdateCapabilityFlags);

@@ -654,9 +654,11 @@ enum {
     ASSET_UPDATE_NOTARY_DETAILS=16, // can you update notary details?
     ASSET_UPDATE_AUXFEE=32, // can you update aux fees?
     ASSET_UPDATE_CAPABILITYFLAGS=64, // can you update capability flags?
+    ASSET_CAPABILITY_ALL=127,
     ASSET_INIT=128, // set when creating an asset
-    ASSET_CAPABILITY_ALL=255
 };
+
+
 const int SYSCOIN_TX_VERSION_MN_REGISTER = 80;
 const int SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE = 81;
 const int SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR = 82;
@@ -828,7 +830,84 @@ public:
         prevAuxFeeDetails.SetNull();
         nUpdateMask = 0;
     }
+    // these two functions will work with transactions which require previous fields for disconnect logic
+    template<typename Stream>
+    void SerializeTx(Stream& s) const
+    {
+        s << *(CAssetAllocation*)this;
+        s << nPrecision;
+        s << nUpdateMask;
+        if(nUpdateMask & ASSET_INIT) {
+            s << strSymbol;
+            s << Using<AmountCompression>(nMaxSupply);
+        }
+        if(nUpdateMask & ASSET_UPDATE_CONTRACT) {
+            s << vchContract;
+            s << vchPrevContract;
+        }
+        if(nUpdateMask & ASSET_UPDATE_DATA) {
+            s << strPubData;
+            s << strPrevPubData;
+        }
+        if(nUpdateMask & ASSET_UPDATE_SUPPLY) {
+            s << Using<AmountCompression>(nTotalSupply);
+        }
+        if(nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
+            s << vchNotaryKeyID;
+            s << vchPrevNotaryKeyID;
+        }
+        if(nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
+            s << notaryDetails;
+            s << prevNotaryDetails;
+        }
+        if(nUpdateMask & ASSET_UPDATE_AUXFEE) {
+            s << auxFeeDetails;
+            s << prevAuxFeeDetails;
+        }
+        if(nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) {
+            s << nUpdateCapabilityFlags;
+            s << nPrevUpdateCapabilityFlags;
+        }
+    }
 
+    template<typename Stream>
+    void UnserializeTx(Stream& s) {
+        s >> *(CAssetAllocation*)this;
+        s >> nPrecision;
+        s >> nUpdateMask;
+        if(nUpdateMask & ASSET_INIT) {
+            s >> strSymbol;
+            s >> Using<AmountCompression>(nMaxSupply);
+        }
+        if(nUpdateMask & ASSET_UPDATE_CONTRACT) {
+            s >> vchContract;
+            s >> vchPrevContract;
+        }
+        if(nUpdateMask & ASSET_UPDATE_DATA) {
+            s >> strPubData;
+            s >> strPrevPubData;
+        }
+        if(nUpdateMask & ASSET_UPDATE_SUPPLY) {
+            s >> Using<AmountCompression>(nTotalSupply);
+        }
+        if(nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
+            s >> vchNotaryKeyID;
+            s >> vchPrevNotaryKeyID;
+        }
+        if(nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
+            s >> notaryDetails;
+            s >> prevNotaryDetails;
+        }
+        if(nUpdateMask & ASSET_UPDATE_AUXFEE) {
+            s >> auxFeeDetails;
+            s >> prevAuxFeeDetails;
+        }
+        if(nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) {
+            s >> nUpdateCapabilityFlags;
+            s >> nPrevUpdateCapabilityFlags;
+        }
+    }
+    // this version is for everything else including database storage which does not require previous fields
     SERIALIZE_METHODS(CAsset, obj) {
         READWRITEAS(CAssetAllocation, obj);
         READWRITE(obj.nPrecision, obj.nUpdateMask);
@@ -837,30 +916,24 @@ public:
         }
         if(obj.nUpdateMask & ASSET_UPDATE_CONTRACT) {
             READWRITE(obj.vchContract);
-            READWRITE(obj.vchPrevContract);
         }
         if(obj.nUpdateMask & ASSET_UPDATE_DATA) {
             READWRITE(obj.strPubData);
-            READWRITE(obj.strPrevPubData);
         }
         if(obj.nUpdateMask & ASSET_UPDATE_SUPPLY) {
             READWRITE(Using<AmountCompression>(obj.nTotalSupply));
         }
         if(obj.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) {
             READWRITE(obj.vchNotaryKeyID);
-            READWRITE(obj.vchPrevNotaryKeyID);
         }
         if(obj.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
             READWRITE(obj.notaryDetails);
-            READWRITE(obj.prevNotaryDetails);
         }
         if(obj.nUpdateMask & ASSET_UPDATE_AUXFEE) {
             READWRITE(obj.auxFeeDetails);
-            READWRITE(obj.prevAuxFeeDetails);
         }
         if(obj.nUpdateMask & ASSET_UPDATE_CAPABILITYFLAGS) {
             READWRITE(obj.nUpdateCapabilityFlags);
-            READWRITE(obj.nPrevUpdateCapabilityFlags);
         }
     }
 
