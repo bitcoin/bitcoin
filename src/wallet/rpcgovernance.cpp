@@ -95,7 +95,7 @@ static RPCHelpMan gobject_list_prepared()
     CWallet* const pwallet = wallet.get();
     EnsureWalletIsUnlocked(pwallet);
 
-    int64_t nCount = request.params.size() > 1 ? request.params[1].get_int64() : 10;
+    int64_t nCount = request.params.size() > 0 ? request.params[0].get_int64() : 10;
     if (nCount < 0) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
     }
