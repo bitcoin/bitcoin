@@ -930,7 +930,7 @@ public:
         CAmount m_watchonly_untrusted_pending{0};
         CAmount m_watchonly_immature{0};
     };
-    Balance GetBalance(int min_depth = 0, bool avoid_reuse = true) const;
+    Balance GetBalance(int min_depth = 0, bool avoid_reuse = true) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     CAmount GetAvailableBalance(const CCoinControl* coinControl = nullptr) const;
 
     OutputType TransactionChangeType(const Optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend);
@@ -1030,7 +1030,7 @@ public:
     std::set<std::set<CTxDestination>> GetAddressGroupings() const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     std::map<CTxDestination, CAmount> GetAddressBalances() const;
 
-    std::set<CTxDestination> GetLabelAddresses(const std::string& label) const;
+    std::set<CTxDestination> GetLabelAddresses(const std::string& label) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Marks all outputs in each one of the destinations dirty, so their cache is
@@ -1274,7 +1274,7 @@ public:
     DescriptorScriptPubKeyMan* GetDescriptorScriptPubKeyMan(const WalletDescriptor& desc) const;
 
     //! Add a descriptor to the wallet, return a ScriptPubKeyMan & associated output type
-    ScriptPubKeyMan* AddWalletDescriptor(WalletDescriptor& desc, const FlatSigningProvider& signing_provider, const std::string& label, bool internal);
+    ScriptPubKeyMan* AddWalletDescriptor(WalletDescriptor& desc, const FlatSigningProvider& signing_provider, const std::string& label, bool internal) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 };
 
 /**

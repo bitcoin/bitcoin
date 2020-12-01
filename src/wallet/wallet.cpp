@@ -2126,10 +2126,9 @@ void MaybeResendWalletTxs()
 
 CWallet::Balance CWallet::GetBalance(const int min_depth, bool avoid_reuse) const
 {
+    AssertLockHeld(cs_wallet);
     Balance ret;
     isminefilter reuse_filter = avoid_reuse ? ISMINE_NO : ISMINE_USED;
-    {
-        LOCK(cs_wallet);
         std::set<uint256> trusted_parents;
         for (const auto& entry : mapWallet)
         {
@@ -2149,7 +2148,6 @@ CWallet::Balance CWallet::GetBalance(const int min_depth, bool avoid_reuse) cons
             ret.m_mine_immature += wtx.GetImmatureCredit();
             ret.m_watchonly_immature += wtx.GetImmatureWatchOnlyCredit();
         }
-    }
     return ret;
 }
 
@@ -3511,7 +3509,7 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings() const
 
 std::set<CTxDestination> CWallet::GetLabelAddresses(const std::string& label) const
 {
-    LOCK(cs_wallet);
+    AssertLockHeld(cs_wallet);
     std::set<CTxDestination> result;
     for (const std::pair<const CTxDestination, CAddressBookData>& item : m_address_book)
     {
@@ -4494,12 +4492,13 @@ DescriptorScriptPubKeyMan* CWallet::GetDescriptorScriptPubKeyMan(const WalletDes
 
 ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const FlatSigningProvider& signing_provider, const std::string& label, bool internal)
 {
+    AssertLockHeld(cs_wallet);
+
     if (!IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
         WalletLogPrintf("Cannot add WalletDescriptor to a non-descriptor wallet\n");
         return nullptr;
     }
 
-    LOCK(cs_wallet);
     auto new_spk_man = std::unique_ptr<DescriptorScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc));
 
     // If we already have this descriptor, remove it from the maps but add the existing cache to desc

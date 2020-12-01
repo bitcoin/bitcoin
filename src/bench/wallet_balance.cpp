@@ -43,11 +43,11 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
     }
     SyncWithValidationInterfaceQueue();
 
-    auto bal = wallet.GetBalance(); // Cache
+    auto bal = WITH_LOCK(wallet.cs_wallet, return wallet.GetBalance()); // Cache
 
     bench.run([&] {
         if (set_dirty) wallet.MarkDirty();
-        bal = wallet.GetBalance();
+        bal = WITH_LOCK(wallet.cs_wallet, return wallet.GetBalance());
         if (add_mine) assert(bal.m_mine_trusted > 0);
         if (add_watchonly) assert(bal.m_watchonly_trusted > 0);
     });
