@@ -4137,6 +4137,10 @@ bool CWallet::UpgradeWallet(int version, bilingual_str& error)
 
 void CWallet::postInitProcess()
 {
+    syncMempool();
+}
+
+void CWallet::syncMempool() {
     LOCK(cs_wallet);
 
     // Add wallet transactions that aren't already in a block to mempool
@@ -4145,6 +4149,10 @@ void CWallet::postInitProcess()
 
     // Update wallet transactions with current mempool transactions.
     chain().requestMempoolTransactions(*this);
+
+    // After running the initial process the wallet is ready to
+    // respond to typical requests like balances etc.
+    setMempoolSynced();
 }
 
 bool CWallet::BackupWallet(const std::string& strDest) const

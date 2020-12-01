@@ -76,6 +76,20 @@ static bool ParseIncludeWatchonly(const UniValue& include_watchonly, const CWall
 }
 
 
+static CWallet* GetReadyWallet(std::shared_ptr<CWallet> const wallet) {
+    CWallet* const pwallet = wallet.get();
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    // Ensure that the mempool has been synced at least once on startup
+    if (!pwallet->mempoolSynced()) pwallet->syncMempool();
+
+    return pwallet;
+}
+
+
 /** Checks if a CKey is in the given CWallet compressed or otherwise*/
 bool HaveKey(const SigningProvider& wallet, const CKey& key)
 {
@@ -476,11 +490,7 @@ static RPCHelpMan sendtoaddress()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    CWallet* const pwallet = GetReadyWallet(wallet);
 
     LOCK(pwallet->cs_wallet);
 
@@ -555,11 +565,7 @@ static RPCHelpMan listaddressgroupings()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    const CWallet* const pwallet = wallet.get();
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    const CWallet* const pwallet = GetReadyWallet(wallet);
 
     LOCK(pwallet->cs_wallet);
 
@@ -613,7 +619,7 @@ static RPCHelpMan signmessage()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    const CWallet* const pwallet = wallet.get();
+    const CWallet* const pwallet = GetReadyWallet(wallet);
 
     LOCK(pwallet->cs_wallet);
 
@@ -716,11 +722,7 @@ static RPCHelpMan getreceivedbyaddress()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    const CWallet* const pwallet = wallet.get();
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    const CWallet* const pwallet = GetReadyWallet(wallet);
 
     LOCK(pwallet->cs_wallet);
 
@@ -755,11 +757,7 @@ static RPCHelpMan getreceivedbylabel()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    const CWallet* const pwallet = wallet.get();
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    const CWallet* const pwallet = GetReadyWallet(wallet);
 
     LOCK(pwallet->cs_wallet);
 
@@ -796,11 +794,7 @@ static RPCHelpMan getbalance()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    const CWallet* const pwallet = wallet.get();
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    const CWallet* const pwallet = GetReadyWallet(wallet);
 
     LOCK(pwallet->cs_wallet);
 
@@ -836,11 +830,7 @@ static RPCHelpMan getunconfirmedbalance()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    const CWallet* const pwallet = wallet.get();
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    const CWallet* const pwallet = GetReadyWallet(wallet);
 
     LOCK(pwallet->cs_wallet);
 
@@ -907,11 +897,7 @@ static RPCHelpMan sendmany()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    CWallet* const pwallet = GetReadyWallet(wallet);
 
     LOCK(pwallet->cs_wallet);
 
@@ -1223,11 +1209,7 @@ static RPCHelpMan listreceivedbyaddress()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    const CWallet* const pwallet = wallet.get();
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    const CWallet* const pwallet = GetReadyWallet(wallet);
 
     LOCK(pwallet->cs_wallet);
 
@@ -1266,11 +1248,7 @@ static RPCHelpMan listreceivedbylabel()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    const CWallet* const pwallet = wallet.get();
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    const CWallet* const pwallet = GetReadyWallet(wallet);
 
     LOCK(pwallet->cs_wallet);
 
@@ -1447,11 +1425,7 @@ static RPCHelpMan listtransactions()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    const CWallet* const pwallet = wallet.get();
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    const CWallet* const pwallet = GetReadyWallet(wallet);
 
     const std::string* filter_label = nullptr;
     if (!request.params[0].isNull() && request.params[0].get_str() != "*") {
@@ -1566,10 +1540,7 @@ static RPCHelpMan listsinceblock()
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
 
-    const CWallet& wallet = *pwallet;
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    wallet.BlockUntilSyncedToCurrentChain();
+    const CWallet& wallet = *GetReadyWallet(pwallet);
 
     LOCK(wallet.cs_wallet);
 
@@ -1707,11 +1678,7 @@ static RPCHelpMan gettransaction()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    const CWallet* const pwallet = wallet.get();
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    const CWallet* const pwallet = GetReadyWallet(wallet);
 
     LOCK(pwallet->cs_wallet);
 
@@ -1781,11 +1748,7 @@ static RPCHelpMan abandontransaction()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    CWallet* const pwallet = GetReadyWallet(wallet);
 
     LOCK(pwallet->cs_wallet);
 
@@ -1820,11 +1783,7 @@ static RPCHelpMan backupwallet()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    const CWallet* const pwallet = wallet.get();
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    const CWallet* const pwallet = GetReadyWallet(wallet);
 
     LOCK(pwallet->cs_wallet);
 
@@ -2171,11 +2130,7 @@ static RPCHelpMan lockunspent()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    CWallet* const pwallet = GetReadyWallet(wallet);
 
     LOCK(pwallet->cs_wallet);
 
@@ -2381,11 +2336,7 @@ static RPCHelpMan getbalances()
 {
     std::shared_ptr<CWallet> const rpc_wallet = GetWalletForJSONRPCRequest(request);
     if (!rpc_wallet) return NullUniValue;
-    CWallet& wallet = *rpc_wallet;
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    wallet.BlockUntilSyncedToCurrentChain();
+    CWallet& wallet = *GetReadyWallet(rpc_wallet);
 
     LOCK(wallet.cs_wallet);
 
@@ -2457,11 +2408,7 @@ static RPCHelpMan getwalletinfo()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    const CWallet* const pwallet = wallet.get();
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    const CWallet* const pwallet = GetReadyWallet(wallet);
 
     LOCK(pwallet->cs_wallet);
 
@@ -2894,7 +2841,7 @@ static RPCHelpMan listunspent()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    const CWallet* const pwallet = wallet.get();
+    const CWallet* const pwallet = GetReadyWallet(wallet);
 
     int nMinDepth = 1;
     if (!request.params[0].isNull()) {
@@ -2959,10 +2906,6 @@ static RPCHelpMan listunspent()
         if (options.exists("maximumCount"))
             nMaximumCount = options["maximumCount"].get_int64();
     }
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
 
     UniValue results(UniValue::VARR);
     std::vector<COutput> vecOutputs;
@@ -3058,10 +3001,6 @@ static RPCHelpMan listunspent()
 
 void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& fee_out, int& change_position, const UniValue& options, CCoinControl& coinControl, bool override_min_fee)
 {
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
-
     change_position = -1;
     bool lockUnspents = false;
     UniValue subtractFeeFromOutputs;
@@ -3261,7 +3200,7 @@ static RPCHelpMan fundrawtransaction()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    CWallet* const pwallet = GetReadyWallet(wallet);
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValueType(), UniValue::VBOOL});
 
@@ -3447,7 +3386,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    CWallet* const pwallet = GetReadyWallet(wallet);
 
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !want_psbt) {
         if (!pwallet->chain().rpcEnableDeprecated("bumpfee")) {
@@ -3487,10 +3426,6 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
         }
         SetFeeEstimateMode(*pwallet, coin_control, conf_target, options["estimate_mode"], options["fee_rate"], /* override_min_fee */ false);
     }
-
-    // Make sure the results are valid at least up to the most recent block
-    // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
 
     LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
@@ -4096,7 +4031,7 @@ static RPCHelpMan send()
 
             std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
             if (!wallet) return NullUniValue;
-            CWallet* const pwallet = wallet.get();
+            CWallet* const pwallet = GetReadyWallet(wallet);
 
             UniValue options{request.params[4].isNull() ? UniValue::VOBJ : request.params[4]};
             if (options.exists("conf_target") || options.exists("estimate_mode")) {
@@ -4412,7 +4347,7 @@ static RPCHelpMan walletcreatefundedpsbt()
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    CWallet* const pwallet = GetReadyWallet(wallet);
 
     RPCTypeCheck(request.params, {
         UniValue::VARR,
