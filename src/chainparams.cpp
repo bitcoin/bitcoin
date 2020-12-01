@@ -326,7 +326,27 @@ public:
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
+
+        // ITCOIN_SPECIFIC
+        /*
+         * GGALANO, MUXATOR 2020-12-02: we'll continue to use 2016 for
+         * nMinerConfirmationWindow and 1916 for nRuleChangeActivationThreshold
+         * (the same value used in the bitcoin codebase), even if the formulae
+         * in the comments are no longer valid.
+         *
+         * nMinerConfirmationWindow is used in soft-fork consensus updates [0]:
+         * nodes need to wait 1916 blocks (nRuleChangeActivationThreshold) out
+         * of the 2016 window are mined with the "I am supporting the update"
+         * flag active.
+         *
+         * Provided that in ItCoin 1 block is mined every minute, this means
+         * that an update can be introduced in at most 2 days, even keeping 1916
+         * and 2016. This is is fast enough.
+         *
+         * [0] https://github.com/bitcoin/bips/blob/master/bip-0009.mediawiki
+         */
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
+
         consensus.MinBIP9WarningHeight = 0;
         consensus.powLimit = uint256S("00000377ae000000000000000000000000000000000000000000000000000000");
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
