@@ -7,7 +7,7 @@
 
 #include <clientversion.h>
 #include <streams.h>
-#include <txmempool.h>
+#include <txmempool_entry.h>
 #include <util/system.h>
 
 static constexpr double INF_FEERATE = 1e99;

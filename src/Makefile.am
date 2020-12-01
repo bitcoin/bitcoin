@@ -215,6 +215,7 @@ BITCOIN_CORE_H = \
   txdb.h \
   txrequest.h \
   txmempool.h \
+  txmempool_entry.h \
   undo.h \
   util/asmap.h \
   util/bip32.h \

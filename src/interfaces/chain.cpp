@@ -26,6 +26,7 @@
 #include <sync.h>
 #include <timedata.h>
 #include <txmempool.h>
+#include <txmempool_entry.h>
 #include <uint256.h>
 #include <univalue.h>
 #include <util/system.h>
