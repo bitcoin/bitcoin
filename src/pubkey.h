@@ -170,6 +170,15 @@ public:
     /*
      * Check syntactic correctness.
      *
+     * When setting a pubkey (Set()) or deserializing fails (its header bytes
+     * don't match the length of the data), the size is set to 0. Thus,
+     * by checking size, one can observe whether Set() or deserialization has
+     * failed.
+     *
+     * This does not check for more than that. In particular, it does not verify
+     * that the coordinates correspond to a point on the curve (see IsFullyValid()
+     * for that instead).
+     *
      * Note that this is consensus critical as CheckECDSASignature() calls it!
      */
     bool IsValid() const

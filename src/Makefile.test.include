@@ -1105,7 +1105,7 @@ test_fuzz_script_interpreter_SOURCES = test/fuzz/script_interpreter.cpp
 test_fuzz_script_assets_test_minimizer_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 test_fuzz_script_assets_test_minimizer_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_script_assets_test_minimizer_LDADD = $(FUZZ_SUITE_LD_COMMON)
-test_fuzz_script_assets_test_minimizer_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+test_fuzz_script_assets_test_minimizer_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_script_assets_test_minimizer_SOURCES = test/fuzz/script_assets_test_minimizer.cpp
 
 test_fuzz_script_ops_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)

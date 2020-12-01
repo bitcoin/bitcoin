@@ -38,11 +38,11 @@ static const unsigned int DEFAULT_BYTES_PER_SIGOP = 20;
 static const bool DEFAULT_PERMIT_BAREMULTISIG = true;
 /** The maximum number of witness stack items in a standard P2WSH script */
 static const unsigned int MAX_STANDARD_P2WSH_STACK_ITEMS = 100;
-/** The maximum size of each witness stack item in a standard P2WSH script */
+/** The maximum size in bytes of each witness stack item in a standard P2WSH script */
 static const unsigned int MAX_STANDARD_P2WSH_STACK_ITEM_SIZE = 80;
-/** The maximum size of each witness stack item in a standard BIP 342 script (Taproot, leaf version 0xc0) */
+/** The maximum size in bytes of each witness stack item in a standard BIP 342 script (Taproot, leaf version 0xc0) */
 static const unsigned int MAX_STANDARD_TAPSCRIPT_STACK_ITEM_SIZE = 80;
-/** The maximum size of a standard witnessScript */
+/** The maximum size in bytes of a standard witnessScript */
 static const unsigned int MAX_STANDARD_P2WSH_SCRIPT_SIZE = 3600;
 /** The maximum size of a standard ScriptSig */
 static const unsigned int MAX_STANDARD_SCRIPTSIG_SIZE = 1650;
@@ -105,7 +105,9 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs,
     /**
      * Check if the transaction is over standard P2WSH resources limit:
      * 3600bytes witnessScript size, 80bytes per witness stack element, 100 witness stack elements
-     * These limits are adequate for multi-signature up to n-of-100 using OP_CHECKSIG, OP_ADD, and OP_EQUAL,
+     * These limits are adequate for multisignatures up to n-of-100 using OP_CHECKSIG, OP_ADD, and OP_EQUAL.
+     *
+     * Also enforce a maximum stack item size limit and no annexes for tapscript spends.
      */
 bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs);
 

@@ -824,21 +824,33 @@ def taproot_tree_helper(scripts):
     h = TaggedHash("TapBranch", left_h + right_h)
     return (left + right, h)
 
+# A TaprootInfo object has the following fields:
+# - scriptPubKey: the scriptPubKey (witness v1 CScript)
+# - inner_pubkey: the inner pubkey (32 bytes)
+# - negflag: whether the pubkey in the scriptPubKey was negated from inner_pubkey+tweak*G (bool).
+# - tweak: the tweak (32 bytes)
+# - leaves: a dict of name -> TaprootLeafInfo objects for all known leaves
 TaprootInfo = namedtuple("TaprootInfo", "scriptPubKey,inner_pubkey,negflag,tweak,leaves")
+
+# A TaprootLeafInfo object has the following fields:
+# - script: the leaf script (CScript or bytes)
+# - version: the leaf version (0xc0 for BIP342 tapscript)
+# - merklebranch: the merkle branch to use for this leaf (32*N bytes)
 TaprootLeafInfo = namedtuple("TaprootLeafInfo", "script,version,merklebranch")
 
 def taproot_construct(pubkey, scripts=None):
     """Construct a tree of Taproot spending conditions
 
-    pubkey: an ECPubKey object for the internal pubkey
+    pubkey: a 32-byte xonly pubkey for the internal pubkey (bytes)
     scripts: a list of items; each item is either:
-             - a (name, CScript) tuple
-             - a (name, CScript, leaf version) tuple
+             - a (name, CScript or bytes, leaf version) tuple
+             - a (name, CScript or bytes) tuple (defaulting to leaf version 0xc0)
              - another list of items (with the same structure)
-             - a function, which specifies how to compute the hashing partner
-               in function of the hash of whatever it is combined with
+             - a list of two items; the first of which is an item itself, and the
+               second is a function. The function takes as input the Merkle root of the
+               first item, and produces a (fictitious) partner to hash with.
 
-    Returns: script (sPK or redeemScript), tweak, {name:(script, leaf version, negation flag, innerkey, merklepath), ...}
+    Returns: a TaprootInfo object
     """
     if scripts is None:
         scripts = []

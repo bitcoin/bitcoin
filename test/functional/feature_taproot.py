@@ -444,6 +444,8 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
     * standard: whether the (valid version of) spending is expected to be standard
     * err_msg: a string with an expected error message for failure (or None, if not cared about)
     * sigops_weight: the pre-taproot sigops weight consumed by a successful spend
+    * need_vin_vout_mismatch: whether this test requires being tested in a transaction input that has no corresponding
+                              transaction output.
     """
 
     conf = dict()
