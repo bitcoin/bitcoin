@@ -5110,7 +5110,9 @@ bool DumpMempool(const CTxMemPool& pool)
         if (!FileCommit(file.Get()))
             throw std::runtime_error("FileCommit failed");
         file.fclose();
-        RenameOver(GetDataDir() / "mempool.dat.new", GetDataDir() / "mempool.dat");
+        if (!RenameOver(GetDataDir() / "mempool.dat.new", GetDataDir() / "mempool.dat")) {
+            throw std::runtime_error("Rename failed");
+        }
         int64_t last = GetTimeMicros();
         LogPrintf("Dumped mempool: %gs to copy, %gs to dump\n", (mid-start)*MICRO, (last-mid)*MICRO);
     } catch (const std::exception& e) {
