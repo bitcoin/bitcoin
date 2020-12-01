@@ -925,6 +925,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-supply-privileges", bSanityCheck);
             }
             // db will be stored with total supply
+            // even though new assets must set this flag, it may be unset by disconnectassetsend
             storedAssetRef.nUpdateMask |= ASSET_UPDATE_SUPPLY;
             const CAmount &nTotal = itOut->second.second - itIn->second.second;
             storedAssetRef.nTotalSupply += nTotal;
