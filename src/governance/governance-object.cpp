@@ -419,6 +419,28 @@ std::string CGovernanceObject::GetDataAsPlainString() const
     return std::string(vchData.begin(), vchData.end());
 }
 
+UniValue CGovernanceObject::ToJson() const
+{
+    UniValue obj(UniValue::VOBJ);
+    obj.pushKV("objectHash", GetHash().ToString());
+    obj.pushKV("parentHash", nHashParent.ToString());
+    obj.pushKV("collateralHash", GetCollateralHash().ToString());
+    obj.pushKV("createdAt", GetCreationTime());
+    obj.pushKV("revision", nRevision);
+    obj.pushKV("type", nObjectType);
+    UniValue data;
+    if (!data.read(GetDataAsPlainString())) {
+        data.clear();
+        data.setObject();
+        data.pushKV("plain", GetDataAsPlainString());
+        data.pushKV("hex", GetDataAsHexString());
+    } else {
+        data.pushKV("hex", GetDataAsHexString());
+    }
+    obj.pushKV("data", data);
+    return obj;
+}
+
 void CGovernanceObject::UpdateLocalValidity()
 {
     LOCK(cs_main);

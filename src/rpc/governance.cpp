@@ -213,6 +213,10 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INTERNAL_ERROR, err);
     }
 
+    if (!pwallet->WriteGovernanceObject({hashParent, nRevision, nTime, tx->GetHash(), strDataHex})) {
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "WriteGovernanceObject failed");
+    }
+
     // -- make our change address
     CReserveKey reservekey(pwallet);
     // -- send the tx to the network
@@ -225,6 +229,53 @@ UniValue gobject_prepare(const JSONRPCRequest& request)
                 govobj.GetDataAsPlainString(), govobj.GetHash().ToString(), tx->GetHash().ToString());
 
     return tx->GetHash().ToString();
+}
+
+void gobject_list_prepared_help(CWallet* const pwallet)
+{
+    throw std::runtime_error(
+                "gobject list-prepared <count>\n"
+                "Returns a list of governance objects prepared by this wallet with \"gobject prepare\" sorted by their creation time.\n"
+                + HelpRequiringPassphrase(pwallet) + "\n"
+                "\nArguments:\n"
+                "1. count (numeric, optional, default=10) Maximum number of objects to return.\n"
+                );
+}
+
+UniValue gobject_list_prepared(const JSONRPCRequest& request)
+{
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    if (request.fHelp || (request.params.size() > 2)) {
+        gobject_prepare_help(pwallet);
+    }
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
+        return NullUniValue;
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    int64_t nCount = request.params.size() > 1 ? ParseInt64V(request.params[1], "count") : 10;
+    if (nCount < 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative count");
+    }
+    // Get a list of all prepared governance objects stored in the wallet
+    LOCK(pwallet->cs_wallet);
+    std::vector<const CGovernanceObject*> vecObjects = pwallet->GetGovernanceObjects();
+    // Sort the vector by the object creation time/hex data
+    std::sort(vecObjects.begin(), vecObjects.end(), [](const CGovernanceObject* a, const CGovernanceObject* b) {
+        bool fGreater = a->GetCreationTime() > b->GetCreationTime();
+        bool fEqual = a->GetCreationTime() == b->GetCreationTime();
+        bool fHexGreater = a->GetDataAsHexString() > b->GetDataAsHexString();
+        return fGreater || (fEqual && fHexGreater);
+    });
+
+    UniValue jsonArray(UniValue::VARR);
+    auto it = vecObjects.rbegin() + std::max<int>(0, vecObjects.size() - nCount);
+    while (it != vecObjects.rend()) {
+        jsonArray.push_back((*it++)->ToJson());
+    }
+
+    return jsonArray;
 }
 #endif // ENABLE_WALLET
 
@@ -884,6 +935,7 @@ UniValue gobject_getcurrentvotes(const JSONRPCRequest& request)
             "  check              - Validate governance object data (proposal only)\n"
 #ifdef ENABLE_WALLET
             "  prepare            - Prepare governance object by signing and creating tx\n"
+            "  list-prepared      - Returns a list of governance objects prepared by this wallet with \"gobject prepare\"\n"
 #endif // ENABLE_WALLET
             "  submit             - Submit governance object to network\n"
             "  deserialize        - Deserialize governance object from hex string to JSON\n"
@@ -924,6 +976,8 @@ UniValue gobject(const JSONRPCRequest& request)
     } else if (strCommand == "prepare") {
         // PREPARE THE GOVERNANCE OBJECT BY CREATING A COLLATERAL TRANSACTION
         return gobject_prepare(request);
+    } else if (strCommand == "list-prepared") {
+        return gobject_list_prepared(request);
 #endif // ENABLE_WALLET
     } else if (strCommand == "submit") {
         // AFTER COLLATERAL TRANSACTION HAS MATURED USER CAN SUBMIT GOVERNANCE OBJECT TO PROPAGATE NETWORK
