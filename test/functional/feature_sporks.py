@@ -35,13 +35,14 @@ class SporkTest(BitcoinTestFramework):
         node.spork('SPORK_2_INSTANTSEND_ENABLED', value)
 
     def run_test(self):
-        # check test spork default state
-        assert(not self.get_test_spork_state(self.nodes[0]))
-        assert(not self.get_test_spork_state(self.nodes[1]))
-        assert(not self.get_test_spork_state(self.nodes[2]))
+        spork_default_state = self.get_test_spork_state(self.nodes[0])
+        # check test spork default state matches on all nodes
+        assert(self.get_test_spork_state(self.nodes[1]) == spork_default_state)
+        assert(self.get_test_spork_state(self.nodes[2]) == spork_default_state)
 
         # check spork propagation for connected nodes
-        self.set_test_spork_state(self.nodes[0], True)
+        spork_new_state = not spork_default_state
+        self.set_test_spork_state(self.nodes[0], spork_new_state)
         wait_until(lambda: self.get_test_spork_state(self.nodes[1]), sleep=0.1, timeout=10)
 
         # restart nodes to check spork persistence
@@ -49,8 +50,8 @@ class SporkTest(BitcoinTestFramework):
         self.stop_node(1)
         self.start_node(0)
         self.start_node(1)
-        assert(self.get_test_spork_state(self.nodes[0]))
-        assert(self.get_test_spork_state(self.nodes[1]))
+        assert(self.get_test_spork_state(self.nodes[0]) == spork_new_state)
+        assert(self.get_test_spork_state(self.nodes[1]) == spork_new_state)
 
         # Generate one block to kick off masternode sync, which also starts sporks syncing for node2
         self.nodes[1].generate(1)
