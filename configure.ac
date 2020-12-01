@@ -220,6 +220,13 @@ AC_ARG_ENABLE([debug],
     [enable_debug=$enableval],
     [enable_debug=no])
 
+# Enable exception stacktraces
+AC_ARG_ENABLE([stacktraces],
+    [AS_HELP_STRING([--enable-stacktraces],
+                    [gather and print exception stack traces (default is yes)])],
+    [enable_stacktraces=$enableval],
+    [enable_stacktraces=yes])
+
 # Enable crash hooks
 AC_ARG_ENABLE([crash-hooks],
     [AS_HELP_STRING([--enable-crash-hooks],
@@ -283,10 +290,22 @@ else
     fi
 fi
 
+if test "x$enable_stacktraces" != xno; then
+  AC_CHECK_HEADERS([execinfo.h], [], [enable_stacktraces=no])
+fi
+
+AM_CONDITIONAL([ENABLE_STACKTRACES], [test x$enable_stacktraces = xyes])
+if test "x$enable_stacktraces" = xyes; then
+    AC_DEFINE(ENABLE_STACKTRACES, 1, [Define this symbol if stacktraces should be enabled])
+else
+    enable_crashhooks=no
+fi
+
 AM_CONDITIONAL([ENABLE_CRASH_HOOKS], [test x$enable_crashhooks = xyes])
 if test "x$enable_crashhooks" = xyes; then
     AC_DEFINE(ENABLE_CRASH_HOOKS, 1, [Define this symbol if crash hooks should be enabled])
 fi
+
 AX_CHECK_LINK_FLAG([-Wl,-wrap=__cxa_allocate_exception], [LINK_WRAP_SUPPORTED=yes],,,)
 AM_CONDITIONAL([CRASH_HOOKS_WRAPPED_CXX_ABI],[test x$LINK_WRAP_SUPPORTED = xyes])
 
@@ -759,7 +778,7 @@ if test x$TARGET_OS = xdarwin; then
   AX_CHECK_LINK_FLAG([[-Wl,-dead_strip]], [LDFLAGS="$LDFLAGS -Wl,-dead_strip"])
 fi
 
-AC_CHECK_HEADERS([endian.h sys/endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h execinfo.h])
+AC_CHECK_HEADERS([endian.h sys/endian.h byteswap.h stdio.h stdlib.h unistd.h strings.h sys/types.h sys/stat.h sys/select.h sys/prctl.h])
 
 AC_CHECK_DECLS([strnlen])
 
@@ -895,9 +914,11 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <stdint.h>
 
 # ensure backtrace() is found, check -lexecinfo if necessary
 if test x$TARGET_OS != xwindows; then
-  AC_SEARCH_LIBS([backtrace], [execinfo], [], [
-    AC_MSG_ERROR([Unable to find backtrace()])
-  ])
+  if test "x$enable_stacktraces" != xno; then
+    AC_SEARCH_LIBS([backtrace], [execinfo], [], [
+      AC_MSG_ERROR([Unable to find backtrace()])
+    ])
+  fi
 fi
 
 # Check for reduced exports
@@ -1536,6 +1557,7 @@ echo "  with upnp           = $use_upnp"
 echo "  use asm             = $use_asm"
 echo "  sanitizers          = $use_sanitizers"
 echo "  debug enabled       = $enable_debug"
+echo "  stacktraces enabled = $enable_stacktraces"
 echo "  crash hooks enabled = $enable_crashhooks"
 echo "  miner enabled       = $enable_miner"
 echo "  gprof enabled       = $enable_gprof"

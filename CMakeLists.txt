@@ -34,6 +34,7 @@ endif()
 
 add_definitions(
         -DENABLE_CRASH_HOOKS=1
+        -DENABLE_STACKTRACES=1
         -DENABLE_WALLET=1
 )
 
