@@ -634,6 +634,7 @@ public:
     bool FlushStateToDisk(
         const CChainParams& chainparams,
         BlockValidationState &state,
+        int64_t mempool_usage,
         FlushStateMode mode,
         int nManualPruneHeight = 0);
 
@@ -706,15 +707,18 @@ public:
     //! Dictates whether we need to flush the cache to disk or not.
     //!
     //! @return the state of the size of the coins cache.
-    CoinsCacheSizeState GetCoinsCacheSizeState(const CTxMemPool* tx_pool)
+    CoinsCacheSizeState GetCoinsCacheSizeState(int64_t mempool_usage)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     CoinsCacheSizeState GetCoinsCacheSizeState(
-        const CTxMemPool* tx_pool,
+        int64_t mempool_usage,
         size_t max_coins_cache_size_bytes,
         size_t max_mempool_size_bytes) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     std::string ToString() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+
+    int64_t LockedMempoolUsage() const EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);
+    int64_t UnlockedMempoolUsage() const EXCLUSIVE_LOCKS_REQUIRED(!m_mempool.cs);
 
 private:
     bool ActivateBestChainStep(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindexMostWork, const std::shared_ptr<const CBlock>& pblock, bool& fInvalidFound, ConnectTrace& connectTrace) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool.cs);
