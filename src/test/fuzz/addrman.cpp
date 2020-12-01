@@ -22,12 +22,22 @@ void initialize()
     SelectParams(CBaseChainParams::REGTEST);
 }
 
+class CAddrManDeterministic : public CAddrMan
+{
+public:
+    void MakeDeterministic(const uint256& random_seed)
+    {
+        insecure_rand = FastRandomContext{random_seed};
+        Clear();
+    }
+};
+
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    CAddrMan addr_man;
+    CAddrManDeterministic addr_man;
+    addr_man.MakeDeterministic(ConsumeUInt256(fuzzed_data_provider));
     if (fuzzed_data_provider.ConsumeBool()) {
         addr_man.m_asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
         if (!SanityCheckASMap(addr_man.m_asmap)) {
