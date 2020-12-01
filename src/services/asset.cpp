@@ -56,7 +56,7 @@ bool GetAssetNotaryKeyID(const uint32_t &nAsset,
     return true;
 }
 // mapAssetIn needs to be copied by value because its modified to check for equality with mapAssetOut if isNoInput is true, we reuse mapAssetIn in CheckSyscoinInputs
-// and do not want to pollute consensus checks elsewhere so therefor we don't modify the reference to mapAssetIn
+// and do not want to pollute consensus checks elsewhere so therefore we don't modify the reference to mapAssetIn
 bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const uint32_t &nAsset, CAssetsMap mapAssetIn, const CAssetsMap &mapAssetOut) {
     if (mapAssetOut.empty()) {
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-outputs-empty");

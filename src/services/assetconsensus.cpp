@@ -1164,7 +1164,7 @@ bool CAssetDB::Flush(const AssetMap &mapAssets) {
 			write++;
             // int32 (guid) -> CAsset
 			batch.Write(key.first, key.second);
-            // for optimization on lookups store the keyID seperately
+            // for optimization on lookups store the keyID separately
             if(key.second.vchNotaryKeyID.empty()) {
                 batch.Erase(std::make_pair(key.first, true));
             } else {
