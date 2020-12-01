@@ -590,15 +590,10 @@ bool BerkeleyDatabase::PeriodicFlush()
     // Don't flush if there haven't been any batch writes for this database.
     if (m_refcount < 0) return false;
 
-    LogPrint(BCLog::WALLETDB, "Flushing %s\n", strFile);
-    int64_t nStart = GetTimeMillis();
-
-    // Flush wallet file so it's self contained
-    env->CloseDb(strFile);
-    env->CheckpointLSN(strFile);
-    m_refcount = -1;
-
-    LogPrint(BCLog::WALLETDB, "Flushed %s %dms\n", strFile, GetTimeMillis() - nStart);
+    // we don't need to move tdb from one environment to another
+    // but instead to flush the underlying memory pool,
+    // write a checkpoint record to the log and to flush it
+    env->dbenv->txn_checkpoint(0, 0, 0);
 
     return true;
 }
