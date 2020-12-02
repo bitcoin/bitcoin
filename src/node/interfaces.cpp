@@ -113,7 +113,7 @@ public:
     {
         return MakeHandler(::uiInterface.NotifyMasternodeListChanged_connect(fn));
     }
-    NodeImpl(NodeContext* context) { setContext(context); }
+    explicit NodeImpl(NodeContext* context) { setContext(context); }
     void initLogging() override { InitLogging(*Assert(m_context->args)); }
     void initParameterInteraction() override { InitParameterInteraction(*Assert(m_context->args)); }
     bilingual_str getWarnings() override { return GetWarnings(true); }

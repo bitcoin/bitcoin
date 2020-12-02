@@ -891,7 +891,7 @@ public:
     class EpochGuard {
         const CTxMemPool& pool;
         public:
-        EpochGuard(const CTxMemPool& in);
+        explicit EpochGuard(const CTxMemPool& in);
         ~EpochGuard();
     };
     // N.B. GetFreshEpoch modifies mutable state via the EpochGuard construction

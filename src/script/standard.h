@@ -28,7 +28,7 @@ protected:
 
 public:
     BaseHash() : m_hash() {}
-    BaseHash(const HashType& in) : m_hash(in) {}
+    explicit BaseHash(const HashType& in) : m_hash(in) {}
 
     unsigned char* begin()
     {

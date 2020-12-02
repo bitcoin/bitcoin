@@ -514,7 +514,7 @@ class FormatArg
         { }
 
         template<typename T>
-        FormatArg(const T& value)
+        explicit FormatArg(const T& value)
             : m_value(static_cast<const void*>(&value)),
             m_formatImpl(&formatImpl<T>),
             m_toIntImpl(&toIntImpl<T>)
@@ -970,7 +970,7 @@ class FormatListN : public FormatList
     public:
 #ifdef TINYFORMAT_USE_VARIADIC_TEMPLATES
         template<typename... Args>
-        FormatListN(const Args&... args)
+        explicit FormatListN(const Args&... args)
             : FormatList(&m_formatterStore[0], N),
             m_formatterStore { FormatArg(args)... }
         { static_assert(sizeof...(args) == N, "Number of args must be N"); }

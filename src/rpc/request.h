@@ -40,7 +40,7 @@ public:
     std::string peerAddr;
     const util::Ref& context;
 
-    JSONRPCRequest(const util::Ref& context) : id(NullUniValue), params(NullUniValue), fHelp(false), context(context) {}
+    explicit JSONRPCRequest(const util::Ref& context) : id(NullUniValue), params(NullUniValue), fHelp(false), context(context) {}
 
     //! Initializes request information from another request object and the
     //! given context. The implementation should be updated if any members are

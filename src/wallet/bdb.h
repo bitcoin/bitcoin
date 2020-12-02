@@ -56,7 +56,7 @@ public:
     std::unordered_map<std::string, WalletDatabaseFileId> m_fileids;
     std::condition_variable_any m_db_in_use;
 
-    BerkeleyEnvironment(const fs::path& env_directory);
+    explicit BerkeleyEnvironment(const fs::path& env_directory);
     BerkeleyEnvironment();
     ~BerkeleyEnvironment();
     void Reset();
