@@ -259,8 +259,7 @@ static bool InitRPCAuthentication()
             if (fields.size() == 3) {
                 g_rpcauth.push_back(fields);
             } else {
-                LogPrintf("Invalid -rpcauth argument.\n");
-                return false;
+                LogPrintf("Ignoring invalid -rpcauth argument.\n");
             }
         }
     }
