@@ -41,7 +41,7 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
 
 
 task:
-  name: 'ARM  [GOAL: install]  [buster]  [unit tests, no functional tests]'
+  name: 'ARM [unit tests, no functional tests] [buster]'
   << : *GLOBAL_TASK_TEMPLATE
   arm_container:
     image: debian:buster
@@ -52,7 +52,7 @@ task:
     QEMU_USER_CMD: ""  # Disable qemu and run the test natively
 
 task:
-  name: 'Win64  [GOAL: deploy]  [unit tests, no gui tests, no boost::process, no functional tests]'
+  name: 'Win64 [unit tests, no gui tests, no boost::process, no functional tests] [bionic]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -60,7 +60,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_win64.sh"
 
 task:
-  name: '32-bit + dash  [GOAL: install]  [CentOS 8]  [gui]'
+  name: '32-bit + dash [gui] [CentOS 8]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: centos:8
@@ -69,7 +69,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
 
 task:
-  name: 'x86_64 Linux  [GOAL: install]  [focal]  [previous releases, uses qt5 dev package and some depends packages] [unsigned char]'
+  name: '[previous releases, uses qt5 dev package and some depends packages] [unsigned char] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -77,7 +77,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
 task:
-  name: 'x86_64 Linux  [GOAL: install]  [lunar]  [depends, sanitizers: thread (TSan), no gui]'
+  name: '[depends, sanitizers: thread (TSan), no gui] [lunar]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:lunar
@@ -88,7 +88,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
 
 task:
-  name: 'x86_64 Linux  [GOAL: install]  [focal]  [depends, sanitizers: memory (MSan)]'
+  name: '[depends, sanitizers: memory (MSan)] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -96,7 +96,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
 
 task:
-  name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
+  name: '[no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -104,7 +104,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
 
 task:
-  name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: fuzzer,address,undefined]'
+  name: '[no depends, only system libs, sanitizers: fuzzer,address,undefined] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -112,7 +112,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
 
 task:
-  name: 'x86_64 Linux [GOAL: install]  [focal]  [multiprocess]'
+  name: '[multiprocess] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -120,7 +120,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_multiprocess.sh"
 
 task:
-  name: 'x86_64 Linux  [GOAL: install]  [focal]  [no wallet]'
+  name: '[no wallet] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -128,7 +128,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_nowallet.sh"
 
 task:
-  name: 'macOS 10.12  [GOAL: deploy] [no functional tests]'
+  name: 'macOS 10.12 [gui, no tests] [bionic]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -136,7 +136,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_mac.sh"
 
 task:
-  name: 'macOS 10.15 native [GOAL: install] [GUI] [no depends]'
+  name: 'macOS 10.15 native [gui] [no depends]'
   macos_brew_addon_script:
     - brew install boost libevent berkeley-db4 qt miniupnpc ccache zeromq qrencode sqlite libtool automake pkg-config gnu-getopt
   << : *GLOBAL_TASK_TEMPLATE
