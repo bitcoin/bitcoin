@@ -907,8 +907,90 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
                </item>
               </layout>
              </item>
+             <item row="2" column="1">
+              <layout class="QVBoxLayout" name="verticalLayoutFee13">
+               <property name="spacing">
+                <number>6</number>
+               </property>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayoutFee14">
+                 <item>
+                  <widget class="QLabel" name="labelDesignerFee">
+                   <property name="toolTip">
+                    <string>Specify a fee, in satoshis, for the transaction.
+
+Note: The exact size of the signed transaction must be known, so you will be prompted for the wallet's password for a temporary transaction to be signed with your private key. Every time the inputs, outputs or change address are modified, the transaction size is altered and must be recalculated with a new signature, thus requiring your password again.</string>
+                   </property>
+                   <property name="text">
+                    <string>exact fee</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="BitcoinAmountField" name="designerFee"/>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_7">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>1</width>
+                     <height>1</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </item>
+			   <item>
+                <layout class="QHBoxLayout" name="horizontalLayoutFee15">
+                 <item>
+                  <widget class="QLabel" name="labelDesignerFeeWarning">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
+                   <property name="toolTip">
+                    <string>The exact size of the signed transaction must be known, so you will be prompted for the wallet's password for a temporary transaction to be signed with your private key. Every time the inputs, outputs or change address are modified, the transaction size is altered and must be recalculated with a new signature, thus requiring your password again.</string>
+                   </property>
+                   <property name="text">
+                    <string>Enabled when inputs are selected manually. Requires unlocking your wallet (read the tooltip).</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_8">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>1</width>
+                     <height>1</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </item>
              <item row="0" column="0">
               <layout class="QVBoxLayout" name="verticalLayoutFee4" stretch="0,1">
+               <item>
+                <spacer name="verticalSpacer_10">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>1</width>
+                   <height>1</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
                <item>
                 <widget class="QRadioButton" name="radioSmartFee">
                  <property name="text">
@@ -940,6 +1022,19 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
              <item row="1" column="0">
               <layout class="QVBoxLayout" name="verticalLayoutFee9" stretch="0,1">
                <item>
+                <spacer name="verticalSpacer_9">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>1</width>
+                   <height>1</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
                 <widget class="QRadioButton" name="radioCustomFee">
                  <property name="text">
                   <string>Custom:</string>
@@ -951,6 +1046,46 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
                </item>
                <item>
                 <spacer name="verticalSpacer_6">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>1</width>
+                   <height>1</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </item>
+             <item row="2" column="0">
+              <layout class="QVBoxLayout" name="verticalLayoutFee10" stretch="0,1">
+               <item>
+                <spacer name="verticalSpacer_8">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>1</width>
+                   <height>1</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="QRadioButton" name="radioDesignerFee">
+                 <property name="text">
+                  <string>Designer fee:</string>
+                 </property>
+                 <attribute name="buttonGroup">
+                  <string notr="true">groupFee</string>
+                 </attribute>
+                </widget>
+               </item>
+               <item>
+                <spacer name="verticalSpacer_7">
                  <property name="orientation">
                   <enum>Qt::Vertical</enum>
                  </property>

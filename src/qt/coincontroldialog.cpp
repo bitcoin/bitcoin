@@ -392,10 +392,10 @@ void CoinControlDialog::updateLabelLocked()
     else ui->labelLocked->setVisible(false);
 }
 
-void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *model, QDialog* dialog)
+CAmount CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *model, QDialog* dialog, unsigned int tx_size)
 {
     if (!model)
-        return;
+        return 0;
 
     // nPayAmount
     CAmount nPayAmount = 0;
@@ -486,7 +486,7 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
                 nBytes -= 34;
 
         // Fee
-        nPayFee = model->wallet().getMinimumFee(nBytes, m_coin_control, nullptr /* returned_target */, nullptr /* reason */);
+        nPayFee = model->wallet().getMinimumFee(tx_size==0?nBytes:tx_size, m_coin_control, nullptr /* returned_target */, nullptr /* reason */);
 
         if (nPayAmount > 0)
         {
@@ -535,12 +535,14 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
     dialog->findChild<QLabel *>("labelCoinControlChangeText")   ->setEnabled(nPayAmount > 0);
     dialog->findChild<QLabel *>("labelCoinControlChange")       ->setEnabled(nPayAmount > 0);
 
+    tx_size = tx_size==0 ? nBytes : tx_size;
+
     // stats
     l1->setText(QString::number(nQuantity));                                 // Quantity
     l2->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nAmount));        // Amount
     l3->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nPayFee));        // Fee
     l4->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nAfterFee));      // After Fee
-    l5->setText(((nBytes > 0) ? ASYMP_UTF8 : "") + QString::number(nBytes));        // Bytes
+    l5->setText(((tx_size > 0) ? ASYMP_UTF8 : "") + QString::number(tx_size));        // Bytes
     l7->setText(fDust ? tr("yes") : tr("no"));                               // Dust
     l8->setText(BitcoinUnits::formatWithUnit(nDisplayUnit, nChange));        // Change
     if (nPayFee > 0)
@@ -576,6 +578,8 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
     QLabel *label = dialog->findChild<QLabel *>("labelCoinControlInsuffFunds");
     if (label)
         label->setVisible(nChange < 0);
+
+    return nPayFee;
 }
 
 void CoinControlDialog::updateView()

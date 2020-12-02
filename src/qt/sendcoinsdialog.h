@@ -67,6 +67,12 @@ private:
     bool fNewRecipientAllowed;
     bool fFeeMinimized;
     const PlatformStyle *platformStyle;
+    bool changing_fee;
+    unsigned int tx_size;
+    std::vector<COutPoint> previous_input_selection;
+    CTxDestination previous_change_address;
+    std::set<QString> previous_recipient_addresses;
+    bool previously_needed_change;
 
     // Process WalletModel::SendCoinsReturn and generate a pair consisting
     // of a message and message flags for use in Q_EMIT message().
@@ -78,6 +84,10 @@ private:
     void updateFeeMinimizedLabel();
     // Update the passed in CCoinControl with state from the GUI
     void updateCoinControlState(CCoinControl& ctrl);
+    std::unique_ptr<WalletModelTransaction> make_unique_transaction();
+    bool outputsAreValid();
+    bool txSizeProbablyChanged();
+    void updateTxSize();
 
 private Q_SLOTS:
     void on_sendButton_clicked();
@@ -91,6 +101,7 @@ private Q_SLOTS:
     void coinControlChangeChecked(int);
     void coinControlChangeEdited(const QString &);
     void coinControlUpdateLabels();
+    void designerFeeChanged();
     void coinControlClipboardQuantity();
     void coinControlClipboardAmount();
     void coinControlClipboardFee();
