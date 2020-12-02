@@ -116,11 +116,16 @@ class BumpFeeTest(BitcoinTestFramework):
         msg = "Insufficient total fee 0.00"
         for zero_value in [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]:
             assert_raises_rpc_error(-8, msg, rbf_node.bumpfee, rbfid, {"fee_rate": zero_value})
+        # Test fee_rate values non-representable by CFeeRate
+        msg = "Invalid amount"
+        for invalid_value in [0.00000001, 0.00099999, "0.00000001", "0.00099999"]:
+            assert_raises_rpc_error(-3, msg, rbf_node.bumpfee, rbfid, {"fee_rate": invalid_value})
+        assert_raises_rpc_error(-3, msg, rbf_node.bumpfee, rbfid, {"fee_rate": ""})
         # Test fee_rate out of range (negative number)
         assert_raises_rpc_error(-3, "Amount out of range", rbf_node.bumpfee, rbfid, {"fee_rate": -1})
+        # Test type error
         for value in [{"foo": "bar"}, True]:
             assert_raises_rpc_error(-3, "Amount is not a number or string", rbf_node.bumpfee, rbfid, {"fee_rate": value})
-        assert_raises_rpc_error(-3, "Invalid amount", rbf_node.bumpfee, rbfid, {"fee_rate": ""})
 
         self.log.info("Test explicit fee rate raises RPC error if both fee_rate and conf_target are passed")
         assert_raises_rpc_error(-8, "Cannot specify both conf_target and fee_rate. Please provide either a confirmation "

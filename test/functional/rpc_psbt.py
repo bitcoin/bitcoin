@@ -215,6 +215,10 @@ class PSBTTest(BitcoinTestFramework):
                 self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {param: {"foo": "bar"}, "add_inputs": True})
             assert_raises_rpc_error(-3, "Invalid amount",
                 self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {param: "", "add_inputs": True})
+        # Test fee_rate values non-representable by CFeeRate
+        for invalid_value in [0.00000001, 0.00099999, "0.00000001", "0.00099999"]:
+            assert_raises_rpc_error(-3, "Invalid amount",
+                self.nodes[1].walletcreatefundedpsbt, inputs, outputs, 0, {"fee_rate": invalid_value, "add_inputs": True})
 
         self.log.info("- raises RPC error if both feeRate and fee_rate are passed")
         assert_raises_rpc_error(-8, "Cannot specify both fee_rate (sat/vB) and feeRate (BTC/kvB)",

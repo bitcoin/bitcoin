@@ -302,16 +302,23 @@ class WalletSendTest(BitcoinTestFramework):
                 self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=v, estimate_mode=mode,
                     expect_error=(-3, "Expected type number for conf_target, got {}".format(k)))
 
-        # Test setting explicit fee rate just below the minimum and at zero.
+        # Test setting explicit fee rate just below the minimum.
         self.log.info("Explicit fee rate raises RPC error 'fee rate too low' if fee_rate of 0.99999999 is passed")
         msg = "Fee rate (0.999 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)"
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=0.99999999, expect_error=(-4, msg))
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=0.99999999, expect_error=(-4, msg))
+
+        self.log.info("Explicit fee rate raises RPC error when invalid fee rates are passed")
         # Test fee_rate with zero values
         msg = "Fee rate (0.000 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)"
         for zero_value in [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]:
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=zero_value, expect_error=(-4, msg))
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=zero_value, expect_error=(-4, msg))
+        # Test fee_rate values non-representable by CFeeRate
+        msg = "Invalid amount"
+        for invalid_value in [0.00000001, 0.0009, 0.00099999]:
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, fee_rate=invalid_value, expect_error=(-3, msg))
+            self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_fee_rate=invalid_value, expect_error=(-3, msg))
 
         # TODO: Return hex if fee rate is below -maxmempool
         # res = self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode="sat/b", add_to_wallet=False)
