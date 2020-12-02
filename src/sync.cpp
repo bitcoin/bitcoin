@@ -139,7 +139,7 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
     throw std::logic_error(strprintf("potential deadlock detected: %s -> %s -> %s", mutex_b, mutex_a, mutex_b));
 }
 
-static void double_lock_detected(const void* mutex, LockStack& lock_stack)
+static void double_lock_detected(const void* mutex, const LockStack& lock_stack)
 {
     LogPrintf("DOUBLE LOCK DETECTED\n");
     LogPrintf("Lock order:\n");
@@ -150,7 +150,9 @@ static void double_lock_detected(const void* mutex, LockStack& lock_stack)
         LogPrintf(" %s\n", i.second.ToString());
     }
     if (g_debug_lockorder_abort) {
-        tfm::format(std::cerr, "Assertion failed: detected double lock at %s:%i, details in debug log.\n", __FILE__, __LINE__);
+        tfm::format(std::cerr,
+                    "Assertion failed: detected double lock for %s, details in debug log.\n",
+                    lock_stack.back().second.ToString());
         abort();
     }
     throw std::logic_error("double lock detected");
