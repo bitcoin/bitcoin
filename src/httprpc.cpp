@@ -27,6 +27,9 @@
 /** WWW-Authenticate to present with 401 Unauthorized response */
 static const char* WWW_AUTH_HEADER_DATA = "Basic realm=\"jsonrpc\"";
 
+static constexpr size_t MIN_RPCAUTH_VALUES = 3;
+static constexpr size_t MAX_RPCAUTH_VALUES = 3;
+
 /** Simple one-shot callback timer to be used by the RPC mechanism to e.g.
  * re-lock the wallet.
  */
@@ -93,8 +96,9 @@ static void JSONErrorReply(HTTPRequest* req, const UniValue& objError, const Uni
 
 //This function checks username and password against -rpcauth
 //entries from config file.
-static bool multiUserAuthorized(std::string strUserPass)
+static bool multiUserAuthorized(std::string strUserPass, bool* out_invalid_rpcauth)
 {
+    if (out_invalid_rpcauth) *out_invalid_rpcauth = false;
     if (strUserPass.find(':') == std::string::npos) {
         return false;
     }
@@ -118,14 +122,23 @@ static bool multiUserAuthorized(std::string strUserPass)
         std::string strHashFromPass = HexStr(hexvec);
 
         if (TimingResistantEqual(strHashFromPass, strHash)) {
+            if (vFields.size() > MAX_RPCAUTH_VALUES) {
+                if (out_invalid_rpcauth) {
+                    *out_invalid_rpcauth = true;
+                }
+                // Allow other rpcauth lines to possibly handle the user
+                continue;
+            }
+
             return true;
         }
     }
     return false;
 }
 
-static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUsernameOut)
+static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUsernameOut, bool* out_invalid_rpcauth)
 {
+    if (out_invalid_rpcauth) *out_invalid_rpcauth = false;
     if (strRPCUserColonPass.empty()) // Belt-and-suspenders measure if InitRPCAuthentication was not called
         return false;
     if (strAuth.substr(0, 6) != "Basic ")
@@ -141,7 +154,7 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     if (TimingResistantEqual(strUserPass, strRPCUserColonPass)) {
         return true;
     }
-    return multiUserAuthorized(strUserPass);
+    return multiUserAuthorized(strUserPass, out_invalid_rpcauth);
 }
 
 static bool HTTPReq_JSONRPC(const util::Ref& context, HTTPRequest* req)
@@ -161,8 +174,13 @@ static bool HTTPReq_JSONRPC(const util::Ref& context, HTTPRequest* req)
 
     JSONRPCRequest jreq(context);
     jreq.peerAddr = req->GetPeer().ToString();
-    if (!RPCAuthorized(authHeader.second, jreq.authUser)) {
-        LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", jreq.peerAddr);
+    bool bad_rpcauth_config;
+    if (!RPCAuthorized(authHeader.second, jreq.authUser, &bad_rpcauth_config)) {
+        if (bad_rpcauth_config) {
+            LogPrintf("RPC User %s has unrecognised rpcauth parameters, denying access\n", jreq.authUser);
+        } else {
+            LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", jreq.peerAddr);
+        }
 
         /* Deter brute-forcing
            If this results in a DoS the user really
@@ -170,7 +188,11 @@ static bool HTTPReq_JSONRPC(const util::Ref& context, HTTPRequest* req)
         UninterruptibleSleep(std::chrono::milliseconds{250});
 
         req->WriteHeader("WWW-Authenticate", WWW_AUTH_HEADER_DATA);
-        req->WriteReply(HTTP_UNAUTHORIZED);
+        if (bad_rpcauth_config) {
+            req->WriteReply(HTTP_UNAUTHORIZED, "Invalid rpcauth configuration line");
+        } else {
+            req->WriteReply(HTTP_UNAUTHORIZED);
+        }
         return false;
     }
 
@@ -256,8 +278,11 @@ static bool InitRPCAuthentication()
         for (const std::string& rpcauth : gArgs.GetArgs("-rpcauth")) {
             std::vector<std::string> fields;
             boost::split(fields, rpcauth, boost::is_any_of(":$"));
-            if (fields.size() == 3) {
+            if (fields.size() >= MIN_RPCAUTH_VALUES) {
                 g_rpcauth.push_back(fields);
+                if (fields.size() > MAX_RPCAUTH_VALUES) {
+                    LogPrintf("Unrecognised -rpcauth parameters for username '%s'. User will not be able to authenticate.\n", SanitizeString(fields[0]));
+                }
             } else {
                 LogPrintf("Invalid -rpcauth argument.\n");
                 return false;

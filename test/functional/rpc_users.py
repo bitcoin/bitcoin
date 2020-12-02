@@ -29,6 +29,7 @@ def call_with_auth(node, user, password):
     conn.connect()
     conn.request('POST', '/', '{"method": "getbestblockhash"}', headers)
     resp = conn.getresponse()
+    resp.data = resp.read()
     conn.close()
     return resp
 
@@ -43,6 +44,9 @@ class HTTPBasicsTest(BitcoinTestFramework):
         #Append rpcauth to bitcoin.conf before initialization
         self.rtpassword = "cA773lm788buwYe4g4WT+05pKyNruVKjQ25x3n0DQcM="
         rpcauth = "rpcauth=rt:93648e835a54c573682c2eb19f882535$7681e9c5b74bdd85e78166031d2058e1069b3ed7ed967c93fc63abba06f31144"
+
+        self.rt_inv_password = "wNOLKB5DLXktHNcgcueEdRYijtDvEm4-e__eHELhd0U="
+        rpcauth_inv = "rpcauth=rt_inv:90d2a2816cc662ddd5c3981a4b88e115$cd5acccf50d87d84f1764e271296086b6e6e1f6b7488aba44042f0e205907fb2"
 
         self.rpcuser = "rpcuser💻"
         self.rpcpassword = "rpcpassword🔑"
@@ -65,6 +69,10 @@ class HTTPBasicsTest(BitcoinTestFramework):
         self.password = lines[3]
 
         with open(os.path.join(get_datadir_path(self.options.tmpdir, 0), "bitcoin.conf"), 'a', encoding='utf8') as f:
+            # Invalid rpcauth line w/ duplicate username/password should warn, then get ignored at runtime (using the other rpcauth line)
+            f.write(rpcauth + ":a:b\n")
+            # Invalid rpcauth line w/ unique username/password should warn, then get rejected for RPC calls with a unique error message
+            f.write(rpcauth_inv + ":a:b\n")
             f.write(rpcauth + "\n")
             f.write(rpcauth2 + "\n")
             f.write(rpcauth3 + "\n")
@@ -102,6 +110,19 @@ class HTTPBasicsTest(BitcoinTestFramework):
         init_error = 'Error: Unable to start HTTP server. See debug log for details.'
 
         self.log.info('Check -rpcauth are validated')
+
+        # Valid password, should give a message about invalid rpcauth line
+        with self.nodes[0].assert_debug_log(expected_msgs=['RPC User rt_inv has unrecognised rpcauth parameters, denying access']):
+            resp = call_with_auth(self.nodes[0], 'rt_inv', self.rt_inv_password)
+        assert_equal(401, resp.status)
+        assert_equal(b'Invalid rpcauth configuration line', resp.data)
+
+        # Wrong password should be a normal forbidden response though
+        with self.nodes[0].assert_debug_log(expected_msgs=['ThreadRPCServer incorrect password attempt from']):
+            resp = call_with_auth(self.nodes[0], 'rt_inv', self.rt_inv_password + 'wrong')
+        assert_equal(401, resp.status)
+        assert_equal(b'', resp.data)
+
         # Empty -rpcauth= are ignored
         self.restart_node(0, extra_args=['-rpcauth='])
         self.stop_node(0)
