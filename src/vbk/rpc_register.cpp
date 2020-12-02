@@ -345,7 +345,7 @@ UniValue getbtcblock(const JSONRPCRequest& req)
 namespace {
 void check_getbestblockhash(const JSONRPCRequest& request, const std::string& chain)
 {
-    auto cmdname = strprintf("get%bestblockhash", chain);
+    auto cmdname = strprintf("get%sbestblockhash", chain);
     RPCHelpMan{
         cmdname,
         "\nReturns the hash of the best (tip) block in the most-work fully-validated chain.\n",
