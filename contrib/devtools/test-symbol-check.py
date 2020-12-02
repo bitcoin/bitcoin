@@ -83,6 +83,43 @@ class TestSymbolChecks(unittest.TestCase):
         self.assertEqual(call_symbol_check(cc, source, executable, ['-lm']),
                 (0, ''))
 
+    def test_MACHO(self):
+        source = 'test1.c'
+        executable = 'test1'
+        cc = 'clang'
+
+        with open(source, 'w', encoding="utf8") as f:
+            f.write('''
+                #include <expat.h>
+
+                int main()
+                {
+                    XML_ExpatVersion();
+                    return 0;
+                }
+
+        ''')
+
+        self.assertEqual(call_symbol_check(cc, source, executable, ['-lexpat']),
+            (1, 'libexpat.1.dylib is not in ALLOWED_LIBRARIES!\n' +
+                executable + ': failed DYNAMIC_LIBRARIES'))
+
+        source = 'test2.c'
+        executable = 'test2'
+        with open(source, 'w', encoding="utf8") as f:
+            f.write('''
+                #include <CoreGraphics/CoreGraphics.h>
+
+                int main()
+                {
+                    CGMainDisplayID();
+                    return 0;
+                }
+        ''')
+
+        self.assertEqual(call_symbol_check(cc, source, executable, ['-framework', 'CoreGraphics']),
+                (0, ''))
+
 if __name__ == '__main__':
     unittest.main()
 

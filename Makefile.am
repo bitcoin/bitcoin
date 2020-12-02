@@ -353,6 +353,7 @@ clean-local: clean-docs
 test-security-check:
 if TARGET_DARWIN
 	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/test-security-check.py TestSecurityChecks.test_MACHO
+	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/test-symbol-check.py TestSymbolChecks.test_MACHO
 endif
 if TARGET_WINDOWS
 	$(AM_V_at) $(PYTHON) $(top_srcdir)/contrib/devtools/test-security-check.py TestSecurityChecks.test_PE
