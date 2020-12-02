@@ -68,6 +68,8 @@ private:
 static std::string strRPCUserColonPass;
 /* Stored RPC timer interface (for unregistration) */
 static std::unique_ptr<HTTPRPCTimerInterface> httpRPCTimerInterface;
+/* List of -rpcauth values */
+static std::vector<std::vector<std::string>> g_rpcauth;
 /* RPC Auth Whitelist */
 static std::map<std::string, std::set<std::string>> g_rpc_whitelist;
 static bool g_rpc_whitelist_default = false;
@@ -99,15 +101,7 @@ static bool multiUserAuthorized(std::string strUserPass)
     std::string strUser = strUserPass.substr(0, strUserPass.find(':'));
     std::string strPass = strUserPass.substr(strUserPass.find(':') + 1);
 
-    for (const std::string& strRPCAuth : gArgs.GetArgs("-rpcauth")) {
-        //Search for multi-user login/pass "rpcauth" from config
-        std::vector<std::string> vFields;
-        boost::split(vFields, strRPCAuth, boost::is_any_of(":$"));
-        if (vFields.size() != 3) {
-            //Incorrect formatting in config file
-            continue;
-        }
-
+    for (const auto& vFields : g_rpcauth) {
         std::string strName = vFields[0];
         if (!TimingResistantEqual(strName, strUser)) {
             continue;
@@ -259,6 +253,16 @@ static bool InitRPCAuthentication()
     if (gArgs.GetArg("-rpcauth","") != "")
     {
         LogPrintf("Using rpcauth authentication.\n");
+        for (const std::string& rpcauth : gArgs.GetArgs("-rpcauth")) {
+            std::vector<std::string> fields;
+            boost::split(fields, rpcauth, boost::is_any_of(":$"));
+            if (fields.size() == 3) {
+                g_rpcauth.push_back(fields);
+            } else {
+                LogPrintf("Invalid -rpcauth argument.\n");
+                return false;
+            }
+        }
     }
 
     g_rpc_whitelist_default = gArgs.GetBoolArg("-rpcwhitelistdefault", gArgs.IsArgSet("-rpcwhitelist"));
