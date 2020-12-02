@@ -26,7 +26,8 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
     {
         auto hash = genesis.GetHash();
         bootstrap.hash = std::vector<uint8_t>{hash.begin(), hash.end()};
-        bootstrap.height = 0; // pop is enabled starting at genesis
+        bootstrap.previousBlock = std::vector<uint8_t>(altintegration::MIN_ALT_HASH_SIZE, 0);
+        bootstrap.height = 0;
         bootstrap.timestamp = genesis.GetBlockTime();
     }
 

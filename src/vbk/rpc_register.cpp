@@ -142,7 +142,8 @@ bool parsePayloads(const UniValue& array, std::vector<pop_t>& out, altintegratio
         auto payloads_bytes = ParseHexV(payloads_hex, strprintf("%s[%d]", pop_t::name(), idx));
 
         pop_t data;
-        if (!altintegration::Deserialize(payloads_bytes, data, state)) {
+        altintegration::ReadStream stream(payloads_bytes);
+        if (!altintegration::DeserializeFromVbkEncoding(stream, data, state)) {
             return state.Invalid("bad-payloads");
         }
         payloads.push_back(data);
@@ -256,8 +257,9 @@ UniValue submitpopIt(const JSONRPCRequest& request)
     auto payloads_bytes = ParseHexV(request.params[0].get_str(), Pop::name());
 
     Pop data;
+    altintegration::ReadStream stream(payloads_bytes);
     altintegration::ValidationState state;
-    if (!altintegration::Deserialize(payloads_bytes, data, state)) {
+    if (!altintegration::DeserializeFromVbkEncoding(stream, data, state)) {
         return state.Invalid("bad-data");
     }
 
@@ -605,7 +607,7 @@ UniValue getrawpayload(const JSONRPCRequest& request, const std::string& name)
     }
 
     if (!fVerbose) {
-        return altintegration::ToJSON<UniValue>(out.toHex());
+        return altintegration::ToJSON<UniValue>(altintegration::SerializeToHex(out));
     }
 
     uint256 activeHashBlock{};

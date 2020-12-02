@@ -124,7 +124,7 @@ public:
         }
 
         if(IsError()) {
-            v.Error(m_reject_reason);
+            v.Invalid(m_reject_reason);
             return v;
         }
 
