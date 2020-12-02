@@ -170,7 +170,7 @@ using ByTxHashView = std::tuple<const uint256&, State, Priority>;
 class ByTxHashViewExtractor {
     const PriorityComputer& m_computer;
 public:
-    ByTxHashViewExtractor(const PriorityComputer& computer) : m_computer(computer) {}
+    explicit ByTxHashViewExtractor(const PriorityComputer& computer) : m_computer(computer) {}
     using result_type = ByTxHashView;
     result_type operator()(const Announcement& ann) const
     {
@@ -522,7 +522,7 @@ private:
     }
 
 public:
-    Impl(bool deterministic) :
+    explicit Impl(bool deterministic) :
         m_computer(deterministic),
         // Explicitly initialize m_index as we need to pass a reference to m_computer to ByTxHashViewExtractor.
         m_index(boost::make_tuple(

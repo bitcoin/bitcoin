@@ -156,7 +156,7 @@ protected:
     uint32_t m_expr_index;
 
 public:
-    PubkeyProvider(uint32_t exp_index) : m_expr_index(exp_index) {}
+    explicit PubkeyProvider(uint32_t exp_index) : m_expr_index(exp_index) {}
 
     virtual ~PubkeyProvider() = default;
 
