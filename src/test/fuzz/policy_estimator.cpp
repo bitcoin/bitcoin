@@ -14,12 +14,12 @@
 #include <string>
 #include <vector>
 
-void initialize()
+void initialize_policy_estimator()
 {
     InitializeFuzzingContext();
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET_INIT(policy_estimator, initialize_policy_estimator)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     CBlockPolicyEstimator block_policy_estimator;

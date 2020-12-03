@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(decode_tx)
 {
     const std::string tx_hex = HexStr(buffer);
     CMutableTransaction mtx;

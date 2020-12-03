@@ -6,7 +6,7 @@
 #include <test/fuzz/fuzz.h>
 #include <util/spanparsing.h>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(spanparsing)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const size_t query_size = fuzzed_data_provider.ConsumeIntegral<size_t>();
