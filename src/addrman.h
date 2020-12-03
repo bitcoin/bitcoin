@@ -500,7 +500,9 @@ public:
         nTried -= nLost;
 
         // Store positions in the new table buckets to apply later (if possible).
-        std::map<int, int> entryToBucket; // Represents which entry belonged to which bucket when serializing
+        // An entry may appear in up to ADDRMAN_NEW_BUCKETS_PER_ADDRESS buckets,
+        // so we store all bucket-entry_index pairs to iterate through later.
+        std::vector<std::pair<int, int>> bucket_entries;
 
         for (int bucket = 0; bucket < nUBuckets; bucket++) {
             int nSize = 0;
@@ -509,7 +511,7 @@ public:
                 int nIndex = 0;
                 s >> nIndex;
                 if (nIndex >= 0 && nIndex < nNew) {
-                    entryToBucket[nIndex] = bucket;
+                    bucket_entries.emplace_back(bucket, nIndex);
                 }
             }
         }
@@ -523,9 +525,10 @@ public:
             s >> serialized_asmap_version;
         }
 
-        for (int n = 0; n < nNew; n++) {
-            CAddrInfo &info = mapInfo[n];
-            int bucket = entryToBucket[n];
+        for (auto bucket_entry : bucket_entries) {
+            int bucket{bucket_entry.first};
+            const int n{bucket_entry.second};
+            CAddrInfo& info = mapInfo[n];
             int nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
             if (format >= Format::V2_ASMAP && nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && vvNew[bucket][nUBucketPos] == -1 &&
                 info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS && serialized_asmap_version == supplied_asmap_version) {
