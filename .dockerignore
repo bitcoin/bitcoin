@@ -1,0 +1,50 @@
+# ItCoin
+#
+# This file limits which files may end up inside the docker build context,
+# i.e., which files will be available at container build time to an ADD/COPY
+# statement.
+#
+# The file follows a strict whitelist approach: everything is excluded from the
+# build context, except for explicitly allowed files/directories.
+#
+# references:
+# - https://docs.docker.com/engine/reference/builder/#dockerignore-file
+# - https://docs.docker.com/engine/reference/commandline/build/#extended-description
+#
+# Author: Antonio Muci <antonio.muci@bancaditalia.it>
+
+# ignore everything by default
+*
+
+# Explicitly list the directories/files that can end up inside the build
+# context.
+#
+# NOTE: when adding a new file or a new directory inside the Dockerfile, put an
+#       entry here as well, otherwise the COPY/ADD phase will fail.
+!/autogen.sh
+!/build-aux
+!/configure.ac
+!/configure-itcoin-core.sh
+!/contrib
+!/doc
+!/libbitcoinconsensus.pc.in
+!/Makefile.am
+!/share
+!/src
+!/test
+
+# If a build was already run in this working directory, do not copy the
+# following artifacts in the Docker image, since they are going to be recreated
+# from scratch.
+**/bitcoin-cli
+**/bitcoind
+**/bitcoin-tx
+**/bitcoin-wallet
+**/*.a
+**/*.la
+**/*.lai
+**/*.lo
+**/*.o
+**/*.Plo
+**/*.Po
+**/*.so
