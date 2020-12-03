@@ -504,14 +504,14 @@ public:
         // so we store all bucket-entry_index pairs to iterate through later.
         std::vector<std::pair<int, int>> bucket_entries;
 
-        for (int bucket = 0; bucket < nUBuckets; bucket++) {
-            int nSize = 0;
-            s >> nSize;
-            for (int n = 0; n < nSize; n++) {
-                int nIndex = 0;
-                s >> nIndex;
-                if (nIndex >= 0 && nIndex < nNew) {
-                    bucket_entries.emplace_back(bucket, nIndex);
+        for (int bucket = 0; bucket < nUBuckets; ++bucket) {
+            int num_entries{0};
+            s >> num_entries;
+            for (int n = 0; n < num_entries; ++n) {
+                int entry_index{0};
+                s >> entry_index;
+                if (entry_index >= 0 && entry_index < nNew) {
+                    bucket_entries.emplace_back(bucket, entry_index);
                 }
             }
         }
@@ -527,13 +527,13 @@ public:
 
         for (auto bucket_entry : bucket_entries) {
             int bucket{bucket_entry.first};
-            const int n{bucket_entry.second};
-            CAddrInfo& info = mapInfo[n];
+            const int entry_index{bucket_entry.second};
+            CAddrInfo& info = mapInfo[entry_index];
             int nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
             if (format >= Format::V2_ASMAP && nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && vvNew[bucket][nUBucketPos] == -1 &&
                 info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS && serialized_asmap_version == supplied_asmap_version) {
                 // Bucketing has not changed, using existing bucket positions for the new table
-                vvNew[bucket][nUBucketPos] = n;
+                vvNew[bucket][nUBucketPos] = entry_index;
                 info.nRefCount++;
             } else {
                 // In case the new table data cannot be used (format unknown, bucket count wrong or new asmap),
@@ -542,7 +542,7 @@ public:
                 bucket = info.GetNewBucket(nKey, m_asmap);
                 nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
                 if (vvNew[bucket][nUBucketPos] == -1) {
-                    vvNew[bucket][nUBucketPos] = n;
+                    vvNew[bucket][nUBucketPos] = entry_index;
                     info.nRefCount++;
                 }
             }
