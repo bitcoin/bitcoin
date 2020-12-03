@@ -517,6 +517,8 @@ public:
             }
         }
 
+        // Attempt to restore the entry's new buckets if the bucket count and asmap
+        // checksum haven't changed
         uint256 supplied_asmap_checksum;
         if (m_asmap.size() != 0) {
             supplied_asmap_checksum = SerializeHash(m_asmap);
@@ -525,19 +527,26 @@ public:
         if (format >= Format::V2_ASMAP) {
             s >> serialized_asmap_checksum;
         }
+        const bool restore_bucketing{nUBuckets == ADDRMAN_NEW_BUCKET_COUNT &&
+                                     serialized_asmap_checksum == supplied_asmap_checksum};
 
         for (auto bucket_entry : bucket_entries) {
             int bucket{bucket_entry.first};
             const int entry_index{bucket_entry.second};
             CAddrInfo& info = mapInfo[entry_index];
+
+            // The entry shouldn't appear in more than
+            // ADDRMAN_NEW_BUCKETS_PER_ADDRESS. If it has already, just skip
+            // this bucket_entry.
+            if (info.nRefCount >= ADDRMAN_NEW_BUCKETS_PER_ADDRESS) continue;
+
             int nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
-            if (format >= Format::V2_ASMAP && nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && vvNew[bucket][nUBucketPos] == -1 &&
-                info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS && serialized_asmap_checksum == supplied_asmap_checksum) {
+            if (restore_bucketing && vvNew[bucket][nUBucketPos] == -1) {
                 // Bucketing has not changed, using existing bucket positions for the new table
                 vvNew[bucket][nUBucketPos] = entry_index;
                 info.nRefCount++;
             } else {
-                // In case the new table data cannot be used (format unknown, bucket count wrong or new asmap),
+                // In case the new table data cannot be used (bucket count wrong or new asmap),
                 // try to give them a reference based on their primary source address.
                 LogPrint(BCLog::ADDRMAN, "Bucketing method was updated, re-bucketing addrman entries from disk\n");
                 bucket = info.GetNewBucket(nKey, m_asmap);
