@@ -23,7 +23,6 @@ install:
       cd c:\tools\vcpkg
       $env:GIT_REDIRECT_STDERR = '2>&1' # git is writing non-errors to STDERR when doing git pull. Send to STDOUT instead.
       git -c advice.detachedHead=false checkout $env:VCPKG_TAG
-      git pull origin $env:VCPKG_TAG
       .\bootstrap-vcpkg.bat > $null
       Add-Content "C:\tools\vcpkg\triplets\$env:PLATFORM-windows-static.cmake" "set(VCPKG_BUILD_TYPE release)"
       cd "$env:APPVEYOR_BUILD_FOLDER"
