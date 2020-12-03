@@ -2365,7 +2365,13 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::VERACK));
 
         // Signal ADDRv2 support (BIP155).
-        m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::SENDADDRV2));
+        if (greatest_common_version >= 70016) {
+            // BIP155 defines addrv2 and sendaddrv2 for all protocol versions, but some
+            // implementations reject messages they don't know. As a courtesy, don't send
+            // it to nodes with a version before 70016, as no software is known to support
+            // BIP155 that doesn't announce at least that protocol version number.
+            m_connman.PushMessage(&pfrom, msg_maker.Make(NetMsgType::SENDADDRV2));
+        }
 
         pfrom.nServices = nServices;
         pfrom.SetAddrLocal(addrMe);
