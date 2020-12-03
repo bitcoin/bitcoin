@@ -33,13 +33,6 @@
 #include <memory>
 #include <condition_variable>
 
-#ifndef WIN32
-#include <arpa/inet.h>
-#endif
-
-// SYSCOIN
-#include <consensus/params.h>
-
 class CScheduler;
 class CNode;
 class BanMan;

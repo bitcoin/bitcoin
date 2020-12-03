@@ -7,6 +7,7 @@
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
+#include <compat.h>
 #include <crypto/hmac_sha256.h>
 #include <net.h>
 #include <netaddress.h>
