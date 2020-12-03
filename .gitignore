@@ -2,17 +2,17 @@
 
 *.exe
 *.pdb
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-gui
-src/bitcoin-node
-src/bitcoin-tx
-src/bitcoin-wallet
+src/litecoin
+src/litecoind
+src/litecoin-cli
+src/litecoin-gui
+src/litecoin-node
+src/litecoin-tx
+src/litecoin-wallet
 src/test/fuzz/*
 !src/test/fuzz/*.*
-src/test/test_bitcoin
-src/qt/test/test_bitcoin-qt
+src/test/test_litecoin
+src/qt/test/test_litecoin-qt
 
 # autoreconf
 Makefile.in
@@ -92,8 +92,8 @@ src/qt/bitcoin-qt.includes
 *.qm
 Makefile
 !depends/Makefile
-src/qt/bitcoin-qt
-Bitcoin-Qt.app
+src/qt/litecoin-qt
+Litecoin-Qt.app
 background.tiff*
 
 # Qt Creator
@@ -101,7 +101,7 @@ Makefile.am.user
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+litecoin-qt_test
 
 # Resources cpp
 qrc_*.cpp
