@@ -121,6 +121,19 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         assert_equal(rawTxSigned['errors'][1]['txid'], inputs[2]['txid'])
         assert_equal(rawTxSigned['errors'][1]['vout'], inputs[2]['vout'])
 
+    def test_fully_signed_tx(self):
+        self.log.info("Test signing a fully signed transaction does nothing")
+        self.nodes[0].walletpassphrase("password", 9999)
+        self.generate(self.nodes[0], 101)
+        rawtx = self.nodes[0].createrawtransaction([], [{self.nodes[0].getnewaddress(): 10}])
+        fundedtx = self.nodes[0].fundrawtransaction(rawtx)
+        signedtx = self.nodes[0].signrawtransactionwithwallet(fundedtx["hex"])
+        assert_equal(signedtx["complete"], True)
+        signedtx2 = self.nodes[0].signrawtransactionwithwallet(signedtx["hex"])
+        assert_equal(signedtx2["complete"], True)
+        assert_equal(signedtx["hex"], signedtx2["hex"])
+        self.nodes[0].walletlock()
+
     def OP_1NEGATE_test(self):
         self.log.info("Test OP_1NEGATE (0x4f) satisfies BIP62 minimal push standardness rule")
         hex_str = (
@@ -145,6 +158,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         self.script_verification_error_test()
         self.OP_1NEGATE_test()
         self.test_with_lock_outputs()
+        self.test_fully_signed_tx()
 
 
 if __name__ == '__main__':
