@@ -766,8 +766,9 @@ class RawTransactionsTest(BitcoinTestFramework):
                 node.fundrawtransaction, rawtx, {param: -1, "add_inputs": True})
             assert_raises_rpc_error(-3, "Amount is not a number or string",
                 node.fundrawtransaction, rawtx, {param: {"foo": "bar"}, "add_inputs": True})
-            assert_raises_rpc_error(-3, "Invalid amount",
-                node.fundrawtransaction, rawtx, {param: "", "add_inputs": True})
+            # Test fee_rate values that don't pass fixed-point parsing checks
+            for invalid_value in ["", 0.000000001, 1.111111111, 11111111111]:
+                assert_raises_rpc_error(-3, "Invalid amount", node.fundrawtransaction, rawtx, {param: invalid_value, "add_inputs": True})
         # Test fee_rate values non-representable by CFeeRate
         for invalid_value in [0.00000001, 0.00099999, "0.00000001", "0.00099999"]:
             assert_raises_rpc_error(-3, "Invalid amount",

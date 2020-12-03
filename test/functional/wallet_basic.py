@@ -273,6 +273,9 @@ class WalletTest(BitcoinTestFramework):
         msg = "Invalid amount"
         for invalid_value in [0.00000001, 0.00099999, "0.00000001", "0.00099999"]:
             assert_raises_rpc_error(-3, msg, self.nodes[2].sendmany, amounts={address: 10}, fee_rate=invalid_value)
+        # Test fee_rate values that don't pass fixed-point parsing checks
+        for invalid_value in ["", 0.000000001, 1.111111111, 11111111111]:
+            assert_raises_rpc_error(-3, msg, self.nodes[2].sendmany, amounts={address: 1.0}, fee_rate=invalid_value)
         # Test fee_rate out of range (negative number)
         assert_raises_rpc_error(-3, OUT_OF_RANGE, self.nodes[2].sendmany, amounts={address: 10}, fee_rate=-1)
 
@@ -463,6 +466,9 @@ class WalletTest(BitcoinTestFramework):
             msg = "Invalid amount"
             for invalid_value in [0.00000001, 0.00099999, "0.00000001", "0.00099999"]:
                 assert_raises_rpc_error(-3, msg, self.nodes[2].sendtoaddress, address=address, amount=10, fee_rate=invalid_value)
+            # Test fee_rate values that don't pass fixed-point parsing checks
+            for invalid_value in ["", 0.000000001, 1.111111111, 11111111111]:
+                assert_raises_rpc_error(-3, msg, self.nodes[2].sendtoaddress, address=address, amount=1.0, fee_rate=invalid_value)
             # Test fee_rate out of range (negative number)
             assert_raises_rpc_error(-3, OUT_OF_RANGE, self.nodes[2].sendtoaddress, address=address, amount=1.0, fee_rate=-1)
 
