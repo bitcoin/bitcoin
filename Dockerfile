@@ -74,13 +74,32 @@ RUN apt update && \
         libdb5.3++ \
         libevent-2.1-7 \
         libevent-pthreads-2.1-7 \
+        libpython3-stdlib \
         libsqlite3-0 \
         libzmqpp4 \
+        python3-minimal \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build-stage \
     /opt/itcoin-core-source/target \
     /opt/itcoin-core/
+
+# test_framework module is a dependency for signet/miner
+COPY \
+    /test/functional/test_framework \
+    /opt/itcoin-core/bin/test_framework
+
+# precompile test_framework module, so that the container can be safely run
+# with --read-only, if desired.
+RUN python3 -m compileall /opt/itcoin-core/bin/test_framework
+
+# This is the signet miner script.
+#
+# The apt packages python3-minimal and libpython3-stdlib were needed because of
+# it.
+COPY \
+    /contrib/signet/miner \
+    /opt/itcoin-core/bin/miner
 
 # Put a symlink to the bitcoin* programs in /usr/local/bin, so that they can be
 # easily executed from anywhere, including from outside the container.
@@ -90,4 +109,5 @@ RUN \
     ln -s /opt/itcoin-core/bin/bitcoin-util   /usr/local/bin/ && \
     ln -s /opt/itcoin-core/bin/bitcoin-wallet /usr/local/bin/ && \
     ln -s /opt/itcoin-core/bin/bitcoind       /usr/local/bin/ && \
+    ln -s /opt/itcoin-core/bin/miner          /usr/local/bin/ && \
     echo "The bitcoin* programs are in the PATH: they can be executed from anywhere, even outside the container"
