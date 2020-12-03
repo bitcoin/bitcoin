@@ -56,7 +56,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(QtReleaseLibraries);%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>/ignore:4206</AdditionalOptions>
+      <AdditionalOptions>/ignore:4206 /LTCG:OFF</AdditionalOptions>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>..\..\src;</AdditionalIncludeDirectories>
