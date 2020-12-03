@@ -4,7 +4,7 @@ The [`src/node/`](./) directory contains code that needs to access node state
 (state in `CChain`, `CBlockIndex`, `CCoinsView`, `CTxMemPool`, and similar
 classes).
 
-Code in [`src/node/`](./) is meant to be segregated from code in
+Code in [`src/node/`](./) is meant to be seperated from code in
 [`src/wallet/`](../wallet/) and [`src/qt/`](../qt/), to ensure wallet and GUI
 code changes don't interfere with node operation, to allow wallet and GUI code
 to run in separate processes, and to perhaps eventually allow wallet and GUI
