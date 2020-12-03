@@ -340,6 +340,7 @@ public:
      * * for each bucket:
      *   * number of elements
      *   * for each element: index
+     * * asmap checksum
      *
      * 2**30 is xorred with the number of buckets to make addrman deserializer v0 detect it
      * as incompatible. This is necessary because it did not check the version number on
@@ -348,8 +349,8 @@ public:
      * Notice that vvTried, mapAddr and vVector are never encoded explicitly;
      * they are instead reconstructed from the other information.
      *
-     * vvNew is serialized, but only used if ADDRMAN_UNKNOWN_BUCKET_COUNT didn't change,
-     * otherwise it is reconstructed as well.
+     * vvNew is serialized, but only used if ADDRMAN_NEW_BUCKET_COUNT and the asmap checksum
+     * didn't change, otherwise it is reconstructed as well.
      *
      * This format is more complex, but significantly smaller (at most 1.5 MiB), and supports
      * changes to the ADDRMAN_ parameters without breaking the on-disk structure.
@@ -413,13 +414,13 @@ public:
                 }
             }
         }
-        // Store asmap version after bucket entries so that it
+        // Store asmap checksum after bucket entries so that it
         // can be ignored by older clients for backward compatibility.
-        uint256 asmap_version;
+        uint256 asmap_checksum;
         if (m_asmap.size() != 0) {
-            asmap_version = SerializeHash(m_asmap);
+            asmap_checksum = SerializeHash(m_asmap);
         }
-        s << asmap_version;
+        s << asmap_checksum;
     }
 
     template <typename Stream>
@@ -516,13 +517,13 @@ public:
             }
         }
 
-        uint256 supplied_asmap_version;
+        uint256 supplied_asmap_checksum;
         if (m_asmap.size() != 0) {
-            supplied_asmap_version = SerializeHash(m_asmap);
+            supplied_asmap_checksum = SerializeHash(m_asmap);
         }
-        uint256 serialized_asmap_version;
+        uint256 serialized_asmap_checksum;
         if (format >= Format::V2_ASMAP) {
-            s >> serialized_asmap_version;
+            s >> serialized_asmap_checksum;
         }
 
         for (auto bucket_entry : bucket_entries) {
@@ -531,7 +532,7 @@ public:
             CAddrInfo& info = mapInfo[entry_index];
             int nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
             if (format >= Format::V2_ASMAP && nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && vvNew[bucket][nUBucketPos] == -1 &&
-                info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS && serialized_asmap_version == supplied_asmap_version) {
+                info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS && serialized_asmap_checksum == supplied_asmap_checksum) {
                 // Bucketing has not changed, using existing bucket positions for the new table
                 vvNew[bucket][nUBucketPos] = entry_index;
                 info.nRefCount++;
