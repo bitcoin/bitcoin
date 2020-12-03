@@ -517,8 +517,9 @@ public:
             }
         }
 
-        // Attempt to restore the entry's new buckets if the bucket count and asmap
-        // checksum haven't changed
+        // If the bucket count and asmap checksum haven't changed, then attempt
+        // to restore the entries to the buckets/positions they were in before
+        // serialization.
         uint256 supplied_asmap_checksum;
         if (m_asmap.size() != 0) {
             supplied_asmap_checksum = SerializeHash(m_asmap);
@@ -540,20 +541,20 @@ public:
             // this bucket_entry.
             if (info.nRefCount >= ADDRMAN_NEW_BUCKETS_PER_ADDRESS) continue;
 
-            int nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
-            if (restore_bucketing && vvNew[bucket][nUBucketPos] == -1) {
+            int bucket_position = info.GetBucketPosition(nKey, true, bucket);
+            if (restore_bucketing && vvNew[bucket][bucket_position] == -1) {
                 // Bucketing has not changed, using existing bucket positions for the new table
-                vvNew[bucket][nUBucketPos] = entry_index;
-                info.nRefCount++;
+                vvNew[bucket][bucket_position] = entry_index;
+                ++info.nRefCount;
             } else {
                 // In case the new table data cannot be used (bucket count wrong or new asmap),
                 // try to give them a reference based on their primary source address.
                 LogPrint(BCLog::ADDRMAN, "Bucketing method was updated, re-bucketing addrman entries from disk\n");
                 bucket = info.GetNewBucket(nKey, m_asmap);
-                nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
-                if (vvNew[bucket][nUBucketPos] == -1) {
-                    vvNew[bucket][nUBucketPos] = entry_index;
-                    info.nRefCount++;
+                bucket_position = info.GetBucketPosition(nKey, true, bucket);
+                if (vvNew[bucket][bucket_position] == -1) {
+                    vvNew[bucket][bucket_position] = entry_index;
+                    ++info.nRefCount;
                 }
             }
         }
