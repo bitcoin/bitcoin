@@ -267,8 +267,11 @@ class WalletTest(BitcoinTestFramework):
             self.nodes[2].sendmany, amounts={address: 10}, fee_rate=0.99999999)
 
         self.log.info("Test sendmany raises if fee_rate of 0 or -1 is passed")
-        assert_raises_rpc_error(-6, "Fee rate (0.000 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)",
-            self.nodes[2].sendmany, amounts={address: 10}, fee_rate=0)
+        # Test fee_rate with zero values.
+        msg = "Fee rate (0.000 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)"
+        for zero_value in [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]:
+            assert_raises_rpc_error(-6, msg, self.nodes[2].sendmany, amounts={address: 1}, fee_rate=zero_value)
+        # Test fee_rate out of range (negative number).
         assert_raises_rpc_error(-3, OUT_OF_RANGE, self.nodes[2].sendmany, amounts={address: 10}, fee_rate=-1)
 
         self.log.info("Test sendmany raises if an invalid conf_target or estimate_mode is passed")
@@ -450,8 +453,11 @@ class WalletTest(BitcoinTestFramework):
                 self.nodes[2].sendtoaddress, address=address, amount=1, fee_rate=0.99999999)
 
             self.log.info("Test sendtoaddress raises if fee_rate of 0 or -1 is passed")
-            assert_raises_rpc_error(-6, "Fee rate (0.000 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)",
-                self.nodes[2].sendtoaddress, address=address, amount=10, fee_rate=0)
+            # Test fee_rate with zero values.
+            msg = "Fee rate (0.000 sat/vB) is lower than the minimum fee rate setting (1.000 sat/vB)"
+            for zero_value in [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]:
+                assert_raises_rpc_error(-6, msg, self.nodes[2].sendtoaddress, address=address, amount=1, fee_rate=zero_value)
+            # Test fee_rate out of range (negative number).
             assert_raises_rpc_error(-3, OUT_OF_RANGE, self.nodes[2].sendtoaddress, address=address, amount=1.0, fee_rate=-1)
 
             self.log.info("Test sendtoaddress raises if an invalid conf_target or estimate_mode is passed")

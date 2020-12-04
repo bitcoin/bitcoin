@@ -110,9 +110,13 @@ class BumpFeeTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "Insufficient total fee 0.00000141", rbf_node.bumpfee, rbfid, {"fee_rate": INSUFFICIENT})
 
         self.log.info("Test invalid fee rate settings")
-        assert_raises_rpc_error(-8, "Insufficient total fee 0.00", rbf_node.bumpfee, rbfid, {"fee_rate": 0})
         assert_raises_rpc_error(-4, "Specified or calculated fee 0.141 is too high (cannot be higher than -maxtxfee 0.10",
             rbf_node.bumpfee, rbfid, {"fee_rate": TOO_HIGH})
+        # Test fee_rate with zero values.
+        msg = "Insufficient total fee 0.00"
+        for zero_value in [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]:
+            assert_raises_rpc_error(-8, msg, rbf_node.bumpfee, rbfid, {"fee_rate": zero_value})
+        # Test fee_rate out of range (negative number).
         assert_raises_rpc_error(-3, "Amount out of range", rbf_node.bumpfee, rbfid, {"fee_rate": -1})
         for value in [{"foo": "bar"}, True]:
             assert_raises_rpc_error(-3, "Amount is not a number or string", rbf_node.bumpfee, rbfid, {"fee_rate": value})

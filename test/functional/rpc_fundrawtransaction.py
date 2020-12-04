@@ -5,6 +5,8 @@
 """Test the fundrawtransaction RPC."""
 
 from decimal import Decimal
+from itertools import product
+
 from test_framework.descriptors import descsum_create
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -723,17 +725,16 @@ class RawTransactionsTest(BitcoinTestFramework):
         result2 = node.fundrawtransaction(rawtx, {"feeRate": 2 * self.min_relay_tx_fee})
         result3 = node.fundrawtransaction(rawtx, {"fee_rate": 10 * btc_kvb_to_sat_vb * self.min_relay_tx_fee})
         result4 = node.fundrawtransaction(rawtx, {"feeRate": str(10 * self.min_relay_tx_fee)})
-        # Test that funding non-standard "zero-fee" transactions is valid.
-        result5 = self.nodes[3].fundrawtransaction(rawtx, {"fee_rate": 0})
-        result6 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 0})
 
         result_fee_rate = result['fee'] * 1000 / count_bytes(result['hex'])
         assert_fee_amount(result1['fee'], count_bytes(result1['hex']), 2 * result_fee_rate)
         assert_fee_amount(result2['fee'], count_bytes(result2['hex']), 2 * result_fee_rate)
         assert_fee_amount(result3['fee'], count_bytes(result3['hex']), 10 * result_fee_rate)
         assert_fee_amount(result4['fee'], count_bytes(result4['hex']), 10 * result_fee_rate)
-        assert_fee_amount(result5['fee'], count_bytes(result5['hex']), 0)
-        assert_fee_amount(result6['fee'], count_bytes(result6['hex']), 0)
+
+        # Test that funding non-standard "zero-fee" transactions is valid.
+        for param, zero_value in product(["fee_rate", "feeRate"], [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]):
+            assert_equal(self.nodes[3].fundrawtransaction(rawtx, {param: zero_value})["fee"], 0)
 
         # With no arguments passed, expect fee of 141 satoshis.
         assert_approx(node.fundrawtransaction(rawtx)["fee"], vexp=0.00000141, vspan=0.00000001)

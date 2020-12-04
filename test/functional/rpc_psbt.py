@@ -6,6 +6,8 @@
 """
 
 from decimal import Decimal
+from itertools import product
+
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_approx,
@@ -199,8 +201,8 @@ class PSBTTest(BitcoinTestFramework):
         assert_approx(res4["fee"], 0.00000381, 0.0000001)
 
         self.log.info("Test min fee rate checks with walletcreatefundedpsbt are bypassed and that funding non-standard 'zero-fee' transactions is valid")
-        for param in ["fee_rate", "feeRate"]:
-            assert_equal(self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {param: 0, "add_inputs": True})["fee"], 0)
+        for param, zero_value in product(["fee_rate", "feeRate"], [0, 0.000, 0.00000000, "0", "0.000", "0.00000000"]):
+            assert_equal(0, self.nodes[1].walletcreatefundedpsbt(inputs, outputs, 0, {param: zero_value, "add_inputs": True})["fee"])
 
         self.log.info("Test invalid fee rate settings")
         for param, value in {("fee_rate", 100000), ("feeRate", 1)}:
