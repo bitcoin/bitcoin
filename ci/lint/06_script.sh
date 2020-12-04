@@ -14,6 +14,8 @@ if [ "$TRAVIS_EVENT_TYPE" = "pull_request" ]; then
   test/lint/commit-script-check.sh $COMMIT_RANGE
 fi
 
+# This only checks that the trees are pure subtrees, it is not doing a full
+# check with -r to not have to fetch all the remotes.
 test/lint/git-subtree-check.sh src/crypto/ctaes
 test/lint/git-subtree-check.sh src/secp256k1
 test/lint/git-subtree-check.sh src/univalue
