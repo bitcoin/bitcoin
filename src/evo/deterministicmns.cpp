@@ -527,7 +527,6 @@ CDeterministicMNManager::CDeterministicMNManager(CEvoDB& _evoDb) :
 bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& _state, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
-
     const auto& consensusParams = Params().GetConsensus();
     bool fDIP0003Active = pindex->nHeight >= consensusParams.DIP0003Height;
     if (!fDIP0003Active) {
@@ -575,17 +574,16 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
         LogPrintf("CDeterministicMNManager::%s -- internal error: %s\n", __func__, e.what());
         return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "failed-dmn-block");
     }
-
-    // Don't hold cs while calling signals
     if (diff.HasChanges()) {
         GetMainSignals().NotifyMasternodeListChanged(false, oldList, diff);
-        uiInterface.NotifyMasternodeListChanged(newList);
     }
+    // always update interface for payment detail changes
+    uiInterface.NotifyMasternodeListChanged(newList);
+    
     {
         LOCK(cs);
         CleanupCache(nHeight);
     }
-
     return true;
 }
 
@@ -614,8 +612,9 @@ bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* 
         CDeterministicMNListDiff inversedDiff;
         curList.BuildDiff(prevList, inversedDiff);
         GetMainSignals().NotifyMasternodeListChanged(true, curList, inversedDiff);
-        uiInterface.NotifyMasternodeListChanged(prevList);
     }
+    // always update interface
+    uiInterface.NotifyMasternodeListChanged(prevList);
 
     return true;
 }

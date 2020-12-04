@@ -288,15 +288,14 @@ static void BannedListChanged(ClientModel *clientmodel)
 // SYSCOIN
 static void NotifyMasternodeListChanged(ClientModel *clientmodel, const CDeterministicMNList& newList)
 {
-    QMetaObject::invokeMethod(clientmodel, "setMasternodeList", Qt::QueuedConnection,
-                            Q_ARG(const CDeterministicMNList&, newList));
-    //clientmodel->setMasternodeList(newList);
+    clientmodel->setMasternodeList(newList);
 }
 
 static void NotifyAdditionalDataSyncProgressChanged(ClientModel *clientmodel, double nSyncProgress)
 {
-    QMetaObject::invokeMethod(clientmodel, "additionalDataSyncProgressChanged", Qt::QueuedConnection,
+    bool invoked = QMetaObject::invokeMethod(clientmodel, "additionalDataSyncProgressChanged", Qt::QueuedConnection,
                               Q_ARG(double, nSyncProgress));
+    assert(invoked);
 }
 static void BlockTipChanged(ClientModel* clientmodel, SynchronizationState sync_state, interfaces::BlockTip tip, double verificationProgress, bool fHeader)
 {
