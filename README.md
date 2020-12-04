@@ -1,4 +1,7 @@
-![Bitcoin Core](https://bitcoincore.org/assets/images/bitcoin_core_logo.png)
+![Bitcoin Core](doc/bitcoin_logo_doxygen.png?raw=true "Bitcoin Core")
+![Bitcoin Core](share/pixmaps/bitcoin128.png?raw=true "Bitcoin Core")
+
+
 
 Bitcoin Core integration/staging tree
 =====================================
