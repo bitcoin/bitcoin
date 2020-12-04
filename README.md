@@ -1,3 +1,5 @@
+![Bitcoin Core](https://bitcoincore.org/assets/images/bitcoin_core_logo.png)
+
 Bitcoin Core integration/staging tree
 =====================================
 
