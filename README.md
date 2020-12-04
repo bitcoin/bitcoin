@@ -1,4 +1,4 @@
-![Bitcoin Core][m](doc/bitcoin_logo_doxygen.png?raw=true "Bitcoin Core") Bitcoin Core integration/staging tree
+![m][Bitcoin Core](doc/bitcoin_logo_doxygen.png?raw=true "Bitcoin Core") Bitcoin Core integration/staging tree
 =====================================
 
 https://bitcoincore.org
