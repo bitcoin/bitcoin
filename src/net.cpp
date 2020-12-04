@@ -2374,6 +2374,12 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
         return false;
     }
 
+    proxyType i2p_sam;
+    if (GetProxy(NET_I2P, i2p_sam)) {
+        m_i2p_sam_session = std::make_unique<i2p::sam::Session>(GetDataDir() / "i2p_private_key",
+                                                                i2p_sam.proxy, &interruptNet);
+    }
+
     for (const auto& strDest : connOptions.vSeedNodes) {
         AddAddrFetch(strDest);
     }
