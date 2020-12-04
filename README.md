@@ -1,4 +1,6 @@
+<div style="display: flex; align-items: center; justify-content: center;">
 ![Bitcoin Core](doc/bitcoin_logo_doxygen.png?raw=true "Bitcoin Core") Bitcoin Core integration/staging tree
+</div>
 =====================================
 
 https://bitcoincore.org
