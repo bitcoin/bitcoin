@@ -15,6 +15,7 @@ from test_framework.util import (
 )
 from test_framework.wallet_util import test_address
 
+NOT_A_NUMBER_OR_STRING = "Amount is not a number or string"
 OUT_OF_RANGE = "Amount out of range"
 
 
@@ -277,6 +278,9 @@ class WalletTest(BitcoinTestFramework):
             assert_raises_rpc_error(-3, msg, self.nodes[2].sendmany, amounts={address: 1.0}, fee_rate=invalid_value)
         # Test fee_rate out of range (negative number).
         assert_raises_rpc_error(-3, OUT_OF_RANGE, self.nodes[2].sendmany, amounts={address: 10}, fee_rate=-1)
+        # Test type error.
+        for invalid_value in [True, {"foo": "bar"}]:
+            assert_raises_rpc_error(-3, NOT_A_NUMBER_OR_STRING, self.nodes[2].sendmany, amounts={address: 10}, fee_rate=invalid_value)
 
         self.log.info("Test sendmany raises if an invalid conf_target or estimate_mode is passed")
         for target, mode in product([-1, 0, 1009], ["economical", "conservative"]):
@@ -467,6 +471,9 @@ class WalletTest(BitcoinTestFramework):
                 assert_raises_rpc_error(-3, msg, self.nodes[2].sendtoaddress, address=address, amount=1.0, fee_rate=invalid_value)
             # Test fee_rate out of range (negative number).
             assert_raises_rpc_error(-3, OUT_OF_RANGE, self.nodes[2].sendtoaddress, address=address, amount=1.0, fee_rate=-1)
+            # Test type error.
+            for invalid_value in [True, {"foo": "bar"}]:
+                assert_raises_rpc_error(-3, NOT_A_NUMBER_OR_STRING, self.nodes[2].sendtoaddress, address=address, amount=1.0, fee_rate=invalid_value)
 
             self.log.info("Test sendtoaddress raises if an invalid conf_target or estimate_mode is passed")
             for target, mode in product([-1, 0, 1009], ["economical", "conservative"]):
