@@ -162,7 +162,8 @@ AC_ARG_ENABLE([extended-functional-tests],
     [use_extended_functional_tests=no])
 
 AC_ARG_ENABLE([fuzz],
-    AS_HELP_STRING([--enable-fuzz],[enable building of fuzz targets (default no)]),
+    AS_HELP_STRING([--enable-fuzz],
+    [enable building of fuzz targets (default no). enabling this will disable all other targets]),
     [enable_fuzz=$enableval],
     [enable_fuzz=no])
 
@@ -1284,11 +1285,6 @@ if test x$have_miniupnpc != xno; then
   ])
 fi
 fi
-
-SYSCOIN_QT_INIT
-
-dnl sets $syscoin_enable_qt, $syscoin_enable_qt_test, $syscoin_enable_qt_dbus
-SYSCOIN_QT_CONFIGURE([$use_pkgconfig])
 
 if test x$build_syscoin_wallet$build_syscoin_cli$build_syscoin_tx$build_syscoind$syscoin_enable_qt$use_tests$use_bench = xnonononononono; then
     use_boost=no
