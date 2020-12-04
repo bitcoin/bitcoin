@@ -364,29 +364,39 @@ bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& st
 
 bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams)
 {
+    return ReadBlockFromDisk(block, BlockFileSeq().FileName(pos), pos.nPos, consensusParams);
+}
+
+bool ReadBlockFromDisk(CBlock& block, const fs::path& path, unsigned int offset, const Consensus::Params& consensusParams)
+{
     block.SetNull();
 
     // Open history file to read
-    CAutoFile filein(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
-    if (filein.IsNull()) {
-        return error("ReadBlockFromDisk: OpenBlockFile failed for %s", pos.ToString());
+    FILE* file = fsbridge::fopen(path, "rb");
+    if (!file) {
+        return error("%s: open failed for %s", __func__, path.string());
     }
+    if (offset > 0 && fseek(file, offset, SEEK_SET)) {
+        fclose(file);
+        return error("%s: fseek failed for %s offset %u", __func__, path.string(), offset);
+    }
+    CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
 
     // Read block
     try {
         filein >> block;
     } catch (const std::exception& e) {
-        return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
+        return error("%s: Deserialize or I/O error - %s at %s, %u", __func__, e.what(), path, offset);
     }
 
     // Check the header
     if (!CheckProofOfWork(block.GetHash(), block.nBits, consensusParams)) {
-        return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
+        return error("%s: Errors in block header at %s, %u", __func__, path, offset);
     }
 
     // Signet only: check block solution
     if (consensusParams.signet_blocks && !CheckSignetBlockSolution(block, consensusParams)) {
-        return error("ReadBlockFromDisk: Errors in block solution at %s", pos.ToString());
+        return error("%s: Errors in block solution at %s, %u", __func__, path, offset);
     }
 
     return true;
