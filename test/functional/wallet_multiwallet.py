@@ -27,7 +27,7 @@ got_loading_error = False
 
 def test_load_unload(node, name):
     global got_loading_error
-    for _ in range(10):
+    while True:
         if got_loading_error:
             return
         try:
