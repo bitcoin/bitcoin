@@ -71,6 +71,4 @@ PUBKEY=$(docker exec "${EPHEMERAL_DAEMON}" bitcoin-cli -datadir=/tmp -regtest ge
 BLOCKSCRIPT="5121${PUBKEY}51ae"
 
 # 4. print out the results
-echo "PRIVKEY=${PRIVKEY}"
-echo "PUBKEY=${PUBKEY}"
-echo "BLOCKSCRIPT=${BLOCKSCRIPT}"
+echo "{ \"privkey\": \"${PRIVKEY}\", \"pubkey\": \"${PUBKEY}\", \"blockscript\": \"${BLOCKSCRIPT}\" }"
