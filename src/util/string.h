@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <array>
 #include <cstring>
+#include <limits>
 #include <locale>
 #include <sstream>
 #include <string>
@@ -85,6 +86,14 @@ template <typename T1, size_t PREFIX_LEN>
 {
     return obj.size() >= PREFIX_LEN &&
            std::equal(std::begin(prefix), std::end(prefix), std::begin(obj));
+}
+
+/**
+ * User-defined literal for byte constants.
+ */
+constexpr uint8_t operator ""_u8(unsigned long long byte)
+{
+    return byte <= std::numeric_limits<uint8_t>::max() ? byte : throw std::overflow_error("The value does not fit uint8_t.");
 }
 
 #endif // BITCOIN_UTIL_STRENCODINGS_H
