@@ -721,11 +721,17 @@ class RawTransactionsTest(BitcoinTestFramework):
         result2 = node.fundrawtransaction(rawtx, {"feeRate": 2 * self.min_relay_tx_fee})
         result3 = node.fundrawtransaction(rawtx, {"fee_rate": 10 * btc_kvb_to_sat_vb * self.min_relay_tx_fee})
         result4 = node.fundrawtransaction(rawtx, {"feeRate": 10 * self.min_relay_tx_fee})
+        # Test that funding non-standard "zero-fee" transactions is valid.
+        result5 = self.nodes[3].fundrawtransaction(rawtx, {"fee_rate": 0})
+        result6 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 0})
+
         result_fee_rate = result['fee'] * 1000 / count_bytes(result['hex'])
         assert_fee_amount(result1['fee'], count_bytes(result2['hex']), 2 * result_fee_rate)
         assert_fee_amount(result2['fee'], count_bytes(result2['hex']), 2 * result_fee_rate)
         assert_fee_amount(result3['fee'], count_bytes(result3['hex']), 10 * result_fee_rate)
         assert_fee_amount(result4['fee'], count_bytes(result3['hex']), 10 * result_fee_rate)
+        assert_fee_amount(result5['fee'], count_bytes(result5['hex']), 0)
+        assert_fee_amount(result6['fee'], count_bytes(result6['hex']), 0)
 
         # With no arguments passed, expect fee of 141 satoshis.
         assert_approx(node.fundrawtransaction(rawtx)["fee"], vexp=0.00000141, vspan=0.00000001)
@@ -752,19 +758,15 @@ class RawTransactionsTest(BitcoinTestFramework):
                     node.fundrawtransaction, rawtx, {"estimate_mode": mode, "conf_target": n, "add_inputs": True})
 
         self.log.info("Test invalid fee rate settings")
-        assert_raises_rpc_error(-8, "Invalid fee_rate 0.000 sat/vB (must be greater than 0)",
-            node.fundrawtransaction, rawtx, {"fee_rate": 0, "add_inputs": True})
-        assert_raises_rpc_error(-8, "Invalid feeRate 0.00000000 BTC/kvB (must be greater than 0)",
-            node.fundrawtransaction, rawtx, {"feeRate": 0, "add_inputs": True})
         for param, value in {("fee_rate", 100000), ("feeRate", 1.000)}:
             assert_raises_rpc_error(-4, "Fee exceeds maximum configured by user (e.g. -maxtxfee, maxfeerate)",
                 node.fundrawtransaction, rawtx, {param: value, "add_inputs": True})
             assert_raises_rpc_error(-3, "Amount out of range",
-                node.fundrawtransaction, rawtx, {"fee_rate": -1, "add_inputs": True})
+                node.fundrawtransaction, rawtx, {param: -1, "add_inputs": True})
             assert_raises_rpc_error(-3, "Amount is not a number or string",
-                node.fundrawtransaction, rawtx, {"fee_rate": {"foo": "bar"}, "add_inputs": True})
+                node.fundrawtransaction, rawtx, {param: {"foo": "bar"}, "add_inputs": True})
             assert_raises_rpc_error(-3, "Invalid amount",
-                node.fundrawtransaction, rawtx, {"fee_rate": "", "add_inputs": True})
+                node.fundrawtransaction, rawtx, {param: "", "add_inputs": True})
 
         self.log.info("Test min fee rate checks are bypassed with fundrawtxn, e.g. a fee_rate under 1 sat/vB is allowed")
         node.fundrawtransaction(rawtx, {"fee_rate": 0.99999999, "add_inputs": True})
