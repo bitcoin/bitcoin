@@ -6,9 +6,16 @@
 #define BITCOIN_UTIL_SOCK_H
 
 #include <compat.h>
+#include <util/time.h>
 
 #include <chrono>
 #include <string>
+
+/**
+ * Maximum time to wait for I/O readiness.
+ * It will take up until this time to break off in case of an interruption.
+ */
+static constexpr auto MAX_WAIT_FOR_IO = 1s;
 
 /**
  * RAII helper class that manages a socket. Mimics `std::unique_ptr`, but instead of a pointer it
