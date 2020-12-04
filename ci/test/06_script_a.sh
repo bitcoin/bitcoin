@@ -6,7 +6,10 @@
 
 export LC_ALL=C.UTF-8
 
-SYSCOIN_CONFIG_ALL="--disable-dependency-tracking --prefix=$DEPENDS_DIR/$HOST --bindir=$BASE_OUTDIR/bin --libdir=$BASE_OUTDIR/lib"
+SYSCOIN_CONFIG_ALL="--enable-suppress-external-warnings --disable-dependency-tracking --prefix=$DEPENDS_DIR/$HOST --bindir=$BASE_OUTDIR/bin --libdir=$BASE_OUTDIR/lib"
+if [ -z "$NO_WERROR" ]; then
+  SYSCOIN_CONFIG_ALL="${BITCOIN_CONFIG_ALL} --enable-werror"
+fi
 DOCKER_EXEC "ccache --zero-stats --max-size=$CCACHE_SIZE"
 
 BEGIN_FOLD autogen
