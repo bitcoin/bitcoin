@@ -107,7 +107,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
 
 task:
-  name: '[no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer] [focal]'
+  name: '[no depends, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -115,7 +115,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
 
 task:
-  name: '[no depends, only system libs, sanitizers: fuzzer,address,undefined] [focal]'
+  name: '[no depends, sanitizers: fuzzer,address,undefined] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
