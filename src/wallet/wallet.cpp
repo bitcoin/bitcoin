@@ -3605,7 +3605,7 @@ void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t>& mapKeyBirth) const {
     AssertLockHeld(cs_wallet);
     mapKeyBirth.clear();
 
-    LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
+    const auto spk_man = GetLegacyScriptPubKeyMan();
     assert(spk_man != nullptr);
     LOCK(spk_man->cs_KeyStore);
 
