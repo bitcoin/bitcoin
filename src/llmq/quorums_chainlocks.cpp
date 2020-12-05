@@ -469,7 +469,7 @@ bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid)
     int64_t txAge = 0;
     {
         LOCK(cs);
-        if (!isSporkActive) {
+        if (!isSporkActive || !isEnforced) {
             return true;
         }
         auto it = txFirstSeenTime.find(txid);
