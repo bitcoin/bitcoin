@@ -40,7 +40,7 @@ script: |
   set -e -o pipefail
 
   WRAP_DIR=$HOME/wrapped
-  HOSTS="x86_64-linux-gnu"
+  HOSTS="x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu"
   CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
   FAKETIME_HOST_PROGS="gcc g++"
   FAKETIME_PROGS="date ar ranlib nm"
@@ -143,7 +143,7 @@ script: |
     find . -name "lib*.la" -delete
     find . -name "lib*.a" -delete
     rm -rf ${DISTNAME}/lib/pkgconfig
-    find ${DISTNAME}/bin -not -name "*.nod*" -type f -executable -print0 | xargs -0 -n1 -I{} ../contrib/devtools/split-debug.sh {} {} {}.dbg
+    find ${DISTNAME}/bin -type f -executable -print0 | xargs -0 -n1 -I{} ../contrib/devtools/split-debug.sh {} {} {}.dbg
     find ${DISTNAME}/lib -type f -print0 | xargs -0 -n1 -I{} ../contrib/devtools/split-debug.sh {} {} {}.dbg
     cp ../README.md ${DISTNAME}/
     find ${DISTNAME} -not -name "*.dbg" | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-${i}.tar.gz
