@@ -1,7 +1,7 @@
 #include <qt/trafficgraphdata.h>
 
 const int TrafficGraphData::RangeMinutes[] = {5,10,15,30,60,120,180,360,720,1440};
-const int TrafficGraphData::DESIRED_DATA_SAMPLES = 800;
+const int TrafficGraphData::DESIRED_DATA_SAMPLES = TrafficGraphData::RangeMinutes[TrafficGraphData::Range_5m] * 60; // i.e. one data sample per second for Range_5m
 const int TrafficGraphData::DesiredQueueSizes[] = {
         TrafficGraphData::DESIRED_DATA_SAMPLES,     //Range_5m
         TrafficGraphData::DESIRED_DATA_SAMPLES/2,   //Range_10m
