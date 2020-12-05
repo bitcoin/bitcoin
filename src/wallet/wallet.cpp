@@ -4472,11 +4472,7 @@ void CWallet::LoadActiveScriptPubKeyMan(uint256 id, OutputType type, bool intern
 
 bool CWallet::IsLegacy() const
 {
-    if (m_internal_spk_managers.count(OutputType::LEGACY) == 0) {
-        return false;
-    }
-    auto spk_man = dynamic_cast<LegacyScriptPubKeyMan*>(m_internal_spk_managers.at(OutputType::LEGACY));
-    return spk_man != nullptr;
+    return (m_internal_spk_managers.count(OutputType::LEGACY) == 1);
 }
 
 DescriptorScriptPubKeyMan* CWallet::GetDescriptorScriptPubKeyMan(const WalletDescriptor& desc) const
