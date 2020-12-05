@@ -820,9 +820,8 @@ bool CWallet::IsSpentKey(const uint256& hash, unsigned int n) const
         if (GetDestData(dest, "used", nullptr)) {
             return true;
         }
-        if (IsLegacy()) {
-            LegacyScriptPubKeyMan* spk_man = GetLegacyScriptPubKeyMan();
-            assert(spk_man != nullptr);
+        const auto spk_man = GetLegacyScriptPubKeyMan();
+        if (spk_man) {
             for (const auto& keyid : GetAffectedKeys(srctx->tx->vout[n].scriptPubKey, *spk_man)) {
                 WitnessV0KeyHash wpkh_dest(keyid);
                 if (GetDestData(wpkh_dest, "used", nullptr)) {
