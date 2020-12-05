@@ -208,8 +208,8 @@ int64_t SelectCoins(interfaces::Wallet& iWallet, const std::string& fromAddress,
     int64_t nTotal = 0;
     int nHeight = ::ChainActive().Height();
 
-    // select coins to cover up to 20 kB max. transaction size
-    CAmount nMax = 20 * GetEstimatedFeePerKb(iWallet);
+    // select coins to cover up to 3 kB max. transaction size
+    CAmount nMax = 3 * GetEstimatedFeePerKb(iWallet);
 
     // if referenceamount is set it is needed to be accounted for here too
     if (0 < additional) nMax += additional;

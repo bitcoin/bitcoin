@@ -66,8 +66,8 @@ int WalletTxBuilder(
     // Next, we set the change address to the sender
     coinControl.destChange = DecodeDestination(senderAddress);
 
-    // Select the inputs
-    if (0 > mastercore::SelectCoins(*iWallet, senderAddress, coinControl, referenceAmount)) { return MP_INPUTS_INVALID; }
+    // Amount required for outputs
+    CAmount outputAmount{0};
 
     // Encode the data outputs
     switch(omniTxClass) {
@@ -77,7 +77,7 @@ int WalletTxBuilder(
             if (!AddressToPubKey(iWallet, sAddress, redeemingPubKey)) {
                 return MP_REDEMP_BAD_VALIDATION;
             }
-            if (!OmniCore_Encode_ClassB(senderAddress,redeemingPubKey,payload,vecSend)) { return MP_ENCODING_ERROR; }
+            if (!OmniCore_Encode_ClassB(senderAddress, redeemingPubKey, payload, vecSend, &outputAmount)) { return MP_ENCODING_ERROR; }
         break; }
         case OMNI_CLASS_C:
             if(!OmniCore_Encode_ClassC(payload,vecSend)) { return MP_ENCODING_ERROR; }
@@ -87,8 +87,12 @@ int WalletTxBuilder(
     // Then add a paytopubkeyhash output for the recipient (if needed) - note we do this last as we want this to be the highest vout
     if (!receiverAddress.empty()) {
         CScript scriptPubKey = GetScriptForDestination(DecodeDestination(receiverAddress));
+        outputAmount += 0 < referenceAmount ? referenceAmount : OmniGetDustThreshold(scriptPubKey);
         vecSend.push_back(std::make_pair(scriptPubKey, 0 < referenceAmount ? referenceAmount : OmniGetDustThreshold(scriptPubKey)));
     }
+
+    // Select the inputs
+    if (0 > mastercore::SelectCoins(*iWallet, senderAddress, coinControl, outputAmount)) { return MP_INPUTS_INVALID; }
 
     // Now we have what we need to pass to the wallet to create the transaction, perform some checks first
 

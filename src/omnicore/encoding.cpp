@@ -23,7 +23,7 @@
  * https://github.com/mastercoin-MSC/spec#class-b-transactions-also-known-as-the-multisig-method
  */
 bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& redeemingPubKey,
-        const std::vector<unsigned char>& vchPayload, std::vector<std::pair<CScript, int64_t> >& vecOutputs)
+        const std::vector<unsigned char>& vchPayload, std::vector<std::pair<CScript, int64_t> >& vecOutputs, CAmount *outputAmount)
 {
     unsigned int nRemainingBytes = vchPayload.size();
     unsigned int nNextByte = 0;
@@ -65,11 +65,15 @@ bool OmniCore_Encode_ClassB(const std::string& senderAddress, const CPubKey& red
 
         // Push back a bare multisig output with obfuscated data
         CScript scriptMultisigOut = GetScriptForMultisig(1, vKeys);
+        if (outputAmount)
+            *outputAmount += OmniGetDustThreshold(scriptMultisigOut);
         vecOutputs.push_back(std::make_pair(scriptMultisigOut, OmniGetDustThreshold(scriptMultisigOut)));
     }
 
     // Add the Exodus marker output
     CScript scriptExodusOutput = GetScriptForDestination(ExodusAddress());
+    if (outputAmount)
+        *outputAmount += OmniGetDustThreshold(scriptExodusOutput);
     vecOutputs.push_back(std::make_pair(scriptExodusOutput, OmniGetDustThreshold(scriptExodusOutput)));
     return true;
 }
