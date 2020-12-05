@@ -4,6 +4,7 @@
 
 #include <key_io.h>
 #include <outputtype.h>
+#include <policy/feerate.h>
 #include <rpc/util.h>
 #include <script/descriptor.h>
 #include <script/signingprovider.h>
@@ -84,6 +85,17 @@ CAmount AmountFromValue(const UniValue& value)
     if (!MoneyRange(amount))
         throw JSONRPCError(RPC_TYPE_ERROR, "Amount out of range");
     return amount;
+}
+
+CFeeRate FeeRateFromValueInSatB(const UniValue& value)
+{
+    const CAmount amount{AmountFromValue(value)};
+    const CFeeRate fee_rate{CFeeRate::FromSatB(amount)};
+    if (fee_rate.IsZero() && amount != 0) {
+        // passed value is an unrepresentable fee rate between 0 and 0.001 sat/vB
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
+    }
+    return fee_rate;
 }
 
 uint256 ParseHashV(const UniValue& v, std::string strName)

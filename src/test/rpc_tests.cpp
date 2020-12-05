@@ -6,9 +6,11 @@
 #include <rpc/server.h>
 #include <rpc/util.h>
 
+#include <amount.h>
 #include <core_io.h>
 #include <interfaces/chain.h>
 #include <node/context.h>
+#include <policy/feerate.h>
 #include <test/util/setup_common.h>
 #include <util/ref.h>
 #include <util/time.h>
@@ -185,6 +187,7 @@ static UniValue ValueFromString(const std::string &str)
 
 BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
 {
+    // Test AmountFromValue
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("-0.00000001")), UniValue);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0")), 0LL);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.00000000")), 0LL);
@@ -206,6 +209,8 @@ BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
 
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("1e-9")), UniValue); //should fail
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("0.000000019")), UniValue); //should fail
+    BOOST_CHECK_THROW(AmountFromValue(ValueFromString("0.000999999")), UniValue);
+    BOOST_CHECK_THROW(AmountFromValue(ValueFromString("1.111111111")), UniValue);
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.00000001000000")), 1LL); //should pass, cut trailing 0
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("19e-9")), UniValue); //should fail
     BOOST_CHECK_EQUAL(AmountFromValue(ValueFromString("0.19e-6")), 19); //should pass, leading 0 is present
@@ -214,6 +219,15 @@ BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("1e+11")), UniValue); //overflow error
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("1e11")), UniValue); //overflow error signless
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("93e+9")), UniValue); //overflow error
+
+    // Test FeeRateFromValueInSatB
+    BOOST_CHECK(FeeRateFromValueInSatB(ValueFromString("0")) == CFeeRate{0});
+    BOOST_CHECK(FeeRateFromValueInSatB(ValueFromString("0.00000000")) == CFeeRate{0});
+    BOOST_CHECK(FeeRateFromValueInSatB(ValueFromString("0.001")) == CFeeRate{1});
+    BOOST_CHECK(FeeRateFromValueInSatB(ValueFromString("0.00100000")) == CFeeRate{1});
+    BOOST_CHECK(FeeRateFromValueInSatB(ValueFromString("1")) == CFeeRate{1000});
+    BOOST_CHECK(FeeRateFromValueInSatB(ValueFromString("1.000")) == CFeeRate{1000});
+    BOOST_CHECK(FeeRateFromValueInSatB(ValueFromString("1.2340000")) == CFeeRate{1234});
 }
 
 BOOST_AUTO_TEST_CASE(json_parse_errors)

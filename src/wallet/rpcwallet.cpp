@@ -216,7 +216,7 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
         if (!estimate_mode.isNull() && estimate_mode.get_str() != "unset") {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and fee_rate");
         }
-        cc.m_feerate = CFeeRate::FromSatB(AmountFromValue(fee_rate));
+        cc.m_feerate = FeeRateFromValueInSatB(fee_rate);
         if (override_min_fee) cc.fOverrideFeeRate = true;
         // Default RBF to true for explicit fee_rate, if unset.
         if (cc.m_signal_bip125_rbf == nullopt) cc.m_signal_bip125_rbf = true;
@@ -3089,7 +3089,7 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
                 {"lockUnspents", UniValueType(UniValue::VBOOL)},
                 {"lock_unspents", UniValueType(UniValue::VBOOL)},
                 {"locktime", UniValueType(UniValue::VNUM)},
-                {"fee_rate", UniValueType()}, // will be checked by AmountFromValue() in SetFeeEstimateMode()
+                {"fee_rate", UniValueType()}, // will be checked by FeeRateFromValueInSatB() in SetFeeEstimateMode()
                 {"feeRate", UniValueType()}, // will be checked by AmountFromValue() below
                 {"psbt", UniValueType(UniValue::VBOOL)},
                 {"subtractFeeFromOutputs", UniValueType(UniValue::VARR)},
@@ -3470,7 +3470,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
             {
                 {"confTarget", UniValueType(UniValue::VNUM)},
                 {"conf_target", UniValueType(UniValue::VNUM)},
-                {"fee_rate", UniValueType()}, // will be checked by AmountFromValue() in SetFeeEstimateMode()
+                {"fee_rate", UniValueType()}, // will be checked by FeeRateFromValueInSatB() in SetFeeEstimateMode()
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
             },

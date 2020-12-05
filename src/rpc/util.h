@@ -8,6 +8,7 @@
 #include <node/coinstats.h>
 #include <node/transaction.h>
 #include <outputtype.h>
+#include <policy/feerate.h>
 #include <protocol.h>
 #include <pubkey.h>
 #include <rpc/protocol.h>
@@ -81,6 +82,10 @@ extern std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKe
 CoinStatsHashType ParseHashType(const UniValue& param, const CoinStatsHashType default_type);
 
 extern CAmount AmountFromValue(const UniValue& value);
+
+/** Return a fee rate from a UniValue number or string in sat/vB */
+extern CFeeRate FeeRateFromValueInSatB(const UniValue& value);
+
 extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);
 extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
 
