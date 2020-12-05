@@ -617,6 +617,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         # restart faucet node
         self.start_node(0)
+        force_finish_mnsync(self.nodes[0])
 
     def start_masternodes(self):
         self.log.info("Starting %d masternodes", self.mn_count)

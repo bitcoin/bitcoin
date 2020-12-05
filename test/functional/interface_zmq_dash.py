@@ -14,7 +14,7 @@ import time
 import zmq
 
 from test_framework.test_framework import DashTestFramework, SkipTest
-from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str, force_finish_mnsync
+from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str
 from test_framework.messages import (CBlock, CGovernanceObject, CGovernanceVote, COutPoint, CRecoveredSig, CTransaction,
                                     msg_clsig, msg_islock,
                                     hash256, ser_string, uint256_to_string)
@@ -69,7 +69,6 @@ class DashZMQTest (DashTestFramework):
             self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
             self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
             self.wait_for_sporks_same()
-            force_finish_mnsync(self.nodes[0])
             # Create an LLMQ for testing
             self.quorum_type = 100  # llmq_test
             self.quorum_hash = self.mine_quorum()

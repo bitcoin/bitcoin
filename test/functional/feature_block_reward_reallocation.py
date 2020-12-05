@@ -24,7 +24,7 @@ class BlockRewardReallocationTest(DashTestFramework):
 
     # 536870912 == 0x20000000, i.e. not signalling for anything
     def create_test_block(self, version=536870912):
-        self.bump_mocktime(150)
+        self.bump_mocktime(5)
         bt = self.nodes[0].getblocktemplate()
         tip = int(bt['previousblockhash'], 16)
         nextheight = bt['height']
