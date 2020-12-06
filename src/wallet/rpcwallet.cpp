@@ -3304,6 +3304,11 @@ static RPCHelpMan rescanblockchain()
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
+    CWallet& wallet{*pwallet};
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    wallet.BlockUntilSyncedToCurrentChain();
 
     WalletRescanReserver reserver(*pwallet);
     if (!reserver.reserve()) {
