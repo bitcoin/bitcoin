@@ -112,7 +112,7 @@ bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, CoinStatsHashType hash_t
 }
 
 // The legacy hash serializes the hashBlock
-static void PrepareHash(CHashWriter& ss, CCoinsStats& stats)
+static void PrepareHash(CHashWriter& ss, const CCoinsStats& stats)
 {
     ss << stats.hashBlock;
 }
