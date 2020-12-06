@@ -70,7 +70,7 @@ public:
     }
 };
 
-static CDataStream AddrmanToStream(CAddrManSerializationMock& _addrman)
+static CDataStream AddrmanToStream(const CAddrManSerializationMock& _addrman)
 {
     CDataStream ssPeersIn(SER_DISK, CLIENT_VERSION);
     ssPeersIn << Params().MessageStart();
