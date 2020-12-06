@@ -305,8 +305,8 @@ private:
     uint32_t m_first_false_pos = NO_FALSE;
 
 public:
-    bool empty() { return m_stack_size == 0; }
-    bool all_true() { return m_first_false_pos == NO_FALSE; }
+    bool empty() const { return m_stack_size == 0; }
+    bool all_true() const { return m_first_false_pos == NO_FALSE; }
     void push_back(bool f)
     {
         if (m_first_false_pos == NO_FALSE && !f) {

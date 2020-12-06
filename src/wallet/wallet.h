@@ -930,7 +930,7 @@ public:
     Balance GetBalance(int min_depth = 0, bool avoid_reuse = true) const;
     CAmount GetAvailableBalance(const CCoinControl* coinControl = nullptr) const;
 
-    OutputType TransactionChangeType(const Optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend);
+    OutputType TransactionChangeType(const Optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend) const;
 
     /**
      * Insert additional inputs into the transaction by

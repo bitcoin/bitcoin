@@ -1216,7 +1216,7 @@ void CConnman::NotifyNumConnectionsChanged()
     }
 }
 
-void CConnman::InactivityCheck(CNode *pnode)
+void CConnman::InactivityCheck(CNode *pnode) const
 {
     int64_t nTime = GetSystemTimeInSeconds();
     if (nTime - pnode->nTimeConnected > m_peer_connect_timeout)

@@ -2706,7 +2706,7 @@ static uint32_t GetLocktimeForNewTransaction(interfaces::Chain& chain, const uin
     return locktime;
 }
 
-OutputType CWallet::TransactionChangeType(const Optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend)
+OutputType CWallet::TransactionChangeType(const Optional<OutputType>& change_type, const std::vector<CRecipient>& vecSend) const
 {
     // If -changetype is specified, always use that change type.
     if (change_type) {

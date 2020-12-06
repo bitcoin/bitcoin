@@ -564,7 +564,7 @@ public:
 
     //! @returns whether or not the CoinsViews object has been fully initialized and we can
     //!          safely flush this object to disk.
-    bool CanFlushToDisk() EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
+    bool CanFlushToDisk() const EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
         return m_coins_views && m_coins_views->m_cacheview;
     }
 
