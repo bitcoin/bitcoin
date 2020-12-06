@@ -111,6 +111,19 @@ BOOST_AUTO_TEST_CASE(CFeeRateNamedConstructorsTest)
     BOOST_CHECK(CFeeRate::FromSatB(CAmount(123456789)) == CFeeRate(1234, 1000));
 }
 
+BOOST_AUTO_TEST_CASE(CFeeRateIsZeroTest)
+{
+    BOOST_CHECK(CFeeRate(0).IsZero());
+    BOOST_CHECK(!CFeeRate(1000).IsZero());
+    BOOST_CHECK(!CFeeRate(-1000).IsZero());
+    BOOST_CHECK(CFeeRate(CAmount(0), 0).IsZero());
+    BOOST_CHECK(CFeeRate(CAmount(1), 1001).IsZero());
+    BOOST_CHECK(CFeeRate::FromBtcKb(CAmount(0)).IsZero());
+    BOOST_CHECK(!CFeeRate::FromBtcKb(CAmount(1)).IsZero());
+    BOOST_CHECK(CFeeRate::FromSatB(CAmount(0.000)).IsZero());
+    BOOST_CHECK(!CFeeRate::FromSatB(CAmount(100001)).IsZero());
+}
+
 BOOST_AUTO_TEST_CASE(BinaryOperatorTest)
 {
     CFeeRate a, b;
