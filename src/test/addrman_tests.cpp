@@ -71,7 +71,7 @@ public:
     }
 
     // Simulates connection failure so that we can test eviction of offline nodes
-    void SimConnFail(CService& addr)
+    void SimConnFail(const CService& addr)
     {
          LOCK(cs);
          int64_t nLastSuccess = 1;

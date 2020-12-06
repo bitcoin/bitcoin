@@ -1860,7 +1860,7 @@ BOOST_AUTO_TEST_CASE(test_Capitalize)
     BOOST_CHECK_EQUAL(Capitalize("\x00\xfe\xff"), "\x00\xfe\xff");
 }
 
-static std::string SpanToStr(Span<const char>& span)
+static std::string SpanToStr(const Span<const char>& span)
 {
     return std::string(span.begin(), span.end());
 }

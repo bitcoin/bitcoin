@@ -1083,7 +1083,8 @@ std::set<BlockFilterType> g_enabled_filter_types;
     // The log was successful, terminate now.
     std::terminate();
 };
-bool AppInitBasicSetup(ArgsManager& args)
+
+bool AppInitBasicSetup(const ArgsManager& args)
 {
     // ********************************************************* Step 1: setup
 #ifdef _MSC_VER
