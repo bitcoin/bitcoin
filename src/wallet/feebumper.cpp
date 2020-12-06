@@ -256,7 +256,7 @@ Result CommitTransaction(CWallet& wallet, const uint256& txid, CMutableTransacti
         errors.push_back(Untranslated("Invalid or non-wallet transaction id"));
         return Result::MISC_ERROR;
     }
-    CWalletTx& oldWtx = it->second;
+    const CWalletTx& oldWtx = it->second;
 
     // make sure the transaction still has no descendants and hasn't been mined in the meantime
     Result result = PreconditionChecks(wallet, oldWtx, errors);
