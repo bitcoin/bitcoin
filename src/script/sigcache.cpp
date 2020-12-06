@@ -66,7 +66,7 @@ public:
         return setValid.contains(entry, erase);
     }
 
-    void Set(uint256& entry)
+    void Set(const uint256& entry)
     {
         boost::unique_lock<boost::shared_mutex> lock(cs_sigcache);
         setValid.insert(entry);
