@@ -216,7 +216,7 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
         if (!estimate_mode.isNull() && estimate_mode.get_str() != "unset") {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and fee_rate");
         }
-        cc.m_feerate = CFeeRate(AmountFromValue(fee_rate), COIN);
+        cc.m_feerate = CFeeRate::FromSatB(AmountFromValue(fee_rate));
         if (override_min_fee) cc.fOverrideFeeRate = true;
         // Default RBF to true for explicit fee_rate, if unset.
         if (cc.m_signal_bip125_rbf == nullopt) cc.m_signal_bip125_rbf = true;
@@ -2332,8 +2332,8 @@ static RPCHelpMan settxfee()
     LOCK(pwallet->cs_wallet);
 
     CAmount nAmount = AmountFromValue(request.params[0]);
-    CFeeRate tx_fee_rate(nAmount, 1000);
-    CFeeRate max_tx_fee_rate(pwallet->m_default_max_tx_fee, 1000);
+    CFeeRate tx_fee_rate{CFeeRate::FromBtcKb(nAmount)};
+    CFeeRate max_tx_fee_rate{CFeeRate::FromBtcKb(pwallet->m_default_max_tx_fee)};
     if (tx_fee_rate == CFeeRate(0)) {
         // automatic selection
     } else if (tx_fee_rate < pwallet->chain().relayMinFee()) {
@@ -3147,7 +3147,7 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
             if (options.exists("estimate_mode")) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and feeRate");
             }
-            coinControl.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]));
+            coinControl.m_feerate = CFeeRate::FromBtcKb(AmountFromValue(options["feeRate"]));
             coinControl.fOverrideFeeRate = true;
         }
 

@@ -39,6 +39,8 @@ public:
         // We've previously had bugs creep in from silent double->int conversion...
         static_assert(std::is_integral<I>::value, "CFeeRate should be used without floats");
     }
+    static CFeeRate FromSatB(CAmount fee_rate);
+    static CFeeRate FromBtcKb(CAmount fee_rate);
     /** Constructor for a fee rate in satoshis per kvB (sat/kvB). The size in bytes must not exceed (2^63 - 1).
      *
      *  Passing an nBytes value of COIN (1e8) returns a fee rate in satoshis per vB (sat/vB),
@@ -69,5 +71,11 @@ public:
 
     SERIALIZE_METHODS(CFeeRate, obj) { READWRITE(obj.nSatoshisPerK); }
 };
+
+/** Construct a CFeeRate from a CAmount in sat/vB */
+inline CFeeRate CFeeRate::FromSatB(CAmount fee_rate) { return CFeeRate(fee_rate, COIN); }
+
+/** Construct a CFeeRate from a CAmount in BTC/kvB */
+inline CFeeRate CFeeRate::FromBtcKb(CAmount fee_rate) { return CFeeRate(fee_rate, 1000); }
 
 #endif //  BITCOIN_POLICY_FEERATE_H
