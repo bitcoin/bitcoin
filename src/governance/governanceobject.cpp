@@ -536,12 +536,6 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
     }
 
-    if (txCollateral->vout.size() < 1) {
-        strError = strprintf("tx vout size less than 1 | %d", txCollateral->vout.size());
-        LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
-        return false;
-    }
-
     // LOOK FOR SPECIALIZED GOVERNANCE SCRIPT (PROOF OF BURN)
 
     CScript findScript;
@@ -554,12 +548,7 @@ bool CGovernanceObject::IsCollateralValid(std::string& strError, bool& fMissingC
     for (const auto& output : txCollateral->vout) {
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- txout = %s, output.nValue = %lld, output.scriptPubKey = %s\n",
                     output.ToString(), output.nValue, ScriptToAsmStr(output.scriptPubKey, false));
-        if (!output.scriptPubKey.IsPayToPublicKeyHash() && !output.scriptPubKey.IsUnspendable()) {
-            strError = strprintf("Invalid Script %s", txCollateral->ToString());
-            LogPrint(BCLog::GOBJECT, "CGovernanceObject::IsCollateralValid -- %s\n", strError);
-            return false;
-        }
-        if (output.scriptPubKey == findScript && output.nValue >= nMinFee) {
+        if (output.scriptPubKey.IsUnspendable() && output.scriptPubKey == findScript && output.nValue >= nMinFee) {
             foundOpReturn = true;
         }
     }
