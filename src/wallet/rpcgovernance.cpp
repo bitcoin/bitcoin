@@ -152,7 +152,7 @@ static RPCHelpMan gobject_prepare()
     // If specified, spend this outpoint as the proposal fee
     COutPoint outpoint;
     outpoint.SetNull();
-    if (!request.params[4].isNull() && !request.params[5].isNull()) {
+    if (request.params.size() > 5 && !request.params[4].isNull() && !request.params[5].isNull()) {
         uint256 collateralHash = ParseHashV(request.params[4], "outputHash");
         int32_t collateralIndex = request.params[5].get_int();
         if (collateralHash.IsNull() || collateralIndex < 0) {
@@ -164,7 +164,7 @@ static RPCHelpMan gobject_prepare()
     CTransactionRef tx;
     if (!pwallet->GetBudgetSystemCollateralTX(tx, govobj.GetHash(), govobj.GetMinCollateralFee(), outpoint)) {
         std::string err = "Error making collateral transaction for governance object. Please check your wallet balance and make sure your wallet is unlocked.";
-        if (!request.params[4].isNull() && !request.params[5].isNull()) {
+        if (request.params.size() > 5 && !request.params[4].isNull() && !request.params[5].isNull()) {
             err += "Please verify your specified output is valid and is enough for the combined proposal fee and transaction fee.";
         }
         throw JSONRPCError(RPC_INTERNAL_ERROR, err);
