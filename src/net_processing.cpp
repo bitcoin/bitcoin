@@ -4757,6 +4757,15 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         if (fListen && pto->RelayAddrsWithConn() &&
             !m_chainman.ActiveChainstate().IsInitialBlockDownload() &&
             pto->m_next_local_addr_send < current_time) {
+            // If we've sent before, clear the bloom filter for the peer, so that our
+            // self-announcement will actually go out.
+            // This might be unnecessary if the bloom filter has already rolled
+            // over since our last self-announcement, but there is only a small
+            // bandwidth cost that we can incur by doing this (which happens
+            // once a day on average).
+            if (pto->m_next_local_addr_send != std::chrono::microseconds::zero()) {
+                pto->m_addr_known->reset();
+            }
             if (std::optional<CAddress> local_addr = GetLocalAddrForPeer(pto)) {
                 FastRandomContext insecure_rand;
                 pto->PushAddress(*local_addr, insecure_rand);
