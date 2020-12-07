@@ -645,7 +645,8 @@ class FullBlockTest(SyscoinTestFramework):
         self.log.info("Reject a block with a timestamp >2 hours in the future")
         self.move_tip(44)
         b48 = self.next_block(48)
-        b48.nTime = int(time.time()) + 60 * 60 * 3
+        # SYSCOIN
+        b48.nTime = int(time.time()) + 6 * 60 * 3
         # Header timestamp has changed. Re-solve the block.
         b48.solve()
         self.send_blocks([b48], False, force_send=True, reject_reason='time-too-new')
