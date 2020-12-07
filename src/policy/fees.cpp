@@ -131,8 +131,88 @@ public:
      * variables with this state.
      */
     void Read(CAutoFile& filein, int nFileVersion, size_t numBuckets);
+
+    /**
+     * Helper function to check that TxConfirmStats behavior is consistent
+     */
+    int CheckConsistent(size_t expected_bucket_count) const;
+    int CheckConsistent(const std::vector<double>& exp_buckets, const std::map<double, unsigned int>& exp_bucket_map) const;
+
+    /**
+     * Copy state, adjusting stats for offset buckets
+     */
+    void ExtendStatsBelow(size_t added_buckets);
 };
 
+bool CBlockPolicyEstimator::IsConsistent() const
+{
+    LOCK(m_cs_fee_estimator);
+    return 0 == CheckConsistent();
+}
+
+int CBlockPolicyEstimator::CheckConsistent() const
+{
+    int res;
+    res = feeStats->CheckConsistent(buckets, bucketMap);
+    res += 32 * shortStats->CheckConsistent(buckets, bucketMap);
+    res += (32*32) * longStats->CheckConsistent(buckets, bucketMap);
+    return res;
+}
+
+int TxConfirmStats::CheckConsistent(size_t expected_bucket_count) const
+{
+    if (decay <= 0 || 1 <= decay) return 1;
+    if (scale <= 0) return 2;
+
+    size_t maxPeriods = confAvg.size();
+    if (maxPeriods == 0 || maxPeriods > 100) return 3;
+    if (failAvg.size() != maxPeriods) return 4;
+    if (unconfTxs.size() != GetMaxConfirms()) return 5;
+
+    for (size_t i = 0; i < expected_bucket_count; ++i) {
+        for (size_t j = 1; j < maxPeriods; ++j) {
+            if (confAvg[j-1][i] > confAvg[j][i]) return 6;
+            if (failAvg[j-1][i] < failAvg[j][i]) return 7;
+        }
+        if (confAvg[0][i] < 0) return 8;
+        if (confAvg[maxPeriods-1][i] > txCtAvg[i]) return 9;
+        if (failAvg[maxPeriods-1][i] < 0) return 10;
+    }
+
+    return 0;
+}
+
+int TxConfirmStats::CheckConsistent(const std::vector<double>& exp_buckets, const std::map<double, unsigned int>& exp_bucket_map) const
+{
+    const int c = CheckConsistent(buckets.size());
+    if (c != 0) return c;
+
+    if (&exp_buckets != &buckets) return 11;
+    if (&exp_bucket_map != &bucketMap) return 12;
+
+    if (buckets.size() != bucketMap.size()) return 13;
+
+    if (txCtAvg.size() != buckets.size()) return 14;
+    if (avg.size() != buckets.size()) return 15;
+    if (oldUnconfTxs.size() != buckets.size()) return 16;
+
+    for (size_t i = 1; i < buckets.size(); ++i) {
+        if (buckets[i-1] >= buckets[i]) return 17;
+    }
+
+    for (size_t i = 0; i < confAvg.size(); ++i) {
+        if (confAvg[i].size() != buckets.size()) return 18;
+        if (failAvg[i].size() != buckets.size()) return 19;
+        if (unconfTxs[i].size() != buckets.size()) return 20;
+    }
+
+    for (const auto& kv : bucketMap) {
+        if (kv.second >= buckets.size()) return 21;
+        if (kv.first != buckets[kv.second]) return 22;
+    }
+
+    return 0;
+}
 
 TxConfirmStats::TxConfirmStats(const std::vector<double>& defaultBuckets,
                                 const std::map<double, unsigned int>& defaultBucketMap,
@@ -151,6 +231,8 @@ TxConfirmStats::TxConfirmStats(const std::vector<double>& defaultBuckets,
     m_feerate_avg.resize(buckets.size());
 
     resizeInMemoryCounters(buckets.size());
+
+    assert(0 == CheckConsistent(defaultBuckets, defaultBucketMap));
 }
 
 void TxConfirmStats::resizeInMemoryCounters(size_t newbuckets) {
@@ -363,6 +445,26 @@ void TxConfirmStats::Write(CAutoFile& fileout) const
     fileout << failAvg;
 }
 
+
+void TxConfirmStats::ExtendStatsBelow(size_t added_buckets)
+{
+    assert(avg.size() + added_buckets == buckets.size());
+    if (added_buckets == 0) return;
+
+    avg.insert(avg.begin(), added_buckets, 0.0);
+    txCtAvg.insert(txCtAvg.begin(), added_buckets, 0.0);
+
+    for (unsigned int i = 0; i < confAvg.size(); ++i) {
+        confAvg[i].insert(confAvg[i].begin(), added_buckets, 0.0);
+    }
+
+    for (unsigned int i = 0; i < failAvg.size(); ++i) {
+        failAvg[i].insert(failAvg[i].begin(), added_buckets, 0.0);
+    }
+
+    resizeInMemoryCounters(buckets.size());
+}
+
 void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets)
 {
     // Read data file and do some very basic sanity checking
@@ -417,6 +519,11 @@ void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets
 
     LogPrint(BCLog::ESTIMATEFEE, "Reading estimates: %u buckets counting confirms up to %u blocks\n",
              numBuckets, maxConfirms);
+
+    int cons = CheckConsistent(numBuckets);
+    if (0 != cons) {
+        LogPrint(BCLog::ESTIMATEFEE, "Reading estimates: inconsistencies detected in fee estimate data (%s), continuing anyway\n", cons);
+    }
 }
 
 unsigned int TxConfirmStats::NewTx(unsigned int nBlockHeight, double val)
@@ -484,17 +591,21 @@ bool CBlockPolicyEstimator::removeTx(uint256 hash, bool inBlock)
     }
 }
 
-CBlockPolicyEstimator::CBlockPolicyEstimator()
+CBlockPolicyEstimator::CBlockPolicyEstimator(double min_bucket_feerate)
     : nBestSeenHeight(0), firstRecordedHeight(0), historicalFirst(0), historicalBest(0), trackedTxs(0), untrackedTxs(0)
 {
+    assert(0 < min_bucket_feerate);
     static_assert(MIN_BUCKET_FEERATE > 0, "Min feerate must be nonzero");
-    size_t bucketIndex = 0;
-    for (double bucketBoundary = MIN_BUCKET_FEERATE; bucketBoundary <= MAX_BUCKET_FEERATE; bucketBoundary *= FEE_SPACING, bucketIndex++) {
-        buckets.push_back(bucketBoundary);
-        bucketMap[bucketBoundary] = bucketIndex;
+    static_assert(MIN_BUCKET_FEERATE <= BASE_BUCKET_FEERATE, "Min feerate cannot be greater than base feerate");
+    static_assert(BASE_BUCKET_FEERATE < MAX_BUCKET_FEERATE, "Max feerate must be greater than base feerate");
+
+    ExtendBucketsUpTo(BASE_BUCKET_FEERATE, min_bucket_feerate);
+    for (double boundary = BASE_BUCKET_FEERATE; boundary <= MAX_BUCKET_FEERATE; boundary *= FEE_SPACING) {
+        buckets.push_back(boundary);
     }
     buckets.push_back(INF_FEERATE);
-    bucketMap[INF_FEERATE] = bucketIndex;
+
+    InitBucketMap();
     assert(bucketMap.size() == buckets.size());
 
     feeStats = std::unique_ptr<TxConfirmStats>(new TxConfirmStats(buckets, bucketMap, MED_BLOCK_PERIODS, MED_DECAY, MED_SCALE));
@@ -504,6 +615,28 @@ CBlockPolicyEstimator::CBlockPolicyEstimator()
 
 CBlockPolicyEstimator::~CBlockPolicyEstimator()
 {
+}
+
+void CBlockPolicyEstimator::InitBucketMap()
+{
+    assert(bucketMap.empty());
+    for (size_t bucketIndex = 0; bucketIndex < buckets.size(); ++bucketIndex) {
+        bucketMap[buckets[bucketIndex]] = bucketIndex;
+    }
+}
+
+size_t CBlockPolicyEstimator::ExtendBucketsUpTo(double base, double min)
+{
+    if (base <= min) return 0;
+
+    std::vector<double> below;
+    double bucketBoundary = base;
+    while (bucketBoundary > min) {
+        bucketBoundary /= FEE_SPACING;
+        below.push_back(bucketBoundary);
+    }
+    buckets.insert(buckets.begin(), below.rbegin(), below.rend());
+    return below.size();
 }
 
 void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate)
@@ -882,10 +1015,17 @@ bool CBlockPolicyEstimator::Write(CAutoFile& fileout) const
     return true;
 }
 
-bool CBlockPolicyEstimator::Read(CAutoFile& filein)
+bool CBlockPolicyEstimator::Read(CAutoFile& filein, double min_bucket_feerate)
 {
+    assert(0 < min_bucket_feerate);
+
     try {
         LOCK(m_cs_fee_estimator);
+
+        // Strategy: read from file into local variables, throwing a runtime
+        // error if there's a parsing problem. Only copy into member variables
+        // once parsing has fully succeeded.
+
         int nVersionRequired, nVersionThatWrote;
         filein >> nVersionRequired >> nVersionThatWrote;
         if (nVersionRequired > CLIENT_VERSION)
@@ -917,13 +1057,25 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
             fileShortStats->Read(filein, nVersionThatWrote, numBuckets);
             fileLongStats->Read(filein, nVersionThatWrote, numBuckets);
 
+            if (0 != fileFeeStats->CheckConsistent(numBuckets))
+                throw std::runtime_error("Corrupt estimates file. Medium estimates don't pass consistency checks");
+            if (0 != fileShortStats->CheckConsistent(numBuckets))
+                throw std::runtime_error("Corrupt estimates file. Short estimates don't pass consistency checks");
+            if (0 != fileLongStats->CheckConsistent(numBuckets))
+                throw std::runtime_error("Corrupt estimates file. Long estimates don't pass consistency checks");
+
             // Fee estimates file parsed correctly
-            // Copy buckets from file and refresh our bucketmap
+
+            // Copy buckets from file, extend, and refresh our bucketmap
             buckets = fileBuckets;
+            const size_t added_before = ExtendBucketsUpTo(buckets.front(), min_bucket_feerate);
             bucketMap.clear();
-            for (unsigned int i = 0; i < buckets.size(); i++) {
-                bucketMap[buckets[i]] = i;
-            }
+            InitBucketMap();
+
+            // Extend stats to match extended buckets
+            fileFeeStats->ExtendStatsBelow(added_before);
+            fileShortStats->ExtendStatsBelow(added_before);
+            fileLongStats->ExtendStatsBelow(added_before);
 
             // Destroy old TxConfirmStats and point to new ones that already reference buckets and bucketMap
             feeStats = std::move(fileFeeStats);
@@ -933,6 +1085,9 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
             nBestSeenHeight = nFileBestSeenHeight;
             historicalFirst = nFileHistoricalFirst;
             historicalBest = nFileHistoricalBest;
+
+            // Stats were consistent before so must still be consistent
+            assert(0 == CheckConsistent());
         }
     }
     catch (const std::exception& e) {
