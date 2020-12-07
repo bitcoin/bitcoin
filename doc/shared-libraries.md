@@ -41,9 +41,10 @@ The interface is defined in the C header `syscoinconsensus.h` located in `src/sc
 - `syscoinconsensus_ERR_TX_SIZE_MISMATCH` - `txToLen` did not match with the size of `txTo`
 - `syscoinconsensus_ERR_DESERIALIZE` - An error deserializing `txTo`
 - `syscoinconsensus_ERR_AMOUNT_REQUIRED` - Input amount is required if WITNESS is used
+- `syscoinconsensus_ERR_INVALID_FLAGS` - Script verification `flags` are invalid (i.e. not part of the libconsensus interface)
 
 ### Example Implementations
-- [NSyscoin](https://github.com/NicolasDorier/NSyscoin/blob/master/NSyscoin/Script.cs#L814) (.NET Bindings)
-- [node-libsyscoinconsensus](https://github.com/bitpay/node-libsyscoinconsensus) (Node.js Bindings)
-- [java-libsyscoinconsensus](https://github.com/dexX7/java-libsyscoinconsensus) (Java Bindings)
-- [syscoinconsensus-php](https://github.com/Bit-Wasp/syscoinconsensus-php) (PHP Bindings)
+- [NBitcoin](https://github.com/MetacoSA/NBitcoin/blob/5e1055cd7c4186dee4227c344af8892aea54faec/NBitcoin/Script.cs#L979-#L1031) (.NET Bindings)
+- [node-libbitcoinconsensus](https://github.com/bitpay/node-libbitcoinconsensus) (Node.js Bindings)
+- [java-libbitcoinconsensus](https://github.com/dexX7/java-libbitcoinconsensus) (Java Bindings)
+- [bitcoinconsensus-php](https://github.com/Bit-Wasp/bitcoinconsensus-php) (PHP Bindings)
