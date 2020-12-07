@@ -18,6 +18,22 @@ SYSCOINQT=${SYSCOINQT:-$BINDIR/qt/syscoin-qt}
 
 [ ! -x $SYSCOIND ] && echo "$SYSCOIND not found or not executable." && exit 1
 
+# Don't allow man pages to be generated for binaries built from a dirty tree
+DIRTY=""
+for cmd in $SYSCOIND $SYSCOINCLI $SYSCOINTX $WALLET_TOOL $SYSCOINQT; do
+  VERSION_OUTPUT=$($cmd --version)
+  if [[ $VERSION_OUTPUT == *"dirty"* ]]; then
+    DIRTY="${DIRTY}${cmd}\n"
+  fi
+done
+if [ -n "$DIRTY" ]
+then
+  echo -e "WARNING: the following binaries were built from a dirty tree:\n"
+  echo -e $DIRTY
+  echo "man pages generated from dirty binaries should NOT be committed."
+  echo "To properly generate man pages, please commit your changes to the above binaries, rebuild them, then run this script again."
+fi
+
 # The autodetected version git tag can screw up manpage output a little bit
 read -r -a SYSVER <<< "$($SYSCOINCLI --version | head -n1 | awk -F'[ -]' '{ print $6, $7 }')"
 
