@@ -6,6 +6,8 @@
 #include <policy/fees.h>
 
 #include <clientversion.h>
+#include <fs.h>
+#include <logging.h>
 #include <streams.h>
 #include <txmempool.h>
 #include <util/system.h>
@@ -872,7 +874,7 @@ void CBlockPolicyEstimator::Flush() {
     fs::path est_filepath = GetDataDir() / FEE_ESTIMATES_FILENAME;
     CAutoFile est_file(fsbridge::fopen(est_filepath, "wb"), SER_DISK, CLIENT_VERSION);
     if (est_file.IsNull() || !Write(est_file)) {
-        LogPrintf("Failed to write fee estimates to %s\n", est_filepath.string());
+        LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", est_filepath.string());
     }
 }
 
