@@ -104,11 +104,6 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
     if (ptx.keyIDOwner.IsNull() || !ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull()) {
         return FormatSyscoinErrorMessage(state, "bad-protx-key-null", fJustCheck);
     }
-    int witnessversion;
-    std::vector<unsigned char> witnessprogram;
-    if (!ptx.scriptPayout.IsPayToPublicKeyHash() && !ptx.scriptPayout.IsPayToScriptHash() && !ptx.scriptPayout.IsWitnessProgram(witnessversion, witnessprogram)) {
-        return FormatSyscoinErrorMessage(state, "bad-protx-payee", fJustCheck);
-    }
 
     CTxDestination payoutDest;
     if (!ExtractDestination(ptx.scriptPayout, payoutDest)) {
@@ -255,9 +250,9 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxV
                 // don't allow to set operator reward payee in case no operatorReward was set
                 return FormatSyscoinErrorMessage(state, "bad-protx-operator-payee", fJustCheck);
             }
-            int witnessversion;
-            std::vector<unsigned char> witnessprogram;
-            if (!ptx.scriptOperatorPayout.IsPayToPublicKeyHash() && !ptx.scriptOperatorPayout.IsPayToScriptHash() && !ptx.scriptOperatorPayout.IsWitnessProgram(witnessversion, witnessprogram)) {
+            CTxDestination payoutDest;
+            if (!ExtractDestination(ptx.scriptOperatorPayout, payoutDest)) {
+                // should not happen as we checked script types before
                 return FormatSyscoinErrorMessage(state, "bad-protx-operator-payee", fJustCheck);
             }
         }
@@ -296,11 +291,6 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
 
     if (!ptx.pubKeyOperator.IsValid() || ptx.keyIDVoting.IsNull()) {
         return FormatSyscoinErrorMessage(state, "bad-protx-key-null", fJustCheck);
-    }
-    int witnessversion;
-    std::vector<unsigned char> witnessprogram;
-    if (!ptx.scriptPayout.IsPayToPublicKeyHash() && !ptx.scriptPayout.IsPayToScriptHash() && !ptx.scriptPayout.IsWitnessProgram(witnessversion, witnessprogram)) {
-        return FormatSyscoinErrorMessage(state, "bad-protx-payee", fJustCheck);
     }
 
     CTxDestination payoutDest;
