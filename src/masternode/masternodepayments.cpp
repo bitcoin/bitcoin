@@ -122,13 +122,19 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmoun
         LogPrint(BCLog::GOBJECT, "%s -- WARNING: Client synced but old budget system is disabled, accepting any payee\n", __func__);
         return true;
     }
+    const CAmount &nHalfFee = fees / 2;
 
+    // Check for correct masternode payment
+    if(CMasternodePayments::IsTransactionValid(txNew, nBlockHeight, blockReward, nHalfFee, nMNSeniorityRet)) {
+        LogPrint(BCLog::MNPAYMENTS, "%s -- Valid masternode payment at height %d\n", __func__, nBlockHeight);
+        return true;
+    }
     // superblocks started
     // SEE IF THIS IS A VALID SUPERBLOCK
 
     if(sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)) {
         if(CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
-            if(CSuperblockManager::IsValid(txNew, nBlockHeight, blockReward)) {
+            if(CSuperblockManager::IsValid(txNew, nBlockHeight, blockReward+nMNSeniorityRet)) {
                 LogPrint(BCLog::GOBJECT, "%s -- Valid superblock at height %d\n", __func__, nBlockHeight);
                 // continue validation, should also pay MN
             } else {
@@ -142,14 +148,6 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmoun
     } else {
         // should NOT allow superblocks at all, when superblocks are disabled
         LogPrint(BCLog::GOBJECT, "%s -- Superblocks are disabled, no superblocks allowed\n", __func__);
-    }
-
-    const CAmount &nHalfFee = fees / 2;
-
-    // Check for correct masternode payment
-    if(CMasternodePayments::IsTransactionValid(txNew, nBlockHeight, blockReward, nHalfFee, nMNSeniorityRet)) {
-        LogPrint(BCLog::MNPAYMENTS, "%s -- Valid masternode payment at height %d\n", __func__, nBlockHeight);
-        return true;
     }
 
     LogPrintf("%s -- ERROR: Invalid masternode payment detected at height %d\n", __func__, nBlockHeight); /* Continued */
