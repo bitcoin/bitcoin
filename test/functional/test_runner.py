@@ -205,6 +205,7 @@ BASE_SCRIPTS = [
     'rpc_signrawtransaction.py --descriptors',
     'rpc_rawtransaction.py --legacy-wallet',
     'rpc_rawtransaction.py --descriptors',
+    'wallet_transactiontime_rescan.py',
     'p2p_addrv2_relay.py',
     'wallet_groups.py --legacy-wallet',
     'wallet_groups.py --descriptors',

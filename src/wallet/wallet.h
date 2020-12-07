@@ -312,8 +312,11 @@ private:
      * abandoned is an indication that it is not safe to be considered abandoned.
      * Abandoned state should probably be more carefully tracked via different
      * chain notifications or by checking mempool presence when necessary.
+     *
+     * Should be called with rescanning_old_block set to true, if the transaction is
+     * not discovered in real time, but during a rescan of old blocks.
      */
-    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, CWalletTx::Confirmation confirm, WalletBatch& batch, bool fUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, CWalletTx::Confirmation confirm, WalletBatch& batch, bool fUpdate, bool rescanning_old_block) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Mark a transaction (and its in-wallet descendants) as conflicting with a particular block. */
     void MarkConflicted(const uint256& hashBlock, int conflicting_height, const uint256& hashTx);
@@ -323,7 +326,7 @@ private:
 
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    void SyncTransaction(const CTransactionRef& tx, CWalletTx::Confirmation confirm, WalletBatch& batch, bool update_tx = true) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void SyncTransaction(const CTransactionRef& tx, CWalletTx::Confirmation confirm, WalletBatch& batch, bool update_tx = true, bool rescanning_old_block = false) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** WalletFlags set on this wallet. */
     std::atomic<uint64_t> m_wallet_flags{0};
@@ -588,7 +591,7 @@ public:
     bool EncryptWallet(const SecureString& strWalletPassphrase);
 
     void GetKeyBirthTimes(std::map<CKeyID, int64_t> &mapKeyBirth) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    unsigned int ComputeTimeSmart(const CWalletTx& wtx) const;
+    unsigned int ComputeTimeSmart(const CWalletTx& wtx, bool rescanning_old_block) const;
 
     /**
      * Increment the next transaction order id
@@ -607,7 +610,7 @@ public:
     //! @return true if wtx is changed and needs to be saved to disk, otherwise false
     using UpdateWalletTxFn = std::function<bool(CWalletTx& wtx, bool new_tx)>;
 
-    CWalletTx* AddToWallet(CTransactionRef tx, const CWalletTx::Confirmation& confirm, const UpdateWalletTxFn& update_wtx=nullptr, bool fFlushOnClose=true);
+    CWalletTx* AddToWallet(CTransactionRef tx, const CWalletTx::Confirmation& confirm, const UpdateWalletTxFn& update_wtx=nullptr, bool fFlushOnClose=true, bool rescanning_old_block = false);
     bool LoadToWallet(const uint256& hash, const UpdateWalletTxFn& fill_wtx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void transactionAddedToMempool(const CTransactionRef& tx, int64_t nAcceptTime, uint64_t mempool_sequence) override;
     void blockConnected(const CBlock& block, int height) override;
