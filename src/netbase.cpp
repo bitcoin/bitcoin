@@ -51,6 +51,9 @@ enum Network ParseNetwork(const std::string& net_in) {
         LogPrintf("Warning: net name 'tor' is deprecated and will be removed in the future. You should use 'onion' instead.\n");
         return NET_ONION;
     }
+    if (net == "i2p") {
+        return NET_I2P;
+    }
     return NET_UNROUTABLE;
 }
 
