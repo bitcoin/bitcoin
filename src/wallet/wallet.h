@@ -1159,7 +1159,7 @@ public:
      */
     void postInitProcess();
     // SYSCOIN
-    bool GetBudgetSystemCollateralTX(CTransactionRef tx, uint256 hash, CAmount amount, const COutPoint& outpoint=COutPoint()/*defaults null*/);
+    bool GetBudgetSystemCollateralTX(CTransactionRef &tx, uint256 hash, CAmount amount, const COutPoint& outpoint=COutPoint()/*defaults null*/);
     bool BackupWallet(const std::string& strDest) const;
 
     /* Returns true if HD is enabled */

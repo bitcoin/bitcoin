@@ -4453,7 +4453,7 @@ bool CWallet::UpgradeWallet(int version, bilingual_str& error)
 }
 
 // SYSCOIN
-bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef tx, uint256 hash, CAmount amount, const COutPoint& outpoint)
+bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef &tx, uint256 hash, CAmount amount, const COutPoint& outpoint)
 {
 
     CScript scriptChange;
