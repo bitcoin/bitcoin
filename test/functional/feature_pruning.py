@@ -20,10 +20,10 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 
-# Rescans start at the earliest block up to 2 hours before a key timestamp, so
+# SYSCOIN Rescans start at the earliest block up to 2 hours before a key timestamp, so
 # the manual prune RPC avoids pruning blocks in the same window to be
 # compatible with pruning based on key creation time.
-TIMESTAMP_WINDOW = 2 * 60 * 60
+TIMESTAMP_WINDOW = 2 * 6 * 60
 
 def mine_large_blocks(node, n):
     # Make a large scriptPubKey for the coinbase transaction. This is OP_RETURN

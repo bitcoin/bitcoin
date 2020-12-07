@@ -129,8 +129,8 @@ IMPORT_VARIANTS = [Variant(*variants) for variants in itertools.product(Call, Da
 ImportNode = collections.namedtuple("ImportNode", "prune rescan")
 IMPORT_NODES = [ImportNode(*fields) for fields in itertools.product((False, True), repeat=2)]
 
-# Rescans start at the earliest block up to 2 hours before the key timestamp.
-TIMESTAMP_WINDOW = 2 * 60 * 60
+# SYSCOIN Rescans start at the earliest block up to 2 hours before the key timestamp.
+TIMESTAMP_WINDOW = 2 * 6 * 60
 
 AMOUNT_DUST = 0.00000546
 
