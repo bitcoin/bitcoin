@@ -2516,8 +2516,8 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         return;
     }
 
-    // Feature negotiation of wtxidrelay should happen between VERSION and
-    // VERACK, to avoid relay problems from switching after a connection is up
+    // Feature negotiation of wtxidrelay must happen between VERSION and VERACK
+    // to avoid relay problems from switching after a connection is up.
     if (msg_type == NetMsgType::WTXIDRELAY) {
         if (pfrom.fSuccessfullyConnected) {
             // Disconnect peers that send wtxidrelay message after VERACK; this
