@@ -41,6 +41,8 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.nodes[0].estimatesmartfee(1)
         # self.nodes[0].estimatesmartfee(1, None)
         self.nodes[0].estimatesmartfee(1, 'ECONOMICAL')
+        self.nodes[0].estimatesmartfee(1, 'unset')
+        self.nodes[0].estimatesmartfee(1, 'conservative')
 
         self.nodes[0].estimaterawfee(1)
         self.nodes[0].estimaterawfee(1, None)
