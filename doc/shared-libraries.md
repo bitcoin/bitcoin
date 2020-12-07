@@ -39,3 +39,4 @@ The interface is defined in the C header `bitcoinconsensus.h` located in  `src/s
 - `dashconsensus_ERR_TX_INDEX` - An invalid index for `txTo`
 - `dashconsensus_ERR_TX_SIZE_MISMATCH` - `txToLen` did not match with the size of `txTo`
 - `dashconsensus_ERR_DESERIALIZE` - An error deserializing `txTo`
+- `dashconsensus_ERR_INVALID_FLAGS` - Script verification `flags` are invalid (i.e. not part of the libconsensus interface)
