@@ -295,8 +295,7 @@ define $(package)_config_cmds
   cd .. && \
   ./configure $($(package)_config_opts) && \
   echo "host_build: QT_CONFIG ~= s/system-zlib/zlib" >> qtbase/mkspecs/qconfig.pri && \
-  echo "CONFIG += force_bootstrap" >> qtbase/mkspecs/qconfig.pri  && \
-  echo "****************CONFIGURING****************"
+  echo "CONFIG += force_bootstrap" >> qtbase/mkspecs/qconfig.pri
 endef
 
 define $(package)_build_cmds
