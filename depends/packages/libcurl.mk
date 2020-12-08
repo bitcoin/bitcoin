@@ -1,9 +1,9 @@
 package=libcurl
-$(package)_version=7.72.0
+$(package)_version=7.73.0
 $(package)_dependencies=gnutls zlib
 $(package)_download_path=https://curl.haxx.se/download
 $(package)_file_name=curl-$($(package)_version).tar.gz
-$(package)_sha256_hash=d4d5899a3868fbb6ae1856c3e55a32ce35913de3956d1973caccd37bd0174fa2
+$(package)_sha256_hash=ba98332752257b47b9dea6d8c0ad25ec1745c20424f1dd3ff2c99ab59e97cf91
 
 # default settings
 $(package)_cflags_darwin="-mmacosx-version-min=$(OSX_MIN_VERSION)"
