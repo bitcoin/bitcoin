@@ -142,7 +142,7 @@ script: |
     find . -name "lib*.a" -delete
     rm -rf ${DISTNAME}/lib/pkgconfig
     # Litecoin: Delete libbitcoin from binary distribution for now, see #192
-    rm -rf ${DISTNAME}/lib/
+    rm -rf ${DISTNAME:?}/lib/
     rm -rf ${DISTNAME}/include/
     # Litecoin: ends
     find ${DISTNAME}/bin -type f -executable -print0 | xargs -0 -n1 -I{} ../contrib/devtools/split-debug.sh {} {} {}.dbg
