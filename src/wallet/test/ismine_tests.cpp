@@ -27,8 +27,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
     CKey uncompressedKey;
     uncompressedKey.MakeNewKey(false);
     CPubKey uncompressedPubkey = uncompressedKey.GetPubKey();
-    NodeContext node;
-    std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain(node);
+    std::unique_ptr<interfaces::Chain>& chain = m_node.chain;
 
     CScript scriptPubKey;
     isminetype result;
