@@ -299,9 +299,7 @@ define $(package)_config_cmds
 endef
 
 define $(package)_build_cmds
-  echo "****************BUILDING****************" && \
-  cd .. && \
-  $(MAKE) -C .
+  $(MAKE) -C ../
 endef
 
 define $(package)_stage_cmds
