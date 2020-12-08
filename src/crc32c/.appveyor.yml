@@ -8,9 +8,9 @@ environment:
   matrix:
     # AppVeyor currently has no custom job name feature.
     # http://help.appveyor.com/discussions/questions/1623-can-i-provide-a-friendly-name-for-jobs
-    - JOB: Visual Studio 2017
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      CMAKE_GENERATOR: Visual Studio 15 2017
+    - JOB: Visual Studio 2019
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      CMAKE_GENERATOR: Visual Studio 16 2019
 
 platform:
   - x86
@@ -24,10 +24,11 @@ build_script:
   - git submodule update --init --recursive
   - mkdir build
   - cd build
-  - if "%platform%"=="x64" set CMAKE_GENERATOR=%CMAKE_GENERATOR% Win64
+  - if "%platform%"=="x86" (set CMAKE_GENERATOR_PLATFORM="Win32")
+      else (set CMAKE_GENERATOR_PLATFORM="%platform%")
   - cmake --version
-  - cmake .. -G "%CMAKE_GENERATOR%" -DCRC32C_USE_GLOG=0
-      -DCMAKE_CONFIGURATION_TYPES="%CONFIGURATION%"
+  - cmake .. -G "%CMAKE_GENERATOR%" -A "%CMAKE_GENERATOR_PLATFORM%"
+      -DCMAKE_CONFIGURATION_TYPES="%CONFIGURATION%" -DCRC32C_USE_GLOG=0
   - cmake --build . --config "%CONFIGURATION%"
   - cd ..
 
