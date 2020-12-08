@@ -18,7 +18,7 @@ import io
 
 from test_framework.blocktools import add_witness_commitment, create_block, create_coinbase, send_to_witness
 from test_framework.messages import BIP125_SEQUENCE_NUMBER, CTransaction
-from test_framework.test_framework import BitcoinTestFramework, SkipTest
+from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,

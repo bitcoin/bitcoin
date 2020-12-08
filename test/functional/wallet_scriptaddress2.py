@@ -8,10 +8,7 @@
 #
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (
-    assert_equal,
-    connect_nodes,
-)
+from test_framework.util import assert_equal
 
 class ScriptAddress2Test(BitcoinTestFramework):
     def set_test_params(self):
@@ -21,8 +18,8 @@ class ScriptAddress2Test(BitcoinTestFramework):
 
     def setup_network(self, split=False):
         self.setup_nodes()
-        connect_nodes(self.nodes[1], 0)
-        connect_nodes(self.nodes[2], 0)
+        self.connect_nodes(1, 0)
+        self.connect_nodes(2, 0)
         self.sync_all()
 
     def skip_test_if_missing_module(self):

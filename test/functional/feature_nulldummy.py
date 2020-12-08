@@ -110,7 +110,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
             self.nodes[0].sendrawtransaction(i.serialize_with_witness().hex(), 0)
         self.block_submit(self.nodes[0], test6txs, True, True)
 
-    def block_submit(self, node, txs, witness=False, accept=False, version):
+    def block_submit(self, node, txs, witness=False, accept=False, version=4):
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
         assert_equal(tmpl['previousblockhash'], self.lastblockhash)
         assert_equal(tmpl['height'], self.lastblockheight + 1)

@@ -75,7 +75,7 @@ static const bool DEFAULT_CHECKPOINTS_ENABLED = true;
 static const bool DEFAULT_TXINDEX = false;
 static const char* const DEFAULT_BLOCKFILTERINDEX = "0";
 /** Default for -persistmempool */
-static const bool DEFAULT_PERSIST_MEMPOOL = false;
+static const bool DEFAULT_PERSIST_MEMPOOL = true;
 /** Default for using fee filter */
 static const bool DEFAULT_FEEFILTER = true;
 /** Default for -stopatheight */
