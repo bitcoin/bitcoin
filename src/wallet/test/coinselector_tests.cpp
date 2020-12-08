@@ -283,7 +283,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     // Make sure that can use BnB when there are preset inputs
     empty_wallet();
     {
-        std::unique_ptr<CWallet> wallet = MakeUnique<CWallet>(m_chain.get(), "", CreateMockWalletDatabase());
+        std::unique_ptr<CWallet> wallet = MakeUnique<CWallet>(m_node.chain.get(), "", CreateMockWalletDatabase());
         bool firstRun;
         wallet->LoadWallet(firstRun);
         wallet->SetupLegacyScriptPubKeyMan();
