@@ -264,41 +264,41 @@
     "output_cmp": "txcreatescript4.json",
     "description": "Create a new transaction with a single output script (OP_DROP) in a P2SH, wrapped in a P2SH (output as json)"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./litecoin-tx",
     "args": ["-create", "outscript=0:9999999999"],
     "return_code": 1,
     "error_txt": "error: script parse error: decimal numeric value only allowed in the range -0xFFFFFFFF...0xFFFFFFFF",
     "description": "Try to parse an output script with a decimal number above the allowed range"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./litecoin-tx",
     "args": ["-create", "outscript=0:4294967296"],
     "return_code": 1,
     "error_txt": "error: script parse error: decimal numeric value only allowed in the range -0xFFFFFFFF...0xFFFFFFFF",
     "description": "Try to parse an output script with a decimal number just above the allowed range"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./litecoin-tx",
     "args": ["-create", "outscript=0:4294967295"],
     "output_cmp": "txcreatescript5.hex",
     "description": "Try to parse an output script with a decimal number at the upper limit of the allowed range"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./litecoin-tx",
     "args": ["-create", "outscript=0:-9999999999"],
     "return_code": 1,
     "error_txt": "error: script parse error: decimal numeric value only allowed in the range -0xFFFFFFFF...0xFFFFFFFF",
     "description": "Try to parse an output script with a decimal number below the allowed range"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./litecoin-tx",
     "args": ["-create", "outscript=0:-4294967296"],
     "return_code": 1,
     "error_txt": "error: script parse error: decimal numeric value only allowed in the range -0xFFFFFFFF...0xFFFFFFFF",
     "description": "Try to parse an output script with a decimal number just below the allowed range"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./litecoin-tx",
     "args": ["-create", "outscript=0:-4294967295"],
     "output_cmp": "txcreatescript6.hex",
     "description": "Try to parse an output script with a decimal number at the lower limit of the allowed range"
   },
-  { "exec": "./bitcoin-tx",
+  { "exec": "./litecoin-tx",
     "args":
     ["-create", "nversion=1",
      "in=6c2789243608b46f750f49ff24f6f79a78c3010f7e56951e045e5b7ea5d07bf7:0",
