@@ -52,7 +52,7 @@ static void BuildTestVectors(size_t count, size_t invalidCount,
     }
 }
 
-static void BLSPubKeyAggregate_Normal(benchmark::Bench& bench)
+static void BLS_PubKeyAggregate_Normal(benchmark::Bench& bench)
 {
     CBLSSecretKey secKey1, secKey2;
     secKey1.MakeNewKey();
@@ -67,7 +67,7 @@ static void BLSPubKeyAggregate_Normal(benchmark::Bench& bench)
     });
 }
 
-static void BLSSecKeyAggregate_Normal(benchmark::Bench& bench)
+static void BLS_SecKeyAggregate_Normal(benchmark::Bench& bench)
 {
     CBLSSecretKey secKey1, secKey2;
     secKey1.MakeNewKey();
@@ -82,7 +82,7 @@ static void BLSSecKeyAggregate_Normal(benchmark::Bench& bench)
     });
 }
 
-static void BLSSign_Normal(benchmark::Bench& bench)
+static void BLS_Sign_Normal(benchmark::Bench& bench)
 {
     CBLSSecretKey secKey;
     secKey.MakeNewKey();
@@ -95,7 +95,7 @@ static void BLSSign_Normal(benchmark::Bench& bench)
     });
 }
 
-static void BLSVerify_Normal(benchmark::Bench& bench)
+static void BLS_Verify_Normal(benchmark::Bench& bench)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -120,7 +120,7 @@ static void BLSVerify_Normal(benchmark::Bench& bench)
 }
 
 
-static void BLSVerify_LargeBlock(size_t txCount, benchmark::Bench& bench)
+static void BLS_Verify_LargeBlock(size_t txCount, benchmark::Bench& bench)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -137,12 +137,12 @@ static void BLSVerify_LargeBlock(size_t txCount, benchmark::Bench& bench)
     });
 }
 
-static void BLSVerify_LargeBlock1000(benchmark::Bench& bench)
+static void BLS_Verify_LargeBlock1000(benchmark::Bench& bench)
 {
-    BLSVerify_LargeBlock(1000, bench);
+    BLS_Verify_LargeBlock(1000, bench);
 }
 
-static void BLSVerify_LargeBlockSelfAggregated(size_t txCount, benchmark::Bench& bench)
+static void BLS_Verify_LargeBlockSelfAggregated(size_t txCount, benchmark::Bench& bench)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -158,17 +158,17 @@ static void BLSVerify_LargeBlockSelfAggregated(size_t txCount, benchmark::Bench&
     });
 }
 
-static void BLSVerify_LargeBlockSelfAggregated1000(benchmark::Bench& bench)
+static void BLS_Verify_LargeBlockSelfAggregated1000(benchmark::Bench& bench)
 {
-    BLSVerify_LargeBlockSelfAggregated(1000, bench);
+    BLS_Verify_LargeBlockSelfAggregated(1000, bench);
 }
 
-static void BLSVerify_LargeBlockSelfAggregated10000(benchmark::Bench& bench)
+static void BLS_Verify_LargeBlockSelfAggregated10000(benchmark::Bench& bench)
 {
-    BLSVerify_LargeBlockSelfAggregated(10000, bench);
+    BLS_Verify_LargeBlockSelfAggregated(10000, bench);
 }
 
-static void BLSVerify_LargeAggregatedBlock(size_t txCount, benchmark::Bench& bench)
+static void BLS_Verify_LargeAggregatedBlock(size_t txCount, benchmark::Bench& bench)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -185,17 +185,17 @@ static void BLSVerify_LargeAggregatedBlock(size_t txCount, benchmark::Bench& ben
     });
 }
 
-static void BLSVerify_LargeAggregatedBlock1000(benchmark::Bench& bench)
+static void BLS_Verify_LargeAggregatedBlock1000(benchmark::Bench& bench)
 {
-    BLSVerify_LargeAggregatedBlock(1000, bench);
+    BLS_Verify_LargeAggregatedBlock(1000, bench);
 }
 
-static void BLSVerify_LargeAggregatedBlock10000(benchmark::Bench& bench)
+static void BLS_Verify_LargeAggregatedBlock10000(benchmark::Bench& bench)
 {
-    BLSVerify_LargeAggregatedBlock(10000, bench);
+    BLS_Verify_LargeAggregatedBlock(10000, bench);
 }
 
-static void BLSVerify_LargeAggregatedBlock1000PreVerified(benchmark::Bench& bench)
+static void BLS_Verify_LargeAggregatedBlock1000PreVerified(benchmark::Bench& bench)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -241,7 +241,7 @@ static void BLSVerify_LargeAggregatedBlock1000PreVerified(benchmark::Bench& benc
     });
 }
 
-static void BLSVerify_Batched(benchmark::Bench& bench)
+static void BLS_Verify_Batched(benchmark::Bench& bench)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -297,7 +297,7 @@ static void BLSVerify_Batched(benchmark::Bench& bench)
     });
 }
 
-static void BLSVerify_BatchedParallel(benchmark::Bench& bench)
+static void BLS_Verify_BatchedParallel(benchmark::Bench& bench)
 {
     BLSPublicKeyVector pubKeys;
     BLSSecretKeyVector secKeys;
@@ -344,15 +344,15 @@ static void BLSVerify_BatchedParallel(benchmark::Bench& bench)
     }
 }
 
-/*BENCHMARK(BLSPubKeyAggregate_Normal)
-BENCHMARK(BLSSecKeyAggregate_Normal)
-BENCHMARK(BLSSign_Normal)
-BENCHMARK(BLSVerify_Normal)
-BENCHMARK(BLSVerify_LargeBlock1000)
-BENCHMARK(BLSVerify_LargeBlockSelfAggregated1000)
-BENCHMARK(BLSVerify_LargeBlockSelfAggregated10000)
-BENCHMARK(BLSVerify_LargeAggregatedBlock1000)
-BENCHMARK(BLSVerify_LargeAggregatedBlock10000)
-BENCHMARK(BLSVerify_LargeAggregatedBlock1000PreVerified)
-BENCHMARK(BLSVerify_Batched)
-BENCHMARK(BLSVerify_BatchedParallel)*/
+/*BENCHMARK(BLS_PubKeyAggregate_Normal)
+BENCHMARK(BLS_SecKeyAggregate_Normal)
+BENCHMARK(BLS_Sign_Normal)
+BENCHMARK(BLS_Verify_Normal)
+BENCHMARK(BLS_Verify_LargeBlock1000)
+BENCHMARK(BLS_Verify_LargeBlockSelfAggregated1000)
+BENCHMARK(BLS_Verify_LargeBlockSelfAggregated10000)
+BENCHMARK(BLS_Verify_LargeAggregatedBlock1000)
+BENCHMARK(BLS_Verify_LargeAggregatedBlock10000)
+BENCHMARK(BLS_Verify_LargeAggregatedBlock1000PreVerified)
+BENCHMARK(BLS_Verify_Batched)
+BENCHMARK(BLS_Verify_BatchedParallel)*/
