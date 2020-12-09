@@ -446,12 +446,8 @@ public:
     static std::string GetMessageByID(PoolMessage nMessageID);
 
     /// Get the minimum/maximum number of participants for the pool
-    static int GetMinPoolParticipants() { return sporkManager.IsSporkActive(SPORK_22_PS_MORE_PARTICIPANTS) ?
-                                                 Params().PoolNewMinParticipants() :
-                                                 Params().PoolMinParticipants(); }
-    static int GetMaxPoolParticipants() { return sporkManager.IsSporkActive(SPORK_22_PS_MORE_PARTICIPANTS) ?
-                                                 Params().PoolNewMaxParticipants() :
-                                                 Params().PoolMaxParticipants(); }
+    static int GetMinPoolParticipants() { return Params().PoolMinParticipants(); }
+    static int GetMaxPoolParticipants() { return Params().PoolMaxParticipants(); }
 
     static CAmount GetMaxPoolAmount() { return vecStandardDenominations.empty() ? 0 : PRIVATESEND_ENTRY_MAX_SIZE * vecStandardDenominations.front(); }
 
