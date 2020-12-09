@@ -18,8 +18,8 @@ altintegration::PopContext& GetPop()
 
 void StopPop()
 {
-    if (app == nullptr) return;
-    app->stop();
+    VBK_ASSERT(app);
+    app->shutdown();
 }
 
 void SetPopConfig(const altintegration::Config& newConfig)
