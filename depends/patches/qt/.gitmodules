@@ -1,50 +1,25 @@
 [submodule "qtbase"]
 	path = qtbase
-	url = ../qtbase.git
-	branch = 5.13.2
-	status = essential
 [submodule "qtdeclarative"]
 	depends = qtbase
 	path = qtdeclarative
-	url = ../qtdeclarative.git
-	branch = 5.13.2
-	status = essential
 [submodule "qttools"]
 	depends = qtbase
 	recommends = qtdeclarative
 	path = qttools
-	url = ../qttools.git
-	branch = 5.13.2
-	status = essential
 [submodule "qttranslations"]
 	depends = qttools
 	path = qttranslations
-	url = ../qttranslations.git
-	branch = 5.13.2
-	status = essential
-	priority = 30
 [submodule "qtgraphicaleffects"]
 	depends = qtdeclarative
 	path = qtgraphicaleffects
-	url = ../qtgraphicaleffects.git
-	branch = 5.13.2
-	status = addon
 [submodule "qtandroidextras"]
 	depends = qtbase
 	path = qtandroidextras
-	url = ../qtandroidextras.git
-	branch = 5.13.2
-	status = addon
 [submodule "qtquickcontrols2"]
 	depends = qtgraphicaleffects
 	path = qtquickcontrols2
-	url = ../qtquickcontrols2.git
-	branch = 5.13.2
-	status = essential
 [submodule "qtcharts"]
 	depends = qtbase
 	recommends = qtdeclarative
 	path = qtcharts
-	url = ../qtcharts.git
-	branch = 5.13.2
-	status = addon
