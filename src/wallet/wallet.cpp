@@ -4193,58 +4193,90 @@ bool CWalletTx::IsImmatureCoinBase() const
     return GetBlocksToMaturity() > 0;
 }
 
-std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outputs, bool single_coin, const CFeeRate& effective_feerate, const CFeeRate& long_term_feerate, const CoinEligibilityFilter& filter, bool positive_only) const {
-    std::vector<OutputGroup> groups;
-    std::map<CTxDestination, OutputGroup> gmap;
-    std::set<CTxDestination> full_groups;
+std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outputs, bool separate_coins, const CFeeRate& effective_feerate, const CFeeRate& long_term_feerate, const CoinEligibilityFilter& filter, bool positive_only) const
+{
+    std::vector<OutputGroup> groups_out;
 
-    for (const auto& output : outputs) {
-        if (output.fSpendable) {
-            CTxDestination dst;
-            CInputCoin input_coin = output.GetInputCoin();
+    if (separate_coins) {
+        // Single coin means no grouping. Each COutput gets its own OutputGroup.
+        for (const COutput& output : outputs) {
+            // Skip outputs we cannot spend
+            if (!output.fSpendable) continue;
 
             size_t ancestors, descendants;
             chain().getTransactionAncestry(output.tx->GetHash(), ancestors, descendants);
-            if (!single_coin && ExtractDestination(output.tx->tx->vout[output.i].scriptPubKey, dst)) {
-                auto it = gmap.find(dst);
-                if (it != gmap.end()) {
-                    // Limit output groups to no more than OUTPUT_GROUP_MAX_ENTRIES
-                    // number of entries, to protect against inadvertently creating
-                    // a too-large transaction when using -avoidpartialspends to
-                    // prevent breaking consensus or surprising users with a very
-                    // high amount of fees.
-                    if (it->second.m_outputs.size() >= OUTPUT_GROUP_MAX_ENTRIES) {
-                        groups.push_back(it->second);
-                        it->second = OutputGroup{effective_feerate, long_term_feerate};
-                        full_groups.insert(dst);
-                    }
-                    it->second.Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, positive_only);
-                } else {
-                    auto ins = gmap.emplace(dst, OutputGroup{effective_feerate, long_term_feerate});
-                    ins.first->second.Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, positive_only);
-                }
-            } else {
-                // This is for if each output gets it's own OutputGroup
-                OutputGroup coin(effective_feerate, long_term_feerate);
-                coin.Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, positive_only);
-                if (positive_only && coin.effective_value <= 0) continue;
-                if (coin.m_outputs.size() > 0 && coin.EligibleForSpending(filter)) groups.push_back(coin);
-            }
+            CInputCoin input_coin = output.GetInputCoin();
+
+            // Make an OutputGroup containing just this output
+            OutputGroup group{effective_feerate, long_term_feerate};
+            group.Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, positive_only);
+
+            // Check the OutputGroup's eligibility. Only add the eligible ones.
+            if (positive_only && group.effective_value <= 0) continue;
+            if (group.m_outputs.size() > 0 && group.EligibleForSpending(filter)) groups_out.push_back(group);
         }
+        return groups_out;
     }
-    if (!single_coin) {
-        for (auto& it : gmap) {
-            auto& group = it.second;
-            if (full_groups.count(it.first) > 0 && !filter.m_include_partial_groups) {
-                // Don't include partial groups if we don't want them
+
+    // We want to combine COutputs that have the same scriptPubKey into single OutputGroups
+    // except when there are more than OUTPUT_GROUP_MAX_ENTRIES COutputs grouped in an OutputGroup.
+    // To do this, we maintain a map where the key is the scriptPubKey and the value is a vector of OutputGroups.
+    // For each COutput, we check if the scriptPubKey is in the map, and if it is, the COutput's CInputCoin is added
+    // to the last OutputGroup in the vector for the scriptPubKey. When the last OutputGroup has
+    // OUTPUT_GROUP_MAX_ENTRIES CInputCoins, a new OutputGroup is added to the end of the vector.
+    std::map<CScript, std::vector<OutputGroup>> spk_to_groups_map;
+    for (const auto& output : outputs) {
+        // Skip outputs we cannot spend
+        if (!output.fSpendable) continue;
+
+        size_t ancestors, descendants;
+        chain().getTransactionAncestry(output.tx->GetHash(), ancestors, descendants);
+        CInputCoin input_coin = output.GetInputCoin();
+        CScript spk = input_coin.txout.scriptPubKey;
+
+        std::vector<OutputGroup>& groups = spk_to_groups_map[spk];
+
+        if (groups.size() == 0) {
+            // No OutputGroups for this scriptPubKey yet, add one
+            groups.emplace_back(effective_feerate, long_term_feerate);
+        }
+
+        // Get the last OutputGroup in the vector so that we can add the CInputCoin to it
+        // A pointer is used here so that group can be reassigned later if it is full.
+        OutputGroup* group = &groups.back();
+
+        // Check if this OutputGroup is full. We limit to OUTPUT_GROUP_MAX_ENTRIES when using -avoidpartialspends
+        // to avoid surprising users with very high fees.
+        if (group->m_outputs.size() >= OUTPUT_GROUP_MAX_ENTRIES) {
+            // The last output group is full, add a new group to the vector and use that group for the insertion
+            groups.emplace_back(effective_feerate, long_term_feerate);
+            group = &groups.back();
+        }
+
+        // Add the input_coin to group
+        group->Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, positive_only);
+    }
+
+    // Now we go through the entire map and pull out the OutputGroups
+    for (const auto& spk_and_groups_pair: spk_to_groups_map) {
+        const std::vector<OutputGroup>& groups_per_spk= spk_and_groups_pair.second;
+
+        // Go through the vector backwards. This allows for the first item we deal with being the partial group.
+        for (auto group_it = groups_per_spk.rbegin(); group_it != groups_per_spk.rend(); group_it++) {
+            const OutputGroup& group = *group_it;
+
+            // Don't include partial groups if there are full groups too and we don't want partial groups
+            if (group_it == groups_per_spk.rbegin() && groups_per_spk.size() > 1 && !filter.m_include_partial_groups) {
                 continue;
             }
-            // If the OutputGroup is not eligible, don't add it
+
+            // Check the OutputGroup's eligibility. Only add the eligible ones.
             if (positive_only && group.effective_value <= 0) continue;
-            if (group.m_outputs.size() > 0 && group.EligibleForSpending(filter)) groups.push_back(group);
+            if (group.m_outputs.size() > 0 && group.EligibleForSpending(filter)) groups_out.push_back(group);
         }
     }
-    return groups;
+
+    return groups_out;
 }
 
 bool CWallet::IsCrypted() const
