@@ -111,6 +111,7 @@ public:
     virtual bool getPrivKey(const CKeyID& address, CKey& key) = 0;
 
     //! Return whether wallet has private key.
+    virtual bool isSpendable(const CScript& script) = 0;
     virtual bool isSpendable(const CTxDestination& dest) = 0;
 
     //! Return whether wallet has watch only keys.
