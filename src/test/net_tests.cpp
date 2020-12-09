@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_serialize_v1)
 
     addr.SetInternal("a");
     s << addr;
-    BOOST_CHECK_EQUAL(HexStr(s), "fd6b88c08724ca978112ca1bbdcafac2");
+    BOOST_CHECK_EQUAL(HexStr(s), "fd6ce9fe4549ca978112ca1bbdcafac2");
     s.clear();
 }
 
@@ -426,7 +426,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_serialize_v2)
 
     BOOST_REQUIRE(addr.SetInternal("a"));
     s << addr;
-    BOOST_CHECK_EQUAL(HexStr(s), "0210fd6b88c08724ca978112ca1bbdcafac2");
+    BOOST_CHECK_EQUAL(HexStr(s), "0210fd6ce9fe4549ca978112ca1bbdcafac2");
     s.clear();
 }
 
