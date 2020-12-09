@@ -173,6 +173,7 @@ public:
 extern CInstantSendManager* quorumInstantSendManager;
 
 bool IsInstantSendEnabled();
+bool RejectConflictingBlocks();
 
 } // namespace llmq
 

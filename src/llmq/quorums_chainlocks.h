@@ -57,7 +57,7 @@ private:
     boost::thread* scheduler_thread;
     CCriticalSection cs;
     bool tryLockChainTipScheduled{false};
-    bool isSporkActive{false};
+    bool isEnabled{false};
     bool isEnforced{false};
 
     uint256 bestChainLockHash;
@@ -122,6 +122,7 @@ private:
 
 extern CChainLocksHandler* chainLocksHandler;
 
+bool AreChainLocksEnabled();
 
 } // namespace llmq
 

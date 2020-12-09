@@ -432,4 +432,6 @@ private:
 
 };
 
+bool AreSuperblocksEnabled();
+
 #endif // BITCOIN_GOVERNANCE_GOVERNANCE_H

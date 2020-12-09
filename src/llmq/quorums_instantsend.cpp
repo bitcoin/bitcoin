@@ -1154,7 +1154,7 @@ void CInstantSendManager::UpdatedBlockTip(const CBlockIndex* pindexNew)
     // TODO remove this after DIP8 has activated
     bool fDIP0008Active = VersionBitsState(pindexNew->pprev, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0008, versionbitscache) == ThresholdState::ACTIVE;
 
-    if (sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED) && fDIP0008Active) {
+    if (AreChainLocksEnabled() && fDIP0008Active) {
         // Nothing to do here. We should keep all islocks and let chainlocks handle them.
         return;
     }
@@ -1532,6 +1532,11 @@ void CInstantSendManager::WorkThreadMain()
 bool IsInstantSendEnabled()
 {
     return sporkManager.IsSporkActive(SPORK_2_INSTANTSEND_ENABLED);
+}
+
+bool RejectConflictingBlocks()
+{
+    return sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING);
 }
 
 } // namespace llmq

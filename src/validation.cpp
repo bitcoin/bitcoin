@@ -35,7 +35,6 @@
 #include <ui_interface.h>
 #include <undo.h>
 #include <util.h>
-#include <spork.h>
 #include <utilmoneystr.h>
 #include <utilstrencodings.h>
 #include <validationinterface.h>
@@ -2313,7 +2312,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
     // DASH : CHECK TRANSACTIONS FOR INSTANTSEND
 
-    if (sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
+    if (llmq::RejectConflictingBlocks()) {
         // Require other nodes to comply, send them some data in case they are missing it.
         for (const auto& tx : block.vtx) {
             // skip txes that have no inputs

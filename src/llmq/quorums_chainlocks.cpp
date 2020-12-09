@@ -90,7 +90,7 @@ CChainLockSig CChainLocksHandler::GetBestChainLock()
 
 void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
-    if (!sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED)) {
+    if (!AreChainLocksEnabled()) {
         return;
     }
 
@@ -230,8 +230,8 @@ void CChainLocksHandler::CheckActiveState()
 
     LOCK(cs);
     bool oldIsEnforced = isEnforced;
-    isSporkActive = sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
-    isEnforced = (fDIP0008Active && isSporkActive);
+    isEnabled = AreChainLocksEnabled();
+    isEnforced = (fDIP0008Active && isEnabled);
 
     if (!oldIsEnforced && isEnforced) {
         // ChainLocks got activated just recently, but it's possible that it was already running before, leaving
@@ -273,7 +273,7 @@ void CChainLocksHandler::TrySignChainTip()
     {
         LOCK(cs);
 
-        if (!isSporkActive) {
+        if (!isEnabled) {
             return;
         }
 
@@ -300,7 +300,7 @@ void CChainLocksHandler::TrySignChainTip()
     // considered safe when it is islocked or at least known since 10 minutes (from mempool or block). These checks are
     // performed for the tip (which we try to sign) and the previous 5 blocks. If a ChainLocked block is found on the
     // way down, we consider all TXs to be safe.
-    if (IsInstantSendEnabled() && sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
+    if (IsInstantSendEnabled() && RejectConflictingBlocks()) {
         auto pindexWalk = pindex;
         while (pindexWalk) {
             if (pindex->nHeight - pindexWalk->nHeight > 5) {
@@ -459,7 +459,7 @@ CChainLocksHandler::BlockTxs::mapped_type CChainLocksHandler::GetBlockTxs(const 
 
 bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid)
 {
-    if (!sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
+    if (!RejectConflictingBlocks()) {
         return true;
     }
     if (!IsInstantSendEnabled()) {
@@ -469,7 +469,7 @@ bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid)
     int64_t txAge = 0;
     {
         LOCK(cs);
-        if (!isSporkActive || !isEnforced) {
+        if (!isEnabled || !isEnforced) {
             return true;
         }
         auto it = txFirstSeenTime.find(txid);
@@ -568,7 +568,7 @@ void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recove
     {
         LOCK(cs);
 
-        if (!isSporkActive) {
+        if (!isEnabled) {
             return;
         }
 
@@ -725,6 +725,11 @@ void CChainLocksHandler::Cleanup()
     }
 
     lastCleanupTime = GetTimeMillis();
+}
+
+bool AreChainLocksEnabled()
+{
+    return sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
 }
 
 } // namespace llmq
