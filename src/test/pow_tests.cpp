@@ -155,11 +155,13 @@ void sanity_check_chainparams(const ArgsManager& args, std::string chainName)
     BOOST_CHECK(UintToArith256(consensus.powLimit) >= pow_compact);
 
     // check max target * 4*nPowTargetTimespan doesn't overflow -- see pow.cpp:CalculateNextWorkRequired()
+    /* Litecoin: we allow overflowing by 1 bit
     if (!consensus.fPowNoRetargeting) {
         arith_uint256 targ_max("0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
         targ_max /= consensus.nPowTargetTimespan*4;
         BOOST_CHECK(UintToArith256(consensus.powLimit) < targ_max);
     }
+    */
 }
 
 BOOST_AUTO_TEST_CASE(ChainParams_MAIN_sanity)
