@@ -17,6 +17,9 @@ namespace llmq
 
 std::vector<CDeterministicMNCPtr> CLLMQUtils::GetAllQuorumMembers(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum)
 {
+    if (!IsQuorumTypeEnabled(llmqType, pindexQuorum->pprev)) {
+        return {};
+    }
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
     auto allMns = deterministicMNManager->GetListForBlock(pindexQuorum);
     auto modifier = ::SerializeHash(std::make_pair(llmqType, pindexQuorum->GetBlockHash()));
@@ -50,7 +53,7 @@ bool CLLMQUtils::IsAllMembersConnectedEnabled(Consensus::LLMQType llmqType)
     if (spork21 == 0) {
         return true;
     }
-    if (spork21 == 1 && llmqType != Consensus::LLMQ_400_60 && llmqType != Consensus::LLMQ_400_85) {
+    if (spork21 == 1 && llmqType != Consensus::LLMQ_100_67 && llmqType != Consensus::LLMQ_400_60 && llmqType != Consensus::LLMQ_400_85) {
         return true;
     }
     return false;
@@ -254,5 +257,47 @@ bool CLLMQUtils::IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quo
     return false;
 }
 
+bool CLLMQUtils::IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockIndex* pindex)
+{
+    const Consensus::Params& consensusParams = Params().GetConsensus();
+    bool f_v17_Active =  VersionBitsState(pindex, consensusParams, Consensus::DEPLOYMENT_V17, versionbitscache) == ThresholdState::ACTIVE;
+
+    switch (llmqType)
+    {
+        case Consensus::LLMQ_50_60:
+        case Consensus::LLMQ_400_60:
+        case Consensus::LLMQ_400_85:
+            break;
+        case Consensus::LLMQ_100_67:
+        case Consensus::LLMQ_TEST_V17:
+            if (!f_v17_Active) {
+                return false;
+            }
+            break;
+        case Consensus::LLMQ_TEST:
+        case Consensus::LLMQ_DEVNET:
+            break;
+        default:
+            throw std::runtime_error(strprintf("%s: Unknown LLMQ type %d", __func__, llmqType));
+    }
+
+    return true;
+}
+
+std::vector<Consensus::LLMQType> CLLMQUtils::GetEnabledQuorumTypes(const CBlockIndex* pindex)
+{
+    std::vector<Consensus::LLMQType> ret;
+    for (const auto& p : Params().GetConsensus().llmqs) {
+        if (IsQuorumTypeEnabled(p.first, pindex)) {
+            ret.push_back(p.first);
+        }
+    }
+    return ret;
+}
+
+Consensus::LLMQParams CLLMQUtils::GetLLMQParams(Consensus::LLMQType llmqType)
+{
+    return Params().GetConsensus().llmqs.at(llmqType);
+}
 
 } // namespace llmq

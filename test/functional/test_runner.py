@@ -147,6 +147,7 @@ BASE_SCRIPTS= [
     'wallet_encryption.py',
     'feature_dersig.py',
     'feature_cltv.py',
+    'feature_new_quorum_type_activation.py',
     'feature_governance_objects.py',
     'rpc_uptime.py',
     'wallet_resendwallettransactions.py',

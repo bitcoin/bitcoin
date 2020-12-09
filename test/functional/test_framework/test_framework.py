@@ -928,6 +928,16 @@ class DashTestFramework(BitcoinTestFramework):
             return all_ok
         wait_until(check_dkg_comitments, timeout=timeout, sleep=0.1)
 
+    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=15, sleep=2):
+        def wait_func():
+            if quorum_hash in self.nodes[0].quorum("list")["llmq_test"]:
+                return True
+            self.bump_mocktime(sleep, nodes=nodes)
+            self.nodes[0].generate(1)
+            sync_blocks(nodes)
+            return False
+        wait_until(wait_func, timeout=timeout, sleep=sleep)
+
     def mine_quorum(self, expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None):
         spork21_active = self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] <= 1
 
@@ -949,8 +959,6 @@ class DashTestFramework(BitcoinTestFramework):
                                                    expected_justifications, expected_commitments))
 
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
-
-        quorums = self.nodes[0].quorum("list")
 
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
@@ -1003,12 +1011,13 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("Mining final commitment")
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(1)
-        while quorums == self.nodes[0].quorum("list"):
-            time.sleep(2)
-            self.bump_mocktime(1, nodes=nodes)
-            self.nodes[0].generate(1)
-            sync_blocks(nodes)
+        sync_blocks(nodes)
+
+        self.log.info("Waiting for quorum to appear in the list")
+        self.wait_for_quorum_list(q, nodes)
+
         new_quorum = self.nodes[0].quorum("list", 1)["llmq_test"][0]
+        assert_equal(q, new_quorum)
         quorum_info = self.nodes[0].quorum("info", 100, new_quorum)
 
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligable for signing sessions

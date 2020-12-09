@@ -54,15 +54,16 @@ UniValue quorum_list(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VOBJ);
 
-    for (auto& p : Params().GetConsensus().llmqs) {
+    for (auto& type : llmq::CLLMQUtils::GetEnabledQuorumTypes(chainActive.Tip())) {
+        const auto& params = llmq::CLLMQUtils::GetLLMQParams(type);
         UniValue v(UniValue::VARR);
 
-        auto quorums = llmq::quorumManager->ScanQuorums(p.first, chainActive.Tip(), count > -1 ? count : p.second.signingActiveQuorumCount);
+        auto quorums = llmq::quorumManager->ScanQuorums(type, chainActive.Tip(), count > -1 ? count : params.signingActiveQuorumCount);
         for (auto& q : quorums) {
             v.push_back(q->qc.quorumHash.ToString());
         }
 
-        ret.pushKV(p.second.name, v);
+        ret.pushKV(params.name, v);
     }
 
 
@@ -181,8 +182,8 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
 
     UniValue minableCommitments(UniValue::VOBJ);
     UniValue quorumConnections(UniValue::VOBJ);
-    for (const auto& p : Params().GetConsensus().llmqs) {
-        auto& params = p.second;
+    for (const auto& type : llmq::CLLMQUtils::GetEnabledQuorumTypes(chainActive.Tip())) {
+        const auto& params = llmq::CLLMQUtils::GetLLMQParams(type);
 
         if (fMasternodeMode) {
             const CBlockIndex* pindexQuorum = chainActive[tipHeight - (tipHeight % params.dkgInterval)];
@@ -265,8 +266,8 @@ UniValue quorum_memberof(const JSONRPCRequest& request)
 
     UniValue result(UniValue::VARR);
 
-    for (const auto& p : Params().GetConsensus().llmqs) {
-        auto& params = p.second;
+    for (const auto& type : llmq::CLLMQUtils::GetEnabledQuorumTypes(pindexTip)) {
+        const auto& params = llmq::CLLMQUtils::GetLLMQParams(type);
         size_t count = params.signingActiveQuorumCount;
         if (scanQuorumsCount != -1) {
             count = (size_t)scanQuorumsCount;
