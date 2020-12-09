@@ -25,7 +25,7 @@ CQuorumBlockProcessor* quorumBlockProcessor;
 static const std::string DB_MINED_COMMITMENT = "q_mc";
 static const std::string DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT = "q_mcih";
 
-void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman)
+void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, PeerManager& peerman)
 {
     if (strCommand == NetMsgType::QFCOMMITMENT) {
         CFinalCommitment qc;
@@ -44,7 +44,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 LOCK(cs_main);
                 peerman.ForgetTxHash(pfrom->GetId(), hash);
             }
-            Misbehaving(pfrom->GetId(), 100, "null commitment from peer");
+            peerman.Misbehaving(pfrom->GetId(), 100, "null commitment from peer");
             return;
         }
 
@@ -55,7 +55,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 LOCK(cs_main);
                 peerman.ForgetTxHash(pfrom->GetId(), hash);
             }
-            Misbehaving(pfrom->GetId(), 100, "invalid commitment type");
+            peerman.Misbehaving(pfrom->GetId(), 100, "invalid commitment type");
             return;
         }
         auto type = qc.llmqType;
@@ -84,7 +84,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- block %s is not the first block in the DKG interval, peer=%d\n", __func__,
                             qc.quorumHash.ToString(), pfrom->GetId());
                 peerman.ForgetTxHash(pfrom->GetId(), hash);
-                Misbehaving(pfrom->GetId(), 100, "not in first block of DKG interval");
+                peerman.Misbehaving(pfrom->GetId(), 100, "not in first block of DKG interval");
                 return;
             }
         }
@@ -115,7 +115,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 LOCK(cs_main);
                 peerman.ForgetTxHash(pfrom->GetId(), hash);
             }                     
-            Misbehaving(pfrom->GetId(), 100, "invalid commitment for quorum");
+            peerman.Misbehaving(pfrom->GetId(), 100, "invalid commitment for quorum");
             return;
         }
 

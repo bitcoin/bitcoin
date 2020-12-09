@@ -1075,8 +1075,8 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
     }
     return nEvicted;
 }
-// SYSCOIN
-void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message)
+
+void PeerManager::Misbehaving(const NodeId pnode, const int howmuch, const std::string& message)
 {
     assert(howmuch > 0);
 
@@ -1093,6 +1093,7 @@ void Misbehaving(const NodeId pnode, const int howmuch, const std::string& messa
         LogPrint(BCLog::NET, "Misbehaving: peer=%d (%d -> %d)%s\n", pnode, peer->m_misbehavior_score - howmuch, peer->m_misbehavior_score, message_prefixed);
     }
 }
+
 void PeerManager::ReceivedResponse(const NodeId pnode, const uint256& hash)
 {
     PeerRef peer = GetPeerRef(pnode);
@@ -4086,13 +4087,13 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         governance.ProcessMessage(&pfrom, msg_type, vRecv, m_connman, *this);
         return;
     } else if(msg_type == NetMsgType::MNAUTH) {
-        CMNAuth::ProcessMessage(&pfrom, msg_type, vRecv, m_connman);
+        CMNAuth::ProcessMessage(&pfrom, msg_type, vRecv, m_connman, *this);
         return;
     } else if(msg_type == NetMsgType::QFCOMMITMENT) {
-        llmq::quorumBlockProcessor->ProcessMessage(&pfrom, msg_type, vRecv, m_connman, *this);
+        llmq::quorumBlockProcessor->ProcessMessage(&pfrom, msg_type, vRecv, *this);
         return;
     } else if(msg_type == NetMsgType::QSIGREC) {
-        llmq::quorumSigningManager->ProcessMessage(&pfrom, msg_type, vRecv, *this);
+        llmq::quorumSigningManager->ProcessMessage(&pfrom, msg_type, vRecv);
         return;
     } else if(msg_type == NetMsgType::CLSIG) {
         llmq::chainLocksHandler->ProcessMessage(&pfrom, msg_type, vRecv);
@@ -4102,7 +4103,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             msg_type == NetMsgType::QJUSTIFICATION || 
             msg_type == NetMsgType::QPCOMMITMENT ||
             msg_type == NetMsgType::QWATCH) {
-        llmq::quorumDKGSessionManager->ProcessMessage(&pfrom, msg_type, vRecv, m_connman);
+        llmq::quorumDKGSessionManager->ProcessMessage(&pfrom, msg_type, vRecv);
         return;
     } else if(msg_type == NetMsgType::QSIGSHARE || 
             msg_type == NetMsgType::QSIGSESANN ||

@@ -85,15 +85,16 @@ void CDKGPendingMessages::Clear()
 
 //////
 
-CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
+CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager, PeerManager& _peerman) :
     params(_params),
     blsWorker(_blsWorker),
     dkgManager(_dkgManager),
     curSession(std::make_shared<CDKGSession>(_params, _blsWorker, _dkgManager)),
-    pendingContributions((size_t)_params.size * 2, _dkgManager.peerman), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
-    pendingComplaints((size_t)_params.size * 2, _dkgManager.peerman),
-    pendingJustifications((size_t)_params.size * 2, _dkgManager.peerman),
-    pendingPrematureCommitments((size_t)_params.size * 2, _dkgManager.peerman)
+    pendingContributions((size_t)_params.size * 2, _peerman), // we allow size*2 messages as we need to make sure we see bad behavior (double messages)
+    pendingComplaints((size_t)_params.size * 2, _peerman),
+    pendingJustifications((size_t)_params.size * 2, _peerman),
+    pendingPrematureCommitments((size_t)_params.size * 2, _peerman),
+    peerman(_peerman)
 {
     m_threadName = strprintf("q-phase-%d", params.type);
     if (params.type == Consensus::LLMQ_NONE) {
@@ -424,7 +425,7 @@ std::set<NodeId> BatchVerifyMessageSigs(CDKGSession& session, const std::vector<
 }
 
 template<typename Message>
-bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendingMessages, size_t maxCount)
+bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendingMessages, size_t maxCount, PeerManager& peerman)
 {
     const auto &msgs = pendingMessages.PopAndDeserializeMessages<Message>(maxCount);
     if (msgs.empty()) {
@@ -439,7 +440,7 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
     for (const auto& p : msgs) {
         if (!p.second) {
             LogPrint(BCLog::LLMQ_DKG, "%s -- failed to deserialize message, peer=%d\n", __func__, p.first);
-            Misbehaving(p.first, 100, "failed to deserialize message");
+            peerman.Misbehaving(p.first, 100, "failed to deserialize message");
             continue;
         }
         const auto& msg = *p.second;
@@ -458,7 +459,7 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
                     pendingMessages.peerman.ForgetTxHash(p.first, hash);
                 }
                 LogPrint(BCLog::LLMQ_DKG, "%s -- banning node due to failed preverification, peer=%d\n", __func__, p.first);
-                Misbehaving(p.first, 100, "banning node due to failed preverification");
+                peerman.Misbehaving(p.first, 100, "banning node due to failed preverification");
             }
             LogPrint(BCLog::LLMQ_DKG, "%s -- skipping message due to failed preverification, peer=%d\n", __func__, p.first);
             continue;
@@ -478,7 +479,7 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
     if (!badNodes.empty()) {
         for (auto nodeId : badNodes) {
             LogPrint(BCLog::LLMQ_DKG, "%s -- failed to verify signature, peer=%d\n", __func__, nodeId);
-            Misbehaving(nodeId, 100, "failed to verify signature");
+            peerman.Misbehaving(nodeId, 100, "failed to verify signature");
         }
     }
 
@@ -492,7 +493,7 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         session.ReceiveMessage(hashes[i], msg, ban);
         if (ban) {
             LogPrint(BCLog::LLMQ_DKG, "%s -- banning node after ReceiveMessage failed, peer=%d\n", __func__, nodeId);
-            Misbehaving(nodeId, 100, "banning node after ReceiveMessage failed");
+            peerman.Misbehaving(nodeId, 100, "banning node after ReceiveMessage failed");
             badNodes.emplace(nodeId);
         }
     }
@@ -546,7 +547,7 @@ void CDKGSessionHandler::HandleDKGRound()
         curSession->Contribute(pendingContributions);
     };
     auto fContributeWait = [this] {
-        return ProcessPendingMessageBatch<CDKGContribution>(*curSession, pendingContributions, 8);
+        return ProcessPendingMessageBatch<CDKGContribution>(*curSession, pendingContributions, 8, peerman);
     };
     HandlePhase(QuorumPhase_Contribute, QuorumPhase_Complain, curQuorumHash, 0.05, fContributeStart, fContributeWait);
 
@@ -555,7 +556,7 @@ void CDKGSessionHandler::HandleDKGRound()
         curSession->VerifyAndComplain(pendingComplaints);
     };
     auto fComplainWait = [this] {
-        return ProcessPendingMessageBatch<CDKGComplaint>(*curSession, pendingComplaints, 8);
+        return ProcessPendingMessageBatch<CDKGComplaint>(*curSession, pendingComplaints, 8, peerman);
     };
     HandlePhase(QuorumPhase_Complain, QuorumPhase_Justify, curQuorumHash, 0.05, fComplainStart, fComplainWait);
 
@@ -564,7 +565,7 @@ void CDKGSessionHandler::HandleDKGRound()
         curSession->VerifyAndJustify(pendingJustifications);
     };
     auto fJustifyWait = [this] {
-        return ProcessPendingMessageBatch<CDKGJustification>(*curSession, pendingJustifications, 8);
+        return ProcessPendingMessageBatch<CDKGJustification>(*curSession, pendingJustifications, 8, peerman);
     };
     HandlePhase(QuorumPhase_Justify, QuorumPhase_Commit, curQuorumHash, 0.05, fJustifyStart, fJustifyWait);
 
@@ -573,7 +574,7 @@ void CDKGSessionHandler::HandleDKGRound()
         curSession->VerifyAndCommit(pendingPrematureCommitments);
     };
     auto fCommitWait = [this] {
-        return ProcessPendingMessageBatch<CDKGPrematureCommitment>(*curSession, pendingPrematureCommitments, 8);
+        return ProcessPendingMessageBatch<CDKGPrematureCommitment>(*curSession, pendingPrematureCommitments, 8, peerman);
     };
     HandlePhase(QuorumPhase_Commit, QuorumPhase_Finalize, curQuorumHash, 0.1, fCommitStart, fCommitWait);
 

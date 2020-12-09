@@ -106,7 +106,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         vRecv >> filter;
         
         if (nProp == uint256()) {
-            SyncObjects(pfrom, connman);
+            SyncObjects(pfrom, connman, peerman);
         } else {
             SyncSingleObjVotes(pfrom, nProp, filter, connman);
         }
@@ -177,7 +177,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
                 LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Governance object is invalid - %s\n", strError);
                 peerman.ForgetTxHash(pfrom->GetId(), nHash);
                 // apply node's ban score
-                Misbehaving(pfrom->GetId(), 20, "invalid governance object");
+                peerman.Misbehaving(pfrom->GetId(), 20, "invalid governance object");
             }
             return;
         }
@@ -229,7 +229,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
                     LOCK(cs_main);
                     peerman.ForgetTxHash(pfrom->GetId(), nHash);
                 }
-                Misbehaving(pfrom->GetId(), exception.GetNodePenalty(), "rejected vote");
+                peerman.Misbehaving(pfrom->GetId(), exception.GetNodePenalty(), "rejected vote");
             }
             return;
         }
@@ -632,7 +632,7 @@ void CGovernanceManager::SyncSingleObjVotes(CNode* pnode, const uint256& nProp, 
     LogPrintf("CGovernanceManager::%s -- sent %d votes to peer=%d\n", __func__, nVoteCount, pnode->GetId());
 }
 
-void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman) const
+void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman, PeerManager& peerman) const
 {
     // do not provide any data until our node is synced
     if (!masternodeSync.IsSynced()) return;
@@ -640,7 +640,7 @@ void CGovernanceManager::SyncObjects(CNode* pnode, CConnman& connman) const
     if (netfulfilledman.HasFulfilledRequest(pnode->addr, NetMsgType::MNGOVERNANCESYNC)) {
         // Asking for the whole list multiple times in a short period of time is no good
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::%s -- peer already asked me for the list\n", __func__);
-        Misbehaving(pnode->GetId(), 20, "peer already asked for list");
+        peerman.Misbehaving(pnode->GetId(), 20, "peer already asked for list");
         return;
     }
     netfulfilledman.AddFulfilledRequest(pnode->addr, NetMsgType::MNGOVERNANCESYNC);

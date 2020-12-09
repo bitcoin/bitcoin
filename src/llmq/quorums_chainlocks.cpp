@@ -118,7 +118,7 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
         if (from != -1) {
             LOCK(cs_main);
             peerman.ForgetTxHash(from, hash);
-            Misbehaving(from, 10, "invalid CLSIG");
+            peerman.Misbehaving(from, 10, "invalid CLSIG");
         }
         return;
     }

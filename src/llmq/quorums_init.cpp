@@ -31,7 +31,7 @@ void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, CConnman& connman, BanMan& ba
     quorumBlockProcessor = new CQuorumBlockProcessor(evoDb, connman);
     quorumDKGSessionManager = new CDKGSessionManager(*llmqDb, *blsWorker, connman, peerman);
     quorumManager = new CQuorumManager(evoDb, *blsWorker, *quorumDKGSessionManager);
-    quorumSigSharesManager = new CSigSharesManager(connman, banman);
+    quorumSigSharesManager = new CSigSharesManager(connman, banman, peerman);
     quorumSigningManager = new CSigningManager(*llmqDb, unitTests, connman, peerman);
     chainLocksHandler = new CChainLocksHandler(connman, peerman);
 }

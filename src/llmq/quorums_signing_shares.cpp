@@ -182,7 +182,7 @@ void CSigSharesNodeState::RemoveSession(const uint256& signHash)
 
 //////////////////////
 
-CSigSharesManager::CSigSharesManager(CConnman& _connman, BanMan& _banman): connman(_connman), banman(_banman)
+CSigSharesManager::CSigSharesManager(CConnman& _connman, BanMan& _banman, PeerManager& _peerman): connman(_connman), banman(_banman), peerman(_peerman)
 {
     workInterrupt.reset();
 }
@@ -1466,7 +1466,7 @@ void CSigSharesManager::BanNode(NodeId nodeId)
         return;
     }
 
-    Misbehaving(nodeId, 100, "banning node from sigshares manager");
+    peerman.Misbehaving(nodeId, 100, "banning node from sigshares manager");
 
     LOCK(cs);
     auto it = nodeStates.find(nodeId);

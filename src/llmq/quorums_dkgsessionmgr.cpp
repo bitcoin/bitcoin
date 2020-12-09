@@ -26,7 +26,7 @@ CDKGSessionManager::CDKGSessionManager(CDBWrapper& _llmqDb, CBLSWorker& _blsWork
     peerman(_peerman)
 {
     for (const auto& qt : Params().GetConsensus().llmqs) {
-        dkgSessionHandlers.try_emplace(qt.first, qt.second, blsWorker, *this);
+        dkgSessionHandlers.try_emplace(qt.first, qt.second, blsWorker, *this, peerman);
     }
 }
 
@@ -62,7 +62,7 @@ void CDKGSessionManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
     }
 }
 
-void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
+void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
 {
     if (!sporkManager.IsSporkActive(SPORK_17_QUORUM_DKG_ENABLED))
         return;
@@ -81,14 +81,14 @@ void CDKGSessionManager::ProcessMessage(CNode* pfrom, const std::string& strComm
     }
 
     if (vRecv.empty()) {
-        Misbehaving(pfrom->GetId(), 100, "invalid recv size for DKG session");
+        peerman.Misbehaving(pfrom->GetId(), 100, "invalid recv size for DKG session");
         return;
     }
 
     // peek into the message and see which uint8_t it is. First byte of all messages is always the uint8_t
     uint8_t llmqType = *vRecv.begin();
     if (!dkgSessionHandlers.count(llmqType)) {
-        Misbehaving(pfrom->GetId(), 100, "DKG session invalid LLMQ type");
+        peerman.Misbehaving(pfrom->GetId(), 100, "DKG session invalid LLMQ type");
         return;
     }
 

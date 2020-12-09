@@ -282,7 +282,7 @@ public:
     bool ConfirmInventoryRequest(const GenTxid& gtxid);
 
     void SyncSingleObjVotes(CNode* pnode, const uint256& nProp, const CBloomFilter& filter, CConnman& connman);
-    void SyncObjects(CNode* pnode, CConnman& connman) const;
+    void SyncObjects(CNode* pnode, CConnman& connman, PeerManager &peerman) const;
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, PeerManager& peerman);
 

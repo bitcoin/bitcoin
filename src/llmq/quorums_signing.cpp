@@ -457,7 +457,7 @@ bool CSigningManager::GetRecoveredSigForGetData(const uint256& hash, CRecoveredS
     return true;
 }
 
-void CSigningManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, PeerManager& peerman)
+void CSigningManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
 {
     if (strCommand == NetMsgType::QSIGREC) {
         CRecoveredSig recoveredSig;
@@ -481,7 +481,7 @@ void CSigningManager::ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredS
                 LOCK(cs_main);
                 peerman.ForgetTxHash(pfrom->GetId(), hash);
             }
-            Misbehaving(pfrom->GetId(), 100, "error PreVerifyRecoveredSig");
+            peerman.Misbehaving(pfrom->GetId(), 100, "error PreVerifyRecoveredSig");
         }
         return;
     }
@@ -663,7 +663,7 @@ bool CSigningManager::ProcessPendingRecoveredSigs()
 
         if (batchVerifier.badSources.count(nodeId)) {
             LogPrint(BCLog::LLMQ, "CSigningManager::%s -- invalid recSig from other node, banning peer=%d\n", __func__, nodeId);
-            Misbehaving(nodeId, 100, "invalid recSig from other node");
+            peerman.Misbehaving(nodeId, 100, "invalid recSig from other node");
             continue;
         }
 

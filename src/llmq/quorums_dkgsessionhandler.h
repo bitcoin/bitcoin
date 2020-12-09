@@ -119,9 +119,9 @@ private:
     CDKGPendingMessages pendingJustifications;
     CDKGPendingMessages pendingPrematureCommitments;
     std::string m_threadName;
-
+    PeerManager& peerman;
 public:
-    CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager);
+    CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager, PeerManager& peerman);
     ~CDKGSessionHandler();
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew);
