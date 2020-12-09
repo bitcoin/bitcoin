@@ -118,7 +118,7 @@ QAbstractSpinBox::up-arrow {
     border-image: url(':/images/arrow_up_light');
 }
 QAbstractSpinBox::up-arrow:hover {
-    border-image: url(':/images/arrow_down_dark');
+    border-image: url(':/images/arrow_up_dark');
 }
 QAbstractSpinBox::up-arrow:pressed {
     border-image: url(':/images/arrow_up_light');
@@ -127,13 +127,13 @@ QAbstractSpinBox::up-arrow:disabled {
     border-image: url(':/images/arrow_light_up_normal');
 }
 QAbstractSpinBox::down-arrow {
-    border-image: url(':/images/arrow_up_light');
+    border-image: url(':/images/arrow_down_light');
 }
 QAbstractSpinBox::down-arrow:hover {
     border-image: url(':/images/arrow_down_dark');
 }
 QAbstractSpinBox::down-arrow:pressed {
-    border-image: url(':/images/arrow_up_light');
+    border-image: url(':/images/arrow_down_light');
 }
 QAbstractSpinBox::down-arrow:disabled {
     border-image: url(':/images/arrow_light_down_normal');
