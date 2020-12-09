@@ -76,7 +76,7 @@ define $(package)_config_cmds
 endef
 
 define $(package)_build_cmds
-  $(MAKE) -j1 build_crypto libcrypto.pc libssl.pc openssl.pc
+  $(MAKE) -j1 build_libs libcrypto.pc libssl.pc openssl.pc
 endef
 
 define $(package)_stage_cmds
