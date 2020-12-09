@@ -433,4 +433,6 @@ private:
 
 };
 
+bool AreSuperblocksEnabled();
+
 #endif

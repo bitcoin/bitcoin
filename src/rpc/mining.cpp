@@ -595,7 +595,7 @@ static RPCHelpMan getblocktemplate()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    bool isSBSportActive = sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED);
+    bool isSBSportActive = AreSuperblocksEnabled();
     LOCK(cs_main);
     // SYSCOIN RPC_MISC_ERROR
     std::string errorMessage = "";

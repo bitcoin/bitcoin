@@ -76,7 +76,7 @@ CChainLockSig CChainLocksHandler::GetBestChainLock()
 
 void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
 {
-    if (!sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED)) {
+    if (!AreChainLocksEnabled()) {
         return;
     }
 
@@ -224,7 +224,7 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
     {
         LOCK(cs);
 
-        if (!isSporkActive) {
+        if (!isEnabled) {
             return;
         }
 
@@ -270,7 +270,7 @@ void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recove
     {
         LOCK(cs);
 
-        if (!isSporkActive) {
+        if (!isEnabled) {
             return;
         }
 
@@ -375,6 +375,11 @@ void CChainLocksHandler::Cleanup()
     }
 
     lastCleanupTime = GetTimeMillis();
+}
+
+bool AreChainLocksEnabled()
+{
+    return sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
 }
 
 } // namespace llmq

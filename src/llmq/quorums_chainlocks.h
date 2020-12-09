@@ -45,7 +45,7 @@ class CChainLocksHandler : public CRecoveredSigsListener
 
 private:
     mutable RecursiveMutex cs;
-    bool isSporkActive{false};
+    bool isEnabled{false};
     bool isEnforced{false};
 
     uint256 bestChainLockHash;
@@ -94,6 +94,7 @@ private:
 
 extern CChainLocksHandler* chainLocksHandler;
 
+bool AreChainLocksEnabled();
 
 } // namespace llmq
 
