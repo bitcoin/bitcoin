@@ -6,9 +6,11 @@
 #ifndef SYSCOIN_UTIL_TIME_H
 #define SYSCOIN_UTIL_TIME_H
 
+#include <chrono>
 #include <stdint.h>
 #include <string>
-#include <chrono>
+
+using namespace std::chrono_literals;
 
 void UninterruptibleSleep(const std::chrono::microseconds& n);
 
