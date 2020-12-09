@@ -4057,7 +4057,7 @@ bool PeerManager::SendMessages(CNode* pto)
             // over since our last self-announcement, but there is only a small
             // bandwidth cost that we can incur by doing this (which happens
             // once a day on average).
-            if (pto->m_next_local_addr_send != std::chrono::microseconds::zero()) {
+            if (pto->m_next_local_addr_send != 0us) {
                 pto->m_addr_known->reset();
             }
             AdvertiseLocal(pto);
