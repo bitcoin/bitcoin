@@ -10,5 +10,3 @@ fi
 cd qtbase || exit
 
 exec "$configure" -top-level "$@"
-
-cd ..
