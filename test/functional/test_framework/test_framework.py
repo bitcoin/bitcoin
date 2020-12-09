@@ -20,6 +20,14 @@ from concurrent.futures import ThreadPoolExecutor
 
 from .authproxy import JSONRPCException
 from . import coverage
+from .messages import (
+    CTransaction,
+    FromHex,
+    hash256,
+    msg_islock,
+    ser_compact_size,
+    ser_string,
+)
 from .test_node import TestNode
 from .util import (
     PortSeed,
@@ -32,6 +40,7 @@ from .util import (
     disconnect_nodes,
     force_finish_mnsync,
     get_datadir_path,
+    hex_str_to_bytes,
     initialize_datadir,
     p2p_port,
     set_node_times,
@@ -758,6 +767,25 @@ class DashTestFramework(BitcoinTestFramework):
                 return False
         if wait_until(check_tx, timeout=timeout, sleep=0.5, do_assert=expected) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
+
+    def create_islock(self, hextx):
+        tx = FromHex(CTransaction(), hextx)
+        tx.rehash()
+
+        request_id_buf = ser_string(b"islock") + ser_compact_size(len(tx.vin))
+        inputs = []
+        for txin in tx.vin:
+            request_id_buf += txin.prevout.serialize()
+            inputs.append(txin.prevout)
+        request_id = hash256(request_id_buf)[::-1].hex()
+        message_hash = tx.hash
+
+        for mn in self.mninfo:
+            mn.node.quorum('sign', 100, request_id, message_hash)
+
+        rec_sig = self.get_recovered_sig(request_id, message_hash)
+        islock = msg_islock(inputs, tx.sha256, hex_str_to_bytes(rec_sig['sig']))
+        return islock
 
     def wait_for_instantlock(self, txid, node, expected=True, timeout=15):
         def check_instantlock():

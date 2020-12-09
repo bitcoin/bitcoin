@@ -958,18 +958,13 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
 
     RemoveMempoolConflictsForLock(hash, islock);
     ResolveBlockConflicts(hash, islock);
-    UpdateWalletTransaction(tx, islock);
-}
 
-void CInstantSendManager::UpdateWalletTransaction(const CTransactionRef& tx, const CInstantSendLock& islock)
-{
-    if (tx == nullptr) {
-        return;
+    if (tx != nullptr) {
+        LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- notify about an in-time lock for tx %s\n", __func__, tx->GetHash().ToString());
+        GetMainSignals().NotifyTransactionLock(*tx, islock);
+        // bump mempool counter to make sure newly locked txes are picked up by getblocktemplate
+        mempool.AddTransactionsUpdated(1);
     }
-
-    GetMainSignals().NotifyTransactionLock(*tx, islock);
-    // bump mempool counter to make sure newly mined txes are picked up by getblocktemplate
-    mempool.AddTransactionsUpdated(1);
 }
 
 void CInstantSendManager::ProcessNewTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, bool allowReSigning)
@@ -1015,7 +1010,24 @@ void CInstantSendManager::ProcessNewTransaction(const CTransactionRef& tx, const
 
 void CInstantSendManager::TransactionAddedToMempool(const CTransactionRef& tx)
 {
+    if (!IsInstantSendEnabled()) {
+        return;
+    }
+
+    CInstantSendLockPtr islock{nullptr};
+    {
+        LOCK(cs);
+        islock = db.GetInstantSendLockByTxid(tx->GetHash());
+    }
+
     ProcessNewTransaction(tx, nullptr, false);
+
+    if (islock != nullptr) {
+        // If the islock was received before the TX, we know we were not able to send
+        // the notification at that time, we need to do it now.
+        LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- notify about an earlier received lock for tx %s\n", __func__, tx->GetHash().ToString());
+        GetMainSignals().NotifyTransactionLock(*tx, *islock);
+    }
 }
 
 void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)

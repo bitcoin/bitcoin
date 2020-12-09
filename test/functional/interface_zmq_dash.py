@@ -14,10 +14,26 @@ import time
 import zmq
 
 from test_framework.test_framework import DashTestFramework, SkipTest
+from test_framework.mininode import P2PInterface, network_thread_start
 from test_framework.util import assert_equal, assert_raises_rpc_error, bytes_to_hex_str
-from test_framework.messages import (CBlock, CGovernanceObject, CGovernanceVote, COutPoint, CRecoveredSig, CTransaction,
-                                    msg_clsig, msg_islock,
-                                    hash256, ser_string, uint256_to_string)
+from test_framework.messages import (
+    CBlock,
+    CGovernanceObject,
+    CGovernanceVote,
+    CInv,
+    COutPoint,
+    CRecoveredSig,
+    CTransaction,
+    FromHex,
+    hash256,
+    msg_clsig,
+    msg_inv,
+    msg_islock,
+    msg_tx,
+    ser_string,
+    uint256_from_str,
+    uint256_to_string
+)
 
 
 class ZMQPublisher(Enum):
@@ -35,6 +51,35 @@ class ZMQPublisher(Enum):
     raw_governance_object = "rawgovernanceobject"
     raw_instantsend_doublespend = "rawinstantsenddoublespend"
     raw_recovered_sig = "rawrecoveredsig"
+
+
+class TestP2PConn(P2PInterface):
+    def __init__(self):
+        super().__init__()
+        self.islocks = {}
+        self.txes = {}
+
+    def send_islock(self, islock):
+        hash = uint256_from_str(hash256(islock.serialize()))
+        self.islocks[hash] = islock
+
+        inv = msg_inv([CInv(30, hash)])
+        self.send_message(inv)
+
+    def send_tx(self, tx):
+        hash = uint256_from_str(hash256(tx.serialize()))
+        self.txes[hash] = tx
+
+        inv = msg_inv([CInv(30, hash)])
+        self.send_message(inv)
+
+    def on_getdata(self, message):
+        for inv in message.inv:
+            if inv.hash in self.islocks:
+                self.send_message(self.islocks[inv.hash])
+            if inv.hash in self.txes:
+                self.send_message(self.txes[inv.hash])
+
 
 class DashZMQTest (DashTestFramework):
     def set_test_params(self):
@@ -97,9 +142,9 @@ class DashZMQTest (DashTestFramework):
         for pub in publishers:
             self.socket.unsubscribe(pub.value)
 
-    def receive(self, publisher):
+    def receive(self, publisher, flags=0):
         # Receive a ZMQ message and validate it's sent from the correct ZMQPublisher
-        topic, body, seq = self.socket.recv_multipart()
+        topic, body, seq = self.socket.recv_multipart(flags)
         # Topic should match the publisher value
         assert_equal(topic.decode(), publisher.value)
         return io.BytesIO(body)
@@ -196,6 +241,10 @@ class DashZMQTest (DashTestFramework):
         self.log.info("Testing %d InstantSend publishers" % len(instantsend_publishers))
         # Subscribe to InstantSend messages
         self.subscribe(instantsend_publishers)
+        # Initialize test node
+        self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
+        network_thread_start()
+        self.nodes[0].p2p.wait_for_verack()
         # Make sure all nodes agree
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
         # Create two raw TXs, they will conflict with each other
@@ -238,6 +287,27 @@ class DashZMQTest (DashTestFramework):
         zmq_double_spend_tx_1.deserialize(self.receive(ZMQPublisher.raw_instantsend_doublespend))
         assert(zmq_double_spend_tx_1.is_valid())
         assert_equal(zmq_double_spend_tx_1.hash, rpc_raw_tx_1['txid'])
+        # No islock notifications when tx is not received yet
+        self.nodes[0].generate(1)
+        rpc_raw_tx_3 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)
+        islock = self.create_islock(rpc_raw_tx_3['hex'])
+        self.test_node.send_islock(islock)
+        # Validate NO hashtxlock
+        time.sleep(1)
+        try:
+            self.receive(ZMQPublisher.hash_tx_lock, zmq.NOBLOCK)
+            assert(False)
+        except zmq.ZMQError:
+            # this is expected
+            pass
+        # Now send the tx itself
+        self.test_node.send_tx(FromHex(msg_tx(), rpc_raw_tx_3['hex']))
+        self.wait_for_instantlock(rpc_raw_tx_3['txid'], self.nodes[0])
+        # Validate hashtxlock
+        zmq_tx_lock_hash = bytes_to_hex_str(self.receive(ZMQPublisher.hash_tx_lock).read(32))
+        assert_equal(zmq_tx_lock_hash, rpc_raw_tx_3['txid'])
+        # Drop test node connection
+        self.nodes[0].disconnect_p2ps()
         # Unsubscribe from InstantSend messages
         self.unsubscribe(instantsend_publishers)
 
