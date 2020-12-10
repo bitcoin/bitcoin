@@ -70,6 +70,10 @@
         <translation>Tohle jsou tvé bitcoinové adresy pro posílání plateb. Před odesláním mincí si vždy zkontroluj částku a cílovou adresu.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>Tohle jsou tvé bitcoinové adresy pro příjem plateb. Použij 'Vytvoř novou přijímací adresu' v záložce Přijmi pro vytvoření nové adresy.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopíruj adresu</translation>
     </message>
@@ -132,6 +136,10 @@
         <translation>Totéž heslo ještě jednou</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>Ukaž heslo</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Zašifruj peněženku</translation>
     </message>
@@ -170,6 +178,30 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Peněženka je zašifrována</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Zadej nové heslo k peněžence.&lt;br/&gt;Použij &lt;b&gt;alespoň deset náhodných znaků&lt;/b&gt; nebo &lt;b&gt;alespoň osm slov&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Zadej staré a nové heslo k peněžence.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Pamatujte, že zašifrování peněženky nemůže plně ochránit vaše bitcoiny před krádeží, pokud by byl váš počítač napadem malwarem.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Peněženka k zašifrování</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Vaše peněženka bude zašifrována.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Vaše peněženka je nyní zašifrována.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -294,6 +326,14 @@
         <translation>Načíst &amp;URI...</translation>
     </message>
     <message>
+        <source>Create Wallet...</source>
+        <translation>Vytvoř peněženku...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Vytvoř novou peněženku</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation>Peněženka:</translation>
     </message>
@@ -311,7 +351,7 @@
     </message>
     <message>
         <source>Syncing Headers (%1%)...</source>
-        <translation>Synchronizuji záhlaví bloků (%1 %)…</translation>
+        <translation>Synchronizace hlaviček bloků (%1 %)…</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -511,7 +551,7 @@
     </message>
     <message>
         <source>Connecting to peers...</source>
-        <translation>Připojuji se…</translation>
+        <translation>Připojuji se k protějskům…</translation>
     </message>
     <message>
         <source>Catching up...</source>
@@ -520,6 +560,10 @@
     <message>
         <source>Error: %1</source>
         <translation>Chyba: %1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>Varování: %1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -743,10 +787,58 @@
 </context>
 <context>
     <name>CreateWalletActivity</name>
-    </context>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Vytvářím peněženku &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>Vytvoření peněženky selhalo</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Vytvořit varování peněženky</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
-    </context>
+    <message>
+        <source>Create Wallet</source>
+        <translation>Vytvořit peněženku</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>Název peněženky</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>Zašifrovat peněženku. Peněženka bude zašifrována pomocí vašeho hesla.</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>Zašifrovat peněženku</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>Vypnout soukromé klíče pro tuto peněženku. Peněženky s vypnutými soukromými klíči nebudou mít soukromé klíče a nemohou mít HD inicializaci ani importované soukromé klíče. Tohle je ideální pro peněženky pouze na sledování.</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>Zrušit soukromé klíče</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>Vytvořit prázdnou peněženku. Prázdné peněženky na začátku nemají žádné soukromé klíče ani skripty. Později mohou být importovány soukromé klíče a adresy nebo nastavená HD inicializace.</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>Vytvořit prázdnou peněženku</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>Vytvořit</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -863,6 +955,10 @@
         <translation>Jakmile stiskneš OK, %1 začne stahovat a zpracovávat celý %4ový blockchain (%2 GB), počínaje nejstaršími transakcemi z roku %3, kdy byl %4 spuštěn.</translation>
     </message>
     <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>Vrácení tohoto nastavení vyžaduje opětovné stažení celého blockchainu. Je rychlejší stáhnout celý řetězec nejprve a prořezat jej později. Některé pokročilé funkce budou zakázány, dokud celý blockchain nebude stažen nanovo.</translation>
+    </message>
+    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>Prvotní synchronizace je velice náročná, a mohou se tak díky ní začít na tvém počítači projevovat dosud skryté hardwarové problémy. Pokaždé, když spustíš %1, bude stahování pokračovat tam, kde skončilo.</translation>
     </message>
@@ -881,6 +977,10 @@
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <source>Discard blocks after verification, except most recent %1 GB (prune)</source>
+        <translation>Zahodit bloky po ověření, s výjimkou posledních %1 GB (prořezat)</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -914,7 +1014,11 @@
         <source>(of %n GB needed)</source>
         <translation><numerusform>(z potřebného %n GB)</numerusform><numerusform>(z potřebných %n GB)</numerusform><numerusform>(z potřebných %n GB)</numerusform><numerusform>(z potřebných %n GB)</numerusform></translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation><numerusform>(%n GB potřeba pre plný řetězec)</numerusform><numerusform>(%n GB potřeba pre plný řetězec)</numerusform><numerusform>(%n GB potřeba pre plný řetězec)</numerusform><numerusform>(%n GB potřeba pre plný řetězec)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -963,7 +1067,7 @@
     </message>
     <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
-        <translation>Neznámé. Synchronizace hlaviček (%1, %2)...</translation>
+        <translation>Neznámé. Synchronizace hlaviček bloků (%1, %2)...</translation>
     </message>
 </context>
 <context>
@@ -991,6 +1095,14 @@
 </context>
 <context>
     <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>Otvorenie peňaženky zlyhalo</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Varování otevření peněženky</translation>
+    </message>
     <message>
         <source>default wallet</source>
         <translation>výchozí peněženka</translation>
@@ -1032,7 +1144,7 @@
     </message>
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
-        <translation>Ukazuje, jestli se zadaná výchozí SOCKS5 proxy používá k připojování k peerům v rámci tohoto typu sítě.</translation>
+        <translation>Ukazuje, jestli se zadaná výchozí SOCKS5 proxy používá k připojování k protějskům v rámci tohoto typu sítě.</translation>
     </message>
     <message>
         <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
@@ -1381,6 +1493,14 @@
         <translation>Není možné zpracovat platební požadavek, protože podpora pro BIP70 platby nebyla přikompilována.</translation>
     </message>
     <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>Vzhledem k rozšířeným bezpečnostním nedostatkům v BIP70 se důrazně doporučuje, aby byly ignorovány veškeré obchodní pokyny pro přepínání peněženek.</translation>
+    </message>
+    <message>
+        <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation>Pokud obdržíte tuto chybu, měli byste požádat obchodníka, aby poskytl URI kompatibilní s BIP21.</translation>
+    </message>
+    <message>
         <source>Invalid payment address %1</source>
         <translation>Neplatná platební adresa %1</translation>
     </message>
@@ -1602,6 +1722,10 @@
         <translation>Chyba při kódování URI do QR kódu.</translation>
     </message>
     <message>
+        <source>QR code support not available.</source>
+        <translation>Podpora QR kódu není k dispozici.</translation>
+    </message>
+    <message>
         <source>Save QR Code</source>
         <translation>Ulož QR kód</translation>
     </message>
@@ -1738,7 +1862,7 @@
     </message>
     <message>
         <source>Synced Headers</source>
-        <translation>Aktuálně hlaviček</translation>
+        <translation>Aktuálně hlaviček bloků</translation>
     </message>
     <message>
         <source>Synced Blocks</source>
@@ -1958,6 +2082,10 @@
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>Volitelná částka, kterou požaduješ. Nech prázdné nebo nulové, pokud nepožaduješ konkrétní částku.</translation>
+    </message>
+    <message>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp;Vytvořit novou přijímací adresu</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2281,6 +2409,14 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
         <translation>%1 (%2 bloků)</translation>
     </message>
     <message>
+        <source> from wallet '%1'</source>
+        <translation>z peněženky '%1'</translation>
+    </message>
+    <message>
+        <source>%1 to '%2'</source>
+        <translation>%1 do '%2'</translation>
+    </message>
+    <message>
         <source>%1 to %2</source>
         <translation>%1 pro %2</translation>
     </message>
@@ -2311,6 +2447,10 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
     <message>
         <source>Total Amount</source>
         <translation>Celková částka</translation>
+    </message>
+    <message>
+        <source>To review recipient list click "Show Details..."</source>
+        <translation>Chcete-li zkontrolovat seznam příjemců, klikněte na „Zobrazit podrobnosti ...“</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2763,6 +2903,10 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
         <translation>Pořadí výstupu</translation>
     </message>
     <message>
+        <source> (Certificate was not verified)</source>
+        <translation>(Certifikát nebyl ověřen)</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation>Obchodník</translation>
     </message>
@@ -3086,6 +3230,10 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
         <translation>Zavřít peněženku</translation>
     </message>
     <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Opravdu chcete zavřít peněženku &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Zavření peněženky na příliš dlouhou dobu může vyústit v potřebu resynchronizace celého blockchainu pokud je zapnuté prořezávání.</translation>
     </message>
@@ -3358,6 +3506,10 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
         <translation>Selhala úvodní zevrubná prověrka. %s se ukončuje.</translation>
     </message>
     <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation>Neplatné oprávnenie P2P: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>Neplatná částka pro -%s=&lt;částka&gt;: '%s'</translation>
     </message>
@@ -3374,12 +3526,24 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
         <translation>Zadaný adresář bloků "%s" neexistuje.</translation>
     </message>
     <message>
+        <source>Unknown address type '%s'</source>
+        <translation>Neznámý typ adresy '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation>Neznámý typ změny '%s'</translation>
+    </message>
+    <message>
         <source>Upgrading txindex database</source>
         <translation>Aktualizuje se txindex databáze</translation>
     </message>
     <message>
         <source>Loading P2P addresses...</source>
         <translation>Načítám P2P adresy…</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is too low!</source>
+        <translation>Chyba: Místo na disku je příliš malé!</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3490,6 +3654,10 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
         <translation>V rámci -whitebind je třeba specifikovat i port: '%s'</translation>
     </message>
     <message>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>Režim prořezávání není kompatibilní s -blockfilterindex.</translation>
+    </message>
+    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Omezuji -maxconnections z %d na %d kvůli systémovým omezením.</translation>
     </message>
@@ -3546,6 +3714,10 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
     <message>
         <source>Unable to generate initial keys</source>
         <translation>Nepodařilo se mi vygenerovat počáteční klíče</translation>
+    </message>
+    <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>Neznámá -blockfilterindex hodnota %s.</translation>
     </message>
     <message>
         <source>Verifying wallet(s)...</source>

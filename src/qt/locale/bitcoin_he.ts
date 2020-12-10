@@ -180,6 +180,31 @@
         <translation>הארנק מוצפן</translation>
     </message>
     <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>הקש את הסיסמא בשביל הארנק.
+השתמש בסיסמא הכוללת עשר או יותר תווים אקראים, או שמונה או יותר מילים.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>הקש את הסיסמא הישנה והחדשה בשביל הארנק.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>זכור שהצפנת הארנק לא יכולה להגן עליך לגמרי מגניבת המטבעות שלך על ידי תוכנה זדונית שנמצאת על המחשב שלך.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>הארנק עוד מעט יהיה מוצפן.</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>הארנק שלך עומד להיות מוצפן.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>הארנק שלך מוצפן כעת.</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>חשוב! כל גיבוי קודם שעשית לארנק שלך יש להחליף עם קובץ הארנק המוצפן שזה עתה נוצר. מסיבות אבטחה, גיבויים קודמים של קובץ הארנק הלא-מוצפן יהפכו לחסרי שימוש ברגע שתתחיל להשתמש בארנק החדש המוצפן.</translation>
     </message>
@@ -300,6 +325,14 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>פתיחת &amp;כתובת משאב…</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>צור ארנק...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>צור ארנק חדש</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -751,10 +784,54 @@
 </context>
 <context>
     <name>CreateWalletActivity</name>
-    </context>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>יצירת הארנק נכשלה</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>אזהרה לגבי יצירת הארנק</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
-    </context>
+    <message>
+        <source>Create Wallet</source>
+        <translation>צור ארנק.</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>שם ארנק</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>הצפן את הארנק. הארנק יהיה מוצפן באמצעות סיסמא לבחירתך.</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>הצפן ארנק</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>נטרלו מפתחות פרטיים לארנק זה. ארנקים עם מפתחות פרטיים מנוטרלים יהיו מחוסרי מפתחות פרטיים וללא מקור HD או מפתחות מיובאים. זהו אידאלי לארנקי צפייה בלבד.</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>השבתת מפתחות פרטיים</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>הכינו ארנק ריק. ארנקים ריקים הנם ללא מפתחות פרטיים ראשוניים או סקריפטים. מפתחות פרטיים או כתובות ניתנים לייבוא, או שניתן להגדיר מקור HD במועד מאוחר יותר. </translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>צור ארנק ריק</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>צור</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -871,6 +948,10 @@
         <translation>בעת לחיצה על אישור, %1 יחל בהורדה ועיבוד מלאים של שרשרת המקטעים %4 (%2 ג״ב) החל מההעברות הראשונות ב־%3 עם ההשקה הראשונית של %4.</translation>
     </message>
     <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>חזרה לאחור מהגדרות אלו מחייב הורדה מחדש של כל הבלוקצ'יין. מהיר יותר להוריד את השרשרת המלאה ולקטום אותה מאוחר יותר. הדבר מנטרל כמה תכונות מתקדמות.</translation>
+    </message>
+    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>הסינכרון הראשוני הוא תובעני ועלול לחשוף בעיות חומרה במחשב שהיו חבויות עד כה. כל פעם שתריץ %1 התהליך ימשיך בהורדה מהנקודה שבה הוא עצר לאחרונה.</translation>
     </message>
@@ -889,6 +970,10 @@
     <message>
         <source>Bitcoin</source>
         <translation>ביטקוין</translation>
+    </message>
+    <message>
+        <source>Discard blocks after verification, except most recent %1 GB (prune)</source>
+        <translation>התעלם בלוקים לאחר ווריפיקציה, למעט %1 GB המאוחרים ביותר (המקוצצים)</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -999,6 +1084,14 @@
 </context>
 <context>
     <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>פתיחת ארנק נכשלה</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>אזהרת פתיחת ארנק</translation>
+    </message>
     <message>
         <source>default wallet</source>
         <translation>ארנק בררת מחדל</translation>
@@ -1389,6 +1482,14 @@
         <translation>אין אפשרות לבצע עיבוד בקשת תשלום כיון שהתמיכה ב BIP70 אינה כלולה בקוד.</translation>
     </message>
     <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>עקב תקלות בטיחות רבות ב BIP70 מומלץ בחום להתעלם מההוראות של סוחר להחליף ארנקים </translation>
+    </message>
+    <message>
+        <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation>Iאם קיבלת הודעת שגיאה זו עליך לבקש מבעל העסק לספק URI תואם   BIP21 URI.</translation>
+    </message>
+    <message>
         <source>Invalid payment address %1</source>
         <translation>כתובת תשלום שגויה %1</translation>
     </message>
@@ -1608,6 +1709,10 @@
     <message>
         <source>Error encoding URI into QR Code.</source>
         <translation>שגיאה בקידוד ה URI לברקוד.</translation>
+    </message>
+    <message>
+        <source>QR code support not available.</source>
+        <translation>תמיכה בקוד QR לא זמינה.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -1968,6 +2073,10 @@
         <translation>סכום כרשות לבקשה. ניתן להשאיר זאת ריק כדי לא לבקש סכום מסוים.</translation>
     </message>
     <message>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp;יצירת כתובת קבלה חדשה</translation>
+    </message>
+    <message>
         <source>Clear all fields of the form.</source>
         <translation>ניקוי של כל השדות בטופס.</translation>
     </message>
@@ -2289,6 +2398,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>%1 (%2 בלוקים)</translation>
     </message>
     <message>
+        <source> from wallet '%1'</source>
+        <translation>מתוך ארנק '%1'</translation>
+    </message>
+    <message>
+        <source>%1 to '%2'</source>
+        <translation>%1 אל '%2'</translation>
+    </message>
+    <message>
         <source>%1 to %2</source>
         <translation>%1 ל %2</translation>
     </message>
@@ -2319,6 +2436,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Total Amount</source>
         <translation>סכום כולל</translation>
+    </message>
+    <message>
+        <source>To review recipient list click "Show Details..."</source>
+        <translation>כדי לסקור את רשימת המקבלים יש להקיש "הצגת פרטים..."</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2771,6 +2892,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>מפתח פלט</translation>
     </message>
     <message>
+        <source> (Certificate was not verified)</source>
+        <translation>(האישור לא אומת)</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation>סוחר</translation>
     </message>
@@ -3094,6 +3219,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>סגירת ארנק</translation>
     </message>
     <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>האם את/ה בטוח/ה שברצונך לסגור את ארנק &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>סגירת הארנק למשך זמן רב מדי יכול לגרור את הצורך לסינכרון מחדש של כל השרשרת אם אופצית הגיזום אקטיבית.</translation>
     </message>
@@ -3366,6 +3495,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>איתחול של תהליך בדיקות השפיות נכשל. %s  בתהליך סגירה.</translation>
     </message>
     <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation>הרשאת P2P שגויה: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>סכום שגוי עבור ‎-%s=&lt;amount&gt;:‏ '%s'</translation>
     </message>
@@ -3380,6 +3513,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation>התיקיה שהוגדרה "%s" לא קיימת.</translation>
+    </message>
+    <message>
+        <source>Unknown address type '%s'</source>
+        <translation>כתובת לא ידועה מסוג "%s"</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation>סוג שינוי לא ידוע: "%s"</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>
@@ -3503,6 +3644,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>עליך לציין פתחה עם ‎-whitebind:‏ '%s'</translation>
     </message>
     <message>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>מצב מצומצם לא ניתן לשימוש עם blockfilterindex</translation>
+    </message>
+    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>הורדת -maxconnections מ %d ל %d, עקב מגבלות מערכת.</translation>
     </message>
@@ -3559,6 +3704,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Unable to generate initial keys</source>
         <translation>לא מצליח ליצור מפתחות ראשוניים</translation>
+    </message>
+    <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>ערך -blockfilterindex   %s לא ידוע.</translation>
     </message>
     <message>
         <source>Verifying wallet(s)...</source>

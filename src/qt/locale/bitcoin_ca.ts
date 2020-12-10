@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Feu clic dret per a editar l'adreça o l'etiqueta</translation>
+        <translation>Clic dret per a editar l'adreça o l'etiqueta</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -68,6 +68,10 @@
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>Aquestes són les vostres adreces de Bitcoin per enviar els pagaments. Sempre reviseu l'import i l'adreça del destinatari abans de transferir monedes.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>Aquestes són les teves adreces per rebre pagaments. Utilitza el botó "Crear nova adreça de recepció" de la pestanya de recepció per crear una nova adreça.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -182,6 +186,18 @@
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
         <translation>Introduïu la contrasenya antiga i la contrasenya nova a la cartera.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Recorda que tot i xifrant el teu moneder, els teus bitcoins no estan completament protegits de robatori a través de programari maliciós que està infectant el teu ordinador.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Cartera per ser encriptada</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>La teva cartera està apunt de ser xifrada</translation>
     </message>
     <message>
         <source>Your wallet is now encrypted. </source>
@@ -310,6 +326,14 @@
         <translation>Obre un &amp;URI...</translation>
     </message>
     <message>
+        <source>Create Wallet...</source>
+        <translation>Crear Cartera...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Crear una nova cartera</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation>Moneder:</translation>
     </message>
@@ -330,12 +354,20 @@
         <translation>Canvia la contrasenya d'encriptació de la cartera</translation>
     </message>
     <message>
+        <source>&amp;Receive</source>
+        <translation>&amp;Rebre</translation>
+    </message>
+    <message>
         <source>Encrypt the private keys that belong to your wallet</source>
         <translation>Encripta les claus privades pertanyents de la cartera</translation>
     </message>
     <message>
         <source>&amp;File</source>
         <translation>&amp;Fitxer</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;Ajuda</translation>
     </message>
     <message>
         <source>Tabs toolbar</source>
@@ -394,6 +426,10 @@
         <translation>No hi ha cap cartera disponible</translation>
     </message>
     <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Finestra</translation>
+    </message>
+    <message>
         <source>Zoom</source>
         <translation>Escala</translation>
     </message>
@@ -403,6 +439,10 @@
     </message>
     <message>
         <source>Error: %1</source>
+        <translation>Avís: %1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
         <translation>Avís: %1</translation>
     </message>
     <message>
@@ -463,6 +503,10 @@
         <translation>Data</translation>
     </message>
     <message>
+        <source>Copy address</source>
+        <translation>Copiar adreça</translation>
+    </message>
+    <message>
         <source>Copy label</source>
         <translation>Copia l'etiqueta</translation>
     </message>
@@ -495,16 +539,73 @@
         <translation>Copia el canvi</translation>
     </message>
     <message>
+        <source>yes</source>
+        <translation>si</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>no</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(sense etiqueta)</translation>
     </message>
     </context>
 <context>
     <name>CreateWalletActivity</name>
-    </context>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Creant cartera &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>La creació de cartera ha fallat</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Avís en la creació de la cartera</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
-    </context>
+    <message>
+        <source>Create Wallet</source>
+        <translation>Crear cartera</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>Nom de la cartera</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>Xifra la cartera. La cartera serà xifrada amb la contrasenya que escullis.</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>Xifrar la cartera</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>Deshabilita les claus privades per a aquesta cartera. Carteres amb claus privades deshabilitades no tindran cap clau privada i no podran tenir cap llavor HD o importar claus privades.
+Això és ideal per a carteres de mode només lectura.</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>Deshabilitar claus privades</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>Crea una cartera en blanc. Carteres en blanc no tenen claus privades inicialment o scripts. Claus privades i adreces poden ser importades, o una llavor HD, més endavant.</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>Fes cartera en blanc</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>Crear</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -517,9 +618,29 @@
     </context>
 <context>
     <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation>versió</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation>Benvingut</translation>
+    </message>
+    <message>
+        <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
+        <translation>Com és la primera vegada que s'executa el programa, podeu triar on %1 emmagatzemaran les dades.</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>Desfer aquest canvi requereix tornar-se a descarregar el blockchain sencer. És més ràpid descarregar la cadena completa primer i després podar. Deshabilita algunes de les característiques avançades.</translation>
+    </message>
+    <message>
+        <source>Discard blocks after verification, except most recent %1 GB (prune)</source>
+        <translation>Descarta blocs després de la verificació, excepte el més recent %1 GB (podar)</translation>
+    </message>
     <message>
         <source>The wallet will also be stored in this directory.</source>
         <translation>La cartera també serà emmagatzemat en aquest directori.</translation>
@@ -554,6 +675,14 @@
 <context>
     <name>OpenWalletActivity</name>
     <message>
+        <source>Open wallet failed</source>
+        <translation>Obre cartera fallida</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Avís en l'obertura de la cartera</translation>
+    </message>
+    <message>
         <source>default wallet</source>
         <translation>moneder per defecte</translation>
     </message>
@@ -573,6 +702,14 @@
         <translation>MiB</translation>
     </message>
     <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Finestra</translation>
+    </message>
+    <message>
+        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
+        <translation>Opcions configurades en aquest diàleg són sobreescrites per la línia d'ordres o el fitxer de configuració:</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>Error</translation>
     </message>
@@ -589,6 +726,14 @@
     <message>
         <source>You are using a BIP70 URL which will be unsupported in the future.</source>
         <translation>Esteu fent servir un URL BIP70, que podria no tenir suport en el futur.</translation>
+    </message>
+    <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>A causa dels defectes generalitzats en el BIP70 és altament recomanable que qualsevol instrucció mercant per canviar carteres sigui ignorada.</translation>
+    </message>
+    <message>
+        <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation>Si estàs rebent aquest error, hauries de demanar al comerciant que et doni una URI compatible amb el BIP21.</translation>
     </message>
     </context>
 <context>
@@ -639,12 +784,24 @@
         <source>Error encoding URI into QR Code.</source>
         <translation>Error en codificar l'URI en un codi QR.</translation>
     </message>
+    <message>
+        <source>QR code support not available.</source>
+        <translation>Suport de codi QR no disponible.</translation>
+    </message>
     </context>
 <context>
     <name>RPCConsole</name>
     <message>
+        <source>To specify a non-default location of the data directory use the '%1' option.</source>
+        <translation>Per tal d'especificar una ubicació que no és per defecte del directori de dades utilitza la '%1' opció.</translation>
+    </message>
+    <message>
         <source>Blocksdir</source>
         <translation>Directori de blocs</translation>
+    </message>
+    <message>
+        <source>To specify a non-default location of the blocks directory use the '%1' option.</source>
+        <translation>Per tal d'especificar una ubicació que no és per defecte del directori de dades utilitza la '%1' opció.</translation>
     </message>
     <message>
         <source>Name</source>
@@ -906,6 +1063,10 @@
         <translation>&amp;Missatge:</translation>
     </message>
     <message>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp;Creeu una nova adreça de recepció</translation>
+    </message>
+    <message>
         <source>Clear all fields of the form.</source>
         <translation>Neteja tots els camps del formulari.</translation>
     </message>
@@ -1111,6 +1272,14 @@
         <translation>Polsim:</translation>
     </message>
     <message>
+        <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
+        <translation>Quan no hi ha prou espai en els blocs per encabir totes les transaccions, els miners i així mateix els nodes repetidors poden exigir una taxa mínima. És acceptable pagar únicament la taxa mínima, però tingueu present que pot resultar que la vostra transacció no sigui mai confirmada mentre hi hagi més demanda de transaccions bitcoin de les que la xarxa pot processar.</translation>
+    </message>
+    <message>
+        <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
+        <translation>Una taxa massa baixa pot resultar en una transacció que no es confirmi mai (llegiu el consell)</translation>
+    </message>
+    <message>
         <source>Clear &amp;All</source>
         <translation>Neteja-ho &amp;tot</translation>
     </message>
@@ -1151,6 +1320,10 @@
         <translation>de la cartera "%1"</translation>
     </message>
     <message>
+        <source>%1 to '%2'</source>
+        <translation>%1 a '%2'</translation>
+    </message>
+    <message>
         <source>Are you sure you want to send?</source>
         <translation>Esteu segur que ho voleu enviar?</translation>
     </message>
@@ -1171,8 +1344,16 @@
         <translation>Comissió de transacció</translation>
     </message>
     <message>
+        <source>Not signalling Replace-By-Fee, BIP-125.</source>
+        <translation>Substitució per tarifa sense senyalització, BIP-125</translation>
+    </message>
+    <message>
         <source>Total Amount</source>
         <translation>Import total</translation>
+    </message>
+    <message>
+        <source>To review recipient list click "Show Details..."</source>
+        <translation>Per revisar la llista de destinataris, feu clic a "Mostra els detalls ..."</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -1313,6 +1494,10 @@
         <translation>Mida virtual de la transacció</translation>
     </message>
     <message>
+        <source> (Certificate was not verified)</source>
+        <translation>(El certificat no s'ha verificat)</translation>
+    </message>
+    <message>
         <source>Amount</source>
         <translation>Import</translation>
     </message>
@@ -1344,6 +1529,10 @@
     <message>
         <source>Enter address, transaction id, or label to search</source>
         <translation>Introduïu una adreça, la id de la transacció o l'etiqueta per a cercar</translation>
+    </message>
+    <message>
+        <source>Copy address</source>
+        <translation>Copiar adreça</translation>
     </message>
     <message>
         <source>Copy label</source>
@@ -1383,7 +1572,15 @@
         <source>Close wallet</source>
         <translation>Tanca la cartera</translation>
     </message>
-    </context>
+    <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Segur que voleu tancar la cartera &lt;i&gt;%1 &lt;/i&gt;?</translation>
+    </message>
+    <message>
+        <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
+        <translation>Si tanqueu la cartera durant massa temps, es pot haver de tornar a sincronitzar tota la cadena si teniu el sistema de poda habilitat.</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
     <message>
@@ -1440,8 +1637,24 @@
         <translation>Poda: la darrera sincronització de la cartera va més enllà de les dades podades. Cal que activeu -reindex (baixeu tota la cadena de blocs de nou en cas de node podat)</translation>
     </message>
     <message>
+        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
+        <translation>No es pot generar una clau d’adreça de canvi. No hi ha claus al keypool intern i no es pot generar cap clau.</translation>
+    </message>
+    <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>No es poden proporcionar connexions específiques i no es poden trobar connexions sortint al mateix temps.</translation>
+    </message>
+    <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation>Configuració per a %s únicament aplicada a  %s de la xarxa quan es troba a la secció [%s].</translation>
+    </message>
+    <message>
         <source>Error initializing wallet database environment %s!</source>
         <translation>Error inicialitzant l'entorn de la base de dades de la cartera %s!</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation>Error carregant %s: les claus privades només es poden desactivar durant la creació</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -1452,8 +1665,36 @@
         <translation>S'ha produït un error en carregar %s: la cartera requereix una versió més nova de %s</translation>
     </message>
     <message>
+        <source>Failed to rescan the wallet during initialization</source>
+        <translation>No s'ha pogut escanejar novament la cartera durant la inicialització</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>S'està important...</translation>
+    </message>
+    <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation>Permís P2P no vàlid: '%s'</translation>
+    </message>
+    <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>El directori de blocs especificat "%s" no existeix.</translation>
+    </message>
+    <message>
+        <source>Unknown address type '%s'</source>
+        <translation>Tipus d'adreça desconegut '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation>Tipus de canvi desconegut '%s'</translation>
+    </message>
+    <message>
+        <source>Upgrading txindex database</source>
+        <translation>Actualitzant txindex de la base de dades</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is too low!</source>
+        <translation>Error: l'espai del disc és insuficient.</translation>
     </message>
     <message>
         <source>Unable to generate keys</source>
@@ -1464,8 +1705,33 @@
         <translation>Cal tornar a escriure la cartera: reinicieu %s per a completar-ho</translation>
     </message>
     <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation>Error: l'espai del disc és insuficient per a %s</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>El mode de poda no és compatible amb -blockfilterindex.</translation>
+    </message>
+    <message>
         <source>Section [%s] is not recognized.</source>
         <translation>No es reconeix la secció [%s]</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>-Walletdir especificat "%s" no existeix</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>-Walletdir especificat "%s" és una ruta relativa</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>-Walletdir especificat "%s" no és un directori</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist
+</source>
+        <translation>El fitxer de configuració especificat %s no existeix</translation>
     </message>
     <message>
         <source>This is experimental software.</source>
@@ -1480,8 +1746,16 @@
         <translation>La transacció és massa gran</translation>
     </message>
     <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>No es pot crear el fitxer PID '%s': %s</translation>
+    </message>
+    <message>
         <source>Unable to generate initial keys</source>
         <translation>No s'han pogut generar les claus inicials</translation>
+    </message>
+    <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>Valor %s -blockfilterindex desconegut</translation>
     </message>
     <message>
         <source>Verifying wallet(s)...</source>
@@ -1502,6 +1776,18 @@
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
         <translation>La cartera evitarà pagar menys de la comissió de tramesa mínima</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
+        <translation>No es pot actualitzar una cartera de tipus dividida que no sigui física sense haver d'actualitzar per tal de suportar keypool pre dividida. Si us plau, utilitzeu -upgradewallet = 169900 o -upgradewallet sense cap versió especificada.</translation>
+    </message>
+    <message>
+        <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
+        <translation>L'estimació de la quota ha fallat. Fallbackfee està desactivat. Espereu uns quants blocs o activeu -fallbackfee.</translation>
+    </message>
+    <message>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation>Avís: Claus privades detectades en la cartera {%s} amb claus privades deshabilitades</translation>
     </message>
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>

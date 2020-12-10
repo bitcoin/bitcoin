@@ -3,51 +3,51 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Кликните правой кнопкой для редактирования адреса или метки</translation>
+        <translation>Клікніть правою кнопкою миші для редагування адреси чи мітки</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Создать новый адрес</translation>
+        <translation>Створити нову адресу</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;Новый</translation>
+        <translation>&amp;Нова</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Копировать текущий выделенный адрес в буфер обмена</translation>
+        <translation>Копіювати виділену адресу в буфер обміну</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;Копировать</translation>
+        <translation>&amp;Копіювати</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
-        <translation>&amp;Закрыть</translation>
+        <translation>&amp;Закрити</translation>
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Удалить текущий выбранный адрес из списка</translation>
+        <translation>Вилучити вибрану адресу з переліку</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation>Введите адрес или метку для поиска</translation>
+        <translation>Введіть адресу чи мітку для пошуку</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Экспортировать данные текущей вкладки в файл</translation>
+        <translation>Експортувати дані з поточної вкладки в файл</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Экспорт</translation>
+        <translation>&amp;Експорт</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Удалить</translation>
+        <translation>&amp;Видалити</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Выберите адрес для отправки перевода</translation>
+        <translation>Оберіть адресу для відправки монет</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
@@ -178,6 +178,10 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Кошелёк зашифрован</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Введіть нову парольну фразу для гаманця.&lt;br/&gt; Будь ласка, використовуйте парольну фразу з &lt;b&gt;десяти або більше випадкових символів&lt;/b&gt;, або &lt;b&gt; вісім або більше слів&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
@@ -815,6 +819,22 @@
         <translation>Шифрувати Гаманець</translation>
     </message>
     <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>Вимкнути приватні ключі для цього гаманця. Гаманці з вимкнутими приватними ключами не матимуть приватних ключів і не можуть мати набір HD або імпортовані приватні ключі. Це ідеально підходить лише для тільки-огляд гаманців.</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>Вимкнути приватні ключі</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>Зробіть порожній гаманець. Порожні гаманці спочатку не мають приватних ключів або сценаріїв. Пізніше можна імпортувати приватні ключі та адреси або встановити HD-файл.</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>Створити пустий гаманець</translation>
+    </message>
+    <message>
         <source>Create</source>
         <translation>Створити</translation>
     </message>
@@ -935,6 +955,10 @@
         <translation>Після натискання кнопки «OK» %1 почне завантажувати та обробляти повний ланцюжок блоків %4 (%2 Гб), починаючи з найбільш ранніх транзакцій у %3, коли було запущено %4.</translation>
     </message>
     <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>Повернення цього параметра вимагає повторне завантаження всього ланцюга блоків. Швидше спочатку завантажити повний ланцюжок і обрізати його пізніше. Вимикає деякі розширені функції.</translation>
+    </message>
+    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>Ця початкова синхронізація є дуже вимогливою, і може виявити проблеми з апаратним забезпеченням комп'ютера, які раніше не були непоміченими. Кожен раз, коли ви запускаєте %1, він буде продовжувати завантаження там, де він зупинився.</translation>
     </message>
@@ -986,7 +1010,11 @@
         <source>(of %n GB needed)</source>
         <translation><numerusform>(в той час, як необхідно %n ГБ)</numerusform><numerusform>(в той час, як необхідно %n ГБ)</numerusform><numerusform>(в той час, як необхідно %n ГБ)</numerusform><numerusform>(в той час, як необхідно %n ГБ)</numerusform></translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation><numerusform>(%n GB потрібно для усього ланцюга)</numerusform><numerusform>(%n GB потрібно для усього ланцюга)</numerusform><numerusform>(%n GB потрібно для усього ланцюга)</numerusform><numerusform>(%n GB потрібно для усього ланцюга)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -1461,6 +1489,14 @@
         <translation>Неможливо обробити платіжний запит, оскільки вимкнено підтримку BIP70.</translation>
     </message>
     <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>Через поширені недоліки безпеки в BIP70 настійно рекомендується ігнорувати будь-які інструкції продавця щодо переключення гаманців.</translation>
+    </message>
+    <message>
+        <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation>Якщо ви отримали цю помилку, ви повинні попросити продавця надати URI, сумісний з BIP21.</translation>
+    </message>
+    <message>
         <source>Invalid payment address %1</source>
         <translation>Помилка в адресі платежу %1</translation>
     </message>
@@ -1682,6 +1718,10 @@
     <message>
         <source>Error encoding URI into QR Code.</source>
         <translation>Помилка кодування URI в QR-код.</translation>
+    </message>
+    <message>
+        <source>QR code support not available.</source>
+        <translation>Підтримка QR-коду недоступна.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -2042,6 +2082,10 @@
         <translation>Необов'язкове поле для суми запиту. Залиште це поле пустим або впишіть нуль, щоб не надсилати у запиті конкретної суми.</translation>
     </message>
     <message>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp;Створити нову адресу</translation>
+    </message>
+    <message>
         <source>Clear all fields of the form.</source>
         <translation>Очистити всі поля в формі</translation>
     </message>
@@ -2363,6 +2407,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>%1 (%2 блоків)</translation>
     </message>
     <message>
+        <source> from wallet '%1'</source>
+        <translation>з гаманця '%1'</translation>
+    </message>
+    <message>
+        <source>%1 to '%2'</source>
+        <translation>%1 до '%2'</translation>
+    </message>
+    <message>
         <source>%1 to %2</source>
         <translation>%1 до %2</translation>
     </message>
@@ -2393,6 +2445,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Total Amount</source>
         <translation>Всього</translation>
+    </message>
+    <message>
+        <source>To review recipient list click "Show Details..."</source>
+        <translation>Щоб переглянути список одержувачів, натисніть "Показати деталі ..."</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3172,6 +3228,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>закрити Гаманець</translation>
     </message>
     <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Ви впевнені, що хочете закрити гаманець &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Якщо занадто довго закривати гаманець, це може призвести до необхідності повторної синхронізації всієї ланцюга, якщо ввімкнено обрізку.</translation>
     </message>
@@ -3444,6 +3504,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Невдала перевірка правильності ініціалізації. %s закривається.</translation>
     </message>
     <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation>Помилка P2P доступу: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>Невірна сума -%s=&lt;amount&gt;: '%s'</translation>
     </message>
@@ -3458,6 +3522,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation>Зазначений каталог блоків "%s" не існує.</translation>
+    </message>
+    <message>
+        <source>Unknown address type '%s'</source>
+        <translation>Невідомий тип адреси '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation>Невідомий тип решти '%s'</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>
@@ -3580,6 +3652,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Необхідно вказати порт для -whitebind: «%s»</translation>
     </message>
     <message>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>Використання скороченого ланцюжка блоків несумісне з параметром -blockfilterindex.</translation>
+    </message>
+    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Зменшення значення -maxconnections з %d до %d із-за обмежень системи.</translation>
     </message>
@@ -3635,6 +3711,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Unable to generate initial keys</source>
         <translation>Не вдається створити початкові ключі</translation>
+    </message>
+    <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>Невідоме значення -blockfilterindex %s.</translation>
     </message>
     <message>
         <source>Verifying wallet(s)...</source>

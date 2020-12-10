@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Phải chuột để sửa địa chỉ hoặc nhãn</translation>
+        <translation>Nhấn chuột phải để sửa địa chỉ hoặc nhãn</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -136,6 +136,10 @@
         <translation>Lặp lại cụm mật khẩu mới</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>Hiện cụm từ mật khẩu</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Ví mã hóa</translation>
     </message>
@@ -174,6 +178,30 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Ví đã được mã hóa</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Nhập cụm từ mật khẩu mới cho ví điện tử. Hãy sử dụng cụm mật khẩu với mười hoặc nhiều hơn các ký tự ngẫu nhiên, hoặc nhiều hơn tám từ.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Nhập cụm mật khẩu cũ và mật khẩu mới cho ví.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Xin lưu ý rằng mật mã hóa ví của bạn không thể bảo vệ hoàn toàn bitcoin của bạn khỏi đánh cắp bởi các phẩn mềm gián điệp nhiễm vào máy tính của bạn.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Ví sẽ được mã hóa</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Ví của bạn sẽ được mã hóa.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Ví của bạn đã được mã hóa.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -296,6 +324,14 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Mở &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>Tạo ví...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Tạo một ví mới</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -751,10 +787,58 @@
 </context>
 <context>
     <name>CreateWalletActivity</name>
-    </context>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Đang tạo ví %1 ...</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>Tạo ví thất bại</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Cảnh báo khi tạo ví</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
-    </context>
+    <message>
+        <source>Create Wallet</source>
+        <translation>Tạo ví</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>Tên Ví</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>Mật mã hóa ví. Ví sẽ được mật mã hóa với cụm mật khẩu của bạn.</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>Mật mã hóa ví</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>Tắt các phím cá nhân cho ví này. Các ví với phím cá nhân tắt sẽ không có các phím cá nhân và không thể có nhân HD hoặc nhập thêm phím cá nhân. Việc này tốt cho các ví chỉ dùng để xem.</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>Tắt các phím cá nhân</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>Tạo một ví trống. Ví trống không có các khóa cá nhân hay script ban đầu. Khóa cá nhân và địa chỉ có thể được nhập, hoặc một nhân HD có thể được thiết lập sau đó.</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>Tạo ví trống</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>Tạo</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -871,6 +955,10 @@
         <translation>Khi bạn click OK, %1 sẽ bắt đầu download và process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</translation>
     </message>
     <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>Đảo ngược lại thiết lập này yêu cầu download lại toàn bộ blockchain. Download toàn bộ blockchain trước và loại nó sau đó sẽ nhanh hơn. Vô hiệu hóa một số tính năng nâng cao.</translation>
+    </message>
+    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>Đồng bộ hóa ban đầu này rất đòi hỏi, và có thể phơi bày các sự cố về phần cứng với máy tính của bạn trước đó đã không được chú ý. Mỗi khi bạn chạy %1, nó sẽ tiếp tục tải về nơi nó dừng lại.</translation>
     </message>
@@ -922,7 +1010,11 @@
         <source>(of %n GB needed)</source>
         <translation><numerusform>(of %n GB cần thiết)</numerusform></translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation><numerusform>(%n GB cần cho toàn chuỗi)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -999,6 +1091,14 @@
 </context>
 <context>
     <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>Mở ví thất bại</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Mở ví cảnh báo</translation>
+    </message>
     <message>
         <source>default wallet</source>
         <translation>ví mặc định</translation>
@@ -1387,6 +1487,14 @@
     <message>
         <source>Cannot process payment request because BIP70 support was not compiled in.</source>
         <translation>Không thể tiến hành yêu cầu thanh toán bởi vì sự trợ giúp BIP70 không có biên dịch trong này.</translation>
+    </message>
+    <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>Do lỗ hổng bảo mật lan rộng của BIP70, bạn được khuyến cáo mạnh mẽ rằng bất kỳ một hướng dẫn thương gia nào để chuyển sang các ví sẽ được bỏ qua.</translation>
+    </message>
+    <message>
+        <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation>Nếu bạn nhận được lỗi này, bạn nên yêu cầu của hàng cung cấp một BIP21 tương thích URI.</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -1982,6 +2090,14 @@
     <message>
         <source>Clear</source>
         <translation>Xóa</translation>
+    </message>
+    <message>
+        <source>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</source>
+        <translation>Các địa chỉ segwit gốc (còn gọi là Bech32 hoặc BIP-173) sẽ giảm phí giao dịch của bạn sau này và bảo vệ tốt hơn trước các lỗi chính tả, nhưng ví cũ không hỗ trợ chúng. Khi không được chọn, một địa chỉ tương thích với ví cũ sẽ được tạo thay thế.</translation>
+    </message>
+    <message>
+        <source>Generate native segwit (Bech32) address</source>
+        <translation>Tạo địa chỉ segwit (Bech32) riêng</translation>
     </message>
     <message>
         <source>Requested payments history</source>
@@ -2783,6 +2899,10 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <translation>Output index</translation>
     </message>
     <message>
+        <source> (Certificate was not verified)</source>
+        <translation>(Chứng chỉ chưa được thẩm định)</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation>Merchant</translation>
     </message>
@@ -3106,6 +3226,10 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <translation>Đông ví</translation>
     </message>
     <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Bạn có chắc bạn muốn đóng ví %1 ?</translation>
+    </message>
+    <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Đóng ví thời gian dài sẽ dẫn đến phải đồng bộ hóa lại cả chuỗi nếu cắt tỉa pruning được kích hoạt</translation>
     </message>
@@ -3396,6 +3520,14 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation>Thư mục chứa các khối được chỉ ra "%s"  không tồn tại</translation>
+    </message>
+    <message>
+        <source>Unknown address type '%s'</source>
+        <translation>Không biết địa chỉ kiểu '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation>Không biết thay đổi kiểu '%s'</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>

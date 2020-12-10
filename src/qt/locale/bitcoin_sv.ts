@@ -71,7 +71,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Detta är dina Bitcoinadresser för att ta emot betalningar. Använd knappen 'Skapa ny mottagaradress' på fliken ta emot för att skapa nya adresser .</translation>
+        <translation>Detta är dina Bitcoinadresser för att ta emot betalningar. Använd knappen 'Skapa ny mottagaradress' på fliken ta emot för att skapa nya adresser.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -796,7 +796,11 @@ Försök igen.</translation>
         <source>Create wallet failed</source>
         <translation>Plånboken kunde inte skapas</translation>
     </message>
-    </context>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Skapa plånboksvarning</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
     <message>
@@ -814,6 +818,22 @@ Försök igen.</translation>
     <message>
         <source>Encrypt Wallet</source>
         <translation>Kryptera plånbok</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>Stäng av privata nycklar för denna plånbok. Plånböcker med privata nycklar avstängda kommer inte innehålla några privata nycklar alls, och kan inte innehålla vare sig en HD-seed eller importerade privata nycklar. Detta är idealt för plånböcker som endast ska granskas.</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>Stäng av privata nycklar</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>Skapa en tom plånbok. Tomma plånböcker har från början inga privata nycklar eller skript. Privata nycklar och adresser kan importeras, eller en HD-seed kan väljas, vid ett senare tillfälle.</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>Skapa tom plånbok</translation>
     </message>
     <message>
         <source>Create</source>
@@ -936,6 +956,10 @@ Försök igen.</translation>
         <translation>När du trycker OK kommer %1 att börja ladda ner och bearbeta den fullständiga %4-blockkedjan (%2 GB), med början vid de första transaktionerna %3 när %4 först lanserades.</translation>
     </message>
     <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>Att återställa detta alternativ påbörjar en omstart av nedladdningen av hela blockkedjan. Det går snabbare att ladda ner hela kedjan först, och gallra den senare. Detta alternativ stänger av vissa avancerade funktioner.</translation>
+    </message>
+    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>Denna första synkronisering är väldigt krävande, och kan påvisa hårdvaruproblem hos din dator som tidigare inte visat sig. Varje gång du kör %1, kommer nerladdningen att fortsätta där den avslutades.</translation>
     </message>
@@ -954,6 +978,10 @@ Försök igen.</translation>
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <source>Discard blocks after verification, except most recent %1 GB (prune)</source>
+        <translation>Släng block efter verifiering, förutom de senaste %1 GB (gallra).</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -1071,6 +1099,10 @@ Försök igen.</translation>
     <message>
         <source>Open wallet failed</source>
         <translation>Det gick inte att öppna plånboken</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Öppna plånboksvarning.</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -1392,7 +1424,7 @@ Försök igen.</translation>
     </message>
     <message>
         <source>Mined balance that has not yet matured</source>
-        <translation>Genererat saldo som ännu inte har mognat</translation>
+        <translation>Grävt saldo som ännu inte har mognat</translation>
     </message>
     <message>
         <source>Balances</source>
@@ -1424,7 +1456,7 @@ Försök igen.</translation>
     </message>
     <message>
         <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation>Genererat saldo i granska-bara adresser som ännu inte har mognat</translation>
+        <translation>Grävt saldo i granska-bara adresser som ännu inte har mognat</translation>
     </message>
     <message>
         <source>Current total balance in watch-only addresses</source>
@@ -1460,6 +1492,14 @@ Försök igen.</translation>
     <message>
         <source>Cannot process payment request because BIP70 support was not compiled in.</source>
         <translation>Det går inte att behandla betalningsbegäran eftersom stöd för BIP70 inte var aktiverat vid kompilering.</translation>
+    </message>
+    <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>Som följd av utbredda säkerhetshål i BIP70, rekommenderas det starkt att en säljares instruktion för dig att byta plånbok ignoreras.</translation>
+    </message>
+    <message>
+        <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation>Om du får detta fel borde du be säljaren förse dig med en BIP21-kompatibel URI.</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -1681,6 +1721,10 @@ Försök igen.</translation>
     <message>
         <source>Error encoding URI into QR Code.</source>
         <translation>Fel vid skapande av QR-kod från URI.</translation>
+    </message>
+    <message>
+        <source>QR code support not available.</source>
+        <translation>Stöd för QR-kod ej tillgängligt.</translation>
     </message>
     <message>
         <source>Save QR Code</source>
@@ -2370,6 +2414,10 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
         <translation>från plånbok: '%1'</translation>
     </message>
     <message>
+        <source>%1 to '%2'</source>
+        <translation>%1 till '%2'</translation>
+    </message>
+    <message>
         <source>%1 to %2</source>
         <translation>%1 till %2</translation>
     </message>
@@ -2400,6 +2448,10 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
     <message>
         <source>Total Amount</source>
         <translation>Totalt belopp</translation>
+    </message>
+    <message>
+        <source>To review recipient list click "Show Details..."</source>
+        <translation>För att gå igenom mottagarlistan, tryck "Visa Detaljer..."</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2852,6 +2904,10 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
         <translation>Utmatningsindex</translation>
     </message>
     <message>
+        <source> (Certificate was not verified)</source>
+        <translation>(Certifikatet verifierades inte)</translation>
+    </message>
+    <message>
         <source>Merchant</source>
         <translation>Handlare</translation>
     </message>
@@ -2963,7 +3019,7 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
     </message>
     <message>
         <source>Mined</source>
-        <translation>Genererade</translation>
+        <translation>Grävda</translation>
     </message>
     <message>
         <source>watch-only</source>
@@ -3046,7 +3102,7 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
     </message>
     <message>
         <source>Mined</source>
-        <translation>Genererade</translation>
+        <translation>Grävda</translation>
     </message>
     <message>
         <source>Other</source>
@@ -3175,8 +3231,12 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
         <translation>Stäng plånboken</translation>
     </message>
     <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>Är du säker att du vill stänga plånboken &lt;i&gt;%1&lt;/i&gt;?</translation>
+    </message>
+    <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
-        <translation>Om plånboken är stängd under för lång tid kan hela kedjan behöva synkroniseras om, om gallring är aktiverad.</translation>
+        <translation>Om plånboken är stängd under för lång tid och gallring är aktiverad kan hela kedjan behöva synkroniseras på nytt.</translation>
     </message>
 </context>
 <context>
@@ -3447,6 +3507,10 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
         <translation>Initieringschecken fallerade. %s stängs av.</translation>
     </message>
     <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation>Ogiltigt P2P-tillstånd: '%s'</translation>
+    </message>
+    <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
         <translation>Ogiltigt belopp för -%s=&lt;amount&gt;:'%s'</translation>
     </message>
@@ -3461,6 +3525,14 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation>Den specificerade mappen för block "%s" existerar inte.</translation>
+    </message>
+    <message>
+        <source>Unknown address type '%s'</source>
+        <translation>Okänd adress-typ '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation>Okänd växel-typ '%s'</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>
@@ -3643,6 +3715,10 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
     <message>
         <source>Unable to generate initial keys</source>
         <translation>Det gick inte att skapa ursprungliga nycklar</translation>
+    </message>
+    <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>Okänt värde för -blockfilterindex '%s'.</translation>
     </message>
     <message>
         <source>Verifying wallet(s)...</source>

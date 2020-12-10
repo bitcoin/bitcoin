@@ -70,6 +70,10 @@
         <translation>ที่อยู่ Bitcoin ของคุณสำหรับการส่งการชำระเงิน โปรดตรวจสอบจำนวนเงินและที่อยู่รับก่อนที่จะส่งเหรียญ</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>นี่คือที่อยู่สำหรับการรับ Bitcoin ของคุณ กดปุ่ม ‘สร้างที่อยู่การรับใหม่’ ในแถบการรับ เพื่อสร้างที่อยู่การรับใหม่</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>คัดลอกที่อยู่</translation>
     </message>

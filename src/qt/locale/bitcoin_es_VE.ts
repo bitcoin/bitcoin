@@ -70,6 +70,10 @@
         <translation>Estas son sus direcciones Bitcoin para enviar pagos. Compruebe siempre la cantidad y la dirección de recibo antes de transferir monedas.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>Copiar dirección</translation>
     </message>
@@ -132,6 +136,10 @@
         <translation>Repita la nueva contraseña</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>Mostrar la frase de contraseña</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Cifrar monedero</translation>
     </message>
@@ -170,6 +178,14 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Monedero cifrado</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Billetera a ser cifrada</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Su billetera está ahora cifrada</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -240,6 +256,18 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Abrir URI...</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>Crear Billetera...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Crear una nueva billetera</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <translation>Actividad de red deshabilitada.</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -364,6 +392,10 @@
     <message>
         <source>Close wallet</source>
         <translation>Cerrar monedero</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>billetera por defecto</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -631,6 +663,10 @@
     </context>
 <context>
     <name>OpenWalletActivity</name>
+    <message>
+        <source>default wallet</source>
+        <translation>billetera por defecto</translation>
+    </message>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -1391,7 +1427,11 @@
         <source>Send Coins</source>
         <translation>Enviar monedas</translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>billetera por defecto</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>
@@ -1402,7 +1442,15 @@
         <source>Export the data in the current tab to a file</source>
         <translation>Exportar a un archivo los datos de esta pestaña</translation>
     </message>
-    </context>
+    <message>
+        <source>Backup Wallet</source>
+        <translation>Billetera de Respaldo</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Cancelar</translation>
+    </message>
+</context>
 <context>
     <name>bitcoin-core</name>
     <message>

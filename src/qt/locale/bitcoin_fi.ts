@@ -795,7 +795,11 @@
         <source>Create wallet failed</source>
         <translation>Lompakon luonti epäonnistui</translation>
     </message>
-    </context>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Luo lompakkovaroitus</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
     <message>
@@ -813,6 +817,10 @@
     <message>
         <source>Encrypt Wallet</source>
         <translation>Salaa lompakko</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>Poista tämän lompakon yksityiset avaimet käytöstä. Lompakot, joissa yksityiset avaimet on poistettu käytöstä, eivät sisällä yksityisiä avaimia, eikä niissä voi olla HD-juurisanoja tai tuotuja yksityisiä avaimia. Tämä on ihanteellinen katselulompakkoihin.</translation>
     </message>
     <message>
         <source>Disable Private Keys</source>
@@ -971,6 +979,10 @@
         <translation>Bitcoin</translation>
     </message>
     <message>
+        <source>Discard blocks after verification, except most recent %1 GB (prune)</source>
+        <translation>Hävitä lohkot varmistuksen jälkeen, poislukien viimeiset %1 GB (karsinta)</translation>
+    </message>
+    <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
         <translation>Ainakin %1 GB tietoa varastoidaan tähän hakemistoon ja tarve kasvaa ajan myötä.</translation>
     </message>
@@ -1002,7 +1014,11 @@
         <source>(of %n GB needed)</source>
         <translation><numerusform>(tarvitaan %n GB)</numerusform><numerusform>(tarvitaan %n GB)</numerusform></translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation><numerusform>(tarvitaan %n GB koko ketjua varten)</numerusform><numerusform>(tarvitaan %n GB koko ketjua varten)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -1082,6 +1098,10 @@
     <message>
         <source>Open wallet failed</source>
         <translation>Lompakon avaaminen epäonnistui</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Avoimen lompakon varoitus</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -1419,7 +1439,7 @@
     </message>
     <message>
         <source>Your current balance in watch-only addresses</source>
-        <translation>Nykyinen tase seurantaosoitetteissa</translation>
+        <translation>Nykyinen tase seurattavassa osoitetteissa</translation>
     </message>
     <message>
         <source>Spendable:</source>
@@ -1431,15 +1451,15 @@
     </message>
     <message>
         <source>Unconfirmed transactions to watch-only addresses</source>
-        <translation>Vahvistamattomat rahansiirrot vain katseltaviin osoitteisiin</translation>
+        <translation>Vahvistamattomat rahansiirrot vain seurattaviin osoitteisiin</translation>
     </message>
     <message>
         <source>Mined balance in watch-only addresses that has not yet matured</source>
-        <translation>Louhittu, ei vielä kypsynyt saldo vain katseltavissa osoitteissa</translation>
+        <translation>Louhittu, ei vielä kypsynyt saldo vain seurattavissa osoitteissa</translation>
     </message>
     <message>
         <source>Current total balance in watch-only addresses</source>
-        <translation>Nykyinen tase seurantaosoitetteissa</translation>
+        <translation>Nykyinen tase seurattavassa osoitetteissa</translation>
     </message>
 </context>
 <context>
@@ -1471,6 +1491,14 @@
     <message>
         <source>Cannot process payment request because BIP70 support was not compiled in.</source>
         <translation>Maksupyyntöä ei voida käsitellä, sillä BIP70-tukea ei ole käännetty ohjelmaan.</translation>
+    </message>
+    <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>BIP70:n laajalle levinneiden tietoturvavirheiden vuoksi on erittäin suositeltavaa, että kaikki kauppiaan ohjeet lompakkojen vaihtamiseksi jätetään huomioimatta.</translation>
+    </message>
+    <message>
+        <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation>Tämän virheen saadessasi tulee sinun pyytää kauppiaalta BIP21 -yhteensopivaa URI-osoitetta.</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -2056,6 +2084,10 @@
         <translation>Valinnainen pyyntömäärä. Jätä tyhjäksi tai nollaksi jos et pyydä tiettyä määrää.</translation>
     </message>
     <message>
+        <source>&amp;Create new receiving address</source>
+        <translation> &amp;Luo uusi vastaanottoosoite</translation>
+    </message>
+    <message>
         <source>Clear all fields of the form.</source>
         <translation>Tyhjennä lomakkeen kaikki kentät.</translation>
     </message>
@@ -2405,8 +2437,16 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>Siirtokulu</translation>
     </message>
     <message>
+        <source>Not signalling Replace-By-Fee, BIP-125.</source>
+        <translation>Ei signalointia Korvattavissa-korkeammalla-kululla, BIP-125.</translation>
+    </message>
+    <message>
         <source>Total Amount</source>
         <translation>Yhteensä</translation>
+    </message>
+    <message>
+        <source>To review recipient list click "Show Details..."</source>
+        <translation>Valitse "Näytä yksityiskohdat" nähdäksesi listan vastaanottajsta.</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2796,7 +2836,7 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     </message>
     <message>
         <source>watch-only</source>
-        <translation>vain katseltava</translation>
+        <translation>vain seurattava</translation>
     </message>
     <message>
         <source>label</source>
@@ -2853,6 +2893,14 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>Transaction virtual size</source>
         <translation>Tapahtuman näennäiskoko</translation>
+    </message>
+    <message>
+        <source>Output index</source>
+        <translation>Ulostulon indeksi</translation>
+    </message>
+    <message>
+        <source> (Certificate was not verified)</source>
+        <translation> (Varmennetta ei vahvistettu)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -2970,7 +3018,7 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     </message>
     <message>
         <source>watch-only</source>
-        <translation>vain katseltava</translation>
+        <translation>vain seurattava</translation>
     </message>
     <message>
         <source>(n/a)</source>
@@ -2994,7 +3042,7 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     </message>
     <message>
         <source>Whether or not a watch-only address is involved in this transaction.</source>
-        <translation>Onko rahansiirrossa mukana ainoastaan katseltava osoite vai ei.</translation>
+        <translation>Onko rahansiirrossa mukana ainoastaan seurattava osoite vai ei.</translation>
     </message>
     <message>
         <source>User-defined intent/purpose of the transaction.</source>
@@ -3117,7 +3165,7 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     </message>
     <message>
         <source>Watch-only</source>
-        <translation>Vain katseltava</translation>
+        <translation>Vain seurattava</translation>
     </message>
     <message>
         <source>Date</source>
@@ -3318,6 +3366,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>Ei voida lukita data-hakemistoa %s. %s on luultavasti jo käynnissä.</translation>
     </message>
     <message>
+        <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
+        <translation>Ei voida tarjota tiettyjä yhteyksiä, ja antaa addrmanin löytää lähteviä yhteyksiä samanaikaisesti.</translation>
+    </message>
+    <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>Virhe luettaessa %s! Avaimet luetttiin oikein, mutta rahansiirtotiedot tai osoitekirjan sisältö saattavat olla puutteellisia tai vääriä.</translation>
     </message>
@@ -3374,6 +3426,14 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>-%s -osoitteen '%s' selvittäminen epäonnistui</translation>
     </message>
     <message>
+        <source>Change index out of range</source>
+        <translation>Vaihda hakemisto alueen ulkopuolelle</translation>
+    </message>
+    <message>
+        <source>Config setting for %s only applied on %s network when in [%s] section.</source>
+        <translation>Konfigurointiasetuksen %s käyttöön vain %s -verkossa, kun osassa [%s].</translation>
+    </message>
+    <message>
         <source>Copyright (C) %i-%i</source>
         <translation>Tekijänoikeus (C) %i-%i</translation>
     </message>
@@ -3396,6 +3456,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>Error loading %s</source>
         <translation>Virhe ladattaessa %s</translation>
+    </message>
+    <message>
+        <source>Error loading %s: Private keys can only be disabled during creation</source>
+        <translation>Virhe %s:n lataamisessa: Yksityiset avaimet voidaan poistaa käytöstä vain luomisen aikana</translation>
     </message>
     <message>
         <source>Error loading %s: Wallet corrupted</source>
@@ -3448,6 +3512,14 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation>Määrättyä lohkohakemistoa "%s" ei ole olemassa.</translation>
+    </message>
+    <message>
+        <source>Unknown address type '%s'</source>
+        <translation>Tuntematon osoitetyyppi '%s'</translation>
+    </message>
+    <message>
+        <source>Unknown change type '%s'</source>
+        <translation>Tuntematon vaihtorahatyyppi '%s'</translation>
     </message>
     <message>
         <source>Upgrading txindex database</source>
@@ -3524,6 +3596,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Virhe: Saapuvien yhteyksien kuuntelu epäonnistui (kuuntelu palautti virheen %s)</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
+        <translation>Virheellinen summa -maxtxfee =: '%s' (täytyy olla vähintään %s minrelay-kulu, jotta estetään jumiutuneet siirtotapahtumat)</translation>
     </message>
     <message>
         <source>The transaction amount is too small to send after the fee has been deducted</source>
@@ -3620,6 +3696,14 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>PID-tiedostoa '%s' ei voitu luoda: %s</translation>
     </message>
     <message>
+        <source>Unable to generate initial keys</source>
+        <translation>Alkuavaimia ei voi luoda</translation>
+    </message>
+    <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>Tuntematon -lohkosuodatusindeksiarvo %s.</translation>
+    </message>
+    <message>
         <source>Verifying wallet(s)...</source>
         <translation>Varmistetaan lompakko(ja)...</translation>
     </message>
@@ -3638,6 +3722,10 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     <message>
         <source>This is the transaction fee you may pay when fee estimates are not available.</source>
         <translation>Tämän siirtomaksun maksat, kun siirtomaksun arviointi ei ole käytettävissä.</translation>
+    </message>
+    <message>
+        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
+        <translation>Tämä tuote sisältää OpenSSL Projektin kehittämän ohjelmiston käytettäväksi OpenSSL Toolkit %s:ssä ja Eric Youngin kirjoittaman salausohjelmiston ja Thomas Bernardin kirjoittaman UPnP-ohjelmiston.</translation>
     </message>
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
@@ -3692,8 +3780,16 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
         <translation>Lompakon saldo ei riitä</translation>
     </message>
     <message>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
+        <translation>Muuta kuin HD-jaettua lompakkoa ei voi päivittää ilman päivitystä tukemaan esijaettua avainvarastoa. Käytä -upgradewallet = 169900 tai -upgradewallet ilman määritettyä versiota.</translation>
+    </message>
+    <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
         <translation>Siirtomaksun arviointi epäonnistui. Odota muutama lohko tai käytä -fallbackfee -valintaa..</translation>
+    </message>
+    <message>
+        <source>Warning: Private keys detected in wallet {%s} with disabled private keys</source>
+        <translation>Varoitus: lompakosta {%s} tunnistetut yksityiset avaimet, on poistettu käytöstä</translation>
     </message>
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>

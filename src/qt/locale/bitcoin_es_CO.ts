@@ -711,6 +711,10 @@
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>Crea una billetera en blanco. Las billeteras en blanco inicialmente no tienen llaves privadas o texto. Las llaves privadas y las direcciones pueden ser importadas, o se puede establecer una semilla HD, más tarde.</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -820,6 +824,10 @@
         <translation>Al hacer clic OK, %1 iniciará el proceso de descarga y procesará el blockchain completo de %4 (%2 GB), iniciando desde el la transacción más antigua %3 cuando %4 se ejecutó inicialmente.</translation>
     </message>
     <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>Revertir esta configuración requiere descargar la blockchain completa nuevamente. Es más rápido descargar la cadena completa  y podarla después. Desactiva algunas funciones avanzadas.</translation>
+    </message>
+    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>El primer proceso de sincronización consume muchos recursos, y es posible que puedan ocurrir problemas de hardware que anteriormente no hayas notado. Cada vez que ejecutes %1 automáticamente se reiniciará el proceso de sincronización desde el punto que lo dejaste anteriormente.</translation>
     </message>
@@ -920,7 +928,7 @@
     </message>
     <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
-        <translation>Desconocido. Sincronizando cabecesar (%1, %2%)...</translation>
+        <translation>Desconocido. Sincronizando cabeceras (%1, %2%)...</translation>
     </message>
 </context>
 <context>
@@ -1025,7 +1033,7 @@
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation>(0 = auto, &lt;0 = deja muchos núcleos gratis)</translation>
+        <translation>(0 = auto, &lt;0 = deja esta cantidad de núcleos libres)</translation>
     </message>
     <message>
         <source>W&amp;allet</source>

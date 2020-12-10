@@ -30,6 +30,10 @@
         <translation>سلیکٹڈ پتے کو مٹائیں</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>پتہ یا لیبل تلاشی کے لئے درج کریں</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>موجودہ ڈیٹا کو فائیل میں محفوظ کریں</translation>
     </message>
@@ -60,6 +64,10 @@
     <message>
         <source>Receiving addresses</source>
         <translation>پتے موصول ہورہے ہیں</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
+        <translation>یہ آپ کے ادائیگی بھیجنے کے لئے بٹ کوائن ایڈریس ہیں.سکے بھیجنے سے پہلے ہمیشہ رقم اور وصول کنندہ پتہ چیک کریں۔</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -100,9 +108,17 @@
         <source>Address</source>
         <translation>پتہ</translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(کوئی لیبل نہیں)</translation>
+    </message>
+</context>
 <context>
     <name>AskPassphraseDialog</name>
+    <message>
+        <source>Passphrase Dialog</source>
+        <translation>پاسفریج ڈائیلاگ</translation>
+    </message>
     <message>
         <source>Enter passphrase</source>
         <translation>پاس فریز داخل کریں</translation>
@@ -115,12 +131,44 @@
         <source>Repeat new passphrase</source>
         <translation>نیا پاس فریز دہرائیں</translation>
     </message>
+    <message>
+        <source>Show passphrase</source>
+        <translation>پاسفریز دکھائیں</translation>
+    </message>
+    <message>
+        <source>Encrypt wallet</source>
+        <translation>بٹوے کو خفیہ کریں</translation>
+    </message>
+    <message>
+        <source>Unlock wallet</source>
+        <translation>بستہ کھولیں</translation>
+    </message>
+    <message>
+        <source>Decrypt wallet</source>
+        <translation>ڈکرپٹ والیٹ</translation>
+    </message>
+    <message>
+        <source>Change passphrase</source>
+        <translation>پاسفریز تبدیل کریں</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>پرس کی خفیہ کاری کی تصدیق کریں</translation>
+    </message>
     </context>
 <context>
     <name>BanTableModel</name>
     </context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>&amp;About %1</source>
+        <translation>&amp;معلومات%1</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>%1 کے بارے میں معلومات دکھایں</translation>
+    </message>
     <message>
         <source>Error</source>
         <translation>نقص</translation>
@@ -139,6 +187,10 @@
     <message>
         <source>Date</source>
         <translation>تاریخ</translation>
+    </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(کوئی لیبل نہیں)</translation>
     </message>
     </context>
 <context>
@@ -241,6 +293,10 @@
         <source>Label</source>
         <translation>لیبل</translation>
     </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(کوئی لیبل نہیں)</translation>
+    </message>
     </context>
 <context>
     <name>SendCoinsDialog</name>
@@ -256,7 +312,11 @@
         <source>Balance:</source>
         <translation>بیلنس:</translation>
     </message>
-    </context>
+    <message>
+        <source>(no label)</source>
+        <translation>(کوئی لیبل نہیں)</translation>
+    </message>
+</context>
 <context>
     <name>SendCoinsEntry</name>
     </context>
@@ -296,9 +356,17 @@
         <source>Label</source>
         <translation>لیبل</translation>
     </message>
+    <message>
+        <source>(no label)</source>
+        <translation>(کوئی لیبل نہیں)</translation>
+    </message>
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Other</source>
+        <translation>Other</translation>
+    </message>
     <message>
         <source>Comma separated file (*.csv)</source>
         <translation>کاما سے جدا فائلیں (*.csv)</translation>

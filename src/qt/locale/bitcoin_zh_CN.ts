@@ -1128,7 +1128,7 @@
     </message>
     <message>
         <source>&amp;Start %1 on system login</source>
-        <translation>系统登入时启动 %1 (%S)</translation>
+        <translation>系统登入时启动 %1 (&amp;S)</translation>
     </message>
     <message>
         <source>Size of &amp;database cache</source>

@@ -924,7 +924,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
-        <translation>Desconocido. Sincronizando cabecesar (%1, %2%)...</translation>
+        <translation>Desconocido. Sincronizando cabeceras (%1, %2%)...</translation>
     </message>
 </context>
 <context>
@@ -1029,7 +1029,7 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     </message>
     <message>
         <source>(0 = auto, &lt;0 = leave that many cores free)</source>
-        <translation>(0 = auto, &lt;0 = deja muchos núcleos gratis)</translation>
+        <translation>(0 = auto, &lt;0 = deja esta cantidad de núcleos libres)</translation>
     </message>
     <message>
         <source>W&amp;allet</source>

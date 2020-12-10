@@ -70,6 +70,10 @@
         <translation>Ito ang iyong mga Bitcoin address para sa pagpapadala ng bayad. Laging suriin ang halaga at ang address na tatanggap bago magpadala ng coins.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>Ito ang iyong mga Bitcoin address para sa pagtanggap ng mga pagbabayad. Gamitin ang pindutang 'Lumikha ng bagong address sa pagtanggap' sa tab na tumanggap upang lumikha ng mga bagong address.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>Kopyahin ang address</translation>
     </message>
@@ -132,6 +136,10 @@
         <translation>Ulitin ang bagong passphrase</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>Ipakita ang Passphrase</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>I-encrypt ang walet.</translation>
     </message>
@@ -170,6 +178,30 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Naka-encrypt ang walet.</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Ipasok ang bagong passphrase para sa wallet. (1)Mangyaring gumamit ng isang passphrase na(2) sampu o higit pang mga random na characte‭r(2), o (3)walo o higit pang mga salita(3).</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Ipasok ang lumang passphrase at bagong passphrase para sa pitaka.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Tandaan na ang pag-encrypt ng iyong pitaka ay hindi maaaring ganap na maprotektahan ang iyong mga bitcoin mula sa pagnanakaw ng malware na nahahawa sa iyong computer.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Ang naka-encrypt na wallet</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Malapit na ma-encrypt ang iyong pitaka.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Ang iyong wallet ay naka-encrypt na ngayon.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -292,6 +324,14 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Buksan ang URI...</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>Gumawa ng Pitaka</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Gumawa ng Bagong Pitaka</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -735,10 +775,38 @@
 </context>
 <context>
     <name>CreateWalletActivity</name>
-    </context>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>Nabigo ang Pag likha ng Pitaka</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Gumawa ng Babala ng Pitaka</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
-    </context>
+    <message>
+        <source>Create Wallet</source>
+        <translation>Gumawa ng Pitaka</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>Pangalan ng Pitaka</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>Huwag paganahin ang Privbadong susi</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>Gumawa ng Blankong Pitaka</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>Gumawa</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -979,6 +1047,14 @@
 </context>
 <context>
     <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>Nabigo ang bukas na pitaka</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Buksan ang babala sa pitaka</translation>
+    </message>
     <message>
         <source>default wallet</source>
         <translation>walet na default</translation>
@@ -1586,6 +1662,10 @@
         <translation>Kamalian sa pag-e-encode ng URI sa QR Code.</translation>
     </message>
     <message>
+        <source>QR code support not available.</source>
+        <translation>Hindi magagamit ang suporta ng QR code.</translation>
+    </message>
+    <message>
         <source>Save QR Code</source>
         <translation>I-save ang QR Code</translation>
     </message>
@@ -1944,6 +2024,10 @@
         <translation>Opsyonal na halaga upang humiling. Iwanan itong walang laman o zero upang hindi humiling ng tiyak na halaga.</translation>
     </message>
     <message>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp; Lumikha ng bagong address sa pagtanggap</translation>
+    </message>
+    <message>
         <source>Clear all fields of the form.</source>
         <translation>Burahin ang laman ng lahat ng patlang ng form.</translation>
     </message>
@@ -2295,6 +2379,10 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
     <message>
         <source>Total Amount</source>
         <translation>Kabuuang Halaga</translation>
+    </message>
+    <message>
+        <source>To review recipient list click "Show Details..."</source>
+        <translation>Upang suriin ang listahan ng tatanggap i-click ang "Ipakita ang Mga Detalye ..."</translation>
     </message>
     <message>
         <source>Confirm send coins</source>

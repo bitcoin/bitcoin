@@ -136,6 +136,10 @@
         <translation>重複新密碼</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>顯示密碼</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>加密錢包</translation>
     </message>
@@ -176,8 +180,28 @@
         <translation>錢包已加密</translation>
     </message>
     <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>輸入錢包的新密碼短語。&lt;br/&gt;請使用&lt;b&gt;個或10個以上隨機字符&lt;/b&gt;或&lt;b&gt;個8個以上單詞3的密碼。</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>輸入錢包的密碼短語和新密碼短語。</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation>請記得, 即使將錢包加密, 也不能完全防止因惡意軟體入侵, 而導致位元幣被偷.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>加密錢包</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>你的錢包將被加密</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>你的錢包現已被加密</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -300,6 +324,14 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>開啓 &amp;URI...</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>新增錢包...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>新增一個新錢包</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -755,10 +787,54 @@
 </context>
 <context>
     <name>CreateWalletActivity</name>
-    </context>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>創建錢包失敗&lt;br&gt;</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>產生錢包警告:</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
-    </context>
+    <message>
+        <source>Create Wallet</source>
+        <translation>新增錢包</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>錢包名稱</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>加密錢包。 錢包將使用您選擇的密碼進行加密。</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>加密錢包</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>禁用此錢包的私鑰。禁用了私鑰的錢包將沒有私鑰，並且不能有HD種子或匯入的私鑰。這是只能看的錢包的理想選擇。</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>禁用私鑰</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>製作一個空白的錢包。空白錢包最初沒有私鑰或腳本。以後可以導入私鑰和地址，或者可以設定HD種子。</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>製作空白錢包</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>產生</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -873,6 +949,10 @@
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
         <translation>在你按下「好」之後，%1 就會開始下載並處理整個 %4 區塊鏈(大小是  %2GB)，也就是從 %3 年 %4 剛剛起步時的最初交易開始。</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>還原此設置需要重新下載整個區塊鏈。首先下載完整的鏈，然後再修剪它是更快的。禁用某些高級功能。</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
@@ -1003,6 +1083,14 @@
 </context>
 <context>
     <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>打開錢包失敗</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>打開錢包警告</translation>
+    </message>
     <message>
         <source>default wallet</source>
         <translation>默认钱包</translation>
@@ -1391,6 +1479,14 @@
     <message>
         <source>Cannot process payment request because BIP70 support was not compiled in.</source>
         <translation>无法处理支付请求，因为编译时没有启用BIP70支持。</translation>
+    </message>
+    <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>由於BIP70中存在廣泛的安全漏洞，因此強烈建議您忽略任何商戶更換錢包的指示都將被忽略。</translation>
+    </message>
+    <message>
+        <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation>如果您收到此錯誤，則應請求商家提供與BIP21相容的URI。</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -2793,6 +2889,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Output index</source>
         <translation>輸出索引</translation>
+    </message>
+    <message>
+        <source> (Certificate was not verified)</source>
+        <translation>（證書未驗證）</translation>
     </message>
     <message>
         <source>Merchant</source>
