@@ -6,6 +6,8 @@
 #include <policy/fees.h>
 
 #include <clientversion.h>
+#include <fs.h>
+#include <logging.h>
 #include <streams.h>
 #include <txmempool.h>
 #include <util/system.h>
@@ -870,7 +872,7 @@ void CBlockPolicyEstimator::Flush() {
     fs::path est_filepath = GetDataDir() / FEE_ESTIMATES_FILENAME;
     CAutoFile est_file(fsbridge::fopen(est_filepath, "wb"), SER_DISK, CLIENT_VERSION);
     if (est_file.IsNull() || !Write(est_file)) {
-        LogPrintf("Failed to write fee estimates to %s\n", est_filepath.string());
+        LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", est_filepath.string());
     }
 }
 
@@ -906,8 +908,9 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
         int nVersionRequired, nVersionThatWrote;
         unsigned int nFileBestSeenHeight;
         filein >> nVersionRequired >> nVersionThatWrote;
-        if (nVersionRequired > CLIENT_VERSION)
-            return error("CBlockPolicyEstimator::Read(): up-version (%d) fee estimate file", nVersionRequired);
+        if (nVersionRequired > CLIENT_VERSION) {
+            throw std::runtime_error(strprintf("up-version (%d) fee estimate file", nVersionRequired));
+        }
 
         // Read fee estimates file into temporary variables so existing data
         // structures aren't corrupted if there is an exception.
@@ -924,8 +927,9 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
             std::vector<double> fileBuckets;
             filein >> fileBuckets;
             size_t numBuckets = fileBuckets.size();
-            if (numBuckets <= 1 || numBuckets > 1000)
+            if (numBuckets <= 1 || numBuckets > 1000) {
                 throw std::runtime_error("Corrupt estimates file. Must have between 2 and 1000 feerate buckets");
+            }
 
             auto fileFeeStats{std::make_unique<TxConfirmStats>(buckets, bucketMap, MED_BLOCK_PERIODS, MED_DECAY, MED_SCALE)};
             auto fileShortStats{std::make_unique<TxConfirmStats>(buckets, bucketMap, SHORT_BLOCK_PERIODS, SHORT_DECAY, SHORT_SCALE)};
