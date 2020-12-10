@@ -47,18 +47,18 @@ servers](#speeding-up-builds-with-substitute-servers) to speed up your build if
 that fits your security model (say, if you're just testing that this works).
 This is skippable if you're using the [Dockerfile][fanquake/guix-docker].
 
-If you prefer not to use any substitutes, make sure to set
-`ADDITIONAL_GUIX_ENVIRONMENT_FLAGS` like the following snippet. The first build
-will take a while, but the resulting packages will be cached for future builds.
+If you prefer not to use any substitutes, make sure to supply `--no-substitutes`
+like in the following snippet. The first build will take a while, but the
+resulting packages will be cached for future builds.
 
 ```sh
-export ADDITIONAL_GUIX_ENVIRONMENT_FLAGS='--no-substitutes'
+export ADDITIONAL_GUIX_COMMON_FLAGS='--no-substitutes'
 ```
 
 Likewise, to perform a bootstrapped build (takes even longer):
 
 ```sh
-export ADDITIONAL_GUIX_ENVIRONMENT_FLAGS='--bootstrap --no-substitutes'
+export ADDITIONAL_GUIX_COMMON_FLAGS='--no-substitutes' ADDITIONAL_GUIX_ENVIRONMENT_FLAGS='--bootstrap'
 ```
 
 ### Using a version of Guix with `guix time-machine` capabilities
@@ -154,12 +154,21 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
   servers section](#speeding-up-builds-with-substitute-servers) for more
   details).
 
-* _**ADDITIONAL_GUIX_ENVIRONMENT_FLAGS**_
+* _**ADDITIONAL_GUIX_COMMON_FLAGS**_
 
-  Additional flags to be passed to `guix environment`. For a fully-bootstrapped
+  Additional flags to be passed to all `guix` commands. For a fully-bootstrapped
   build, set this to `--bootstrap --no-substitutes` (refer to the [security
   model section](#choosing-your-security-model) for more details). Note that a
   fully-bootstrapped build will take quite a long time on the first run.
+
+* _**ADDITIONAL_GUIX_TIMEMACHINE_FLAGS**_
+
+  Additional flags to be passed to `guix time-machine`.
+
+* _**ADDITIONAL_GUIX_ENVIRONMENT_FLAGS**_
+
+  Additional flags to be passed to the invocation of `guix environment` inside
+  `guix time-machine`.
 
 ## Tips and Tricks
 

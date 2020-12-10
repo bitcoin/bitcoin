@@ -2,6 +2,30 @@
 export LC_ALL=C
 set -e -o pipefail
 
+# GUIX_BUILD_OPTIONS is an environment variable recognized by guix commands that
+# can perform builds. This seems like what we want instead of
+# ADDITIONAL_GUIX_COMMON_FLAGS, but the value of GUIX_BUILD_OPTIONS is actually
+# _appended_ to normal command-line options. Meaning that they will take
+# precedence over the command-specific ADDITIONAL_GUIX_<CMD>_FLAGS.
+#
+# This seems like a poor user experience. Thus we check for GUIX_BUILD_OPTIONS's
+# existence here and direct users of this script to use our (more flexible)
+# custom environment variables.
+if [ -n "$GUIX_BUILD_OPTIONS" ]; then
+cat << EOF
+Error: Environment variable GUIX_BUILD_OPTIONS is not empty:
+  '$GUIX_BUILD_OPTIONS'
+
+Unfortunately this script is incompatible with GUIX_BUILD_OPTIONS, please unset
+GUIX_BUILD_OPTIONS and use ADDITIONAL_GUIX_COMMON_FLAGS to set build options
+across guix commands or ADDITIONAL_GUIX_<CMD>_FLAGS to set build options for a
+specific guix command.
+
+See contrib/guix/README.md for more details.
+EOF
+exit 1
+fi
+
 # Determine the maximum number of jobs to run simultaneously (overridable by
 # environment)
 MAX_JOBS="${MAX_JOBS:-$(nproc)}"
@@ -21,6 +45,7 @@ time-machine() {
                       --commit=b066c25026f21fb57677aa34692a5034338e7ee3 \
                       --max-jobs="$MAX_JOBS" \
                       ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
+                      ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_TIMEMACHINE_FLAGS} \
                       -- "$@"
 }
 
@@ -120,9 +145,9 @@ for host in ${HOSTS=x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv
                                  --share="$PWD"=/bitcoin \
                                  --expose="$(git rev-parse --git-common-dir)" \
                                  ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
-                                 ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS} \
                                  --max-jobs="$MAX_JOBS" \
                                  ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
+                                 ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS} \
                                  -- env HOST="$host" \
                                         MAX_JOBS="$MAX_JOBS" \
                                         SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:?unable to determine value}" \
