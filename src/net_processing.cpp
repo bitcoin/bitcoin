@@ -2786,12 +2786,13 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
     }
 
     if (msg_type == NetMsgType::SENDADDRV2) {
-        if (pfrom.fSuccessfullyConnected) {
+        // SYSCOIN todo find out why it's geting in here
+        // if (pfrom.fSuccessfullyConnected) {
             // Disconnect peers that send SENDADDRV2 message after VERACK; this
             // must be negotiated between VERSION and VERACK.
-            pfrom.fDisconnect = true;
-            return;
-        }
+            // pfrom.fDisconnect = true;
+            //return;
+        //}
         pfrom.m_wants_addrv2 = true;
         return;
     }
