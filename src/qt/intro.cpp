@@ -161,6 +161,37 @@ Intro::Intro(QWidget *parent, int64_t blockchain_size_gb, int64_t chain_state_si
         UpdateFreeSpaceLabel();
     });
 
+    bool have_user_assumevalid = false;
+    if (gArgs.IsArgSet("-assumevalid")) {
+        const auto user_assumevalid = gArgs.GetArg("-assumevalid", /* ignored default; determines return type */ "");
+        if (uint256S(user_assumevalid).IsNull()) {
+            // -assumevalid=0: default checkbox to off, and initialise with chainparams later
+            ui->assumevalid->setChecked(false);
+        } else {
+            // -assumevalid=blockhash: initialise with the user-specified value, enabled
+            ui->assumevalid->setChecked(true);
+            ui->assumevalidBlock->setText(QString::fromStdString(user_assumevalid));
+            have_user_assumevalid = true;
+        }
+    }
+    if (!have_user_assumevalid) {
+        const auto chainparams = CreateChainParams(gArgs, gArgs.GetChainType());
+        const uint256 default_assumevalid = chainparams ? chainparams->GetConsensus().defaultAssumeValid : uint256();
+        if (default_assumevalid.IsNull()) {
+            // no chainparams assumevalid (nor user-provided), so hide the options entirely
+            ui->groupAssumeValid->setVisible(false);
+        } else {
+            // assumevalid from chainparams only (normal case): disable editing of blockhash
+            ui->assumevalidBlock->setText(QString::fromStdString(default_assumevalid.GetHex()));
+            ui->assumevalidBlock->setReadOnly(true);
+        }
+    }
+    {
+        // TODO: Ideally, we would include actual margins here (instead of extra digits), but this seems non-trivial
+        const int text_width = ui->assumevalidBlock->fontMetrics().horizontalAdvance(QStringLiteral("4")) * (64 + 4);
+        ui->assumevalidBlock->setFixedWidth(text_width);
+    }
+
     startThread();
 }
 
@@ -200,6 +231,14 @@ int64_t Intro::getPruneMiB() const
     case Qt::Unchecked: default:
         return 0;
     }
+}
+
+QString Intro::getAssumeValid() const
+{
+    if (!ui->assumevalid->isChecked()) {
+        return QStringLiteral("0");
+    }
+    return ui->assumevalidBlock->text();
 }
 
 bool Intro::showIfNeeded(std::unique_ptr<Intro>& intro)
