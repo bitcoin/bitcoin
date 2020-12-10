@@ -102,10 +102,8 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
 * _**HOSTS**_
 
   Override the space-separated list of platform triples for which to perform a
-  bootstrappable build. _(defaults to "x86\_64-linux-gnu
-  arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu")_
-
-  > Windows and OS X platform triplet support are WIP.
+  bootstrappable build. _(defaults to "x86\_64-linux-gnu arm-linux-gnueabihf
+  aarch64-linux-gnu riscv64-linux-gnu x86_64-w64-mingw32")_
 
 * _**SOURCES_PATH**_
 
