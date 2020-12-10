@@ -24,6 +24,9 @@ SYSCOIN_GUI_NAME=syscoin-qt
 SYSCOIN_CLI_NAME=syscoin-cli
 SYSCOIN_TX_NAME=syscoin-tx
 SYSCOIN_WALLET_TOOL_NAME=syscoin-wallet
+dnl Multi Process
+SYSCOIN_MP_NODE_NAME=syscoin-node
+SYSCOIN_MP_GUI_NAME=syscoin-gui
 
 dnl Unless the user specified ARFLAGS, force it to be cr
 AC_ARG_VAR(ARFLAGS, [Flags for the archiver, defaults to <cr> if not set])
@@ -1677,6 +1680,8 @@ AC_SUBST(SYSCOIN_GUI_NAME)
 AC_SUBST(SYSCOIN_CLI_NAME)
 AC_SUBST(SYSCOIN_TX_NAME)
 AC_SUBST(SYSCOIN_WALLET_TOOL_NAME)
+AC_SUBST(SYSCOIN_MP_NODE_NAME)
+AC_SUBST(SYSCOIN_MP_GUI_NAME)
 
 AC_SUBST(RELDFLAGS)
 AC_SUBST(DEBUG_CPPFLAGS)
@@ -1800,7 +1805,7 @@ echo "  with zmq      = $use_zmq"
 if test x$enable_fuzz == xno; then
     echo "  with test     = $use_tests"
 else
-    echo "  with test     = not building test_bitcoin because fuzzing is enabled"
+    echo "  with test     = not building test_syscoin because fuzzing is enabled"
     echo "    with fuzz   = $enable_fuzz"
 fi
 echo "  with bench    = $use_bench"

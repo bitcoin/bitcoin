@@ -25,6 +25,8 @@ SYSCOIN_QT_BIN=$(top_builddir)/src/qt/$(SYSCOIN_GUI_NAME)$(EXEEXT)
 SYSCOIN_CLI_BIN=$(top_builddir)/src/$(SYSCOIN_CLI_NAME)$(EXEEXT)
 SYSCOIN_TX_BIN=$(top_builddir)/src/$(SYSCOIN_TX_NAME)$(EXEEXT)
 SYSCOIN_WALLET_BIN=$(top_builddir)/src/$(SYSCOIN_WALLET_TOOL_NAME)$(EXEEXT)
+SYSCOIN_NODE_BIN=$(top_builddir)/src/$(SYSCOIN_MP_NODE_NAME)$(EXEEXT)
+SYSCOIN_GUI_BIN=$(top_builddir)/src/$(SYSCOIN_MP_GUI_NAME)$(EXEEXT)
 SYSCOIN_WIN_INSTALLER=$(PACKAGE)-$(PACKAGE_VERSION)-win64-setup$(EXEEXT)
 
 empty :=
@@ -170,6 +172,12 @@ $(SYSCOIN_TX_BIN): FORCE
 	$(MAKE) -C src $(@F)
 
 $(SYSCOIN_WALLET_BIN): FORCE
+	$(MAKE) -C src $(@F)
+
+$(SYSCOIN_NODE_BIN): FORCE
+	$(MAKE) -C src $(@F)
+
+$(SYSCOIN_GUI_BIN): FORCE
 	$(MAKE) -C src $(@F)
 
 if USE_LCOV
