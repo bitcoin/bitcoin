@@ -40,12 +40,14 @@ Otherwise, follow the [Guix installation guide][guix/bin-install].
 
 Guix allows us to achieve better binary security by using our CPU time to build
 everything from scratch. However, it doesn't sacrifice user choice in pursuit of
-this: users can decide whether or not to bootstrap and to use substitutes.
+this: users can decide whether or not to bootstrap and to use substitutes
+(pre-built packages).
 
 After installation, you may want to consider [adding substitute
-servers](#speeding-up-builds-with-substitute-servers) to speed up your build if
-that fits your security model (say, if you're just testing that this works).
-This is skippable if you're using the [Dockerfile][fanquake/guix-docker].
+servers](#speeding-up-builds-with-substitute-servers) from which to download
+pre-built packages to speed up your build if that fits your security model (say,
+if you're just testing that this works). Substitute servers are set up by
+default if you're using the [Dockerfile][fanquake/guix-docker].
 
 If you prefer not to use any substitutes, make sure to supply `--no-substitutes`
 like in the following snippet. The first build will take a while, but the
@@ -164,14 +166,15 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
 _This whole section is automatically done in the convenience
 [Dockerfiles][fanquake/guix-docker]_
 
-For those who are used to life in the fast _(and trustful)_ lane, you can use
-[substitute servers][guix/substitutes] to enable binary downloads of packages.
+For those who are used to life in the fast _(and trustful)_ lane, you can
+specify [substitute servers][guix/substitutes] from which to download pre-built
+packages.
 
 > For those who only want to use substitutes from the official Guix build farm
 > and have authorized the build farm's signing key during Guix's installation,
 > you don't need to do anything.
 
-#### Authorize the signing keys
+#### Step 1: Authorize the signing keys
 
 For the official Guix build farm at https://ci.guix.gnu.org, run as root:
 
@@ -185,7 +188,7 @@ For dongcarl's substitute server at https://guix.carldong.io, run as root:
 wget -qO- 'https://guix.carldong.io/signing-key.pub' | guix archive --authorize
 ```
 
-#### Use the substitute servers
+#### Step 2: Specify the substitute servers
 
 The official Guix build farm at https://ci.guix.gnu.org is automatically used
 unless the `--no-substitutes` flag is supplied.
@@ -215,9 +218,9 @@ As mentioned at the bottom of [this manual page][guix/bin-install]:
 
 ### When will Guix be packaged in debian?
 
-Vagrant Cascadian has been making good progress on this
-[here][debian/guix-package]. We have all the pieces needed to put up an APT
-repository and will likely put one up soon.
+Thanks to Vagrant Cascadian's diligent work, Guix is now [in debian
+experimental][debian/guix-experimental]! Hopefully it will make its way into a
+release soon.
 
 [b17e]: http://bootstrappable.org/
 [r12e/source-date-epoch]: https://reproducible-builds.org/docs/source-date-epoch/
@@ -229,5 +232,5 @@ repository and will likely put one up soon.
 [guix/substitute-server-auth]: https://www.gnu.org/software/guix/manual/en/html_node/Substitute-Server-Authorization.html
 [guix/time-machine]: https://guix.gnu.org/manual/en/html_node/Invoking-guix-time_002dmachine.html
 
-[debian/guix-package]: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=850644
+[debian/guix-experimental]: https://packages.debian.org/experimental/guix
 [fanquake/guix-docker]: https://github.com/fanquake/core-review/tree/master/guix
