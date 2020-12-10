@@ -1200,25 +1200,30 @@ UniValue RunCommandParseJSON(const std::string& str_command, const std::string& 
 
     if (str_command.empty()) return UniValue::VNULL;
 
-    bp::child c(
+    // This is here because boost::process quotes the argument given to
+    // system when used in combination with boost::process::shell.
+    // https://github.com/boostorg/process/issues/95
+    auto exit =
+#ifdef _WIN32
+    bp::system(
+    bp::shell(), cmd, bp::std_out > stdout_stream);
+#else
+    bp::system(bp::shell(),
+        "-c",
         str_command,
         bp::std_out > stdout_stream,
         bp::std_err > stderr_stream,
         bp::std_in < stdin_stream
     );
-    if (!str_std_in.empty()) {
-        stdin_stream << str_std_in << std::endl;
-    }
+#endif
+    stdin_stream << str_std_in << std::endl;
     stdin_stream.pipe().close();
 
-    std::string result;
-    std::string error;
-    std::getline(stdout_stream, result);
-    std::getline(stderr_stream, error);
-
-    c.wait();
-    const int n_error = c.exit_code();
-    if (n_error) throw std::runtime_error(strprintf("RunCommandParseJSON error: process(%s) returned %d: %s\n", str_command, n_error, error));
+    if (exit) {
+        std::string error{std::istreambuf_iterator<char>(stderr_stream), {}};
+        throw std::runtime_error(strprintf("RunCommandParseJSON error: process(%s) returned %d: %s\n", str_command, exit, error));
+    }
+    std::string result{std::istreambuf_iterator<char>(stdout_stream), {}};
     if (!result_json.read(result)) throw std::runtime_error("Unable to parse JSON: " + result);
 
     return result_json;

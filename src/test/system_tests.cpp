@@ -23,26 +23,28 @@ BOOST_AUTO_TEST_CASE(dummy)
 
 #ifdef HAVE_BOOST_PROCESS
 
-bool checkMessage(const std::runtime_error& ex)
-{
-    // On Linux & Mac: "No such file or directory"
-    // On Windows: "The system cannot find the file specified."
-    const std::string what(ex.what());
-    BOOST_CHECK(what.find("file") != std::string::npos);
-    return true;
-}
-
 bool checkMessageFalse(const std::runtime_error& ex)
 {
     BOOST_CHECK_EQUAL(ex.what(), std::string("RunCommandParseJSON error: process(false) returned 1: \n"));
     return true;
 }
 
-bool checkMessageStdErr(const std::runtime_error& ex)
+bool checkMessageFileNotFound(const std::runtime_error& ex)
 {
     const std::string what(ex.what());
     BOOST_CHECK(what.find("RunCommandParseJSON error:") != std::string::npos);
-    return checkMessage(ex);
+    // "ls nosuchfile" should result in:
+    // On Linux & Mac: "No such file or directory"
+    // On Windows: "The system cannot find the file specified."
+    BOOST_CHECK(what.find("file") != std::string::npos);
+    return true;
+}
+
+bool checkCommandNotFound(const std::runtime_error& ex)
+{
+    const std::string what(ex.what());
+    BOOST_CHECK(what.find("127") != std::string::npos);
+    return true;
 }
 
 BOOST_AUTO_TEST_CASE(run_command)
@@ -52,21 +54,15 @@ BOOST_AUTO_TEST_CASE(run_command)
         BOOST_CHECK(result.isNull());
     }
     {
-#ifdef WIN32
-        // Windows requires single quotes to prevent escaping double quotes from the JSON...
         const UniValue result = RunCommandParseJSON("echo '{\"success\": true}'");
-#else
-        // ... but Linux and macOS echo a single quote if it's used
-        const UniValue result = RunCommandParseJSON("echo \"{\"success\": true}\"");
-#endif
         BOOST_CHECK(result.isObject());
         const UniValue& success = find_value(result, "success");
         BOOST_CHECK(!success.isNull());
         BOOST_CHECK_EQUAL(success.getBool(), true);
     }
     {
-        // An invalid command is handled by Boost
-        BOOST_CHECK_EXCEPTION(RunCommandParseJSON("invalid_command"), boost::process::process_error, checkMessage); // Command failed
+        // An invalid command results in exit code 127
+        BOOST_CHECK_EXCEPTION(RunCommandParseJSON("invalid_command"), std::runtime_error, checkCommandNotFound);
     }
     {
         // Return non-zero exit code, no output to stderr
@@ -74,10 +70,10 @@ BOOST_AUTO_TEST_CASE(run_command)
     }
     {
         // Return non-zero exit code, with error message for stderr
-        BOOST_CHECK_EXCEPTION(RunCommandParseJSON("ls nosuchfile"), std::runtime_error, checkMessageStdErr);
+        BOOST_CHECK_EXCEPTION(RunCommandParseJSON("ls nosuchfile"), std::runtime_error, checkMessageFileNotFound);
     }
     {
-        BOOST_REQUIRE_THROW(RunCommandParseJSON("echo \"{\""), std::runtime_error); // Unable to parse JSON
+        BOOST_REQUIRE_THROW(RunCommandParseJSON("echo '{\"'"), std::runtime_error); // Unable to parse JSON
     }
     // Test std::in, except for Windows
 #ifndef WIN32
