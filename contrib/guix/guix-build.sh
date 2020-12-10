@@ -18,6 +18,7 @@ SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
 time-machine() {
     guix time-machine --url=https://github.com/dongcarl/guix.git \
                       --commit=b066c25026f21fb57677aa34692a5034338e7ee3 \
+                      --max-jobs="$MAX_JOBS" \
                       -- "$@"
 }
 
@@ -108,6 +109,7 @@ for host in ${HOSTS=x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv
                                  --expose="$(git rev-parse --git-common-dir)" \
                                  ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
                                  ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS} \
+                                 --max-jobs="$MAX_JOBS" \
                                  -- env HOST="$host" \
                                         MAX_JOBS="$MAX_JOBS" \
                                         SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:?unable to determine value}" \
