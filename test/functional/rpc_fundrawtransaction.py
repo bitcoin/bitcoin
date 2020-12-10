@@ -717,10 +717,10 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         result = node.fundrawtransaction(rawtx)  # uses self.min_relay_tx_fee (set by settxfee)
         btc_kvb_to_sat_vb = 100000  # (1e5)
-        result1 = node.fundrawtransaction(rawtx, {"fee_rate": 2 * btc_kvb_to_sat_vb * self.min_relay_tx_fee})
+        result1 = node.fundrawtransaction(rawtx, {"fee_rate": str(2 * btc_kvb_to_sat_vb * self.min_relay_tx_fee)})
         result2 = node.fundrawtransaction(rawtx, {"feeRate": 2 * self.min_relay_tx_fee})
         result3 = node.fundrawtransaction(rawtx, {"fee_rate": 10 * btc_kvb_to_sat_vb * self.min_relay_tx_fee})
-        result4 = node.fundrawtransaction(rawtx, {"feeRate": 10 * self.min_relay_tx_fee})
+        result4 = node.fundrawtransaction(rawtx, {"feeRate": str(10 * self.min_relay_tx_fee)})
         # Test that funding non-standard "zero-fee" transactions is valid.
         result5 = self.nodes[3].fundrawtransaction(rawtx, {"fee_rate": 0})
         result6 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 0})

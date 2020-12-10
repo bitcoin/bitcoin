@@ -4089,7 +4089,7 @@ static RPCHelpMan send()
                 UniValueType(), // outputs (ARR or OBJ, checked later)
                 UniValue::VNUM, // conf_target
                 UniValue::VSTR, // estimate_mode
-                UniValue::VNUM, // fee_rate
+                UniValueType(), // fee_rate, will be checked by AmountFromValue() in SetFeeEstimateMode()
                 UniValue::VOBJ, // options
                 }, true
             );
