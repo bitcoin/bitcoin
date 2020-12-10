@@ -189,13 +189,6 @@ CAddress GetLocalAddress(const CNetAddr& paddrPeer, ServiceFlags nLocalServices)
     return ret;
 }
 
-static int GetnScore(const CService& addr)
-{
-    LOCK(cs_mapLocalHost);
-    if (mapLocalHost.count(addr) == 0) return 0;
-    return mapLocalHost[addr].nScore;
-}
-
 bool IsPeerAddrLocalGood(CNode& pnode)
 {
     CService addrLocal = pnode.GetAddrLocal();
@@ -208,14 +201,22 @@ void AdvertiseLocal(CNode& pnode)
     assert(fListen);
     assert(pnode.fSuccessfullyConnected);
 
-    // First consider our "best" addr for the peer, as seen locally.
-    // In absence of other information, we assume that the locally seen address
-    // is the "best" addr for peers to refer to our node.
-    CAddress addrLocal = GetLocalAddress(pnode.addr, pnode.GetLocalServices());
+    FastRandomContext rng;
 
     if (gArgs.GetBoolArg("-addrmantest", false)) {
         // use IPv4 loopback during addrmantest
-        addrLocal = CAddress(CService(LookupNumeric("127.0.0.1", GetListenPort())), pnode.GetLocalServices());
+        CAddress addrLocal = CAddress(CService(LookupNumeric("127.0.0.1", GetListenPort())), pnode.GetLocalServices());
+        LogPrint(BCLog::NET, "AdvertiseLocal: advertising address %s\n", addrLocal.ToString());
+        pnode.PushAddress(addrLocal, rng);
+        return;
+    }
+
+    // We assume that the locally seen address is a good addr
+    // for peers to refer to our node, assuming it is routable.
+    CAddress addrLocal = GetLocalAddress(pnode.addr, pnode.GetLocalServices());
+    if (addrLocal.IsRoutable()) {
+        LogPrint(BCLog::NET, "AdvertiseLocal: advertising address %s\n", addrLocal.ToString());
+        pnode.PushAddress(addrLocal, rng);
     }
 
     // If discovery is enabled, we request that peers advertise our node to their peers.
@@ -223,12 +224,8 @@ void AdvertiseLocal(CNode& pnode)
     // on our address than our own node. Sometimes, we ask our peer to advertise
     // our node under the address they see us as at instead of the address that our
     // node thinks it has.
-    FastRandomContext rng;
-    if (IsPeerAddrLocalGood(pnode) && (!addrLocal.IsRoutable() || rng.randbits((GetnScore(addrLocal) > LOCAL_MANUAL) ? 3 : 1) == 0)) {
+    if (IsPeerAddrLocalGood(pnode)) {
         addrLocal.SetIP(pnode.GetAddrLocal());
-    }
-
-    if (addrLocal.IsRoutable() || gArgs.GetBoolArg("-addrmantest", false)) {
         LogPrint(BCLog::NET, "AdvertiseLocal: advertising address %s\n", addrLocal.ToString());
         pnode.PushAddress(addrLocal, rng);
     }
