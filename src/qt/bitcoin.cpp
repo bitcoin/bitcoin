@@ -35,6 +35,7 @@
 #include <util/string.h>
 #include <util/threadnames.h>
 #include <util/translation.h>
+#include <univalue.h>
 #include <validation.h>
 
 #ifdef ENABLE_WALLET
@@ -674,7 +675,7 @@ int GuiMain(int argc, char* argv[])
     if (intro) {
         // Store intro dialog settings other than datadir (network specific)
         app.InitPruneSetting(intro->getPruneMiB());
-        intro.reset();
+        gArgs.ForceSetArg("-assumevalid", intro->getAssumeValid().toStdString());
     }
 
     try
@@ -684,6 +685,13 @@ int GuiMain(int argc, char* argv[])
         // This is acceptable because this function only contains steps that are quick to execute,
         // so the GUI thread won't be held up.
         if (app.baseInitialize()) {
+            if (intro) {
+                // Store intro dialog settings other than datadir (network specific)
+                common::SettingsValue intro_assumevalid = intro->getAssumeValid().toStdString();
+                app.node().context()->chain->overwriteRwSetting("assumevalid", intro_assumevalid);
+                // We can release the Intro widget now
+                intro.reset();
+            }
             app.requestInitialize();
 #if defined(Q_OS_WIN)
             WinShutdownMonitor::registerShutdownBlockReason(QObject::tr("%1 didn't yet exit safely…").arg(CLIENT_NAME), (HWND)app.getMainWinId());
