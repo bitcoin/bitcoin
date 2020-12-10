@@ -19,7 +19,7 @@ Then install [Homebrew](https://brew.sh).
 
 ## Dependencies
 ```shell
-brew install automake berkeley-db4 libtool boost miniupnpc pkg-config python qt libevent qrencode sqlite
+brew install automake libtool boost miniupnpc pkg-config python qt libevent qrencode
 ```
 
 If you run into issues, check [Homebrew's troubleshooting page](https://docs.brew.sh/Troubleshooting).
@@ -30,7 +30,22 @@ If you want to build the disk image with `make deploy` (.dmg / optional), you ne
 brew install librsvg
 ```
 
-## Berkeley DB
+The wallet support requires one or both of the dependencies ([*SQLite*](#sqlite) and [*Berkeley DB*](#berkeley-db)) in the sections below.
+To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode).
+
+#### SQLite
+
+Usually, macOS installation already has a suitable SQLite installation.
+Also, the Homebrew package could be installed:
+
+```shell
+brew install sqlite
+```
+
+In that case the Homebrew package will prevail.
+
+#### Berkeley DB
+
 It is recommended to use Berkeley DB 4.8. If you have to build it yourself,
 you can use [this](/contrib/install_db4.sh) script to install it
 like so:
@@ -41,7 +56,11 @@ like so:
 
 from the root of the repository.
 
-**Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](/doc/build-osx.md#disable-wallet-mode)).
+Also, the Homebrew package could be installed:
+
+```shell
+brew install berkeley-db4
+```
 
 ## Build Bitcoin Core
 
@@ -72,14 +91,14 @@ from the root of the repository.
     make deploy
     ```
 
-## `disable-wallet` mode
+## Disable-wallet mode
 When the intention is to run only a P2P node without a wallet, Bitcoin Core may be
-compiled in `disable-wallet` mode with:
+compiled in disable-wallet mode with:
 ```shell
 ./configure --disable-wallet
 ```
 
-In this case there is no dependency on Berkeley DB 4.8 and SQLite.
+In this case there is no dependency on [*Berkeley DB*](#berkeley-db) and [*SQLite*](#sqlite).
 
 Mining is also possible in disable-wallet mode using the `getblocktemplate` RPC call.
 
