@@ -16,9 +16,11 @@ SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
 # Execute "$@" in a pinned, possibly older version of Guix, for reproducibility
 # across time.
 time-machine() {
+    # shellcheck disable=SC2086
     guix time-machine --url=https://github.com/dongcarl/guix.git \
                       --commit=b066c25026f21fb57677aa34692a5034338e7ee3 \
                       --max-jobs="$MAX_JOBS" \
+                      ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
                       -- "$@"
 }
 
@@ -100,6 +102,16 @@ for host in ${HOSTS=x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv
         #     make the downloaded depends sources available to it. The sources
         #     should have been downloaded prior to this invocation.
         #
+        #  ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"}
+        #
+        #                     fetch substitute from SUBSTITUTE_URLS if they are
+        #                     authorized
+        #
+        #    Depending on the user's security model, it may be desirable to use
+        #    substitutes (pre-built packages) from servers that the user trusts.
+        #    Please read the README.md in the same directory as this file for
+        #    more information.
+        #
         # shellcheck disable=SC2086
         time-machine environment --manifest="${PWD}/contrib/guix/manifest.scm" \
                                  --container \
@@ -110,6 +122,7 @@ for host in ${HOSTS=x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv
                                  ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
                                  ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS} \
                                  --max-jobs="$MAX_JOBS" \
+                                 ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
                                  -- env HOST="$host" \
                                         MAX_JOBS="$MAX_JOBS" \
                                         SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:?unable to determine value}" \

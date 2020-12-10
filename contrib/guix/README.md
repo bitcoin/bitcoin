@@ -147,6 +147,13 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
   string) is interpreted the same way as not setting `V` at all, and that `V=0`
   has the same effect as `V=1`.
 
+* _**SUBSTITUTE_URLS**_
+
+  A whitespace-delimited list of URLs from which to download pre-built packages.
+  A URL is only used if its signing key is authorized (refer to the [substitute
+  servers section](#speeding-up-builds-with-substitute-servers) for more
+  details).
+
 * _**ADDITIONAL_GUIX_ENVIRONMENT_FLAGS**_
 
   Additional flags to be passed to `guix environment`. For a fully-bootstrapped
@@ -196,7 +203,7 @@ To use dongcarl's substitute server for Bitcoin Core builds after having
 [authorized his signing key](#authorize-the-signing-keys):
 
 ```
-export ADDITIONAL_GUIX_ENVIRONMENT_FLAGS='--substitute-urls="https://guix.carldong.io https://ci.guix.gnu.org"'
+export SUBSTITUTE_URLS='https://guix.carldong.io https://ci.guix.gnu.org'
 ```
 
 ## FAQ
