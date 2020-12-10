@@ -505,10 +505,9 @@ int GuiMain(int argc, char* argv[])
 
     /// 5. Now that settings and translations are available, ask user for data directory
     // User language is set up: pick a data directory
-    bool did_show_intro = false;
-    int64_t prune_MiB = 0;  // Intro dialog prune configuration
+    std::unique_ptr<Intro> intro;
     // Gracefully exit if the user cancels
-    if (!Intro::showIfNeeded(did_show_intro, prune_MiB)) return EXIT_SUCCESS;
+    if (!Intro::showIfNeeded(intro)) return EXIT_SUCCESS;
 
     /// 6. Determine availability of data directory and parse bitcoin.conf
     /// - Do not call GetDataDir(true) before this step finishes
@@ -590,9 +589,10 @@ int GuiMain(int argc, char* argv[])
     // Load GUI settings from QSettings
     app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
 
-    if (did_show_intro) {
+    if (intro) {
         // Store intro dialog settings other than datadir (network specific)
-        app.InitPruneSetting(prune_MiB);
+        app.InitPruneSetting(intro->getPruneMiB());
+        intro.reset();
     }
 
     if (gArgs.GetBoolArg("-splash", DEFAULT_SPLASHSCREEN) && !gArgs.GetBoolArg("-min", false))

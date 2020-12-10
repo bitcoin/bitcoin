@@ -202,9 +202,9 @@ int64_t Intro::getPruneMiB() const
     }
 }
 
-bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
+bool Intro::showIfNeeded(std::unique_ptr<Intro>& intro)
 {
-    did_show_intro = false;
+    intro.reset();
 
     QSettings settings;
     /* If data directory provided on command line, no need to look at settings
@@ -226,19 +226,18 @@ bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
         }
 
         /* If current default data directory does not exist, let the user choose one */
-        Intro intro(0, Params().AssumedBlockchainSize(), Params().AssumedChainStateSize());
-        intro.setDataDirectory(dataDir);
-        intro.setWindowIcon(QIcon(":icons/bitcoin"));
-        did_show_intro = true;
+        intro.reset(new Intro(0, Params().AssumedBlockchainSize(), Params().AssumedChainStateSize()));
+        intro->setDataDirectory(dataDir);
+        intro->setWindowIcon(QIcon(":icons/bitcoin"));
 
         while(true)
         {
-            if(!intro.exec())
+            if(!intro->exec())
             {
                 /* Cancel clicked */
                 return false;
             }
-            dataDir = intro.getDataDirectory();
+            dataDir = intro->getDataDirectory();
             try {
                 if (TryCreateDirectories(GUIUtil::qstringToBoostPath(dataDir))) {
                     // If a new data directory has been created, make wallets subdirectory too
@@ -251,9 +250,6 @@ bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
                 /* fall through, back to choosing screen */
             }
         }
-
-        // Additional preferences:
-        prune_MiB = intro.getPruneMiB();
 
         settings.setValue("strDataDir", dataDir);
         settings.setValue("fReset", false);

@@ -9,6 +9,8 @@
 #include <QMutex>
 #include <QThread>
 
+#include <memory>
+
 static const bool DEFAULT_CHOOSE_DATADIR = false;
 
 class FreespaceChecker;
@@ -48,7 +50,7 @@ public:
      * @note do NOT call global GetDataDir() before calling this function, this
      * will cause the wrong path to be cached.
      */
-    static bool showIfNeeded(bool& did_show_intro, int64_t& prune_MiB);
+    static bool showIfNeeded(std::unique_ptr<Intro>& intro);
 
 Q_SIGNALS:
     void requestCheck();
