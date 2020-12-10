@@ -366,6 +366,6 @@ IndexSummary BaseIndex::GetSummary() const
     IndexSummary summary{};
     summary.name = GetName();
     summary.synced = m_synced;
-    summary.best_block_height = m_best_block_index.load()->nHeight;
+    summary.best_block_height = m_best_block_index ? m_best_block_index.load()->nHeight : 0;
     return summary;
 }
