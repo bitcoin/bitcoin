@@ -6,7 +6,7 @@ $(package)_file_name=qtbase-$($(package)_suffix)
 $(package)_sha256_hash=9b9dec1f67df1f94bce2955c5604de992d529dde72050239154c56352da0907d
 $(package)_dependencies=zlib
 $(package)_linux_dependencies=freetype fontconfig libxcb
-$(package)_build_subdir=qtbase
+$(package)_build_subdir=.
 $(package)_qt_libs=corelib network widgets gui plugins testlib
 $(package)_patches=fix_qt_pkgconfig.patch mac-qmake.conf fix_configure_mac.patch fix_no_printer.patch
 $(package)_patches+= fix_rcc_determinism.patch fix_riscv64_arch.patch xkb-default.patch no-xlib.patch
@@ -292,18 +292,16 @@ define $(package)_config_cmds
   export PKG_CONFIG_SYSROOT_DIR=/ && \
   export PKG_CONFIG_LIBDIR=$(host_prefix)/lib/pkgconfig && \
   export PKG_CONFIG_PATH=$(host_prefix)/share/pkgconfig  && \
-  cd .. && \
   ./configure $($(package)_config_opts) && \
   echo "host_build: QT_CONFIG ~= s/system-zlib/zlib" >> qtbase/mkspecs/qconfig.pri && \
   echo "CONFIG += force_bootstrap" >> qtbase/mkspecs/qconfig.pri
 endef
 
 define $(package)_build_cmds
-  $(MAKE) -C ../
+  $(MAKE) -C .
 endef
 
 define $(package)_stage_cmds
-  cd .. && \
   $(MAKE) -C . INSTALL_ROOT=$($(package)_staging_dir) install_subtargets && \
   if `test -f qtbase/src/plugins/platforms/xcb/xcb-static/libxcb-static.a`; then \
     cp qtbase/src/plugins/platforms/xcb/xcb-static/libxcb-static.a $($(package)_staging_prefix_dir)/lib; \
