@@ -13,6 +13,7 @@
 #include <assert.h>
 #include <memory>
 
+#include <interfaces/chain.h>
 #include <interfaces/node.h>
 
 class BitcoinGUI;

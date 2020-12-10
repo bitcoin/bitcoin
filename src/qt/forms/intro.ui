@@ -272,6 +272,64 @@
     </layout>
    </item>
    <item>
+    <widget class="QWidget" name="groupAssumeValid">
+     <layout class="QVBoxLayout">
+      <item>
+       <widget class="QLabel" name="lblExplanationAssumeValid">
+        <property name="text">
+         <string>The initial synchronisation process can go faster if you skip verification of older transactions. This does, however, require trusting that the &quot;assumed valid&quot; blockchain below is in fact valid. Uncheck this if you want to fully validate the entire blockchain history.</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="layoutAssumeValid">
+        <item>
+         <widget class="QCheckBox" name="assumevalid">
+          <property name="toolTip">
+           <string>Reverting this setting will slow down initial synchronisation due to validating old transactions</string>
+          </property>
+          <property name="text">
+           <string>Skip validation of the transactions until after block:</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="layoutAssumeValidBlock">
+        <item>
+         <spacer>
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="assumevalidBlock">
+          <property name="maxLength">
+           <number>64</number>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
     <spacer name="verticalSpacer">
      <property name="orientation">
       <enum>Qt::Vertical</enum>

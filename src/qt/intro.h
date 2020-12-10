@@ -39,6 +39,7 @@ public:
     QString getDataDirectory();
     void setDataDirectory(const QString &dataDir);
     int64_t getPruneMiB() const;
+    QString getAssumeValid() const;
 
     /**
      * Determine data directory. Let the user choose if the current one doesn't exist.
