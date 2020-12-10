@@ -120,6 +120,43 @@ class TestSymbolChecks(unittest.TestCase):
         self.assertEqual(call_symbol_check(cc, source, executable, ['-framework', 'CoreGraphics']),
                 (0, ''))
 
+    def test_PE(self):
+        source = 'test1.c'
+        executable = 'test1.exe'
+        cc = 'x86_64-w64-mingw32-gcc'
+
+        with open(source, 'w', encoding="utf8") as f:
+            f.write('''
+                #include <pdh.h>
+
+                int main()
+                {
+                    PdhConnectMachineA(NULL);
+                    return 0;
+                }
+        ''')
+
+        self.assertEqual(call_symbol_check(cc, source, executable, ['-lpdh']),
+            (1, 'pdh.dll is not in ALLOWED_LIBRARIES!\n' +
+                 executable + ': failed DYNAMIC_LIBRARIES'))
+
+        source = 'test2.c'
+        executable = 'test2.exe'
+        with open(source, 'w', encoding="utf8") as f:
+            f.write('''
+                #include <windows.h>
+
+                int main()
+                {
+                    CoFreeUnusedLibrariesEx(0,0);
+                    return 0;
+                }
+        ''')
+
+        self.assertEqual(call_symbol_check(cc, source, executable, ['-lole32']),
+                (0, ''))
+
+
 if __name__ == '__main__':
     unittest.main()
 
