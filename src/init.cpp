@@ -1632,8 +1632,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
     fListen = args.GetBoolArg("-listen", DEFAULT_LISTEN);
     fDiscover = args.GetBoolArg("-discover", true);
-    // SYSCOIN
-    const bool ignores_incoming_txs{args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) || fMasternodeMode};
+    // SYSCOIN masternodes need to relay mn info which would be skipped if it was blocks only
+    const bool ignores_incoming_txs{args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY) && !fMasternodeMode};
 
     assert(!node.banman);
     node.banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", &uiInterface, args.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
