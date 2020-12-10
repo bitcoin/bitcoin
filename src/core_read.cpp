@@ -126,31 +126,72 @@ static bool CheckTxScriptsSanity(const CMutableTransaction& tx)
 
 static bool DecodeTx(CMutableTransaction& tx, const std::vector<unsigned char>& tx_data, bool try_no_witness, bool try_witness)
 {
+    // General strategy:
+    // - Decode both with extended serialization (which interprets the 0x0001 tag as a marker for
+    //   the presense of witnesses) and with legacy serialization (which interprets the tag as a
+    //   0-input 1-output incomplete transaction).
+    //   - Restricted by try_no_witness (which disables legacy if false) and try_witness (which
+    //     disables extended if false).
+    //   - Ignore serializations that do not fully consume the hex string.
+    // - If neither succeeds, fail.
+    // - If only one succeeds, return that one.
+    // - If both decode attempts succeed:
+    //   - If only one passes the CheckTxScriptsSanity check, return that one.
+    //   - If neither or both pass CheckTxScriptsSanity, return the extended one.
+
+    CMutableTransaction tx_extended, tx_legacy;
+    bool ok_extended = false, ok_legacy = false;
+
+    // Try decoding with extended serialization support, and remember if the result successfully
+    // consumes the entire input.
     if (try_witness) {
         CDataStream ssData(tx_data, SER_NETWORK, PROTOCOL_VERSION);
         try {
-            ssData >> tx;
-            // If transaction looks sane, we don't try other mode even if requested
-            if (ssData.empty() && (!try_no_witness || CheckTxScriptsSanity(tx))) {
-                return true;
-            }
+            ssData >> tx_extended;
+            if (ssData.empty()) ok_extended = true;
         } catch (const std::exception&) {
             // Fall through.
         }
     }
 
+    // Optimization: if extended decoding succeeded and the result passes CheckTxScriptsSanity,
+    // don't bother decoding the other way.
+    if (ok_extended && CheckTxScriptsSanity(tx_extended)) {
+        tx = std::move(tx_extended);
+        return true;
+    }
+
+    // Try decoding with legacy serialization, and remember if the result successfully consumes the entire input.
     if (try_no_witness) {
         CDataStream ssData(tx_data, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
         try {
-            ssData >> tx;
-            if (ssData.empty()) {
-                return true;
-            }
+            ssData >> tx_legacy;
+            if (ssData.empty()) ok_legacy = true;
         } catch (const std::exception&) {
             // Fall through.
         }
     }
 
+    // If legacy decoding succeeded and passes CheckTxScriptsSanity, that's our answer, as we know
+    // at this point that extended decoding either failed or doesn't pass the sanity check.
+    if (ok_legacy && CheckTxScriptsSanity(tx_legacy)) {
+        tx = std::move(tx_legacy);
+        return true;
+    }
+
+    // If extended decoding succeeded, and neither decoding passes sanity, return the extended one.
+    if (ok_extended) {
+        tx = std::move(tx_extended);
+        return true;
+    }
+
+    // If legacy decoding succeeded and extended didn't, return the legacy one.
+    if (ok_legacy) {
+        tx = std::move(tx_legacy);
+        return true;
+    }
+
+    // If none succeeded, we failed.
     return false;
 }
 

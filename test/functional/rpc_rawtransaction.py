@@ -372,6 +372,13 @@ class RawTransactionsTest(BitcoinTestFramework):
         encrawtx = "01000000010000000000000072c1a6a246ae63f74f931e8365e15a089c68d61900000000000000000000ffffffff0100e1f505000000000000000000"
         decrawtx = self.nodes[0].decoderawtransaction(encrawtx, False) # decode as non-witness transaction
         assert_equal(decrawtx['vout'][0]['value'], Decimal('1.00000000'))
+        # known ambiguous transaction in the chain (see https://github.com/bitcoin/bitcoin/issues/20579)
+        encrawtx = "020000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff4b03c68708046ff8415c622f4254432e434f4d2ffabe6d6de1965d02c68f928e5b244ab1965115a36f56eb997633c7f690124bbf43644e23080000000ca3d3af6d005a65ff0200fd00000000ffffffff03f4c1fb4b0000000016001497cfc76442fe717f2a3f0cc9c175f7561b6619970000000000000000266a24aa21a9ed957d1036a80343e0d1b659497e1b48a38ebe876a056d45965fac4a85cda84e1900000000000000002952534b424c4f434b3a8e092581ab01986cbadc84f4b43f4fa4bb9e7a2e2a0caf9b7cf64d939028e22c0120000000000000000000000000000000000000000000000000000000000000000000000000"
+        decrawtx = self.nodes[0].decoderawtransaction(encrawtx)
+        decrawtx_wit = self.nodes[0].decoderawtransaction(encrawtx, True)
+        assert_raises_rpc_error(-22, 'TX decode failed', self.nodes[0].decoderawtransaction, encrawtx, False) # fails to decode as non-witness transaction
+        assert_equal(decrawtx, decrawtx_wit) # the witness interpretation should be chosen
+        assert_equal(decrawtx['vin'][0]['coinbase'], "03c68708046ff8415c622f4254432e434f4d2ffabe6d6de1965d02c68f928e5b244ab1965115a36f56eb997633c7f690124bbf43644e23080000000ca3d3af6d005a65ff0200fd00000000")
 
         # Basic signrawtransaction test
         addr = self.nodes[1].getnewaddress()
