@@ -149,7 +149,7 @@ def test_simple_bumpfee_succeeds(self, mode, rbf_node, peer_node, dest_address):
     self.sync_mempools((rbf_node, peer_node))
     assert rbfid in rbf_node.getrawmempool() and rbfid in peer_node.getrawmempool()
     if mode == "fee_rate":
-        bumped_psbt = rbf_node.psbtbumpfee(rbfid, {"fee_rate": NORMAL})
+        bumped_psbt = rbf_node.psbtbumpfee(rbfid, {"fee_rate": str(NORMAL)})
         bumped_tx = rbf_node.bumpfee(rbfid, {"fee_rate": NORMAL})
     else:
         bumped_psbt = rbf_node.psbtbumpfee(rbfid)
