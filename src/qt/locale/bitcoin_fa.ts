@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>برای ویرایش آدرس یا برچسب روی آن راست کلیک کنید</translation>
+        <translation>برای ویرایش آدرس یا برچسب‌گذاری راست‌کلیک کنید</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>کپی کردن آدرس  انتخاب شده به حافظه  کلیپ بورد سیستم</translation>
+        <translation>کپی‌کردن آدرس انتخاب‌شده به حافظهٔ کلیپ‌بورد سیستم</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -110,7 +110,7 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(برچسب ندارد)</translation>
+        <translation>(بدون برچسب)</translation>
     </message>
 </context>
 <context>

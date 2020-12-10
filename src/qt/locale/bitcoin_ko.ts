@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>새로운 지갑 주소 생성하기.</translation>
+        <translation>새 주소 만들기</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>현재 선택한 주소를 시스템 클립보드로 복사하기</translation>
+        <translation>현재 선택한 주소를 시스템 클립보드로 복사</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -68,6 +68,11 @@
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>비트코인을 보내는 계좌 주소입니다. 코인을 보내기 전에 금액과 받는 주소를 항상 확인하세요.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation>지불 수신용 비트코인주소. 신규 주소를 만들려면 'Create new receiving address' 버튼을 사용하세요. 사인은 '레거시' 타입의 주소만 가능합니다.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -478,6 +483,22 @@
         <translation>최신의</translation>
     </message>
     <message>
+        <source>&amp;Load PSBT from file...</source>
+        <translation>파일로부터 PSBT 불러오기 (&amp;L)</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction</source>
+        <translation>부분적으로 서명된 비트코인 트랙젠션 불러오기</translation>
+    </message>
+    <message>
+        <source>Load PSBT from clipboard...</source>
+        <translation>클립보드로부터 PSBT 불러오기...</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <translation>클립보드로부터 부분적으로 서명된 비트코인 트랜젝션 불러오기</translation>
+    </message>
+    <message>
         <source>Node window</source>
         <translation>노드 창</translation>
     </message>
@@ -514,8 +535,24 @@
         <translation>지갑 닫기</translation>
     </message>
     <message>
+        <source>Close All Wallets...</source>
+        <translation>모든 지갑 닫기...</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>모든 지갑 닫기</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>사용할 수 있는 비트코인 명령줄 옵션 목록을 가져오기 위해 %1 도움말 메시지를 표시합니다</translation>
+    </message>
+    <message>
+        <source>&amp;Mask values</source>
+        <translation>마스크값(&amp;M)</translation>
+    </message>
+    <message>
+        <source>Mask the values in the Overview tab</source>
+        <translation>개요 탭에서 값 마스킹</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -624,6 +661,10 @@
     <message>
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>지갑이 &lt;b&gt;암호화&lt;/b&gt; 되었고 현재 &lt;b&gt;잠겨져&lt;/b&gt; 있습니다</translation>
+    </message>
+    <message>
+        <source>Original message:</source>
+        <translation>원본 메세지:</translation>
     </message>
     </context>
 <context>
@@ -811,18 +852,38 @@
         <translation>지갑 암호화</translation>
     </message>
     <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>이 지갑에 대한 개인 키를 비활성화합니다. 개인 키가 비활성화 된 지갑에는 개인 키가 없으며 HD 시드 또는 가져온 개인 키를 가질 수 없습니다. 이것은 시계 전용 지갑에 이상적입니다.</translation>
+    </message>
+    <message>
         <source>Disable Private Keys</source>
         <translation>개인키 비활성화 하기</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>빈 지갑을 만드십시오. 빈 지갑에는 처음에 개인 키나 스크립트가 없습니다. 나중에 개인 키와 주소를 가져 오거나 HD 시드를 설정할 수 있습니다.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
         <translation>빈 지갑 만들기</translation>
     </message>
     <message>
+        <source>Use descriptors for scriptPubKey management</source>
+        <translation>scriptPubKey 관리를 위해 디스크립터를 사용하십시오</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation>디스크립터 지갑</translation>
+    </message>
+    <message>
         <source>Create</source>
         <translation>생성하기</translation>
     </message>
-    </context>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>sqlite 지원 없이 컴파일 됨 (디스크립터 지갑 사용을 위해 필요함)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -933,6 +994,10 @@
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
         <translation>확인을 클릭하면 %1은 모든 %4블록 체인 (%2GB) 장부를 %3 안에 다운로드하고 처리하기 시작합니다.  이는 %4가 시작될 때 생성된 가장 오래된 트랜잭션부터 시작합니다.</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>이 설정을 되돌리려면 전체 블록 체인을 다시 다운로드해야합니다. 전체 체인을 먼저 다운로드하고 나중에 정리하는 것이 더 빠릅니다. 일부 고급 기능을 비활성화합니다.</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
@@ -1283,6 +1348,14 @@
         <translation>코인 상세 제어기능에 대한 표시 여부를 선택할 수 있습니다.</translation>
     </message>
     <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation>Tor onion 서비스를 위한 별도의 SOCKS5 프록시를 통해 Bitcoin 네트워크에 연결합니다.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
+        <translation>Tor onion 서비스를 통해 피어에 도달하려면 별도의 SOCKS &amp; 5 프록시를 사용하십시오.</translation>
+    </message>
+    <message>
         <source>&amp;Third party transaction URLs</source>
         <translation>제 3자 거래 URL들 (&amp;T)</translation>
     </message>
@@ -1417,9 +1490,89 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>조회전용 주소의 현재 잔액</translation>
     </message>
-    </context>
+    <message>
+        <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
+        <translation>개요 탭에서 개인 정보 보호 모드가 활성화되었습니다. 값의 마스크를 해제하려면 설정-&gt; 마스크 값의 선택을 취소하십시오.</translation>
+    </message>
+</context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation>다이얼로그</translation>
+    </message>
+    <message>
+        <source>Sign Tx</source>
+        <translation>트랜젝션 서명</translation>
+    </message>
+    <message>
+        <source>Broadcast Tx</source>
+        <translation>트랜젝션 전파</translation>
+    </message>
+    <message>
+        <source>Copy to Clipboard</source>
+        <translation>클립보드로 복사</translation>
+    </message>
+    <message>
+        <source>Save...</source>
+        <translation>저장...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>닫기</translation>
+    </message>
+    <message>
+        <source>Failed to load transaction: %1</source>
+        <translation>트랜젝션 불러오기에 실패: %1</translation>
+    </message>
+    <message>
+        <source>Failed to sign transaction: %1</source>
+        <translation>트랜젝션 서명 실패: %1</translation>
+    </message>
+    <message>
+        <source>Could not sign any more inputs.</source>
+        <translation>더 이상 추가적인 인풋에 대해 서명할 수 없음</translation>
+    </message>
+    <message>
+        <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
+        <translation>거래 서명완료. 트랜잭션을 브로드 캐스트 할 준비가 되었습니다.</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation>트랜젝션 처리 과정에 알 수 없는 오류</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast failed: %1</source>
+        <translation>트랜젝션 전파에 실패: %1</translation>
+    </message>
+    <message>
+        <source>PSBT copied to clipboard.</source>
+        <translation>클립보드로 PSBT가 복사 됨</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>트랜젝션 데이터 저장 됨</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>부분적으로 서명된 비트코인 트랜젝션 (바이너리) (*.psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk.</source>
+        <translation>PSBT가 디스크에 저장 됨</translation>
+    </message>
+    <message>
+        <source> * Sends %1 to %2</source>
+        <translation>%1 에게 %2 보내기</translation>
+    </message>
+    <message>
+        <source>Unable to calculate transaction fee or total transaction amount.</source>
+        <translation>거래 수수료 또는 총 거래 금액을 계산할 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Pays transaction fee: </source>
+        <translation>거래 수수료 납부:</translation>
+    </message>
     <message>
         <source>Total Amount</source>
         <translation>총액</translation>
@@ -1428,7 +1581,35 @@
         <source>or</source>
         <translation>또는</translation>
     </message>
-    </context>
+    <message>
+        <source>Transaction has %1 unsigned inputs.</source>
+        <translation>트랜젝션이 %1 개의 서명안 된 인풋을 갖고 있음</translation>
+    </message>
+    <message>
+        <source>Transaction is missing some information about inputs.</source>
+        <translation>트랜젝션에 인풋에 대한 일부 정보가 없음</translation>
+    </message>
+    <message>
+        <source>Transaction still needs signature(s).</source>
+        <translation>트랜젝션에 서명이 더 필요함</translation>
+    </message>
+    <message>
+        <source>(But this wallet cannot sign transactions.)</source>
+        <translation>(그러나 이 지갑은 트랜젝션에 서명이 불가능 함)</translation>
+    </message>
+    <message>
+        <source>(But this wallet does not have the right keys.)</source>
+        <translation>(그러나 이 지갑은 적절한 키를 갖고 있지 않음)</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation>트랜젝션이 모두 서명되었고, 전파 준비 됨</translation>
+    </message>
+    <message>
+        <source>Transaction status is unknown.</source>
+        <translation>트랜잭션 상태 안 알려짐</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1756,12 +1937,24 @@
         <translation>동기화된 블록</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>피어 선택을 다양 화하는 데 사용되는 매핑 된 자율 시스템입니다.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>매핑된 AS</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>유저 에이전트</translation>
     </message>
     <message>
         <source>Node window</source>
         <translation>노드 창</translation>
+    </message>
+    <message>
+        <source>Current block height</source>
+        <translation>현재 블록 높이</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -1774,6 +1967,10 @@
     <message>
         <source>Increase font size</source>
         <translation>글자 크기 확대</translation>
+    </message>
+    <message>
+        <source>Permissions</source>
+        <translation>권한</translation>
     </message>
     <message>
         <source>Services</source>
@@ -1963,6 +2160,14 @@
         <translation>요청할 금액 입력칸으로 선택 사항입니다. 빈 칸으로 두거나 특정 금액이 필요하지 않는 경우 0을 입력하세요.</translation>
     </message>
     <message>
+        <source>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</source>
+        <translation>새 수신 주소와 연결할 선택적 레이블 (사용자가 송장을 식별하는 데 사용함). 지불 요청에도 첨부됩니다.</translation>
+    </message>
+    <message>
+        <source>An optional message that is attached to the payment request and may be displayed to the sender.</source>
+        <translation>지불 요청에 첨부되고 발신자에게 표시 될 수있는 선택적 메시지입니다.</translation>
+    </message>
+    <message>
         <source>&amp;Create new receiving address</source>
         <translation>&amp;새 받을 주소 생성하기</translation>
     </message>
@@ -2022,12 +2227,28 @@
         <source>Could not unlock wallet.</source>
         <translation>지갑을 잠금해제 할 수 없습니다.</translation>
     </message>
-    </context>
+    <message>
+        <source>Could not generate new %1 address</source>
+        <translation>새로운 %1 주소를 생성 할 수 없음</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Request payment to ...</source>
+        <translation>...에게 결제 요청</translation>
+    </message>
+    <message>
+        <source>Address:</source>
+        <translation>주소:</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>거래액:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>라벨:</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -2276,6 +2497,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>%1(%2 블록)</translation>
     </message>
     <message>
+        <source>Cr&amp;eate Unsigned</source>
+        <translation>사인되지 않은 것을 생성</translation>
+    </message>
+    <message>
         <source> from wallet '%1'</source>
         <translation>%1 지갑에서</translation>
     </message>
@@ -2288,8 +2513,28 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>%1을(를) %2(으)로</translation>
     </message>
     <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>이 거래 초안을 작성 하시겠습니까?</translation>
+    </message>
+    <message>
         <source>Are you sure you want to send?</source>
         <translation>정말로 보내시겠습니까?</translation>
+    </message>
+    <message>
+        <source>Create Unsigned</source>
+        <translation>서명되지 않은 것을 생성</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>트랜젝션 데이터 저장 됨</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>부분적으로 서명된 비트코인 트랜젝션 (바이너리) (*.psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT saved</source>
+        <translation>PSBT 저장 됨</translation>
     </message>
     <message>
         <source>or</source>
@@ -2322,6 +2567,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Confirm send coins</source>
         <translation>코인 전송을 확인</translation>
+    </message>
+    <message>
+        <source>Confirm transaction proposal</source>
+        <translation>거래 제안 확인</translation>
     </message>
     <message>
         <source>Send</source>
@@ -2425,6 +2674,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Remove this entry</source>
         <translation>입력된 항목 삭제</translation>
+    </message>
+    <message>
+        <source>The amount to send in the selected unit</source>
+        <translation>선택한 단위로 보낼 수량</translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
@@ -2551,6 +2804,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>The Bitcoin address the message was signed with</source>
         <translation>메세지의 서명에 사용된 비트코인 주소</translation>
+    </message>
+    <message>
+        <source>The signed message to verify</source>
+        <translation>검증할 서명된 메세지</translation>
+    </message>
+    <message>
+        <source>The signature given when the message was signed</source>
+        <translation>메세지의 서명되었을 때의 시그니처</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
@@ -3097,9 +3358,25 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>블록축소를 하고 지갑을 너무 오랫동안 닫으면 체인 전체를 다시 동기화해야 할 수도 있습니다.</translation>
     </message>
-    </context>
+    <message>
+        <source>Close all wallets</source>
+        <translation>모든 지갑 닫기</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close all wallets?</source>
+        <translation>정말로 모든 지갑들을 닫으시겠습니까?</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
+    <message>
+        <source>No wallet has been loaded.
+Go to File &gt; Open Wallet to load a wallet.
+- OR -</source>
+        <translation>지갑이로드되지 않았습니다.
+파일&gt; 지갑 열기로 이동하여 지갑을로드합니다.
+-또는-</translation>
+    </message>
     <message>
         <source>Create a new wallet</source>
         <translation>새로운 지갑 생성하기</translation>
@@ -3124,6 +3401,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>수수료를 올리시겠습니까?</translation>
     </message>
     <message>
+        <source>Do you want to draft a transaction with fee increase?</source>
+        <translation>수수료가 인상 된 거래를 작성 하시겠습니까?</translation>
+    </message>
+    <message>
         <source>Current fee:</source>
         <translation>현재 수수료:</translation>
     </message>
@@ -3138,6 +3419,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Confirm fee bump</source>
         <translation>수수료 상향 승인</translation>
+    </message>
+    <message>
+        <source>Can't draft transaction.</source>
+        <translation>거래 초안을 작성할 수 없습니다.</translation>
     </message>
     <message>
         <source>PSBT copied</source>
@@ -3169,6 +3454,26 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Error</source>
         <translation>오류</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT from clipboard (invalid base64)</source>
+        <translation>클립 보드에서 PSBT를 디코딩 할 수 없습니다 (잘못된 base64).</translation>
+    </message>
+    <message>
+        <source>Load Transaction Data</source>
+        <translation>트랜젝션 데이터 불러오기</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (*.psbt)</source>
+        <translation>부분적으로 서명된 비트코인 트랜잭션 (* .psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT file must be smaller than 100 MiB</source>
+        <translation>PSBT 파일은 100MiB보다 작아야합니다.</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT</source>
+        <translation>PSBT를 디코드 할 수 없음</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
@@ -3244,6 +3549,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation>%s가 유용하다고 생각한다면 프로젝트에 공헌해주세요. 이 소프트웨어에 대한 보다 자세한 정보는 %s를 방문해주십시오.</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare the statement to fetch sqlite wallet schema version: %s</source>
+        <translation>SQLiteDatabase : sqlite 지갑 스키마 버전을 가져오는 실행문 준비에 실패함 : %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare the statement to fetch the application id: %s</source>
+        <translation>SQLiteDatabase : 응용 프로그램 ID를 가져오는 실행문 준비에 실패함 : %s</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
@@ -3350,6 +3663,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>지갑 스캔 오류</translation>
     </message>
     <message>
+        <source>Failed to verify database</source>
+        <translation>데이터베이스를 검증할 수 없음</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>불러오는 중...</translation>
     </message>
@@ -3376,6 +3693,26 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>유효하지 않은 금액 -fallbackfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to execute statement to verify database: %s</source>
+        <translation>SQLiteDatabase : 데이터베이스를 확인하는 실행문 출력에 실패함 : %s.</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to fetch sqlite wallet schema version: %s</source>
+        <translation>SQLiteDatabase : sqlite 지갑 스키마 버전을 가져오는데 실패함 : %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to fetch the application id: %s</source>
+        <translation>SQLiteDatabase: 어플리케이션 아이디를 가져오는데 실패함: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare statement to verify database: %s</source>
+        <translation>SQLiteDatabase : 데이터베이스를 확인하는 실행문 준비에 실패함 : %s.</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
+        <translation>SQLiteDataBase: 예상 못한 어플리케이션 아이디. %u 이어야하나, %u 받음</translation>
     </message>
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
@@ -3458,6 +3795,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>오류: 들어오는 연결을 허용하는데 실패했습니다 (listen returned error %s)</translation>
     </message>
     <message>
+        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
+        <translation>%s가 손상되었습니다. bitcoin-wallet을 사용하여 백업을 구제하거나 복원하십시오.</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use version 169900 or no version specified.</source>
+        <translation>HD split을 하지 않은 지갑은 pre split keypool로 업그레이드 하지 않고는 업그레이드를 진행할 수 없습니다. 버전 169900나 버전을 지정하지 않는 것을 사용해주세요.</translation>
+    </message>
+    <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>유효하지 않은 금액 -maxtxfee=&lt;amount&gt;: '%s' (거래가 막히는 상황을 방지하게 위해 적어도 %s 의 중계 수수료를 지정해야 합니다)</translation>
     </message>
@@ -3466,8 +3811,32 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>거래액이 수수료를 지불하기엔 너무 작습니다</translation>
     </message>
     <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation>지갑이 완전히 종료되지 않고 최신 버전의 Berkeley DB 빌드를 사용하여 마지막으로 로드된 경우 오류가 발생할 수 있습니다. 이 지갑을 마지막으로 로드한 소프트웨어를 사용하십시오.</translation>
+    </message>
+    <message>
+        <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
+        <translation>이것은 일반 코인 선택보다 부분적 지출 회피를 우선시하기 위해 지불하는 최대 거래 수수료 (일반 수수료에 추가)입니다.</translation>
+    </message>
+    <message>
+        <source>Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.</source>
+        <translation>거래에 변경 주소가 필요하지만 생성 할 수 없습니다. 먼저 keypoolrefill에 전화하십시오.</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>블록 축소 모드를 해제하려면 데이터베이스를 재구성하기 위해 -reindex를 사용해야 합니다. 이 명령은 전체 블록체인을 다시 다운로드합니다.</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation>치명적 내부 오류 발생. 상세한 내용을 debug.log 에서 확인하십시오</translation>
+    </message>
+    <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation>-blockfilterindex를 -peerblockfilters 없이 사용할 수 없음</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation>디스크 용량이 부족함!</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3480,6 +3849,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Error: Disk space is low for %s</source>
         <translation>오류: %s 하기엔 저장공간이 부족합니다</translation>
+    </message>
+    <message>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>오류: 키풀이 바닥남, keypoolrefill을 먼저 호출할 하십시오</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>
@@ -3500,6 +3873,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>-whitebind: '%s' 를 이용하여 포트를 지정해야 합니다</translation>
+    </message>
+    <message>
+        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
+        <translation>프록시 서버가 지정되지 않았습니다. -proxy =&lt;ip&gt; 또는 -proxy =&lt;ip:port&gt;를 사용하십시오.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -blockfilterindex.</source>

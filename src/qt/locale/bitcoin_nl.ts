@@ -1544,6 +1544,26 @@ Dit is ideaal voor alleen-lezen portommonees.</translation>
         <translation>Kon geen inputs meer ondertekenen.</translation>
     </message>
     <message>
+        <source>Unknown error processing transaction.</source>
+        <translation>Onbekende fout bij verwerken van transactie.</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast successfully! Transaction ID: %1</source>
+        <translation>Transactie succesvol uitgezonden! Transactie-ID: %1</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast failed: %1</source>
+        <translation>Uitzenden transactie mislukt: %1</translation>
+    </message>
+    <message>
+        <source>PSBT copied to clipboard.</source>
+        <translation>PSBT gekopieerd naar klembord.</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Transactiedata Opslaan</translation>
+    </message>
+    <message>
         <source>Total Amount</source>
         <translation>Totaalbedrag</translation>
     </message>
@@ -2445,6 +2465,10 @@ Notitie: Omdat de vergoeding per byte wordt gerekend, zal een vergoeding van "10
     <message>
         <source>Are you sure you want to send?</source>
         <translation>Weet u zeker dat u wilt verzenden?</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Transactiedata Opslaan</translation>
     </message>
     <message>
         <source>or</source>

@@ -70,6 +70,11 @@
         <translation>Jen viaj Bitmon-adresoj por sendi pagojn. Zorge kontrolu la sumon kaj la alsendan adreson antaŭ ol sendi.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation>Jen viaj bitmonaj adresoj por ricevi pagojn. Estas konsilinde uzi apartan ricevan adreson por ĉiu transakcio.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopii Adreson</translation>
     </message>
@@ -234,7 +239,11 @@
 </context>
 <context>
     <name>BanTableModel</name>
-    </context>
+    <message>
+        <source>Banned Until</source>
+        <translation>Ekzilita Ĝis</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -442,6 +451,22 @@
         <translation>Ĝisdata</translation>
     </message>
     <message>
+        <source>Open Wallet</source>
+        <translation>Malfermi la Monujon</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Malfermi monujon</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Fermi la Monujon...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Fermi monujon</translation>
+    </message>
+    <message>
         <source>Close All Wallets...</source>
         <translation>Fermi Ĉiujn Monujojn...</translation>
     </message>
@@ -456,6 +481,10 @@
     <message>
         <source>&amp;Window</source>
         <translation>&amp;Fenestro</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Zomi</translation>
     </message>
     <message>
         <source>Main Window</source>
@@ -680,6 +709,10 @@
 <context>
     <name>CreateWalletActivity</name>
     <message>
+        <source>Create wallet failed</source>
+        <translation>Krei monujon malsukcesis</translation>
+    </message>
+    <message>
         <source>Create wallet warning</source>
         <translation>Averto pro krei monujon</translation>
     </message>
@@ -788,6 +821,10 @@
         <translation>versio</translation>
     </message>
     <message>
+        <source>About %1</source>
+        <translation>Pri %1</translation>
+    </message>
+    <message>
         <source>Command-line options</source>
         <translation>Komandliniaj agordaĵoj</translation>
     </message>
@@ -797,6 +834,10 @@
     <message>
         <source>Welcome</source>
         <translation>Bonvenon</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation>Bonvenon al %1.</translation>
     </message>
     <message>
         <source>Use the default data directory</source>
@@ -824,6 +865,10 @@
     <message>
         <source>Form</source>
         <translation>Formularo</translation>
+    </message>
+    <message>
+        <source>Unknown...</source>
+        <translation>Nekonata...</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1038,6 +1083,10 @@
         <translation>Eblas, ke la informoj videblaj ĉi tie estas eksdataj. Via monujo aŭtomate sinkoniĝas kun la bitmona reto kiam ili konektiĝas, sed tiu procezo ankoraŭ ne finfariĝis.</translation>
     </message>
     <message>
+        <source>Available:</source>
+        <translation>Disponebla:</translation>
+    </message>
+    <message>
         <source>Your current spendable balance</source>
         <translation>via aktuala elspezebla saldo</translation>
     </message>
@@ -1076,6 +1125,18 @@
     </context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Save...</source>
+        <translation>Konservi...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Fermi</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Totala Sumo</translation>
+    </message>
     <message>
         <source>or</source>
         <translation>aŭ</translation>
@@ -1137,9 +1198,33 @@
         <source>N/A</source>
         <translation>neaplikebla</translation>
     </message>
+    <message numerus="yes">
+        <source>%n second(s)</source>
+        <translation><numerusform>%n sekundo</numerusform><numerusform>%n sekundoj</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n minute(s)</source>
+        <translation><numerusform>%n minuto</numerusform><numerusform>%n minutoj</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n hour(s)</source>
+        <translation><numerusform>%n horo</numerusform><numerusform>%n horoj</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n day(s)</source>
+        <translation><numerusform>%n tago</numerusform><numerusform>%n tagoj</numerusform></translation>
+    </message>
+    <message numerus="yes">
+        <source>%n week(s)</source>
+        <translation><numerusform>%n semajno</numerusform><numerusform>%n semajnoj</numerusform></translation>
+    </message>
     <message>
         <source>%1 and %2</source>
         <translation>%1 kaj %2</translation>
+    </message>
+    <message numerus="yes">
+        <source>%n year(s)</source>
+        <translation><numerusform>%n jaro</numerusform><numerusform>%n jaroj</numerusform></translation>
     </message>
     <message>
         <source>%1 B</source>
@@ -1236,6 +1321,10 @@
         <translation>Blokĉeno</translation>
     </message>
     <message>
+        <source>Wallet: </source>
+        <translation>Monujo:</translation>
+    </message>
+    <message>
         <source>Received</source>
         <translation>Ricevita</translation>
     </message>
@@ -1299,7 +1388,35 @@
         <source>Clear console</source>
         <translation>Malplenigi konzolon</translation>
     </message>
-    </context>
+    <message>
+        <source>1 &amp;hour</source>
+        <translation>1 &amp;horo</translation>
+    </message>
+    <message>
+        <source>1 &amp;day</source>
+        <translation>1 &amp;tago</translation>
+    </message>
+    <message>
+        <source>1 &amp;week</source>
+        <translation>1 &amp;semajno</translation>
+    </message>
+    <message>
+        <source>1 &amp;year</source>
+        <translation>1 &amp;jaro</translation>
+    </message>
+    <message>
+        <source>&amp;Unban</source>
+        <translation>&amp;Malekzili</translation>
+    </message>
+    <message>
+        <source>never</source>
+        <translation>neniam</translation>
+    </message>
+    <message>
+        <source>Unknown</source>
+        <translation>Nekonata</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveCoinsDialog</name>
     <message>
@@ -1349,6 +1466,10 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Address:</source>
+        <translation>Adreso:</translation>
+    </message>
     <message>
         <source>Amount:</source>
         <translation>Sumo:</translation>
@@ -1536,8 +1657,16 @@
         <translation>Krompago</translation>
     </message>
     <message>
+        <source>Total Amount</source>
+        <translation>Totala Sumo</translation>
+    </message>
+    <message>
         <source>Confirm send coins</source>
         <translation>Konfirmi sendon de bitmono</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>Sendi</translation>
     </message>
     <message>
         <source>The amount to pay must be larger than 0.</source>
@@ -2073,6 +2202,10 @@
     </context>
 <context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Fermi monujon</translation>
+    </message>
     <message>
         <source>Close all wallets</source>
         <translation>Fermi ĉiujn monujojn</translation>

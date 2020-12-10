@@ -884,7 +884,11 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
         <source>Create</source>
         <translation>Luo</translation>
     </message>
-    </context>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>Koostettu ilman sqlite-tukea (vaaditaan descriptor-lompakoille)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -3690,6 +3694,10 @@ Siirry osioon Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
     <message>
         <source>Failed to verify database</source>
         <translation>Tietokannan todennus epäonnistui</translation>
+    </message>
+    <message>
+        <source>Ignoring duplicate -wallet %s.</source>
+        <translation>Ohitetaan kaksois -lompakko %s.</translation>
     </message>
     <message>
         <source>Importing...</source>

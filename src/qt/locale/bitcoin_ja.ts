@@ -2397,8 +2397,16 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>送金してもよろしいですか？</translation>
     </message>
     <message>
+        <source>Create Unsigned</source>
+        <translation>未署名で作成</translation>
+    </message>
+    <message>
         <source>Save Transaction Data</source>
         <translation>トランザクションデータの保存</translation>
+    </message>
+    <message>
+        <source>PSBT saved</source>
+        <translation>PSBTは保存されました。</translation>
     </message>
     <message>
         <source>or</source>
@@ -3019,7 +3027,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Transaction status. Hover over this field to show number of confirmations.</source>
-        <translation>取引の状況。このフィールドの上にカーソルを置くと承認数が表示されます。</translation>
+        <translation>トランザクションステータス。このフィールドの上にカーソルを合わせると承認数が表示されます。</translation>
     </message>
     <message>
         <source>Date and time that the transaction was received.</source>
@@ -3312,6 +3320,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>エラー</translation>
     </message>
     <message>
+        <source>Load Transaction Data</source>
+        <translation>トランザクションデータのロード</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>ウォレットのバックアップ</translation>
     </message>
@@ -3489,6 +3501,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Failed to rescan the wallet during initialization</source>
         <translation>初期化中にウォレットの再スキャンに失敗しました</translation>
+    </message>
+    <message>
+        <source>Failed to verify database</source>
+        <translation>データベースの検証に失敗しました</translation>
     </message>
     <message>
         <source>Importing...</source>
