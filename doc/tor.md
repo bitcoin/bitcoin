@@ -37,7 +37,7 @@ In a typical situation, this suffices to run behind a Tor proxy:
 	./bitcoind -proxy=127.0.0.1:9050
 
 
-## 2. Run a Bitcoin Core hidden server
+## 2. Manually create a Bitcoin Core onion service
 
 If you configure your Tor system accordingly, it is possible to make your node also
 reachable from the Tor network. Add these lines to your /etc/tor/torrc (or equivalent
@@ -46,7 +46,6 @@ versions of Tor see [Section 3](#3-automatically-listen-on-tor).*
 
 	HiddenServiceDir /var/lib/tor/bitcoin-service/
 	HiddenServicePort 8333 127.0.0.1:8334
-	HiddenServicePort 18333 127.0.0.1:18334
 
 The directory can be different of course, but virtual port numbers should be equal to
 your bitcoind's P2P listen port (8333 by default), and target addresses and ports
@@ -92,7 +91,7 @@ for normal IPv4/IPv6 communication, use:
 
 	./bitcoind -onion=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -discover
 
-## 3. Automatically listen on Tor
+## 3. Automatically create a Bitcoin Core onion service
 
 Starting with Tor version 0.2.7.1 it is possible, through Tor's control socket
 API, to create and destroy 'ephemeral' onion services programmatically.
@@ -130,6 +129,6 @@ in the tor configuration file. The hashed password can be obtained with the comm
 
 - Do not add anything but Bitcoin Core ports to the onion service created in section 2.
   If you run a web service too, create a new onion service for that.
-  Otherwise it is trivial to link them, which may reduce privacy. Hidden
+  Otherwise it is trivial to link them, which may reduce privacy. Onion
   services created automatically (as in section 3) always have only one port
   open.
