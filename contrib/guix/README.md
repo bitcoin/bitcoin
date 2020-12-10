@@ -82,17 +82,6 @@ export PATH="${HOME}/.config/guix/current/bin${PATH:+:}$PATH"
 
 ## Usage
 
-### As a Development Environment
-
-For a Bitcoin Core depends development environment, simply invoke
-
-```sh
-guix environment --manifest=contrib/guix/manifest.scm
-```
-
-And you'll land back in your shell with all the build dependencies required for
-a `depends` build injected into your environment.
-
 ### As a Tool for Deterministic Builds
 
 From the top of a clean Bitcoin Core repository:
