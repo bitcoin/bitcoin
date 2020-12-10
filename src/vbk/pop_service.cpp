@@ -61,7 +61,7 @@ CBlockIndex* compareTipToBlock(CBlockIndex* candidate)
         return tip;
     }
 
-   int result = 0;
+    int result = 0;
     if (Params().isPopActive(tip->nHeight)) {
         result = compareForks(*tip, *candidate);
     } else {
@@ -96,16 +96,6 @@ bool acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state)
     return true;
 }
 
-bool checkPopDataSize(const altintegration::PopData& popData, altintegration::ValidationState& state)
-{
-    uint32_t nPopDataSize = ::GetSerializeSize(popData, CLIENT_VERSION);
-    if (nPopDataSize >= GetPop().config->alt->getMaxPopDataSize()) {
-        return state.Invalid("popdata-overisize", "popData raw size more than allowed");
-    }
-
-    return true;
-}
-
 bool popdataStatelessValidation(const altintegration::PopData& popData, altintegration::ValidationState& state)
 {
     auto& pop = GetPop();
@@ -126,7 +116,7 @@ bool addAllBlockPayloads(const CBlock& block, BlockValidationState& state) EXCLU
 
     altintegration::ValidationState instate;
 
-    if (!checkPopDataSize(block.popData, instate) || !popdataStatelessValidation(block.popData, instate)) {
+    if (!popdataStatelessValidation(block.popData, instate)) {
         return error("[%s] block %s is not accepted because popData is invalid: %s", __func__, block.GetHash().ToString(),
             instate.toString());
     }

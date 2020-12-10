@@ -18,8 +18,9 @@ altintegration::PopContext& GetPop()
 
 void StopPop()
 {
-    VBK_ASSERT(app);
-    app->shutdown();
+    if (app) {
+        app->shutdown();
+    }
 }
 
 void SetPopConfig(const altintegration::Config& newConfig)
