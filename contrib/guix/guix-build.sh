@@ -110,6 +110,24 @@ else
     mkdir -p "$DISTSRC_BASE"
 fi
 
+################
+# Check 5: When building for darwin, make sure that the macOS SDK exists
+################
+
+for host in $HOSTS; do
+    case "$host" in
+        *darwin*)
+            OSX_SDK="$(make -C "${PWD}/depends" --no-print-directory HOST="$host" print-OSX_SDK | sed 's@^[^=]\+=[[:space:]]\+@@g')"
+            if [ -e "$OSX_SDK" ]; then
+                echo "Found macOS SDK at '${OSX_SDK}', using..."
+            else
+                echo "macOS SDK does not exist at '${OSX_SDK}', please place the extracted, untarred SDK there to perform darwin builds, exiting..."
+                exit 1
+            fi
+            ;;
+    esac
+done
+
 #########
 # Setup #
 #########
