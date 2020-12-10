@@ -751,7 +751,7 @@ void PeerManager::PushNodeVersion(CNode& pnode, int64_t nTime)
                            CAddress(CService(), addr.nServices);
     CAddress addrMe = CAddress(CService(), nLocalNodeServices);
 
-    // SYSCOIN
+    // SYSCOIN push version and mn auth
     uint256 mnauthChallenge;
     GetRandBytes(mnauthChallenge.begin(), mnauthChallenge.size());
     {
@@ -762,13 +762,13 @@ void PeerManager::PushNodeVersion(CNode& pnode, int64_t nTime)
     if (fRegTest && gArgs.IsArgSet("-pushversion")) {
         nProtocolVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
     }
-    m_connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
+    m_connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, nProtocolVersion, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
             nonce, strSubVersion, nNodeStartingHeight, !m_ignore_incoming_txs && pnode.m_tx_relay != nullptr, mnauthChallenge, pnode.fMasternode));
 
     if (fLogIPs) {
-        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
+        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", nProtocolVersion, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
     } else {
-        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, peer=%d\n", PROTOCOL_VERSION, nNodeStartingHeight, addrMe.ToString(), nodeid);
+        LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, peer=%d\n", nProtocolVersion, nNodeStartingHeight, addrMe.ToString(), nodeid);
     }
 }
 
