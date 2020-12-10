@@ -1006,7 +1006,11 @@
         <source>(of %n GB needed)</source>
         <translation><numerusform>(в той час, як необхідно %n ГБ)</numerusform><numerusform>(в той час, як необхідно %n ГБ)</numerusform><numerusform>(в той час, як необхідно %n ГБ)</numerusform><numerusform>(в той час, як необхідно %n ГБ)</numerusform></translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation><numerusform>(%n ГБ, необхідний для повного ланцюга)</numerusform><numerusform>(%n ГБ, необхідних для повного ланцюга)</numerusform><numerusform>(%n ГБ, необхідних для повного ланцюга)</numerusform><numerusform>(%n ГБ, необхідних для повного ланцюга)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -1779,6 +1783,14 @@
     <message>
         <source>Synced Blocks</source>
         <translation>Синхронізовані Блоки</translation>
+    </message>
+    <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>Картована автономна система, що використовується для диверсифікації вибору вузлів.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>Картована Автономна Система</translation>
     </message>
     <message>
         <source>User Agent</source>

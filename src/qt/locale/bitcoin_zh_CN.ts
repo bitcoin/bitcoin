@@ -1276,7 +1276,7 @@
     </message>
     <message>
         <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>通过 Tor 隐藏服务连接比特币网络时使用另一个 SOCKS5 代理。</translation>
+        <translation>连接比特币网络时专门为Tor 隐藏服务使用另一个 SOCKS5 代理。</translation>
     </message>
     <message>
         <source>&amp;Window</source>

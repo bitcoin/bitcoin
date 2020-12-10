@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Klik-kanan untuk mengubah alamat atau label</translation>
+        <translation>Klik-kanan untuk mengedit alamat atau label</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Hapus alamat yang sementara dipilih dari daftar</translation>
+        <translation>Hapus alamat yang saat ini dipilih dari daftar</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -79,7 +79,7 @@
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>Salin&amp; Label</translation>
+        <translation>Salin &amp;Label</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
@@ -1789,6 +1789,14 @@
         <translation>Block Yang Telah Sinkron</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>Autonomous System yang dipetakan digunakan untuk mendiversifikasi pilihan peer</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>AS yang Dipetakan</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>Agen Pengguna
 
@@ -2004,6 +2012,14 @@
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>Nilai permintaan opsional. Biarkan ini kosong atau nol bila tidak meminta nilai tertentu.</translation>
+    </message>
+    <message>
+        <source>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</source>
+        <translation>Label fakultatif untuk menghubungkan dengan alamat penerima baru (anda menggunakannya untuk mengindetifikasi faktur). Itu juga dilampirkan pada permintaan pembayaran.</translation>
+    </message>
+    <message>
+        <source>An optional message that is attached to the payment request and may be displayed to the sender.</source>
+        <translation>Pesan opsional yang dilampirkan di permintaan pembayaran dan dapat ditampilkan ke pengirim.</translation>
     </message>
     <message>
         <source>&amp;Create new receiving address</source>
@@ -2896,6 +2912,10 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
         <translation>Belum dikonfirmasi</translation>
     </message>
     <message>
+        <source>Abandoned</source>
+        <translation>yang ditelantarkan</translation>
+    </message>
+    <message>
         <source>Confirmed (%1 confirmations)</source>
         <translation>Dikonfirmasi (%1 konfirmasi)</translation>
     </message>
@@ -3481,6 +3501,10 @@ Catatan: Karena biaya dihitung berdasarkan per byte, biaya "100 satoshi per kB" 
     <message>
         <source>%s is set very high!</source>
         <translation>%s diset sangat tinggi!</translation>
+    </message>
+    <message>
+        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
+        <translation>Terjadi kesalahan saat memuat dompet %s duplikat -wallet  nama file yang diterapkan</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>

@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>एड्रेस या लेबल को बदलने के लिए राइट-क्लिक करें </translation>
+        <translation>पता या लेबल को बदलने के लिए राइट-क्लिक करें </translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>नया एड्रेस बनाएं</translation>
+        <translation>नया पता बनाएं</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>चुने हुए एड्रेस को सिस्टम क्लिपबोर्ड पर कॉपी करें</translation>
+        <translation>चुने हुए पता को सिस्टम क्लिपबोर्ड पर कॉपी करें</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -27,11 +27,11 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>चुने हुए एड्रेस को सूची से हटाएं</translation>
+        <translation>चुने हुए पता को सूची से हटाएं</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
-        <translation>ढूंढने के लिए एड्रेस या लेबल दर्ज करें</translation>
+        <translation>ढूंढने के लिए पता या लेबल दर्ज करें</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -59,23 +59,23 @@
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>एड्रेस भेजे जा रहें हैं</translation>
+        <translation>पता भेजे जा रहें हैं</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>एड्रेस प्राप्त किए जा रहें हैं</translation>
+        <translation>पता प्राप्त किए जा रहें हैं</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>भुगतान करने के लिए ये आपके बिटकॉइन एड्रेस हैं। कॉइन भेजने से पहले राशि और गंतव्य एड्रेस की हमेशा जाँच करें </translation>
+        <translation>भुगतान करने के लिए ये आपके बिटकॉइन पता हैं। कॉइन भेजने से पहले राशि और गंतव्य पता की हमेशा जाँच करें </translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>भुगतान प्राप्त करने के लिए ये आपके बिटकॉइन एड्रेस हैं। नया एड्रेस बनाने के लिए रिसीव टैब में 'नया एड्रेस बनाएं' बटन का प्रयोग करें</translation>
+        <translation>भुगतान प्राप्त करने के लिए ये आपके बिटकॉइन पता हैं। नया पता बनाने के लिए रिसीव टैब में 'नया पता बनाएं' बटन का प्रयोग करें</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>&amp;एड्रेस कॉपी करें</translation>
+        <translation>&amp;पता कॉपी करें</translation>
     </message>
     <message>
         <source>Copy &amp;Label</source>
@@ -87,7 +87,7 @@
     </message>
     <message>
         <source>Export Address List</source>
-        <translation>एड्रेस की सूची निर्यात करें</translation>
+        <translation>पता की सूची निर्यात करें</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -110,7 +110,7 @@
     </message>
     <message>
         <source>Address</source>
-        <translation>एड्रेस</translation>
+        <translation>पता</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -259,7 +259,7 @@
     </message>
     <message>
         <source>Synchronizing with network...</source>
-        <translation>नेटवर्क से समकालिक (मिल) रहा है ...</translation>
+        <translation>नेटवर्क से समकालिकरण जारी है ...</translation>
     </message>
     <message>
         <source>&amp;Overview</source>
@@ -323,6 +323,10 @@
         <translation>तिजोरी</translation>
     </message>
     <message>
+        <source>Send coins to a Bitcoin address</source>
+        <translation>इस पते पर बिटकौइन भेजें</translation>
+    </message>
+    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>पहचान शब्द/अक्षर जो वॉलेट एनक्रिपशन के लिए इस्तेमाल किया है उसे बदलिए!</translation>
     </message>
@@ -363,6 +367,18 @@
         <translation>नवीनतम</translation>
     </message>
     <message>
+        <source>Open a wallet</source>
+        <translation>बटुआ खोलें</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>बटुआ बंद करें...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>बटुआ बंद करें</translation>
+    </message>
+    <message>
         <source>Sent transaction</source>
         <translation>भेजी ट्रांजक्शन</translation>
     </message>
@@ -382,6 +398,10 @@
 <context>
     <name>CoinControlDialog</name>
     <message>
+        <source>Quantity:</source>
+        <translation>मात्रा :</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>राशि :</translation>
     </message>
@@ -396,6 +416,14 @@
     <message>
         <source>Confirmed</source>
         <translation>पक्का</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>हाँ</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>नहीं</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -580,6 +608,10 @@
         <translation>सिक्के भेजें|</translation>
     </message>
     <message>
+        <source>Quantity:</source>
+        <translation>मात्रा :</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>राशि :</translation>
     </message>
@@ -660,7 +692,15 @@
     <name>TransactionDesc</name>
     <message>
         <source>Date</source>
-        <translation>taareek</translation>
+        <translation>दिनांक</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>स्रोत</translation>
+    </message>
+    <message>
+        <source>Generated</source>
+        <translation>उत्पन्न</translation>
     </message>
     <message>
         <source>unknown</source>
@@ -725,6 +765,10 @@
     </context>
 <context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>बटुआ बंद करें</translation>
+    </message>
     </context>
 <context>
     <name>WalletFrame</name>
@@ -749,6 +793,10 @@
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
+        <translation>यह एक पूर्व-रिलीज़ परीक्षण बिल्ड है - अपने जोखिम पर उपयोग करें - खनन या व्यापारी अनुप्रयोगों के लिए उपयोग न करें</translation>
+    </message>
     <message>
         <source>Verifying blocks...</source>
         <translation>ब्लॉक्स जाँचे जा रहा है...</translation>

@@ -307,7 +307,7 @@
     </message>
     <message>
         <source>Modify configuration options for %1</source>
-        <translation>Wijzig configuratieopties voor %1</translation>
+        <translation>Wijzig configuratie opties voor %1</translation>
     </message>
     <message>
         <source>&amp;Encrypt Wallet...</source>
@@ -319,7 +319,7 @@
     </message>
     <message>
         <source>&amp;Change Passphrase...</source>
-        <translation>&amp;Wijzig Wachtwoord</translation>
+        <translation>&amp;Wijzig Wachtwoordzin</translation>
     </message>
     <message>
         <source>Open &amp;URI...</source>
@@ -327,7 +327,7 @@
     </message>
     <message>
         <source>Create Wallet...</source>
-        <translation>Wallet creëren</translation>
+        <translation>Creëer Wallet</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
@@ -339,11 +339,11 @@
     </message>
     <message>
         <source>Click to disable network activity.</source>
-        <translation>Klik om de netwerkactiviteit te stoppen.</translation>
+        <translation>Klik om de netwerk activiteit te stoppen.</translation>
     </message>
     <message>
         <source>Network activity disabled.</source>
-        <translation>Netwerkactiviteit gestopt.</translation>
+        <translation>Netwerk activiteit gestopt.</translation>
     </message>
     <message>
         <source>Click to enable network activity again.</source>
@@ -363,7 +363,7 @@
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
-        <translation>Verstuur munten naar een Bitcoinadres</translation>
+        <translation>munten Versturen naar een Bitcoin adres</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>

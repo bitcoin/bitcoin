@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Feu clic dret per a editar l'adreça o l'etiqueta</translation>
+        <translation>Feu clic al botó dret per a editar l'adreça o l'etiqueta</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -189,7 +189,7 @@
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Recorda que tot i xifrant la teva cartera, els teus bitcoins no estan completament protegits de robatori a través de programari maliciós que està infectant el teu ordinador.</translation>
+        <translation>Recorda que tot i xifrant la teva cartera, els teus bitcoins no estan completament protegits de robatori a través de programari maliciós que estigui infectant el teu ordinador.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
@@ -291,7 +291,7 @@
     </message>
     <message>
         <source>Show information about %1</source>
-        <translation>Mosta informació sobre el %1</translation>
+        <translation>Mostra informació sobre el %1</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
@@ -507,7 +507,7 @@
     </message>
     <message>
         <source>Open a wallet</source>
-        <translation>Obre la cartera</translation>
+        <translation>Obre una cartera</translation>
     </message>
     <message>
         <source>Close Wallet...</source>
@@ -945,7 +945,7 @@ Això és ideal per a carteres de mode només lectura.</translation>
     </message>
     <message>
         <source>As this is the first time the program is launched, you can choose where %1 will store its data.</source>
-        <translation>Com és la primera vegada que s'executa el programa, podeu triar on %1 emmagatzemarà les dades.</translation>
+        <translation>Com és la primera vegada que s'executa el programa, podeu triar on %1 emmagatzemaran les dades.</translation>
     </message>
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>

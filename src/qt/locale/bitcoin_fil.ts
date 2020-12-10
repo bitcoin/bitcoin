@@ -70,6 +70,10 @@
         <translation>Ito ang iyong mga Bitcoin address para sa pagpapadala ng bayad. Laging suriin ang halaga at ang address na tatanggap bago magpadala ng coins.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>Ito ang iyong mga Bitcoin address para sa pagtanggap ng mga pagbabayad. Gamitin ang pindutang 'Lumikha ng bagong address sa pagtanggap' sa tab na tumanggap upang lumikha ng mga bagong address.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>Kopyahin ang address</translation>
     </message>
@@ -132,6 +136,10 @@
         <translation>Ulitin ang bagong passphrase</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>Ipakita ang Passphrase</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>I-encrypt ang walet.</translation>
     </message>
@@ -170,6 +178,30 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Naka-encrypt ang walet.</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>‭Ipasok ang bagong passphrase para sa wallet.&lt;br/&gt;Mangyaring gumamit ng isang passphrase na&lt;b&gt; sampu o higit pang mga random na characte‭r&lt;/b&gt;, o &lt;b&gt;walo o higit pang mga salita&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Ipasok ang lumang passphrase at bagong passphrase para sa pitaka.</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Tandaan na ang pag-encrypt ng iyong pitaka ay hindi maaaring ganap na maprotektahan ang iyong mga bitcoin mula sa pagnanakaw ng malware na nahahawa sa iyong computer.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Ang naka-encrypt na wallet</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Malapit na ma-encrypt ang iyong pitaka.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Ang iyong wallet ay naka-encrypt na ngayon.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -292,6 +324,14 @@
     <message>
         <source>Open &amp;URI...</source>
         <translation>Buksan ang URI...</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>Gumawa ng Pitaka</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Gumawa ng Bagong Pitaka</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -432,6 +472,10 @@
     <message>
         <source>Up to date</source>
         <translation>Napapanahon</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>Bintana ng Node</translation>
     </message>
     <message>
         <source>&amp;Sending addresses</source>
@@ -723,10 +767,42 @@
 </context>
 <context>
     <name>CreateWalletActivity</name>
-    </context>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Gumagawa ng Pitaka %1</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>Nabigo ang Pag likha ng Pitaka</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Gumawa ng Babala ng Pitaka</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
-    </context>
+    <message>
+        <source>Create Wallet</source>
+        <translation>Gumawa ng Pitaka</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>Pangalan ng Pitaka</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>Huwag paganahin ang Privbadong susi</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>Gumawa ng Blankong Pitaka</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>Gumawa</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -934,6 +1010,10 @@
         <translation>Itago</translation>
     </message>
     <message>
+        <source>Esc</source>
+        <translation>Esc</translation>
+    </message>
+    <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
         <translation>Hindi alam. S-in-i-sync ang mga Header (%1, %2%)...</translation>
     </message>
@@ -947,6 +1027,14 @@
 </context>
 <context>
     <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>Nabigo ang bukas na pitaka</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Buksan ang babala sa pitaka</translation>
+    </message>
     <message>
         <source>default wallet</source>
         <translation>walet na default</translation>
@@ -1482,6 +1570,10 @@
         <translation>Kamalian sa pag-e-encode ng URI sa QR Code.</translation>
     </message>
     <message>
+        <source>QR code support not available.</source>
+        <translation>Hindi magagamit ang suporta ng QR code.</translation>
+    </message>
+    <message>
         <source>Save QR Code</source>
         <translation>I-save ang QR Code</translation>
     </message>
@@ -1621,8 +1713,20 @@
         <translation>Mga block na na-sync</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>Ginamit ang na-map na Autonomous System para sa pag-iba-iba ng pagpipilian ng kapwa.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>Mapa sa AS</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>Ahente ng User</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>Bintana ng Node</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -1834,6 +1938,18 @@
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>Opsyonal na halaga upang humiling. Iwanan itong walang laman o zero upang hindi humiling ng tiyak na halaga.</translation>
+    </message>
+    <message>
+        <source>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</source>
+        <translation>Isang opsyonal na label upang maiugnay sa bagong address ng pagtanggap (ginamit mo upang makilala ang isang invoice). Nakalakip din ito sa kahilingan sa pagbabayad.</translation>
+    </message>
+    <message>
+        <source>An optional message that is attached to the payment request and may be displayed to the sender.</source>
+        <translation>Isang opsyonal na mensahe na naka-attach sa kahilingan sa pagbabayad at maaaring ipakita sa nagpadala.</translation>
+    </message>
+    <message>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp; Lumikha ng bagong address sa pagtanggap</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2085,6 +2201,10 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
         <translation>Dust:</translation>
     </message>
     <message>
+        <source>Hide transaction fee settings</source>
+        <translation>Itago ang mga Setting ng bayad sa Transaksyon</translation>
+    </message>
+    <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
         <translation>Kapag mas kaunti ang dami ng transaksyon kaysa sa puwang sa mga blocks, ang mga minero pati na rin ang mga relaying node ay maaaring magpatupad ng minimum na bayad. Ang pagbabayad lamang ng minimum na bayad na ito ay maayos, ngunit malaman na maaari itong magresulta sa hindi kailanmang nagkukumpirmang transaksyon sa sandaling magkaroon ng higit na pangangailangan para sa mga transaksyon ng bitcoin kaysa sa kayang i-proseso ng network.</translation>
     </message>
@@ -2153,8 +2273,16 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
         <translation>%1 (%2 mga block)</translation>
     </message>
     <message>
+        <source>Cr&amp;eate Unsigned</source>
+        <translation>Lumikha ng Unsigned</translation>
+    </message>
+    <message>
         <source>%1 to %2</source>
         <translation>%1 sa %2</translation>
+    </message>
+    <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>Nais mo bang i-draft ang transaksyong ito?</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
@@ -2185,8 +2313,32 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
         <translation>Kabuuang Halaga</translation>
     </message>
     <message>
+        <source>To review recipient list click "Show Details..."</source>
+        <translation>Upang suriin ang listahan ng tatanggap i-click ang "Ipakita ang Mga Detalye ..."</translation>
+    </message>
+    <message>
         <source>Confirm send coins</source>
         <translation>Kumpirmahin magpadala ng coins</translation>
+    </message>
+    <message>
+        <source>Confirm transaction proposal</source>
+        <translation>Kumpirmahin ang panukala sa transaksyon</translation>
+    </message>
+    <message>
+        <source>Copy PSBT to clipboard</source>
+        <translation>Kopyahin ang PSBT sa clipboard</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>Ipadala</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>Kinopya ang PSBT</translation>
+    </message>
+    <message>
+        <source>Watch-only balance:</source>
+        <translation>Balanse lamang sa panonood:</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2440,6 +2592,10 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
     <message>
         <source>Wallet unlock was cancelled.</source>
         <translation>Kinansela ang pag-unlock ng walet.</translation>
+    </message>
+    <message>
+        <source>No error</source>
+        <translation>Walang Kamalian</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
@@ -2983,6 +3139,14 @@ Tandaan: Dahil ang bayad  ay kinakalkula sa bawat-byte na batayan, ang bayad ng 
     <message>
         <source>Confirm fee bump</source>
         <translation>Kumpirmahin ang fee bump</translation>
+    </message>
+    <message>
+        <source>Can't draft transaction.</source>
+        <translation>Hindi ma-draft ang transaksyon</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>Kinopya ang PSBT</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>

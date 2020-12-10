@@ -819,8 +819,16 @@
         <translation>지갑 암호화</translation>
     </message>
     <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>이 지갑에 대한 개인 키를 비활성화합니다. 개인 키가 비활성화 된 지갑에는 개인 키가 없으며 HD 시드 또는 가져온 개인 키를 가질 수 없습니다. 이것은 시계 전용 지갑에 이상적입니다.</translation>
+    </message>
+    <message>
         <source>Disable Private Keys</source>
         <translation>개인키 비활성화 하기</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>빈 지갑을 만드십시오. 빈 지갑에는 처음에 개인 키나 스크립트가 없습니다. 나중에 개인 키와 주소를 가져 오거나 HD 시드를 설정할 수 있습니다.</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -941,6 +949,10 @@
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
         <translation>확인을 클릭하면 %1은 모든 %4블록 체인 (%2GB) 장부를 %3 안에 다운로드하고 처리하기 시작합니다.  이는 %4가 시작될 때 생성된 가장 오래된 트랜잭션부터 시작합니다.</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>이 설정을 되돌리려면 전체 블록 체인을 다시 다운로드해야합니다. 전체 체인을 먼저 다운로드하고 나중에 정리하는 것이 더 빠릅니다. 일부 고급 기능을 비활성화합니다.</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
@@ -1769,6 +1781,14 @@
         <translation>동기화된 블록</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>피어 선택을 다양 화하는 데 사용되는 매핑 된 자율 시스템입니다.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>매핑된 AS</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>유저 에이전트</translation>
     </message>
@@ -1986,6 +2006,14 @@
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>요청할 금액 입력칸으로 선택 사항입니다. 빈 칸으로 두거나 특정 금액이 필요하지 않는 경우 0을 입력하세요.</translation>
+    </message>
+    <message>
+        <source>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</source>
+        <translation>새 수신 주소와 연결할 선택적 레이블 (사용자가 송장을 식별하는 데 사용함). 지불 요청에도 첨부됩니다.</translation>
+    </message>
+    <message>
+        <source>An optional message that is attached to the payment request and may be displayed to the sender.</source>
+        <translation>지불 요청에 첨부되고 발신자에게 표시 될 수있는 선택적 메시지입니다.</translation>
     </message>
     <message>
         <source>&amp;Create new receiving address</source>
@@ -2313,6 +2341,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>%1(%2 블록)</translation>
     </message>
     <message>
+        <source>Cr&amp;eate Unsigned</source>
+        <translation>사인되지 않은 것을 생성</translation>
+    </message>
+    <message>
         <source> from wallet '%1'</source>
         <translation>%1 지갑에서</translation>
     </message>
@@ -2323,6 +2355,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>%1 to %2</source>
         <translation>%1을(를) %2(으)로</translation>
+    </message>
+    <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>이 거래 초안을 작성 하시겠습니까?</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
@@ -2353,8 +2389,16 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>총액</translation>
     </message>
     <message>
+        <source>To review recipient list click "Show Details..."</source>
+        <translation>수령인 목록을 검토하려면 "거래 세부 내역 보기" 를 클릭하십시오</translation>
+    </message>
+    <message>
         <source>Confirm send coins</source>
         <translation>코인 전송을 확인</translation>
+    </message>
+    <message>
+        <source>Confirm transaction proposal</source>
+        <translation>거래 제안 확인</translation>
     </message>
     <message>
         <source>Copy PSBT to clipboard</source>
@@ -2466,6 +2510,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Remove this entry</source>
         <translation>입력된 항목 삭제</translation>
+    </message>
+    <message>
+        <source>The amount to send in the selected unit</source>
+        <translation>선택한 단위로 보낼 수량</translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
@@ -2592,6 +2640,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>The Bitcoin address the message was signed with</source>
         <translation>메세지의 서명에 사용된 비트코인 주소</translation>
+    </message>
+    <message>
+        <source>The signed message to verify</source>
+        <translation>검증할 서명된 메세지</translation>
+    </message>
+    <message>
+        <source>The signature given when the message was signed</source>
+        <translation>메세지의 서명되었을 때의 시그니처</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
@@ -3165,6 +3221,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>수수료를 올리시겠습니까?</translation>
     </message>
     <message>
+        <source>Do you want to draft a transaction with fee increase?</source>
+        <translation>수수료가 인상 된 거래를 작성 하시겠습니까?</translation>
+    </message>
+    <message>
         <source>Current fee:</source>
         <translation>현재 수수료:</translation>
     </message>
@@ -3179,6 +3239,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Confirm fee bump</source>
         <translation>수수료 상향 승인</translation>
+    </message>
+    <message>
+        <source>Can't draft transaction.</source>
+        <translation>거래 초안을 작성할 수 없습니다.</translation>
     </message>
     <message>
         <source>PSBT copied</source>

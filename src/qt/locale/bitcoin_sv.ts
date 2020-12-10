@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Högerklicka för att redigera adressen eller etiketten.</translation>
+        <translation>Högerklicka för att redigera adress eller etikett.</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -2001,6 +2001,10 @@ Försök igen.</translation>
         <translation>Ett valfritt belopp att begära. Lämna tomt eller ange noll för att inte begära ett specifikt belopp.</translation>
     </message>
     <message>
+        <source>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</source>
+        <translation>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</translation>
+    </message>
+    <message>
         <source>&amp;Create new receiving address</source>
         <translation>S&amp;kapa ny mottagaradress</translation>
     </message>
@@ -2350,6 +2354,10 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
         <translation>Är du säker på att du vill skicka?</translation>
     </message>
     <message>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>Pleasetransaktion, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>eller</translation>
     </message>
@@ -2491,6 +2499,10 @@ Notera: Då avgiften beräknas per byte kommer en avgift på 50 satoshi tas ut f
     <message>
         <source>Remove this entry</source>
         <translation>Ta bort denna post</translation>
+    </message>
+    <message>
+        <source>The amount to send in the selected unit</source>
+        <translation>Beloppett att skicka i vald enhet</translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>

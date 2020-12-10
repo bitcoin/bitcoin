@@ -132,6 +132,10 @@
         <translation>Повтори парола</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>Показване на парола</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Криптирай портфейл</translation>
     </message>
@@ -170,6 +174,14 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>портфейлa е шифрован</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Портфейл за криптиране</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Вашият портфейл сега е криптиран.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -438,6 +450,14 @@
         <translation>Актуално</translation>
     </message>
     <message>
+        <source>Close Wallet...</source>
+        <translation>Затвори портфейла</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Затвори портфейла</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Покажи %1 помощно съобщение за да получиш лист с възможни Биткойн команди</translation>
     </message>
@@ -452,6 +472,14 @@
     <message>
         <source>Minimize</source>
         <translation>Минимизирай</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>Увеличи</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>Главен Прозорец</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -2188,6 +2216,10 @@
     </context>
 <context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Затвори портфейла</translation>
+    </message>
     </context>
 <context>
     <name>WalletFrame</name>

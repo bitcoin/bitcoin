@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>أنقر بزر الماوس الأيمن لتحرير العنوان أو التصنيف</translation>
+        <translation>أنقر بزر الفأرة الأيمن لتحرير العنوان أو التصنيف</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -470,6 +470,14 @@
         <translation>محدث</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation>نافذة Node </translation>
+    </message>
+    <message>
+        <source>Open node debugging and diagnostic console</source>
+        <translation>افتح وحدة التحكم في تصحيح أخطاء node والتشخيص</translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation>&amp;عناوين الإرسال</translation>
     </message>
@@ -536,6 +544,10 @@
     <message>
         <source>Error: %1</source>
         <translation>خطأ: %1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>تحذير:  %1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -760,9 +772,53 @@
 </context>
 <context>
     <name>CreateWalletActivity</name>
-    </context>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>فشل إنشاء المحفظة</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>تحذير إنشاء محفظة</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation>إنشاء محفظة</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>إسم المحفظة</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>شفر المحفظة. المحفظة سيتم تشفيرها بإستخدام كلمة مرور من إختيارك.</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>تشفير محفظة</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>تعطيل المفاتيح الخاصة لهذه المحفظة. لن تحتوي المحافظ ذات المفاتيح الخاصة المعطلة على مفاتيح خاصة ولا يمكن أن تحتوي على مفتاح HD أو مفاتيح خاصة مستوردة. هذا مثالي لمحافظ watch-only فقط.</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>إيقاف المفاتيح الخاصة</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>اصنع محفظة فارغة. لا تحتوي المحافظ الفارغة في البداية على مفاتيح خاصة أو نصوص. يمكن استيراد المفاتيح والعناوين الخاصة، أو يمكن تعيين مصدر HD في وقت لاحق.</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>أنشئ محفظة فارغة</translation>
+    </message>
     <message>
         <source>Create</source>
         <translation>إنشاء</translation>
@@ -805,6 +861,14 @@
     <message>
         <source>The entered address "%1" is not a valid Bitcoin address.</source>
         <translation>العنوان المدخل "%1" ليس عنوان بيت كوين صحيح.</translation>
+    </message>
+    <message>
+        <source>Address "%1" already exists as a receiving address with label "%2" and so cannot be added as a sending address.</source>
+        <translation>العنوان "%1" موجود بالفعل كعنوان إستقبال تحت مسمى "%2" ولذلك لا يمكن إضافته كعنوان إرسال.</translation>
+    </message>
+    <message>
+        <source>The entered address "%1" is already in the address book with label "%2".</source>
+        <translation>العنوان المدخل  "%1" موجود بالفعل في سجل العناوين تحت مسمى " "%2".</translation>
     </message>
     <message>
         <source>Could not unlock wallet.</source>
@@ -872,6 +936,10 @@
         <translation>عند النقر على "موافق" ، سيبدأ %1 في تنزيل ومعالجة سلسلة الكتل %4 الكاملة (%2 جيجابايت) بدءًا من المعاملات الأقدم في %3 عند تشغيل %4 في البداية.</translation>
     </message>
     <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>تتطلب العودة إلى هذا الإعداد إعادة تنزيل blockchain بالكامل. من الأسرع تنزيل السلسلة الكاملة أولاً وتقليمها لاحقًا. تعطيل بعض الميزات المتقدمة.</translation>
+    </message>
+    <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
         <translation>تُعد هذه المزامنة الأولية أمرًا شاقًا للغاية، وقد تعرض جهاز الكمبيوتر الخاص بك للمشاكل الذي لم يلاحظها أحد سابقًا. في كل مرة تقوم فيها بتشغيل %1، سيتابع التحميل من حيث تم التوقف.</translation>
     </message>
@@ -890,6 +958,10 @@
     <message>
         <source>Bitcoin</source>
         <translation>بتكوين</translation>
+    </message>
+    <message>
+        <source>Discard blocks after verification, except most recent %1 GB (prune)</source>
+        <translation>تجاهل الكتل بعد التحقق ، باستثناء أحدث %1  جيجابايت (تقليم)</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -962,9 +1034,17 @@
         <source>Hide</source>
         <translation>إخفاء</translation>
     </message>
-    </context>
+    <message>
+        <source>Unknown. Syncing Headers (%1, %2%)...</source>
+        <translation>مجهول. مزامنة الرؤوس (%1, %2%)...</translation>
+    </message>
+</context>
 <context>
     <name>OpenURIDialog</name>
+    <message>
+        <source>Open bitcoin URI</source>
+        <translation>افتح بتكوين URI</translation>
+    </message>
     <message>
         <source>URI:</source>
         <translation>العنوان:</translation>
@@ -972,6 +1052,14 @@
 </context>
 <context>
     <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>فشل فتح المحفظة</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>تحذير محفظة مفتوحة</translation>
+    </message>
     <message>
         <source>default wallet</source>
         <translation>محفظة إفتراضية</translation>
@@ -1006,6 +1094,10 @@
     <message>
         <source>Number of script &amp;verification threads</source>
         <translation>عدد مؤشرات التحقق من البرنامج النصي</translation>
+    </message>
+    <message>
+        <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
+        <translation>عنوان IP للوكيل (مثل IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
@@ -1048,8 +1140,20 @@
         <translation>&amp;الشبكة</translation>
     </message>
     <message>
+        <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
+        <translation>يعطل بعض الميزات المتقدمة ولكن سيظل التحقق من صحة جميع الكتل بالكامل. تتطلب العودة إلى هذا الإعداد إعادة تنزيل سلسلة الكتل بالكامل. قد يكون الاستخدام الفعلي للقرص أعلى إلى حد ما.</translation>
+    </message>
+    <message>
+        <source>Prune &amp;block storage to</source>
+        <translation>تقليم وحظر التخزين من أجل</translation>
+    </message>
+    <message>
         <source>GB</source>
         <translation>جب</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>تتطلب العودة إلى هذا الإعداد إعادة تنزيل سلسلة الكتل بالكامل.</translation>
     </message>
     <message>
         <source>MiB</source>
@@ -1148,6 +1252,10 @@
         <translation>واجهة المستخدم &amp;اللغة:</translation>
     </message>
     <message>
+        <source>The user interface language can be set here. This setting will take effect after restarting %1.</source>
+        <translation>سيسري هذا الإعداد بعد إعادة تشغيل %1.</translation>
+    </message>
+    <message>
         <source>&amp;Unit to show amounts in:</source>
         <translation>الوحدة لإظهار المبالغ فيها:</translation>
     </message>
@@ -1162,6 +1270,10 @@
     <message>
         <source>&amp;Third party transaction URLs</source>
         <translation>العناوين (URL) لجهات خارجية</translation>
+    </message>
+    <message>
+        <source>Options set in this dialog are overridden by the command line or in the configuration file:</source>
+        <translation>يتم تجاوز الخيارات المعينة في مربع الحوار هذا بواسطة سطر الأوامر أو في ملف التكوين:</translation>
     </message>
     <message>
         <source>&amp;OK</source>
@@ -1194,6 +1306,10 @@
     <message>
         <source>Configuration options</source>
         <translation>إعداد الخيارات</translation>
+    </message>
+    <message>
+        <source>The configuration file is used to specify advanced user options which override GUI settings. Additionally, any command-line options will override this configuration file.</source>
+        <translation>يتم استخدام ملف التكوين لتحديد خيارات المستخدم المتقدمة التي تتجاوز إعدادات واجهة المستخدم الرسومية. بالإضافة إلى ذلك ، ستتجاوز أي خيارات سطر أوامر ملف التكوين هذا.</translation>
     </message>
     <message>
         <source>Error</source>
@@ -1506,6 +1622,14 @@
         <translation>استخدام الذاكرة</translation>
     </message>
     <message>
+        <source>Wallet: </source>
+        <translation>محفظة:</translation>
+    </message>
+    <message>
+        <source>(none)</source>
+        <translation>(لايوجد)</translation>
+    </message>
+    <message>
         <source>&amp;Reset</source>
         <translation>إعادة تعيين</translation>
     </message>
@@ -1556,6 +1680,10 @@
     <message>
         <source>User Agent</source>
         <translation>وكيل المستخدم</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>نافذة Node </translation>
     </message>
     <message>
         <source>Decrease font size</source>
@@ -1694,6 +1822,10 @@
         <translation>تم تعطيل نشاط الشبكة</translation>
     </message>
     <message>
+        <source>Executing command without any wallet</source>
+        <translation>تنفيذ الأوامر بدون محفظة </translation>
+    </message>
+    <message>
         <source>(node id: %1)</source>
         <translation>(معرف العقدة: %1)</translation>
     </message>
@@ -1755,6 +1887,10 @@
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>مبلغ اختياري للطلب. اترك هذا فارغًا أو صفراً لعدم طلب مبلغ محدد.</translation>
+    </message>
+    <message>
+        <source>&amp;Create new receiving address</source>
+        <translation>و إنشاء عناوين استقبال جديدة</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2070,8 +2206,16 @@
         <translation>لا يشير إلى الإستبدال بواسطة الرسوم، BIP-125.</translation>
     </message>
     <message>
+        <source>Total Amount</source>
+        <translation>القيمة الإجمالية</translation>
+    </message>
+    <message>
         <source>Confirm send coins</source>
         <translation>تأكيد الإرسال Coins</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>إرسال</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>

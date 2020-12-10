@@ -482,12 +482,24 @@
         <translation>Ažurno</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation>Konzola za čvor</translation>
+    </message>
+    <message>
+        <source>Open node debugging and diagnostic console</source>
+        <translation>Otvori konzolu za dijagnostiku i otklanjanje pogrešaka čvora.</translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation>Adrese za &amp;slanje</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
         <translation>Adrese za &amp;primanje</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI</source>
+        <translation>Otvori bitcoin: URI</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -1768,6 +1780,10 @@
         <translation>Korisnički agent</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation>Konzola za čvor</translation>
+    </message>
+    <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Otvorite datoteku zapisa programa %1 iz trenutne podatkovne mape. Može potrajati nekoliko sekundi za velike datoteke zapisa.</translation>
     </message>
@@ -2232,6 +2248,10 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
         <translation>Prah:</translation>
     </message>
     <message>
+        <source>Hide transaction fee settings</source>
+        <translation>Sakrijte postavke za transakcijske provizije</translation>
+    </message>
+    <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
         <translation>Kada je kapacitet transakcija manja od prostora u blokovima, rudari i čvorovi prenositelji mogu zatražiti minimalnu naknadu. Prihvatljivo je platiti samo ovu minimalnu naknadu, ali budite svjesni da ovime može nastati transakcija koja se nikad ne potvrđuje čim je potražnja za korištenjem Bitcoina veća nego što mreža može obraditi.</translation>
     </message>
@@ -2445,6 +2465,10 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message>
         <source>Remove this entry</source>
         <translation>Obrišite ovaj zapis</translation>
+    </message>
+    <message>
+        <source>The amount to send in the selected unit</source>
+        <translation>Iznos za slanje u odabranoj valuti </translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
