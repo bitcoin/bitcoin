@@ -13,7 +13,7 @@ $(package)_patches+= fix_rcc_determinism.patch fix_riscv64_arch.patch xkb-defaul
 $(package)_patches+= fix_android_qmake_conf.patch fix_android_jni_static.patch dont_hardcode_pwd.patch
 $(package)_patches+= freetype_back_compat.patch drop_lrelease_dependency.patch fix_powerpc_libpng.patch
 $(package)_patches+= fix_mingw_cross_compile.patch fix_qpainter_non_determinism.patch
-$(package)_patches+= .configure qt.pro .gitmodules
+$(package)_patches+= .configure qt.pro qt.modules
 
 # Update OSX_QT_TRANSLATIONS when this is updated
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
@@ -272,7 +272,7 @@ define $(package)_preprocess_cmds
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
   cp -f qtbase/mkspecs/macx-clang/qplatformdefs.h qtbase/mkspecs/macx-clang-linux/ &&\
   cp -f $($(package)_patch_dir)/qt.pro . && \
-  cp -f $($(package)_patch_dir)/.gitmodules . && \
+  cp -f $($(package)_patch_dir)/qt.modules . && \
   cp -f $($(package)_patch_dir)/.configure configure && \
   cp -f $($(package)_patch_dir)/mac-qmake.conf qtbase/mkspecs/macx-clang-linux/qmake.conf && \
   cp -r qtbase/mkspecs/linux-arm-gnueabi-g++ qtbase/mkspecs/bitcoin-linux-g++ && \
@@ -303,7 +303,6 @@ define $(package)_build_cmds
 endef
 
 define $(package)_stage_cmds
-  echo "****************STAGING****************" && \
   cd .. && \
   $(MAKE) -C . INSTALL_ROOT=$($(package)_staging_dir) install_subtargets && \
   if `test -f qtbase/src/plugins/platforms/xcb/xcb-static/libxcb-static.a`; then \
