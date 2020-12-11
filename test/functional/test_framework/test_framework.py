@@ -611,7 +611,7 @@ class DashTestFramework(BitcoinTestFramework):
     def remove_mastermode(self, idx):
         mn = self.mninfo[idx]
         rawtx = self.nodes[0].createrawtransaction([{"txid": mn.collateral_txid, "vout": mn.collateral_vout}], {self.nodes[0].getnewaddress(): 999.9999})
-        rawtx = self.nodes[0].signrawtransaction(rawtx)
+        rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)
         self.nodes[0].sendrawtransaction(rawtx["hex"])
         self.nodes[0].generate(1)
         self.sync_all()
@@ -762,7 +762,7 @@ class DashTestFramework(BitcoinTestFramework):
         outputs[receiver_address] = satoshi_round(amount)
         outputs[change_address] = satoshi_round(in_amount - amount - fee)
         rawtx = node_from.createrawtransaction(inputs, outputs)
-        ret = node_from.signrawtransaction(rawtx)
+        ret = node_from.signrawtransactionwithwallet(rawtx)
         decoded = node_from.decoderawtransaction(ret['hex'])
         ret = {**decoded, **ret}
         return ret

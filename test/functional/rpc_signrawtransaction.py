@@ -111,7 +111,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         assert_equal(rawTxSigned['errors'][1]['vout'], inputs[2]['vout'])
 
         # Perform same test with signrawtransaction
-        rawTxSigned2 = self.nodes[0].signrawtransaction(p2wpkh_raw_tx)
+        rawTxSigned2 = self.nodes[0].signrawtransaction(rawTx, scripts, privKeys)
         assert_equal(rawTxSigned, rawTxSigned2)
 
     def run_test(self):

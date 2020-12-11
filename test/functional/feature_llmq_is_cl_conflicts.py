@@ -91,7 +91,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
                 inputs.append({"txid": rawtx1_txid, "vout": n})
             n += 1
         rawtx4 = self.nodes[0].createrawtransaction(inputs, {self.nodes[0].getnewaddress(): 0.999})
-        rawtx4 = self.nodes[0].signrawtransaction(rawtx4)['hex']
+        rawtx4 = self.nodes[0].signrawtransactionwithwallet(rawtx4)['hex']
         rawtx4_txid = self.nodes[0].sendrawtransaction(rawtx4)
 
         # wait for transactions to propagate
@@ -135,7 +135,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
                 inputs.append({"txid": rawtx2_txid, "vout": n})
             n += 1
         rawtx5 = self.nodes[0].createrawtransaction(inputs, {self.nodes[0].getnewaddress(): 0.999})
-        rawtx5 = self.nodes[0].signrawtransaction(rawtx5)['hex']
+        rawtx5 = self.nodes[0].signrawtransactionwithwallet(rawtx5)['hex']
         rawtx5_txid = self.nodes[0].sendrawtransaction(rawtx5)
         # wait for the transaction to propagate
         self.sync_mempools()

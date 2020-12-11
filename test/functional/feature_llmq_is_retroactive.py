@@ -69,7 +69,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         isolate_node(self.nodes[3])
         rawtx = self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})
         rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
-        rawtx = self.nodes[0].signrawtransaction(rawtx)['hex']
+        rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)['hex']
         txid = self.nodes[3].sendrawtransaction(rawtx)
         # Make node 3 consider the TX as safe
         self.bump_mocktime(10 * 60 + 1)
@@ -117,7 +117,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         isolate_node(self.nodes[3])
         rawtx = self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})
         rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
-        rawtx = self.nodes[0].signrawtransaction(rawtx)['hex']
+        rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)['hex']
         txid = self.nodes[0].sendrawtransaction(rawtx)
         txid = self.nodes[3].sendrawtransaction(rawtx)
         # Make sure nodes 1 and 2 received the TX before we continue
@@ -148,7 +148,7 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         isolate_node(self.nodes[3])
         rawtx = self.nodes[0].createrawtransaction([], {self.nodes[0].getnewaddress(): 1})
         rawtx = self.nodes[0].fundrawtransaction(rawtx)['hex']
-        rawtx = self.nodes[0].signrawtransaction(rawtx)['hex']
+        rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)['hex']
         txid = self.nodes[3].sendrawtransaction(rawtx)
         time.sleep(2) # make sure signing is done on node 2 (it's async)
         # Make the signing session for the IS lock timeout on node 3

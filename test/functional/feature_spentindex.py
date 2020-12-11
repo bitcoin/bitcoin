@@ -69,7 +69,7 @@ class SpentIndexTest(BitcoinTestFramework):
         tx.vout = [CTxOut(amount, scriptPubKey)]
         tx.rehash()
 
-        signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
+        signed_tx = self.nodes[0].signrawtransactionwithwallet(binascii.hexlify(tx.serialize()).decode("utf-8"))
         txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
         self.nodes[0].generate(1)
         self.sync_all()
@@ -104,7 +104,7 @@ class SpentIndexTest(BitcoinTestFramework):
         tx2.vout = [CTxOut(amount - int(COIN / 10), scriptPubKey2)]
         tx2.rehash()
         self.nodes[0].importprivkey(privkey)
-        signed_tx2 = self.nodes[0].signrawtransaction(binascii.hexlify(tx2.serialize()).decode("utf-8"))
+        signed_tx2 = self.nodes[0].signrawtransactionwithwallet(binascii.hexlify(tx2.serialize()).decode("utf-8"))
         txid2 = self.nodes[0].sendrawtransaction(signed_tx2["hex"], True)
 
         # Check the mempool index
