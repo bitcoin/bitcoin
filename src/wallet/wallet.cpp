@@ -2289,7 +2289,7 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
             // if coin control requested an asset to be funded
             if (coinControlAssetRequested) {
                 // only allowed if asset matches the output or fAllowOtherInputs and output is non-asset
-                const bool& bMatchAssetOrSysOutput = (coinControl->assetInfo->nAsset == wtx.tx->vout[i].assetInfo.nAsset) || (coinControl->fAllowOtherInputs && wtx.tx->vout[i].assetInfo.IsNull());
+                const bool& bMatchAssetOrSysOutput = (coinControl->assetInfo->nAsset == wtx.tx->vout[i].assetInfo.nAsset) || (coinControl->fAllowOtherInputs && !isAssetCoin);
                 if(!bMatchAssetOrSysOutput)
                     continue;
             }
