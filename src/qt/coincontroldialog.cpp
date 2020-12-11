@@ -30,7 +30,11 @@
 #include <QIcon>
 #include <QSettings>
 #include <QTreeWidget>
-
+// SYSCOIN
+#include <services/asset.h>
+#include <core_io.h>
+#include <univalue.h>
+#include <rpc/util.h>
 QList<CAmount> CoinControlDialog::payAmounts;
 bool CoinControlDialog::fSubtractFeeFromAmount = false;
 
@@ -468,7 +472,6 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
 
     std::vector<COutPoint> vCoinControl;
     m_coin_control.ListSelected(vCoinControl);
-
     size_t i = 0;
     for (const auto& out : model->wallet().getCoins(vCoinControl)) {
         if (out.depth_in_main_chain < 0) continue;
@@ -487,9 +490,6 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
 
         // Amount
         nAmount += out.txout.nValue;
-        // SYSCOIN
-        nAmountAsset.nAsset = out.txout.assetInfo.nAsset;
-        nAmountAsset.nValue += out.txout.assetInfo.nValue;
 
         // Bytes
         CTxDestination address;
@@ -672,14 +672,18 @@ void CoinControlDialog::updateView()
 
         CAmount nSum = 0;
         // SYSCOIN
-        CAmount nSumAsset = 0;
         int nChildren = 0;
         for (const auto& outpair : coins.second) {
             const COutPoint& output = std::get<0>(outpair);
             const interfaces::WalletTxOut& out = std::get<1>(outpair);
             nSum += out.txout.nValue;
-            // SYSCOIN
-            nSumAsset += out.txout.assetInfo.nValue;
+            // SYSCOIN    
+            CAsset theAsset;
+            CAmount nAssetDisplayValue;
+            if(out.txout.assetInfo.nAsset > 0) {
+                GetAsset(out.txout.assetInfo.nAsset, theAsset);
+                nAssetDisplayValue = nDisplayUnit == SyscoinUnits::SAT? out.txout.assetInfo.nValue: AmountFromValue(ValueFromAssetAmount(out.txout.assetInfo.nValue, theAsset.nPrecision));
+            }
             nChildren++;
 
             CCoinControlWidgetItem *itemOutput;
@@ -720,7 +724,7 @@ void CoinControlDialog::updateView()
             itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)out.txout.nValue)); // padding so that sorting works correctly
 
             // SYSCOIN amount asset
-            itemOutput->setText(COLUMN_AMOUNT_ASSET, SyscoinUnits::format(nDisplayUnit, out.txout.assetInfo.nValue));
+            itemOutput->setText(COLUMN_AMOUNT_ASSET, SyscoinUnits::format(nDisplayUnit, nAssetDisplayValue));
             itemOutput->setData(COLUMN_AMOUNT_ASSET, Qt::UserRole, QVariant((qlonglong)out.txout.assetInfo.nValue)); // padding so that sorting works correctly
 
             // asset
@@ -760,9 +764,7 @@ void CoinControlDialog::updateView()
         {
             itemWalletAddress->setText(COLUMN_CHECKBOX, "(" + QString::number(nChildren) + ")");
             itemWalletAddress->setText(COLUMN_AMOUNT, SyscoinUnits::format(nDisplayUnit, nSum));
-            itemWalletAddress->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)nSum));
-            itemWalletAddress->setText(COLUMN_AMOUNT_ASSET, SyscoinUnits::format(nDisplayUnit, nSumAsset));
-            itemWalletAddress->setData(COLUMN_AMOUNT_ASSET, Qt::UserRole, QVariant((qlonglong)nSumAsset));           
+            itemWalletAddress->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)nSum));        
         }
     }
 

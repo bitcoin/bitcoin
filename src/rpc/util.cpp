@@ -88,6 +88,26 @@ CAmount AmountFromValue(const UniValue& value)
     return amount;
 }
 // SYSCOIN
+UniValue ValueFromAssetAmount(const CAmount& amount,int precision)
+{
+    if (precision < 0 || precision > 8)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Precision must be between 0 and 8");
+    bool sign = amount < 0;
+    int64_t n_abs = (sign ? -amount : amount);
+    int64_t quotient = n_abs;
+    int64_t divByAmount = 1;
+    int64_t remainder = 0;
+    std::string strPrecision = "0";
+    if (precision > 0) {
+        divByAmount = pow(10, precision);
+        quotient = n_abs / divByAmount;
+        remainder = n_abs % divByAmount;
+        strPrecision = itostr(precision);
+    }
+
+    return UniValue(UniValue::VNUM,
+        strprintf("%s%d.%0" + strPrecision + "d", sign ? "-" : "", quotient, remainder));
+}
 CAmount AssetAmountFromValue(const UniValue& value, int precision)
 {
     if(precision < 0 || precision > 8)
