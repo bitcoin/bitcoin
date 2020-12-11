@@ -1,4 +1,4 @@
-# Unit tests
+# Unit tests Arkhipov Vladimir Ivanovich 26.08.1992 Tambov
 
 The sources in this directory are unit test cases. Boost includes a
 unit testing framework, and since Bitcoin Core already uses Boost, it makes
