@@ -15,6 +15,8 @@
 #include <evo/specialtx.h>
 #include <evo/deterministicmns.h>
 
+#include <governance/governance-classes.h>
+
 #include <masternode/masternode-payments.h>
 #include <masternode/masternode-sync.h>
 
@@ -280,6 +282,36 @@ UniValue masternode_status(const JSONRPCRequest& request)
     return mnObj;
 }
 
+std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterministicMNCPtr &payee)
+{
+    std::string strPayments = "Unknown";
+    if (payee) {
+        CTxDestination dest;
+        if (!ExtractDestination(payee->pdmnState->scriptPayout, dest)) {
+            assert(false);
+        }
+        strPayments = EncodeDestination(dest);
+    }
+    if (CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
+        std::vector<CTxOut> voutSuperblock;
+        if (!CSuperblockManager::GetSuperblockPayments(nBlockHeight, voutSuperblock)) {
+            return strPayments + ", error";
+        }
+        std::string strSBPayees = "Unknown";
+        for (const auto& txout : voutSuperblock) {
+            CTxDestination dest;
+            ExtractDestination(txout.scriptPubKey, dest);
+            if (strSBPayees != "Unknown") {
+                strSBPayees += ", " + EncodeDestination(dest);
+            } else {
+                strSBPayees = EncodeDestination(dest);
+            }
+        }
+        strPayments += ", " + strSBPayees;
+    }
+    return strPayments;
+}
+
 void masternode_winners_help()
 {
     throw std::runtime_error(
@@ -296,20 +328,18 @@ UniValue masternode_winners(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() > 3)
         masternode_winners_help();
 
-    int nHeight;
+    const CBlockIndex* pindexTip{nullptr};
     {
         LOCK(cs_main);
-        CBlockIndex* pindex = chainActive.Tip();
-        if (!pindex) return NullUniValue;
-
-        nHeight = pindex->nHeight;
+        pindexTip = chainActive.Tip();
+        if (!pindexTip) return NullUniValue;
     }
 
-    int nLast = 10;
+    int nCount = 10;
     std::string strFilter = "";
 
     if (!request.params[1].isNull()) {
-        nLast = atoi(request.params[1].get_str());
+        nCount = atoi(request.params[1].get_str());
     }
 
     if (!request.params[2].isNull()) {
@@ -317,10 +347,23 @@ UniValue masternode_winners(const JSONRPCRequest& request)
     }
 
     UniValue obj(UniValue::VOBJ);
-    auto mapPayments = GetRequiredPaymentsStrings(nHeight - nLast, nHeight + 20);
-    for (const auto &p : mapPayments) {
-        if (strFilter != "" && p.second.find(strFilter) == std::string::npos) continue;
-        obj.pushKV(strprintf("%d", p.first), p.second);
+
+    int nChainTipHeight = pindexTip->nHeight;
+    int nStartHeight = std::max(nChainTipHeight - nCount, 1);
+
+    for (int h = nStartHeight; h <= nChainTipHeight; h++) {
+        auto payee = deterministicMNManager->GetListForBlock(pindexTip->GetAncestor(h - 1)).GetMNPayee();
+        std::string strPayments = GetRequiredPaymentsString(h, payee);
+        if (strFilter != "" && strPayments.find(strFilter) == std::string::npos) continue;
+        obj.pushKV(strprintf("%d", h), strPayments);
+    }
+
+    auto projection = deterministicMNManager->GetListForBlock(pindexTip).GetProjectedMNPayees(20);
+    for (size_t i = 0; i < projection.size(); i++) {
+        int h = nChainTipHeight + 1 + i;
+        std::string strPayments = GetRequiredPaymentsString(h, projection[i]);
+        if (strFilter != "" && strPayments.find(strFilter) == std::string::npos) continue;
+        obj.pushKV(strprintf("%d", h), strPayments);
     }
 
     return obj;

@@ -233,54 +233,6 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blo
                             nBlockHeight, blockReward, voutMasternodeStr, txNew.ToString());
 }
 
-std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterministicMNCPtr &payee)
-{
-    std::string strPayee = "Unknown";
-    if (payee) {
-        CTxDestination dest;
-        if (!ExtractDestination(payee->pdmnState->scriptPayout, dest))
-            assert(false);
-        strPayee = EncodeDestination(dest);
-    }
-    if (CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
-        strPayee += ", " + CSuperblockManager::GetRequiredPaymentsString(nBlockHeight);
-    }
-    return strPayee;
-}
-
-std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEndHeight)
-{
-    std::map<int, std::string> mapPayments;
-
-    if (nStartHeight < 1) {
-        nStartHeight = 1;
-    }
-
-    LOCK(cs_main);
-    int nChainTipHeight = chainActive.Height();
-
-    bool doProjection = false;
-    for(int h = nStartHeight; h < nEndHeight; h++) {
-        if (h <= nChainTipHeight) {
-            auto payee = deterministicMNManager->GetListForBlock(chainActive[h - 1]).GetMNPayee();
-            mapPayments.emplace(h, GetRequiredPaymentsString(h, payee));
-        } else {
-            doProjection = true;
-            break;
-        }
-    }
-    if (doProjection) {
-        auto projection = deterministicMNManager->GetListAtChainTip().GetProjectedMNPayees(nEndHeight - nChainTipHeight);
-        for (size_t i = 0; i < projection.size(); i++) {
-            auto payee = projection[i];
-            size_t h = nChainTipHeight + 1 + i;
-            mapPayments.emplace(h, GetRequiredPaymentsString(h, payee));
-        }
-    }
-
-    return mapPayments;
-}
-
 /**
 *   GetMasternodeTxOuts
 *
