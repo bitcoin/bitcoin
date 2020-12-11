@@ -23,7 +23,6 @@ MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # These should probably be taken from cmdline
 DATADIR="${MYDIR}/datadir"
-TARGET_DELAY=60
 
 errecho() {
     # prints to stderr
@@ -96,13 +95,6 @@ errecho "Import private key into itcoin_signer"
 "${BITCOIN_CLI}" -datadir="${DATADIR}" importprivkey "${PRIVKEY}"
 errecho "Private key imported into itcoin_signer"
 
-# Estimate the value for nbit parameter which is necessary to generate blocks at
-# 5 seconds pace on the hardware we are running now.
-# The NBITS variable will be an empty string if the regex does not match.
-errecho "Calibrating difficulty for target delay ${TARGET_DELAY} seconds"
-NBITS=$("${MINER}" calibrate --grind-cmd="${BITCOIN_UTIL} grind" --seconds "${TARGET_DELAY}" | sed --regexp-extended --quiet 's/nbits=(.*) for (.*)s average mining time/\1/p')
-errecho "Difficulty for target delay ${TARGET_DELAY} seconds calibrated. nbits=${NBITS}"
-
 # Generate an address we'll send bitcoins to.
 errecho "Generate an address"
 ADDR=$("${BITCOIN_CLI}" -datadir="${DATADIR}" getnewaddress)
@@ -111,10 +103,10 @@ errecho "Address ${ADDR} generated"
 # Ask the miner to send bitcoins to that address. Being the first block in the
 # chain, we need to choose a date. We'll use "-1", which means "current time".
 errecho "Mine the first block"
-"${MINER}" --cli="${BITCOIN_CLI} -datadir=${DATADIR}" generate --address "${ADDR}" --grind-cmd="${BITCOIN_UTIL} grind" --nbits="${NBITS}" --set-block-time -1
+"${MINER}" --cli="${BITCOIN_CLI} -datadir=${DATADIR}" generate --address "${ADDR}" --grind-cmd="${BITCOIN_UTIL} grind" --min-nbits --set-block-time -1
 errecho "First block mined"
 
 # Let's start mining continuously. We'll reuse the same ADDR as before.
 errecho "Keep mining the following blocks"
-"${MINER}" --cli="${BITCOIN_CLI} -datadir=${DATADIR}" generate --address "${ADDR}" --grind-cmd="${BITCOIN_UTIL} grind" --nbits="${NBITS}" --ongoing
+"${MINER}" --cli="${BITCOIN_CLI} -datadir=${DATADIR}" generate --address "${ADDR}" --grind-cmd="${BITCOIN_UTIL} grind" --min-nbits --ongoing
 errecho "You should never reach here"

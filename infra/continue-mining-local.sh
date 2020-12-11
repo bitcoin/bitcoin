@@ -25,7 +25,6 @@ MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # These should probably be taken from cmdline
 DATADIR="${MYDIR}/datadir"
-TARGET_DELAY=60
 WALLET_NAME=itcoin_signer
 
 errecho() {
@@ -77,16 +76,7 @@ errecho "Retrieve the address of the first transaction we find"
 ADDR=$("${BITCOIN_CLI}" -datadir="${DATADIR}" listtransactions | jq --raw-output '.[0].address')
 errecho "Address ${ADDR} retrieved"
 
-# Estimate the value for nbit parameter which is necessary to generate blocks at
-# 5 seconds pace on the hardware we are running now.
-# The NBITS variable will be an empty string if the regex does not match.
-#
-# On my laptop, nbits=1d1ae7b3 for a target of 60 seconds.
-errecho "Calibrating difficulty for target delay ${TARGET_DELAY} seconds"
-NBITS=$("${MINER}" calibrate --grind-cmd="${BITCOIN_UTIL} grind" --seconds "${TARGET_DELAY}" | sed --regexp-extended --quiet 's/nbits=(.*) for (.*)s average mining time/\1/p')
-errecho "Difficulty for target delay ${TARGET_DELAY} seconds calibrated. nbits=${NBITS}"
-
 # Let's start mining continuously. We'll reuse the same ADDR as before.
 errecho "Keep mining eternally"
-"${MINER}" --cli="${BITCOIN_CLI} -datadir=${DATADIR}" generate --address "${ADDR}" --grind-cmd="${BITCOIN_UTIL} grind" --nbits="${NBITS}" --ongoing
+"${MINER}" --cli="${BITCOIN_CLI} -datadir=${DATADIR}" generate --address "${ADDR}" --grind-cmd="${BITCOIN_UTIL} grind" --min-nbits --ongoing
 errecho "You should never reach here"
