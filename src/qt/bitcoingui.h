@@ -173,7 +173,7 @@ private:
     Notificator* notificator = nullptr;
     RPCConsole* rpcConsole = nullptr;
     HelpMessageDialog* helpMessageDialog = nullptr;
-#ifdef Q_OS_WIN
+#ifdef BITCOIN_QT_WIN_TASKBAR
     QWinTaskbarButton* m_taskbar_button = nullptr;
 #endif
     ModalOverlay* modalOverlay = nullptr;
