@@ -1295,8 +1295,9 @@ void PeerManager::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_
 void PeerManager::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
     const int nNewHeight = pindexNew->nHeight;
     m_connman.SetBestHeight(nNewHeight);
-
     SetServiceFlagsIBDCache(!fInitialDownload);
+
+    // Relay inventory, but don't relay old inventory during initial block download.
     if (!fInitialDownload) {
         // Find the hashes of all blocks that weren't previously in the best chain.
         std::vector<uint256> vHashes;
@@ -1310,13 +1311,10 @@ void PeerManager::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockInde
                 break;
             }
         }
-        // Relay inventory, but don't relay old inventory during initial block download.
         m_connman.ForEachNode([nNewHeight, &vHashes](CNode* pnode) {
             LOCK(pnode->cs_inventory);
-            if (nNewHeight > (pnode->nStartingHeight != -1 ? pnode->nStartingHeight - 2000 : 0)) {
-                for (const uint256& hash : reverse_iterate(vHashes)) {
-                    pnode->vBlockHashesToAnnounce.push_back(hash);
-                }
+            for (const uint256& hash : reverse_iterate(vHashes)) {
+                pnode->vBlockHashesToAnnounce.push_back(hash);
             }
         });
         m_connman.WakeMessageHandler();
