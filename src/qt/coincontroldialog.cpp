@@ -742,8 +742,8 @@ void CoinControlDialog::updateView()
             // vout index
             itemOutput->setData(COLUMN_ADDRESS, VOutRole, output.n);
 
-             // disable locked coins
-            if (model->wallet().isLockedCoin(output))
+            // SYSCOIN disable locked coins
+            if (model->wallet().isLockedCoin(output) || !out.txout.assetInfo.IsNull())
             {
                 m_coin_control.UnSelect(output); // just to be sure
                 itemOutput->setDisabled(true);

@@ -1294,8 +1294,6 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
     // SYSCOIN
     fDisableGovernance = args.GetBoolArg("-disablegovernance", false);
-    LogPrintf("fDisableGovernance %d\n", fDisableGovernance);
-
     if (fDisableGovernance) {
         LogPrintf("You are starting with governance validation disabled. %s\n" , fPruneMode ? "This is expected because you are running a pruned node." : "");
     }
@@ -1862,7 +1860,10 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                 UnloadBlockIndex(node.mempool.get(), chainman);
                                 
                 // SYSCOIN
-                fAssetIndex = args.GetBoolArg("-assetindex", false);	
+                fAssetIndex = args.GetBoolArg("-assetindex", false);
+                if(fAssetIndex) {
+                    LogPrintf("Asset Index enabled, allowing for an asset aware spending policy\n");
+                }
                 passetdb.reset();
                 pethereumtxrootsdb.reset();
                 pethereumtxmintdb.reset();
