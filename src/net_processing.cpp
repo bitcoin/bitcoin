@@ -1293,8 +1293,7 @@ void PeerManager::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_
  * in ::ChainActive() to our peers.
  */
 void PeerManager::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
-    const int nNewHeight = pindexNew->nHeight;
-    m_connman.SetBestHeight(nNewHeight);
+    m_connman.SetBestHeight(pindexNew->nHeight);
     SetServiceFlagsIBDCache(!fInitialDownload);
 
     // Relay inventory, but don't relay old inventory during initial block download.
@@ -1311,7 +1310,7 @@ void PeerManager::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockInde
                 break;
             }
         }
-        m_connman.ForEachNode([nNewHeight, &vHashes](CNode* pnode) {
+        m_connman.ForEachNode([&vHashes](CNode* pnode) {
             LOCK(pnode->cs_inventory);
             for (const uint256& hash : reverse_iterate(vHashes)) {
                 pnode->vBlockHashesToAnnounce.push_back(hash);
