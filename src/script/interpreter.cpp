@@ -301,9 +301,15 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
             if (opcode > OP_16 && ++nOpCount > MAX_OPS_PER_SCRIPT)
                 return set_error(serror, SCRIPT_ERR_OP_COUNT);
 
-            if (opcode == OP_CAT ||
-                opcode == OP_SUBSTR ||
-                opcode == OP_LEFT ||
+            bool fDIP0020OpcodesEnabled = (flags & SCRIPT_ENABLE_DIP0020_OPCODES) != 0;
+            if (!fDIP0020OpcodesEnabled) {
+                if (opcode == OP_CAT ||
+                    opcode == OP_SPLIT) {
+                    return set_error(serror, SCRIPT_ERR_DISABLED_OPCODE); // Disabled opcodes.
+                }
+            }
+
+            if (opcode == OP_LEFT ||
                 opcode == OP_RIGHT ||
                 opcode == OP_INVERT ||
                 opcode == OP_AND ||
@@ -1024,6 +1030,62 @@ bool EvalScript(std::vector<std::vector<unsigned char> >& stack, const CScript& 
                             popstack(stack);
                         else
                             return set_error(serror, SCRIPT_ERR_CHECKMULTISIGVERIFY);
+                    }
+                }
+                break;
+
+                //
+                // Splice operations
+                //
+                case OP_CAT:
+                {
+                    // (x1 x2 -- out)
+                    if (stack.size() < 2) {
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                    }
+
+                    valtype &vch1 = stacktop(-2);
+                    valtype &vch2 = stacktop(-1);
+                    if (vch1.size() + vch2.size() > MAX_SCRIPT_ELEMENT_SIZE) {
+                        return set_error(serror, SCRIPT_ERR_PUSH_SIZE);
+                    }
+
+                    vch1.insert(vch1.end(), vch2.begin(), vch2.end());
+                    popstack(stack);
+                }
+                break;
+
+                case OP_SPLIT:
+                {
+                    // (in position -- x1 x2)
+                    if (stack.size() < 2) {
+                        return set_error(serror, SCRIPT_ERR_INVALID_STACK_OPERATION);
+                    }
+
+                    valtype vch = stacktop(-2);
+                    int64_t nPosition = CScriptNum(stacktop(-1), fRequireMinimal).getint();
+
+                    // if nPosition is less than 0 or is larger than the input then throw error
+                    if (nPosition < 0 || static_cast<size_t>(nPosition) > vch.size()) {
+                        return set_error(serror, SCRIPT_ERR_INVALID_SPLIT_RANGE);
+                    }
+
+                    popstack(stack);
+                    popstack(stack);
+
+                    // initialize outputs
+                    if (nPosition == 0) {
+                        stack.push_back(valtype());
+                        stack.push_back(vch);
+                    } else if (static_cast<size_t>(nPosition) == vch.size()) {
+                        stack.push_back(vch);
+                        stack.push_back(valtype());
+                    } else {
+                        valtype vchOut1, vchOut2;
+                        vchOut1.insert(vchOut1.end(), vch.begin(), vch.begin() + nPosition);
+                        vchOut2.insert(vchOut2.end(), vch.begin() + nPosition, vch.end());
+                        stack.emplace_back(move(vchOut1));
+                        stack.emplace_back(move(vchOut2));
                     }
                 }
                 break;

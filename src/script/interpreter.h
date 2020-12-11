@@ -95,6 +95,9 @@ enum
     // Signature(s) must be empty vector if a CHECK(MULTI)SIG operation failed
     //
     SCRIPT_VERIFY_NULLFAIL = (1U << 14),
+
+    // Enable the opcodes listed in DIP0020 (OP_CAT, OP_AND, OP_OR, OP_XOR, OP_DIV, OP_MOD, OP_SPLIT, OP_BIN2NUM, OP_NUM2BIN, OP_CHECKDATASIG, OP_CHECKDATASIGVERIFY).
+    SCRIPT_ENABLE_DIP0020_OPCODES = (1U << 15),
 };
 
 bool CheckSignatureEncoding(const std::vector<unsigned char> &vchSig, unsigned int flags, ScriptError* serror);

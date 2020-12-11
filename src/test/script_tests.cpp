@@ -86,7 +86,8 @@ static ScriptErrorDesc script_errors[]={
     {SCRIPT_ERR_PUBKEYTYPE, "PUBKEYTYPE"},
     {SCRIPT_ERR_CLEANSTACK, "CLEANSTACK"},
     {SCRIPT_ERR_SIG_NULLFAIL, "NULLFAIL"},
-    {SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS, "DISCOURAGE_UPGRADABLE_NOPS"}
+    {SCRIPT_ERR_DISCOURAGE_UPGRADABLE_NOPS, "DISCOURAGE_UPGRADABLE_NOPS"},
+    {SCRIPT_ERR_INVALID_SPLIT_RANGE, "SPLIT_RANGE"}
 };
 
 const char *FormatScriptError(ScriptError_t err)
@@ -145,6 +146,7 @@ CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CMu
 void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, int flags, const std::string& message, int scriptError)
 {
     bool expect = (scriptError == SCRIPT_ERR_OK);
+    bool fEnableDIP0020Opcodes = (SCRIPT_ENABLE_DIP0020_OPCODES & flags) != 0;
     ScriptError err;
     CMutableTransaction txCredit = BuildCreditingTransaction(scriptPubKey);
     CMutableTransaction tx = BuildSpendingTransaction(scriptSig, txCredit);
@@ -158,6 +160,8 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, int flags, co
         int combined_flags = expect ? (flags & ~extra_flags) : (flags | extra_flags);
         // Weed out some invalid flag combinations.
         if (combined_flags & SCRIPT_VERIFY_CLEANSTACK && ~combined_flags & SCRIPT_VERIFY_P2SH) continue;
+        // Make sure DIP0020 opcodes flag stays unchanged.
+        combined_flags = fEnableDIP0020Opcodes ? (combined_flags | SCRIPT_ENABLE_DIP0020_OPCODES) : (combined_flags & ~SCRIPT_ENABLE_DIP0020_OPCODES);
         BOOST_CHECK_MESSAGE(VerifyScript(scriptSig, scriptPubKey, combined_flags, MutableTransactionSignatureChecker(&tx, 0, txCredit.vout[0].nValue), &err) == expect, message + strprintf(" (with flags %x)", combined_flags));
     }
 

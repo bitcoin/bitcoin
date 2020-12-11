@@ -153,7 +153,7 @@ OP_TUCK = CScriptOp(0x7d)
 
 # splice ops
 OP_CAT = CScriptOp(0x7e)
-OP_SUBSTR = CScriptOp(0x7f)
+OP_SPLIT = CScriptOp(0x7f)
 OP_LEFT = CScriptOp(0x80)
 OP_RIGHT = CScriptOp(0x81)
 OP_SIZE = CScriptOp(0x82)
@@ -285,7 +285,7 @@ OPCODE_NAMES.update({
     OP_SWAP : 'OP_SWAP',
     OP_TUCK : 'OP_TUCK',
     OP_CAT : 'OP_CAT',
-    OP_SUBSTR : 'OP_SUBSTR',
+    OP_SPLIT : 'OP_SPLIT',
     OP_LEFT : 'OP_LEFT',
     OP_RIGHT : 'OP_RIGHT',
     OP_SIZE : 'OP_SIZE',

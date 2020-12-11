@@ -70,7 +70,7 @@ const char* GetOpName(opcodetype opcode)
 
     // splice ops
     case OP_CAT                    : return "OP_CAT";
-    case OP_SUBSTR                 : return "OP_SUBSTR";
+    case OP_SPLIT                  : return "OP_SPLIT";
     case OP_LEFT                   : return "OP_LEFT";
     case OP_RIGHT                  : return "OP_RIGHT";
     case OP_SIZE                   : return "OP_SIZE";

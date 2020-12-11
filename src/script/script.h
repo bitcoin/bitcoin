@@ -108,7 +108,7 @@ enum opcodetype
 
     // splice ops
     OP_CAT = 0x7e,
-    OP_SUBSTR = 0x7f,
+    OP_SPLIT = 0x7f,
     OP_LEFT = 0x80,
     OP_RIGHT = 0x81,
     OP_SIZE = 0x82,
