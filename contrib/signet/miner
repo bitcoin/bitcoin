@@ -323,7 +323,8 @@ def next_block_delta(last_nbits, last_hash, ultimate_target, do_poisson):
     #  4) if doing poisson, use the last hash to pick a uniformly random number in [0,1), and work out a random multiplier to vary the average by
     #  5) cap the resulting interval between 1 second and 1 hour to avoid extremes
 
-    INTERVAL = 600.0*2016/2015 # 10 minutes, adjusted for the off-by-one bug
+    # ITCOIN_SPECIFIC: in upstream Bitcoin, INTERVAL is 10 minutes
+    INTERVAL = 60.0*2016/2015 # 1 minute, adjusted for the off-by-one bug
 
     current_target = nbits_to_target(last_nbits)
     retarget_factor = ultimate_target / current_target
