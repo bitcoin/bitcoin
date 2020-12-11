@@ -671,7 +671,6 @@ void CoinControlDialog::updateView()
         }
 
         CAmount nSum = 0;
-        // SYSCOIN
         int nChildren = 0;
         for (const auto& outpair : coins.second) {
             const COutPoint& output = std::get<0>(outpair);
