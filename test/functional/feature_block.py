@@ -1338,13 +1338,12 @@ class FullBlockTest(BitcoinTestFramework):
         coinbase = create_coinbase(height, self.coinbase_pubkey)
         coinbase.vout[0].nValue += additional_coinbase_value
         coinbase.rehash()
-        blockversion = 0x20000000
         if spend is None:
-            block = create_block(base_block_hash, coinbase, block_time, version=blockversion)
+            block = create_block(base_block_hash, coinbase, block_time, version=version)
         else:
             coinbase.vout[0].nValue += spend.vout[0].nValue - 1  # all but one satoshi to fees
             coinbase.rehash()
-            block = create_block(base_block_hash, coinbase, block_time, version=blockversion)
+            block = create_block(base_block_hash, coinbase, block_time, version=version)
             tx = self.create_tx(spend, 0, 1, script)  # spend 1 satoshi
             self.sign_tx(tx, spend)
             self.add_transactions_to_block(block, [tx])

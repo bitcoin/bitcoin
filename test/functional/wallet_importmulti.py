@@ -579,8 +579,8 @@ class ImportMultiTest(BitcoinTestFramework):
 
         # Test ranged descriptor fails if range is not specified
         xpriv = "tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg"
-        addresses = ["2N7yv4p8G8yEaPddJxY41kPihnWvs39qCMf", "2MsHxyb2JS3pAySeNUsJ7mNnurtpeenDzLA"] # hdkeypath=m/0'/0'/0' and 1'
-        addresses += ["bcrt1qrd3n235cj2czsfmsuvqqpr3lu6lg0ju7scl8gn", "bcrt1qfqeppuvj0ww98r6qghmdkj70tv8qpchehegrg8"] # wpkh subscripts corresponding to the above addresses
+        addresses = ["QbLgBpzWA5HfXpPMae62q6A8vuNgxHqXbU", "QLej6btYT9sG7dQR6yL8r5EM1HGUaDYa2F"] # hdkeypath=m/0'/0'/0' and 1'
+        addresses += ["rltc1qrd3n235cj2czsfmsuvqqpr3lu6lg0ju7w49wld", "rltc1qfqeppuvj0ww98r6qghmdkj70tv8qpchef5j2le"] # wpkh subscripts corresponding to the above addresses
         desc = "sh(wpkh(" + xpriv + "/0'/0'/*'" + "))"
         self.log.info("Ranged descriptor import should fail without a specified range")
         self.test_importmulti({"desc": descsum_create(desc),
