@@ -141,6 +141,9 @@ build_id_string+=system_clang
 $(host_arch)_$(host_os)_id_string+=system_clang
 endif
 
+build_id_string+=GUIX_ENVIRONMENT=$(GUIX_ENVIRONMENT)
+$(host_arch)_$(host_os)_id_string+=GUIX_ENVIRONMENT=$(GUIX_ENVIRONMENT)
+
 qrencode_packages_$(NO_QR) = $(qrencode_packages)
 
 qt_packages_$(NO_QT) = $(qt_packages) $(qt_$(host_os)_packages) $(qt_$(host_arch)_$(host_os)_packages) $(qrencode_packages_)
