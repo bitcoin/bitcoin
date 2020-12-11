@@ -1296,28 +1296,30 @@ void PeerManager::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockInde
     m_connman.SetBestHeight(pindexNew->nHeight);
     SetServiceFlagsIBDCache(!fInitialDownload);
 
-    // Relay inventory, but don't relay old inventory during initial block download.
-    if (!fInitialDownload) {
-        // Find the hashes of all blocks that weren't previously in the best chain.
-        std::vector<uint256> vHashes;
-        const CBlockIndex *pindexToAnnounce = pindexNew;
-        while (pindexToAnnounce != pindexFork) {
-            vHashes.push_back(pindexToAnnounce->GetBlockHash());
-            pindexToAnnounce = pindexToAnnounce->pprev;
-            if (vHashes.size() == MAX_BLOCKS_TO_ANNOUNCE) {
-                // Limit announcements in case of a huge reorganization.
-                // Rely on the peer's synchronization mechanism in that case.
-                break;
-            }
+    // Don't relay inventory during initial block download.
+    if (fInitialDownload) return;
+
+    // Find the hashes of all blocks that weren't previously in the best chain.
+    std::vector<uint256> vHashes;
+    const CBlockIndex *pindexToAnnounce = pindexNew;
+    while (pindexToAnnounce != pindexFork) {
+        vHashes.push_back(pindexToAnnounce->GetBlockHash());
+        pindexToAnnounce = pindexToAnnounce->pprev;
+        if (vHashes.size() == MAX_BLOCKS_TO_ANNOUNCE) {
+            // Limit announcements in case of a huge reorganization.
+            // Rely on the peer's synchronization mechanism in that case.
+            break;
         }
-        m_connman.ForEachNode([&vHashes](CNode* pnode) {
-            LOCK(pnode->cs_inventory);
-            for (const uint256& hash : reverse_iterate(vHashes)) {
-                pnode->vBlockHashesToAnnounce.push_back(hash);
-            }
-        });
-        m_connman.WakeMessageHandler();
     }
+
+    // Relay to all peers
+    m_connman.ForEachNode([&vHashes](CNode* pnode) {
+        LOCK(pnode->cs_inventory);
+        for (const uint256& hash : reverse_iterate(vHashes)) {
+            pnode->vBlockHashesToAnnounce.push_back(hash);
+        }
+    });
+    m_connman.WakeMessageHandler();
 }
 
 /**
