@@ -187,7 +187,7 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
 
     const CBlockIndex* baseBlockIndex = chainActive.Genesis();
     if (!baseBlockHash.IsNull()) {
-        baseBlockIndex = LookupBlockIndex(blockHash);
+        baseBlockIndex = LookupBlockIndex(baseBlockHash);
         if (!baseBlockIndex) {
             errorRet = strprintf("block %s not found", baseBlockHash.ToString());
             return false;
