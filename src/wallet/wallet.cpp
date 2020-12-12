@@ -1178,9 +1178,8 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
     // Handle transactions that were removed from the mempool because they
     // conflict with transactions in a newly connected block.
     if (reason == MemPoolRemovalReason::CONFLICT) {
-        // Call SyncNotifications, so external -walletnotify notifications will
-        // be triggered for these transactions. Set Status::UNCONFIRMED instead
-        // of Status::CONFLICTED for a few reasons:
+        // Trigger external -walletnotify notifications for these transactions.
+        // Set Status::UNCONFIRMED instead of Status::CONFLICTED for a few reasons:
         //
         // 1. The transactionRemovedFromMempool callback does not currently
         //    provide the conflicting block's hash and height, and for backwards
