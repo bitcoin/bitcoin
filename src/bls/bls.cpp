@@ -14,18 +14,6 @@
 #include <assert.h>
 #include <string.h>
 
-bool CBLSId::InternalSetBuf(const void* buf)
-{
-    memcpy(impl.begin(), buf, sizeof(uint256));
-    return true;
-}
-
-bool CBLSId::InternalGetBuf(void* buf) const
-{
-    memcpy(buf, impl.begin(), sizeof(uint256));
-    return true;
-}
-
 void CBLSId::SetInt(int x)
 {
     impl.SetHex(strprintf("%x", x));
@@ -52,22 +40,6 @@ CBLSId CBLSId::FromHash(const uint256& hash)
     CBLSId id;
     id.SetHash(hash);
     return id;
-}
-
-bool CBLSSecretKey::InternalSetBuf(const void* buf)
-{
-    try {
-        impl = bls::PrivateKey::FromBytes((const uint8_t*)buf);
-        return true;
-    } catch (...) {
-        return false;
-    }
-}
-
-bool CBLSSecretKey::InternalGetBuf(void* buf) const
-{
-    impl.Serialize((uint8_t*)buf);
-    return true;
 }
 
 void CBLSSecretKey::AggregateInsecure(const CBLSSecretKey& o)
@@ -171,22 +143,6 @@ CBLSSignature CBLSSecretKey::Sign(const uint256& hash) const
     return sigRet;
 }
 
-bool CBLSPublicKey::InternalSetBuf(const void* buf)
-{
-    try {
-        impl = bls::PublicKey::FromBytes((const uint8_t*)buf);
-        return true;
-    } catch (...) {
-        return false;
-    }
-}
-
-bool CBLSPublicKey::InternalGetBuf(void* buf) const
-{
-    impl.Serialize((uint8_t*)buf);
-    return true;
-}
-
 void CBLSPublicKey::AggregateInsecure(const CBLSPublicKey& o)
 {
     assert(IsValid() && o.IsValid());
@@ -254,22 +210,6 @@ bool CBLSPublicKey::DHKeyExchange(const CBLSSecretKey& sk, const CBLSPublicKey& 
     impl = bls::BLS::DHKeyExchange(sk.impl, pk.impl);
     fValid = true;
     UpdateHash();
-    return true;
-}
-
-bool CBLSSignature::InternalSetBuf(const void* buf)
-{
-    try {
-        impl = bls::InsecureSignature::FromBytes((const uint8_t*)buf);
-        return true;
-    } catch (...) {
-        return false;
-    }
-}
-
-bool CBLSSignature::InternalGetBuf(void* buf) const
-{
-    impl.Serialize((uint8_t*)buf);
     return true;
 }
 
