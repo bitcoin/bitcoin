@@ -44,9 +44,6 @@ protected:
 
     inline constexpr size_t GetSerSize() const { return SerSize; }
 
-    virtual bool InternalSetBuf(const void* buf) = 0;
-    virtual bool InternalGetBuf(void* buf) const = 0;
-
 public:
     static const size_t SerSize = _SerSize;
 
@@ -107,8 +104,10 @@ public:
         if (std::all_of((const char*)buf, (const char*)buf + SerSize, [](char c) { return c == 0; })) {
             Reset();
         } else {
-            fValid = InternalSetBuf(buf);
-            if (!fValid) {
+            try {
+                impl = ImplType::FromBytes((const uint8_t*)buf);
+                fValid = true;
+            } catch (...) {
                 Reset();
             }
         }
@@ -127,8 +126,7 @@ public:
         if (!fValid) {
             memset(buf, 0, SerSize);
         } else {
-            bool ok = InternalGetBuf(buf);
-            assert(ok);
+            impl.Serialize(static_cast<uint8_t*>(buf));
         }
     }
 
@@ -216,7 +214,26 @@ public:
     }
 };
 
-class CBLSId : public CBLSWrapper<uint256, BLS_CURVE_ID_SIZE, CBLSId>
+struct CBLSIdImplicit : public uint256
+{
+    CBLSIdImplicit() {}
+    CBLSIdImplicit(const uint256& id)
+    {
+        memcpy(begin(), id.begin(), sizeof(uint256));
+    }
+    static CBLSIdImplicit FromBytes(const uint8_t* buffer)
+    {
+        CBLSIdImplicit instance;
+        memcpy(instance.begin(), buffer, sizeof(CBLSIdImplicit));
+        return instance;
+    }
+    void Serialize(uint8_t* buffer) const
+    {
+        memcpy(buffer, data, sizeof(CBLSIdImplicit));
+    }
+};
+
+class CBLSId : public CBLSWrapper<CBLSIdImplicit, BLS_CURVE_ID_SIZE, CBLSId>
 {
 public:
     using CBLSWrapper::operator=;
@@ -229,10 +246,6 @@ public:
 
     static CBLSId FromInt(int64_t i);
     static CBLSId FromHash(const uint256& hash);
-
-protected:
-    bool InternalSetBuf(const void* buf) override;
-    bool InternalGetBuf(void* buf) const override;
 };
 
 class CBLSSecretKey : public CBLSWrapper<bls::PrivateKey, BLS_CURVE_SECKEY_SIZE, CBLSSecretKey>
@@ -255,10 +268,6 @@ public:
 
     CBLSPublicKey GetPublicKey() const;
     CBLSSignature Sign(const uint256& hash) const;
-
-protected:
-    bool InternalSetBuf(const void* buf) override;
-    bool InternalGetBuf(void* buf) const override;
 };
 
 class CBLSPublicKey : public CBLSWrapper<bls::PublicKey, BLS_CURVE_PUBKEY_SIZE, CBLSPublicKey>
@@ -278,9 +287,6 @@ public:
     bool PublicKeyShare(const std::vector<CBLSPublicKey>& mpk, const CBLSId& id);
     bool DHKeyExchange(const CBLSSecretKey& sk, const CBLSPublicKey& pk);
 
-protected:
-    bool InternalSetBuf(const void* buf) override;
-    bool InternalGetBuf(void* buf) const override;
 };
 
 class CBLSSignature : public CBLSWrapper<bls::InsecureSignature, BLS_CURVE_SIG_SIZE, CBLSSignature>
@@ -308,9 +314,6 @@ public:
     bool VerifySecureAggregated(const std::vector<CBLSPublicKey>& pks, const uint256& hash) const;
 
     bool Recover(const std::vector<CBLSSignature>& sigs, const std::vector<CBLSId>& ids);
-protected:
-    bool InternalSetBuf(const void* buf) override;
-    bool InternalGetBuf(void* buf) const override;
 };
 
 #ifndef BUILD_SYSCOIN_INTERNAL
