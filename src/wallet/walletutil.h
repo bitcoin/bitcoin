@@ -65,9 +65,6 @@ enum WalletFlags : uint64_t {
 //! Get the path of the wallet directory.
 fs::path GetWalletDir();
 
-//! Get wallets in wallet directory.
-std::vector<fs::path> ListWalletDir();
-
 /** Descriptor with some wallet metadata */
 class WalletDescriptor
 {
