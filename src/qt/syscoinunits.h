@@ -71,10 +71,10 @@ public:
     static qint64 factor(int unit);
     //! Number of decimals left
     static int decimals(int unit);
-    //! Format as string
-    static QString format(int unit, const CAmount& amount, bool plussign = false, SeparatorStyle separators = SeparatorStyle::STANDARD, bool justify = false);
+    //! SYSCOIN Format as string
+    static QString format(int unit, const CAmount& amount, const uint32_t &nAsset = 0, bool plussign = false, SeparatorStyle separators = SeparatorStyle::STANDARD, bool justify = false);
     //! Format as string (with unit)
-    static QString formatWithUnit(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=SeparatorStyle::STANDARD);
+    static QString formatWithUnit(int unit, const CAmount& amount, const uint32_t &nAsset = 0, bool plussign=false, SeparatorStyle separators=SeparatorStyle::STANDARD);
     //! Format as HTML string (with unit)
     static QString formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=SeparatorStyle::STANDARD);
     //! Format as string (with unit) of fixed length to preserve privacy, if it is set.

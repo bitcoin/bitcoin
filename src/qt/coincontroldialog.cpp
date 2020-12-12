@@ -604,7 +604,7 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
             l8->setText(ASYMP_UTF8 + l8->text());
     }
     // SYSCOIN
-    l9->setText(SyscoinUnits::formatWithUnit(nDisplayUnit, nAmountAsset.nValue));        // Asset Amount
+    l9->setText(SyscoinUnits::formatWithUnit(nDisplayUnit, nAmountAsset.nValue, nAmountAsset.nAsset));        // Asset Amount
 
     // turn label red when dust
     l7->setStyleSheet((fDust) ? "color:red;" : "");
@@ -676,13 +676,6 @@ void CoinControlDialog::updateView()
             const COutPoint& output = std::get<0>(outpair);
             const interfaces::WalletTxOut& out = std::get<1>(outpair);
             nSum += out.txout.nValue;
-            // SYSCOIN    
-            CAsset theAsset;
-            CAmount nAssetDisplayValue;
-            if(out.txout.assetInfo.nAsset > 0) {
-                GetAsset(out.txout.assetInfo.nAsset, theAsset);
-                nAssetDisplayValue = nDisplayUnit == SyscoinUnits::SAT? out.txout.assetInfo.nValue: AmountFromValue(ValueFromAssetAmount(out.txout.assetInfo.nValue, theAsset.nPrecision));
-            }
             nChildren++;
 
             CCoinControlWidgetItem *itemOutput;
@@ -723,7 +716,7 @@ void CoinControlDialog::updateView()
             itemOutput->setData(COLUMN_AMOUNT, Qt::UserRole, QVariant((qlonglong)out.txout.nValue)); // padding so that sorting works correctly
 
             // SYSCOIN amount asset
-            itemOutput->setText(COLUMN_AMOUNT_ASSET, SyscoinUnits::format(nDisplayUnit, nAssetDisplayValue));
+            itemOutput->setText(COLUMN_AMOUNT_ASSET, SyscoinUnits::format(nDisplayUnit, out.txout.assetInfo.nValue, out.txout.assetInfo.nAsset));
             itemOutput->setData(COLUMN_AMOUNT_ASSET, Qt::UserRole, QVariant((qlonglong)out.txout.assetInfo.nValue)); // padding so that sorting works correctly
 
             // asset

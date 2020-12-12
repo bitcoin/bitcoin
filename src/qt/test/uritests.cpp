@@ -63,4 +63,7 @@ void URITests::uriTests()
 
     uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=1,000.0&label=Wikipedia Example"));
     QVERIFY(!GUIUtil::parseSyscoinURI(uri, &rv));
+    // SYSCOIN
+    uri.setUrl(QString("syscoin:175tWpb8K1S7NmH4Zx6rewF9WQrcZv245W?amount=1,000.0&label=Wikipedia Example&asset=1234"));
+    QVERIFY(!GUIUtil::parseSyscoinURI(uri, &rv));
 }

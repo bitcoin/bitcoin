@@ -77,7 +77,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
         SetTxPayload(tx, payload);
         std::vector<CRecipient> vecSend;
         for (const auto& txOut : tx.vout) {
-            CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, false};
+            CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, false, txOut.assetInfo};
             vecSend.push_back(recipient);
         }
 

@@ -56,7 +56,8 @@ public:
 
         if (valid) {
             val = qBound(m_min_amount, val, m_max_amount);
-            input = SyscoinUnits::format(currentUnit, val, false, SyscoinUnits::SeparatorStyle::ALWAYS);
+            // SYSCOIN
+            input = SyscoinUnits::format(currentUnit, val, 0, false, SyscoinUnits::SeparatorStyle::ALWAYS);
             lineEdit()->setText(input);
         }
     }
@@ -68,7 +69,8 @@ public:
 
     void setValue(const CAmount& value)
     {
-        lineEdit()->setText(SyscoinUnits::format(currentUnit, value, false, SyscoinUnits::SeparatorStyle::ALWAYS));
+        // SYSCOIN
+        lineEdit()->setText(SyscoinUnits::format(currentUnit, value, 0, false, SyscoinUnits::SeparatorStyle::ALWAYS));
         Q_EMIT valueChanged();
     }
 
@@ -102,7 +104,8 @@ public:
         CAmount val = value(&valid);
 
         currentUnit = unit;
-        lineEdit()->setPlaceholderText(SyscoinUnits::format(currentUnit, m_min_amount, false, SyscoinUnits::SeparatorStyle::ALWAYS));
+        // SYSCOIN
+        lineEdit()->setPlaceholderText(SyscoinUnits::format(currentUnit, m_min_amount, 0, false, SyscoinUnits::SeparatorStyle::ALWAYS));
         if(valid)
             setValue(val);
         else
@@ -122,7 +125,8 @@ public:
 
             const QFontMetrics fm(fontMetrics());
             int h = lineEdit()->minimumSizeHint().height();
-            int w = GUIUtil::TextWidth(fm, SyscoinUnits::format(SyscoinUnits::SYS, SyscoinUnits::maxMoney(), false, SyscoinUnits::SeparatorStyle::ALWAYS));
+            // SYSCOIN
+            int w = GUIUtil::TextWidth(fm, SyscoinUnits::format(SyscoinUnits::SYS, SyscoinUnits::maxMoney(), 0, false, SyscoinUnits::SeparatorStyle::ALWAYS));
             w += 2; // cursor blinking space
 
             QStyleOptionSpinBox opt;

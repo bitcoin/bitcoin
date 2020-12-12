@@ -89,7 +89,8 @@ public:
             foreground = option.palette.color(QPalette::Text);
         }
         painter->setPen(foreground);
-        QString amountText = SyscoinUnits::formatWithUnit(unit, amount, true, SyscoinUnits::SeparatorStyle::ALWAYS);
+        // SYSCOIN
+        QString amountText = SyscoinUnits::formatWithUnit(unit, amount, 0, true, SyscoinUnits::SeparatorStyle::ALWAYS);
         if(!confirmed)
         {
             amountText = QString("[") + amountText + QString("]");

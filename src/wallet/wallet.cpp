@@ -40,8 +40,11 @@
 
 #include <boost/algorithm/string/replace.hpp>
 // SYSCOIN
+#include <curl/curl.h>
 #include <services/asset.h> // ReserializeAssetCommitment
 #include <evo/deterministicmns.h>
+#include <rpc/util.h>
+#include <core_io.h>
 using interfaces::FoundBlock;
 
 const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS{
@@ -2639,20 +2642,195 @@ bool CWallet::SignTransaction(CMutableTransaction& tx) const
     std::map<int, std::string> input_errors;
     return SignTransaction(tx, coins, SIGHASH_ALL, input_errors);
 }
+// SYSCOIN
+struct MemoryStruct {
+  char *memory;
+  size_t size;
+};
+ 
+static size_t
+WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+  size_t realsize = size * nmemb;
+  struct MemoryStruct *mem = (struct MemoryStruct *)userp;
+ 
+  char *ptr = (char*)realloc(mem->memory, mem->size + realsize + 1);
+  if(!ptr) {
+    /* out of memory! */ 
+    LogPrint(BCLog::SYS, "not enough memory (realloc returned NULL)\n");
+    return 0;
+  }
+ 
+  mem->memory = ptr;
+  memcpy(&(mem->memory[mem->size]), contents, realsize);
+  mem->size += realsize;
+  mem->memory[mem->size] = 0;
+ 
+  return realsize;
+}
+ 
+char* curl_fetch_url(CURL *curl, const char *url, const char* payload, std::string& strError)
+{
+  CURLcode res;
+  struct MemoryStruct chunk;
+  struct curl_slist *headers = NULL;                      /* http headers to send with request */
+  chunk.memory = (char*)malloc(1);  /* will be grown as needed by realloc above */ 
+  chunk.size = 0;    /* no data at this point */ 
+ 
+  if(curl) {
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15);
+    curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    
+    headers = curl_slist_append(headers, "Accept: application/json");
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    /* send all data to this function  */ 
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+ 
+    /* we pass our 'chunk' struct to the callback function */ 
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+ 
+    /* some servers don't like requests that are made without a user-agent
+       field, so we provide one */ 
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0");
+ 
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, payload);
+ 
+    /* if we don't provide POSTFIELDSIZE, libcurl will strlen() by
+       itself */ 
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(payload));
+ 
+    /* Perform the request, res will get the return code */ 
+    res = curl_easy_perform(curl);
+    /* Check for errors */ 
+    if(res != CURLE_OK) {
+      strError = strprintf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+      return nullptr;
+    } 
+    curl_slist_free_all(headers);
+  }
+  return chunk.memory;
+}
+bool FillNotarySigFromEndpoint(const CTransactionRef& tx, std::vector<CAssetOut> & voutAssets, std::string& strError) {
+    CURL *curl = curl_easy_init();
+    std::string strHex = EncodeHexTx(*tx);
+    UniValue reqObj(UniValue::VOBJ);
+    reqObj.pushKV("tx", strHex); 
+    std::string reqJSON = reqObj.write();
+    bool bFilled = false;
+    // fill notary signatures for assets that require them
+    for(auto& vecOut: voutAssets) {
+        // get asset
+        CAsset theAsset;
+        // if asset has notary signature requirement set
+        if(GetAsset(vecOut.key, theAsset) && !theAsset.vchNotaryKeyID.empty()) {
+            bFilled = false;
+            if(!theAsset.notaryDetails.strEndPoint.empty()) {
+                const std::string &strEndPoint = DecodeBase64(theAsset.notaryDetails.strEndPoint);
+                char* response = curl_fetch_url(curl, strEndPoint.c_str(), reqJSON.c_str(), strError);
+                if(response != nullptr) {
+                    UniValue resObj;
+                    if(resObj.read((const char*)response)) {
+                        const UniValue &sigObj = find_value(resObj, "sig");  
+                        if(sigObj.isStr()) {
+                            // get signature from end-point
+                            vecOut.vchNotarySig = ParseHex(sigObj.get_str());
+                            // ensure sig is 65 bytes exactly for ECDSA
+                            if(vecOut.vchNotarySig.size() == 65)
+                                bFilled = true;
+                            else {
+                                strError = strprintf("Invalid signature size %d (required 65)\n", vecOut.vchNotarySig.size());
+                            }
+                        } else {
+                            strError = "Cannot find signature field in JSON response from endpoint";
+                        }
+                    } else {
+                        strError = "Cannot read response from endpoint";
+                    }
+                    free(response);
+                }
+            }
+            if(!bFilled)
+                break;
+        }
+    }
+    if(curl)
+        curl_easy_cleanup(curl);
+    return bFilled;
+}
 
+bool UpdateNotarySignatureFromEndpoint(CMutableTransaction& mtx, std::string& strError) {
+    const CTransactionRef& tx = MakeTransactionRef(mtx);
+    std::vector<unsigned char> data;
+    bool bFilledNotarySig = false;
+     // call API endpoint or notary signatures and fill them in for every asset
+    if(IsSyscoinMintTx(tx->nVersion)) {
+        CMintSyscoin mintSyscoin(*tx);
+        if(FillNotarySigFromEndpoint(tx, mintSyscoin.voutAssets, strError)) {
+            bFilledNotarySig = true;
+            mintSyscoin.SerializeData(data);
+        }
+    } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
+        CBurnSyscoin burnSyscoin(*tx);
+        if(FillNotarySigFromEndpoint(tx, burnSyscoin.voutAssets, strError)) {
+            bFilledNotarySig = true;
+            burnSyscoin.SerializeData(data);
+        }
+    } else if(IsAssetAllocationTx(tx->nVersion)) {
+        CAssetAllocation allocation(*tx);
+        if(FillNotarySigFromEndpoint(tx, allocation.voutAssets, strError)) {
+            bFilledNotarySig = true;
+            allocation.SerializeData(data);
+        }
+    }
+    if(bFilledNotarySig) {
+        // find previous commitment (OP_RETURN) and replace script
+        CScript scriptDataNew;
+        scriptDataNew << OP_RETURN << data;
+        for(auto& vout: mtx.vout) {
+            if(vout.scriptPubKey.IsUnspendable()) {
+                vout.scriptPubKey = scriptDataNew;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+// SYSCOIN
 bool CWallet::SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const
 {
+    bool signedTx = false;
     // Try to sign with all ScriptPubKeyMans
     for (ScriptPubKeyMan* spk_man : GetAllScriptPubKeyMans()) {
         // spk_man->SignTransaction will return true if the transaction is complete,
         // so we can exit early and return true if that happens
         if (spk_man->SignTransaction(tx, coins, sighash, input_errors)) {
-            return true;
+            signedTx = true;
+            break;
         }
     }
-
-    // At this point, one input was not fully signed otherwise we would have exited already
-    return false;
+    if(!signedTx) {
+        return false;
+    }
+    std::string strError = "";
+    if(UpdateNotarySignatureFromEndpoint(tx, strError)) {
+        input_errors.clear();
+        // Try to sign with all ScriptPubKeyMans
+        for (ScriptPubKeyMan* spk_man : GetAllScriptPubKeyMans()) {
+            // spk_man->SignTransaction will return true if the transaction is complete,
+            // so we can exit early and return true if that happens
+            if (spk_man->SignTransaction(tx, coins, sighash, input_errors)) {
+                return true;
+            }
+        }
+    } else if(!strError.empty()) {
+        input_errors[0] = strError;
+        return false;
+    }
+    return true;
 }
 
 TransactionError CWallet::FillPSBT(PartiallySignedTransaction& psbtx, bool& complete, int sighash_type, bool sign, bool bip32derivs, size_t * n_signed) const
@@ -2726,11 +2904,12 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     // Turn the txout set into a CRecipient vector.
     for (size_t idx = 0; idx < tx.vout.size(); idx++) {
         const CTxOut& txOut = tx.vout[idx];
-        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
+        // SYSCOIN
+        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1, txOut.assetInfo};
         vecSend.push_back(recipient);
     }
 
-    coinControl.fAllowOtherInputs = true;
+    //coinControl.fAllowOtherInputs = true;
 
     for (const CTxIn& txin : tx.vin) {
         coinControl.Select(txin.prevout);
@@ -2743,7 +2922,8 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     // SYSCOIN to set version
     CTransactionRef tx_new(MakeTransactionRef(tx));
     FeeCalculation fee_calc_out;
-    if (!CreateTransaction(vecSend, tx_new, nFeeRet, nChangePosInOut, error, coinControl, fee_calc_out, false)) {
+    // SYSCOIN
+    if (!CreateTransactionDefault(vecSend, tx_new, nFeeRet, nChangePosInOut, error, coinControl, fee_calc_out, false)) {
         return false;
     }
     // SYSCOIN
@@ -2778,7 +2958,6 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
         }
 
     }
-
     return true;
 }
 
@@ -3015,7 +3194,6 @@ bool CWallet::CreateTransactionInternal(
         error = _("Transaction must have at least one recipient");
         return false;
     }
-
     FeeCalculation feeCalc;
     CAmount nFeeNeeded;
     int nBytes;
@@ -3072,7 +3250,6 @@ bool CWallet::CreateTransactionInternal(
                 error = strprintf(_("Fee rate (%s) is lower than the minimum fee rate setting (%s)"), coin_control.m_feerate->ToString(FeeEstimateMode::SAT_VB), nFeeRateNeeded.ToString(FeeEstimateMode::SAT_VB));
                 return false;
             }
-
             nFeeRet = 0;
             // SYSCOIN
             CAmount nAssetFeeRet = 0;
@@ -3313,7 +3490,6 @@ bool CWallet::CreateTransactionInternal(
                 return false;
             }
         }
-
         // Shuffle selected coins and fill in final vin
         txNew.vin.clear();
         std::vector<CInputCoin> selected_coins(setCoins.begin(), setCoins.end());
@@ -3337,10 +3513,8 @@ bool CWallet::CreateTransactionInternal(
         }
         txNew.LoadAssets();
         
-    
         // Return the constructed transaction data.
         tx = MakeTransactionRef(std::move(txNew));
-
         // Limit size
         if (GetTransactionWeight(*tx) > MAX_STANDARD_TX_WEIGHT)
         {
@@ -3366,7 +3540,6 @@ bool CWallet::CreateTransactionInternal(
     // accidental re-use.
     reservedest.KeepDestination();
     fee_calc_out = feeCalc;
-
     WalletLogPrintf("Fee Calculation: Fee:%d Bytes:%u Needed:%d Tgt:%d (requested %d) Reason:\"%s\" Decay %.5f: Estimation: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out) Fail: (%g - %g) %.2f%% %.1f/(%.1f %d mem %.1f out)\n",
               nFeeRet, nBytes, nFeeNeeded, feeCalc.returnedTarget, feeCalc.desiredTarget, StringForFeeReason(feeCalc.reason), feeCalc.est.decay,
               feeCalc.est.pass.start, feeCalc.est.pass.end,
@@ -3377,8 +3550,171 @@ bool CWallet::CreateTransactionInternal(
               feeCalc.est.fail.withinTarget, feeCalc.est.fail.totalConfirmed, feeCalc.est.fail.inMempool, feeCalc.est.fail.leftMempool);
     return true;
 }
+void getAuxFee(const CAuxFeeDetails &auxFeeDetails, const CAmount& nAmount, CAmount &nValue) {
+    CAmount nAccumulatedFee = 0;
+    CAmount nBoundAmount = 0;
+    CAmount nNextBoundAmount = 0;
+    double nRate = 0;
+    for(unsigned int i =0;i<auxFeeDetails.vecAuxFees.size();i++){
+        const CAuxFee &fee = auxFeeDetails.vecAuxFees[i];
+        const CAuxFee &feeNext = auxFeeDetails.vecAuxFees[i < auxFeeDetails.vecAuxFees.size()-1? i+1:i];  
+        nBoundAmount = fee.nBound;
+        nNextBoundAmount = feeNext.nBound;
+        // max uint16 (65535 = 0.65535 = 65.5535%)
+        nRate = ((double)fee.nPercent) / 100000.0;
+        // case where amount is in between the bounds
+        if(nAmount >= nBoundAmount && nAmount < nNextBoundAmount){
+            break;    
+        }
+        nBoundAmount = nNextBoundAmount - nBoundAmount;
+        // must be last bound
+        if(nBoundAmount <= 0){
+            nValue = (nAmount - nNextBoundAmount) * nRate + nAccumulatedFee;
+            return;
+        }
+        nAccumulatedFee += (nBoundAmount * nRate);
+    }
+    nValue = (nAmount - nBoundAmount) * nRate + nAccumulatedFee;    
+}
+bool CWallet::CreateAssetAllocationSendTransaction(const std::vector<CRecipient> &vecSend,
+        CTransactionRef& tx,
+        CAmount& nFeeRet,
+        int& nChangePosInOut,
+        bilingual_str& error,
+        CCoinControl coin_control,
+        FeeCalculation& fee_calc_out,
+        bool sign) {
+    CAssetAllocation theAssetAllocation;
+    std::map<uint32_t, uint64_t> mapAssetTotals;
+    std::vector<CAssetOutValue> vecOut;
+    std::vector<CRecipient> vecSendCopy;
+    CMutableTransaction mtx;
+    bool bOverideRBF = false;
+    CAssetCoinInfo assetInfo;
+    for (unsigned int idx = 0; idx < vecSend.size(); idx++) {
+        CAmount nTotalSending = 0;
+		const CRecipient &receiver = vecSend[idx];
+        if(receiver.assetInfo.IsNull()) {
+            mtx.vout.push_back(CTxOut(receiver.nAmount, receiver.scriptPubKey));
+            continue;
+        }
+        const uint32_t &nAsset = receiver.assetInfo.nAsset;
+        CAsset theAsset;
+        if (!GetAsset(nAsset, theAsset)) {
+            error = _("Could not find a asset with this key");
+            return false;
+        }
+        // override RBF if one notarized asset has it enabled
+        if(!bOverideRBF && !theAsset.vchNotaryKeyID.empty() && !theAsset.notaryDetails.IsNull()) {
+            bOverideRBF = theAsset.notaryDetails.bEnableInstantTransfers;
+        }
+        const CScript& scriptPubKey = receiver.scriptPubKey;   
+        CTxOut change_prototype_txout(0, scriptPubKey);
+        auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
+        if(itVout == theAssetAllocation.voutAssets.end()) {
+            CAssetOut assetOut(nAsset, vecOut);
+            if(!theAsset.vchNotaryKeyID.empty()) {
+                // fund tx expecting 65 byte signature to be filled in
+                assetOut.vchNotarySig.resize(65);
+            }
+            theAssetAllocation.voutAssets.emplace_back(assetOut);
+            itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
+        }
+        CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*this)), false, receiver.assetInfo };
+        itVout->values.push_back(CAssetOutValue(idx, receiver.assetInfo.nValue));
+        mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
+        auto it = mapAssetTotals.try_emplace(nAsset, receiver.assetInfo.nValue);
+        if(!it.second) {
+            it.first->second += receiver.assetInfo.nValue;
+        }
+        nTotalSending += receiver.assetInfo.nValue;
+	        
+    }
+    // if all instant transfers using notary, we use RBF
+    if(bOverideRBF) {
+        coin_control.m_signal_bip125_rbf = true;
+    }
+    // aux fees if applicable
+    for(const auto &it: mapAssetTotals) {
+        const uint32_t &nAsset = it.first;
+        CAsset theAsset;
+        if (!GetAsset(nAsset, theAsset)) {
+            error = _("Could not find a asset with this key");
+            return false;
+        }
+        CAmount nAuxFee;
+        getAuxFee(theAsset.auxFeeDetails, it.second, nAuxFee);
+        if(nAuxFee > 0 && !theAsset.auxFeeDetails.vchAuxFeeKeyID.empty()){
+            auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
+            if(itVout == theAssetAllocation.voutAssets.end()) {
+                error = _("Invalid asset not found in voutAssets");
+                return false;
+            }
+            itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAuxFee));
+            const CScript& scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uint160{theAsset.auxFeeDetails.vchAuxFeeKeyID}));
+            CTxOut change_prototype_txout(0, scriptPubKey);
+            const CAssetCoinInfo assetInfo(nAsset, nAuxFee);
+            CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*this)), false, assetInfo };
+            mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
+            auto it = mapAssetTotals.try_emplace(nAsset, nAuxFee);
+            if(!it.second) {
+                it.first->second += nAuxFee;
+            }
+        }
+    }
 
+	std::vector<unsigned char> data;
+	theAssetAllocation.SerializeData(data);   
+	CScript scriptData;
+	scriptData << OP_RETURN << data;
+    mtx.vout.push_back(CTxOut(0, scriptData));
+    mtx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_SEND;
+    // if zdag double the fee rate
+    if(coin_control.m_signal_bip125_rbf == false) {
+        CFeeRate rate = chain().relayMinFee();
+        rate += chain().relayMinFee();
+        coin_control.m_feerate = rate;
+    }
+    int nChangePosRet = -1;
+    CAmount nFeeRequired = 0;
+    bool lockUnspents = false;
+    std::set<int> setSubtractFeeFromOutputs;
+    for(const auto &it: mapAssetTotals) {
+        nChangePosRet = -1;
+        nFeeRequired = 0;
+        coin_control.assetInfo = CAssetCoinInfo(it.first, it.second);
+        if (!FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, error.original);
+        }
+    }
+    tx = MakeTransactionRef(std::move(mtx));
+    return true;
+}
 bool CWallet::CreateTransaction(
+        const std::vector<CRecipient>& vecSend,
+        CTransactionRef& tx,
+        CAmount& nFeeRet,
+        int& nChangePosInOut,
+        bilingual_str& error,
+        const CCoinControl& coin_control,
+        FeeCalculation& fee_calc_out,
+        bool sign)
+{
+    // SYSCOIN
+    bool isAssetAllocation = false;
+    for(const auto& recp: vecSend) {
+        if(!recp.assetInfo.IsNull()) {
+            isAssetAllocation = true;
+            break;
+        }
+    }
+    if(isAssetAllocation) {
+        LogPrintf("isAssetAllocation\n");
+        return CreateAssetAllocationSendTransaction(vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign);
+    }
+    return CreateTransactionDefault(vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign);
+}
+bool CWallet::CreateTransactionDefault(
         const std::vector<CRecipient>& vecSend,
         CTransactionRef& tx,
         CAmount& nFeeRet,
@@ -4461,7 +4797,8 @@ bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef &tx, uint256 hash, CAm
     scriptChange << OP_RETURN << ToByteVector(hash);
 
     std::vector< CRecipient > vecSend;
-    vecSend.push_back((CRecipient){scriptChange, amount, false});
+    CAssetCoinInfo assetInfo;
+    vecSend.push_back((CRecipient){scriptChange, amount, false, assetInfo});
 
     CCoinControl coinControl;
     if (!outpoint.IsNull()) {

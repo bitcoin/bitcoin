@@ -7,7 +7,10 @@
 #include <QStringList>
 
 #include <cassert>
-
+// SYSCOIN
+#include <primitives/transaction.h>
+#include <services/asset.h>
+#include <rpc/util.h>
 SyscoinUnits::SyscoinUnits(QObject *parent):
         QAbstractListModel(parent),
         unitlist(availableUnits())
@@ -96,8 +99,15 @@ int SyscoinUnits::decimals(int unit)
     }
 }
 
-QString SyscoinUnits::format(int unit, const CAmount& nIn, bool fPlus, SeparatorStyle separators, bool justify)
+QString SyscoinUnits::format(int unit, const CAmount& _nIn, const uint32_t &nAsset, bool fPlus, SeparatorStyle separators, bool justify)
 {
+    // SYSCOIN 
+    CAmount nIn = _nIn;   
+    if(nAsset > 0) {
+        CAsset theAsset;
+        if(GetAsset(nAsset, theAsset))
+            nIn = AmountFromValue(ValueFromAssetAmount(_nIn, theAsset.nPrecision));
+    }
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.
     if(!valid(unit))
@@ -140,15 +150,16 @@ QString SyscoinUnits::format(int unit, const CAmount& nIn, bool fPlus, Separator
 //
 // Please take care to use formatHtmlWithUnit instead, when
 // appropriate.
-
-QString SyscoinUnits::formatWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
+// SYSCOIN
+QString SyscoinUnits::formatWithUnit(int unit, const CAmount& amount, const uint32_t &nAsset, bool plussign, SeparatorStyle separators)
 {
-    return format(unit, amount, plussign, separators) + QString(" ") + shortName(unit);
+    return format(unit, amount, nAsset, plussign, separators) + QString(" ") + shortName(unit);
 }
 
 QString SyscoinUnits::formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
-    QString str(formatWithUnit(unit, amount, plussign, separators));
+    // SYSCOIN
+    QString str(formatWithUnit(unit, amount, 0, plussign, separators));
     str.replace(QChar(THIN_SP_CP), QString(THIN_SP_HTML));
     return QString("<span style='white-space: nowrap;'>%1</span>").arg(str);
 }
@@ -157,10 +168,11 @@ QString SyscoinUnits::formatWithPrivacy(int unit, const CAmount& amount, Separat
 {
     assert(amount >= 0);
     QString value;
+    // SYSCOIN
     if (privacy) {
-        value = format(unit, 0, false, separators, true).replace('0', '#');
+        value = format(unit, 0, 0, false, separators, true).replace('0', '#');
     } else {
-        value = format(unit, amount, false, separators, true);
+        value = format(unit, amount, 0, false, separators, true);
     }
     return value + QString(" ") + shortName(unit);
 }

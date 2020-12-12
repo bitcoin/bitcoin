@@ -90,12 +90,19 @@ void ReceiveRequestDialog::setInfo(const SendCoinsRecipient &_info)
         ui->wallet_tag->hide();
         ui->wallet_content->hide();
     }
+    // SYSCOIN
+    if (!info.nAsset) {
+        ui->asset_tag->hide();
+        ui->asset_content->hide();
+    }
+    ui->asset_content->setText(QString::number(info.nAsset));
 }
 
 void ReceiveRequestDialog::updateDisplayUnit()
 {
     if (!model) return;
-    ui->amount_content->setText(SyscoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), info.amount));
+    // SYSCOIN
+    ui->amount_content->setText(SyscoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), info.amount, info.nAsset));
 }
 
 void ReceiveRequestDialog::on_btnCopyURI_clicked()

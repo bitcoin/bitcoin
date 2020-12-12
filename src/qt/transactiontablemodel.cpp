@@ -449,7 +449,8 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
 
 QString TransactionTableModel::formatTxAmount(const TransactionRecord *wtx, bool showUnconfirmed, SyscoinUnits::SeparatorStyle separators) const
 {
-    QString str = SyscoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit + wtx->debit, false, separators);
+    // SYSCOIN
+    QString str = SyscoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), wtx->credit + wtx->debit, 0, false, separators);
     if(showUnconfirmed)
     {
         if(!wtx->status.countsForBalance)

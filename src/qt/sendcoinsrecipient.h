@@ -19,9 +19,9 @@
 class SendCoinsRecipient
 {
 public:
-    explicit SendCoinsRecipient() : amount(0), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
-    explicit SendCoinsRecipient(const QString &addr, const QString &_label, const CAmount& _amount, const QString &_message):
-        address(addr), label(_label), amount(_amount), message(_message), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
+    explicit SendCoinsRecipient() : amount(0), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION), nAsset(0) { }
+    explicit SendCoinsRecipient(const QString &addr, const QString &_label, const CAmount& _amount, const QString &_message, const uint32_t &_nAsset):
+        address(addr), label(_label), amount(_amount), message(_message), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION), nAsset(_nAsset) {}
 
     // If from an unauthenticated payment request, this is used for storing
     // the addresses, e.g. address-A<br />address-B<br />address-C.
@@ -43,6 +43,8 @@ public:
 
     static const int CURRENT_VERSION = 1;
     int nVersion;
+    // SYSCOIN
+    uint32_t nAsset;
 
     SERIALIZE_METHODS(SendCoinsRecipient, obj)
     {
@@ -59,6 +61,9 @@ public:
         SER_READ(obj, obj.label = QString::fromStdString(label_str));
         SER_READ(obj, obj.message = QString::fromStdString(message_str));
         SER_READ(obj, obj.authenticatedMerchant = QString::fromStdString(auth_merchant_str));
+
+        // SYSCOIN
+        READWRITE(obj.nAsset);
     }
 };
 

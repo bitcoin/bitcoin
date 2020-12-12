@@ -39,6 +39,7 @@
 #include <boost/signals2/signal.hpp>
 // SYSCOIN
 class CAssetCoinInfo;
+class CAuxFeeDetails;
 using LoadWalletFn = std::function<void(std::unique_ptr<interfaces::Wallet> wallet)>;
 
 struct bilingual_str;
@@ -211,6 +212,8 @@ struct CRecipient
     CScript scriptPubKey;
     CAmount nAmount;
     bool fSubtractFeeFromAmount;
+    // SYSCOIN
+    CAssetCoinInfo assetInfo;
 };
 
 typedef std::map<std::string, std::string> mapValue_t;
@@ -980,7 +983,17 @@ public:
      * selected by SelectCoins(); Also create the change output, when needed
      * @note passing nChangePosInOut as -1 will result in setting a random position
      */
+    bool CreateTransactionDefault(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, const CCoinControl& coin_control, FeeCalculation& fee_calc_out, bool sign = true);
+    // SYSCOIN
     bool CreateTransaction(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, const CCoinControl& coin_control, FeeCalculation& fee_calc_out, bool sign = true);
+    bool CreateAssetAllocationSendTransaction(const std::vector<CRecipient> &vecSend,
+        CTransactionRef& tx,
+        CAmount& nFeeRet,
+        int& nChangePosInOut,
+        bilingual_str& error,
+        CCoinControl coin_control,
+        FeeCalculation& fee_calc_out,
+        bool sign = true);
     /**
      * Submit the transaction to the node's mempool and then relay to peers.
      * Should be called after CreateTransaction unless you want to abort
@@ -1341,5 +1354,6 @@ bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
 
 //! Remove wallet name from persistent configuration so it will not be loaded on startup.
 bool RemoveWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
-
+// SYSCOIN
+void getAuxFee(const CAuxFeeDetails &auxFeeDetails, const CAmount& nAmount, CAmount& nValue);
 #endif // SYSCOIN_WALLET_WALLET_H

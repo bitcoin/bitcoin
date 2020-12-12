@@ -177,7 +177,8 @@ void TestGUI(interfaces::Node& node)
         QString balanceText = balanceLabel->text();
         int unit = walletModel.getOptionsModel()->getDisplayUnit();
         CAmount balance = walletModel.wallet().getBalance();
-        QString balanceComparison = SyscoinUnits::formatWithUnit(unit, balance, false, SyscoinUnits::SeparatorStyle::ALWAYS);
+        // SYSCOIN
+        QString balanceComparison = SyscoinUnits::formatWithUnit(unit, balance, 0, false, SyscoinUnits::SeparatorStyle::ALWAYS);
         QCOMPARE(balanceText, balanceComparison);
     }
 
@@ -203,7 +204,8 @@ void TestGUI(interfaces::Node& node)
     QString balanceText = balanceLabel->text().trimmed();
     int unit = walletModel.getOptionsModel()->getDisplayUnit();
     CAmount balance = walletModel.wallet().getBalance();
-    QString balanceComparison = SyscoinUnits::formatWithUnit(unit, balance, false, SyscoinUnits::SeparatorStyle::ALWAYS);
+    // SYSCOIN
+    QString balanceComparison = SyscoinUnits::formatWithUnit(unit, balance, 0, false, SyscoinUnits::SeparatorStyle::ALWAYS);
     QCOMPARE(balanceText, balanceComparison);
 
     // Check Request Payment button

@@ -158,7 +158,15 @@ bool parseSyscoinURI(const QUrl &uri, SendCoinsRecipient *out)
             }
             fShouldReturnFalse = false;
         }
-
+        // SYSCOIN
+        else if (i->first == "asset")
+        {
+            if(!i->second.isEmpty())
+            {
+                rv.nAsset = i->second.toUInt();
+            }
+            fShouldReturnFalse = false;
+        }
         if (fShouldReturnFalse)
             return false;
     }
@@ -186,7 +194,8 @@ QString formatSyscoinURI(const SendCoinsRecipient &info)
 
     if (info.amount)
     {
-        ret += QString("?amount=%1").arg(SyscoinUnits::format(SyscoinUnits::SYS, info.amount, false, SyscoinUnits::SeparatorStyle::NEVER));
+        // SYSCOIN
+        ret += QString("?amount=%1").arg(SyscoinUnits::format(SyscoinUnits::SYS, info.amount, info.nAsset, false, SyscoinUnits::SeparatorStyle::NEVER));
         paramCount++;
     }
 
@@ -201,6 +210,12 @@ QString formatSyscoinURI(const SendCoinsRecipient &info)
     {
         QString msg(QUrl::toPercentEncoding(info.message));
         ret += QString("%1message=%2").arg(paramCount == 0 ? "?" : "&").arg(msg);
+        paramCount++;
+    }
+    // SYSCOIN
+    if(info.nAsset > 0)
+    {
+        ret += QString("?asset=%1").arg(info.nAsset);
         paramCount++;
     }
 
