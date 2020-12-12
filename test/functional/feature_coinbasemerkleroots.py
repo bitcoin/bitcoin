@@ -85,13 +85,17 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
 
         self.nodes[0].generate(1)
         oldhash = self.nodes[0].getbestblockhash()
+        # Have to disable ChainLocks here because they won't let you to invalidate already locked blocks
+        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
+        self.wait_for_sporks_same()
         # Test DIP8 activation once with a pre-existing quorum and once without (we don't know in which order it will activate on mainnet)
         self.test_dip8_quorum_merkle_root_activation(True)
         for n in self.nodes:
             n.invalidateblock(oldhash)
         self.sync_all()
         first_quorum = self.test_dip8_quorum_merkle_root_activation(False)
-
+        # Re-enable ChainLocks again
+        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 

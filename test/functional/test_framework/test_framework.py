@@ -905,6 +905,8 @@ class DashTestFramework(SyscoinTestFramework):
                 self.extra_args[i].append("-dip3params=30:50")
         for i in range(0, num_nodes):
             self.extra_args[i].append("-mncollateral=100")
+
+
         # LLMQ default test params (no need to pass -llmqtestparams)
         self.llmq_size = 3
         self.llmq_threshold = 2
@@ -1071,6 +1073,11 @@ class DashTestFramework(SyscoinTestFramework):
         self.nodes[0].generate(1)
         # sync nodes
         self.sync_all()
+        # Enable InstantSend (including block filtering) and ChainLocks by default
+        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 0)
+        self.nodes[0].spork("SPORK_3_INSTANTSEND_BLOCK_FILTERING", 0)
+        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
+        self.wait_for_sporks_same()
         self.bump_mocktime(1)
 
         mn_info = self.nodes[0].masternode_list("status")
