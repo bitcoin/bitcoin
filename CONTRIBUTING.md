@@ -412,7 +412,7 @@ when needed (the original author does not need to worry about it).
 A backport should contain the following metadata in the commit body:
 
 ```
-Github-Pull: #<PR number>
+GitHub-Pull: #<PR number>
 Rebased-From: <commit hash of the original commit>
 ```
 
