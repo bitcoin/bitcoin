@@ -32,8 +32,9 @@ bool RecoverDatabaseFile(const fs::path& file_path, bilingual_str& error, std::v
     std::unique_ptr<WalletDatabase> database = MakeDatabase(file_path, options, status, error);
     if (!database) return false;
 
-    std::string filename;
-    std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(file_path, filename);
+    BerkeleyDatabase& berkeley_database = static_cast<BerkeleyDatabase&>(*database);
+    std::string filename = berkeley_database.Filename();
+    std::shared_ptr<BerkeleyEnvironment> env = berkeley_database.env;
 
     if (!env->Open(error)) {
         return false;
