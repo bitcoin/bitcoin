@@ -115,6 +115,7 @@ script: |
   git archive --prefix="${DISTNAME}/" --output="$GIT_ARCHIVE" HEAD
 
   ORIGPATH="$PATH"
+  CODESIGN_ALLOCATE="${BASEPREFIX}/${i}/native/bin/${i}-codesign_allocate"
   # Extract the git archive into a dir for each host and build
   for i in ${HOSTS}; do
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
@@ -133,6 +134,31 @@ script: |
 
     make osx_volname
     make deploydir
+
+    # Hack to work around differences in the behavior of native_cctools' codesign_allocate and Apple distributed codesign and codesign_allocate.
+    # Specifically, the signature is created by appending it to the end of the binary and then updating the size for the section __LINKEDIT
+    # The "vmsize" attribute of this section is rounded to 0x1000, 0x2000, or 0x4000 depending on the architecture. For some reason, this also happens
+    # to differ between what we can build ourselves in native_cctools (which uses Apple's published source code) and what Apple distributes
+    # as "Xcode command line tools". It appears that the Apple distributed tool rounds to 0x2000.
+    #
+    # Fortunately codesign_allocate will not reduce the "vmsize" attribute, and when the signature is appended, the difference in actual size and
+    # "vmsize" will not be present in the final binary.
+    #
+    # Thus we can workaround this by calculating an overestimate of what the signature will be and then using codesign_allocate to preallocate
+    # space for the code signature. Because the same codesign_allocate is used in this step, the rounding problem will not be present.
+    # Since the space allocated for the signature should be larger than actually needed, the signing step will not reduce "vmsize" so we
+    # won't have any problems there.
+    #
+    # From inspecting previous releases' code signatures, we find that the code signature primarily consists of SHA256 hashes of 4096 byte chunk
+    # of the unsigned binary. There are a few other hashes of something. Then the signature itself, which is ~9kb. Then ~10kb of additional overhead.
+    # We can thus produce an overestimate as follows: (((unsigned_size / 4096) + 1) * 32) + 51200. This gives us an expected number of SHA256 hashes
+    # and how large they will be. By adding 50kb, we can include the signature, overhead, and still have room if Apple decides to cram more stuff
+    # into the code signature.
+    BINARY_RESULT="dist/Bitcoin-Qt.app/Contents/MacOS/Bitcoin-Qt"
+    UNSIGNED_SIZE=$(stat -c %s ${BINARY_RESULT})
+    SIG_SIZE_EST=$(((((UNSIGNED_SIZE / 4096) + 1) * 32) + 51200))
+    ${CODESIGN_ALLOCATE} -i ${BINARY_RESULT} -a x86_64 ${SIG_SIZE_EST} -o ${BINARY_RESULT}
+
     mkdir -p unsigned-app-${i}
     cp osx_volname unsigned-app-${i}/
     cp contrib/macdeploy/detached-sig-apply.sh unsigned-app-${i}
