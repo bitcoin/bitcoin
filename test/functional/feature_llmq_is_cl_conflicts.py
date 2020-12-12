@@ -48,7 +48,6 @@ class TestP2PConn(P2PInterface):
 class LLMQ_IS_CL_Conflicts(DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(4, 3, fast_dip3_enforcement=True)
-        self.set_dash_dip8_activation(10)
         #disable_mocktime()
 
     def run_test(self):
@@ -62,9 +61,6 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         self.nodes[0].p2p.wait_for_verack()
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
-        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
-        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 0)
-        self.nodes[0].spork("SPORK_3_INSTANTSEND_BLOCK_FILTERING", 0)
         self.wait_for_sporks_same()
 
         self.mine_quorum()

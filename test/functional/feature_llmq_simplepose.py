@@ -110,6 +110,8 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 addr = self.nodes[0].getnewaddress()
                 self.nodes[0].sendtoaddress(addr, 0.1)
                 self.nodes[0].protx('update_service', mn.proTxHash, '127.0.0.1:%d' % p2p_port(mn.node.index), mn.keyOperator, "", addr)
+                # Make sure this tx "safe" to mine even when InstantSend and ChainLocks are no longer functional
+                self.bump_mocktime(60 * 10 + 1)
                 self.nodes[0].generate(1)
                 assert(not self.check_banned(mn))
 

@@ -90,7 +90,6 @@ class DashZMQTest (DashTestFramework):
         node0_extra_args.append("-whitelist=127.0.0.1")
 
         self.set_dash_test_params(4, 3, fast_dip3_enforcement=True, extra_args=[node0_extra_args, [], [], []])
-        self.set_dash_dip8_activation(10)
 
     def run_test(self):
         # Check that dashd has been built with ZMQ enabled.
@@ -110,9 +109,7 @@ class DashZMQTest (DashTestFramework):
             while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
                 self.nodes[0].generate(10)
             self.sync_blocks()
-            self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 0)
             self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
-            self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
             self.wait_for_sporks_same()
             # Create an LLMQ for testing
             self.quorum_type = 100  # llmq_test

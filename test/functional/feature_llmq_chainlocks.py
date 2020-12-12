@@ -19,7 +19,6 @@ Checks LLMQs based ChainLocks
 class LLMQChainLocksTest(DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(4, 3, fast_dip3_enforcement=True)
-        self.set_dash_dip8_activation(10)
 
     def run_test(self):
 
@@ -42,9 +41,6 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Mining 4 quorums")
         for i in range(4):
             self.mine_quorum()
-
-        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
-        self.wait_for_sporks_same()
 
         self.log.info("Mine single block, wait for chainlock")
         self.nodes[0].generate(1)
@@ -105,11 +101,6 @@ class LLMQChainLocksTest(DashTestFramework):
         self.nodes[1].generatetoaddress(1, node0_mining_addr)
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[1].getbestblockhash())
         assert(self.nodes[0].getbestblockhash() == self.nodes[1].getbestblockhash())
-
-        self.log.info("Enable LLMQ bases InstantSend, which also enables checks for \"safe\" transactions")
-        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 0)
-        self.nodes[0].spork("SPORK_3_INSTANTSEND_BLOCK_FILTERING", 0)
-        self.wait_for_sporks_same()
 
         self.log.info("Isolate a node and let it create some transactions which won't get IS locked")
         isolate_node(self.nodes[0])

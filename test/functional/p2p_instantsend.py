@@ -27,10 +27,6 @@ class InstantSendTest(DashTestFramework):
         self.wait_for_sporks_same()
         self.mine_quorum()
 
-        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 0)
-        self.nodes[0].spork("SPORK_3_INSTANTSEND_BLOCK_FILTERING", 0)
-        self.wait_for_sporks_same()
-
         self.test_mempool_doublespend()
         self.test_block_doublespend()
 
