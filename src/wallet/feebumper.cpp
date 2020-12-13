@@ -215,7 +215,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     // We cannot source new unconfirmed inputs(bip125 rule 2)
     new_coin_control.m_min_depth = 1;
 
-    CTransactionRef tx_new = MakeTransactionRef();
+    CTransactionRef tx_new;
     CAmount fee_ret;
     int change_pos_in_out = -1; // No requested location for change
     bilingual_str fail_reason;

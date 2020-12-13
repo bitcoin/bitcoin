@@ -29,7 +29,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     const std::optional<CMutableTransaction> mutable_transaction = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider);
-    const CTransaction tx = mutable_transaction ? CTransaction{*mutable_transaction} : CTransaction{};
+    const CTransaction tx{mutable_transaction ? *mutable_transaction : CMutableTransaction{}};
     const unsigned int n_in = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
     const CAmount amount = ConsumeMoney(fuzzed_data_provider);
     const bool store = fuzzed_data_provider.ConsumeBool();
