@@ -961,14 +961,10 @@ static std::optional<CreatedTransactionResult> CreateTransactionInternal(
     return CreatedTransactionResult(tx, nFeeRet, nChangePosInOut);
 }
 
-// TODO: also return std::optional<CreatedTransactionResult> here in order
-//       to eliminate the out parameters and to simplify the function
-bool CreateTransaction(
+std::optional<CreatedTransactionResult> CreateTransaction(
         CWallet& wallet,
         const std::vector<CRecipient>& vecSend,
-        CTransactionRef& tx,
-        CAmount& nFeeRet,
-        int& nChangePosInOut,
+        int change_pos,
         bilingual_str& error,
         const CCoinControl& coin_control,
         FeeCalculation& fee_calc_out,
@@ -976,54 +972,37 @@ bool CreateTransaction(
 {
     if (vecSend.empty()) {
         error = _("Transaction must have at least one recipient");
-        return false;
+        return std::nullopt;
     }
 
     if (std::any_of(vecSend.cbegin(), vecSend.cend(), [](const auto& recipient){ return recipient.nAmount < 0; })) {
         error = _("Transaction amounts must not be negative");
-        return false;
+        return std::nullopt;
     }
 
     LOCK(wallet.cs_wallet);
 
-    int nChangePosIn = nChangePosInOut;
-    Assert(!tx); // tx is an out-param. TODO change the return type from bool to tx (or nullptr)
-    std::optional<CreatedTransactionResult> txr_ungrouped = CreateTransactionInternal(wallet, vecSend, nChangePosInOut, error, coin_control, fee_calc_out, sign);
-    bool res = false;
-    if (txr_ungrouped) {
-        tx = txr_ungrouped->tx;
-        nFeeRet = txr_ungrouped->fee;
-        nChangePosInOut = txr_ungrouped->change_pos;
-        res = true;
-    }
-    TRACE4(coin_selection, normal_create_tx_internal, wallet.GetName().c_str(), res, nFeeRet, nChangePosInOut);
+    std::optional<CreatedTransactionResult> txr_ungrouped = CreateTransactionInternal(wallet, vecSend, change_pos, error, coin_control, fee_calc_out, sign);
+    TRACE4(coin_selection, normal_create_tx_internal, wallet.GetName().c_str(), txr_ungrouped.has_value(),
+           txr_ungrouped.has_value() ? txr_ungrouped->fee : 0, txr_ungrouped.has_value() ? txr_ungrouped->change_pos : 0);
+    if (!txr_ungrouped) return std::nullopt;
     // try with avoidpartialspends unless it's enabled already
-    if (res && nFeeRet > 0 /* 0 means non-functional fee rate estimation */ && wallet.m_max_aps_fee > -1 && !coin_control.m_avoid_partial_spends) {
+    if (txr_ungrouped->fee > 0 /* 0 means non-functional fee rate estimation */ && wallet.m_max_aps_fee > -1 && !coin_control.m_avoid_partial_spends) {
         TRACE1(coin_selection, attempting_aps_create_tx, wallet.GetName().c_str());
         CCoinControl tmp_cc = coin_control;
         tmp_cc.m_avoid_partial_spends = true;
-        CAmount nFeeRet2;
-        CTransactionRef tx2;
-        int nChangePosInOut2 = nChangePosIn;
         bilingual_str error2; // fired and forgotten; if an error occurs, we discard the results
-        std::optional<CreatedTransactionResult> txr_grouped = CreateTransactionInternal(wallet, vecSend, nChangePosInOut2, error2, tmp_cc, fee_calc_out, sign);
+        std::optional<CreatedTransactionResult> txr_grouped = CreateTransactionInternal(wallet, vecSend, change_pos, error2, tmp_cc, fee_calc_out, sign);
         if (txr_grouped) {
-            tx2 = txr_grouped->tx;
-            nFeeRet2 = txr_grouped->fee;
-            nChangePosInOut2 = txr_grouped->change_pos;
-
             // if fee of this alternative one is within the range of the max fee, we use this one
-            const bool use_aps = nFeeRet2 <= nFeeRet + wallet.m_max_aps_fee;
-            wallet.WalletLogPrintf("Fee non-grouped = %lld, grouped = %lld, using %s\n", nFeeRet, nFeeRet2, use_aps ? "grouped" : "non-grouped");
-            TRACE5(coin_selection, aps_create_tx_internal, wallet.GetName().c_str(), use_aps, res, nFeeRet2, nChangePosInOut2);
-            if (use_aps) {
-                tx = tx2;
-                nFeeRet = nFeeRet2;
-                nChangePosInOut = nChangePosInOut2;
-            }
+            const bool use_aps = txr_grouped->fee <= txr_ungrouped->fee + wallet.m_max_aps_fee;
+            wallet.WalletLogPrintf("Fee non-grouped = %lld, grouped = %lld, using %s\n",
+                txr_ungrouped->fee, txr_grouped->fee, use_aps ? "grouped" : "non-grouped");
+            TRACE5(coin_selection, aps_create_tx_internal, wallet.GetName().c_str(), use_aps, true, txr_grouped->fee, txr_grouped->change_pos);
+            if (use_aps) return txr_grouped;
         }
     }
-    return res;
+    return txr_ungrouped;
 }
 
 bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl)
@@ -1047,11 +1026,12 @@ bool FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& nFeeRet,
     // CreateTransaction call and LockCoin calls (when lockUnspents is true).
     LOCK(wallet.cs_wallet);
 
-    CTransactionRef tx_new;
     FeeCalculation fee_calc_out;
-    if (!CreateTransaction(wallet, vecSend, tx_new, nFeeRet, nChangePosInOut, error, coinControl, fee_calc_out, false)) {
-        return false;
-    }
+    std::optional<CreatedTransactionResult> txr = CreateTransaction(wallet, vecSend, nChangePosInOut, error, coinControl, fee_calc_out, false);
+    if (!txr) return false;
+    CTransactionRef tx_new = txr->tx;
+    nFeeRet = txr->fee;
+    nChangePosInOut = txr->change_pos;
 
     if (nChangePosInOut != -1) {
         tx.vout.insert(tx.vout.begin() + nChangePosInOut, tx_new->vout[nChangePosInOut]);
