@@ -229,7 +229,7 @@ struct CBLSIdImplicit : public uint256
     }
     void Serialize(uint8_t* buffer) const
     {
-        memcpy(buffer, data, sizeof(CBLSIdImplicit));
+        memcpy(buffer, m_data, sizeof(CBLSIdImplicit));
     }
 };
 
