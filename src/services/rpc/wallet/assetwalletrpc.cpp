@@ -384,6 +384,7 @@ static RPCHelpMan syscoinburntoassetallocation()
     vecSend.push_back(burn);
     vecSend.push_back(recp);
     CCoinControl coin_control;
+    coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
     int nChangePosRet = -1;
     bilingual_str error;
     CAmount nFeeRequired = 0;
@@ -789,6 +790,7 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     bilingual_str error;
     int nChangePosRet = -1;
     coin_control.m_min_depth = 1;
+    coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
     coin_control.Select(inputCoin.outpoint);
     coin_control.fAllowOtherInputs = recp.nAmount <= 0 || !recp.fSubtractFeeFromAmount; // select asset + sys utxo's
     CTransactionRef tx;
@@ -1476,6 +1478,7 @@ static RPCHelpMan assetallocationburn()
     bilingual_str error;
     mtx.nVersion = nVersionIn;
     CCoinControl coin_control;
+    coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
@@ -1665,6 +1668,7 @@ static RPCHelpMan assetallocationmint()
     bilingual_str error;
     int nChangePosRet = -1;
     CCoinControl coin_control;
+    coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
     bool lockUnspents = false;
     std::set<int> setSubtractFeeFromOutputs;
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
