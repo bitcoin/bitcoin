@@ -1073,9 +1073,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.nodes[0].generate(1)
         # sync nodes
         self.sync_all()
-        # Enable InstantSend (including block filtering) and ChainLocks by default
-        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 0)
-        self.nodes[0].spork("SPORK_3_INSTANTSEND_BLOCK_FILTERING", 0)
+        # Enable ChainLocks by default
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
         self.wait_for_sporks_same()
         self.bump_mocktime(1)
@@ -1292,6 +1290,17 @@ class DashTestFramework(SyscoinTestFramework):
                 done_proc()
             return all_ok
         wait_until_helper(check_dkg_comitments, timeout=timeout)
+    
+    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=30, sleep=2):
+        def wait_func():
+            if quorum_hash in self.nodes[0].quorum_list()["llmq_test"]:
+                return True
+            time.sleep(2)
+            self.bump_mocktime(sleep, nodes=nodes)
+            self.nodes[0].generate(1)
+            self.sync_blocks(nodes)
+            return False
+        wait_until_helper(wait_func, timeout=timeout)
 
     def mine_quorum(self, expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None, bumptime=1):
         spork21_active = self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] <= 1
@@ -1374,15 +1383,11 @@ class DashTestFramework(SyscoinTestFramework):
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(1)
         self.sync_blocks(nodes)
-        i = 0
-        while quorums == self.nodes[0].quorum_list():
-            time.sleep(2)
-            self.bump_mocktime(1, nodes=nodes)
-            self.nodes[0].generate(1)
-            self.sync_blocks(nodes)
-            i+=1
-            assert(i < 300)
+        self.log.info("Waiting for quorum to appear in the list")
+        self.wait_for_quorum_list(q, nodes)
+
         new_quorum = self.nodes[0].quorum_list(1)["llmq_test"][0]
+        assert_equal(q, new_quorum)
         quorum_info = self.nodes[0].quorum_info(100, new_quorum)
 
         # Mine 8 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
