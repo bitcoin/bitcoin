@@ -29,8 +29,7 @@ extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 uint32_t nCustomAssetGuid = 0;
 void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient) {
-    CAssetCoinInfo assetInfo;
-    CRecipient recp = { scriptPubKey, 0, false, assetInfo };
+    CRecipient recp = { scriptPubKey, 0, false };
     recipient = recp;
 }
 
@@ -357,8 +356,7 @@ static RPCHelpMan syscoinburntoassetallocation()
 
     const CScript& scriptPubKey = GetScriptForDestination(dest);
     CTxOut change_prototype_txout(0, scriptPubKey);
-    CAssetCoinInfo assetInfo;
-    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false, assetInfo };
+    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
 
 
     CMutableTransaction mtx;
@@ -385,17 +383,15 @@ static RPCHelpMan syscoinburntoassetallocation()
     std::vector<CRecipient> vecSend;
     vecSend.push_back(burn);
     vecSend.push_back(recp);
-    mtx.nVersion = SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION;
     CCoinControl coin_control;
     int nChangePosRet = -1;
     bilingual_str error;
     CAmount nFeeRequired = 0;
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
-    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+    CTransactionRef tx;
     FeeCalculation fee_calc_out;
-    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out)) {
-        if (tx->GetValueOut() + nFeeRequired > curBalance)
-            error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
+    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, true /* sign*/, SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION)) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
     }
     std::string err_string;
     AssertLockNotHeld(cs_main);
@@ -583,8 +579,7 @@ RPCHelpMan assetnew()
     const CScript& scriptPubKey = GetScriptForDestination(dest);
     CTxOut change_prototype_txout(nGas, scriptPubKey);
     bool isDust = nGas < COIN;
-    CAssetCoinInfo assetInfo;
-    CRecipient recp = { scriptPubKey, isDust? GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)): nGas,  !isDust, assetInfo};
+    CRecipient recp = { scriptPubKey, isDust? GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)): nGas,  !isDust};
     mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
     if(nGas > 0)
         setSubtractFeeFromOutputs.insert(0);
@@ -602,9 +597,9 @@ RPCHelpMan assetnew()
     CCoinControl coin_control;
     // assetnew must not be replaceable
     coin_control.m_signal_bip125_rbf = false;
+    coin_control.m_min_depth = 1;
     bool lockUnspents = false;   
     mtx.nVersion = SYSCOIN_TX_VERSION_ASSET_ACTIVATE;
-    coin_control.fAllowOtherInputs = true;
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
@@ -624,7 +619,6 @@ RPCHelpMan assetnew()
     mtx.vout.push_back(CTxOut(opreturnRecipient.nAmount, opreturnRecipient.scriptPubKey));
     nFeeRequired = 0;
     nChangePosRet = -1;
-    coin_control.fAllowOtherInputs = true;
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
@@ -759,8 +753,7 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     const CInputCoin &inputCoin = vecOutputs[nFoundOutput].GetInputCoin();
     const CAmount &nGas = inputCoin.effective_value;  
     // subtract fee from this output (it should pay the gas which was funded by asset new)
-    CAssetCoinInfo assetInfo;
-    CRecipient recp = { CScript(), 0, false, assetInfo };
+    CRecipient recp = { CScript(), 0, false };
     if(recpIn) {
         vecSend.push_back(*recpIn);
     }
@@ -772,7 +765,7 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
         if (!pwallet->GetNewDestination(pwallet->m_default_address_type, label, dest, errorStr)) {
             throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr);
         }
-        recp = { GetScriptForDestination(dest), nGas, false, assetInfo};  
+        recp = { GetScriptForDestination(dest), nGas, false};  
     }
     // if enough for change + max fee, we try to take fee from this output
     if(nGas > (MIN_CHANGE + pwallet->m_default_max_tx_fee)) {
@@ -788,7 +781,6 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
         else
             recp.nAmount -= nTotalOther;
     }
-    CMutableTransaction mtx;
     // order matters here as vecSend is in sync with asset commitment, it may change later when
     // change is added but it will resync the commitment there
     if(recp.nAmount > 0)
@@ -797,15 +789,14 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     CAmount nFeeRequired = 0;
     bilingual_str error;
     int nChangePosRet = -1;
+    coin_control.m_min_depth = 1;
     coin_control.Select(inputCoin.outpoint);
     coin_control.fAllowOtherInputs = recp.nAmount <= 0 || !recp.fSubtractFeeFromAmount; // select asset + sys utxo's
     CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
-    mtx.nVersion = nVersionIn;
-    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+    CTransactionRef tx;
     FeeCalculation fee_calc_out;
-    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out)) {
-        if (tx->GetValueOut() + nFeeRequired > curBalance)
-            error = strprintf(Untranslated("Error: This transaction requires a transaction fee of at least %s"), FormatMoney(nFeeRequired));
+    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, true /* sign*/, nVersionIn)) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
     }
     std::string err_string;
     AssertLockNotHeld(cs_main);
@@ -1010,8 +1001,7 @@ static RPCHelpMan assettransfer()
     }
     const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddress));
     CTxOut change_prototype_txout(0, scriptPubKey);
-    CAssetCoinInfo assetInfo;
-    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false, assetInfo };
+    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
     theAsset.ClearAsset();
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
     theAsset.voutAssets.emplace_back(CAssetOut(nAsset, outVec));
@@ -1084,7 +1074,6 @@ static RPCHelpMan assetsendmany()
     UniValue receivers = valueTo.get_array();
     std::vector<CRecipient> vecSend;
     std::vector<CAssetOutValue> vecOut;
-    CAssetCoinInfo assetInfo;
     for (unsigned int idx = 0; idx < receivers.size(); idx++) {
         const UniValue& receiver = receivers[idx];
         if (!receiver.isObject())
@@ -1106,7 +1095,7 @@ static RPCHelpMan assetsendmany()
         const size_t len = it->values.size();
         it->values.push_back(CAssetOutValue(len, nAmount));
         CTxOut change_prototype_txout(0, scriptPubKey);
-        CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false, assetInfo };
+        CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
         vecSend.push_back(recp);
     }
     auto it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
@@ -1221,8 +1210,9 @@ static RPCHelpMan assetallocationsendmany()
 	UniValue valueTo = params[0];
 	if (!valueTo.isArray())
 		throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Array of receivers not found");
+    bool m_signal_bip125_rbf = pwallet->m_signal_rbf;
     if (!request.params[1].isNull()) {
-        coin_control.m_signal_bip125_rbf = request.params[1].get_bool();
+        m_signal_bip125_rbf = request.params[1].get_bool();
     }
     mapValue_t mapValue;
     if (!request.params[2].isNull() && !request.params[2].get_str().empty())
@@ -1238,45 +1228,118 @@ static RPCHelpMan assetallocationsendmany()
     CAssetAllocation theAssetAllocation;
     CMutableTransaction mtx;
 	UniValue receivers = valueTo.get_array();
-    std::vector<CRecipient> vecSend;
+    std::map<uint32_t, uint64_t> mapAssetTotals;
+    std::vector<CAssetOutValue> vecOut;
+    uint8_t bOverideRBF = 0;
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
+        CAmount nTotalSending = 0;
 		const UniValue& receiver = receivers[idx];
 		if (!receiver.isObject())
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"address\" or \"amount\"}");
+
 		const UniValue &receiverObj = receiver.get_obj();
         const uint32_t &nAsset = find_value(receiverObj, "asset_guid").get_uint();
         CAsset theAsset;
         if (!GetAsset(nAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
+        // override RBF if one notarized asset has it enabled
+        if(!bOverideRBF && !theAsset.vchNotaryKeyID.empty() && !theAsset.notaryDetails.IsNull()) {
+            bOverideRBF = theAsset.notaryDetails.bEnableInstantTransfers;
+        }
+
         const std::string &toStr = find_value(receiverObj, "address").get_str();
         const auto& dest = DecodeDestination(toStr);
-        if(!IsValidDestination(dest)) {
+        if(!IsValidDestination(dest)) 
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Invalid destination address %s", toStr));
-        }
         const CScript& scriptPubKey = GetScriptForDestination(dest);   
         CTxOut change_prototype_txout(0, scriptPubKey);
         const CAmount &nAmount = AssetAmountFromValue(find_value(receiverObj, "amount"), theAsset.nPrecision);
-        CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false, CAssetCoinInfo(nAsset, nAmount) };
-        vecSend.push_back(recp); 
-    }
+        auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
+        if(itVout == theAssetAllocation.voutAssets.end()) {
+            CAssetOut assetOut(nAsset, vecOut);
+            if(!theAsset.vchNotaryKeyID.empty()) {
+                // fund tx expecting 65 byte signature to be filled in
+                assetOut.vchNotarySig.resize(65);
+            }
+            theAssetAllocation.voutAssets.emplace_back(assetOut);
+            itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
+        }
+        itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAmount));
 
+        CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
+        mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
+        auto it = mapAssetTotals.try_emplace(nAsset, nAmount);
+        if(!it.second) {
+            it.first->second += nAmount;
+        }
+        nTotalSending += nAmount;
+	        
+    }
+    // if all instant transfers using notary, we use RBF
+    if(bOverideRBF) {
+        // only override if parameter was not provided by user
+        if(request.params[1].isNull())
+            m_signal_bip125_rbf = true;
+    }
+    // aux fees if applicable
+    for(const auto &it: mapAssetTotals) {
+        const uint32_t &nAsset = it.first;
+        CAsset theAsset;
+        if (!GetAsset(nAsset, theAsset))
+            throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
+        CAmount nAuxFee;
+        getAuxFee(theAsset.auxFeeDetails, it.second, nAuxFee);
+        if(nAuxFee > 0 && !theAsset.auxFeeDetails.vchAuxFeeKeyID.empty()){
+            auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
+            if(itVout == theAssetAllocation.voutAssets.end()) {
+                 throw JSONRPCError(RPC_DATABASE_ERROR, "Invalid asset not found in voutAssets");
+            }
+            itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAuxFee));
+            const CScript& scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uint160{theAsset.auxFeeDetails.vchAuxFeeKeyID}));
+            CTxOut change_prototype_txout(0, scriptPubKey);
+            CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
+            mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
+            auto it = mapAssetTotals.try_emplace(nAsset, nAuxFee);
+            if(!it.second) {
+                it.first->second += nAuxFee;
+            }
+        }
+    }
+    coin_control.m_signal_bip125_rbf = m_signal_bip125_rbf;
     EnsureWalletIsUnlocked(pwallet);
 
-    mtx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_SEND;
+	std::vector<unsigned char> data;
+	theAssetAllocation.SerializeData(data);   
+
+
+	CScript scriptData;
+	scriptData << OP_RETURN << data;
+	CRecipient fee;
+	CreateFeeRecipient(scriptData, fee);
+    mtx.vout.push_back(CTxOut(fee.nAmount, fee.scriptPubKey));
     CAmount nFeeRequired = 0;
-    int nChangePosRet = -1;
     bilingual_str error;
-    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    FeeCalculation fee_calc_out;
-    coin_control.fAllowOtherInputs = true;
-    bool fCreated = pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, !pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
-    if (!fCreated) {
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
+    int nChangePosRet = -1;
+    bool lockUnspents = false;
+    std::set<int> setSubtractFeeFromOutputs;
+    // if zdag double the fee rate
+    if(coin_control.m_signal_bip125_rbf == false) {
+        CFeeRate rate = pwallet->chain().relayMinFee();
+        rate += pwallet->chain().relayMinFee();
+        coin_control.m_feerate = rate;
+    }
+    mtx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_SEND;
+    for(const auto &it: mapAssetTotals) {
+        nChangePosRet = -1;
+        nFeeRequired = 0;
+        coin_control.assetInfo = CAssetCoinInfo(it.first, it.second);
+        if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, error.original);
+        }
     }
     if(pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         UniValue result(UniValue::VOBJ);
-        CMutableTransaction mtx1(*tx);
-        PartiallySignedTransaction psbtx(mtx1);
+        PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
         const TransactionError err = pwallet->FillPSBT(psbtx, complete, SIGHASH_ALL, false /* sign */, true /* bip32derivs */);
         CHECK_NONFATAL(err == TransactionError::OK);
@@ -1286,31 +1349,30 @@ static RPCHelpMan assetallocationsendmany()
         result.pushKV("psbt", EncodeBase64(ssTx.str()));
         return result;
     }
-    CMutableTransaction mtx1(*tx);
     // Script verification errors
     std::map<int, std::string> input_errors;
     // Fetch previous transactions (inputs):
     std::map<COutPoint, Coin> coins;
-    for (const CTxIn& txin : mtx1.vin) {
+    for (const CTxIn& txin : mtx.vin) {
         coins[txin.prevout]; // Create empty map entry keyed by prevout.
     }
     pwallet->chain().findCoins(coins);
-    bool complete = pwallet->SignTransaction(mtx1, coins, SIGHASH_ALL, input_errors);
+    bool complete = pwallet->SignTransaction(mtx, coins, SIGHASH_ALL, input_errors);
     if(!complete) {
         UniValue result(UniValue::VOBJ);
-        SignTransactionResultToJSON(mtx1, complete, coins, input_errors, result);
+        SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
         return result;
     }
-    CTransactionRef tx1(MakeTransactionRef(std::move(mtx1)));
+    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     std::string err_string;
     AssertLockNotHeld(cs_main);
     NodeContext& node = EnsureNodeContext(request.context);
-    const TransactionError err = BroadcastTransaction(node, tx1, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
+    const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
     }
     UniValue res(UniValue::VOBJ);
-    res.__pushKV("txid", tx1->GetHash().GetHex());
+    res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
 },
     };
@@ -1396,8 +1458,7 @@ static RPCHelpMan assetallocationburn()
     }
 
     const CScript& scriptPubKey = GetScriptForDestination(dest);
-    CAssetCoinInfo assetInfo;
-    CRecipient recp = {scriptPubKey, nAmount, false, assetInfo };
+    CRecipient recp = {scriptPubKey, nAmount, false };
 
 
     std::vector<unsigned char> data;
@@ -1418,7 +1479,6 @@ static RPCHelpMan assetallocationburn()
     mtx.nVersion = nVersionIn;
     CCoinControl coin_control;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
-    coin_control.fAllowOtherInputs = true;
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
@@ -1572,8 +1632,7 @@ static RPCHelpMan assetallocationmint()
     
     const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddress));
     CTxOut change_prototype_txout(0, scriptPubKey);
-    CAssetCoinInfo assetInfo;
-    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false, assetInfo };    
+    CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };    
     
     CMutableTransaction mtx;
     mtx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_MINT;
@@ -1593,7 +1652,7 @@ static RPCHelpMan assetallocationmint()
             itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAuxFee));
             const CScript& scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uint160{theAsset.auxFeeDetails.vchAuxFeeKeyID}));
             CTxOut change_prototype_txout(0, scriptPubKey);
-            CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false, assetInfo };
+            CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
         }
     }
@@ -1610,7 +1669,6 @@ static RPCHelpMan assetallocationmint()
     CCoinControl coin_control;
     bool lockUnspents = false;
     std::set<int> setSubtractFeeFromOutputs;
-    coin_control.fAllowOtherInputs = true;
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }

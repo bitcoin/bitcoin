@@ -2905,12 +2905,11 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     // Turn the txout set into a CRecipient vector.
     for (size_t idx = 0; idx < tx.vout.size(); idx++) {
         const CTxOut& txOut = tx.vout[idx];
-        // SYSCOIN
-        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1, txOut.assetInfo};
+        CRecipient recipient = {txOut.scriptPubKey, txOut.nValue, setSubtractFeeFromOutputs.count(idx) == 1};
         vecSend.push_back(recipient);
     }
 
-    //coinControl.fAllowOtherInputs = true;
+    coinControl.fAllowOtherInputs = true;
 
     for (const CTxIn& txin : tx.vin) {
         coinControl.Select(txin.prevout);
@@ -2921,10 +2920,9 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     LOCK(cs_wallet);
 
     // SYSCOIN to set version
-    CTransactionRef tx_new(MakeTransactionRef(tx));
+    CTransactionRef tx_new;
     FeeCalculation fee_calc_out;
-    // SYSCOIN
-    if (!CreateTransactionDefault(vecSend, tx_new, nFeeRet, nChangePosInOut, error, coinControl, fee_calc_out, false)) {
+    if (!CreateTransaction(vecSend, tx_new, nFeeRet, nChangePosInOut, error, coinControl, fee_calc_out, false, tx.nVersion)) {
         return false;
     }
     // SYSCOIN
@@ -3160,7 +3158,8 @@ bool CWallet::CreateTransactionInternal(
         bilingual_str& error,
         const CCoinControl& coin_control,
         FeeCalculation& fee_calc_out,
-        bool sign)
+        bool sign,
+        const int& nVersion)
 {
     CAmount nValue = 0;
     const OutputType change_type = TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : m_default_change_type, vecSend);
@@ -3170,9 +3169,7 @@ bool CWallet::CreateTransactionInternal(
     // SYSCOIN
     CMutableTransaction txNew;
     CAssetCoinInfo nChangeAsset;
-    if(tx) {
-        txNew.nVersion = tx->nVersion;
-    }
+    txNew.nVersion = nVersion;
     bool bFirstOutput = true;
     for (const auto& recipient : vecSend)
     {
@@ -3577,120 +3574,6 @@ void getAuxFee(const CAuxFeeDetails &auxFeeDetails, const CAmount& nAmount, CAmo
     }
     nValue = (nAmount - nBoundAmount) * nRate + nAccumulatedFee;    
 }
-bool CWallet::CreateAssetAllocationSendTransaction(const std::vector<CRecipient> &vecSend,
-        CTransactionRef& tx,
-        CAmount& nFeeRet,
-        int& nChangePosInOut,
-        bilingual_str& error,
-        CCoinControl coin_control,
-        FeeCalculation& fee_calc_out,
-        bool sign) {
-    CAssetAllocation theAssetAllocation;
-    std::map<uint32_t, uint64_t> mapAssetTotals;
-    std::vector<CAssetOutValue> vecOut;
-    std::vector<CRecipient> vecSendCopy;
-    CMutableTransaction mtx;
-    bool bOverideRBF = false;
-    CAssetCoinInfo assetInfo;
-    for (unsigned int idx = 0; idx < vecSend.size(); idx++) {
-        CAmount nTotalSending = 0;
-		const CRecipient &receiver = vecSend[idx];
-        if(receiver.assetInfo.IsNull()) {
-            mtx.vout.push_back(CTxOut(receiver.nAmount, receiver.scriptPubKey));
-            continue;
-        }
-        const uint32_t &nAsset = receiver.assetInfo.nAsset;
-        CAsset theAsset;
-        if (!GetAsset(nAsset, theAsset)) {
-            error = _("Could not find a asset with this key");
-            return false;
-        }
-        // override RBF if one notarized asset has it enabled
-        if(!bOverideRBF && !theAsset.vchNotaryKeyID.empty() && !theAsset.notaryDetails.IsNull()) {
-            bOverideRBF = theAsset.notaryDetails.bEnableInstantTransfers;
-        }
-        const CScript& scriptPubKey = receiver.scriptPubKey;   
-        CTxOut change_prototype_txout(0, scriptPubKey);
-        auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
-        if(itVout == theAssetAllocation.voutAssets.end()) {
-            CAssetOut assetOut(nAsset, vecOut);
-            if(!theAsset.vchNotaryKeyID.empty()) {
-                // fund tx expecting 65 byte signature to be filled in
-                assetOut.vchNotarySig.resize(65);
-            }
-            theAssetAllocation.voutAssets.emplace_back(assetOut);
-            itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
-        }
-        CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*this)), false, receiver.assetInfo };
-        itVout->values.push_back(CAssetOutValue(idx, receiver.assetInfo.nValue));
-        mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
-        auto it = mapAssetTotals.try_emplace(nAsset, receiver.assetInfo.nValue);
-        if(!it.second) {
-            it.first->second += receiver.assetInfo.nValue;
-        }
-        nTotalSending += receiver.assetInfo.nValue;
-	        
-    }
-    // if all instant transfers using notary, we use RBF
-    if(bOverideRBF) {
-        coin_control.m_signal_bip125_rbf = true;
-    }
-    // aux fees if applicable
-    for(const auto &it: mapAssetTotals) {
-        const uint32_t &nAsset = it.first;
-        CAsset theAsset;
-        if (!GetAsset(nAsset, theAsset)) {
-            error = _("Could not find a asset with this key");
-            return false;
-        }
-        CAmount nAuxFee;
-        getAuxFee(theAsset.auxFeeDetails, it.second, nAuxFee);
-        if(nAuxFee > 0 && !theAsset.auxFeeDetails.vchAuxFeeKeyID.empty()){
-            auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
-            if(itVout == theAssetAllocation.voutAssets.end()) {
-                error = _("Invalid asset not found in voutAssets");
-                return false;
-            }
-            itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAuxFee));
-            const CScript& scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uint160{theAsset.auxFeeDetails.vchAuxFeeKeyID}));
-            CTxOut change_prototype_txout(0, scriptPubKey);
-            const CAssetCoinInfo assetInfo(nAsset, nAuxFee);
-            CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*this)), false, assetInfo };
-            mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
-            auto it = mapAssetTotals.try_emplace(nAsset, nAuxFee);
-            if(!it.second) {
-                it.first->second += nAuxFee;
-            }
-        }
-    }
-
-	std::vector<unsigned char> data;
-	theAssetAllocation.SerializeData(data);   
-	CScript scriptData;
-	scriptData << OP_RETURN << data;
-    mtx.vout.push_back(CTxOut(0, scriptData));
-    mtx.nVersion = SYSCOIN_TX_VERSION_ALLOCATION_SEND;
-    // if zdag double the fee rate
-    if(coin_control.m_signal_bip125_rbf == false) {
-        CFeeRate rate = chain().relayMinFee();
-        rate += chain().relayMinFee();
-        coin_control.m_feerate = rate;
-    }
-    int nChangePosRet = -1;
-    CAmount nFeeRequired = 0;
-    bool lockUnspents = false;
-    std::set<int> setSubtractFeeFromOutputs;
-    for(const auto &it: mapAssetTotals) {
-        nChangePosRet = -1;
-        nFeeRequired = 0;
-        coin_control.assetInfo = CAssetCoinInfo(it.first, it.second);
-        if (!FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
-            throw JSONRPCError(RPC_WALLET_ERROR, error.original);
-        }
-    }
-    tx = MakeTransactionRef(std::move(mtx));
-    return true;
-}
 bool CWallet::CreateTransaction(
         const std::vector<CRecipient>& vecSend,
         CTransactionRef& tx,
@@ -3699,35 +3582,12 @@ bool CWallet::CreateTransaction(
         bilingual_str& error,
         const CCoinControl& coin_control,
         FeeCalculation& fee_calc_out,
-        bool sign)
-{
-    // SYSCOIN
-    bool isAssetAllocation = false;
-    for(const auto& recp: vecSend) {
-        if(!recp.assetInfo.IsNull()) {
-            isAssetAllocation = true;
-            break;
-        }
-    }
-    if(isAssetAllocation) {
-        return CreateAssetAllocationSendTransaction(vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign);
-    }
-    return CreateTransactionDefault(vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign);
-}
-bool CWallet::CreateTransactionDefault(
-        const std::vector<CRecipient>& vecSend,
-        CTransactionRef& tx,
-        CAmount& nFeeRet,
-        int& nChangePosInOut,
-        bilingual_str& error,
-        const CCoinControl& coin_control,
-        FeeCalculation& fee_calc_out,
-        bool sign)
+        bool sign,
+        const int& nVersion)
 {
     int nChangePosIn = nChangePosInOut;
-    // SYSCOIN
-    //Assert(!tx); // tx is an out-param. TODO change the return type from bool to tx (or nullptr)
-    bool res = CreateTransactionInternal(vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign);
+    Assert(!tx); // tx is an out-param. TODO change the return type from bool to tx (or nullptr)
+    bool res = CreateTransactionInternal(vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign, nVersion);
     // try with avoidpartialspends unless it's enabled already
     if (res && nFeeRet > 0 /* 0 means non-functional fee rate estimation */ && m_max_aps_fee > -1 && !coin_control.m_avoid_partial_spends) {
         CCoinControl tmp_cc = coin_control;
@@ -3736,7 +3596,7 @@ bool CWallet::CreateTransactionDefault(
         CTransactionRef tx2;
         int nChangePosInOut2 = nChangePosIn;
         bilingual_str error2; // fired and forgotten; if an error occurs, we discard the results
-        if (CreateTransactionInternal(vecSend, tx2, nFeeRet2, nChangePosInOut2, error2, tmp_cc, fee_calc_out, sign)) {
+        if (CreateTransactionInternal(vecSend, tx2, nFeeRet2, nChangePosInOut2, error2, tmp_cc, fee_calc_out, sign, nVersion)) {
             // if fee of this alternative one is within the range of the max fee, we use this one
             const bool use_aps = nFeeRet2 <= nFeeRet + m_max_aps_fee;
             WalletLogPrintf("Fee non-grouped = %lld, grouped = %lld, using %s\n", nFeeRet, nFeeRet2, use_aps ? "grouped" : "non-grouped");
@@ -4799,8 +4659,7 @@ bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef &tx, uint256 hash, CAm
     scriptChange << OP_RETURN << ToByteVector(hash);
 
     std::vector< CRecipient > vecSend;
-    CAssetCoinInfo assetInfo;
-    vecSend.push_back((CRecipient){scriptChange, amount, false, assetInfo});
+    vecSend.push_back((CRecipient){scriptChange, amount, false});
 
     CCoinControl coinControl;
     if (!outpoint.IsNull()) {

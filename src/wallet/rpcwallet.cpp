@@ -394,9 +394,7 @@ void ParseRecipients(const UniValue& address_amounts, const UniValue& subtract_f
                 subtract_fee = true;
             }
         }
-        // SYSCOIN
-        CAssetCoinInfo assetInfo;
-        CRecipient recipient = {script_pub_key, amount, subtract_fee, assetInfo};
+        CRecipient recipient = {script_pub_key, amount, subtract_fee};
         recipients.push_back(recipient);
     }
 }
@@ -3240,8 +3238,6 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
     }
 
     bilingual_str error;
-    // SYSCOIN
-    coinControl.fAllowOtherInputs = true;
     if (!pwallet->FundTransaction(tx, fee_out, change_position, error, lockUnspents, setSubtractFeeFromOutputs, coinControl)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
