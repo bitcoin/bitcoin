@@ -1089,10 +1089,13 @@ static RPCHelpMan assetsendmany()
         const UniValue& receiver = receivers[idx];
         if (!receiver.isObject())
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"asset_guid\", \"address\", \"amount\"}");
-
         const UniValue &receiverObj = receiver.get_obj();
         const std::string &toStr = find_value(receiverObj, "address").get_str(); 
-        const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(toStr));           
+        const auto& dest = DecodeDestination(toStr);
+        if(!IsValidDestination(dest)) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Invalid destination address %s", toStr));
+        }
+        const CScript& scriptPubKey = GetScriptForDestination(dest);           
         CAmount nAmount = AssetAmountFromValue(find_value(receiverObj, "amount"), theAsset.nPrecision);
 
         auto it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
@@ -1246,6 +1249,10 @@ static RPCHelpMan assetallocationsendmany()
         if (!GetAsset(nAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         const std::string &toStr = find_value(receiverObj, "address").get_str();
+        const auto& dest = DecodeDestination(toStr);
+        if(!IsValidDestination(dest)) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Invalid destination address %s", toStr));
+        }
         const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(toStr));   
         CTxOut change_prototype_txout(0, scriptPubKey);
         const CAmount &nAmount = AssetAmountFromValue(find_value(receiverObj, "amount"), theAsset.nPrecision);
