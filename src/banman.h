@@ -74,6 +74,9 @@ public:
     bool IsDiscouraged(const CNetAddr& net_addr);
 
     bool Unban(const CSubNet& sub_net);
+
+    // Removes all ban entries that include net_addr
+    void UnbanAll(const CNetAddr& net_addr);
     void GetBanned(banmap_t& banmap);
     void DumpBanlist();
 

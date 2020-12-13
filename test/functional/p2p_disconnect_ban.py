@@ -66,6 +66,32 @@ class DisconnectBanTest(BitcoinTestFramework):
         self.nodes[1].clearbanned()
         assert_equal(len(self.nodes[1].listbanned()), 0)
 
+        self.log.info("setban removeall: ipv4 test")
+        self.nodes[1].setban("127.0.0.1/16", "add")
+        self.nodes[1].setban("127.0.0.1/24", "add")
+        self.nodes[1].setban("127.0.0.1/32", "add")
+        assert_equal(len(self.nodes[1].listbanned()), 3)
+        assert_raises_rpc_error(-8, "Error: setban removeall requires a single IP address",
+            self.nodes[1].setban, "127.0.0.3/32", "removeall")
+        self.nodes[1].setban("127.0.0.3", "removeall")
+        listbanned_response = self.nodes[1].listbanned()
+        assert_equal(len(listbanned_response), 1)
+        assert_equal(listbanned_response[0]["address"], "127.0.0.1/32")
+        self.nodes[1].clearbanned()
+
+        self.log.info("setban removeall: ipv6 test")
+        self.nodes[1].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/96", "add")
+        self.nodes[1].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/112", "add")
+        self.nodes[1].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/128", "add")
+        assert_equal(len(self.nodes[1].listbanned()), 3)
+        assert_raises_rpc_error(-8, "Error: setban removeall requires a single IP address",
+            self.nodes[1].setban, "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c64/128", "removeall")
+        self.nodes[1].setban("2001:4d48:ac57:400:cacf:e9ff:fe1d:9c64", "removeall")
+        listbanned_response = self.nodes[1].listbanned()
+        assert_equal(len(listbanned_response), 1)
+        assert_equal(listbanned_response[0]["address"], "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/128")
+        self.nodes[1].clearbanned()
+
         self.log.info("setban: test persistence across node restart")
         self.nodes[1].setban("127.0.0.0/32", "add")
         self.nodes[1].setban("127.0.0.0/24", "add")

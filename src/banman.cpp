@@ -135,6 +135,25 @@ bool BanMan::Unban(const CSubNet& sub_net)
     return true;
 }
 
+void BanMan::UnbanAll(const CNetAddr& net_addr)
+{
+    {
+        LOCK(m_cs_banned);
+        for (auto it = m_banned.begin(); it != m_banned.end();) {
+            CSubNet sub_net = it->first;
+            if (sub_net.Match(net_addr)) {
+                it = m_banned.erase(it);
+                m_is_dirty = true;
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    if (m_client_interface) m_client_interface->BannedListChanged();
+    DumpBanlist(); //store banlist to disk immediately
+}
+
 void BanMan::GetBanned(banmap_t& banmap)
 {
     LOCK(m_cs_banned);
