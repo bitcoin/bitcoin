@@ -395,6 +395,7 @@ class P2PInterface(P2PConnection):
 
     # SYSCOIN
     def on_mnlistdiff(self, message): pass
+    def on_clsig(self, message): pass
     def on_inv(self, message):
         want = msg_getdata()
         for i in message.inv:

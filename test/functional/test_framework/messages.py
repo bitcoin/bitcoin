@@ -370,7 +370,8 @@ class CInv:
         MSG_QUORUM_COMPLAINT: "qcomplaint",
         MSG_QUORUM_JUSTIFICATION: "qjustify",
         MSG_QUORUM_PREMATURE_COMMITMENT: "qpcommit",
-        MSG_QUORUM_RECOVERED_SIG: "qsigrec"
+        MSG_QUORUM_RECOVERED_SIG: "qsigrec",
+        MSG_CLSIG: "clsig"
     }
 
     def __init__(self, t=0, h=0):
@@ -1936,7 +1937,7 @@ class msg_mnlistdiff():
         return "msg_mnlistdiff(baseBlockHash=%064x, blockHash=%064x)" % (self.baseBlockHash, self.blockHash)
 
 class msg_clsig():
-    command = b"clsig"
+    msgtype = b"clsig"
 
     def __init__(self, height=0, blockHash=0, sig=b'\\x0' * 96):
         self.height = height
