@@ -387,7 +387,6 @@ static RPCHelpMan syscoinburntoassetallocation()
     int nChangePosRet = -1;
     bilingual_str error;
     CAmount nFeeRequired = 0;
-    CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx;
     FeeCalculation fee_calc_out;
     if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, true /* sign*/, SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION)) {
@@ -792,7 +791,6 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     coin_control.m_min_depth = 1;
     coin_control.Select(inputCoin.outpoint);
     coin_control.fAllowOtherInputs = recp.nAmount <= 0 || !recp.fSubtractFeeFromAmount; // select asset + sys utxo's
-    CAmount curBalance = pwallet->GetBalance(0, coin_control.m_avoid_address_reuse).m_mine_trusted;
     CTransactionRef tx;
     FeeCalculation fee_calc_out;
     if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, true /* sign*/, nVersionIn)) {
