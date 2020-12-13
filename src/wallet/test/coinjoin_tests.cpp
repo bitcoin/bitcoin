@@ -173,7 +173,6 @@ public:
     CompactTallyItem GetTallyItem(const std::vector<CAmount>& vecAmounts)
     {
         CompactTallyItem tallyItem;
-        CTransactionRef tx;
         ReserveDestination reserveDest(wallet.get());
         CAmount nFeeRet;
         int nChangePosRet = -1;
@@ -185,6 +184,7 @@ public:
             BOOST_CHECK(reserveDest.GetReservedDestination(tallyItem.txdest, false));
         }
         for (CAmount nAmount : vecAmounts) {
+            CTransactionRef tx;
             BOOST_CHECK(wallet->CreateTransaction({{GetScriptForDestination(tallyItem.txdest), nAmount, false}}, tx, nFeeRet, nChangePosRet, strError, coinControl));
             {
                 LOCK2(wallet->cs_wallet, cs_main);
