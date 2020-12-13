@@ -177,7 +177,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
 
             CScript scriptPubKey = GetScriptForDestination(DecodeDestination(rcp.address.toStdString()));
             // SYSCOIN
-            CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount, CAssetCoinInfo(rcp.amount, rcp.nAsset)};
+            CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount, CAssetCoinInfo()};
             vecSend.push_back(recipient);
 
             total += rcp.amount;

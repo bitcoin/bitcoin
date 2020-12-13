@@ -93,9 +93,7 @@ CoinControlDialog::CoinControlDialog(CCoinControl& coin_control, WalletModel* _m
     // clipboard actions
     QAction *clipboardQuantityAction = new QAction(tr("Copy quantity"), this);
     QAction *clipboardAmountAction = new QAction(tr("Copy amount"), this);
-    // SYSCOIN
-    QAction *clipboardAmountAssetAction = new QAction(tr("Copy asset amount"), this);
-    QAction *clipboardAssetAction = new QAction(tr("Copy asset"), this);
+
     QAction *clipboardFeeAction = new QAction(tr("Copy fee"), this);
     QAction *clipboardAfterFeeAction = new QAction(tr("Copy after fee"), this);
     QAction *clipboardBytesAction = new QAction(tr("Copy bytes"), this);
@@ -104,9 +102,7 @@ CoinControlDialog::CoinControlDialog(CCoinControl& coin_control, WalletModel* _m
 
     connect(clipboardQuantityAction, &QAction::triggered, this, &CoinControlDialog::clipboardQuantity);
     connect(clipboardAmountAction, &QAction::triggered, this, &CoinControlDialog::clipboardAmount);
-    // SYSCOIN
-    connect(clipboardAmountAssetAction, &QAction::triggered, this, &CoinControlDialog::clipboardAmountAsset);
-    connect(clipboardAssetAction, &QAction::triggered, this, &CoinControlDialog::clipboardAsset);
+
     connect(clipboardFeeAction, &QAction::triggered, this, &CoinControlDialog::clipboardFee);
     connect(clipboardAfterFeeAction, &QAction::triggered, this, &CoinControlDialog::clipboardAfterFee);
     connect(clipboardBytesAction, &QAction::triggered, this, &CoinControlDialog::clipboardBytes);
@@ -115,8 +111,6 @@ CoinControlDialog::CoinControlDialog(CCoinControl& coin_control, WalletModel* _m
 
     ui->labelCoinControlQuantity->addAction(clipboardQuantityAction);
     ui->labelCoinControlAmount->addAction(clipboardAmountAction);
-    // SYSCOIN
-    ui->labelCoinControlAmountAsset->addAction(clipboardAssetAction);
     ui->labelCoinControlFee->addAction(clipboardFeeAction);
     ui->labelCoinControlAfterFee->addAction(clipboardAfterFeeAction);
     ui->labelCoinControlBytes->addAction(clipboardBytesAction);
@@ -321,17 +315,6 @@ void CoinControlDialog::clipboardAmount()
     GUIUtil::setClipboard(ui->labelCoinControlAmount->text().left(ui->labelCoinControlAmount->text().indexOf(" ")));
 }
 
-// copy label "Asset Amount" to clipboard
-void CoinControlDialog::clipboardAmountAsset()
-{
-    GUIUtil::setClipboard(ui->labelCoinControlAmount->text().left(ui->labelCoinControlAmountAsset->text().indexOf(" ")));
-}
-
-// copy label "Asset" to clipboard
-void CoinControlDialog::clipboardAsset()
-{
-    GUIUtil::setClipboard(ui->labelCoinControlAmount->text().left(ui->labelCoinControlAmount->text().indexOf(" ")));
-}
 
 // copy label "Fee" to clipboard
 void CoinControlDialog::clipboardFee()
@@ -413,13 +396,16 @@ void CoinControlDialog::viewItemChanged(QTreeWidgetItem* item, int column)
     if (column == COLUMN_CHECKBOX && item->data(COLUMN_ADDRESS, TxHashRole).toString().length() == 64) // transaction hash is 64 characters (this means it is a child node, so it is not a parent node in tree mode)
     {
         COutPoint outpt(uint256S(item->data(COLUMN_ADDRESS, TxHashRole).toString().toStdString()), item->data(COLUMN_ADDRESS, VOutRole).toUInt());
-
-        if (item->checkState(COLUMN_CHECKBOX) == Qt::Unchecked)
+        
+        if (item->checkState(COLUMN_CHECKBOX) == Qt::Unchecked) {
             m_coin_control.UnSelect(outpt);
+        }
         else if (item->isDisabled()) // locked (this happens if "check all" through parent node)
             item->setCheckState(COLUMN_CHECKBOX, Qt::Unchecked);
-        else
+        else {
             m_coin_control.Select(outpt);
+            
+        }
 
         // selection changed -> update labels
         if (ui->treeWidget->isEnabled()) // do not update on every click for (un)select all
@@ -460,8 +446,6 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
         }
     }
     CAmount nAmount             = 0;
-    // SYSCOIN
-    CAssetCoinInfo nAmountAsset;
     CAmount nPayFee             = 0;
     CAmount nAfterFee           = 0;
     CAmount nChange             = 0;
@@ -490,7 +474,6 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
 
         // Amount
         nAmount += out.txout.nValue;
-
         // Bytes
         CTxDestination address;
         int witnessversion = 0;
@@ -576,18 +559,12 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
     QLabel *l5 = dialog->findChild<QLabel *>("labelCoinControlBytes");
     QLabel *l7 = dialog->findChild<QLabel *>("labelCoinControlLowOutput");
     QLabel *l8 = dialog->findChild<QLabel *>("labelCoinControlChange");
-    // SYSCOIN
-    QLabel *l9 = dialog->findChild<QLabel *>("labelCoinControlAmountAsset");
-    QLabel *l10 = dialog->findChild<QLabel *>("labelCoinControlAmountAssetText");
 
     // enable/disable "dust" and "change"
     dialog->findChild<QLabel *>("labelCoinControlLowOutputText")->setEnabled(nPayAmount > 0);
     dialog->findChild<QLabel *>("labelCoinControlLowOutput")    ->setEnabled(nPayAmount > 0);
     dialog->findChild<QLabel *>("labelCoinControlChangeText")   ->setEnabled(nPayAmount > 0);
     dialog->findChild<QLabel *>("labelCoinControlChange")       ->setEnabled(nPayAmount > 0);
-    // SYSCOIN
-    l9->setEnabled(nAmountAsset.nValue > 0);
-    l10->setEnabled(nAmountAsset.nValue > 0);
     // stats
     l1->setText(QString::number(nQuantity));                                 // Quantity
     l2->setText(SyscoinUnits::formatWithUnit(nDisplayUnit, nAmount));        // Amount
@@ -603,9 +580,6 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
         if (nChange > 0 && !CoinControlDialog::fSubtractFeeFromAmount)
             l8->setText(ASYMP_UTF8 + l8->text());
     }
-    // SYSCOIN
-    l9->setText(SyscoinUnits::formatWithUnit(nDisplayUnit, nAmountAsset.nValue, nAmountAsset.nAsset));        // Asset Amount
-
     // turn label red when dust
     l7->setStyleSheet((fDust) ? "color:red;" : "");
 
@@ -717,7 +691,7 @@ void CoinControlDialog::updateView()
 
             // SYSCOIN amount asset
             itemOutput->setText(COLUMN_AMOUNT_ASSET, SyscoinUnits::format(nDisplayUnit, out.txout.assetInfo.nValue, out.txout.assetInfo.nAsset));
-            itemOutput->setData(COLUMN_AMOUNT_ASSET, Qt::UserRole, QVariant((qlonglong)out.txout.assetInfo.nValue)); // padding so that sorting works correctly
+            itemOutput->setData(COLUMN_AMOUNT_ASSET, AssetRole, QVariant((qlonglong)out.txout.assetInfo.nValue)); // padding so that sorting works correctly
 
             // asset
             itemOutput->setText(COLUMN_ASSET, QString::number(out.txout.assetInfo.nAsset));

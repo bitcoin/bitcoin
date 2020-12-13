@@ -43,20 +43,6 @@
            <cstring>reqAmount</cstring>
           </property>
          </widget>
-          <widget class="QLabel" name="label">
-          <property name="toolTip">
-           <string>An optional asset to request. Leave this empty or zero to not request a specific asset.</string>
-          </property>
-          <property name="text">
-           <string>&amp;Asset:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-          </property>
-          <property name="buddy">
-           <cstring>reqAsset</cstring>
-          </property>
-         </widget>
         </item>
         <item row="6" column="0">
          <widget class="QLabel" name="label_3">
@@ -205,31 +191,6 @@
             </property>
             <property name="toolTip">
              <string>An optional amount to request. Leave this empty or zero to not request a specific amount.</string>
-            </property>
-           </widget>
-          </item>
-            <item>
-           <widget class="SyscoinAmountField" name="reqAsset">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="minimumSize">
-             <size>
-              <width>80</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>150</width>
-              <height>100</height>
-             </size>
-            </property>
-            <property name="toolTip">
-             <string>An optional asset to request. Leave this empty or zero to not request a asset amount.</string>
             </property>
            </widget>
           </item>
@@ -405,7 +366,6 @@
  <tabstops>
   <tabstop>reqLabel</tabstop>
   <tabstop>reqAmount</tabstop>
-  <tabstop>reqAsset</tabstop>
   <tabstop>useBech32</tabstop>
   <tabstop>reqMessage</tabstop>
   <tabstop>receiveButton</tabstop>

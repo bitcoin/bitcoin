@@ -104,9 +104,6 @@ private Q_SLOTS:
     void unlockCoin();
     void clipboardQuantity();
     void clipboardAmount();
-    // SYSCOIN
-    void clipboardAmountAsset();
-    void clipboardAsset();
     void clipboardFee();
     void clipboardAfterFee();
     void clipboardBytes();

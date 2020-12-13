@@ -118,8 +118,6 @@ void ReceiveCoinsDialog::clear()
     ui->reqAmount->clear();
     ui->reqLabel->setText("");
     ui->reqMessage->setText("");
-    // SYSCOIN
-    ui->reqAsset->clear();
     updateDisplayUnit();
 }
 
@@ -163,9 +161,9 @@ void ReceiveCoinsDialog::on_receiveButton_clicked()
     switch(model->getAddressTableModel()->getEditStatus())
     {
     case AddressTableModel::EditStatus::OK: {
-        // SYSCOIN Success
+        // Success
         SendCoinsRecipient info(address, label,
-            ui->reqAmount->value(), ui->reqMessage->text(), ui->reqAsset->value());
+            ui->reqAmount->value(), ui->reqMessage->text());
         ReceiveRequestDialog *dialog = new ReceiveRequestDialog(this);
         dialog->setAttribute(Qt::WA_DeleteOnClose);
         dialog->setModel(model);

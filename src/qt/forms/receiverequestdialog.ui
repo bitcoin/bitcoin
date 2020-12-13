@@ -136,35 +136,6 @@
      </property>
     </widget>
    </item>
-    <item row="4" column="2" alignment="Qt::AlignRight|Qt::AlignTop">
-    <widget class="QLabel" name="asset_tag">
-     <property name="font">
-      <font>
-       <weight>75</weight>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>Asset:</string>
-     </property>
-     <property name="textInteractionFlags">
-      <set>Qt::NoTextInteraction</set>
-     </property>
-    </widget>
-   </item>
-   <item row="4" column="3" alignment="Qt::AlignTop">
-    <widget class="QLabel" name="asset_content">
-     <property name="text">
-      <string notr="true">0</string>
-     </property>
-     <property name="textFormat">
-      <enum>Qt::PlainText</enum>
-     </property>
-     <property name="textInteractionFlags">
-      <set>Qt::TextSelectableByMouse</set>
-     </property>
-    </widget>
-   </item>
    <item row="5" column="0" alignment="Qt::AlignRight|Qt::AlignTop">
     <widget class="QLabel" name="label_tag">
      <property name="font">

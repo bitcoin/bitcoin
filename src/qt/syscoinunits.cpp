@@ -150,16 +150,15 @@ QString SyscoinUnits::format(int unit, const CAmount& _nIn, const uint32_t &nAss
 //
 // Please take care to use formatHtmlWithUnit instead, when
 // appropriate.
-// SYSCOIN
-QString SyscoinUnits::formatWithUnit(int unit, const CAmount& amount, const uint32_t &nAsset, bool plussign, SeparatorStyle separators)
+QString SyscoinUnits::formatWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
-    return format(unit, amount, nAsset, plussign, separators) + QString(" ") + shortName(unit);
+    // SYSCOIN
+    return format(unit, amount, 0, plussign, separators) + QString(" ") + shortName(unit);
 }
 
 QString SyscoinUnits::formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign, SeparatorStyle separators)
 {
-    // SYSCOIN
-    QString str(formatWithUnit(unit, amount, 0, plussign, separators));
+    QString str(formatWithUnit(unit, amount, plussign, separators));
     str.replace(QChar(THIN_SP_CP), QString(THIN_SP_HTML));
     return QString("<span style='white-space: nowrap;'>%1</span>").arg(str);
 }

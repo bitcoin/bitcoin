@@ -414,60 +414,6 @@
               </layout>
              </item>
              <item>
-              <layout class="QFormLayout" name="formLayoutCoinControl3">
-               <property name="horizontalSpacing">
-                <number>10</number>
-               </property>
-               <property name="verticalSpacing">
-                <number>14</number>
-               </property>
-               <property name="leftMargin">
-                <number>6</number>
-               </property>
-               <property name="topMargin">
-                <number>4</number>
-               </property>
-               <property name="rightMargin">
-                <number>6</number>
-               </property>
-               <item row="0" column="0">
-                <widget class="QLabel" name="labelCoinControlAmountAssetText">
-                <property name="enabled">
-                  <bool>false</bool>
-                </property>
-                <property name="font">
-                  <font>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                  </font>
-                </property>
-                <property name="text">
-                  <string>Asset Amount:</string>
-                </property>
-                </widget>
-              </item>
-              <item row="0" column="1">
-                <widget class="QLabel" name="labelCoinControlAmountAsset">
-                <property name="enabled">
-                  <bool>false</bool>
-                </property>
-                <property name="cursor">
-                  <cursorShape>IBeamCursor</cursorShape>
-                </property>
-                <property name="contextMenuPolicy">
-                  <enum>Qt::ActionsContextMenu</enum>
-                </property>
-                <property name="text">
-                  <string notr="true">0.00</string>
-                </property>
-                <property name="textInteractionFlags">
-                  <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-                </property>
-                </widget>
-              </item>
-              </layout>
-             </item>
-             <item>
               <layout class="QFormLayout" name="formLayoutCoinControl4">
                <property name="horizontalSpacing">
                 <number>10</number>

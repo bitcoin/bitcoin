@@ -3709,7 +3709,6 @@ bool CWallet::CreateTransaction(
         }
     }
     if(isAssetAllocation) {
-        LogPrintf("isAssetAllocation\n");
         return CreateAssetAllocationSendTransaction(vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign);
     }
     return CreateTransactionDefault(vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign);

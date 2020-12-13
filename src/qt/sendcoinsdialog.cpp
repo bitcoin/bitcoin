@@ -242,6 +242,7 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
             if(entry->validate(model->node()))
             {
                 recipients.append(entry->getValue());
+                
             }
             else if (valid)
             {
@@ -286,14 +287,11 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
     QStringList formatted;
     for (const SendCoinsRecipient &rcp : m_current_transaction->getRecipients())
     {
-        // SYSCOIN generate amount string with wallet name in case of multiwallet
-        QString amount = SyscoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount, rcp.nAsset);
+        // generate amount string with wallet name in case of multiwallet
+        QString amount = SyscoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
         
         if (model->isMultiwallet()) {
             amount.append(tr(" from wallet '%1'").arg(GUIUtil::HtmlEscape(model->getWalletName())));
-        }
-        if(rcp.nAsset > 0) {
-            amount.append(tr(" Asset '%1'").arg(QString::number(rcp.nAsset)));
         }
 
         // generate address string
@@ -427,8 +425,7 @@ void SendCoinsDialog::on_sendButton_clicked()
                     fileNameSuggestion.append(" - ");
                 }
                 QString labelOrAddress = rcp.label.isEmpty() ? rcp.address : rcp.label;
-                // SYSCOIN
-                QString amount = SyscoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount, rcp.nAsset);
+                QString amount = SyscoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), rcp.amount);
                 fileNameSuggestion.append(labelOrAddress + "-" + amount);
                 first = false;
             }

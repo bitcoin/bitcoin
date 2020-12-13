@@ -24,8 +24,7 @@ RecentRequestsTableModel::RecentRequestsTableModel(WalletModel *parent) :
         addNewRequest(request);
 
     /* These columns must match the indices in the ColumnIndex enumeration */
-    // SYSCOIN
-    columns << tr("Date") << tr("Label") << tr("Message") << getAmountTitle() << tr("Asset");
+    columns << tr("Date") << tr("Label") << tr("Message") << getAmountTitle();
 
     connect(walletModel->getOptionsModel(), &OptionsModel::displayUnitChanged, this, &RecentRequestsTableModel::updateDisplayUnit);
 }
@@ -84,12 +83,9 @@ QVariant RecentRequestsTableModel::data(const QModelIndex &index, int role) cons
                 return tr("(no amount requested)");
             // SYSCOIN
             else if (role == Qt::EditRole)
-                return SyscoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount, rec->recipient.nAsset, false, SyscoinUnits::SeparatorStyle::NEVER);
+                return SyscoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount, 0, false, SyscoinUnits::SeparatorStyle::NEVER);
             else
-                return SyscoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount, rec->recipient.nAsset);
-        // SYSCOIN
-        case Asset:
-            return QString::number(rec->recipient.nAsset);
+                return SyscoinUnits::format(walletModel->getOptionsModel()->getDisplayUnit(), rec->recipient.amount);
         }
     }
     else if (role == Qt::TextAlignmentRole)
@@ -235,9 +231,6 @@ bool RecentRequestEntryLessThan::operator()(const RecentRequestEntry& left, cons
         return pLeft->recipient.message < pRight->recipient.message;
     case RecentRequestsTableModel::Amount:
         return pLeft->recipient.amount < pRight->recipient.amount;
-    // SYSCOIN
-    case RecentRequestsTableModel::Asset:
-        return pLeft->recipient.nAsset < pRight->recipient.nAsset;
     default:
         return pLeft->id < pRight->id;
     }
