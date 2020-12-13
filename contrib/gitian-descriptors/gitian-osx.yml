@@ -116,6 +116,7 @@ script: |
 
   ORIGPATH="$PATH"
   CODESIGN_ALLOCATE="${BASEPREFIX}/${i}/native/bin/${i}-codesign_allocate"
+  PAGESTUFF="${BASEPREFIX}/${i}/native/bin/${i}-pagestuff"
   # Extract the git archive into a dir for each host and build
   for i in ${HOSTS}; do
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
@@ -158,6 +159,15 @@ script: |
     UNSIGNED_SIZE=$(stat -c %s ${BINARY_RESULT})
     SIG_SIZE_EST=$(((((UNSIGNED_SIZE / 4096) + 1) * 32) + 51200))
     ${CODESIGN_ALLOCATE} -i ${BINARY_RESULT} -a x86_64 ${SIG_SIZE_EST} -o ${BINARY_RESULT}
+
+    # codesign_allocate appends 0's, and this causes codesign to error because it is expecting a properly formatted signature.
+    # To avoid this problem, we attach a bogus signature. This signature was valid for some version, but it doesn't matter because it is invalid
+    # for this version.
+    BOGUS_SIG="contrib/macdeploy/a.sig"
+    BOGUS_SIG_SIZE=$(stat -c %s ${BOGUS_SIG})
+    ${CODESIGN_ALLOCATE} -i "${BINARY_RESULT}" -a x86_64 ${BOGUS_SIG_SIZE} -o "${BINARY_RESULT}"
+    OFFSET=$(${PAGESTUFF} "${BINARY_RESULT}" -p | tail -2 | grep offset | sed 's/[^0-9]*//g')
+    dd if="${BOGUS_SIG}" of="${BINARY_RESULT}" bs=1 seek=${OFFSET} count=${BOGUS_SIG_SIZE} 2>/dev/null
 
     mkdir -p unsigned-app-${i}
     cp osx_volname unsigned-app-${i}/
