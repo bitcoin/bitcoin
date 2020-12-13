@@ -1253,7 +1253,7 @@ static RPCHelpMan assetallocationsendmany()
         if(!IsValidDestination(dest)) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Invalid destination address %s", toStr));
         }
-        const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(toStr));   
+        const CScript& scriptPubKey = GetScriptForDestination(dest);   
         CTxOut change_prototype_txout(0, scriptPubKey);
         const CAmount &nAmount = AssetAmountFromValue(find_value(receiverObj, "amount"), theAsset.nPrecision);
         CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false, CAssetCoinInfo(nAsset, nAmount) };
