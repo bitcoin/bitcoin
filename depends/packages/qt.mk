@@ -13,7 +13,7 @@ $(package)_patches+= fix_rcc_determinism.patch fix_riscv64_arch.patch xkb-defaul
 $(package)_patches+= fix_android_qmake_conf.patch fix_android_jni_static.patch dont_hardcode_pwd.patch
 $(package)_patches+= freetype_back_compat.patch drop_lrelease_dependency.patch fix_powerpc_libpng.patch
 $(package)_patches+= fix_mingw_cross_compile.patch fix_qpainter_non_determinism.patch
-$(package)_patches+= .configure qt.pro qt.modules
+$(package)_patches+= .configure qt.pro .gitmodules fix_git_modules.patch
 
 # Update OSX_QT_TRANSLATIONS when this is updated
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
@@ -25,26 +25,24 @@ $(package)_qttools_sha256_hash=a97556eb7b2f30252cdd8a598c396cfce2b2f79d2bae883af
 $(package)_qtdeclarative_file_name=qtdeclarative-$($(package)_suffix)
 $(package)_qtdeclarative_sha256_hash=b4e47b6038f3c604dee8128aeed12a0e9558a7b2bba63a2c44e4ad0743de5450
 
-$(package)_qtquickcontrols2_file_name=qtquickcontrols2-$($(package)_suffix)
-$(package)_qtquickcontrols2_sha256_hash=6c1e47188facca82f443e2d3d9692d5a9574db073c37e218b1d89f795b697018
-
 $(package)_qtcharts_file_name=qtcharts-$($(package)_suffix)
 $(package)_qtcharts_sha256_hash=a75f89c0081af9635b50cab335a4871d476b36abc8a11dc4f24724bd3cf42437
 
 $(package)_qtgraphicaleffects_file_name=qtgraphicaleffects-$($(package)_suffix)
 $(package)_qtgraphicaleffects_sha256_hash=7f0d47ed7a92440de8d4a149210ecb76f2020586d7704388f5fd69063ab01a1b
 
+$(package)_qtquickcontrols2_file_name=qtquickcontrols2-$($(package)_suffix)
+$(package)_qtquickcontrols2_sha256_hash=6c1e47188facca82f443e2d3d9692d5a9574db073c37e218b1d89f795b697018
+
 $(package)_extra_sources  = $($(package)_qttranslations_file_name)
 $(package)_extra_sources += $($(package)_qttools_file_name)
 $(package)_extra_sources += $($(package)_qtcharts_file_name)
-$(package)_extra_sources += $($(package)_qtandroidextras_file_name)
 $(package)_extra_sources += $($(package)_qtgraphicaleffects_file_name)
 $(package)_extra_sources += $($(package)_qtdeclarative_file_name)
 $(package)_extra_sources += $($(package)_qtquickcontrols2_file_name)
 
 define $(package)_set_vars
 $(package)_config_opts_release = -release
-$(package)_config_opts_release += -silent
 $(package)_config_opts_debug = -debug
 $(package)_config_opts += -bindir $(build_prefix)/bin
 $(package)_config_opts += -c++std c++1z
@@ -69,7 +67,6 @@ $(package)_config_opts += -no-mtdev
 $(package)_config_opts += -no-openssl
 $(package)_config_opts += -no-openvg
 $(package)_config_opts += -no-reduce-relocations
-$(package)_config_opts += -no-qml-debug
 $(package)_config_opts += -no-sctp
 $(package)_config_opts += -no-securetransport
 $(package)_config_opts += -no-sql-db2
@@ -87,7 +84,7 @@ $(package)_config_opts += -no-xinput2
 $(package)_config_opts += -nomake examples
 $(package)_config_opts += -nomake tests
 $(package)_config_opts += -opensource
-$(package)_config_opts += -optimized-tools
+$(package)_config_opts += -optimized-qmake
 $(package)_config_opts += -pkg-config
 $(package)_config_opts += -prefix $(host_prefix)
 $(package)_config_opts += -qt-libpng
@@ -95,15 +92,14 @@ $(package)_config_opts += -qt-pcre
 $(package)_config_opts += -qt-harfbuzz
 $(package)_config_opts += -system-zlib
 $(package)_config_opts += -static
+$(package)_config_opts += -silent
 $(package)_config_opts += -v
 $(package)_config_opts += -no-feature-bearermanagement
 $(package)_config_opts += -no-feature-colordialog
-$(package)_config_opts += -no-feature-commandlineparser
 $(package)_config_opts += -no-feature-concurrent
 $(package)_config_opts += -no-feature-dial
-$(package)_config_opts += -no-feature-fontcombobox
+$(package)_config_opts += -no-feature-filesystemwatcher
 $(package)_config_opts += -no-feature-ftp
-$(package)_config_opts += -no-feature-http
 $(package)_config_opts += -no-feature-image_heuristic_mask
 $(package)_config_opts += -no-feature-keysequenceedit
 $(package)_config_opts += -no-feature-lcdnumber
@@ -114,13 +110,9 @@ $(package)_config_opts += -no-feature-printdialog
 $(package)_config_opts += -no-feature-printer
 $(package)_config_opts += -no-feature-printpreviewdialog
 $(package)_config_opts += -no-feature-printpreviewwidget
-$(package)_config_opts += -no-feature-regularexpression
 $(package)_config_opts += -no-feature-sessionmanager
-$(package)_config_opts += -no-feature-socks5
-$(package)_config_opts += -no-feature-sql
 $(package)_config_opts += -no-feature-statemachine
 $(package)_config_opts += -no-feature-syntaxhighlighter
-$(package)_config_opts += -no-feature-textbrowser
 $(package)_config_opts += -no-feature-textodfwriter
 $(package)_config_opts += -no-feature-topleveldomain
 $(package)_config_opts += -no-feature-udpsocket
@@ -129,7 +121,6 @@ $(package)_config_opts += -no-feature-undogroup
 $(package)_config_opts += -no-feature-undostack
 $(package)_config_opts += -no-feature-undoview
 $(package)_config_opts += -no-feature-vnc
-$(package)_config_opts += -no-feature-wizard
 $(package)_config_opts += -no-feature-xml
 
 $(package)_config_opts_darwin = -no-dbus
@@ -209,10 +200,10 @@ define $(package)_extract_cmds
   echo "$($(package)_sha256_hash)  $($(package)_source)" > $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   echo "$($(package)_qttranslations_sha256_hash)  $($(package)_source_dir)/$($(package)_qttranslations_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   echo "$($(package)_qttools_sha256_hash)  $($(package)_source_dir)/$($(package)_qttools_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
+  echo "$($(package)_qtdeclarative_sha256_hash)  $($(package)_source_dir)/$($(package)_qtdeclarative_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   echo "$($(package)_qtcharts_sha256_hash)  $($(package)_source_dir)/$($(package)_qtcharts_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   echo "$($(package)_qtgraphicaleffects_sha256_hash)  $($(package)_source_dir)/$($(package)_qtgraphicaleffects_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   echo "$($(package)_qtquickcontrols2_sha256_hash)  $($(package)_source_dir)/$($(package)_qtquickcontrols2_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
-  echo "$($(package)_qtdeclarative_sha256_hash)  $($(package)_source_dir)/$($(package)_qtdeclarative_file_name)" >> $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   $(build_SHA256SUM) -c $($(package)_extract_dir)/.$($(package)_file_name).hash && \
   mkdir qtbase && \
   tar --no-same-owner --strip-components=1 -xf $($(package)_source) -C qtbase && \
@@ -272,8 +263,9 @@ define $(package)_preprocess_cmds
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
   cp -f qtbase/mkspecs/macx-clang/qplatformdefs.h qtbase/mkspecs/macx-clang-linux/ &&\
   cp -f $($(package)_patch_dir)/qt.pro . && \
-  cp -f $($(package)_patch_dir)/qt.modules . && \
+  cp -f $($(package)_patch_dir)/.gitmodules . && \
   cp -f $($(package)_patch_dir)/.configure configure && \
+  patch -p0 -i $($(package)_patch_dir)/fix_git_modules.patch && \
   cp -f $($(package)_patch_dir)/mac-qmake.conf qtbase/mkspecs/macx-clang-linux/qmake.conf && \
   cp -r qtbase/mkspecs/linux-arm-gnueabi-g++ qtbase/mkspecs/bitcoin-linux-g++ && \
   sed -i.old "s/arm-linux-gnueabi-/$(host)-/g" qtbase/mkspecs/bitcoin-linux-g++/qmake.conf && \
@@ -302,7 +294,7 @@ define $(package)_build_cmds
 endef
 
 define $(package)_stage_cmds
-  $(MAKE) -C . INSTALL_ROOT=$($(package)_staging_dir) install_subtargets && \
+  $(MAKE) -C . INSTALL_ROOT=$($(package)_staging_dir) install && \
   if `test -f qtbase/src/plugins/platforms/xcb/xcb-static/libxcb-static.a`; then \
     cp qtbase/src/plugins/platforms/xcb/xcb-static/libxcb-static.a $($(package)_staging_prefix_dir)/lib; \
   fi

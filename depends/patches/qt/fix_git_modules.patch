@@ -1,0 +1,314 @@
+--- .gitmodules	2020-12-10 22:54:33.839522901 +0200
++++ .gitmodules	2020-12-13 03:18:16.830059009 +0200
+@@ -3,52 +3,19 @@
+ 	url = ../qtbase.git
+ 	branch = 5.9.8
+ 	status = essential
+-[submodule "qtsvg"]
+-	depends = qtbase
+-	path = qtsvg
+-	url = ../qtsvg.git
+-	branch = 5.9.8
+-	status = addon
+ [submodule "qtdeclarative"]
+ 	depends = qtbase
+-	recommends = qtsvg qtxmlpatterns
+ 	path = qtdeclarative
+ 	url = ../qtdeclarative.git
+ 	branch = 5.9.8
+ 	status = essential
+-[submodule "qtactiveqt"]
+-	depends = qtbase
+-	path = qtactiveqt
+-	url = ../qtactiveqt.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtscript"]
+-	depends = qtbase
+-	recommends = qttools
+-	path = qtscript
+-	url = ../qtscript.git
+-	branch = 5.9.8
+-	status = deprecated
+-[submodule "qtmultimedia"]
+-	depends = qtbase
+-	recommends = qtdeclarative
+-	path = qtmultimedia
+-	url = ../qtmultimedia.git
+-	branch = 5.9.8
+-	status = essential
+ [submodule "qttools"]
+ 	depends = qtbase
+-	recommends = qtdeclarative qtactiveqt
++	recommends = qtdeclarative
+ 	path = qttools
+ 	url = ../qttools.git
+ 	branch = 5.9.8
+ 	status = essential
+-[submodule "qtxmlpatterns"]
+-	depends = qtbase
+-	path = qtxmlpatterns
+-	url = ../qtxmlpatterns.git
+-	branch = 5.9.8
+-	status = addon
+ [submodule "qttranslations"]
+ 	depends = qttools
+ 	path = qttranslations
+@@ -56,256 +23,22 @@
+ 	branch = 5.9.8
+ 	status = essential
+ 	priority = 30
+-[submodule "qtdoc"]
+-	depends = qtdeclarative
+-	path = qtdoc
+-	url = ../qtdoc.git
+-	branch = 5.9.8
+-	status = essential
+-	priority = 40
+-[submodule "qtrepotools"]
+-	path = qtrepotools
+-	url = ../qtrepotools.git
+-	branch = master
+-	status = essential
+-	project = -
+-[submodule "qtqa"]
+-	depends = qtbase
+-	path = qtqa
+-	url = ../qtqa.git
+-	branch = master
+-	status = essential
+-	priority = 50
+-[submodule "qtlocation"]
+-	depends = qtbase
+-	recommends = qtdeclarative qtquickcontrols qtquickcontrols2 qtserialport
+-	path = qtlocation
+-	url = ../qtlocation.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtsensors"]
+-	depends = qtbase
+-	recommends = qtdeclarative
+-	path = qtsensors
+-	url = ../qtsensors.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtsystems"]
+-	depends = qtbase
+-	recommends = qtdeclarative
+-	path = qtsystems
+-	url = ../qtsystems.git
+-	branch = dev
+-	status = ignore
+-[submodule "qtfeedback"]
+-	depends = qtdeclarative
+-	recommends = qtmultimedia
+-	path = qtfeedback
+-	url = ../qtfeedback.git
+-	branch = master
+-	status = ignore
+-[submodule "qtdocgallery"]
+-	depends = qtdeclarative
+-	path = qtdocgallery
+-	url = ../qtdocgallery.git
+-	branch = master
+-	status = ignore
+-[submodule "qtpim"]
+-	depends = qtdeclarative
+-	path = qtpim
+-	url = ../qtpim.git
+-	branch = dev
+-	status = ignore
+-[submodule "qtconnectivity"]
+-	depends = qtbase
+-	recommends = qtdeclarative qtandroidextras
+-	path = qtconnectivity
+-	url = ../qtconnectivity.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtwayland"]
+-	depends = qtbase
+-	recommends = qtdeclarative
+-	path = qtwayland
+-	url = ../qtwayland.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qt3d"]
+-	depends = qtbase
+-	recommends = qtdeclarative qtimageformats qtgamepad
+-	path = qt3d
+-	url = ../qt3d.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtimageformats"]
+-	depends = qtbase
+-	path = qtimageformats
+-	url = ../qtimageformats.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtquick1"]
+-	depends = qtscript
+-	recommends = qtsvg qtxmlpatterns
+-	path = qtquick1
+-	url = ../qtquick1.git
+-	branch = dev
+-	status = ignore
+ [submodule "qtgraphicaleffects"]
+ 	depends = qtdeclarative
+ 	path = qtgraphicaleffects
+ 	url = ../qtgraphicaleffects.git
+ 	branch = 5.9.8
+ 	status = addon
+-[submodule "qtquickcontrols"]
+-	depends = qtdeclarative
+-	recommends = qtgraphicaleffects
+-	path = qtquickcontrols
+-	url = ../qtquickcontrols.git
+-	branch = 5.9.8
+-	status = essential
+-[submodule "qtserialbus"]
+-	depends = qtserialport
+-	path = qtserialbus
+-	url = ../qtserialbus.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtserialport"]
+-	depends = qtbase
+-	path = qtserialport
+-	url = ../qtserialport.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtx11extras"]
+-	depends = qtbase
+-	path = qtx11extras
+-	url = ../qtx11extras.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtmacextras"]
+-	depends = qtbase
+-	path = qtmacextras
+-	url = ../qtmacextras.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtwinextras"]
+-	depends = qtbase
+-	recommends = qtdeclarative qtmultimedia
+-	path = qtwinextras
+-	url = ../qtwinextras.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtandroidextras"]
+-	depends = qtbase
+-	path = qtandroidextras
+-	url = ../qtandroidextras.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtenginio"]
+-	depends = qtdeclarative
+-	path = qtenginio
+-	url = ../qtenginio.git
+-	branch = dev
+-	status = ignore
+-[submodule "qtwebsockets"]
+-	depends = qtbase
+-	recommends = qtdeclarative
+-	path = qtwebsockets
+-	url = ../qtwebsockets.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtwebchannel"]
+-	depends = qtbase
+-	recommends = qtdeclarative qtwebsockets
+-	path = qtwebchannel
+-	url = ../qtwebchannel.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtwebengine"]
+-	depends = qtquickcontrols qtwebchannel
+-	recommends = qtlocation qttools
+-	path = qtwebengine
+-	url = ../qtwebengine.git
+-	branch = 5.9.8
+-	status = addon
+-	priority = 10
+-[submodule "qtcanvas3d"]
+-	depends = qtdeclarative
+-	path = qtcanvas3d
+-	url = ../qtcanvas3d.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtwebview"]
+-	depends = qtdeclarative
+-	recommends = qtwebengine
+-	path = qtwebview
+-	url = ../qtwebview.git
+-	branch = 5.9.8
+-	status = addon
+ [submodule "qtquickcontrols2"]
+ 	depends = qtgraphicaleffects
+ 	path = qtquickcontrols2
+ 	url = ../qtquickcontrols2.git
+ 	branch = 5.9.8
+ 	status = addon
+-[submodule "qtpurchasing"]
+-	depends = qtbase qtandroidextras
+-	recommends = qtdeclarative
+-	path = qtpurchasing
+-	url = ../qtpurchasing.git
+-	branch = 5.9.8
+-	status = addon
+ [submodule "qtcharts"]
+ 	depends = qtbase
+-	recommends = qtdeclarative qtmultimedia
++	recommends = qtdeclarative
+ 	path = qtcharts
+ 	url = ../qtcharts.git
+ 	branch = 5.9.8
+ 	status = addon
+-[submodule "qtdatavis3d"]
+-	depends = qtbase
+-	recommends = qtdeclarative qtmultimedia
+-	path = qtdatavis3d
+-	url = ../qtdatavis3d.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtvirtualkeyboard"]
+-	depends = qtbase qtdeclarative qtsvg
+-	recommends = qtmultimedia qtquickcontrols
+-	path = qtvirtualkeyboard
+-	url = ../qtvirtualkeyboard.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtgamepad"]
+-	depends = qtbase
+-	recommends = qtdeclarative
+-	path = qtgamepad
+-	url = ../qtgamepad.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtscxml"]
+-	depends = qtbase qtdeclarative
+-	path = qtscxml
+-	url = ../qtscxml.git
+-	branch = 5.9.8
+-	status = addon
+-[submodule "qtspeech"]
+-	depends = qtbase
+-	recommends = qtdeclarative qtmultimedia
+-	path = qtspeech
+-	url = ../qtspeech.git
+-	branch = 5.9.8
+-	status = preview
+-[submodule "qtnetworkauth"]
+-	depends = qtbase
+-	recommends = qtwebview
+-	path = qtnetworkauth
+-	url = ../qtnetworkauth.git
+-	branch = 5.9.8
+-	status = preview
+-[submodule "qtremoteobjects"]
+-	depends = qtbase
+-	recommends = qtdeclarative
+-	path = qtremoteobjects
+-	url = ../qtremoteobjects.git
+-	branch = 5.9.8
+-	status = preview
