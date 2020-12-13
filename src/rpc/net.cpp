@@ -721,9 +721,7 @@ static RPCHelpMan setban()
     }
     else if(strCommand == "remove")
     {
-        if (!node.banman->Unban(subNet)) {
-            throw JSONRPCError(RPC_CLIENT_INVALID_IP_OR_SUBNET, "Error: Unban failed. Requested address/subnet was not previously manually banned.");
-        }
+        node.banman->Unban(subNet);
     }
     return NullUniValue;
 },

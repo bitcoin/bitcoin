@@ -55,8 +55,9 @@ class DisconnectBanTest(BitcoinTestFramework):
         assert_raises_rpc_error(-30, "Error: Invalid IP/Subnet", self.nodes[1].setban, "127.0.0.1/42", "add")
         assert_equal(len(self.nodes[1].listbanned()), 1)  # still only one banned ip because 127.0.0.1/42 is invalid
 
-        self.log.info("setban remove: fail to unban a non-banned subnet")
-        assert_raises_rpc_error(-30, "Error: Unban failed", self.nodes[1].setban, "127.0.0.1", "remove")
+        # Unbanning a non-banned subnet should succeed as user intent is accomplished
+        self.log.info("setban remove: unban a non-banned subnet")
+        self.nodes[1].setban("127.0.0.1", "remove")
         assert_equal(len(self.nodes[1].listbanned()), 1)
 
         self.log.info("setban remove: successfully unban subnet")

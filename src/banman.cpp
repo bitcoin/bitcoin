@@ -137,12 +137,6 @@ bool BanMan::Ban(const CSubNet& sub_net, int64_t ban_time_offset, bool since_uni
     return true;
 }
 
-bool BanMan::Unban(const CNetAddr& net_addr)
-{
-    CSubNet sub_net(net_addr);
-    return Unban(sub_net);
-}
-
 bool BanMan::Unban(const CSubNet& sub_net)
 {
     {
