@@ -4,7 +4,7 @@ $(package)_download_path=https://github.com/tpoechtrager/cctools-port/archive
 $(package)_file_name=$($(package)_version).tar.gz
 $(package)_sha256_hash=e51995a843533a3dac155dd0c71362dd471597a2d23f13dff194c6285362f875
 $(package)_build_subdir=cctools
-$(package)_patches=ld64_disable_threading.patch
+$(package)_patches=ld64_disable_threading.patch segalign.patch
 
 ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
 $(package)_clang_version=8.0.0
@@ -80,7 +80,8 @@ endef
 define $(package)_preprocess_cmds
   CC=$($(package)_cc) CXX=$($(package)_cxx) INSTALLPREFIX=$($(package)_extract_dir) ./libtapi/build.sh && \
   CC=$($(package)_cc) CXX=$($(package)_cxx) INSTALLPREFIX=$($(package)_extract_dir) ./libtapi/install.sh && \
-  patch -p1 < $($(package)_patch_dir)/ld64_disable_threading.patch
+  patch -p1 < $($(package)_patch_dir)/ld64_disable_threading.patch && \
+  patch -p1 < $($(package)_patch_dir)/segalign.patch
 endef
 
 define $(package)_config_cmds
