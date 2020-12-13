@@ -202,17 +202,11 @@ int64_t GetEconomicThreshold(interfaces::Wallet& iWallet, const CTxOut& txOut)
 }
 
 #ifdef ENABLE_WALLET
-int64_t SelectCoins(interfaces::Wallet& iWallet, const std::string& fromAddress, CCoinControl& coinControl, int64_t additional)
+int64_t SelectCoins(interfaces::Wallet& iWallet, const std::string& fromAddress, CCoinControl& coinControl, int64_t amountRequired)
 {
     // total output funds collected
     int64_t nTotal = 0;
     int nHeight = ::ChainActive().Height();
-
-    // select coins to cover up to 3 kB max. transaction size
-    CAmount nMax = 3 * GetEstimatedFeePerKb(iWallet);
-
-    // if referenceamount is set it is needed to be accounted for here too
-    if (0 < additional) nMax += additional;
 
     std::map<uint256, interfaces::WalletTxStatus> tx_status;
     const std::vector<interfaces::WalletTx>& transactions = iWallet.getWalletTxsDetails(tx_status);
@@ -271,11 +265,11 @@ int64_t SelectCoins(interfaces::Wallet& iWallet, const std::string& fromAddress,
 
                 nTotal += txOut.nValue;
 
-                if (nMax <= nTotal) break;
+                if (amountRequired <= nTotal) break;
             }
         }
 
-        if (nMax <= nTotal) break;
+        if (amountRequired <= nTotal) break;
     }
 
     return nTotal;

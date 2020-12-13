@@ -224,6 +224,7 @@ BASE_SCRIPTS = [
     'feature_help.py',
     'feature_shutdown.py',
     'framework_test_script.py',
+    'omni_calculate_fee.py',
     'omni_reorg.py',
     'omni_clientexpiry.py',
     'omni_metadexprices.py',

@@ -41,7 +41,7 @@ int64_t GetEconomicThreshold(interfaces::Wallet& iWallet, const CTxOut& txOut);
 
 #ifdef ENABLE_WALLET
 /** Selects spendable outputs to create a transaction. */
-int64_t SelectCoins(interfaces::Wallet& iWallet, const std::string& fromAddress, CCoinControl& coinControl, int64_t additional = 0);
+int64_t SelectCoins(interfaces::Wallet& iWallet, const std::string& fromAddress, CCoinControl& coinControl, int64_t amountRequired = 0);
 
 /** Selects all spendable outputs to create a transaction. */
 int64_t SelectAllCoins(interfaces::Wallet& iWallet, const std::string& fromAddress, CCoinControl& coinControl);

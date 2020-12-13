@@ -91,13 +91,7 @@ int WalletTxBuilder(
         vecSend.push_back(std::make_pair(scriptPubKey, 0 < referenceAmount ? referenceAmount : OmniGetDustThreshold(scriptPubKey)));
     }
 
-    // Select the inputs
-    if (0 > mastercore::SelectCoins(*iWallet, senderAddress, coinControl, outputAmount)) { return MP_INPUTS_INVALID; }
-
-    // Now we have what we need to pass to the wallet to create the transaction, perform some checks first
-
-    if (!coinControl.HasSelected()) return MP_ERR_INPUTSELECT_FAIL;
-
+    // Create CRecipients for outputs
     std::vector<CRecipient> vecRecipients;
     for (size_t i = 0; i < vecSend.size(); ++i) {
         const std::pair<CScript, int64_t>& vec = vecSend[i];
@@ -105,11 +99,40 @@ int WalletTxBuilder(
         vecRecipients.push_back(recipient);
     }
 
-    // Ask the wallet to create the transaction (note mining fee determined by Bitcoin Core params)
-    CAmount nFeeRet = 0;
-    int nChangePosInOut = -1;
+    CAmount nFeeRequired{std::max(minFee, iWallet->getMinimumFee(1000, coinControl, nullptr, nullptr))};
+    CTransactionRef wtxNew;
     std::string strFailReason;
-    auto wtxNew = iWallet->createTransaction(vecRecipients, coinControl, true /* sign */, nChangePosInOut, nFeeRet, strFailReason, false, minFee);
+    CAmount nFeeRet{0};
+    bool createTX{true};
+
+    while (createTX) {
+        // Select the inputs
+        auto selected = mastercore::SelectCoins(*iWallet, senderAddress, coinControl, outputAmount + nFeeRequired);
+
+        // Did not select anything at all!
+        if (!coinControl.HasSelected()) {
+            return MP_ERR_INPUTSELECT_FAIL;
+        }
+
+        // Could not select to enough to cover outputs and fee
+        if (selected < outputAmount) {
+            return MP_INPUTS_INVALID;
+        }
+
+        // Ask the wallet to create the transaction (note mining fee determined by Bitcoin Core params)
+        int nChangePosInOut = -1;
+        wtxNew = iWallet->createTransaction(vecRecipients, coinControl, true /* sign */, nChangePosInOut, nFeeRet, strFailReason, false, minFee);
+
+        // TX creation was a success or fee no longer incremeneintg
+        if (wtxNew || nFeeRet <= nFeeRequired) {
+            createTX = false;
+        } else {
+            // Set new fee required
+            nFeeRequired = nFeeRet;
+
+            PrintToLog("Increasing fee. nFeeRequired: %d selected: %d outputAmount: %d\n", nFeeRequired, selected, outputAmount);
+        }
+    }
 
     if (!wtxNew) {
         PrintToLog("%s: ERROR: wallet transaction creation failed: %s\n", __func__, strFailReason);
@@ -391,26 +414,45 @@ int CreateDExTransaction(interfaces::Wallet* pwallet, const std::string& buyerAd
     // Calculate dust for Exodus output
     CAmount dust = OmniGetDustThreshold(exodus);
 
-    // Select the inputs required to cover amount, dust and fees
-    if (0 > mastercore::SelectCoins(*pwallet, buyerAddress, coinControl, nAmount + dust)) {
-        return MP_INPUTS_INVALID;
-    }
-
-    // Make sure that we have inputs selected.
-    if (!coinControl.HasSelected()) {
-        return MP_ERR_INPUTSELECT_FAIL;
-    }
-
     // Create CRecipients for outputs
     std::vector<CRecipient> vecRecipients;
     vecRecipients.push_back({exodus, dust, false}); // Exodus
     vecRecipients.push_back({destScript, nAmount, false}); // Seller
 
-    // Ask the wallet to create the transaction (note mining fee determined by Bitcoin Core params)
-    CAmount nFeeRet = 0;
-    int nChangePosInOut = -1;
+    CAmount nFeeRequired{pwallet->getMinimumFee(1000, coinControl, nullptr, nullptr)};
+    CTransactionRef wtxNew;
     std::string strFailReason;
-    auto wtxNew = pwallet->createTransaction(vecRecipients, coinControl, true /* sign */, nChangePosInOut, nFeeRet, strFailReason, false);
+    CAmount nFeeRet{0};
+    CAmount outputAmount{nAmount + dust};
+    bool createTX{true};
+
+    while (createTX) {
+        // Select the inputs
+        auto selected = mastercore::SelectCoins(*pwallet, buyerAddress, coinControl, outputAmount + nFeeRequired);
+
+        // Did not select anything at all!
+        if (!coinControl.HasSelected()) {
+            return MP_ERR_INPUTSELECT_FAIL;
+        }
+
+        // Could not select to enough to cover outputs and fee
+        if (selected < outputAmount) {
+            return MP_INPUTS_INVALID;
+        }
+
+        int nChangePosInOut = -1;
+        wtxNew = pwallet->createTransaction(vecRecipients, coinControl, true /* sign */, nChangePosInOut, nFeeRet, strFailReason, false);
+
+        // TX creation was a success or fee no longer incremeneintg
+        if (wtxNew || nFeeRet <= nFeeRequired) {
+            createTX = false;
+        } else {
+            // Set new fee required
+            nFeeRequired = nFeeRet;
+
+            PrintToLog("Increasing fee. nFeeRequired: %d selected: %d outputAmount: %d\n", nFeeRequired, selected, outputAmount);
+        }
+    }
 
     if (!wtxNew) {
         return MP_ERR_CREATE_TX;
