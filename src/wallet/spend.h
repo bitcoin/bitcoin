@@ -82,6 +82,16 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
 std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, const CCoinControl& coin_control,
                  const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
+struct CreatedTransactionResult
+{
+    CTransactionRef tx;
+    CAmount fee;
+    int change_pos;
+
+    CreatedTransactionResult(CTransactionRef tx, CAmount fee, int change_pos)
+        : tx(tx), fee(fee), change_pos(change_pos) {}
+};
+
 /**
  * Create a new transaction paying the recipients with a set of coins
  * selected by SelectCoins(); Also create the change output, when needed
