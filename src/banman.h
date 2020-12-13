@@ -70,9 +70,6 @@ public:
     //! Return whether net_addr is banned
     bool IsBanned(const CNetAddr& net_addr);
 
-    //! Return whether sub_net is exactly banned
-    bool IsBanned(const CSubNet& sub_net);
-
     //! Return whether net_addr is discouraged.
     bool IsDiscouraged(const CNetAddr& net_addr);
 

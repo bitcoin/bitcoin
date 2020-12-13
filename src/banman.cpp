@@ -89,20 +89,6 @@ bool BanMan::IsBanned(const CNetAddr& net_addr)
     return false;
 }
 
-bool BanMan::IsBanned(const CSubNet& sub_net)
-{
-    auto current_time = GetTime();
-    LOCK(m_cs_banned);
-    banmap_t::iterator i = m_banned.find(sub_net);
-    if (i != m_banned.end()) {
-        CBanEntry ban_entry = (*i).second;
-        if (current_time < ban_entry.nBanUntil) {
-            return true;
-        }
-    }
-    return false;
-}
-
 void BanMan::Discourage(const CNetAddr& net_addr)
 {
     LOCK(m_cs_banned);
