@@ -188,61 +188,6 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmou
                             nBlockHeight, blockReward, voutMasternodeStr);
 }
 
-std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterministicMNCPtr &payee)
-{
-    std::string strPayee = "Unknown";
-    if (payee) {
-        CTxDestination dest;
-        if (!ExtractDestination(payee->pdmnState->scriptPayout, dest))
-            assert(false);
-        strPayee = EncodeDestination(dest);
-    }
-    if (CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
-        strPayee += ", " + CSuperblockManager::GetRequiredPaymentsString(nBlockHeight);
-    }
-    return strPayee;
-}
-
-std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEndHeight)
-{
-    std::map<int, std::string> mapPayments;
-
-    if (nStartHeight < 1) {
-        nStartHeight = 1;
-    }
-
-    LOCK(cs_main);
-    int nChainTipHeight = ::ChainActive().Height();
-
-    bool doProjection = false;
-    for(int h = nStartHeight; h < nEndHeight; h++) {
-        if (h <= nChainTipHeight) {
-            CDeterministicMNList payeeList;
-            if(deterministicMNManager)
-                deterministicMNManager->GetListForBlock(::ChainActive()[h - 1], payeeList);
-            CDeterministicMNCPtr payee = payeeList.GetMNPayee();
-            mapPayments.try_emplace(h, GetRequiredPaymentsString(h, payee));
-        } else {
-            doProjection = true;
-            break;
-        }
-    }
-    if (doProjection) {
-        CDeterministicMNList mnList;
-        if(deterministicMNManager)
-            deterministicMNManager->GetListAtChainTip(mnList);
-        std::vector<CDeterministicMNCPtr> projection;
-        mnList.GetProjectedMNPayees(nEndHeight - nChainTipHeight, projection);
-        for (size_t i = 0; i < projection.size(); i++) {
-            auto payee = projection[i];
-            size_t h = nChainTipHeight + 1 + i;
-            mapPayments.try_emplace(h, GetRequiredPaymentsString(h, payee));
-        }
-    }
-
-    return mapPayments;
-}
-
 /**
 *   GetMasternodeTxOuts
 *

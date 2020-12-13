@@ -19,7 +19,6 @@ class CMasternodePayments;
 bool IsBlockValueValid(const CBlock& block, int nBlockHeight, const CAmount &blockReward, std::string& strErrorRet);
 bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, const CAmount &blockReward, const CAmount &fees, CAmount& nMNSeniorityRet);
 void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmount &blockReward, const CAmount &fees, std::vector<CTxOut>& voutMasternodePaymentsRet, std::vector<CTxOut>& voutSuperblockPaymentsRet);
-std::map<int, std::string> GetRequiredPaymentsStrings(int nStartHeight, int nEndHeight);
 
 extern CMasternodePayments mnpayments;
 

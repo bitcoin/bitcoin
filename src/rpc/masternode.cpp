@@ -9,6 +9,7 @@
 #include <rpc/server.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
+#include <governance/governanceclasses.h>
 RPCHelpMan masternodelist();
 
 static RPCHelpMan masternode_list()
@@ -214,13 +215,42 @@ static RPCHelpMan masternode_status()
 },
     };
 } 
-
+std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterministicMNCPtr &payee)
+{
+    std::string strPayments = "Unknown";
+    if (payee) {
+        CTxDestination dest;
+        if (!ExtractDestination(payee->pdmnState->scriptPayout, dest)) {
+            assert(false);
+        }
+        strPayments = EncodeDestination(dest);
+    }
+    if (CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
+        std::vector<CTxOut> voutSuperblock;
+        if (!CSuperblockManager::GetSuperblockPayments(nBlockHeight, voutSuperblock)) {
+            return strPayments + ", error";
+        }
+        std::string strSBPayees = "Unknown";
+        for (const auto& txout : voutSuperblock) {
+            CTxDestination dest;
+            ExtractDestination(txout.scriptPubKey, dest);
+            if (strSBPayees != "Unknown") {
+                strSBPayees += ", " + EncodeDestination(dest);
+            } else {
+                strSBPayees = EncodeDestination(dest);
+            }
+        }
+        strPayments += ", " + strSBPayees;
+    }
+    return strPayments;
+}
 static RPCHelpMan masternode_winners()
 {
     return RPCHelpMan{"masternode_winners",
         "\nPrint list of masternode winners\n",
         {         
-            {"count", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Number of last winners to return."},    
+            {"count", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Number of last winners to return."}, 
+            {"filter", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Filter for returned winners."},    
         },
         RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{
@@ -229,28 +259,46 @@ static RPCHelpMan masternode_winners()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    int nHeight;
+    const CBlockIndex* pindexTip{nullptr};
     {
         LOCK(cs_main);
-        CBlockIndex* pindex = ::ChainActive().Tip();
-        if (!pindex) return NullUniValue;
-
-        nHeight = pindex->nHeight;
+        pindexTip = ::ChainActive().Tip();
+        if (!pindexTip) return NullUniValue;
     }
 
-    int nLast = 10;
+    int nCount = 10;
+    std::string strFilter = "";
+
     if (!request.params[0].isNull()) {
-        nLast = request.params[0].get_int();
+        nCount = request.params[0].get_int();
     }
 
+    if (!request.params[1].isNull()) {
+        strFilter = request.params[1].get_str();
+    }
 
     UniValue obj(UniValue::VOBJ);
-    auto mapPayments = GetRequiredPaymentsStrings(nHeight - nLast, nHeight + 20);
-    for (const auto &p : mapPayments) {
-        if (strFilter != "" && p.second.find(strFilter) == std::string::npos) continue;
-        obj.pushKV(strprintf("%d", p.first), p.second);
-    }
+    int nChainTipHeight = pindexTip->nHeight;
+    int nStartHeight = std::max(nChainTipHeight - nCount, 1);
 
+    for (int h = nStartHeight; h <= nChainTipHeight; h++) {
+        CDeterministicMNList projection;
+        deterministicMNManager->GetListForBlock(pindexTip->GetAncestor(h - 1),projection);
+        auto payee = projection.GetMNPayee();
+        std::string strPayments = GetRequiredPaymentsString(h, payee);
+        if (strFilter != "" && strPayments.find(strFilter) == std::string::npos) continue;
+        obj.pushKV(strprintf("%d", h), strPayments);
+    }
+    CDeterministicMNList projection;
+    deterministicMNManager->GetListForBlock(pindexTip,projection);
+    std::vector<CDeterministicMNCPtr> projectedPayees;
+    projection.GetProjectedMNPayees(20, projectedPayees);
+    for (size_t i = 0; i < projectedPayees.size(); i++) {
+        int h = nChainTipHeight + 1 + i;
+        std::string strPayments = GetRequiredPaymentsString(h, projectedPayees[i]);
+        if (strFilter != "" && strPayments.find(strFilter) == std::string::npos) continue;
+        obj.pushKV(strprintf("%d", h), strPayments);
+    }
     return obj;
 },
     };
@@ -423,7 +471,7 @@ static const CRPCCommand commands[] =
 //  --------------------- ------------------------  -----------------------  ----------
     { "masternode",               "masternode_connect",         &masternode_connect,      {"address"} },
     { "masternode",               "masternode_list",            &masternode_list,         {"mode","filter"} },
-    { "masternode",               "masternode_winners",         &masternode_winners,      {"count"} },
+    { "masternode",               "masternode_winners",         &masternode_winners,      {"count","filter"} },
     { "masternode",               "masternode_count",           &masternode_count,        {} },
     { "masternode",               "masternode_winner",          &masternode_winner,       {} },
     { "masternode",               "masternode_status",          &masternode_status,       {} },

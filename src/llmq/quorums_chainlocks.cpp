@@ -180,12 +180,12 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
 
 void CChainLocksHandler::CheckActiveState()
 {
-    bool sporkActive = sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
+    bool sporkActive = AreChainLocksEnabled();
     {
         LOCK(cs);
         bool oldIsEnforced = isEnforced;
-        isSporkActive = sporkActive;
-        isEnforced = isSporkActive;
+        isEnabled = sporkActive;
+        isEnforced = isEnabled;
 
         if (!oldIsEnforced && isEnforced) {
             // ChainLocks got activated just recently, but it's possible that it was already running before, leaving
