@@ -1668,9 +1668,12 @@ static RPCHelpMan assetallocationsend()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
     const UniValue &params = request.params;
     const uint32_t &nAsset = params[0].get_uint();          
-    bool m_signal_bip125_rbf = false;
+    bool m_signal_bip125_rbf = pwallet->m_signal_rbf;
     if (!request.params[3].isNull()) {
         m_signal_bip125_rbf = request.params[3].get_bool();
     }  
