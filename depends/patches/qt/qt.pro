@@ -13,8 +13,8 @@ TEMPLATE      = subdirs
 
 CONFIG += prepare_docs qt_docs_targets
 
-# Extract submodules from qt.modules file.
-lines = $$cat(qt.modules, lines)
+# Extract submodules from .gitmodules.
+lines = $$cat(.gitmodules, lines)
 for (line, lines) {
     mod = $$replace(line, "^\\[submodule \"([^\"]+)\"\\]$", \\1)
     !equals(mod, $$line) {
@@ -26,11 +26,11 @@ for (line, lines) {
             val = $$replace(line, "^[^=]+= *", )
             module.$${module}.$$prop = $$split(val)
         } else {
-            error("Malformed line in qt.modules: $$line")
+            error("Malformed line in .gitmodules: $$line")
         }
     }
 }
-QMAKE_INTERNAL_INCLUDED_FILES += $$PWD/qt.modules
+QMAKE_INTERNAL_INCLUDED_FILES += $$PWD/.gitmodules
 
 QT_SKIP_MODULES =
 

@@ -1,5 +1,5 @@
 --- .gitmodules	2020-12-10 22:54:33.839522901 +0200
-+++ .gitmodules	2020-12-13 03:18:16.830059009 +0200
++++ .gitmodules	2020-12-13 07:46:16.446257894 +0200
 @@ -3,52 +3,19 @@
  	url = ../qtbase.git
  	branch = 5.9.8
@@ -54,7 +54,7 @@
  [submodule "qttranslations"]
  	depends = qttools
  	path = qttranslations
-@@ -56,256 +23,22 @@
+@@ -56,256 +23,28 @@
  	branch = 5.9.8
  	status = essential
  	priority = 30
