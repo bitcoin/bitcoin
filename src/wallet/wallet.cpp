@@ -3725,7 +3725,8 @@ bool CWallet::CreateTransactionDefault(
         bool sign)
 {
     int nChangePosIn = nChangePosInOut;
-    Assert(!tx); // tx is an out-param. TODO change the return type from bool to tx (or nullptr)
+    // SYSCOIN
+    //Assert(!tx); // tx is an out-param. TODO change the return type from bool to tx (or nullptr)
     bool res = CreateTransactionInternal(vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign);
     // try with avoidpartialspends unless it's enabled already
     if (res && nFeeRet > 0 /* 0 means non-functional fee rate estimation */ && m_max_aps_fee > -1 && !coin_control.m_avoid_partial_spends) {
