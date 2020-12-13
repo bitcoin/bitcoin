@@ -99,7 +99,7 @@ public:
     virtual bool getBanned(banmap_t& banmap) = 0;
 
     //! Ban node.
-    virtual bool ban(const CNetAddr& net_addr, int64_t ban_time_offset) = 0;
+    virtual bool ban(const CSubNet& net_addr, int64_t ban_time_offset) = 0;
 
     //! Unban node.
     virtual bool unban(const CSubNet& ip) = 0;

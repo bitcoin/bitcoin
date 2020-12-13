@@ -140,10 +140,10 @@ public:
         }
         return false;
     }
-    bool ban(const CNetAddr& net_addr, int64_t ban_time_offset) override
+    bool ban(const CSubNet& sub_net, int64_t ban_time_offset) override
     {
         if (m_context->banman) {
-            m_context->banman->Ban(net_addr, ban_time_offset);
+            m_context->banman->Ban(sub_net, ban_time_offset);
             return true;
         }
         return false;

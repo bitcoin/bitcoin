@@ -1116,7 +1116,7 @@ CSubNet::CSubNet(const CNetAddr& addr) : CSubNet()
     switch (addr.m_net) {
     case NET_IPV4:
     case NET_IPV6:
-        valid = true;
+        valid = addr.IsValid();
         assert(addr.m_addr.size() <= sizeof(netmask));
         memset(netmask, 0xFF, addr.m_addr.size());
         break;

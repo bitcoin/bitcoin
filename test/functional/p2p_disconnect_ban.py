@@ -7,6 +7,7 @@ import time
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
+    assert_approx,
     assert_equal,
     assert_raises_rpc_error,
 )
@@ -38,13 +39,21 @@ class DisconnectBanTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[1].listbanned()), 0)
         self.nodes[1].setban("127.0.0.0/24", "add")
 
-        self.log.info("setban: fail to ban an already banned subnet")
+        self.log.info("adding a subset ban creates a new ban entry")
         assert_equal(len(self.nodes[1].listbanned()), 1)
-        assert_raises_rpc_error(-23, "IP/Subnet already banned", self.nodes[1].setban, "127.0.0.1", "add")
+        self.nodes[1].setban("127.0.0.1", "add", 500)
+        listbanned_response = self.nodes[1].listbanned()
+        assert_equal(len(listbanned_response), 2)
+        assert_equal(listbanned_response[1]["address"], "127.0.0.1/32")
+
+        # Verify that relative bantime is correct
+        now = int(time.time())
+        assert_approx(listbanned_response[1]["banned_until"] - now, 10, 500)
+        self.nodes[1].setban("127.0.0.1/32", "remove", 500)
 
         self.log.info("setban: fail to ban an invalid subnet")
         assert_raises_rpc_error(-30, "Error: Invalid IP/Subnet", self.nodes[1].setban, "127.0.0.1/42", "add")
-        assert_equal(len(self.nodes[1].listbanned()), 1)  # still only one banned ip because 127.0.0.1 is within the range of 127.0.0.0/24
+        assert_equal(len(self.nodes[1].listbanned()), 1)  # still only one banned ip because 127.0.0.1/42 is invalid
 
         self.log.info("setban remove: fail to unban a non-banned subnet")
         assert_raises_rpc_error(-30, "Error: Unban failed", self.nodes[1].setban, "127.0.0.1", "remove")

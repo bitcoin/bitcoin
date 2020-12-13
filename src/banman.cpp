@@ -103,19 +103,13 @@ bool BanMan::IsBanned(const CSubNet& sub_net)
     return false;
 }
 
-void BanMan::Ban(const CNetAddr& net_addr, int64_t ban_time_offset, bool since_unix_epoch)
-{
-    CSubNet sub_net(net_addr);
-    Ban(sub_net, ban_time_offset, since_unix_epoch);
-}
-
 void BanMan::Discourage(const CNetAddr& net_addr)
 {
     LOCK(m_cs_banned);
     m_discouraged.insert(net_addr.GetAddrBytes());
 }
 
-void BanMan::Ban(const CSubNet& sub_net, int64_t ban_time_offset, bool since_unix_epoch)
+bool BanMan::Ban(const CSubNet& sub_net, int64_t ban_time_offset, bool since_unix_epoch)
 {
     CBanEntry ban_entry(GetTime());
 
@@ -129,16 +123,18 @@ void BanMan::Ban(const CSubNet& sub_net, int64_t ban_time_offset, bool since_uni
 
     {
         LOCK(m_cs_banned);
+        // If ban entry is absent, add it. If it's shorter, update it.
         if (m_banned[sub_net].nBanUntil < ban_entry.nBanUntil) {
             m_banned[sub_net] = ban_entry;
             m_is_dirty = true;
         } else
-            return;
+            return false; // nothing to do, longer ban already exists
     }
     if (m_client_interface) m_client_interface->BannedListChanged();
 
     //store banlist to disk immediately
     DumpBanlist();
+    return true;
 }
 
 bool BanMan::Unban(const CNetAddr& net_addr)

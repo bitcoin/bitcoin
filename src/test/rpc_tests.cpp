@@ -293,16 +293,62 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     BOOST_CHECK_EQUAL(ban_duration, banned_until - ban_created);
     BOOST_CHECK_EQUAL(time_remaining, time_remaining_expected);
 
-    // must throw an exception because 127.0.0.1 is in already banned subnet range
-    BOOST_CHECK_THROW(r = CallRPC(std::string("setban 127.0.0.1 add")), std::runtime_error);
+    // 127.0.0.1 is within 127.0.0.0/24 and this ban is for 86400 seconds (default)
+    BOOST_CHECK_NO_THROW(r = CallRPC(std::string("setban 127.0.0.1 add")));
+    BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
+    ar = r.get_array();
+    BOOST_CHECK_EQUAL(ar.size(), 2U);
+    bool found = false;
+    for (size_t i = 0; i < ar.size(); i++) {
+        o1 = ar[i].get_obj();
+        adr = find_value(o1, "address");
+        if (adr.get_str() == "127.0.0.1/32") {
+            banned_until = find_value(o1, "banned_until");
+            now = GetTime();
+            BOOST_CHECK(banned_until.get_int64() > now);
+            BOOST_CHECK(banned_until.get_int64() - now > 86390);
+            found = true;
+        }
+    }
+    BOOST_CHECK_EQUAL(found, true);
+
+    BOOST_CHECK_NO_THROW(CallRPC(std::string("setban 127.0.0.1/32 remove")));
+    // Adding another ban for 127.0.0.0/24 with a longer time, updates the ban entry
+    BOOST_CHECK_NO_THROW(r = CallRPC(std::string("setban 127.0.0.0/24 add 2000")));
+    BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
+    ar = r.get_array();
+    o1 = ar[0].get_obj();
+    adr = find_value(o1, "address");
+    banned_until = find_value(o1, "banned_until");
+    BOOST_CHECK_EQUAL(adr.get_str(), "127.0.0.0/24");
+    now = GetTime();
+    BOOST_CHECK(banned_until.get_int64() > now);
+    BOOST_CHECK(banned_until.get_int64() - now > 1990);
+
+    // Adding another ban for 127.0.0.0/24 with a shorter time, does nothing leaving the longer ban in place
+    BOOST_CHECK_NO_THROW(r = CallRPC(std::string("setban 127.0.0.0/24 add 200")));
+    BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
+    ar = r.get_array();
+    o1 = ar[0].get_obj();
+    adr = find_value(o1, "address");
+    banned_until = find_value(o1, "banned_until");
+    BOOST_CHECK_EQUAL(adr.get_str(), "127.0.0.0/24");
+    now = GetTime();
+    BOOST_CHECK(banned_until.get_int64() > now);
+    BOOST_CHECK(banned_until.get_int64() - now > 1990);
 
     BOOST_CHECK_NO_THROW(CallRPC(std::string("setban 127.0.0.0/24 remove")));
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
     ar = r.get_array();
     BOOST_CHECK_EQUAL(ar.size(), 0U);
 
-    BOOST_CHECK_NO_THROW(r = CallRPC(std::string("setban 127.0.0.0/255.255.0.0 add")));
-    BOOST_CHECK_THROW(r = CallRPC(std::string("setban 127.0.1.1 add")), std::runtime_error);
+    // 9 bit netmask
+    BOOST_CHECK_NO_THROW(r = CallRPC(std::string("setban 127.0.0.0/255.128.0.0 add")));
+    BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
+    ar = r.get_array();
+    o1 = ar[0].get_obj();
+    adr = find_value(o1, "address");
+    BOOST_CHECK_EQUAL(adr.get_str(), "127.0.0.0/9");
 
     BOOST_CHECK_NO_THROW(CallRPC(std::string("clearbanned")));
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));

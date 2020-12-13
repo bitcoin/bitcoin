@@ -42,10 +42,6 @@ FUZZ_TARGET_INIT(banman, initialize_banman)
             CallOneOf(
                 fuzzed_data_provider,
                 [&] {
-                    ban_man.Ban(ConsumeNetAddr(fuzzed_data_provider),
-                                ConsumeBanTimeOffset(fuzzed_data_provider), fuzzed_data_provider.ConsumeBool());
-                },
-                [&] {
                     ban_man.Ban(ConsumeSubNet(fuzzed_data_provider),
                                 ConsumeBanTimeOffset(fuzzed_data_provider), fuzzed_data_provider.ConsumeBool());
                 },
