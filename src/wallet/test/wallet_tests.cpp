@@ -504,13 +504,14 @@ public:
     CWalletTx& AddTx(CRecipient recipient)
     {
         CTransactionRef tx;
-        CAmount fee;
-        int changePos = -1;
         bilingual_str error;
         CCoinControl dummy;
         FeeCalculation fee_calc_out;
         {
-            BOOST_CHECK(wallet->CreateTransaction({recipient}, tx, fee, changePos, error, dummy, fee_calc_out));
+            constexpr int RANDOM_CHANGE_POSITION = -1;
+            std::optional<CreatedTransactionResult> txr = wallet->CreateTransaction({recipient}, RANDOM_CHANGE_POSITION, error, dummy, fee_calc_out);
+            BOOST_CHECK(txr.has_value());
+            tx = txr->tx;
         }
         wallet->CommitTransaction(tx, {}, {});
         CMutableTransaction blocktx;
