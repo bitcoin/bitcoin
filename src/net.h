@@ -964,6 +964,9 @@ public:
     /* Whether we send addr messages over this connection */
     bool RelayAddrsWithConn() const
     {
+        // Don't relay addr messages to peers that we connect to as block-relay-only
+        // peers (to prevent adversaries from inferring these links from addr
+        // traffic).
         return m_conn_type != ConnectionType::BLOCK_RELAY;
     }
 
