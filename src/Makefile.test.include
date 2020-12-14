@@ -10,6 +10,7 @@ endif
 
 TEST_SRCDIR = test
 TEST_BINARY=test/test_bitcoin$(EXEEXT)
+FUZZ_BINARY=test/fuzz/fuzz$(EXEEXT)
 
 JSON_TEST_FILES = \
   test/data/script_tests.json \
@@ -318,6 +319,11 @@ endif
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C secp256k1 check
 if EMBEDDED_UNIVALUE
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check
+endif
+
+if ENABLE_FUZZ_LINK_ALL
+all-local: $(FUZZ_BINARY)
+	bash ./test/fuzz/danger_link_all.sh
 endif
 
 %.cpp.test: %.cpp
