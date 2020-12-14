@@ -54,108 +54,118 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
 #  install_script:
 #    - choco install python --version=3.7.7 -y
 
-task:
-  name: 'ARM [unit tests, no functional tests] [buster]'
-  << : *GLOBAL_TASK_TEMPLATE
+lint_task:
+  name: 'lint'
+  skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == ""  # No need to run on the read-only mirror, unless it is a PR.
   container:
-    image: debian:buster
-  env:
-    FILE_ENV: "./ci/test/00_setup_env_arm.sh"
+    image: python:slim
+  fingerprint_script: echo $PYTHON_VERSION
+  pip_cache:
+    folder: /tmp/pip_cache_dir
+  script: set -o errexit; source ./ci/lint/lint_run_all.sh
 
-task:
-  name: 'Win64 [unit tests, no gui tests, no boost::process, no functional tests] [bionic]'
-  << : *GLOBAL_TASK_TEMPLATE
-  container:
-    image: ubuntu:bionic
-  env:
-    FILE_ENV: "./ci/test/00_setup_env_win64.sh"
+# task:
+#   name: 'ARM [unit tests, no functional tests] [buster]'
+#   << : *GLOBAL_TASK_TEMPLATE
+#   container:
+#     image: debian:buster
+#   env:
+#     FILE_ENV: "./ci/test/00_setup_env_arm.sh"
 
-task:
-  name: '32-bit + dash [gui] [CentOS 8]'
-  << : *GLOBAL_TASK_TEMPLATE
-  container:
-    image: centos:8
-  env:
-    PACKAGE_MANAGER_INSTALL: "yum install -y"
-    FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
+# task:
+#   name: 'Win64 [unit tests, no gui tests, no boost::process, no functional tests] [bionic]'
+#   << : *GLOBAL_TASK_TEMPLATE
+#   container:
+#     image: ubuntu:bionic
+#   env:
+#     FILE_ENV: "./ci/test/00_setup_env_win64.sh"
 
-task:
-  name: '[previous releases, uses qt5 dev package and some depends packages] [unsigned char] [bionic]'
-  << : *GLOBAL_TASK_TEMPLATE
-  container:
-    image: ubuntu:bionic
-  env:
-    FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
+# task:
+#   name: '32-bit + dash [gui] [CentOS 8]'
+#   << : *GLOBAL_TASK_TEMPLATE
+#   container:
+#     image: centos:8
+#   env:
+#     PACKAGE_MANAGER_INSTALL: "yum install -y"
+#     FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
 
-task:
-  name: '[depends, sanitizers: thread (TSan), no gui] [focal]'
-  << : *GLOBAL_TASK_TEMPLATE
-  container:
-    image: ubuntu:focal
-    cpu: 4  # Double CPU and increase Memory to avoid timeout
-    memory: 24G
-  env:
-    MAKEJOBS: "-j8"
-    FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
+# task:
+#   name: '[previous releases, uses qt5 dev package and some depends packages] [unsigned char] [bionic]'
+#   << : *GLOBAL_TASK_TEMPLATE
+#   container:
+#     image: ubuntu:bionic
+#   env:
+#     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
-task:
-  name: '[depends, sanitizers: memory (MSan)] [focal]'
-  << : *GLOBAL_TASK_TEMPLATE
-  container:
-    image: ubuntu:focal
-  env:
-    FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
+# task:
+#   name: '[depends, sanitizers: thread (TSan), no gui] [focal]'
+#   << : *GLOBAL_TASK_TEMPLATE
+#   container:
+#     image: ubuntu:focal
+#     cpu: 4  # Double CPU and increase Memory to avoid timeout
+#     memory: 24G
+#   env:
+#     MAKEJOBS: "-j8"
+#     FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
 
-task:
-  name: '[no depends, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer] [focal]'
-  << : *GLOBAL_TASK_TEMPLATE
-  container:
-    image: ubuntu:focal
-  env:
-    FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
+# task:
+#   name: '[depends, sanitizers: memory (MSan)] [focal]'
+#   << : *GLOBAL_TASK_TEMPLATE
+#   container:
+#     image: ubuntu:focal
+#   env:
+#     FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
 
-task:
-  name: '[no depends, sanitizers: fuzzer,address,undefined] [focal]'
-  << : *GLOBAL_TASK_TEMPLATE
-  container:
-    image: ubuntu:focal
-  env:
-    FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
+# task:
+#   name: '[no depends, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer] [focal]'
+#   << : *GLOBAL_TASK_TEMPLATE
+#   container:
+#     image: ubuntu:focal
+#   env:
+#     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
 
-task:
-  name: '[multiprocess] [focal]'
-  << : *GLOBAL_TASK_TEMPLATE
-  container:
-    image: ubuntu:focal
-  env:
-    FILE_ENV: "./ci/test/00_setup_env_native_multiprocess.sh"
+# task:
+#   name: '[no depends, sanitizers: fuzzer,address,undefined] [focal]'
+#   << : *GLOBAL_TASK_TEMPLATE
+#   container:
+#     image: ubuntu:focal
+#   env:
+#     FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
 
-task:
-  name: '[no wallet] [bionic]'
-  << : *GLOBAL_TASK_TEMPLATE
-  container:
-    image: ubuntu:bionic
-  env:
-    FILE_ENV: "./ci/test/00_setup_env_native_nowallet.sh"
+# task:
+#   name: '[multiprocess] [focal]'
+#   << : *GLOBAL_TASK_TEMPLATE
+#   container:
+#     image: ubuntu:focal
+#   env:
+#     FILE_ENV: "./ci/test/00_setup_env_native_multiprocess.sh"
 
-task:
-  name: 'macOS 10.14 [gui, no tests] [bionic]'
-  << : *GLOBAL_TASK_TEMPLATE
-  container:
-    image: ubuntu:bionic
-  env:
-    FILE_ENV: "./ci/test/00_setup_env_mac.sh"
+# task:
+#   name: '[no wallet] [bionic]'
+#   << : *GLOBAL_TASK_TEMPLATE
+#   container:
+#     image: ubuntu:bionic
+#   env:
+#     FILE_ENV: "./ci/test/00_setup_env_native_nowallet.sh"
 
-task:
-  name: 'macOS 10.15 native [gui] [no depends]'
-  macos_brew_addon_script:
-    - brew install boost libevent berkeley-db4 qt miniupnpc ccache zeromq qrencode sqlite libtool automake pkg-config gnu-getopt
-  << : *GLOBAL_TASK_TEMPLATE
-  osx_instance:
-    # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
-    image: catalina-xcode-12.1  # https://cirrus-ci.org/guide/macOS
-  env:
-    DANGER_RUN_CI_ON_HOST: "true"
-    CI_USE_APT_INSTALL: "no"
-    PACKAGE_MANAGER_INSTALL: "echo"  # Nothing to do
-    FILE_ENV: "./ci/test/00_setup_env_mac_host.sh"
+# task:
+#   name: 'macOS 10.14 [gui, no tests] [bionic]'
+#   << : *GLOBAL_TASK_TEMPLATE
+#   container:
+#     image: ubuntu:bionic
+#   env:
+#     FILE_ENV: "./ci/test/00_setup_env_mac.sh"
+
+# task:
+#   name: 'macOS 10.15 native [gui] [no depends]'
+#   macos_brew_addon_script:
+#     - brew install boost libevent berkeley-db4 qt miniupnpc ccache zeromq qrencode sqlite libtool automake pkg-config gnu-getopt
+#   << : *GLOBAL_TASK_TEMPLATE
+#   osx_instance:
+#     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
+#     image: catalina-xcode-12.1  # https://cirrus-ci.org/guide/macOS
+#   env:
+#     DANGER_RUN_CI_ON_HOST: "true"
+#     CI_USE_APT_INSTALL: "no"
+#     PACKAGE_MANAGER_INSTALL: "echo"  # Nothing to do
+#     FILE_ENV: "./ci/test/00_setup_env_mac_host.sh"
