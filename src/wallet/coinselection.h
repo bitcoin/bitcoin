@@ -98,11 +98,11 @@ struct OutputGroup
     , m_value_asset(value_asset)
     {}
     // SYSCOIN
-    OutputGroup(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants, const CAssetCoinInfo& nTargetValueAsset) : OutputGroup() {
+    OutputGroup(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants, const CAssetCoinInfo& nTargetValueAsset=CAssetCoinInfo()) : OutputGroup() {
         Insert(output, depth, from_me, ancestors, descendants, nTargetValueAsset);
     }
     // SYSCOIN
-    void Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants, const CAssetCoinInfo& nTargetValueAsset);
+    void Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants, const CAssetCoinInfo& nTargetValueAsset=CAssetCoinInfo());
     std::vector<CInputCoin>::iterator Discard(const CInputCoin& output);
     bool EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const;
 
