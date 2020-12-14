@@ -51,8 +51,11 @@ static double GetSimulatedErrorRate(const std::string& type)
     return 0;
 }
 
-static bool ShouldSimulateError(const std::string& type)
+bool CDKGSession::ShouldSimulateError(const std::string& type)
 {
+    if (params.type != Consensus::LLMQType::LLMQ_TEST) {
+        return false;
+    }
     double rate = GetSimulatedErrorRate(type);
     return GetRandBool(rate);
 }
