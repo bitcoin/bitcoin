@@ -386,19 +386,22 @@ bool KnapsackSolver(const CAssetCoinInfo& nTargetValueAsset, std::vector<OutputG
 
  ******************************************************************************/
 
-void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants) {
+void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants, const CAssetCoinInfo& nTargetValueAsset) {
     m_outputs.push_back(output);
     m_from_me &= from_me;
     m_value += output.txout.nValue;
     // SYSCOIN
     if(!output.effective_value_asset.IsNull()) {
-        if(effective_value_asset.IsNull()) {
+        if(effective_value_asset.IsNull()){
             effective_value_asset = output.effective_value_asset;
             m_value_asset = effective_value_asset.nValue;
         }
         else {
-            // at this point we shouldn't get an asset mismatch because groups should have targeted asset or none (0)
-            assert(effective_value_asset.nAsset == output.effective_value_asset.nAsset);
+            // if targetting an asset input then ensure we do not get conflicting assets
+            if(!nTargetValueAsset.IsNull()) {
+                // at this point we shouldn't get an asset mismatch because groups should have targeted asset or none (0)
+                assert(effective_value_asset.nAsset == output.effective_value_asset.nAsset);
+            }
             m_value_asset += output.effective_value_asset.nValue;
             effective_value_asset.nValue = m_value_asset;
         }

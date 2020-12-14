@@ -77,33 +77,32 @@ struct OutputGroup
     std::vector<CInputCoin> m_outputs;
     bool m_from_me{true};
     CAmount m_value{0};
-    // SYSCOIN
-    CAmount m_value_asset{0};
     int m_depth{999};
     size_t m_ancestors{0};
     size_t m_descendants{0};
     CAmount effective_value{0};
-    // SYSCOIN
-    CAssetCoinInfo effective_value_asset;
     CAmount fee{0};
     CAmount long_term_fee{0};
-
+    // SYSCOIN
+    CAmount m_value_asset{0};
+    CAssetCoinInfo effective_value_asset;
     OutputGroup() {}
     // SYSCOIN
     OutputGroup(std::vector<CInputCoin>&& outputs, bool from_me, CAmount value, CAmount value_asset, int depth, size_t ancestors, size_t descendants)
     : m_outputs(std::move(outputs))
     , m_from_me(from_me)
     , m_value(value)
-    , m_value_asset(value_asset)
     , m_depth(depth)
     , m_ancestors(ancestors)
     , m_descendants(descendants)
+    , m_value_asset(value_asset)
     {}
     // SYSCOIN
-    OutputGroup(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants) : OutputGroup() {
-        Insert(output, depth, from_me, ancestors, descendants);
+    OutputGroup(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants, const CAssetCoinInfo& nTargetValueAsset) : OutputGroup() {
+        Insert(output, depth, from_me, ancestors, descendants, nTargetValueAsset);
     }
-    void Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants);
+    // SYSCOIN
+    void Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants, const CAssetCoinInfo& nTargetValueAsset);
     std::vector<CInputCoin>::iterator Discard(const CInputCoin& output);
     bool EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const;
 

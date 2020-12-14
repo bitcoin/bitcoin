@@ -729,9 +729,9 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     CAmount nMinimumAmountAsset = 0;
     CAmount nMaximumAmountAsset = 0;
     CAmount nMinimumSumAmountAsset = 0;
-    coin_control.assetInfo = CAssetCoinInfo(nAsset, nMaximumAmountAsset);
+    coin_control.m_min_depth = 1;
     std::vector<COutput> vecOutputs;
-    pwallet->AvailableCoins(vecOutputs, true, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset);
+    pwallet->AvailableCoins(vecOutputs, true, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, 0, false, CAssetCoinInfo(nAsset, 0));
     int nNumOutputsFound = 0;
     int nFoundOutput = -1;
     for(unsigned int i = 0; i < vecOutputs.size(); i++) {
@@ -789,7 +789,6 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     CAmount nFeeRequired = 0;
     bilingual_str error;
     int nChangePosRet = -1;
-    coin_control.m_min_depth = 1;
     coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
     coin_control.Select(inputCoin.outpoint);
     coin_control.fAllowOtherInputs = recp.nAmount <= 0 || !recp.fSubtractFeeFromAmount; // select asset + sys utxo's
@@ -1092,8 +1091,7 @@ static RPCHelpMan assetsendmany()
             theAssetAllocation.voutAssets.emplace_back(CAssetOut(nAsset, vecOut));
             it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
         }
-        const size_t len = it->values.size();
-        it->values.push_back(CAssetOutValue(len, nAmount));
+        it->values.push_back(CAssetOutValue(vecSend.size(), nAmount));
         CTxOut change_prototype_txout(0, scriptPubKey);
         CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
         vecSend.push_back(recp);
@@ -1103,9 +1101,8 @@ static RPCHelpMan assetsendmany()
         theAssetAllocation.voutAssets.emplace_back(CAssetOut(nAsset, vecOut));
         it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
     }
-    const size_t len = it->values.size();
     // add change for asset
-    it->values.push_back(CAssetOutValue(len, 0));
+    it->values.push_back(CAssetOutValue(vecSend.size(), 0));
     CScript scriptPubKey;
     std::vector<unsigned char> data;
     theAssetAllocation.SerializeData(data);
@@ -1479,7 +1476,6 @@ static RPCHelpMan assetallocationburn()
     mtx.nVersion = nVersionIn;
     CCoinControl coin_control;
     coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
-    coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }

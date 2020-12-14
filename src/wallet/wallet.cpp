@@ -2187,10 +2187,9 @@ CAmount CWallet::GetAvailableBalance(const CCoinControl* coinControl) const
     return balance;
 }
 // SYSCOIN
-void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const CAmount& nMinimumAmountAsset, const CAmount& nMaximumAmountAsset, const CAmount& nMinimumSumAmountAsset, const uint64_t nMaximumCount, const bool bIncludeLocked) const
+void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const CCoinControl* coinControl, const CAmount& nMinimumAmount, const CAmount& nMaximumAmount, const CAmount& nMinimumSumAmount, const CAmount& nMinimumAmountAsset, const CAmount& nMaximumAmountAsset, const CAmount& nMinimumSumAmountAsset, const uint64_t nMaximumCount, const bool bIncludeLocked, const CAssetCoinInfo& assetInfo) const
 {
     AssertLockHeld(cs_wallet);
-
     vCoins.clear();
     CAmount nTotal = 0;
     // SYSCOIN
@@ -2226,7 +2225,7 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
         bool safeTx = IsTrusted(wtx, trusted_parents);
         if(!safeTx) {
             // if wasn't safe but it was a zdag tx and we are creating an asset tx then let it be safe as its interactively verified anyway with zdag
-            if(IsZdagTx(wtx.tx->nVersion) && coinControl && coinControl->assetInfo && coinControl->assetInfo->nAsset > 0)
+            if(IsZdagTx(wtx.tx->nVersion) && !assetInfo.IsNull())
                 safeTx = true;
         }
 
@@ -2268,7 +2267,6 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
         if (nDepth < min_depth || nDepth > max_depth) {
             continue;
         }
-
         for (unsigned int i = 0; i < wtx.tx->vout.size(); i++) {
             // Only consider selected coins if add_inputs is false
             if (coinControl && !coinControl->m_add_inputs && !coinControl->IsSelected(COutPoint(entry.first, i))) {
@@ -2281,21 +2279,23 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
             // SYSCOIN apply min max threshold only if coin control not used (for asset updates we want to select 0 value asset input)
             if (coinControl && coinControl->HasSelected() && !coinControl->fAllowOtherInputs && !coinControl->IsSelected(COutPoint(entry.first, i)))
                 continue;
-            const bool &coinControlAssetRequested = coinControl && coinControl->assetInfo && coinControl->assetInfo->nAsset > 0;
-            const bool &isAssetUpdate = coinControlAssetRequested && coinControl->assetInfo->nValue == 0;
+            const bool &coinControlAssetRequested = !assetInfo.IsNull();
+            const bool &isAssetUpdate = coinControlAssetRequested && assetInfo.nValue == 0;
             const bool &isAssetCoin = !wtx.tx->vout[i].assetInfo.IsNull();
             // for updates only select 0 value coins, otherwise enforce min amount rules
-            if (isAssetCoin && ((isAssetUpdate && wtx.tx->vout[i].assetInfo.nValue != 0) || (!isAssetUpdate && (wtx.tx->vout[i].assetInfo.nValue < nMinimumAmountAsset || wtx.tx->vout[i].assetInfo.nValue > nMaximumAmountAsset))))
+            if (isAssetCoin && ((isAssetUpdate && wtx.tx->vout[i].assetInfo.nValue != 0) || (!isAssetUpdate && (wtx.tx->vout[i].assetInfo.nValue < nMinimumAmountAsset || wtx.tx->vout[i].assetInfo.nValue > nMaximumAmountAsset)))) {
                 continue;
+            }
             // SYSCOIN
             if (!bIncludeLocked && IsLockedCoin(entry.first, i))
                 continue;
             // if coin control requested an asset to be funded
             if (coinControlAssetRequested) {
                 // only allowed if asset matches the output or fAllowOtherInputs and output is non-asset
-                const bool& bMatchAssetOrSysOutput = (coinControl->assetInfo->nAsset == wtx.tx->vout[i].assetInfo.nAsset) || (coinControl->fAllowOtherInputs && !isAssetCoin);
-                if(!bMatchAssetOrSysOutput)
+                const bool& bMatchAssetOrSysOutput = (assetInfo.nAsset == wtx.tx->vout[i].assetInfo.nAsset) || (coinControl->fAllowOtherInputs && !isAssetCoin);
+                if(!bMatchAssetOrSysOutput) {
                     continue;
+                }
             }
             if (IsSpent(wtxid, i))
                 continue;
@@ -2601,7 +2601,8 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         // explicitly shuffling the outputs before processing
         Shuffle(vCoins.begin(), vCoins.end(), FastRandomContext());
     }
-    std::vector<OutputGroup> groups = GroupOutputs(vCoins, !coin_control.m_avoid_partial_spends, max_ancestors);
+    // SYSCOIN
+    std::vector<OutputGroup> groups = GroupOutputs(vCoins, !coin_control.m_avoid_partial_spends, max_ancestors, nTargetValueAsset);
     // SYSCOIN
     int min_conf_theirs = 1;
     // if spending asset allow to spend with 0 conf
@@ -3149,24 +3150,29 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
     }
     return true;
 }
-
+// SYSCOIN
 bool CWallet::CreateTransactionInternal(
         const std::vector<CRecipient>& vecSend,
         CTransactionRef& tx,
         CAmount& nFeeRet,
         int& nChangePosInOut,
         bilingual_str& error,
-        const CCoinControl& coin_control,
+        const CCoinControl &coin_control,
         FeeCalculation& fee_calc_out,
         bool sign,
         const int& nVersion)
 {
+    
     CAmount nValue = 0;
     const OutputType change_type = TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : m_default_change_type, vecSend);
     ReserveDestination reservedest(this, change_type);
     int nChangePosRequest = nChangePosInOut;
     unsigned int nSubtractFeeFromAmount = 0;
     // SYSCOIN
+    CAssetCoinInfo nValueToSelectAsset;
+    if(coin_control.assetInfo) {
+        nValueToSelectAsset = *coin_control.assetInfo;
+    }
     CMutableTransaction txNew;
     CAssetCoinInfo nChangeAsset;
     txNew.nVersion = nVersion;
@@ -3202,7 +3208,7 @@ bool CWallet::CreateTransactionInternal(
         {
             std::vector<COutput> vAvailableCoins;
             // SYSCOIN
-            AvailableCoins(vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 1, MAX_ASSET, MAX_ASSET, 0);
+            //AvailableCoins(vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 1, MAX_ASSET, MAX_ASSET, 0);
             CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
 
             // Create change script that will be used if we need change
@@ -3235,10 +3241,6 @@ bool CWallet::CreateTransactionInternal(
             }
             CTxOut change_prototype_txout(0, scriptChange);
             coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
-            // add change output size info for asset output colouring
-            if(coin_control.assetInfo) {
-                coin_selection_params.change_output_size += GetSerializeSize(*coin_control.assetInfo);
-            }
             CFeeRate discard_rate = GetDiscardRate(*this);
             // Get the fee rate to use effective values in coin selection
             CFeeRate nFeeRateNeeded = GetMinimumFeeRate(*this, coin_control, &feeCalc);
@@ -3269,11 +3271,6 @@ bool CWallet::CreateTransactionInternal(
                 bool fFirst = true;
 
                 CAmount nValueToSelect = nValue;
-                // SYSCOIN
-                nChangeAsset.SetNull();
-                CAssetCoinInfo nValueToSelectAsset;
-                if(coin_control.assetInfo)
-                    nValueToSelectAsset = *coin_control.assetInfo;
                 // SYSCOIN
                 nFeeRet += nAssetFeeRet;
                 if (nSubtractFeeFromAmount == 0) {
@@ -3319,6 +3316,33 @@ bool CWallet::CreateTransactionInternal(
                     }
                     txNew.vout.push_back(txout);
                 }
+                // SYSCOIN
+                nChangeAsset.SetNull();
+                // these three tx types do not use asset inputs and should be funded with SYS only inputs
+                if(txNew.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_MINT &&
+                    txNew.nVersion != SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION &&
+                    txNew.nVersion != SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
+                    if (nValueToSelectAsset.IsNull() && txNew.HasAssets()) {
+                        // if assetInfo not passed in try to use the first asset to fund
+                        txNew.LoadAssets();
+                        if(!txNew.voutAssets.empty()) {
+                            auto it = txNew.voutAssets.begin();
+                            nValueToSelectAsset = txNew.vout[it->values[0].n].assetInfo;
+                            // for asset send, regardless of output amount, we always fund with 0 value input
+                            if(txNew.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND) {
+                                nValueToSelectAsset.nValue = 0;
+                            }
+                        }
+                    }
+                } else {
+                    nValueToSelectAsset.SetNull();
+                }
+                // add change output size info for asset output colouring
+                if(!nValueToSelectAsset.IsNull()) {
+                    coin_selection_params.change_output_size += GetSerializeSize(nValueToSelectAsset);
+                }
+                // SYSCOIN
+                AvailableCoins(vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 1, MAX_ASSET, MAX_ASSET, 0, false, nValueToSelectAsset);
                 // Choose coins to use
                 bool bnb_used = false;
                 if (pick_new_inputs) {
@@ -3351,9 +3375,9 @@ bool CWallet::CreateTransactionInternal(
                     bnb_used = false;
                 }
                 // SYSCOIN
-                if(coin_control.assetInfo)
-                    nChangeAsset = CAssetCoinInfo(coin_control.assetInfo->nAsset, nValueInAsset - nValueToSelectAsset.nValue);
-                const bool& isAssetChange = (nChangeAsset.nAsset > 0 && nChangeAsset.nValue > 0);
+                if(!nValueToSelectAsset.IsNull())
+                    nChangeAsset = CAssetCoinInfo(nValueToSelectAsset.nAsset, nValueInAsset - nValueToSelectAsset.nValue);
+                const bool& isAssetChange = (!nChangeAsset.IsNull() && nChangeAsset.nValue > 0);
                 CAmount nChange = nValueIn - nValueToSelect;
                 if (nChange > 0 || isAssetChange)
                 {
@@ -4751,7 +4775,7 @@ bool CWalletTx::IsImmatureCoinBase() const
     return GetBlocksToMaturity() > 0;
 }
 
-std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outputs, bool single_coin, const size_t max_ancestors) const {
+std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outputs, bool single_coin, const size_t max_ancestors, const CAssetCoinInfo& nTargetValueAsset) const {
     std::vector<OutputGroup> groups;
     std::map<CTxDestination, OutputGroup> gmap;
     std::set<CTxDestination> full_groups;
@@ -4775,12 +4799,12 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
                         it->second = OutputGroup{};
                         full_groups.insert(dst);
                     }
-                    it->second.Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants);
+                    it->second.Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, nTargetValueAsset);
                 } else {
-                    gmap[dst].Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants);
+                    gmap[dst].Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, nTargetValueAsset);
                 }
             } else {
-                groups.emplace_back(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants);
+                groups.emplace_back(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, nTargetValueAsset);
             }
         }
     }

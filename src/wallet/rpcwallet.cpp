@@ -3021,10 +3021,9 @@ RPCHelpMan listunspent()
         cctl.m_avoid_address_reuse = false;
         cctl.m_min_depth = nMinDepth;
         cctl.m_max_depth = nMaxDepth;
-        cctl.assetInfo = CAssetCoinInfo(nAsset, nMaximumAmountAsset);
         LOCK(pwallet->cs_wallet);
         // SYSCOIN
-        pwallet->AvailableCoins(vecOutputs, !include_unsafe, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, nMaximumCount);
+        pwallet->AvailableCoins(vecOutputs, !include_unsafe, &cctl, nMinimumAmount, nMaximumAmount, nMinimumSumAmount, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, nMaximumCount, false, CAssetCoinInfo(nAsset, nMaximumAmountAsset));
     }
 
     LOCK(pwallet->cs_wallet);
