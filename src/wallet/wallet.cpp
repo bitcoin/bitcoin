@@ -41,7 +41,7 @@
 #include <boost/algorithm/string/replace.hpp>
 // SYSCOIN
 #include <curl/curl.h>
-#include <services/asset.h> // ReserializeAssetCommitment
+#include <services/asset.h> // GetAsset
 #include <evo/deterministicmns.h>
 #include <rpc/util.h>
 #include <core_io.h>
@@ -2716,9 +2716,9 @@ char* curl_fetch_url(CURL *curl, const char *url, const char* payload, std::stri
   }
   return chunk.memory;
 }
-bool FillNotarySigFromEndpoint(const CTransactionRef& tx, std::vector<CAssetOut> & voutAssets, std::string& strError) {
+bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAssetOut> & voutAssets, std::string& strError) {
     CURL *curl = curl_easy_init();
-    std::string strHex = EncodeHexTx(*tx);
+    std::string strHex = EncodeHexTx(CTransaction(mtx));
     UniValue reqObj(UniValue::VOBJ);
     reqObj.pushKV("tx", strHex); 
     std::string reqJSON = reqObj.write();
@@ -2765,25 +2765,24 @@ bool FillNotarySigFromEndpoint(const CTransactionRef& tx, std::vector<CAssetOut>
 }
 
 bool UpdateNotarySignatureFromEndpoint(CMutableTransaction& mtx, std::string& strError) {
-    const CTransactionRef& tx = MakeTransactionRef(mtx);
     std::vector<unsigned char> data;
     bool bFilledNotarySig = false;
      // call API endpoint or notary signatures and fill them in for every asset
-    if(IsSyscoinMintTx(tx->nVersion)) {
-        CMintSyscoin mintSyscoin(*tx);
-        if(FillNotarySigFromEndpoint(tx, mintSyscoin.voutAssets, strError)) {
+    if(IsSyscoinMintTx(mtx.nVersion)) {
+        CMintSyscoin mintSyscoin(mtx);
+        if(FillNotarySigFromEndpoint(mtx, mintSyscoin.voutAssets, strError)) {
             bFilledNotarySig = true;
             mintSyscoin.SerializeData(data);
         }
-    } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
-        CBurnSyscoin burnSyscoin(*tx);
-        if(FillNotarySigFromEndpoint(tx, burnSyscoin.voutAssets, strError)) {
+    } else if(mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
+        CBurnSyscoin burnSyscoin(mtx);
+        if(FillNotarySigFromEndpoint(mtx, burnSyscoin.voutAssets, strError)) {
             bFilledNotarySig = true;
             burnSyscoin.SerializeData(data);
         }
-    } else if(IsAssetAllocationTx(tx->nVersion)) {
-        CAssetAllocation allocation(*tx);
-        if(FillNotarySigFromEndpoint(tx, allocation.voutAssets, strError)) {
+    } else if(IsAssetAllocationTx(mtx.nVersion)) {
+        CAssetAllocation allocation(mtx);
+        if(FillNotarySigFromEndpoint(mtx, allocation.voutAssets, strError)) {
             bFilledNotarySig = true;
             allocation.SerializeData(data);
         }
@@ -3051,10 +3050,9 @@ OutputType CWallet::TransactionChangeType(const Optional<OutputType>& change_typ
 // SYSCOIN
 bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &assetInfo, const uint32_t &nChangePosInOut) {
     // store tx.voutAssets into OP_RETURN data overwriting previous commitment
-    const CTransactionRef& tx = MakeTransactionRef(mtx);
     std::vector<unsigned char> data;
-    if(IsSyscoinMintTx(tx->nVersion)) {
-        CMintSyscoin mintSyscoin(*tx);
+    if(IsSyscoinMintTx(mtx.nVersion)) {
+        CMintSyscoin mintSyscoin(mtx);
         // for any output that would be invalidated by a new output at position nChangePosInOut, update them
         for(auto& vout: mintSyscoin.voutAssets) {
             for(auto& out: vout.values) {
@@ -3075,8 +3073,8 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
             it->values.push_back(CAssetOutValue(nChangePosInOut, assetInfo.nValue));
         }
         mintSyscoin.SerializeData(data);
-    } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
-        CBurnSyscoin burnSyscoin(*tx);
+    } else if(mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN || mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
+        CBurnSyscoin burnSyscoin(mtx);
         for(auto& vout: burnSyscoin.voutAssets) {
             for(auto& out: vout.values) {
                 if(nChangePosInOut <= out.n) {
@@ -3094,8 +3092,8 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
             it->values.push_back(CAssetOutValue(nChangePosInOut, assetInfo.nValue));
         }
         burnSyscoin.SerializeData(data);
-    } else if(IsAssetTx(tx->nVersion)) {
-        CAsset asset(*tx);
+    } else if(IsAssetTx(mtx.nVersion)) {
+        CAsset asset(mtx);
         for(auto& vout: asset.voutAssets) {
             for(auto& out: vout.values) {
                 if(nChangePosInOut <= out.n) {
@@ -3113,8 +3111,8 @@ bool ReserializeAssetCommitment(CMutableTransaction& mtx, const CAssetCoinInfo &
             it->values.push_back(CAssetOutValue(nChangePosInOut, assetInfo.nValue));
         }
         asset.SerializeData(data); 
-    } else if(IsAssetAllocationTx(tx->nVersion)) {
-        CAssetAllocation allocation(*tx);
+    } else if(IsAssetAllocationTx(mtx.nVersion)) {
+        CAssetAllocation allocation(mtx);
         for(auto& vout: allocation.voutAssets) {
             for(auto& out: vout.values) {
                 if(nChangePosInOut <= out.n) {

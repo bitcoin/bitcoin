@@ -765,6 +765,7 @@ public:
 		SetNull();
 	}
     explicit CAssetAllocation(const CTransaction &tx);
+    explicit CAssetAllocation(const CMutableTransaction &mtx);
 
 	inline friend bool operator==(const CAssetAllocation &a, const CAssetAllocation &b) {
 		return (a.voutAssets == b.voutAssets
@@ -781,6 +782,7 @@ public:
 	inline void SetNull() { voutAssets.clear();}
     inline bool IsNull() const { return voutAssets.empty();}
     bool UnserializeFromTx(const CTransaction &tx);
+    bool UnserializeFromTx(const CMutableTransaction &mtx);
 	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
 	void SerializeData(std::vector<unsigned char>& vchData);
 };
@@ -808,6 +810,7 @@ public:
         SetNull();
     }
     explicit CAsset(const CTransaction &tx);
+    explicit CAsset(const CMutableTransaction &mtx);
     
     inline void ClearAsset() {
         strPubData.clear();
@@ -948,6 +951,7 @@ public:
     inline void SetNull() { ClearAsset(); nPrecision = 9; }
     inline bool IsNull() const { return nPrecision == 9; }
     bool UnserializeFromTx(const CTransaction &tx);
+    bool UnserializeFromTx(const CMutableTransaction &mtx);
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     void SerializeData(std::vector<unsigned char>& vchData);
 };
@@ -969,6 +973,7 @@ public:
         SetNull();
     }
     explicit CMintSyscoin(const CTransaction &tx);
+    explicit CMintSyscoin(const CMutableTransaction &mtx);
 
     SERIALIZE_METHODS(CMintSyscoin, obj) {
         READWRITEAS(CAssetAllocation, obj);
@@ -981,6 +986,7 @@ public:
     inline bool IsNull() const { return (voutAssets.empty() && posTx == 0 && posReceipt == 0); }
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     bool UnserializeFromTx(const CTransaction &tx);
+    bool UnserializeFromTx(const CMutableTransaction &mtx);
     void SerializeData(std::vector<unsigned char>& vchData);
 };
 
@@ -991,6 +997,7 @@ public:
         SetNull();
     }
     explicit CBurnSyscoin(const CTransaction &tx);
+    explicit CBurnSyscoin(const CMutableTransaction &mtx);
 
     SERIALIZE_METHODS(CBurnSyscoin, obj) {
         READWRITEAS(CAssetAllocation, obj);
@@ -1001,6 +1008,7 @@ public:
     inline bool IsNull() const { return (vchEthAddress.empty() && voutAssets.empty()); }
     bool UnserializeFromData(const std::vector<unsigned char> &vchData);
     bool UnserializeFromTx(const CTransaction &tx);
+    bool UnserializeFromTx(const CMutableTransaction &mtx);
     void SerializeData(std::vector<unsigned char>& vchData);
 };
 bool IsSyscoinTx(const int &nVersion);
@@ -1011,7 +1019,9 @@ bool IsSyscoinWithNoInputTx(const int &nVersion);
 bool IsAssetTx(const int &nVersion);
 bool IsSyscoinMintTx(const int &nVersion);
 int GetSyscoinDataOutput(const CTransaction& tx);
+int GetSyscoinDataOutput(const CMutableTransaction& mtx);
 bool GetSyscoinData(const CTransaction &tx, std::vector<unsigned char> &vchData, int& nOut);
+bool GetSyscoinData(const CMutableTransaction &mtx, std::vector<unsigned char> &vchData, int& nOut);
 bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vchData);
 typedef std::unordered_map<uint32_t, uint256> EthereumMintTxMap;
 typedef std::unordered_map<uint32_t, CAsset > AssetMap;

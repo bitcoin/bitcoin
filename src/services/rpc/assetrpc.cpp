@@ -95,7 +95,7 @@ bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, c
 	}
 	return true;
 }
-bool FillNotarySig(const CTransactionRef& tx, std::vector<CAssetOut> & voutAssets, const uint32_t& nAsset, const std::vector<unsigned char> &vchSig) {
+bool FillNotarySig(std::vector<CAssetOut> & voutAssets, const uint32_t& nAsset, const std::vector<unsigned char> &vchSig) {
     auto itVout = std::find_if( voutAssets.begin(), voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
     if(itVout != voutAssets.end()) {
         itVout->vchNotarySig = vchSig;
@@ -105,25 +105,24 @@ bool FillNotarySig(const CTransactionRef& tx, std::vector<CAssetOut> & voutAsset
 }
 
 bool UpdateNotarySignature(CMutableTransaction& mtx, const uint32_t& nAsset, const std::vector<unsigned char> &vchSig) {
-    const CTransactionRef& tx = MakeTransactionRef(mtx);
     std::vector<unsigned char> data;
     bool bFilledNotarySig = false;
      // call API endpoint or notary signatures and fill them in for every asset
-    if(IsSyscoinMintTx(tx->nVersion)) {
-        CMintSyscoin mintSyscoin(*tx);
-        if(FillNotarySig(tx, mintSyscoin.voutAssets, nAsset, vchSig)) {
+    if(IsSyscoinMintTx(mtx.nVersion)) {
+        CMintSyscoin mintSyscoin(mtx);
+        if(FillNotarySig(mintSyscoin.voutAssets, nAsset, vchSig)) {
             bFilledNotarySig = true;
             mintSyscoin.SerializeData(data);
         }
-    } else if(tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
-        CBurnSyscoin burnSyscoin(*tx);
-        if(FillNotarySig(tx, burnSyscoin.voutAssets, nAsset, vchSig)) {
+    } else if(mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
+        CBurnSyscoin burnSyscoin(mtx);
+        if(FillNotarySig(burnSyscoin.voutAssets, nAsset, vchSig)) {
             bFilledNotarySig = true;
             burnSyscoin.SerializeData(data);
         }
-    } else if(IsAssetAllocationTx(tx->nVersion)) {
-        CAssetAllocation allocation(*tx);
-        if(FillNotarySig(tx, allocation.voutAssets, nAsset, vchSig)) {
+    } else if(IsAssetAllocationTx(mtx.nVersion)) {
+        CAssetAllocation allocation(mtx);
+        if(FillNotarySig(allocation.voutAssets, nAsset, vchSig)) {
             bFilledNotarySig = true;
             allocation.SerializeData(data);
         }
