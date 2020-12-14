@@ -3256,14 +3256,15 @@ void PeerManagerImpl::ProcessMessage(
         return;
     }
 
+    // BIP155 defines feature negotiation of addrv2 and sendaddrv2, which must happen
+    // between VERSION and VERACK.
     if (msg_type == NetMsgType::SENDADDRV2) {
         if (pfrom.GetCommonVersion() < ADDRV2_PROTO_VERSION) {
             // Ignore previous implementations
             return;
         }
         if (pfrom.fSuccessfullyConnected) {
-            // Disconnect peers that send SENDADDRV2 message after VERACK; this
-            // must be negotiated between VERSION and VERACK.
+            // Disconnect peers that send a SENDADDRV2 message after VERACK.
             LogPrint(BCLog::NET_NETCONN, "sendaddrv2 received after verack from peer=%d; disconnecting\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;
