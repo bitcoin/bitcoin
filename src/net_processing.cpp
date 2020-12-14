@@ -670,11 +670,8 @@ struct CNodeState {
     //! Whether this peer is an inbound connection
     bool m_is_inbound;
 
-    //! Whether this peer is a manual connection
-    bool m_is_manual_connection;
-
-    CNodeState(CAddress addrIn, bool is_inbound, bool is_manual) :
-        address(addrIn), m_is_inbound(is_inbound), m_is_manual_connection(is_manual)
+    CNodeState(CAddress addrIn, bool is_inbound) :
+        address(addrIn), m_is_inbound(is_inbound)
     {
         pindexBestKnownBlock = nullptr;
         hashLastUnknownBlock.SetNull();
@@ -1159,7 +1156,7 @@ void PeerManagerImpl::InitializeNode(CNode *pnode) {
     NodeId nodeid = pnode->GetId();
     {
         LOCK(cs_main);
-        mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(addr, pnode->fInbound, pnode->m_manual_connection));
+        mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(addr, pnode->fInbound));
     }
     {
         PeerRef peer = std::make_shared<Peer>(nodeid);
@@ -1475,8 +1472,8 @@ bool PeerManagerImpl::MaybePunishNodeForBlock(NodeId nodeid, const BlockValidati
             }
 
             // Discourage outbound (but not inbound) peers if on an invalid chain.
-            // Exempt HB compact block peers and manual connections.
-            if (!via_compact_block && !node_state->m_is_inbound && !node_state->m_is_manual_connection) {
+            // Exempt HB compact block peers. Manual connections are always protected from discouragement.
+            if (!via_compact_block && !node_state->m_is_inbound) {
                 Misbehaving(nodeid, 100, message);
                 return true;
             }
