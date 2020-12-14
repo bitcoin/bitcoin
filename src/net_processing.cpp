@@ -121,6 +121,8 @@ static const unsigned int NODE_NETWORK_LIMITED_MIN_BLOCKS = 288;
 static constexpr std::chrono::hours AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL{24};
 /** Average delay between peer address broadcasts */
 static constexpr std::chrono::seconds AVG_ADDRESS_BROADCAST_INTERVAL{30};
+/** Delay between rotating the peers we relay a particular address to */
+static constexpr std::chrono::hours ROTATE_ADDR_RELAY_DEST_INTERVAL{24};
 /** Average delay between trickled inventory transmissions in seconds.
  *  Blocks and peers with noban permission bypass this, outbound peers get half this delay. */
 static const unsigned int INVENTORY_BROADCAST_INTERVAL = 5;
@@ -1418,7 +1420,11 @@ static void RelayAddress(const CAddress& addr, bool fReachable, const CConnman& 
     // Use deterministic randomness to send to the same nodes for 24 hours
     // at a time so the m_addr_knowns of the chosen nodes prevent repeats
     uint64_t hashAddr = addr.GetHash();
-    const CSipHasher hasher = connman.GetDeterministicRandomizer(RANDOMIZER_ID_ADDRESS_RELAY).Write(hashAddr << 32).Write((GetTime() + hashAddr) / (24 * 60 * 60));
+
+    std::chrono::seconds current_time = GetTime<std::chrono::seconds>();
+    // Adding address hash makes exact rotation time different per address, while preserving periodicity.
+    uint64_t time_addr = static_cast<uint64_t>((current_time + std::chrono::seconds{static_cast<int64_t>(hashAddr)}) / ROTATE_ADDR_RELAY_DEST_INTERVAL);
+    const CSipHasher hasher = connman.GetDeterministicRandomizer(RANDOMIZER_ID_ADDRESS_RELAY).Write(hashAddr).Write(time_addr);
     FastRandomContext insecure_rand;
 
     // Relay reachable addresses to 2 peers. Unreachable addresses are relayed randomly to 1 or 2 peers.
