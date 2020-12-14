@@ -385,6 +385,14 @@ CAmount CTransaction::GetAssetValueOut(const std::vector<CAssetOutValue> &vecVou
     }
     return nTotal;
 }
+CAmount CMutableTransaction::GetAssetValueOut(const std::vector<CAssetOutValue> &vecVout) const
+{
+    CAmount nTotal = 0;
+    for(const auto& voutAsset: vecVout) {
+        nTotal += voutAsset.nValue;
+    }
+    return nTotal;
+}
 bool CTransaction::GetAssetValueOut(CAssetsMap &mapAssetOut, std::string &err) const
 {
     std::unordered_set<uint32_t> setUsedIndex;

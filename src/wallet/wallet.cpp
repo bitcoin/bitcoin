@@ -3327,7 +3327,7 @@ bool CWallet::CreateTransactionInternal(
                         txNew.LoadAssets();
                         if(!txNew.voutAssets.empty()) {
                             auto it = txNew.voutAssets.begin();
-                            nValueToSelectAsset = txNew.vout[it->values[0].n].assetInfo;
+                            nValueToSelectAsset = CAssetCoinInfo(it->key, txNew.GetAssetValueOut(it->values));
                             // for asset send, regardless of output amount, we always fund with 0 value input
                             if(txNew.nVersion == SYSCOIN_TX_VERSION_ASSET_SEND) {
                                 nValueToSelectAsset.nValue = 0;
@@ -4774,7 +4774,7 @@ bool CWalletTx::IsImmatureCoinBase() const
     // note GetBlocksToMaturity is 0 for non-coinbase tx
     return GetBlocksToMaturity() > 0;
 }
-
+// SYSCOIN
 std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outputs, bool single_coin, const size_t max_ancestors, const CAssetCoinInfo& nTargetValueAsset) const {
     std::vector<OutputGroup> groups;
     std::map<CTxDestination, OutputGroup> gmap;
@@ -4799,11 +4799,14 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
                         it->second = OutputGroup{};
                         full_groups.insert(dst);
                     }
+                    // SYSCOIN
                     it->second.Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, nTargetValueAsset);
                 } else {
+                    // SYSCOIN
                     gmap[dst].Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, nTargetValueAsset);
                 }
             } else {
+                // SYSCOIN
                 groups.emplace_back(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, nTargetValueAsset);
             }
         }

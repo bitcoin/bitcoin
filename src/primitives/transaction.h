@@ -637,6 +637,7 @@ struct CMutableTransaction
     bool HasAssets() const;
     bool IsMnTx() const;
     void LoadAssets();
+    CAmount GetAssetValueOut(const std::vector<CAssetOutValue> &vecVout) const;
 };
 
 typedef std::shared_ptr<const CTransaction> CTransactionRef;
