@@ -736,7 +736,9 @@ static RPCHelpMan listbanned()
 {
     return RPCHelpMan{"listbanned",
                 "\nList all manually banned IPs/Subnets.\n",
-                {},
+                {
+                    {"ip", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "If IP is provided, only bans which include the IP will be returned."},
+                },
         RPCResult{RPCResult::Type::ARR, "", "",
             {
                 {RPCResult::Type::OBJ, "", "",
@@ -761,8 +763,24 @@ static RPCHelpMan listbanned()
 
     banmap_t banMap;
     node.banman->GetBanned(banMap);
-    const int64_t current_time{GetTime()};
 
+    if (!request.params[0].isNull()) {
+        CNetAddr netAddr;
+        LookupHost(request.params[0].get_str(), netAddr, false);
+        if (!netAddr.IsValid()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Error: Invalid IP address");
+        }
+        for (auto it = banMap.begin(); it != banMap.end();) {
+            CSubNet ban_sub_net = it->first;
+            if (!ban_sub_net.Match(netAddr)) {
+                it = banMap.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    const int64_t current_time{GetTime()};
     UniValue bannedAddresses(UniValue::VARR);
     for (const auto& entry : banMap)
     {
