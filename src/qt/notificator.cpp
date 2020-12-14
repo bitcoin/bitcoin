@@ -26,6 +26,18 @@
 #ifdef USE_DBUS
 // https://wiki.ubuntu.com/NotificationDevelopmentGuidelines recommends at least 128
 const int FREEDESKTOP_NOTIFICATION_ICON_SIZE = 128;
+
+void DBusInitThread::run() {
+    auto interface = new QDBusInterface("org.freedesktop.Notifications", "/org/freedesktop/Notifications", "org.freedesktop.Notifications");
+    if (!interface->isValid()) {
+        delete interface;
+        return;
+    }
+    interface->moveToThread(m_notificator.thread());
+    m_notificator.interface = interface;
+    m_notificator.mode = Notificator::Freedesktop;
+}
+
 #endif
 
 Notificator::Notificator(const QString &_programName, QSystemTrayIcon *_trayIcon, QWidget *_parent) :
@@ -39,12 +51,8 @@ Notificator::Notificator(const QString &_programName, QSystemTrayIcon *_trayIcon
         mode = QSystemTray;
     }
 #ifdef USE_DBUS
-    interface = new QDBusInterface("org.freedesktop.Notifications",
-        "/org/freedesktop/Notifications", "org.freedesktop.Notifications");
-    if(interface->isValid())
-    {
-        mode = Freedesktop;
-    }
+    m_dbus_init_thread = new DBusInitThread(*this);
+    m_dbus_init_thread->start();
 #endif
 #ifdef Q_OS_MACOS
     // check if users OS has support for NSUserNotification
@@ -57,6 +65,8 @@ Notificator::Notificator(const QString &_programName, QSystemTrayIcon *_trayIcon
 Notificator::~Notificator()
 {
 #ifdef USE_DBUS
+    m_dbus_init_thread->wait();
+    delete m_dbus_init_thread;
     delete interface;
 #endif
 }
@@ -216,8 +226,7 @@ void Notificator::notifyMacUserNotificationCenter(const QString &title, const QS
 
 void Notificator::notify(Class cls, const QString &title, const QString &text, const QIcon &icon, int millisTimeout)
 {
-    switch(mode)
-    {
+    switch (Mode(mode)) {
 #ifdef USE_DBUS
     case Freedesktop:
         notifyDBus(cls, title, text, icon, millisTimeout);
