@@ -5,11 +5,12 @@
 '''
 Script to generate list of seed nodes for chainparams.cpp.
 
-This script expects two text files in the directory that is passed as an
+This script expects text files in the directory that is passed as an
 argument:
 
     nodes_main.txt
     nodes_test.txt
+    nodes_signet.txt
 
 These files must consist of lines in the format
 
@@ -20,14 +21,12 @@ These files must consist of lines in the format
     <onion>.onion
     0xDDBBCCAA (IPv4 little-endian old pnSeeds format)
 
-The output will be two data structures with the peers in binary format:
+The output will be data structures with the peers in binary format:
 
    static SeedSpec6 pnSeed6_main[]={
    ...
    }
-   static SeedSpec6 pnSeed6_test[]={
    ...
-   }
 
 These should be pasted into `src/chainparamsseeds.h`.
 '''
@@ -132,6 +131,8 @@ def main():
     g.write('\n')
     with open(os.path.join(indir,'nodes_test.txt'), 'r', encoding="utf8") as f:
         process_nodes(g, f, 'pnSeed6_test', 18333)
+    with open(os.path.join(indir,'nodes_signet.txt'), 'r', encoding="utf8") as f:
+        process_nodes(g, f, 'g_fixed_seeds_signet', 38333)
     g.write('#endif // BITCOIN_CHAINPARAMSSEEDS_H\n')
 
 if __name__ == '__main__':
