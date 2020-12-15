@@ -6,11 +6,11 @@
 #define BITCOIN_WALLET_RPCWALLET_H
 
 #include <string>
-#include <univalue.h>
 
 class CRPCTable;
 class CWallet;
 class JSONRPCRequest;
+class UniValue;
 
 void RegisterWalletRPCCommands(CRPCTable &t);
 
