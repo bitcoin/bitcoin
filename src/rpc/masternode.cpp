@@ -416,11 +416,10 @@ UniValue masternode_payments(const JSONRPCRequest& request)
     } else {
         LOCK(cs_main);
         uint256 blockHash = ParseHashV(request.params[1], "blockhash");
-        auto it = mapBlockIndex.find(blockHash);
-        if (it == mapBlockIndex.end()) {
+        pindex = LookupBlockIndex(blockHash);
+        if (pindex == nullptr) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
-        pindex = it->second;
     }
 
     int64_t nCount = request.params.size() > 2 ? ParseInt64V(request.params[2], "count") : 1;

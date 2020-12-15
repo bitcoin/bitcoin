@@ -5601,9 +5601,9 @@ bool CMerkleTx::IsChainLocked() const
 {
     if (!fIsChainlocked) {
         AssertLockHeld(cs_main);
-        BlockMap::iterator mi = mapBlockIndex.find(hashBlock);
-        if (mi != mapBlockIndex.end() && mi->second != nullptr) {
-            fIsChainlocked = llmq::chainLocksHandler->HasChainLock(mi->second->nHeight, hashBlock);
+        CBlockIndex* pIndex = LookupBlockIndex(hashBlock);
+        if (pIndex != nullptr) {
+            fIsChainlocked = llmq::chainLocksHandler->HasChainLock(pIndex->nHeight, hashBlock);
         }
     }
     return fIsChainlocked;
