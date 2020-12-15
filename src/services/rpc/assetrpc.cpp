@@ -108,19 +108,13 @@ bool UpdateNotarySignature(CMutableTransaction& mtx, const uint32_t& nAsset, con
     std::vector<unsigned char> data;
     bool bFilledNotarySig = false;
      // call API endpoint or notary signatures and fill them in for every asset
-    if(IsSyscoinMintTx(mtx.nVersion)) {
-        CMintSyscoin mintSyscoin(mtx);
-        if(FillNotarySig(mintSyscoin.voutAssets, nAsset, vchSig)) {
-            bFilledNotarySig = true;
-            mintSyscoin.SerializeData(data);
-        }
-    } else if(mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM) {
+    if(mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM || mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
         CBurnSyscoin burnSyscoin(mtx);
         if(FillNotarySig(burnSyscoin.voutAssets, nAsset, vchSig)) {
             bFilledNotarySig = true;
             burnSyscoin.SerializeData(data);
         }
-    } else if(IsAssetAllocationTx(mtx.nVersion)) {
+    } else if(mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND || mtx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION) {
         CAssetAllocation allocation(mtx);
         if(FillNotarySig(allocation.voutAssets, nAsset, vchSig)) {
             bFilledNotarySig = true;

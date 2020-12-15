@@ -13,7 +13,6 @@
 #include <wallet/feebumper.h>
 #include <wallet/fees.h>
 #include <wallet/wallet.h>
-
 //! Check whether transaction has descendant in wallet or mempool, or has been
 //! mined, or conflicts with a mined transaction. Return a feebumper::Result.
 static feebumper::Result PreconditionChecks(const CWallet& wallet, const CWalletTx& wtx, std::vector<bilingual_str>& errors) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet)
@@ -107,7 +106,18 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CWalletTx& wt
             FormatMoney(new_total_fee), FormatMoney(max_tx_fee)));
         return feebumper::Result::WALLET_ERROR;
     }
-
+    // SYSCOIN if zdag double the fee rate
+    if (wtx.tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND) {
+        CFeeRate rate = wallet.chain().relayMinFee();
+        rate += wallet.chain().relayMinFee();
+        if(newFeerate < rate) {
+            errors.push_back(strprintf(
+                Untranslated("New fee rate (%s) is lower than the minimum zdag fee rate (%s) to get into the mempool -- "),
+                FormatMoney(newFeerate.GetFeePerK()),
+                FormatMoney(rate.GetFeePerK())));
+            return feebumper::Result::WALLET_ERROR;
+        }     
+    }
     return feebumper::Result::OK;
 }
 
@@ -133,7 +143,12 @@ static CFeeRate EstimateFeeRate(const CWallet& wallet, const CWalletTx& wtx, con
 
     // Fee rate must also be at least the wallet's GetMinimumFeeRate
     CFeeRate min_feerate(GetMinimumFeeRate(wallet, coin_control, /* feeCalc */ nullptr));
-
+    // SYSCOIN if zdag double the fee rate
+    if (wtx.tx->nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND) {
+        CFeeRate rate = wallet.chain().relayMinFee();
+        rate += wallet.chain().relayMinFee();
+        feerate = std::max(feerate, rate);    
+    }
     // Set the required fee rate for the replacement transaction in coin control.
     return std::max(feerate, min_feerate);
 }
@@ -171,22 +186,25 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         return result;
     }
 
-    // Fill in recipients(and preserve a single change key if there is one)
-    std::vector<CRecipient> recipients;
-    for (const auto& output : wtx.tx->vout) {
-        if (!wallet.IsChange(output)) {
-            CRecipient recipient = {output.scriptPubKey, output.nValue, false};
-            recipients.push_back(recipient);
-        } else {
+    // SYSCOIN
+    std::vector<int> vecChangePos;
+    mtx = CMutableTransaction(*wtx.tx);
+    int i = 0;
+    for (std::vector<CTxOut>::iterator it = mtx.vout.begin() ; it != mtx.vout.end();) {
+        const auto& output = *it;
+        if (wallet.IsChange(output)) {
             CTxDestination change_dest;
             ExtractDestination(output.scriptPubKey, change_dest);
             new_coin_control.destChange = change_dest;
+            vecChangePos.push_back(i);
+            it = mtx.vout.erase(it);
+        } else {
+            ++it;
         }
+        i++;
     }
-
     isminefilter filter = wallet.GetLegacyScriptPubKeyMan() && wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) ? ISMINE_WATCH_ONLY : ISMINE_SPENDABLE;
     old_fee = wtx.GetDebit(filter) - wtx.tx->GetValueOut();
-
     if (coin_control.m_feerate) {
         // The user provided a feeRate argument.
         // We calculate this here to avoid compiler warning on the cs_wallet lock
@@ -200,43 +218,34 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
         new_coin_control.m_feerate = EstimateFeeRate(wallet, wtx, old_fee, new_coin_control);
     }
 
-    // Fill in required inputs we are double-spending(all of them)
-    // N.B.: bip125 doesn't require all the inputs in the replaced transaction to be
-    // used in the replacement transaction, but it's very important for wallets to make
-    // sure that happens. If not, it would be possible to bump a transaction A twice to
-    // A2 and A3 where A2 and A3 don't conflict (or alternatively bump A to A2 and A2
-    // to A3 where A and A3 don't conflict). If both later get confirmed then the sender
-    // has accidentally double paid.
-    for (const auto& inputs : wtx.tx->vin) {
-        new_coin_control.Select(COutPoint(inputs.prevout));
-    }
     new_coin_control.fAllowOtherInputs = true;
 
     // We cannot source new unconfirmed inputs(bip125 rule 2)
     new_coin_control.m_min_depth = 1;
 
-    CTransactionRef tx_new;
-    CAmount fee_ret;
-    int change_pos_in_out = -1; // No requested location for change
+    CAmount fee_ret = 0;
     bilingual_str fail_reason;
-    FeeCalculation fee_calc_out;
     // SYSCOIN
-    if (!wallet.CreateTransaction(recipients, tx_new, fee_ret, change_pos_in_out, fail_reason, new_coin_control, fee_calc_out, false, wtx.tx->nVersion)) {
-        errors.push_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + fail_reason);
-        return Result::WALLET_ERROR;
+    int nChangePosRet = -1;
+    bool lockUnspents = false;
+    std::set<int> setSubtractFeeFromOutputs;
+    if(!vecChangePos.empty()) {
+        for(const auto & pos: vecChangePos) {
+            nChangePosRet = pos;
+            fee_ret = 0;
+            if (!wallet.FundTransaction(mtx, fee_ret, nChangePosRet, fail_reason, lockUnspents, setSubtractFeeFromOutputs, new_coin_control)) {
+                errors.push_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + fail_reason);
+                return Result::WALLET_ERROR;
+            }
+        }
+    } else {
+        if (!wallet.FundTransaction(mtx, fee_ret, nChangePosRet, fail_reason, lockUnspents, setSubtractFeeFromOutputs, new_coin_control)) {
+            errors.push_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + fail_reason);
+            return Result::WALLET_ERROR;
+        }   
     }
-
     // Write back new fee if successful
     new_fee = fee_ret;
-
-    // Write back transaction
-    mtx = CMutableTransaction(*tx_new);
-    // Mark new tx not replaceable, if requested.
-    if (!coin_control.m_signal_bip125_rbf.get_value_or(wallet.m_signal_rbf)) {
-        for (auto& input : mtx.vin) {
-            if (input.nSequence < 0xfffffffe) input.nSequence = 0xfffffffe;
-        }
-    }
 
     return Result::OK;
 }
