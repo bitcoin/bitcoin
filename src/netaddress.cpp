@@ -436,6 +436,11 @@ bool CNetAddr::IsValid() const
         return false;
     }
 
+    // CJDNS addresses always start with 0xfc
+    if (IsCJDNS() && (m_addr[0] != 0xFC)) {
+        return false;
+    }
+
     // documentation IPv6 address
     if (IsRFC3849())
         return false;
