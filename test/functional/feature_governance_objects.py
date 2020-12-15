@@ -26,6 +26,9 @@ class SyscoinGovernanceTest (DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(2, 1)
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
+
     def prepare_object(self, object_type, parent_hash, creation_time, revision, name, amount):
         proposal_rev = revision
         proposal_time = int(creation_time)
