@@ -23,32 +23,11 @@ static std::unique_ptr<bls::CoreMPL>& Scheme(const bool fLegacy)
     return fLegacy ? pSchemeLegacy : pScheme;
 }
 
-void CBLSId::SetInt(int x)
+CBLSId::CBLSId(const uint256& nHash) : CBLSWrapper<CBLSIdImplicit, BLS_CURVE_ID_SIZE, CBLSId>()
 {
-    impl.SetHex(strprintf("%x", x));
+    impl = nHash;
     fValid = true;
     cachedHash.SetNull();
-}
-
-void CBLSId::SetHash(const uint256& hash)
-{
-    impl = hash;
-    fValid = true;
-    cachedHash.SetNull();
-}
-
-CBLSId CBLSId::FromInt(int64_t i)
-{
-    CBLSId id;
-    id.SetInt(i);
-    return id;
-}
-
-CBLSId CBLSId::FromHash(const uint256& hash)
-{
-    CBLSId id;
-    id.SetHash(hash);
-    return id;
 }
 
 void CBLSSecretKey::AggregateInsecure(const CBLSSecretKey& o)

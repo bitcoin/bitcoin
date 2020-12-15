@@ -219,11 +219,7 @@ public:
     using CBLSWrapper::CBLSWrapper;
 
     CBLSId() {}
-    void SetInt(int x);
-    void SetHash(const uint256& hash);
-
-    static CBLSId FromInt(int64_t i);
-    static CBLSId FromHash(const uint256& hash);
+    CBLSId(const uint256& nHash);
 };
 
 class CBLSSecretKey : public CBLSWrapper<bls::PrivateKey, BLS_CURVE_SECKEY_SIZE, CBLSSecretKey>
