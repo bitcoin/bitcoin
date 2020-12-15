@@ -30,6 +30,7 @@ FUZZ_TARGET_INIT(net, initialize_net)
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     CNode node{ConsumeNode(fuzzed_data_provider)};
+    SetMockTime(ConsumeTime(fuzzed_data_provider));
     while (fuzzed_data_provider.ConsumeBool()) {
         CallOneOf(
             fuzzed_data_provider,
