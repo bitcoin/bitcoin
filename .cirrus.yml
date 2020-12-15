@@ -81,6 +81,8 @@ task:
 
 task:
   name: '[previous releases, uses qt5 dev package and some depends packages] [unsigned char] [bionic]'
+  # For faster CI feedback, immediately schedule a task that compiles most modules. https://cirrus-ci.org/pricing/#compute-credits
+  use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'bitcoin/bitcoin'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:bionic
