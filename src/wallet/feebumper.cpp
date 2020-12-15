@@ -246,7 +246,12 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     }
     // Write back new fee if successful
     new_fee = fee_ret;
-
+    // Mark new tx not replaceable, if requested.
+    if (!coin_control.m_signal_bip125_rbf.get_value_or(wallet.m_signal_rbf)) {
+        for (auto& input : mtx.vin) {
+            if (input.nSequence < 0xfffffffe) input.nSequence = 0xfffffffe;
+        }
+    }
     return Result::OK;
 }
 
