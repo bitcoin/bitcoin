@@ -1373,7 +1373,7 @@ bool AppInitParameterInteraction()
             if (!ParseInt64(vDeploymentParams[2], &nTimeout)) {
                 return InitError(strprintf("Invalid nTimeout (%s)", vDeploymentParams[2]));
             }
-            if (vDeploymentParams.size() == 5) {
+            if (vDeploymentParams.size() >= 5) {
                 if (!ParseInt64(vDeploymentParams[3], &nWindowSize)) {
                     return InitError(strprintf("Invalid nWindowSize (%s)", vDeploymentParams[3]));
                 }
