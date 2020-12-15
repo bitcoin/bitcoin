@@ -3390,8 +3390,8 @@ bool CWallet::CreateTransactionInternal(
                     }
                     else
                     {
-                        // SYSCOIN
-                        const bool bPreDefinedChange = nChangePosInOut != -1;
+                        // SYSCOIN change customized as well as destChange in bumpfee, in that case we don't want to modify asset commitments
+                        const bool bPreDefinedChange = nChangePosInOut != -1 && !boost::get<CNoDestination>(&coin_control.destChange);
                         if (nChangePosInOut == -1)
                         {
                             // Insert change txn at random position:
