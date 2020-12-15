@@ -6,6 +6,7 @@
 #include <test/util/setup_common.h>
 #include <uint256.h>
 #include <util/memory.h>
+#include <clocale>
 
 #include <memory>
 
@@ -399,8 +400,44 @@ BOOST_AUTO_TEST_CASE(iterator_string_ordering)
     }
 }
 
+//BOOST_AUTO_TEST_CASE(unicodepath)
+//{
+//    // https://cplusplus.com/reference/clocale/setlocale/
+//    // https://en.cppreference.com/w/cpp/locale/codecvt_utf8_utf16
+//    // https://rextester.com/PXRH65151
+//    // https://docs.microsoft.com/en-us/cpp/standard-library/filesystem-functions?view=msvc-160
+//    // https://www.cplusplus.com/forum/beginner/255527/
+//    // https://stackoverflow.com/questions/63175473/passing-unicode-sfstring-into-stdfilesystemu8path
+//    // https://stackoverflow.com/questions/58521857/cross-platform-way-to-handle-stdstring-stdwstring-with-stdfilesystempath
+//    // https://stackoverflow.com/questions/45401822/how-to-convert-filesystem-path-to-string
+//
+//    // Attempt to create a database with a UTF8 character in the path.
+//    // On Windows this test will fail if the directory is created using
+//    // the ANSI CreateDirectoryA call and the code page isn't UTF8.
+//    // It will succeed if created with CreateDirectoryW.
+//    //fs::u8path(u8"test_runner_₿_🏃_20191128_104644");
+//
+//    //fs::path testPath = U8ToW(u8"test_runner_₿_🏃_20191128_104644");
+//
+//    std::setlocale(LC_ALL, "en_US.UTF-8");
+//
+//    //fs::path ph = GetDataDir() / U8ToW(u8"test_runner_₿_🏃_20191128_104644");
+//    //fs::path path = U8ToW(u8"愛.txt");
+//    fs::path ph = fs::u8path(u8"愛.txt");
+//
+//    fs::path phStemp = ph.stem();
+//    std::string m_name = phStemp.string();
+//
+//    CDBWrapper dbw(ph, (1 << 20));
+//
+//    fs::path lockPath = ph / "LOCK";
+//    BOOST_CHECK(fs::exists(lockPath));
+//}
+
 BOOST_AUTO_TEST_CASE(unicodepath)
 {
+    std::setlocale(LC_ALL, "en_US.UTF-8");
+
     // Attempt to create a database with a UTF8 character in the path.
     // On Windows this test will fail if the directory is created using
     // the ANSI CreateDirectoryA call and the code page isn't UTF8.
