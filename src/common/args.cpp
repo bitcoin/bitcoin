@@ -1061,6 +1061,13 @@ void ArgsManager::ModifyRWConfigFile(const std::map<std::string, std::string>& s
         fs::remove(rwconf_new_path);
         throw std::ios_base::failure(strprintf("Failed to replace %s", fs::PathToString(rwconf_new_path)));
     }
+    if (!IsArgNegated("-settings")) {
+        // Also save to settings.json for Core (0.21+) compatibility
+        for (const auto& setting_change : settings_to_change) {
+            m_settings.rw_settings[setting_change.first] = setting_change.second;
+        }
+        WriteSettingsFile();
+    }
 }
 
 void ArgsManager::ModifyRWConfigFile(const std::string& setting_to_change, const std::string& new_value)
