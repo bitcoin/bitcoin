@@ -346,6 +346,27 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     // TOR, invalid base32
     BOOST_CHECK(!addr.SetSpecial(std::string{"mf*g zak.onion"}));
 
+    // I2P
+    const char* i2p_addr = "udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.i2p";
+    BOOST_REQUIRE(addr.SetSpecial(i2p_addr));
+    BOOST_REQUIRE(addr.IsValid());
+    BOOST_REQUIRE(addr.IsI2P());
+
+    BOOST_CHECK(!addr.IsBindAny());
+    BOOST_CHECK(!addr.IsAddrV1Compatible());
+    BOOST_CHECK_EQUAL(addr.ToString(), i2p_addr);
+
+    // I2P, malicious
+    BOOST_CHECK(!addr.SetSpecial(std::string{
+        "udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna\0wtf.b32.i2p", 64}));
+
+    // I2P, valid but unsupported
+    BOOST_CHECK(!addr.SetSpecial(std::string{"pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscsad.b32.i2p"}));
+
+    // I2P, invalid base32
+    BOOST_CHECK(!addr.SetSpecial(std::string{"tp*szydbh4dp.b32.i2p"}));
+
+
     // Internal
     addr.SetInternal("esffpp");
     BOOST_REQUIRE(!addr.IsValid()); // "internal" is considered invalid

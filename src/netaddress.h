@@ -150,8 +150,7 @@ class CNetAddr
         void SetLegacyIPv6(Span<const uint8_t> ipv6);
 
         bool SetInternal(const std::string& name);
-
-        bool SetSpecial(const std::string &strName); // for Tor addresses
+        bool SetSpecial(const std::string &strName); // for addresses that doesn't fit in IPv6 addresses
         bool IsBindAny() const; // INADDR_ANY equivalent
         bool IsIPv4() const;    // IPv4 mapped address (::FFFF:0:0/96, 0.0.0.0/0)
         bool IsIPv6() const;    // IPv6 address (not mapped IPv4, not Tor)
@@ -287,6 +286,25 @@ class CNetAddr
          * networks (id 1..6) with wrong address size.
          */
         bool SetNetFromBIP155Network(uint8_t possible_bip155_net, size_t address_size);
+
+        /**
+         * Parse a TOR address and set this object to it.
+         *
+         * @returns Whether or not the operation was successful.
+         *
+         * @see CNetAddr::IsTor()
+         */
+        bool SetTor(const std::string &strName); // for Tor addresses
+
+        /**
+         * Parse a I2P address and set this object to it.
+         *
+         * @returns Whether or not the operation was successful.
+         *
+         * @see CNetAddr::IsI2P()
+         */
+        bool SetI2P(const std::string &strName); // for I2P addresses
+
 
         /**
          * Serialize in pre-ADDRv2/BIP155 format to an array.
