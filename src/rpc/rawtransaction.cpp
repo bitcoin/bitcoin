@@ -887,7 +887,11 @@ static RPCHelpMan sendrawtransaction()
     if (!json_ign_rejs->isNull()) {
         for (size_t i = 0; i < json_ign_rejs->size(); ++i) {
             const UniValue& json_ign_rej = (*json_ign_rejs)[i];
-            ignore_rejects.insert(json_ign_rej.get_str());
+            const std::string& ign_rej = json_ign_rej.get_str();
+            ignore_rejects.insert(ign_rej);
+        }
+        if (ignore_rejects.count("absurdly-high-fee") || ignore_rejects.count("max-fee-exceeded")) {
+            max_raw_tx_fee = MAX_MONEY;
         }
     }
 
