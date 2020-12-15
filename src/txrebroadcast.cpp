@@ -245,3 +245,9 @@ void TxRebroadcastHandler::TrimMaxRebroadcast()
         }
     }
 };
+
+void TxRebroadcastHandler::UpdateCachedFeeRate(const CFeeRate& new_fee_rate)
+{
+    LOCK(m_rebroadcast_mutex);
+    m_cached_fee_rate = new_fee_rate;
+};

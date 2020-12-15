@@ -53,6 +53,9 @@ public:
     /** Remove transaction entry from the attempt tracker.*/
     void RemoveFromAttemptTracker(const CTransactionRef& tx);
 
+    /** Test only */
+    void UpdateCachedFeeRate(const CFeeRate& new_fee_rate);
+
 private:
     const CTxMemPool& m_mempool;
     const ChainstateManager& m_chainman;
