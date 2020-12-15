@@ -568,12 +568,15 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_Window">
        <item>
-        <widget class="QCheckBox" name="hideTrayIcon">
+        <widget class="QCheckBox" name="showTrayIcon">
          <property name="toolTip">
-          <string>Hide the icon from the system tray.</string>
+          <string>Show the icon in the system tray.</string>
          </property>
          <property name="text">
-          <string>&amp;Hide tray icon</string>
+          <string>&amp;Show tray icon</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
          </property>
         </widget>
        </item>

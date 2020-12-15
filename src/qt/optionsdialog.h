@@ -57,7 +57,7 @@ private Q_SLOTS:
     void on_okButton_clicked();
     void on_cancelButton_clicked();
 
-    void on_hideTrayIcon_stateChanged(int fState);
+    void on_showTrayIcon_stateChanged(int state);
 
     void togglePruneWarning(bool enabled);
     void showRestartWarning(bool fPersistent = false);
