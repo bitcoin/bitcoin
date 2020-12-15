@@ -155,6 +155,7 @@ BASE_SCRIPTS= [
     'p2p_unrequested_blocks.py', # NOTE: needs dash_hash to pass
     'feature_shutdown.py',
     'rpc_privatesend.py',
+    'rpc_masternode.py',
     'p2p_fingerprint.py',
     'rpc_platform_filter.py',
     'feature_dip0020_activation.py',
