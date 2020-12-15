@@ -3,8 +3,11 @@
 # ItCoin
 #
 # Builds a docker image for itcoin-core from the current working copy.
-# The image is tagged (for now) with the fixed hard coded tag
-# itcoin:git-bc177a0bd9e, which will be used by subsequent steps.
+# The image is named "arthub.azurecr.io/itcoin-core", and tagged with "git-"
+# plus a 12 digits long git hash of the current version.
+#
+# EXAMPLE:
+#    arthub.azurecr.io/itcoin-core:git-2a43646f76e4
 #
 # REQUIREMENTS:
 # - docker, version >= 17.06
@@ -34,7 +37,7 @@ checkPrerequisites
 # https://stackoverflow.com/questions/59895/how-to-get-the-source-directory-of-a-bash-script-from-within-the-script-itself#246128
 MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-IMAGE_NAME="itcoin"
-IMAGE_TAG="git-bc177a0bd9e4"
+IMAGE_NAME="arthub.azurecr.io/itcoin-core"
+IMAGE_TAG="git-"$("${MYDIR}"/compute-git-hash.sh)
 
 docker build --tag "${IMAGE_NAME}:${IMAGE_TAG}" "${MYDIR}/.."

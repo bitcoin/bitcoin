@@ -17,7 +17,15 @@
 
 set -eu
 
-ITCOIN_IMAGE="itcoin:git-bc177a0bd9e4"
+# https://stackoverflow.com/questions/59895/how-to-get-the-source-directory-of-a-bash-script-from-within-the-script-itself/246128#246128
+MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+ITCOIN_IMAGE_NAME="arthub.azurecr.io/itcoin-core"
+
+# this uses the current checked out version. If you want to use a different
+# version, you'll have to modify this variable, for now.
+ITCOIN_IMAGE_TAG="git-"$("${MYDIR}"/compute-git-hash.sh)
+
 EPHEMERAL_DAEMON="itcoin-ephemeral-daemon"
 JSON_RPC_REGTEST_PORT=18443
 
@@ -49,6 +57,9 @@ trap cleanup EXIT
 
 # Do not run if the required packages are not installed
 checkPrerequisites
+
+ITCOIN_IMAGE="${ITCOIN_IMAGE_NAME}:${ITCOIN_IMAGE_TAG}"
+errecho "Using itcoin docker image ${ITCOIN_IMAGE}"
 
 # 1. run an ephemeral itcoin daemon to build the keys
 errecho "ItCoin daemon: trying to start image ${ITCOIN_IMAGE} in container ${EPHEMERAL_DAEMON}"

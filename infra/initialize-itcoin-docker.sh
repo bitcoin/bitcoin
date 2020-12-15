@@ -22,7 +22,12 @@ set -eu
 MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # These should probably be taken from cmdline
-ITCOIN_IMAGE="itcoin:git-bc177a0bd9e4"
+ITCOIN_IMAGE_NAME="arthub.azurecr.io/itcoin-core"
+
+# this uses the current checked out version. If you want to use a different
+# version, you'll have to modify this variable, for now.
+ITCOIN_IMAGE_TAG="git-"$("${MYDIR}"/compute-git-hash.sh)
+
 CONTAINER_NAME="itcoin-node"
 EXTERNAL_DATADIR="${MYDIR}/datadir"
 INTERNAL_DATADIR="/opt/itcoin-core/datadir"
@@ -55,6 +60,9 @@ trap cleanup EXIT
 
 # Do not run if the required packages are not installed
 checkPrerequisites
+
+ITCOIN_IMAGE="${ITCOIN_IMAGE_NAME}:${ITCOIN_IMAGE_TAG}"
+errecho "Using itcoin docker image ${ITCOIN_IMAGE}"
 
 KEYPAIR=$("${MYDIR}/create-keypair-docker.sh")
 
