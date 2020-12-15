@@ -391,7 +391,7 @@ static RPCHelpMan syscoinburntoassetallocation()
     std::vector<CRecipient> vecSend;
     vecSend.push_back(burn);
     vecSend.push_back(recp);
-    if(nAuxFee > 0) {
+    if(nAuxFee > 0 && !theAsset.auxFeeDetails.vchAuxFeeKeyID.empty()) {
         const CScript& scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uint160{theAsset.auxFeeDetails.vchAuxFeeKeyID}));
         CTxOut change_prototype_txout(0, scriptPubKey);
         CRecipient recpAF = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
@@ -1489,7 +1489,7 @@ static RPCHelpMan assetallocationburn()
         mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
     // burn output
     mtx.vout.push_back(CTxOut(fee.nAmount, fee.scriptPubKey));
-    if(nAuxFee > 0) {
+    if(nAuxFee > 0 && !theAsset.auxFeeDetails.vchAuxFeeKeyID.empty()) {
         const CScript& scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uint160{theAsset.auxFeeDetails.vchAuxFeeKeyID}));
         CTxOut change_prototype_txout(0, scriptPubKey);
         CRecipient recpAF = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
