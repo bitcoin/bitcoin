@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(merkleblock)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     CPartialMerkleTree partial_merkle_tree;

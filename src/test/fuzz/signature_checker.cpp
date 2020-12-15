@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-void initialize()
+void initialize_signature_checker()
 {
     static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
 }
@@ -52,7 +52,7 @@ public:
 };
 } // namespace
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET_INIT(signature_checker, initialize_signature_checker)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const unsigned int flags = fuzzed_data_provider.ConsumeIntegral<unsigned int>();

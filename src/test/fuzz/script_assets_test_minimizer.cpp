@@ -188,9 +188,9 @@ void Test(const std::string& str)
 
 ECCVerifyHandle handle;
 
-}
+} // namespace
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(script_assets_test_minimizer)
 {
     if (buffer.size() < 2 || buffer.back() != '\n' || buffer[buffer.size() - 2] != ',') return;
     const std::string str((const char*)buffer.data(), buffer.size() - 2);

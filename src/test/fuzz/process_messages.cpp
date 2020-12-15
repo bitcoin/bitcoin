@@ -19,7 +19,7 @@
 
 const TestingSetup* g_setup;
 
-void initialize()
+void initialize_process_messages()
 {
     static TestingSetup setup{
         CBaseChainParams::REGTEST,
@@ -35,7 +35,7 @@ void initialize()
     SyncWithValidationInterfaceQueue();
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 

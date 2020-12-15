@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(str_printf)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const std::string format_string = fuzzed_data_provider.ConsumeRandomLengthString(64);

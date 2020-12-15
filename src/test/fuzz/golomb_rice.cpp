@@ -54,7 +54,7 @@ std::vector<uint64_t> BuildHashedSet(const std::unordered_set<std::vector<uint8_
 }
 } // namespace
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(golomb_rice)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     std::vector<uint8_t> golomb_rice_data;
