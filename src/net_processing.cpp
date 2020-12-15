@@ -4170,7 +4170,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
         //
         std::vector<CInv> vInv;
         {
-            size_t reserve = std::min<size_t>(pto->setInventoryTxToSend.size(), INVENTORY_BROADCAST_MAX_PER_1MB_BLOCK * MaxBlockSize(true) / 1000000);
+            size_t reserve = std::min<size_t>(pto->setInventoryTxToSend.size(), INVENTORY_BROADCAST_MAX_PER_1MB_BLOCK * MaxBlockSize() / 1000000);
             reserve = std::max<size_t>(reserve, pto->vInventoryBlockToSend.size());
             reserve = std::min<size_t>(reserve, MAX_INV_SZ);
             vInv.reserve(reserve);
@@ -4268,7 +4268,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                 // especially since we have many peers and some will draw much shorter delays.
                 unsigned int nRelayedTransactions = 0;
                 LOCK(pto->cs_filter);
-                while (!vInvTx.empty() && nRelayedTransactions < INVENTORY_BROADCAST_MAX_PER_1MB_BLOCK * MaxBlockSize(true) / 1000000) {
+                while (!vInvTx.empty() && nRelayedTransactions < INVENTORY_BROADCAST_MAX_PER_1MB_BLOCK * MaxBlockSize() / 1000000) {
                     // Fetch the top element from the heap
                     std::pop_heap(vInvTx.begin(), vInvTx.end(), compareInvMempoolOrder);
                     std::set<uint256>::iterator it = vInvTx.back();

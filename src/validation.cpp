@@ -3548,7 +3548,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     // because we receive the wrong transactions for it.
 
     // Size limits (relaxed)
-    if (block.vtx.empty() || block.vtx.size() > MaxBlockSize(true) || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MaxBlockSize(true))
+    if (block.vtx.empty() || block.vtx.size() > MaxBlockSize() || ::GetSerializeSize(block, SER_NETWORK, PROTOCOL_VERSION) > MaxBlockSize())
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-length", false, "size limits failed");
 
     // First transaction must be coinbase, the rest must not be
@@ -3570,7 +3570,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         nSigOps += GetLegacySigOpCount(*tx);
     }
     // sigops limits (relaxed)
-    if (nSigOps > MaxBlockSigOps(true))
+    if (nSigOps > MaxBlockSigOps())
         return state.DoS(100, false, REJECT_INVALID, "bad-blk-sigops", false, "out-of-bounds SigOpCount");
 
     if (fCheckPOW && fCheckMerkleRoot)
@@ -4710,7 +4710,7 @@ bool LoadExternalBlockFile(const CChainParams& chainparams, FILE* fileIn, CDiskB
 
     int nLoaded = 0;
     try {
-        unsigned int nMaxBlockSize = MaxBlockSize(true);
+        unsigned int nMaxBlockSize = MaxBlockSize();
         // This takes over fileIn and calls fclose() on it in the CBufferedFile destructor
         CBufferedFile blkdat(fileIn, 2*nMaxBlockSize, nMaxBlockSize+8, SER_DISK, CLIENT_VERSION);
         uint64_t nRewind = blkdat.GetPos();
