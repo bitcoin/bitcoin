@@ -106,6 +106,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "sendrawtransaction", 2, "ignore_rejects" },
     { "testmempoolaccept", 0, "rawtxs" },
     { "testmempoolaccept", 1, "maxfeerate" },
+    { "testmempoolaccept", 2, "ignore_rejects" },
     { "combinerawtransaction", 0, "txs" },
     { "fundrawtransaction", 1, "options" },
     { "fundrawtransaction", 2, "iswitness" },
