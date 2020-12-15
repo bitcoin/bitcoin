@@ -84,7 +84,7 @@ CBLSPublicKey CQuorum::GetPubKeyShare(size_t memberIdx) const
         return CBLSPublicKey();
     }
     auto& m = members[memberIdx];
-    return blsCache.BuildPubKeyShare(m->proTxHash, quorumVvec, CBLSId::FromHash(m->proTxHash));
+    return blsCache.BuildPubKeyShare(m->proTxHash, quorumVvec, CBLSId(m->proTxHash));
 }
 
 CBLSSecretKey CQuorum::GetSkShare() const
