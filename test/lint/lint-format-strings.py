@@ -21,6 +21,8 @@ FALSE_POSITIVES = [
     ("src/qt/networkstyle.cpp", "strprintf(titleAddText, gArgs.GetDevNetName())"),
     ("src/rpc/rpcevo.cpp", "strprintf(it->second, nParamNum)"),
     ("src/stacktraces.cpp", "strprintf(fmtStr, i, si.pc, lstr, fstr)"),
+    ("src/statsd_client.cpp", "snprintf(d->errmsg, sizeof(d->errmsg), \"could not create socket, err=%m\")"),
+    ("src/statsd_client.cpp", "snprintf(d->errmsg, sizeof(d->errmsg), \"sendto server fail, host=%s:%d, err=%m\", d->host.c_str(), d->port)"),
     ("src/util.cpp", "strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION))"),
     ("src/util.cpp", "strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION)"),
     ("src/wallet/wallet.h",  "WalletLogPrintf(std::string fmt, Params... parameters)"),

@@ -490,6 +490,7 @@ private:
     void AcceptConnection(const ListenSocket& hListenSocket);
     void DisconnectNodes();
     void NotifyNumConnectionsChanged();
+    void CalculateNumConnectionsChangedStats();
     void InactivityCheck(CNode *pnode);
     bool GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
 #ifdef USE_EPOLL

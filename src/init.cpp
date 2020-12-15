@@ -16,6 +16,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <checkpoints.h>
+#include <node/coinstats.h>
 #include <compat/sanity.h>
 #include <consensus/validation.h>
 #include <fs.h>
@@ -63,6 +64,8 @@
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_init.h>
 #include <llmq/quorums_blockprocessor.h>
+
+#include <statsd_client.h>
 
 #include <stdint.h>
 #include <stdio.h>
@@ -655,6 +658,14 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-rpcuser=<user>", _("Username for JSON-RPC connections"));
     strUsage += HelpMessageOpt("-server", _("Accept command line and JSON-RPC commands"));
 
+    strUsage += HelpMessageGroup(_("Statsd options:"));
+    strUsage += HelpMessageOpt("-statsenabled", strprintf(_("Publish internal stats to statsd (default: %u)"), DEFAULT_STATSD_ENABLE));
+    strUsage += HelpMessageOpt("-statshost=<ip>", strprintf(_("Specify statsd host (default: %s)"), DEFAULT_STATSD_HOST));
+    strUsage += HelpMessageOpt("-statshostname=<ip>", strprintf(_("Specify statsd host name (default: %s)"), DEFAULT_STATSD_HOSTNAME));
+    strUsage += HelpMessageOpt("-statsport=<port>", strprintf(_("Specify statsd port (default: %u)"), DEFAULT_STATSD_PORT));
+    strUsage += HelpMessageOpt("-statsns=<ns>", strprintf(_("Specify additional namespace prefix (default: %s)"), DEFAULT_STATSD_NAMESPACE));
+    strUsage += HelpMessageOpt("-statsperiod=<seconds>", strprintf(_("Specify the number of seconds between periodic measurements (default: %d)"), DEFAULT_STATSD_PERIOD));
+
     return strUsage;
 }
 
@@ -867,6 +878,56 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
         LoadMempool();
     }
     g_is_mempool_loaded = !fRequestShutdown;
+}
+
+void PeriodicStats()
+{
+    assert(gArgs.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE));
+    CCoinsStats stats;
+    FlushStateToDisk();
+    if (GetUTXOStats(pcoinsdbview.get(), stats)) {
+        statsClient.gauge("utxoset.tx", stats.nTransactions, 1.0f);
+        statsClient.gauge("utxoset.txOutputs", stats.nTransactionOutputs, 1.0f);
+        statsClient.gauge("utxoset.dbSizeBytes", stats.nDiskSize, 1.0f);
+        statsClient.gauge("utxoset.blockHeight", stats.nHeight, 1.0f);
+        statsClient.gauge("utxoset.totalAmount", (double)stats.nTotalAmount / (double)COIN, 1.0f);
+    } else {
+        // something went wrong
+        LogPrintf("%s: GetUTXOStats failed\n", __func__);
+    }
+    statsClient.gauge("transactions.txCacheSize", pcoinsTip->GetCacheSize(), 1.0f);
+
+    // short version of GetNetworkHashPS(120, -1);
+    CBlockIndex *tip;
+    {
+        LOCK(cs_main);
+        tip = chainActive.Tip();
+        assert(tip);
+    }
+    CBlockIndex *pindex = tip;
+    int64_t minTime = pindex->GetBlockTime();
+    int64_t maxTime = minTime;
+    for (int i = 0; i < 120 && pindex->pprev != nullptr; i++) {
+        pindex = pindex->pprev;
+        int64_t time = pindex->GetBlockTime();
+        minTime = std::min(time, minTime);
+        maxTime = std::max(time, maxTime);
+    }
+    arith_uint256 workDiff = tip->nChainWork - pindex->nChainWork;
+    int64_t timeDiff = maxTime - minTime;
+    double nNetworkHashPS = workDiff.getdouble() / timeDiff;
+
+    statsClient.gauge("network.hashesPerSecond", nNetworkHashPS);
+    statsClient.gauge("network.terahashesPerSecond", nNetworkHashPS / 1e12);
+    statsClient.gauge("network.petahashesPerSecond", nNetworkHashPS / 1e15);
+    statsClient.gauge("network.exahashesPerSecond", nNetworkHashPS / 1e18);
+    // No need for cs_main, we never use null tip here
+    statsClient.gauge("network.difficulty", (double)GetDifficulty(tip));
+
+    statsClient.gauge("transactions.mempool.totalTransactions", mempool.size(), 1.0f);
+    statsClient.gauge("transactions.mempool.totalTxBytes", (int64_t) mempool.GetTotalTxSize(), 1.0f);
+    statsClient.gauge("transactions.mempool.memoryUsageBytes", (int64_t) mempool.DynamicMemoryUsage(), 1.0f);
+    statsClient.gauge("transactions.mempool.minFeePerKb", mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK(), 1.0f);
 }
 
 /** Sanity checks
@@ -2212,6 +2273,11 @@ bool AppInitMain()
 
     if (fMasternodeMode) {
         scheduler.scheduleEvery(std::bind(&CPrivateSendServer::DoMaintenance, std::ref(privateSendServer), std::ref(*g_connman)), 1 * 1000);
+    }
+
+    if (gArgs.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE)) {
+        int nStatsPeriod = std::min(std::max((int)gArgs.GetArg("-statsperiod", DEFAULT_STATSD_PERIOD), MIN_STATSD_PERIOD), MAX_STATSD_PERIOD);
+        scheduler.scheduleEvery(PeriodicStats, nStatsPeriod * 1000);
     }
 
     llmq::StartLLMQSystem();

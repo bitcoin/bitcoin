@@ -28,6 +28,8 @@
 #include <privatesend/privatesend.h>
 #include <evo/deterministicmns.h>
 
+#include <statsd_client.h>
+
 #ifdef WIN32
 #include <string.h>
 #else
@@ -507,6 +509,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
     CAddress addr_bind = GetBindAddress(hSocket);
     CNode* pnode = new CNode(id, nLocalServices, GetBestHeight(), hSocket, addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", false);
     pnode->AddRef();
+    statsClient.inc("peers.connect", 1.0f);
 
     return pnode;
 }
@@ -559,6 +562,7 @@ void CNode::CloseSocketDisconnect(CConnman* connman)
 
     LogPrint(BCLog::NET, "disconnecting peer=%d\n", id);
     CloseSocket(hSocket);
+    statsClient.inc("peers.disconnect", 1.0f);
 }
 
 void CConnman::ClearBanned()
@@ -860,6 +864,7 @@ bool CNode::ReceiveMsgBytes(const char *pch, unsigned int nBytes, bool& complete
                 i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
             assert(i != mapRecvBytesPerMsgCmd.end());
             i->second += msg.hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
+            statsClient.count("bandwidth.message." + std::string(msg.hdr.pchCommand) + ".bytesReceived", msg.hdr.nMessageSize + CMessageHeader::HEADER_SIZE, 1.0f);
 
             msg.nTime = nTimeMicros;
             complete = true;
@@ -1402,7 +1407,68 @@ void CConnman::NotifyNumConnectionsChanged()
         nPrevNodeCount = vNodesSize;
         if(clientInterface)
             clientInterface->NotifyNumConnectionsChanged(vNodesSize);
+
+        CalculateNumConnectionsChangedStats();
     }
+}
+
+void CConnman::CalculateNumConnectionsChangedStats()
+{
+    if (!gArgs.GetBoolArg("-statsenabled", DEFAULT_STATSD_ENABLE)) {
+        return;
+    }
+
+    // count various node attributes for statsD
+    int fullNodes = 0;
+    int spvNodes = 0;
+    int inboundNodes = 0;
+    int outboundNodes = 0;
+    int ipv4Nodes = 0;
+    int ipv6Nodes = 0;
+    int torNodes = 0;
+    mapMsgCmdSize mapRecvBytesMsgStats;
+    mapMsgCmdSize mapSentBytesMsgStats;
+    for (const std::string &msg : getAllNetMessageTypes()) {
+        mapRecvBytesMsgStats[msg] = 0;
+        mapSentBytesMsgStats[msg] = 0;
+    }
+    mapRecvBytesMsgStats[NET_MESSAGE_COMMAND_OTHER] = 0;
+    mapSentBytesMsgStats[NET_MESSAGE_COMMAND_OTHER] = 0;
+    LOCK(cs_vNodes);
+    for (const CNode* pnode : vNodes) {
+        for (const mapMsgCmdSize::value_type &i : pnode->mapRecvBytesPerMsgCmd)
+            mapRecvBytesMsgStats[i.first] += i.second;
+        for (const mapMsgCmdSize::value_type &i : pnode->mapSendBytesPerMsgCmd)
+            mapSentBytesMsgStats[i.first] += i.second;
+        if(pnode->fClient)
+            spvNodes++;
+        else
+            fullNodes++;
+        if(pnode->fInbound)
+            inboundNodes++;
+        else
+            outboundNodes++;
+        if(pnode->addr.IsIPv4())
+            ipv4Nodes++;
+        if(pnode->addr.IsIPv6())
+            ipv6Nodes++;
+        if(pnode->addr.IsTor())
+            torNodes++;
+        if(pnode->nPingUsecTime > 0)
+            statsClient.timing("peers.ping_us", pnode->nPingUsecTime, 1.0f);
+    }
+    for (const std::string &msg : getAllNetMessageTypes()) {
+        statsClient.gauge("bandwidth.message." + msg + ".totalBytesReceived", mapRecvBytesMsgStats[msg], 1.0f);
+        statsClient.gauge("bandwidth.message." + msg + ".totalBytesSent", mapSentBytesMsgStats[msg], 1.0f);
+    }
+    statsClient.gauge("peers.totalConnections", nPrevNodeCount, 1.0f);
+    statsClient.gauge("peers.spvNodeConnections", spvNodes, 1.0f);
+    statsClient.gauge("peers.fullNodeConnections", fullNodes, 1.0f);
+    statsClient.gauge("peers.inboundConnections", inboundNodes, 1.0f);
+    statsClient.gauge("peers.outboundConnections", outboundNodes, 1.0f);
+    statsClient.gauge("peers.ipv4Connections", ipv4Nodes, 1.0f);
+    statsClient.gauge("peers.ipv6Connections", ipv6Nodes, 1.0f);
+    statsClient.gauge("peers.torConnections", torNodes, 1.0f);
 }
 
 void CConnman::InactivityCheck(CNode *pnode)
@@ -3535,12 +3601,16 @@ void CConnman::RecordBytesRecv(uint64_t bytes)
 {
     LOCK(cs_totalBytesRecv);
     nTotalBytesRecv += bytes;
+    statsClient.count("bandwidth.bytesReceived", bytes, 0.1f);
+    statsClient.gauge("bandwidth.totalBytesReceived", nTotalBytesRecv, 0.01f);
 }
 
 void CConnman::RecordBytesSent(uint64_t bytes)
 {
     LOCK(cs_totalBytesSent);
     nTotalBytesSent += bytes;
+    statsClient.count("bandwidth.bytesSent", bytes, 0.01f);
+    statsClient.gauge("bandwidth.totalBytesSent", nTotalBytesSent, 0.01f);
 
     uint64_t now = GetTime();
     if (nMaxOutboundCycleStartTime + nMaxOutboundTimeframe < now)
@@ -3749,6 +3819,8 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
     size_t nMessageSize = msg.data.size();
     size_t nTotalSize = nMessageSize + CMessageHeader::HEADER_SIZE;
     LogPrint(BCLog::NET, "sending %s (%d bytes) peer=%d\n",  SanitizeString(msg.command.c_str()), nMessageSize, pnode->GetId());
+    statsClient.count("bandwidth.message." + SanitizeString(msg.command.c_str()) + ".bytesSent", nTotalSize, 1.0f);
+    statsClient.inc("message.sent." + SanitizeString(msg.command.c_str()), 1.0f);
 
     std::vector<unsigned char> serializedHeader;
     serializedHeader.reserve(CMessageHeader::HEADER_SIZE);

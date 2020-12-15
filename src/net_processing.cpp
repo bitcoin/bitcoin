@@ -54,6 +54,8 @@
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
 
+#include <statsd_client.h>
+
 #if defined(NDEBUG)
 # error "Dash Core cannot be compiled without assertions."
 #endif
@@ -961,6 +963,8 @@ bool AddOrphanTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRE
 
     LogPrint(BCLog::MEMPOOL, "stored orphan tx %s (mapsz %u outsz %u)\n", hash.ToString(),
              mapOrphanTransactions.size(), mapOrphanTransactionsByPrev.size());
+    statsClient.inc("transactions.orphans.add", 1.0f);
+    statsClient.gauge("transactions.orphans", mapOrphanTransactions.size());
     return true;
 }
 
@@ -981,6 +985,8 @@ int static EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
     assert(nMapOrphanTransactionsSize >= it->second.nTxSize);
     nMapOrphanTransactionsSize -= it->second.nTxSize;
     mapOrphanTransactions.erase(it);
+    statsClient.inc("transactions.orphans.remove", 1.0f);
+    statsClient.gauge("transactions.orphans", mapOrphanTransactions.size());
     return 1;
 }
 
@@ -1060,8 +1066,11 @@ void Misbehaving(NodeId pnode, int howmuch, const std::string& message) EXCLUSIV
     {
         LogPrint(BCLog::NET, "%s: %s peer=%d (%d -> %d) BAN THRESHOLD EXCEEDED%s\n", __func__, state->name, pnode, state->nMisbehavior-howmuch, state->nMisbehavior, message_prefixed);
         state->fShouldBan = true;
-    } else
+        statsClient.inc("misbehavior.banned", 1.0f);
+    } else {
         LogPrint(BCLog::NET, "%s: %s peer=%d (%d -> %d)%s\n", __func__, state->name, pnode, state->nMisbehavior-howmuch, state->nMisbehavior, message_prefixed);
+        statsClient.count("misbehavior.amount", howmuch, 1.0);
+    }
 }
 
 // Requires cs_main.
@@ -2043,9 +2052,30 @@ void static ProcessOrphanTx(CConnman* connman, std::set<uint256>& orphan_work_se
     }
 }
 
+std::string RejectCodeToString(const unsigned char code)
+{
+    if (code == REJECT_MALFORMED)
+        return "malformed";
+    if (code == REJECT_INVALID)
+        return "invalid";
+    if (code == REJECT_OBSOLETE)
+        return "obsolete";
+    if (code == REJECT_DUPLICATE)
+        return "duplicate";
+    if (code == REJECT_NONSTANDARD)
+        return "nonstandard";
+    if (code == REJECT_INSUFFICIENTFEE)
+        return "insufficientfee";
+    if (code == REJECT_CHECKPOINT)
+        return "checkpoint";
+    return "";
+}
+
 bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, int64_t nTimeReceived, const CChainParams& chainparams, CConnman* connman, const std::atomic<bool>& interruptMsgProc, bool enable_bip61)
 {
     LogPrint(BCLog::NET, "received: %s (%u bytes) peer=%d\n", SanitizeString(strCommand), vRecv.size(), pfrom->GetId());
+    statsClient.inc("message.received." + SanitizeString(strCommand), 1.0f);
+
     if (gArgs.IsArgSet("-dropmessagestest") && GetRand(gArgs.GetArg("-dropmessagestest", 0)) == 0)
     {
         LogPrintf("dropmessagestest DROPPING RECV MESSAGE\n");
@@ -2092,6 +2122,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             }
             LogPrint(BCLog::NET, "Reject %s\n", SanitizeString(ss.str()));
         }
+        statsClient.inc("message.sent.reject_" + strMsg + "_" + RejectCodeToString(ccode), 1.0f);
         return true;
     }
 
@@ -2424,6 +2455,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             pfrom->fGetAddr = false;
         if (pfrom->fOneShot)
             pfrom->fDisconnect = true;
+        statsClient.gauge("peers.knownAddresses", connman->GetAddressCount(), 1.0f);
         return true;
     }
 
@@ -2495,6 +2527,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
             bool fAlreadyHave = AlreadyHave(inv);
             LogPrint(BCLog::NET, "got inv: %s  %s peer=%d\n", inv.ToString(), fAlreadyHave ? "have" : "new", pfrom->GetId());
+            statsClient.inc(strprintf("message.received.inv_%s", inv.GetCommand()), 1.0f);
 
             if (inv.type == MSG_BLOCK) {
                 UpdateBlockAvailability(pfrom->GetId(), inv.hash);
