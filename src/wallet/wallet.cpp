@@ -249,6 +249,19 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, const std::strin
     uint64_t wallet_creation_flags = options.create_flags;
     const SecureString& passphrase = options.create_passphrase;
 
+    // Sanity check to prevent creating by typo accident a new wallets subdir for mainchain
+    std::string chainname = gArgs.GetChainName();
+    if (chainname == CBaseChainParams::MAIN) {
+        if (!(fs::is_directory(GetWalletDir() / "wallets"))) {
+            if ((name.length() == 7 && std::memcmp(name.c_str(), "wallets", 7) == 0) || std::memcmp(name.c_str(), "wallets/", 8) == 0) {
+                error = Untranslated("Please use a different walletname \"") + Untranslated(name) +
+                        Untranslated("\" - older wallets could be otherwise inaccessible.") + Untranslated(" ") + error;
+                status = DatabaseStatus::FAILED_CREATE;
+                return nullptr;
+            }
+        }
+    }
+
     if (wallet_creation_flags & WALLET_FLAG_DESCRIPTORS) options.require_format = DatabaseFormat::SQLITE;
 
     // Indicate that the wallet is actually supposed to be blank and not just blank to make it encrypted
