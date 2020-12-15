@@ -72,6 +72,9 @@ static constexpr std::chrono::seconds DNSSEEDS_DELAY_FEW_PEERS{11};
 static constexpr std::chrono::minutes DNSSEEDS_DELAY_MANY_PEERS{5};
 static constexpr int DNSSEEDS_DELAY_PEER_THRESHOLD = 1000; // "many" vs "few" peers
 
+/** The default timeframe for -maxuploadtarget. 1 day. */
+static constexpr std::chrono::seconds MAX_UPLOAD_TIMEFRAME{60 * 60 * 24};
+
 // We add a random period time (0 to 1 seconds) to feeler connections to prevent synchronization.
 #define FEELER_SLEEP_WINDOW 1
 
@@ -2847,8 +2850,8 @@ void CConnman::RecordBytesSent(uint64_t bytes)
     LOCK(cs_totalBytesSent);
     nTotalBytesSent += bytes;
 
-    uint64_t now = GetTime();
-    if (nMaxOutboundCycleStartTime + nMaxOutboundTimeframe < now)
+    const auto now = GetTime<std::chrono::seconds>();
+    if (nMaxOutboundCycleStartTime + MAX_UPLOAD_TIMEFRAME < now)
     {
         // timeframe expired, reset cycle
         nMaxOutboundCycleStartTime = now;
@@ -2859,48 +2862,29 @@ void CConnman::RecordBytesSent(uint64_t bytes)
     nMaxOutboundTotalBytesSentInCycle += bytes;
 }
 
-void CConnman::SetMaxOutboundTarget(uint64_t limit)
-{
-    LOCK(cs_totalBytesSent);
-    nMaxOutboundLimit = limit;
-}
-
 uint64_t CConnman::GetMaxOutboundTarget()
 {
     LOCK(cs_totalBytesSent);
     return nMaxOutboundLimit;
 }
 
-uint64_t CConnman::GetMaxOutboundTimeframe()
+std::chrono::seconds CConnman::GetMaxOutboundTimeframe()
 {
-    LOCK(cs_totalBytesSent);
-    return nMaxOutboundTimeframe;
+    return MAX_UPLOAD_TIMEFRAME;
 }
 
-uint64_t CConnman::GetMaxOutboundTimeLeftInCycle()
+std::chrono::seconds CConnman::GetMaxOutboundTimeLeftInCycle()
 {
     LOCK(cs_totalBytesSent);
     if (nMaxOutboundLimit == 0)
-        return 0;
+        return 0s;
 
-    if (nMaxOutboundCycleStartTime == 0)
-        return nMaxOutboundTimeframe;
+    if (nMaxOutboundCycleStartTime.count() == 0)
+        return MAX_UPLOAD_TIMEFRAME;
 
-    uint64_t cycleEndTime = nMaxOutboundCycleStartTime + nMaxOutboundTimeframe;
-    uint64_t now = GetTime();
-    return (cycleEndTime < now) ? 0 : cycleEndTime - GetTime();
-}
-
-void CConnman::SetMaxOutboundTimeframe(uint64_t timeframe)
-{
-    LOCK(cs_totalBytesSent);
-    if (nMaxOutboundTimeframe != timeframe)
-    {
-        // reset measure-cycle in case of changing
-        // the timeframe
-        nMaxOutboundCycleStartTime = GetTime();
-    }
-    nMaxOutboundTimeframe = timeframe;
+    const std::chrono::seconds cycleEndTime = nMaxOutboundCycleStartTime + MAX_UPLOAD_TIMEFRAME;
+    const auto now = GetTime<std::chrono::seconds>();
+    return (cycleEndTime < now) ? 0s : cycleEndTime - now;
 }
 
 bool CConnman::OutboundTargetReached(bool historicalBlockServingLimit)
@@ -2912,8 +2896,8 @@ bool CConnman::OutboundTargetReached(bool historicalBlockServingLimit)
     if (historicalBlockServingLimit)
     {
         // keep a large enough buffer to at least relay each block once
-        uint64_t timeLeftInCycle = GetMaxOutboundTimeLeftInCycle();
-        uint64_t buffer = timeLeftInCycle / 600 * MAX_BLOCK_SERIALIZED_SIZE;
+        const std::chrono::seconds timeLeftInCycle = GetMaxOutboundTimeLeftInCycle();
+        const uint64_t buffer = timeLeftInCycle / std::chrono::minutes{10} * MAX_BLOCK_SERIALIZED_SIZE;
         if (buffer >= nMaxOutboundLimit || nMaxOutboundTotalBytesSentInCycle >= nMaxOutboundLimit - buffer)
             return true;
     }
