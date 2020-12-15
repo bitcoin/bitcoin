@@ -415,9 +415,9 @@ bool CInstantSendManager::ProcessTx(const CTransaction& tx, bool allowReSigning,
 
     auto conflictingLock = GetConflictingLock(tx);
     if (conflictingLock) {
-        auto islockHash = ::SerializeHash(*conflictingLock);
+        auto conflictingLockHash = ::SerializeHash(*conflictingLock);
         LogPrintf("CInstantSendManager::%s -- txid=%s: conflicts with islock %s, txid=%s\n", __func__,
-                  tx.GetHash().ToString(), islockHash.ToString(), conflictingLock->txid.ToString());
+                  tx.GetHash().ToString(), conflictingLockHash.ToString(), conflictingLock->txid.ToString());
         return false;
     }
 
