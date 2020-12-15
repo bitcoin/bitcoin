@@ -369,17 +369,6 @@ static RPCHelpMan syscoinburntoassetallocation()
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(1, nAmount)};
     theAssetAllocation.voutAssets.emplace_back(CAssetOut(nAsset, outVec));
 
-    // aux fees if applicable
-    CAmount nAuxFee;
-    getAuxFee(theAsset.auxFeeDetails, nAmount, nAuxFee);
-    if(nAuxFee > 0 && !theAsset.auxFeeDetails.vchAuxFeeKeyID.empty()){
-        auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
-        if(itVout == theAssetAllocation.voutAssets.end()) {
-                throw JSONRPCError(RPC_DATABASE_ERROR, "Invalid asset not found in voutAssets");
-        }
-        itVout->values.push_back(CAssetOutValue(2, nAuxFee));
-    }
-
     std::vector<unsigned char> data;
     theAssetAllocation.SerializeData(data); 
     
@@ -391,12 +380,6 @@ static RPCHelpMan syscoinburntoassetallocation()
     std::vector<CRecipient> vecSend;
     vecSend.push_back(burn);
     vecSend.push_back(recp);
-    if(nAuxFee > 0 && !theAsset.auxFeeDetails.vchAuxFeeKeyID.empty()) {
-        const CScript& scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uint160{theAsset.auxFeeDetails.vchAuxFeeKeyID}));
-        CTxOut change_prototype_txout(0, scriptPubKey);
-        CRecipient recpAF = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
-        vecSend.push_back(recpAF);
-    }
     CCoinControl coin_control;
     coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
     int nChangePosRet = -1;
@@ -1466,17 +1449,6 @@ static RPCHelpMan assetallocationburn()
 
     const CScript& scriptPubKey = GetScriptForDestination(dest);
     CRecipient recp = {scriptPubKey, nAmount, false };
-    // aux fees if applicable
-    CAmount nAuxFee;
-    getAuxFee(theAsset.auxFeeDetails, nAmount, nAuxFee);
-    if(nAuxFee > 0 && !theAsset.auxFeeDetails.vchAuxFeeKeyID.empty()){
-        auto itVout = std::find_if( burnSyscoin.voutAssets.begin(), burnSyscoin.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
-        if(itVout == burnSyscoin.voutAssets.end()) {
-                throw JSONRPCError(RPC_DATABASE_ERROR, "Invalid asset not found in voutAssets");
-        }
-        itVout->values.push_back(CAssetOutValue(nChangePosRet, nAuxFee));
-        nChangePosRet++;
-    }
 
     std::vector<unsigned char> data;
     burnSyscoin.SerializeData(data);  
@@ -1489,12 +1461,6 @@ static RPCHelpMan assetallocationburn()
         mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
     // burn output
     mtx.vout.push_back(CTxOut(fee.nAmount, fee.scriptPubKey));
-    if(nAuxFee > 0 && !theAsset.auxFeeDetails.vchAuxFeeKeyID.empty()) {
-        const CScript& scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uint160{theAsset.auxFeeDetails.vchAuxFeeKeyID}));
-        CTxOut change_prototype_txout(0, scriptPubKey);
-        CRecipient recpAF = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
-        mtx.vout.push_back(CTxOut(recpAF.nAmount, recpAF.scriptPubKey));
-    }
 
     CAmount nFeeRequired = 0;
     bool lockUnspents = false;
