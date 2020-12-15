@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-void initialize()
+void initialize_addrman()
 {
     SelectParams(CBaseChainParams::REGTEST);
 }
@@ -32,7 +32,7 @@ public:
     }
 };
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET_INIT(addrman, initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));

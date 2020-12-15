@@ -32,19 +32,10 @@
 #include <vector>
 
 namespace {
-
-#ifdef MESSAGE_TYPE
-#define TO_STRING_(s) #s
-#define TO_STRING(s) TO_STRING_(s)
-const std::string LIMIT_TO_MESSAGE_TYPE{TO_STRING(MESSAGE_TYPE)};
-#else
-const std::string LIMIT_TO_MESSAGE_TYPE;
-#endif
-
 const TestingSetup* g_setup;
 } // namespace
 
-void initialize()
+void initialize_process_message()
 {
     static TestingSetup setup{
         CBaseChainParams::REGTEST,
@@ -60,7 +51,7 @@ void initialize()
     SyncWithValidationInterfaceQueue();
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+void fuzz_target(const std::vector<uint8_t>& buffer, const std::string& LIMIT_TO_MESSAGE_TYPE)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     ConnmanTestMsg& connman = *(ConnmanTestMsg*)g_setup->m_node.connman.get();
@@ -88,3 +79,29 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     LOCK2(::cs_main, g_cs_orphans); // See init.cpp for rationale for implicit locking order requirement
     g_setup->m_node.connman->StopNodes();
 }
+
+FUZZ_TARGET_INIT(process_message, initialize_process_message) { fuzz_target(buffer, ""); }
+FUZZ_TARGET_INIT(process_message_addr, initialize_process_message) { fuzz_target(buffer, "addr"); }
+FUZZ_TARGET_INIT(process_message_block, initialize_process_message) { fuzz_target(buffer, "block"); }
+FUZZ_TARGET_INIT(process_message_blocktxn, initialize_process_message) { fuzz_target(buffer, "blocktxn"); }
+FUZZ_TARGET_INIT(process_message_cmpctblock, initialize_process_message) { fuzz_target(buffer, "cmpctblock"); }
+FUZZ_TARGET_INIT(process_message_feefilter, initialize_process_message) { fuzz_target(buffer, "feefilter"); }
+FUZZ_TARGET_INIT(process_message_filteradd, initialize_process_message) { fuzz_target(buffer, "filteradd"); }
+FUZZ_TARGET_INIT(process_message_filterclear, initialize_process_message) { fuzz_target(buffer, "filterclear"); }
+FUZZ_TARGET_INIT(process_message_filterload, initialize_process_message) { fuzz_target(buffer, "filterload"); }
+FUZZ_TARGET_INIT(process_message_getaddr, initialize_process_message) { fuzz_target(buffer, "getaddr"); }
+FUZZ_TARGET_INIT(process_message_getblocks, initialize_process_message) { fuzz_target(buffer, "getblocks"); }
+FUZZ_TARGET_INIT(process_message_getblocktxn, initialize_process_message) { fuzz_target(buffer, "getblocktxn"); }
+FUZZ_TARGET_INIT(process_message_getdata, initialize_process_message) { fuzz_target(buffer, "getdata"); }
+FUZZ_TARGET_INIT(process_message_getheaders, initialize_process_message) { fuzz_target(buffer, "getheaders"); }
+FUZZ_TARGET_INIT(process_message_headers, initialize_process_message) { fuzz_target(buffer, "headers"); }
+FUZZ_TARGET_INIT(process_message_inv, initialize_process_message) { fuzz_target(buffer, "inv"); }
+FUZZ_TARGET_INIT(process_message_mempool, initialize_process_message) { fuzz_target(buffer, "mempool"); }
+FUZZ_TARGET_INIT(process_message_notfound, initialize_process_message) { fuzz_target(buffer, "notfound"); }
+FUZZ_TARGET_INIT(process_message_ping, initialize_process_message) { fuzz_target(buffer, "ping"); }
+FUZZ_TARGET_INIT(process_message_pong, initialize_process_message) { fuzz_target(buffer, "pong"); }
+FUZZ_TARGET_INIT(process_message_sendcmpct, initialize_process_message) { fuzz_target(buffer, "sendcmpct"); }
+FUZZ_TARGET_INIT(process_message_sendheaders, initialize_process_message) { fuzz_target(buffer, "sendheaders"); }
+FUZZ_TARGET_INIT(process_message_tx, initialize_process_message) { fuzz_target(buffer, "tx"); }
+FUZZ_TARGET_INIT(process_message_verack, initialize_process_message) { fuzz_target(buffer, "verack"); }
+FUZZ_TARGET_INIT(process_message_version, initialize_process_message) { fuzz_target(buffer, "version"); }

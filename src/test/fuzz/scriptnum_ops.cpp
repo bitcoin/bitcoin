@@ -24,7 +24,7 @@ bool IsValidSubtraction(const CScriptNum& lhs, const CScriptNum& rhs)
 }
 } // namespace
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(scriptnum_ops)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     CScriptNum script_num = ConsumeScriptNum(fuzzed_data_provider);

@@ -10,12 +10,12 @@
 #include <cstdint>
 #include <vector>
 
-void initialize()
+void initialize_policy_estimator_io()
 {
     InitializeFuzzingContext();
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET_INIT(policy_estimator_io, initialize_policy_estimator_io)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     FuzzedAutoFileProvider fuzzed_auto_file_provider = ConsumeAutoFile(fuzzed_data_provider);

@@ -15,12 +15,12 @@
 #include <optional>
 #include <vector>
 
-void initialize()
+void initialize_signet()
 {
     InitializeFuzzingContext(CBaseChainParams::SIGNET);
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET_INIT(signet, initialize_signet)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     const std::optional<CBlock> block = ConsumeDeserializable<CBlock>(fuzzed_data_provider);

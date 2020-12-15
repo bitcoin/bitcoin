@@ -12,12 +12,12 @@
 #include <limits>
 #include <vector>
 
-void initialize()
+void initialize_p2p_transport_deserializer()
 {
     SelectParams(CBaseChainParams::REGTEST);
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET_INIT(p2p_transport_deserializer, initialize_p2p_transport_deserializer)
 {
     // Construct deserializer, with a dummy NodeId
     V1TransportDeserializer deserializer{Params(), (NodeId)0, SER_NETWORK, INIT_PROTO_VERSION};
