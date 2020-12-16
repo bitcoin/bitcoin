@@ -2394,8 +2394,8 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             // empty and no one will know who we are, so these mechanisms are
             // important to help us connect to the network.
             //
-            // We skip this for BLOCK_RELAY peers to avoid potentially leaking
-            // information about our BLOCK_RELAY connections via address relay.
+            // We skip this for block-relay-only peers to avoid potentially leaking
+            // information about our block-relay-only connections via address relay.
             if (fListen && !::ChainstateActive().IsInitialBlockDownload())
             {
                 CAddress addr = GetLocalAddress(&pfrom.addr, pfrom.GetLocalServices());
@@ -3963,10 +3963,10 @@ void PeerManager::EvictExtraOutboundPeers(int64_t time_in_seconds)
         });
     }
 
-    // Check whether we have too many OUTBOUND_FULL_RELAY peers
+    // Check whether we have too many outbound-full-relay peers
     if (m_connman.GetExtraFullOutboundCount() > 0) {
-        // If we have more OUTBOUND_FULL_RELAY peers than we target, disconnect one.
-        // Pick the OUTBOUND_FULL_RELAY peer that least recently announced
+        // If we have more outbound-full-relay peers than we target, disconnect one.
+        // Pick the outbound-full-relay peer that least recently announced
         // us a new block, with ties broken by choosing the more recent
         // connection (higher node id)
         NodeId worst_peer = -1;
@@ -3975,7 +3975,7 @@ void PeerManager::EvictExtraOutboundPeers(int64_t time_in_seconds)
         m_connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
             AssertLockHeld(::cs_main);
 
-            // Only consider OUTBOUND_FULL_RELAY peers that are not already
+            // Only consider outbound-full-relay peers that are not already
             // marked for disconnection
             if (!pnode->IsFullOutboundConn() || pnode->fDisconnect) return;
             CNodeState *state = State(pnode->GetId());
