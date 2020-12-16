@@ -961,6 +961,16 @@ public:
         return m_conn_type != ConnectionType::BLOCK_RELAY;
     }
 
+    /* Whether we relay transactions over this connection */
+    bool RelayTxsWithConn() const
+    {
+        // This should be exactly the set of non-block-relay-only peers, but
+        // implement by checking whether m_tx_relay is set so that we can be
+        // sure we'll never dereference a nullptr if calling code is using this
+        // function to check whether tx relay is in fact allowed.
+        return m_tx_relay != nullptr;
+    }
+
     bool ExpectServicesFromConn() const {
         switch (m_conn_type) {
             case ConnectionType::INBOUND:
