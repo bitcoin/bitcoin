@@ -77,6 +77,7 @@ src/qt/syscoin-qt.includes
 *.log
 *.trs
 *.dmg
+*.iso
 
 *.json.h
 *.raw.h
