@@ -28,15 +28,6 @@
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = urlDecode;
 
-static void WaitForShutdown(NodeContext& node)
-{
-    while (!ShutdownRequested())
-    {
-        UninterruptibleSleep(std::chrono::milliseconds{200});
-    }
-    Interrupt(node);
-}
-
 static bool AppInit(int argc, char* argv[])
 {
     NodeContext node;
@@ -147,12 +138,10 @@ static bool AppInit(int argc, char* argv[])
         PrintExceptionContinue(nullptr, "AppInit()");
     }
 
-    if (!fRet)
-    {
-        Interrupt(node);
-    } else {
-        WaitForShutdown(node);
+    if (fRet) {
+        WaitForShutdown();
     }
+    Interrupt(node);
     Shutdown(node);
 
     return fRet;
