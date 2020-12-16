@@ -198,7 +198,7 @@ class ChainstateWriteCrashTest(BitcoinTestFramework):
                 tx.vout.append(CTxOut(output_amount, hex_str_to_bytes(utxo['scriptPubKey'])))
 
             # Sign and send the transaction to get into the mempool
-            tx_signed_hex = node.signrawtransaction(ToHex(tx))['hex']
+            tx_signed_hex = node.signrawtransactionwithwallet(ToHex(tx))['hex']
             node.sendrawtransaction(tx_signed_hex)
             num_transactions += 1
 

@@ -130,7 +130,7 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.vout = [CTxOut(10, scriptPubKey), CTxOut(11, scriptPubKey)]
         tx.rehash()
 
-        signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
+        signed_tx = self.nodes[0].signrawtransactionwithwallet(binascii.hexlify(tx.serialize()).decode("utf-8"))
         sent_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
 
         self.nodes[0].generate(1)
@@ -160,7 +160,7 @@ class AddressIndexTest(BitcoinTestFramework):
         amount = int(unspent[0]["amount"] * 100000000) - tx_fee_sat
         tx.vout = [CTxOut(amount, scriptPubKey2)]
         tx.rehash()
-        signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
+        signed_tx = self.nodes[0].signrawtransactionwithwallet(binascii.hexlify(tx.serialize()).decode("utf-8"))
         spending_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
         self.nodes[0].generate(1)
         self.sync_all()
@@ -174,7 +174,7 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.vout = [CTxOut(change_amount, scriptPubKey2), CTxOut(send_amount, scriptPubKey)]
         tx.rehash()
 
-        signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
+        signed_tx = self.nodes[0].signrawtransactionwithwallet(binascii.hexlify(tx.serialize()).decode("utf-8"))
         sent_txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
         self.nodes[0].generate(1)
         self.sync_all()
@@ -255,7 +255,7 @@ class AddressIndexTest(BitcoinTestFramework):
         amount = int(unspent[0]["amount"] * 100000000) - tx_fee_sat
         tx.vout = [CTxOut(amount, scriptPubKey3)]
         tx.rehash()
-        signed_tx = self.nodes[2].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
+        signed_tx = self.nodes[2].signrawtransactionwithwallet(binascii.hexlify(tx.serialize()).decode("utf-8"))
         memtxid1 = self.nodes[2].sendrawtransaction(signed_tx["hex"], True)
         self.bump_mocktime(2)
 
@@ -269,7 +269,7 @@ class AddressIndexTest(BitcoinTestFramework):
             CTxOut(int(amount / 4), scriptPubKey4)
         ]
         tx2.rehash()
-        signed_tx2 = self.nodes[2].signrawtransaction(binascii.hexlify(tx2.serialize()).decode("utf-8"))
+        signed_tx2 = self.nodes[2].signrawtransactionwithwallet(binascii.hexlify(tx2.serialize()).decode("utf-8"))
         memtxid2 = self.nodes[2].sendrawtransaction(signed_tx2["hex"], True)
         self.bump_mocktime(2)
 
@@ -296,7 +296,7 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.vout = [CTxOut(int(amount / 2 - 10000), scriptPubKey2)]
         tx.rehash()
         self.nodes[2].importprivkey(privKey3)
-        signed_tx3 = self.nodes[2].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
+        signed_tx3 = self.nodes[2].signrawtransactionwithwallet(binascii.hexlify(tx.serialize()).decode("utf-8"))
         self.nodes[2].sendrawtransaction(signed_tx3["hex"], True)
         self.bump_mocktime(2)
 
@@ -328,7 +328,7 @@ class AddressIndexTest(BitcoinTestFramework):
         tx.vout = [CTxOut(amount, address1script)]
         tx.rehash()
         self.nodes[0].importprivkey(privkey1)
-        signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
+        signed_tx = self.nodes[0].signrawtransactionwithwallet(binascii.hexlify(tx.serialize()).decode("utf-8"))
         self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
 
         self.sync_all()

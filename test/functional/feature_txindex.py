@@ -66,7 +66,7 @@ class TxIndexTest(BitcoinTestFramework):
         tx.vout = [CTxOut(amount, scriptPubKey)]
         tx.rehash()
 
-        signed_tx = self.nodes[0].signrawtransaction(binascii.hexlify(tx.serialize()).decode("utf-8"))
+        signed_tx = self.nodes[0].signrawtransactionwithwallet(binascii.hexlify(tx.serialize()).decode("utf-8"))
         txid = self.nodes[0].sendrawtransaction(signed_tx["hex"], True)
         self.nodes[0].generate(1)
         self.sync_all()

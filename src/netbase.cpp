@@ -24,7 +24,7 @@
 #include <poll.h>
 #endif
 
-#if !defined(HAVE_MSG_NOSIGNAL)
+#if !defined(MSG_NOSIGNAL)
 #define MSG_NOSIGNAL 0
 #endif
 

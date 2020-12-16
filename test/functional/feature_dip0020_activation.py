@@ -35,7 +35,7 @@ class DIP0020ActivationTest(BitcoinTestFramework):
         tx = CTransaction()
         tx.vin.append(CTxIn(COutPoint(int(utxo["txid"], 16), utxo["vout"])))
         tx.vout.append(CTxOut(value, CScript([b'1', b'2', OP_CAT])))
-        tx_signed_hex = self.node.signrawtransaction(ToHex(tx))["hex"]
+        tx_signed_hex = self.node.signrawtransactionwithwallet(ToHex(tx))["hex"]
         txid = self.node.sendrawtransaction(tx_signed_hex)
 
         # This tx should be completely valid, should be included in mempool and mined in the next block

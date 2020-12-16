@@ -95,7 +95,7 @@ def create_transaction(node, txid, to_address, amount):
 
 def sign_transaction(node, unsignedtx):
     rawtx = ToHex(unsignedtx)
-    signresult = node.signrawtransaction(rawtx)
+    signresult = node.signrawtransactionwithwallet(rawtx)
     tx = CTransaction()
     f = BytesIO(hex_str_to_bytes(signresult['hex']))
     tx.deserialize(f)

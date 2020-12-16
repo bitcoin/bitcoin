@@ -554,7 +554,10 @@ static int64_t AddTx(CWallet& wallet, uint32_t lockTime, int64_t mockTime, int64
     if (block) {
         wtx.SetMerkleBranch(block, 0);
     }
-    wallet.AddToWallet(wtx);
+    {
+        LOCK(cs_main);
+        wallet.AddToWallet(wtx);
+    }
     LOCK(wallet.cs_wallet);
     return wallet.mapWallet.at(wtx.GetHash()).nTimeSmart;
 }

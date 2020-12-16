@@ -799,22 +799,6 @@ AC_CHECK_DECLS([bswap_16, bswap_32, bswap_64],,,
 
 AC_CHECK_DECLS([__builtin_clz, __builtin_clzl, __builtin_clzll])
 
-dnl Check for MSG_NOSIGNAL
-AC_MSG_CHECKING(for MSG_NOSIGNAL)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/socket.h>]],
- [[ int f = MSG_NOSIGNAL; ]])],
- [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_MSG_NOSIGNAL, 1,[Define this symbol if you have MSG_NOSIGNAL]) ],
- [ AC_MSG_RESULT(no)]
-)
-
-dnl Check for MSG_DONTWAIT
-AC_MSG_CHECKING(for MSG_DONTWAIT)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/socket.h>]],
- [[ int f = MSG_DONTWAIT; ]])],
- [ AC_MSG_RESULT(yes); AC_DEFINE(HAVE_MSG_DONTWAIT, 1,[Define this symbol if you have MSG_DONTWAIT]) ],
- [ AC_MSG_RESULT(no)]
-)
-
 dnl Check for mallopt(M_ARENA_MAX) (to set glibc arenas)
 AC_MSG_CHECKING(for mallopt M_ARENA_MAX)
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <malloc.h>]],
@@ -944,7 +928,7 @@ dnl Check for libminiupnpc (optional)
 if test x$use_upnp != xno; then
   AC_CHECK_HEADERS(
     [miniupnpc/miniwget.h miniupnpc/miniupnpc.h miniupnpc/upnpcommands.h miniupnpc/upnperrors.h],
-    [AC_CHECK_LIB([miniupnpc], [main],[MINIUPNPC_LIBS=-lminiupnpc], [have_miniupnpc=no])],
+    [AC_CHECK_LIB([miniupnpc], [upnpDiscover], [MINIUPNPC_LIBS=-lminiupnpc], [have_miniupnpc=no])],
     [have_miniupnpc=no]
   )
 fi

@@ -68,9 +68,10 @@ class TestNode():
             append_config(dirname, i, extra_conf)
         # Most callers will just need to add extra args to the standard list below.
         # For those callers that need more flexibity, they can just set the args property directly.
+        # Note that common args are set in the config file (see initialize_datadir)
         self.extra_args = extra_args
         self.extra_args_from_options = extra_args_from_options
-        self.args = [self.binary, "-datadir=" + self.datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(mocktime), "-uacomment=testnode%d" % i]
+        self.args = [self.binary, "-datadir=" + self.datadir, "-logtimemicros", "-debug", "-debugexclude=libevent", "-debugexclude=leveldb", "-mocktime=" + str(mocktime), "-uacomment=testnode%d" % i]
 
         self.cli = TestNodeCLI(bitcoin_cli, self.datadir)
         self.use_cli = use_cli

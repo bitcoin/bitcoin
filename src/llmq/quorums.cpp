@@ -338,13 +338,12 @@ CQuorumCPtr CQuorumManager::GetQuorum(Consensus::LLMQType llmqType, const uint25
     CBlockIndex* pindexQuorum;
     {
         LOCK(cs_main);
-        auto quorumIt = mapBlockIndex.find(quorumHash);
 
-        if (quorumIt == mapBlockIndex.end()) {
+        pindexQuorum = LookupBlockIndex(quorumHash);
+        if (!pindexQuorum) {
             LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- block %s not found\n", __func__, quorumHash.ToString());
             return nullptr;
         }
-        pindexQuorum = quorumIt->second;
     }
     return GetQuorum(llmqType, pindexQuorum);
 }
