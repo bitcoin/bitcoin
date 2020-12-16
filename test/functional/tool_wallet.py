@@ -28,8 +28,11 @@ class ToolWalletTest(BitcoinTestFramework):
 
     def bitcoin_wallet_process(self, *args):
         binary = self.config["environment"]["BUILDDIR"] + '/src/bitcoin-wallet' + self.config["environment"]["EXEEXT"]
-        args = ['-datadir={}'.format(self.nodes[0].datadir), '-chain=%s' % self.chain] + list(args)
-        return subprocess.Popen([binary] + args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        default_args = ['-datadir={}'.format(self.nodes[0].datadir), '-chain=%s' % self.chain]
+        if self.options.descriptors:
+            default_args.append('-descriptors')
+
+        return subprocess.Popen([binary] + default_args + list(args), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
 
     def assert_raises_tool_error(self, error, *args):
         p = self.bitcoin_wallet_process(*args)
@@ -62,6 +65,36 @@ class ToolWalletTest(BitcoinTestFramework):
     def log_wallet_timestamp_comparison(self, old, new):
         result = 'unchanged' if new == old else 'increased!'
         self.log.debug('Wallet file timestamp {}'.format(result))
+
+    def get_expected_info_output(self, name="", transactions=0, keypool=2, address=0):
+        wallet_name = self.default_wallet_name if name == "" else name
+        output_types = 3  # p2pkh, p2sh, segwit
+        if self.options.descriptors:
+            return textwrap.dedent('''\
+                Wallet info
+                ===========
+                Name: %s
+                Format: sqlite
+                Descriptors: yes
+                Encrypted: no
+                HD (hd seed available): yes
+                Keypool Size: %d
+                Transactions: %d
+                Address Book: %d
+            ''' % (wallet_name, keypool * output_types, transactions, address))
+        else:
+            return textwrap.dedent('''\
+                Wallet info
+                ===========
+                Name: %s
+                Format: bdb
+                Descriptors: no
+                Encrypted: no
+                HD (hd seed available): yes
+                Keypool Size: %d
+                Transactions: %d
+                Address Book: %d
+            ''' % (wallet_name, keypool, transactions, address * output_types))
 
     def test_invalid_tool_commands_and_args(self):
         self.log.info('Testing that various invalid commands raise with specific error messages')
@@ -98,33 +131,7 @@ class ToolWalletTest(BitcoinTestFramework):
         # shasum_before = self.wallet_shasum()
         timestamp_before = self.wallet_timestamp()
         self.log.debug('Wallet file timestamp before calling info: {}'.format(timestamp_before))
-        if self.options.descriptors:
-            out = textwrap.dedent('''\
-                Wallet info
-                ===========
-                Name: default_wallet
-                Format: sqlite
-                Descriptors: yes
-                Encrypted: no
-                HD (hd seed available): yes
-                Keypool Size: 6
-                Transactions: 0
-                Address Book: 1
-            ''')
-        else:
-            out = textwrap.dedent('''\
-                Wallet info
-                ===========
-                Name: \
-
-                Format: bdb
-                Descriptors: no
-                Encrypted: no
-                HD (hd seed available): yes
-                Keypool Size: 2
-                Transactions: 0
-                Address Book: 3
-            ''')
+        out = self.get_expected_info_output(address=1)
         self.assert_tool_output(out, '-wallet=' + self.default_wallet_name, 'info')
         timestamp_after = self.wallet_timestamp()
         self.log.debug('Wallet file timestamp after calling info: {}'.format(timestamp_after))
@@ -155,33 +162,7 @@ class ToolWalletTest(BitcoinTestFramework):
         shasum_before = self.wallet_shasum()
         timestamp_before = self.wallet_timestamp()
         self.log.debug('Wallet file timestamp before calling info: {}'.format(timestamp_before))
-        if self.options.descriptors:
-            out = textwrap.dedent('''\
-                Wallet info
-                ===========
-                Name: default_wallet
-                Format: sqlite
-                Descriptors: yes
-                Encrypted: no
-                HD (hd seed available): yes
-                Keypool Size: 6
-                Transactions: 1
-                Address Book: 1
-            ''')
-        else:
-            out = textwrap.dedent('''\
-                Wallet info
-                ===========
-                Name: \
-
-                Format: bdb
-                Descriptors: no
-                Encrypted: no
-                HD (hd seed available): yes
-                Keypool Size: 2
-                Transactions: 1
-                Address Book: 3
-            ''')
+        out = self.get_expected_info_output(transactions=1, address=1)
         self.assert_tool_output(out, '-wallet=' + self.default_wallet_name, 'info')
         shasum_after = self.wallet_shasum()
         timestamp_after = self.wallet_timestamp()
@@ -199,19 +180,7 @@ class ToolWalletTest(BitcoinTestFramework):
         shasum_before = self.wallet_shasum()
         timestamp_before = self.wallet_timestamp()
         self.log.debug('Wallet file timestamp before calling create: {}'.format(timestamp_before))
-        out = textwrap.dedent('''\
-            Topping up keypool...
-            Wallet info
-            ===========
-            Name: foo
-            Format: bdb
-            Descriptors: no
-            Encrypted: no
-            HD (hd seed available): yes
-            Keypool Size: 2000
-            Transactions: 0
-            Address Book: 0
-        ''')
+        out = "Topping up keypool...\n" + self.get_expected_info_output(name="foo", keypool=2000)
         self.assert_tool_output(out, '-wallet=foo', 'create')
         shasum_after = self.wallet_shasum()
         timestamp_after = self.wallet_timestamp()
@@ -237,9 +206,13 @@ class ToolWalletTest(BitcoinTestFramework):
         self.log.debug('Wallet file timestamp after calling getwalletinfo: {}'.format(timestamp_after))
 
         assert_equal(0, out['txcount'])
-        assert_equal(1000, out['keypoolsize'])
-        assert_equal(1000, out['keypoolsize_hd_internal'])
-        assert_equal(True, 'hdseedid' in out)
+        if not self.options.descriptors:
+            assert_equal(1000, out['keypoolsize'])
+            assert_equal(1000, out['keypoolsize_hd_internal'])
+            assert_equal(True, 'hdseedid' in out)
+        else:
+            assert_equal(3000, out['keypoolsize'])
+            assert_equal(3000, out['keypoolsize_hd_internal'])
 
         self.log_wallet_timestamp_comparison(timestamp_before, timestamp_after)
         assert_equal(timestamp_before, timestamp_after)
@@ -261,10 +234,9 @@ class ToolWalletTest(BitcoinTestFramework):
         # Warning: The following tests are order-dependent.
         self.test_tool_wallet_info()
         self.test_tool_wallet_info_after_transaction()
+        self.test_tool_wallet_create_on_existing_wallet()
+        self.test_getwalletinfo_on_different_wallet()
         if not self.options.descriptors:
-            # TODO: Wallet tool needs more create options at which point these can be enabled.
-            self.test_tool_wallet_create_on_existing_wallet()
-            self.test_getwalletinfo_on_different_wallet()
             # Salvage is a legacy wallet only thing
             self.test_salvage()
 
