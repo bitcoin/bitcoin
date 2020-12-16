@@ -1487,8 +1487,8 @@ static void RelayAddress(const CAddress& addr, bool fReachable, CConnman* connma
     std::array<std::pair<uint64_t, CNode*>,2> best{{{0, nullptr}, {0, nullptr}}};
     assert(nRelayNodes <= best.size());
 
-    auto sortfunc = [&best, &hasher, nRelayNodes](CNode* pnode) {
-        if (pnode->nVersion >= CADDR_TIME_VERSION) {
+    auto sortfunc = [&best, &hasher, nRelayNodes, addr](CNode* pnode) {
+        if (pnode->nVersion >= CADDR_TIME_VERSION && pnode->IsAddrCompatible(addr)) {
             uint64_t hashKey = CSipHasher(hasher).Write(pnode->GetId()).Finalize();
             for (unsigned int i = 0; i < nRelayNodes; i++) {
                 if (hashKey > best[i].first) {
