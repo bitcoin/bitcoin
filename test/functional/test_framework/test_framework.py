@@ -1391,7 +1391,7 @@ class DashTestFramework(SyscoinTestFramework):
 
         # Mine 20 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligible for signing sessions
         self.nodes[0].generate(20)
-        
+
         self.sync_blocks(nodes)
 
         self.log.info("New quorum: height=%d, quorumHash=%s, minedBlock=%s" % (quorum_info["height"], new_quorum, quorum_info["minedBlock"]))
