@@ -1298,6 +1298,7 @@ class DashTestFramework(SyscoinTestFramework):
             time.sleep(2)
             self.bump_mocktime(sleep, nodes=nodes)
             self.nodes[0].generate(1)
+            self.bump_mocktime(5, nodes=nodes)
             self.sync_blocks(nodes)
             return False
         wait_until_helper(wait_func, timeout=timeout)
