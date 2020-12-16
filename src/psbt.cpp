@@ -3,6 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <psbt.h>
+
+#include <util/check.h>
 #include <util/strencodings.h>
 
 
@@ -207,7 +209,8 @@ size_t CountPSBTUnsignedInputs(const PartiallySignedTransaction& psbt) {
 
 void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransaction& psbt, int index)
 {
-    const CTxOut& out = psbt.tx->vout.at(index);
+    CMutableTransaction& tx = *Assert(psbt.tx);
+    const CTxOut& out = tx.vout.at(index);
     PSBTOutput& psbt_out = psbt.outputs.at(index);
 
     // Fill a SignatureData with output info
@@ -217,7 +220,7 @@ void UpdatePSBTOutput(const SigningProvider& provider, PartiallySignedTransactio
     // Construct a would-be spend of this output, to update sigdata with.
     // Note that ProduceSignature is used to fill in metadata (not actual signatures),
     // so provider does not need to provide any private keys (it can be a HidingSigningProvider).
-    MutableTransactionSignatureCreator creator(psbt.tx.get_ptr(), /* index */ 0, out.nValue, SIGHASH_ALL);
+    MutableTransactionSignatureCreator creator(&tx, /* index */ 0, out.nValue, SIGHASH_ALL);
     ProduceSignature(provider, creator, out.scriptPubKey, sigdata);
 
     // Put redeem_script, witness_script, key paths, into PSBTOutput.
