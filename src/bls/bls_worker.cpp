@@ -615,12 +615,10 @@ void CBLSWorker::AsyncBuildQuorumVerificationVector(const std::vector<BLSVerific
         count = vvecs.size();
     }
     if (vvecs.empty() || count == 0 || start > vvecs.size() || start + count > vvecs.size()) {
-        LogPrintf("AsyncBuildQuorumVerificationVector1 vvecs.size() %d start %d count %d\n", vvecs.size(), start, count);
         doneCallback(nullptr);
         return;
     }
     if (!VerifyVerificationVectors(vvecs, start, count)) {
-        LogPrintf("AsyncBuildQuorumVerificationVector2 vvecs.size() %d start %d count %d\n", vvecs.size(), start, count);
         doneCallback(nullptr);
         return;
     }
