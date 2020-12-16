@@ -1299,7 +1299,6 @@ class DashTestFramework(SyscoinTestFramework):
             time.sleep(2)
             self.bump_mocktime(sleep, nodes=nodes)
             self.nodes[0].generate(1)
-            self.bump_mocktime(5, nodes=nodes)
             self.sync_blocks(nodes)
             return False
         wait_until_helper(wait_func, timeout=timeout)
@@ -1327,7 +1326,7 @@ class DashTestFramework(SyscoinTestFramework):
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
 
         def timeout_func():
-            self.bump_mocktime(bumptime)
+            self.bump_mocktime(bumptime, nodes=nodes)
 
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
