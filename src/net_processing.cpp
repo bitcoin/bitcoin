@@ -1443,8 +1443,8 @@ static void RelayAddress(const CNode& originator,
     std::array<std::pair<uint64_t, CNode*>,2> best{{{0, nullptr}, {0, nullptr}}};
     assert(nRelayNodes <= best.size());
 
-    auto sortfunc = [&best, &hasher, nRelayNodes, &originator](CNode* pnode) {
-        if (pnode->RelayAddrsWithConn() && pnode != &originator) {
+    auto sortfunc = [&best, &hasher, nRelayNodes, &originator, &addr](CNode* pnode) {
+        if (pnode->RelayAddrsWithConn() && pnode != &originator && pnode->IsAddrCompatible(addr)) {
             uint64_t hashKey = CSipHasher(hasher).Write(pnode->GetId()).Finalize();
             for (unsigned int i = 0; i < nRelayNodes; i++) {
                  if (hashKey > best[i].first) {
