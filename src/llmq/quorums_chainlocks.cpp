@@ -113,6 +113,7 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
     if(bReturn) {
         LOCK(cs_main);
         peerman.ForgetTxHash(from, hash);
+        return;
     }
 
     uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, clsig.nHeight));
