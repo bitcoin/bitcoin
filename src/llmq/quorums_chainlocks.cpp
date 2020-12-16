@@ -102,10 +102,14 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
         LOCK(cs);
         enforced = isEnforced;
         if (!seenChainLocks.try_emplace(hash, GetTimeMillis()).second) {
+            LOCK(cs_main);
+            peerman.ForgetTxHash(from, hash);
             return;
         }
 
         if (!bestChainLock.IsNull() && clsig.nHeight <= bestChainLock.nHeight) {
+            LOCK(cs_main);
+            peerman.ForgetTxHash(from, hash);
             // no need to process/relay older CLSIGs
             return;
         }
