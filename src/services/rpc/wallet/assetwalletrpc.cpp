@@ -844,6 +844,9 @@ static RPCHelpMan assetupdate()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    if(!fAssetIndex) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
+    }
     const UniValue &params = request.params;
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
@@ -974,6 +977,9 @@ static RPCHelpMan assettransfer()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    if(!fAssetIndex) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
+    }
     const UniValue &params = request.params;
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
@@ -1042,6 +1048,9 @@ static RPCHelpMan assetsendmany()
     },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    if(!fAssetIndex) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
+    }    
     const UniValue &params = request.params;
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
@@ -1130,6 +1139,9 @@ static RPCHelpMan assetsend()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    if(!fAssetIndex) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
+    }
     const UniValue &params = request.params;
     const uint32_t &nAsset = params[0].get_uint();          
     UniValue output(UniValue::VARR);
@@ -1186,6 +1198,9 @@ static RPCHelpMan assetallocationsendmany()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    if(!fAssetIndex) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
+    }
 	const UniValue &params = request.params;
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
@@ -1389,6 +1404,9 @@ static RPCHelpMan assetallocationburn()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    if(!fAssetIndex) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
+    }    
 	const UniValue &params = request.params;
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
@@ -1725,6 +1743,9 @@ static RPCHelpMan assetallocationsend()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    if(!fAssetIndex) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
+    }
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
