@@ -88,7 +88,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 return;
             }
         }
-
+        bool bReturn = false;
         {
             // Check if we already got a better one locally
             // We do this before verifying the commitment to avoid DoS
@@ -99,16 +99,15 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 auto jt = minableCommitments.find(it->second);
                 if (jt != minableCommitments.end()) {
                     if (jt->second.CountSigners() <= qc.CountSigners()) {
-                        {
-                            LOCK(cs_main);
-                            peerman.ForgetTxHash(pfrom->GetId(), hash);
-                        }
-                        return;
+                        bReturn = true;
                     }
                 }
             }
         }
-
+        if(bReturn) {
+            LOCK(cs_main);
+            peerman.ForgetTxHash(pfrom->GetId(), hash);
+        }
         CLLMQUtils::GetAllQuorumMembers(type, pquorumIndex, members);
         
 

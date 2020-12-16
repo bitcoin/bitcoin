@@ -142,15 +142,18 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received unrequested object: %s\n", strHash);
             return;
         }
-
-        LOCK(cs);
-
-        if (mapObjects.count(nHash) || mapPostponedObjects.count(nHash) || mapErasedGovernanceObjects.count(nHash)) {
+        bool bReturn = false;
+        {
+            LOCK(cs);
+            if (mapObjects.count(nHash) || mapPostponedObjects.count(nHash) || mapErasedGovernanceObjects.count(nHash)) {
+                // TODO - print error code? what if it's GOVOBJ_ERROR_IMMATURE?
+                LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received already seen object: %s\n", strHash);
+                bReturn = true;
+            }
+        }
+        if(bReturn) {
             LOCK(cs_main);
             peerman.ForgetTxHash(pfrom->GetId(), nHash);
-            // TODO - print error code? what if it's GOVOBJ_ERROR_IMMATURE?
-            LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received already seen object: %s\n", strHash);
-            return;
         }
 
         bool fRateCheckBypassed = false;
@@ -176,18 +179,13 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
             if (fMissingConfirmations) {
                 AddPostponedObject(govobj);
                 LogPrintf("MNGOVERNANCEOBJECT -- Not enough fee confirmations for: %s, strError = %s\n", strHash, strError);
+                return;
             } else {
                 LOCK(cs_main);
-                LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Governance object is invalid - %s\n", strError);
                 peerman.ForgetTxHash(pfrom->GetId(), nHash);
                 // apply node's ban score
                 peerman.Misbehaving(pfrom->GetId(), 20, "invalid governance object");
             }
-            return;
-        }
-        {
-            LOCK(cs_main);
-            peerman.ForgetTxHash(pfrom->GetId(), nHash);
         }
         AddGovernanceObject(govobj, connman, pfrom);
     }
