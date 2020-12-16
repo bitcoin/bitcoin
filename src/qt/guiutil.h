@@ -108,9 +108,8 @@ namespace GUIUtil
     QString dateTimeStr(const QDateTime &datetime);
     QString dateTimeStr(qint64 nTime);
 
-    // Set up widgets for address and amounts
+    // Set up widget for address
     void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent, bool fAllowURI = false);
-    void setupAmountWidget(QLineEdit *widget, QWidget *parent);
 
     // Setup appearance settings if not done yet
     void setupAppearance(QWidget* parent, OptionsModel* model);

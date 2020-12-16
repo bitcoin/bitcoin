@@ -60,6 +60,11 @@ See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.16.1.0.
 
 - [`ccef3b4836`](https://github.com/dashpay/dash/commit/ccef3b48363d8bff4b919d9119355182e3902ef3) qt: Fix wallet encryption dialog (#3816)
 
+Python Support
+--------------
+
+Support for Python 2 has been discontinued for all test files and tools.
+
 Credits
 =======
 

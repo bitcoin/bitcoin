@@ -221,7 +221,7 @@ private:
     // discriminate entries based on port. Should be false on mainnet/testnet and can be true on devnet/regtest
     bool discriminatePorts;
 
-    //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discpline used to resolve these collisions.
+    //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<int> m_tried_collisions;
 
 protected:

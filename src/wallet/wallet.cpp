@@ -5290,7 +5290,6 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
             if (!reserver.reserve()) {
                 return error(_("Failed to rescan the wallet during initialization"));
             }
-            uiInterface.LoadWallet(walletInstance); // TODO: move it up when backporting 13063
             walletInstance->ScanForWalletTransactions(pindexRescan, nullptr, reserver, true);
         }
         LogPrintf(" rescan      %15dms\n", GetTimeMillis() - nStart);
@@ -5322,6 +5321,8 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
             }
         }
     }
+
+    uiInterface.LoadWallet(walletInstance);
 
     // Register with the validation interface. It's ok to do this after rescan since we're still holding cs_main.
     RegisterValidationInterface(temp_wallet.release());

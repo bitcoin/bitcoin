@@ -11,7 +11,11 @@ import re
 import shutil
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal, assert_raises_rpc_error
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+)
+
 
 class MultiWalletTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -200,6 +204,29 @@ class MultiWalletTest(BitcoinTestFramework):
 
         # Fail to load if wallet file is a symlink
         assert_raises_rpc_error(-4, "Wallet file verification failed: Invalid -wallet path 'w8_symlink'", self.nodes[0].loadwallet, 'w8_symlink')
+
+        self.log.info("Test dynamic wallet creation.")
+
+        # Fail to create a wallet if it already exists.
+        assert_raises_rpc_error(-4, "Wallet w2 already exists.", self.nodes[0].createwallet, 'w2')
+
+        # Successfully create a wallet with a new name
+        loadwallet_name = self.nodes[0].createwallet('w9')
+        assert_equal(loadwallet_name['name'], 'w9')
+        w9 = node.get_wallet_rpc('w9')
+        assert_equal(w9.getwalletinfo()['walletname'], 'w9')
+
+        assert 'w9' in self.nodes[0].listwallets()
+
+        # Successfully create a wallet using a full path
+        new_wallet_dir = os.path.join(self.options.tmpdir, 'new_walletdir')
+        new_wallet_name = os.path.join(new_wallet_dir, 'w10')
+        loadwallet_name = self.nodes[0].createwallet(new_wallet_name)
+        assert_equal(loadwallet_name['name'], new_wallet_name)
+        w10 = node.get_wallet_rpc(new_wallet_name)
+        assert_equal(w10.getwalletinfo()['walletname'], new_wallet_name)
+
+        assert new_wallet_name in self.nodes[0].listwallets()
 
         # Fail to load if a directory is specified that doesn't contain a wallet
         os.mkdir(wallet_dir('empty_wallet_dir'))

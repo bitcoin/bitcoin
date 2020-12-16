@@ -423,21 +423,18 @@ class SendHeadersTest(BitcoinTestFramework):
                 inv_node.check_last_inv_announcement(inv=[tip])
                 test_node.check_last_inv_announcement(inv=[tip])
                 if i == 0:
-                    # Just get the data -- shouldn't cause headers announcements to resume
+                    self.log.debug("Just get the data -- shouldn't cause headers announcements to resume")
                     test_node.send_get_data([tip])
                     test_node.wait_for_block(tip)
                 elif i == 1:
-                    # Send a getheaders message that shouldn't trigger headers announcements
-                    # to resume (best header sent will be too old)
+                    self.log.debug("Send a getheaders message that shouldn't trigger headers announcements to resume (best header sent will be too old)")
                     test_node.send_get_headers(locator=[fork_point], hashstop=new_block_hashes[1])
                     test_node.send_get_data([tip])
                     test_node.wait_for_block(tip)
                 elif i == 2:
-                    # This time, try sending either a getheaders to trigger resumption
-                    # of headers announcements, or mine a new block and inv it, also
-                    # triggering resumption of headers announcements.
                     test_node.send_get_data([tip])
                     test_node.wait_for_block(tip)
+                    self.log.debug("This time, try sending either a getheaders to trigger resumption of headers announcements, or mine a new block and inv it, also triggering resumption of headers announcements.")
                     if j == 0:
                         test_node.send_get_headers(locator=[tip], hashstop=0)
                         test_node.sync_with_ping()

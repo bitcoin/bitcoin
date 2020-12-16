@@ -9,7 +9,10 @@ import shutil
 import os
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    assert_equal,
+    connect_nodes_bi,
+)
 
 class WalletHDTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -21,9 +24,7 @@ class WalletHDTest(BitcoinTestFramework):
         self.add_nodes(self.num_nodes, self.extra_args, stderr=sys.stdout)
         self.start_nodes()
 
-    def run_test (self):
-        tmpdir = self.options.tmpdir
-
+    def run_test(self):
         # Make sure can't switch off usehd after wallet creation
         self.stop_node(1)
         self.nodes[1].assert_start_raises_init_error(['-usehd=0'], "Error: Error loading : You can't disable HD on an already existing HD wallet")
@@ -44,8 +45,8 @@ class WalletHDTest(BitcoinTestFramework):
         self.nodes[1].importprivkey(self.nodes[0].dumpprivkey(non_hd_add))
 
         # This should be enough to keep the master key and the non-HD key
-        self.nodes[1].backupwallet(tmpdir + "/hd.bak")
-        #self.nodes[1].dumpwallet(tmpdir + "/hd.dump")
+        self.nodes[1].backupwallet(os.path.join(self.nodes[1].datadir, "hd.bak"))
+        #self.nodes[1].dumpwallet(os.path.join(self.nodes[1].datadir, "hd.dump"))
 
         # Derive some HD addresses and remember the last
         # Also send funds to each add
@@ -74,11 +75,11 @@ class WalletHDTest(BitcoinTestFramework):
         self.stop_node(1)
         # we need to delete the complete regtest directory
         # otherwise node1 would auto-recover all funds in flag the keypool keys as used
-        shutil.rmtree(os.path.join(tmpdir, "node1/regtest/blocks"))
-        shutil.rmtree(os.path.join(tmpdir, "node1/regtest/chainstate"))
-        shutil.rmtree(os.path.join(tmpdir, "node1/regtest/evodb"))
-        shutil.rmtree(os.path.join(tmpdir, "node1/regtest/llmq"))
-        shutil.copyfile(os.path.join(tmpdir, "hd.bak"), os.path.join(tmpdir, "node1/regtest/wallets/wallet.dat"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "blocks"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "chainstate"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "evodb"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "llmq"))
+        shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"), os.path.join(self.nodes[1].datadir, "regtest", "wallets", "wallet.dat"))
         self.start_node(1)
 
         # Assert that derivation is deterministic
@@ -99,11 +100,11 @@ class WalletHDTest(BitcoinTestFramework):
 
         # Try a RPC based rescan
         self.stop_node(1)
-        shutil.rmtree(os.path.join(tmpdir, "node1/regtest/blocks"))
-        shutil.rmtree(os.path.join(tmpdir, "node1/regtest/chainstate"))
-        shutil.rmtree(os.path.join(tmpdir, "node1/regtest/evodb"))
-        shutil.rmtree(os.path.join(tmpdir, "node1/regtest/llmq"))
-        shutil.copyfile(os.path.join(tmpdir, "hd.bak"), os.path.join(tmpdir, "node1/regtest/wallets/wallet.dat"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "blocks"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "chainstate"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "evodb"))
+        shutil.rmtree(os.path.join(self.nodes[1].datadir, "regtest", "llmq"))
+        shutil.copyfile(os.path.join(self.nodes[1].datadir, "hd.bak"), os.path.join(self.nodes[1].datadir, "regtest", "wallets", "wallet.dat"))
         self.start_node(1, extra_args=self.extra_args[1])
         connect_nodes_bi(self.nodes, 0, 1)
         self.sync_all()
