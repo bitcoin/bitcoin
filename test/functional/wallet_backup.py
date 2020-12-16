@@ -152,8 +152,8 @@ class WalletBackupTest(BitcoinTestFramework):
         # Start node2 with no chain
         shutil.rmtree(os.path.join(self.nodes[2].datadir, 'regtest', 'blocks'))
         shutil.rmtree(os.path.join(self.nodes[2].datadir, 'regtest', 'chainstate'))
-        shutil.rmtree(self.options.tmpdir + "/node2/regtest/evodb")
-        shutil.rmtree(self.options.tmpdir + "/node2/regtest/llmq")
+        shutil.rmtree(os.path.join(self.nodes[2].datadir, 'regtest', 'evodb'))
+        shutil.rmtree(os.path.join(self.nodes[2].datadir, 'regtest', 'llmq'))
 
         # Restore wallets from backup
         shutil.copyfile(os.path.join(self.nodes[0].datadir, 'wallet.bak'), os.path.join(self.nodes[0].datadir, 'regtest', 'wallets', 'wallet.dat'))
@@ -175,8 +175,8 @@ class WalletBackupTest(BitcoinTestFramework):
         #start node2 with no chain
         shutil.rmtree(os.path.join(self.nodes[2].datadir, 'regtest', 'blocks'))
         shutil.rmtree(os.path.join(self.nodes[2].datadir, 'regtest', 'chainstate'))
-        shutil.rmtree(self.options.tmpdir + "/node2/regtest/evodb")
-        shutil.rmtree(self.options.tmpdir + "/node2/regtest/llmq")
+        shutil.rmtree(os.path.join(self.nodes[2].datadir, 'regtest', 'evodb'))
+        shutil.rmtree(os.path.join(self.nodes[2].datadir, 'regtest', 'llmq'))
 
         self.start_three()
 
