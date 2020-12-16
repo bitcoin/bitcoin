@@ -5290,7 +5290,6 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
             if (!reserver.reserve()) {
                 return error(_("Failed to rescan the wallet during initialization"));
             }
-            uiInterface.LoadWallet(walletInstance); // TODO: move it up when backporting 13063
             walletInstance->ScanForWalletTransactions(pindexRescan, nullptr, reserver, true);
         }
         LogPrintf(" rescan      %15dms\n", GetTimeMillis() - nStart);
