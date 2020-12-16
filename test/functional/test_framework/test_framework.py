@@ -1290,7 +1290,7 @@ class DashTestFramework(SyscoinTestFramework):
                 done_proc()
             return all_ok
         wait_until_helper(check_dkg_comitments, timeout=timeout)
-    
+
     def wait_for_quorum_list(self, quorum_hash, nodes, timeout=600, sleep=2):
         def wait_func():
             if quorum_hash in self.nodes[0].quorum_list()["llmq_test"]:
@@ -1323,8 +1323,6 @@ class DashTestFramework(SyscoinTestFramework):
                                                    expected_justifications, expected_commitments))
 
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
-
-        quorums = self.nodes[0].quorum_list()
 
         def timeout_func():
             self.bump_mocktime(bumptime)

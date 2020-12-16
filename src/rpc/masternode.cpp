@@ -221,7 +221,7 @@ std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterministicMNCP
     if (payee) {
         CTxDestination dest;
         if (!ExtractDestination(payee->pdmnState->scriptPayout, dest)) {
-            assert(false);
+            CHECK_NONFATAL(false);
         }
         strPayments = EncodeDestination(dest);
     }
