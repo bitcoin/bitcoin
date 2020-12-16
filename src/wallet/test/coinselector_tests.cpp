@@ -67,7 +67,8 @@ static void add_coin(CWallet& wallet, const CAmount& nValue, int nAge = 6*24, bo
     if (spendable) {
         CTxDestination dest;
         std::string error;
-        assert(wallet.GetNewDestination("", dest, error));
+        const bool destination_ok = wallet.GetNewDestination("", dest, error);
+        assert(destination_ok);
         tx.vout[nInput].scriptPubKey = GetScriptForDestination(dest);
     }
     if (fIsFromMe) {
