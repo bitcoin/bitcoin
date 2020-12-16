@@ -40,7 +40,7 @@ public:
     const CBlockIndex* pindexQuorum;
     uint256 minedBlockHash;
     std::vector<CDeterministicMNCPtr> members;
-    mutable RecursiveMutex quorumsCachePopCs;
+
     // These are only valid when we either participated in the DKG or fully watched it
     BLSVerificationVectorPtr quorumVvec;
     CBLSSecretKey skShare;

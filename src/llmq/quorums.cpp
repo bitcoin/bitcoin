@@ -42,7 +42,6 @@ static uint256 MakeQuorumKey(const CQuorum& q)
 
 CQuorum::~CQuorum()
 {
-    LOCK(quorumsCachePopCs);
     // most likely the thread is already done
     stopCachePopulatorThread = true;
     // watch out to not join the thread when we're called from inside the thread, which might happen on shutdown. This
@@ -136,7 +135,6 @@ bool CQuorum::ReadContributions(CEvoDB& evoDb)
 
 void CQuorum::StartCachePopulatorThread(std::shared_ptr<CQuorum> _this)
 {
-    LOCK(_this->quorumsCachePopCs);
     if (_this->quorumVvec == nullptr) {
         return;
     }
