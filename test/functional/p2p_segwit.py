@@ -37,7 +37,6 @@ from test_framework.messages import (
     msg_tx,
     msg_block,
     msg_no_witness_tx,
-    msg_verack,
     ser_uint256,
     ser_vector,
     sha256,
@@ -146,7 +145,7 @@ def test_witness_block(node, p2p, block, accepted, with_witness=True, reason=Non
 
 class TestP2PConn(P2PInterface):
     def __init__(self, wtxidrelay=False):
-        super().__init__()
+        super().__init__(wtxidrelay=wtxidrelay)
         self.getdataset = set()
         self.last_wtxidrelay = []
         self.lastgetdata = []
@@ -156,13 +155,6 @@ class TestP2PConn(P2PInterface):
     # We'll send the getdata messages explicitly in the test logic.
     def on_inv(self, message):
         pass
-
-    def on_version(self, message):
-        if self.wtxidrelay:
-            super().on_version(message)
-        else:
-            self.send_message(msg_verack())
-            self.nServices = message.nServices
 
     def on_getdata(self, message):
         self.lastgetdata = message.inv
