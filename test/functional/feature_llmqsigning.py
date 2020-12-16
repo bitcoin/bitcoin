@@ -106,6 +106,7 @@ class LLMQSigningTest(DashTestFramework):
             self.mninfo[i].node.quorum_sign(100, id, msgHash)
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
+        self.nodes[0].generate(1)
         self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
 
@@ -126,6 +127,7 @@ class LLMQSigningTest(DashTestFramework):
         # Make sure node0 has received qsendrecsigs from the previously isolated node
         mn.node.ping()
         self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
+        self.nodes[0].generate(1)
         self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
 
