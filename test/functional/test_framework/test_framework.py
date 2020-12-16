@@ -1382,7 +1382,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(1)
         self.sync_blocks(nodes)
-        self.log.info("Waiting for quorum to appear in the list")
+        self.log.info("Waiting for quorum {} to appear in the list".format(q))
         self.wait_for_quorum_list(q, nodes)
 
         new_quorum = self.nodes[0].quorum_list(1)["llmq_test"][0]
