@@ -105,15 +105,6 @@
   { "exec": "./dash-tx",
     "args":
     ["-create",
-     "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0",
-     "replaceable=0foo"],
-    "return_code": 1,
-    "error_txt": "error: Invalid TX input index",
-    "description": "Tests the check for an invalid input index with replaceable"
-  },
-  { "exec": "./dash-tx",
-    "args":
-    ["-create",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0x"],
     "return_code": 1,
     "error_txt": "error: invalid TX input vout",
@@ -252,10 +243,10 @@
     "args":
     ["-create",
       "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
-      "set=privatekeys:[\"5HpHagT65TZzG1PH3CSu63k8DbpvD8s5ip4nEB3kEsreAnchuDf\"]",
+      "set=privatekeys:[\"cW5MmkEJF4PzKgwyyZU2ecUEecGXnhEyrB6JAmVpQkWVxErFuvnX\"]",
       "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\",\"vout\":\"0foo\",\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
       "sign=ALL",
-      "outaddr=0.001:193P6LtvS4nCnkDvM9uXn1gsSRqh4aDAz7"],
+      "outaddr=0.001:ycgEaAAqfXUyuansGTRRn9fCvLmQ6nWNKS"],
     "return_code": 1,
     "error_txt": "error: prevtxs internal object typecheck fail",
     "description": "Tests the check for invalid vout index in prevtxs for sign"
