@@ -1303,7 +1303,7 @@ CSigShare CSigSharesManager::RebuildSigShare(const CSigSharesNodeState::SessionI
 
 void CSigSharesManager::Cleanup()
 {
-    int64_t now = GetAdjustedTime();
+    const int64_t now = GetAdjustedTime();
     if (now - lastCleanupTime < 5) {
         return;
     }

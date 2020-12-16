@@ -669,9 +669,9 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
     def sync_all(self, nodes=None):
         self.sync_blocks(nodes)
         self.sync_mempools(nodes)
-
-    def wait_until(self, test_function, timeout=60):
-        return wait_until_helper(test_function, timeout=timeout, timeout_factor=self.options.timeout_factor)
+    # SYSCOIN
+    def wait_until(self, test_function, timeout=60, do_assert = True):
+        return wait_until_helper(test_function, timeout=timeout, timeout_factor=self.options.timeout_factor,do_assert=do_assert)
 
     # Private helper methods. These should not be accessed by the subclass test scripts.
 

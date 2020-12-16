@@ -420,14 +420,14 @@ class P2PInterface(P2PConnection):
         self.nServices = message.nServices
 
     # Connection helper methods
-
-    def wait_until(self, test_function_in, *, timeout=60, check_connected=True):
+    # SYSCOIN
+    def wait_until(self, test_function_in, *, timeout=60, check_connected=True, do_assert = True):
         def test_function():
             if check_connected:
                 assert self.is_connected
             return test_function_in()
 
-        wait_until_helper(test_function, timeout=timeout, lock=p2p_lock, timeout_factor=self.timeout_factor)
+        wait_until_helper(test_function, timeout=timeout, lock=p2p_lock, timeout_factor=self.timeout_factor, do_assert=do_assert)
 
     def wait_for_disconnect(self, timeout=60):
         test_function = lambda: not self.is_connected
