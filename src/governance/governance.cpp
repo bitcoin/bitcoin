@@ -137,6 +137,8 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received object: %s\n", strHash);
 
         if (!AcceptObjectMessage(nHash)) {
+            LOCK(cs_main);
+            peerman.ForgetTxHash(pfrom->GetId(), nHash);
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received unrequested object: %s\n", strHash);
             return;
         }
@@ -144,6 +146,8 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         LOCK(cs);
 
         if (mapObjects.count(nHash) || mapPostponedObjects.count(nHash) || mapErasedGovernanceObjects.count(nHash)) {
+            LOCK(cs_main);
+            peerman.ForgetTxHash(pfrom->GetId(), nHash);
             // TODO - print error code? what if it's GOVOBJ_ERROR_IMMATURE?
             LogPrint(BCLog::GOBJECT, "MNGOVERNANCEOBJECT -- Received already seen object: %s\n", strHash);
             return;

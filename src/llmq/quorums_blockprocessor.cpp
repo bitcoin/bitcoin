@@ -99,6 +99,10 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
                 auto jt = minableCommitments.find(it->second);
                 if (jt != minableCommitments.end()) {
                     if (jt->second.CountSigners() <= qc.CountSigners()) {
+                        {
+                            LOCK(cs_main);
+                            peerman.ForgetTxHash(pfrom->GetId(), hash);
+                        }
                         return;
                     }
                 }
