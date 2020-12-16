@@ -1989,16 +1989,17 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         int nOutboundFullRelay = 0;
         int nOutboundBlockRelay = 0;
         std::set<std::vector<unsigned char> > setConnected;
-
+        // SYSCOIN
+        std::set<uint256> setConnectedMasternodes;
         {
             LOCK(cs_vNodes);
             for (const CNode* pnode : vNodes) {
-                // SYSCOIN
-                if(pnode->fMasternode)
-                    continue;
                 if (pnode->IsFullOutboundConn()) nOutboundFullRelay++;
                 if (pnode->IsBlockOnlyConn()) nOutboundBlockRelay++;
-
+                // SYSCOIN
+                if (!pnode->verifiedProRegTxHash.IsNull()) {
+                    setConnectedMasternodes.emplace(pnode->verifiedProRegTxHash);
+                }
                 // Netgroups for inbound and manual peers are not excluded because our goal here
                 // is to not use multiple of our limited outbound slots on a single netgroup
                 // but inbound and manual peers do not use our outbound slots. Inbound peers
@@ -2014,16 +2015,6 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     case ConnectionType::FEELER:
                         setConnected.insert(pnode->addr.GetGroup(addrman.m_asmap));
                 } // no default case, so the compiler can warn about missing cases
-            }
-        }
-        // SYSCOIN
-        std::set<uint256> setConnectedMasternodes;
-        {
-            LOCK(cs_vNodes);
-            for (CNode* pnode : vNodes) {
-                if (!pnode->verifiedProRegTxHash.IsNull()) {
-                    setConnectedMasternodes.emplace(pnode->verifiedProRegTxHash);
-                }
             }
         }
         ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
@@ -2097,6 +2088,10 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             if (anchor && !m_anchors.empty()) {
                 const CAddress addr = m_anchors.back();
                 m_anchors.pop_back();
+                // SYSCOIN
+                auto dmn = mnList.GetMNByService(addr);
+                if(dmn != nullptr)
+                    continue;
                 if (!addr.IsValid() || IsLocal(addr) || !IsReachable(addr) ||
                     !HasAllDesirableServiceFlags(addr.nServices) ||
                     setConnected.count(addr.GetGroup(addrman.m_asmap))) continue;
@@ -2137,9 +2132,10 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 // Not a feeler
                 addr = addrman.Select();
             }
-            
+            // SYSCOIN
+            bool fAllowLocal = Params().AllowMultiplePorts() && addr.GetPort() != GetListenPort();
             // Require outbound connections, other than feelers, to be to distinct network groups
-            if (!fFeeler && setConnected.count(addr.GetGroup(addrman.m_asmap))) {
+            if (!fAllowLocal && !fFeeler && setConnected.count(addr.GetGroup(addrman.m_asmap))) {
                 break;
             }
             // SYSCOIN
@@ -2148,12 +2144,15 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             // don't try to connect to masternodes that we already have a connection to (most likely inbound)
             if (isMasternode && setConnectedMasternodes.count(dmn->proTxHash))
                 break;
-
+            // if anchor was set, and it's a dmn then override to full relay from blocks only
+            if (isMasternode && anchor) {
+                conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
+            }
+                     
             // SYSCOIN
             if (!addr.IsValid())
                 break;
 
-            bool fAllowLocal = Params().AllowMultiplePorts() && addr.GetPort() != GetListenPort();
             if (!fAllowLocal && IsLocal(addr))
                 break;
 
