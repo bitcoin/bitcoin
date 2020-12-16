@@ -154,6 +154,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         if(bReturn) {
             LOCK(cs_main);
             peerman.ForgetTxHash(pfrom->GetId(), nHash);
+            return;
         }
 
         bool fRateCheckBypassed = false;
@@ -179,13 +180,13 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
             if (fMissingConfirmations) {
                 AddPostponedObject(govobj);
                 LogPrintf("MNGOVERNANCEOBJECT -- Not enough fee confirmations for: %s, strError = %s\n", strHash, strError);
-                return;
             } else {
                 LOCK(cs_main);
                 peerman.ForgetTxHash(pfrom->GetId(), nHash);
                 // apply node's ban score
                 peerman.Misbehaving(pfrom->GetId(), 20, "invalid governance object");
             }
+            return;
         }
         AddGovernanceObject(govobj, connman, pfrom);
     }
