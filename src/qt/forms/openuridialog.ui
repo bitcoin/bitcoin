@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Open bitcoin URI</string>
+   <string>Open litecoin URI</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
