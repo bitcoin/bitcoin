@@ -1113,6 +1113,7 @@ bool CSigSharesManager::SendMessages()
     std::unordered_map<NodeId, std::vector<CSigSesAnn>> sigSessionAnnouncements;
 
     auto addSigSesAnnIfNeeded = [&](NodeId nodeId, const uint256& signHash) {
+        LOCK(cs);
         auto& nodeState = nodeStates[nodeId];
         auto session = nodeState.GetSessionBySignHash(signHash);
         assert(session);
@@ -1344,7 +1345,7 @@ void CSigSharesManager::Cleanup()
             RemoveSigSharesForSession(signHash);
         }
     }
-
+    std::unordered_set<NodeId> nodeStatesToDelete;
     {
         LOCK(cs);
 
@@ -1403,13 +1404,12 @@ void CSigSharesManager::Cleanup()
             }
             RemoveSigSharesForSession(signHash);
         }
+        // Find node states for peers that disappeared from CConnman
+        for (auto& p : nodeStates) {
+            nodeStatesToDelete.emplace(p.first);
+        }
     }
 
-    // Find node states for peers that disappeared from CConnman
-    std::unordered_set<NodeId> nodeStatesToDelete;
-    for (auto& p : nodeStates) {
-        nodeStatesToDelete.emplace(p.first);
-    }
     connman.ForEachNode([&](CNode* pnode) {
         nodeStatesToDelete.erase(pnode->GetId());
     });
