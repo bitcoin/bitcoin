@@ -237,6 +237,7 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
  * scripts, instead use ExtractDestinations. Currently only works for P2PK,
  * P2PKH, P2SH, P2WPKH, and P2WSH scripts.
  */
+bool ExtractDestination(const CScript& scriptPubKey, TxoutType& typeRet, CTxDestination& addressRet);
 bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet);
 
 /**
@@ -249,6 +250,8 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
  * Note: this function confuses destinations (a subset of CScripts that are
  * encodable as an address) with key identifiers (of keys involved in a
  * CScript), and its use should be phased out.
+ *
+ * TODO: from v0.22 ("addresses" and "reqSigs" deprecated) "ExtractDestinations" should be removed
  */
 bool ExtractDestinations(const CScript& scriptPubKey, TxoutType& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet);
 

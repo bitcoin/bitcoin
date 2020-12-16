@@ -15,11 +15,8 @@
             "scriptPubKey": {
                 "asm": "0 0bfe935e70c321c7ca3afc75ce0d0ca2f98b5422e008bb31c00c6d7f1f1c0ad6",
                 "hex": "00200bfe935e70c321c7ca3afc75ce0d0ca2f98b5422e008bb31c00c6d7f1f1c0ad6",
-                "reqSigs": 1,
-                "type": "witness_v0_scripthash",
-                "addresses": [
-                    "bc1qp0lfxhnscvsu0j36l36uurgv5tuck4pzuqytkvwqp3kh78cupttqyf705v"
-                ]
+                "address": "bc1qp0lfxhnscvsu0j36l36uurgv5tuck4pzuqytkvwqp3kh78cupttqyf705v",
+                "type": "witness_v0_scripthash"
             }
         }
     ],

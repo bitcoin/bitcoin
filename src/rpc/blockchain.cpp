@@ -1114,8 +1114,8 @@ static RPCHelpMan gettxout()
                             {
                                 {RPCResult::Type::STR_HEX, "asm", ""},
                                 {RPCResult::Type::STR_HEX, "hex", ""},
-                                {RPCResult::Type::NUM, "reqSigs", "Number of required signatures"},
-                                {RPCResult::Type::STR_HEX, "type", "The type, eg pubkeyhash"},
+                                {RPCResult::Type::NUM, "reqSigs", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=reqSigs is passed) Number of required signatures"},
+                                {RPCResult::Type::STR, "type", "The type, eg pubkeyhash"},
                                 {RPCResult::Type::ARR, "addresses", "array of bitcoin addresses",
                                     {{RPCResult::Type::STR, "address", "bitcoin address"}}},
                             }},

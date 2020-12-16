@@ -177,10 +177,10 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
     return TxoutType::NONSTANDARD;
 }
 
-bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
+bool ExtractDestination(const CScript& scriptPubKey, TxoutType& whichType, CTxDestination& addressRet)
 {
     std::vector<valtype> vSolutions;
-    TxoutType whichType = Solver(scriptPubKey, vSolutions);
+    whichType = Solver(scriptPubKey, vSolutions);
 
     if (whichType == TxoutType::PUBKEY) {
         CPubKey pubKey(vSolutions[0]);
@@ -221,6 +221,12 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     return false;
 }
 
+bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet) {
+    TxoutType type;
+    return ExtractDestination(scriptPubKey, type, addressRet);
+}
+
+// TODO: from v0.22 ("addresses" and "reqSigs" deprecated) "ExtractDestinations" should be removed
 bool ExtractDestinations(const CScript& scriptPubKey, TxoutType& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet)
 {
     addressRet.clear();

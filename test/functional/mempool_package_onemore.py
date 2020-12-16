@@ -80,7 +80,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         self.chain_transaction(self.nodes[0], [second_chain], [0], second_chain_value, fee, 1)
 
         # Make sure we can RBF the chain which used our carve-out rule
-        second_tx_outputs = {self.nodes[0].getrawtransaction(replacable_txid, True)["vout"][0]['scriptPubKey']['addresses'][0]: replacable_orig_value - (Decimal(1) / Decimal(100))}
+        second_tx_outputs = {self.nodes[0].getrawtransaction(replacable_txid, True)["vout"][0]['scriptPubKey']['address']: replacable_orig_value - (Decimal(1) / Decimal(100))}
         second_tx = self.nodes[0].createrawtransaction([{'txid': chain[0][0], 'vout': 1}], second_tx_outputs)
         signed_second_tx = self.nodes[0].signrawtransactionwithwallet(second_tx)
         self.nodes[0].sendrawtransaction(signed_second_tx['hex'])

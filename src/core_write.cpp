@@ -7,6 +7,7 @@
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <key_io.h>
+#include <rpc/server.h>
 #include <script/script.h>
 #include <script/standard.h>
 #include <serialize.h>
@@ -141,40 +142,41 @@ void ScriptToUniv(const CScript& script, UniValue& out, bool include_address)
     out.pushKV("asm", ScriptToAsmStr(script));
     out.pushKV("hex", HexStr(script));
 
-    std::vector<std::vector<unsigned char>> solns;
-    TxoutType type = Solver(script, solns);
-    out.pushKV("type", GetTxnOutputType(type));
-
+    TxoutType type;
     CTxDestination address;
-    if (include_address && ExtractDestination(script, address) && type != TxoutType::PUBKEY) {
+
+    if (ExtractDestination(script, type, address) && include_address && type != TxoutType::PUBKEY) {
         out.pushKV("address", EncodeDestination(address));
     }
+    out.pushKV("type", GetTxnOutputType(type));
 }
 
-void ScriptPubKeyToUniv(const CScript& scriptPubKey,
-                        UniValue& out, bool fIncludeHex)
+void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex)
 {
     TxoutType type;
-    std::vector<CTxDestination> addresses;
-    int nRequired;
+    CTxDestination address;
 
     out.pushKV("asm", ScriptToAsmStr(scriptPubKey));
     if (fIncludeHex)
         out.pushKV("hex", HexStr(scriptPubKey));
 
-    if (!ExtractDestinations(scriptPubKey, type, addresses, nRequired) || type == TxoutType::PUBKEY) {
-        out.pushKV("type", GetTxnOutputType(type));
-        return;
+    // TODO: from v0.22 ("addresses" and "reqSigs" deprecated) this entire if statement should be removed
+    if (IsDeprecatedRPCEnabled("reqSigs")) { // cruft...
+        std::vector<CTxDestination> addresses;
+        int nRequired;
+        if (ExtractDestinations(scriptPubKey, type, addresses, nRequired) && type != TxoutType::PUBKEY) {
+            out.pushKV("reqSigs", nRequired);
+            UniValue a(UniValue::VARR);
+            for (const CTxDestination& addr : addresses) {
+                a.push_back(EncodeDestination(addr));
+            }
+            out.pushKV("addresses", a);
+        }
     }
-
-    out.pushKV("reqSigs", nRequired);
+    if (ExtractDestination(scriptPubKey, type, address) && type != TxoutType::PUBKEY) {
+        out.pushKV("address", EncodeDestination(address));
+    }
     out.pushKV("type", GetTxnOutputType(type));
-
-    UniValue a(UniValue::VARR);
-    for (const CTxDestination& addr : addresses) {
-        a.push_back(EncodeDestination(addr));
-    }
-    out.pushKV("addresses", a);
 }
 
 void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex, int serialize_flags)

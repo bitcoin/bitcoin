@@ -280,6 +280,7 @@ BASE_SCRIPTS = [
     'feature_settings.py',
     'rpc_getdescriptorinfo.py',
     'rpc_getpeerinfo_deprecation.py',
+    'rpc_reqsigs_deprecation.py',
     'rpc_help.py',
     'feature_help.py',
     'feature_shutdown.py',

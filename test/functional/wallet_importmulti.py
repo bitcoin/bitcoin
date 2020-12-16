@@ -497,8 +497,7 @@ class ImportMultiTest(BitcoinTestFramework):
         test_address(self.nodes[1],
                      multisig.p2sh_addr,
                      solvable=True,
-                     ismine=True,
-                     sigsrequired=2)
+                     ismine=True)
 
         # P2SH-P2WPKH address with no redeemscript or public or private key
         key = get_key(self.nodes[0])
