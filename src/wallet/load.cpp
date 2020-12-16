@@ -105,6 +105,7 @@ bool LoadWallets(interfaces::Chain& chain)
             if (!database && status == DatabaseStatus::FAILED_NOT_FOUND) {
                 continue;
             }
+            chain.initMessage(_("Loading wallet...").translated);
             std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(chain, name, std::move(database), options.create_flags, error, warnings) : nullptr;
             if (!warnings.empty()) chain.initWarning(Join(warnings, Untranslated("\n")));
             if (!pwallet) {

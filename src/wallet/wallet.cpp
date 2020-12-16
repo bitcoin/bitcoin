@@ -213,6 +213,7 @@ std::shared_ptr<CWallet> LoadWalletInternal(interfaces::Chain& chain, const std:
             return nullptr;
         }
 
+        chain.initMessage(_("Loading wallet...").translated);
         std::shared_ptr<CWallet> wallet = CWallet::Create(chain, name, std::move(database), options.create_flags, error, warnings);
         if (!wallet) {
             error = Untranslated("Wallet loading failed.") + Untranslated(" ") + error;
@@ -292,6 +293,7 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, const std::strin
     }
 
     // Make the wallet
+    chain.initMessage(_("Loading wallet...").translated);
     std::shared_ptr<CWallet> wallet = CWallet::Create(chain, name, std::move(database), wallet_creation_flags, error, warnings);
     if (!wallet) {
         error = Untranslated("Wallet creation failed.") + Untranslated(" ") + error;
@@ -3886,8 +3888,6 @@ std::unique_ptr<WalletDatabase> MakeWalletDatabase(const std::string& name, cons
 std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::string& name, std::unique_ptr<WalletDatabase> database, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings)
 {
     const std::string& walletFile = database->Filename();
-
-    chain.initMessage(_("Loading wallet…").translated);
 
     int64_t nStart = GetTimeMillis();
     // TODO: Can't use std::make_shared because we need a custom deleter but
