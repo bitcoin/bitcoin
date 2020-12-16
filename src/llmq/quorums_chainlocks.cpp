@@ -97,22 +97,22 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
         LOCK(cs_main);
         peerman.ReceivedResponse(from, hash);
     }
-
+    bool bReturn = false;
     {
         LOCK(cs);
         enforced = isEnforced;
         if (!seenChainLocks.try_emplace(hash, GetTimeMillis()).second) {
-            LOCK(cs_main);
-            peerman.ForgetTxHash(from, hash);
-            return;
+            bReturn = true;
         }
 
         if (!bestChainLock.IsNull() && clsig.nHeight <= bestChainLock.nHeight) {
-            LOCK(cs_main);
-            peerman.ForgetTxHash(from, hash);
             // no need to process/relay older CLSIGs
-            return;
+            bReturn = true;
         }
+    }
+    if(bReturn) {
+        LOCK(cs_main);
+        peerman.ForgetTxHash(from, hash);
     }
 
     uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, clsig.nHeight));
