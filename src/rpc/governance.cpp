@@ -246,7 +246,7 @@ UniValue gobject_list_prepared(const JSONRPCRequest& request)
 {
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (request.fHelp || (request.params.size() > 2)) {
-        gobject_prepare_help(pwallet);
+        gobject_list_prepared_help(pwallet);
     }
 
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
