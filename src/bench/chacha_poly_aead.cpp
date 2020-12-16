@@ -31,12 +31,15 @@ static void CHACHA20_POLY1305_AEAD(benchmark::Bench& bench, size_t buffersize, b
     uint32_t len = 0;
     bench.batch(buffersize).unit("byte").run([&] {
         // encrypt or decrypt the buffer with a static key
-        assert(aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, out.data(), out.size(), in.data(), buffersize, true));
+        const bool crypt_ok_1 = aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, out.data(), out.size(), in.data(), buffersize, true);
+        assert(crypt_ok_1);
 
         if (include_decryption) {
             // if we decrypt, include the GetLength
-            assert(aead.GetLength(&len, seqnr_aad, aad_pos, in.data()));
-            assert(aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, out.data(), out.size(), in.data(), buffersize, true));
+            const bool get_length_ok = aead.GetLength(&len, seqnr_aad, aad_pos, in.data());
+            assert(get_length_ok);
+            const bool crypt_ok_2 = aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, out.data(), out.size(), in.data(), buffersize, true);
+            assert(crypt_ok_2);
         }
 
         // increase main sequence number
