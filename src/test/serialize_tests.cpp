@@ -57,7 +57,7 @@ public:
 
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITEMANY(intval, boolval, stringval, charstrval, txval);
+        READWRITE(intval, boolval, stringval, charstrval, txval);
     }
 };
 
