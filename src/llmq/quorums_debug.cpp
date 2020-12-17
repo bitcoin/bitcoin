@@ -28,9 +28,9 @@ UniValue CDKGDebugSessionStatus::ToJson(int detailLevel) const
         {
             LOCK(cs_main);
             pindex = LookupBlockIndex(quorumHash);
-            if (pindex != nullptr) {
-                CLLMQUtils::GetAllQuorumMembers(llmqType, pindex, dmnMembers);
-            }
+        }
+        if (pindex != nullptr) {
+            CLLMQUtils::GetAllQuorumMembers(llmqType, pindex, dmnMembers);
         }
     }
 

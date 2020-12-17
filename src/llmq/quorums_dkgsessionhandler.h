@@ -132,7 +132,7 @@ public:
     const char* GetName() {return m_threadName.c_str();}
 
 private:
-    bool InitNewQuorum(const CBlockIndex* pindexQuorum) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool InitNewQuorum(const CBlockIndex* pindexQuorum);
 
     std::pair<QuorumPhase, uint256> GetPhaseAndQuorumHash() const;
 

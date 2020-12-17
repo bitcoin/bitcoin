@@ -16,7 +16,6 @@
 
 #include <llmq/quorums_utils.h>
 #include <sync.h>
-extern RecursiveMutex cs_main;
 class UniValue;
 
 namespace llmq
@@ -258,7 +257,7 @@ public:
     CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
         params(_params), blsWorker(_blsWorker), cache(_blsWorker), dkgManager(_dkgManager) {}
 
-    bool Init(const CBlockIndex* _pindexQuorum, const std::vector<CDeterministicMNCPtr>& mns, const uint256& _myProTxHash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    bool Init(const CBlockIndex* _pindexQuorum, const std::vector<CDeterministicMNCPtr>& mns, const uint256& _myProTxHash);
 
     size_t GetMyMemberIndex() const { return myIdx; }
 
