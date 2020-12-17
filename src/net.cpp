@@ -2165,7 +2165,11 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 continue;
             }
 
-            // SYSCOIN do not allow non-default ports, unless after 50 invalid addresses selected already
+            // SYSCOIN Do not allow non-default ports, unless after 50 invalid
+            // addresses selected already. This is to prevent malicious peers
+            // from advertising themselves as a service on another host and
+            // port, causing a DoS attack as nodes around the network attempt
+            // to connect to it fruitlessly.
             if ((!isMasternode || !Params().AllowMultiplePorts()) && addr.GetPort() != Params().GetDefaultPort() && addr.GetPort() != GetListenPort() && nTries < 50)
                 continue;
 
