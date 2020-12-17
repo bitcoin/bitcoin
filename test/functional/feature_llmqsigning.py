@@ -2,7 +2,7 @@
 # Copyright (c) 2015-2020 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
+import time
 from test_framework.test_framework import DashTestFramework
 
 '''
@@ -43,7 +43,13 @@ class LLMQSigningTest(DashTestFramework):
             return True
 
         def wait_for_sigs(hasrecsigs, isconflicting1, isconflicting2, timeout):
-            self.wait_until(lambda: check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout, sleep = 1, bumptime=1)
+            t = time.time()
+            while time.time() - t < timeout:
+                if check_sigs(hasrecsigs, isconflicting1, isconflicting2):
+                    return
+                self.bump_mocktime(1)
+                time.sleep(1)
+            raise AssertionError("wait_for_sigs timed out")
 
         def assert_sigs_nochange(hasrecsigs, isconflicting1, isconflicting2, timeout):
             assert(not self.wait_until(lambda: not check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout, bumptime=1, do_assert = False))
@@ -55,6 +61,7 @@ class LLMQSigningTest(DashTestFramework):
         for i in range(2):
             self.mninfo[i].node.quorum_sign(100, id, msgHash)
         self.bump_mocktime(5)
+        self.nodes[0].generate(1)
         assert_sigs_nochange(False, False, False, 3)
 
         # Sign one more share, should result in recovered sig and conflict for msgHashConflict
@@ -71,13 +78,14 @@ class LLMQSigningTest(DashTestFramework):
         self.mine_quorum()
         self.mine_quorum()
         assert_sigs_nochange(True, False, True, 3)
-
         # fast forward until 0.5 days before cleanup is expected, recovered sig should still be valid
         self.bump_mocktime(recsig_time + int(60 * 60 * 24 * 6.5) - self.mocktime)
+        self.nodes[0].generate(1)
         # Cleanup starts every 5 seconds
         wait_for_sigs(True, False, True, 15)
         # fast forward 1 day, recovered sig should not be valid anymore
         self.bump_mocktime(int(60 * 60 * 24 * 1))
+        self.nodes[0].generate(1)
         # Cleanup starts every 5 seconds
         wait_for_sigs(False, False, False, 15)
 
@@ -86,6 +94,7 @@ class LLMQSigningTest(DashTestFramework):
         for i in range(2, 5):
             self.mninfo[i].node.quorum_sign(100, id, msgHash)
         self.bump_mocktime(5)
+        self.nodes[0].generate(1)
         wait_for_sigs(True, False, True, 15)
 
         id = "0000000000000000000000000000000000000000000000000000000000000002"
@@ -106,6 +115,7 @@ class LLMQSigningTest(DashTestFramework):
         self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()), bumptime=1)
         # Let 5 seconds pass so that the next node is used for recovery, which should succeed
         self.bump_mocktime(5)
+        self.nodes[0].generate(1)
         wait_for_sigs(True, False, True, 15)
 if __name__ == '__main__':
     LLMQSigningTest().main()
