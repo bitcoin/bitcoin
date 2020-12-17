@@ -6,7 +6,6 @@
 import time
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import force_finish_mnsync, MAX_INITIAL_BROADCAST_DELAY
 
 '''
 feature_llmqchainlocks.py
@@ -21,7 +20,7 @@ class LLMQChainLocksTest(DashTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
- 
+
     def run_test(self):
 
         # Connect all nodes to node1 so that we always have the whole network connected
