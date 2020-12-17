@@ -138,13 +138,11 @@ void CQuorum::StartCachePopulatorThread(std::shared_ptr<CQuorum> _this)
     if (_this->quorumVvec == nullptr) {
         return;
     }
-
-    LogPrint(BCLog::LLMQ, "CQuorum::StartCachePopulatorThread -- start\n");
     if (_this->cachePopulatorThread.joinable()) {
-        LogPrint(BCLog::LLMQ, "CQuorum::StartCachePopulatorThread -- joining and waiting on previous thread\n");
-        _this->cachePopulatorThread.join();
-        LogPrint(BCLog::LLMQ, "CQuorum::StartCachePopulatorThread -- done, now we can proceed...\n");
+        LogPrint(BCLog::LLMQ, "CQuorum::StartCachePopulatorThread -- thread already active\n");
+        return;
     }
+    LogPrint(BCLog::LLMQ, "CQuorum::StartCachePopulatorThread -- start\n");
     // this thread will exit after some time
     // when then later some other thread tries to get keys, it will be much faster
     _this->cachePopulatorThread = std::thread(&TraceThread<std::function<void()>>, "syscoin-q-cachepop", [_this] {
@@ -333,11 +331,20 @@ CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const uint256& quorumHas
 CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const CBlockIndex* pindexQuorum)
 {
     assert(pindexQuorum);
+
+    auto quorumHash = pindexQuorum->GetBlockHash();
+
     // we must check this before we look into the cache. Reorgs might have happened which would mean we might have
     // cached quorums which are not in the active chain anymore
-    const uint256& quorumHash = pindexQuorum->GetBlockHash();
     if (!HasQuorum(llmqType, quorumHash)) {
         return nullptr;
+    }
+
+    LOCK(quorumsCacheCs);
+
+    auto it = quorumsCache.find(std::make_pair(llmqType, quorumHash));
+    if (it != quorumsCache.end()) {
+        return it->second;
     }
 
     CFinalCommitment qc;
@@ -345,24 +352,17 @@ CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const CBlockIndex* pinde
     if (!quorumBlockProcessor->GetMinedCommitment(llmqType, quorumHash, qc, minedBlockHash)) {
         return nullptr;
     }
-    {
-        LOCK(quorumsCacheCs);
 
-        auto it = quorumsCache.find(std::make_pair(llmqType, quorumHash));
-        if (it != quorumsCache.end()) {
-            return it->second;
-        }
-
-    }
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
+
     auto quorum = std::make_shared<CQuorum>(params, blsWorker);
+
     if (!BuildQuorumFromCommitment(qc, pindexQuorum, minedBlockHash, quorum)) {
         return nullptr;
     }
-    {
-        LOCK(quorumsCacheCs);
-        quorumsCache.try_emplace(std::make_pair(llmqType, quorumHash), quorum);
-    }
+
+    quorumsCache.emplace(std::make_pair(llmqType, quorumHash), quorum);
+
     return quorum;
 }
 } // namespace llmq
