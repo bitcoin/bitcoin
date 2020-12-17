@@ -1231,7 +1231,7 @@ bool CConnman::InactivityCheck(const CNode& node) const
     }
 
     if (node.nLastRecv == 0 || node.nLastSend == 0) {
-        LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d from %d\n", m_peer_connect_timeout, node.nLastRecv != 0, node.nLastSend != 0, node.GetId());
+        LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d peer=%d\n", m_peer_connect_timeout, node.nLastRecv != 0, node.nLastSend != 0, node.GetId());
         return true;
     }
 
@@ -1254,7 +1254,7 @@ bool CConnman::InactivityCheck(const CNode& node) const
     }
 
     if (!node.fSuccessfullyConnected) {
-        LogPrint(BCLog::NET, "version handshake timeout from %d\n", node.GetId());
+        LogPrint(BCLog::NET, "version handshake timeout peer=%d\n", node.GetId());
         return true;
     }
 
