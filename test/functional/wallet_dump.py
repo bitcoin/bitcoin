@@ -98,7 +98,7 @@ class WalletDumpTest(BitcoinTestFramework):
         addrs = []
         for i in range(0,test_addr_count):
             addr = self.nodes[0].getnewaddress()
-            vaddr= self.nodes[0].validateaddress(addr) #required to get hd keypath
+            vaddr= self.nodes[0].getaddressinfo(addr) #required to get hd keypath
             addrs.append(vaddr)
         # Should be a no-op:
         self.nodes[0].keypoolrefill()
@@ -144,13 +144,13 @@ class WalletDumpTest(BitcoinTestFramework):
         self.start_node(0, ['-wallet=w2'])
 
         # Make sure the address is not IsMine before import
-        result = self.nodes[0].validateaddress(multisig_addr)
+        result = self.nodes[0].getaddressinfo(multisig_addr)
         assert(result['ismine'] == False)
 
         self.nodes[0].importwallet(wallet_unenc_dump)
 
         # Now check IsMine is true
-        result = self.nodes[0].validateaddress(multisig_addr)
+        result = self.nodes[0].getaddressinfo(multisig_addr)
         assert(result['ismine'] == True)
 
 if __name__ == '__main__':

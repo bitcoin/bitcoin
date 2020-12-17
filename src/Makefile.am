@@ -229,10 +229,10 @@ BITCOIN_CORE_H = \
   rpc/util.h \
   saltedhasher.h \
   scheduler.h \
+  script/ismine.h \
   script/sigcache.h \
   script/sign.h \
   script/standard.h \
-  script/ismine.h \
   spork.h \
   stacktraces.h \
   streams.h \
@@ -360,7 +360,6 @@ libdash_server_a_SOURCES = \
   rpc/privatesend.cpp \
   rpc/util.cpp \
   script/sigcache.cpp \
-  script/ismine.cpp \
   spork.cpp \
   statsd_client.cpp \
   timedata.cpp \
@@ -537,6 +536,7 @@ libdash_common_a_SOURCES = \
   protocol.cpp \
   saltedhasher.cpp \
   scheduler.cpp \
+  script/ismine.cpp \
   script/sign.cpp \
   script/standard.cpp \
   warnings.cpp \
@@ -602,10 +602,10 @@ endif
 
 dashd_LDADD = \
   $(LIBBITCOIN_SERVER) \
+  $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_COMMON) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_ZMQ) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \

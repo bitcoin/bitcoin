@@ -66,3 +66,29 @@ CScript CreateMultisigRedeemscript(const int required, const std::vector<CPubKey
 
     return result;
 }
+
+class DescribeAddressVisitor : public boost::static_visitor<UniValue>
+{
+public:
+
+    explicit DescribeAddressVisitor() {}
+
+    UniValue operator()(const CNoDestination &dest) const { return UniValue(UniValue::VOBJ); }
+
+    UniValue operator()(const CKeyID &keyID) const {
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("isscript", false);
+        return obj;
+    }
+
+    UniValue operator()(const CScriptID &scriptID) const {
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("isscript", true);
+        return obj;
+    }
+};
+
+UniValue DescribeAddress(const CTxDestination& dest)
+{
+    return boost::apply_visitor(DescribeAddressVisitor(), dest);
+}

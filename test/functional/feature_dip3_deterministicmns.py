@@ -150,8 +150,8 @@ class DIP3Test(BitcoinTestFramework):
         addr1 = self.nodes[0].getnewaddress()
         addr2 = self.nodes[0].getnewaddress()
 
-        addr1Obj = self.nodes[0].validateaddress(addr1)
-        addr2Obj = self.nodes[0].validateaddress(addr2)
+        addr1Obj = self.nodes[0].getaddressinfo(addr1)
+        addr2Obj = self.nodes[0].getaddressinfo(addr2)
 
         multisig = self.nodes[0].createmultisig(1, [addr1Obj['pubkey'], addr2Obj['pubkey']])['address']
         self.update_mn_payee(mns[0], multisig)

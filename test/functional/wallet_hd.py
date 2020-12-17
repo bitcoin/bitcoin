@@ -37,7 +37,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         # create an internal key
         change_addr = self.nodes[1].getrawchangeaddress()
-        change_addrV= self.nodes[1].validateaddress(change_addr)
+        change_addrV= self.nodes[1].getaddressinfo(change_addr)
         assert_equal(change_addrV["hdkeypath"], "m/44'/1'/0'/1/0") #first internal child key
 
         # Import a non-HD private key in the HD wallet
@@ -55,7 +55,7 @@ class WalletHDTest(BitcoinTestFramework):
         NUM_HD_ADDS = 10
         for i in range(NUM_HD_ADDS):
             hd_add = self.nodes[1].getnewaddress()
-            hd_info = self.nodes[1].validateaddress(hd_add)
+            hd_info = self.nodes[1].getaddressinfo(hd_add)
             assert_equal(hd_info["hdkeypath"], "m/44'/1'/0'/0/"+str(i))
             assert_equal(hd_info["hdchainid"], chainid)
             self.nodes[0].sendtoaddress(hd_add, 1)
@@ -65,7 +65,7 @@ class WalletHDTest(BitcoinTestFramework):
 
         # create an internal key (again)
         change_addr = self.nodes[1].getrawchangeaddress()
-        change_addrV= self.nodes[1].validateaddress(change_addr)
+        change_addrV= self.nodes[1].getaddressinfo(change_addr)
         assert_equal(change_addrV["hdkeypath"], "m/44'/1'/0'/1/1") #second internal child key
 
         self.sync_all()
@@ -86,7 +86,7 @@ class WalletHDTest(BitcoinTestFramework):
         hd_add_2 = None
         for i in range(NUM_HD_ADDS):
             hd_add_2 = self.nodes[1].getnewaddress()
-            hd_info_2 = self.nodes[1].validateaddress(hd_add_2)
+            hd_info_2 = self.nodes[1].getaddressinfo(hd_add_2)
             assert_equal(hd_info_2["hdkeypath"], "m/44'/1'/0'/0/"+str(i))
             assert_equal(hd_info_2["hdchainid"], chainid)
         assert_equal(hd_add, hd_add_2)
@@ -124,7 +124,7 @@ class WalletHDTest(BitcoinTestFramework):
         keypath = ""
         for out in outs:
             if out['value'] != 1:
-                keypath = self.nodes[1].validateaddress(out['scriptPubKey']['addresses'][0])['hdkeypath']
+                keypath = self.nodes[1].getaddressinfo(out['scriptPubKey']['addresses'][0])['hdkeypath']
 
         assert_equal(keypath[0:13], "m/44'/1'/0'/1")
 
