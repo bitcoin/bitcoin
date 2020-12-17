@@ -5,7 +5,7 @@
 
 #include <shutdown.h>
 
-#include <config/bitcoin-config.h>
+#include <config/syscoin-config.h>
 
 #include <assert.h>
 #include <atomic>
