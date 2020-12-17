@@ -319,14 +319,19 @@ void CQuorumManager::ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexQuor
 
 CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const uint256& quorumHash)
 {
-    LOCK(cs_main);
-    const CBlockIndex* pindexQuorum = LookupBlockIndex(quorumHash);
-    if (!pindexQuorum) {
-        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- block %s not found\n", __func__, quorumHash.ToString());
-        return nullptr;
+    CBlockIndex* pindexQuorum;
+    {
+        LOCK(cs_main);
+
+        pindexQuorum = LookupBlockIndex(quorumHash);
+        if (!pindexQuorum) {
+            LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- block %s not found\n", __func__, quorumHash.ToString());
+            return nullptr;
+        }
     }
     return GetQuorum(llmqType, pindexQuorum);
 }
+
 
 CQuorumCPtr CQuorumManager::GetQuorum(uint8_t llmqType, const CBlockIndex* pindexQuorum)
 {
