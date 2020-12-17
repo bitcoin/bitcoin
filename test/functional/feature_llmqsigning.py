@@ -43,7 +43,7 @@ class LLMQSigningTest(DashTestFramework):
             return True
 
         def wait_for_sigs(hasrecsigs, isconflicting1, isconflicting2, timeout):
-            self.wait_until(lambda: check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout, bumptime=5)
+            self.wait_until(lambda: check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout, sleep = 0.1, bumptime=5)
 
         def assert_sigs_nochange(hasrecsigs, isconflicting1, isconflicting2, timeout):
             assert(not self.wait_until(lambda: not check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout, bumptime=1, do_assert = False))

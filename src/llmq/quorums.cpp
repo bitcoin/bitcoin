@@ -139,7 +139,6 @@ void CQuorum::StartCachePopulatorThread(std::shared_ptr<CQuorum> _this)
         return;
     }
 
-    cxxtimer::Timer t(true);
     LogPrint(BCLog::LLMQ, "CQuorum::StartCachePopulatorThread -- start\n");
 
     // this thread will exit after some time
@@ -151,7 +150,6 @@ void CQuorum::StartCachePopulatorThread(std::shared_ptr<CQuorum> _this)
                 _this->GetPubKeyShare(i);
             }
         }
-        LogPrint(BCLog::LLMQ, "CQuorum::StartCachePopulatorThread -- done. time=%d\n", t.count());
     });
 }
 
