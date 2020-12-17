@@ -143,7 +143,7 @@ void CQuorum::StartCachePopulatorThread(std::shared_ptr<CQuorum> _this)
 
     // this thread will exit after some time
     // when then later some other thread tries to get keys, it will be much faster
-    _this->cachePopulatorThread = std::thread([_this, t]() {
+    _this->cachePopulatorThread = std::thread([_this]() {
         util::ThreadRename("syscoin-q-cachepop");
         for (size_t i = 0; i < _this->members.size() && !_this->stopCachePopulatorThread && !ShutdownRequested(); i++) {
             if (_this->qc.validMembers[i]) {
