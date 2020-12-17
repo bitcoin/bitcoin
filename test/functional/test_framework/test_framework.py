@@ -670,9 +670,10 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         self.sync_blocks(nodes)
         self.sync_mempools(nodes)
     # SYSCOIN
-    def wait_until(self, test_function, timeout=60, sleep=0.05, do_assert = True):
+    def wait_until(self, test_function, timeout=60, sleep=0.05, bumptime=0, do_assert = True):
         def bumptimeproc():
-            self.bump_mocktime(1)
+            if bumptime > 0:
+                self.bump_mocktime(bumptime)
         return wait_until_helper(test_function, timeout=timeout, sleep=sleep, bumptimeproc=bumptimeproc, timeout_factor=self.options.timeout_factor,do_assert=do_assert)
 
     # Private helper methods. These should not be accessed by the subclass test scripts.
@@ -1151,7 +1152,7 @@ class DashTestFramework(SyscoinTestFramework):
                 return block["confirmations"] > 0 and block["chainlock"]
             except:
                 return False
-        if self.wait_until(check_chainlocked_block, timeout=timeout, sleep=0.1, do_assert=expected) and not expected:
+        if self.wait_until(check_chainlocked_block, timeout=timeout, sleep=0.1, bumptime=1, do_assert=expected) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
     def wait_for_chainlocked_block_all_nodes(self, block_hash, timeout=15):
@@ -1159,13 +1160,13 @@ class DashTestFramework(SyscoinTestFramework):
             self.wait_for_chainlocked_block(node, block_hash, timeout=timeout)
 
     def wait_for_best_chainlock(self, node, block_hash, timeout=15):
-        self.wait_until(lambda: node.getbestchainlock()["blockhash"] == block_hash, timeout=timeout, sleep=0.1)
+        self.wait_until(lambda: node.getbestchainlock()["blockhash"] == block_hash, timeout=timeout, sleep=0.1, bumptime=1)
 
     def wait_for_sporks_same(self, timeout=30):
         def check_sporks_same():
             sporks = self.nodes[0].spork('show')
             return all(node.spork('show') == sporks for node in self.nodes[1:])
-        self.wait_until(check_sporks_same, timeout=timeout, sleep=0.5)
+        self.wait_until(check_sporks_same, timeout=timeout, sleep=0.5, bumptime=1)
 
     def wait_for_quorum_connections(self, expected_connections, nodes, timeout = 60, wait_proc=None):
         def check_quorum_connections():
@@ -1191,7 +1192,7 @@ class DashTestFramework(SyscoinTestFramework):
             if not all_ok and wait_proc is not None:
                 wait_proc()
             return all_ok
-        self.wait_until(check_quorum_connections, timeout=timeout, sleep=1)
+        self.wait_until(check_quorum_connections, timeout=timeout, sleep=1, bumptime=1)
 
     def wait_for_masternode_probes(self, mninfos, timeout = 30, wait_proc=None):
         def check_probes():
@@ -1227,7 +1228,7 @@ class DashTestFramework(SyscoinTestFramework):
                                 return ret()
 
             return True
-        self.wait_until(check_probes, timeout=timeout, sleep=1)
+        self.wait_until(check_probes, timeout=timeout, sleep=1, bumptime=1)
 
     def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, timeout=30, sleep=0.1):
         def check_dkg_session():
@@ -1255,7 +1256,7 @@ class DashTestFramework(SyscoinTestFramework):
             if all_ok and member_count != expected_member_count:
                 return False
             return all_ok
-        self.wait_until(check_dkg_session, timeout=timeout, sleep=sleep)
+        self.wait_until(check_dkg_session, timeout=timeout, sleep=sleep, bumptime=1)
 
     def wait_for_quorum_commitment(self, quorum_hash, nodes, timeout = 15):
         def check_dkg_comitments():
@@ -1274,7 +1275,7 @@ class DashTestFramework(SyscoinTestFramework):
                     all_ok = False
                     break
             return all_ok
-        self.wait_until(check_dkg_comitments, timeout=timeout, sleep=0.1)
+        self.wait_until(check_dkg_comitments, timeout=timeout, sleep=0.1, bumptime=1)
 
     def wait_for_quorum_list(self, quorum_hash, nodes, timeout=15, sleep=2):
         def wait_func():
@@ -1282,9 +1283,8 @@ class DashTestFramework(SyscoinTestFramework):
                 return True
             self.nodes[0].generate(1)
             self.bump_mocktime(sleep, nodes=nodes)
-            self.sync_blocks(nodes)
             return False
-        self.wait_until(wait_func, timeout=timeout, sleep=sleep)
+        self.wait_until(wait_func, timeout=timeout, sleep=sleep, bumptime=1)
 
     def mine_quorum(self, expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None):
         spork21_active = self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] <= 1
@@ -1398,4 +1398,4 @@ class DashTestFramework(SyscoinTestFramework):
                 if "verified_proregtx_hash" in p and p["verified_proregtx_hash"] != "":
                     c += 1
             return c >= count
-        self.wait_until(test, timeout=timeout)
+        self.wait_until(test, timeout=timeout, bumptime=1)

@@ -43,10 +43,10 @@ class LLMQSigningTest(DashTestFramework):
             return True
 
         def wait_for_sigs(hasrecsigs, isconflicting1, isconflicting2, timeout):
-            self.wait_until(lambda: check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout)
+            self.wait_until(lambda: check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout, bumptime=1)
 
         def assert_sigs_nochange(hasrecsigs, isconflicting1, isconflicting2, timeout):
-            assert(not self.wait_until(lambda: not check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout, do_assert = False))
+            assert(not self.wait_until(lambda: not check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout, bumptime=1, do_assert = False))
 
         # Initial state
         wait_for_sigs(False, False, False, 1)
@@ -92,7 +92,7 @@ class LLMQSigningTest(DashTestFramework):
         q = self.nodes[0].quorum_selectquorum(100, id)
         mn = self.get_mninfo(q['recoveryMembers'][0])
         mn.node.setnetworkactive(False)
-        self.wait_until(lambda: mn.node.getconnectioncount() == 0)
+        self.wait_until(lambda: mn.node.getconnectioncount() == 0, bumptime=1)
         for i in range(4):
             self.mninfo[i].node.quorum_sign(100, id, msgHash)
         assert_sigs_nochange(False, False, False, 3)
@@ -101,7 +101,7 @@ class LLMQSigningTest(DashTestFramework):
         self.connect_nodes(mn.node.index, 0)
         # Make sure node0 has received qsendrecsigs from the previously isolated node
         mn.node.ping()
-        self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
+        self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo(), bumptime=1))
         # Let 2 seconds pass so that the next node is used for recovery, which should succeed
         self.bump_mocktime(2)
         wait_for_sigs(True, False, True, 2)

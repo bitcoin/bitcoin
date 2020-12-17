@@ -55,7 +55,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def isolate_mn(self, mn):
         mn.node.setnetworkactive(False)
-        self.wait_until(lambda: mn.node.getconnectioncount() == 0)
+        self.wait_until(lambda: mn.node.getconnectioncount() == 0, bumptime=1)
         return True
 
     def close_mn_port(self, mn):
@@ -130,7 +130,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Isolate and re-connect all MNs (otherwise there might be open connections with no MNAUTH for MNs which were banned before)
         for mn in self.mninfo:
             mn.node.setnetworkactive(False)
-            self.wait_until(lambda: mn.node.getconnectioncount() == 0)
+            self.wait_until(lambda: mn.node.getconnectioncount() == 0, bumptime=1)
             mn.node.setnetworkactive(True)
             force_finish_mnsync(mn.node)
             self.connect_nodes(mn.node.index, 0)
