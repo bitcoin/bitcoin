@@ -4,9 +4,9 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import force_finish_mnsync
+
 '''
-llmq-dkgerrors.py
+feature_llmqdkgerrors.py
 
 Simulate and check DKG errors
 
@@ -20,11 +20,8 @@ class LLMQDKGErrors(DashTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        for i in range(len(self.nodes)):
-            force_finish_mnsync(self.nodes[i])
         self.sync_blocks(self.nodes, timeout=60*5)
         self.confirm_mns()
-
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
@@ -97,6 +94,7 @@ class LLMQDKGErrors(DashTestFramework):
         self.sync_all()
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
+
 
 if __name__ == '__main__':
     LLMQDKGErrors().main()

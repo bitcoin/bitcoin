@@ -957,8 +957,10 @@ void InitParameterInteraction(ArgsManager& args)
     }
     if (args.GetBoolArg("-masternodeblsprivkey", false)) {
         // masternodes MUST accept connections from outside
-        args.SoftSetBoolArg("-listen", true);
-        LogPrintf("%s: parameter interaction: -masternodeblsprivkey=... -> setting -listen=1\n", __func__);
+        if(!args.GetBoolArg("-regtest", false)) {
+            args.SoftSetBoolArg("-listen", true);
+            LogPrintf("%s: parameter interaction: -masternodeblsprivkey=... -> setting -listen=1\n", __func__);
+        }
         #ifdef ENABLE_WALLET
         // masternode should not have wallet enabled
         args.ForceSetArg("-disablewallet", "1");

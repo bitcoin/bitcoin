@@ -14,13 +14,14 @@ feature_llmqchainlocks.py
 Checks LLMQs based ChainLocks
 
 '''
+
 class LLMQChainLocksTest(DashTestFramework):
     def set_test_params(self):
         self.set_dash_test_params(4, 3, fast_dip3_enforcement=True)
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
-
+ 
     def run_test(self):
 
         # Connect all nodes to node1 so that we always have the whole network connected
@@ -29,24 +30,21 @@ class LLMQChainLocksTest(DashTestFramework):
         for i in range(len(self.nodes)):
             if i != 1:
                 self.connect_nodes(i, 1)
-            force_finish_mnsync(self.nodes[i])
-
         self.nodes[0].generate(10)
         self.sync_blocks(self.nodes, timeout=60*5)
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
         self.wait_for_sporks_same()
 
         self.log.info("Mining 4 quorums")
         for i in range(4):
             self.mine_quorum()
 
-        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
-        self.wait_for_sporks_same()
-
         self.log.info("Mine single block, wait for chainlock")
         self.nodes[0].generate(1)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
+
         self.log.info("Mine many blocks, wait for chainlock")
         self.nodes[0].generate(20)
         # We need more time here due to 20 blocks being generated at once
@@ -86,9 +84,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Restart it so that it forgets all the chainlocks from the past")
         self.stop_node(0)
         self.start_node(0)
-        force_finish_mnsync(self.nodes[0])
         self.connect_nodes(0, 1)
-        self.nodes[0].mockscheduler(MAX_INITIAL_BROADCAST_DELAY)
         self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
         self.log.info("Now try to reorg the chain")
         self.nodes[0].generate(2)
@@ -105,7 +101,6 @@ class LLMQChainLocksTest(DashTestFramework):
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[1].getbestblockhash())
         assert(self.nodes[0].getbestblockhash() == self.nodes[1].getbestblockhash())
 
-
         self.log.info("Isolate a node and let it create some transactions")
         self.isolate_node(self.nodes[0])
         txs = []
@@ -120,6 +115,7 @@ class LLMQChainLocksTest(DashTestFramework):
         time.sleep(1)
         assert(not self.nodes[0].getblock(self.nodes[0].getbestblockhash())["chainlock"])
         self.nodes[0].generate(1)
+        self.log.info("Assert that TXs got included now")
         for txid in txs:
             tx = self.nodes[0].getrawtransaction(txid, True)
             assert("confirmations" in tx and tx["confirmations"] > 0)
@@ -128,17 +124,6 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Re-enable network on first node and wait for chainlock")
         self.reconnect_isolated_node(self.nodes[0], 1)
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[0].getbestblockhash(), timeout=30)
-        self.nodes[1].generate(50)
-        self.wait_for_chainlocked_block_all_nodes(self.nodes[1].getbestblockhash(), timeout=30)
-
-    def reset_probe_timeouts(self):
-        # Make sure all masternodes will reconnect/re-probe
-        self.bump_mocktime(60 * 60 + 1)
-        for i in range(len(self.nodes)):
-            force_finish_mnsync(self.nodes[i])
-        self.sync_all()
-        for i in range(len(self.nodes)):
-            force_finish_mnsync(self.nodes[i])
 
     def create_chained_txs(self, node, amount):
         txid = node.sendtoaddress(node.getnewaddress(), amount)

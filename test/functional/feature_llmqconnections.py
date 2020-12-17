@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import time
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_greater_than_or_equal, force_finish_mnsync
+from test_framework.util import assert_greater_than_or_equal
 
 '''
 feature_llmqconnections.py
@@ -22,8 +22,6 @@ class LLMQConnections(DashTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        for i in range(len(self.nodes)):
-            force_finish_mnsync(self.nodes[i])
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
@@ -56,7 +54,7 @@ class LLMQConnections(DashTestFramework):
             self.wait_until(lambda: self.get_mn_probe_count(mn.node, q, False) == 4)
 
         self.log.info("checking that probes age")
-        self.bump_mocktime(120)
+        self.bump_mocktime(60)
         for mn in self.get_quorum_masternodes(q):
             self.wait_until(lambda: self.get_mn_probe_count(mn.node, q, False) == 0)
 
@@ -75,7 +73,7 @@ class LLMQConnections(DashTestFramework):
             self.wait_until(lambda: len(mn.node.getpeerinfo()) == 0)
         for mn in self.mninfo:
             mn.node.setnetworkactive(True)
-        self.bump_mocktime(120)
+        self.bump_mocktime(60)
 
         self.log.info("verify that all masternodes re-connected")
         for q in self.nodes[0].quorum_list()['llmq_test']:
@@ -101,7 +99,6 @@ class LLMQConnections(DashTestFramework):
 
     def get_mn_probe_count(self, node, q, check_peers):
         count = 0
-        self.bump_mocktime(1)
         mnList = node.protx_list('registered', True)
         peerList = node.getpeerinfo()
         mnMap = {}
@@ -113,7 +110,7 @@ class LLMQConnections(DashTestFramework):
                 peerMap[p['verified_proregtx_hash']] = p
         for mn in self.get_quorum_masternodes(q):
             pi = mnMap[mn.proTxHash]
-            if pi['metaInfo']['lastOutboundSuccessElapsed'] <= 120:
+            if pi['metaInfo']['lastOutboundSuccessElapsed'] < 60:
                 count += 1
             elif check_peers and mn.proTxHash in peerMap:
                 count += 1

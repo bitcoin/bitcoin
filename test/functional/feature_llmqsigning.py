@@ -33,7 +33,6 @@ class LLMQSigningTest(DashTestFramework):
         msgHashConflict = "0000000000000000000000000000000000000000000000000000000000000003"
 
         def check_sigs(hasrecsigs, isconflicting1, isconflicting2):
-            self.bump_mocktime(1)
             for node in self.nodes:
                 if node.quorum_hasrecsig(100, id, msgHash) != hasrecsigs:
                     return False

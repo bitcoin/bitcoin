@@ -226,7 +226,7 @@ def str_to_b64str(string):
 def satoshi_round(amount):
     return Decimal(amount).quantize(Decimal('0.00000001'), rounding=ROUND_DOWN)
 
-def wait_until_helper(predicate, *, attempts=float('inf'), timeout=float('inf'), lock=None, timeout_factor=1.0, do_assert=True):
+def wait_until_helper(predicate, *, attempts=float('inf'), timeout=float('inf'), sleep=0.05, bumptimeproc=None, lock=None, timeout_factor=1.0, do_assert=True):
     """Sleep until the predicate resolves to be True.
 
     Warning: Note that this method is not recommended to be used in tests as it is
@@ -250,7 +250,9 @@ def wait_until_helper(predicate, *, attempts=float('inf'), timeout=float('inf'),
             if predicate():
                 return
         attempt += 1
-        time.sleep(0.05)
+        time.sleep(sleep)
+        if bumptimeproc is not None:
+            bumptimeproc()
     # SYSCOIN
     if do_assert:
         # Print the cause of the timeout
