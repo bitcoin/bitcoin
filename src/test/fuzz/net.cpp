@@ -28,26 +28,7 @@ FUZZ_TARGET_INIT(net, initialize_net)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    const std::optional<CAddress> address = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
-    if (!address) {
-        return;
-    }
-    const std::optional<CAddress> address_bind = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
-    if (!address_bind) {
-        return;
-    }
-
-    CNode node{fuzzed_data_provider.ConsumeIntegral<NodeId>(),
-               static_cast<ServiceFlags>(fuzzed_data_provider.ConsumeIntegral<uint64_t>()),
-               fuzzed_data_provider.ConsumeIntegral<int>(),
-               INVALID_SOCKET,
-               *address,
-               fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
-               fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
-               *address_bind,
-               fuzzed_data_provider.ConsumeRandomLengthString(32),
-               fuzzed_data_provider.PickValueInArray({ConnectionType::INBOUND, ConnectionType::OUTBOUND_FULL_RELAY, ConnectionType::MANUAL, ConnectionType::FEELER, ConnectionType::BLOCK_RELAY, ConnectionType::ADDR_FETCH}),
-               fuzzed_data_provider.ConsumeBool()};
+    CNode node{ConsumeNode(fuzzed_data_provider)};
     node.SetCommonVersion(fuzzed_data_provider.ConsumeIntegral<int>());
     while (fuzzed_data_provider.ConsumeBool()) {
         switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 10)) {
