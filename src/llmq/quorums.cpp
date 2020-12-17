@@ -26,7 +26,7 @@ namespace llmq
 
 static const std::string DB_QUORUM_SK_SHARE = "q_Qsk";
 static const std::string DB_QUORUM_QUORUM_VVEC = "q_Qqvvec";
-RecursiveMutex quorumsCachePopCs;
+
 CQuorumManager* quorumManager;
 
 static uint256 MakeQuorumKey(const CQuorum& q)
@@ -42,7 +42,6 @@ static uint256 MakeQuorumKey(const CQuorum& q)
 
 CQuorum::~CQuorum()
 {
-    LOCK(quorumsCachePopCs);
     // most likely the thread is already done
     stopCachePopulatorThread = true;
     // watch out to not join the thread when we're called from inside the thread, which might happen on shutdown. This
@@ -145,7 +144,6 @@ void CQuorum::StartCachePopulatorThread(std::shared_ptr<CQuorum> _this)
     // this thread will exit after some time
     // when then later some other thread tries to get keys, it will be much faster
     _this->cachePopulatorThread = std::thread(&TraceThread<std::function<void()>>, "syscoin-q-cachepop", [_this] {
-        LOCK(quorumsCachePopCs);
         for (size_t i = 0; i < _this->members.size() && !_this->stopCachePopulatorThread && !ShutdownRequested(); i++) {
             if (_this->qc.validMembers[i]) {
                 _this->GetPubKeyShare(i);
