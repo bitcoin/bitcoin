@@ -639,7 +639,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
             assert (all([len(x.getpeerinfo()) for x in rpc_connections]))
             time.sleep(wait)
             if bumptime > 0:
-                self.bump_mocktime(bumptime, nodes)
+                self.bump_mocktime(bumptime, rpc_connections)
         raise AssertionError("Block sync timed out after {}s:{}".format(
             timeout,
             "".join("\n  {!r}".format(b) for b in best_hash),
