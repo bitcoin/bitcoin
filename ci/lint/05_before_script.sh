@@ -6,4 +6,4 @@
 
 export LC_ALL=C
 
-git fetch --unshallow
+git fetch
