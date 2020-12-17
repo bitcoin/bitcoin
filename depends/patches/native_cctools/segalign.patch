@@ -1,0 +1,19 @@
+commit 7f2eb11ce6ebec7eb9b8e1429535e453054143e5
+Author: Pieter Wuille <pieter@wuille.net>
+Date:   Sun Dec 13 11:34:21 2020 -0800
+
+    Make cctools_port's codesign_allocate compatible with Apple's
+
+diff --git a/cctools/libstuff/arch.c b/cctools/libstuff/arch.c
+index 6f2332f..d85c25c 100644
+--- a/cctools/libstuff/arch.c
++++ b/cctools/libstuff/arch.c
+@@ -134,7 +134,7 @@ static const struct cpu_entry cpu_entries[] = {
+     { CPU_TYPE_ARM,	    LITTLE_ENDIAN_BYTE_SEX, 0,		       0x4000 },
+     
+     /* desktop */
+-    { CPU_TYPE_X86_64,	    LITTLE_ENDIAN_BYTE_SEX, 0x7fff5fc00000LL,  0x1000 },
++    { CPU_TYPE_X86_64,	    LITTLE_ENDIAN_BYTE_SEX, 0x7fff5fc00000LL,  0x2000 /* Used to be 0x1000; changed to 0x2000 to match Apple's distributed codesign_allocate. */},
+     { CPU_TYPE_I386,	    LITTLE_ENDIAN_BYTE_SEX, 0xc0000000,        0x1000 },
+     { CPU_TYPE_POWERPC,	    BIG_ENDIAN_BYTE_SEX,    0xc0000000,	       0x1000 },
+     { CPU_TYPE_POWERPC64,   BIG_ENDIAN_BYTE_SEX,    0x7ffff00000000LL, 0x1000 },
