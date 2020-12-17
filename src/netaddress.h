@@ -145,7 +145,7 @@ class CSubNet
 class CService : public CNetAddr
 {
     protected:
-        unsigned short port; // host order
+        uint16_t port; // host order
 
     public:
         CService();
@@ -172,13 +172,7 @@ class CService : public CNetAddr
         template <typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action) {
             READWRITE(ip);
-
-            // TODO: introduce native support for BE serialization in serialize.h
-            unsigned short portN = htons(port);
-            READWRITE(Span<unsigned char>((unsigned char*)&portN, 2));
-            if (ser_action.ForRead()) {
-                 port = ntohs(portN);
-            }
+            READWRITE(WrapBigEndian(port));
         }
 };
 
