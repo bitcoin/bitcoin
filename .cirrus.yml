@@ -8,10 +8,9 @@ env:
   CCACHE_SIZE: "200M"
   CCACHE_DIR: "/tmp/ccache_dir"
 
-### Base template
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
 base_template: &BASE_TEMPLATE
-  skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == "" # No need to run on the read-only mirror, unless it is a PR. https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
+  skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == ""  # No need to run on the read-only mirror, unless it is a PR. https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
   merge_base_script:
     - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
     - bash -c "$PACKAGE_MANAGER_INSTALL git"
@@ -19,8 +18,8 @@ base_template: &BASE_TEMPLATE
     - git config --global user.email "ci@ci.ci"
     - git config --global user.name "ci"
     - git merge FETCH_HEAD  # Merge base to detect silent merge conflicts
+  stateful: false  # https://cirrus-ci.org/guide/writing-tasks/#stateful-tasks
 
-### Global task template
 global_task_template: &GLOBAL_TASK_TEMPLATE
   << : *BASE_TEMPLATE
   timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
@@ -41,6 +40,11 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
   ci_script:
     - ./ci/test_run_all.sh
 
+compute_credits_template: &CREDITS_TEMPLATE
+  # https://cirrus-ci.org/pricing/#compute-credits
+  # Only use credits for pull requests to the main repo
+  use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'bitcoin/bitcoin' && $CIRRUS_PR != ""
+
 #task:
 #  name: "Windows"
 #  windows_container:
@@ -58,13 +62,14 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
 #    - choco install python --version=3.7.7 -y
 
 task:
-  name: 'lint'
+  name: 'lint [bionic]'
   << : *BASE_TEMPLATE
   container:
-    image: ubuntu:bionic # For python 3.6, oldest supported version according to doc/dependencies.md
-    cpu: 1 # Cut bill in half for linting
-  # For faster CI feedback, immediately schedule the linters. https://cirrus-ci.org/pricing/#compute-credits
-  use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'bitcoin/bitcoin'
+    image: ubuntu:bionic  # For python 3.6, oldest supported version according to doc/dependencies.md
+    cpu: 1
+    memory: 1G
+  # For faster CI feedback, immediately schedule the linters
+  << : *CREDITS_TEMPLATE
   setup_script:
     - set -o errexit; source ./ci/test/00_setup_env.sh
   before_install_script:
@@ -103,8 +108,8 @@ task:
 
 task:
   name: '[previous releases, uses qt5 dev package and some depends packages] [unsigned char] [bionic]'
-  # For faster CI feedback, immediately schedule a task that compiles most modules. https://cirrus-ci.org/pricing/#compute-credits
-  use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'bitcoin/bitcoin'
+  # For faster CI feedback, immediately schedule a task that compiles most modules
+  << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:bionic
