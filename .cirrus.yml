@@ -67,8 +67,6 @@ task:
   use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'bitcoin/bitcoin'
   setup_script:
     - set -o errexit; source ./ci/test/00_setup_env.sh
-  before_install_script:
-    - set -o errexit; source ./ci/test/03_before_install.sh
   install_script:
     - set -o errexit; source ./ci/lint/04_install.sh
   before_script:
