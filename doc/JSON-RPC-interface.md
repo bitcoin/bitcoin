@@ -34,3 +34,14 @@ wallet would reflect the removal of these mempool transactions in the state.
 
 However, the wallet may not be up-to-date with the current state of the mempool
 or the state of the mempool by an RPC that returned before this RPC.
+
+## Limitations
+
+There is a known issue in the JSON-RPC interface that can cause a node to crash if
+too many http connections are being opened at the same time because the system runs
+out of available file descriptors. To prevent this from happening you might
+want to increase the number of maximum allowed file descriptors in your system
+and try to prevent opening too many connections to your JSON-RPC interface at the
+same time if this is under your control. It is hard to give general advice
+since this depends on your system but if you make several hundred requests at
+once you are definitely at risk of encountering this issue.
