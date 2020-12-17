@@ -1230,7 +1230,7 @@ class DashTestFramework(SyscoinTestFramework):
                                 return ret()
 
             return True
-        self.wait_until(check_probes, timeout=timeout, sleep=1, bumptime=1)
+        self.wait_until(check_probes, timeout=timeout, sleep=1)
 
     def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, timeout=30, sleep=0.1):
         def check_dkg_session():
