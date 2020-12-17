@@ -140,7 +140,11 @@ void CQuorum::StartCachePopulatorThread(std::shared_ptr<CQuorum> _this)
     }
 
     LogPrint(BCLog::LLMQ, "CQuorum::StartCachePopulatorThread -- start\n");
-
+    if (_this->cachePopulatorThread.joinable()) {
+        LogPrint(BCLog::LLMQ, "CQuorum::StartCachePopulatorThread -- joining and waiting on previous thread\n");
+        _this->cachePopulatorThread.join();
+        LogPrint(BCLog::LLMQ, "CQuorum::StartCachePopulatorThread -- done, now we can proceed...\n");
+    }
     // this thread will exit after some time
     // when then later some other thread tries to get keys, it will be much faster
     _this->cachePopulatorThread = std::thread(&TraceThread<std::function<void()>>, "syscoin-q-cachepop", [_this] {
