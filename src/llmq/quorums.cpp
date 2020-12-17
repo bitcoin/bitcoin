@@ -271,10 +271,13 @@ bool CQuorumManager::HasQuorum(uint8_t llmqType, const uint256& quorumHash)
 
 void CQuorumManager::ScanQuorums(uint8_t llmqType, size_t maxCount, std::vector<CQuorumCPtr>& quorums)
 {
-    LOCK(cs_main);
-    ScanQuorums(llmqType, ::ChainActive().Tip(), maxCount, quorums);
+    const CBlockIndex* pindex;
+    {
+        LOCK(cs_main);
+        pindex = ::ChainActive().Tip();
+    }
+    return ScanQuorums(llmqType, pindex, maxCount, quorums);
 }
-
 void CQuorumManager::ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexQuorum, size_t maxCount, std::vector<CQuorumCPtr>& result)
 {
     result.clear();
