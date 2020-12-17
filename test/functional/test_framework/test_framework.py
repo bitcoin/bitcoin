@@ -1286,7 +1286,7 @@ class DashTestFramework(SyscoinTestFramework):
             self.nodes[0].generate(1)
             self.bump_mocktime(sleep, nodes=nodes)
             return False
-        self.wait_until(wait_func, timeout=timeout, sleep=sleep, bumptime=1)
+        self.wait_until(wait_func, timeout=timeout, sleep=sleep)
 
     def mine_quorum(self, expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None):
         spork21_active = self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] <= 1
