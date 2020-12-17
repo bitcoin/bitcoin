@@ -120,8 +120,9 @@ int main(int argc, char* argv[])
 
     ECCVerifyHandle globalVerifyHandle;
     ECC_Start();
-    if (!WalletTool::ExecuteWalletToolFunc(method, name))
+    if (!WalletTool::ExecuteWalletToolFunc(gArgs, method, name)) {
         return EXIT_FAILURE;
+    }
     ECC_Stop();
     return EXIT_SUCCESS;
 }

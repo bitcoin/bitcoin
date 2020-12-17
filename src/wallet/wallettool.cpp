@@ -103,17 +103,17 @@ static void WalletShowInfo(CWallet* wallet_instance)
     tfm::format(std::cout, "Address Book: %zu\n", wallet_instance->m_address_book.size());
 }
 
-bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
+bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command, const std::string& name)
 {
     fs::path path = fs::absolute(name, GetWalletDir());
 
     // -format is only allowed with createfromdump. Disallow it for all other commands.
-    if (gArgs.IsArgSet("-format") && command != "createfromdump") {
+    if (args.IsArgSet("-format") && command != "createfromdump") {
         tfm::format(std::cerr, "The -format option can only be used with the \"createfromdump\" command.\n");
         return false;
     }
     // -dumpfile is only allowed with dump and createfromdump. Disallow it for all other commands.
-    if (gArgs.IsArgSet("-dumpfile") && command != "dump" && command != "createfromdump") {
+    if (args.IsArgSet("-dumpfile") && command != "dump" && command != "createfromdump") {
         tfm::format(std::cerr, "The -dumpfile option can only be used with the \"dump\" and \"createfromdump\" commands.\n");
         return false;
     }
@@ -121,7 +121,7 @@ bool ExecuteWalletToolFunc(const std::string& command, const std::string& name)
     if (command == "create") {
         DatabaseOptions options;
         options.require_create = true;
-        if (gArgs.GetBoolArg("-descriptors", false)) {
+        if (args.GetBoolArg("-descriptors", false)) {
             options.create_flags |= WALLET_FLAG_DESCRIPTORS;
             options.require_format = DatabaseFormat::SQLITE;
         }
