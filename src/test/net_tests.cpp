@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
         /* nKeyedNetGroupIn = */ 0,
         /* nLocalHostNonceIn = */ 0,
         CAddress(), pszDest, ConnectionType::OUTBOUND_FULL_RELAY,
-        /* inbound_onion = */ true);
+        /* inbound_onion = */ false);
     BOOST_CHECK(pnode3->IsFullOutboundConn() == true);
     BOOST_CHECK(pnode3->IsManualConn() == false);
     BOOST_CHECK(pnode3->IsBlockOnlyConn() == false);
