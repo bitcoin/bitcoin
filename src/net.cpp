@@ -815,7 +815,7 @@ size_t CConnman::SocketSendData(CNode& node) const
                 // error
                 int nErr = WSAGetLastError();
                 if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS) {
-                    LogPrintf("socket send error %s\n", NetworkErrorString(nErr));
+                    LogPrint(BCLog::NET, "socket send error for peer=%d: %s\n", node.GetId(), NetworkErrorString(nErr));
                     node.CloseSocketDisconnect();
                 }
             }
@@ -1053,7 +1053,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     }
 
     if (!fNetworkActive) {
-        LogPrintf("connection from %s dropped: not accepting new connections\n", addr.ToString());
+        LogPrint(BCLog::NET, "connection from %s dropped: not accepting new connections\n", addr.ToString());
         CloseSocket(hSocket);
         return;
     }
@@ -1236,12 +1236,12 @@ bool CConnman::InactivityCheck(const CNode& node) const
     }
 
     if (now > node.nLastSend + TIMEOUT_INTERVAL) {
-        LogPrintf("socket sending timeout: %is\n", now - node.nLastSend);
+        LogPrint(BCLog::NET, "socket sending timeout: %is peer=%d\n", now - node.nLastSend, node.GetId());
         return true;
     }
 
     if (now > node.nLastRecv + TIMEOUT_INTERVAL) {
-        LogPrintf("socket receive timeout: %is\n", now - node.nLastRecv);
+        LogPrint(BCLog::NET, "socket receive timeout: %is peer=%d\n", now - node.nLastRecv, node.GetId());
         return true;
     }
 
@@ -1249,7 +1249,7 @@ bool CConnman::InactivityCheck(const CNode& node) const
         // We use mockable time for ping timeouts. This means that setmocktime
         // may cause pings to time out for peers that have been connected for
         // longer than m_peer_connect_timeout.
-        LogPrintf("ping timeout: %fs\n", 0.000001 * count_microseconds(GetTime<std::chrono::microseconds>() - node.m_ping_start.load()));
+        LogPrint(BCLog::NET, "ping timeout: %fs peer=%d\n", 0.000001 * count_microseconds(GetTime<std::chrono::microseconds>() - node.m_ping_start.load()), node.GetId());
         return true;
     }
 
