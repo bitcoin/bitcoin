@@ -1,12 +1,5 @@
 ### Global defaults
 
-timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
-container:
-  # https://cirrus-ci.org/faq/#are-there-any-limits
-  # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
-  cpu: 2
-  memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
-  kvm: true  # Use kvm to avoid spurious CI failures in the default virtualization cluster, see https://github.com/bitcoin/bitcoin/issues/20093
 env:
   PACKAGE_MANAGER_INSTALL: "apt-get update && apt-get install -y"
   MAKEJOBS: "-j4"
@@ -15,11 +8,28 @@ env:
   CCACHE_SIZE: "200M"
   CCACHE_DIR: "/tmp/ccache_dir"
 
-### Global task template
-
+### Base template
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
+base_template: &BASE_TEMPLATE
+  skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == "" # No need to run on the read-only mirror, unless it is a PR. https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
+  merge_base_script:
+    - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
+    - bash -c "$PACKAGE_MANAGER_INSTALL git"
+    - git fetch $CIRRUS_REPO_CLONE_URL $CIRRUS_BASE_BRANCH
+    - git config --global user.email "ci@ci.ci"
+    - git config --global user.name "ci"
+    - git merge FETCH_HEAD  # Merge base to detect silent merge conflicts
+
+### Global task template
 global_task_template: &GLOBAL_TASK_TEMPLATE
-  skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == ""  # No need to run on the read-only mirror, unless it is a PR. https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
+  << : *BASE_TEMPLATE
+  timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
+  container:
+    # https://cirrus-ci.org/faq/#are-there-any-limits
+    # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
+    cpu: 2
+    memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
+    kvm: true  # Use kvm to avoid spurious CI failures in the default virtualization cluster, see https://github.com/bitcoin/bitcoin/issues/20093
   ccache_cache:
     folder: "/tmp/ccache_dir"
   depends_built_cache:
@@ -28,13 +38,6 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
     folder: "/tmp/cirrus-ci-build/depends/sdk-sources"
   depends_releases_cache:
     folder: "/tmp/cirrus-ci-build/releases"
-  merge_base_script:
-    - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
-    - bash -c "$PACKAGE_MANAGER_INSTALL git"
-    - git fetch $CIRRUS_REPO_CLONE_URL $CIRRUS_BASE_BRANCH
-    - git config --global user.email "ci@ci.ci"
-    - git config --global user.name "ci"
-    - git merge FETCH_HEAD  # Merge base to detect silent merge conflicts
   ci_script:
     - ./ci/test_run_all.sh
 
@@ -53,6 +56,25 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
 #    VCPKG_COMMIT_ID: 'ed0df8ecc4ed7e755ea03e18aaf285fd9b4b4a74'
 #  install_script:
 #    - choco install python --version=3.7.7 -y
+
+task:
+  name: 'lint'
+  << : *BASE_TEMPLATE
+  container:
+    image: ubuntu:bionic # For python 3.6, oldest supported version according to doc/dependencies.md
+    cpu: 1 # Cut bill in half for linting
+  # For faster CI feedback, immediately schedule the linters. https://cirrus-ci.org/pricing/#compute-credits
+  use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'bitcoin/bitcoin'
+  setup_script:
+    - set -o errexit; source ./ci/test/00_setup_env.sh
+  before_install_script:
+    - set -o errexit; source ./ci/test/03_before_install.sh
+  install_script:
+    - set -o errexit; source ./ci/lint/04_install.sh
+  before_script:
+    - set -o errexit; source ./ci/lint/05_before_script.sh
+  lint_script:
+    - set -o errexit; source ./ci/lint/06_script.sh
 
 task:
   name: 'ARM [unit tests, no functional tests] [buster]'
