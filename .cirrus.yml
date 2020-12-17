@@ -1,12 +1,5 @@
 ### Global defaults
 
-timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
-container:
-  # https://cirrus-ci.org/faq/#are-there-any-limits
-  # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
-  cpu: 2
-  memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
-  kvm: true  # Use kvm to avoid spurious CI failures in the default virtualization cluster, see https://github.com/bitcoin/bitcoin/issues/20093
 env:
   PACKAGE_MANAGER_INSTALL: "apt-get update && apt-get install -y"
   MAKEJOBS: "-j4"
@@ -30,6 +23,13 @@ base_template: &BASE_TEMPLATE
 ### Global task template
 global_task_template: &GLOBAL_TASK_TEMPLATE
   << : *BASE_TEMPLATE
+  timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
+  container:
+    # https://cirrus-ci.org/faq/#are-there-any-limits
+    # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
+    cpu: 2
+    memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
+    kvm: true  # Use kvm to avoid spurious CI failures in the default virtualization cluster, see https://github.com/bitcoin/bitcoin/issues/20093
   ccache_cache:
     folder: "/tmp/ccache_dir"
   depends_built_cache:
@@ -62,6 +62,7 @@ task:
   << : *BASE_TEMPLATE
   container:
     image: ubuntu:bionic # For python 3.6, oldest supported version according to doc/dependencies.md
+    cpu: 1 # Cut bill in half for linting
   # For faster CI feedback, immediately schedule the linters. https://cirrus-ci.org/pricing/#compute-credits
   use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'bitcoin/bitcoin'
   setup_script:
