@@ -107,14 +107,16 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command, 
 {
     fs::path path = fs::absolute(name, GetWalletDir());
 
-    // -format is only allowed with createfromdump. Disallow it for all other commands.
     if (args.IsArgSet("-format") && command != "createfromdump") {
         tfm::format(std::cerr, "The -format option can only be used with the \"createfromdump\" command.\n");
         return false;
     }
-    // -dumpfile is only allowed with dump and createfromdump. Disallow it for all other commands.
     if (args.IsArgSet("-dumpfile") && command != "dump" && command != "createfromdump") {
         tfm::format(std::cerr, "The -dumpfile option can only be used with the \"dump\" and \"createfromdump\" commands.\n");
+        return false;
+    }
+    if (args.IsArgSet("-descriptors") && command != "create") {
+        tfm::format(std::cerr, "The -descriptors option can only be used with the 'create' command.\n");
         return false;
     }
 
