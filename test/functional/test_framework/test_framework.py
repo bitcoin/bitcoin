@@ -1232,7 +1232,7 @@ class DashTestFramework(SyscoinTestFramework):
             return True
         self.wait_until(check_probes, timeout=timeout, sleep=1, bumptime=1)
 
-    def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, timeout=30, sleep=0.1):
+    def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, timeout=30, sleep=1):
         def check_dkg_session():
             all_ok = True
             member_count = 0
@@ -1277,9 +1277,9 @@ class DashTestFramework(SyscoinTestFramework):
                     all_ok = False
                     break
             return all_ok
-        self.wait_until(check_dkg_comitments, timeout=timeout, sleep=0.1, bumptime=1)
+        self.wait_until(check_dkg_comitments, timeout=timeout, sleep=1, bumptime=1)
 
-    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=15, sleep=2):
+    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=15, sleep=1):
         def wait_func():
             if quorum_hash in self.nodes[0].quorum_list()["llmq_test"]:
                 return True

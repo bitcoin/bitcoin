@@ -43,7 +43,7 @@ class LLMQSigningTest(DashTestFramework):
             return True
 
         def wait_for_sigs(hasrecsigs, isconflicting1, isconflicting2, timeout):
-            self.wait_until(lambda: check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout, sleep = 0.1, bumptime=5)
+            self.wait_until(lambda: check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout, sleep = 1, bumptime=1)
 
         def assert_sigs_nochange(hasrecsigs, isconflicting1, isconflicting2, timeout):
             assert(not self.wait_until(lambda: not check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout, bumptime=1, do_assert = False))
@@ -54,6 +54,7 @@ class LLMQSigningTest(DashTestFramework):
         # Sign 2 shares, should not result in recovered sig
         for i in range(2):
             self.mninfo[i].node.quorum_sign(100, id, msgHash)
+        self.bump_mocktime(5)
         assert_sigs_nochange(False, False, False, 3)
 
         # Sign one more share, should result in recovered sig and conflict for msgHashConflict
@@ -64,7 +65,7 @@ class LLMQSigningTest(DashTestFramework):
 
         # Mine one more quorum, so that we have 2 active ones, nothing should change
         self.mine_quorum()
-        assert_sigs_nochange(True, False, True, 3)
+        assert_sigs_nochange(True, False, True, 5)
 
         # Mine 2 more quorums, so that the one used for the the recovered sig should become inactive, nothing should change
         self.mine_quorum()
@@ -84,6 +85,7 @@ class LLMQSigningTest(DashTestFramework):
             self.mninfo[i].node.quorum_sign(100, id, msgHashConflict)
         for i in range(2, 5):
             self.mninfo[i].node.quorum_sign(100, id, msgHash)
+        self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
 
         id = "0000000000000000000000000000000000000000000000000000000000000002"
@@ -102,8 +104,8 @@ class LLMQSigningTest(DashTestFramework):
         # Make sure node0 has received qsendrecsigs from the previously isolated node
         mn.node.ping()
         self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()), bumptime=1)
-        # Let 2 seconds pass so that the next node is used for recovery, which should succeed
-        self.bump_mocktime(2)
-        wait_for_sigs(True, False, True, 2)
+        # Let 5 seconds pass so that the next node is used for recovery, which should succeed
+        self.bump_mocktime(5)
+        wait_for_sigs(True, False, True, 15)
 if __name__ == '__main__':
     LLMQSigningTest().main()
