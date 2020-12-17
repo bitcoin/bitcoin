@@ -80,48 +80,30 @@ For linux S390X cross compilation:
     sudo apt-get install g++-s390x-linux-gnu binutils-s390x-linux-gnu
 
 ### Dependency Options
+
 The following can be set when running make: `make FOO=bar`
 
-<dl>
-<dt>SOURCES_PATH</dt>
-<dd>downloaded sources will be placed here</dd>
-<dt>BASE_CACHE</dt>
-<dd>built packages will be placed here</dd>
-<dt>SDK_PATH</dt>
-<dd>Path where sdk's can be found (used by macOS)</dd>
-<dt>FALLBACK_DOWNLOAD_PATH</dt>
-<dd>If a source file can't be fetched, try here before giving up</dd>
-<dt>NO_QT</dt>
-<dd>Don't download/build/cache qt and its dependencies</dd>
-<dt>NO_QR</dt>
-<dd>Don't download/build/cache packages needed for enabling qrencode</dd>
-<dt>NO_ZMQ</dt>
-<dd>Don't download/build/cache packages needed for enabling zeromq</dd>
-<dt>NO_WALLET</dt>
-<dd>Don't download/build/cache libs needed to enable the wallet</dd>
-<dt>NO_BDB</dt>
-<dd>Don't download/build/cache BerkeleyDB</dd>
-<dt>NO_SQLITE</dt>
-<dd>Don't download/build/cache SQLite</dd>
-<dt>NO_UPNP</dt>
-<dd>Don't download/build/cache packages needed for enabling upnp</dd>
-<dt>ALLOW_HOST_PACKAGES</dt>
-<dd>Packages that are missed in dependencies (due to `NO_*` option or
-build script logic) are searched for among the host system packages using
-`pkg-config`. It allows building with packages of other (newer) versions</dd>
-<dt>MULTIPROCESS</dt>
-<dd>build libmultiprocess (experimental, requires cmake)</dd>
-<dt>DEBUG</dt>
-<dd>disable some optimizations and enable more runtime checking</dd>
-<dt>HOST_ID_SALT</dt>
-<dd>Optional salt to use when generating host package ids</dd>
-<dt>BUILD_ID_SALT</dt>
-<dd>Optional salt to use when generating build package ids</dd>
-<dt>FORCE_USE_SYSTEM_CLANG</dt>
-<dd>(EXPERTS ONLY) When cross-compiling for macOS, use Clang found in the
-system's <code>$PATH</code> rather than the default prebuilt release of Clang
-from llvm.org. Clang 8 or later is required.</dd>
-</dl>
+- `SOURCES_PATH`: Downloaded sources will be placed here
+- `BASE_CACHE`: Built packages will be placed here
+- `SDK_PATH`: Path where SDKs can be found (used by macOS)
+- `FALLBACK_DOWNLOAD_PATH`: If a source file can't be fetched, try here before giving up
+- `NO_QT`: Don't download/build/cache Qt and its dependencies
+- `NO_QR`: Don't download/build/cache packages needed for enabling qrencode
+- `NO_ZMQ`: Don't download/build/cache packages needed for enabling ZeroMQ
+- `NO_WALLET`: Don't download/build/cache libs needed to enable the wallet
+- `NO_BDB`: Don't download/build/cache BerkeleyDB
+- `NO_SQLITE`: Don't download/build/cache SQLite
+- `NO_UPNP`: Don't download/build/cache packages needed for enabling UPnP
+- `ALLOW_HOST_PACKAGES`: Packages that are missed in dependencies (due to `NO_*` option or
+  build script logic) are searched for among the host system packages using
+  `pkg-config`. It allows building with packages of other (newer) versions
+- `MULTIPROCESS`: Build libmultiprocess (experimental, requires CMake)
+- `DEBUG`: Disable some optimizations and enable more runtime checking
+- `HOST_ID_SALT`: Optional salt to use when generating host package ids
+- `BUILD_ID_SALT`: Optional salt to use when generating build package ids
+- `FORCE_USE_SYSTEM_CLANG`: (EXPERTS ONLY) When cross-compiling for macOS, use Clang found in the
+  system's `$PATH` rather than the default prebuilt release of Clang
+  from llvm.org. Clang 8 or later is required.
 
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
 options will be passed to bitcoin's configure. In this case, `--disable-wallet`.
