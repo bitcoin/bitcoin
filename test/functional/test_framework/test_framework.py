@@ -1194,7 +1194,7 @@ class DashTestFramework(SyscoinTestFramework):
             if not all_ok and wait_proc is not None:
                 wait_proc()
             return all_ok
-        self.wait_until(check_quorum_connections, timeout=timeout, sleep=1)
+        self.wait_until(check_quorum_connections, timeout=timeout, sleep=1, bumptime=1)
 
     def wait_for_masternode_probes(self, mninfos, timeout = 30, wait_proc=None):
         def check_probes():
