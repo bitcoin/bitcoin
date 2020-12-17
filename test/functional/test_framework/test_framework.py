@@ -621,7 +621,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         node.setnetworkactive(True)
         self.connect_nodes(node.index, node_num)
 
-    def sync_blocks(self, nodes=None, wait=1, timeout=60):
+    def sync_blocks(self, nodes=None, wait=1, timeout=60, bumptime=0):
         """
         Wait until everybody has the same tip.
         sync_blocks needs to be called with an rpc_connections set that has least
@@ -638,6 +638,8 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
             # Check that each peer has at least one connection
             assert (all([len(x.getpeerinfo()) for x in rpc_connections]))
             time.sleep(wait)
+            if bumptime > 0:
+                self.bump_mocktime(bumptime, nodes)
         raise AssertionError("Block sync timed out after {}s:{}".format(
             timeout,
             "".join("\n  {!r}".format(b) for b in best_hash),
@@ -1313,7 +1315,7 @@ class DashTestFramework(SyscoinTestFramework):
         if skip_count != 0:
             self.bump_mocktime(1, nodes=nodes)
             self.nodes[0].generate(skip_count)
-        self.sync_blocks(nodes)
+        self.sync_blocks(nodes, bumptime=1)
 
         q = self.nodes[0].getbestblockhash()
 
@@ -1324,31 +1326,31 @@ class DashTestFramework(SyscoinTestFramework):
             self.wait_for_masternode_probes(mninfos_valid, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
-        self.sync_blocks(nodes)
+        self.sync_blocks(nodes, bumptime=1)
 
         self.log.info("Waiting for phase 2 (contribute)")
         self.wait_for_quorum_phase(q, 2, expected_members, "receivedContributions", expected_contributions, mninfos_online)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
-        self.sync_blocks(nodes)
+        self.sync_blocks(nodes, bumptime=1)
 
         self.log.info("Waiting for phase 3 (complain)")
         self.wait_for_quorum_phase(q, 3, expected_members, "receivedComplaints", expected_complaints, mninfos_online)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
-        self.sync_blocks(nodes)
+        self.sync_blocks(nodes, bumptime=1)
 
         self.log.info("Waiting for phase 4 (justify)")
         self.wait_for_quorum_phase(q, 4, expected_members, "receivedJustifications", expected_justifications, mninfos_online)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
-        self.sync_blocks(nodes)
+        self.sync_blocks(nodes, bumptime=1)
 
         self.log.info("Waiting for phase 5 (commit)")
         self.wait_for_quorum_phase(q, 5, expected_members, "receivedPrematureCommitments", expected_commitments, mninfos_online)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
-        self.sync_blocks(nodes)
+        self.sync_blocks(nodes, bumptime=1)
 
         self.log.info("Waiting for phase 6 (mining)")
         self.wait_for_quorum_phase(q, 6, expected_members, None, 0, mninfos_online)
@@ -1359,7 +1361,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.log.info("Mining final commitment")
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(1)
-        self.sync_blocks(nodes)
+        self.sync_blocks(nodes, bumptime=1)
 
         self.log.info("Waiting for quorum to appear in the list")
         self.wait_for_quorum_list(q, nodes)
@@ -1371,7 +1373,7 @@ class DashTestFramework(SyscoinTestFramework):
         # Mine 20 (SIGN_HEIGHT_OFFSET) more blocks to make sure that the new quorum gets eligable for signing sessions
         self.nodes[0].generate(20)
 
-        self.sync_blocks(nodes)
+        self.sync_blocks(nodes, bumptime=1)
 
         self.log.info("New quorum: height=%d, quorumHash=%s, minedBlock=%s" % (quorum_info["height"], new_quorum, quorum_info["minedBlock"]))
 
