@@ -56,6 +56,7 @@ FUZZ_TARGET(validation_load_mempool, .init = initialize_validation_load_mempool)
     (void)LoadMempool(pool, MempoolPath(g_setup->m_args), chainstate,
                       {
                           .mockable_fopen_function = fuzzed_fopen,
+                          .load_knots_data = true,
                       });
     pool.SetLoadTried(true);
     (void)DumpMempool(pool, MempoolPath(g_setup->m_args), fuzzed_fopen, true);
