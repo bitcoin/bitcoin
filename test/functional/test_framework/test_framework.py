@@ -1232,7 +1232,7 @@ class DashTestFramework(SyscoinTestFramework):
             return True
         self.wait_until(check_probes, timeout=timeout, sleep=1, bumptime=1)
 
-    def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, timeout=30, sleep=1):
+    def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, timeout=30, sleep=0.1):
         def check_dkg_session():
             all_ok = True
             member_count = 0
@@ -1286,7 +1286,7 @@ class DashTestFramework(SyscoinTestFramework):
             self.nodes[0].generate(1)
             self.bump_mocktime(sleep, nodes=nodes)
             return False
-        self.wait_until(wait_func, timeout=timeout, sleep=sleep)
+        self.wait_until(wait_func, timeout=timeout, sleep=0.1)
 
     def mine_quorum(self, expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None):
         spork21_active = self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] <= 1
