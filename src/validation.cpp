@@ -204,11 +204,6 @@ static FILE* OpenUndoFile(const FlatFilePos &pos, bool fReadOnly = false);
 static FlatFileSeq BlockFileSeq();
 static FlatFileSeq UndoFileSeq();
 
-bool CheckFinalTx(const CTransaction &tx, int flags)
-{
-    return CheckFinalTx(::ChainActive().Tip(), tx, flags);
-}
-
 bool CheckFinalTx(const CBlockIndex* active_chain_tip, const CTransaction &tx, int flags)
 {
     AssertLockHeld(cs_main);
