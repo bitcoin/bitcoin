@@ -10,6 +10,8 @@ if [ -n "$CIRRUS_PR" ]; then
   git fetch $CIRRUS_REPO_CLONE_URL $CIRRUS_BASE_SHA
   COMMIT_RANGE="${CIRRUS_BASE_SHA}..HEAD"
   test/lint/commit-script-check.sh $COMMIT_RANGE
+else
+  COMMIT_RANGE="$(git fetch $CIRRUS_REPO_CLONE_URL ${CIRRUS_LAST_GREEN_CHANGE:-$CIRRUS_DEFAULT_BRANCH} && git merge-base FETCH_HEAD HEAD)..HEAD"
 fi
 export COMMIT_RANGE
 
