@@ -449,13 +449,15 @@ public:
     bool checkFinalTx(const CTransaction& tx) override
     {
         LOCK(cs_main);
-        return CheckFinalTx(::ChainActive().Tip(), tx);
+        assert(std::addressof(::ChainActive()) == std::addressof(m_node.chainman->ActiveChain()));
+        return CheckFinalTx(m_node.chainman->ActiveChain().Tip(), tx);
     }
     Optional<int> findLocatorFork(const CBlockLocator& locator) override
     {
         LOCK(cs_main);
         const CChain& active = Assert(m_node.chainman)->ActiveChain();
-        if (CBlockIndex* fork = g_chainman.m_blockman.FindForkInGlobalIndex(active, locator)) {
+        assert(std::addressof(g_chainman) == std::addressof(*m_node.chainman));
+        if (CBlockIndex* fork = m_node.chainman->m_blockman.FindForkInGlobalIndex(active, locator)) {
             return fork->nHeight;
         }
         return nullopt;
@@ -464,7 +466,8 @@ public:
     {
         WAIT_LOCK(cs_main, lock);
         const CChain& active = Assert(m_node.chainman)->ActiveChain();
-        return FillBlock(g_chainman.m_blockman.LookupBlockIndex(hash), block, lock, active);
+        assert(std::addressof(g_chainman) == std::addressof(*m_node.chainman));
+        return FillBlock(m_node.chainman->m_blockman.LookupBlockIndex(hash), block, lock, active);
     }
     bool findFirstBlockWithTimeAndHeight(int64_t min_time, int min_height, const FoundBlock& block) override
     {
@@ -476,7 +479,8 @@ public:
     {
         WAIT_LOCK(cs_main, lock);
         const CChain& active = Assert(m_node.chainman)->ActiveChain();
-        if (const CBlockIndex* block = g_chainman.m_blockman.LookupBlockIndex(block_hash)) {
+        assert(std::addressof(g_chainman) == std::addressof(*m_node.chainman));
+        if (const CBlockIndex* block = m_node.chainman->m_blockman.LookupBlockIndex(block_hash)) {
             if (const CBlockIndex* ancestor = block->GetAncestor(ancestor_height)) {
                 return FillBlock(ancestor, ancestor_out, lock, active);
             }
@@ -487,8 +491,10 @@ public:
     {
         WAIT_LOCK(cs_main, lock);
         const CChain& active = Assert(m_node.chainman)->ActiveChain();
-        const CBlockIndex* block = g_chainman.m_blockman.LookupBlockIndex(block_hash);
-        const CBlockIndex* ancestor = g_chainman.m_blockman.LookupBlockIndex(ancestor_hash);
+        assert(std::addressof(g_chainman) == std::addressof(*m_node.chainman));
+        const CBlockIndex* block = m_node.chainman->m_blockman.LookupBlockIndex(block_hash);
+        assert(std::addressof(g_chainman) == std::addressof(*m_node.chainman));
+        const CBlockIndex* ancestor = m_node.chainman->m_blockman.LookupBlockIndex(ancestor_hash);
         if (block && ancestor && block->GetAncestor(ancestor->nHeight) != ancestor) ancestor = nullptr;
         return FillBlock(ancestor, ancestor_out, lock, active);
     }
@@ -496,8 +502,10 @@ public:
     {
         WAIT_LOCK(cs_main, lock);
         const CChain& active = Assert(m_node.chainman)->ActiveChain();
-        const CBlockIndex* block1 = g_chainman.m_blockman.LookupBlockIndex(block_hash1);
-        const CBlockIndex* block2 = g_chainman.m_blockman.LookupBlockIndex(block_hash2);
+        assert(std::addressof(g_chainman) == std::addressof(*m_node.chainman));
+        const CBlockIndex* block1 = m_node.chainman->m_blockman.LookupBlockIndex(block_hash1);
+        assert(std::addressof(g_chainman) == std::addressof(*m_node.chainman));
+        const CBlockIndex* block2 = m_node.chainman->m_blockman.LookupBlockIndex(block_hash2);
         const CBlockIndex* ancestor = block1 && block2 ? LastCommonAncestor(block1, block2) : nullptr;
         // Using & instead of && below to avoid short circuiting and leaving
         // output uninitialized.
@@ -507,7 +515,8 @@ public:
     double guessVerificationProgress(const uint256& block_hash) override
     {
         LOCK(cs_main);
-        return GuessVerificationProgress(Params().TxData(), g_chainman.m_blockman.LookupBlockIndex(block_hash));
+        assert(std::addressof(g_chainman) == std::addressof(*m_node.chainman));
+        return GuessVerificationProgress(Params().TxData(), m_node.chainman->m_blockman.LookupBlockIndex(block_hash));
     }
     bool hasBlocks(const uint256& block_hash, int min_height, Optional<int> max_height) override
     {
@@ -519,7 +528,8 @@ public:
         // used to limit the range, and passing min_height that's too low or
         // max_height that's too high will not crash or change the result.
         LOCK(::cs_main);
-        if (CBlockIndex* block = g_chainman.m_blockman.LookupBlockIndex(block_hash)) {
+        assert(std::addressof(g_chainman) == std::addressof(*m_node.chainman));
+        if (CBlockIndex* block = m_node.chainman->m_blockman.LookupBlockIndex(block_hash)) {
             if (max_height && block->nHeight >= *max_height) block = block->GetAncestor(*max_height);
             for (; block->nStatus & BLOCK_HAVE_DATA; block = block->pprev) {
                 // Check pprev to not segfault if min_height is too low
@@ -603,7 +613,10 @@ public:
         return ::fHavePruned;
     }
     bool isReadyToBroadcast() override { return !::fImporting && !::fReindex && !isInitialBlockDownload(); }
-    bool isInitialBlockDownload() override { return ::ChainstateActive().IsInitialBlockDownload(); }
+    bool isInitialBlockDownload() override {
+        assert(std::addressof(::ChainstateActive()) == std::addressof(m_node.chainman->ActiveChainstate()));
+        return m_node.chainman->ActiveChainstate().IsInitialBlockDownload();
+    }
     bool shutdownRequested() override { return ShutdownRequested(); }
     int64_t getAdjustedTime() override { return GetAdjustedTime(); }
     void initMessage(const std::string& message) override { ::uiInterface.InitMessage(message); }
