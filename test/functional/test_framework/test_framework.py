@@ -1309,7 +1309,8 @@ class DashTestFramework(SyscoinTestFramework):
                                                    expected_justifications, expected_commitments))
 
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
-
+        for i in range(len(nodes)):
+            force_finish_mnsync(nodes[i])
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
         if skip_count != 0:
