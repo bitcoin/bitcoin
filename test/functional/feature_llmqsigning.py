@@ -111,6 +111,6 @@ class LLMQSigningTest(DashTestFramework):
         mn.node.ping()
         self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()), bumptime=1)
         # Let 2 seconds pass so that the next node is used for recovery, which should succeed
-        wait_for_sigs(True, False, True, 2)
+        wait_for_sigs(True, False, True, 15)
 if __name__ == '__main__':
     LLMQSigningTest().main()
