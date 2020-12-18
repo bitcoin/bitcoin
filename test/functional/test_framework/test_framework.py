@@ -1315,6 +1315,9 @@ class DashTestFramework(SyscoinTestFramework):
         if skip_count != 0:
             self.bump_mocktime(1, nodes=nodes)
             self.nodes[0].generate(skip_count)
+        else:
+            self.bump_mocktime(1, nodes=nodes)
+            self.nodes[0].generate(1)
         self.sync_blocks(nodes, bumptime=1)
 
         q = self.nodes[0].getbestblockhash()
