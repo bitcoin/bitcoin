@@ -307,9 +307,9 @@ syscoin.org (see below for syscoin.org update instructions).
   - First, check to see if the Syscoin.org maintainers have prepared a
     release: https://github.com/syscoin-dot-org/syscoin.org/labels/Core
 
-      - If they have, it will have previously failed their Travis CI
+      - If they have, it will have previously failed their CI
         checks because the final release files weren't uploaded.
-        Trigger a Travis CI rebuild---if it passes, merge.
+        Trigger a CI rebuild---if it passes, merge.
 
   - If they have not prepared a release, follow the Syscoin.org release
     instructions: https://github.com/syscoin-dot-org/syscoin.org/blob/master/docs/adding-events-release-notes-and-alerts.md#release-notes
