@@ -4,6 +4,7 @@
 
 #include <bench/bench.h>
 #include <wallet/wallet.h>
+#include <wallet/coinselection.h>
 
 #include <set>
 
@@ -44,7 +45,11 @@ static void CoinSelection(benchmark::State& state)
 
         std::set<CInputCoin> setCoinsRet;
         CAmount nValueRet;
-        bool success = wallet.SelectCoinsMinConf(1003 * COIN, 1, 6, 0, vCoins, setCoinsRet, nValueRet);
+        bool bnb_used;
+        CoinEligibilityFilter filter_standard(1, 6, 0);
+        CoinSelectionParams coin_selection_params(false, 34, 148, CFeeRate(0), 0);
+        bool success = wallet.SelectCoinsMinConf(1003 * COIN, filter_standard, vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)
+                       || wallet.SelectCoinsMinConf(1003 * COIN, filter_standard, vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used);
         assert(success);
         assert(nValueRet == 1003 * COIN);
         assert(setCoinsRet.size() == 2);
@@ -57,4 +62,47 @@ static void CoinSelection(benchmark::State& state)
     }
 }
 
+typedef std::set<CInputCoin> CoinSet;
+
+// Copied from src/wallet/test/coinselector_tests.cpp
+static void add_coin(const CAmount& nValue, int nInput, std::vector<CInputCoin>& set)
+{
+    CMutableTransaction tx;
+    tx.vout.resize(nInput + 1);
+    tx.vout[nInput].nValue = nValue;
+    set.emplace_back(MakeTransactionRef(tx), nInput);
+}
+// Copied from src/wallet/test/coinselector_tests.cpp
+static CAmount make_hard_case(int utxos, std::vector<CInputCoin>& utxo_pool)
+{
+    utxo_pool.clear();
+    CAmount target = 0;
+    for (int i = 0; i < utxos; ++i) {
+        target += (CAmount)1 << (utxos+i);
+        add_coin((CAmount)1 << (utxos+i), 2*i, utxo_pool);
+        add_coin(((CAmount)1 << (utxos+i)) + ((CAmount)1 << (utxos-1-i)), 2*i + 1, utxo_pool);
+    }
+    return target;
+}
+
+static void BnBExhaustion(benchmark::State& state)
+{
+    // Setup
+    std::vector<CInputCoin> utxo_pool;
+    CoinSet selection;
+    CAmount value_ret = 0;
+    CAmount not_input_fees = 0;
+
+    while (state.KeepRunning()) {
+        // Benchmark
+        CAmount target = make_hard_case(17, utxo_pool);
+        SelectCoinsBnB(utxo_pool, target, 0, selection, value_ret, not_input_fees); // Should exhaust
+
+        // Cleanup
+        utxo_pool.clear();
+        selection.clear();
+    }
+}
+
 BENCHMARK(CoinSelection, 650);
+BENCHMARK(BnBExhaustion, 650);
