@@ -243,10 +243,10 @@
     "args":
     ["-create",
       "in=4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485:0",
-      "set=privatekeys:[\"cW5MmkEJF4PzKgwyyZU2ecUEecGXnhEyrB6JAmVpQkWVxErFuvnX\"]",
+      "set=privatekeys:[\"7qYrzJZWqnyCWMYswFcqaRJypGdVceudXPSxmZKsngN7fyo7aAV\"]",
       "set=prevtxs:[{\"txid\":\"4d49a71ec9da436f71ec4ee231d04f292a29cd316f598bb7068feccabdc59485\",\"vout\":\"0foo\",\"scriptPubKey\":\"76a91491b24bf9f5288532960ac687abb035127b1d28a588ac\"}]",
       "sign=ALL",
-      "outaddr=0.001:ycgEaAAqfXUyuansGTRRn9fCvLmQ6nWNKS"],
+      "outaddr=0.001:XijDvbYpPmznwgpWD3DkdYNfGmRP2KoVSk"],
     "return_code": 1,
     "error_txt": "error: prevtxs internal object typecheck fail",
     "description": "Tests the check for invalid vout index in prevtxs for sign"
