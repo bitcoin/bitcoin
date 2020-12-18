@@ -483,8 +483,7 @@ public:
             LOCK2(wallet->cs_wallet, ::cs_main);
             wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
         }
-        bool firstRun;
-        wallet->LoadWallet(firstRun);
+        wallet->LoadWallet();
         AddKey(*wallet, coinbaseKey);
         WalletRescanReserver reserver(*wallet);
         reserver.reserve();
