@@ -70,14 +70,8 @@ task:
     memory: 1G
   # For faster CI feedback, immediately schedule the linters
   << : *CREDITS_TEMPLATE
-  setup_script:
-    - set -o errexit; source ./ci/test/00_setup_env.sh
-  install_script:
-    - set -o errexit; source ./ci/lint/04_install.sh
-  before_script:
-    - set -o errexit; source ./ci/lint/05_before_script.sh
   lint_script:
-    - set -o errexit; source ./ci/lint/06_script.sh
+    - ./ci/lint_run_all.sh
 
 task:
   name: 'ARM [unit tests, no functional tests] [buster]'
