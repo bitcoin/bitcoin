@@ -508,7 +508,7 @@ UniValue protx_register(const JSONRPCRequest& request)
 
     bool fSubmit{true};
     if ((isExternalRegister || isFundRegister) && !request.params[paramIdx + 7].isNull()) {
-        fSubmit = request.params[paramIdx + 7].get_bool();
+        fSubmit = ParseBoolV(request.params[paramIdx + 7], "submit");
     }
 
     if (isFundRegister) {
