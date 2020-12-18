@@ -1101,11 +1101,6 @@ static MempoolAcceptResult AcceptToMemoryPoolWithTime(const CChainParams& chainp
     return result;
 }
 
-MempoolAcceptResult AcceptToMemoryPool(CTxMemPool& pool, const CTransactionRef &tx, bool bypass_limits, bool test_accept)
-{
-    return AcceptToMemoryPool(::ChainstateActive(), pool, tx, bypass_limits, test_accept);
-}
-
 MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPool& pool, const CTransactionRef& tx, bool bypass_limits, bool test_accept)
 {
     assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
