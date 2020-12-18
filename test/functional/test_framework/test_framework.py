@@ -1279,12 +1279,13 @@ class DashTestFramework(SyscoinTestFramework):
             return all_ok
         self.wait_until(check_dkg_comitments, timeout=timeout, sleep=1, bumptime=1)
 
-    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=60, sleep=1):
+    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=15, sleep=1):
         def wait_func():
             if quorum_hash in self.nodes[0].quorum_list()["llmq_test"]:
                 return True
             self.nodes[0].generate(1)
             self.bump_mocktime(sleep, nodes=nodes)
+            self.sync_blocks(nodes)
             return False
         self.wait_until(wait_func, timeout=timeout, sleep=0.1)
 
@@ -1309,8 +1310,6 @@ class DashTestFramework(SyscoinTestFramework):
                                                    expected_justifications, expected_commitments))
 
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
-        for i in range(len(nodes)):
-            force_finish_mnsync(nodes[i])
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
         if skip_count != 0:
@@ -1319,7 +1318,6 @@ class DashTestFramework(SyscoinTestFramework):
         self.sync_blocks(nodes, bumptime=1)
 
         q = self.nodes[0].getbestblockhash()
-        self.bump_mocktime(5, nodes=nodes)
         self.log.info("Waiting for phase 1 (init)")
         self.wait_for_quorum_phase(q, 1, expected_members, None, 0, mninfos_online)
         self.wait_for_quorum_connections(expected_connections, nodes, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))

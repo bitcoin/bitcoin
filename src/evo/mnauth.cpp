@@ -103,8 +103,12 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         uint256 signHash;
         {
             LOCK(pnode->cs_mnauth);
+            int nOurNodeVersion{PROTOCOL_VERSION};
+            if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
+                nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
+            }
             // See comment in PushMNAUTH (IsInboundConn() is negated here as we're on the other side of the connection)
-            signHash = ::SerializeHash(std::make_tuple(dmn->pdmnState->pubKeyOperator, pnode->sentMNAuthChallenge, !pnode->IsInboundConn(), pnode->nVersion.load()));
+            signHash = ::SerializeHash(std::make_tuple(dmn->pdmnState->pubKeyOperator, pnode->sentMNAuthChallenge, !pnode->IsInboundConn(), nOurNodeVersion));
             
             LogPrint(BCLog::NET, "CMNAuth::%s -- constructed signHash for nVersion %d, peer=%d\n", __func__, pnode->nVersion, pnode->GetId());
         }

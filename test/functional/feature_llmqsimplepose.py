@@ -140,7 +140,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.bump_mocktime(50 * 60 + 1)
         # Sleep a couple of seconds to let mn sync tick to happen
         time.sleep(2)
-        self.sync_all(bumptime=1)
+        self.sync_all()
 
     def check_punished(self, mn):
         info = self.nodes[0].protx_info(mn.proTxHash)
