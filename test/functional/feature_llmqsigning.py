@@ -33,13 +33,18 @@ class LLMQSigningTest(DashTestFramework):
         msgHashConflict = "0000000000000000000000000000000000000000000000000000000000000003"
 
         def check_sigs(hasrecsigs, isconflicting1, isconflicting2):
+            self.log.info('check_sigs hasrecsigs {} isconflicting1 {} isconflicting2 {}'.format(isconflicting1, isconflicting1, isconflicting2))
             for node in self.nodes:
                 if node.quorum_hasrecsig(100, id, msgHash) != hasrecsigs:
+                    self.log.info('quorum_hasrecsig failed value {} hasrecsigs {}'.format(node.quorum_hasrecsig(100, id, msgHash) , hasrecsigs))
                     return False
                 if node.quorum_isconflicting(100, id, msgHash) != isconflicting1:
+                    self.log.info('quorum_isconflicting1 failed value {} isconflicting1 {}'.format(node.quorum_isconflicting(100, id, msgHash) , isconflicting1))
                     return False
                 if node.quorum_isconflicting(100, id, msgHashConflict) != isconflicting2:
+                    self.log.info('quorum_isconflicting2 failed value {} isconflicting2 {}'.format(node.quorum_isconflicting(100, id, msgHashConflict) , isconflicting2))
                     return False
+            self.log.info('check_sigs passed') 
             return True
 
         def wait_for_sigs(hasrecsigs, isconflicting1, isconflicting2, timeout):
@@ -68,6 +73,7 @@ class LLMQSigningTest(DashTestFramework):
         self.mninfo[2].node.quorum_sign(100, id, msgHash)
         self.bump_mocktime(5)
         self.nodes[0].generate(1)
+        self.log.info('before wait_for_sigs')
         wait_for_sigs(True, False, True, 15)
 
         recsig_time = self.mocktime
