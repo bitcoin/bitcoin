@@ -58,6 +58,7 @@ BlockAssembler::Options::Options() {
 
 BlockAssembler::BlockAssembler(CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params, const Options& options)
     : m_skip_inclusion_until(options.m_skip_inclusion_until),
+      m_check_block_validity(options.m_check_block_validity),
       chainparams(params),
       m_mempool(mempool),
       m_chainstate(chainstate)
@@ -178,7 +179,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
     BlockValidationState state;
     assert(std::addressof(::ChainstateActive()) == std::addressof(m_chainstate));
-    if (!TestBlockValidity(state, chainparams, m_chainstate, *pblock, pindexPrev, false, false)) {
+    if (m_check_block_validity && !TestBlockValidity(state, chainparams, m_chainstate, *pblock, pindexPrev, false, false)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, state.ToString()));
     }
     int64_t nTime2 = GetTimeMicros();

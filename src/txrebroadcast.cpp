@@ -39,6 +39,7 @@ std::vector<TxIds> TxRebroadcastHandler::GetRebroadcastTransactions(const std::s
     BlockAssembler::Options options;
     options.nBlockMaxWeight = rebroadcast_block_weight;
     options.m_skip_inclusion_until = GetTime<std::chrono::microseconds>() - REBROADCAST_MIN_TX_AGE;
+    options.m_check_block_validity = false;
 
     // Use CreateNewBlock to identify rebroadcast candidates
     std::vector<TxIds> rebroadcast_txs;
