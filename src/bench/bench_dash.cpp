@@ -31,7 +31,7 @@ void CleanupBLSDkgTests();
 
 static fs::path SetDataDir()
 {
-    fs::path ret = fs::temp_directory_path() / "bench_bitcoin" / fs::unique_path();
+    fs::path ret = fs::temp_directory_path() / "bench_dash" / fs::unique_path();
     fs::create_directories(ret);
     gArgs.ForceSetArg("-datadir", ret.string());
     return ret;
