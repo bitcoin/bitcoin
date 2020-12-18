@@ -1312,12 +1312,10 @@ class DashTestFramework(SyscoinTestFramework):
         nodes = [self.nodes[0]] + [mn.node for mn in mninfos_online]
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
-        if skip_count != 0:
-            self.bump_mocktime(1, nodes=nodes)
-            self.nodes[0].generate(skip_count)
-        else:
-            self.bump_mocktime(1, nodes=nodes)
-            self.nodes[0].generate(1)
+        if skip_count == 0:
+            skip_count = 1
+        self.bump_mocktime(1, nodes=nodes)
+        self.nodes[0].generate(skip_count)
         self.sync_blocks(nodes, bumptime=1)
 
         q = self.nodes[0].getbestblockhash()
