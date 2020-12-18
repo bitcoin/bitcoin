@@ -510,6 +510,7 @@ libdash_consensus_a_SOURCES = \
   script/script_error.cpp \
   script/script_error.h \
   serialize.h \
+  span.h \
   streams.h \
   tinyformat.h \
   uint256.cpp \

@@ -11,6 +11,7 @@
 
 #include <compat.h>
 #include <serialize.h>
+#include <span.h>
 
 #include <stdint.h>
 #include <string>
@@ -144,7 +145,7 @@ class CSubNet
 class CService : public CNetAddr
 {
     protected:
-        unsigned short port; // host order
+        uint16_t port; // host order
 
     public:
         CService();
@@ -171,10 +172,7 @@ class CService : public CNetAddr
         template <typename Stream, typename Operation>
         inline void SerializationOp(Stream& s, Operation ser_action) {
             READWRITE(ip);
-            unsigned short portN = htons(port);
-            READWRITE(FLATDATA(portN));
-            if (ser_action.ForRead())
-                 port = ntohs(portN);
+            READWRITE(WrapBigEndian(port));
         }
 };
 
