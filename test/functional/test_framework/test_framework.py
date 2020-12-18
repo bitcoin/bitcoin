@@ -1318,7 +1318,7 @@ class DashTestFramework(SyscoinTestFramework):
         self.sync_blocks(nodes, bumptime=1)
 
         q = self.nodes[0].getbestblockhash()
-
+        self.bump_mocktime(5, nodes=nodes)
         self.log.info("Waiting for phase 1 (init)")
         self.wait_for_quorum_phase(q, 1, expected_members, None, 0, mninfos_online)
         self.wait_for_quorum_connections(expected_connections, nodes, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
