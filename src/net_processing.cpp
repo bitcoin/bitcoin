@@ -2738,7 +2738,7 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             LogPrintf("New outbound peer connected: version: %d, blocks=%d, peer=%d%s (%s)\n",
                       pfrom.nVersion.load(), pfrom.nStartingHeight,
                       pfrom.GetId(), (fLogIPs ? strprintf(", peeraddr=%s", pfrom.addr.ToString()) : ""),
-                      pfrom.IsBlockOnlyConn() ? "block-relay" : "full-relay");
+                      pfrom.ConnectionTypeAsString());
         }
         // SYSCOIN
         if (!pfrom.fMasternodeProbe) {
