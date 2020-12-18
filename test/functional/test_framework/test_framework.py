@@ -668,8 +668,8 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
             "".join("\n  {!r}".format(m) for m in pool),
         ))
 
-    def sync_all(self, nodes=None):
-        self.sync_blocks(nodes)
+    def sync_all(self, nodes=None, bumptime=None):
+        self.sync_blocks(nodes, bumptime=bumptime)
         self.sync_mempools(nodes)
     # SYSCOIN
     def wait_until(self, test_function, timeout=60, sleep=0.05, bumptime=0, do_assert = True):

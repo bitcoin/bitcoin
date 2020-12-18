@@ -125,7 +125,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 else:
                     mn.node.setnetworkactive(True)
             self.connect_nodes(mn.node.index, 0)
-        self.sync_all()
+        self.sync_all(bumptime=1)
 
         # Isolate and re-connect all MNs (otherwise there might be open connections with no MNAUTH for MNs which were banned before)
         for mn in self.mninfo:
@@ -140,7 +140,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.bump_mocktime(50 * 60 + 1)
         # Sleep a couple of seconds to let mn sync tick to happen
         time.sleep(2)
-        self.sync_all()
+        self.sync_all(bumptime=1)
 
     def check_punished(self, mn):
         info = self.nodes[0].protx_info(mn.proTxHash)
