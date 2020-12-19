@@ -111,7 +111,7 @@ static RPCHelpMan gobject_list_prepared()
     });
 
     UniValue jsonArray(UniValue::VARR);
-    auto it = vecObjects.rbegin() + std::max<int>(0, vecObjects.size() - nCount);
+    auto it = vecObjects.rbegin() + std::max<int>(0, ((int)vecObjects.size()) - nCount);
     while (it != vecObjects.rend()) {
         jsonArray.push_back((*it++)->ToJson());
     }
