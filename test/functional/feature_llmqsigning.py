@@ -104,9 +104,6 @@ class LLMQSigningTest(DashTestFramework):
             self.mninfo[i].node.quorum_sign(100, id, msgHashConflict)
         for i in range(2, 5):
             self.mninfo[i].node.quorum_sign(100, id, msgHash)
-        for i in range(len(self.nodes)):
-            force_finish_mnsync(self.nodes[i])
-        self.nodes[0].generate(1)
         self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
 
@@ -133,4 +130,3 @@ class LLMQSigningTest(DashTestFramework):
 
 if __name__ == '__main__':
     LLMQSigningTest().main()
-    
