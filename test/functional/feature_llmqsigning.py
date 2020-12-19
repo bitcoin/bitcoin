@@ -2,10 +2,9 @@
 # Copyright (c) 2015-2020 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 import time
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import force_finish_mnsync
+
 '''
 feature_llmqsigning.py
 
@@ -22,8 +21,7 @@ class LLMQSigningTest(DashTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        for i in range(len(self.nodes)):
-            force_finish_mnsync(self.nodes[i])
+
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
         self.wait_for_sporks_same()
@@ -49,15 +47,12 @@ class LLMQSigningTest(DashTestFramework):
             while time.time() - t < timeout:
                 if check_sigs(hasrecsigs, isconflicting1, isconflicting2):
                     return
-                self.bump_mocktime(2)
                 time.sleep(1)
+                self.bump_mocktime(2)
             raise AssertionError("wait_for_sigs timed out")
 
         def assert_sigs_nochange(hasrecsigs, isconflicting1, isconflicting2, timeout):
-            t = time.time()
-            while time.time() - t < timeout:
-                assert(check_sigs(hasrecsigs, isconflicting1, isconflicting2))
-                time.sleep(0.1)
+            assert(not self.wait_until(lambda: not check_sigs(hasrecsigs, isconflicting1, isconflicting2), timeout = timeout, do_assert = False))
 
         # Initial state
         wait_for_sigs(False, False, False, 1)
@@ -82,34 +77,24 @@ class LLMQSigningTest(DashTestFramework):
         self.mine_quorum()
         self.mine_quorum()
         assert_sigs_nochange(True, False, True, 3)
-
-        # fast forward until 0.5 days before cleanup is expected, recovered sig should still be valid
+        # fast forward until 6.5 days before cleanup is expected, recovered sig should still be valid
         self.bump_mocktime(recsig_time + int(60 * 60 * 24 * 6.5) - self.mocktime)
-        for i in range(len(self.nodes)):
-            force_finish_mnsync(self.nodes[i])
-        self.nodes[0].generate(1)
-        self.bump_mocktime(5)
         # Cleanup starts every 5 seconds
+        self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
         # fast forward 1 day, recovered sig should not be valid anymore
         self.bump_mocktime(int(60 * 60 * 24 * 1))
-        for i in range(len(self.nodes)):
-            force_finish_mnsync(self.nodes[i])
         self.nodes[0].generate(1)
-        self.bump_mocktime(5)
         # Cleanup starts every 5 seconds
+        self.bump_mocktime(5)
         wait_for_sigs(False, False, False, 15)
 
         for i in range(2):
             self.mninfo[i].node.quorum_sign(100, id, msgHashConflict)
         for i in range(2, 5):
             self.mninfo[i].node.quorum_sign(100, id, msgHash)
-        for i in range(len(self.nodes)):
-            force_finish_mnsync(self.nodes[i])
-        self.nodes[0].generate(1)
         self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
-
 
         id = "0000000000000000000000000000000000000000000000000000000000000002"
 
@@ -117,7 +102,7 @@ class LLMQSigningTest(DashTestFramework):
         q = self.nodes[0].quorum_selectquorum(100, id)
         mn = self.get_mninfo(q['recoveryMembers'][0])
         mn.node.setnetworkactive(False)
-        self.wait_until(lambda: mn.node.getconnectioncount() == 0)
+        self.wait_until(lambda: mn.node.getconnectioncount() == 0, bumptime=1)
         for i in range(4):
             self.mninfo[i].node.quorum_sign(100, id, msgHash)
         assert_sigs_nochange(False, False, False, 3)
@@ -127,9 +112,8 @@ class LLMQSigningTest(DashTestFramework):
         # Make sure node0 has received qsendrecsigs from the previously isolated node
         mn.node.ping()
         self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
-        self.nodes[0].generate(1)
+        # Let 5 seconds pass so that the next node is used for recovery, which should succeed
         self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
-
 if __name__ == '__main__':
     LLMQSigningTest().main()
