@@ -3953,11 +3953,11 @@ void PeerManager::EvictExtraOutboundPeers(int64_t time_in_seconds)
             if (node_state == nullptr ||
                 (time_in_seconds - pnode->nTimeConnected >= MINIMUM_CONNECT_TIME && node_state->nBlocksInFlight == 0)) {
                 pnode->fDisconnect = true;
-                LogPrint(BCLog::NET, "disconnecting extra block-relay-only peer=%d (last block received at time %d)\n", pnode->GetId(), pnode->nLastBlockTime);
+                const std::string block_details{pnode->nLastBlockTime == 0 ? "no block announcement received" : strprintf("last block announcement received at time %d", pnode->nLastBlockTime)};
+                LogPrint(BCLog::NET, "disconnecting extra %s peer=%d (%s)\n", pnode->ConnectionTypeAsString(), pnode->GetId(), block_details);
                 return true;
             } else {
-                LogPrint(BCLog::NET, "keeping block-relay-only peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n",
-                    pnode->GetId(), pnode->nTimeConnected, node_state->nBlocksInFlight);
+                LogPrint(BCLog::NET, "keeping %s peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n", pnode->ConnectionTypeAsString(), pnode->GetId(), pnode->nTimeConnected, node_state->nBlocksInFlight);
             }
             return false;
         });
