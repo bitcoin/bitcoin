@@ -49,7 +49,7 @@ Please replace `<host>` with your local system's `host-platform-triplet`. The fo
 - `x86_64-pc-linux-gnu` for Linux64
 - `i686-w64-mingw32` for Win32
 - `x86_64-w64-mingw32` for Win64
-- `x86_64-apple-darwin11` for MacOSX
+- `x86_64-apple-darwin14` for MacOSX
 - `arm-linux-gnueabihf` for Linux ARM 32 bit
 - `aarch64-linux-gnu` for Linux ARM 64 bit
 

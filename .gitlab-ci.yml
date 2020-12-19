@@ -42,7 +42,7 @@ builder-image:
   before_script:
     - echo HOST=$HOST
     - |
-      if [ "$HOST" = "x86_64-apple-darwin11" ]; then
+      if [ "$HOST" = "x86_64-apple-darwin14" ]; then
         echo "Downloading MacOS SDK"
         mkdir -p depends/SDKs
         mkdir -p depends/sdk-sources
@@ -187,12 +187,12 @@ x86_64-unknown-linux-gnu-release:
     HOST: x86_64-unknown-linux-gnu
     DEP_OPTS: "NO_UPNP=1"
 
-x86_64-apple-darwin11:
+x86_64-apple-darwin14:
   extends:
     - .build-depends-template
     - .skip-in-fast-mode-template
   variables:
-    HOST: x86_64-apple-darwin11
+    HOST: x86_64-apple-darwin14
 
 ###
 
@@ -260,7 +260,7 @@ mac-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-apple-darwin11
+    - x86_64-apple-darwin14
   variables:
     BUILD_TARGET: mac
 

@@ -1,0 +1,26 @@
+--- old/qtbase/src/gui/configure.pri	2018-06-06 17:28:10.000000000 -0400
++++ new/qtbase/src/gui/configure.pri	2018-08-17 18:43:01.589384567 -0400
+@@ -43,18 +43,11 @@
+ }
+
+ defineTest(qtConfTest_xkbConfigRoot) {
+-    qtConfTest_getPkgConfigVariable($${1}): return(true)
+-
+-    for (dir, $$list("/usr/share/X11/xkb", "/usr/local/share/X11/xkb")) {
+-        exists($$dir) {
+-            $${1}.value = $$dir
+-            export($${1}.value)
+-            $${1}.cache += value
+-            export($${1}.cache)
+-            return(true)
+-        }
+-    }
+-    return(false)
++    $${1}.value = "/usr/share/X11/xkb"
++    export($${1}.value)
++    $${1}.cache += value
++    export($${1}.cache)
++    return(true)
+ }
+
+ defineTest(qtConfTest_qpaDefaultPlatform) {
