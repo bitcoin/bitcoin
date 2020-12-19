@@ -1269,6 +1269,22 @@ class msg_wtxidrelay:
     def __repr__(self):
         return "msg_wtxidrelay()"
 
+class msg_disabletx:
+    __slots__ = ()
+    msgtype = b"disabletx"
+
+    def __init__(self):
+        pass
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        return b""
+
+    def __repr__(self):
+        return "msg_disabletx()"
+
 
 class msg_no_witness_tx(msg_tx):
     __slots__ = ()
