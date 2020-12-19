@@ -65,7 +65,7 @@ class LLMQSigningTest(DashTestFramework):
         # Sign one more share, should result in recovered sig and conflict for msgHashConflict
         self.mninfo[2].node.quorum_sign(100, id, msgHash)
         self.bump_mocktime(5)
-        wait_for_sigs(True, False, True, 15)
+        wait_for_sigs(True, False, True, 30)
 
         recsig_time = self.mocktime
 
