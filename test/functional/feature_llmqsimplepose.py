@@ -9,7 +9,7 @@ from test_framework.test_framework import DashTestFramework
 from test_framework.util import p2p_port, force_finish_mnsync
 
 '''
-feature_llmqsimplepose.py
+llmq-simplepose.py
 
 Checks simple PoSe system based on LLMQ commitments
 
@@ -17,15 +17,16 @@ Checks simple PoSe system based on LLMQ commitments
 
 class LLMQSimplePoSeTest(DashTestFramework):
     def set_test_params(self):
-        self.bind_to_localhost_only = False
-        self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
+        self.set_dash_test_params(6, 5, [["-whitelist=127.0.0.1"]] * 6, fast_dip3_enforcement=True)
         self.set_dash_llmq_test_params(5, 3)
+        self.bind_to_localhost_only = False
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
     def run_test(self):
-
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 
@@ -55,12 +56,12 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def isolate_mn(self, mn):
         mn.node.setnetworkactive(False)
-        self.wait_until(lambda: mn.node.getconnectioncount() == 0, bumptime=1)
+        self.wait_until(lambda: mn.node.getconnectioncount() == 0)
         return True
 
     def close_mn_port(self, mn):
         self.stop_node(mn.node.index)
-        self.start_masternode(mn, ["-mocktime=" + str(self.mocktime), "-listen=0"])
+        self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime), "-listen=0"])
         self.connect_nodes(mn.node.index, 0)
         # Make sure the to-be-banned node is still connected well via outbound connections
         for mn2 in self.mninfo:
@@ -71,7 +72,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
     def force_old_mn_proto(self, mn):
         self.stop_node(mn.node.index)
-        self.start_masternode(mn, ["-mocktime=" + str(self.mocktime), "-pushversion=70015"])
+        self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime), "-pushversion=70015"])
         self.connect_nodes(mn.node.index, 0)
         self.reset_probe_timeouts()
         return False
@@ -119,16 +120,17 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
                 if restart:
                     self.stop_node(mn.node.index)
+                    time.sleep(0.5)
                     self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime)])
                 else:
                     mn.node.setnetworkactive(True)
             self.connect_nodes(mn.node.index, 0)
-        self.sync_all(bumptime=1)
+        self.sync_all()
 
         # Isolate and re-connect all MNs (otherwise there might be open connections with no MNAUTH for MNs which were banned before)
         for mn in self.mninfo:
             mn.node.setnetworkactive(False)
-            self.wait_until(lambda: mn.node.getconnectioncount() == 0, bumptime=1)
+            self.wait_until(lambda: mn.node.getconnectioncount() == 0)
             mn.node.setnetworkactive(True)
             force_finish_mnsync(mn.node)
             self.connect_nodes(mn.node.index, 0)
@@ -139,6 +141,8 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Sleep a couple of seconds to let mn sync tick to happen
         time.sleep(2)
         self.sync_all()
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
 
     def check_punished(self, mn):
         info = self.nodes[0].protx_info(mn.proTxHash)

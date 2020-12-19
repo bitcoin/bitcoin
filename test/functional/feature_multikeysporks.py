@@ -109,7 +109,7 @@ class MultiKeySporkTest(DashTestFramework):
         # now spork state is changed
         for node in self.nodes:
             time.sleep(0.1)
-            self.wait_until(lambda: self.get_test_spork_value(node) == 1, timeout=10, bumptime=1)
+            self.wait_until(lambda: self.get_test_spork_value(node) == 1, timeout=10)
 
         self.bump_mocktime(1)
         # now set the spork again with other signers to test
@@ -119,7 +119,7 @@ class MultiKeySporkTest(DashTestFramework):
         self.set_test_spork_value(self.nodes[4], 2)
         time.sleep(0.1)
         for node in self.nodes:
-            self.wait_until(lambda: self.get_test_spork_value(node) == 2, timeout=10, bumptime=1)
+            self.wait_until(lambda: self.get_test_spork_value(node) == 2, timeout=10)
 
 
 if __name__ == '__main__':

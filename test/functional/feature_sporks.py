@@ -42,8 +42,8 @@ class SporkTest(DashTestFramework):
         spork_new_state = not spork_default_state
         self.set_test_spork_state(self.nodes[0], spork_new_state)
         time.sleep(0.1)
-        self.wait_until(lambda: self.get_test_spork_state(self.nodes[1]), timeout=10, bumptime=1)
-        self.wait_until(lambda: self.get_test_spork_state(self.nodes[0]), timeout=10, bumptime=1)
+        self.wait_until(lambda: self.get_test_spork_state(self.nodes[1]), timeout=10)
+        self.wait_until(lambda: self.get_test_spork_state(self.nodes[0]), timeout=10)
 
         # restart nodes to check spork persistence
         self.stop_node(0)
@@ -60,7 +60,7 @@ class SporkTest(DashTestFramework):
         # connect new node and check spork propagation after restoring from cache
         self.connect_nodes(1, 2)
         time.sleep(0.1)
-        self.wait_until(lambda: self.get_test_spork_state(self.nodes[2]), timeout=12, bumptime=1)
+        self.wait_until(lambda: self.get_test_spork_state(self.nodes[2]), timeout=12)
 
         # turn off and check
         self.bump_mocktime(1)
@@ -69,9 +69,9 @@ class SporkTest(DashTestFramework):
         self.set_test_spork_state(self.nodes[0], False)
 
         time.sleep(0.1)
-        self.wait_until(lambda: not self.get_test_spork_state(self.nodes[1]), timeout=10, bumptime=1)
-        self.wait_until(lambda: not self.get_test_spork_state(self.nodes[2]), timeout=10, bumptime=1)
-        self.wait_until(lambda: not self.get_test_spork_state(self.nodes[0]), timeout=10, bumptime=1)
+        self.wait_until(lambda: not self.get_test_spork_state(self.nodes[1]), timeout=10)
+        self.wait_until(lambda: not self.get_test_spork_state(self.nodes[2]), timeout=10)
+        self.wait_until(lambda: not self.get_test_spork_state(self.nodes[0]), timeout=10)
 
 if __name__ == '__main__':
     SporkTest().main()
