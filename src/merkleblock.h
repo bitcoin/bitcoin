@@ -115,6 +115,12 @@ public:
      * returns the merkle root, or 0 in case of failure
      */
     uint256 ExtractMatches(std::vector<uint256> &vMatch, std::vector<unsigned int> &vnIndex);
+
+    /** Get number of transactions the merkle proof is indicating for cross-reference with
+     * local blockchain knowledge.
+     */
+    unsigned int GetNumTransactions() const { return nTransactions; };
+
 };
 
 

@@ -134,6 +134,8 @@ private:
     bool fOnlyMixingAllowed;
 
 protected:
+    using CryptedKeyMap = std::map<CKeyID, std::pair<CPubKey, std::vector<unsigned char>>>;
+
     bool SetCrypted();
 
     //! will encrypt previously unencrypted keys

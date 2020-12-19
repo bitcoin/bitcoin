@@ -738,6 +738,7 @@ class CPartialMerkleTree():
         self.nTransactions = 0
         self.vBits = []
         self.vHash = []
+        self.fBad = False
 
     def deserialize(self, f):
         self.nTransactions = struct.unpack("<I", f.read(4))[0]
