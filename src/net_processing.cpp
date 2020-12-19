@@ -3949,7 +3949,7 @@ void PeerManager::EvictExtraOutboundPeers(int64_t time_in_seconds)
             // at all.
             // Note that we only request blocks from a peer if we learn of a
             // valid headers chain with at least as much work as our tip.
-            CNodeState *node_state = State(pnode->GetId());
+            const CNodeState* node_state = State(pnode->GetId());
             if (node_state == nullptr ||
                 (time_in_seconds - pnode->nTimeConnected >= MINIMUM_CONNECT_TIME && node_state->nBlocksInFlight == 0)) {
                 pnode->fDisconnect = true;
@@ -3978,7 +3978,7 @@ void PeerManager::EvictExtraOutboundPeers(int64_t time_in_seconds)
             // Only consider outbound-full-relay peers that are not already
             // marked for disconnection
             if (!pnode->IsFullOutboundConn() || pnode->fDisconnect) return;
-            CNodeState *state = State(pnode->GetId());
+            const CNodeState* state = State(pnode->GetId());
             if (state == nullptr) return; // shouldn't be possible, but just in case
             // Don't evict our protected peers
             if (state->m_chain_sync.m_protect) return;
@@ -3996,7 +3996,7 @@ void PeerManager::EvictExtraOutboundPeers(int64_t time_in_seconds)
                 // it time for new information to have arrived.
                 // Also don't disconnect any peer we're trying to download a
                 // block from.
-                CNodeState &state = *State(pnode->GetId());
+                const CNodeState& state = *State(pnode->GetId());
                 if (time_in_seconds - pnode->nTimeConnected > MINIMUM_CONNECT_TIME && state.nBlocksInFlight == 0) {
                     const std::string block_details{oldest_block_announcement == 0 ? "no block announcement received" : strprintf("last block announcement received at time %d", oldest_block_announcement)};
                     LogPrint(BCLog::NET, "disconnecting extra %s peer=%d (%s)\n", pnode->ConnectionTypeAsString(), pnode->GetId(), block_details);
