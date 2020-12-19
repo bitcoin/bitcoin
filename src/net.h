@@ -506,7 +506,12 @@ public:
         // Don't relay addr messages to peers that we connect to as block-relay-only
         // peers (to prevent adversaries from inferring these links from addr
         // traffic).
-        return m_conn_type != ConnectionType::BLOCK_RELAY;
+        if (m_conn_type == ConnectionType::BLOCK_RELAY) return false;
+
+        // Don't relay addr messages to peers that have sent disabletx, as they are
+        // likely to be inbound block-relay-only peers.
+        if (m_disable_tx) return false;
+        return true;
     }
 
     bool ExpectServicesFromConn() const {
@@ -547,6 +552,9 @@ public:
     bool fGetAddr{false};
     std::chrono::microseconds m_next_addr_send GUARDED_BY(cs_sendProcessing){0};
     std::chrono::microseconds m_next_local_addr_send GUARDED_BY(cs_sendProcessing){0};
+
+    /** Whether a peer has sent us a disabletx message */
+    std::atomic<bool> m_disable_tx{false};
 
     struct TxRelay {
         mutable RecursiveMutex cs_filter;
