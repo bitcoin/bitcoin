@@ -17,7 +17,6 @@
 namespace bls {
 
 ChainCode ChainCode::FromBytes(const uint8_t* bytes) {
-    BLS::AssertInitialized();
     ChainCode c = ChainCode();
     bn_new(c.chainCode);
     bn_read_bin(c.chainCode, bytes, ChainCode::CHAIN_CODE_SIZE);
@@ -25,7 +24,6 @@ ChainCode ChainCode::FromBytes(const uint8_t* bytes) {
 }
 
 ChainCode::ChainCode(const ChainCode &cc) {
-    BLS::AssertInitialized();
     uint8_t bytes[ChainCode::CHAIN_CODE_SIZE];
     cc.Serialize(bytes);
     bn_new(chainCode);

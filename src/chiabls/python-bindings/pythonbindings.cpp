@@ -261,10 +261,7 @@ PYBIND11_MODULE(blspy, m) {
     py::class_<BLS>(m, "BLS")
         .def_property_readonly_static("MESSAGE_HASH_LEN", [](py::object self) {
             return BLS::MESSAGE_HASH_LEN;
-        })
-        .def("init", &BLS::Init)
-        .def("assert_initialized", &BLS::AssertInitialized)
-        .def("clean", &BLS::Clean);
+        });
 
     py::class_<Util>(m, "Util")
         .def("hash256", [](const py::bytes &message) {

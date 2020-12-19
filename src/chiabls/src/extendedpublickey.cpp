@@ -21,7 +21,6 @@ namespace bls {
 
 ExtendedPublicKey ExtendedPublicKey::FromBytes(
         const uint8_t* serialized) {
-    BLS::AssertInitialized();
     uint32_t version = Util::FourBytesToInt(serialized);
     uint32_t depth = serialized[4];
     uint32_t parentFingerprint = Util::FourBytesToInt(serialized + 5);
@@ -36,14 +35,13 @@ ExtendedPublicKey ExtendedPublicKey::FromBytes(
 }
 
 ExtendedPublicKey ExtendedPublicKey::PublicChild(uint32_t i) const {
-    BLS::AssertInitialized();
     // Hardened children have i >= 2^31. Non-hardened have i < 2^31
     uint32_t cmp = (1 << 31);
     if (i >= cmp) {
-        throw std::string("Cannot derive hardened children from public key");
+        throw std::invalid_argument("Cannot derive hardened children from public key");
     }
     if (depth >= 255) {
-        throw std::string("Cannot go further than 255 levels");
+        throw std::logic_error("Cannot go further than 255 levels");
     }
     uint8_t ILeft[PrivateKey::PRIVATE_KEY_SIZE];
     uint8_t IRight[ChainCode::CHAIN_CODE_SIZE];
@@ -109,7 +107,6 @@ PublicKey ExtendedPublicKey::GetPublicKey() const {
 
 // Comparator implementation.
 bool operator==(ExtendedPublicKey const &a,  ExtendedPublicKey const &b) {
-    BLS::AssertInitialized();
     return (a.GetPublicKey() == b.GetPublicKey() &&
             a.GetChainCode() == b.GetChainCode());
 }
@@ -119,12 +116,10 @@ bool operator!=(ExtendedPublicKey const&a,  ExtendedPublicKey const&b) {
 }
 
 std::ostream &operator<<(std::ostream &os, ExtendedPublicKey const &a) {
-    BLS::AssertInitialized();
     return os << a.GetPublicKey() << a.GetChainCode();
 }
 
 void ExtendedPublicKey::Serialize(uint8_t *buffer) const {
-    BLS::AssertInitialized();
     Util::IntToFourBytes(buffer, version);
     buffer[4] = depth;
     Util::IntToFourBytes(buffer + 5, parentFingerprint);

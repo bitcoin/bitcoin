@@ -18,6 +18,7 @@
 #include "test-utils.hpp"
 
 #include <array>
+#include <thread>
 
 using std::string;
 using std::vector;
@@ -195,6 +196,79 @@ TEST_CASE("Key generation") {
     }
 }
 
+TEST_CASE("Error handling") {
+    SECTION("Should throw on a bad private key") {
+        uint8_t seed[32];
+        getRandomSeed(seed);
+        PrivateKey sk1 = PrivateKey::FromSeed(seed, 32);
+        uint8_t* skData = Util::SecAlloc<uint8_t>(
+                Signature::SIGNATURE_SIZE);
+        sk1.Serialize(skData);
+        skData[0] = 255;
+        REQUIRE_THROWS(PrivateKey::FromBytes(skData));
+
+        Util::SecFree(skData);
+    }
+
+    SECTION("Should throw on a bad public key") {
+        uint8_t buf[PublicKey::PUBLIC_KEY_SIZE] = {0};
+        std::set<int> invalid = {1, 2, 3, 4};
+
+        for (int i = 0; i < 10; i++) {
+            buf[0] = (uint8_t)i;
+            try {
+                PublicKey::FromBytes(buf);
+                REQUIRE(invalid.count(i) == 0);
+            } catch (std::invalid_argument& s) {
+                REQUIRE(invalid.count(i) != 0);
+            }
+        }
+    }
+
+    SECTION("Should throw on a bad signature") {
+        uint8_t buf[Signature::SIGNATURE_SIZE] = {0};
+        std::set<int> invalid = {0, 1, 2, 3, 5, 6, 7, 8};
+
+        for (int i = 0; i < 10; i++) {
+            buf[0] = (uint8_t)i;
+            try {
+                Signature::FromBytes(buf);
+                REQUIRE(invalid.count(i) == 0);
+            } catch (std::invalid_argument& s) {
+                REQUIRE(invalid.count(i) != 0);
+            }
+        }
+    }
+
+    SECTION("Error handling should be thread safe") {
+        core_get()->code = 10;
+        REQUIRE(core_get()->code == 10);
+
+        ctx_t* ctx1 = core_get();
+        bool ctxError = false;
+
+        // spawn a thread and make sure it uses a different context
+        std::thread([&]() {
+            if (ctx1 == core_get()) {
+                ctxError = true;
+            }
+            if (core_get()->code != STS_OK) {
+                ctxError = true;
+            }
+            // this should not modify the code of the main thread
+            core_get()->code = 1;
+        }).join();
+
+        REQUIRE(!ctxError);
+
+        // other thread should not modify code
+        REQUIRE(core_get()->code == 10);
+
+        // reset so that future test cases don't fail
+        core_get()->code = STS_OK;
+    }
+}
+
 TEST_CASE("Util tests") {
     SECTION("Should convert an int to four bytes") {
         uint32_t x = 1024;
@@ -335,19 +409,6 @@ TEST_CASE("Signatures") {
 
         InsecureSignature sig3 = InsecureSignature::FromBytes(sigData);
         REQUIRE(Signature::FromInsecureSig(sig3) == sig2);
-    }
-
-    SECTION("Should throw on a bad private key") {
-        uint8_t seed[32];
-        getRandomSeed(seed);
-        PrivateKey sk1 = PrivateKey::FromSeed(seed, 32);
-        uint8_t* skData = Util::SecAlloc<uint8_t>(
-                Signature::SIGNATURE_SIZE);
-        sk1.Serialize(skData);
-        skData[0] = 255;
-        REQUIRE_THROWS(PrivateKey::FromBytes(skData));
-
-        Util::SecFree(skData);
     }
 
     SECTION("Should not validate a bad sig") {

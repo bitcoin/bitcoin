@@ -38,6 +38,7 @@ set(CHECK "off" CACHE STRING "")
 set(VERBS "off" CACHE STRING "")
 set(ALLOC "AUTO" CACHE STRING "")
 set(SHLIB "OFF" CACHE STRING "")
+set(MULTI "PTHREAD" CACHE STRING "")
 
 set(FP_PRIME 381 CACHE INTEGER "")
 
@@ -62,6 +63,7 @@ set(EP_SUPER "off" CACHE STRING "")
 # Disable relic tests and benchmarks
 set(TESTS 0 CACHE INTEGER "")
 set(BENCH 0 CACHE INTEGER "")
+set(QUIET 1 CACHE INTEGER "")
 
 set(PP_EXT "LAZYR" CACHE STRING "")
 set(PP_METHD "LAZYR;OATEP" CACHE STRING "")

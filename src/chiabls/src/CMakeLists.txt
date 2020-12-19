@@ -5,7 +5,7 @@ file(GLOB HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp)
 source_group("SrcHeaders" FILES ${HEADERS})
 
 include_directories(
-  ${INCLUDE_DIRECTORIES}
+  BEFORE
   ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/relic/include
   ${CMAKE_BINARY_DIR}/contrib/relic/include
   ${CMAKE_CURRENT_SOURCE_DIR}/../contrib/catch

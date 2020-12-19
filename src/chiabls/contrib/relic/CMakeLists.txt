@@ -12,7 +12,7 @@ set(PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT
 set(VERSION ${PROJECT_VERSION})
 
 set(INCLUDE ${CMAKE_CURRENT_BINARY_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/include/low)
-include_directories(${INCLUDE})
+include_directories(BEFORE ${INCLUDE})
 
 set(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
@@ -107,7 +107,7 @@ message("   OPSYS=WINDOWS  Windows operating system.")
 message("   OPSYS=DROID    Android operating system.")
 message("   OPSYS=DUINO    Arduino platform.\n")
 
-message(STATUS "Supported multithreading APIs (default = UNDEF):\n")
+message(STATUS "Supported multithreading APIs (default = PTHREAD):\n")
 
 message("   MULTI=         No multithreading support.")
 message("   MULTI=OPENMP   Open Multi-Processing.")

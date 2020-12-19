@@ -21,8 +21,6 @@
 #include "privatekey.hpp"
 namespace bls {
 PrivateKey PrivateKey::FromSeed(const uint8_t* seed, size_t seedLen) {
-    BLS::AssertInitialized();
-
     // "BLS private key seed" in ascii
     const uint8_t hmacKey[] = {66, 76, 83, 32, 112, 114, 105, 118, 97, 116, 101,
                               32, 107, 101, 121, 32, 115, 101, 101, 100};
@@ -53,7 +51,6 @@ PrivateKey PrivateKey::FromSeed(const uint8_t* seed, size_t seedLen) {
 
 // Construct a private key from a bytearray.
 PrivateKey PrivateKey::FromBytes(const uint8_t* bytes, bool modOrder) {
-    BLS::AssertInitialized();
     PrivateKey k;
     bn_read_bin(*k.keydata, bytes, PrivateKey::PRIVATE_KEY_SIZE);
     bn_t ord;
@@ -63,36 +60,31 @@ PrivateKey PrivateKey::FromBytes(const uint8_t* bytes, bool modOrder) {
         bn_mod_basic(*k.keydata, *k.keydata, ord);
     } else {
         if (bn_cmp(*k.keydata, ord) > 0) {
-            throw std::string("Key data too large, must be smaller than group order");
+            throw std::invalid_argument("Key data too large, must be smaller than group order");
         }
     }
     return k;
 }
 
 PrivateKey::PrivateKey() {
-    BLS::AssertInitialized();
     AllocateKeyData();
 }
 
 // Construct a private key from another private key.
 PrivateKey::PrivateKey(const PrivateKey &privateKey) {
-    BLS::AssertInitialized();
     AllocateKeyData();
     bn_copy(*keydata, *privateKey.keydata);
 }
 
 PrivateKey::PrivateKey(PrivateKey&& k) {
-    BLS::AssertInitialized();
     std::swap(keydata, k.keydata);
 }
 
 PrivateKey::~PrivateKey() {
-    BLS::AssertInitialized();
     Util::SecFree(keydata);
 }
 
 PublicKey PrivateKey::GetPublicKey() const {
-    BLS::AssertInitialized();
     g1_t *q = Util::SecAlloc<g1_t>(1);
     g1_mul_gen(*q, *keydata);
 
@@ -103,7 +95,7 @@ PublicKey PrivateKey::GetPublicKey() const {
 
 PrivateKey PrivateKey::AggregateInsecure(std::vector<PrivateKey> const& privateKeys) {
     if (privateKeys.empty()) {
-        throw std::string("Number of private keys must be at least 1");
+        throw std::length_error("Number of private keys must be at least 1");
     }
 
     bn_t order;
@@ -121,10 +113,10 @@ PrivateKey PrivateKey::AggregateInsecure(std::vector<PrivateKey> const& privateK
 PrivateKey PrivateKey::Aggregate(std::vector<PrivateKey> const& privateKeys,
                                        std::vector<PublicKey> const& pubKeys) {
     if (pubKeys.size() != privateKeys.size()) {
-        throw std::string("Number of public keys must equal number of private keys");
+        throw std::length_error("Number of public keys must equal number of private keys");
     }
     if (privateKeys.empty()) {
-        throw std::string("Number of keys must be at least 1");
+        throw std::length_error("Number of keys must be at least 1");
     }
 
     std::vector<uint8_t*> serPubKeys(pubKeys.size());
@@ -183,17 +175,14 @@ PrivateKey PrivateKey::Mul(const bn_t n) const {
 }
 
 bool operator==(const PrivateKey& a, const PrivateKey& b) {
-    BLS::AssertInitialized();
     return bn_cmp(*a.keydata, *b.keydata) == CMP_EQ;
 }
 
 bool operator!=(const PrivateKey& a, const PrivateKey& b) {
-    BLS::AssertInitialized();
     return !(a == b);
 }
 
 PrivateKey& PrivateKey::operator=(const PrivateKey &rhs) {
-    BLS::AssertInitialized();
     Util::SecFree(keydata);
     AllocateKeyData();
     bn_copy(*keydata, *rhs.keydata);
@@ -201,7 +190,6 @@ PrivateKey& PrivateKey::operator=(const PrivateKey &rhs) {
 }
 
 void PrivateKey::Serialize(uint8_t* buffer) const {
-    BLS::AssertInitialized();
     bn_write_bin(buffer, PrivateKey::PRIVATE_KEY_SIZE, *keydata);
 }
 
@@ -212,14 +200,12 @@ std::vector<uint8_t> PrivateKey::Serialize() const {
 }
 
 InsecureSignature PrivateKey::SignInsecure(const uint8_t *msg, size_t len) const {
-    BLS::AssertInitialized();
     uint8_t messageHash[BLS::MESSAGE_HASH_LEN];
     Util::Hash256(messageHash, msg, len);
     return SignInsecurePrehashed(messageHash);
 }
 
 InsecureSignature PrivateKey::SignInsecurePrehashed(const uint8_t *messageHash) const {
-    BLS::AssertInitialized();
     g2_t sig, point;
 
     g2_map(point, messageHash, BLS::MESSAGE_HASH_LEN, 0);
@@ -229,15 +215,12 @@ InsecureSignature PrivateKey::SignInsecurePrehashed(const uint8_t *messageHash) 
 }
 
 Signature PrivateKey::Sign(const uint8_t *msg, size_t len) const {
-    BLS::AssertInitialized();
     uint8_t messageHash[BLS::MESSAGE_HASH_LEN];
     Util::Hash256(messageHash, msg, len);
     return SignPrehashed(messageHash);
 }
 
 Signature PrivateKey::SignPrehashed(const uint8_t *messageHash) const {
-    BLS::AssertInitialized();
-
     InsecureSignature insecureSig = SignInsecurePrehashed(messageHash);
     Signature ret = Signature::FromInsecureSig(insecureSig);
 
@@ -248,7 +231,6 @@ Signature PrivateKey::SignPrehashed(const uint8_t *messageHash) const {
 }
 
 void PrivateKey::AllocateKeyData() {
-    BLS::AssertInitialized();
     keydata = Util::SecAlloc<bn_t>(1);
     bn_new(*keydata);  // Freed in destructor
     bn_zero(*keydata);

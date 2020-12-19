@@ -405,9 +405,8 @@ static void secure_free(void* p)
 
 bool BLSInit()
 {
-    bool BLSInitResult = bls::BLS::Init();
 #ifndef BUILD_SYSCOIN_INTERNAL
     bls::BLS::SetSecureAllocator(secure_allocate, secure_free);
 #endif
-    return BLSInitResult;
+    return true;
 }

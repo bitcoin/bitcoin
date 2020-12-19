@@ -21,8 +21,6 @@ namespace bls {
 
 ExtendedPrivateKey ExtendedPrivateKey::FromSeed(const uint8_t* seed,
                                                 size_t seedLen) {
-    BLS::AssertInitialized();
-
     // "BLS HD seed" in ascii
     const uint8_t prefix[] = {66, 76, 83, 32, 72, 68, 32, 115, 101, 101, 100};
 
@@ -63,7 +61,6 @@ ExtendedPrivateKey ExtendedPrivateKey::FromSeed(const uint8_t* seed,
 }
 
 ExtendedPrivateKey ExtendedPrivateKey::FromBytes(const uint8_t* serialized) {
-    BLS::AssertInitialized();
     uint32_t version = Util::FourBytesToInt(serialized);
     uint32_t depth = serialized[4];
     uint32_t parentFingerprint = Util::FourBytesToInt(serialized + 5);
@@ -78,9 +75,8 @@ ExtendedPrivateKey ExtendedPrivateKey::FromBytes(const uint8_t* serialized) {
 }
 
 ExtendedPrivateKey ExtendedPrivateKey::PrivateChild(uint32_t i) const {
-    BLS::AssertInitialized();
     if (depth >= 255) {
-        throw std::string("Cannot go further than 255 levels");
+        throw std::logic_error("Cannot go further than 255 levels");
     }
     // Hardened keys have i >= 2^31. Non-hardened have i < 2^31
     uint32_t cmp = (1 << 31);
@@ -157,7 +153,6 @@ PrivateKey ExtendedPrivateKey::GetPrivateKey() const {
 }
 
 PublicKey ExtendedPrivateKey::GetPublicKey() const {
-    BLS::AssertInitialized();
     return sk.GetPublicKey();
 }
 
@@ -166,7 +161,6 @@ ChainCode ExtendedPrivateKey::GetChainCode() const {
 }
 
 ExtendedPublicKey ExtendedPrivateKey::GetExtendedPublicKey() const {
-    BLS::AssertInitialized();
     uint8_t buffer[ExtendedPublicKey::EXTENDED_PUBLIC_KEY_SIZE];
     Util::IntToFourBytes(buffer, version);
     buffer[4] = depth;
@@ -181,7 +175,6 @@ ExtendedPublicKey ExtendedPrivateKey::GetExtendedPublicKey() const {
 
 // Comparator implementation.
 bool operator==(ExtendedPrivateKey const &a,  ExtendedPrivateKey const &b) {
-    BLS::AssertInitialized();
     return (a.GetPrivateKey() == b.GetPrivateKey() &&
             a.GetChainCode() == b.GetChainCode());
 }
@@ -191,7 +184,6 @@ bool operator!=(ExtendedPrivateKey const&a,  ExtendedPrivateKey const&b) {
 }
 
 void ExtendedPrivateKey::Serialize(uint8_t *buffer) const {
-    BLS::AssertInitialized();
     Util::IntToFourBytes(buffer, version);
     buffer[4] = depth;
     Util::IntToFourBytes(buffer + 5, parentFingerprint);

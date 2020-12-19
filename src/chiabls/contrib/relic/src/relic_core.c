@@ -67,6 +67,14 @@ thread ctx_t first_ctx;
  */
 thread ctx_t *core_ctx = NULL;
 
+#if MULTI != RELIC_NONE
+/*
+ * Initializer function to call for every thread's context
+ */
+void (*core_thread_initializer)(void* init_ptr) = NULL;
+void* core_init_ptr = NULL;
+#endif
+
 #if MULTI == OPENMP
 #pragma omp threadprivate(first_ctx, core_ctx)
 #endif
@@ -164,9 +172,22 @@ int core_clean(void) {
 }
 
 ctx_t *core_get(void) {
+#if MULTI != RELIC_NONE
+    if (core_ctx == NULL && core_thread_initializer != NULL) {
+        core_thread_initializer(core_init_ptr);
+    }
+#endif
+
 	return core_ctx;
 }
 
 void core_set(ctx_t *ctx) {
 	core_ctx = ctx;
 }
+
+#if MULTI != RELIC_NONE
+void core_set_thread_initializer(void(*init)(void *init_ptr), void* init_ptr) {
+    core_thread_initializer = init;
+    core_init_ptr = init_ptr;
+}
+#endif

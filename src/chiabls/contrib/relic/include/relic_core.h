@@ -448,4 +448,15 @@ ctx_t *core_get(void);
  */
 void core_set(ctx_t *ctx);
 
+#if MULTI != RELIC_NONE
+/**
+ * Set an initializer function which is called when the context
+ * is uninitialized. This function is called for every thread.
+ *
+ * @param[in] init function to call when the current context is not initialized
+ * @param[in] init_ptr a pointer which is passed to the initialized
+ */
+void core_set_thread_initializer(void(*init)(void *init_ptr), void* init_ptr);
+#endif
+
 #endif /* !RELIC_CORE_H */

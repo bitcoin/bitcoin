@@ -56,8 +56,7 @@ AggregationInfo AggregationInfo::FromVectors(
         std::vector<bn_t*> const &exponents) {
     if (pubKeys.size() != messageHashes.size() || messageHashes.size() !=
             exponents.size()) {
-         throw std::string(("Invalid input, all std::vectors must have\
-                             the same length"));
+         throw std::length_error("Invalid input, all std::vectors must have the same length");
     }
     AggregationInfo::AggregationTree tree;
     for (size_t i = 0; i < pubKeys.size(); i++) {
@@ -133,7 +132,7 @@ AggregationInfo::AggregationInfo(const AggregationInfo& info) {
 void AggregationInfo::RemoveEntries(std::vector<uint8_t*> const &messages,
                                     std::vector<PublicKey> const &pubKeys) {
     if (messages.size() != pubKeys.size()) {
-        throw std::string("Invalid entries");
+        throw std::length_error("Invalid entries");
     }
     // Erase the keys from the tree
     for (size_t i = 0; i < messages.size(); i++) {

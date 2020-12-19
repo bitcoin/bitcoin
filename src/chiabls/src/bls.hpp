@@ -48,12 +48,8 @@ class BLS {
     static const size_t MESSAGE_HASH_LEN = 32;
     static const size_t ID_SIZE = 32;
 
-    // Initializes the BLS library manually
+    // Initializes the BLS library (called automatically)
     static bool Init();
-    // Asserts the BLS library is initialized
-    static void AssertInitialized();
-    // Cleans the BLS library
-    static void Clean();
 
     static void SetSecureAllocator(Util::SecureAllocCallback allocCb, Util::SecureFreeCallback freeCb);
 
