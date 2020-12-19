@@ -63,6 +63,8 @@ class AddrTest(BitcoinTestFramework):
         receivers = []
         for _ in range(num_receivers):
             receivers.append(self.nodes[0].add_p2p_connection(AddrReceiver()))
+        # add one more receiver that is a block-relay-only peer
+        block_relay_peer = self.nodes[0].add_p2p_connection(AddrReceiver(disabletx=True))
         msg.addrs = ADDRS
         with self.nodes[0].assert_debug_log(
             [
@@ -81,6 +83,7 @@ class AddrTest(BitcoinTestFramework):
         # originating node (addr_source).
         ipv4_branching_factor = 2
         assert_equal(total_ipv4_received, num_ipv4_addrs * ipv4_branching_factor)
+        assert_equal(block_relay_peer.num_ipv4_received, 0)
 
 
 if __name__ == '__main__':
