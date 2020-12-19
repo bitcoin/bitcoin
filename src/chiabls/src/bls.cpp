@@ -23,6 +23,8 @@ namespace bls {
 const char BLS::GROUP_ORDER[] =
         "73EDA753299D7D483339D80809A1D80553BDA402FFFE5BFEFFFFFFFF00000001";
 
+bool BLSInitResult = BLS::Init();
+
 Util::SecureAllocCallback Util::secureAllocCallback;
 Util::SecureFreeCallback Util::secureFreeCallback;
 
