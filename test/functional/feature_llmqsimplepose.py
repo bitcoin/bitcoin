@@ -100,6 +100,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 self.bump_mocktime(50 * 60 + 1)
                 # Sleep a couple of seconds to let mn sync tick to happen
                 time.sleep(2)
+                self.nodes[0].generate(1)
                 self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
 
             assert(self.check_banned(mn))
