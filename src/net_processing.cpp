@@ -3998,11 +3998,12 @@ void PeerManager::EvictExtraOutboundPeers(int64_t time_in_seconds)
                 // block from.
                 CNodeState &state = *State(pnode->GetId());
                 if (time_in_seconds - pnode->nTimeConnected > MINIMUM_CONNECT_TIME && state.nBlocksInFlight == 0) {
-                    LogPrint(BCLog::NET, "disconnecting extra outbound peer=%d (last block announcement received at time %d)\n", pnode->GetId(), oldest_block_announcement);
+                    const std::string block_details{oldest_block_announcement == 0 ? "no block announcement received" : strprintf("last block announcement received at time %d", oldest_block_announcement)};
+                    LogPrint(BCLog::NET, "disconnecting extra %s peer=%d (%s)\n", pnode->ConnectionTypeAsString(), pnode->GetId(), block_details);
                     pnode->fDisconnect = true;
                     return true;
                 } else {
-                    LogPrint(BCLog::NET, "keeping outbound peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n", pnode->GetId(), pnode->nTimeConnected, state.nBlocksInFlight);
+                    LogPrint(BCLog::NET, "keeping %s peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n", pnode->ConnectionTypeAsString(), pnode->GetId(), pnode->nTimeConnected, state.nBlocksInFlight);
                     return false;
                 }
             });
