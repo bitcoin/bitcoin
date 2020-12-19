@@ -332,7 +332,7 @@ private:
     const bool m_ignore_incoming_txs;
 
     /** Whether we've completed initial sync yet, for determining when to turn
-      * on extra block-relay-only peers. */
+      * on extra outbound-block-relay peers. */
     bool m_initial_sync_finished{false};
 
     /** Protects m_peer_map. This mutex must not be locked while holding a lock
@@ -519,7 +519,7 @@ struct CNodeState {
       * Both are only in effect for outbound, non-manual, non-protected connections.
       * Any peer protected (m_protect = true) is not chosen for eviction. A peer is
       * marked as protected if all of these are true:
-      *   - its connection type is IsBlockOnlyConn() == false
+      *   - its connection type is IsOutboundBlockRelayConn() == false
       *   - it gave us a valid connecting header
       *   - we haven't reached MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT yet
       *   - it has a better chain than we have
@@ -991,8 +991,8 @@ void PeerManagerImpl::FinalizeNode(const CNode& node, bool& fUpdateConnectionTim
         nSyncStarted--;
 
     if (node.fSuccessfullyConnected && misbehavior == 0 &&
-        !node.IsBlockOnlyConn() && !node.IsInboundConn()) {
-        // Only change visible addrman state for outbound, full-relay peers
+        !node.IsOutboundBlockRelayConn() && !node.IsInboundConn()) {
+        // Only change visible addrman state for outbound-full-relay peers
         fUpdateConnectionTime = true;
     }
 
@@ -2140,12 +2140,12 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
             }
         }
 
-        // If this is an outbound full-relay peer, check to see if we should protect
+        // If this is an outbound-full-relay peer, check to see if we should protect
         // it from the bad/lagging chain logic.
-        // Note that outbound block-relay peers are excluded from this protection, and
+        // Note that outbound-block-relay peers are excluded from this protection, and
         // thus always subject to eviction under the bad/lagging chain logic.
         // See ChainSyncTimeoutState.
-        if (!pfrom.fDisconnect && pfrom.IsFullOutboundConn() && nodestate->pindexBestKnownBlock != nullptr) {
+        if (!pfrom.fDisconnect && pfrom.IsOutboundFullRelayConn() && nodestate->pindexBestKnownBlock != nullptr) {
             if (g_outbound_peers_with_protect_from_disconnect < MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT && nodestate->pindexBestKnownBlock->nChainWork >= ::ChainActive().Tip()->nChainWork && !nodestate->m_chain_sync.m_protect) {
                 LogPrint(BCLog::NET, "Protecting outbound peer=%d from eviction\n", pfrom.GetId());
                 nodestate->m_chain_sync.m_protect = true;
@@ -2593,7 +2593,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         UpdatePreferredDownload(pfrom, State(pfrom.GetId()));
         }
 
-        if (!pfrom.IsInboundConn() && !pfrom.IsBlockOnlyConn()) {
+        if (!pfrom.IsInboundConn() && !pfrom.IsOutboundBlockRelayConn()) {
             // For outbound peers, we try to relay our address (so that other
             // nodes can try to find us more quickly, as we have no guarantee
             // that an outbound peer is even aware of how to reach us) and do a
@@ -2602,8 +2602,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // empty and no one will know who we are, so these mechanisms are
             // important to help us connect to the network.
             //
-            // We skip this for block-relay-only peers to avoid potentially leaking
-            // information about our block-relay-only connections via address relay.
+            // We skip this for outbound-block-relay peers to avoid potentially leaking
+            // information about our outbound-block-relay connections via address relay.
             if (fListen && !::ChainstateActive().IsInitialBlockDownload())
             {
                 CAddress addr = GetLocalAddress(&pfrom.addr, pfrom.GetLocalServices());
@@ -2629,12 +2629,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // connection success so that addrman will have an up-to-date
             // notion of which peers are online and available.
             //
-            // While we strive to not leak information about block-relay-only
+            // While we strive to not leak information about outbound-block-relay
             // connections via the addrman, not moving an address to the tried
             // table is also potentially detrimental because new-table entries
             // are subject to eviction in the event of addrman collisions.  We
             // mitigate the information-leak by never calling
-            // CAddrMan::Connected() on block-relay-only peers; see
+            // CAddrMan::Connected() on outbound-block-relay peers; see
             // FinalizeNode().
             //
             // This moves an address from New to Tried table in Addrman,
@@ -2863,8 +2863,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
-        // We won't accept tx inv's if we're in blocks-only mode, or this is a
-        // block-relay-only peer
+        // We won't accept tx inv's if we're in blocks-only mode, or if this is an
+        // outbound-block-relay peer
         bool fBlocksOnly = m_ignore_incoming_txs || (pfrom.m_tx_relay == nullptr);
 
         // Allow peers with relay permission to send data other than blocks in blocks only mode
@@ -3140,7 +3140,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     if (msg_type == NetMsgType::TX) {
         // Stop processing the transaction early if
         // 1) We are in blocks only mode and peer has no relay permission
-        // 2) This peer is a block-relay-only peer
+        // 2) This peer is an outbound-block-relay peer
         if ((m_ignore_incoming_txs && !pfrom.HasPermission(PF_RELAY)) || (pfrom.m_tx_relay == nullptr))
         {
             LogPrint(BCLog::NET, "transaction sent in violation of protocol peer=%d\n", pfrom.GetId());
@@ -4143,17 +4143,17 @@ void PeerManagerImpl::ConsiderEviction(CNode& pto, int64_t time_in_seconds)
 
 void PeerManagerImpl::EvictExtraOutboundPeers(int64_t time_in_seconds)
 {
-    // If we have any extra block-relay-only peers, disconnect the youngest unless
+    // If we have any extra outbound-block-relay peers, disconnect the youngest unless
     // it's given us a block -- in which case, compare with the second-youngest, and
     // out of those two, disconnect the peer who least recently gave us a block.
-    // The youngest block-relay-only peer would be the extra peer we connected
+    // The youngest outbound-block-relay peer would be the extra peer we connected
     // to temporarily in order to sync our tip; see net.cpp.
     // Note that we use higher nodeid as a measure for most recent connection.
-    if (m_connman.GetExtraBlockRelayCount() > 0) {
+    if (m_connman.GetExtraOutboundBlockRelayCount() > 0) {
         std::pair<NodeId, int64_t> youngest_peer{-1, 0}, next_youngest_peer{-1, 0};
 
         m_connman.ForEachNode([&](CNode* pnode) {
-            if (!pnode->IsBlockOnlyConn() || pnode->fDisconnect) return;
+            if (!pnode->IsOutboundBlockRelayConn() || pnode->fDisconnect) return;
             if (pnode->GetId() > youngest_peer.first) {
                 next_youngest_peer = youngest_peer;
                 youngest_peer.first = pnode->GetId();
@@ -4162,7 +4162,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(int64_t time_in_seconds)
         });
         NodeId to_disconnect = youngest_peer.first;
         if (youngest_peer.second > next_youngest_peer.second) {
-            // Our newest block-relay-only peer gave us a block more recently;
+            // Our newest outbound-block-relay peer gave us a block more recently;
             // disconnect our second youngest.
             to_disconnect = next_youngest_peer.first;
         }
@@ -4177,10 +4177,10 @@ void PeerManagerImpl::EvictExtraOutboundPeers(int64_t time_in_seconds)
             if (node_state == nullptr ||
                 (time_in_seconds - pnode->nTimeConnected >= MINIMUM_CONNECT_TIME && node_state->nBlocksInFlight == 0)) {
                 pnode->fDisconnect = true;
-                LogPrint(BCLog::NET, "disconnecting extra block-relay-only peer=%d (last block received at time %d)\n", pnode->GetId(), pnode->nLastBlockTime);
+                LogPrint(BCLog::NET, "disconnecting extra outbound-block-relay peer=%d (last block received at time %d)\n", pnode->GetId(), pnode->nLastBlockTime);
                 return true;
             } else {
-                LogPrint(BCLog::NET, "keeping block-relay-only peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n",
+                LogPrint(BCLog::NET, "keeping outbound-block-relay peer=%d chosen for eviction (connect time: %d, blocks_in_flight: %d)\n",
                     pnode->GetId(), pnode->nTimeConnected, node_state->nBlocksInFlight);
             }
             return false;
@@ -4188,7 +4188,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(int64_t time_in_seconds)
     }
 
     // Check whether we have too many outbound-full-relay peers
-    if (m_connman.GetExtraFullOutboundCount() > 0) {
+    if (m_connman.GetExtraOutboundFullRelayCount() > 0) {
         // If we have more outbound-full-relay peers than we target, disconnect one.
         // Pick the outbound-full-relay peer that least recently announced
         // us a new block, with ties broken by choosing the more recent
@@ -4201,7 +4201,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(int64_t time_in_seconds)
 
             // Only consider outbound-full-relay peers that are not already
             // marked for disconnection
-            if (!pnode->IsFullOutboundConn() || pnode->fDisconnect) return;
+            if (!pnode->IsOutboundFullRelayConn() || pnode->fDisconnect) return;
             CNodeState *state = State(pnode->GetId());
             if (state == nullptr) return; // shouldn't be possible, but just in case
             // Don't evict our protected peers
@@ -4236,7 +4236,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(int64_t time_in_seconds)
                 // detected a stale tip. Don't try any more extra peers until
                 // we next detect a stale tip, to limit the load we put on the
                 // network from these extra connections.
-                m_connman.SetTryNewOutboundPeer(false);
+                m_connman.SetTryNewOutboundFullRelayPeer(false);
             }
         }
     }
@@ -4255,9 +4255,9 @@ void PeerManagerImpl::CheckForStaleTipAndEvictPeers()
         // outbound peer
         if (!fImporting && !fReindex && m_connman.GetNetworkActive() && m_connman.GetUseAddrmanOutgoing() && TipMayBeStale(m_chainparams.GetConsensus())) {
             LogPrintf("Potential stale tip detected, will try using extra outbound peer (last tip update: %d seconds ago)\n", time_in_seconds - g_last_tip_update);
-            m_connman.SetTryNewOutboundPeer(true);
-        } else if (m_connman.GetTryNewOutboundPeer()) {
-            m_connman.SetTryNewOutboundPeer(false);
+            m_connman.SetTryNewOutboundFullRelayPeer(true);
+        } else if (m_connman.GetTryNewOutboundFullRelayPeer()) {
+            m_connman.SetTryNewOutboundFullRelayPeer(false);
         }
         m_stale_tip_check_time = time_in_seconds + STALE_CHECK_INTERVAL;
     }

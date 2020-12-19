@@ -128,11 +128,11 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
                 connman.SetServices(random_service, ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS));
             },
             [&] {
-                connman.SetTryNewOutboundPeer(fuzzed_data_provider.ConsumeBool());
+                connman.SetTryNewOutboundFullRelayPeer(fuzzed_data_provider.ConsumeBool());
             });
     }
     (void)connman.GetAddedNodeInfo();
-    (void)connman.GetExtraFullOutboundCount();
+    (void)connman.GetExtraOutboundFullRelayCount();
     (void)connman.GetLocalServices();
     (void)connman.GetMaxOutboundTarget();
     (void)connman.GetMaxOutboundTimeframe();
@@ -144,6 +144,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
     (void)connman.GetReceiveFloodSize();
     (void)connman.GetTotalBytesRecv();
     (void)connman.GetTotalBytesSent();
-    (void)connman.GetTryNewOutboundPeer();
+    (void)connman.GetTryNewOutboundFullRelayPeer();
     (void)connman.GetUseAddrmanOutgoing();
 }

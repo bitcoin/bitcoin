@@ -57,7 +57,7 @@ constexpr ConnectionType ALL_CONNECTION_TYPES[]{
     ConnectionType::OUTBOUND_FULL_RELAY,
     ConnectionType::MANUAL,
     ConnectionType::FEELER,
-    ConnectionType::BLOCK_RELAY,
+    ConnectionType::OUTBOUND_BLOCK_RELAY,
     ConnectionType::ADDR_FETCH,
 };
 

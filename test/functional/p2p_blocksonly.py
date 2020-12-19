@@ -2,7 +2,7 @@
 # Copyright (c) 2019-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test p2p blocksonly mode & block-relay-only connections."""
+"""Test p2p blocksonly mode & outbound-block-relay connections."""
 
 import time
 
@@ -72,17 +72,17 @@ class P2PBlocksOnly(BitcoinTestFramework):
         self.nodes[0].generate(1)
 
     def blocks_relay_conn_tests(self):
-        self.log.info('Tests with node in normal mode with block-relay-only connections')
+        self.log.info('Tests with node in normal mode with outbound-block-relay connections')
         self.restart_node(0, ["-noblocksonly"])  # disables blocks only mode
         assert_equal(self.nodes[0].getnetworkinfo()['localrelay'], True)
 
-        # Ensure we disconnect if a block-relay-only connection sends us a transaction
-        self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=0, connection_type="block-relay-only")
+        # Ensure we disconnect if an outbound-block-relay connection sends us a transaction
+        self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=0, connection_type="outbound-block-relay")
         assert_equal(self.nodes[0].getpeerinfo()[0]['relaytxes'], False)
         _, txid, tx_hex = self.check_p2p_tx_violation(index=2)
 
         self.log.info("Check that txs from RPC are not sent to blockrelay connection")
-        conn = self.nodes[0].add_outbound_p2p_connection(P2PTxInvStore(), p2p_idx=1, connection_type="block-relay-only")
+        conn = self.nodes[0].add_outbound_p2p_connection(P2PTxInvStore(), p2p_idx=1, connection_type="outbound-block-relay")
 
         self.nodes[0].sendrawtransaction(tx_hex)
 

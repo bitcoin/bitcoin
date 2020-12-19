@@ -549,8 +549,8 @@ class TestNode():
 
     def add_outbound_p2p_connection(self, p2p_conn, *, p2p_idx, connection_type="outbound-full-relay", **kwargs):
         """Add an outbound p2p connection from node. Either
-        full-relay("outbound-full-relay") or
-        block-relay-only("block-relay-only") connection.
+        outbound-full-relay("outbound-full-relay") or
+        outbound-block-relay("outbound-block-relay") connection.
 
         This method adds the p2p connection to the self.p2ps list and returns
         the connection to the caller.

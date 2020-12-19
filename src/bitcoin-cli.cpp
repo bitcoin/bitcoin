@@ -304,7 +304,7 @@ private:
     static constexpr uint8_t m_networks_size{4};
     const std::array<std::string, m_networks_size> m_networks{{"ipv4", "ipv6", "onion", "i2p"}};
     std::array<std::array<uint16_t, m_networks_size + 1>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total)
-    uint8_t m_block_relay_peers_count{0};
+    uint8_t m_outbound_block_relay_peers_count{0};
     uint8_t m_manual_peers_count{0};
     int8_t NetworkStringToId(const std::string& str) const
     {
@@ -361,7 +361,7 @@ private:
     std::string ConnectionTypeForNetinfo(const std::string& conn_type) const
     {
         if (conn_type == "outbound-full-relay") return "full";
-        if (conn_type == "block-relay-only") return "block";
+        if (conn_type == "outbound-block-relay") return "block";
         if (conn_type == "manual" || conn_type == "feeler") return conn_type;
         if (conn_type == "addr-fetch") return "addr";
         return "";
@@ -479,7 +479,7 @@ public:
             ++m_counts.at(is_outbound).at(m_networks_size); // in/out overall
             ++m_counts.at(2).at(network_id);                // total by network
             ++m_counts.at(2).at(m_networks_size);           // total overall
-            if (conn_type == "block-relay-only") ++m_block_relay_peers_count;
+            if (conn_type == "outbound-block-relay") ++m_outbound_block_relay_peers_count;
             if (conn_type == "manual") ++m_manual_peers_count;
             if (DetailsRequested()) {
                 // Push data for this peer to the peers vector.
@@ -553,7 +553,7 @@ public:
             if (m_is_i2p_on) result += strprintf("   %5i", m_counts.at(i).at(3)); // i2p peers count
             result += strprintf("   %5i", m_counts.at(i).at(m_networks_size)); // total peers count
             if (i == 1) { // the outbound row has two extra columns for block relay and manual peer counts
-                result += strprintf("   %5i", m_block_relay_peers_count);
+                result += strprintf("   %5i", m_outbound_block_relay_peers_count);
                 if (m_manual_peers_count) result += strprintf("   %5i", m_manual_peers_count);
             }
         }

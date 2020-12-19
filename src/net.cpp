@@ -41,9 +41,9 @@
 
 #include <math.h>
 
-/** Maximum number of block-relay-only anchor connections */
-static constexpr size_t MAX_BLOCK_RELAY_ONLY_ANCHORS = 2;
-static_assert (MAX_BLOCK_RELAY_ONLY_ANCHORS <= static_cast<size_t>(MAX_BLOCK_RELAY_ONLY_CONNECTIONS), "MAX_BLOCK_RELAY_ONLY_ANCHORS must not exceed MAX_BLOCK_RELAY_ONLY_CONNECTIONS.");
+/** Maximum number of outbound-block-relay anchor connections */
+static constexpr size_t MAX_OUTBOUND_BLOCK_RELAY_ANCHORS = 2;
+static_assert (MAX_OUTBOUND_BLOCK_RELAY_ANCHORS <= static_cast<size_t>(MAX_OUTBOUND_BLOCK_RELAY_CONNECTIONS), "MAX_OUTBOUND_BLOCK_RELAY_ANCHORS must not exceed MAX_OUTBOUND_BLOCK_RELAY_CONNECTIONS.");
 /** Anchor IP address database file name */
 const char* const ANCHORS_DATABASE_FILENAME = "anchors.dat";
 
@@ -513,8 +513,8 @@ std::string ConnectionTypeAsString(ConnectionType conn_type)
         return "feeler";
     case ConnectionType::OUTBOUND_FULL_RELAY:
         return "outbound-full-relay";
-    case ConnectionType::BLOCK_RELAY:
-        return "block-relay-only";
+    case ConnectionType::OUTBOUND_BLOCK_RELAY:
+        return "outbound-block-relay";
     case ConnectionType::ADDR_FETCH:
         return "addr-fetch";
     } // no default case, so the compiler can warn about missing cases
@@ -872,7 +872,7 @@ static bool CompareNodeTXTime(const NodeEvictionCandidate &a, const NodeEviction
     return a.nTimeConnected > b.nTimeConnected;
 }
 
-// Pick out the potential block-relay only peers, and sort them by last block time.
+// Pick out the potential outbound-block-relay peers, and sort them by last block time.
 static bool CompareNodeBlockRelayOnlyTime(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
 {
     if (a.fRelayTxes != b.fRelayTxes) return a.fRelayTxes;
@@ -1129,7 +1129,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
 
 bool CConnman::AddConnection(const std::string& address, ConnectionType conn_type)
 {
-    if (conn_type != ConnectionType::OUTBOUND_FULL_RELAY && conn_type != ConnectionType::BLOCK_RELAY) return false;
+    if (conn_type != ConnectionType::OUTBOUND_FULL_RELAY && conn_type != ConnectionType::OUTBOUND_BLOCK_RELAY) return false;
 
     const int max_connections = conn_type == ConnectionType::OUTBOUND_FULL_RELAY ? m_max_outbound_full_relay : m_max_outbound_block_relay;
 
@@ -1703,15 +1703,15 @@ void CConnman::ProcessAddrFetch()
     }
 }
 
-bool CConnman::GetTryNewOutboundPeer()
+bool CConnman::GetTryNewOutboundFullRelayPeer()
 {
-    return m_try_another_outbound_peer;
+    return m_try_another_outbound_full_relay_peer;
 }
 
-void CConnman::SetTryNewOutboundPeer(bool flag)
+void CConnman::SetTryNewOutboundFullRelayPeer(bool flag)
 {
-    m_try_another_outbound_peer = flag;
-    LogPrint(BCLog::NET, "net: setting try another outbound peer=%s\n", flag ? "true" : "false");
+    m_try_another_outbound_full_relay_peer = flag;
+    LogPrint(BCLog::NET, "net: setting try another outbound-full-relay peer=%s\n", flag ? "true" : "false");
 }
 
 // Return the number of peers we have over our outbound connection limit
@@ -1720,32 +1720,32 @@ void CConnman::SetTryNewOutboundPeer(bool flag)
 // Also exclude peers that haven't finished initial connection handshake yet
 // (so that we don't decide we're over our desired connection limit, and then
 // evict some peer that has finished the handshake)
-int CConnman::GetExtraFullOutboundCount()
+int CConnman::GetExtraOutboundFullRelayCount()
 {
-    int full_outbound_peers = 0;
+    int outbound_full_relay_peers = 0;
     {
         LOCK(cs_vNodes);
         for (const CNode* pnode : vNodes) {
-            if (pnode->fSuccessfullyConnected && !pnode->fDisconnect && pnode->IsFullOutboundConn()) {
-                ++full_outbound_peers;
+            if (pnode->fSuccessfullyConnected && !pnode->fDisconnect && pnode->IsOutboundFullRelayConn()) {
+                ++outbound_full_relay_peers;
             }
         }
     }
-    return std::max(full_outbound_peers - m_max_outbound_full_relay, 0);
+    return std::max(outbound_full_relay_peers - m_max_outbound_full_relay, 0);
 }
 
-int CConnman::GetExtraBlockRelayCount()
+int CConnman::GetExtraOutboundBlockRelayCount()
 {
-    int block_relay_peers = 0;
+    int outbound_block_relay_peers = 0;
     {
         LOCK(cs_vNodes);
         for (const CNode* pnode : vNodes) {
-            if (pnode->fSuccessfullyConnected && !pnode->fDisconnect && pnode->IsBlockOnlyConn()) {
-                ++block_relay_peers;
+            if (pnode->fSuccessfullyConnected && !pnode->fDisconnect && pnode->IsOutboundBlockRelayConn()) {
+                ++outbound_block_relay_peers;
             }
         }
     }
-    return std::max(block_relay_peers - m_max_outbound_block_relay, 0);
+    return std::max(outbound_block_relay_peers - m_max_outbound_block_relay, 0);
 }
 
 void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
@@ -1777,7 +1777,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
     // Minimum time before next feeler connection (in microseconds).
 
     int64_t nNextFeeler = PoissonNextSend(count_microseconds(start), FEELER_INTERVAL);
-    int64_t nNextExtraBlockRelay = PoissonNextSend(count_microseconds(start), EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL);
+    int64_t nNextExtraBlockRelay = PoissonNextSend(count_microseconds(start), EXTRA_OUTBOUND_BLOCK_RELAY_PEER_INTERVAL);
     const bool dnsseed = gArgs.GetBoolArg("-dnsseed", DEFAULT_DNSSEED);
     bool add_fixed_seeds = gArgs.GetBoolArg("-fixedseeds", DEFAULT_FIXEDSEEDS);
 
@@ -1838,8 +1838,8 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         {
             LOCK(cs_vNodes);
             for (const CNode* pnode : vNodes) {
-                if (pnode->IsFullOutboundConn()) nOutboundFullRelay++;
-                if (pnode->IsBlockOnlyConn()) nOutboundBlockRelay++;
+                if (pnode->IsOutboundFullRelayConn()) nOutboundFullRelay++;
+                if (pnode->IsOutboundBlockRelayConn()) nOutboundBlockRelay++;
 
                 // Netgroups for inbound and manual peers are not excluded because our goal here
                 // is to not use multiple of our limited outbound slots on a single netgroup
@@ -1851,7 +1851,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                     case ConnectionType::MANUAL:
                         break;
                     case ConnectionType::OUTBOUND_FULL_RELAY:
-                    case ConnectionType::BLOCK_RELAY:
+                    case ConnectionType::OUTBOUND_BLOCK_RELAY:
                     case ConnectionType::ADDR_FETCH:
                     case ConnectionType::FEELER:
                         setConnected.insert(pnode->addr.GetGroup(addrman.m_asmap));
@@ -1865,26 +1865,26 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         bool fFeeler = false;
 
         // Determine what type of connection to open. Opening
-        // BLOCK_RELAY connections to addresses from anchors.dat gets the highest
+        // OUTBOUND_BLOCK_RELAY connections to addresses from anchors.dat gets the highest
         // priority. Then we open OUTBOUND_FULL_RELAY priority until we
-        // meet our full-relay capacity. Then we open BLOCK_RELAY connection
-        // until we hit our block-relay-only peer limit.
-        // GetTryNewOutboundPeer() gets set when a stale tip is detected, so we
+        // meet our outbound-full-relay capacity. Then we open OUTBOUND_BLOCK_RELAY connection
+        // until we hit our outbound-block-relay peer limit.
+        // GetTryNewOutboundFullRelayPeer() gets set when a stale tip is detected, so we
         // try opening an additional OUTBOUND_FULL_RELAY connection. If none of
         // these conditions are met, check to see if it's time to try an extra
-        // block-relay-only peer (to confirm our tip is current, see below) or the nNextFeeler
+        // outbound-block-relay peer (to confirm our tip is current, see below) or the nNextFeeler
         // timer to decide if we should open a FEELER.
 
         if (!m_anchors.empty() && (nOutboundBlockRelay < m_max_outbound_block_relay)) {
-            conn_type = ConnectionType::BLOCK_RELAY;
+            conn_type = ConnectionType::OUTBOUND_BLOCK_RELAY;
             anchor = true;
         } else if (nOutboundFullRelay < m_max_outbound_full_relay) {
             // OUTBOUND_FULL_RELAY
         } else if (nOutboundBlockRelay < m_max_outbound_block_relay) {
-            conn_type = ConnectionType::BLOCK_RELAY;
-        } else if (GetTryNewOutboundPeer()) {
+            conn_type = ConnectionType::OUTBOUND_BLOCK_RELAY;
+        } else if (GetTryNewOutboundFullRelayPeer()) {
             // OUTBOUND_FULL_RELAY
-        } else if (nTime > nNextExtraBlockRelay && m_start_extra_block_relay_peers) {
+        } else if (nTime > nNextExtraBlockRelay && m_start_extra_outbound_block_relay_peers) {
             // Periodically connect to a peer (using regular outbound selection
             // methodology from addrman) and stay connected long enough to sync
             // headers, but not much else.
@@ -1895,19 +1895,19 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             // because every few minutes we're finding a new peer to learn headers
             // from.
             //
-            // This is similar to the logic for trying extra outbound (full-relay)
+            // This is similar to the logic for trying extra outbound-full-relay
             // peers, except:
             // - we do this all the time on a poisson timer, rather than just when
             //   our tip is stale
-            // - we potentially disconnect our next-youngest block-relay-only peer, if our
-            //   newest block-relay-only peer delivers a block more recently.
+            // - we potentially disconnect our next-youngest outbound-block-relay peer, if our
+            //   newest outbound-block-relay peer delivers a block more recently.
             //   See the eviction logic in net_processing.cpp.
             //
-            // Because we can promote these connections to block-relay-only
+            // Because we can promote these connections to outbound-block-relay
             // connections, they do not get their own ConnectionType enum
-            // (similar to how we deal with extra outbound peers).
-            nNextExtraBlockRelay = PoissonNextSend(nTime, EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL);
-            conn_type = ConnectionType::BLOCK_RELAY;
+            // (similar to how we deal with extra outbound-full-relay peers).
+            nNextExtraBlockRelay = PoissonNextSend(nTime, EXTRA_OUTBOUND_BLOCK_RELAY_PEER_INTERVAL);
+            conn_type = ConnectionType::OUTBOUND_BLOCK_RELAY;
         } else if (nTime > nNextFeeler) {
             nNextFeeler = PoissonNextSend(nTime, FEELER_INTERVAL);
             conn_type = ConnectionType::FEELER;
@@ -2025,7 +2025,7 @@ std::vector<CAddress> CConnman::GetCurrentBlockRelayOnlyConns() const
     std::vector<CAddress> ret;
     LOCK(cs_vNodes);
     for (const CNode* pnode : vNodes) {
-        if (pnode->IsBlockOnlyConn()) {
+        if (pnode->IsOutboundBlockRelayConn()) {
             ret.push_back(pnode->addr);
         }
     }
@@ -2327,7 +2327,7 @@ void CConnman::SetNetworkActive(bool active)
 CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, bool network_active)
     : nSeed0(nSeed0In), nSeed1(nSeed1In)
 {
-    SetTryNewOutboundPeer(false);
+    SetTryNewOutboundFullRelayPeer(false);
 
     Options connOptions;
     Init(connOptions);
@@ -2421,10 +2421,10 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
     if (m_use_addrman_outgoing) {
         // Load addresses from anchors.dat
         m_anchors = ReadAnchors(GetDataDir() / ANCHORS_DATABASE_FILENAME);
-        if (m_anchors.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
-            m_anchors.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
+        if (m_anchors.size() > MAX_OUTBOUND_BLOCK_RELAY_ANCHORS) {
+            m_anchors.resize(MAX_OUTBOUND_BLOCK_RELAY_ANCHORS);
         }
-        LogPrintf("%i block-relay-only anchors will be tried for connections.\n", m_anchors.size());
+        LogPrintf("%i outbound-block-relay anchors will be tried for connections.\n", m_anchors.size());
     }
 
     uiInterface.InitMessage(_("Starting network threads...").translated);
@@ -2546,8 +2546,8 @@ void CConnman::StopNodes()
         if (m_use_addrman_outgoing) {
             // Anchor connections are only dumped during clean shutdown.
             std::vector<CAddress> anchors_to_dump = GetCurrentBlockRelayOnlyConns();
-            if (anchors_to_dump.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
-                anchors_to_dump.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
+            if (anchors_to_dump.size() > MAX_OUTBOUND_BLOCK_RELAY_ANCHORS) {
+                anchors_to_dump.resize(MAX_OUTBOUND_BLOCK_RELAY_ANCHORS);
             }
             DumpAnchors(GetDataDir() / ANCHORS_DATABASE_FILENAME, anchors_to_dump);
         }
@@ -2865,7 +2865,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
     hSocket = hSocketIn;
     addrName = addrNameIn == "" ? addr.ToStringIPPort() : addrNameIn;
-    if (conn_type_in != ConnectionType::BLOCK_RELAY) {
+    if (conn_type_in != ConnectionType::OUTBOUND_BLOCK_RELAY) {
         m_tx_relay = MakeUnique<TxRelay>();
     }
 

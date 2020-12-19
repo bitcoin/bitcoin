@@ -50,8 +50,8 @@ static const bool DEFAULT_WHITELISTFORCERELAY = false;
 static const int TIMEOUT_INTERVAL = 20 * 60;
 /** Run the feeler connection loop once every 2 minutes or 120 seconds. **/
 static const int FEELER_INTERVAL = 120;
-/** Run the extra block-relay-only connection loop once every 5 minutes. **/
-static const int EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL = 300;
+/** Run the extra outbound-block-relay connection loop once every 5 minutes. **/
+static const int EXTRA_OUTBOUND_BLOCK_RELAY_PEER_INTERVAL = 300;
 /** The maximum number of addresses from our addrman to return in response to a getaddr message. */
 static constexpr size_t MAX_ADDR_TO_SEND = 1000;
 /** Maximum length of incoming protocol messages (no message over 4 MB is currently acceptable). */
@@ -62,8 +62,8 @@ static const unsigned int MAX_SUBVERSION_LENGTH = 256;
 static const int MAX_OUTBOUND_FULL_RELAY_CONNECTIONS = 8;
 /** Maximum number of addnode outgoing nodes */
 static const int MAX_ADDNODE_CONNECTIONS = 8;
-/** Maximum number of block-relay-only outgoing connections */
-static const int MAX_BLOCK_RELAY_ONLY_CONNECTIONS = 2;
+/** Maximum number of outbound-block-relay connections */
+static const int MAX_OUTBOUND_BLOCK_RELAY_CONNECTIONS = 2;
 /** Maximum number of feeler connections */
 static const int MAX_FEELER_CONNECTIONS = 1;
 /** -listen default */
@@ -161,15 +161,15 @@ enum class ConnectionType {
     FEELER,
 
     /**
-     * We use block-relay-only connections to help prevent against partition
+     * We use outbound-block-relay connections to help prevent against partition
      * attacks. By not relaying transactions or addresses, these connections
      * are harder to detect by a third party, thus helping obfuscate the
      * network topology. We automatically attempt to open
-     * MAX_BLOCK_RELAY_ONLY_ANCHORS using addresses from our anchors.dat. Then
-     * addresses from our AddrMan if MAX_BLOCK_RELAY_ONLY_CONNECTIONS
+     * MAX_OUTBOUND_BLOCK_RELAY_ANCHORS using addresses from our anchors.dat. Then
+     * addresses from our AddrMan if MAX_OUTBOUND_BLOCK_RELAY_CONNECTIONS
      * isn't reached yet.
      */
-    BLOCK_RELAY,
+    OUTBOUND_BLOCK_RELAY,
 
     /**
      * AddrFetch connections are short lived connections used to solicit
@@ -463,7 +463,7 @@ public:
     bool IsOutboundOrBlockRelayConn() const {
         switch (m_conn_type) {
             case ConnectionType::OUTBOUND_FULL_RELAY:
-            case ConnectionType::BLOCK_RELAY:
+            case ConnectionType::OUTBOUND_BLOCK_RELAY:
                 return true;
             case ConnectionType::INBOUND:
             case ConnectionType::MANUAL:
@@ -475,7 +475,7 @@ public:
         assert(false);
     }
 
-    bool IsFullOutboundConn() const {
+    bool IsOutboundFullRelayConn() const {
         return m_conn_type == ConnectionType::OUTBOUND_FULL_RELAY;
     }
 
@@ -483,8 +483,8 @@ public:
         return m_conn_type == ConnectionType::MANUAL;
     }
 
-    bool IsBlockOnlyConn() const {
-        return m_conn_type == ConnectionType::BLOCK_RELAY;
+    bool IsOutboundBlockRelayConn() const {
+        return m_conn_type == ConnectionType::OUTBOUND_BLOCK_RELAY;
     }
 
     bool IsFeelerConn() const {
@@ -502,10 +502,10 @@ public:
     /* Whether we send addr messages over this connection */
     bool RelayAddrsWithConn() const
     {
-        // Don't relay addr messages to peers that we connect to as block-relay-only
+        // Don't relay addr messages to peers that we connect to as outbound-block-relay
         // peers (to prevent adversaries from inferring these links from addr
         // traffic).
-        return m_conn_type != ConnectionType::BLOCK_RELAY;
+        return m_conn_type != ConnectionType::OUTBOUND_BLOCK_RELAY;
     }
 
     bool ExpectServicesFromConn() const {
@@ -515,7 +515,7 @@ public:
             case ConnectionType::FEELER:
                 return false;
             case ConnectionType::OUTBOUND_FULL_RELAY:
-            case ConnectionType::BLOCK_RELAY:
+            case ConnectionType::OUTBOUND_BLOCK_RELAY:
             case ConnectionType::ADDR_FETCH:
                 return true;
         } // no default case, so the compiler can warn about missing cases
@@ -942,23 +942,23 @@ public:
 
     // This allows temporarily exceeding m_max_outbound_full_relay, with the goal of finding
     // a peer that is better than all our current peers.
-    void SetTryNewOutboundPeer(bool flag);
-    bool GetTryNewOutboundPeer();
+    void SetTryNewOutboundFullRelayPeer(bool flag);
+    bool GetTryNewOutboundFullRelayPeer();
 
     void StartExtraBlockRelayPeers() {
-        LogPrint(BCLog::NET, "net: enabling extra block-relay-only peers\n");
-        m_start_extra_block_relay_peers = true;
+        LogPrint(BCLog::NET, "net: enabling extra outbound-block-relay peers\n");
+        m_start_extra_outbound_block_relay_peers = true;
     }
 
-    // Return the number of outbound peers we have in excess of our target (eg,
-    // if we previously called SetTryNewOutboundPeer(true), and have since set
+    // Return the number of outbound-full-relay peers we have in excess of our target (eg,
+    // if we previously called SetTryNewOutboundFullRelayPeer(true), and have since set
     // to false, we may have extra peers that we wish to disconnect). This may
     // return a value less than (num_outbound_connections - num_outbound_slots)
-    // in cases where some outbound connections are not yet fully connected, or
+    // in cases where some outbound-full-relay connections are not yet fully connected, or
     // not yet fully disconnected.
-    int GetExtraFullOutboundCount();
-    // Count the number of block-relay-only peers we have over our limit.
-    int GetExtraBlockRelayCount();
+    int GetExtraOutboundFullRelayCount();
+    // Count the number of outbound-block-relay peers we have over our limit.
+    int GetExtraOutboundBlockRelayCount();
 
     bool AddNode(const std::string& node);
     bool RemoveAddedNode(const std::string& node);
@@ -968,7 +968,7 @@ public:
      * Attempts to open a connection. Currently only used from tests.
      *
      * @param[in]   address     Address of node to try connecting to
-     * @param[in]   conn_type   ConnectionType::OUTBOUND or ConnectionType::BLOCK_RELAY
+     * @param[in]   conn_type   ConnectionType::OUTBOUND_FULL_RELAY or ConnectionType::OUTBOUND_BLOCK_RELAY
      * @return      bool        Returns false if there are no available
      *                          slots for this connection:
      *                          - conn_type not a supported ConnectionType
@@ -1088,7 +1088,7 @@ private:
     void RecordBytesSent(uint64_t bytes);
 
     /**
-     * Return vector of current BLOCK_RELAY peers.
+     * Return vector of current OUTBOUND_BLOCK_RELAY peers.
      */
     std::vector<CAddress> GetCurrentBlockRelayOnlyConns() const;
 
@@ -1175,10 +1175,10 @@ private:
     std::unique_ptr<CSemaphore> semAddnode;
     int nMaxConnections;
 
-    // How many full-relay (tx, block, addr) outbound peers we want
+    // How many outbound-full-relay (tx, block, addr) peers we want
     int m_max_outbound_full_relay;
 
-    // How many block-relay only outbound peers we want
+    // How many outbound-block-relay peers we want
     // We do not relay tx or addr messages with these peers
     int m_max_outbound_block_relay;
 
@@ -1193,7 +1193,7 @@ private:
 
     /**
      * Addresses that were saved during the previous clean shutdown. We'll
-     * attempt to make block-relay-only connections to them.
+     * attempt to make outbound-block-relay connections to them.
      */
     std::vector<CAddress> m_anchors;
 
@@ -1215,16 +1215,16 @@ private:
     std::thread threadOpenConnections;
     std::thread threadMessageHandler;
 
-    /** flag for deciding to connect to an extra outbound peer,
+    /** flag for deciding to connect to an extra outbound-full-relay peer,
      *  in excess of m_max_outbound_full_relay
      *  This takes the place of a feeler connection */
-    std::atomic_bool m_try_another_outbound_peer;
+    std::atomic_bool m_try_another_outbound_full_relay_peer;
 
-    /** flag for initiating extra block-relay-only peer connections.
+    /** flag for initiating extra outbound-block-relay peer connections.
      *  this should only be enabled after initial chain sync has occurred,
      *  as these connections are intended to be short-lived and low-bandwidth.
      */
-    std::atomic_bool m_start_extra_block_relay_peers{false};
+    std::atomic_bool m_start_extra_outbound_block_relay_peers{false};
 
     std::atomic<int64_t> m_next_send_inv_to_incoming{0};
 
