@@ -2724,9 +2724,9 @@ static RPCHelpMan createwallet()
     
     WalletContext& context = EnsureWalletContext(request.context);
     uint64_t flags = 0;
-    std::__cxx11::regex invalid_chars("(/|\\.)(.*)");
-
-    if (regex_match(request.params[0].get_str(), invalid_chars)) {
+    char first_char = request.params[0].get_str().front();      
+     
+    if (first_char=='.' or first_char == '/' or first_char == '%' or first_char == '?' or first_char == '\\'){
         throw JSONRPCError(RPC_WALLET_ERROR, "Invalid characters in wallet name");
     }
 
