@@ -88,6 +88,7 @@ class LLMQSigningTest(DashTestFramework):
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
         self.nodes[0].generate(1)
+        self.sync_blocks()
         self.bump_mocktime(5)
         # Cleanup starts every 5 seconds
         wait_for_sigs(True, False, True, 15)
@@ -96,6 +97,7 @@ class LLMQSigningTest(DashTestFramework):
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
         self.nodes[0].generate(1)
+        self.sync_blocks()
         self.bump_mocktime(5)
         # Cleanup starts every 5 seconds
         wait_for_sigs(False, False, False, 15)
@@ -105,6 +107,9 @@ class LLMQSigningTest(DashTestFramework):
         for i in range(2, 5):
             self.mninfo[i].node.quorum_sign(100, id, msgHash)
         self.nodes[0].generate(1)
+        self.sync_blocks()
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
         wait_for_sigs(True, False, True, 15)
 
 
@@ -125,6 +130,7 @@ class LLMQSigningTest(DashTestFramework):
         mn.node.ping()
         self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
         self.nodes[0].generate(1)
+        self.sync_blocks()
         wait_for_sigs(True, False, True, 15)
 
 if __name__ == '__main__':
