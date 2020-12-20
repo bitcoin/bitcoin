@@ -15,7 +15,7 @@ using TypeInitialize = std::function<void()>;
 
 void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target, TypeInitialize init);
 
-void FuzzFrameworkEmptyFun() {}
+inline void FuzzFrameworkEmptyFun() {}
 
 #define FUZZ_TARGET(name) \
     FUZZ_TARGET_INIT(name, FuzzFrameworkEmptyFun)
