@@ -30,6 +30,18 @@ class CreateWalletTest(BitcoinTestFramework):
         self.nodes[0].createwallet(wallet_name='w0')
         w0 = node.get_wallet_rpc('w0')
         address1 = w0.getnewaddress()
+        
+        self.log.info('Test if wallet name has invalid chars')
+        self.nodes[0].createwallet(wallet_name='.w1')
+        assert_raises_rpc_error(-4, "Error: Invalid characters in wallet name")
+        self.nodes[0].createwallet(wallet_name='/w1')
+        assert_raises_rpc_error(-4, "Error: Invalid characters in wallet name")
+        self.nodes[0].createwallet(wallet_name='\w1')
+        assert_raises_rpc_error(-4, "Error: Invalid characters in wallet name")
+        self.nodes[0].createwallet(wallet_name='?w1')
+        assert_raises_rpc_error(-4, "Error: Invalid characters in wallet name")
+        self.nodes[0].createwallet(wallet_name='%w1')
+        assert_raises_rpc_error(-4, "Error: Invalid characters in wallet name")
 
         self.log.info("Test disableprivatekeys creation.")
         self.nodes[0].createwallet(wallet_name='w1', disable_private_keys=True)
