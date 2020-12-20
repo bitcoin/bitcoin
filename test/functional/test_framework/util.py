@@ -421,7 +421,11 @@ def copy_datadir(from_node, to_node, dirname):
 def delete_cookie_file(datadir, chain):
     if os.path.isfile(os.path.join(datadir, chain, ".cookie")):
         logger.debug("Deleting leftover cookie file")
-        os.remove(os.path.join(datadir, chain, ".cookie"))
+        # SYSCOIN
+        try:
+            os.remove(os.path.join(datadir, chain, ".cookie"))
+        except:
+            pass
 
 
 def softfork_active(node, key):
