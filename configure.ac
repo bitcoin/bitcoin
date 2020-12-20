@@ -753,6 +753,9 @@ if test x$use_lcov_branch != xno; then
   AC_SUBST(LCOV_OPTS, "$LCOV_OPTS --rc lcov_branch_coverage=1")
 fi
 
+dnl Check for __int128
+AC_CHECK_TYPES([__int128])
+
 dnl Check for endianness
 AC_C_BIGENDIAN
 
