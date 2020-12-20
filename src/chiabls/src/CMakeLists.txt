@@ -62,10 +62,9 @@ set_target_properties(combined
 file(GLOB includes "${CMAKE_CURRENT_SOURCE_DIR}/*.hpp")
 install(FILES ${includes} DESTINATION include/chiabls)
 install(FILES ${C_LIB} DESTINATION lib)
-
+if(OPSYS STREQUAL LINUX OR OPSYS STREQUAL MACOSX)
 add_executable(runtest test.cpp)
 add_executable(runbench test-bench.cpp)
-
 if (SODIUM_FOUND)
   target_link_libraries(runtest chiablstmp relic_s sodium)
   target_link_libraries(runbench chiablstmp relic_s sodium)
@@ -73,3 +72,4 @@ else()
   target_link_libraries(runtest chiablstmp relic_s)
   target_link_libraries(runbench chiablstmp relic_s)
 endif()
+endif(OPSYS STREQUAL LINUX OR OPSYS STREQUAL MACOSX)
