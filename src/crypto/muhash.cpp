@@ -275,3 +275,64 @@ void Num3072::Divide(const Num3072& a)
     this->Multiply(inv);
     if (this->IsOverflow()) this->FullReduce();
 }
+
+Num3072 MuHash3072::ToNum3072(Span<const unsigned char> in) {
+    Num3072 out{};
+    uint256 hashed_in = (CHashWriter(SER_DISK, 0) << in).GetSHA256();
+    unsigned char tmp[BYTE_SIZE];
+    ChaCha20(hashed_in.data(), hashed_in.size()).Keystream(tmp, BYTE_SIZE);
+    for (int i = 0; i < LIMBS; ++i) {
+        if (sizeof(limb_t) == 4) {
+            out.limbs[i] = ReadLE32(tmp + 4 * i);
+        } else if (sizeof(limb_t) == 8) {
+            out.limbs[i] = ReadLE64(tmp + 8 * i);
+        }
+    }
+    return out;
+}
+
+MuHash3072::MuHash3072(Span<const unsigned char> in) noexcept
+{
+    m_numerator = ToNum3072(in);
+}
+
+void MuHash3072::Finalize(uint256& out) noexcept
+{
+    m_numerator.Divide(m_denominator);
+    m_denominator.SetToOne();  // Needed to keep the MuHash object valid
+
+    unsigned char data[384];
+    for (int i = 0; i < LIMBS; ++i) {
+        if (sizeof(limb_t) == 4) {
+            WriteLE32(data + i * 4, m_numerator.limbs[i]);
+        } else if (sizeof(limb_t) == 8) {
+            WriteLE64(data + i * 8, m_numerator.limbs[i]);
+        }
+    }
+
+    out = (CHashWriter(SER_DISK, 0) << data).GetSHA256();
+}
+
+MuHash3072& MuHash3072::operator*=(const MuHash3072& mul) noexcept
+{
+    m_numerator.Multiply(mul.m_numerator);
+    m_denominator.Multiply(mul.m_denominator);
+    return *this;
+}
+
+MuHash3072& MuHash3072::operator/=(const MuHash3072& div) noexcept
+{
+    m_numerator.Multiply(div.m_denominator);
+    m_denominator.Multiply(div.m_numerator);
+    return *this;
+}
+
+MuHash3072& MuHash3072::Insert(Span<const unsigned char> in) noexcept {
+    m_numerator.Multiply(ToNum3072(in));
+    return *this;
+}
+
+MuHash3072& MuHash3072::Remove(Span<const unsigned char> in) noexcept {
+    m_numerator.Divide(ToNum3072(in));
+    return *this;
+}
