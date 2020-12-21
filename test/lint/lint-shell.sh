@@ -8,14 +8,6 @@
 
 export LC_ALL=C
 
-# The shellcheck binary segfault/coredumps in Travis with LC_ALL=C
-# It does not do so in Ubuntu 14.04, 16.04, 18.04 in versions 0.3.3, 0.3.7, 0.4.6
-# respectively. So export LC_ALL=C is set as required by lint-shell-locale.sh
-# but unset here in case of running in Travis.
-if [ "$TRAVIS" = "true" ]; then
-    unset LC_ALL
-fi
-
 # Disabled warnings:
 disabled=(
     SC2046 # Quote this to prevent word splitting.
