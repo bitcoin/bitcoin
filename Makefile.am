@@ -78,6 +78,7 @@ COVERAGE_INFO = $(COV_TOOL_WRAPPER) baseline.info \
 dist-hook:
 	-$(GIT) archive --format=tar HEAD -- src/clientversion.cpp | $(AMTAR) -C $(top_distdir) -xf -
 
+if TARGET_WINDOWS
 $(BITCOIN_WIN_INSTALLER): all-recursive
 	$(MKDIR_P) $(top_builddir)/release
 	STRIPPROG="$(STRIP)" $(INSTALL_STRIP_PROGRAM) $(BITCOIND_BIN) $(top_builddir)/release
@@ -89,6 +90,9 @@ $(BITCOIN_WIN_INSTALLER): all-recursive
 	@test -f $(MAKENSIS) && echo 'OutFile "$@"' | cat $(top_builddir)/share/setup.nsi - | $(MAKENSIS) -V2 - || \
 	  echo error: could not build $@
 	@echo built $@
+
+deploy: $(BITCOIN_WIN_INSTALLER)
+endif
 
 if TARGET_DARWIN
 $(OSX_APP)/Contents/PkgInfo:
@@ -165,10 +169,6 @@ endif !BUILD_DARWIN
 
 appbundle: $(OSX_APP_BUILT)
 deploy: $(OSX_DMG)
-endif
-
-if TARGET_WINDOWS
-deploy: $(BITCOIN_WIN_INSTALLER)
 endif
 
 $(BITCOIN_QT_BIN): FORCE
