@@ -35,11 +35,14 @@ void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
         //   node1 -> Eve -> node2
         // This is ok as we only use MNAUTH as a DoS protection and not for sensitive stuff
         int nOurNodeVersion{PROTOCOL_VERSION};
-        if (Params().NetworkIDString() != CBaseChainParams::MAIN && gArgs.IsArgSet("-pushversion")) {
+        if (fRegTest && gArgs.IsArgSet("-pushversion")) {
             nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
         }
-        signHash = ::SerializeHash(std::make_tuple(*activeMasternodeInfo.blsPubKeyOperator, pnode->receivedMNAuthChallenge, pnode->IsInboundConn(), nOurNodeVersion));
-        
+        if (pnode->nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
+            signHash = ::SerializeHash(std::make_tuple(*activeMasternodeInfo.blsPubKeyOperator, pnode->receivedMNAuthChallenge, pnode->IsInboundConn()));
+        } else {
+            signHash = ::SerializeHash(std::make_tuple(*activeMasternodeInfo.blsPubKeyOperator, pnode->receivedMNAuthChallenge, pnode->IsInboundConn(), nOurNodeVersion));
+        }
     }
 
     CMNAuth mnauth;
@@ -103,9 +106,16 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         uint256 signHash;
         {
             LOCK(pnode->cs_mnauth);
-            // See comment in PushMNAUTH (IsInboundConn() is negated here as we're on the other side of the connection)
-            signHash = ::SerializeHash(std::make_tuple(dmn->pdmnState->pubKeyOperator, pnode->sentMNAuthChallenge, !pnode->IsInboundConn(), pnode->nVersion.load()));
-            
+            int nOurNodeVersion{PROTOCOL_VERSION};
+            if (fRegTest && gArgs.IsArgSet("-pushversion")) {
+                nOurNodeVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
+            }
+            // See comment in PushMNAUTH (fInbound is negated here as we're on the other side of the connection)
+            if (pnode->nVersion < MNAUTH_NODE_VER_VERSION || nOurNodeVersion < MNAUTH_NODE_VER_VERSION) {
+                signHash = ::SerializeHash(std::make_tuple(dmn->pdmnState->pubKeyOperator, pnode->sentMNAuthChallenge, !pnode->IsInboundConn()));
+            } else {
+                signHash = ::SerializeHash(std::make_tuple(dmn->pdmnState->pubKeyOperator, pnode->sentMNAuthChallenge, !pnode->IsInboundConn(), pnode->nVersion.load()));
+            }
             LogPrint(BCLog::NET, "CMNAuth::%s -- constructed signHash for nVersion %d, peer=%d\n", __func__, pnode->nVersion, pnode->GetId());
         }
 
