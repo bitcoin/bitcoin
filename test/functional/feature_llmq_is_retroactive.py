@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import time
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import set_node_times
+from test_framework.util import set_node_times,force_finish_mnsync
 
 '''
 feature_llmq_is_retroactive.py
@@ -26,8 +26,9 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        self.sync_blocks(self.nodes, timeout=60*5)
-
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
+        self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
 

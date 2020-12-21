@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from test_framework.p2p import P2PInterface, msg_getmnlistd, CBlockHeader
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import assert_equal,force_finish_mnsync
 from test_framework.messages import FromHex, CMerkleBlock, ser_uint256, hash256, CBlock, QuorumId
 
 '''
@@ -98,7 +98,8 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()
-
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
         # Verify that the first quorum appears in MNLISTDIFF
         expectedDeleted = []
         expectedNew = [QuorumId(100, int(first_quorum, 16))]
