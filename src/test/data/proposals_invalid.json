@@ -14,5 +14,6 @@
 {"end_epoch": 1491368400, "name": "dean-miller-5493", "payment_address": "XpG61qAVhdyN7AqVZQsHfJL7AEk4dPVinc", "payment_amount": 25.75, "start_epoch": 1474261086, "type": 1, "url": "http://::12.34.56.78]/"},
 {"end_epoch": 1491368400, "name": "dean-miller-5493", "payment_address": "XpG61qAVhdyN7AqVZQsHfJL7AEk4dPVinc", "payment_amount": "25.75", "start_epoch": 1474261086, "type": 1, "url": "http://dashcentral.org/dean-miller-5493"},
 {"end_epoch": "1491368400", "name": "dean-miller-5493", "payment_address": "XpG61qAVhdyN7AqVZQsHfJL7AEk4dPVinc", "payment_amount": 25.75, "start_epoch": 1474261086, "type": 1, "url": "http://dashcentral.org/dean-miller-5493"},
-{"end_epoch": 1491368400, "name": "dean-miller-5493", "payment_address": "XpG61qAVhdyN7AqVZQsHfJL7AEk4dPVinc", "payment_amount": 25.75, "start_epoch": "1474261086", "type": 1, "url": "http://dashcentral.org/dean-miller-5493"}
+{"end_epoch": 1491368400, "name": "dean-miller-5493", "payment_address": "XpG61qAVhdyN7AqVZQsHfJL7AEk4dPVinc", "payment_amount": 25.75, "start_epoch": "1474261086", "type": 1, "url": "http://dashcentral.org/dean-miller-5493"},
+{"end_epoch": 1491368400, "name": "dean-miller-5493", "payment_address": "XpG61qAVhdyN7AqVZQsHfJL7AEk4dPVinc", "payment_amount": 25.75, "start_epoch": 1474261086, "type": 2, "url": "http://dashcentral.org/dean-miller-5493"}
 ]

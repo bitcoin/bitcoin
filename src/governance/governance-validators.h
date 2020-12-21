@@ -35,6 +35,7 @@ private:
     bool GetDataValue(const std::string& strKey, int64_t& nValueRet);
     bool GetDataValue(const std::string& strKey, double& dValueRet);
 
+    bool ValidateType();
     bool ValidateName();
     bool ValidateStartEndEpoch(bool fCheckExpiration = true);
     bool ValidatePaymentAmount();

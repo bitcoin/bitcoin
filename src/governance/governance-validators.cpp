@@ -2,6 +2,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <governance/governance-object.h>
 #include <governance/governance-validators.h>
 
 #include <base58.h>
@@ -41,6 +42,10 @@ bool CProposalValidator::Validate(bool fCheckExpiration)
         strErrorMessages += "JSON parsing error;";
         return false;
     }
+    if (!ValidateType()) {
+        strErrorMessages += "Invalid type;";
+        return false;
+    }
     if (!ValidateName()) {
         strErrorMessages += "Invalid name;";
         return false;
@@ -61,6 +66,22 @@ bool CProposalValidator::Validate(bool fCheckExpiration)
         strErrorMessages += "Invalid URL;";
         return false;
     }
+    return true;
+}
+
+bool CProposalValidator::ValidateType()
+{
+    int64_t nType;
+    if (!GetDataValue("type", nType)) {
+        strErrorMessages += "type field not found;";
+        return false;
+    }
+
+    if (nType != GOVERNANCE_OBJECT_PROPOSAL) {
+        strErrorMessages += strprintf("type is not %d;", GOVERNANCE_OBJECT_PROPOSAL);
+        return false;
+    }
+
     return true;
 }
 

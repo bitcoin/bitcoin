@@ -416,6 +416,10 @@ CSuperblock::
 
     UniValue obj = pGovObj->GetJSONObject();
 
+    if (obj["type"].get_int() != GOVERNANCE_OBJECT_TRIGGER) {
+        throw std::runtime_error("CSuperblock: invalid data type");
+    }
+
     // FIRST WE GET THE START HEIGHT, THE BLOCK HEIGHT AT WHICH THE PAYMENT SHALL OCCUR
     nBlockHeight = obj["event_block_height"].get_int();
 
