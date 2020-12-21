@@ -85,9 +85,9 @@ static void UpdateWalletSetting(interfaces::Chain& chain,
                                 std::vector<bilingual_str>& warnings)
 {
     if (load_on_startup == nullopt) return;
-    if (load_on_startup.get() && !AddWalletSetting(chain, wallet_name)) {
+    if (load_on_startup.value() && !AddWalletSetting(chain, wallet_name)) {
         warnings.emplace_back(Untranslated("Wallet load on startup setting could not be updated, so wallet may not be loaded next node startup."));
-    } else if (!load_on_startup.get() && !RemoveWalletSetting(chain, wallet_name)) {
+    } else if (!load_on_startup.value() && !RemoveWalletSetting(chain, wallet_name)) {
         warnings.emplace_back(Untranslated("Wallet load on startup setting could not be updated, so wallet may still be loaded next node startup."));
     }
 }
@@ -3051,7 +3051,7 @@ bool CWallet::CreateTransactionInternal(
         // to avoid conflicting with other possible uses of nSequence,
         // and in the spirit of "smallest possible change from prior
         // behavior."
-        const uint32_t nSequence = coin_control.m_signal_bip125_rbf.get_value_or(m_signal_rbf) ? MAX_BIP125_RBF_SEQUENCE : (CTxIn::SEQUENCE_FINAL - 1);
+        const uint32_t nSequence = coin_control.m_signal_bip125_rbf.value_or(m_signal_rbf) ? MAX_BIP125_RBF_SEQUENCE : (CTxIn::SEQUENCE_FINAL - 1);
         for (const auto& coin : selected_coins) {
             txNew.vin.push_back(CTxIn(coin.outpoint, CScript(), nSequence));
         }
@@ -4055,8 +4055,7 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain& chain, const std::st
 
         // No need to read and scan block if block was created before
         // our wallet birthday (as adjusted for block time variability)
-        // The way the 'time_first_key' is initialized is just a workaround for the gcc bug #47679 since version 4.6.0.
-        Optional<int64_t> time_first_key = MakeOptional(false, int64_t());;
+        Optional<int64_t> time_first_key;
         for (auto spk_man : walletInstance->GetAllScriptPubKeyMans()) {
             int64_t time = spk_man->GetTimeFirstKey();
             if (!time_first_key || time < *time_first_key) time_first_key = time;
