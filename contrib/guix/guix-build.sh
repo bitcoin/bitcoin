@@ -2,6 +2,10 @@
 export LC_ALL=C
 set -e -o pipefail
 
+###################
+## Sanity Checks ##
+###################
+
 # GUIX_BUILD_OPTIONS is an environment variable recognized by guix commands that
 # can perform builds. This seems like what we want instead of
 # ADDITIONAL_GUIX_COMMON_FLAGS, but the value of GUIX_BUILD_OPTIONS is actually
@@ -26,6 +30,10 @@ EOF
 exit 1
 fi
 
+#########
+# Setup #
+#########
+
 # Determine the maximum number of jobs to run simultaneously (overridable by
 # environment)
 MAX_JOBS="${MAX_JOBS:-$(nproc)}"
@@ -48,6 +56,10 @@ time-machine() {
                       ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_TIMEMACHINE_FLAGS} \
                       -- "$@"
 }
+
+#########
+# Build #
+#########
 
 # Function to be called when building for host ${1} and the user interrupts the
 # build
