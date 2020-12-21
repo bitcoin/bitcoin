@@ -23,10 +23,6 @@ echo "At most ${MAX_JOBS:?not set} jobs will run at once..."
 # $HOSTs after successfully building.
 BASEPREFIX="${PWD}/depends"
 
-# Setup an output directory for our build
-OUTDIR="${OUTDIR:-${PWD}/output}"
-[ -e "$OUTDIR" ] || mkdir -p "$OUTDIR"
-
 # Setup the directory where our Bitcoin Core build for HOST will occur
 DISTSRC="${DISTSRC:-${PWD}/distsrc-${HOST}}"
 if [ -e "$DISTSRC" ]; then

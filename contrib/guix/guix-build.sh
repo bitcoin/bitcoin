@@ -91,6 +91,10 @@ time-machine() {
                       -- "$@"
 }
 
+# Make sure an output directory exists for our builds
+OUTDIR="${OUTDIR:-${PWD}/output}"
+[ -e "$OUTDIR" ] || mkdir -p "$OUTDIR"
+
 #########
 # Build #
 #########
@@ -189,6 +193,7 @@ for host in ${HOSTS=x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv
                                  --pure \
                                  --no-cwd \
                                  --share="$PWD"=/bitcoin \
+                                 --share="$OUTDIR"=/outdir \
                                  --expose="$(git rev-parse --git-common-dir)" \
                                  ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
                                  --max-jobs="$MAX_JOBS" \
@@ -199,6 +204,7 @@ for host in ${HOSTS=x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv
                                         SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:?unable to determine value}" \
                                         ${V:+V=1} \
                                         ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"} \
+                                        OUTDIR=/outdir \
                                       bash -c "cd /bitcoin && bash contrib/guix/libexec/build.sh"
     )
 
