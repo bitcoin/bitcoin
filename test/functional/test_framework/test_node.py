@@ -311,7 +311,7 @@ class TestNode():
     def version_is_at_least(self, ver):
         return self.version is None or self.version >= ver
 
-    def stop_node(self, expected_stderr='', wait=0):
+    def stop_node(self, expected_stderr='', *, wait=0, wait_until_stopped=True):
         """Stop the node."""
         if not self.running:
             return
@@ -339,6 +339,9 @@ class TestNode():
         self.stderr.close()
 
         del self.p2ps[:]
+
+        if wait_until_stopped:
+            self.wait_until_stopped()
 
     def is_node_stopped(self):
         """Checks whether the node has stopped.
