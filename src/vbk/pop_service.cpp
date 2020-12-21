@@ -294,16 +294,19 @@ bool LoadTree(CDBIterator& iter, char blocktype, std::pair<char, std::string> ti
     iter.Seek(tiptype);
     if (!iter.Valid()) {
         // no valid tip is stored = no need to load anything
-        return error("%s: failed to load %s tip", block_t::name());
+        return state.Invalid("bad-iter", strprintf("%s: failed to load %s tip", block_t::name()));
     }
     if (!iter.GetKey(ckey)) {
-        return error("%s: failed to find key %c:%s in %s", __func__, tiptype.first, tiptype.second, block_t::name());
+        return state.Invalid("bad-key", strprintf("%s: failed to find key %c:%s in %s", __func__,
+                                            tiptype.first, tiptype.second, block_t::name()));
     }
     if (ckey != tiptype) {
-        return error("%s: bad key for tip %c:%s in %s", __func__, tiptype.first, tiptype.second, block_t::name());
+        return state.Invalid("bad-key-type", strprintf("%s: bad key for tip %c:%s in %s", __func__, tiptype.first,
+                                                 tiptype.second, block_t::name()));
     }
     if (!iter.GetValue(tiphash)) {
-        return error("%s: failed to read tip value in %s", __func__, block_t::name());
+        return state.Invalid("bad-value", strprintf("%s: failed to read tip value in %s", __func__,
+                                              block_t::name()));
     }
 
     std::vector<index_t> blocks;
@@ -322,7 +325,8 @@ bool LoadTree(CDBIterator& iter, char blocktype, std::pair<char, std::string> ti
                 blocks.push_back(diskindex);
                 iter.Next();
             } else {
-                return error("%s: failed to read %s block", __func__, block_t::name());
+                return state.Invalid("bad-block", strprintf("%s: failed to read %s block", __func__,
+                                                      block_t::name()));
             }
         } else {
             break;
@@ -330,16 +334,19 @@ bool LoadTree(CDBIterator& iter, char blocktype, std::pair<char, std::string> ti
     }
 
     // sort blocks by height
-    std::sort(blocks.begin(), blocks.end(), [](const index_t& a, const index_t& b) {
-        return a.getHeight() < b.getHeight();
-    });
+    std::sort(blocks.begin(), blocks.end(),
+        [](const index_t& a, const index_t& b) {
+            return a.getHeight() < b.getHeight();
+        });
     if (!altintegration::LoadTree(out, blocks, tiphash, state)) {
-        return error("%s: failed to load tree %s", __func__, block_t::name());
+        return state.Invalid("bad-tree");
     }
 
     auto* tip = out.getBestChain().tip();
     assert(tip);
-    LogPrintf("Loaded %d blocks in %s tree with tip %s\n", out.getBlocks().size(), block_t::name(), tip->toShortPrettyString());
+    LogPrintf("Loaded %d blocks in %s tree with tip %s\n",
+        out.getBlocks().size(), block_t::name(),
+        tip->toShortPrettyString());
 
     return true;
 }
