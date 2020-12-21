@@ -2,14 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#if defined(HAVE_CONFIG_H)
+#include <config/dash-config.h>
+#endif // HAVE_CONFIG_H
+
 #include <stacktraces.h>
 #include <fs.h>
 #include <random.h>
 #include <streams.h>
 #include <util.h>
 #include <utilstrencodings.h>
-
-#include <dash-config.h>
 
 #include <mutex>
 #include <map>
