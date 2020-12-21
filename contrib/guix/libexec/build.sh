@@ -23,15 +23,6 @@ echo "At most ${MAX_JOBS:?not set} jobs will run at once..."
 # $HOSTs after successfully building.
 BASEPREFIX="${PWD}/depends"
 
-# Setup the directory where our Bitcoin Core build for HOST will occur
-DISTSRC="${DISTSRC:-${PWD}/distsrc-${HOST}}"
-if [ -e "$DISTSRC" ]; then
-    echo "DISTSRC directory '${DISTSRC}' exists, probably because of previous builds... Aborting..."
-    exit 1
-else
-    mkdir -p "$DISTSRC"
-fi
-
 # Given a package name and an output name, return the path of that output in our
 # current guix environment
 store_path() {
@@ -185,6 +176,7 @@ esac
 
 # Make $HOST-specific native binaries from depends available in $PATH
 export PATH="${BASEPREFIX}/${HOST}/native/bin:${PATH}"
+mkdir -p "$DISTSRC"
 (
     cd "$DISTSRC"
 
