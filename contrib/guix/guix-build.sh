@@ -172,6 +172,19 @@ for host in $HOSTS; do
         # for the particular $HOST we're building for
         export HOST="$host"
 
+        # shellcheck disable=SC2030
+cat << EOF
+INFO: Building commit ${GIT_COMMIT:?not set} for platform triple ${HOST:?not set}:
+      ...using reference timestamp: ${SOURCE_DATE_EPOCH:?not set}
+      ...running at most ${MAX_JOBS:?not set} jobs
+      ...from worktree directory: '${PWD}'
+          ...bind-mounted in container to: '/bitcoin'
+      ...in build directory: '$(distsrc_for_host "$HOST")'
+          ...bind-mounted in container to: '$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")'
+      ...outputting in: '${OUTDIR:?not set}'
+          ...bind-mounted in container to: '/outdir'
+EOF
+
         # Run the build script 'contrib/guix/libexec/build.sh' in the build
         # container specified by 'contrib/guix/manifest.scm'.
         #

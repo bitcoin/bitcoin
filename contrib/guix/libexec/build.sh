@@ -11,9 +11,15 @@ if [ -n "$V" ]; then
     export VERBOSE="$V"
 fi
 
-# Check that environment variables assumed to be set by the environment are set
-echo "Building for platform triple ${HOST:?not set} with reference timestamp ${SOURCE_DATE_EPOCH:?not set}..."
-echo "At most ${MAX_JOBS:?not set} jobs will run at once..."
+# Check that required environment variables are set
+cat << EOF
+Required environment variables as seen inside the container:
+    HOST: ${HOST:?not set}
+    SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH:?not set}
+    MAX_JOBS: ${MAX_JOBS:?not set}
+    DISTSRC: ${DISTSRC:?not set}
+    OUTDIR: ${OUTDIR:?not set}
+EOF
 
 #####################
 # Environment Setup #
