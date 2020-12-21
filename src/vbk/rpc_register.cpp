@@ -312,18 +312,8 @@ UniValue getblock(const JSONRPCRequest& req, Tree& tree, const std::string& chai
     check_getblock(req, chain);
     LOCK(cs_main);
 
-    using block_t = typename Tree::block_t;
-    using hash_t = typename block_t::hash_t;
     std::string strhash = req.params[0].get_str();
-    hash_t hash;
-
-    try {
-        hash = hash_t::fromHex(strhash);
-    } catch (const std::exception& e) {
-        throw JSONRPCError(RPC_TYPE_ERROR, strprintf("Bad hash: %s", e.what()));
-    }
-
-    auto* index = tree.getBlockIndex(hash);
+    auto* index = tree.getBlockIndex(strhash);
     if (!index) {
         // no block found
         return UniValue(UniValue::VNULL);
