@@ -41,3 +41,12 @@ IMAGE_NAME="arthub.azurecr.io/itcoin-core"
 IMAGE_TAG="git-"$("${MYDIR}"/compute-git-hash.sh)
 
 docker build --tag "${IMAGE_NAME}:${IMAGE_TAG}" "${MYDIR}/.."
+
+# MUXATOR 2020-12-22: as of today, there is no known way to compute the sha256
+# digest of an image that was never pushed to a registry. This is odd, since the
+# hashes should be dependant on the image contents only.
+#
+# Since printing the digest is just an experimental functionality, let's ignore
+# errors here.
+echo "EXPERIMENTAL: the sha256 hash of the container we just built is:"
+docker inspect --format='{{index .RepoDigests 0}}' "${IMAGE_NAME}:${IMAGE_TAG}" || true
