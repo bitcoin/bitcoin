@@ -22,13 +22,6 @@ while getopts "?" opt; do
   esac
 done
 
-# TRAVIS_BRANCH will be present in a Travis environment. For builds triggered
-# by a pull request this is the name of the branch targeted by the pull request.
-# https://docs.travis-ci.com/user/environment-variables/
-if [ -n "${TRAVIS_BRANCH}" ]; then
-  COMMIT_RANGE="$TRAVIS_BRANCH..HEAD"
-fi
-
 if [ -z "${COMMIT_RANGE}" ]; then
   if [ -n "$1" ]; then
     COMMIT_RANGE="HEAD~$1...HEAD"
