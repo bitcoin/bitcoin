@@ -90,6 +90,7 @@ $(BITCOIN_WIN_INSTALLER): all-recursive
 	  echo error: could not build $@
 	@echo built $@
 
+if TARGET_DARWIN
 $(OSX_APP)/Contents/PkgInfo:
 	$(MKDIR_P) $(@D)
 	@echo "APPL????" > $@
@@ -133,7 +134,7 @@ $(OSX_BACKGROUND_IMAGE): $(OSX_BACKGROUND_IMAGE).png $(OSX_BACKGROUND_IMAGE)@2x.
 	tiffutil -cathidpicheck $^ -out $@
 
 deploydir: $(OSX_DMG)
-else
+else !BUILD_DARWIN
 APP_DIST_DIR=$(top_builddir)/dist
 APP_DIST_EXTRAS=$(APP_DIST_DIR)/.background/$(OSX_BACKGROUND_IMAGE) $(APP_DIST_DIR)/.DS_Store $(APP_DIST_DIR)/Applications
 
@@ -160,12 +161,12 @@ $(APP_DIST_DIR)/$(OSX_APP)/Contents/MacOS/Bitcoin-Qt: $(OSX_APP_BUILT) $(OSX_PAC
 	INSTALLNAMETOOL=$(INSTALLNAMETOOL) OTOOL=$(OTOOL) STRIP=$(STRIP) $(PYTHON) $(OSX_DEPLOY_SCRIPT) $(OSX_APP) $(OSX_VOLNAME) -translations-dir=$(QT_TRANSLATION_DIR)
 
 deploydir: $(APP_DIST_EXTRAS)
-endif
+endif !BUILD_DARWIN
 
-if TARGET_DARWIN
 appbundle: $(OSX_APP_BUILT)
 deploy: $(OSX_DMG)
 endif
+
 if TARGET_WINDOWS
 deploy: $(BITCOIN_WIN_INSTALLER)
 endif
