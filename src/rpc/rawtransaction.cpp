@@ -109,7 +109,7 @@ static RPCHelpMan getrawtransaction()
                                  {RPCResult::Type::OBJ, "", "",
                                  {
                                      {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
-                                     {RPCResult::Type::STR, "vout", ""},
+                                     {RPCResult::Type::NUM, "vout", "The output number"},
                                      {RPCResult::Type::OBJ, "scriptSig", "The script",
                                      {
                                          {RPCResult::Type::STR, "asm", "asm"},
