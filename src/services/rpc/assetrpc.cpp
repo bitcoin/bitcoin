@@ -25,8 +25,8 @@ extern CTxDestination DecodeDestination(const std::string& str);
 
 bool BuildAssetJson(const CAsset& asset, const uint32_t& nAsset, UniValue& oAsset) {
     oAsset.__pushKV("asset_guid", nAsset);
-    oAsset.__pushKV("symbol", asset.strSymbol);
-	oAsset.__pushKV("public_value", asset.strPubData);
+    oAsset.__pushKV("symbol", DecodeBase64(asset.strSymbol));
+	oAsset.__pushKV("public_value", AssetPublicDataToJson(asset.strPubData));
     oAsset.__pushKV("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
     oAsset.__pushKV("notary_address", asset.vchNotaryKeyID.empty()? "" : EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
     if (!asset.notaryDetails.IsNull()) {

@@ -65,7 +65,7 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
         }
 
         if(asset.nUpdateMask & ASSET_UPDATE_DATA) 
-            entry.__pushKV("public_value", asset.strPubData);
+            entry.__pushKV("public_value", AssetPublicDataToJson(asset.strPubData));
 
         if(asset.nUpdateMask & ASSET_UPDATE_CONTRACT) 
             entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));

@@ -130,7 +130,13 @@ CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision)
         vecAuxFees.push_back(CAuxFee(AssetAmountFromValue(auxFeeArr[0], nPrecision), (uint16_t)iPct));
     }
 }
-
+UniValue AssetPublicDataToJson(const std::string &strPubData) {
+    UniValue pubDataObj(UniValue::VOBJ);
+    if(!pubDataObj.read(strPubData)) {
+        pubDataObj.pushKV("desc", DecodeBase64(pubDataObj["desc"].get_str()));
+    }
+    return pubDataObj;
+}
 void CAuxFeeDetails::ToJson(UniValue& value) const {
     UniValue feeStruct(UniValue::VARR);
     for(const auto& auxfee: vecAuxFees) {
@@ -165,11 +171,11 @@ CNotaryDetails::CNotaryDetails(const UniValue& value){
         SetNull();
         return;
     }   
-    bRequireHD = hdObj.get_bool()? 1: 0; 
+    bRequireHD = hdObj.get_bool()? 1: 0;
 }
 
 void CNotaryDetails::ToJson(UniValue& value) const {
-    value.pushKV("endpoint", strEndPoint);
+    value.pushKV("endpoint", DecodeBase64(strEndPoint));
     value.pushKV("instant_transfers", bEnableInstantTransfers);
     value.pushKV("hd_required", bRequireHD);
 }
