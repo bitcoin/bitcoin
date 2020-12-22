@@ -5,6 +5,7 @@ $(package)_file_name=$($(package)_version).tar.gz
 $(package)_sha256_hash=a09c9ba4684670a0375e42d9d67e7f12c1f62581a27f28f7c825d6d7032ccc6a
 $(package)_build_subdir=cctools
 $(package)_clang_version=3.7.1
+$(package)_patches=segalign.patch
 $(package)_clang_download_path=https://llvm.org/releases/$($(package)_clang_version)
 $(package)_clang_download_file=clang+llvm-$($(package)_clang_version)-x86_64-linux-gnu-ubuntu-14.04.tar.xz
 $(package)_clang_file_name=clang-llvm-$($(package)_clang_version)-x86_64-linux-gnu-ubuntu-14.04.tar.xz
@@ -39,7 +40,8 @@ endef
 
 define $(package)_preprocess_cmds
   cd $($(package)_build_subdir); ./autogen.sh && \
-  sed -i.old "/define HAVE_PTHREADS/d" ld64/src/ld/InputFiles.h
+  sed -i.old "/define HAVE_PTHREADS/d" ld64/src/ld/InputFiles.h && \
+  patch -p1 < $($(package)_patch_dir)/segalign.patch
 endef
 
 define $(package)_config_cmds
