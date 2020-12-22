@@ -220,9 +220,9 @@ class SegWitTest(BitcoinTestFramework):
         self.num_nodes = 3
         # This test tests SegWit both pre and post-activation, so use the normal BIP9 activation.
         self.extra_args = [
-            ["-acceptnonstdtxn=1", "-segwitheight={}".format(SEGWIT_HEIGHT), "-whitelist=noban@127.0.0.1", "-mempoolreplacement=1"],
-            ["-acceptnonstdtxn=0", "-segwitheight={}".format(SEGWIT_HEIGHT), "-mempoolreplacement=1"],
-            ["-acceptnonstdtxn=1", "-segwitheight=-1"], "-mempoolreplacement=1",
+            ["-acceptnonstdtxn=1", "-segwitheight={}".format(SEGWIT_HEIGHT), "-whitelist=noban@127.0.0.1"],
+            ["-acceptnonstdtxn=0", "-segwitheight={}".format(SEGWIT_HEIGHT)],
+            ["-acceptnonstdtxn=1", "-segwitheight=-1"],
         ]
         self.supports_cli = False
 
@@ -405,7 +405,6 @@ class SegWitTest(BitcoinTestFramework):
         assert self.test_node.last_message["getdata"].inv[0].type == blocktype
         test_witness_block(self.nodes[0], self.test_node, block1, True)
 
-
         block2 = self.build_next_block()
         block2.solve()
 
@@ -557,9 +556,8 @@ class SegWitTest(BitcoinTestFramework):
             # 'non-mandatory-script-verify-flag (Witness program was passed an
             # empty witness)' (otherwise).
             # TODO: support multiple acceptable reject reasons.
-            # Litecoin: SCRIPT_VERIFY_WITNESS is enforced when segwit is activated
-            test_witness_block(self.nodes[0], self.test_node, block, accepted=True, with_witness=False)
-
+            test_witness_block(self.nodes[0], self.test_node, block, accepted=False, with_witness=False)
+            
         self.connect_nodes(0, 2)
 
         self.utxo.pop(0)
@@ -1944,7 +1942,7 @@ class SegWitTest(BitcoinTestFramework):
     def test_upgrade_after_activation(self):
         """Test the behavior of starting up a segwit-aware node after the softfork has activated."""
 
-        block = self.build_next_block(nVersion=4)
+        block = self.build_next_block(version=4)
         block.solve()
         resp = self.nodes[0].submitblock(block.serialize().hex())
         assert_equal(resp, 'bad-version(0x00000004)')

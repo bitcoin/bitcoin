@@ -96,19 +96,19 @@ class NULLDUMMYTest(BitcoinTestFramework):
         test6txs = [CTransaction(test4tx)]
         trueDummy(test4tx)
         assert_raises_rpc_error(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, test4tx.serialize_with_witness().hex(), 0)
-        self.block_submit(self.nodes[0], [test4tx])
+        self.block_submit(self.nodes[0], [test4tx], version=VB_TOP_BITS)
 
         self.log.info("Test 5: Non-NULLDUMMY P2WSH multisig transaction invalid after activation")
         test5tx = create_transaction(self.nodes[0], txid3, self.wit_address, amount=48)
         test6txs.append(CTransaction(test5tx))
         test5tx.wit.vtxinwit[0].scriptWitness.stack[0] = b'\x01'
         assert_raises_rpc_error(-26, NULLDUMMY_ERROR, self.nodes[0].sendrawtransaction, test5tx.serialize_with_witness().hex(), 0)
-        self.block_submit(self.nodes[0], [test5tx], True)
+        self.block_submit(self.nodes[0], [test5tx], True, version=VB_TOP_BITS)
 
         self.log.info("Test 6: NULLDUMMY compliant base/witness transactions should be accepted to mempool and in block after activation [432]")
         for i in test6txs:
             self.nodes[0].sendrawtransaction(i.serialize_with_witness().hex(), 0)
-        self.block_submit(self.nodes[0], test6txs, True, True)
+        self.block_submit(self.nodes[0], test6txs, True, True, VB_TOP_BITS)
 
     def block_submit(self, node, txs, witness=False, accept=False, version=4):
         tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
