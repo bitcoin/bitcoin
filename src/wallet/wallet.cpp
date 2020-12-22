@@ -2612,13 +2612,13 @@ std::unordered_set<const CWalletTx*, WalletTxHasher> CWallet::GetSpendableTXs() 
     return ret;
 }
 
-CAmount CWallet::GetBalance(const isminefilter& filter, const int min_depth) const
+CAmount CWallet::GetBalance(const isminefilter& filter, const int min_depth, const bool fAddLocked) const
 {
     CAmount nTotal = 0;
     {
         LOCK2(cs_main, cs_wallet);
         for (auto pcoin : GetSpendableTXs()) {
-            if (pcoin->IsTrusted() && pcoin->GetDepthInMainChain() >= min_depth) {
+            if (pcoin->IsTrusted() && ((pcoin->GetDepthInMainChain() >= min_depth) || (fAddLocked && pcoin->IsLockedByInstantSend()))) {
                 nTotal += pcoin->GetAvailableCredit(true, filter);
             }
         }
