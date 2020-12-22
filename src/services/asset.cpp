@@ -132,7 +132,7 @@ CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision)
 }
 UniValue AssetPublicDataToJson(const std::string &strPubData) {
     UniValue pubDataObj(UniValue::VOBJ);
-    if(!pubDataObj.read(strPubData)) {
+    if(pubDataObj.read(strPubData)) {
         pubDataObj.pushKV("desc", DecodeBase64(pubDataObj["desc"].get_str()));
     }
     return pubDataObj;
@@ -140,10 +140,10 @@ UniValue AssetPublicDataToJson(const std::string &strPubData) {
 void CAuxFeeDetails::ToJson(UniValue& value) const {
     UniValue feeStruct(UniValue::VARR);
     for(const auto& auxfee: vecAuxFees) {
-        UniValue auxfeeArr(UniValue::VARR);
-        auxfeeArr.push_back(auxfee.nBound);
-        auxfeeArr.push_back(auxfee.nPercent);
-        feeStruct.push_back(auxfeeArr);
+        UniValue auxfeeObj(UniValue::VOBJ);
+        auxfeeObj.__pushKV("bound", auxfee.nBound);
+        auxfeeObj.__pushKV("percentage", auxfee.nPercent / 100000.0);
+        feeStruct.push_back(auxfeeObj);
     }
     value.__pushKV("auxfee_address", vchAuxFeeKeyID.empty()? "" : EncodeDestination(WitnessV0KeyHash(uint160{vchAuxFeeKeyID})));
     value.__pushKV("fee_struct", feeStruct);
