@@ -30,13 +30,7 @@ race:zmq::*
 race:bitcoin-qt
 
 # deadlock (TODO fix)
-deadlock:CConnman::ForNode
-deadlock:CConnman::GetNodeStats
 deadlock:CChainState::ConnectTip
-deadlock:UpdateTip
-
-# WalletBatch (unidentified deadlock)
-deadlock:WalletBatch
 
 # Intentional deadlock in tests
 deadlock:TestPotentialDeadLockDetected
