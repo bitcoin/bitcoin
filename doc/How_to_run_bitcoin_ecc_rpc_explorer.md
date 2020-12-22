@@ -1,6 +1,6 @@
 # Bitcoin ECC RPC Explorer
 
-![image](./images/bitcoin_ecc_rpc_explorer.PNG)
+![image](./images/bitcoin_ecc_rpc_explorer.png)
 
 
 
