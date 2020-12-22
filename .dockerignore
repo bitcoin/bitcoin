@@ -24,9 +24,9 @@
 !/autogen.sh
 !/build-aux
 !/configure.ac
-!/configure-itcoin-core.sh
 !/contrib
 !/doc
+!/infra/configure-itcoin-core.sh
 !/libbitcoinconsensus.pc.in
 !/Makefile.am
 !/share

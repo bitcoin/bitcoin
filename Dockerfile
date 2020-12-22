@@ -39,7 +39,7 @@ WORKDIR /opt/itcoin-core-source
 
 COPY . .
 
-RUN ./configure-itcoin-core.sh
+RUN infra/configure-itcoin-core.sh
 
 # run the build on all the available cores (sparing one), with load limiting.
 RUN make --jobs=$(nproc --ignore=1) --max-load=$(nproc --ignore=1)
