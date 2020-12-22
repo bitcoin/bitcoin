@@ -26,7 +26,7 @@ class DumptxoutsetTest(BitcoinTestFramework):
         FILENAME = 'txoutset.dat'
         out = node.dumptxoutset(FILENAME)
         expected_path = Path(node.datadir) / self.chain / FILENAME
-        
+
         assert expected_path.is_file()
 
         assert_equal(out['coins_written'], 100)

@@ -557,7 +557,7 @@ class SegWitTest(BitcoinTestFramework):
             # empty witness)' (otherwise).
             # TODO: support multiple acceptable reject reasons.
             test_witness_block(self.nodes[0], self.test_node, block, accepted=False, with_witness=False)
-            
+
         self.connect_nodes(0, 2)
 
         self.utxo.pop(0)
