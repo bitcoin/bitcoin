@@ -88,8 +88,7 @@ GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.r
 
 BITCOIN_TEST_SUITE = \
   test/main.cpp \
-  $(TEST_UTIL_H) \
-  vbk/test/util/mock.hpp
+  $(TEST_UTIL_H)
 
 FUZZ_SUITE = \
   test/fuzz/fuzz.cpp \

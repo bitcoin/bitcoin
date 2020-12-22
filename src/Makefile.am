@@ -111,7 +111,6 @@ VBK_H = \
   vbk/merkle.hpp \
   vbk/genesis.hpp \
   vbk/genesis_common.hpp \
-  vbk/altchainparam.hpp \
   vbk/p2p_sync.hpp \
   vbk/util.hpp \
   vbk/adaptors/univalue_json.hpp \
