@@ -14,6 +14,7 @@ mutex:CConnman::SocketHandler
 mutex:UpdateTip
 mutex:PeerManager::UpdatedBlockTip
 mutex:g_best_block_mutex
+
 # race (TODO fix)
 race:CConnman::WakeMessageHandler
 race:CConnman::ThreadMessageHandler
@@ -28,6 +29,7 @@ race:DatabaseBatch
 race:leveldb::DBImpl::DeleteObsoleteFiles
 race:zmq::*
 race:syscoin-qt
+
 # deadlock (TODO fix)
 deadlock:CConnman::ForNode
 deadlock:CConnman::GetNodeStats
@@ -48,11 +50,12 @@ deadlock:src/qt/test/*
 # External libraries
 deadlock:libdb
 race:libzmq
-race:epoll_ctl  # https://github.com/bitcoin/bitcoin/pull/20218
-
 race:CBLSWorker::GenerateContributions
 race:ctpl::thread_pool::push
 race:masternodeSync
 race:CEvoDB::CommitRootTransaction
 race:CDeterministicMNManager:GetListForBlock
 deadlock:CConnman::ForEachNode
+
+# https://github.com/bitcoin/bitcoin/pull/20218, https://github.com/bitcoin/bitcoin/pull/20745
+race:epoll_ctl
