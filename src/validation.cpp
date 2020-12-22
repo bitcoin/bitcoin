@@ -381,7 +381,7 @@ static void UpdateMempoolForReorg(CTxMemPool& mempool, DisconnectedBlockTransact
         TxValidationState stateDummy;
         if (!fAddToMempool || (*it)->IsCoinBase() ||
             !AcceptToMemoryPool(mempool, stateDummy, *it,
-                                nullptr /* plTxnReplaced */, true /* bypass_limits */)) {
+                                nullptr /* plTxnReplaced */, {} /* ignore_rejects */, true /* bypass_limits */)) {
             // If the transaction doesn't make it in to the mempool, remove any
             // transactions that depend on it (which would now be orphans).
             mempool.removeRecursive(**it, MemPoolRemovalReason::REORG);
@@ -459,6 +459,7 @@ public:
         TxValidationState &m_state;
         const int64_t m_accept_time;
         std::list<CTransactionRef>* m_replaced_transactions;
+        const IgnoreRejectsType m_ignore_rejects;
         const bool m_bypass_limits;
         /*
          * Return any outpoints which were not previously present in the coins
@@ -554,6 +555,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     TxValidationState &state = args.m_state;
     const int64_t nAcceptTime = args.m_accept_time;
     const bool bypass_limits = args.m_bypass_limits;
+    const auto& ignore_rejects = args.m_ignore_rejects;
     std::vector<COutPoint>& coins_to_uncache = args.m_coins_to_uncache;
 
     // Alias what we need out of ws
@@ -576,8 +578,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     std::string reason;
-    if (fRequireStandard && !IsStandardTx(tx, reason))
+    if (fRequireStandard && !IsStandardTx(tx, reason, ignore_rejects)) {
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, reason);
+    }
 
     // Do not work on transactions that are too small.
     // A transaction with 1 segwit input and 1 P2WPHK output has non-witness size of 82 bytes.
@@ -690,13 +693,13 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     const auto& params = args.m_chainparams.GetConsensus();
     auto taproot_state = VersionBitsState(::ChainActive().Tip(), params, Consensus::DEPLOYMENT_TAPROOT, versionbitscache);
     std::string reason_inputs;
-    if (fRequireStandard && !AreInputsStandard(tx, m_view, reason_inputs, taproot_state == ThresholdState::ACTIVE)) {
+    if (fRequireStandard && !AreInputsStandard(tx, m_view, reason_inputs, ignore_rejects, taproot_state == ThresholdState::ACTIVE)) {
         return state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, reason_inputs);
     }
 
     // Check for non-standard witnesses.
     std::string reason_witness;
-    if (tx.HasWitness() && fRequireStandard && !IsWitnessStandard(tx, m_view, reason_witness)) {
+    if (tx.HasWitness() && fRequireStandard && !IsWitnessStandard(tx, m_view, reason_witness, ignore_rejects)) {
         return state.Invalid(TxValidationResult::TX_WITNESS_MUTATED, reason_witness);
     }
 
@@ -1056,15 +1059,15 @@ bool MemPoolAccept::AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs
     return true;
 }
 
-} // anon namespace
+} // namespace
 
 /** (try to) add transaction to memory pool with a specified acceptance time **/
 static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPool& pool, TxValidationState &state, const CTransactionRef &tx,
-                        int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
+                        int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced, const IgnoreRejectsType& ignore_rejects,
                         bool bypass_limits, bool test_accept, CAmount* fee_out=nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     std::vector<COutPoint> coins_to_uncache;
-    MemPoolAccept::ATMPArgs args { chainparams, state, nAcceptTime, plTxnReplaced, bypass_limits, coins_to_uncache, test_accept, fee_out };
+    MemPoolAccept::ATMPArgs args{chainparams, state, nAcceptTime, plTxnReplaced, ignore_rejects, bypass_limits, coins_to_uncache, test_accept, fee_out};
     bool res = MemPoolAccept(pool).AcceptSingleTransaction(tx, args);
     if (!res) {
         // Remove coins that were not present in the coins cache before calling ATMPW;
@@ -1082,11 +1085,11 @@ static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPo
 }
 
 bool AcceptToMemoryPool(CTxMemPool& pool, TxValidationState &state, const CTransactionRef &tx,
-                        std::list<CTransactionRef>* plTxnReplaced,
+                        std::list<CTransactionRef>* plTxnReplaced, const IgnoreRejectsType& ignore_rejects,
                         bool bypass_limits, bool test_accept, CAmount* fee_out)
 {
     const CChainParams& chainparams = Params();
-    return AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, GetTime(), plTxnReplaced, bypass_limits, test_accept, fee_out);
+    return AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, GetTime(), plTxnReplaced, ignore_rejects, bypass_limits, test_accept, fee_out);
 }
 
 CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock)
@@ -5010,7 +5013,7 @@ bool LoadMempool(CTxMemPool& pool)
             if (nTime > nNow - nExpiryTimeout) {
                 LOCK(cs_main);
                 AcceptToMemoryPoolWithTime(chainparams, pool, state, tx, nTime,
-                                           nullptr /* plTxnReplaced */, false /* bypass_limits */,
+                                           nullptr /* plTxnReplaced */, /* ignore_rejects */ {}, false /* bypass_limits */,
                                            false /* test_accept */);
                 if (state.IsValid()) {
                     ++count;

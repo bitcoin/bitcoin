@@ -91,6 +91,7 @@ bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFee);
 
 bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType);
 
+using IgnoreRejectsType = std::set<std::string>;
 
 // Changing the default transaction version requires a two step process: first
 // adapting relay policy by bumping TX_MAX_STANDARD_VERSION, and then later
@@ -101,14 +102,14 @@ static constexpr decltype(CTransaction::nVersion) TX_MAX_STANDARD_VERSION{2};
 * Check for standard transaction types
 * @return True if all outputs (scriptPubKeys) use only standard transaction forms
 */
-bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason);
+bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason, const IgnoreRejectsType& ignore_rejects);
 /**
 * Check for standard transaction types
 * @param[in] mapInputs       Map of previous transactions that have outputs we're spending
 * @param[in] taproot_active  Whether or taproot consensus rules are active (used to decide whether spends of them are permitted)
 * @return True if all inputs (scriptSigs) use only standard transaction forms
 */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, std::string& reason_out, bool taproot_active);
+bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, std::string& reason_out, const IgnoreRejectsType& ignore_rejects, bool taproot_active);
 /**
 * Check if the transaction is over standard P2WSH resources limit:
 * 3600bytes witnessScript size, 80bytes per witness stack element, 100 witness stack elements
@@ -116,7 +117,7 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs,
 *
 * Also enforce a maximum stack item size limit and no annexes for tapscript spends.
 */
-bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, std::string& reason_out);
+bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, std::string& reason_out, const IgnoreRejectsType& ignore_rejects);
 
 /** Compute the virtual transaction size (weight reinterpreted as bytes). */
 int64_t GetVirtualTransactionSize(int64_t nWeight, int64_t nSigOpCost, unsigned int bytes_per_sigop);

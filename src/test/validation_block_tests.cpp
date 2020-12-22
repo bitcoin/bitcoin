@@ -291,6 +291,7 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
                     state,
                     tx,
                     &plTxnReplaced,
+                    /* ignore_rejects */ {},
                     /* bypass_limits */ false));
             }
         }

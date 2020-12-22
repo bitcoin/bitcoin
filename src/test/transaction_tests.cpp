@@ -302,11 +302,11 @@ BOOST_AUTO_TEST_CASE(test_Get)
     t1.vin[2].prevout.n = 1;
     t1.vin[2].scriptSig << std::vector<unsigned char>(65, 0) << std::vector<unsigned char>(33, 4);
     t1.vout.resize(2);
-    t1.vout[0].nValue = 90*CENT;
+    t1.vout[0].nValue = 90 * CENT;
     t1.vout[0].scriptPubKey << OP_1;
 
     std::string reason_dummy;
-    BOOST_CHECK(AreInputsStandard(CTransaction(t1), coins, reason_dummy, false));
+    BOOST_CHECK(AreInputsStandard(CTransaction(t1), coins, reason_dummy, {}, false));
 }
 
 static void CreateCreditAndSpend(const FillableSigningProvider& keystore, const CScript& outscript, CTransactionRef& output, CMutableTransaction& input, bool success = true)
@@ -669,6 +669,10 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     CKey key;
     key.MakeNewKey(true);
     t.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
+
+    const auto IsStandardTx = [](const CTransaction& tx, std::string& reason) {
+        return ::IsStandardTx(tx, reason, {});
+    };
 
     std::string reason;
     BOOST_CHECK(IsStandardTx(CTransaction(t), reason));

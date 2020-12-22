@@ -73,7 +73,7 @@ bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType)
     return true;
 }
 
-bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
+bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason, const IgnoreRejectsType& ignore_rejects)
 {
     if (tx.nVersion > TX_MAX_STANDARD_VERSION || tx.nVersion < 1) {
         reason = "version";
@@ -192,7 +192,7 @@ static bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& map
 
     return true;
 }
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, std::string& reason_out, bool taproot_active)
+bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, std::string& reason_out, const IgnoreRejectsType& ignore_rejects, bool taproot_active)
 {
     if (!AreInputsStandard(tx, mapInputs, taproot_active)) {
         reason_out = "bad-txns-nonstandard-inputs";
@@ -284,7 +284,7 @@ static bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& map
     }
     return true;
 }
-bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, std::string& reason_out)
+bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, std::string& reason_out, const IgnoreRejectsType& ignore_rejects)
 {
     if (!IsWitnessStandard(tx, mapInputs)) {
         reason_out = "bad-witness-nonstandard";

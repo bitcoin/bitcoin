@@ -46,7 +46,7 @@ static void CCoinsCaching(benchmark::Bench& bench)
     const CTransaction tx_1(t1);
     std::string reason_dummy;
     bench.run([&] {
-        bool success = AreInputsStandard(tx_1, coins, reason_dummy, false);
+        bool success = AreInputsStandard(tx_1, coins, reason_dummy, /* ignore_rejects */ {}, false);
         assert(success);
     });
     ECC_Stop();

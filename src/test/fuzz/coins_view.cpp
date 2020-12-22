@@ -230,8 +230,8 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
         }
         case 1: {
             std::string reason_dummy;
-            (void)AreInputsStandard(CTransaction{random_mutable_transaction}, coins_view_cache, reason_dummy, false);
-            (void)AreInputsStandard(CTransaction{random_mutable_transaction}, coins_view_cache, reason_dummy, true);
+            (void)AreInputsStandard(CTransaction{random_mutable_transaction}, coins_view_cache, reason_dummy, {}, false);
+            (void)AreInputsStandard(CTransaction{random_mutable_transaction}, coins_view_cache, reason_dummy, {}, true);
             break;
         }
         case 2: {
@@ -289,7 +289,7 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
         }
         case 6: {
             std::string reason_dummy;
-            (void)IsWitnessStandard(CTransaction{random_mutable_transaction}, coins_view_cache, reason_dummy);
+            (void)IsWitnessStandard(CTransaction{random_mutable_transaction}, coins_view_cache, reason_dummy, {});
             break;
         }
         }

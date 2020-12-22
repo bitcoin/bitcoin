@@ -856,13 +856,15 @@ static RPCHelpMan sendrawtransaction()
                                              DEFAULT_MAX_RAW_TX_FEE_RATE :
                                              CFeeRate(AmountFromValue(request.params[1]));
 
+    IgnoreRejectsType ignore_rejects;
+
     int64_t virtual_size = GetVirtualTransactionSize(*tx);
     CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
 
     std::string err_string;
     AssertLockNotHeld(cs_main);
     NodeContext& node = EnsureNodeContext(request.context);
-    const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee, /*relay*/ true, /*wait_callback*/ true);
+    const TransactionError err = BroadcastTransaction(node, tx, err_string, ignore_rejects, max_raw_tx_fee, /*relay*/ true, /*wait_callback*/ true);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
     }
@@ -936,6 +938,8 @@ static RPCHelpMan testmempoolaccept()
                                              DEFAULT_MAX_RAW_TX_FEE_RATE :
                                              CFeeRate(AmountFromValue(request.params[1]));
 
+    IgnoreRejectsType ignore_rejects;
+
     CTxMemPool& mempool = EnsureMemPool(request.context);
     int64_t virtual_size = GetVirtualTransactionSize(*tx);
     CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
@@ -950,7 +954,7 @@ static RPCHelpMan testmempoolaccept()
     {
         LOCK(cs_main);
         test_accept_res = AcceptToMemoryPool(mempool, state, std::move(tx),
-            nullptr /* plTxnReplaced */, false /* bypass_limits */, /* test_accept */ true, &fee);
+                                             nullptr /* plTxnReplaced */, ignore_rejects, false /* bypass_limits */, /* test_accept */ true, &fee);
     }
 
     // Check that fee does not exceed maximum fee
