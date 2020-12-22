@@ -33,14 +33,8 @@ race:leveldb::DBImpl::DeleteObsoleteFiles
 race:zmq::*
 race:bitcoin-qt
 # deadlock (TODO fix)
-deadlock:CConnman::ForNode
-deadlock:CConnman::GetNodeStats
 deadlock:CChainState::ConnectTip
-deadlock:UpdateTip
 deadlock:wallet_tests::CreateWallet
-
-# WalletBatch (unidentified deadlock)
-deadlock:WalletBatch
 
 # deadlock false positive (see: https://github.com/dashpay/dash/pull/4563)
 deadlock:CChainState::ConnectTip
