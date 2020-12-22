@@ -7,9 +7,21 @@
 
 #include <policy/policy.h>
 
-#include <consensus/validation.h>
 #include <coins.h>
+#include <consensus/validation.h>
 #include <span.h>
+
+bool IsReject(std::string& reason_out, const std::string& reason_in, const IgnoreRejectsType& ignore_rejects)
+{
+    if (ignore_rejects.count(reason_in)) return false;
+    reason_out = reason_in;
+    return true;
+}
+
+#define MAYBE_REJECT(reason_out, reason_in, ignore_rejects)                \
+    do {                                                                   \
+        if (IsReject(reason_out, reason_in, ignore_rejects)) return false; \
+    } while (false)
 
 CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 {
@@ -76,8 +88,7 @@ bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType)
 bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason, const IgnoreRejectsType& ignore_rejects)
 {
     if (tx.nVersion > TX_MAX_STANDARD_VERSION || tx.nVersion < 1) {
-        reason = "version";
-        return false;
+        MAYBE_REJECT(reason, "version", ignore_rejects);
     }
 
     // Extremely large transactions with lots of inputs can cost the network
@@ -86,8 +97,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
     // to MAX_STANDARD_TX_WEIGHT mitigates CPU exhaustion attacks.
     unsigned int sz = GetTransactionWeight(tx);
     if (sz > MAX_STANDARD_TX_WEIGHT) {
-        reason = "tx-size";
-        return false;
+        MAYBE_REJECT(reason, "tx-size", ignore_rejects);
     }
 
     for (const CTxIn& txin : tx.vin)
@@ -101,12 +111,10 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
         // 20-of-20 CHECKMULTISIG scriptPubKey, though such a scriptPubKey
         // is not considered standard.
         if (txin.scriptSig.size() > MAX_STANDARD_SCRIPTSIG_SIZE) {
-            reason = "scriptsig-size";
-            return false;
+            MAYBE_REJECT(reason, "scriptsig-size", ignore_rejects);
         }
         if (!txin.scriptSig.IsPushOnly()) {
-            reason = "scriptsig-not-pushonly";
-            return false;
+            MAYBE_REJECT(reason, "scriptsig-not-pushonly", ignore_rejects);
         }
     }
 
@@ -114,25 +122,22 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
     TxoutType whichType;
     for (const CTxOut& txout : tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, whichType)) {
-            reason = "scriptpubkey";
-            return false;
+            MAYBE_REJECT(reason, "scriptpubkey", ignore_rejects);
         }
 
         if (whichType == TxoutType::NULL_DATA)
             nDataOut++;
         else if ((whichType == TxoutType::MULTISIG) && (!permit_bare_multisig)) {
-            reason = "bare-multisig";
-            return false;
-        } else if (IsDust(txout, dust_relay_fee)) {
-            reason = "dust";
-            return false;
+            MAYBE_REJECT(reason, "bare-multisig", ignore_rejects);
+        }
+        if (IsDust(txout, dust_relay_fee)) {
+            MAYBE_REJECT(reason, "dust", ignore_rejects);
         }
     }
 
     // only one OP_RETURN txout is permitted
     if (nDataOut > 1) {
-        reason = "multi-op-return";
-        return false;
+        MAYBE_REJECT(reason, "multi-op-return", ignore_rejects);
     }
 
     return true;
@@ -195,8 +200,7 @@ static bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& map
 bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, std::string& reason_out, const IgnoreRejectsType& ignore_rejects, bool taproot_active)
 {
     if (!AreInputsStandard(tx, mapInputs, taproot_active)) {
-        reason_out = "bad-txns-nonstandard-inputs";
-        return false;
+        MAYBE_REJECT(reason_out, "bad-txns-nonstandard-inputs", ignore_rejects);
     }
     return true;
 }
@@ -287,8 +291,7 @@ static bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& map
 bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, std::string& reason_out, const IgnoreRejectsType& ignore_rejects)
 {
     if (!IsWitnessStandard(tx, mapInputs)) {
-        reason_out = "bad-witness-nonstandard";
-        return false;
+        MAYBE_REJECT(reason_out, "bad-witness-nonstandard", ignore_rejects);
     }
     return true;
 }

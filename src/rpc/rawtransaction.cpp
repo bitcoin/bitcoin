@@ -812,6 +812,15 @@ static RPCHelpMan signrawtransactionwithkey()
     };
 }
 
+const static std::string DOC_IGNORE_REJECTS{
+    "Specific reject reasons of a previous failing call to ignore.\n"
+    "Be aware of the following:\n"
+    "* This is not a stable interface. Policy in general and specific reject reasons might change from one version to another.\n"
+    "* Only some of the reject reasons that are returned can be ignored.\n"
+    "* A transaction with an ignored reject reason might not propagate on the network.\n"
+    "* As a miner, be aware that nonstandard transactions sometimes become consensus-invalid by future softforks that this software might not be aware of.\n"
+    "Only use this setting if you understand what it does."};
+
 static RPCHelpMan sendrawtransaction()
 {
     return RPCHelpMan{"sendrawtransaction",
@@ -825,6 +834,10 @@ static RPCHelpMan sendrawtransaction()
                     {"maxfeerate", RPCArg::Type::AMOUNT, /* default */ FormatMoney(DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK()),
                         "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT +
                             "/kB.\nSet to 0 to accept any fee rate.\n"},
+                    {"ignore_rejects", RPCArg::Type::ARR, /* default */ "empty", DOC_IGNORE_REJECTS,
+                    {
+                        {"reason", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A reject reason of a previous failing call"},
+                    }},
                 },
                 RPCResult{
                     RPCResult::Type::STR_HEX, "", "The transaction hash in hex"
@@ -857,6 +870,11 @@ static RPCHelpMan sendrawtransaction()
                                              CFeeRate(AmountFromValue(request.params[1]));
 
     IgnoreRejectsType ignore_rejects;
+    if (!request.params[2].isNull()) {
+        for (const auto& ignore : request.params[2].get_array().getValues()) {
+            ignore_rejects.insert(ignore.get_str());
+        }
+    }
 
     int64_t virtual_size = GetVirtualTransactionSize(*tx);
     CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
@@ -888,6 +906,10 @@ static RPCHelpMan testmempoolaccept()
                         },
                         },
                     {"maxfeerate", RPCArg::Type::AMOUNT, /* default */ FormatMoney(DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK()), "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT + "/kB\n"},
+                    {"ignore_rejects", RPCArg::Type::ARR, /* default */ "empty", DOC_IGNORE_REJECTS,
+                    {
+                        {"reason", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "A reject reason of a previous failing call"},
+                    }},
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "The result of the mempool acceptance test for each raw transaction in the input array.\n"
@@ -939,6 +961,11 @@ static RPCHelpMan testmempoolaccept()
                                              CFeeRate(AmountFromValue(request.params[1]));
 
     IgnoreRejectsType ignore_rejects;
+    if (!request.params[2].isNull()) {
+        for (const auto& ignore : request.params[2].get_array().getValues()) {
+            ignore_rejects.insert(ignore.get_str());
+        }
+    }
 
     CTxMemPool& mempool = EnsureMemPool(request.context);
     int64_t virtual_size = GetVirtualTransactionSize(*tx);
@@ -1868,10 +1895,10 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "createrawtransaction",         &createrawtransaction,      {"inputs","outputs","locktime","replaceable"} },
     { "rawtransactions",    "decoderawtransaction",         &decoderawtransaction,      {"hexstring","iswitness"} },
     { "rawtransactions",    "decodescript",                 &decodescript,              {"hexstring"} },
-    { "rawtransactions",    "sendrawtransaction",           &sendrawtransaction,        {"hexstring","maxfeerate"} },
+    { "rawtransactions",    "sendrawtransaction",           &sendrawtransaction,        {"hexstring","maxfeerate","ignore_rejects"} },
     { "rawtransactions",    "combinerawtransaction",        &combinerawtransaction,     {"txs"} },
     { "rawtransactions",    "signrawtransactionwithkey",    &signrawtransactionwithkey, {"hexstring","privkeys","prevtxs","sighashtype"} },
-    { "rawtransactions",    "testmempoolaccept",            &testmempoolaccept,         {"rawtxs","maxfeerate"} },
+    { "rawtransactions",    "testmempoolaccept",            &testmempoolaccept,         {"rawtxs","maxfeerate","ignore_rejects"} },
     { "rawtransactions",    "decodepsbt",                   &decodepsbt,                {"psbt"} },
     { "rawtransactions",    "combinepsbt",                  &combinepsbt,               {"txs"} },
     { "rawtransactions",    "finalizepsbt",                 &finalizepsbt,              {"psbt", "extract"} },
