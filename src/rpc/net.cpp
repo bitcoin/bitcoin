@@ -128,8 +128,6 @@ static RPCHelpMan getpeerinfo()
                             {RPCResult::Type::BOOL, "inbound", "Inbound (true) or Outbound (false)"},
                             {RPCResult::Type::BOOL, "bip152_hb_to", "Whether we selected peer as (compact blocks) high-bandwidth peer"},
                             {RPCResult::Type::BOOL, "bip152_hb_from", "Whether peer selected us as (compact blocks) high-bandwidth peer"},
-                            {RPCResult::Type::BOOL, "addnode", "Whether connection was due to addnode/-connect or if it was an automatic/inbound connection\n"
-                                                               "(DEPRECATED, returned only if the config option -deprecatedrpc=getpeerinfo_addnode is passed)"},
                             {RPCResult::Type::STR, "connection_type", "Type of connection: \n" + Join(CONNECTION_TYPE_DOC, ",\n") + ".\n"
                                                                       "Please note this output is unlikely to be stable in upcoming releases as we iterate to\n"
                                                                       "best capture connection behaviors."},
@@ -224,10 +222,6 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("inbound", stats.fInbound);
         obj.pushKV("bip152_hb_to", stats.m_bip152_highbandwidth_to);
         obj.pushKV("bip152_hb_from", stats.m_bip152_highbandwidth_from);
-        if (IsDeprecatedRPCEnabled("getpeerinfo_addnode")) {
-            // addnode is deprecated in v0.21 for removal in v0.22
-            obj.pushKV("addnode", stats.m_manual_connection);
-        }
         if (fStateStats) {
             if (IsDeprecatedRPCEnabled("banscore")) {
                 // banscore is deprecated in v0.21 for removal in v0.22
