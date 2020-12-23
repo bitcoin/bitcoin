@@ -123,3 +123,8 @@ struct timeval MillisToTimeval(int64_t nTimeout)
     timeout.tv_usec = (nTimeout % 1000) * 1000;
     return timeout;
 }
+
+struct timeval MillisToTimeval(std::chrono::milliseconds ms)
+{
+    return MillisToTimeval(count_milliseconds(ms));
+}

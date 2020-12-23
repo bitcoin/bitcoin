@@ -429,24 +429,26 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
 
     // Connect
     bool connected = false;
-    SOCKET hSocket = INVALID_SOCKET;
+    std::unique_ptr<Sock> sock;
     proxyType proxy;
     if (addrConnect.IsValid()) {
         bool proxyConnectionFailed = false;
 
         if (GetProxy(addrConnect.GetNetwork(), proxy)) {
-            hSocket = CreateSocket(proxy.proxy);
-            if (hSocket == INVALID_SOCKET) {
+            sock = CreateSock(proxy.proxy);
+            if (!sock) {
                 return nullptr;
             }
-            connected = ConnectThroughProxy(proxy, addrConnect.ToStringIP(), addrConnect.GetPort(), hSocket, nConnectTimeout, proxyConnectionFailed);
+            connected = ConnectThroughProxy(proxy, addrConnect.ToStringIP(), addrConnect.GetPort(),
+                                            sock->Get(), nConnectTimeout, proxyConnectionFailed);
         } else {
             // no proxy needed (none set for target network)
-            hSocket = CreateSocket(addrConnect);
-            if (hSocket == INVALID_SOCKET) {
+            sock = CreateSock(addrConnect);
+            if (!sock) {
                 return nullptr;
             }
-            connected = ConnectSocketDirectly(addrConnect, hSocket, nConnectTimeout, conn_type == ConnectionType::MANUAL);
+            connected = ConnectSocketDirectly(addrConnect, sock->Get(), nConnectTimeout,
+                                              conn_type == ConnectionType::MANUAL);
         }
         if (!proxyConnectionFailed) {
             // If a connection to the node was attempted, and failure (if any) is not caused by a problem connecting to
@@ -454,26 +456,26 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             addrman.Attempt(addrConnect, fCountFailure);
         }
     } else if (pszDest && GetNameProxy(proxy)) {
-        hSocket = CreateSocket(proxy.proxy);
-        if (hSocket == INVALID_SOCKET) {
+        sock = CreateSock(proxy.proxy);
+        if (!sock) {
             return nullptr;
         }
         std::string host;
         int port = default_port;
         SplitHostPort(std::string(pszDest), port, host);
         bool proxyConnectionFailed;
-        connected = ConnectThroughProxy(proxy, host, port, hSocket, nConnectTimeout, proxyConnectionFailed);
+        connected = ConnectThroughProxy(proxy, host, port, sock->Get(), nConnectTimeout,
+                                        proxyConnectionFailed);
     }
     if (!connected) {
-        CloseSocket(hSocket);
         return nullptr;
     }
 
     // Add node
     NodeId id = GetNewNodeId();
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
-    CAddress addr_bind = GetBindAddress(hSocket);
-    CNode* pnode = new CNode(id, nLocalServices, hSocket, addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", conn_type);
+    CAddress addr_bind = GetBindAddress(sock->Get());
+    CNode* pnode = new CNode(id, nLocalServices, sock->Release(), addrConnect, CalculateKeyedNetGroup(addrConnect), nonce, addr_bind, pszDest ? pszDest : "", conn_type);
     pnode->AddRef();
 
     // We're making a new connection, harvest entropy from the time (and our peer count)
@@ -2177,9 +2179,8 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
         return false;
     }
 
-    SOCKET hListenSocket = CreateSocket(addrBind);
-    if (hListenSocket == INVALID_SOCKET)
-    {
+    std::unique_ptr<Sock> sock = CreateSock(addrBind);
+    if (!sock) {
         strError = strprintf(Untranslated("Error: Couldn't open socket for incoming connections (socket returned error %s)"), NetworkErrorString(WSAGetLastError()));
         LogPrintf("%s\n", strError.original);
         return false;
@@ -2187,21 +2188,21 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
 
     // Allow binding if the port is still in TIME_WAIT state after
     // the program was closed and restarted.
-    setsockopt(hListenSocket, SOL_SOCKET, SO_REUSEADDR, (sockopt_arg_type)&nOne, sizeof(int));
+    setsockopt(sock->Get(), SOL_SOCKET, SO_REUSEADDR, (sockopt_arg_type)&nOne, sizeof(int));
 
     // some systems don't have IPV6_V6ONLY but are always v6only; others do have the option
     // and enable it by default or not. Try to enable it, if possible.
     if (addrBind.IsIPv6()) {
 #ifdef IPV6_V6ONLY
-        setsockopt(hListenSocket, IPPROTO_IPV6, IPV6_V6ONLY, (sockopt_arg_type)&nOne, sizeof(int));
+        setsockopt(sock->Get(), IPPROTO_IPV6, IPV6_V6ONLY, (sockopt_arg_type)&nOne, sizeof(int));
 #endif
 #ifdef WIN32
         int nProtLevel = PROTECTION_LEVEL_UNRESTRICTED;
-        setsockopt(hListenSocket, IPPROTO_IPV6, IPV6_PROTECTION_LEVEL, (const char*)&nProtLevel, sizeof(int));
+        setsockopt(sock->Get(), IPPROTO_IPV6, IPV6_PROTECTION_LEVEL, (const char*)&nProtLevel, sizeof(int));
 #endif
     }
 
-    if (::bind(hListenSocket, (struct sockaddr*)&sockaddr, len) == SOCKET_ERROR)
+    if (::bind(sock->Get(), (struct sockaddr*)&sockaddr, len) == SOCKET_ERROR)
     {
         int nErr = WSAGetLastError();
         if (nErr == WSAEADDRINUSE)
@@ -2209,21 +2210,19 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
         else
             strError = strprintf(_("Unable to bind to %s on this computer (bind returned error %s)"), addrBind.ToString(), NetworkErrorString(nErr));
         LogPrintf("%s\n", strError.original);
-        CloseSocket(hListenSocket);
         return false;
     }
     LogPrintf("Bound to %s\n", addrBind.ToString());
 
     // Listen for incoming connections
-    if (listen(hListenSocket, SOMAXCONN) == SOCKET_ERROR)
+    if (listen(sock->Get(), SOMAXCONN) == SOCKET_ERROR)
     {
         strError = strprintf(_("Error: Listening for incoming connections failed (listen returned error %s)"), NetworkErrorString(WSAGetLastError()));
         LogPrintf("%s\n", strError.original);
-        CloseSocket(hListenSocket);
         return false;
     }
 
-    vhListenSocket.push_back(ListenSocket(hListenSocket, permissions));
+    vhListenSocket.push_back(ListenSocket(sock->Release(), permissions));
     return true;
 }
 
