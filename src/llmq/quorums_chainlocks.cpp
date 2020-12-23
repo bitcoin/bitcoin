@@ -148,10 +148,11 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
     }
     // don't hold lock while relaying which locks nodes/mempool
     CInv inv(MSG_CLSIG, hash);
+    const CBlockIndex* pindex;
     connman.RelayOtherInv(inv);
     {
-        LOCK2(cs_main, cs);
-        const CBlockIndex* pindex = LookupBlockIndex(clsig.blockHash);
+        LOCK(cs_main);
+        pindex = LookupBlockIndex(clsig.blockHash);
         if (pindex == nullptr) {
             // we don't know the block/header for this CLSIG yet, so bail out for now
             // when the block or the header later comes in, we will enforce the correct chain
@@ -164,9 +165,11 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
                     __func__, clsig.ToString(), pindex->nHeight);
             return;
         }
-
-        bestChainLockBlockIndex = pindex;
         peerman.ForgetTxHash(from, hash);
+    }
+    {
+        LOCK(cs);
+        bestChainLockBlockIndex = pindex;
     }
     CheckActiveState();
     EnforceBestChainLock(bestChainLockBlockIndex, bestChainLock, enforced);
