@@ -1323,7 +1323,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
 
     LOCK(cs_main);
 
-    static int nHighestFastAnnounce = 0;
+    static int nHighestFastAnnounce = 0; // GUARDED_BY(cs_main)
     if (pindex->nHeight <= nHighestFastAnnounce)
         return;
     nHighestFastAnnounce = pindex->nHeight;
@@ -4720,13 +4720,14 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             !pto->HasPermission(PF_FORCERELAY) // peers with the forcerelay permission should not filter txs to us
         ) {
             CAmount currentFilter = m_mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
-            static FeeFilterRounder g_filter_rounder{CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}};
+            AssertLockHeld(cs_main);
+            static FeeFilterRounder g_filter_rounder{CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}}; // GUARDED_BY(cs_main)
             if (m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
                 // Received tx-inv messages are discarded when the active
                 // chainstate is in IBD, so tell the peer to not send them.
                 currentFilter = MAX_MONEY;
             } else {
-                static const CAmount MAX_FILTER{g_filter_rounder.round(MAX_MONEY)};
+                static const CAmount MAX_FILTER{g_filter_rounder.round(MAX_MONEY)}; // GUARDED_BY(cs_main)
                 if (pto->m_tx_relay->lastSentFeeFilter == MAX_FILTER) {
                     // Send the current filter if we sent MAX_FILTER previously
                     // and made it out of IBD.
