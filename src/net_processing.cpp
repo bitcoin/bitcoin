@@ -606,6 +606,8 @@ private:
     int m_height_of_highest_fast_announce GUARDED_BY(cs_main) = 0;
 
     CNodeState *State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    CNodeState* State(const CNode& node) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return State(node.GetId()); }
+
     void ProcessBlockAvailability(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void RelayTransaction(const uint256& txid, const uint256& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -1352,7 +1354,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
         if (pnode->GetCommonVersion() < INVALID_CB_NO_BAN_VERSION || pnode->fDisconnect)
             return;
         ProcessBlockAvailability(pnode->GetId());
-        CNodeState &state = *State(pnode->GetId());
+        CNodeState &state = *State(*pnode);
         // If the peer has, or we announced to them the previous block already,
         // but we don't think they have this one, go ahead and announce it
         if (state.fPreferHeaderAndIDs && (!fWitnessEnabled || state.fWantsCmpctWitness) &&
@@ -1486,7 +1488,7 @@ void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid
     m_connman.ForEachNode([this, &txid, &wtxid](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         AssertLockHeld(::cs_main);
 
-        CNodeState* state = State(pnode->GetId());
+        CNodeState* state = State(*pnode);
         if (state == nullptr) return;
         if (state->m_wtxid_relay) {
             pnode->PushTxInventory(wtxid);
@@ -1676,7 +1678,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CChain
                 // they won't have a useful mempool to match against a compact block,
                 // and we don't feel like constructing the object for them, so
                 // instead we respond with the full, non-compact block.
-                bool fPeerWantsWitness = State(pfrom.GetId())->fWantsCmpctWitness;
+                bool fPeerWantsWitness = State(pfrom)->fWantsCmpctWitness;
                 int nSendFlags = fPeerWantsWitness ? 0 : SERIALIZE_TRANSACTION_NO_WITNESS;
                 if (CanDirectFetch(consensusParams) && pindex->nHeight >= ::ChainActive().Height() - MAX_CMPCTBLOCK_DEPTH) {
                     if ((fPeerWantsWitness || !fWitnessesPresentInARecentCompactBlock) && a_recent_compact_block && a_recent_compact_block->header.GetHash() == pindex->GetBlockHash()) {
@@ -1722,7 +1724,7 @@ CTransactionRef PeerManagerImpl::FindTxForGetData(const CNode& peer, const GenTx
     {
         LOCK(cs_main);
         // Otherwise, the transaction must have been announced recently.
-        if (State(peer.GetId())->m_recently_announced_invs.contains(gtxid.GetHash())) {
+        if (State(peer)->m_recently_announced_invs.contains(gtxid.GetHash())) {
             // If it was, it can be relayed from either the mempool...
             if (txinfo.tx) return std::move(txinfo.tx);
             // ... or the relay pool.
@@ -1788,7 +1790,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                 // Relaying a transaction with a recent but unconfirmed parent.
                 if (WITH_LOCK(pfrom.m_tx_relay->cs_tx_inventory, return !pfrom.m_tx_relay->filterInventoryKnown.contains(parent_txid))) {
                     LOCK(cs_main);
-                    State(pfrom.GetId())->m_recently_announced_invs.insert(parent_txid);
+                    State(pfrom)->m_recently_announced_invs.insert(parent_txid);
                 }
             }
         } else {
@@ -1831,7 +1833,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
 uint32_t PeerManagerImpl::GetFetchFlags(const CNode& pfrom) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     uint32_t nFetchFlags = 0;
-    if ((pfrom.GetLocalServices() & NODE_WITNESS) && State(pfrom.GetId())->fHaveWitness) {
+    if ((pfrom.GetLocalServices() & NODE_WITNESS) && State(pfrom)->fHaveWitness) {
         nFetchFlags |= MSG_WITNESS_FLAG;
     }
     return nFetchFlags;
@@ -1849,7 +1851,7 @@ void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, const CBlock& block, c
     }
     LOCK(cs_main);
     const CNetMsgMaker msgMaker(pfrom.GetCommonVersion());
-    int nSendFlags = State(pfrom.GetId())->fWantsCmpctWitness ? 0 : SERIALIZE_TRANSACTION_NO_WITNESS;
+    int nSendFlags = State(pfrom)->fWantsCmpctWitness ? 0 : SERIALIZE_TRANSACTION_NO_WITNESS;
     m_connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::BLOCKTXN, resp));
 }
 
@@ -1869,7 +1871,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
     const CBlockIndex *pindexLast = nullptr;
     {
         LOCK(cs_main);
-        CNodeState *nodestate = State(pfrom.GetId());
+        CNodeState *nodestate = State(pfrom);
 
         // If this looks like it could be a block announcement (nCount <
         // MAX_BLOCKS_TO_ANNOUNCE), use special logic for handling headers that
@@ -1924,7 +1926,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
 
     {
         LOCK(cs_main);
-        CNodeState *nodestate = State(pfrom.GetId());
+        CNodeState *nodestate = State(pfrom);
         if (nodestate->nUnconnectingHeaders > 0) {
             LogPrint(BCLog::NET, "peer=%d: resetting nUnconnectingHeaders (%d -> 0)\n", pfrom.GetId(), nodestate->nUnconnectingHeaders);
         }
@@ -1960,7 +1962,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
             while (pindexWalk && !::ChainActive().Contains(pindexWalk) && vToFetch.size() <= MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
                 if (!(pindexWalk->nStatus & BLOCK_HAVE_DATA) &&
                         !mapBlocksInFlight.count(pindexWalk->GetBlockHash()) &&
-                        (!IsWitnessEnabled(pindexWalk->pprev, m_chainparams.GetConsensus()) || State(pfrom.GetId())->fHaveWitness)) {
+                        (!IsWitnessEnabled(pindexWalk->pprev, m_chainparams.GetConsensus()) || State(pfrom)->fHaveWitness)) {
                     // We don't have this block, and it's not yet in flight.
                     vToFetch.push_back(pindexWalk);
                 }
@@ -2458,13 +2460,13 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         if((nServices & NODE_WITNESS))
         {
             LOCK(cs_main);
-            State(pfrom.GetId())->fHaveWitness = true;
+            State(pfrom)->fHaveWitness = true;
         }
 
         // Potentially mark this peer as a preferred download peer.
         {
         LOCK(cs_main);
-        UpdatePreferredDownload(pfrom, State(pfrom.GetId()));
+        UpdatePreferredDownload(pfrom, State(pfrom));
         }
 
         if (!pfrom.IsInboundConn() && !pfrom.IsBlockOnlyConn()) {
@@ -2591,7 +2593,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
     if (msg_type == NetMsgType::SENDHEADERS) {
         LOCK(cs_main);
-        State(pfrom.GetId())->fPreferHeaders = true;
+        State(pfrom)->fPreferHeaders = true;
         return;
     }
 
@@ -2602,21 +2604,21 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         if (nCMPCTBLOCKVersion == 1 || ((pfrom.GetLocalServices() & NODE_WITNESS) && nCMPCTBLOCKVersion == 2)) {
             LOCK(cs_main);
             // fProvidesHeaderAndIDs is used to "lock in" version of compact blocks we send (fWantsCmpctWitness)
-            if (!State(pfrom.GetId())->fProvidesHeaderAndIDs) {
-                State(pfrom.GetId())->fProvidesHeaderAndIDs = true;
-                State(pfrom.GetId())->fWantsCmpctWitness = nCMPCTBLOCKVersion == 2;
+            if (!State(pfrom)->fProvidesHeaderAndIDs) {
+                State(pfrom)->fProvidesHeaderAndIDs = true;
+                State(pfrom)->fWantsCmpctWitness = nCMPCTBLOCKVersion == 2;
             }
-            if (State(pfrom.GetId())->fWantsCmpctWitness == (nCMPCTBLOCKVersion == 2)) { // ignore later version announces
-                State(pfrom.GetId())->fPreferHeaderAndIDs = fAnnounceUsingCMPCTBLOCK;
+            if (State(pfrom)->fWantsCmpctWitness == (nCMPCTBLOCKVersion == 2)) { // ignore later version announces
+                State(pfrom)->fPreferHeaderAndIDs = fAnnounceUsingCMPCTBLOCK;
                 // save whether peer selects us as BIP152 high-bandwidth peer
                 // (receiving sendcmpct(1) signals high-bandwidth, sendcmpct(0) low-bandwidth)
                 pfrom.m_bip152_highbandwidth_from = fAnnounceUsingCMPCTBLOCK;
             }
-            if (!State(pfrom.GetId())->fSupportsDesiredCmpctVersion) {
+            if (!State(pfrom)->fSupportsDesiredCmpctVersion) {
                 if (pfrom.GetLocalServices() & NODE_WITNESS)
-                    State(pfrom.GetId())->fSupportsDesiredCmpctVersion = (nCMPCTBLOCKVersion == 2);
+                    State(pfrom)->fSupportsDesiredCmpctVersion = (nCMPCTBLOCKVersion == 2);
                 else
-                    State(pfrom.GetId())->fSupportsDesiredCmpctVersion = (nCMPCTBLOCKVersion == 1);
+                    State(pfrom)->fSupportsDesiredCmpctVersion = (nCMPCTBLOCKVersion == 1);
             }
         }
         return;
@@ -2633,8 +2635,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         }
         if (pfrom.GetCommonVersion() >= WTXID_RELAY_VERSION) {
             LOCK(cs_main);
-            if (!State(pfrom.GetId())->m_wtxid_relay) {
-                State(pfrom.GetId())->m_wtxid_relay = true;
+            if (!State(pfrom)->m_wtxid_relay) {
+                State(pfrom)->m_wtxid_relay = true;
                 m_wtxid_relay_peers++;
             } else {
                 LogPrint(BCLog::NET, "ignoring duplicate wtxidrelay from peer=%d\n", pfrom.GetId());
@@ -2757,7 +2759,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // Ignore INVs that don't match wtxidrelay setting.
             // Note that orphan parent fetching always uses MSG_TX GETDATAs regardless of the wtxidrelay setting.
             // This is fine as no INV messages are involved in that process.
-            if (State(pfrom.GetId())->m_wtxid_relay) {
+            if (State(pfrom)->m_wtxid_relay) {
                 if (inv.IsMsgTx()) continue;
             } else {
                 if (inv.IsMsgWtx()) continue;
@@ -2937,7 +2939,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // actually receive all the data read from disk over the network.
         LogPrint(BCLog::NET, "Peer %d sent us a getblocktxn for a block > %i deep\n", pfrom.GetId(), MAX_BLOCKTXN_DEPTH);
         CInv inv;
-        WITH_LOCK(cs_main, inv.type = State(pfrom.GetId())->fWantsCmpctWitness ? MSG_WITNESS_BLOCK : MSG_BLOCK);
+        WITH_LOCK(cs_main, inv.type = State(pfrom)->fWantsCmpctWitness ? MSG_WITNESS_BLOCK : MSG_BLOCK);
         inv.hash = req.blockhash;
         WITH_LOCK(peer->m_getdata_requests_mutex, peer->m_getdata_requests.push_back(inv));
         // The message processing loop will go around again (without pausing) and we'll respond then
@@ -2961,7 +2963,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
-        CNodeState *nodestate = State(pfrom.GetId());
+        CNodeState *nodestate = State(pfrom);
         const CBlockIndex* pindex = nullptr;
         if (locator.IsNull())
         {
@@ -3031,7 +3033,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         LOCK2(cs_main, g_cs_orphans);
 
-        CNodeState* nodestate = State(pfrom.GetId());
+        CNodeState* nodestate = State(pfrom);
 
         const uint256& hash = nodestate->m_wtxid_relay ? wtxid : txid;
         pfrom.AddKnownTx(hash);
@@ -3282,7 +3284,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         assert(pindex);
         UpdateBlockAvailability(pfrom.GetId(), pindex->GetBlockHash());
 
-        CNodeState *nodestate = State(pfrom.GetId());
+        CNodeState *nodestate = State(pfrom);
 
         // If this was a new header with more work than our tip, update the
         // peer's last block announcement time
@@ -3958,7 +3960,7 @@ void PeerManagerImpl::ConsiderEviction(CNode& pto, int64_t time_in_seconds)
 {
     AssertLockHeld(cs_main);
 
-    CNodeState &state = *State(pto.GetId());
+    CNodeState &state = *State(pto);
     const CNetMsgMaker msgMaker(pto.GetCommonVersion());
 
     if (!state.m_chain_sync.m_protect && pto.IsOutboundOrBlockRelayConn() && state.fSyncStarted) {
@@ -4039,7 +4041,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(int64_t time_in_seconds)
             // at all.
             // Note that we only request blocks from a peer if we learn of a
             // valid headers chain with at least as much work as our tip.
-            CNodeState *node_state = State(pnode->GetId());
+            CNodeState *node_state = State(*pnode);
             if (node_state == nullptr ||
                 (time_in_seconds - pnode->nTimeConnected >= MINIMUM_CONNECT_TIME && node_state->nBlocksInFlight == 0)) {
                 pnode->fDisconnect = true;
@@ -4068,7 +4070,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(int64_t time_in_seconds)
             // Only consider outbound-full-relay peers that are not already
             // marked for disconnection
             if (!pnode->IsFullOutboundConn() || pnode->fDisconnect) return;
-            CNodeState *state = State(pnode->GetId());
+            CNodeState *state = State(*pnode);
             if (state == nullptr) return; // shouldn't be possible, but just in case
             // Don't evict our protected peers
             if (state->m_chain_sync.m_protect) return;
@@ -4086,7 +4088,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(int64_t time_in_seconds)
                 // it time for new information to have arrived.
                 // Also don't disconnect any peer we're trying to download a
                 // block from.
-                CNodeState &state = *State(pnode->GetId());
+                CNodeState &state = *State(*pnode);
                 if (time_in_seconds - pnode->nTimeConnected > MINIMUM_CONNECT_TIME && state.nBlocksInFlight == 0) {
                     LogPrint(BCLog::NET, "disconnecting extra outbound peer=%d (last block announcement received at time %d)\n", pnode->GetId(), oldest_block_announcement);
                     pnode->fDisconnect = true;
@@ -4224,7 +4226,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
     {
         LOCK(cs_main);
 
-        CNodeState &state = *State(pto->GetId());
+        CNodeState &state = *State(*pto);
 
         // Address refresh broadcast
         auto current_time = GetTime<std::chrono::microseconds>();
@@ -4564,7 +4566,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         }
                         if (pto->m_tx_relay->pfilter && !pto->m_tx_relay->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                         // Send
-                        State(pto->GetId())->m_recently_announced_invs.insert(hash);
+                        State(*pto)->m_recently_announced_invs.insert(hash);
                         vInv.push_back(inv);
                         nRelayedTransactions++;
                         {
