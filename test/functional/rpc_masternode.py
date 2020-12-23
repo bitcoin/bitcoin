@@ -17,17 +17,33 @@ class RPCMasternodeTest(DashTestFramework):
 
     def run_test(self):
         self.log.info("test that results from `winners` and `payments` RPCs match")
-        bi = self.nodes[0].getblockchaininfo()
-        height = bi["blocks"]
-        blockhash = bi["bestblockhash"]
-        winners_payee = self.nodes[0].masternode("winners")[str(height)]
-        payments = self.nodes[0].masternode("payments", blockhash)
-        assert_equal(len(payments), 1)
-        payments_block = payments[0]
-        payments_payee = payments_block["masternodes"][0]["payees"][0]["address"]
-        assert_equal(payments_block["height"], height)
-        assert_equal(payments_block["blockhash"], blockhash)
-        assert_equal(winners_payee, payments_payee)
+        blockhash = ""
+        payments = []
+        # we expect some masternodes to have 0 operator reward and some to have non-0 operator reward
+        checked_0_operator_reward = False
+        checked_non_0_operator_reward = False
+        while not checked_0_operator_reward or not checked_non_0_operator_reward:
+            self.nodes[0].generate(1)
+            bi = self.nodes[0].getblockchaininfo()
+            height = bi["blocks"]
+            blockhash = bi["bestblockhash"]
+            winners_payee = self.nodes[0].masternode("winners")[str(height)]
+            payments = self.nodes[0].masternode("payments", blockhash)
+            assert_equal(len(payments), 1)
+            payments_block = payments[0]
+            payments_block_payees = payments_block["masternodes"][0]["payees"]
+            payments_payee = ""
+            for i in range(0, len(payments_block_payees)):
+                payments_payee += payments_block_payees[i]["address"]
+                if i < len(payments_block_payees) - 1:
+                    payments_payee += ", "
+            assert_equal(payments_block["height"], height)
+            assert_equal(payments_block["blockhash"], blockhash)
+            assert_equal(winners_payee, payments_payee)
+            if len(payments_block_payees) == 1:
+                checked_0_operator_reward = True
+            if len(payments_block_payees) > 1:
+                checked_non_0_operator_reward = True
 
         self.log.info("test various `payments` RPC options")
         payments1 = self.nodes[0].masternode("payments", blockhash, -1)
@@ -45,9 +61,10 @@ class RPCMasternodeTest(DashTestFramework):
         gbt_masternode = self.nodes[0].getblocktemplate()["masternode"]
         self.nodes[0].generate(1)
         payments_masternode = self.nodes[0].masternode("payments")[0]["masternodes"][0]
-        assert_equal(gbt_masternode[0]["payee"], payments_masternode["payees"][0]["address"])
-        assert_equal(gbt_masternode[0]["script"], payments_masternode["payees"][0]["script"])
-        assert_equal(gbt_masternode[0]["amount"], payments_masternode["payees"][0]["amount"])
+        for i in range(0, len(gbt_masternode)):
+            assert_equal(gbt_masternode[i]["payee"], payments_masternode["payees"][i]["address"])
+            assert_equal(gbt_masternode[i]["script"], payments_masternode["payees"][i]["script"])
+            assert_equal(gbt_masternode[i]["amount"], payments_masternode["payees"][i]["amount"])
 
 
 if __name__ == '__main__':

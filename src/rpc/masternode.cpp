@@ -291,6 +291,12 @@ std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterministicMNCP
             assert(false);
         }
         strPayments = EncodeDestination(dest);
+        if (payee->nOperatorReward != 0 && payee->pdmnState->scriptOperatorPayout != CScript()) {
+            if (!ExtractDestination(payee->pdmnState->scriptOperatorPayout, dest)) {
+                assert(false);
+            }
+            strPayments += ", " + EncodeDestination(dest);
+        }
     }
     if (CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
         std::vector<CTxOut> voutSuperblock;
