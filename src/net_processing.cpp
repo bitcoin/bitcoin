@@ -1490,13 +1490,13 @@ void PeerManagerImpl::RelayTransaction(const uint256& txid, const uint256& wtxid
  * address. So within 24h we will likely relay a given address once. This is to
  * prevent a peer from unjustly giving their address better propagation by sending
  * it to us repeatedly.
- * @param[in] originator The peer that sent us the address. We don't want to relay it back.
+ * @param[in] originator The id of the peer that sent us the address. We don't want to relay it back.
  * @param[in] addr Address to relay.
  * @param[in] fReachable Whether the address' network is reachable. We relay unreachable
  * addresses less.
  * @param[in] connman Connection manager to choose nodes to relay to.
  */
-static void RelayAddress(const CNode& originator,
+static void RelayAddress(NodeId originator,
                          const CAddress& addr,
                          bool fReachable,
                          const CConnman& connman)
@@ -1516,8 +1516,8 @@ static void RelayAddress(const CNode& originator,
     std::array<std::pair<uint64_t, CNode*>,2> best{{{0, nullptr}, {0, nullptr}}};
     assert(nRelayNodes <= best.size());
 
-    auto sortfunc = [&best, &hasher, nRelayNodes, &originator, &addr](CNode* pnode) {
-        if (pnode->RelayAddrsWithConn() && pnode != &originator && pnode->IsAddrCompatible(addr)) {
+    auto sortfunc = [&best, &hasher, nRelayNodes, originator, &addr](CNode* pnode) {
+        if (pnode->RelayAddrsWithConn() && pnode->GetId() != originator && pnode->IsAddrCompatible(addr)) {
             uint64_t hashKey = CSipHasher(hasher).Write(pnode->GetId()).Finalize();
             for (unsigned int i = 0; i < nRelayNodes; i++) {
                  if (hashKey > best[i].first) {
@@ -2683,7 +2683,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             if (addr.nTime > nSince && !pfrom.fGetAddr && vAddr.size() <= 10 && addr.IsRoutable())
             {
                 // Relay to a limited number of other nodes
-                RelayAddress(pfrom, addr, fReachable, m_connman);
+                RelayAddress(pfrom.GetId(), addr, fReachable, m_connman);
             }
             // Do not store addresses outside our network
             if (fReachable)
