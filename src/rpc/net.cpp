@@ -117,6 +117,10 @@ static UniValue getpeerinfo(const JSONRPCRequest& request)
                                 {RPCResult::Type::NUM, "n", "The heights of blocks we're currently asking from this peer"},
                             }},
                             {RPCResult::Type::BOOL, "whitelisted", "Whether the peer is whitelisted"},
+                            {RPCResult::Type::ARR, "permissions", "Any special permissions that have been granted to this peer",
+                            {
+                                {RPCResult::Type::STR, "permission_type", Join(NET_PERMISSIONS_DOC, ",\n") + ".\n"},
+                            }},
                             {RPCResult::Type::NUM, "minfeefilter", "The minimum fee rate for transactions this peer accepts"},
                             {RPCResult::Type::OBJ_DYN, "bytessent_per_msg", "",
                             {
