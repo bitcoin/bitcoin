@@ -143,8 +143,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     addPackageTxs<ancestor_score>(nPackagesSelected, nDescendantsUpdated);
 
     // VeriBlock: add PopData into the block
-    pblock->popData = VeriBlock::getPopData();
-    // VeriBlock: add PopData into the block
     if (chainparams.isPopActive(nHeight))
     {
         pblock->popData = VeriBlock::getPopData();
