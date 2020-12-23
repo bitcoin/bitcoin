@@ -1050,4 +1050,13 @@ bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mocka
  */
 const AssumeutxoData* ExpectedAssumeutxo(const int height, const CChainParams& params);
 
+/** Identifies blocks that overwrote an existing coinbase output in the UTXO set (see BIP30) */
+bool IsBIP30Repeat(const CBlockIndex* pindex);
+
+/** Identifies blocks which coinbase output was subsequently overwritten in the UTXO set (see BIP30) */
+bool IsBIP30Unspendable(const CBlockIndex* pindex);
+
+/** Identifies blocks with unspendable coinbase outputs (BIP30 and Genesis) */
+bool IsUnspendableCoinbase(const CBlockIndex* pindex);
+
 #endif // BITCOIN_VALIDATION_H
