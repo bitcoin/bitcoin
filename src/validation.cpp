@@ -689,13 +689,16 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // Check for non-standard pay-to-script-hash in inputs
     const auto& params = args.m_chainparams.GetConsensus();
     auto taproot_state = VersionBitsState(::ChainActive().Tip(), params, Consensus::DEPLOYMENT_TAPROOT, versionbitscache);
-    if (fRequireStandard && !AreInputsStandard(tx, m_view, taproot_state == ThresholdState::ACTIVE)) {
-        return state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, "bad-txns-nonstandard-inputs");
+    std::string reason_inputs;
+    if (fRequireStandard && !AreInputsStandard(tx, m_view, reason_inputs, taproot_state == ThresholdState::ACTIVE)) {
+        return state.Invalid(TxValidationResult::TX_INPUTS_NOT_STANDARD, reason_inputs);
     }
 
     // Check for non-standard witnesses.
-    if (tx.HasWitness() && fRequireStandard && !IsWitnessStandard(tx, m_view))
-        return state.Invalid(TxValidationResult::TX_WITNESS_MUTATED, "bad-witness-nonstandard");
+    std::string reason_witness;
+    if (tx.HasWitness() && fRequireStandard && !IsWitnessStandard(tx, m_view, reason_witness)) {
+        return state.Invalid(TxValidationResult::TX_WITNESS_MUTATED, reason_witness);
+    }
 
     int64_t nSigOpsCost = GetTransactionSigOpCost(tx, m_view, STANDARD_SCRIPT_VERIFY_FLAGS);
 

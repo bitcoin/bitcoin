@@ -95,9 +95,10 @@ FUZZ_TARGET_INIT(transaction, initialize_transaction)
 
     CCoinsView coins_view;
     const CCoinsViewCache coins_view_cache(&coins_view);
-    (void)AreInputsStandard(tx, coins_view_cache, false);
-    (void)AreInputsStandard(tx, coins_view_cache, true);
-    (void)IsWitnessStandard(tx, coins_view_cache);
+    std::string reason_dummy;
+    (void)AreInputsStandard(tx, coins_view_cache, reason_dummy, false);
+    (void)AreInputsStandard(tx, coins_view_cache, reason_dummy, true);
+    (void)IsWitnessStandard(tx, coins_view_cache, reason_dummy);
 
     UniValue u(UniValue::VOBJ);
     // ValueFromAmount(i) not defined when i == std::numeric_limits<int64_t>::min()

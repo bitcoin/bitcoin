@@ -156,7 +156,7 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
  *
  * Note that only the non-witness portion of the transaction is checked here.
  */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, bool taproot_active)
+static bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, bool taproot_active)
 {
     if (tx.IsCoinBase())
         return true; // Coinbases don't use vin normally
@@ -192,8 +192,16 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs,
 
     return true;
 }
+bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, std::string& reason_out, bool taproot_active)
+{
+    if (!AreInputsStandard(tx, mapInputs, taproot_active)) {
+        reason_out = "bad-txns-nonstandard-inputs";
+        return false;
+    }
+    return true;
+}
 
-bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
+static bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
 {
     if (tx.IsCoinBase())
         return true; // Coinbases are skipped
@@ -273,6 +281,14 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
                 return false;
             }
         }
+    }
+    return true;
+}
+bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, std::string& reason_out)
+{
+    if (!IsWitnessStandard(tx, mapInputs)) {
+        reason_out = "bad-witness-nonstandard";
+        return false;
     }
     return true;
 }
