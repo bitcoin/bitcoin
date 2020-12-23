@@ -425,7 +425,6 @@ UniValue CGovernanceObject::ToJson() const
     obj.pushKV("collateralHash", GetCollateralHash().ToString());
     obj.pushKV("createdAt", GetCreationTime());
     obj.pushKV("revision", nRevision);
-    obj.pushKV("type", nObjectType);
     UniValue data;
     if (!data.read(GetDataAsPlainString())) {
         data.clear();
