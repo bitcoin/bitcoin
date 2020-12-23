@@ -345,10 +345,7 @@ private:
      * their own locks.
      */
     std::map<NodeId, PeerRef> m_peer_map GUARDED_BY(m_peer_mutex);
-};
-} // namespace
 
-namespace {
     /** Number of nodes with fSyncStarted. */
     int nSyncStarted GUARDED_BY(cs_main) = 0;
 
@@ -360,6 +357,15 @@ namespace {
      */
     std::map<uint256, std::pair<NodeId, bool>> mapBlockSource GUARDED_BY(cs_main);
 
+    /** Number of peers with wtxid relay. */
+    int m_wtxid_relay_peers GUARDED_BY(cs_main) = 0;
+
+    /** Number of outbound peers with m_chain_sync.m_protect. */
+    int m_outbound_peers_with_protect_from_disconnect GUARDED_BY(cs_main) = 0;
+};
+} // namespace
+
+namespace {
     /**
      * Filter for transactions that were recently rejected by
      * AcceptToMemoryPool. These are not rerequested until the chain tip
@@ -422,12 +428,6 @@ namespace {
 
     /** Number of peers from which we're downloading blocks. */
     int nPeersWithValidatedDownloads GUARDED_BY(cs_main) = 0;
-
-    /** Number of peers with wtxid relay. */
-    int g_wtxid_relay_peers GUARDED_BY(cs_main) = 0;
-
-    /** Number of outbound peers with m_chain_sync.m_protect. */
-    int g_outbound_peers_with_protect_from_disconnect GUARDED_BY(cs_main) = 0;
 
     /** When our tip was last updated. */
     std::atomic<int64_t> g_last_tip_update(0);
@@ -911,7 +911,7 @@ void PeerManagerImpl::AddTxAnnouncement(const CNode& node, const GenTxid& gtxid,
     auto delay = std::chrono::microseconds{0};
     const bool preferred = state->fPreferredDownload;
     if (!preferred) delay += NONPREF_PEER_TX_DELAY;
-    if (!gtxid.IsWtxid() && g_wtxid_relay_peers > 0) delay += TXID_RELAY_DELAY;
+    if (!gtxid.IsWtxid() && m_wtxid_relay_peers > 0) delay += TXID_RELAY_DELAY;
     const bool overloaded = !node.HasPermission(PF_RELAY) &&
         m_txrequest.CountInFlight(nodeid) >= MAX_PEER_TX_REQUEST_IN_FLIGHT;
     if (overloaded) delay += OVERLOADED_PEER_TX_DELAY;
@@ -1004,10 +1004,10 @@ void PeerManagerImpl::FinalizeNode(const CNode& node, bool& fUpdateConnectionTim
     nPreferredDownload -= state->fPreferredDownload;
     nPeersWithValidatedDownloads -= (state->nBlocksInFlightValidHeaders != 0);
     assert(nPeersWithValidatedDownloads >= 0);
-    g_outbound_peers_with_protect_from_disconnect -= state->m_chain_sync.m_protect;
-    assert(g_outbound_peers_with_protect_from_disconnect >= 0);
-    g_wtxid_relay_peers -= state->m_wtxid_relay;
-    assert(g_wtxid_relay_peers >= 0);
+    m_outbound_peers_with_protect_from_disconnect -= state->m_chain_sync.m_protect;
+    assert(m_outbound_peers_with_protect_from_disconnect >= 0);
+    m_wtxid_relay_peers -= state->m_wtxid_relay;
+    assert(m_wtxid_relay_peers >= 0);
 
     mapNodeState.erase(nodeid);
 
@@ -1016,8 +1016,8 @@ void PeerManagerImpl::FinalizeNode(const CNode& node, bool& fUpdateConnectionTim
         assert(mapBlocksInFlight.empty());
         assert(nPreferredDownload == 0);
         assert(nPeersWithValidatedDownloads == 0);
-        assert(g_outbound_peers_with_protect_from_disconnect == 0);
-        assert(g_wtxid_relay_peers == 0);
+        assert(m_outbound_peers_with_protect_from_disconnect == 0);
+        assert(m_wtxid_relay_peers == 0);
         assert(m_txrequest.Size() == 0);
     }
     LogPrint(BCLog::NET, "Cleared nodestate for peer=%d\n", nodeid);
@@ -2146,10 +2146,10 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
         // thus always subject to eviction under the bad/lagging chain logic.
         // See ChainSyncTimeoutState.
         if (!pfrom.fDisconnect && pfrom.IsFullOutboundConn() && nodestate->pindexBestKnownBlock != nullptr) {
-            if (g_outbound_peers_with_protect_from_disconnect < MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT && nodestate->pindexBestKnownBlock->nChainWork >= ::ChainActive().Tip()->nChainWork && !nodestate->m_chain_sync.m_protect) {
+            if (m_outbound_peers_with_protect_from_disconnect < MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT && nodestate->pindexBestKnownBlock->nChainWork >= ::ChainActive().Tip()->nChainWork && !nodestate->m_chain_sync.m_protect) {
                 LogPrint(BCLog::NET, "Protecting outbound peer=%d from eviction\n", pfrom.GetId());
                 nodestate->m_chain_sync.m_protect = true;
-                ++g_outbound_peers_with_protect_from_disconnect;
+                ++m_outbound_peers_with_protect_from_disconnect;
             }
         }
     }
@@ -2759,7 +2759,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             LOCK(cs_main);
             if (!State(pfrom.GetId())->m_wtxid_relay) {
                 State(pfrom.GetId())->m_wtxid_relay = true;
-                g_wtxid_relay_peers++;
+                m_wtxid_relay_peers++;
             } else {
                 LogPrint(BCLog::NET, "ignoring duplicate wtxidrelay from peer=%d\n", pfrom.GetId());
             }
