@@ -145,6 +145,10 @@ static RPCHelpMan getpeerinfo()
                         {RPCResult::Type::NUM, "n", "The heights of blocks we're currently asking from this peer"},
                     }},
                     {RPCResult::Type::BOOL, "whitelisted", "Whether the peer is whitelisted"},
+                    {RPCResult::Type::ARR, "permissions", "Any special permissions that have been granted to this peer",
+                    {
+                        {RPCResult::Type::STR, "permission_type", Join(NET_PERMISSIONS_DOC, ",\n") + ".\n"},
+                    }},
                     {RPCResult::Type::OBJ_DYN, "bytessent_per_msg", "",
                     {
                         {RPCResult::Type::NUM, "msg", "The total bytes sent aggregated by message type\n"
