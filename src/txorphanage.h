@@ -80,6 +80,9 @@ protected:
     /** Index from wtxid into the m_orphans to lookup orphan
      *  transactions using their witness ids. */
     std::map<uint256, OrphanMap::iterator> m_wtxid_to_orphan_it GUARDED_BY(g_cs_orphans);
+
+    /** Timestamp for next sweep of orphans by LimitOrphanTxSize */
+    int64_t m_next_sweep GUARDED_BY(g_cs_orphans) = 0;
 };
 
 #endif // BITCOIN_TXORPHANAGE_H

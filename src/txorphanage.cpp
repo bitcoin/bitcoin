@@ -107,9 +107,8 @@ unsigned int TxOrphanage::LimitOrphans(unsigned int max_orphans)
     AssertLockHeld(g_cs_orphans);
 
     unsigned int nEvicted = 0;
-    static int64_t nNextSweep; // GUARDED_BY(g_cs_orphans)
     int64_t nNow = GetTime();
-    if (nNextSweep <= nNow) {
+    if (m_next_sweep <= nNow) {
         // Sweep out expired orphan pool entries:
         int nErased = 0;
         int64_t nMinExpTime = nNow + ORPHAN_TX_EXPIRE_TIME - ORPHAN_TX_EXPIRE_INTERVAL;
@@ -124,7 +123,7 @@ unsigned int TxOrphanage::LimitOrphans(unsigned int max_orphans)
             }
         }
         // Sweep again 5 minutes after the next entry that expires in order to batch the linear scan.
-        nNextSweep = nMinExpTime + ORPHAN_TX_EXPIRE_INTERVAL;
+        m_next_sweep = nMinExpTime + ORPHAN_TX_EXPIRE_INTERVAL;
         if (nErased > 0) LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx due to expiration\n", nErased);
     }
     FastRandomContext rng;

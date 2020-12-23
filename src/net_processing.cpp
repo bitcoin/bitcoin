@@ -602,6 +602,9 @@ private:
     /** Number of preferable block download peers. */
     int nPreferredDownload GUARDED_BY(cs_main) = 0;
 
+    /** Height of highest fast announce block, updated by NewPoWValidBlock */
+    int m_height_of_highest_fast_announce GUARDED_BY(cs_main) = 0;
+
     CNodeState *State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ProcessBlockAvailability(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -619,6 +622,10 @@ private:
     std::shared_ptr<const CBlockHeaderAndShortTxIDs> most_recent_compact_block GUARDED_BY(cs_most_recent_block);
     uint256 most_recent_block_hash GUARDED_BY(cs_most_recent_block);
     bool fWitnessesPresentInMostRecentCompactBlock GUARDED_BY(cs_most_recent_block) = false;
+
+    // Fee calculator helpers for SendMessages()
+    FeeFilterRounder m_filter_rounder GUARDED_BY(cs_main) {CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}};
+    const CAmount MAX_FILTER GUARDED_BY(cs_main) {m_filter_rounder.round(MAX_MONEY)};
 };
 } // namespace
 
@@ -1323,10 +1330,9 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
 
     LOCK(cs_main);
 
-    static int nHighestFastAnnounce = 0; // GUARDED_BY(cs_main)
-    if (pindex->nHeight <= nHighestFastAnnounce)
+    if (pindex->nHeight <= m_height_of_highest_fast_announce)
         return;
-    nHighestFastAnnounce = pindex->nHeight;
+    m_height_of_highest_fast_announce = pindex->nHeight;
 
     bool fWitnessEnabled = IsWitnessEnabled(pindex->pprev, m_chainparams.GetConsensus());
     uint256 hashBlock(pblock->GetHash());
@@ -4721,13 +4727,11 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         ) {
             CAmount currentFilter = m_mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
             AssertLockHeld(cs_main);
-            static FeeFilterRounder g_filter_rounder{CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}}; // GUARDED_BY(cs_main)
             if (m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
                 // Received tx-inv messages are discarded when the active
                 // chainstate is in IBD, so tell the peer to not send them.
                 currentFilter = MAX_MONEY;
             } else {
-                static const CAmount MAX_FILTER{g_filter_rounder.round(MAX_MONEY)}; // GUARDED_BY(cs_main)
                 if (pto->m_tx_relay->lastSentFeeFilter == MAX_FILTER) {
                     // Send the current filter if we sent MAX_FILTER previously
                     // and made it out of IBD.
@@ -4735,7 +4739,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 }
             }
             if (count_microseconds(current_time) > pto->m_tx_relay->nextSendTimeFeeFilter) {
-                CAmount filterToSend = g_filter_rounder.round(currentFilter);
+                CAmount filterToSend = m_filter_rounder.round(currentFilter);
                 // We always have a fee filter of at least minRelayTxFee
                 filterToSend = std::max(filterToSend, ::minRelayTxFee.GetFeePerK());
                 if (filterToSend != pto->m_tx_relay->lastSentFeeFilter) {
