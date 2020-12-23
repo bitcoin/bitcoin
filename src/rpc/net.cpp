@@ -138,8 +138,6 @@ static RPCHelpMan getpeerinfo()
                             {
                                 {RPCResult::Type::NUM, "n", "The heights of blocks we're currently asking from this peer"},
                             }},
-                            {RPCResult::Type::BOOL, "whitelisted", /* optional */ true, "Whether the peer is whitelisted with default permissions\n"
-                                                                                        "(DEPRECATED, returned only if config option -deprecatedrpc=whitelisted is passed)"},
                             {RPCResult::Type::ARR, "permissions", "Any special permissions that have been granted to this peer",
                             {
                                 {RPCResult::Type::STR, "permission_type", Join(NET_PERMISSIONS_DOC, ",\n") + ".\n"},
@@ -230,10 +228,6 @@ static RPCHelpMan getpeerinfo()
                 heights.push_back(height);
             }
             obj.pushKV("inflight", heights);
-        }
-        if (IsDeprecatedRPCEnabled("whitelisted")) {
-            // whitelisted is deprecated in v0.21 for removal in v0.22
-            obj.pushKV("whitelisted", stats.m_legacyWhitelisted);
         }
         UniValue permissions(UniValue::VARR);
         for (const auto& permission : NetPermissions::ToStrings(stats.m_permissionFlags)) {

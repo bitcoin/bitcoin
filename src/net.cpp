@@ -599,7 +599,6 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
         X(mapRecvBytesPerMsgCmd);
         X(nRecvBytes);
     }
-    X(m_legacyWhitelisted);
     X(m_permissionFlags);
     if (m_tx_relay != nullptr) {
         LOCK(m_tx_relay->cs_feeFilter);
@@ -1122,8 +1121,6 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     CNode* pnode = new CNode(id, nodeServices, GetBestHeight(), hSocket, addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", ConnectionType::INBOUND, inbound_onion);
     pnode->AddRef();
     pnode->m_permissionFlags = permissionFlags;
-    // If this flag is present, the user probably expect that RPC and QT report it as whitelisted (backward compatibility)
-    pnode->m_legacyWhitelisted = legacyWhitelisted;
     pnode->m_prefer_evict = discouraged;
     m_msgproc->InitializeNode(pnode);
 
