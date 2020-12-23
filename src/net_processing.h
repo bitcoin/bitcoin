@@ -94,11 +94,47 @@ struct Peer {
 
 using PeerRef = std::shared_ptr<Peer>;
 
-class PeerManager final : public CValidationInterface, public NetEventsInterface {
+class PeerManager : public CValidationInterface, public NetEventsInterface
+{
 public:
-    PeerManager(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
-                CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                bool ignore_incoming_txs);
+    static std::unique_ptr<PeerManager> make(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
+                                             CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool,
+                                             bool ignore_incoming_txs);
+    virtual ~PeerManager() { }
+
+    /** Get statistics from node state */
+    virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) = 0;
+
+    /** Whether this node ignores txs received over p2p. */
+    virtual bool IgnoresIncomingTxs() = 0;
+
+    /** Set the best height */
+    virtual void SetBestHeight(int height) = 0;
+
+    /**
+     * Increment peer's misbehavior score. If the new value >= DISCOURAGEMENT_THRESHOLD, mark the node
+     * to be discouraged, meaning the peer might be disconnected and added to the discouragement filter.
+     * Public for unit testing.
+     */
+    virtual void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message) = 0;
+
+    /**
+     * Evict extra outbound peers. If we think our tip may be stale, connect to an extra outbound.
+     * Public for unit testing.
+     */
+    virtual void CheckForStaleTipAndEvictPeers() = 0;
+
+    /** Process a single message from a peer. Public for fuzz testing */
+    virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
+                                const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) = 0;
+};
+
+class PeerManagerImpl final : public PeerManager
+{
+public:
+    PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
+                    CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool,
+                    bool ignore_incoming_txs);
 
     /** Overridden from CValidationInterface. */
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
@@ -113,31 +149,14 @@ public:
     bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override;
     bool SendMessages(CNode* pto) override EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing);
 
-    /** Get statistics from node state */
-    bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats);
-
-    /** Whether this node ignores txs received over p2p. */
-    bool IgnoresIncomingTxs() { return m_ignore_incoming_txs; };
-
-    /** Set the best height */
-    void SetBestHeight(int height) { m_best_height = height; };
-
-    /**
-     * Increment peer's misbehavior score. If the new value >= DISCOURAGEMENT_THRESHOLD, mark the node
-     * to be discouraged, meaning the peer might be disconnected and added to the discouragement filter.
-     * Public for unit testing.
-     */
-    void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message);
-
-    /**
-     * Evict extra outbound peers. If we think our tip may be stale, connect to an extra outbound.
-     * Public for unit testing.
-     */
-    void CheckForStaleTipAndEvictPeers();
-
-    /** Process a single message from a peer. Public for fuzz testing */
+    /** Implement PeerManager */
+    void CheckForStaleTipAndEvictPeers() override;
+    bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) override;
+    bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
+    void SetBestHeight(int height) override { m_best_height = height; };
+    void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message) override;
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
-                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc);
+                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override;
 
 private:
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */

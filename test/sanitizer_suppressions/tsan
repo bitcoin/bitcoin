@@ -13,7 +13,7 @@ mutex:CConnman::ThreadOpenConnections
 mutex:CConnman::ThreadOpenAddedConnections
 mutex:CConnman::SocketHandler
 mutex:UpdateTip
-mutex:PeerManager::UpdatedBlockTip
+mutex:PeerManagerImpl::UpdatedBlockTip
 mutex:g_best_block_mutex
 
 # race (TODO fix)
