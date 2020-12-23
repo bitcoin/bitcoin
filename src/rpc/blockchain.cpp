@@ -2382,7 +2382,7 @@ static RPCHelpMan scantxoutset()
             // SYSCOIN
             if(!coin.out.assetInfo.IsNull()) {
                 unspent.pushKV("asset_guid", coin.out.assetInfo.nAsset);
-                unspent.pushKV("asset_amount", coin.out.assetInfo.nValue);
+                unspent.pushKV("asset_amount_sat", coin.out.assetInfo.nValue);
             }
 
             unspents.push_back(unspent);

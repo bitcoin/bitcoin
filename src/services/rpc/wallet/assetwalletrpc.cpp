@@ -139,7 +139,7 @@ bool AssetMintWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, c
                 nTotal += voutAsset.nValue;
                 UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
                 oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
-                oAssetAllocationReceiverOutputObj.__pushKV("amount", voutAsset.nValue);
+                oAssetAllocationReceiverOutputObj.__pushKV("amount_sat", voutAsset.nValue);
                 oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
             }
             oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
@@ -155,7 +155,7 @@ bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, 
     entry.__pushKV("txtype", stringFromSyscoinTx(wtx.tx->nVersion));
     entry.__pushKV("asset_guid", assetInfo.nAsset);
     if(IsAssetAllocationTx(wtx.tx->nVersion)) {
-        entry.__pushKV("amount", assetInfo.nValue);
+        entry.__pushKV("amount_sat", assetInfo.nValue);
         entry.__pushKV("action", strCategory);
     }
     return true;
