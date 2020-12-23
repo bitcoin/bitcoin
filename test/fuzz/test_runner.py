@@ -5,13 +5,13 @@
 """Run fuzz test targets.
 """
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import argparse
 import configparser
 import logging
 import os
 import subprocess
 import sys
+import time
 
 
 def main():
@@ -144,35 +144,33 @@ def main():
         logging.error("subprocess timed out: Currently only libFuzzer is supported")
         sys.exit(1)
 
-    with ThreadPoolExecutor(max_workers=args.par) as fuzz_pool:
-        if args.generate:
-            return generate_corpus_seeds(
-                fuzz_pool=fuzz_pool,
-                build_dir=config["environment"]["BUILDDIR"],
-                seed_dir=args.seed_dir,
-                targets=test_list_selection,
-            )
+    if args.generate:
+        return generate_corpus_seeds(
+            max_jobs=args.par,
+            build_dir=config["environment"]["BUILDDIR"],
+            seed_dir=args.seed_dir,
+            targets=test_list_selection,
+        )
 
-        if args.m_dir:
-            merge_inputs(
-                fuzz_pool=fuzz_pool,
-                corpus=args.seed_dir,
-                test_list=test_list_selection,
-                build_dir=config["environment"]["BUILDDIR"],
-                merge_dir=args.m_dir,
-            )
-            return
-
-        run_once(
-            fuzz_pool=fuzz_pool,
+    if args.m_dir:
+        merge_inputs(
+            max_jobs=args.par,
             corpus=args.seed_dir,
             test_list=test_list_selection,
             build_dir=config["environment"]["BUILDDIR"],
-            use_valgrind=args.valgrind,
+            merge_dir=args.m_dir,
         )
+        return
 
+    run_once(
+        max_jobs=args.par,
+        corpus=args.seed_dir,
+        test_list=test_list_selection,
+        build_dir=config["environment"]["BUILDDIR"],
+        use_valgrind=args.valgrind,
+    )
 
-def generate_corpus_seeds(*, fuzz_pool, build_dir, seed_dir, targets):
+def generate_corpus_seeds(*, max_jobs, build_dir, seed_dir, targets):
     """Generates new corpus seeds.
 
     Run {targets} without input, and outputs the generated corpus seeds to
@@ -180,72 +178,84 @@ def generate_corpus_seeds(*, fuzz_pool, build_dir, seed_dir, targets):
     """
     logging.info("Generating corpus seeds to {}".format(seed_dir))
 
-    def job(command, t):
-        logging.debug("Running '{}'\n".format(" ".join(command)))
-        logging.debug("Command '{}' output:\n'{}'\n".format(
-            ' '.join(command),
-            subprocess.run(
-                command,
-                env={
-                    'FUZZ': t
-                },
-                check=True,
-                stderr=subprocess.PIPE,
-                universal_newlines=True,
-            ).stderr))
-
-    futures = []
+    jobs = []
     for target in targets:
         target_seed_dir = os.path.join(seed_dir, target)
         os.makedirs(target_seed_dir, exist_ok=True)
-        command = [
+        args = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', 'fuzz'),
             "-runs=100000",
             target_seed_dir,
         ]
-        futures.append(fuzz_pool.submit(job, command, target))
+        jobs.append([target, args])
 
-    for future in as_completed(futures):
-        future.result()
+    running_jobs = set()
+    while len(jobs) > 0 or len(running_jobs) > 0:
+        if len(running_jobs) < max_jobs and len(jobs) > 0:
+            target, args = jobs.pop()
+            logging.debug("Running '{}' '{}'\n".format(target, " ".join(args)))
+            job = subprocess.Popen(
+                args,
+                env={
+                    'FUZZ': target
+                },
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True)
+            running_jobs.add(job)
 
+        dead_jobs = set()
+        for job in running_jobs:
+            ret = job.poll()
+            if ret is not None:
+                logging.debug("args:'{}'\nstdout: '{}'\nstderr: '{}'\n".format(' '.join(job.args), job.stdout.read(), job.stderr.read()))
+                dead_jobs.add(job)
+        running_jobs -= dead_jobs
+        time.sleep(0.1)
 
-def merge_inputs(*, fuzz_pool, corpus, test_list, build_dir, merge_dir):
+def merge_inputs(*, max_jobs, corpus, test_list, build_dir, merge_dir):
     logging.info("Merge the inputs in the passed dir into the seed_dir. Passed dir {}".format(merge_dir))
     jobs = []
-    for t in test_list:
+    for target in test_list:
+        os.makedirs(os.path.join(corpus, target), exist_ok=True)
+        os.makedirs(os.path.join(merge_dir, target), exist_ok=True)
         args = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', 'fuzz'),
             '-merge=1',
             '-use_value_profile=1',  # Also done by oss-fuzz https://github.com/google/oss-fuzz/issues/1406#issuecomment-387790487
-            os.path.join(corpus, t),
-            os.path.join(merge_dir, t),
+            os.path.join(corpus, target),
+            os.path.join(merge_dir, target),
         ]
-        os.makedirs(os.path.join(corpus, t), exist_ok=True)
-        os.makedirs(os.path.join(merge_dir, t), exist_ok=True)
+        jobs.append([target, args])
 
-        def job(t, args):
-            output = 'Run {} with args {}\n'.format(t, " ".join(args))
-            output += subprocess.run(
+    running_jobs = set()
+    while len(jobs) > 0 or len(running_jobs) > 0:
+        if len(running_jobs) < max_jobs and len(jobs) > 0:
+            target, args = jobs.pop()
+            logging.debug("Running '{}' '{}'\n".format(target, " ".join(args)))
+            job = subprocess.Popen(
                 args,
                 env={
-                    'FUZZ': t
+                    'FUZZ': target
                 },
-                check=True,
+                stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
-                universal_newlines=True,
-            ).stderr
-            logging.debug(output)
+                universal_newlines=True)
+            running_jobs.add(job)
 
-        jobs.append(fuzz_pool.submit(job, t, args))
+        dead_jobs = set()
+        for job in running_jobs:
+            ret = job.poll()
+            if ret is not None:
+                logging.debug("args:'{}'\nstdout: '{}'\nstderr: '{}'\n".format(' '.join(job.args), job.stdout.read(), job.stderr.read()))
+                dead_jobs.add(job)
+        running_jobs -= dead_jobs
+        time.sleep(0.01)
 
-    for future in as_completed(jobs):
-        future.result()
-
-
-def run_once(*, fuzz_pool, corpus, test_list, build_dir, use_valgrind):
+def run_once(*, max_jobs, corpus, test_list, build_dir, use_valgrind):
     jobs = []
-    for t in test_list:
-        corpus_path = os.path.join(corpus, t)
+    for target in test_list:
+        corpus_path = os.path.join(corpus, target)
         os.makedirs(corpus_path, exist_ok=True)
         args = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', 'fuzz'),
@@ -254,28 +264,34 @@ def run_once(*, fuzz_pool, corpus, test_list, build_dir, use_valgrind):
         ]
         if use_valgrind:
             args = ['valgrind', '--quiet', '--error-exitcode=1'] + args
+        jobs.append([target, args])
 
-        def job(t, args):
-            output = 'Run {} with args {}'.format(t, args)
-            result = subprocess.run(args, env={'FUZZ': t}, stderr=subprocess.PIPE, universal_newlines=True)
-            output += result.stderr
-            return output, result
+    running_jobs = set()
+    while len(jobs) > 0 or len(running_jobs) > 0:
+        if len(running_jobs) < max_jobs and len(jobs) > 0:
+            target, args = jobs.pop()
+            logging.debug("Running '{}' '{}'\n".format(target, " ".join(args)))
+            job = subprocess.Popen(
+                args,
+                env={
+                    'FUZZ': target
+                },
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True)
+            running_jobs.add(job)
 
-        jobs.append(fuzz_pool.submit(job, t, args))
-
-    for future in as_completed(jobs):
-        output, result = future.result()
-        logging.debug(output)
-        try:
-            result.check_returncode()
-        except subprocess.CalledProcessError as e:
-            if e.stdout:
-                logging.info(e.stdout)
-            if e.stderr:
-                logging.info(e.stderr)
-            logging.info("Target \"{}\" failed with exit code {}".format(" ".join(result.args), e.returncode))
-            sys.exit(1)
-
+        dead_jobs = set()
+        for job in running_jobs:
+            ret = job.poll()
+            if ret is not None:
+                logging.debug("args:'{}'\nstdout: '{}'\nstderr: '{}'\n".format(' '.join(job.args), job.stdout.read(), job.stderr.read()))
+                if ret != 0:
+                    logging.error("Target failed with exit code {}".format(ret))
+                    sys.exit(1)
+                dead_jobs.add(job)
+        running_jobs -= dead_jobs
+        time.sleep(0.01)
 
 def parse_test_list(*, fuzz_bin):
     test_list_all = subprocess.run(
