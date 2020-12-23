@@ -340,7 +340,10 @@ struct Peer {
     /** Work queue of items requested by this peer **/
     std::deque<CInv> m_getdata_requests GUARDED_BY(m_getdata_requests_mutex);
 
-    explicit Peer(NodeId id) : m_id(id) {}
+    /** Traditional CNodeState info **/
+    CNodeState nodestate GUARDED_BY(cs_main);
+
+    explicit Peer(NodeId id, CAddress addr, bool is_inbound) : m_id(id),  nodestate(addr, is_inbound) {}
 };
 
 using PeerRef = std::shared_ptr<Peer>;
@@ -391,7 +394,7 @@ private:
 
     /** Get a shared pointer to the Peer object and remove it from m_peer_map.
      *  May return an empty shared_ptr if the Peer object can't be found. */
-    PeerRef RemovePeer(NodeId id);
+    PeerRef RemovePeer(NodeId id) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /**
      * Potentially mark a node discouraged based on the contents of a BlockValidationState object
@@ -470,6 +473,10 @@ private:
      * by the m_peer_mutex. Once a shared pointer reference is
      * taken, the lock may be released. Individual fields are protected by
      * their own locks.
+     *
+     * Removals to this are additionally gated by cs_main, so that holding
+     * a non-shared reference to peer.nodestate is safe while cs_main
+     * is held (see State, RemoveNode).
      */
     std::map<NodeId, PeerRef> m_peer_map GUARDED_BY(m_peer_mutex);
 
@@ -615,9 +622,6 @@ private:
     uint32_t GetFetchFlags(const CNode& pfrom) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds) override;
 
-    /** Map maintaining per-node state. */
-    std::map<NodeId, CNodeState> mapNodeState GUARDED_BY(cs_main);
-
     // All of the following cache a recent block, and are protected by cs_most_recent_block
     RecursiveMutex cs_most_recent_block;
     std::shared_ptr<const CBlock> most_recent_block GUARDED_BY(cs_most_recent_block);
@@ -634,10 +638,12 @@ private:
 namespace {
 CNodeState *PeerManagerImpl::State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    std::map<NodeId, CNodeState>::iterator it = mapNodeState.find(pnode);
-    if (it == mapNodeState.end())
-        return nullptr;
-    return &it->second;
+    PeerRef peer = GetPeerRef(pnode);
+    if (!peer) return nullptr;
+    // peer will not be removed from m_peer_map until RemovePeer is called,
+    // which requires cs_main to be held; as such the nodestate returned will
+    // remain valid at least until cs_main is freed
+    return &peer->nodestate;
 }
 
 void PeerManagerImpl::UpdatePreferredDownload(const CNode& node, CNodeState* state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -968,11 +974,10 @@ void PeerManagerImpl::InitializeNode(CNode *pnode)
     NodeId nodeid = pnode->GetId();
     {
         LOCK(cs_main);
-        mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(addr, pnode->IsInboundConn()));
         assert(m_txrequest.Count(nodeid) == 0);
     }
     {
-        PeerRef peer = std::make_shared<Peer>(nodeid);
+        PeerRef peer = std::make_shared<Peer>(nodeid, std::move(addr), pnode->IsInboundConn());
         LOCK(m_peer_mutex);
         m_peer_map.emplace_hint(m_peer_map.end(), nodeid, std::move(peer));
     }
@@ -1008,18 +1013,17 @@ void PeerManagerImpl::FinalizeNode(const CNode& node, bool& fUpdateConnectionTim
     fUpdateConnectionTime = false;
     LOCK(cs_main);
     int misbehavior{0};
-    {
-        // We remove the PeerRef from g_peer_map here, but we don't always
-        // destruct the Peer. Sometimes another thread is still holding a
-        // PeerRef, so the refcount is >= 1. Be careful not to do any
-        // processing here that assumes Peer won't be changed before it's
-        // destructed.
-        PeerRef peer = RemovePeer(nodeid);
-        assert(peer != nullptr);
-        misbehavior = WITH_LOCK(peer->m_misbehavior_mutex, return peer->m_misbehavior_score);
-    }
-    CNodeState *state = State(nodeid);
-    assert(state != nullptr);
+
+    // We remove the PeerRef from g_peer_map here, but we don't always
+    // destruct the Peer. Sometimes another thread is still holding a
+    // PeerRef, so the refcount is >= 1. Be careful not to do any
+    // processing here that assumes Peer won't be changed before it's
+    // destructed.
+    PeerRef peer = RemovePeer(nodeid);
+    assert(peer != nullptr);
+    misbehavior = WITH_LOCK(peer->m_misbehavior_mutex, return peer->m_misbehavior_score);
+
+    CNodeState *state = &peer->nodestate;
 
     if (state->fSyncStarted)
         nSyncStarted--;
@@ -1043,9 +1047,8 @@ void PeerManagerImpl::FinalizeNode(const CNode& node, bool& fUpdateConnectionTim
     m_wtxid_relay_peers -= state->m_wtxid_relay;
     assert(m_wtxid_relay_peers >= 0);
 
-    mapNodeState.erase(nodeid);
-
-    if (mapNodeState.empty()) {
+    LOCK(m_peer_mutex);
+    if (m_peer_map.empty()) {
         // Do a consistency check after the last peer is removed.
         assert(mapBlocksInFlight.empty());
         assert(nPreferredDownload == 0);
@@ -1064,7 +1067,7 @@ PeerRef PeerManagerImpl::GetPeerRef(NodeId id) const
     return it != m_peer_map.end() ? it->second : nullptr;
 }
 
-PeerRef PeerManagerImpl::RemovePeer(NodeId id)
+PeerRef PeerManagerImpl::RemovePeer(NodeId id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     PeerRef ret;
     LOCK(m_peer_mutex);
