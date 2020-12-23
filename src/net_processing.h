@@ -42,7 +42,7 @@ public:
     virtual ~PeerManager() { }
 
     /** Relay transaction to every node */
-    virtual void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(cs_main) = 0;
+    virtual void RelayTransaction(const uint256& txid, const uint256& wtxid) EXCLUSIVE_LOCKS_REQUIRED(cs_main) = 0;
 
     /** Get statistics from node state */
     virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) = 0;
