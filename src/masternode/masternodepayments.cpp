@@ -171,7 +171,8 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, const CAmou
     }
 	// miner takes 25% of the reward and half fees
 	txNew.vout[0].nValue = voutMasternodePaymentsRet.empty()? blockReward: (blockReward*0.25);
-	txNew.vout[0].nValue += nHalfFee;
+    if(nHalfFee > 0)
+	    txNew.vout[0].nValue += nHalfFee;
     // mn is paid 75% of block reward plus any seniority
     txNew.vout.insert(txNew.vout.end(), voutMasternodePaymentsRet.begin(), voutMasternodePaymentsRet.end());
     // superblock governance amount is added as extra

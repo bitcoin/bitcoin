@@ -963,13 +963,28 @@ class DashTestFramework(SyscoinTestFramework):
         rewardsAddr = self.nodes[0].getnewaddress()
 
         port = p2p_port(len(self.nodes) + idx)
-        if (idx % 2) == 0:
+        ipAndPort = '127.0.0.1:%d' % port
+        operatorReward = idx
+        operatorPayoutAddress = self.nodes[0].getnewaddress()
+
+        submit = (idx % 4) < 2
+
+        if (idx % 2) == 0 :
             self.nodes[0].lockunspent(True, [{'txid': txid, 'vout': collateral_vout}])
-            proTxHash = self.nodes[0].protx_register_fund(address, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
+            protx_result = self.nodes[0].protx_register_fund(address, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
         else:
             self.nodes[0].generate(1)
-            proTxHash = self.nodes[0].protx_register(txid, collateral_vout, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
+            protx_result = self.nodes[0].protx_register(txid, collateral_vout, ipAndPort, ownerAddr, bls['public'], votingAddr, operatorReward, rewardsAddr, address, submit)
+
+        if submit:
+            proTxHash = protx_result
+        else:
+            proTxHash = self.nodes[0].sendrawtransaction(protx_result)
+
         self.nodes[0].generate(1)
+
+        if operatorReward > 0:
+            self.nodes[0].protx_update_service(proTxHash, ipAndPort, bls['secret'], operatorPayoutAddress, address)
 
         self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
         self.sync_all()

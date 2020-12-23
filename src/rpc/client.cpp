@@ -248,7 +248,9 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "protx_list", 2, "height" },
     { "protx_register", 1, "collateralIndex" },
     { "protx_register", 6, "operatorReward" },
+    { "protx_register", 9, "submit" },
     { "protx_register_fund", 5, "operatorReward" },
+    { "protx_register_fund", 8, "submit" },
     { "protx_register_prepare", 1, "collateralIndex" },
     { "protx_register_prepare", 6, "operatorReward" },
     { "protx_revoke", 2, "reason" },
@@ -271,6 +273,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "gobject_submit", 2, "time" },
     { "gobject_list_prepared", 0, "count" },
     { "masternode_winners", 0, "count" },
+    { "masternode_payments", 1, "count" },
 
 };
 // clang-format on

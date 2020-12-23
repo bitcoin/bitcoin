@@ -224,6 +224,12 @@ std::string GetRequiredPaymentsString(int nBlockHeight, const CDeterministicMNCP
             CHECK_NONFATAL(false);
         }
         strPayments = EncodeDestination(dest);
+        if (payee->nOperatorReward != 0 && payee->pdmnState->scriptOperatorPayout != CScript()) {
+            if (!ExtractDestination(payee->pdmnState->scriptOperatorPayout, dest)) {
+                assert(false);
+            }
+            strPayments += ", " + EncodeDestination(dest);
+        }
     }
     if (CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
         std::vector<CTxOut> voutSuperblock;
@@ -303,6 +309,129 @@ static RPCHelpMan masternode_winners()
 },
     };
 } 
+
+RPCHelpMan masternode_payments()
+{
+    return RPCHelpMan{"masternode_payments",
+        "\nReturns an array of deterministic masternodes and their payments for the specified block\n",
+        {         
+            {"blockhash", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The hash of the starting block."},
+            {"count", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The number of blocks to return.\n"
+                                                                    "Will return <count> previous blocks if <count> is negative.\n"
+                                                                    "Both 1 and -1 correspond to the chain tip."},    
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+                HelpExampleCli("masternode_payments", "")
+            + HelpExampleRpc("masternode_payments", "")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    CBlockIndex* pindex{nullptr};
+    const NodeContext& node = EnsureNodeContext(request.context);
+    if (request.params[0].isNull()) {
+        LOCK(cs_main);
+        pindex = ::ChainActive().Tip();
+    } else {
+        LOCK(cs_main);
+        uint256 blockHash = ParseHashV(request.params[0], "blockhash");
+        pindex = LookupBlockIndex(blockHash);
+        if (pindex == nullptr) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+        }
+    }
+
+    int64_t nCount = request.params.size() > 1 ? request.params[1].get_int64() : 1;
+
+    // A temporary vector which is used to sort results properly (there is no "reverse" in/for UniValue)
+    std::vector<UniValue> vecPayments;
+
+    while (vecPayments.size() < (size_t)(std::abs(nCount)) != 0 && pindex != nullptr) {
+
+        CBlock block;
+        if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Can't read block from disk");
+        }
+
+        // Note: we have to actually calculate block reward from scratch instead of simply querying coinbase vout
+        // because miners might collect less coins than they potentially could and this would break our calculations.
+        CAmount nBlockFees{0};
+        for (const auto& tx : block.vtx) {
+            if (tx->IsCoinBase()) {
+                continue;
+            }
+            CAmount nValueIn{0};
+            for (const auto &txin : tx->vin) {
+                uint256 blockHashTmp;
+                CTransactionRef txPrev = GetTransaction( pindex, node.mempool.get(), txin.prevout.hash, Params().GetConsensus(), blockHashTmp);
+                nValueIn += txPrev->vout[txin.prevout.n].nValue;
+            }
+            nBlockFees += nValueIn - tx->GetValueOut();
+        }
+
+        std::vector<CTxOut> voutMasternodePayments, voutDummy;
+        CAmount blockReward = nBlockFees + GetBlockSubsidy(pindex->pprev->nHeight, Params());
+        CMutableTransaction coinbaseTx;
+        coinbaseTx.vout.resize(1);
+        coinbaseTx.vout[0].nValue = blockReward + nBlockFees;
+        FillBlockPayments(coinbaseTx, pindex->nHeight, blockReward, nBlockFees, voutMasternodePayments, voutDummy);
+
+        UniValue blockObj(UniValue::VOBJ);
+        CAmount payedPerBlock{0};
+
+        UniValue masternodeArr(UniValue::VARR);
+        UniValue protxObj(UniValue::VOBJ);
+        UniValue payeesArr(UniValue::VARR);
+        CAmount payedPerMasternode{0};
+
+        for (const auto& txout : voutMasternodePayments) {
+            UniValue obj(UniValue::VOBJ);
+            CTxDestination dest;
+            ExtractDestination(txout.scriptPubKey, dest);
+            obj.pushKV("address", EncodeDestination(dest));
+            obj.pushKV("script", HexStr(txout.scriptPubKey));
+            obj.pushKV("amount", txout.nValue);
+            payedPerMasternode += txout.nValue;
+            payeesArr.push_back(obj);
+        }
+        CDeterministicMNList mnList;
+        if(deterministicMNManager)
+            deterministicMNManager->GetListForBlock(pindex, mnList);
+        const auto dmnPayee = mnList.GetMNPayee();
+        protxObj.pushKV("proTxHash", dmnPayee == nullptr ? "" : dmnPayee->proTxHash.ToString());
+        protxObj.pushKV("amount", payedPerMasternode);
+        protxObj.pushKV("payees", payeesArr);
+        payedPerBlock += payedPerMasternode;
+        masternodeArr.push_back(protxObj);
+
+        blockObj.pushKV("height", pindex->nHeight);
+        blockObj.pushKV("blockhash", pindex->GetBlockHash().ToString());
+        blockObj.pushKV("amount", payedPerBlock);
+        blockObj.pushKV("masternodes", masternodeArr);
+        vecPayments.push_back(blockObj);
+
+        if (nCount > 0) {
+            LOCK(cs_main);
+            pindex = ::ChainActive().Next(pindex);
+        } else {
+            pindex = pindex->pprev;
+        }
+    }
+
+    if (nCount < 0) {
+        std::reverse(vecPayments.begin(), vecPayments.end());
+    }
+
+    UniValue paymentsArr(UniValue::VARR);
+    for (const auto& payment : vecPayments) {
+        paymentsArr.push_back(payment);
+    }
+
+    return paymentsArr;
+},
+    };
+} 
+
 
 RPCHelpMan masternodelist()
 {
@@ -472,6 +601,7 @@ static const CRPCCommand commands[] =
     { "masternode",               "masternode_connect",         &masternode_connect,      {"address"} },
     { "masternode",               "masternode_list",            &masternode_list,         {"mode","filter"} },
     { "masternode",               "masternode_winners",         &masternode_winners,      {"count","filter"} },
+    { "masternode",               "masternode_payments",        &masternode_payments,     {"blockhash","count"} },
     { "masternode",               "masternode_count",           &masternode_count,        {} },
     { "masternode",               "masternode_winner",          &masternode_winner,       {} },
     { "masternode",               "masternode_status",          &masternode_status,       {} },

@@ -151,7 +151,7 @@ static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxP
     uint256 hash = ::SerializeHash(payload);
     payload.sig = key.Sign(hash);
 }
-static UniValue SignAndSendSpecialTx(const util::Ref& context, const CMutableTransaction& tx)
+static UniValue SignAndSendSpecialTx(const util::Ref& context, const CMutableTransaction& tx, bool fSubmit = true)
 {
     {
         LOCK(cs_main);
@@ -169,7 +169,9 @@ static UniValue SignAndSendSpecialTx(const util::Ref& context, const CMutableTra
     signRequest.params.setArray();
     signRequest.params.push_back(HexStr(ds));
     UniValue signResult = signrawtransactionwithwallet().HandleRequest(signRequest);
-
+    if (!fSubmit) {
+        return signResult["hex"].get_str();
+    }
     JSONRPCRequest sendRequest(context);
     sendRequest.params.setArray();
     sendRequest.params.push_back(signResult["hex"].get_str());
@@ -203,6 +205,7 @@ static RPCHelpMan protx_register()
                     {"fundAddress", RPCArg::Type::STR, "", "If specified wallet will only use coins from this address to fund ProTx.\n"
                                         "If not specified, payoutAddress is the one that is going to be used.\n"
                                         "The private key belonging to this address must be known in your wallet."},
+                    {"submit", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "If true, the resulting transaction is sent to the network."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -291,6 +294,10 @@ static RPCHelpMan protx_register()
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Syscoin address: ") + request.params[paramIdx + 6].get_str());
         }
     }
+    bool fSubmit{true};
+    if (!request.params[paramIdx + 7].isNull()) {
+        fSubmit = request.params[paramIdx + 7].get_bool();
+    }
     FundSpecialTx(pwallet, tx, ptx, fundDest);
     UpdateSpecialTxInputsHash(tx, ptx);
 
@@ -325,7 +332,7 @@ static RPCHelpMan protx_register()
     }
     SignSpecialTxPayloadByString(tx, ptx, key);
     SetTxPayload(tx, ptx);
-    return SignAndSendSpecialTx(request.context,  tx);
+    return SignAndSendSpecialTx(request.context,  tx, fSubmit);
 },
     };
 }
@@ -354,6 +361,7 @@ static RPCHelpMan protx_register_fund()
                     {"fundAddress", RPCArg::Type::STR, "", "If specified wallet will only use coins from this address to fund ProTx.\n"
                                         "If not specified, payoutAddress is the one that is going to be used.\n"
                                         "The private key belonging to this address must be known in your wallet."},
+                    {"submit", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "If true, the resulting transaction is sent to the network."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -440,6 +448,11 @@ static RPCHelpMan protx_register_fund()
     FundSpecialTx(pwallet, tx, ptx, fundDest);
     UpdateSpecialTxInputsHash(tx, ptx);
 
+    bool fSubmit{true};
+    if (!request.params[paramIdx + 7].isNull()) {
+        fSubmit = request.params[paramIdx + 7].get_bool();
+    }
+
     uint32_t collateralIndex = (uint32_t) -1;
     for (uint32_t i = 0; i < tx.vout.size(); i++) {
         if (tx.vout[i].nValue == nMNCollateralRequired) {
@@ -451,7 +464,7 @@ static RPCHelpMan protx_register_fund()
     ptx.collateralOutpoint.n = collateralIndex;
 
     SetTxPayload(tx, ptx);
-    return SignAndSendSpecialTx(request.context, tx);
+    return SignAndSendSpecialTx(request.context, tx, fSubmit);
 },
     };
 }  
@@ -1111,8 +1124,8 @@ static const CRPCCommand commands[] =
   //  --------------------- ------------------------  -----------------------
     { "evowallet",                "protx_list_wallet",                  &protx_list_wallet,                   {"detailed","height"}  },
     { "evowallet",                "protx_info_wallet",                  &protx_info_wallet,                   {"proTxHash"}  },
-    { "evowallet",                "protx_register",                     &protx_register,                      {"collateralHash","collateralIndex","ipAndPort","ownerAddress","operatorPubKey","votingAddress","operatorReward","payoutAddress","fundAddress"}  },
-    { "evowallet",                "protx_register_fund",                &protx_register_fund,                 {"collateralAddress","ipAndPort","ownerAddress","operatorPubKey","votingAddress","operatorReward","payoutAddress","fundAddress"} },
+    { "evowallet",                "protx_register",                     &protx_register,                      {"collateralHash","collateralIndex","ipAndPort","ownerAddress","operatorPubKey","votingAddress","operatorReward","payoutAddress","fundAddress","submit"}  },
+    { "evowallet",                "protx_register_fund",                &protx_register_fund,                 {"collateralAddress","ipAndPort","ownerAddress","operatorPubKey","votingAddress","operatorReward","payoutAddress","fundAddress","submit"} },
     { "evowallet",                "protx_register_prepare",             &protx_register_prepare,              {"collateralHash","collateralIndex","ipAndPort","ownerAddress","operatorPubKey","votingAddress","operatorReward","payoutAddress","fundAddress"}  },
     { "evowallet",                "protx_register_submit",              &protx_register_submit,               {"tx","sig"}  },
     { "evowallet",                "protx_update_service",               &protx_update_service,                {"proTxHash","ipAndPort","operatorKey","operatorPayoutAddress","feeSourceAddress"}  },
