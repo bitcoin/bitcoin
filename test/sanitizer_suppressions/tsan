@@ -1,5 +1,7 @@
 # ThreadSanitizer suppressions
 # ============================
+#
+# https://github.com/google/sanitizers/wiki/ThreadSanitizerSuppressions
 
 # double locks (TODO fix)
 mutex:g_genesis_wait_mutex
@@ -42,6 +44,15 @@ deadlock:src/qt/test/*
 # External libraries
 deadlock:libdb
 race:libzmq
+
+# Intermittent issues
+# -------------------
+#
+# Suppressions that follow might only happen intermittently, thus they are not
+# reproducible. Make sure to include a link to a full trace.
+
+# https://github.com/bitcoin/bitcoin/issues/20618
+race:CZMQAbstractPublishNotifier::SendZmqMessage
 
 # https://github.com/bitcoin/bitcoin/pull/20218, https://github.com/bitcoin/bitcoin/pull/20745
 race:epoll_ctl
