@@ -12,7 +12,7 @@ import os
 import subprocess
 import sys
 import time
-
+import random
 
 def main():
     parser = argparse.ArgumentParser(
@@ -178,22 +178,32 @@ def generate_corpus_seeds(*, max_jobs, build_dir, seed_dir, targets):
     """
     logging.info("Generating corpus seeds to {}".format(seed_dir))
 
-    jobs = []
-    for target in targets:
+    def generate_job():
+        target = random.choice(targets)
+        mutate_depth = random.randint(1, 15)
+        use_value_profile = 0
+        if random.randint(1, 10) == 1:
+            use_value_profile = 1
+        max_len = 2**random.randint(6, 12)
+        if random.randint(1, 20) == 1:
+            max_len = 0
         target_seed_dir = os.path.join(seed_dir, target)
         os.makedirs(target_seed_dir, exist_ok=True)
         args = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', 'fuzz'),
-            "-runs=100000",
+            "-max_total_time=1800",
+            "-reload=0",
+            "-mutate_depth={}".format(mutate_depth),
+            "-use_value_profile={}".format(use_value_profile),
+            "-max_len={}".format(max_len),
             target_seed_dir,
         ]
-        jobs.append([target, args])
+        return [target, args]
 
     running_jobs = set()
-    while len(jobs) > 0 or len(running_jobs) > 0:
-        if len(running_jobs) < max_jobs and len(jobs) > 0:
-            target, args = jobs.pop()
-            logging.debug("Running '{}' '{}'\n".format(target, " ".join(args)))
+    while True:
+        if len(running_jobs) < max_jobs:
+            target, args = generate_job()
             job = subprocess.Popen(
                 args,
                 env={
@@ -202,13 +212,19 @@ def generate_corpus_seeds(*, max_jobs, build_dir, seed_dir, targets):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 universal_newlines=True)
+            logging.debug("started pid: {} target: '{}' arghs: '{}'\n".format(job.pid, target, " ".join(args)))
             running_jobs.add(job)
 
         dead_jobs = set()
         for job in running_jobs:
+            try:
+                outs,errs = job.communicate(timeout=0)
+                logging.debug("pid: {} args:'{}'\nstdout: '{}'\nstderr: '{}'\n".format(job.pid, ' '.join(job.args), outs, err))
+            except subprocess.TimeoutExpired:
+                pass
             ret = job.poll()
             if ret is not None:
-                logging.debug("args:'{}'\nstdout: '{}'\nstderr: '{}'\n".format(' '.join(job.args), job.stdout.read(), job.stderr.read()))
+                logging.debug("pid: {} args:'{}'\nstdout: '{}'\nstderr: '{}'\n".format(job.pid, ' '.join(job.args), job.stdout.read(), job.stderr.read()))
                 dead_jobs.add(job)
         running_jobs -= dead_jobs
         time.sleep(0.1)
