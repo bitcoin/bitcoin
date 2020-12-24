@@ -1664,9 +1664,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             tip_info->block_time = chainman.ActiveChain().Tip() ? chainman.ActiveChain().Tip()->GetBlockTime() : Params().GenesisBlock().GetBlockTime();
             tip_info->verification_progress = GuessVerificationProgress(Params().TxData(), chainman.ActiveChain().Tip());
         }
-        if (tip_info && ::pindexBestHeader) {
-            tip_info->header_height = ::pindexBestHeader->nHeight;
-            tip_info->header_time = ::pindexBestHeader->GetBlockTime();
+        if (tip_info && chainman.pindexBestHeader) {
+            tip_info->header_height = chainman.pindexBestHeader->nHeight;
+            tip_info->header_time = chainman.pindexBestHeader->GetBlockTime();
         }
     }
     LogPrintf("nBestHeight = %d\n", chain_active_height);
