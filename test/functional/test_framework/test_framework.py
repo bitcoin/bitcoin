@@ -1322,6 +1322,11 @@ class DashTestFramework(SyscoinTestFramework):
         def timeout_func():
             self.bump_mocktime(bumptime, nodes=nodes)
 
+        def timeout_func1():
+            self.nodes[0].generate(1)
+            self.bump_mocktime(bumptime, nodes=nodes)
+            self.sync_blocks(nodes)
+
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
         self.log.info("skip_count {}".format(skip_count))
@@ -1331,7 +1336,6 @@ class DashTestFramework(SyscoinTestFramework):
         self.sync_blocks(nodes)
 
         q = self.nodes[0].getbestblockhash()
-
         self.log.info("Waiting for phase 1 (init)")
         timeout_func()
         self.wait_for_quorum_phase(q, 1, expected_members, None, 0, mninfos_online, wait_proc=timeout_func)
@@ -1368,15 +1372,11 @@ class DashTestFramework(SyscoinTestFramework):
 
         self.log.info("Waiting for phase 6 (mining)")
 
-        self.wait_for_quorum_phase(q, 6, expected_members, None, 0, mninfos_online, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 6 (mining))"))
+        self.wait_for_quorum_phase(q, 6, expected_members, None, 0, mninfos_online, wait_proc=timeout_func1, done_proc=lambda: self.log.info("Done phase 6 (mining))"))
 
         self.log.info("Waiting final commitment")
         self.wait_for_quorum_commitment(q, nodes, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done final commitment"))
 
-        self.log.info("Mining final commitment")
-        self.bump_mocktime(1, nodes=nodes)
-        self.nodes[0].generate(1)
-        self.sync_blocks(nodes)
         self.log.info("Waiting for quorum to appear in the list")
         self.wait_for_quorum_list(q, nodes)
         new_quorum = self.nodes[0].quorum_list(1)["llmq_test"][0]
