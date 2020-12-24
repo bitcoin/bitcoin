@@ -426,7 +426,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 uint256 checksum;
                 ssValue >> checksum;
                 if ((checksum_valid = Hash(vchPrivKey) != checksum)) {
-                    strErr = "Error reading wallet database: Crypted key corrupt";
+                    strErr = "Error reading wallet database: Encrypted key corrupt";
                     return false;
                 }
             }

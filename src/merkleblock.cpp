@@ -59,7 +59,7 @@ uint256 CPartialMerkleTree::CalcHash(int height, unsigned int pos, const std::ve
     //if we do not have this assert, we can hit a memory access violation when indexing into vTxid
     assert(vTxid.size() != 0);
     if (height == 0) {
-        // hash at height 0 is the txids themself
+        // hash at height 0 is the txids themselves
         return vTxid[pos];
     } else {
         // calculate left hash
