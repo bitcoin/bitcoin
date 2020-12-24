@@ -787,7 +787,7 @@ def TaprootSignatureHash(txTo, spent_utxos, hash_type, input_index = 0, scriptpa
 
 def taproot_tree_helper(scripts):
     if len(scripts) == 0:
-        return ([], bytes(0 for _ in range(32)))
+        return ([], bytes())
     if len(scripts) == 1:
         # One entry: treat as a leaf
         script = scripts[0]
