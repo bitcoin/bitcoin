@@ -28,6 +28,7 @@ struct CNodeCombinedStats {
     CNodeStateStats nodeStateStats;
     bool fNodeStateStatsAvailable;
 };
+Q_DECLARE_METATYPE(CNodeCombinedStats*)
 
 class NodeLessThan
 {
@@ -65,6 +66,10 @@ public:
         Sent = 4,
         Received = 5,
         Subversion = 6
+    };
+
+    enum {
+        StatsRole = Qt::UserRole,
     };
 
     /** @name Methods overridden from QAbstractTableModel
