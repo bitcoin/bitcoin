@@ -57,8 +57,13 @@ static UniValue GetNetworkHashPS(int lookup, int height) {
         return 0;
 
     // If lookup is -1, then use blocks since last difficulty change.
-    if (lookup <= 0)
-        lookup = pb->nHeight % Params().GetConsensus().DifficultyAdjustmentInterval() + 1;
+    if (lookup <= 0) {
+        if (pb->nHeight < Params().GetConsensus().ZawyLWMAHeight) {
+            lookup = pb->nHeight % Params().GetConsensus().DifficultyAdjustmentInterval() + 1;
+        } else {
+            lookup = Params().GetConsensus().nZawyLwmaAveragingWindow;
+        }
+    }
 
     // If lookup is larger than chain, then set it to chain length.
     if (lookup > pb->nHeight)

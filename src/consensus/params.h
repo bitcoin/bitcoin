@@ -83,6 +83,13 @@ struct Params {
 
     // VeriBlock
     uint64_t VeriBlockPopSecurityHeight;
+    /** Block height at which Zawy's LWMA difficulty algorithm becomes active */
+    int ZawyLWMAHeight;
+    // Params for Zawy's LWMA difficulty adjustment algorithm.
+    int64_t nZawyLwmaAveragingWindow;
+    int64_t nZawyLwmaAdjustedWeight;  // k = (N+1)/2 * 0.998 * T
+    int64_t nZawyLwmaMinDenominator;
+    bool bZawyLwmaSolvetimeLimitation;
 };
 } // namespace Consensus
 
