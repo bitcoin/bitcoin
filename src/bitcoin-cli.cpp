@@ -303,6 +303,7 @@ private:
     static constexpr uint8_t m_networks_size{3};
     const std::array<std::string, m_networks_size> m_networks{{"ipv4", "ipv6", "onion"}};
     std::array<std::array<uint16_t, m_networks_size + 2>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total/block-relay)
+    uint8_t m_manual_peers_count{0};
     int8_t NetworkStringToId(const std::string& str) const
     {
         for (uint8_t i = 0; i < m_networks_size; ++i) {
@@ -405,7 +406,7 @@ private:
             "  address  IP address and port of the peer\n"
             "  version  Peer version and subversion concatenated, e.g. \"70016/Satoshi:21.0.0/\"\n\n"
             "* The connection counts table displays the number of peers by direction, network, and the totals\n"
-            "  for each, as well as a column for block relay peers.\n\n"
+            "  for each, as well as two special outbound columns for block relay peers and manual peers.\n\n"
             "* The local addresses table lists each local address broadcast by the node, the port, and the score.\n\n"
             "Examples:\n\n"
             "Connection counts and local addresses only\n"
@@ -473,6 +474,7 @@ public:
                 ++m_counts.at(is_outbound).at(m_networks_size + 1); // in/out block-relay
                 ++m_counts.at(2).at(m_networks_size + 1);           // total block-relay
             }
+            if (conn_type == "manual") ++m_manual_peers_count;
             if (DetailsRequested()) {
                 // Push data for this peer to the peers vector.
                 const int peer_id{peer["id"].get_int()};
@@ -532,14 +534,16 @@ public:
         }
 
         // Report peer connection totals by type.
-        result += "        ipv4    ipv6   onion   total  block-relay\n";
+        result += "        ipv4    ipv6   onion   total   block";
+        if (m_manual_peers_count) result += "  manual";
         const std::array<std::string, 3> rows{{"in", "out", "total"}};
         for (uint8_t i = 0; i < m_networks_size; ++i) {
-            result += strprintf("%-5s  %5i   %5i   %5i   %5i   %5i\n", rows.at(i), m_counts.at(i).at(0), m_counts.at(i).at(1), m_counts.at(i).at(2), m_counts.at(i).at(m_networks_size), m_counts.at(i).at(m_networks_size + 1));
+            result += strprintf("\n%-5s  %5i   %5i   %5i   %5i   %5i", rows.at(i), m_counts.at(i).at(0), m_counts.at(i).at(1), m_counts.at(i).at(2), m_counts.at(i).at(m_networks_size), m_counts.at(i).at(m_networks_size + 1));
+            if (i == 1 && m_manual_peers_count) result += strprintf("   %5i", m_manual_peers_count);
         }
 
         // Report local addresses, ports, and scores.
-        result += "\nLocal addresses";
+        result += "\n\nLocal addresses";
         const std::vector<UniValue>& local_addrs{networkinfo["localaddresses"].getValues()};
         if (local_addrs.empty()) {
             result += ": n/a\n";
