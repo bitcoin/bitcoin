@@ -72,6 +72,13 @@ FUZZ_TARGET_INIT(script, initialize_script)
 
     TxoutType which_type;
     (void)IsStandard(script, which_type);
+    if (which_type == TxoutType::NULL_DATA) {
+        assert(script.IsUnspendable());
+    }
+    if (script.IsUnspendable()) {
+        assert(which_type == TxoutType::NULL_DATA ||
+               which_type == TxoutType::NONSTANDARD);
+    }
 
     (void)RecursiveDynamicUsage(script);
 
@@ -82,7 +89,6 @@ FUZZ_TARGET_INIT(script, initialize_script)
     (void)script.IsPayToScriptHash();
     (void)script.IsPayToWitnessScriptHash();
     (void)script.IsPushOnly();
-    (void)script.IsUnspendable();
     (void)script.GetSigOpCount(/* fAccurate= */ false);
 
     (void)FormatScript(script);
