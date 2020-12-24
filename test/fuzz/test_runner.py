@@ -54,7 +54,7 @@ def main():
     )
     parser.add_argument(
         '--m_dir',
-        help='Merge inputs from this directory into the seed_dir. Needs /target subdirectory.',
+        help='Merge inputs from this directory into the seed_dir.',
     )
     parser.add_argument(
         '-g',
@@ -210,7 +210,7 @@ def generate_corpus_seeds(*, fuzz_pool, build_dir, seed_dir, targets):
 
 
 def merge_inputs(*, fuzz_pool, corpus, test_list, build_dir, merge_dir):
-    logging.info("Merge the inputs in the passed dir into the seed_dir. Passed dir {}".format(merge_dir))
+    logging.info("Merge the inputs from the passed dir into the seed_dir. Passed dir {}".format(merge_dir))
     jobs = []
     for t in test_list:
         args = [
