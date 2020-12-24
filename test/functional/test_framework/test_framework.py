@@ -1287,15 +1287,15 @@ class DashTestFramework(SyscoinTestFramework):
             return all_ok
         wait_until_helper(check_dkg_comitments, timeout=timeout)
 
-    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=60, sleep=1):
+    def wait_for_quorum_list(self, quorum_hash, nodes, timeout=60):
         def wait_func():
             if quorum_hash in self.nodes[0].quorum_list()["llmq_test"]:
                 return True
             self.nodes[0].generate(1)
-            self.bump_mocktime(sleep, nodes=nodes)
+            self.bump_mocktime(1, nodes=nodes)
             self.sync_blocks(nodes)
             return False
-        wait_until_helper(wait_func, timeout=timeout, sleep=0.1)
+        wait_until_helper(wait_func, timeout=timeout)
 
     def mine_quorum(self, expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None, bumptime=1):
         spork21_active = self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] <= 1
@@ -1324,6 +1324,7 @@ class DashTestFramework(SyscoinTestFramework):
 
         # move forward to next DKG
         skip_count = 24 - (self.nodes[0].getblockcount() % 24)
+        self.log.info("skip_count {}".format(skip_count))
         if skip_count != 0:
             timeout_func()
             self.nodes[0].generate(skip_count)
