@@ -307,13 +307,44 @@ void check_getblock(const JSONRPCRequest& request, const std::string& chain)
 }
 
 template <typename Tree>
+typename Tree::index_t* GetBlockIndex(Tree& tree, std::string hex)
+{
+    auto data = ParseHex(hex);
+    using hash_t = typename Tree::hash_t;
+    hash_t hash = data;
+    return tree.getBlockIndex(hash);
+}
+
+template <>
+typename altintegration::VbkBlockTree::index_t* GetBlockIndex(altintegration::VbkBlockTree& tree, std::string hex)
+{
+    auto data = ParseHex(hex);
+    using block_t = altintegration::VbkBlock;
+    using hash_t = block_t::hash_t;
+    using prev_hash_t = block_t::prev_hash_t;
+    if (data.size() == hash_t::size()) {
+        // it is a full hash
+        hash_t h = data;
+        return tree.getBlockIndex(h);
+    }
+    if (data.size() == prev_hash_t::size()) {
+        // it is an id
+        prev_hash_t h = data;
+        return tree.getBlockIndex(h);
+    }
+
+    throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Wrong hash size");
+    return nullptr;
+}
+
+template <typename Tree>
 UniValue getblock(const JSONRPCRequest& req, Tree& tree, const std::string& chain)
 {
     check_getblock(req, chain);
     LOCK(cs_main);
 
     std::string strhash = req.params[0].get_str();
-    auto* index = tree.getBlockIndex(strhash);
+    auto* index = GetBlockIndex<Tree>(tree, strhash);
     if (!index) {
         // no block found
         return UniValue(UniValue::VNULL);

@@ -47,7 +47,7 @@ class PopE2E(BitcoinTestFramework):
         assert self.nodes[1].getpeerinfo()[0]['banscore'] == 0
         lastblock = self.nodes[0].getblockcount()
 
-        vbk_blocks_amount = 200
+        vbk_blocks_amount = 100
         self.log.info("generate vbk blocks on node0, amount {}".format(vbk_blocks_amount))
         vbk_blocks = []
         for i in range(vbk_blocks_amount):
