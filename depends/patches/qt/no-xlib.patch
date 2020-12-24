@@ -53,7 +53,7 @@ index 7c62c2e2b3..c05c6c0a07 100644
      cursor = createNonStandardCursor(cshape);
  
 +#if QT_CONFIG(xcb_xlib) && QT_CONFIG(library)
-     // Create a glpyh cursor if everything else failed
+     // Create a glyph cursor if everything else failed
      if (!cursor && cursorId) {
          cursor = xcb_generate_id(conn);
 @@ -596,6 +603,7 @@ xcb_cursor_t QXcbCursor::createFontCursor(int cshape)
