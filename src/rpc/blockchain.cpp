@@ -219,19 +219,24 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
 
     result.pushKV("size", (int)::GetSerializeSize(block, PROTOCOL_VERSION));
     UniValue txs(UniValue::VARR);
-    for(const auto& tx : block.vtx)
-    {
-        if(txDetails)
-        {
+    if (txDetails) {
+        CBlockUndo blockUndo;
+        const bool have_undo = !IsBlockPruned(blockindex) && UndoReadFromDisk(blockUndo, blockindex);
+        for (size_t i = 0; i < block.vtx.size(); ++i) {
+            const CTransactionRef& tx = block.vtx.at(i);
+            // coinbase transaction (i == 0) doesn't have undo data
+            const CTxUndo* txundo = (have_undo && i) ? &blockUndo.vtxundo.at(i - 1) : nullptr;
             UniValue objTx(UniValue::VOBJ);
-            TxToUniv(*tx, uint256(), objTx, true);
+            TxToUniv(*tx, uint256(), objTx, true, nullptr, txundo);
             bool fLocked = isman.IsLocked(tx->GetHash());
             objTx.pushKV("instantlock", fLocked || result["chainlock"].get_bool());
             objTx.pushKV("instantlock_internal", fLocked);
             txs.push_back(objTx);
         }
-        else
+    } else {
+        for (const CTransactionRef& tx : block.vtx) {
             txs.push_back(tx->GetHash().GetHex());
+        }
     }
     result.pushKV("tx", txs);
     if (!block.vtx[0]->vExtraPayload.empty()) {
@@ -1222,6 +1227,7 @@ static RPCHelpMan getblock()
                                 {RPCResult::Type::OBJ, "", "",
                                 {
                                     {RPCResult::Type::ELISION, "", "The transactions in the format of the getrawtransaction RPC. Different from verbosity = 1 \"tx\" result"},
+                                    {RPCResult::Type::NUM, "fee", "The transaction fee in " + CURRENCY_UNIT + ", omitted if block undo data is not available"},
                                 }},
                             }},
                         }},
