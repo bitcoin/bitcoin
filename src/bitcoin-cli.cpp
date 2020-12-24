@@ -322,6 +322,7 @@ private:
     struct Peer {
         std::string addr;
         std::string sub_version;
+        std::string conn_type;
         std::string network;
         std::string age;
         double min_ping;
@@ -387,6 +388,9 @@ private:
             "  type     Type of peer connection\n"
             "           \"full\"   - full relay, the default\n"
             "           \"block\"  - block relay; like full relay but does not relay transactions or addresses\n"
+            "           \"manual\" - peer we manually added using RPC addnode or the -addnode/-connect config options\n"
+            "           \"feeler\" - short-lived connection for testing addresses\n"
+            "           \"addr\"   - address fetch; short-lived connection for requesting addresses\n"
             "  net      Network the peer connected through (\"ipv4\", \"ipv6\", \"onion\", \"i2p\", or \"cjdns\")\n"
             "  mping    Minimum observed ping time, in milliseconds (ms)\n"
             "  ping     Last observed ping time, in milliseconds (ms)\n"
@@ -460,11 +464,12 @@ public:
             if (network_id == UNKNOWN_NETWORK) continue;
             const bool is_outbound{!peer["inbound"].get_bool()};
             const bool is_block_relay{!peer["relaytxes"].get_bool()};
+            const std::string conn_type{peer["connection_type"].get_str()};
             ++m_counts.at(is_outbound).at(network_id);      // in/out by network
             ++m_counts.at(is_outbound).at(m_networks_size); // in/out overall
             ++m_counts.at(2).at(network_id);                // total by network
             ++m_counts.at(2).at(m_networks_size);           // total overall
-            if (is_block_relay) {
+            if (conn_type == "block-relay-only") {
                 ++m_counts.at(is_outbound).at(m_networks_size + 1); // in/out block-relay
                 ++m_counts.at(2).at(m_networks_size + 1);           // total block-relay
             }
@@ -483,7 +488,7 @@ public:
                 const std::string addr{peer["addr"].get_str()};
                 const std::string age{conn_time == 0 ? "" : ToString((m_time_now - conn_time) / 60)};
                 const std::string sub_version{peer["subver"].get_str()};
-                m_peers.push_back({addr, sub_version, network, age, min_ping, ping, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_block_relay, is_outbound});
+                m_peers.push_back({addr, sub_version, conn_type, network, age, min_ping, ping, last_blck, last_recv, last_send, last_trxn, peer_id, mapped_as, version, is_block_relay, is_outbound});
                 m_max_addr_length = std::max(addr.length() + 1, m_max_addr_length);
                 m_max_age_length = std::max(age.length(), m_max_age_length);
                 m_max_id_length = std::max(ToString(peer_id).length(), m_max_id_length);
@@ -497,15 +502,15 @@ public:
         // Report detailed peer connections list sorted by direction and minimum ping time.
         if (DetailsRequested() && !m_peers.empty()) {
             std::sort(m_peers.begin(), m_peers.end());
-            result += strprintf("<-> relay   net  mping   ping send recv  txn  blk %*s ", m_max_age_length, "age");
+            result += strprintf("<->   type   net  mping   ping send recv  txn  blk %*s ", m_max_age_length, "age");
             if (m_is_asmap_on) result += " asmap ";
             result += strprintf("%*s %-*s%s\n", m_max_id_length, "id", IsAddressSelected() ? m_max_addr_length : 0, IsAddressSelected() ? "address" : "", IsVersionSelected() ? "version" : "");
             for (const Peer& peer : m_peers) {
                 std::string version{ToString(peer.version) + peer.sub_version};
                 result += strprintf(
-                    "%3s %5s %5s%7s%7s%5s%5s%5s%5s %*s%*i %*s %-*s%s\n",
+                    "%3s %6s %5s%7s%7s%5s%5s%5s%5s %*s%*i %*s %-*s%s\n",
                     peer.is_outbound ? "out" : "in",
-                    peer.is_block_relay ? "block" : "full",
+                    ConnectionTypeForNetinfo(peer.conn_type),
                     peer.network,
                     PingTimeToString(peer.min_ping),
                     PingTimeToString(peer.ping),
@@ -523,7 +528,7 @@ public:
                     IsAddressSelected() ? peer.addr : "",
                     IsVersionSelected() && version != "0" ? version : "");
             }
-            result += strprintf("                    ms     ms  sec  sec  min  min %*s\n\n", m_max_age_length, "min");
+            result += strprintf("                     ms     ms  sec  sec  min  min %*s\n\n", m_max_age_length, "min");
         }
 
         // Report peer connection totals by type.
