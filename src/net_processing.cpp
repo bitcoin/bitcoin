@@ -4591,7 +4591,7 @@ bool PeerManager::SendMessages(CNode* pto)
         }
 
         //
-        // Message: getdata (non-blocks)
+        // Message: getdata (transactions)
         //
         std::vector<std::pair<NodeId, GenTxid>> expired;
         auto requestable = m_txrequest.GetRequestable(pto->GetId(), current_time, &expired);
