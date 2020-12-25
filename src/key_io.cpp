@@ -80,7 +80,9 @@ CKey DecodeSecret(const std::string& str)
             key.Set(data.begin() + privkey_prefix.size(), data.begin() + privkey_prefix.size() + 32, compressed);
         }
     }
-    memory_cleanse(data.data(), data.size());
+    if (!data.empty()) {
+        memory_cleanse(data.data(), data.size());
+    }
     return key;
 }
 
