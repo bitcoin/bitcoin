@@ -425,6 +425,7 @@ public:
 
     std::atomic<int64_t> nLastSend{0};
     std::atomic<int64_t> nLastRecv{0};
+    //! Unix epoch time at peer connection, in seconds.
     const int64_t nTimeConnected;
     std::atomic<int64_t> nTimeOffset{0};
     // Address of this peer
@@ -1281,6 +1282,7 @@ struct NodeEvictionCandidate
     uint64_t nKeyedNetGroup;
     bool prefer_evict;
     bool m_is_local;
+    bool m_is_onion;
 };
 
 /**

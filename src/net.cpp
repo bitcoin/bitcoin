@@ -992,7 +992,8 @@ bool CConnman::AttemptToEvictConnection()
                                                node->nLastBlockTime, node->nLastTXTime,
                                                HasAllDesirableServiceFlags(node->nServices),
                                                peer_relay_txes, peer_filter_not_null, node->nKeyedNetGroup,
-                                               node->m_prefer_evict, node->addr.IsLocal()};
+                                               node->m_prefer_evict, node->addr.IsLocal(),
+                                               node->m_inbound_onion};
             vEvictionCandidates.push_back(candidate);
         }
     }
