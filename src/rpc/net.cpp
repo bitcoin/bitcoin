@@ -188,7 +188,7 @@ static RPCHelpMan getpeerinfo()
         if (!(stats.addrLocal.empty())) {
             obj.pushKV("addrlocal", stats.addrLocal);
         }
-        obj.pushKV("network", stats.m_network);
+        obj.pushKV("network", GetNetworkName(stats.m_network));
         if (stats.m_mapped_as != 0) {
             obj.pushKV("mapped_as", uint64_t(stats.m_mapped_as));
         }
