@@ -346,7 +346,7 @@ RPCHelpMan masternode_payments()
     // A temporary vector which is used to sort results properly (there is no "reverse" in/for UniValue)
     std::vector<UniValue> vecPayments;
 
-    while (vecPayments.size() < (size_t)(std::abs(nCount)) != 0 && pindex != nullptr) {
+    while (vecPayments.size() < (size_t)std::abs(nCount) && pindex != nullptr) {
 
         CBlock block;
         if (!ReadBlockFromDisk(block, pindex, Params().GetConsensus())) {
