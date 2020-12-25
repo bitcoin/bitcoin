@@ -968,7 +968,7 @@ class DashTestFramework(SyscoinTestFramework):
         else:
             self.nodes[0].generate(1)
             proTxHash = self.nodes[0].protx_register(txid, collateral_vout, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
-        
+
         self.nodes[0].generate(1)
         self.mninfo.append(MasternodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout))
         self.sync_all()
