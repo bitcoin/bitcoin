@@ -496,6 +496,8 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
     clear();
 
     GUIUtil::handleCloseWindowShortcut(this);
+
+    ui->peerConnectionTypeLabel->setToolTip(ui->peerConnectionTypeLabel->toolTip().arg("addnode").arg(QString(nonbreaking_hyphen) + "addnode").arg(QString(nonbreaking_hyphen) + "connect"));
 }
 
 RPCConsole::~RPCConsole()
