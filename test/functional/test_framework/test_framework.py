@@ -1129,18 +1129,16 @@ class DashTestFramework(SyscoinTestFramework):
     def wait_for_tx(self, txid, node, expected=True, timeout=15):
         def check_tx():
             try:
-                time.sleep(0.5)
                 self.bump_mocktime(1)
                 return node.getrawtransaction(txid)
             except:
                 return False
-        if wait_until_helper(check_tx, timeout=timeout) and not expected:
+        if wait_until_helper(check_tx, timeout=timeout, sleep=0.5) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
     def wait_for_chainlocked_block(self, node, block_hash, expected=True, timeout=30):
         def check_chainlocked_block():
             try:
-                time.sleep(0.5)
                 self.bump_mocktime(1)
                 block = node.getblock(block_hash)
                 return block["confirmations"] > 0 and block["chainlock"] is True
@@ -1160,11 +1158,10 @@ class DashTestFramework(SyscoinTestFramework):
 
     def wait_for_sporks_same(self, timeout=30):
         def check_sporks_same():
-            time.sleep(0.5)
             self.bump_mocktime(1)
             sporks = self.nodes[0].spork('show')
             return all(node.spork('show') == sporks for node in self.nodes[1:])
-        wait_until_helper(check_sporks_same, timeout=timeout)
+        wait_until_helper(check_sporks_same, timeout=timeout, sleep=0.5)
 
     def wait_for_quorum_connections(self, expected_connections, nodes, timeout = 60, wait_proc=None, done_proc=None):
         def check_quorum_connections():
@@ -1192,8 +1189,7 @@ class DashTestFramework(SyscoinTestFramework):
             if all_ok is True and done_proc is not None:
                 done_proc()
             return all_ok
-        time.sleep(1)
-        wait_until_helper(check_quorum_connections, timeout=timeout)
+        wait_until_helper(check_quorum_connections, timeout=timeout, sleep=1)
 
     def wait_for_masternode_probes(self, mninfos, timeout = 30, wait_proc=None):
         def check_probes():
@@ -1228,8 +1224,7 @@ class DashTestFramework(SyscoinTestFramework):
                                 return ret()
 
             return True
-        time.sleep(1)
-        wait_until_helper(check_probes, timeout=timeout)
+        wait_until_helper(check_probes, timeout=timeout, sleep=1)
 
     def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, wait_proc=None, done_proc=None, timeout=30, sleep=0.5):
         def check_dkg_session():
@@ -1261,8 +1256,7 @@ class DashTestFramework(SyscoinTestFramework):
             if all_ok is True and done_proc is not None:
                 done_proc()
             return all_ok
-        time.sleep(sleep)
-        wait_until_helper(check_dkg_session, timeout=timeout)
+        wait_until_helper(check_dkg_session, timeout=timeout, sleep=sleep)
 
     def wait_for_quorum_commitment(self, quorum_hash, nodes, timeout = 15, wait_proc=None, done_proc=None):
         def check_dkg_comitments():
