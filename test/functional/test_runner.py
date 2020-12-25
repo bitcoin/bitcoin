@@ -154,7 +154,7 @@ BASE_SCRIPTS = [
     'wallet_txn_clone.py --segwit',
     'rpc_getchaintips.py',
     'rpc_misc.py',
-    'rpc_masternode.py',
+    #'rpc_masternode.py',
     'interface_rest.py',
     'mempool_spend_coinbase.py',
     'wallet_avoidreuse.py',
