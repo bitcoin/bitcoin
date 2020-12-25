@@ -463,6 +463,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
     ui->dataDir->setToolTip(ui->dataDir->toolTip().arg(QString(nonbreaking_hyphen) + "datadir"));
     ui->blocksDir->setToolTip(ui->blocksDir->toolTip().arg(QString(nonbreaking_hyphen) + "blocksdir"));
     ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(PACKAGE_NAME));
+    ui->peerConnectionTypeLabel->setToolTip(ui->peerConnectionTypeLabel->toolTip().arg("addnode").arg(QString(nonbreaking_hyphen) + "addnode").arg(QString(nonbreaking_hyphen) + "connect"));
 
     if (platformStyle->getImagesOnButtons()) {
         ui->openDebugLogfileButton->setIcon(platformStyle->SingleColorIcon(":/icons/export"));
