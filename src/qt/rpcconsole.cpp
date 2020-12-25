@@ -457,6 +457,8 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
         move(QGuiApplication::primaryScreen()->availableGeometry().center() - frameGeometry().center());
     }
 
+    ui->splitter->restoreState(settings.value("PeersTabSplitterSizes").toByteArray());
+
     QChar nonbreaking_hyphen(8209);
     ui->dataDir->setToolTip(ui->dataDir->toolTip().arg(QString(nonbreaking_hyphen) + "datadir"));
     ui->blocksDir->setToolTip(ui->blocksDir->toolTip().arg(QString(nonbreaking_hyphen) + "blocksdir"));
@@ -502,6 +504,7 @@ RPCConsole::~RPCConsole()
 {
     QSettings settings;
     settings.setValue("RPCConsoleWindowGeometry", saveGeometry());
+    settings.setValue("PeersTabSplitterSizes", ui->splitter->saveState());
     m_node.rpcUnsetTimerInterface(rpcTimerInterface);
     delete rpcTimerInterface;
     delete ui;
