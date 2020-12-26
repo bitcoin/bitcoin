@@ -45,13 +45,15 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
         # Make sure no banning happens with spork21 enabled
         self.test_no_banning()
-
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
         # Lets restart masternodes with closed ports and verify that they get banned even though they are connected to other MNs (via outbound connections)
         self.test_banning(self.close_mn_port, 3)
 
         self.repair_masternodes(True)
         self.reset_probe_timeouts()
-
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
         self.test_banning(self.force_old_mn_proto, 3)
 
     def isolate_mn(self, mn):
@@ -74,6 +76,10 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.stop_node(mn.node.index)
         self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime), "-pushversion=70015"])
         self.connect_nodes(mn.node.index, 0)
+        # Make sure the to-be-banned node is still connected well via outbound connections
+        for mn2 in self.mninfo:
+            if mn2 is not mn:
+                self.connect_nodes(mn.node.index, mn2.node.index)
         self.reset_probe_timeouts()
         return False
 
@@ -99,8 +105,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 # Make sure we do fresh probes
                 self.bump_mocktime(50 * 60 + 1)
                 # Sleep a couple of seconds to let mn sync tick to happen
-                time.sleep(5)
-                self.bump_mocktime(5)
+                time.sleep(2)
                 self.nodes[0].generate(1)
                 self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
 
