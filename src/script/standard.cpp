@@ -221,7 +221,8 @@ bool ExtractDestination(const CScript& scriptPubKey, TxoutType& whichType, CTxDe
     return false;
 }
 
-bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet) {
+bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
+{
     TxoutType type;
     return ExtractDestination(scriptPubKey, type, addressRet);
 }
