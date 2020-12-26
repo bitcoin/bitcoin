@@ -37,7 +37,7 @@ Individual tests can be run by directly calling the test script, e.g.:
 test/functional/feature_rbf.py
 ```
 
-or can be run through the test_runner harness, eg:
+or can be run through the test_runner harness, e.g.:
 
 ```
 test/functional/test_runner.py feature_rbf.py
@@ -106,7 +106,7 @@ bitcoind process running when the tests are started.
 
 If there are zombie bitcoind processes after test failure, you can kill them
 by running the following commands. **Note that these commands will kill all
-bitcoind processes running on the system, so should not be used if any non-test
+bitcoind processes running on the system, so they should not be used if any non-test
 bitcoind processes are being run.**
 
 ```bash
@@ -172,7 +172,7 @@ test/functional/combine_logs.py -c <test data directory> | less -r
 will pipe the colorized logs from the test into less.
 
 Use `--tracerpc` to trace out all the RPC calls and responses to the console. For
-some tests (eg any that use `submitblock` to submit a full block over RPC),
+some tests (e.g. any that use `submitblock` to submit a full block over RPC),
 this can result in a lot of screen output.
 
 By default, the test data directory will be deleted after a successful run.
