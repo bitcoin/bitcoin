@@ -143,6 +143,10 @@ static RPCHelpMan getpeerinfo()
                             }},
                             {RPCResult::Type::BOOL, "whitelisted", /* optional */ true, "Whether the peer is whitelisted with default permissions\n"
                                                                                         "(DEPRECATED, returned only if config option -deprecatedrpc=whitelisted is passed)"},
+                            {RPCResult::Type::ARR, "permissions", "Any special permissions that have been granted to this peer",
+                            {
+                                {RPCResult::Type::STR, "permission_type", Join(NET_PERMISSIONS_DOC, ",\n") + ".\n"},
+                            }},
                             {RPCResult::Type::NUM, "minfeefilter", "The minimum fee rate for transactions this peer accepts"},
                             {RPCResult::Type::OBJ_DYN, "bytessent_per_msg", "",
                             {
