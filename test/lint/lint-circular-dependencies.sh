@@ -20,7 +20,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "txmempool -> validation -> txmempool"
     "wallet/fees -> wallet/wallet -> wallet/fees"
     "wallet/wallet -> wallet/walletdb -> wallet/wallet"
-    "core_io -> rpc/server -> rpc/util -> node/coinstats -> validation -> signet -> core_io"
 )
 
 EXIT_CODE=0

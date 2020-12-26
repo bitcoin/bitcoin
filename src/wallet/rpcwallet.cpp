@@ -3660,6 +3660,7 @@ public:
         obj.pushKV("hex", HexStr(subscript));
 
         CTxDestination embedded;
+        const std::vector<std::string> enabled_methods = gArgs.GetArgs("-deprecatedrpc");
         if (ExtractDestination(subscript, embedded)) {
             // Only when the script corresponds to an address.
             UniValue subobj(UniValue::VOBJ);
@@ -3672,7 +3673,8 @@ public:
             // Always report the pubkey at the top level, so that `getnewaddress()['pubkey']` always works.
             if (subobj.exists("pubkey")) obj.pushKV("pubkey", subobj["pubkey"]);
             obj.pushKV("embedded", std::move(subobj));
-        } else if (IsDeprecatedRPCEnabled("reqSigs") && which_type == TxoutType::MULTISIG) {
+        } else if (find(enabled_methods.begin(), enabled_methods.end(), "reqSigs") != enabled_methods.end() &&
+                   which_type == TxoutType::MULTISIG) {
             // TODO: from v0.22 ("addresses" and "reqSigs" deprecated) this entire else if statement should be removed
             obj.pushKV("sigsrequired", solutions_data[0][0]);
             UniValue pubkeys(UniValue::VARR);

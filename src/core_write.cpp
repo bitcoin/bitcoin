@@ -7,7 +7,6 @@
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <key_io.h>
-#include <rpc/server.h>
 #include <script/script.h>
 #include <script/standard.h>
 #include <serialize.h>
@@ -161,7 +160,8 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fInclud
         out.pushKV("hex", HexStr(scriptPubKey));
 
     // TODO: from v0.22 ("addresses" and "reqSigs" deprecated) this entire if statement should be removed
-    if (IsDeprecatedRPCEnabled("reqSigs")) { // cruft...
+    const std::vector<std::string> enabled_methods = gArgs.GetArgs("-deprecatedrpc");
+    if (find(enabled_methods.begin(), enabled_methods.end(), "reqSigs") != enabled_methods.end()) {
         std::vector<CTxDestination> addresses;
         int nRequired;
         if (ExtractDestinations(scriptPubKey, type, addresses, nRequired) && type != TxoutType::PUBKEY) {

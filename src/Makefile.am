@@ -502,14 +502,12 @@ libbitcoin_common_a_SOURCES = \
   protocol.cpp \
   psbt.cpp \
   rpc/rawtransaction_util.cpp \
-  rpc/server.cpp \
   rpc/util.cpp \
   scheduler.cpp \
   script/descriptor.cpp \
   script/sign.cpp \
   script/signingprovider.cpp \
   script/standard.cpp \
-  shutdown.cpp \
   versionbitsinfo.cpp \
   warnings.cpp \
   $(BITCOIN_CORE_H)
