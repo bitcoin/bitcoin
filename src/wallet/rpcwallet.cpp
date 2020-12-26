@@ -3660,7 +3660,6 @@ public:
         obj.pushKV("hex", HexStr(subscript));
 
         CTxDestination embedded;
-        const std::vector<std::string> enabled_methods = gArgs.GetArgs("-deprecatedrpc");
         if (ExtractDestination(subscript, embedded)) {
             // Only when the script corresponds to an address.
             UniValue subobj(UniValue::VOBJ);
@@ -3673,16 +3672,6 @@ public:
             // Always report the pubkey at the top level, so that `getnewaddress()['pubkey']` always works.
             if (subobj.exists("pubkey")) obj.pushKV("pubkey", subobj["pubkey"]);
             obj.pushKV("embedded", std::move(subobj));
-        } else if (find(enabled_methods.begin(), enabled_methods.end(), "reqSigs") != enabled_methods.end() &&
-                   which_type == TxoutType::MULTISIG) {
-            // TODO: from v0.22 ("addresses" and "reqSigs" deprecated) this entire else if statement should be removed
-            obj.pushKV("sigsrequired", solutions_data[0][0]);
-            UniValue pubkeys(UniValue::VARR);
-            for (size_t i = 1; i < solutions_data.size() - 1; ++i) {
-                CPubKey key(solutions_data[i].begin(), solutions_data[i].end());
-                pubkeys.push_back(HexStr(key));
-            }
-            obj.pushKV("pubkeys", std::move(pubkeys));
         }
     }
 
@@ -3790,11 +3779,7 @@ RPCHelpMan getaddressinfo()
                                                                      "types: nonstandard, pubkey, pubkeyhash, scripthash, multisig, nulldata, witness_v0_keyhash,\n"
                             "witness_v0_scripthash, witness_unknown."},
                         {RPCResult::Type::STR_HEX, "hex", /* optional */ true, "The redeemscript for the p2sh address."},
-                        {RPCResult::Type::ARR, "pubkeys", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=reqSigs is passed) Array of pubkeys associated with the known redeemscript (only if script is multisig).",
-                        {
-                            {RPCResult::Type::STR, "pubkey", ""},
-                        }},
-                        {RPCResult::Type::NUM, "sigsrequired", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=reqSigs is passed) The number of signatures required to spend multisig output (only if script is multisig)."},
+                        {RPCResult::Type::STR, "pubkey", ""},
                         {RPCResult::Type::STR_HEX, "pubkey", /* optional */ true, "The hex value of the raw public key for single-key addresses (possibly embedded in P2SH or P2WSH)."},
                         {RPCResult::Type::OBJ, "embedded", /* optional */ true, "Information about the address embedded in P2SH or P2WSH, if relevant and known.",
                         {

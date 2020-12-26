@@ -159,20 +159,6 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fInclud
     if (fIncludeHex)
         out.pushKV("hex", HexStr(scriptPubKey));
 
-    // TODO: from v0.22 ("addresses" and "reqSigs" deprecated) this entire if statement should be removed
-    const std::vector<std::string> enabled_methods = gArgs.GetArgs("-deprecatedrpc");
-    if (find(enabled_methods.begin(), enabled_methods.end(), "reqSigs") != enabled_methods.end()) {
-        std::vector<CTxDestination> addresses;
-        int nRequired;
-        if (ExtractDestinations(scriptPubKey, type, addresses, nRequired) && type != TxoutType::PUBKEY) {
-            out.pushKV("reqSigs", nRequired);
-            UniValue a(UniValue::VARR);
-            for (const CTxDestination& addr : addresses) {
-                a.push_back(EncodeDestination(addr));
-            }
-            out.pushKV("addresses", a);
-        }
-    }
     if (ExtractDestination(scriptPubKey, type, address) && type != TxoutType::PUBKEY) {
         out.pushKV("address", EncodeDestination(address));
     }
