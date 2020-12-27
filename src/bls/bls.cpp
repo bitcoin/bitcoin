@@ -40,9 +40,8 @@ CBLSSecretKey CBLSSecretKey::AggregateInsecure(const std::vector<CBLSSecretKey>&
         v.emplace_back(sk.impl);
     }
 
-    auto agg = bls::PrivateKey::AggregateInsecure(v);
     CBLSSecretKey ret;
-    ret.impl = agg;
+    ret.impl = bls::PrivateKey::AggregateInsecure(v);
     ret.fValid = true;
     ret.UpdateHash();
     return ret;
@@ -141,9 +140,8 @@ CBLSPublicKey CBLSPublicKey::AggregateInsecure(const std::vector<CBLSPublicKey>&
         v.emplace_back(pk.impl);
     }
 
-    auto agg = bls::PublicKey::AggregateInsecure(v);
     CBLSPublicKey ret;
-    ret.impl = agg;
+    ret.impl = bls::PublicKey::AggregateInsecure(v);
     ret.fValid = true;
     ret.UpdateHash();
     return ret;
@@ -211,9 +209,8 @@ CBLSSignature CBLSSignature::AggregateInsecure(const std::vector<CBLSSignature>&
         v.emplace_back(pk.impl);
     }
 
-    auto agg = bls::InsecureSignature::Aggregate(v);
     CBLSSignature ret;
-    ret.impl = agg;
+    ret.impl = bls::InsecureSignature::Aggregate(v);
     ret.fValid = true;
     ret.UpdateHash();
     return ret;
@@ -235,9 +232,8 @@ CBLSSignature CBLSSignature::AggregateSecure(const std::vector<CBLSSignature>& s
         v.emplace_back(bls::Signature::FromInsecureSig(sigs[i].impl, aggInfo));
     }
 
-    auto aggSig = bls::Signature::AggregateSigs(v);
     CBLSSignature ret;
-    ret.impl = aggSig.GetInsecureSig();
+    ret.impl = bls::Signature::AggregateSigs(v).GetInsecureSig();
     ret.fValid = true;
     ret.UpdateHash();
     return ret;
