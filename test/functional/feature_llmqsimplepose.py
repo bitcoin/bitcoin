@@ -104,6 +104,8 @@ class LLMQSimplePoSeTest(DashTestFramework):
             while (not self.check_banned(mn)) and (time.time() - t) < 120:
                 # Make sure we do fresh probes
                 self.bump_mocktime(50 * 60 + 1)
+                for i in range(len(self.nodes)):
+                    force_finish_mnsync(self.nodes[i])
                 # Sleep a couple of seconds to let mn sync tick to happen
                 time.sleep(2)
                 self.nodes[0].generate(1)
