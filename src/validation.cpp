@@ -2385,7 +2385,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     std::string strError = "";
     // add seniority to reward when checking for limit
     if (!IsBlockValueValid(block, pindex->nHeight, blockReward+nFees+nMNSeniorityRet, strError) && (fRegTest || pindex->nHeight >= chainparams.GetConsensus().nUTXOAssetsBlock)) {
-        LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%lld vs limit=%lld)\n", block.vtx[0]->GetValueOut(), blockReward+nFees);
+        LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%lld vs limit=%lld)\n", block.vtx[0]->GetValueOut(), blockReward+nFees+nMNSeniorityRet);
         // hack for feature_signet.py to pass which uses bitcoin blocks signed by the signet witness
         if(!fSigNet || pindex->nHeight > 100) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
@@ -4724,6 +4724,12 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             } else {
                 nGoodTransactions += block.vtx.size();
             }
+            // SYSCOIN must flush for now because disconnect may remove asset data and rolling forward expects it to be clean from db
+            if(passetdb != nullptr){
+                if(!passetdb->Flush(mapAssets) || !pethereumtxmintdb->FlushErase(mapMintKeys) || !pblockindexdb->FlushErase(vecTXIDs)){
+                    return error("VerifyDB(): Error flushing to asset dbs on disconnect %s", pindex->GetBlockHash().ToString());
+                }
+            }
         }
         if (ShutdownRequested()) return true;
     }
@@ -4735,12 +4741,6 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
 
     // check level 4: try reconnecting blocks
     if (nCheckLevel >= 4) {
-        // SYSCOIN must flush for now because disconnect may remove asset data and rolling forward expects it to be clean from db
-        if(passetdb != nullptr){
-            if(!passetdb->Flush(mapAssets) || !pethereumtxmintdb->FlushErase(mapMintKeys) || !pblockindexdb->FlushErase(vecTXIDs)){
-                return error("VerifyDB(): Error flushing to asset dbs on disconnect %s", pindex->GetBlockHash().ToString());
-            }
-        }
         while (pindex != ::ChainActive().Tip()) {
             const int percentageDone = std::max(1, std::min(99, 100 - (int)(((double)(::ChainActive().Height() - pindex->nHeight)) / (double)nCheckDepth * 50)));
             if (reportDone < percentageDone/10) {
