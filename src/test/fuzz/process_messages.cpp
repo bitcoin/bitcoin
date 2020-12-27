@@ -72,6 +72,10 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
             connman.ProcessMessagesOnce(random_node);
         } catch (const std::ios_base::failure&) {
         }
+        {
+            LOCK(random_node.cs_sendProcessing);
+            g_setup->m_node.peer_logic->SendMessages(&random_node);
+        }
     }
     connman.ClearTestNodes();
     SyncWithValidationInterfaceQueue();
