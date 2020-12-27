@@ -2007,8 +2007,8 @@ void CConnman::WakeSelect()
         return;
     }
 
-    char buf[1];
-    if (write(wakeupPipe[1], buf, 1) != 1) {
+    char buf{0};
+    if (write(wakeupPipe[1], &buf, sizeof(buf)) != 1) {
         LogPrint(BCLog::NET, "write to wakeupPipe failed\n");
     }
 #endif
