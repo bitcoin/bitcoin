@@ -22,6 +22,7 @@ class AssetBurnTest(SyscoinTestFramework):
         self.sync_blocks()
         self.basic_burn_asset()
         self.basic_burn_asset_multiple()
+        self.two_way_burn()
 
     def basic_burn_asset(self):
         self.basic_asset(None)
@@ -30,14 +31,52 @@ class AssetBurnTest(SyscoinTestFramework):
         self.nodes[0].assetsend(self.asset, self.nodes[1].getnewaddress(), 0.5)
         self.nodes[0].generate(1)
         self.sync_blocks()
-        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
+        out =  self.nodes[1].listunspentasset(self.asset)
         assert_equal(len(out), 1)
         # try to burn more than we own
         assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[1].assetallocationburn, self.asset, 0.6, "0x931d387731bbbc988b312206c74f77d004d6b84b")
         self.nodes[1].assetallocationburn(self.asset, 0.5, "0x931d387731bbbc988b312206c74f77d004d6b84b")
         self.nodes[0].generate(1)
         self.sync_blocks()
-        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
+        out =  self.nodes[1].listunspentasset(self.asset)
+        assert_equal(len(out), 0)
+
+    def two_way_burn(self):
+        # burn SYS to SYSX and back
+        self.nodes[0].generate(1)
+        self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 100)
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        balancebefore = self.nodes[1].getbalance()
+        txid = self.nodes[1].syscoinburntoassetallocation(self.asset, 50)['txid']
+        fee = self.nodes[1].gettransaction(txid)['fee']
+        assert_equal(self.nodes[1].getbalance(), (balancebefore + fee) - 50)
+        self.sync_mempools()
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        out = self.nodes[1].listunspentasset(self.asset)
+        assert_equal(len(out), 1)
+        # try to burn more than we own
+        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[1].assetallocationburn, self.asset, 55, "")
+        # burn part of it
+        balancebefore = self.nodes[1].getbalance()
+        txid = self.nodes[1].assetallocationburn(self.asset, 22)['txid']
+        self.sync_mempools()
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        fee = self.nodes[1].gettransaction(txid)['fee']
+        assert_equal(self.nodes[1].getbalance(), (balancebefore + fee) + 22)
+        out = self.nodes[1].listunspentasset(self.asset)
+        assert_equal(len(out), 1)
+        # burn the rest
+        balancebefore = self.nodes[1].getbalance()
+        txid = self.nodes[1].assetallocationburn(self.asset, 28)['txid']
+        self.sync_mempools()
+        self.nodes[0].generate(1)
+        self.sync_blocks()
+        fee = self.nodes[1].gettransaction(txid)['fee']
+        assert_equal(self.nodes[1].getbalance(), (balancebefore + fee) + 28)
+        out = self.nodes[1].listunspentasset(self.asset)
         assert_equal(len(out), 0)
 
     def basic_burn_asset_multiple(self):
@@ -48,7 +87,7 @@ class AssetBurnTest(SyscoinTestFramework):
         self.nodes[0].assetsend(self.asset, self.nodes[1].getnewaddress(), 1)
         self.nodes[0].generate(1)
         self.sync_blocks()
-        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
+        out =  self.nodes[1].listunspentasset(self.asset)
         assert_equal(len(out), 1)
         # burn 0.4 + 0.5 + 0.05
         prebalance = float(self.nodes[1].getbalance())
@@ -81,7 +120,7 @@ class AssetBurnTest(SyscoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_blocks()
         # check over block too
-        out =  self.nodes[1].listunspent(query_options={'assetGuid': self.asset})
+        out =  self.nodes[1].listunspentasset(self.asset)
         assert_equal(len(out), 0)
 
     def basic_asset(self, guid):

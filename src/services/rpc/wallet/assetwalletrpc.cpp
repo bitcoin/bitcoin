@@ -1391,7 +1391,7 @@ static RPCHelpMan assetallocationburn()
         {
             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to burn to SYSX"},
-            {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The 20 byte (40 character) hex string of the ethereum destination address. Set to '' to burn to Syscoin."}
+            {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The 20 byte (40 character) hex string of the ethereum destination address. Omit or leave empty to burn to Syscoin."}
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -1430,7 +1430,9 @@ static RPCHelpMan assetallocationburn()
     catch(...) {
         nAmount = params[1].get_int64();
     }
-	std::string ethAddress = params[2].get_str();
+	std::string ethAddress = "";
+    if(params[2].isStr())
+        ethAddress = params[2].get_str();
     boost::erase_all(ethAddress, "0x");  // strip 0x if exist
     CScript scriptData;
     int32_t nVersionIn = 0;
