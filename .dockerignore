@@ -27,6 +27,7 @@
 !/contrib
 !/doc
 !/infra/configure-itcoin-core.sh
+!/infra/render-template.sh
 !/libbitcoinconsensus.pc.in
 !/Makefile.am
 !/share

@@ -85,6 +85,7 @@ WORKDIR /opt/itcoin-core
 
 RUN apt update && \
     apt install --no-install-recommends -y \
+        gettext-base \
         libboost-filesystem1.71.0 \
         libboost-thread1.71.0 \
         libdb5.3++ \
@@ -117,6 +118,10 @@ COPY \
     /contrib/signet/miner \
     /opt/itcoin-core/bin/miner
 
+COPY \
+    /infra/render-template.sh \
+    /opt/itcoin-core/bin/
+
 # Put a symlink to the bitcoin* programs in /usr/local/bin, so that they can be
 # easily executed from anywhere, including from outside the container.
 RUN \
@@ -126,4 +131,5 @@ RUN \
     ln -s /opt/itcoin-core/bin/bitcoin-wallet /usr/local/bin/ && \
     ln -s /opt/itcoin-core/bin/bitcoind       /usr/local/bin/ && \
     ln -s /opt/itcoin-core/bin/miner          /usr/local/bin/ && \
+    ln -s /opt/itcoin-core/bin/render-template.sh /usr/local/bin/ && \
     echo "The bitcoin* programs are in the PATH: they can be executed from anywhere, even outside the container"
