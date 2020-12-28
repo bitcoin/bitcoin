@@ -12,21 +12,18 @@
 #include <txmempool.h>
 #include <util/system.h>
 
-static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
+static const char* FEE_ESTIMATES_FILENAME = "fee_estimates.dat";
 
 static constexpr double INF_FEERATE = 1e99;
 
-std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon) {
-    static const std::map<FeeEstimateHorizon, std::string> horizon_strings = {
-        {FeeEstimateHorizon::SHORT_HALFLIFE, "short"},
-        {FeeEstimateHorizon::MED_HALFLIFE, "medium"},
-        {FeeEstimateHorizon::LONG_HALFLIFE, "long"},
-    };
-    auto horizon_string = horizon_strings.find(horizon);
-
-    if (horizon_string == horizon_strings.end()) return "unknown";
-
-    return horizon_string->second;
+std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon)
+{
+    switch (horizon) {
+    case FeeEstimateHorizon::SHORT_HALFLIFE: return "short";
+    case FeeEstimateHorizon::MED_HALFLIFE: return "medium";
+    case FeeEstimateHorizon::LONG_HALFLIFE: return "long";
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 /**
  * We will instantiate an instance of this class to track transactions that were
@@ -642,7 +639,7 @@ CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget) const
 
 CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThreshold, FeeEstimateHorizon horizon, EstimationResult* result) const
 {
-    TxConfirmStats* stats;
+    TxConfirmStats* stats = nullptr;
     double sufficientTxs = SUFFICIENT_FEETXS;
     switch (horizon) {
     case FeeEstimateHorizon::SHORT_HALFLIFE: {
@@ -658,10 +655,8 @@ CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThr
         stats = longStats.get();
         break;
     }
-    default: {
-        throw std::out_of_range("CBlockPolicyEstimator::estimateRawFee unknown FeeEstimateHorizon");
-    }
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(stats);
 
     LOCK(m_cs_fee_estimator);
     // Return failure if trying to analyze a target we're not tracking
@@ -691,10 +686,8 @@ unsigned int CBlockPolicyEstimator::HighestTargetTracked(FeeEstimateHorizon hori
     case FeeEstimateHorizon::LONG_HALFLIFE: {
         return longStats->GetMaxConfirms();
     }
-    default: {
-        throw std::out_of_range("CBlockPolicyEstimator::HighestTargetTracked unknown FeeEstimateHorizon");
-    }
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 unsigned int CBlockPolicyEstimator::BlockSpan() const
