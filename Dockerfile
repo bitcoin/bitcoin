@@ -37,7 +37,23 @@ RUN mkdir /opt/itcoin-core-source
 
 WORKDIR /opt/itcoin-core-source
 
-COPY . .
+COPY /build-aux build-aux/
+COPY /contrib contrib/
+COPY /doc doc/
+COPY /share share/
+COPY /src src/
+COPY /test test/
+
+COPY \
+    /autogen.sh \
+    /configure.ac \
+    /libbitcoinconsensus.pc.in \
+    /Makefile.am \
+    ./
+
+COPY \
+    /infra/configure-itcoin-core.sh \
+    /opt/itcoin-core-source/infra/
 
 RUN infra/configure-itcoin-core.sh
 
