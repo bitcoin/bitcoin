@@ -109,10 +109,7 @@ class DashZMQTest (DashTestFramework):
             self.socket = self.zmq_context.socket(zmq.SUB)
             self.socket.connect(self.address)
             # Initialize the network
-            self.log.info("Wait for dip0008 activation")
-            while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
-                self.nodes[0].generate(10)
-            self.sync_blocks()
+            self.activate_dip8()
             self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
             self.wait_for_sporks_same()
             # Create an LLMQ for testing

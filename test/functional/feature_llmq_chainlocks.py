@@ -29,11 +29,7 @@ class LLMQChainLocksTest(DashTestFramework):
             if i != 1:
                 connect_nodes(self.nodes[i], 1)
 
-        self.log.info("Wait for dip0008 activation")
-
-        while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
-            self.nodes[0].generate(10)
-        self.sync_blocks(self.nodes, timeout=60*5)
+        self.activate_dip8()
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()

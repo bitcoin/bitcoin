@@ -251,13 +251,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
         assert(cbtx["cbTx"]["version"] == 1)
 
-        assert(self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active")
-
-        while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
-            self.nodes[0].generate(4)
-            self.sync_all()
-        self.nodes[0].generate(1)
-        self.sync_blocks()
+        self.activate_dip8()
 
         # Assert that merkleRootQuorums is present and 0 (we have no quorums yet)
         cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]

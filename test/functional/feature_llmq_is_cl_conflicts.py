@@ -51,10 +51,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         #disable_mocktime()
 
     def run_test(self):
-
-        while self.nodes[0].getblockchaininfo()["bip9_softforks"]["dip0008"]["status"] != "active":
-            self.nodes[0].generate(10)
-        self.sync_blocks(self.nodes, timeout=60*5)
+        self.activate_dip8()
 
         self.test_node = self.nodes[0].add_p2p_connection(TestP2PConn())
         network_thread_start()

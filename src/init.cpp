@@ -1489,6 +1489,14 @@ bool AppInitParameterInteraction()
         UpdateDIP3Parameters(nDIP3ActivationHeight, nDIP3EnforcementHeight);
     }
 
+    if (gArgs.IsArgSet("-dip8params")) {
+        // Allow overriding dip8 activation height for testing
+        if (!chainparams.MineBlocksOnDemand()) {
+            return InitError("DIP8 activation height may only be overridden on regtest.");
+        }
+        UpdateDIP8Parameters(gArgs.GetArg("-dip8params", Params().GetConsensus().DIP0008Height));
+    }
+
     if (gArgs.IsArgSet("-budgetparams")) {
         // Allow overriding budget parameters for testing
         if (!chainparams.MineBlocksOnDemand()) {

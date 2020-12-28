@@ -543,10 +543,15 @@ class DashTestFramework(BitcoinTestFramework):
         self.llmq_threshold = 2
 
     def set_dash_dip8_activation(self, activate_after_block):
-        window = int((activate_after_block + 2) / 3)
-        threshold = int((window + 1) / 2)
+        self.dip8_activation_height = activate_after_block
         for i in range(0, self.num_nodes):
-            self.extra_args[i].append("-vbparams=dip0008:0:999999999999:%d:%d" % (window, threshold))
+            self.extra_args[i].append("-dip8params=%d" % (activate_after_block))
+
+    def activate_dip8(self):
+        self.log.info("Wait for dip0008 activation")
+        while self.nodes[0].getblockcount() < self.dip8_activation_height:
+            self.nodes[0].generate(10)
+        self.sync_blocks(self.nodes)
 
     def set_dash_llmq_test_params(self, llmq_size, llmq_threshold):
         self.llmq_size = llmq_size
