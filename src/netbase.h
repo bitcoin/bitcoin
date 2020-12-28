@@ -68,7 +68,7 @@ std::unique_ptr<Sock> CreateSockTCP(const CService& address_family);
 extern std::function<std::unique_ptr<Sock>(const CService&)> CreateSock;
 
 bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocketRet, int nTimeout, bool manual_connection);
-bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int port, const SOCKET& hSocketRet, int nTimeout, bool& outProxyConnectionFailed);
+bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, int port, const Sock& hSocketRet, int nTimeout, bool& outProxyConnectionFailed);
 /** Disable or enable blocking-mode for a socket */
 bool SetSocketNonBlocking(const SOCKET& hSocket, bool fNonBlocking);
 /** Set the TCP_NODELAY flag on a socket */

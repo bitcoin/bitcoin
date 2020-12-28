@@ -440,7 +440,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
                 return nullptr;
             }
             connected = ConnectThroughProxy(proxy, addrConnect.ToStringIP(), addrConnect.GetPort(),
-                                            sock->Get(), nConnectTimeout, proxyConnectionFailed);
+                                            *sock, nConnectTimeout, proxyConnectionFailed);
         } else {
             // no proxy needed (none set for target network)
             sock = CreateSock(addrConnect);
@@ -464,7 +464,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         int port = default_port;
         SplitHostPort(std::string(pszDest), port, host);
         bool proxyConnectionFailed;
-        connected = ConnectThroughProxy(proxy, host, port, sock->Get(), nConnectTimeout,
+        connected = ConnectThroughProxy(proxy, host, port, *sock, nConnectTimeout,
                                         proxyConnectionFailed);
     }
     if (!connected) {
