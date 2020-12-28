@@ -170,6 +170,12 @@ public:
     inline static std::optional<int64_t> m_last_block_num_txs{};
     inline static std::optional<int64_t> m_last_block_weight{};
 
+    /* This function wraps addPackageTxs to calculate and return the minimum fee
+     * rate required for a package to currently be included in the highest fee rate
+     * block possible based on mempool transactions.
+     */
+    CFeeRate MinTxFeeRate();
+
 private:
     // utility functions
     /** Clear the block's state and prepare for assembling a new block */
@@ -180,8 +186,10 @@ private:
     // Methods for how to add transactions to a block.
     /** Add transactions based on feerate including unconfirmed ancestors
       * Increments nPackagesSelected / nDescendantsUpdated with corresponding
-      * statistics from the package selection (for logging statistics). */
-    void addPackageTxs(int& nPackagesSelected, int& nDescendantsUpdated) EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);
+      * statistics from the package selection (for logging statistics).
+      * Populates min_package_fee_rate with the minimum fee rate of a package
+      * included in the block (used for rebroadcast cache). */
+    void addPackageTxs(int& nPackagesSelected, int& nDescendantsUpdated, CFeeRate* min_package_fee_rate = nullptr) EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);
 
     // helper functions for addPackageTxs()
     /** Remove confirmed (inBlock) entries from given set */

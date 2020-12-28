@@ -305,6 +305,25 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::ve
     std::sort(sortedEntries.begin(), sortedEntries.end(), CompareTxIterByAncestorCount());
 }
 
+CFeeRate BlockAssembler::MinTxFeeRate()
+{
+    int packages_selected = 0;
+    int descendants_updated = 0;
+    CFeeRate min_fee_rate = CFeeRate(COIN, 1);
+
+    resetBlock();
+    pblocktemplate = std::make_unique<CBlockTemplate>();
+
+    CBlockIndex* prev_block_index = m_chainstate.m_chain.Tip();
+    assert(prev_block_index != nullptr);
+    nHeight = prev_block_index->nHeight + 1;
+    nLockTimeCutoff = prev_block_index->GetMedianTimePast();
+    fIncludeWitness = IsWitnessEnabled(prev_block_index, chainparams.GetConsensus());
+
+    WITH_LOCK(m_mempool.cs, addPackageTxs(packages_selected, descendants_updated, &min_fee_rate));
+    return min_fee_rate;
+}
+
 // This transaction selection algorithm orders the mempool based
 // on feerate of a transaction including all unconfirmed ancestors.
 // Since we don't remove transactions from the mempool as we select them
@@ -315,7 +334,7 @@ void BlockAssembler::SortForBlock(const CTxMemPool::setEntries& package, std::ve
 // Each time through the loop, we compare the best transaction in
 // mapModifiedTxs with the next transaction in the mempool to decide what
 // transaction package to work on next.
-void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpdated)
+void BlockAssembler::addPackageTxs(int& nPackagesSelected, int& nDescendantsUpdated, CFeeRate* min_package_fee_rate)
 {
     // mapModifiedTx will store sorted packages after they are modified
     // because some of their txs are already in the block
@@ -397,6 +416,10 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
                 failedTx.insert(iter);
             }
 
+            // We ran out of space, so don't track fee rates of leftover
+            // transactions that can be squeezed in
+            min_package_fee_rate = nullptr;
+
             ++nConsecutiveFailed;
 
             if (nConsecutiveFailed > MAX_CONSECUTIVE_FAILURES && nBlockWeight >
@@ -426,6 +449,12 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
 
         // This transaction will make it in; reset the failed counter.
         nConsecutiveFailed = 0;
+
+        if (min_package_fee_rate) {
+            // Compare package fee rate and potentially update new minimum
+            const CFeeRate new_fee_rate(packageFees, packageSize);
+            if (new_fee_rate < *min_package_fee_rate) *min_package_fee_rate = new_fee_rate;
+        }
 
         // Package can be added. Sort the entries in a valid order.
         std::vector<CTxMemPool::txiter> sortedEntries;
