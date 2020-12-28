@@ -736,7 +736,6 @@ void CNode::CopyStats(CNodeStats& stats)
         X(cleanSubVer);
     }
     stats.fInbound = IsInboundConn();
-    stats.m_manual_connection = IsManualConn();
     X(m_bip152_highbandwidth_to);
     X(m_bip152_highbandwidth_from);
     {
@@ -752,7 +751,6 @@ void CNode::CopyStats(CNodeStats& stats)
         stats.m_transport_type = info.transport_type;
         if (info.session_id) stats.m_session_id = HexStr(*info.session_id);
     }
-    X(m_legacyWhitelisted);
     X(m_permission_flags);
 
     X(m_last_ping_time);
@@ -2010,8 +2008,6 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
                                  .use_v2transport = use_v2transport,
                              });
     pnode->AddRef();
-    // If this flag is present, the user probably expect that RPC and QT report it as whitelisted (backward compatibility)
-    pnode->m_legacyWhitelisted = legacyWhitelisted;
     m_msgproc->InitializeNode(*pnode, nodeServices);
 
     {
