@@ -11,7 +11,7 @@ Example usage:
     find ../path/to/binaries -type f -executable | xargs python3 contrib/devtools/symbol-check.py
 '''
 import sys
-from typing import Dict
+from typing import Dict, List
 
 import lief
 
@@ -173,7 +173,7 @@ def check_version(max_versions, version, arch) -> bool:
         return ver <= max_versions[lib][arch]
 
 def check_imported_symbols(binary) -> bool:
-    ok = True
+    ok: bool = True
 
     for symbol in binary.imported_symbols:
         if not symbol.imported:
@@ -189,7 +189,7 @@ def check_imported_symbols(binary) -> bool:
     return ok
 
 def check_exported_symbols(binary) -> bool:
-    ok = True
+    ok: bool = True
 
     for symbol in binary.dynamic_symbols:
         if not symbol.exported:
@@ -202,7 +202,7 @@ def check_exported_symbols(binary) -> bool:
     return ok
 
 def check_ELF_libraries(binary) -> bool:
-    ok = True
+    ok: bool = True
     for library in binary.libraries:
         if library not in ELF_ALLOWED_LIBRARIES:
             print(f'{filename}: {library} is not in ALLOWED_LIBRARIES!')
@@ -210,7 +210,7 @@ def check_ELF_libraries(binary) -> bool:
     return ok
 
 def check_MACHO_libraries(binary) -> bool:
-    ok = True
+    ok: bool = True
     for dylib in binary.libraries:
         split = dylib.name.split('/')
         if split[-1] not in MACHO_ALLOWED_LIBRARIES:
@@ -229,7 +229,7 @@ def check_MACHO_sdk(binary) -> bool:
     return False
 
 def check_PE_libraries(binary) -> bool:
-    ok = True
+    ok: bool = True
     for dylib in binary.libraries:
         if dylib not in PE_ALLOWED_LIBRARIES:
             print(f'{dylib} is not in ALLOWED_LIBRARIES!')
@@ -267,7 +267,7 @@ lief.EXE_FORMATS.PE: [
 }
 
 if __name__ == '__main__':
-    retval = 0
+    retval: int = 0
     for filename in sys.argv[1:]:
         try:
             binary = lief.parse(filename)
@@ -277,7 +277,7 @@ if __name__ == '__main__':
                 retval = 1
                 continue
 
-            failed = []
+            failed: List[str] = []
             for (name, func) in CHECKS[etype]:
                 if not func(binary):
                     failed.append(name)
