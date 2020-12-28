@@ -13,6 +13,7 @@
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
+#include <test/util/net.h>
 #include <test/util/setup_common.h>
 
 #include <cstdint>
@@ -122,9 +123,7 @@ FUZZ_TARGET_INIT(net, initialize_net)
     (void)node.GetCommonVersion();
     (void)node.RelayAddrsWithConn();
 
-    const NetPermissionFlags net_permission_flags = fuzzed_data_provider.ConsumeBool() ?
-                                                        fuzzed_data_provider.PickValueInArray<NetPermissionFlags>({NetPermissionFlags::PF_NONE, NetPermissionFlags::PF_BLOOMFILTER, NetPermissionFlags::PF_RELAY, NetPermissionFlags::PF_FORCERELAY, NetPermissionFlags::PF_NOBAN, NetPermissionFlags::PF_MEMPOOL, NetPermissionFlags::PF_ISIMPLICIT, NetPermissionFlags::PF_ALL}) :
-                                                        static_cast<NetPermissionFlags>(fuzzed_data_provider.ConsumeIntegral<uint32_t>());
+    const NetPermissionFlags net_permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
     (void)node.HasPermission(net_permission_flags);
     (void)node.ConnectedThroughNetwork();
 }
