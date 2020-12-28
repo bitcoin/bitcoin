@@ -754,7 +754,7 @@ void CSigSharesManager::ProcessSigShare(NodeId nodeId, const CSigShare& sigShare
             return;
         }
         if (!CLLMQUtils::IsAllMembersConnectedEnabled(llmqType)) {
-            sigSharesToAnnounce.Add(sigShare.GetKey(), true);
+            sigSharesQueuedToAnnounce.Add(sigShare.GetKey(), true);
         }
 
         // Update the time we've seen the last sigShare
@@ -1074,7 +1074,7 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
 
     std::unordered_map<std::pair<Consensus::LLMQType, uint256>, std::unordered_set<NodeId>, StaticSaltedHasher> quorumNodesMap;
 
-    this->sigSharesToAnnounce.ForEach([&](const SigShareKey& sigShareKey, bool) {
+    sigSharesQueuedToAnnounce.ForEach([&](const SigShareKey& sigShareKey, bool) {
         auto& signHash = sigShareKey.first;
         auto quorumMember = sigShareKey.second;
         const CSigShare* sigShare = sigShares.Get(sigShareKey);
@@ -1117,7 +1117,7 @@ void CSigSharesManager::CollectSigSharesToAnnounce(std::unordered_map<NodeId, st
     });
 
     // don't announce these anymore
-    this->sigSharesToAnnounce.Clear();
+    sigSharesQueuedToAnnounce.Clear();
 }
 
 bool CSigSharesManager::SendMessages()
@@ -1444,7 +1444,7 @@ void CSigSharesManager::RemoveSigSharesForSession(const uint256& signHash)
     }
 
     sigSharesRequested.EraseAllForSignHash(signHash);
-    sigSharesToAnnounce.EraseAllForSignHash(signHash);
+    sigSharesQueuedToAnnounce.EraseAllForSignHash(signHash);
     sigShares.EraseAllForSignHash(signHash);
     signedSessions.erase(signHash);
     timeSeenForSessions.erase(signHash);
@@ -1617,7 +1617,7 @@ void CSigSharesManager::ForceReAnnouncement(const CQuorumCPtr& quorum, Consensus
     if (sigs) {
         for (auto& p : *sigs) {
             // re-announce every sigshare to every node
-            sigSharesToAnnounce.Add(std::make_pair(signHash, p.first), true);
+            sigSharesQueuedToAnnounce.Add(std::make_pair(signHash, p.first), true);
         }
     }
     for (auto& p : nodeStates) {

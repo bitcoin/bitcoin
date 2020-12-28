@@ -382,7 +382,7 @@ private:
 
     std::unordered_map<NodeId, CSigSharesNodeState> nodeStates;
     SigShareMap<std::pair<NodeId, int64_t>> sigSharesRequested;
-    SigShareMap<bool> sigSharesToAnnounce;
+    SigShareMap<bool> sigSharesQueuedToAnnounce;
 
     std::vector<std::tuple<const CQuorumCPtr, uint256, uint256>> pendingSigns;
 
