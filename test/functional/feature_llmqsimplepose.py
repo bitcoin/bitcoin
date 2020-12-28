@@ -101,9 +101,9 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 expected_contributors -= 1
 
             t = time.time()
-            while (not self.check_banned(mn)) and (time.time() - t) < 240:
+            while (not self.check_banned(mn)) and (time.time() - t) < 120:
                 # Make sure we do fresh probes
-                self.bump_mocktime(50 * 60 + 1)
+                self.bump_mocktime(100 * 60 + 1)
                 time.sleep(2)
                 self.nodes[0].generate(1)
                 self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
