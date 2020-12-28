@@ -495,5 +495,19 @@ $ bitcoin-cli gettransaction f2fc88a8bc534cfb7e6bc8e7c7d944f440a6612a8b7d34c166c
 Please Note. There are no leading zeros in the block hash because ECCPoW is used.
 
 
+### 4.6 Connection node
+
+
+
+```shell
+$ bitcoin-cli addnode <ip_address> <add / remove / onetry>
+```
+
+Check connected node.
+
+```shell
+$ bitcoin-cli getpeerinfo
+```
+
 
 End.
