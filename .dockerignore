@@ -26,6 +26,7 @@
 !/configure.ac
 !/contrib
 !/doc
+!/infra/bitcoin.conf.tmpl
 !/infra/configure-itcoin-core.sh
 !/infra/render-template.sh
 !/libbitcoinconsensus.pc.in

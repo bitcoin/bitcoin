@@ -119,6 +119,10 @@ COPY \
     /opt/itcoin-core/bin/miner
 
 COPY \
+    /infra/bitcoin.conf.tmpl \
+    /opt/itcoin-core
+
+COPY \
     /infra/render-template.sh \
     /opt/itcoin-core/bin/
 
