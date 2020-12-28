@@ -57,7 +57,7 @@ MINER=$(realpath "${MYDIR}/../contrib/signet/miner")
 
 KEYPAIR=$("${MYDIR}/create-keypair-local.sh")
 
-BLOCKSCRIPT=$(echo "${KEYPAIR}" | jq --raw-output '.blockscript')
+export BLOCKSCRIPT=$(echo "${KEYPAIR}" | jq --raw-output '.blockscript')
 PRIVKEY=$(echo     "${KEYPAIR}" | jq --raw-output '.privkey')
 
 errecho "Creating datadir ${DATADIR}. If it already exists this script will fail"
@@ -65,14 +65,7 @@ mkdir "${DATADIR}"
 
 # creare il file di configurazione del demone bitcoin
 # Lo facciamo partire su signet e il signetchallenge varrà BLOCKSCRIPT.
-cat << EOF > "${DATADIR}/bitcoin.conf"
-# ITCOIN configuration
-
-signet=1
-
-[signet]
-signetchallenge = ${BLOCKSCRIPT}
-EOF
+"${MYDIR}/render-template.sh" BLOCKSCRIPT < "${MYDIR}/bitcoin.conf.tmpl" > "${DATADIR}/bitcoin.conf"
 
 # Start itcoin daemon
 # Different from the wiki: the wallet is not automatically loaded now. It will

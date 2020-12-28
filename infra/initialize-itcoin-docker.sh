@@ -66,7 +66,7 @@ errecho "Using itcoin docker image ${ITCOIN_IMAGE}"
 
 KEYPAIR=$("${MYDIR}/create-keypair-docker.sh")
 
-BLOCKSCRIPT=$(echo "${KEYPAIR}" | jq --raw-output '.blockscript')
+export BLOCKSCRIPT=$(echo "${KEYPAIR}" | jq --raw-output '.blockscript')
 PRIVKEY=$(echo     "${KEYPAIR}" | jq --raw-output '.privkey')
 
 errecho "Creating datadir ${EXTERNAL_DATADIR}. If it already exists this script will fail"
@@ -74,14 +74,7 @@ mkdir "${EXTERNAL_DATADIR}"
 
 # creare il file di configurazione del demone bitcoin
 # Lo facciamo partire su signet e il signetchallenge varrà BLOCKSCRIPT.
-cat << EOF > "${EXTERNAL_DATADIR}/bitcoin.conf"
-# ITCOIN configuration
-
-signet=1
-
-[signet]
-signetchallenge = ${BLOCKSCRIPT}
-EOF
+"${MYDIR}/render-template.sh" BLOCKSCRIPT < "${MYDIR}/bitcoin.conf.tmpl" > "${EXTERNAL_DATADIR}/bitcoin.conf"
 
 # Start itcoin daemon
 # Different from the wiki: the wallet is not automatically loaded now. It will
