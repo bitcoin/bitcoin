@@ -111,7 +111,7 @@ if ! PYTHONWARNINGS="ignore" $FLAKECMD --ignore=B,C,E,F,I,N,W --select=$(IFS=","
     EXIT_CODE=1
 fi
 
-if ! mypy --ignore-missing-imports $(git ls-files "test/functional/*.py"); then
+if ! mypy --ignore-missing-imports $(git ls-files "test/functional/*.py" "contrib/devtools/*.py" | grep -v contrib/devtools/github-merge.py) ; then
     EXIT_CODE=1
 fi
 
