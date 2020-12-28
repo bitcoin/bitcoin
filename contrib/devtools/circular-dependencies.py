@@ -5,6 +5,7 @@
 
 import sys
 import re
+from typing import Dict, List, Set
 
 MAPPING = {
     'core_read.cpp': 'core_io.cpp',
@@ -32,7 +33,7 @@ def module_name(path):
     return None
 
 files = dict()
-deps = dict()
+deps: Dict[str, Set[str]] = dict()
 
 RE = re.compile("^#include <(.*)>")
 
@@ -59,12 +60,12 @@ for arg in sorted(files.keys()):
                     deps[module].add(included_module)
 
 # Loop to find the shortest (remaining) circular dependency
-have_cycle = False
+have_cycle: bool = False
 while True:
     shortest_cycle = None
     for module in sorted(deps.keys()):
         # Build the transitive closure of dependencies of module
-        closure = dict()
+        closure: Dict[str, List[str]] = dict()
         for dep in deps[module]:
             closure[dep] = []
         while True:
