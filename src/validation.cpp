@@ -1611,9 +1611,9 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
     int32_t nVersion = VERSIONBITS_TOP_BITS;
 
     for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
-        ThresholdState state = VersionBitsState(pindexPrev, params, static_cast<Consensus::DeploymentPos>(i), g_versionbitscache);
+        ThresholdState state = g_versionbitscache.State(pindexPrev, params, static_cast<Consensus::DeploymentPos>(i));
         if (state == ThresholdState::LOCKED_IN || state == ThresholdState::STARTED) {
-            nVersion |= VersionBitsMask(params, static_cast<Consensus::DeploymentPos>(i));
+            nVersion |= g_versionbitscache.Mask(params, static_cast<Consensus::DeploymentPos>(i));
         }
     }
 

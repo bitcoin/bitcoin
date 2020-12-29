@@ -1372,7 +1372,7 @@ static void SoftForkDescPushBack(const CBlockIndex* active_chain_tip, UniValue& 
     if (consensusParams.vDeployments[id].nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE) return;
 
     UniValue bip9(UniValue::VOBJ);
-    const ThresholdState thresholdState = VersionBitsState(active_chain_tip, consensusParams, id, g_versionbitscache);
+    const ThresholdState thresholdState = g_versionbitscache.State(active_chain_tip, consensusParams, id);
     switch (thresholdState) {
     case ThresholdState::DEFINED: bip9.pushKV("status", "defined"); break;
     case ThresholdState::STARTED: bip9.pushKV("status", "started"); break;
@@ -1386,12 +1386,12 @@ static void SoftForkDescPushBack(const CBlockIndex* active_chain_tip, UniValue& 
     }
     bip9.pushKV("start_time", consensusParams.vDeployments[id].nStartTime);
     bip9.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
-    int64_t since_height = VersionBitsStateSinceHeight(active_chain_tip, consensusParams, id, g_versionbitscache);
+    int64_t since_height = g_versionbitscache.StateSinceHeight(active_chain_tip, consensusParams, id);
     bip9.pushKV("since", since_height);
     if (ThresholdState::STARTED == thresholdState)
     {
         UniValue statsUV(UniValue::VOBJ);
-        BIP9Stats statsStruct = VersionBitsStatistics(active_chain_tip, consensusParams, id);
+        BIP9Stats statsStruct = g_versionbitscache.Statistics(active_chain_tip, consensusParams, id);
         statsUV.pushKV("period", statsStruct.period);
         statsUV.pushKV("threshold", statsStruct.threshold);
         statsUV.pushKV("elapsed", statsStruct.elapsed);
