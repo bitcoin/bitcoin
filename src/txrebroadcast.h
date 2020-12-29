@@ -7,6 +7,10 @@
 
 #include <policy/feerate.h>
 #include <txmempool.h>
+#include <validation.h>
+
+/** Frequency to run the fee rate cache. */
+constexpr std::chrono::minutes REBROADCAST_CACHE_FREQUENCY{1};
 
 struct TxIds {
     TxIds(uint256 txid, uint256 wtxid) : m_txid(txid), m_wtxid(wtxid) {}
@@ -36,10 +40,26 @@ public:
      * */
     std::vector<TxIds> GetRebroadcastTransactions(const std::shared_ptr<const CBlock>& recent_block, const CBlockIndex& recent_block_index);
 
+    /** Assemble a block from the highest fee rate packages in the local
+     *  mempool. Update the cache with the minimum fee rate for a package to be
+     *  included.
+     * */
+    void CacheMinRebroadcastFee();
+
 private:
     const CTxMemPool& m_mempool;
     const ChainstateManager& m_chainman;
     const CChainParams& m_chainparams;
+
+    /** Protects internal data members */
+    Mutex m_rebroadcast_mutex;
+
+    /** Block at time of cache */
+    CBlockIndex* m_tip_at_cache_time GUARDED_BY(m_rebroadcast_mutex){nullptr};
+
+    /** Minimum fee rate for package to be included in block */
+    CFeeRate m_cached_fee_rate GUARDED_BY(m_rebroadcast_mutex);
+    CFeeRate m_previous_cached_fee_rate GUARDED_BY(m_rebroadcast_mutex);
 };
 
 #endif // BITCOIN_TXREBROADCAST_H
