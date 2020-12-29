@@ -13,6 +13,7 @@
 #include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
+#include <llmq/quorums_utils.h>
 
 #include <dbwrapper.h>
 
@@ -60,6 +61,8 @@ void DestroyLLMQSystem()
     blsWorker = nullptr;
     delete llmqDb;
     llmqDb = nullptr;
+    LOCK(cs_llmq_vbc);
+    llmq_versionbitscache.Clear();
 }
 
 void StartLLMQSystem()

@@ -15,6 +15,9 @@
 namespace llmq
 {
 
+CCriticalSection cs_llmq_vbc;
+VersionBitsCache llmq_versionbitscache;
+
 std::vector<CDeterministicMNCPtr> CLLMQUtils::GetAllQuorumMembers(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum)
 {
     if (!IsQuorumTypeEnabled(llmqType, pindexQuorum->pprev)) {
@@ -259,8 +262,10 @@ bool CLLMQUtils::IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quo
 
 bool CLLMQUtils::IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockIndex* pindex)
 {
+    LOCK(cs_llmq_vbc);
+
     const Consensus::Params& consensusParams = Params().GetConsensus();
-    bool f_v17_Active =  VersionBitsState(pindex, consensusParams, Consensus::DEPLOYMENT_V17, versionbitscache) == ThresholdState::ACTIVE;
+    bool f_v17_Active = VersionBitsState(pindex, consensusParams, Consensus::DEPLOYMENT_V17, llmq_versionbitscache) == ThresholdState::ACTIVE;
 
     switch (llmqType)
     {
