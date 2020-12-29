@@ -94,6 +94,7 @@ RUN apt update && \
         libpython3-stdlib \
         libsqlite3-0 \
         libzmqpp4 \
+        jq \
         python3-minimal \
     && rm -rf /var/lib/apt/lists/*
 
@@ -123,6 +124,7 @@ COPY \
     /opt/itcoin-core
 
 COPY \
+    /infra/create-keypair.sh \
     /infra/render-template.sh \
     /opt/itcoin-core/bin/
 
@@ -136,4 +138,5 @@ RUN \
     ln -s /opt/itcoin-core/bin/bitcoind       /usr/local/bin/ && \
     ln -s /opt/itcoin-core/bin/miner          /usr/local/bin/ && \
     ln -s /opt/itcoin-core/bin/render-template.sh /usr/local/bin/ && \
+    ln -s /opt/itcoin-core/bin/create-keypair.sh  /usr/local/bin/ && \
     echo "The bitcoin* programs are in the PATH: they can be executed from anywhere, even outside the container"

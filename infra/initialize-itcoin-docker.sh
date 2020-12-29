@@ -64,7 +64,11 @@ checkPrerequisites
 ITCOIN_IMAGE="${ITCOIN_IMAGE_NAME}:${ITCOIN_IMAGE_TAG}"
 errecho "Using itcoin docker image ${ITCOIN_IMAGE}"
 
-KEYPAIR=$("${MYDIR}/create-keypair-docker.sh")
+KEYPAIR=$(docker run \
+    --rm \
+    "${ITCOIN_IMAGE}" \
+    create-keypair.sh
+)
 
 export BLOCKSCRIPT=$(echo "${KEYPAIR}" | jq --raw-output '.blockscript')
 PRIVKEY=$(echo     "${KEYPAIR}" | jq --raw-output '.privkey')

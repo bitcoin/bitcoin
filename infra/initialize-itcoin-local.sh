@@ -55,7 +55,7 @@ BITCOIN_CLI="${PATH_TO_BINARIES}/bitcoin-cli"
 BITCOIN_UTIL="${PATH_TO_BINARIES}/bitcoin-util"
 MINER=$(realpath "${MYDIR}/../contrib/signet/miner")
 
-KEYPAIR=$("${MYDIR}/create-keypair-local.sh")
+KEYPAIR=$("${MYDIR}/create-keypair.sh")
 
 export BLOCKSCRIPT=$(echo "${KEYPAIR}" | jq --raw-output '.blockscript')
 PRIVKEY=$(echo     "${KEYPAIR}" | jq --raw-output '.privkey')

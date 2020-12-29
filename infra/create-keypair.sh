@@ -12,7 +12,15 @@
 #   make install
 #
 # USAGE:
-#     create-keypair-local.sh
+#     create-keypair.sh
+#
+#     If you want to run this inside the itcoin container, do something along
+#     the lines of:
+#
+#     docker run \
+#         --rm \
+#         arthub.azurecr.io/itcoin-core:git-abcdef \
+#         create-keypair.sh
 #
 # Author: muxator <antonio.muci@bancaditalia.it>
 
@@ -27,7 +35,7 @@ cleanup() {
     # stop the ephemeral daemon
     "${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest stop >/dev/null
     # destroy the temporary wallet.
-    errecho "ItCoin daemon: cleaning up (deleting temporary directory ${TMPDIR})"
+    errecho "create-keypair: cleaning up (deleting temporary directory ${TMPDIR})"
     rm -rf "${TMPDIR}"
 }
 
@@ -52,15 +60,23 @@ checkPrerequisites
 # https://stackoverflow.com/questions/59895/how-to-get-the-source-directory-of-a-bash-script-from-within-the-script-itself#246128
 MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-PATH_TO_BINARIES=$(realpath "${MYDIR}/../target/bin")
+# Depending on whether we are running on bare metal or inside a container, the
+# path to the itcoin binaries will vary.
+#
+# Let's check if "${MYDIR}/../target/bin" exists.
+# - if it exists, we are running on bare metal, and the binaries will be at
+#   "${MYDIR}/../target/bin";
+# - if not, we are running inside a container, and the binaries reside in the
+#   same directory containing this script.
+PATH_TO_BINARIES=$(realpath --quiet --canonicalize-existing "${MYDIR}/../target/bin" || echo "${MYDIR}")
 
 TMPDIR=$(mktemp --directory itcoin-temp-XXXX)
 
 "${PATH_TO_BINARIES}"/bitcoind -daemon -datadir="${TMPDIR}" -regtest >/dev/null
 
-errecho "ItCoin daemon: waiting (at most 10 seconds) for itcoin daemon to warmup"
+errecho "create-keypair: waiting (at most 10 seconds) for itcoin daemon to warmup"
 timeout 10 "${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest -rpcwait -rpcclienttimeout=3 uptime >/dev/null
-errecho "ItCoin daemon: warmed up"
+errecho "create-keypair: warmed up"
 
 "${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest createwallet mywallet >/dev/null
 

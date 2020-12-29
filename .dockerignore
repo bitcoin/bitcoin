@@ -28,6 +28,7 @@
 !/doc
 !/infra/bitcoin.conf.tmpl
 !/infra/configure-itcoin-core.sh
+!/infra/create-keypair.sh
 !/infra/render-template.sh
 !/libbitcoinconsensus.pc.in
 !/Makefile.am
