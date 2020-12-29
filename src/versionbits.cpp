@@ -207,6 +207,22 @@ uint32_t VersionBitsCache::Mask(const Consensus::Params& params, Consensus::Depl
     return VersionBitsConditionChecker(pos).Mask(params);
 }
 
+int32_t VersionBitsCache::ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params)
+{
+    LOCK(cs);
+    int32_t nVersion = VERSIONBITS_TOP_BITS;
+
+    for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
+        Consensus::DeploymentPos pos = static_cast<Consensus::DeploymentPos>(i);
+        ThresholdState state = VersionBitsConditionChecker(pos).GetStateFor(pindexPrev, params, caches[pos]);
+        if (state == ThresholdState::LOCKED_IN || state == ThresholdState::STARTED) {
+            nVersion |= Mask(params, pos);
+        }
+    }
+
+    return nVersion;
+}
+
 void VersionBitsCache::Clear()
 {
     LOCK(cs);
