@@ -1606,11 +1606,10 @@ void StopScriptCheckWorkerThreads()
     scriptcheckqueue.StopWorkerThreads();
 }
 
-VersionBitsCache versionbitscache GUARDED_BY(cs_main);
+VersionBitsCache versionbitscache;
 
 int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params)
 {
-    LOCK(cs_main);
     int32_t nVersion = VERSIONBITS_TOP_BITS;
 
     for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
@@ -1659,9 +1658,8 @@ static bool IsScriptWitnessEnabled(const Consensus::Params& params)
     return params.SegwitHeight != std::numeric_limits<int>::max();
 }
 
-static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& consensusparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
-    AssertLockHeld(cs_main);
-
+static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consensus::Params& consensusparams)
+{
     unsigned int flags = SCRIPT_VERIFY_NONE;
 
     // BIP16 didn't become active until Apr 1 2012 (on mainnet, and

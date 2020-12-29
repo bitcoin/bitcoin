@@ -6,6 +6,8 @@
 #define BITCOIN_VERSIONBITS_H
 
 #include <chain.h>
+#include <sync.h>
+
 #include <map>
 
 /** What block version to use for new blocks (pre versionbits) */
@@ -75,7 +77,8 @@ public:
  *  keyed by the bit position used to signal support. */
 struct VersionBitsCache
 {
-    ThresholdConditionCache caches[Consensus::MAX_VERSION_BITS_DEPLOYMENTS];
+    Mutex mutex;
+    ThresholdConditionCache caches[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] GUARDED_BY(mutex);
 
     void Clear();
 };
