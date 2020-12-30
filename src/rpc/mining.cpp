@@ -35,6 +35,7 @@
 #include <validationinterface.h>
 #include <versionbitsinfo.h>
 #include <warnings.h>
+#include <consensus/merkle.h>
 
 #include <vbk/pop_service.hpp>
 #include <vbk/merkle.hpp>
@@ -403,12 +404,20 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
             "  \"bits\" : \"xxxxxxxx\",              (string) compressed target of next block\n"
             "  \"height\" : n                      (numeric) The height of the next block\n"
             "  \"default_witness_commitment\" : \"xxxx\" (string) coinbase witness commitment \n"
-            "  \"pop_keystone_hashes\" : [ \"keystone_hash1\" ...]  (array of strings) keystone hashes for the block.\n"
-            "  \"pop_output\" : \"xxxx\"   (string) Script with Merkle root of POP data for new block.\n"
+            "  \"pop_context\" : \n"
+            "    \"serialized\": \"xxx\"     (string) serialized version of AuthenticatedContextInfoContainer\n"
+            "    \"stateRoot\" : \"xxx\"     (string) Hex-encoded StateRoot=sha256d(txRoot, popDataRoot)\n"
+            "    \"context\"   : {\n"
+            "      \"height\"    : 123       (numeric) Current block height.\n"
+            "      \"firstPreviousKeystone\": \"xxx\"  (string) First previous keystone of current block.\n"
+            "      \"secondPreviousKeystone\": \"xxx\" (string) Second previous keystone of current block.\n"
+            "      }\n"
+            "    }\n"
+            "  \"pop_data_root\" : \"xxxx\"   (string) Merkle Root of PopData\n"
             "  \"pop_data\" : { \"atvs\": [], \"vtbs\": [], \"vbkblocks\": [] }   (object) Valid POP data that must be included in next block in order they appear here (vbkblocks, vtbs, atvs).\n"
             "  \"pop_payout\" : [                 (array) List of POP payouts that must be addedd to next coinbase in order they appear in array.\n"
-                  "\"payout_info\": \"...\",\n"
-                  "\"amount\": xxx\n"
+            "    \"payout_info\": \"...\",\n"
+            "    \"amount\": xxx\n"
             "   ]\n"
             "}\n"
                 },
@@ -724,36 +733,16 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     }
 
     //VeriBlock Data
-    UniValue keystoneArray(UniValue::VARR);
-    VeriBlock::KeystoneArray keystones = VeriBlock::getKeystoneHashesForTheNextBlock(pindexPrev);
-    for (const auto& keystone : keystones) {
-        keystoneArray.push_back(keystone.GetHex());
-    }
-    result.pushKV("pop_keystone_hashes", keystoneArray);
-
     auto& popctx = VeriBlock::GetPop();
     pblock->popData = popctx.mempool->getPop();
-    CTxOut popOutput = VeriBlock::addPopDataRootIntoCoinbaseCommitment(*pblock);
-    result.pushKV("pop_output", HexStr(popOutput.scriptPubKey.begin(), popOutput.scriptPubKey.end()));
-
-    // add pop data
-    UniValue popData(UniValue::VOBJ);
-    UniValue popDataAtvs(UniValue::VARR);
-    for(auto& atv : pblock->popData.atvs) {
-        popDataAtvs.push_back(atv.getId().toHex());
-    }
-    UniValue popDataVtbs(UniValue::VARR);
-    for(auto& vtb : pblock->popData.vtbs) {
-        popDataVtbs.push_back(vtb.getId().toHex());
-    }
-    UniValue popDataVbks(UniValue::VARR);
-    for(auto& vbk : pblock->popData.context) {
-        popDataVbks.push_back(vbk.getId().toHex());
-    }
-    popData.pushKV("atvs", popDataAtvs);
-    popData.pushKV("vtbs", popDataVtbs);
-    popData.pushKV("vbkblocks", popDataVbks);
-    result.pushKV("pop_data", popData);
+    const auto popDataRoot = pblock->popData.getMerkleRoot();
+    result.pushKV("pop_data_root", HexStr(popDataRoot.begin(), popDataRoot.end()));
+    auto txRoot = BlockMerkleRoot(*pblock, nullptr);
+    result.pushKV("tx_root", HexStr(txRoot));
+    result.pushKV("pop_data", altintegration::ToJSON<UniValue>(pblock->popData));
+    using altintegration::AuthenticatedContextInfoContainer;
+    auto authctx = AuthenticatedContextInfoContainer::createFromPrevious(txRoot.asVector(), popDataRoot, VeriBlock::GetAltBlockIndex(pindexPrev), VeriBlock::GetPop().config->getAltParams());
+    result.pushKV("pop_context", altintegration::ToJSON<UniValue>(authctx));
 
     // pop rewards
     UniValue popRewardsArray(UniValue::VARR);

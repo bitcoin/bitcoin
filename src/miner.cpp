@@ -148,7 +148,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         pblock->popData = VeriBlock::getPopData();
     }
 
-    if (!pblock->popData.atvs.empty() || !pblock->popData.context.empty() || !pblock->popData.vtbs.empty()) {
+    if (!pblock->popData.empty()) {
         pblock->nVersion |= VeriBlock::POP_BLOCK_VERSION_BIT;
     }
 

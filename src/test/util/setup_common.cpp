@@ -31,7 +31,7 @@
 #include <validation.h>
 #include <validationinterface.h>
 
-#include <bootstraps.h>
+#include <vbk/params.hpp>
 
 #include <functional>
 
@@ -73,7 +73,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     gArgs.ForceSetArg("-datadir", m_path_root.string());
     ClearDatadirCache();
     SelectParams(chainName);
-    selectPopConfig("regtest", "regtest", true);
+    VeriBlock::selectPopConfig("regtest", "regtest", true);
     SeedInsecureRand();
     gArgs.ForceSetArg("-printtoconsole", "0");
     InitLogging();

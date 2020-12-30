@@ -63,6 +63,12 @@ def sha256(s):
 def hash256(s):
     return sha256(sha256(s))
 
+def hash256lr(left, right):
+    data = b''
+    data += left
+    data += right
+    return hash256(data)
+
 def ser_compact_size(l):
     r = b""
     if l < 253:
@@ -628,10 +634,6 @@ class CBlock(CBlockHeader):
                 newhashes.append(hash256(hashes[i] + hashes[i2]))
             hashes = newhashes
         return uint256_from_str(hashes[0])
-
-    def get_top_level_merkle_root(self):
-        self.contextinfo.setTxRootInt(self.calc_merkle_root())
-        return self.contextinfo.getTopLevelMerkleRoot()
 
     def calc_merkle_root(self):
         hashes = []

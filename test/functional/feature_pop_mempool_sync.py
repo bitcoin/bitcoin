@@ -9,7 +9,7 @@
 Test with multiple nodes, and multiple PoP endorsements, checking to make sure nodes stay in sync.
 """
 
-from test_framework.pop import endorse_block
+from test_framework.pop import endorse_block, mine_until_pop_enabled
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     connect_nodes,
@@ -29,6 +29,8 @@ class PoPMempoolSync(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()
 
+        mine_until_pop_enabled(self.nodes[0])
+
         for i in range(self.num_nodes - 1):
             connect_nodes(self.nodes[i + 1], i)
             self.sync_all()
@@ -44,7 +46,9 @@ class PoPMempoolSync(BitcoinTestFramework):
         addr0 = self.nodes[0].getnewaddress()
         self.log.info("node0 endorses block 5")
         self.nodes[0].generate(nblocks=10)
-        atvid = endorse_block(self.nodes[0], self.apm, 5, addr0)
+
+        tipheight = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['height']
+        atvid = endorse_block(self.nodes[0], self.apm, tipheight - 5, addr0)
 
         self.sync_pop_mempools(self.nodes, timeout=20)
         self.log.info("nodes[0,1] have syncd pop mempools")
@@ -67,8 +71,6 @@ class PoPMempoolSync(BitcoinTestFramework):
 
         rawpopmempool1 = self.nodes[1].getrawpopmempool()
         assert atvid in rawpopmempool1['atvs']
-
-
 
 
 if __name__ == '__main__':

@@ -3495,8 +3495,6 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
             commitment = std::vector<unsigned char>(out.scriptPubKey.begin(), out.scriptPubKey.end());
             CMutableTransaction tx(*block.vtx[0]);
             tx.vout.push_back(out);
-            CTxOut popOut = VeriBlock::addPopDataRootIntoCoinbaseCommitment(block);
-            tx.vout.push_back(popOut);
             block.vtx[0] = MakeTransactionRef(std::move(tx));
         }
     }

@@ -11,7 +11,8 @@ from test_framework.messages import ToHex
 from test_framework.mininode import P2PInterface, mininode_lock
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, wait_until
-from test_framework.pop import mine_until_pop_enabled
+from test_framework.pop import mine_until_pop_enabled, PopMiningContext
+
 
 class P2PStoreTxInvs(P2PInterface):
     def __init__(self):
@@ -35,6 +36,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
     def run_test(self):
         mine_until_pop_enabled(self.nodes[0])
         node = self.nodes[0]  # alias
+        self.popctx = PopMiningContext(self.nodes[0])
 
         node.add_p2p_connection(P2PStoreTxInvs())
 
@@ -60,7 +62,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         assert self.nodes[0].getblockchaininfo()['softforks']['pop_security']['active'], "POP is not activated"
         block_time = int(time.time()) + 6 * 60
         node.setmocktime(block_time)
-        block = create_block(self.nodes[0], int(node.getbestblockhash(), 16), create_coinbase(node.getblockcount() + 1), block_time)
+        block = create_block(self.popctx, int(node.getbestblockhash(), 16), create_coinbase(node.getblockcount() + 1), block_time)
         block.rehash()
         block.solve()
         node.submitblock(ToHex(block))

@@ -6,7 +6,10 @@
 #ifndef BITCOIN_SRC_VBK_POP_COMMON_HPP
 #define BITCOIN_SRC_VBK_POP_COMMON_HPP
 
+#include <uint256.h>
 #include <veriblock/pop_context.hpp>
+
+class CBlockIndex;
 
 namespace VeriBlock {
 
@@ -17,6 +20,9 @@ void StopPop();
 void SetPopConfig(const altintegration::Config& config);
 
 void SetPop(std::shared_ptr<altintegration::PayloadsProvider>& db);
+
+altintegration::BlockIndex<altintegration::AltBlock>* GetAltBlockIndex(const uint256& hash);
+altintegration::BlockIndex<altintegration::AltBlock>* GetAltBlockIndex(const CBlockIndex* index);
 
 std::string toPrettyString(const altintegration::PopContext& pop);
 

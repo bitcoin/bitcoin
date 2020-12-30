@@ -83,7 +83,7 @@ class PopPayouts(BitcoinTestFramework):
         coinbasetxhash = block['tx'][0]
         coinbasetx = self.nodes[0].getrawtransaction(coinbasetxhash, 1)
         outputs = coinbasetx['vout']
-        assert len(outputs) > 3, "block with payout does not contain pop payout: {}".format(outputs)
+        assert len(outputs) > 2, "block with payout does not contain pop payout: {}".format(outputs)
         assert outputs[1]['n'] == 1
         assert outputs[1]['value'] > 0, "expected non-zero output at n=1, got: {}".format(outputs[1])
 

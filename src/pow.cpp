@@ -10,6 +10,7 @@
 #include <chainparams.h>
 #include <primitives/block.h>
 #include <uint256.h>
+#include <logging.h>
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock,
                                  const Consensus::Params& params)
@@ -28,25 +29,6 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     LogPrint(BCLog::NET, "Block %s - version: %s: found next work required using LWMA: [%s]\n",
         nHeight, pblock->nVersion, lwma);
     return lwma;
-}
-
-bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
-{
-    bool fNegative;
-    bool fOverflow;
-    arith_uint256 bnTarget;
-
-    bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
-
-    // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
-        return false;
-
-    // Check proof of work matches claimed amount
-    if (UintToArith256(hash) > bnTarget)
-        return false;
-
-    return true;
 }
 
 unsigned int LwmaGetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock, const Consensus::Params& params)

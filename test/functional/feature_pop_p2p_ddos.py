@@ -4,7 +4,7 @@
 # https://www.veriblock.org
 # Distributed under the MIT software license, see the accompanying
 # file LICENSE or http://www.opensource.org/licenses/mit-license.php.
-from test_framework.pop import endorse_block
+from test_framework.pop import endorse_block, mine_until_pop_enabled
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     connect_nodes,
@@ -20,6 +20,7 @@ from test_framework.mininode import (
 )
 
 import time
+
 
 class BaseNode(P2PInterface):
     def __init__(self):
@@ -39,6 +40,8 @@ class PopP2P(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()
 
+        mine_until_pop_enabled(self.nodes[0])
+
         connect_nodes(self.nodes[0], 1)
         self.sync_all(self.nodes)
 
@@ -49,12 +52,13 @@ class PopP2P(BitcoinTestFramework):
 
         # endorse block 5
         addr = self.nodes[0].getnewaddress()
+        tipheight = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['height']
         self.log.info("endorsing block 5 on node0 by miner {}".format(addr))
-        atv_id = endorse_block(self.nodes[0], self.apm, 5, addr)
+        atv_id = endorse_block(self.nodes[0], self.apm, tipheight - 5, addr)
 
         assert len(self.nodes[0].getpeerinfo()) == 1
         peerinfo = self.nodes[0].getpeerinfo()[0]
-        assert(not 'noban' in peerinfo['permissions'])
+        assert (not 'noban' in peerinfo['permissions'])
 
         # spaming node1
         self.log.info("spaming node0 ...")
@@ -80,12 +84,13 @@ class PopP2P(BitcoinTestFramework):
         # endorse block 5
         addr = self.nodes[0].getnewaddress()
         self.log.info("endorsing block 5 on node0 by miner {}".format(addr))
-        atv_id = endorse_block(self.nodes[0], self.apm, 5, addr)
+        tipheight = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['height']
+        atv_id = endorse_block(self.nodes[0], self.apm, tipheight - 5, addr)
         raw_atv = self.nodes[0].getrawatv(atv_id)
 
         assert len(self.nodes[0].getpeerinfo()) == 1
         peerinfo = self.nodes[0].getpeerinfo()[0]
-        assert(not 'noban' in peerinfo['permissions'])
+        assert (not 'noban' in peerinfo['permissions'])
 
         # spaming node1
         self.log.info("spaming node0 ...")
@@ -111,12 +116,13 @@ class PopP2P(BitcoinTestFramework):
         # endorse block 5
         addr = self.nodes[0].getnewaddress()
         self.log.info("endorsing block 5 on node0 by miner {}".format(addr))
-        atv_id = endorse_block(self.nodes[0], self.apm, 5, addr)
+        tipheight = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['height']
+        atv_id = endorse_block(self.nodes[0], self.apm, tipheight - 5, addr)
         raw_atv = self.nodes[0].getrawatv(atv_id)
 
         assert len(self.nodes[0].getpeerinfo()) == 1
         peerinfo = self.nodes[0].getpeerinfo()[0]
-        assert(not 'noban' in peerinfo['permissions'])
+        assert (not 'noban' in peerinfo['permissions'])
         assert peerinfo['banscore'] == 0
 
         # spaming node1
@@ -124,12 +130,11 @@ class PopP2P(BitcoinTestFramework):
         msg = msg_atv(raw_atv)
         # Send message is used to send a P2P message to the node over our P2PInterface
         self.nodes[0].p2p.send_message(msg)
-        
+
         time.sleep(1)
-        
+
         peerinfo = self.nodes[0].getpeerinfo()[0]
         assert peerinfo['banscore'] == 20
-
 
     def run_test(self):
         """Main test logic"""

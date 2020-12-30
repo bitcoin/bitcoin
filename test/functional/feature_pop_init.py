@@ -69,7 +69,7 @@ class PopInit(BitcoinTestFramework):
         self.log.info("nodes are in sync")
 
         bestblocks = [self.get_best_block(x) for x in self.nodes]
-        popdata = [x.getpopdata(bestblocks[0]['height']) for x in self.nodes]
+        popdata = [x.getpopdatabyheight(bestblocks[0]['height']) for x in self.nodes]
 
         # when node0 stops, its VBK/BTC trees get cleared. When we start it again, it MUST load payloads into trees.
         # if this assert fails, it means that node restarted, but NOT loaded its VBK/BTC state into memory.

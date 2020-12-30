@@ -8,11 +8,11 @@
 #ifndef BITCOIN_CHAINPARAMS_H
 #define BITCOIN_CHAINPARAMS_H
 
-#include <bootstraps.h>
 #include <chainparamsbase.h>
 #include <consensus/params.h>
 #include <primitives/block.h>
 #include <protocol.h>
+#include <vbk/bootstraps.h>
 
 #include <memory>
 #include <vector>
@@ -138,6 +138,8 @@ class CTestNetParams : public CChainParams
 public:
     CTestNetParams();
 };
+
+class ArgsManager;
 
 /**
  * Regression test

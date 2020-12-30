@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "pop_common.hpp"
+#include <chain.h>
 
 namespace VeriBlock {
 
@@ -38,5 +39,16 @@ std::string toPrettyString(const altintegration::PopContext& pop)
 {
     return pop.altTree->toPrettyString();
 }
+
+altintegration::BlockIndex<altintegration::AltBlock>* GetAltBlockIndex(const uint256& hash)
+{
+    return GetPop().altTree->getBlockIndex(hash.asVector());
+}
+
+altintegration::BlockIndex<altintegration::AltBlock>* GetAltBlockIndex(const CBlockIndex* index)
+{
+    return index == nullptr ? nullptr : GetAltBlockIndex(index->GetBlockHash());
+}
+
 
 } // namespace VeriBlock

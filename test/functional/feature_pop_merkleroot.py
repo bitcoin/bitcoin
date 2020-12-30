@@ -7,13 +7,17 @@
 """Test VeriBlock PoP merkle root calculation"""
 
 # Avoid wildcard * imports
-from test_framework.pop import mine_until_pop_enabled
+from test_framework.messages import ser_uint256, deser_uint256, uint256_from_str
+from test_framework.pop import mine_until_pop_enabled, PopMiningContext, ContextInfoContainer, \
+    _calculateTopLevelMerkleRoot
 from test_framework.blocktools import (create_block, create_coinbase)
 from test_framework.mininode import (
     P2PInterface,
     msg_block,
 )
+from test_framework.pop_const import EMPTY_POPDATA_ROOT_V1
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import assert_equal
 
 
 class PoPMerkleRootTest(BitcoinTestFramework):
@@ -27,8 +31,30 @@ class PoPMerkleRootTest(BitcoinTestFramework):
         self.start_node(0)
         # POP should be enabled because merkle root calculation differs for non-POP blocks
         mine_until_pop_enabled(self.nodes[0])
+        self.popctx = PopMiningContext(self.nodes[0])
+
+    def _check_algorithm_sanity(self):
+        ctx = ContextInfoContainer()
+        ctx.height = 1337
+        ctx.keystone1 = "010203"
+        ctx.keystone2 = "040506"
+        assert_equal(ctx.getHash().hex(), "db35aad09a65b667a6c9e09cbd47b8d6b378b9ec705db604a4d5cd489afd2bc6")
+
+        txroot = uint256_from_str(bytes.fromhex("bf9fb4901a0d8fc9b0d3bf38546191f77a3f2ea5d543546aac0574290c0a9e83"))
+        poproot = EMPTY_POPDATA_ROOT_V1
+
+        tlmr = _calculateTopLevelMerkleRoot(
+            txRoot=txroot,
+            popDataRoot=poproot,
+            ctx=ctx
+        )
+
+        tlmr_hex = ser_uint256(tlmr).hex()
+        assert_equal(tlmr_hex, "700c1abb69dd1899796b4cafa81c0eefa7b7d0c5aaa4b2bcb67713b2918edb52")
 
     def run_test(self):
+        self._check_algorithm_sanity()
+
         """Main test logic"""
         lastblock = self.nodes[0].getblockcount()
         self.nodes[0].add_p2p_connection(P2PInterface())
@@ -41,7 +67,7 @@ class PoPMerkleRootTest(BitcoinTestFramework):
 
         # create a block
         assert self.nodes[0].getblockchaininfo()['softforks']['pop_security']['active'], "POP is not activated"
-        block = create_block(self.nodes[0], int(blockhashhex, 16), create_coinbase(height + 1), blocktime + 1)
+        block = create_block(self.popctx, int(blockhashhex, 16), create_coinbase(height + 1), blocktime + 1)
         block.solve()
         block_message = msg_block(block)
         # Send message is used to send a P2P message to the node over our P2PInterface

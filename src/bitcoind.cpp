@@ -23,8 +23,8 @@
 #include <util/threadnames.h>
 #include <util/translation.h>
 
-#include "bootstraps.h"
 #include <functional>
+#include <vbk/params.hpp>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
@@ -93,7 +93,7 @@ static bool AppInit(int argc, char* argv[])
                 throw std::runtime_error("Mainnet is disabled. Use testnet.");
             }
             SelectParams(gArgs.GetChainName());
-            selectPopConfig(gArgs);
+            VeriBlock::selectPopConfig(gArgs);
         } catch (const std::exception& e) {
             return InitError(strprintf("%s\n", e.what()));
         }

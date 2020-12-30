@@ -28,7 +28,7 @@ from .messages import (
     sha256,
     uint256_from_str,
 )
-from .pop import ContextInfoContainer
+from .pop import ContextInfoContainer, PopMiningContext, calculateTopLevelMerkleRoot
 from .script import (
     CScript,
     CScriptNum,
@@ -55,9 +55,9 @@ TIME_GENESIS_BLOCK = 1296688602
 WITNESS_COMMITMENT_HEADER = b"\xaa\x21\xa9\xed"
 
 
-def create_block(node, hashprev, coinbase, ntime=None, *, version=1, prevheight=None):
+def create_block(popctx: PopMiningContext, hashprev, coinbase, ntime=None, *, version=1):
     """Create a block (with regtest difficulty)."""
-    assert isinstance(node, TestNode)
+    assert isinstance(popctx, PopMiningContext)
     assert isinstance(hashprev, int)
 
     block = CBlock()
@@ -70,8 +70,12 @@ def create_block(node, hashprev, coinbase, ntime=None, *, version=1, prevheight=
     block.hashPrevBlock = hashprev
     block.nBits = 0x207fffff  # difficulty retargeting is disabled in REGTEST chainparams
     block.vtx.append(coinbase)
-    block.contextinfo = ContextInfoContainer.create(node, hashprev, prevheight)
-    block.hashMerkleRoot = block.get_top_level_merkle_root()
+    block.hashMerkleRoot = calculateTopLevelMerkleRoot(
+        popctx=popctx,
+        txRoot=block.calc_merkle_root(),
+        prevHash=ser_uint256(hashprev)[::-1].hex(),
+        # leave PopData empty
+    )
     block.calc_sha256()
     return block
 
@@ -118,7 +122,7 @@ def create_coinbase(height, pubkey=None):
     coinbaseoutput = CTxOut()
     coinbaseoutput.nValue = POW_PAYOUT * COIN
     if height >= POP_ACTIVATION_HEIGHT:
-        coinbaseoutput.nValue = int(coinbaseoutput.nValue * POW_REWARD_PERCENTAGE / 100)
+        coinbaseoutput.nValue = int(coinbaseoutput.nValue * (100 - POW_REWARD_PERCENTAGE) / 100)
     halvings = int(height / 150)  # regtest
     coinbaseoutput.nValue >>= halvings
     if (pubkey is not None):

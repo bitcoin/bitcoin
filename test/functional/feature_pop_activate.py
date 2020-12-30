@@ -52,11 +52,8 @@ class PopActivate(BitcoinTestFramework):
 
         # endorse block 100 (fork A tip)
         addr0 = self.nodes[0].getnewaddress()
-        txid = endorse_block(self.nodes[0], self.apm, 100, addr0)
-        self.log.info("node0 endorsed block 100 (fork A tip)")
-        # mine pop tx on node0
         self.log.info('Should not accept POP data before activation block height')
-        assert_raises_rpc_error(-1, 'block contains PopData before PopSecurity has been enabled', lambda: self.nodes[0].generate(nblocks=1))
+        assert_raises_rpc_error(-1, 'POP protocol is not active. Current=100, activation height=200', lambda: endorse_block(self.nodes[0], self.apm, 100, addr0))
 
         self.log.warning("_cannot_endorse() succeeded!")
 

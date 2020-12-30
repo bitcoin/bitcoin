@@ -52,7 +52,7 @@ namespace p2p {
 const static std::string get_prefix = "g";
 const static std::string offer_prefix = "of";
 
-const static uint32_t MAX_POP_DATA_SENDING_AMOUNT = 1000;
+const static uint32_t MAX_POP_DATA_SENDING_AMOUNT = 100;
 const static uint32_t MAX_POP_MESSAGE_SENDING_COUNT = 30;
 
 template <typename pop_t>

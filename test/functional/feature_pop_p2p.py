@@ -10,7 +10,7 @@ from test_framework.mininode import (
     P2PInterface,
     msg_get_atv,
 )
-from test_framework.pop import endorse_block
+from test_framework.pop import endorse_block, mine_until_pop_enabled
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     connect_nodes, assert_equal,
@@ -18,7 +18,7 @@ from test_framework.util import (
 
 
 class BaseNode(P2PInterface):
-    def __init__(self, log = None):
+    def __init__(self, log=None):
         super().__init__()
         self.log = log
         # Test variables for the offer PopData messages
@@ -33,7 +33,6 @@ class BaseNode(P2PInterface):
         self.executed_msg_get_atv = 0
         self.executed_msg_get_vtb = 0
         self.executed_msg_get_vbk = 0
-
 
     def on_ofATV(self, message):
         self.log.info("receive message offer ATV")
@@ -71,6 +70,7 @@ class BaseNode(P2PInterface):
         self.log.info("receive message get VBK")
         self.executed_msg_get_vbk = self.executed_msg_get_vbk + 1
 
+
 class PopP2P(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -84,6 +84,7 @@ class PopP2P(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()
 
+        mine_until_pop_enabled(self.nodes[0])
         connect_nodes(self.nodes[0], 1)
         self.sync_all(self.nodes)
 
@@ -92,8 +93,9 @@ class PopP2P(BitcoinTestFramework):
 
         # endorse block 5
         addr = self.nodes[0].getnewaddress()
+        tipheight = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['height']
         self.log.info("endorsing block 5 on node0 by miner {}".format(addr))
-        atv_id = endorse_block(self.nodes[0], self.apm, 5, addr)
+        atv_id = endorse_block(self.nodes[0], self.apm, tipheight - 5, addr)
 
         bn = BaseNode(self.log)
 
@@ -115,7 +117,6 @@ class PopP2P(BitcoinTestFramework):
 
         self.log.info("_run_sync_case successful")
 
-
     def _run_sync_after_generating(self):
         self.log.info("running _run_sync_after_generating")
 
@@ -125,7 +126,9 @@ class PopP2P(BitcoinTestFramework):
         # endorse block 5
         addr = self.nodes[0].getnewaddress()
         self.log.info("endorsing block 5 on node0 by miner {}".format(addr))
-        atv_id = endorse_block(self.nodes[0], self.apm, 5, addr)
+        tipheight = self.nodes[0].getblock(self.nodes[0].getbestblockhash())['height']
+
+        atv_id = endorse_block(self.nodes[0], self.apm, tipheight - 5, addr)
 
         msg = msg_get_atv([atv_id])
         self.nodes[0].p2p.send_message(msg)
@@ -134,7 +137,6 @@ class PopP2P(BitcoinTestFramework):
 
         assert_equal(bn.executed_msg_atv, 1)
         assert_equal(bn.executed_msg_offer_vbk, 2)
-
 
         self.log.info("_run_sync_after_generating successful")
 
@@ -151,6 +153,7 @@ class PopP2P(BitcoinTestFramework):
 
         self.restart_node(0)
         self._run_sync_after_generating()
+
 
 if __name__ == '__main__':
     PopP2P().main()

@@ -112,6 +112,7 @@ VBK_H = \
   vbk/genesis.hpp \
   vbk/genesis_common.hpp \
   vbk/p2p_sync.hpp \
+  vbk/params.hpp \
   vbk/util.hpp \
   vbk/adaptors/univalue_json.hpp \
   vbk/adaptors/block_batch_adaptor.hpp \
@@ -493,10 +494,12 @@ libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
   vbk/pop_common.hpp \
   vbk/pop_common.cpp \
+  vbk/params.cpp \
+  vbk/bootstraps.cpp \
+  pow_common.cpp \
   base58.cpp \
   bech32.cpp \
   bloom.cpp \
-  bootstraps.cpp \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \

@@ -1925,10 +1925,13 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         return true;
     }
 
-    int pop_res = VeriBlock::p2p::processPopData(pfrom, strCommand, vRecv, connman);
-    if(pop_res >= 0)
-    {
-        return pop_res;
+    // VeriBlock: if POP is not enabled, ignore POP-related P2P calls
+    int tipHeight = ChainActive().Height();
+    if (Params().isPopActive(tipHeight)) {
+        int pop_res = VeriBlock::p2p::processPopData(pfrom, strCommand, vRecv, connman);
+        if (pop_res >= 0) {
+            return pop_res;
+        }
     }
 
     if (!(pfrom->GetLocalServices() & NODE_BLOOM) &&
