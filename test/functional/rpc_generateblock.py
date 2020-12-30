@@ -10,30 +10,33 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
+from test_framework.wallet import MiniWallet
 
 
 class GenerateBlockTest(BitcoinTestFramework):
     def set_test_params(self):
+        self.setup_clean_chain = True
         self.num_nodes = 1
-
-    def skip_test_if_missing_module(self):
-        self.skip_if_no_wallet()
 
     def run_test(self):
         node = self.nodes[0]
+        miniwallet = MiniWallet(node)
 
         self.log.info('Generate an empty block to address')
-        address = node.getnewaddress()
-        hash = node.generateblock(output=address, transactions=[])['hash']
+        hash = node.generateblock(output=miniwallet.address, transactions=[])['hash']
         block = node.getblock(blockhash=hash, verbose=2)
+        tx = block['tx'][0]
+        utxo = {'txid': tx['txid'], 'vout': 0, 'value': tx['vout'][0]['value']}
+        miniwallet._utxos.append(utxo)
         assert_equal(len(block['tx']), 1)
-        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['addresses'][0], address)
+        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['addresses'][0], miniwallet.address)
 
         self.log.info('Generate an empty block to a descriptor')
-        hash = node.generateblock('addr(' + address + ')', [])['hash']
+        hash = node.generateblock('addr(' + miniwallet.address + ')', [])['hash']
         block = node.getblock(blockhash=hash, verbosity=2)
         assert_equal(len(block['tx']), 1)
-        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['addresses'][0], address)
+        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['addresses'][0], miniwallet.address)
+        miniwallet.scan_blocks(num=2) # add previous two blocks to _utxos
 
         self.log.info('Generate an empty block to a combo descriptor with compressed pubkey')
         combo_key = '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
@@ -51,45 +54,43 @@ class GenerateBlockTest(BitcoinTestFramework):
         assert_equal(len(block['tx']), 1)
         assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['addresses'][0], combo_address)
 
-        # Generate 110 blocks to spend
-        node.generatetoaddress(110, address)
+        # Generate some blocks to spend
+        node.generatetoaddress(110, miniwallet.address)
+        miniwallet.scan_blocks(start=5, num=10) # start after the previous two blocks which weren't mined to miniwallet
 
         # Generate some extra mempool transactions to verify they don't get mined
         for _ in range(10):
-            node.sendtoaddress(address, 0.001)
+            miniwallet.send_self_transfer(from_node=node)
 
         self.log.info('Generate block with txid')
-        txid = node.sendtoaddress(address, 1)
-        hash = node.generateblock(address, [txid])['hash']
+        txid = miniwallet.send_self_transfer(from_node=node)['txid']
+        hash = node.generateblock(miniwallet.address, [txid])['hash']
         block = node.getblock(hash, 1)
         assert_equal(len(block['tx']), 2)
         assert_equal(block['tx'][1], txid)
 
         self.log.info('Generate block with raw tx')
-        utxos = node.listunspent(addresses=[address])
-        raw = node.createrawtransaction([{'txid':utxos[0]['txid'], 'vout':utxos[0]['vout']}],[{address:1}])
-        signed_raw = node.signrawtransactionwithwallet(raw)['hex']
-        hash = node.generateblock(address, [signed_raw])['hash']
+        rawtx = miniwallet.send_self_transfer(from_node=node, submit_tx=False)['hex']
+        hash = node.generateblock(miniwallet.address, [rawtx])['hash']
         block = node.getblock(hash, 1)
         assert_equal(len(block['tx']), 2)
         txid = block['tx'][1]
-        assert_equal(node.gettransaction(txid)['hex'], signed_raw)
+        assert_equal(node.getrawtransaction(txid=txid, verbose=False, blockhash=hash), rawtx)
 
         self.log.info('Fail to generate block with out of order txs')
-        raw1 = node.createrawtransaction([{'txid':txid, 'vout':0}],[{address:0.9999}])
-        signed_raw1 = node.signrawtransactionwithwallet(raw1)['hex']
-        txid1 = node.sendrawtransaction(signed_raw1)
-        raw2 = node.createrawtransaction([{'txid':txid1, 'vout':0}],[{address:0.999}])
-        signed_raw2 = node.signrawtransactionwithwallet(raw2)['hex']
-        assert_raises_rpc_error(-25, 'TestBlockValidity failed: bad-txns-inputs-missingorspent', node.generateblock, address, [signed_raw2, txid1])
+        txid1 = miniwallet.send_self_transfer(from_node=node)['txid']
+        utxo1 = miniwallet.get_utxo(txid=txid1)
+        rawtx2 = miniwallet.send_self_transfer(from_node=node, utxo_to_spend=utxo1, submit_tx=False)['hex']
+
+        assert_raises_rpc_error(-25, 'TestBlockValidity failed: bad-txns-inputs-missingorspent', node.generateblock, miniwallet.address, [rawtx2, txid1])
 
         self.log.info('Fail to generate block with txid not in mempool')
         missing_txid = '0000000000000000000000000000000000000000000000000000000000000000'
-        assert_raises_rpc_error(-5, 'Transaction ' + missing_txid + ' not in mempool.', node.generateblock, address, [missing_txid])
+        assert_raises_rpc_error(-5, 'Transaction ' + missing_txid + ' not in mempool.', node.generateblock, miniwallet.address, [missing_txid])
 
         self.log.info('Fail to generate block with invalid raw tx')
         invalid_raw_tx = '0000'
-        assert_raises_rpc_error(-22, 'Transaction decode failed for ' + invalid_raw_tx, node.generateblock, address, [invalid_raw_tx])
+        assert_raises_rpc_error(-22, 'Transaction decode failed for ' + invalid_raw_tx, node.generateblock, miniwallet.address, [invalid_raw_tx])
 
         self.log.info('Fail to generate block with invalid address/descriptor')
         assert_raises_rpc_error(-5, 'Invalid address or descriptor', node.generateblock, '1234', [])
