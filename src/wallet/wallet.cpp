@@ -1041,12 +1041,12 @@ bool CWallet::AccountMove(std::string strFrom, std::string strTo, CAmount nAmoun
     return true;
 }
 
-bool CWallet::GetAccountDestination(CTxDestination &dest, std::string strAccount, bool bForceNew)
+bool CWallet::GetLabelDestination(CTxDestination &dest, const std::string& label, bool bForceNew)
 {
     WalletBatch batch(*database);
 
     CAccount account;
-    batch.ReadAccount(strAccount, account);
+    batch.ReadAccount(label, account);
 
     if (!bForceNew) {
         if (!account.vchPubKey.IsValid())
@@ -1071,8 +1071,8 @@ bool CWallet::GetAccountDestination(CTxDestination &dest, std::string strAccount
             return false;
 
         dest = account.vchPubKey.GetID();
-        SetAddressBook(dest, strAccount, "receive");
-        batch.WriteAccount(strAccount, account);
+        SetAddressBook(dest, label, "receive");
+        batch.WriteAccount(label, account);
     } else {
         dest = account.vchPubKey.GetID();
     }
@@ -2333,7 +2333,7 @@ CAmount CWalletTx::GetImmatureCredit(bool fUseCache) const
     return 0;
 }
 
-CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
+CAmount CWalletTx::GetAvailableCredit(bool fUseCache, const isminefilter& filter) const
 {
     if (pwallet == nullptr)
         return 0;
@@ -2342,8 +2342,20 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
     if (IsCoinBase() && GetBlocksToMaturity() > 0)
         return 0;
 
-    if (fUseCache && fAvailableCreditCached)
-        return nAvailableCreditCached;
+    CAmount* cache = nullptr;
+    bool* cache_used = nullptr;
+
+    if (filter == ISMINE_SPENDABLE) {
+        cache = &nAvailableCreditCached;
+        cache_used = &fAvailableCreditCached;
+    } else if (filter == ISMINE_WATCH_ONLY) {
+        cache = &nAvailableWatchCreditCached;
+        cache_used = &fAvailableWatchCreditCached;
+    }
+
+    if (fUseCache && cache_used && *cache_used) {
+        return *cache;
+    }
 
     CAmount nCredit = 0;
     uint256 hashTx = GetHash();
@@ -2352,14 +2364,16 @@ CAmount CWalletTx::GetAvailableCredit(bool fUseCache) const
         if (!pwallet->IsSpent(hashTx, i))
         {
             const CTxOut &txout = tx->vout[i];
-            nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
+            nCredit += pwallet->GetCredit(txout, filter);
             if (!MoneyRange(nCredit))
                 throw std::runtime_error(std::string(__func__) + ": value out of range");
         }
     }
 
-    nAvailableCreditCached = nCredit;
-    fAvailableCreditCached = true;
+    if (cache) {
+        *cache = nCredit;
+        *cache_used = true;
+    }
     return nCredit;
 }
 
@@ -2375,35 +2389,6 @@ CAmount CWalletTx::GetImmatureWatchOnlyCredit(const bool fUseCache) const
     }
 
     return 0;
-}
-
-CAmount CWalletTx::GetAvailableWatchOnlyCredit(const bool fUseCache) const
-{
-    if (pwallet == nullptr)
-        return 0;
-
-    // Must wait until coinbase is safely deep enough in the chain before valuing it
-    if (IsCoinBase() && GetBlocksToMaturity() > 0)
-        return 0;
-
-    if (fUseCache && fAvailableWatchCreditCached)
-        return nAvailableWatchCreditCached;
-
-    CAmount nCredit = 0;
-    for (unsigned int i = 0; i < tx->vout.size(); i++)
-    {
-        if (!pwallet->IsSpent(GetHash(), i))
-        {
-            const CTxOut &txout = tx->vout[i];
-            nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
-            if (!MoneyRange(nCredit))
-                throw std::runtime_error(std::string(__func__) + ": value out of range");
-        }
-    }
-
-    nAvailableWatchCreditCached = nCredit;
-    fAvailableWatchCreditCached = true;
-    return nCredit;
 }
 
 CAmount CWalletTx::GetAnonymizedCredit(const CCoinControl* coinControl) const
@@ -2627,14 +2612,15 @@ std::unordered_set<const CWalletTx*, WalletTxHasher> CWallet::GetSpendableTXs() 
     return ret;
 }
 
-CAmount CWallet::GetBalance() const
+CAmount CWallet::GetBalance(const isminefilter& filter, const int min_depth, const bool fAddLocked) const
 {
     CAmount nTotal = 0;
     {
         LOCK2(cs_main, cs_wallet);
         for (auto pcoin : GetSpendableTXs()) {
-            if (pcoin->IsTrusted())
-                nTotal += pcoin->GetAvailableCredit();
+            if (pcoin->IsTrusted() && ((pcoin->GetDepthInMainChain() >= min_depth) || (fAddLocked && pcoin->IsLockedByInstantSend()))) {
+                nTotal += pcoin->GetAvailableCredit(true, filter);
+            }
         }
     }
 
@@ -2764,20 +2750,6 @@ CAmount CWallet::GetImmatureBalance() const
     return nTotal;
 }
 
-CAmount CWallet::GetWatchOnlyBalance() const
-{
-    CAmount nTotal = 0;
-    {
-        LOCK2(cs_main, cs_wallet);
-        for (auto pcoin : GetSpendableTXs()) {
-            if (pcoin->IsTrusted())
-                nTotal += pcoin->GetAvailableWatchOnlyCredit();
-        }
-    }
-
-    return nTotal;
-}
-
 CAmount CWallet::GetUnconfirmedWatchOnlyBalance() const
 {
     CAmount nTotal = 0;
@@ -2785,7 +2757,7 @@ CAmount CWallet::GetUnconfirmedWatchOnlyBalance() const
         LOCK2(cs_main, cs_wallet);
         for (auto pcoin : GetSpendableTXs()) {
             if (!pcoin->IsTrusted() && pcoin->GetDepthInMainChain() == 0 && !pcoin->IsLockedByInstantSend() && pcoin->InMempool())
-                nTotal += pcoin->GetAvailableWatchOnlyCredit();
+                nTotal += pcoin->GetAvailableCredit(true, ISMINE_WATCH_ONLY);
         }
     }
     return nTotal;
@@ -2828,7 +2800,7 @@ CAmount CWallet::GetLegacyBalance(const isminefilter& filter, int minDepth, cons
         for (const CTxOut& out : wtx.tx->vout) {
             if (outgoing && IsChange(out)) {
                 debit -= out.nValue;
-            } else if (IsMine(out) & filter && (depth >= minDepth || (fAddLocked && wtx.IsLockedByInstantSend())) && (!account || *account == GetAccountName(out.scriptPubKey))) {
+            } else if (IsMine(out) & filter && (depth >= minDepth || (fAddLocked && wtx.IsLockedByInstantSend())) && (!account || *account == GetLabelName(out.scriptPubKey))) {
                 balance += out.nValue;
             }
         }
@@ -4279,7 +4251,7 @@ bool CWallet::DelAddressBook(const CTxDestination& address)
     return WalletBatch(*database).EraseName(EncodeDestination(address));
 }
 
-const std::string& CWallet::GetAccountName(const CScript& scriptPubKey) const
+const std::string& CWallet::GetLabelName(const CScript& scriptPubKey) const
 {
     CTxDestination address;
     if (ExtractDestination(scriptPubKey, address) && !scriptPubKey.IsUnspendable()) {
@@ -4289,9 +4261,9 @@ const std::string& CWallet::GetAccountName(const CScript& scriptPubKey) const
         }
     }
     // A scriptPubKey that doesn't have an entry in the address book is
-    // associated with the default account ("").
-    const static std::string DEFAULT_ACCOUNT_NAME;
-    return DEFAULT_ACCOUNT_NAME;
+    // associated with the default label ("").
+    const static std::string DEFAULT_LABEL_NAME;
+    return DEFAULT_LABEL_NAME;
 }
 
 /**
@@ -4671,7 +4643,7 @@ std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings()
     return ret;
 }
 
-std::set<CTxDestination> CWallet::GetAccountAddresses(const std::string& strAccount) const
+std::set<CTxDestination> CWallet::GetLabelAddresses(const std::string& label) const
 {
     LOCK(cs_wallet);
     std::set<CTxDestination> result;
@@ -4679,10 +4651,16 @@ std::set<CTxDestination> CWallet::GetAccountAddresses(const std::string& strAcco
     {
         const CTxDestination& address = item.first;
         const std::string& strName = item.second.name;
-        if (strName == strAccount)
+        if (strName == label)
             result.insert(address);
     }
     return result;
+}
+
+void CWallet::DeleteLabel(const std::string& label)
+{
+    WalletBatch batch(*database);
+    batch.EraseAccount(label);
 }
 
 bool CReserveKey::GetReservedKey(CPubKey& pubkey, bool fInternalIn)

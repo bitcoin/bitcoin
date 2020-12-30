@@ -43,16 +43,15 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
 
     def do_import(self, timestamp):
         """Call one key import RPC."""
+        rescan = self.rescan == Rescan.yes
 
         if self.call == Call.single:
             if self.data == Data.address:
-                response = self.try_rpc(self.node.importaddress, self.address["address"], self.label,
-                                               self.rescan == Rescan.yes)
+                response = self.try_rpc(self.node.importaddress, address=self.address["address"], label=self.label, rescan=rescan)
             elif self.data == Data.pub:
-                response = self.try_rpc(self.node.importpubkey, self.address["pubkey"], self.label,
-                                               self.rescan == Rescan.yes)
+                response = self.try_rpc(self.node.importpubkey, pubkey=self.address["pubkey"], label=self.label, rescan=rescan)
             elif self.data == Data.priv:
-                response = self.try_rpc(self.node.importprivkey, self.key, self.label, self.rescan == Rescan.yes)
+                response = self.try_rpc(self.node.importprivkey, privkey=self.key, label=self.label, rescan=rescan)
             assert_equal(response, None)
 
         elif self.call == Call.multi:
@@ -69,17 +68,18 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
             assert_equal(response, [{"success": True}])
 
     def check(self, txid=None, amount=None, confirmations=None):
-        """Verify that getbalance/listtransactions return expected values."""
+        """Verify that listtransactions/listreceivedbyaddress return expected values."""
 
-        balance = self.node.getbalance(self.label, 0, False, True)
-        assert_equal(balance, self.expected_balance)
-
-        txs = self.node.listtransactions(self.label, 10000, 0, True)
+        txs = self.node.listtransactions(label=self.label, count=10000, skip=0, include_watchonly=True)
         assert_equal(len(txs), self.expected_txs)
+
+        addresses = self.node.listreceivedbyaddress(minconf=0, include_watchonly=True, address_filter=self.address['address'])
+        if self.expected_txs:
+            assert_equal(len(addresses[0]["txids"]), self.expected_txs)
 
         if txid is not None:
             tx, = [tx for tx in txs if tx["txid"] == txid]
-            assert_equal(tx["account"], self.label)
+            assert_equal(tx["label"], self.label)
             assert_equal(tx["address"], self.address["address"])
             assert_equal(tx["amount"], amount)
             assert_equal(tx["category"], "receive")
@@ -87,6 +87,11 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
             assert_equal(tx["txid"], txid)
             assert_equal(tx["confirmations"], confirmations)
             assert_equal("trusted" not in tx, True)
+
+            address, = [ad for ad in addresses if txid in ad["txids"]]
+            assert_equal(address["address"], self.address["address"])
+            assert_equal(address["amount"], self.expected_balance)
+            assert_equal(address["confirmations"], confirmations)
             # Verify the transaction is correctly marked watchonly depending on
             # whether the transaction pays to an imported public key or
             # imported private key. The test setup ensures that transaction
@@ -94,9 +99,9 @@ class Variant(collections.namedtuple("Variant", "call data rescan prune")):
             # involvesWatchonly will be true if either the transaction output
             # or inputs are watchonly).
             if self.data != Data.priv:
-                assert_equal(tx["involvesWatchonly"], True)
+                assert_equal(address["involvesWatchonly"], True)
             else:
-                assert_equal("involvesWatchonly" not in tx, True)
+                assert_equal("involvesWatchonly" not in address, True)
 
 
 # List of Variants for each way a key or address could be imported.
@@ -132,7 +137,7 @@ class ImportRescanTest(BitcoinTestFramework):
             connect_nodes(self.nodes[i], 0)
 
     def run_test(self):
-        # Create one transaction on node 0 with a unique amount and label for
+        # Create one transaction on node 0 with a unique amount for
         # each possible type of wallet import RPC.
         for i, variant in enumerate(IMPORT_VARIANTS):
             variant.label = "label {} {}".format(i, variant)

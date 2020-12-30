@@ -70,9 +70,9 @@ BASE_SCRIPTS= [
     # vv Tests less than 2m vv
     'p2p_instantsend.py',
     'wallet_basic.py',
-    'wallet_accounts.py',
+    'wallet_labels.py',
     'wallet_dump.py',
-    'rpc_listtransactions.py',
+    'wallet_listtransactions.py',
     'feature_multikeysporks.py',
     'feature_llmq_signing.py', # NOTE: needs dash_hash to pass
     'feature_llmq_signing.py --spork21', # NOTE: needs dash_hash to pass

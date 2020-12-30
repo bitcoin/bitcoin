@@ -474,9 +474,8 @@ public:
     CAmount GetDebit(const isminefilter& filter) const;
     CAmount GetCredit(const isminefilter& filter) const;
     CAmount GetImmatureCredit(bool fUseCache=true) const;
-    CAmount GetAvailableCredit(bool fUseCache=true) const;
+    CAmount GetAvailableCredit(bool fUseCache=true, const isminefilter& filter=ISMINE_SPENDABLE) const;
     CAmount GetImmatureWatchOnlyCredit(const bool fUseCache=true) const;
-    CAmount GetAvailableWatchOnlyCredit(const bool fUseCache=true) const;
     CAmount GetChange() const;
 
     CAmount GetAnonymizedCredit(const CCoinControl* coinControl = nullptr) const;
@@ -602,7 +601,7 @@ public:
 };
 
 /**
- * Internal transfers.
+ * DEPRECATED Internal transfers.
  * Database key is acentry<account><counter>.
  */
 class CAccountingEntry
@@ -1031,7 +1030,7 @@ public:
     int64_t IncOrderPosNext(WalletBatch *batch = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     DBErrors ReorderTransactions();
     bool AccountMove(std::string strFrom, std::string strTo, CAmount nAmount, std::string strComment = "") EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    bool GetAccountDestination(CTxDestination &dest, std::string strAccount, bool bForceNew = false);
+    bool GetLabelDestination(CTxDestination &dest, const std::string& label, bool bForceNew = false);
 
     void MarkDirty();
     bool AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose=true);
@@ -1047,10 +1046,9 @@ public:
     void ResendWalletTransactions(int64_t nBestBlockTime, CConnman* connman) override;
     // ResendWalletTransactionsBefore may only be called if fBroadcastTransactions!
     std::vector<uint256> ResendWalletTransactionsBefore(int64_t nTime, CConnman* connman);
-    CAmount GetBalance() const;
+    CAmount GetBalance(const isminefilter& filter=ISMINE_SPENDABLE, const int min_depth=0, bool fAddLocked = false) const;
     CAmount GetUnconfirmedBalance() const;
     CAmount GetImmatureBalance() const;
-    CAmount GetWatchOnlyBalance() const;
     CAmount GetUnconfirmedWatchOnlyBalance() const;
     CAmount GetImmatureWatchOnlyBalance() const;
     CAmount GetLegacyBalance(const isminefilter& filter, int minDepth, const std::string* account, const bool fAddLocked) const;
@@ -1116,7 +1114,8 @@ public:
     std::set<std::set<CTxDestination>> GetAddressGroupings() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     std::map<CTxDestination, CAmount> GetAddressBalances();
 
-    std::set<CTxDestination> GetAccountAddresses(const std::string& strAccount) const;
+    std::set<CTxDestination> GetLabelAddresses(const std::string& label) const;
+    void DeleteLabel(const std::string& label);
 
     isminetype IsMine(const CTxIn& txin) const;
     /**
@@ -1147,7 +1146,7 @@ public:
 
     bool DelAddressBook(const CTxDestination& address);
 
-    const std::string& GetAccountName(const CScript& scriptPubKey) const;
+    const std::string& GetLabelName(const CScript& scriptPubKey) const;
 
     void GetScriptForMining(std::shared_ptr<CReserveScript> &script);
 
@@ -1304,7 +1303,7 @@ public:
 
 
 /**
- * Account information.
+ * DEPRECATED Account information.
  * Stored in wallet with key "acc"+string account name.
  */
 class CAccount

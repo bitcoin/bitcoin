@@ -124,12 +124,12 @@ void WalletTxToJSON(const CWalletTx& wtx, UniValue& entry)
         entry.pushKV(item.first, item.second);
 }
 
-std::string AccountFromValue(const UniValue& value)
+std::string LabelFromValue(const UniValue& value)
 {
-    std::string strAccount = value.get_str();
-    if (strAccount == "*")
-        throw JSONRPCError(RPC_WALLET_INVALID_ACCOUNT_NAME, "Invalid account name");
-    return strAccount;
+    std::string label = value.get_str();
+    if (label == "*")
+        throw JSONRPCError(RPC_WALLET_INVALID_LABEL_NAME, "Invalid label name");
+    return label;
 }
 
 UniValue getnewaddress(const JSONRPCRequest& request)
@@ -141,12 +141,12 @@ UniValue getnewaddress(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() > 1)
         throw std::runtime_error(
-            "getnewaddress ( \"account\" )\n"
+            "getnewaddress ( \"label\" )\n"
             "\nReturns a new Dash address for receiving payments.\n"
-            "If 'account' is specified (DEPRECATED), it is added to the address book \n"
-            "so payments received with the address will be credited to 'account'.\n"
+            "If 'label' is specified, it is added to the address book \n"
+            "so payments received with the address will be associated with 'label'.\n"
             "\nArguments:\n"
-            "1. \"account\"        (string, optional) DEPRECATED. The account name for the address to be linked to. If not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
+            "1. \"label\"        (string, optional) The label name for the address to be linked to. If not provided, the default label \"\" is used. It can also be set to the empty string \"\" to represent the default label. The label does not need to exist, it will be created if there is no label by the given name.\n"
             "\nResult:\n"
             "\"address\"    (string) The new dash address\n"
             "\nExamples:\n"
@@ -156,10 +156,10 @@ UniValue getnewaddress(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    // Parse the account first so we don't generate a key if there's an error
-    std::string strAccount;
+    // Parse the label first so we don't generate a key if there's an error
+    std::string label;
     if (!request.params[0].isNull())
-        strAccount = AccountFromValue(request.params[0]);
+        label = LabelFromValue(request.params[0]);
 
     if (!pwallet->IsLocked(true)) {
         pwallet->TopUpKeyPool();
@@ -172,16 +172,15 @@ UniValue getnewaddress(const JSONRPCRequest& request)
     }
     CKeyID keyID = newKey.GetID();
 
-    pwallet->SetAddressBook(keyID, strAccount, "receive");
+    pwallet->SetAddressBook(keyID, label, "receive");
 
     return EncodeDestination(keyID);
 }
 
-
-CTxDestination GetAccountDestination(CWallet* const pwallet, std::string strAccount, bool bForceNew=false)
+CTxDestination GetLabelDestination(CWallet* const pwallet, const std::string& label, bool bForceNew=false)
 {
     CTxDestination dest;
-    if (!pwallet->GetAccountDestination(dest, strAccount, bForceNew)) {
+    if (!pwallet->GetLabelDestination(dest, label, bForceNew)) {
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
     }
 
@@ -195,12 +194,19 @@ UniValue getaccountaddress(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
+    if (!IsDeprecatedRPCEnabled("accounts")) {
+        if (request.fHelp) {
+            throw std::runtime_error("getaccountaddress (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+        }
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "getaccountaddress is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
+    }
+
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             "getaccountaddress \"account\"\n"
-            "\nDEPRECATED. Returns the current Dash address for receiving payments to this account.\n"
+            "\n\nDEPRECATED. Returns the current Dash address for receiving payments to this account.\n"
             "\nArguments:\n"
-            "1. \"account\"       (string, required) The account name for the address. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created and a new address created  if there is no account by the given name.\n"
+            "1. \"account\"       (string, required) The account for the address. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created and a new address created  if there is no account by the given name.\n"
             "\nResult:\n"
             "\"address\"          (string) The account dash address\n"
             "\nExamples:\n"
@@ -213,11 +219,11 @@ UniValue getaccountaddress(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
 
     // Parse the account first so we don't generate a key if there's an error
-    std::string strAccount = AccountFromValue(request.params[0]);
+    std::string account = LabelFromValue(request.params[0]);
 
     UniValue ret(UniValue::VSTR);
 
-    ret = EncodeDestination(GetAccountDestination(pwallet, strAccount));
+    ret = EncodeDestination(GetLabelDestination(pwallet, account));
     return ret;
 }
 
@@ -260,23 +266,30 @@ UniValue getrawchangeaddress(const JSONRPCRequest& request)
 }
 
 
-UniValue setaccount(const JSONRPCRequest& request)
+UniValue setlabel(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
+    if (!IsDeprecatedRPCEnabled("accounts") && request.strMethod == "setaccount") {
+        if (request.fHelp) {
+            throw std::runtime_error("setaccount (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+        }
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "setaccount is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
+    }
+
+    if (request.fHelp || request.params.size() != 2)
         throw std::runtime_error(
-            "setaccount \"address\" \"account\"\n"
-            "\nDEPRECATED. Sets the account associated with the given address.\n"
+            "setlabel \"address\" \"label\"\n"
+            "\nSets the label associated with the given address.\n"
             "\nArguments:\n"
-            "1. \"address\"         (string, required) The dash address to be associated with an account.\n"
-            "2. \"account\"         (string, required) The account to assign the address to.\n"
+            "1. \"address\"         (string, required) The dash address to be associated with a label.\n"
+            "2. \"label\"           (string, required) The label to assign to the address.\n"
             "\nExamples:\n"
-            + HelpExampleCli("setaccount", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" \"tabby\"")
-            + HelpExampleRpc("setaccount", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\", \"tabby\"")
+            + HelpExampleCli("setlabel", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\" \"tabby\"")
+            + HelpExampleRpc("setlabel", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\", \"tabby\"")
         );
 
     LOCK2(cs_main, pwallet->cs_wallet);
@@ -286,23 +299,32 @@ UniValue setaccount(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
     }
 
-    std::string strAccount;
-    if (!request.params[1].isNull())
-        strAccount = AccountFromValue(request.params[1]);
+    std::string old_label = pwallet->mapAddressBook[dest].name;
+    std::string label = LabelFromValue(request.params[1]);
 
-    // Only add the account if the address is yours.
     if (IsMine(*pwallet, dest)) {
-        // Detect when changing the account of an address that is the 'unused current key' of another account:
-        if (pwallet->mapAddressBook.count(dest)) {
-            std::string strOldAccount = pwallet->mapAddressBook[dest].name;
-            if (dest == GetAccountDestination(pwallet, strOldAccount)) {
-                GetAccountDestination(pwallet, strOldAccount, true);
-            }
+        pwallet->SetAddressBook(dest, label, "receive");
+        if (request.strMethod == "setaccount" && old_label != label && dest == GetLabelDestination(pwallet, old_label)) {
+            // for setaccount, call GetLabelDestination so a new receive address is created for the old account
+            GetLabelDestination(pwallet, old_label, true);
         }
-        pwallet->SetAddressBook(dest, strAccount, "receive");
+    } else {
+        pwallet->SetAddressBook(dest, label, "send");
     }
-    else
-        throw JSONRPCError(RPC_MISC_ERROR, "setaccount can only be used with own address");
+
+    // Detect when there are no addresses using this label.
+    // If so, delete the account record for it. Labels, unlike addresses, can be deleted,
+    // and if we wouldn't do this, the record would stick around forever.
+    bool found_address = false;
+    for (const std::pair<CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
+        if (item.second.name == label) {
+            found_address = true;
+            break;
+        }
+    }
+    if (!found_address) {
+        pwallet->DeleteLabel(old_label);
+    }
 
     return NullUniValue;
 }
@@ -313,6 +335,13 @@ UniValue getaccount(const JSONRPCRequest& request)
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
+    }
+
+    if (!IsDeprecatedRPCEnabled("accounts")) {
+        if (request.fHelp) {
+            throw std::runtime_error("getaccount (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+        }
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "getaccount is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
     }
 
     if (request.fHelp || request.params.size() != 1)
@@ -351,6 +380,13 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
+    if (!IsDeprecatedRPCEnabled("accounts")) {
+        if (request.fHelp) {
+            throw std::runtime_error("getaddressbyaccount (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+        }
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "getaddressesbyaccount is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
+    }
+
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             "getaddressesbyaccount \"account\"\n"
@@ -369,7 +405,7 @@ UniValue getaddressesbyaccount(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    std::string strAccount = AccountFromValue(request.params[0]);
+    std::string strAccount = LabelFromValue(request.params[0]);
 
     // Find all addresses that have the given account
     UniValue ret(UniValue::VARR);
@@ -545,7 +581,7 @@ UniValue listaddressgroupings(const JSONRPCRequest& request)
             "    [\n"
             "      \"address\",            (string) The dash address\n"
             "      amount,                 (numeric) The amount in " + CURRENCY_UNIT + "\n"
-            "      \"account\"             (string, optional) DEPRECATED. The account\n"
+            "      \"label\"               (string, optional) The label\n"
             "    ]\n"
             "    ,...\n"
             "  ]\n"
@@ -753,32 +789,39 @@ UniValue getreceivedbyaddress(const JSONRPCRequest& request)
 }
 
 
-UniValue getreceivedbyaccount(const JSONRPCRequest& request)
+UniValue getreceivedbylabel(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
+    if (!IsDeprecatedRPCEnabled("accounts") && request.strMethod == "getreceivedbyaccount") {
+        if (request.fHelp) {
+            throw std::runtime_error("getreceivedbyaccount (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+        }
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "getreceivedbyaccount is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
+    }
+
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw std::runtime_error(
-            "getreceivedbyaccount \"account\" ( minconf addlocked )\n"
-            "\nDEPRECATED. Returns the total amount received by addresses with <account> in transactions with specified minimum number of confirmations.\n"
+            "getreceivedbylabel \"account\" ( minconf addlocked )\n"
+            "\nReturns the total amount received by addresses with <label> in transactions with specified minimum number of confirmations.\n"
             "\nArguments:\n"
-            "1. \"account\"      (string, required) The selected account, may be the default account using \"\".\n"
+            "1. \"label\"      (string, required) The selected label, may be the default label using \"\".\n"
             "2. minconf        (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
             "3. addlocked      (bool, optional, default=false) Whether to include transactions locked via InstantSend.\n"
             "\nResult:\n"
-            "amount            (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
+            "amount            (numeric) The total amount in " + CURRENCY_UNIT + " received for this label.\n"
             "\nExamples:\n"
-            "\nAmount received by the default account with at least 1 confirmation\n"
-            + HelpExampleCli("getreceivedbyaccount", "\"\"") +
-            "\nAmount received at the tabby account including unconfirmed amounts with zero confirmations\n"
-            + HelpExampleCli("getreceivedbyaccount", "\"tabby\" 0") +
+            "\nAmount received by the default label with at least 1 confirmation\n"
+            + HelpExampleCli("getreceivedbylabel", "\"\"") +
+            "\nAmount received at the tabby label including unconfirmed amounts with zero confirmations\n"
+            + HelpExampleCli("getreceivedbylabel", "\"tabby\" 0") +
             "\nThe amount with at least 6 confirmations\n"
-            + HelpExampleCli("getreceivedbyaccount", "\"tabby\" 6") +
+            + HelpExampleCli("getreceivedbylabel", "\"tabby\" 6") +
             "\nAs a json rpc call\n"
-            + HelpExampleRpc("getreceivedbyaccount", "\"tabby\", 6")
+            + HelpExampleRpc("getreceivedbylabel", "\"tabby\", 6")
         );
 
     // Make sure the results are valid at least up to the most recent block
@@ -793,9 +836,9 @@ UniValue getreceivedbyaccount(const JSONRPCRequest& request)
         nMinDepth = request.params[1].get_int();
     bool fAddLocked = (!request.params[2].isNull() && request.params[2].get_bool());
 
-    // Get the set of pub keys assigned to account
-    std::string strAccount = AccountFromValue(request.params[0]);
-    std::set<CTxDestination> setAddress = pwallet->GetAccountAddresses(strAccount);
+    // Get the set of pub keys assigned to label
+    std::string label = LabelFromValue(request.params[0]);
+    std::set<CTxDestination> setAddress = pwallet->GetLabelAddresses(label);
 
     // Tally
     CAmount nAmount = 0;
@@ -825,8 +868,9 @@ UniValue getbalance(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 4)
+    if (request.fHelp || (request.params.size() > 4))
         throw std::runtime_error(
+           (IsDeprecatedRPCEnabled("accounts") ? std::string(
             "getbalance ( \"account\" minconf addlocked include_watchonly )\n"
             "\nIf account is not specified, returns the server's total available balance.\n"
             "The available balance is what the wallet considers currently spendable, and is\n"
@@ -835,9 +879,20 @@ UniValue getbalance(const JSONRPCRequest& request)
             "Note that the account \"\" is not the same as leaving the parameter out.\n"
             "The server total may be different to the balance in the default \"\" account.\n"
             "\nArguments:\n"
-            "1. \"account\"        (string, optional) DEPRECATED. The selected account, or \"*\" for entire wallet. It may be the default account using \"\".\n"
-            "2. minconf          (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
-            "3. addlocked      (bool, optional, default=false) Whether to include the value of transactions locked via InstantSend in the wallet's balance.\n"
+            "1. \"account\"        (string, optional) DEPRECATED. This argument will be removed in V0.18. \n"
+            "                     To use this deprecated argument, start dashd with -deprecatedrpc=accounts.\n"
+            "                     The selected account, or \"*\" for entire wallet. It may be the default account using \"\".\n"
+            "2. minconf           (numeric, optional) Only include transactions confirmed at least this many times.\n"
+            "                     The default is 1 if an account is provided or 0 if no account is provided\n")
+            : std::string(
+            "getbalance ( \"(dummy)\" minconf addlocked include_watchonly )\n"
+            "\nReturns the total available balance.\n"
+            "The available balance is what the wallet considers currently spendable, and is\n"
+            "thus affected by options which limit spendability such as -spendzeroconfchange.\n"
+            "\nArguments:\n"
+            "1. (dummy)           (string, optional) Remains for backward compatibility. Must be excluded or set to \"*\".\n"
+            "2. minconf           (numeric, optional, default=0) Only include transactions confirmed at least this many times.\n")) +
+            "3. addlocked         (bool, optional, default=false) Whether to include the value of transactions locked via InstantSend in the wallet's balance.\n"
             "4. include_watchonly (bool, optional, default=false) Also include balance in watch-only addresses (see 'importaddress')\n"
             "\nResult:\n"
             "amount              (numeric) The total amount in " + CURRENCY_UNIT + " received for this account.\n"
@@ -857,37 +912,40 @@ UniValue getbalance(const JSONRPCRequest& request)
     LOCK2(cs_main, pwallet->cs_wallet);
 
     const UniValue& account_value = request.params[0];
-    const UniValue& minconf = request.params[1];
-    const UniValue& addlocked = request.params[2];
-    const UniValue& include_watchonly = request.params[3];
 
-    if (account_value.isNull()) {
-        if (!minconf.isNull()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER,
-                "getbalance minconf option is only currently supported if an account is specified");
-        }
-        if (!include_watchonly.isNull()) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER,
-                "getbalance include_watchonly option is only currently supported if an account is specified");
-        }
-        return ValueFromAmount(pwallet->GetBalance());
+    int min_depth = 0;
+    if (IsDeprecatedRPCEnabled("accounts") && !account_value.isNull()) {
+        // Default min_depth to 1 when an account is provided.
+        min_depth = 1;
+    }
+    if (!request.params[1].isNull()) {
+        min_depth = request.params[1].get_int();
     }
 
-    const std::string& account_param = account_value.get_str();
-    const std::string* account = account_param != "*" ? &account_param : nullptr;
-
-    int nMinDepth = 1;
-    if (!minconf.isNull())
-        nMinDepth = minconf.get_int();
+    const UniValue& addlocked = request.params[2];
     bool fAddLocked = false;
-    if (!addlocked.isNull())
+    if (!addlocked.isNull()) {
         fAddLocked = addlocked.get_bool();
-    isminefilter filter = ISMINE_SPENDABLE;
-    if(!include_watchonly.isNull())
-        if(include_watchonly.get_bool())
-            filter = filter | ISMINE_WATCH_ONLY;
+    }
 
-    return ValueFromAmount(pwallet->GetLegacyBalance(filter, nMinDepth, account, fAddLocked));
+    isminefilter filter = ISMINE_SPENDABLE;
+    if (!request.params[3].isNull() && request.params[3].get_bool()) {
+        filter = filter | ISMINE_WATCH_ONLY;
+    }
+
+    if (!account_value.isNull()) {
+
+        const std::string& account_param = account_value.get_str();
+        const std::string* account = account_param != "*" ? &account_param : nullptr;
+
+        if (!IsDeprecatedRPCEnabled("accounts") && account_param != "*") {
+            throw JSONRPCError(RPC_METHOD_DEPRECATED, "dummy first argument must be excluded or set to \"*\".");
+        } else if (IsDeprecatedRPCEnabled("accounts")) {
+            return ValueFromAmount(pwallet->GetLegacyBalance(filter, min_depth, account, fAddLocked));
+        }
+    }
+
+    return ValueFromAmount(pwallet->GetBalance(filter, min_depth, fAddLocked));
 }
 
 UniValue getunconfirmedbalance(const JSONRPCRequest &request)
@@ -919,6 +977,13 @@ UniValue movecmd(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
+    if (!IsDeprecatedRPCEnabled("accounts")) {
+        if (request.fHelp) {
+            throw std::runtime_error("move (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+        }
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "move is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
+    }
+
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 5)
         throw std::runtime_error(
             "move \"fromaccount\" \"toaccount\" amount ( minconf \"comment\" )\n"
@@ -942,8 +1007,8 @@ UniValue movecmd(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    std::string strFrom = AccountFromValue(request.params[0]);
-    std::string strTo = AccountFromValue(request.params[1]);
+    std::string strFrom = LabelFromValue(request.params[0]);
+    std::string strTo = LabelFromValue(request.params[1]);
     CAmount nAmount = AmountFromValue(request.params[2]);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
@@ -968,6 +1033,14 @@ UniValue sendfrom(const JSONRPCRequest& request)
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
+
+    if (!IsDeprecatedRPCEnabled("accounts")) {
+        if (request.fHelp) {
+            throw std::runtime_error("sendfrom (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+        }
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "sendfrom is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
+    }
+
 
     if (request.fHelp || request.params.size() < 3 || request.params.size() > 7)
         throw std::runtime_error(
@@ -1006,7 +1079,7 @@ UniValue sendfrom(const JSONRPCRequest& request)
     LOCK2(cs_main, mempool.cs);
     LOCK(pwallet->cs_wallet);
 
-    std::string strAccount = AccountFromValue(request.params[0]);
+    std::string strAccount = LabelFromValue(request.params[0]);
     CTxDestination dest = DecodeDestination(request.params[1].get_str());
     if (!IsValidDestination(dest)) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Dash address");
@@ -1045,9 +1118,50 @@ UniValue sendmany(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 2 || request.params.size() > 10)
-        throw std::runtime_error(
-            "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf addlocked \"comment\" [\"address\",...] subtractfeefrom use_is use_ps conf_target \"estimate_mode\")\n"
+    std::string help_text;
+    if (!IsDeprecatedRPCEnabled("accounts")) {
+        help_text = "sendmany \"\" {\"address\":amount,...} ( minconf addlocked \"comment\" [\"address\",...] subtractfeefrom use_is use_ps conf_target \"estimate_mode\")\n"
+            "\nSend multiple times. Amounts are double-precision floating point numbers."
+            "Note that the \"fromaccount\" argument has been removed in V0.17. To use this RPC with a \"fromaccount\" argument, restart\n"
+            "dashd with -deprecatedrpc=accounts\n"
+            + HelpRequiringPassphrase(pwallet) + "\n"
+            "\nArguments:\n"
+            "1. \"dummy\"           (string, required) Must be set to \"\" for backwards compatibility.\n"
+            "2. \"amounts\"               (string, required) A json object with addresses and amounts\n"
+            "    {\n"
+            "      \"address\":amount     (numeric or string) The dash address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value\n"
+            "      ,...\n"
+            "    }\n"
+            "3. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
+            "4. addlocked               (bool, optional, default=false) Whether to include transactions locked via InstantSend.\n"
+            "5. \"comment\"               (string, optional) A comment\n"
+            "6. subtractfeefrom         (array, optional) A json array with addresses.\n"
+            "                           The fee will be equally deducted from the amount of each selected address.\n"
+            "                           Those recipients will receive less dashs than you enter in their corresponding amount field.\n"
+            "                           If no addresses are specified here, the sender pays the fee.\n"
+            "    [\n"
+            "      \"address\"          (string) Subtract fee from this address\n"
+            "      ,...\n"
+            "    ]\n"
+            "7. \"use_is\"                (bool, optional, default=false) Deprecated and ignored\n"
+            "8. \"use_ps\"                (bool, optional, default=false) Use PrivateSend funds only\n"
+            "9. conf_target            (numeric, optional) Confirmation target (in blocks)\n"
+            "10. \"estimate_mode\"      (string, optional, default=UNSET) The fee estimate mode, must be one of:\n"
+            "       \"UNSET\"\n"
+            "       \"ECONOMICAL\"\n"
+            "       \"CONSERVATIVE\"\n"
+             "\nResult:\n"
+            "\"txid\"                   (string) The transaction id for the send. Only 1 transaction is created regardless of \n"
+            "                                    the number of addresses.\n"
+            "\nExamples:\n"
+            "\nSend two amounts to two different addresses:\n"
+            + HelpExampleCli("sendmany", "\"\" \"{\\\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\\\":0.01,\\\"XuQQkwA4FYkq2XERzMY2CiAZhJTEDAbtcG\\\":0.02}\"") +
+            "\nSend two amounts to two different addresses setting the confirmation and comment:\n"
+            + HelpExampleCli("sendmany", "\"\" \"{\\\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\\\":0.01,\\\"XuQQkwA4FYkq2XERzMY2CiAZhJTEDAbtcG\\\":0.02}\" 6 false \"testing\"") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("sendmany", "\"\", \"{\\\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\\\":0.01,\\\"XuQQkwA4FYkq2XERzMY2CiAZhJTEDAbtcG\\\":0.02}\", 6, false, \"testing\"");
+    } else {
+        help_text = "sendmany \"fromaccount\" {\"address\":amount,...} ( minconf addlocked \"comment\" [\"address\",...] subtractfeefrom use_is use_ps conf_target \"estimate_mode\")\n"
             "\nSend multiple times. Amounts are double-precision floating point numbers."
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
@@ -1084,8 +1198,10 @@ UniValue sendmany(const JSONRPCRequest& request)
             "\nSend two amounts to two different addresses setting the confirmation and comment:\n"
             + HelpExampleCli("sendmany", "\"tabby\" \"{\\\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\\\":0.01,\\\"XuQQkwA4FYkq2XERzMY2CiAZhJTEDAbtcG\\\":0.02}\" 6 false \"testing\"") +
             "\nAs a json rpc call\n"
-            + HelpExampleRpc("sendmany", "\"tabby\", \"{\\\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\\\":0.01,\\\"XuQQkwA4FYkq2XERzMY2CiAZhJTEDAbtcG\\\":0.02}\", 6, false, \"testing\"")
-        );
+            + HelpExampleRpc("sendmany", "\"tabby\", \"{\\\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwG\\\":0.01,\\\"XuQQkwA4FYkq2XERzMY2CiAZhJTEDAbtcG\\\":0.02}\", 6, false, \"testing\"");
+    }
+
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 10) throw std::runtime_error(help_text);
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -1098,7 +1214,10 @@ UniValue sendmany(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
 
-    std::string strAccount = AccountFromValue(request.params[0]);
+    if (!IsDeprecatedRPCEnabled("accounts") && !request.params[0].get_str().empty()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Dummy value must be set to \"\"");
+    }
+    std::string strAccount = LabelFromValue(request.params[0]);
     UniValue sendTo = request.params[1].get_obj();
     int nMinDepth = 1;
     if (!request.params[2].isNull())
@@ -1171,9 +1290,11 @@ UniValue sendmany(const JSONRPCRequest& request)
     EnsureWalletIsUnlocked(pwallet);
 
     // Check funds
-    CAmount nBalance = pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount, fAddLocked);
-    if (totalAmount > nBalance)
+    if (IsDeprecatedRPCEnabled("accounts") && totalAmount > pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, &strAccount, fAddLocked)) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
+    } else if (!IsDeprecatedRPCEnabled("accounts") && totalAmount > pwallet->GetLegacyBalance(ISMINE_SPENDABLE, nMinDepth, nullptr, fAddLocked)) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Wallet has insufficient funds");
+    }
 
     // Send
     CReserveKey keyChange(pwallet);
@@ -1202,12 +1323,12 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 2 || request.params.size() > 3)
     {
-        std::string msg = "addmultisigaddress nrequired [\"key\",...] ( \"account\" )\n"
+        std::string msg = "addmultisigaddress nrequired [\"key\",...] ( \"label\" )\n"
             "\nAdd a nrequired-to-sign multisignature address to the wallet. Requires a new wallet backup.\n"
             "Each key is a Dash address or hex-encoded public key.\n"
             "This functionality is only intended for use with non-watchonly addresses.\n"
             "See `importaddress` for watchonly p2sh address support.\n"
-            "If 'account' is specified (DEPRECATED), assign address to that account.\n"
+            "If 'label' is specified, assign address to that label.\n"
 
             "\nArguments:\n"
             "1. nrequired                      (numeric, required) The number of required signatures out of the n keys or addresses.\n"
@@ -1216,7 +1337,7 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
             "       \"address\"                  (string) dash address or hex-encoded public key\n"
             "       ...,\n"
             "     ]\n"
-            "3. \"account\"                      (string, optional) DEPRECATED. An account to assign the addresses to.\n"
+            "3. \"label\"                        (string, optional) An label to assign the addresses to.\n"
 
             "\nResult:\n"
             "{\n"
@@ -1234,9 +1355,9 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    std::string strAccount;
+    std::string label;
     if (!request.params[2].isNull())
-        strAccount = AccountFromValue(request.params[2]);
+        label = LabelFromValue(request.params[2]);
 
     int required = request.params[0].get_int();
 
@@ -1256,7 +1377,7 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
     CScriptID innerID(inner);
     pwallet->AddCScript(inner);
 
-    pwallet->SetAddressBook(innerID, strAccount, "send");
+    pwallet->SetAddressBook(innerID, label, "send");
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("address", EncodeDestination(innerID));
@@ -1279,7 +1400,7 @@ struct tallyitem
     }
 };
 
-UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByAccounts)
+UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool by_label)
 {
     // Minimum confirmations
     int nMinDepth = 1;
@@ -1289,7 +1410,7 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
     if (!params[1].isNull())
         fAddLocked = params[1].get_bool();
 
-    // Whether to include empty accounts
+    // Whether to include empty labels
     bool fIncludeEmpty = false;
     if (!params[2].isNull())
         fIncludeEmpty = params[2].get_bool();
@@ -1301,7 +1422,7 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
 
     bool has_filtered_address = false;
     CTxDestination filtered_address = CNoDestination();
-    if (!fByAccounts && params.size() > 4) {
+    if (!by_label && params.size() > 4) {
         if (!IsValidDestinationString(params[4].get_str())) {
             throw JSONRPCError(RPC_WALLET_ERROR, "address_filter parameter was invalid");
         }
@@ -1346,7 +1467,7 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
 
     // Reply
     UniValue ret(UniValue::VARR);
-    std::map<std::string, tallyitem> mapAccountTally;
+    std::map<std::string, tallyitem> label_tally;
 
     // Create mapAddressBook iterator
     // If we aren't filtering, go from begin() to end()
@@ -1363,7 +1484,7 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
     for (auto item_it = start; item_it != end; ++item_it)
     {
         const CTxDestination& address = item_it->first;
-        const std::string& strAccount = item_it->second.name;
+        const std::string& label = item_it->second.name;
         auto it = mapTally.find(address);
         if (it == mapTally.end() && !fIncludeEmpty)
             continue;
@@ -1382,9 +1503,9 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
             fIsWatchonly = (*it).second.fIsWatchonly;
         }
 
-        if (fByAccounts)
+        if (by_label)
         {
-            tallyitem& _item = mapAccountTally[strAccount];
+            tallyitem& _item = label_tally[label];
             _item.nAmount += nAmount;
             _item.nConf = std::min(_item.nConf, nConf);
             _item.fIsWatchonly = fIsWatchonly;
@@ -1395,11 +1516,10 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
             if(fIsWatchonly)
                 obj.pushKV("involvesWatchonly", true);
             obj.pushKV("address",       EncodeDestination(address));
-            obj.pushKV("account",       strAccount);
+            obj.pushKV("account",       label);
             obj.pushKV("amount",        ValueFromAmount(nAmount));
             obj.pushKV("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
-            if (!fByAccounts)
-                obj.pushKV("label", strAccount);
+            obj.pushKV("label", label);
             UniValue transactions(UniValue::VARR);
             if (it != mapTally.end())
             {
@@ -1413,9 +1533,9 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
         }
     }
 
-    if (fByAccounts)
+    if (by_label)
     {
-        for (const auto& entry : mapAccountTally)
+        for (const auto& entry : label_tally)
         {
             CAmount nAmount = entry.second.nAmount;
             int nConf = entry.second.nConf;
@@ -1425,6 +1545,7 @@ UniValue ListReceived(CWallet * const pwallet, const UniValue& params, bool fByA
             obj.pushKV("account",       entry.first);
             obj.pushKV("amount",        ValueFromAmount(nAmount));
             obj.pushKV("confirmations", (nConf == std::numeric_limits<int>::max() ? 0 : nConf));
+            obj.pushKV("label",         entry.first);
             ret.push_back(obj);
         }
     }
@@ -1454,12 +1575,12 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
             "  {\n"
             "    \"involvesWatchonly\" : true,        (bool) Only returned if imported addresses were involved in transaction\n"
             "    \"address\" : \"receivingaddress\",    (string) The receiving address\n"
-            "    \"account\" : \"accountname\",         (string) DEPRECATED. The account of the receiving address. The default account is \"\".\n"
+            "    \"account\" : \"accountname\",         (string) Backwards compatible alias for label.\n"
             "    \"amount\" : x.xxx,                  (numeric) The total amount in " + CURRENCY_UNIT + " received by the address\n"
             "    \"confirmations\" : n                (numeric) The number of confirmations of the most recent transaction included.\n"
             "                                                 If 'addlocked' is true, the number of confirmations can be less than\n"
             "                                                 configured for transactions locked via InstantSend\n"
-            "    \"label\" : \"label\",               (string) A comment for the address/transaction, if any\n"
+            "    \"label\" : \"label\",               (string) The label of the receiving address. The default label is \"\".\n"
             "    \"txids\": [\n"
             "       \"txid\",                         (string) The ids of transactions received with the address \n"
             "       ...\n"
@@ -1484,39 +1605,46 @@ UniValue listreceivedbyaddress(const JSONRPCRequest& request)
     return ListReceived(pwallet, request.params, false);
 }
 
-UniValue listreceivedbyaccount(const JSONRPCRequest& request)
+UniValue listreceivedbylabel(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
     }
 
+    if (!IsDeprecatedRPCEnabled("accounts") && request.strMethod == "listreceivedbyaccount") {
+        if (request.fHelp) {
+            throw std::runtime_error("listreceivedbyaccount (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+        }
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "listreceivedbyaccount is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
+    }
+
     if (request.fHelp || request.params.size() > 4)
         throw std::runtime_error(
-            "listreceivedbyaccount ( minconf addlocked include_empty include_watchonly)\n"
-            "\nDEPRECATED. List incoming payments grouped by account.\n"
+            "listreceivedbylabel ( minconf addlocked include_empty include_watchonly)\n"
+            "\nList received transactions by label.\n"
             "\nArguments:\n"
             "1. minconf           (numeric, optional, default=1) The minimum number of confirmations before payments are included.\n"
             "2. addlocked         (bool, optional, default=false) Whether to include transactions locked via InstantSend.\n"
-            "3. include_empty     (bool, optional, default=false) Whether to include accounts that haven't received any payments.\n"
+            "3. include_empty     (bool, optional, default=false) Whether to include labels that haven't received any payments.\n"
             "4. include_watchonly (bool, optional, default=false) Whether to include watch-only addresses (see 'importaddress').\n"
 
             "\nResult:\n"
             "[\n"
             "  {\n"
             "    \"involvesWatchonly\" : true,   (bool) Only returned if imported addresses were involved in transaction\n"
-            "    \"account\" : \"accountname\",    (string) The account name of the receiving account\n"
-            "    \"amount\" : x.xxx,             (numeric) The total amount received by addresses with this account\n"
+            "    \"account\" : \"accountname\",    (string) DEPRECATED. Backwards compatible alias for label.\n"
+            "    \"amount\" : x.xxx,             (numeric) The total amount received by addresses with this label\n"
             "    \"confirmations\" : n           (numeric) The number of blockchain confirmations of the most recent transaction included\n"
-            "    \"label\" : \"label\"             (string) A comment for the address/transaction, if any\n"
+            "    \"label\" : \"label\"             (string) The label of the receiving address. The default label is \"\".\n"
             "  }\n"
             "  ,...\n"
             "]\n"
 
             "\nExamples:\n"
-            + HelpExampleCli("listreceivedbyaccount", "")
-            + HelpExampleCli("listreceivedbyaccount", "6 false true")
-            + HelpExampleRpc("listreceivedbyaccount", "6, false, true, true")
+            + HelpExampleCli("listreceivedbylabel", "")
+            + HelpExampleCli("listreceivedbylabel", "6 false true")
+            + HelpExampleRpc("listreceivedbylabel", "6, false, true, true")
         );
 
     // Make sure the results are valid at least up to the most recent block
@@ -1558,16 +1686,21 @@ void ListTransactions(CWallet * const pwallet, const CWalletTx& wtx, const std::
     bool fAllAccounts = (strAccount == std::string("*"));
     bool involvesWatchonly = wtx.IsFromMe(ISMINE_WATCH_ONLY);
 
+    bool list_sent = fAllAccounts;
+
+    if (IsDeprecatedRPCEnabled("accounts")) {
+        list_sent |= strAccount == strSentAccount;
+    }
+
     // Sent
-    if ((!listSent.empty() || nFee != 0) && (fAllAccounts || strAccount == strSentAccount))
-    {
+    if (list_sent) {
         for (const COutputEntry& s : listSent)
         {
             UniValue entry(UniValue::VOBJ);
             if (involvesWatchonly || (::IsMine(*pwallet, s.destination) & ISMINE_WATCH_ONLY)) {
                 entry.pushKV("involvesWatchonly", true);
             }
-            entry.pushKV("account", strSentAccount);
+            if (IsDeprecatedRPCEnabled("accounts")) entry.pushKV("account", strSentAccount);
             MaybePushAddress(entry, s.destination);
             std::map<std::string, std::string>::const_iterator it = wtx.mapValue.find("DS");
             entry.pushKV("category", (it != wtx.mapValue.end() && it->second == "1") ? "privatesend" : "send");
@@ -1599,7 +1732,7 @@ void ListTransactions(CWallet * const pwallet, const CWalletTx& wtx, const std::
                 if (involvesWatchonly || (::IsMine(*pwallet, r.destination) & ISMINE_WATCH_ONLY)) {
                     entry.pushKV("involvesWatchonly", true);
                 }
-                entry.pushKV("account", account);
+                if (IsDeprecatedRPCEnabled("accounts")) entry.pushKV("account", account);
                 MaybePushAddress(entry, r.destination);
                 if (wtx.IsCoinBase())
                 {
@@ -1638,7 +1771,7 @@ void AcentryToJSON(const CAccountingEntry& acentry, const std::string& strAccoun
         entry.pushKV("category", "move");
         entry.pushKV("time", acentry.nTime);
         entry.pushKV("amount", ValueFromAmount(acentry.nCreditDebit));
-        entry.pushKV("otheraccount", acentry.strOtherAccount);
+        if (IsDeprecatedRPCEnabled("accounts")) entry.pushKV("otheraccount", acentry.strOtherAccount);
         entry.pushKV("comment", acentry.strComment);
         ret.push_back(entry);
     }
@@ -1651,19 +1784,76 @@ UniValue listtransactions(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() > 4)
-        throw std::runtime_error(
-            "listtransactions ( \"account\" count skip include_watchonly)\n"
-            "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions for account 'account'.\n"
+    std::string help_text {};
+    if (!IsDeprecatedRPCEnabled("accounts")) {
+        help_text = "listtransactions (label count skip include_watchonly)\n"
+            "\nIf a label name is provided, this will return only incoming transactions paying to addresses with the specified label.\n"
+            "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions.\n"
+            "Note that the \"account\" argument and \"otheraccount\" return value have been removed in V0.17. To use this RPC with an \"account\" argument, restart\n"
+            "dashd with -deprecatedrpc=accounts\n"
             "\nArguments:\n"
-            "1. \"account\"        (string, optional) DEPRECATED. The account name. Should be \"*\".\n"
-            "2. count            (numeric, optional, default=10) The number of transactions to return\n"
+            "1. \"label\"    (string, optional) If set, should be a valid label name to return only incoming transactions\n"
+            "              with the specified label, or \"*\" to disable filtering and return all transactions.\n"
+            "2. count          (numeric, optional, default=10) The number of transactions to return\n"
             "3. skip           (numeric, optional, default=0) The number of transactions to skip\n"
             "4. include_watchonly (bool, optional, default=false) Include transactions to watch-only addresses (see 'importaddress')\n"
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"account\":\"accountname\",  (string) DEPRECATED. The account name associated with the transaction. \n"
+            "    \"address\":\"address\",    (string) The dash address of the transaction. Not present for \n"
+            "                                                move transactions (category = move).\n"
+            "    \"category\":\"send|receive|move\", (string) The transaction category. 'move' is a local (off blockchain)\n"
+            "                                                transaction between accounts, and not associated with an address,\n"
+            "                                                transaction id or block. 'send' and 'receive' transactions are \n"
+            "                                                associated with an address, transaction id and block details\n"
+            "    \"amount\": x.xxx,          (numeric) The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and for the\n"
+            "                                         'move' category for moves outbound. It is positive for the 'receive' category,\n"
+            "                                         and for the 'move' category for inbound funds.\n"
+            "    \"label\": \"label\",       (string) A comment for the address/transaction, if any\n"
+            "    \"vout\": n,                (numeric) the vout value\n"
+            "    \"fee\": x.xxx,             (numeric) The amount of the fee in " + CURRENCY_UNIT + ". This is negative and only available for the \n"
+            "                                         'send' category of transactions.\n"
+            "    \"confirmations\": n,       (numeric) The number of blockchain confirmations for the transaction. Available for 'send' and \n"
+            "                                         'receive' category of transactions. Negative confirmations indicate the\n"
+            "                                         transation conflicts with the block chain\n"
+            "    \"instantlock\" : true|false, (bool) Current transaction lock state. Available for 'send' and 'receive' category of transactions\n"
+            "    \"instantlock_internal\" : true|false, (bool) Current internal transaction lock state. Available for 'send' and 'receive' category of transactions\n"
+            "    \"chainlock\" : true|false, (bool) The state of the corresponding block chainlock\n"
+            "    \"trusted\": xxx,           (bool) Whether we consider the outputs of this unconfirmed transaction safe to spend.\n"
+            "    \"blockhash\": \"hashvalue\", (string) The block hash containing the transaction. Available for 'send' and 'receive'\n"
+            "                                          category of transactions.\n"
+            "    \"blockindex\": n,          (numeric) The index of the transaction in the block that includes it. Available for 'send' and 'receive'\n"
+            "                                          category of transactions.\n"
+            "    \"blocktime\": xxx,         (numeric) The block time in seconds since epoch (1 Jan 1970 GMT).\n"
+            "    \"txid\": \"transactionid\",  (string) The transaction id. Available for 'send' and 'receive' category of transactions.\n"
+            "    \"time\": xxx,              (numeric) The transaction time in seconds since epoch (midnight Jan 1 1970 GMT).\n"
+            "    \"timereceived\": xxx,      (numeric) The time received in seconds since epoch (midnight Jan 1 1970 GMT). Available \n"
+            "                                          for 'send' and 'receive' category of transactions.\n"
+            "    \"comment\": \"...\",         (string) If a comment is associated with the transaction.\n"
+            "    \"abandoned\": xxx          (bool) 'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
+            "                                         'send' category of transactions.\n"
+            "  }\n"
+            "]\n"
+
+            "\nExamples:\n"
+            "\nList the most recent 10 transactions in the systems\n"
+            + HelpExampleCli("listtransactions", "") +
+            "\nList transactions 100 to 120\n"
+            + HelpExampleCli("listtransactions", "\"\" 20 100") +
+            "\nAs a json rpc call\n"
+            + HelpExampleRpc("listtransactions", "\"\", 20, 100");
+    } else {
+        help_text = "listtransactions ( \"account\" count skip include_watchonly)\n"
+            "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions for account 'account'.\n"
+            "\nArguments:\n"
+            "1. \"account\"    (string, optional) DEPRECATED. This argument will be removed in V0.18. The account name. Should be \"*\".\n"
+            "2. count          (numeric, optional, default=10) The number of transactions to return\n"
+            "3. skip           (numeric, optional, default=0) The number of transactions to skip\n"
+            "4. include_watchonly (bool, optional, default=false) Include transactions to watch-only addresses (see 'importaddress')\n"
+            "\nResult:\n"
+            "[\n"
+            "  {\n"
+            "    \"account\":\"accountname\",       (string) DEPRECATED. This field will be removed in V0.18. The account name associated with the transaction. \n"
             "                                                It will be \"\" for the default account.\n"
             "    \"address\":\"address\",    (string) The dash address of the transaction. Not present for \n"
             "                                                move transactions (category = move).\n"
@@ -1695,7 +1885,7 @@ UniValue listtransactions(const JSONRPCRequest& request)
             "    \"timereceived\": xxx,      (numeric) The time received in seconds since epoch (midnight Jan 1 1970 GMT). Available \n"
             "                                          for 'send' and 'receive' category of transactions.\n"
             "    \"comment\": \"...\",         (string) If a comment is associated with the transaction.\n"
-            "    \"otheraccount\": \"accountname\",  (string) DEPRECATED. For the 'move' category of transactions, the account the funds came \n"
+            "    \"otheraccount\": \"accountname\",  (string) DEPRECATED. This field will be removed in V0.18. For the 'move' category of transactions, the account the funds came \n"
             "                                          from (for receiving funds, positive amounts), or went to (for sending funds,\n"
             "                                          negative amounts).\n"
             "    \"abandoned\": xxx          (bool) 'true' if the transaction has been abandoned (inputs are respendable). Only available for the \n"
@@ -1709,16 +1899,21 @@ UniValue listtransactions(const JSONRPCRequest& request)
             "\nList transactions 100 to 120\n"
             + HelpExampleCli("listtransactions", "\"*\" 20 100") +
             "\nAs a json rpc call\n"
-            + HelpExampleRpc("listtransactions", "\"*\", 20, 100")
-        );
+            + HelpExampleRpc("listtransactions", "\"*\", 20, 100");
+    }
+    if (request.fHelp || request.params.size() > 4) throw std::runtime_error(help_text);
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
     std::string strAccount = "*";
-    if (!request.params[0].isNull())
+    if (!request.params[0].isNull()) {
         strAccount = request.params[0].get_str();
+        if (!IsDeprecatedRPCEnabled("accounts") && strAccount.empty()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Label argument must be a valid label name or \"*\".");
+        }
+    }
     int nCount = 10;
     if (!request.params[1].isNull())
         nCount = request.params[1].get_int();
@@ -1748,9 +1943,10 @@ UniValue listtransactions(const JSONRPCRequest& request)
             CWalletTx *const pwtx = (*it).second.first;
             if (pwtx != nullptr)
                 ListTransactions(pwallet, *pwtx, strAccount, 0, true, ret, filter);
-            CAccountingEntry *const pacentry = (*it).second.second;
-            if (pacentry != nullptr)
-                AcentryToJSON(*pacentry, strAccount, ret);
+            if (IsDeprecatedRPCEnabled("accounts")) {
+                CAccountingEntry *const pacentry = (*it).second.second;
+                if (pacentry != nullptr) AcentryToJSON(*pacentry, strAccount, ret);
+            }
 
             if ((int)ret.size() >= (nCount+nFrom)) break;
         }
@@ -1787,6 +1983,13 @@ UniValue listaccounts(const JSONRPCRequest& request)
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
         return NullUniValue;
+    }
+
+    if (!IsDeprecatedRPCEnabled("accounts")) {
+        if (request.fHelp) {
+            throw std::runtime_error("listaccounts (Deprecated, will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts)");
+        }
+        throw JSONRPCError(RPC_METHOD_DEPRECATED, "listaccounts is deprecated and will be removed in V0.18. To use this command, start dashd with -deprecatedrpc=accounts.");
     }
 
     if (request.fHelp || request.params.size() > 3)
@@ -1894,7 +2097,7 @@ UniValue listsinceblock(const JSONRPCRequest& request)
             "\nResult:\n"
             "{\n"
             "  \"transactions\": [\n"
-            "    \"account\":\"accountname\",  (string) DEPRECATED. The account name associated with the transaction. Will be \"\" for the default account.\n"
+            "    \"account\":\"accountname\",  (string) DEPRECATED. This field will be removed in V0.18. To see this deprecated field, start dashd with -deprecatedrpc=accounts. The account name associated with the transaction. Will be \"\" for the default account.\n"
             "    \"address\":\"address\",    (string) The dash address of the transaction. Not present for move transactions (category = move).\n"
             "    \"category\":\"send|receive\",  (string) The transaction category. 'send' has negative amounts, 'receive' has positive amounts.\n"
             "    \"amount\": x.xxx,          (numeric) The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and for the 'move' category for moves \n"
@@ -2043,7 +2246,7 @@ UniValue gettransaction(const JSONRPCRequest& request)
             "  \"timereceived\" : ttt,    (numeric) The time received in seconds since epoch (1 Jan 1970 GMT)\n"
             "  \"details\" : [\n"
             "    {\n"
-            "      \"account\" : \"accountname\",      (string) DEPRECATED. The account name involved in the transaction, can be \"\" for the default account.\n"
+            "      \"account\" : \"accountname\",      (string) DEPRECATED. This field will be removed in V0.18. To see this deprecated field, start dashd with -deprecatedrpc=accounts. The account name involved in the transaction, can be \"\" for the default account.\n"
             "      \"address\" : \"address\",          (string) The dash address involved in the transaction\n"
             "      \"category\" : \"send|receive\",    (string) The category, either 'send' or 'receive'\n"
             "      \"amount\" : x.xxx,               (numeric) The amount in " + CURRENCY_UNIT + "\n"
@@ -3085,7 +3288,8 @@ UniValue listunspent(const JSONRPCRequest& request)
             "    \"txid\" : \"txid\",          (string) the transaction id \n"
             "    \"vout\" : n,               (numeric) the vout value\n"
             "    \"address\" : \"address\",    (string) the dash address\n"
-            "    \"account\" : \"account\",    (string) DEPRECATED. The associated account, or \"\" for the default account\n"
+            "    \"label\" : \"label\",        (string) The associated label, or \"\" for the default label\n"
+            "    \"account\" : \"account\",    (string) DEPRECATED. This field will be removed in V0.18. To see this deprecated field, start dashd with -deprecatedrpc=accounts. The associated account, or \"\" for the default account\n"
             "    \"scriptPubKey\" : \"key\",   (string) the script key\n"
             "    \"amount\" : x.xxx,         (numeric) the transaction output amount in " + CURRENCY_UNIT + "\n"
             "    \"confirmations\" : n,      (numeric) The number of confirmations\n"
@@ -3215,7 +3419,10 @@ UniValue listunspent(const JSONRPCRequest& request)
             entry.pushKV("address", EncodeDestination(address));
 
             if (pwallet->mapAddressBook.count(address)) {
-                entry.pushKV("account", pwallet->mapAddressBook[address].name);
+                entry.pushKV("label", pwallet->mapAddressBook[address].name);
+                if (IsDeprecatedRPCEnabled("accounts")) {
+                    entry.pushKV("account", pwallet->mapAddressBook[address].name);
+                }
             }
 
             if (scriptPubKey.IsPayToScriptHash()) {
@@ -3667,6 +3874,17 @@ UniValue DescribeWalletAddress(CWallet* pwallet, const CTxDestination& dest)
     return ret;
 }
 
+/** Convert CAddressBookData to JSON record.  */
+static UniValue AddressBookDataToJSON(const CAddressBookData& data, const bool verbose)
+{
+    UniValue ret(UniValue::VOBJ);
+    if (verbose) {
+        ret.pushKV("name", data.name);
+    }
+    ret.pushKV("purpose", data.purpose);
+    return ret;
+}
+
 UniValue getaddressinfo(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
@@ -3699,10 +3917,18 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             "  \"pubkey\" : \"publickeyhex\",    (string, optional) The hex value of the raw public key, for single-key addresses (possibly embedded in P2SH)\n"
             "  \"embedded\" : {...},           (object, optional) Information about the address embedded in P2SH, if relevant and known. It includes all getaddressinfo output fields for the embedded address, excluding metadata (\"timestamp\", \"hdkeypath\") and relation to the wallet (\"ismine\", \"iswatchonly\", \"account\").\n"
             "  \"iscompressed\" : true|false,  (boolean) If the address is compressed\n"
-            "  \"account\" : \"account\"         (string) The account associated with the address, \"\" is the default account\n"
+            "  \"label\" :  \"label\"         (string) The label associated with the address, \"\" is the default account\n"
+            "  \"account\" : \"account\"         (string) DEPRECATED. This field will be removed in V0.18. To see this deprecated field, start dashd with -deprecatedrpc=accounts. The account associated with the address, \"\" is the default account\n"
             "  \"timestamp\" : timestamp,      (number, optional) The creation time of the key if available in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"hdkeypath\" : \"keypath\"       (string, optional) The HD keypath if the key is HD and available\n"
             "  \"hdchainid\" : \"<hash>\"        (string, optional) The ID of the HD chain\n"
+            "  \"labels\"                      (object) Array of labels associated with the address.\n"
+            "    [\n"
+            "      { (json object of label data)\n"
+            "        \"name\": \"labelname\" (string) The label\n"
+            "        \"purpose\": \"string\" (string) Purpose of address (\"send\" for sending address, \"receive\" for receiving address)\n"
+            "      },...\n"
+            "    ]\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getaddressinfo", "\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\"")
@@ -3732,7 +3958,10 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     UniValue detail = DescribeWalletAddress(pwallet, dest);
     ret.pushKVs(detail);
     if (pwallet->mapAddressBook.count(dest)) {
-        ret.pushKV("account", pwallet->mapAddressBook[dest].name);
+        ret.pushKV("label", pwallet->mapAddressBook[dest].name);
+        if (IsDeprecatedRPCEnabled("accounts")) {
+            ret.pushKV("account", pwallet->mapAddressBook[dest].name);
+        }
     }
     const CKeyMetadata* meta = nullptr;
     const CKeyID *key_id = boost::get<CKeyID>(&dest);
@@ -3756,6 +3985,112 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
             ret.pushKV("hdchainid", hdChainCurrent.GetID().GetHex());
         }
     }
+
+    // Currently only one label can be associated with an address, return an array
+    // so the API remains stable if we allow multiple labels to be associated with
+    // an address.
+    UniValue labels(UniValue::VARR);
+    std::map<CTxDestination, CAddressBookData>::iterator mi = pwallet->mapAddressBook.find(dest);
+    if (mi != pwallet->mapAddressBook.end()) {
+        labels.push_back(AddressBookDataToJSON(mi->second, true));
+    }
+    ret.pushKV("labels", std::move(labels));
+
+    return ret;
+}
+
+UniValue getaddressesbylabel(const JSONRPCRequest& request)
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            "getaddressesbylabel \"label\"\n"
+            "\nReturns the list of addresses assigned the specified label.\n"
+            "\nArguments:\n"
+            "1. \"label\"  (string, required) The label.\n"
+            "\nResult:\n"
+            "{ (json object with addresses as keys)\n"
+            "  \"address\": { (json object with information about address)\n"
+            "    \"purpose\": \"string\" (string)  Purpose of address (\"send\" for sending address, \"receive\" for receiving address)\n"
+            "  },...\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getaddressesbylabel", "\"tabby\"")
+            + HelpExampleRpc("getaddressesbylabel", "\"tabby\"")
+        );
+
+    LOCK(pwallet->cs_wallet);
+
+    std::string label = LabelFromValue(request.params[0]);
+
+    // Find all addresses that have the given label
+    UniValue ret(UniValue::VOBJ);
+    for (const std::pair<CTxDestination, CAddressBookData>& item : pwallet->mapAddressBook) {
+        if (item.second.name == label) {
+            ret.pushKV(EncodeDestination(item.first), AddressBookDataToJSON(item.second, false));
+        }
+    }
+
+    if (ret.empty()) {
+        throw JSONRPCError(RPC_WALLET_INVALID_LABEL_NAME, std::string("No addresses with label " + label));
+    }
+
+    return ret;
+}
+
+UniValue listlabels(const JSONRPCRequest& request)
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() > 1)
+        throw std::runtime_error(
+            "listlabels ( \"purpose\" )\n"
+            "\nReturns the list of all labels, or labels that are assigned to addresses with a specific purpose.\n"
+            "\nArguments:\n"
+            "1. \"purpose\"    (string, optional) Address purpose to list labels for ('send','receive'). An empty string is the same as not providing this argument.\n"
+            "\nResult:\n"
+            "[               (json array of string)\n"
+            "  \"label\",      (string) Label name\n"
+            "  ...\n"
+            "]\n"
+            "\nExamples:\n"
+            "\nList all labels\n"
+            + HelpExampleCli("listlabels", "") +
+            "\nList labels that have receiving addresses\n"
+            + HelpExampleCli("listlabels", "receive") +
+            "\nList labels that have sending addresses\n"
+            + HelpExampleCli("listlabels", "send") +
+            "\nAs json rpc call\n"
+            + HelpExampleRpc("listlabels", "receive")
+        );
+
+    LOCK(pwallet->cs_wallet);
+
+    std::string purpose;
+    if (!request.params[0].isNull()) {
+        purpose = request.params[0].get_str();
+    }
+
+    // Add to a set to sort by label name, then insert into Univalue array
+    std::set<std::string> label_set;
+    for (const std::pair<CTxDestination, CAddressBookData>& entry : pwallet->mapAddressBook) {
+        if (purpose.empty() || entry.second.purpose == purpose) {
+            label_set.insert(entry.second.name);
+        }
+    }
+
+    UniValue ret(UniValue::VARR);
+    for (const std::string& name : label_set) {
+        ret.push_back(name);
+    }
+
     return ret;
 }
 
@@ -3781,20 +4116,16 @@ static const CRPCCommand commands[] =
     { "hidden",             "resendwallettransactions",         &resendwallettransactions,      {} },
     { "wallet",             "abandontransaction",               &abandontransaction,            {"txid"} },
     { "wallet",             "abortrescan",                      &abortrescan,                   {} },
-    { "wallet",             "addmultisigaddress",               &addmultisigaddress,            {"nrequired","keys","account"} },
+    { "wallet",             "addmultisigaddress",               &addmultisigaddress,            {"nrequired","keys","label|account"} },
     { "wallet",             "backupwallet",                     &backupwallet,                  {"destination"} },
     { "wallet",             "createwallet",                     &createwallet,                  {"wallet_name"} },
     { "wallet",             "dumpprivkey",                      &dumpprivkey,                   {"address"}  },
     { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
-    { "wallet",             "getaccountaddress",                &getaccountaddress,             {"account"} },
-    { "wallet",             "getaccount",                       &getaccount,                    {"address"} },
-    { "wallet",             "getaddressesbyaccount",            &getaddressesbyaccount,         {"account"} },
     { "wallet",             "getaddressinfo",                   &getaddressinfo,                {"address"} },
-    { "wallet",             "getbalance",                       &getbalance,                    {"account","minconf","addlocked","include_watchonly"} },
-    { "wallet",             "getnewaddress",                    &getnewaddress,                 {"account"} },
+    { "wallet",             "getbalance",                       &getbalance,                    {"account|dummy","minconf","addlocked","include_watchonly"} },
+    { "wallet",             "getnewaddress",                    &getnewaddress,                 {"label|account"} },
     { "wallet",             "getrawchangeaddress",              &getrawchangeaddress,           {} },
-    { "wallet",             "getreceivedbyaccount",             &getreceivedbyaccount,          {"account","minconf","addlocked"} },
     { "wallet",             "getreceivedbyaddress",             &getreceivedbyaddress,          {"address","minconf","addlocked"} },
     { "wallet",             "gettransaction",                   &gettransaction,                {"txid","include_watchonly"} },
     { "wallet",             "getunconfirmedbalance",            &getunconfirmedbalance,         {} },
@@ -3806,23 +4137,18 @@ static const CRPCCommand commands[] =
     { "wallet",             "importprunedfunds",                &importprunedfunds,             {"rawtransaction","txoutproof"} },
     { "wallet",             "importpubkey",                     &importpubkey,                  {"pubkey","label","rescan"} },
     { "wallet",             "keypoolrefill",                    &keypoolrefill,                 {"newsize"} },
-    { "wallet",             "listaccounts",                     &listaccounts,                  {"minconf","addlocked","include_watchonly"} },
     { "wallet",             "listaddressgroupings",             &listaddressgroupings,          {} },
     { "wallet",             "listaddressbalances",      &listaddressbalances,      {"minamount"} },
     { "wallet",             "listlockunspent",                  &listlockunspent,               {} },
-    { "wallet",             "listreceivedbyaccount",            &listreceivedbyaccount,         {"minconf","addlocked","include_empty","include_watchonly"} },
     { "wallet",             "listreceivedbyaddress",            &listreceivedbyaddress,         {"minconf","addlocked","include_empty","include_watchonly","address_filter"} },
     { "wallet",             "listsinceblock",           &listsinceblock,           {"blockhash","target_confirmations","include_watchonly","include_removed"} },
-    { "wallet",             "listtransactions",         &listtransactions,         {"account","count","skip","include_watchonly"} },
+    { "wallet",             "listtransactions",         &listtransactions,         {"account|label|dummy","count","skip","include_watchonly"} },
     { "wallet",             "listunspent",              &listunspent,              {"minconf","maxconf","addresses","include_unsafe","query_options"} },
     { "wallet",             "listwallets",              &listwallets,              {} },
     { "wallet",             "loadwallet",               &loadwallet,               {"filename"} },
     { "wallet",             "lockunspent",                      &lockunspent,                   {"unlock","transactions"} },
-    { "wallet",             "move",                             &movecmd,                       {"fromaccount","toaccount","amount","minconf","comment"} },
-    { "wallet",             "sendfrom",                         &sendfrom,                      {"fromaccount","toaddress","amount","minconf","addlocked","comment","comment_to"} },
-    { "wallet",             "sendmany",                         &sendmany,                      {"fromaccount","amounts","minconf","addlocked","comment","subtractfeefrom","use_is","use_ps","conf_target","estimate_mode"} },
+    { "wallet",             "sendmany",                         &sendmany,                      {"fromaccount|dummy","amounts","minconf","addlocked","comment","subtractfeefrom","use_is","use_ps","conf_target","estimate_mode"} },
     { "wallet",             "sendtoaddress",                    &sendtoaddress,                 {"address","amount","comment","comment_to","subtractfeefromamount","use_is","use_ps","conf_target","estimate_mode"} },
-    { "wallet",             "setaccount",                       &setaccount,                    {"address","account"} },
     { "wallet",             "settxfee",                         &settxfee,                      {"amount"} },
     { "wallet",             "setprivatesendrounds",     &setprivatesendrounds,     {"rounds"} },
     { "wallet",             "setprivatesendamount",     &setprivatesendamount,     {"amount"} },
@@ -3833,6 +4159,24 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrase",                 &walletpassphrase,              {"passphrase","timeout","mixingonly"} },
     { "wallet",             "removeprunedfunds",                &removeprunedfunds,             {"txid"} },
     { "wallet",             "rescanblockchain",                 &rescanblockchain,              {"start_height", "stop_height"} },
+
+    /** Account functions (deprecated) */
+    { "wallet",             "getaccountaddress",                &getaccountaddress,             {"account"} },
+    { "wallet",             "getaccount",                       &getaccount,                    {"address"} },
+    { "wallet",             "getaddressesbyaccount",            &getaddressesbyaccount,         {"account"} },
+    { "wallet",             "getreceivedbyaccount",             &getreceivedbylabel,            {"account","minconf","addlocked"} },
+    { "wallet",             "listaccounts",                     &listaccounts,                  {"minconf","addlocked","include_watchonly"} },
+    { "wallet",             "listreceivedbyaccount",            &listreceivedbylabel,           {"minconf","addlocked","include_empty","include_watchonly"} },
+    { "wallet",             "setaccount",                       &setlabel,                      {"address","account"} },
+    { "wallet",             "sendfrom",                         &sendfrom,                      {"fromaccount","toaddress","amount","minconf","addlocked","comment","comment_to"} },
+    { "wallet",             "move",                             &movecmd,                       {"fromaccount","toaccount","amount","minconf","comment"} },
+
+    /** Label functions (to replace non-balance account functions) */
+    { "wallet",             "getaddressesbylabel",              &getaddressesbylabel,           {"label"} },
+    { "wallet",             "getreceivedbylabel",               &getreceivedbylabel,            {"label","minconf","addlocked"} },
+    { "wallet",             "listlabels",                       &listlabels,                    {"purpose"} },
+    { "wallet",             "listreceivedbylabel",              &listreceivedbylabel,           {"minconf","addlocked","include_empty","include_watchonly"} },
+    { "wallet",             "setlabel",                         &setlabel,                      {"address","label"} },
 
 #if ENABLE_MINER
     { "generating",         "generate",                         &generate,                      {"nblocks","maxtries"} },
