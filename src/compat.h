@@ -114,6 +114,10 @@ typedef char* sockopt_arg_type;
 #define USE_EPOLL
 #endif
 
+#if defined(__FreeBSD__) || defined(__APPLE__)
+#define USE_KQUEUE
+#endif
+
 bool static inline IsSelectableSocket(const SOCKET& s) {
 #if defined(USE_POLL) || defined(WIN32)
     return true;

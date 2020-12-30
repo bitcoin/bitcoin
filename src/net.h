@@ -98,7 +98,9 @@ static const size_t DEFAULT_MAXSENDBUFFER    = 1 * 1000;
 // NOTE: When adjusting this, update rpcnet:setban's help ("24h")
 static const unsigned int DEFAULT_MISBEHAVING_BANTIME = 60 * 60 * 24;  // Default 24-hour ban
 
-#if defined USE_EPOLL
+#if defined USE_KQUEUE
+#define DEFAULT_SOCKETEVENTS "kqueue"
+#elif defined USE_EPOLL
 #define DEFAULT_SOCKETEVENTS "epoll"
 #elif defined USE_POLL
 #define DEFAULT_SOCKETEVENTS "poll"
@@ -149,6 +151,7 @@ public:
         SOCKETEVENTS_SELECT = 0,
         SOCKETEVENTS_POLL = 1,
         SOCKETEVENTS_EPOLL = 2,
+        SOCKETEVENTS_KQUEUE = 3,
     };
 
     struct Options
@@ -493,6 +496,9 @@ private:
     void CalculateNumConnectionsChangedStats();
     void InactivityCheck(CNode *pnode);
     bool GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
+#ifdef USE_KQUEUE
+    void SocketEventsKqueue(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll);
+#endif
 #ifdef USE_EPOLL
     void SocketEventsEpoll(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll);
 #endif
@@ -620,6 +626,9 @@ private:
     std::atomic<bool> wakeupSelectNeeded{false};
 
     SocketEventsMode socketEventsMode;
+#ifdef USE_KQUEUE
+    int kqueuefd{-1};
+#endif
 #ifdef USE_EPOLL
     int epollfd{-1};
 #endif

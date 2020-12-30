@@ -439,7 +439,7 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
             "  \"timeoffset\": xxxxx,                   (numeric) the time offset\n"
             "  \"connections\": xxxxx,                  (numeric) the number of connections\n"
             "  \"networkactive\": true|false,           (bool) whether p2p networking is enabled\n"
-            "  \"socketevents\": \"xxx/\",              (string) the socket events mode, either epoll, poll or select\n"
+            "  \"socketevents\": \"xxx/\",              (string) the socket events mode, either kqueue, epoll, poll or select\n"
             "  \"networks\": [                          (array) information per network\n"
             "  {\n"
             "    \"name\": \"xxx\",                     (string) network (ipv4, ipv6 or onion)\n"
@@ -489,6 +489,9 @@ UniValue getnetworkinfo(const JSONRPCRequest& request)
                 break;
             case CConnman::SOCKETEVENTS_EPOLL:
                 strSocketEvents = "epoll";
+                break;
+            case CConnman::SOCKETEVENTS_KQUEUE:
+                strSocketEvents = "kqueue";
                 break;
             default:
                 assert(false);
