@@ -35,7 +35,7 @@ CChainLocksHandler::CChainLocksHandler()
 {
     scheduler = new CScheduler();
     CScheduler::Function serviceLoop = boost::bind(&CScheduler::serviceQueue, scheduler);
-    scheduler_thread = new boost::thread(boost::bind(&TraceThread<CScheduler::Function>, "cl-scheduler", serviceLoop));
+    scheduler_thread = new boost::thread(boost::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));
 }
 
 CChainLocksHandler::~CChainLocksHandler()

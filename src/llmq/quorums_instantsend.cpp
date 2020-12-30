@@ -352,7 +352,7 @@ void CInstantSendManager::Start()
         assert(false);
     }
 
-    workThread = std::thread(&TraceThread<std::function<void()> >, "instantsend", std::function<void()>(std::bind(&CInstantSendManager::WorkThreadMain, this)));
+    workThread = std::thread(&TraceThread<std::function<void()> >, "isman", std::function<void()>(std::bind(&CInstantSendManager::WorkThreadMain, this)));
 
     quorumSigningManager->RegisterRecoveredSigsListener(this);
 }
