@@ -96,7 +96,7 @@ CDKGSessionHandler::CDKGSessionHandler(const Consensus::LLMQParams& _params, CBL
     pendingPrematureCommitments((size_t)_params.size * 2, _peerman),
     peerman(_peerman)
 {
-    m_threadName = strprintf("q-phase-%d", params.type);
+    m_threadName = strprintf("llmq-%d", params.type);
     if (params.type == Consensus::LLMQ_NONE) {
         throw std::runtime_error("Can't initialize CDKGSessionHandler with LLMQ_NONE type.");
     }

@@ -474,24 +474,26 @@ int GetNumCores();
  */
 template <typename Callable> void TraceThread(const char* name,  Callable func)
 {
+    // SYSCOIN keep copy to work with dynamic thread names in LLMQ code
+    std::string strName = std::string(name);
     util::ThreadRename(name);
     try
     {
-        LogPrintf("%s thread start\n", name);
+        LogPrintf("%s thread start\n", strName);
         func();
-        LogPrintf("%s thread exit\n", name);
+        LogPrintf("%s thread exit\n", strName);
     }
     catch (const boost::thread_interrupted&)
     {
-        LogPrintf("%s thread interrupt\n", name);
+        LogPrintf("%s thread interrupt\n", strName);
         throw;
     }
     catch (const std::exception& e) {
-        PrintExceptionContinue(&e, name);
+        PrintExceptionContinue(&e, strName.c_str());
         throw;
     }
     catch (...) {
-        PrintExceptionContinue(nullptr, name);
+        PrintExceptionContinue(nullptr, strName.c_str());
         throw;
     }
 }
