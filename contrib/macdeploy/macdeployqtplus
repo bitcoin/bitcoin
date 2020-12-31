@@ -13,7 +13,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
 import plistlib
@@ -45,13 +45,13 @@ class FrameworkInfo(object):
         self.sourceContentsDirectory = ""
         self.destinationResourcesDirectory = ""
         self.destinationVersionContentsDirectory = ""
-    
+
     def __eq__(self, other):
         if self.__class__ == other.__class__:
             return self.__dict__ == other.__dict__
         else:
             return False
-    
+
     def __str__(self):
         return f""" Framework name: {frameworkName}
  Framework directory: {self.frameworkDirectory}
@@ -65,51 +65,51 @@ class FrameworkInfo(object):
  Source file Path: {self.sourceFilePath}
  Deployed Directory (relative to bundle): {self.destinationDirectory}
 """
-    
+
     def isDylib(self):
         return self.frameworkName.endswith(".dylib")
-    
+
     def isQtFramework(self):
         if self.isDylib():
             return self.frameworkName.startswith("libQt")
         else:
             return self.frameworkName.startswith("Qt")
-    
+
     reOLine = re.compile(r'^(.+) \(compatibility version [0-9.]+, current version [0-9.]+\)$')
     bundleFrameworkDirectory = "Contents/Frameworks"
     bundleBinaryDirectory = "Contents/MacOS"
-    
+
     @classmethod
     def fromOtoolLibraryLine(cls, line: str) -> Optional['FrameworkInfo']:
         # Note: line must be trimmed
         if line == "":
             return None
-        
+
         # Don't deploy system libraries (exception for libQtuitools and libQtlucene).
         if line.startswith("/System/Library/") or line.startswith("@executable_path") or (line.startswith("/usr/lib/") and "libQt" not in line):
             return None
-        
+
         m = cls.reOLine.match(line)
         if m is None:
             raise RuntimeError(f"otool line could not be parsed: {line}")
-        
+
         path = m.group(1)
-        
+
         info = cls()
         info.sourceFilePath = path
         info.installName = path
-        
+
         if path.endswith(".dylib"):
             dirname, filename = os.path.split(path)
             info.frameworkName = filename
             info.frameworkDirectory = dirname
             info.frameworkPath = path
-            
+
             info.binaryDirectory = dirname
             info.binaryName = filename
             info.binaryPath = path
             info.version = "-"
-            
+
             info.installName = path
             info.deployedInstallName = f"@executable_path/../Frameworks/{info.binaryName}"
             info.sourceFilePath = path
@@ -124,25 +124,25 @@ class FrameworkInfo(object):
                 i += 1
             if i == len(parts):
                 raise RuntimeError(f"Could not find .framework or .dylib in otool line: {line}")
-            
+
             info.frameworkName = parts[i]
             info.frameworkDirectory = "/".join(parts[:i])
             info.frameworkPath = os.path.join(info.frameworkDirectory, info.frameworkName)
-            
+
             info.binaryName = parts[i+3]
             info.binaryDirectory = "/".join(parts[i+1:i+3])
             info.binaryPath = os.path.join(info.binaryDirectory, info.binaryName)
             info.version = parts[i+2]
-            
+
             info.deployedInstallName = f"@executable_path/../Frameworks/{os.path.join(info.frameworkName, info.binaryPath)}"
             info.destinationDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, info.binaryDirectory)
-            
+
             info.sourceResourcesDirectory = os.path.join(info.frameworkPath, "Resources")
             info.sourceContentsDirectory = os.path.join(info.frameworkPath, "Contents")
             info.sourceVersionContentsDirectory = os.path.join(info.frameworkPath, "Versions", info.version, "Contents")
             info.destinationResourcesDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, "Resources")
             info.destinationVersionContentsDirectory = os.path.join(cls.bundleFrameworkDirectory, info.frameworkName, "Versions", info.version, "Contents")
-        
+
         return info
 
 class ApplicationBundleInfo(object):
@@ -160,7 +160,7 @@ class DeploymentInfo(object):
         self.qtPath = None
         self.pluginPath = None
         self.deployedFrameworks = []
-    
+
     def detectQtPath(self, frameworkDirectory: str):
         parentDir = os.path.dirname(frameworkDirectory)
         if os.path.exists(os.path.join(parentDir, "translations")):
@@ -173,7 +173,7 @@ class DeploymentInfo(object):
             pluginPath = os.path.join(self.qtPath, "plugins")
             if os.path.exists(pluginPath):
                 self.pluginPath = pluginPath
-    
+
     def usesFramework(self, name: str) -> bool:
         for framework in self.deployedFrameworks:
             if framework.endswith(".framework"):
@@ -198,7 +198,7 @@ def getFrameworks(binaryPath: str, verbose: int) -> List[FrameworkInfo]:
     otoolLines.pop(0) # First line is the inspected binary
     if ".framework" in binaryPath or binaryPath.endswith(".dylib"):
         otoolLines.pop(0) # Frameworks and dylibs list themselves as a dependency.
-    
+
     libraries = []
     for line in otoolLines:
         line = line.replace("@loader_path", os.path.dirname(binaryPath))
@@ -208,7 +208,7 @@ def getFrameworks(binaryPath: str, verbose: int) -> List[FrameworkInfo]:
                 print("Found framework:")
                 print(info)
             libraries.append(info)
-    
+
     return libraries
 
 def runInstallNameTool(action: str, *args):
@@ -245,16 +245,16 @@ def copyFramework(framework: FrameworkInfo, path: str, verbose: int) -> Optional
         fromPath = framework.sourceFilePath
     toDir = os.path.join(path, framework.destinationDirectory)
     toPath = os.path.join(toDir, framework.binaryName)
-    
+
     if not os.path.exists(fromPath):
         raise RuntimeError(f"No file at {fromPath}")
-    
+
     if os.path.exists(toPath):
         return None # Already there
-    
+
     if not os.path.exists(toDir):
         os.makedirs(toDir)
-    
+
     shutil.copy2(fromPath, toPath)
     if verbose:
         print("Copied:", fromPath)
@@ -295,51 +295,51 @@ def copyFramework(framework: FrameworkInfo, path: str, verbose: int) -> Optional
             if verbose:
                 print("Copied for libQtGui:", qtMenuNibSourcePath)
                 print(" to:", qtMenuNibDestinationPath)
-    
+
     return toPath
 
 def deployFrameworks(frameworks: List[FrameworkInfo], bundlePath: str, binaryPath: str, strip: bool, verbose: int, deploymentInfo: Optional[DeploymentInfo] = None) -> DeploymentInfo:
     if deploymentInfo is None:
         deploymentInfo = DeploymentInfo()
-    
+
     while len(frameworks) > 0:
         framework = frameworks.pop(0)
         deploymentInfo.deployedFrameworks.append(framework.frameworkName)
-        
+
         print("Processing", framework.frameworkName, "...")
-        
+
         # Get the Qt path from one of the Qt frameworks
         if deploymentInfo.qtPath is None and framework.isQtFramework():
             deploymentInfo.detectQtPath(framework.frameworkDirectory)
-        
+
         if framework.installName.startswith("@executable_path") or framework.installName.startswith(bundlePath):
             print(framework.frameworkName, "already deployed, skipping.")
             continue
-        
+
         # install_name_tool the new id into the binary
         changeInstallName(framework.installName, framework.deployedInstallName, binaryPath, verbose)
-        
+
         # Copy framework to app bundle.
         deployedBinaryPath = copyFramework(framework, bundlePath, verbose)
         # Skip the rest if already was deployed.
         if deployedBinaryPath is None:
             continue
-        
+
         if strip:
             runStrip(deployedBinaryPath, verbose)
-        
+
         # install_name_tool it a new id.
         changeIdentification(framework.deployedInstallName, deployedBinaryPath, verbose)
         # Check for framework dependencies
         dependencies = getFrameworks(deployedBinaryPath, verbose)
-        
+
         for dependency in dependencies:
             changeInstallName(dependency.installName, dependency.deployedInstallName, deployedBinaryPath, verbose)
-            
+
             # Deploy framework if necessary.
             if dependency.frameworkName not in deploymentInfo.deployedFrameworks and dependency not in frameworks:
                 frameworks.append(dependency)
-    
+
     return deploymentInfo
 
 def deployFrameworksForAppBundle(applicationBundle: ApplicationBundleInfo, strip: bool, verbose: int) -> DeploymentInfo:
@@ -462,29 +462,29 @@ def deployPlugins(appBundleInfo: ApplicationBundleInfo, deploymentInfo: Deployme
                     continue
 
             plugins.append((pluginDirectory, pluginName))
-    
+
     for pluginDirectory, pluginName in plugins:
         print("Processing plugin", os.path.join(pluginDirectory, pluginName), "...")
-        
+
         sourcePath = os.path.join(deploymentInfo.pluginPath, pluginDirectory, pluginName)
         destinationDirectory = os.path.join(appBundleInfo.pluginPath, pluginDirectory)
         if not os.path.exists(destinationDirectory):
             os.makedirs(destinationDirectory)
-        
+
         destinationPath = os.path.join(destinationDirectory, pluginName)
         shutil.copy2(sourcePath, destinationPath)
         if verbose:
             print("Copied:", sourcePath)
             print(" to:", destinationPath)
-        
+
         if strip:
             runStrip(destinationPath, verbose)
-        
+
         dependencies = getFrameworks(destinationPath, verbose)
-        
+
         for dependency in dependencies:
             changeInstallName(dependency.installName, dependency.deployedInstallName, destinationPath, verbose)
-            
+
             # Deploy framework if necessary.
             if dependency.frameworkName not in deploymentInfo.deployedFrameworks:
                 deployFrameworks([dependency], appBundleInfo.path, destinationPath, strip, verbose, deploymentInfo)
@@ -559,7 +559,7 @@ except RuntimeError as e:
 
 if config.plugins:
     print("+ Deploying plugins +")
-    
+
     try:
         deployPlugins(applicationBundle, deploymentInfo, config.strip, verbose)
     except RuntimeError as e:
