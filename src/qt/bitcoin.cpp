@@ -67,8 +67,7 @@ Q_IMPORT_PLUGIN(QAndroidPlatformIntegrationPlugin);
 
 #if defined (Q_OS_ANDROID)
 #include <QtAndroidExtras/QtAndroid>
-const QVector<QString> permissions({"android.permission.ACCESS_COARSE_LOCATION",
-                                    "android.permission.ACCESS_NETWORK_STATE",
+const QVector<QString> permissions({"android.permission.ACCESS_NETWORK_STATE",
                                     "android.permission.ACCESS_WIFI_STATE",
                                     "android.permission.BLUETOOTH",
                                     "android.permission.CAMERA",
