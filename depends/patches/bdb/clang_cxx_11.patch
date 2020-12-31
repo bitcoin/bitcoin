@@ -27,7 +27,7 @@ index 0034dcc..7c11d4a 100644
  {
  	int	temp;
 @@ -176,7 +176,7 @@ static inline int __atomic_dec(db_atomic_t *p)
-  * https://gcc.gnu.org/onlinedocs/gcc-4.1.0/gcc/Atomic-Builtins.html
+  * http://gcc.gnu.org/onlinedocs/gcc-4.1.0/gcc/Atomic-Builtins.html
   * which configure could be changed to use.
   */
 -static inline int __atomic_compare_exchange(
