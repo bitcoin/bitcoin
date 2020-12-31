@@ -229,7 +229,7 @@ std::unique_ptr<Node> MakeNode(NodeContext* context = nullptr);
 
 //! Block tip (could be a header or not, depends on the subscribed signal).
 struct BlockTip {
-    int block_height;
+    int64 block_height;
     int64_t block_time;
     uint256 block_hash;
 };
