@@ -66,7 +66,7 @@ Notificator::~Notificator()
 
 #ifdef USE_DBUS
 
-// Loosely based on http://www.qtcentre.org/archive/index.php/t-25879.html
+// Loosely based on https://www.qtcentre.org/archive/index.php/t-25879.html
 class FreedesktopImage
 {
 public:
