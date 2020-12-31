@@ -42,7 +42,7 @@ Files: src/qt/res/icons/add.png
        src/qt/res/icons/tx_output.png
        src/qt/res/icons/warning.png
 Copyright: Stephen Hutchings (and more)
-           https://www.s-ings.com
+           http://typicons.com
 License: Expat
 Comment: Site: https://github.com/stephenhutchings/typicons.font
 
@@ -129,7 +129,7 @@ Comment:
  located in '/usr/share/common-licenses/GPL-2'.
  .
  You should have received a copy of the GNU General Public License along
- with this program.  If not, see <https://www.gnu.org/licenses/>.
+ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 License: GPL-3+
  Permission is granted to copy, distribute and/or modify this document
@@ -140,7 +140,7 @@ Comment:
  located in '/usr/share/common-licenses/GPL-3'.
  .
  You should have received a copy of the GNU General Public License along
- with this program.  If not, see <https://www.gnu.org/licenses/>.
+ with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 License: public-domain
  This work is in the public domain.

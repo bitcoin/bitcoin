@@ -216,7 +216,7 @@ Vagrant Cascadian has been making good progress on this
 [here][debian/guix-package]. We have all the pieces needed to put up an APT
 repository and will likely put one up soon.
 
-[b17e]: https://bootstrappable.org/
+[b17e]: http://bootstrappable.org/
 [r12e/source-date-epoch]: https://reproducible-builds.org/docs/source-date-epoch/
 
 [guix/install.sh]: https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh
