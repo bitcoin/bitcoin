@@ -60,7 +60,22 @@ Q_IMPORT_PLUGIN(QXcbIntegrationPlugin);
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin);
 #elif defined(QT_QPA_PLATFORM_COCOA)
 Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin);
+#elif defined(QT_QPA_PLATFORM_ANDROID)
+Q_IMPORT_PLUGIN(QAndroidPlatformIntegrationPlugin);
 #endif
+#endif
+
+#if defined (Q_OS_ANDROID)
+#include <QtAndroid>
+const QVector<QString> permissions({"android.permission.ACCESS_COARSE_LOCATION",
+                                    "android.permission.ACCESS_NETWORK_STATE",
+                                    "android.permission.ACCESS_WIFI_STATE",
+                                    "android.permission.BLUETOOTH",
+                                    "android.permission.CAMERA",
+                                    "android.permission.INTERNET",
+                                    "android.permission.NFC",
+                                    "android.permission.WRITE_EXTERNAL_STORAGE",
+                                    "android.permission.READ_EXTERNAL_STORAGE"});
 #endif
 
 // Declare meta types used for QMetaObject::invokeMethod
@@ -514,6 +529,28 @@ int GuiMain(int argc, char* argv[])
     bool prune = false; // Intro dialog prune check box
     // Gracefully exit if the user cancels
     if (!Intro::showIfNeeded(did_show_intro, prune)) return EXIT_SUCCESS;
+
+#if defined (Q_OS_ANDROID)
+    if(QtAndroid::androidSdkVersion() >= 23)
+    {
+        //Request required permissions at runtime
+        for(const QString &permission : permissions){
+            auto result = QtAndroid::checkPermission(permission);            
+            if(result != QtAndroid::PermissionResult::Granted) // or maybe == QtAndroid::PermissionResult::Denied
+            {
+                auto resultHash = QtAndroid::requestPermissionsSync(QStringList({permission}));
+                if(resultHash[permission] == QtAndroid::PermissionResult::Denied){
+					//if(QtAndroid::shouldShowRequestPermissionRationale(permissions)){
+					    QMessageBox::information(this, "Info", "This permission is requested and required for Xequium to work.");
+						auto resultHash = QtAndroid::requestPermissionsSync(QStringList({permission}));
+						if(resultHash[permission] == QtAndroid::PermissionResult::Denied)
+							return EXIT_FAILURE;
+					//}
+				}
+            }
+        }    
+    }
+#endif
 
     /// 6. Determine availability of data directory and parse bitcoin.conf
     /// - Do not call GetDataDir(true) before this step finishes
