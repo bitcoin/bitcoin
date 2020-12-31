@@ -541,7 +541,7 @@ int GuiMain(int argc, char* argv[])
                 auto resultHash = QtAndroid::requestPermissionsSync(QStringList({permission}));
                 if(resultHash[permission] == QtAndroid::PermissionResult::Denied){
 					//if(QtAndroid::shouldShowRequestPermissionRationale(permissions)){
-					    QMessageBox::information(this, "Info", "This permission is requested and required for Xequium to work.");
+					    QMessageBox::information(this, "Info", "This permission is requested and required for bitcoin to work.");
 						auto resultHash = QtAndroid::requestPermissionsSync(QStringList({permission}));
 						if(resultHash[permission] == QtAndroid::PermissionResult::Denied)
 							return EXIT_FAILURE;
