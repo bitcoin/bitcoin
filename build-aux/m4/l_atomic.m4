@@ -7,7 +7,7 @@ dnl warranty.
 # Some versions of gcc/libstdc++ require linking with -latomic if
 # using the C++ atomic library.
 #
-# Sourced from http://bugs.debian.org/797228
+# Sourced from https://bugs.debian.org/797228
 
 m4_define([_CHECK_ATOMIC_testbody], [[
   #include <atomic>

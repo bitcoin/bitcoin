@@ -435,7 +435,7 @@ ANKERL_NANOBENCH(IGNORE_PADDED_POP)
 
 /**
  * An extremely fast random generator. Currently, this implements *RomuDuoJr*, developed by Mark Overton. Source:
- * http://www.romu-random.org/
+ * https://www.romu-random.org
  *
  * RomuDuoJr is extremely fast and provides reasonable good randomness. Not enough for large jobs, but definitely
  * good enough for a benchmarking framework.

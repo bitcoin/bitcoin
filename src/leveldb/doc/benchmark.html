@@ -451,7 +451,7 @@ performance may very well be better with compression if it allows more
 of the working set to fit in memory.</p>
 
 <h2>Note about Ext4 Filesystems</h2>
-<p>The preceding numbers are for an ext3 file system. Synchronous writes are much slower under <a href="http://en.wikipedia.org/wiki/Ext4">ext4</a> (LevelDB drops to ~31 writes / second and TreeDB drops to ~5 writes / second; SQLite3's synchronous writes do not noticeably drop) due to ext4's different handling of <span class="code">fsync</span> / <span class="code">msync</span> calls. Even LevelDB's asynchronous write performance drops somewhat since it spreads its storage across multiple files and issues <span class="code">fsync</span> calls when switching to a new file.</p>
+<p>The preceding numbers are for an ext3 file system. Synchronous writes are much slower under <a href="https://en.wikipedia.org/wiki/Ext4">ext4</a> (LevelDB drops to ~31 writes / second and TreeDB drops to ~5 writes / second; SQLite3's synchronous writes do not noticeably drop) due to ext4's different handling of <span class="code">fsync</span> / <span class="code">msync</span> calls. Even LevelDB's asynchronous write performance drops somewhat since it spreads its storage across multiple files and issues <span class="code">fsync</span> calls when switching to a new file.</p>
 
 <h2>Acknowledgements</h2>
 <p>Jeff Dean and Sanjay Ghemawat wrote LevelDB. Kevin Tseng wrote and compiled these benchmarks. Mikio Hirabayashi, Scott Hess, and Gabor Cselle provided help and advice.</p>

@@ -415,7 +415,7 @@ namespace cxx11
 
   }
 
-  // http://stackoverflow.com/questions/13728184/template-aliases-and-sfinae
+  // https://stackoverflow.com/questions/13728184/template-aliases-and-sfinae
   // Clang 3.1 fails with headers of libstd++ 4.8.3 when using std::function
   // because of this.
   namespace test_template_alias_sfinae

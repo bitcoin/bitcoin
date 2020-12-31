@@ -135,7 +135,7 @@ Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.m
 Coding Style (Doxygen-compatible comments)
 ------------------------------------------
 
-Bitcoin Core uses [Doxygen](http://www.doxygen.nl/) to generate its official documentation.
+Bitcoin Core uses [Doxygen](https://www.doxygen.nl/) to generate its official documentation.
 
 Use Doxygen-compatible comment blocks for functions, methods, and fields.
 
@@ -156,7 +156,7 @@ For example, to describe a function use:
 bool function(int arg1, const char *arg2, std::string& arg3)
 ```
 
-A complete list of `@xxx` commands can be found at http://www.doxygen.nl/manual/commands.html.
+A complete list of `@xxx` commands can be found at https://www.doxygen.nl/manual/commands.html.
 As Doxygen recognizes the comments by the delimiters (`/**` and `*/` in this case), you don't
 *need* to provide any commands for a comment to be valid; just a description text is fine.
 
@@ -203,7 +203,7 @@ Also not picked up by Doxygen:
  */
 ```
 
-A full list of comment syntaxes picked up by Doxygen can be found at http://www.doxygen.nl/manual/docblocks.html,
+A full list of comment syntaxes picked up by Doxygen can be found at https://www.doxygen.nl/manual/docblocks.html,
 but the above styles are favored.
 
 Recommendations:
@@ -216,7 +216,7 @@ Recommendations:
 
 - Backticks aren't required when referring to functions Doxygen already knows
   about; it will build hyperlinks for these automatically. See
-  http://www.doxygen.nl/manual/autolink.html for complete info.
+  https://www.doxygen.nl/manual/autolink.html for complete info.
 
 - Avoid linking to external documentation; links can break.
 

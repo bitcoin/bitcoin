@@ -33,7 +33,7 @@ LIBUNIVALUE_MICRO_VERSION=libunivalue_micro_version
 LIBUNIVALUE_INTERFACE_AGE=libunivalue_interface_age
 
 # ABI version
-# http://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
+# https://www.gnu.org/software/libtool/manual/html_node/Updating-version-info.html
 LIBUNIVALUE_CURRENT=libunivalue_current
 LIBUNIVALUE_REVISION=libunivalue_revision
 LIBUNIVALUE_AGE=libunivalue_age

@@ -14,9 +14,9 @@ index 0034dcc..7c11d4a 100644
  #define	atomic_read(p)		((p)->value)
 -#define	atomic_init(p, val)	((p)->value = (val))
 +#define	atomic_init_db(p, val)	((p)->value = (val))
- 
+
  #ifdef HAVE_ATOMIC_SUPPORT
- 
+
 @@ -144,7 +144,7 @@ typedef LONG volatile *interlocked_val;
  #define	atomic_inc(env, p)	__atomic_inc(p)
  #define	atomic_dec(env, p)	__atomic_dec(p)
@@ -27,7 +27,7 @@ index 0034dcc..7c11d4a 100644
  {
  	int	temp;
 @@ -176,7 +176,7 @@ static inline int __atomic_dec(db_atomic_t *p)
-  * http://gcc.gnu.org/onlinedocs/gcc-4.1.0/gcc/Atomic-Builtins.html
+  * https://gcc.gnu.org/onlinedocs/gcc-4.1.0/gcc/Atomic-Builtins.html
   * which configure could be changed to use.
   */
 -static inline int __atomic_compare_exchange(
@@ -49,7 +49,7 @@ index 5fdee5a..0b75f57 100644
 --- a/mp/mp_fget.c
 +++ b/mp/mp_fget.c
 @@ -617,7 +617,7 @@ alloc:		/* Allocate a new buffer header and data space. */
- 
+
  		/* Initialize enough so we can call __memp_bhfree. */
  		alloc_bhp->flags = 0;
 -		atomic_init(&alloc_bhp->ref, 1);
@@ -60,7 +60,7 @@ index 5fdee5a..0b75f57 100644
 @@ -911,7 +911,7 @@ alloc:		/* Allocate a new buffer header and data space. */
  			MVCC_MPROTECT(bhp->buf, mfp->stat.st_pagesize,
  			    PROT_READ);
- 
+
 -		atomic_init(&alloc_bhp->ref, 1);
 +		atomic_init_db(&alloc_bhp->ref, 1);
  		MUTEX_LOCK(env, alloc_bhp->mtx_buf);
@@ -87,7 +87,7 @@ index 34467d2..f05aa0c 100644
 +		atomic_init_db(&alloc_bhp->ref, 1);
  		F_CLR(alloc_bhp, BH_FROZEN);
  	}
- 
+
 diff --git a/mp/mp_region.c b/mp/mp_region.c
 index e6cece9..ddbe906 100644
 --- a/mp/mp_region.c
@@ -99,7 +99,7 @@ index e6cece9..ddbe906 100644
 -			atomic_init(&htab[i].hash_page_dirty, 0);
 +			atomic_init_db(&htab[i].hash_page_dirty, 0);
  		}
- 
+
  		/*
 @@ -269,7 +269,7 @@ __memp_init(env, dbmp, reginfo_off, htab_buckets, max_nreg)
  		hp->mtx_hash = (mtx_base == MUTEX_INVALID) ? MUTEX_INVALID :
@@ -121,14 +121,14 @@ index 2588763..5c6d516 100644
 -		atomic_init(v, newval);
 +		atomic_init_db(v, newval);
  	MUTEX_UNLOCK(env, mtx);
- 
+
  	return (ret);
 diff --git a/mutex/mut_tas.c b/mutex/mut_tas.c
 index f3922e0..e40fcdf 100644
 --- a/mutex/mut_tas.c
 +++ b/mutex/mut_tas.c
 @@ -46,7 +46,7 @@ __db_tas_mutex_init(env, mutex, flags)
- 
+
  #ifdef HAVE_SHARED_LATCHES
  	if (F_ISSET(mutexp, DB_MUTEX_SHARED))
 -		atomic_init(&mutexp->sharecount, 0);

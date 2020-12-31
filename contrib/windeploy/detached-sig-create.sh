@@ -19,7 +19,7 @@ SRCDIR=unsigned
 WORKDIR=./.tmp
 OUTDIR="${WORKDIR}/out"
 OUTSUBDIR="${OUTDIR}/win"
-TIMESERVER=http://timestamp.comodoca.com
+TIMESERVER=https://timestamp.comodoca.com
 CERTFILE="win-codesign.cert"
 
 mkdir -p "${OUTSUBDIR}"

@@ -1,5 +1,5 @@
 # ===========================================================================
-#   http://www.gnu.org/software/autoconf-archive/ax_gcc_func_attribute.html
+#   https://www.gnu.org/software/autoconf-archive/ax_gcc_func_attribute.html
 # ===========================================================================
 #
 # SYNOPSIS

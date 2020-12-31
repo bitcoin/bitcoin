@@ -21,7 +21,7 @@
 #
 #     University of Illinois at Urbana-Champaign
 #
-#     http://llvm.org
+#     https://llvm.org
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of
 # this software and associated documentation files (the "Software"), to deal with

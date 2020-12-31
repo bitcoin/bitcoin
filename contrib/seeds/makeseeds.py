@@ -128,7 +128,7 @@ def lookup_asn(net, ip):
         if net == 'ipv4':
             ipaddr = ip
             prefix = '.origin'
-        else:                  # http://www.team-cymru.com/IP-ASN-mapping.html
+        else:                  # https://www.team-cymru.com/IP-ASN-mapping.html
             res = str()                         # 2001:4860:b002:23::68
             for nb in ip.split(':')[:4]:  # pick the first 4 nibbles
                 for c in nb.zfill(4):           # right padded with '0'
