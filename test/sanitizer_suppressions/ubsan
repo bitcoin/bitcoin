@@ -40,6 +40,8 @@ unsigned-integer-overflow:stl_bvector.h
 unsigned-integer-overflow:txmempool.cpp
 unsigned-integer-overflow:util/strencodings.cpp
 unsigned-integer-overflow:validation.cpp
+# std::variant warning fixed in https://github.com/gcc-mirror/gcc/commit/074436cf8cdd2a9ce75cadd36deb8301f00e55b9
+implicit-unsigned-integer-truncation:std::__detail::__variant::_Variant_storage
 vptr:bls/bls.h
 
 implicit-integer-sign-change:*/include/c++/*/bits/*.h
