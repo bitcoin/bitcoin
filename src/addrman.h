@@ -173,11 +173,10 @@ static const int64_t ADDRMAN_TEST_WINDOW = 40*60; // 40 minutes
 class CAddrMan
 {
 friend class CAddrManTest;
-protected:
+private:
     //! critical section to protect the inner data structures
     mutable RecursiveMutex cs;
 
-private:
     //! Serialization versions.
     enum Format : uint8_t {
         V0_HISTORICAL = 0,    //!< historic format, before commit e6b343d88
@@ -237,6 +236,7 @@ protected:
     //! Source of random numbers for randomization in inner loops
     FastRandomContext insecure_rand;
 
+private:
     //! Find an entry.
     CAddrInfo* Find(const CNetAddr& addr, int *pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
