@@ -832,10 +832,13 @@ if test x$use_hardening != xno; then
   dnl Since FORTIFY_SOURCE is a no-op without optimizations, do not enable it when enable_debug is yes.
   if test x$enable_debug != xyes; then
     AX_CHECK_PREPROC_FLAG([-D_FORTIFY_SOURCE=2],[
-      AX_CHECK_PREPROC_FLAG([-U_FORTIFY_SOURCE],[
-        HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -U_FORTIFY_SOURCE"
-      ])
-      HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -D_FORTIFY_SOURCE=2"
+      AX_CHECK_COMPILE_FLAG([-D_FORTIFY_SOURCE=2], [
+        AX_CHECK_PREPROC_FLAG([-U_FORTIFY_SOURCE], [HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -U_FORTIFY_SOURCE"])
+        HARDENED_CPPFLAGS="$HARDENED_CPPFLAGS -D_FORTIFY_SOURCE=2"
+      ], [], [$CXXFLAG_WERROR], [AC_LANG_SOURCE([[
+        #define _FORTIFY_SOURCE 2
+        #include <memory.h>
+      ]])])
     ])
   fi
 
