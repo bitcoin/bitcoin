@@ -2883,22 +2883,24 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         bool fAnnounceUsingCMPCTBLOCK = false;
         uint64_t nCMPCTBLOCKVersion = 0;
         vRecv >> fAnnounceUsingCMPCTBLOCK >> nCMPCTBLOCKVersion;
-        if (nCMPCTBLOCKVersion == 1 || nCMPCTBLOCKVersion == 2) {
-            LOCK(cs_main);
-            // fProvidesHeaderAndIDs is used to "lock in" version of compact blocks we send (fWantsCmpctWitness)
-            if (!State(pfrom.GetId())->fProvidesHeaderAndIDs) {
-                State(pfrom.GetId())->fProvidesHeaderAndIDs = true;
-                State(pfrom.GetId())->fWantsCmpctWitness = nCMPCTBLOCKVersion == 2;
-            }
-            if (State(pfrom.GetId())->fWantsCmpctWitness == (nCMPCTBLOCKVersion == 2)) { // ignore later version announces
-                State(pfrom.GetId())->fPreferHeaderAndIDs = fAnnounceUsingCMPCTBLOCK;
-                // save whether peer selects us as BIP152 high-bandwidth peer
-                // (receiving sendcmpct(1) signals high-bandwidth, sendcmpct(0) low-bandwidth)
-                pfrom.m_bip152_highbandwidth_from = fAnnounceUsingCMPCTBLOCK;
-            }
-            if (!State(pfrom.GetId())->fSupportsDesiredCmpctVersion) {
-                State(pfrom.GetId())->fSupportsDesiredCmpctVersion = (nCMPCTBLOCKVersion == 2);
-            }
+
+        // Only support compact block relay with witnesses
+        if (nCMPCTBLOCKVersion != CMPCTBLOCKS_VERSION) return;
+
+        LOCK(cs_main);
+        // fProvidesHeaderAndIDs is used to "lock in" version of compact blocks we send (fWantsCmpctWitness)
+        if (!State(pfrom.GetId())->fProvidesHeaderAndIDs) {
+            State(pfrom.GetId())->fProvidesHeaderAndIDs = true;
+            State(pfrom.GetId())->fWantsCmpctWitness = nCMPCTBLOCKVersion == 2;
+        }
+        if (State(pfrom.GetId())->fWantsCmpctWitness == (nCMPCTBLOCKVersion == 2)) { // ignore later version announces
+            State(pfrom.GetId())->fPreferHeaderAndIDs = fAnnounceUsingCMPCTBLOCK;
+            // save whether peer selects us as BIP152 high-bandwidth peer
+            // (receiving sendcmpct(1) signals high-bandwidth, sendcmpct(0) low-bandwidth)
+            pfrom.m_bip152_highbandwidth_from = fAnnounceUsingCMPCTBLOCK;
+        }
+        if (!State(pfrom.GetId())->fSupportsDesiredCmpctVersion) {
+            State(pfrom.GetId())->fSupportsDesiredCmpctVersion = (nCMPCTBLOCKVersion == 2);
         }
         return;
     }
