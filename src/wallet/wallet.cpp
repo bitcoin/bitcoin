@@ -2741,7 +2741,11 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
                         const UniValue &sigObj = find_value(resObj, "sig");  
                         if(sigObj.isStr()) {
                             // get signature from end-point
-                            vecOut.vchNotarySig = ParseHex(sigObj.get_str());
+                            bool fInvalid = false;
+                            vecOut.vchNotarySig = DecodeBase64(sigObj.get_str().c_str(), &fInvalid);
+                            if (fInvalid) {
+                                strError = "Malformed base64 encoding for notary signature";
+                            }
                             // ensure sig is 65 bytes exactly for ECDSA
                             if(vecOut.vchNotarySig.size() == 65)
                                 bFilled = true;
