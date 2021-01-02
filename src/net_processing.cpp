@@ -367,12 +367,10 @@ struct CNodeState {
     bool fPreferredDownload{false};
     //! Whether this peer wants invs or headers (when possible) for block announcements.
     bool fPreferHeaders{false};
-    //! Whether this peer wants invs or cmpctblocks (when possible) for block announcements.
-    bool fPreferHeaderAndIDs{false};
-    /**
-      * Whether this peer will send us cmpctblocks if we request them.
-      */
-    bool fProvidesHeaderAndIDs{false};
+    /** Whether this peer wants invs or cmpctblocks (when possible) for block announcements. */
+    bool m_requested_hb_cmpctblocks{false};
+    /** Whether this peer will send us cmpctblocks if we request them. */
+    bool m_provides_cmpctblocks{false};
     //! Whether this peer can give us witnesses
     bool fHaveWitness{false};
 
@@ -967,11 +965,11 @@ void PeerManagerImpl::MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid)
     if (m_ignore_incoming_txs) return;
 
     CNodeState* nodestate = State(nodeid);
-    if (!nodestate || !nodestate->fProvidesHeaderAndIDs) {
+    if (!nodestate || !nodestate->m_provides_cmpctblocks) {
         // Don't request compact blocks if the peer has not signalled support
         return;
     }
-    if (nodestate->fProvidesHeaderAndIDs) {
+    if (nodestate->m_provides_cmpctblocks) {
         int num_outbound_hb_peers = 0;
         for (std::list<NodeId>::iterator it = lNodesAnnouncingHeaderAndIDs.begin(); it != lNodesAnnouncingHeaderAndIDs.end(); it++) {
             if (*it == nodeid) {
@@ -1654,7 +1652,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
         CNodeState &state = *State(pnode->GetId());
         // If the peer has, or we announced to them the previous block already,
         // but we don't think they have this one, go ahead and announce it
-        if (state.fPreferHeaderAndIDs && !PeerHasHeader(&state, pindex) && PeerHasHeader(&state, pindex->pprev)) {
+        if (state.m_requested_hb_cmpctblocks && !PeerHasHeader(&state, pindex) && PeerHasHeader(&state, pindex->pprev)) {
 
             LogPrint(BCLog::NET, "%s sending header-and-ids %s to peer=%d\n", "PeerManager::NewPoWValidBlock",
                     hashBlock.ToString(), pnode->GetId());
@@ -1967,7 +1965,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
             // they won't have a useful mempool to match against a compact block,
             // and we don't feel like constructing the object for them, so
             // instead we respond with the full, non-compact block.
-            bool fPeerWantsWitness = State(pfrom.GetId())->fProvidesHeaderAndIDs;
+            bool fPeerWantsWitness = State(pfrom.GetId())->m_provides_cmpctblocks;
             int nSendFlags = fPeerWantsWitness ? 0 : SERIALIZE_TRANSACTION_NO_WITNESS;
             if (CanDirectFetch() && pindex->nHeight >= m_chainman.ActiveChain().Height() - MAX_CMPCTBLOCK_DEPTH) {
                 if ((fPeerWantsWitness || !fWitnessesPresentInARecentCompactBlock) && a_recent_compact_block && a_recent_compact_block->header.GetHash() == pindex->GetBlockHash()) {
@@ -2138,7 +2136,7 @@ void PeerManagerImpl::SendBlockTransactions(CNode& pfrom, const CBlock& block, c
     }
     LOCK(cs_main);
     const CNetMsgMaker msgMaker(pfrom.GetCommonVersion());
-    int nSendFlags = State(pfrom.GetId())->fProvidesHeaderAndIDs ? 0 : SERIALIZE_TRANSACTION_NO_WITNESS;
+    int nSendFlags = State(pfrom.GetId())->m_provides_cmpctblocks ? 0 : SERIALIZE_TRANSACTION_NO_WITNESS;
     m_connman.PushMessage(&pfrom, msgMaker.Make(nSendFlags, NetMsgType::BLOCKTXN, resp));
 }
 
@@ -2282,7 +2280,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
                 }
                 if (vGetData.size() > 0) {
                     if (!m_ignore_incoming_txs &&
-                        nodestate->fProvidesHeaderAndIDs &&
+                        nodestate->m_provides_cmpctblocks &&
                         vGetData.size() == 1 &&
                         mapBlocksInFlight.size() == 1 &&
                         pindexLast->pprev->IsValid(BLOCK_VALID_CHAIN)) {
@@ -2879,8 +2877,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         LOCK(cs_main);
         CNodeState* nodestate = State(pfrom.GetId());
-        nodestate->fProvidesHeaderAndIDs = true;
-        nodestate->fPreferHeaderAndIDs = sendcmpct_hb;
+        nodestate->m_provides_cmpctblocks = true;
+        nodestate->m_requested_hb_cmpctblocks = sendcmpct_hb;
         // save whether peer selects us as BIP152 high-bandwidth peer
         // (receiving sendcmpct(1) signals high-bandwidth, sendcmpct(0) low-bandwidth)
         pfrom.m_bip152_highbandwidth_from = sendcmpct_hb;
@@ -3233,7 +3231,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // actually receive all the data read from disk over the network.
         LogPrint(BCLog::NET, "Peer %d sent us a getblocktxn for a block > %i deep\n", pfrom.GetId(), MAX_BLOCKTXN_DEPTH);
         CInv inv;
-        WITH_LOCK(cs_main, inv.type = State(pfrom.GetId())->fProvidesHeaderAndIDs ? MSG_WITNESS_BLOCK : MSG_BLOCK);
+        WITH_LOCK(cs_main, inv.type = State(pfrom.GetId())->m_provides_cmpctblocks ? MSG_WITNESS_BLOCK : MSG_BLOCK);
         inv.hash = req.blockhash;
         WITH_LOCK(peer->m_getdata_requests_mutex, peer->m_getdata_requests.push_back(inv));
         // The message processing loop will go around again (without pausing) and we'll respond then
@@ -3609,7 +3607,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
 
-        if (DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_SEGWIT) && !nodestate->fProvidesHeaderAndIDs) {
+        if (DeploymentActiveAt(*pindex, m_chainman, Consensus::DEPLOYMENT_SEGWIT) && !nodestate->m_provides_cmpctblocks) {
             // Don't bother trying to process compact blocks from v1 peers
             // after segwit activates.
             return;
@@ -4704,7 +4702,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             LOCK(peer->m_block_inv_mutex);
             std::vector<CBlock> vHeaders;
             bool fRevertToInv = ((!state.fPreferHeaders &&
-                                 (!state.fPreferHeaderAndIDs || peer->m_blocks_for_headers_relay.size() > 1)) ||
+                                 (!state.m_requested_hb_cmpctblocks || peer->m_blocks_for_headers_relay.size() > 1)) ||
                                  peer->m_blocks_for_headers_relay.size() > MAX_BLOCKS_TO_ANNOUNCE);
             const CBlockIndex *pBestIndex = nullptr; // last header queued for delivery
             ProcessBlockAvailability(pto->GetId()); // ensure pindexBestKnownBlock is up-to-date
@@ -4757,7 +4755,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 }
             }
             if (!fRevertToInv && !vHeaders.empty()) {
-                if (vHeaders.size() == 1 && state.fPreferHeaderAndIDs) {
+                if (vHeaders.size() == 1 && state.m_requested_hb_cmpctblocks) {
                     // We only send up to 1 block as header-and-ids, as otherwise
                     // probably means we're doing an initial-ish-sync or they're slow
                     LogPrint(BCLog::NET, "%s sending header-and-ids %s to peer=%d\n", __func__,
