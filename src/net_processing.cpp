@@ -968,49 +968,48 @@ void PeerManagerImpl::MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid)
         // Don't request compact blocks if the peer has not signalled support
         return;
     }
-    if (nodestate->m_provides_cmpctblocks) {
-        int num_outbound_hb_peers = 0;
-        for (std::list<NodeId>::iterator it = lNodesAnnouncingHeaderAndIDs.begin(); it != lNodesAnnouncingHeaderAndIDs.end(); it++) {
-            if (*it == nodeid) {
-                lNodesAnnouncingHeaderAndIDs.erase(it);
-                lNodesAnnouncingHeaderAndIDs.push_back(nodeid);
-                return;
-            }
-            CNodeState *state = State(*it);
-            if (state != nullptr && !state->m_is_inbound) ++num_outbound_hb_peers;
+
+    int num_outbound_hb_peers = 0;
+    for (std::list<NodeId>::iterator it = lNodesAnnouncingHeaderAndIDs.begin(); it != lNodesAnnouncingHeaderAndIDs.end(); it++) {
+        if (*it == nodeid) {
+            lNodesAnnouncingHeaderAndIDs.erase(it);
+            lNodesAnnouncingHeaderAndIDs.push_back(nodeid);
+            return;
         }
-        if (nodestate->m_is_inbound) {
-            // If we're adding an inbound HB peer, make sure we're not removing
-            // our last outbound HB peer in the process.
-            if (lNodesAnnouncingHeaderAndIDs.size() >= 3 && num_outbound_hb_peers == 1) {
-                CNodeState *remove_node = State(lNodesAnnouncingHeaderAndIDs.front());
-                if (remove_node != nullptr && !remove_node->m_is_inbound) {
-                    // Put the HB outbound peer in the second slot, so that it
-                    // doesn't get removed.
-                    std::swap(lNodesAnnouncingHeaderAndIDs.front(), *std::next(lNodesAnnouncingHeaderAndIDs.begin()));
-                }
-            }
-        }
-        m_connman.ForNode(nodeid, [this](CNode* pfrom) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
-            AssertLockHeld(::cs_main);
-            if (lNodesAnnouncingHeaderAndIDs.size() >= 3) {
-                // As per BIP152, we only get 3 of our peers to announce
-                // blocks using compact encodings.
-                m_connman.ForNode(lNodesAnnouncingHeaderAndIDs.front(), [this](CNode* pnodeStop){
-                    m_connman.PushMessage(pnodeStop, CNetMsgMaker(pnodeStop->GetCommonVersion()).Make(NetMsgType::SENDCMPCT, /*high_bandwidth=*/false, /*version=*/CMPCTBLOCKS_VERSION));
-                    // save BIP152 bandwidth state: we select peer to be low-bandwidth
-                    pnodeStop->m_bip152_highbandwidth_to = false;
-                    return true;
-                });
-                lNodesAnnouncingHeaderAndIDs.pop_front();
-            }
-            m_connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetCommonVersion()).Make(NetMsgType::SENDCMPCT, /*high_bandwidth=*/true, /*version=*/CMPCTBLOCKS_VERSION));
-            // save BIP152 bandwidth state: we select peer to be high-bandwidth
-            pfrom->m_bip152_highbandwidth_to = true;
-            lNodesAnnouncingHeaderAndIDs.push_back(pfrom->GetId());
-            return true;
-        });
+        CNodeState *state = State(*it);
+        if (state != nullptr && !state->m_is_inbound) ++num_outbound_hb_peers;
     }
+    if (nodestate->m_is_inbound) {
+        // If we're adding an inbound HB peer, make sure we're not removing
+        // our last outbound HB peer in the process.
+        if (lNodesAnnouncingHeaderAndIDs.size() >= 3 && num_outbound_hb_peers == 1) {
+            CNodeState *remove_node = State(lNodesAnnouncingHeaderAndIDs.front());
+            if (remove_node != nullptr && !remove_node->m_is_inbound) {
+                // Put the HB outbound peer in the second slot, so that it
+                // doesn't get removed.
+                std::swap(lNodesAnnouncingHeaderAndIDs.front(), *std::next(lNodesAnnouncingHeaderAndIDs.begin()));
+            }
+        }
+    }
+    m_connman.ForNode(nodeid, [this](CNode* pfrom) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        AssertLockHeld(::cs_main);
+        if (lNodesAnnouncingHeaderAndIDs.size() >= 3) {
+            // As per BIP152, we only get 3 of our peers to announce
+            // blocks using compact encodings.
+            m_connman.ForNode(lNodesAnnouncingHeaderAndIDs.front(), [this](CNode* pnodeStop){
+                m_connman.PushMessage(pnodeStop, CNetMsgMaker(pnodeStop->GetCommonVersion()).Make(NetMsgType::SENDCMPCT, /*high_bandwidth=*/false, /*version=*/CMPCTBLOCKS_VERSION));
+                // save BIP152 bandwidth state: we select peer to be low-bandwidth
+                pnodeStop->m_bip152_highbandwidth_to = false;
+                return true;
+            });
+            lNodesAnnouncingHeaderAndIDs.pop_front();
+        }
+        m_connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetCommonVersion()).Make(NetMsgType::SENDCMPCT, /*high_bandwidth=*/true, /*version=*/CMPCTBLOCKS_VERSION));
+        // save BIP152 bandwidth state: we select peer to be high-bandwidth
+        pfrom->m_bip152_highbandwidth_to = true;
+        lNodesAnnouncingHeaderAndIDs.push_back(pfrom->GetId());
+        return true;
+    });
 }
 
 bool PeerManagerImpl::TipMayBeStale()
