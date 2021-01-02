@@ -60,7 +60,7 @@ CBLSWorker::~CBLSWorker()
 
 void CBLSWorker::Start()
 {
-    int workerCount = std::thread::hardware_concurrency() / 2;
+    int workerCount = GetNumCores() / 2;
     workerCount = std::max(std::min(1, workerCount), 4);
     workerPool.resize(workerCount);
 }
