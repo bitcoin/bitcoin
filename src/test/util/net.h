@@ -30,6 +30,15 @@ struct ConnmanTestMsg : public CConnman {
     bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg& ser_msg) const;
 };
 
+constexpr ServiceFlags ALL_SERVICE_FLAGS[]{
+    NODE_NONE,
+    NODE_NETWORK,
+    NODE_BLOOM,
+    NODE_WITNESS,
+    NODE_COMPACT_FILTERS,
+    NODE_NETWORK_LIMITED,
+};
+
 constexpr NetPermissionFlags ALL_NET_PERMISSION_FLAGS[]{
     NetPermissionFlags::PF_NONE,
     NetPermissionFlags::PF_BLOOMFILTER,
