@@ -298,6 +298,7 @@ void BlockManager::FindFilesToPrune(
     // Distribute our -prune budget over all chainstates.
     const auto target = std::max(
         MIN_DISK_SPACE_FOR_BLOCK_FILES, GetPruneTarget() / chainman.GetAll().size());
+    const uint64_t target_sync_height = chainman.m_best_header->nHeight;
 
     if (chain.m_chain.Height() < 0 || target == 0) {
         return;
@@ -320,10 +321,13 @@ void BlockManager::FindFilesToPrune(
         // On a prune event, the chainstate DB is flushed.
         // To avoid excessive prune events negating the benefit of high dbcache
         // values, we should not prune too rapidly.
-        // So when pruning in IBD, increase the buffer a bit to avoid a re-prune too soon.
-        if (chainman.IsInitialBlockDownload()) {
-            // Since this is only relevant during IBD, we use a fixed 10%
-            nBuffer += target / 10;
+        // So when pruning in IBD, increase the buffer to avoid a re-prune too soon.
+        const auto chain_tip_height = chain.m_chain.Height();
+        if (chainman.IsInitialBlockDownload() && target_sync_height > (uint64_t)chain_tip_height) {
+            // Since this is only relevant during IBD, we assume blocks are at least 1 MB on average
+            static constexpr uint64_t average_block_size = 1000000;  /* 1 MB */
+            const uint64_t remaining_blocks = target_sync_height - chain_tip_height;
+            nBuffer += average_block_size * remaining_blocks;
         }
 
         for (int fileNumber = 0; fileNumber < this->MaxBlockfileNum(); fileNumber++) {
