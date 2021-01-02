@@ -29,8 +29,6 @@
 #include <stdint.h>
 #include <unistd.h>
 
-#include <vector>
-
 #include <test/fuzz/fuzz.h>
 
 void initialize_deserialize()
@@ -70,7 +68,7 @@ T Deserialize(CDataStream ds)
 }
 
 template <typename T>
-void DeserializeFromFuzzingInput(const std::vector<uint8_t>& buffer, T& obj, const std::optional<int>& protocol_version = {})
+void DeserializeFromFuzzingInput(FuzzBufferType buffer, T& obj, const std::optional<int>& protocol_version = {})
 {
     CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
     if (protocol_version) {
