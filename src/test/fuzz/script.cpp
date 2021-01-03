@@ -71,7 +71,15 @@ FUZZ_TARGET_INIT(script, initialize_script)
     (void)IsSolvable(signing_provider, script);
 
     TxoutType which_type;
-    (void)IsStandard(script, which_type);
+    bool is_standard_ret = IsStandard(script, which_type);
+    if (!is_standard_ret) {
+        assert(which_type == TxoutType::NONSTANDARD ||
+               which_type == TxoutType::NULL_DATA ||
+               which_type == TxoutType::MULTISIG);
+    }
+    if (which_type == TxoutType::NONSTANDARD) {
+        assert(!is_standard_ret);
+    }
     if (which_type == TxoutType::NULL_DATA) {
         assert(script.IsUnspendable());
     }
