@@ -643,6 +643,8 @@ RPCHelpMan assetnew()
         SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
         return result;
     }
+    // need to reload asset as notary signature may have gotten added and this is needed in voutAssets so consensus validation passes for notary check
+    mtx.LoadAssets();
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     std::string err_string;
     AssertLockNotHeld(cs_main);
@@ -1369,6 +1371,8 @@ static RPCHelpMan assetallocationsendmany()
         SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
         return result;
     }
+    // need to reload asset as notary signature may have gotten added and this is needed in voutAssets so consensus validation passes for notary check
+    mtx.LoadAssets();
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     std::string err_string;
     AssertLockNotHeld(cs_main);
@@ -1519,6 +1523,8 @@ static RPCHelpMan assetallocationburn()
         SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
         return result;
     }
+    // need to reload asset as notary signature may have gotten added and this is needed in voutAssets so consensus validation passes for notary check
+    mtx.LoadAssets();
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     std::string err_string;
     AssertLockNotHeld(cs_main);
@@ -1710,6 +1716,8 @@ static RPCHelpMan assetallocationmint()
         SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
         return result;
     }
+    // need to reload asset as notary signature may have gotten added and this is needed in voutAssets so consensus validation passes for notary check
+    mtx.LoadAssets();
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     std::string err_string;
     AssertLockNotHeld(cs_main);

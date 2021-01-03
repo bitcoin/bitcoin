@@ -450,9 +450,9 @@ public:
     }
 
     CAssetOutValue(const uint32_t &nIn, const uint64_t& nAmountIn): n(nIn), nValue(nAmountIn) {}
-	CAssetOutValue() {
+    CAssetOutValue() {
         SetNull();
-	}
+    }
     inline void SetNull() {
         nValue = 0;
         n = 0;
@@ -474,7 +474,8 @@ public:
     }
 
     CAssetOut(const uint32_t &keyIn, const std::vector<CAssetOutValue>& valuesIn): key(keyIn), values(valuesIn) {}
-	CAssetOut() {
+    CAssetOut(const uint32_t &keyIn, const std::vector<CAssetOutValue>& valuesIn, const std::vector<unsigned char> &vchNotarySigIn): key(keyIn), values(valuesIn), vchNotarySig(vchNotarySigIn) {}
+    CAssetOut() {
 		SetNull();
 	}
     inline void SetNull() {

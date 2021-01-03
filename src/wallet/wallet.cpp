@@ -2733,7 +2733,11 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
         if(GetAsset(vecOut.key, theAsset) && !theAsset.vchNotaryKeyID.empty()) {
             bFilled = false;
             if(!theAsset.notaryDetails.strEndPoint.empty()) {
-                const std::string &strEndPoint = DecodeBase64(theAsset.notaryDetails.strEndPoint);
+                bool fInvalid = false;
+                const std::string &strEndPoint = DecodeBase64(theAsset.notaryDetails.strEndPoint, &fInvalid);
+                if (fInvalid) {
+                    strError = "Malformed base64 encoding for notary endpoint";
+                }
                 char* response = curl_fetch_url(curl, strEndPoint.c_str(), reqJSON.c_str(), strError);
                 if(response != nullptr) {
                     UniValue resObj;
@@ -2741,7 +2745,6 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
                         const UniValue &sigObj = find_value(resObj, "sig");  
                         if(sigObj.isStr()) {
                             // get signature from end-point
-                            bool fInvalid = false;
                             vecOut.vchNotarySig = DecodeBase64(sigObj.get_str().c_str(), &fInvalid);
                             if (fInvalid) {
                                 strError = "Malformed base64 encoding for notary signature";
