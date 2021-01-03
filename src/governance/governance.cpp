@@ -280,53 +280,53 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
 
     govobj.UpdateSentinelVariables(); //this sets local vars in object
 
-    LOCK(cs);
-    std::string strError = "";
-
     // MAKE SURE THIS OBJECT IS OK
-
+    std::string strError = "";
     if (!govobj.IsValidLocally(strError, true)) {
         LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- invalid governance object - %s - (nCachedBlockHeight %d) \n", strError, nCachedBlockHeight);
         return;
     }
+    {
+        LOCK(cs);
 
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- Adding object: hash = %s, type = %d\n", nHash.ToString(), govobj.GetObjectType());
 
-    // INSERT INTO OUR GOVERNANCE OBJECT MEMORY
-    // IF WE HAVE THIS OBJECT ALREADY, WE DON'T WANT ANOTHER COPY
-    auto objpair = mapObjects.try_emplace(nHash, govobj);
+        LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- Adding object: hash = %s, type = %d\n", nHash.ToString(), govobj.GetObjectType());
 
-    if (!objpair.second) {
-        LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- already have governance object %s\n", nHash.ToString());
-        return;
-    }
+        // INSERT INTO OUR GOVERNANCE OBJECT MEMORY
+        // IF WE HAVE THIS OBJECT ALREADY, WE DON'T WANT ANOTHER COPY
+        auto objpair = mapObjects.try_emplace(nHash, govobj);
 
-    // SHOULD WE ADD THIS OBJECT TO ANY OTHER MANAGERS?
-
-    LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- Before trigger block, GetDataAsPlainString = %s, nObjectType = %d\n",
-                govobj.GetDataAsPlainString(), govobj.GetObjectType());
-
-    if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
-        if (!triggerman.AddNewTrigger(nHash)) {
-            LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- undo adding invalid trigger object: hash = %s\n", nHash.ToString());
-            objpair.first->second.PrepareDeletion(GetAdjustedTime());
+        if (!objpair.second) {
+            LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- already have governance object %s\n", nHash.ToString());
             return;
         }
+
+        // SHOULD WE ADD THIS OBJECT TO ANY OTHER MANAGERS?
+
+        LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- Before trigger block, GetDataAsPlainString = %s, nObjectType = %d\n",
+                    govobj.GetDataAsPlainString(), govobj.GetObjectType());
+
+        if (govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
+            if (!triggerman.AddNewTrigger(nHash)) {
+                LogPrint(BCLog::GOBJECT, "CGovernanceManager::AddGovernanceObject -- undo adding invalid trigger object: hash = %s\n", nHash.ToString());
+                objpair.first->second.PrepareDeletion(GetAdjustedTime());
+                return;
+            }
+        }
+
+        LogPrintf("CGovernanceManager::AddGovernanceObject -- %s new, received from peer %s\n", strHash, pfrom ? pfrom->addr.ToString() : "nullptr");
+        govobj.Relay(connman);
+
+        // Update the rate buffer
+        MasternodeRateUpdate(govobj);
+
+        masternodeSync.BumpAssetLastTime("CGovernanceManager::AddGovernanceObject");
+
+        // WE MIGHT HAVE PENDING/ORPHAN VOTES FOR THIS OBJECT
+
+        CGovernanceException exception;
+        CheckOrphanVotes(govobj, exception, connman);
     }
-
-    LogPrintf("CGovernanceManager::AddGovernanceObject -- %s new, received from peer %s\n", strHash, pfrom ? pfrom->addr.ToString() : "nullptr");
-    govobj.Relay(connman);
-
-    // Update the rate buffer
-    MasternodeRateUpdate(govobj);
-
-    masternodeSync.BumpAssetLastTime("CGovernanceManager::AddGovernanceObject");
-
-    // WE MIGHT HAVE PENDING/ORPHAN VOTES FOR THIS OBJECT
-
-    CGovernanceException exception;
-    CheckOrphanVotes(govobj, exception, connman);
-
     // SEND NOTIFICATION TO SCRIPT/ZMQ
     GetMainSignals().NotifyGovernanceObject(govobj);
 }
