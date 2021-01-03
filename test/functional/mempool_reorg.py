@@ -94,7 +94,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         for node in self.nodes:
             node.invalidateblock(last_block[0])
         # Time-locked transaction is now too immature and has been removed from the mempool
-        # spend_103_1 has been re-orged out of the chain and is back in the mempool
+        # spend_103_1 has been reorged out of the chain and is back in the mempool
         assert_equal(set(self.nodes[0].getrawmempool()), {spend_101_id, spend_102_1_id, spend_103_1_id})
 
         # Use invalidateblock to re-org back and make all those coinbase spends

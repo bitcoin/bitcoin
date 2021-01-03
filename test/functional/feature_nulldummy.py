@@ -60,7 +60,7 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.wit_address = w0.getnewaddress(address_type='p2sh-segwit')
         self.wit_ms_address = wmulti.addmultisigaddress(1, [self.pubkey], '', 'p2sh-segwit')['address']
         if not self.options.descriptors:
-            # Legacy wallets need to import these so that they are watched by the wallet. This is unnecssary (and does not need to be tested) for descriptor wallets
+            # Legacy wallets need to import these so that they are watched by the wallet. This is unnecessary (and does not need to be tested) for descriptor wallets
             wmulti.importaddress(self.ms_address)
             wmulti.importaddress(self.wit_ms_address)
 

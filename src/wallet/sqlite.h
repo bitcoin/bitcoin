@@ -37,7 +37,7 @@ public:
     explicit SQLiteBatch(SQLiteDatabase& database);
     ~SQLiteBatch() override { Close(); }
 
-    /* No-op. See commeng on SQLiteDatabase::Flush */
+    /* No-op. See comment on SQLiteDatabase::Flush */
     void Flush() override {}
 
     void Close() override;

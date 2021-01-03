@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_too_easy_target)
     BOOST_CHECK(!CheckProofOfWork(hash, nBits, consensus));
 }
 
-BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_biger_hash_than_target)
+BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_bigger_hash_than_target)
 {
     const auto consensus = CreateChainParams(*m_node.args, CBaseChainParams::MAIN)->GetConsensus();
     uint256 hash;
