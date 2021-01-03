@@ -43,7 +43,7 @@ extern "C" {
  */
 typedef struct secp256k1_context_struct secp256k1_context;
 
-/** Opaque data structure that holds rewritable "scratch space"
+/** Opaque data structure that holds rewriteable "scratch space"
  *
  *  The purpose of this structure is to replace dynamic memory allocations,
  *  because we target architectures where this may not be available. It is
