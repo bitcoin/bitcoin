@@ -35,6 +35,7 @@ set -eu
 SUPPORTED_VARIABLES=(
 	BITCOIN_PORT
 	BLOCKSCRIPT
+	RPC_PORT
 )
 
 INTERNAL_CONFIG_DIR="/opt/itcoin-core/configdir"

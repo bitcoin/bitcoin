@@ -34,6 +34,7 @@ EXTERNAL_DATADIR="${MYDIR}/datadir"
 INTERNAL_DATADIR="/opt/itcoin-core/datadir"
 
 BITCOIN_PORT=38333
+RPC_PORT=38332
 
 errecho() {
     # prints to stderr
@@ -90,7 +91,9 @@ docker run \
 	--rm \
 	--env BITCOIN_PORT="${BITCOIN_PORT}" \
 	--env BLOCKSCRIPT="${BLOCKSCRIPT}" \
+	--env RPC_PORT="${RPC_PORT}" \
 	--publish "${BITCOIN_PORT}":"${BITCOIN_PORT}" \
+	--publish "${RPC_PORT}":"${RPC_PORT}" \
 	--tmpfs "${INTERNAL_CONFIGDIR}" \
 	--mount type=bind,source="${EXTERNAL_DATADIR}",target="${INTERNAL_DATADIR}" \
 	"${ITCOIN_IMAGE}" \

@@ -35,6 +35,8 @@ BITCOIN_PORT=38333
 # accepted as parameter by this script.
 BLOCKSCRIPT="51210268b28e68c3263379cc70fd0711daa6647f2b4c86eb5ab9c91c6bbd0a77ab616f2102482a952da354c4997e9e59bdb49a6ee2fb0214bb207e637557fc5e5beb20185552ae"
 
+RPC_PORT=38332
+
 errecho() {
     # prints to stderr
     >&2 echo $@;
@@ -50,7 +52,9 @@ docker run \
 	--rm \
 	--env BITCOIN_PORT="${BITCOIN_PORT}" \
 	--env BLOCKSCRIPT="${BLOCKSCRIPT}" \
+	--env RPC_PORT="${RPC_PORT}" \
 	--publish "${BITCOIN_PORT}":"${BITCOIN_PORT}" \
+	--publish "${RPC_PORT}":"${RPC_PORT}" \
 	--tmpfs /opt/itcoin-core/configdir \
 	--mount type=bind,source="${EXTERNAL_DATADIR}",target="${INTERNAL_DATADIR}" \
 	"${ITCOIN_IMAGE}" \
