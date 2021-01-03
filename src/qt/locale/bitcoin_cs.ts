@@ -1454,12 +1454,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Dialog</translation>
     </message>
     <message>
+        <source>Save Transaction Data</source>
+        <translation>Zachovaj procesní data</translation>
+    </message>
+    <message>
         <source>Total Amount</source>
         <translation>Celková částka</translation>
     </message>
     <message>
         <source>or</source>
         <translation>nebo</translation>
+    </message>
+    <message>
+        <source>(But this wallet does not have the right keys.)</source>
+        <translation>Ale tenhle vstup nemá správné klíče</translation>
     </message>
     </context>
 <context>
@@ -1625,6 +1633,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error: %1</source>
         <translation>Chyba: %1</translation>
+    </message>
+    <message>
+        <source>Error initializing settings: %1</source>
+        <translation>Zjišťování neshod: %1</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
@@ -2355,6 +2367,10 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
     <message>
         <source>Are you sure you want to send?</source>
         <translation>Jsi si jistý, že tuhle transakci chceš poslat?</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Zachovaj procesní data</translation>
     </message>
     <message>
         <source>or</source>
@@ -3441,6 +3457,10 @@ Poznámka: Jelikož je poplatek počítaný za bajt, poplatek o hodnotě "100 sa
     <message>
         <source>Failed to rescan the wallet during initialization</source>
         <translation>Během inicializace se nepodařilo proskenovat peněženku</translation>
+    </message>
+    <message>
+        <source>Failed to verify database</source>
+        <translation>Selhání v ověření databáze</translation>
     </message>
     <message>
         <source>Importing...</source>

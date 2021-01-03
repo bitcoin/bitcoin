@@ -1547,6 +1547,18 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>or</source>
         <translation>أو</translation>
     </message>
+    <message>
+        <source>Transaction is missing some information about inputs.</source>
+        <translation>تفتقد المعاملة إلى بعض المعلومات حول المدخلات </translation>
+    </message>
+    <message>
+        <source>(But this wallet cannot sign transactions.)</source>
+        <translation>.لكن هذه المخفضة لا يمكنها توقيع للمعاملات</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation> الصفقة موقعة بالكامل وجاهزة للبث</translation>
+    </message>
     </context>
 <context>
     <name>PaymentServer</name>
@@ -1561,6 +1573,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>URI handling</source>
         <translation>التعامل مع العنوان</translation>
+    </message>
+    <message>
+        <source>Cannot process payment request because BIP70 is not supported.</source>
+        <translation>معالجة طلب الدفع لأن BIP70 غير مدعوم.</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>

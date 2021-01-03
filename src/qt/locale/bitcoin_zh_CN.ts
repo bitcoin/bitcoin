@@ -549,7 +549,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Mask values</source>
-        <translation>不明文显示数值(&amp;M)</translation>
+        <translation>遮住数值(&amp;M)</translation>
     </message>
     <message>
         <source>Mask the values in the Overview tab</source>
@@ -3753,7 +3753,7 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>SQLiteDatabase: Failed to read database verification error: %s</source>
-        <translation>SQLiteDatabase: 读取数据库失败校验错误: %s</translation>
+        <translation>SQLiteDatabase: 读取数据库失败，校验错误: %s</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>

@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>לחיצה על הכפתור הימני בעכבר תערוך את הכתובת או התווית</translation>
+        <translation>לעריכת הכתובת או התווית יש ללחוץ על הלחצן הימני בעכבר</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -290,19 +290,19 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;About %1</source>
-        <translation>&amp;אודות %1</translation>
+        <translation>על &amp;אודות %1</translation>
     </message>
     <message>
         <source>Show information about %1</source>
-        <translation>הצג מידע על %1</translation>
+        <translation>הצגת מידע על %1</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>
-        <translation>אודות &amp;Qt</translation>
+        <translation>על אודות &amp;Qt</translation>
     </message>
     <message>
         <source>Show information about Qt</source>
-        <translation>הצג מידע על Qt</translation>
+        <translation>הצגת מידע על Qt</translation>
     </message>
     <message>
         <source>&amp;Options...</source>
@@ -824,6 +824,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>CreateWalletActivity</name>
     <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>יצירת הארנק &lt;b&gt;%1&lt;/b&gt; מתבצעת...</translation>
+    </message>
+    <message>
         <source>Create wallet failed</source>
         <translation>יצירת הארנק נכשלה</translation>
     </message>
@@ -844,7 +848,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
-        <translation>הצפן את הארנק. הארנק יהיה מוצפן באמצעות סיסמא לבחירתך.</translation>
+        <translation>הצפנת הארנק. הארנק יהיה מוצפן באמצעות סיסמה לבחירתך.</translation>
     </message>
     <message>
         <source>Encrypt Wallet</source>
@@ -965,7 +969,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>About %1</source>
-        <translation>אודות %1</translation>
+        <translation>על אודות %1</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -1594,7 +1598,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Transaction is missing some information about inputs.</source>
-        <translation>לעיסקה חסר חלק מהמידע לגבי הקלטים.</translation>
+        <translation>לעסקה חסר חלק מהמידע לגבי הקלט.</translation>
     </message>
     <message>
         <source>Transaction still needs signature(s).</source>
@@ -3560,10 +3564,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation>נא בדקו שהתאריך והשעה במחשב שלכם נכונים! אם השעון שלכם לא מסונכרן, %s לא יעבוד כהלכה.</translation>
-    </message>
-    <message>
-        <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
-        <translation>אנא שקלו תרומה אם מצאתם את %s שימושי. בקרו ב %s למידע נוסף על התוכנה.</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>

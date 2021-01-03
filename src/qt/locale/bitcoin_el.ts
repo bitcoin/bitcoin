@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Αντέγραψε την επιλεγμένη διεύθυνση στο πρόχειρο του συστήματος</translation>
+        <translation>Αντιγράψτε την επιλεγμένη διεύθυνση στο πρόχειρο του συστήματος</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -1452,6 +1452,10 @@
     <message>
         <source>Failed to load transaction: %1</source>
         <translation>Αποτυχία φόρτωσης μεταφοράς: %1</translation>
+    </message>
+    <message>
+        <source>Failed to sign transaction: %1</source>
+        <translation>Αποτυχία εκπλήρωσης συναλλαγής: %1</translation>
     </message>
     <message>
         <source>Unknown error processing transaction.</source>
@@ -3299,6 +3303,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Σφάλμα</translation>
     </message>
     <message>
+        <source>Load Transaction Data</source>
+        <translation>Φόρτωση δεδομένων συναλλαγής</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>Αντίγραφο ασφαλείας Πορτοφολιού</translation>
     </message>
@@ -3592,6 +3600,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Πρέπει να ξαναφτιάξετε τη βάση δεδομένων χρησιμοποιώντας το -reindex για να επιστρέψετε στη λειτουργία χωρίς εκτύπωση. Αυτό θα ξαναφορτώσει ολόκληρο το blockchain</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation>Αποθηκευτικός χώρος πολύ μικρός!</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>

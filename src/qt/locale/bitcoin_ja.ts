@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>新しいアドレスを作成</translation>
+        <translation>アドレスの新規作成</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -68,6 +68,11 @@
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>これらは、あなたが知っている送信先の Bitcoin アドレスです。コインを送る前に必ず、金額と受取用アドレスを確認してください。</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation>これらは支払いを受け取るための、あなたの Bitcoin アドレスです。新しいアドレスを作成するには受取タブ内の「新しい受取用アドレスを作成」ボタンを使用します。</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -477,6 +482,10 @@
     <message>
         <source>Up to date</source>
         <translation>ブロックは最新</translation>
+    </message>
+    <message>
+        <source>&amp;Load PSBT from file...</source>
+        <translation>PSBTをファイルから読込 (&amp;L)</translation>
     </message>
     <message>
         <source>Load PSBT from clipboard...</source>
@@ -1466,6 +1475,10 @@
         <translation>ダイアログ</translation>
     </message>
     <message>
+        <source>Sign Tx</source>
+        <translation>署名されたトランザクション</translation>
+    </message>
+    <message>
         <source>Copy to Clipboard</source>
         <translation>クリップボードにコピー</translation>
     </message>
@@ -1478,16 +1491,40 @@
         <translation>閉じる</translation>
     </message>
     <message>
+        <source>Failed to load transaction: %1</source>
+        <translation>%1 : トランザクションの読込失敗</translation>
+    </message>
+    <message>
+        <source>Failed to sign transaction: %1</source>
+        <translation>%1 : トランザクション署名失敗</translation>
+    </message>
+    <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
         <translation>トランザクションへの署名が成功しました。トランザクションのブロードキャストの準備ができています。</translation>
+    </message>
+    <message>
+        <source>PSBT copied to clipboard.</source>
+        <translation>PSBTをクリップボードにコピーしました.</translation>
     </message>
     <message>
         <source>Save Transaction Data</source>
         <translation>トランザクションデータの保存</translation>
     </message>
     <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>部分的に署名されたトランザクションファイル (*.psbt)</translation>
+    </message>
+    <message>
         <source>PSBT saved to disk.</source>
         <translation>PSBTはディスクに保存されました。</translation>
+    </message>
+    <message>
+        <source> * Sends %1 to %2</source>
+        <translation> *  %1 から %2 へ送信</translation>
+    </message>
+    <message>
+        <source>Pays transaction fee: </source>
+        <translation>トランザクション手数料: </translation>
     </message>
     <message>
         <source>Total Amount</source>
@@ -1497,7 +1534,11 @@
         <source>or</source>
         <translation>または</translation>
     </message>
-    </context>
+    <message>
+        <source>Transaction status is unknown.</source>
+        <translation>トランザクションの状態が不明です.</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1851,6 +1892,10 @@
     <message>
         <source>Increase font size</source>
         <translation>文字サイズを拡大</translation>
+    </message>
+    <message>
+        <source>Permissions</source>
+        <translation>パーミッション</translation>
     </message>
     <message>
         <source>Services</source>
@@ -2403,6 +2448,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Save Transaction Data</source>
         <translation>トランザクションデータの保存</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>部分的に署名されたトランザクションファイル (*.psbt)</translation>
     </message>
     <message>
         <source>PSBT saved</source>
@@ -3324,6 +3373,18 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>トランザクションデータのロード</translation>
     </message>
     <message>
+        <source>Partially Signed Transaction (*.psbt)</source>
+        <translation>部分的に署名されたトランザクション (*.psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT file must be smaller than 100 MiB</source>
+        <translation>PSBTファイルは、100MBより小さい必要があります.</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT</source>
+        <translation>PSBTファイルを復号できません.</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>ウォレットのバックアップ</translation>
     </message>
@@ -3665,6 +3726,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>-whitebind オプションでポートを指定する必要があります: '%s'</translation>
+    </message>
+    <message>
+        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
+        <translation>プロキシサーバーが指定されてません. -proxy=&lt;ip&gt; か -proxy=&lt;ip:port&gt; を使用してください.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -blockfilterindex.</source>

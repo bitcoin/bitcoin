@@ -315,16 +315,72 @@
         <translation>और पासफ़्रेज़ बदलें</translation>
     </message>
     <message>
+        <source>Create Wallet...</source>
+        <translation>वॉलेट बनाएं</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>नया वॉलेट बनाएं</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation>तिजोरी</translation>
+    </message>
+    <message>
+        <source>Click to disable network activity.</source>
+        <translation>नेटवर्क एक्टिविटी बंद करने के लिए क्लिक करें</translation>
+    </message>
+    <message>
+        <source>Network activity disabled.</source>
+        <translation>नेटवर्क एक्टिविटी बंद हो गई है.</translation>
+    </message>
+    <message>
+        <source>Click to enable network activity again.</source>
+        <translation>नेटवर्क एक्टिविटी दोबारा शुरू करने के लिए क्लिक करें.</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>हेडर्स सिंक हो रहे हैं (%1%)...</translation>
+    </message>
+    <message>
+        <source>Reindexing blocks on disk...</source>
+        <translation>डिस्क पर ब्लॉक्स री-इंडेक्सिंग हो रहे हैं...</translation>
+    </message>
+    <message>
+        <source>Proxy is &lt;b&gt;enabled&lt;/b&gt;: %1</source>
+        <translation>प्रॉक्सी &lt;b&gt; चालू है &lt;/b&gt; : %1</translation>
     </message>
     <message>
         <source>Send coins to a Bitcoin address</source>
         <translation>इस पते पर बिटकौइन भेजें</translation>
     </message>
     <message>
+        <source>Backup wallet to another location</source>
+        <translation>वॉलेट का दूसरी जगह पर बैकअप लें</translation>
+    </message>
+    <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>पहचान शब्द/अक्षर जो वॉलेट एनक्रिपशन के लिए इस्तेमाल किया है उसे बदलिए!</translation>
+    </message>
+    <message>
+        <source>&amp;Verify message...</source>
+        <translation>&amp;मैसेज वैरीफ़ाई करें...</translation>
+    </message>
+    <message>
+        <source>&amp;Send</source>
+        <translation>&amp;भेजें</translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation>&amp;प्राप्त करें</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;दिखाएं/छिपाएं</translation>
+    </message>
+    <message>
+        <source>Show or hide the main Window</source>
+        <translation>मुख्य विंडो को दिखाएं या छिपाएं</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -767,7 +823,11 @@
     </context>
 <context>
     <name>WalletFrame</name>
-    </context>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>नया वॉलेट बनाएं</translation>
+    </message>
+</context>
 <context>
     <name>WalletModel</name>
     <message>
@@ -807,6 +867,10 @@
     <message>
         <source>Loading wallet...</source>
         <translation>वॉलेट आ रहा है...</translation>
+    </message>
+    <message>
+        <source>Cannot downgrade wallet</source>
+        <translation>वॉलेट को डाउनग्रेड नहीं कर सकते</translation>
     </message>
     <message>
         <source>Rescanning...</source>
