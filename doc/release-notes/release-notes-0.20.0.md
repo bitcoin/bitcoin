@@ -698,7 +698,7 @@ Build system
 - #18224 Make AnalyzePSBT next role calculation simple, correct (instagibbs)
 - #18228 Add missing syncwithvalidationinterfacequeue (MarcoFalke)
 - #18247 Wait for both veracks in `add_p2p_connection` (MarcoFalke)
-- #18249 Bump timeouts to accomodate really slow disks (MarcoFalke)
+- #18249 Bump timeouts to accommodate really slow disks (MarcoFalke)
 - #18255 Add `bad-txns-*-toolarge` test cases to `invalid_txs` (MarcoFalke)
 - #18263 rpc: change setmocktime check to use IsMockableChain (gzhao408)
 - #18285 Check that `wait_until` returns if time point is in the past (MarcoFalke)
