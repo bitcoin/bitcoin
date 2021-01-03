@@ -170,7 +170,7 @@ class BigO;
  *    Apart from these tags, it is also possible to use some mathematical operations on the measurement data. The operations
  *    are of the form `{{command(name)}}`.  Currently `name` can be one of `elapsed`, `iterations`. If performance counters
  *    are available (currently only on current Linux systems), you also have `pagefaults`, `cpucycles`,
- *    `contextswitches`, `instructions`, `branchinstructions`, and `branchmisses`. All the measuers (except `iterations`) are
+ *    `contextswitches`, `instructions`, `branchinstructions`, and `branchmisses`. All the measures (except `iterations`) are
  *    provided for a single iteration (so `elapsed` is the time a single iteration took). The following tags are available:
  *
  *    * `{{median(<name>>)}}` Calculate median of a measurement data set, e.g. `{{median(elapsed)}}`.

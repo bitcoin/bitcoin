@@ -10,7 +10,7 @@
 #
 #   Test for the Boost C++ libraries of a particular version (or newer)
 #
-#   If no path to the installed boost library is given the macro searchs
+#   If no path to the installed boost library is given the macro searches
 #   under /usr, /usr/local, /opt and /opt/local and evaluates the
 #   $BOOST_ROOT environment variable. Further documentation is available at
 #   <http://randspringer.de/boost/index.html>.

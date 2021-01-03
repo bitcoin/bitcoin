@@ -52,19 +52,19 @@ frequently tested on them.
 ### Wallet
 - #13622 `c04a4a5` Remove mapRequest tracking that just effects Qt display. (TheBlueMatt)
 - #12905 `cfc6f74` [rpcwallet] Clamp walletpassphrase value at 100M seconds (sdaftuar)
-- #13437 `ed82e71` wallet: Erase wtxOrderd wtx pointer on removeprunedfunds (MarcoFalke)
+- #13437 `ed82e71` wallet: Erase wtxOrdered wtx pointer on removeprunedfunds (MarcoFalke)
 
 ### RPC and other APIs
 - #13451 `cbd2f70` rpc: expose CBlockIndex::nTx in getblock(header) (instagibbs)
 - #13507 `f7401c8` RPC: Fix parameter count check for importpubkey (kristapsk)
 - #13452 `6b9dc8c` rpc: have verifytxoutproof check the number of txns in proof structure (instagibbs)
-- #12837 `bf1f150` rpc: fix type mistmatch in `listreceivedbyaddress` (joemphilips)
+- #12837 `bf1f150` rpc: fix type mismatch in `listreceivedbyaddress` (joemphilips)
 - #12743 `657dfc5` Fix csBestBlock/cvBlockChange waiting in rpc/mining (sipa)
 
 ### GUI
 - #12432 `f78e7f6` [qt] send: Clear All also resets coin control options (Sjors)
 - #12617 `21dd512` gui: Show messages as text not html (laanwj)
-- #12793 `cf6feb7` qt: Avoid reseting on resetguisettigs=0 (MarcoFalke)
+- #12793 `cf6feb7` qt: Avoid resetting on resetguisettigs=0 (MarcoFalke)
 
 ### Build system
 - #13544 `9fd3e00` depends: Update Qt download url (fanquake)

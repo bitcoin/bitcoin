@@ -18,7 +18,7 @@ Fix possible buffer overflow on systems with very long application data paths. T
 Resolved multiple bugs preventing long-term unlocking of encrypted wallets (issue #922).
 Only send local IP in "version" messages if it is globally routable (ie, not private), and try to get such an IP from UPnP if applicable.
 Reannounce UPnP port forwards every 20 minutes, to workaround routers expiring old entries, and allow the -upnp option to override any stored setting.
-Various memory leaks and potential null pointer deferences have been
+Various memory leaks and potential null pointer dereferences have been
 fixed.
 Several shutdown issues have been fixed.
 Check that keys stored in the wallet are valid at startup, and if not,

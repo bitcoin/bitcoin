@@ -61,7 +61,7 @@ Command-line options:
 - `cd5164a` Make -proxy set all network types, avoiding a connect leak.
 
 P2P:
-- `bb424e4` Limit the number of new addressses to accumulate
+- `bb424e4` Limit the number of new addresses to accumulate
 
 RPC:
 - `0a94661` Disable SSLv3 (in favor of TLS) for the RPC client and server.

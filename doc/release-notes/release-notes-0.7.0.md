@@ -80,7 +80,7 @@ JSON-RPC API
 * Added 'listaddressgroupings' for better coin control
 * Rework getblock call.
 * Remove deprecated RPC 'getblocknumber'
-* Remove superceded RPC 'getmemorypool' (see BIP 22, above)
+* Remove superseded RPC 'getmemorypool' (see BIP 22, above)
 * listtransactions output now displays "smart" times for transactions,
   and 'blocktime' and 'timereceived' fields were added
 

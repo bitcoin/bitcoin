@@ -110,7 +110,7 @@ Memory pool limiting
 Previous versions of Bitcoin Core had their mempool limited by checking
 a transaction's fees against the node's minimum relay fee. There was no
 upper bound on the size of the mempool and attackers could send a large
-number of transactions paying just slighly more than the default minimum
+number of transactions paying just slightly more than the default minimum
 relay fee to crash nodes with relatively low RAM. A temporary workaround
 for previous versions of Bitcoin Core was to raise the default minimum
 relay fee.

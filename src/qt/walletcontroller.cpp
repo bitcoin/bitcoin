@@ -152,7 +152,7 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
 
     connect(wallet_model, &WalletModel::unload, this, [this, wallet_model] {
         // Defer removeAndDeleteWallet when no modal widget is active.
-        // TODO: remove this workaround by removing usage of QDiallog::exec.
+        // TODO: remove this workaround by removing usage of QDialog::exec.
         if (QApplication::activeModalWidget()) {
             connect(qApp, &QApplication::focusWindowChanged, wallet_model, [this, wallet_model]() {
                 if (!QApplication::activeModalWidget()) {

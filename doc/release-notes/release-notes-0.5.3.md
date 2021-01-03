@@ -26,7 +26,7 @@ Reannounce UPnP port forwards every 20 minutes, to workaround routers expiring o
 Skip splash screen when -min is used, and fix Minimize to Tray function.
 Do not blank "label" in Bitcoin-Qt "Send" tab, if the user has already entered something.
 Correct various labels and messages.
-Various memory leaks and potential null pointer deferences have been fixed.
+Various memory leaks and potential null pointer dereferences have been fixed.
 Handle invalid Bitcoin URIs using "bitcoin://" instead of "bitcoin:".
 Several shutdown issues have been fixed.
 Revert to "global progress indication", as starting from zero every time was considered too confusing for many users.

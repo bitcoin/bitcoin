@@ -1,4 +1,4 @@
-# PSBT Howto for Bitcoin Core
+# PSBT How-to for Bitcoin Core
 
 Since Bitcoin Core 0.17, an RPC interface exists for Partially Signed Bitcoin
 Transactions (PSBTs, as specified in

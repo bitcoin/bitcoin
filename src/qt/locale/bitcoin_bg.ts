@@ -173,7 +173,7 @@
     </message>
     <message>
         <source>Wallet encrypted</source>
-        <translation>портфейлa е шифрован</translation>
+        <translation>Портфейлът е шифрован</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>

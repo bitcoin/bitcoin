@@ -44,7 +44,7 @@
 #  define WINDOW_G ECMULT_WINDOW_SIZE
 #endif
 
-/* Noone will ever need more than a window size of 24. The code might
+/* No one will ever need more than a window size of 24. The code might
  * be correct for larger values of ECMULT_WINDOW_SIZE but this is not
  * not tested.
  *
