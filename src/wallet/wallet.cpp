@@ -2711,7 +2711,7 @@ char* curl_fetch_url(CURL *curl, const char *url, const char* payload, std::stri
     res = curl_easy_perform(curl);
     /* Check for errors */ 
     if(res != CURLE_OK) {
-      strError = strprintf("curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+      strError = strprintf("Notarization failed: %s\n", curl_easy_strerror(res));
       return nullptr;
     } 
     curl_slist_free_all(headers);
