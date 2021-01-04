@@ -29,7 +29,6 @@ ITCOIN_IMAGE_NAME="arthub.azurecr.io/itcoin-core"
 ITCOIN_IMAGE_TAG="git-"$("${MYDIR}"/compute-git-hash.sh)
 
 CONTAINER_NAME="itcoin-node"
-INTERNAL_CONFIGDIR="/opt/itcoin-core/configdir"
 EXTERNAL_DATADIR="${MYDIR}/datadir"
 INTERNAL_DATADIR="/opt/itcoin-core/datadir"
 
@@ -100,7 +99,7 @@ docker run \
 	--publish "${RPC_PORT}":"${RPC_PORT}" \
 	--publish "${ZMQ_PUBHASHTX_PORT}":"${ZMQ_PUBHASHTX_PORT}" \
 	--publish "${ZMQ_PUBRAWBLOCK_PORT}":"${ZMQ_PUBRAWBLOCK_PORT}" \
-	--tmpfs "${INTERNAL_CONFIGDIR}" \
+	--tmpfs /opt/itcoin-core/configdir \
 	--mount type=bind,source="${EXTERNAL_DATADIR}",target="${INTERNAL_DATADIR}" \
 	"${ITCOIN_IMAGE}" \
 	bitcoind
@@ -129,10 +128,10 @@ errecho "Address ${ADDR} generated"
 # Ask the miner to send bitcoins to that address. Being the first block in the
 # chain, we need to choose a date. We'll use "-1", which means "current time".
 errecho "Mine the first block"
-docker exec "${CONTAINER_NAME}" miner --cli="bitcoin-cli -conf=${INTERNAL_CONFIGDIR}/bitcoin.conf -datadir=${INTERNAL_DATADIR}" generate --address "${ADDR}" --grind-cmd='bitcoin-util grind' --min-nbits --set-block-time -1
+"${MYDIR}/run-docker-miner.sh" "${ADDR}" --set-block-time -1
 errecho "First block mined"
 
 # Let's start mining continuously. We'll reuse the same ADDR as before.
 errecho "Keep mining the following blocks"
-docker exec "${CONTAINER_NAME}" miner --cli="bitcoin-cli -conf=${INTERNAL_CONFIGDIR}/bitcoin.conf -datadir=${INTERNAL_DATADIR}" generate --address "${ADDR}" --grind-cmd='bitcoin-util grind' --min-nbits --ongoing
+"${MYDIR}/run-docker-miner.sh" "${ADDR}" --ongoing
 errecho "You should never reach here"
