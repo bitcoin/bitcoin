@@ -28,13 +28,14 @@ public:
  */
 static const CRPCConvertParam vRPCConvertParams[] =
 {
-    // VBK
+    // VeriBlock
     { "getbtcblockhash", 0, "height"},
     { "getvbkblockhash", 0, "height"},
     { "getrawatv", 1, "verbose"},
     { "getrawvtb", 1, "verbose"},
     { "getrawvbkblock", 1, "verbose"},
-    // VBK
+    { "getpopdatabyheight", 0, "block_height"},
+    // end VeriBlock
     { "setmocktime", 0, "timestamp" },
     { "utxoupdatepsbt", 1, "descriptors" },
     { "generatetoaddress", 0, "nblocks" },
@@ -180,8 +181,6 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "createwallet", 4, "avoid_reuse"},
     { "getnodeaddresses", 0, "count"},
     { "stop", 0, "wait" },
-    { "getpopdatabyheight", 0, "block_height"},
-    { "submitpop", 1, "vtbs"},
 };
 // clang-format on
 

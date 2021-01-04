@@ -19,6 +19,7 @@
 #include <vbk/merkle.hpp>
 
 #include <vbk/test/util/e2e_fixture.hpp>
+#include <utility>
 
 UniValue CallRPC(std::string args);
 
@@ -49,6 +50,21 @@ BOOST_AUTO_TEST_CASE(getpopdata_test)
 
 BOOST_FIXTURE_TEST_CASE(submitpop_test, E2eFixture)
 {
+    auto makeRequest = [](std::string req, const std::string& arg){
+      JSONRPCRequest request;
+      request.strMethod = std::move(req);
+      request.params = UniValue(UniValue::VARR);
+      request.params.push_back(arg);
+      request.fHelp = false;
+
+      if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
+
+      UniValue result;
+      BOOST_CHECK_NO_THROW(result = tableRPC.execute(request));
+
+      return result;
+    };
+
     JSONRPCRequest request;
     request.strMethod = "submitpop";
     request.params = UniValue(UniValue::VARR);
@@ -72,34 +88,13 @@ BOOST_FIXTURE_TEST_CASE(submitpop_test, E2eFixture)
 
     UniValue vbk_blocks_params(UniValue::VARR);
     for (const auto& b : vbk_blocks) {
-        altintegration::WriteStream stream;
-        b.toVbkEncoding(stream);
-        vbk_blocks_params.push_back(HexStr(stream.data()));
+        auto res = makeRequest("submitpopvbkblock", altintegration::SerializeToHex(b));
     }
 
     UniValue vtb_params(UniValue::VARR);
     for (const auto& vtb : vtbs) {
-        altintegration::WriteStream stream;
-        vtb.toVbkEncoding(stream);
-        vtb_params.push_back(HexStr(stream.data()));
+        auto res = makeRequest("submitpopvtb", altintegration::SerializeToHex(vtb));
     }
-
-    BOOST_CHECK_EQUAL(vbk_blocks.size(), vbk_blocks_params.size());
-    BOOST_CHECK_EQUAL(vtbs.size(), vtb_params.size());
-
-    UniValue atv_empty(UniValue::VARR);
-    request.params.push_back(vbk_blocks_params);
-    request.params.push_back(vtb_params);
-    request.params.push_back(atv_empty);
-
-    if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
-
-    UniValue result;
-    BOOST_CHECK_NO_THROW(result = tableRPC.execute(request));
-
-    BOOST_CHECK_EQUAL(result["atvs"].size(), 0);
-    BOOST_CHECK_EQUAL(result["vtbs"].size(), vtbs.size());
-    BOOST_CHECK_EQUAL(result["vbkblocks"].size(), vbk_blocks.size());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

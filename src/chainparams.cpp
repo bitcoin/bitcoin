@@ -117,8 +117,9 @@ CMainParams::CMainParams()
 
     // VeriBlock
     consensus.VeriBlockPopSecurityHeight = -1;
-    consensus.ZawyLWMAHeight = -1;
+    consensus.ZawyLWMAHeight = 100;
     consensus.nZawyLwmaAveragingWindow = 45;
+    assert(consensus.ZawyLWMAHeight > consensus.nZawyLwmaAveragingWindow);
     consensus.nZawyLwmaAdjustedWeight = 13772;
     consensus.nZawyLwmaMinDenominator = 10;
     consensus.bZawyLwmaSolvetimeLimitation = true;
@@ -197,8 +198,9 @@ CMainParams::CMainParams()
 
      // VeriBlock
      consensus.VeriBlockPopSecurityHeight = -1;
-     consensus.ZawyLWMAHeight = -1;
+     consensus.ZawyLWMAHeight = 100;
      consensus.nZawyLwmaAveragingWindow = 45;
+     assert(consensus.ZawyLWMAHeight > consensus.nZawyLwmaAveragingWindow);
      consensus.nZawyLwmaAdjustedWeight = 13772;
      consensus.nZawyLwmaMinDenominator = 10;
      consensus.bZawyLwmaSolvetimeLimitation = false;
@@ -294,6 +296,7 @@ CRegTestParams::CRegTestParams(const ArgsManager& args)
     {
         consensus.ZawyLWMAHeight = std::numeric_limits<int>::max();
         consensus.nZawyLwmaAveragingWindow = 45;
+        assert(consensus.ZawyLWMAHeight > consensus.nZawyLwmaAveragingWindow);
         consensus.nZawyLwmaAdjustedWeight = 13772;
         consensus.nZawyLwmaMinDenominator = 10;
         consensus.bZawyLwmaSolvetimeLimitation = true;

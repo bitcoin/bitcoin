@@ -195,62 +195,6 @@ static void logSubmitResult(const std::string idhex, const altintegration::Valid
     }
 }
 
-UniValue submitpop(const JSONRPCRequest& request)
-{
-    if (request.fHelp || request.params.size() > 3)
-        throw std::runtime_error(
-            "submitpop [vbk_blocks] [vtbs] [atvs]\n"
-            "\nCreates and submits a PoP transaction constructed from the provided ATV and VTBs.\n"
-            "\nArguments:\n"
-            "1. vbk_blocks      (array, required) Array of hex-encoded VbkBlocks records.\n"
-            "2. vtbs      (array, required) Array of hex-encoded VTB records.\n"
-            "3. atvs      (array, required) Array of hex-encoded ATV records.\n"
-            "\nResult:\n"
-            "             (string) MempoolResult\n"
-            "\nExamples:\n" +
-            HelpExampleCli("submitpop", " [VBK_HEX VBK_HEX] [VTB_HEX VTB_HEX] [ATV_HEX ATV_HEX]") + HelpExampleRpc("submitpop", "[VBK_HEX] [] [ATV_HEX ATV_HEX]"));
-
-    RPCTypeCheck(request.params, {UniValue::VARR, UniValue::VARR, UniValue::VARR});
-
-    EnsurePopEnabled();
-
-    altintegration::PopData popData;
-    altintegration::ValidationState state;
-    bool ret = true;
-    ret = ret && parsePayloads<altintegration::VbkBlock>(request.params[0].get_array(), popData.context, state);
-    ret = ret && parsePayloads<altintegration::VTB>(request.params[1].get_array(), popData.vtbs, state);
-    ret = ret && parsePayloads<altintegration::ATV>(request.params[2].get_array(), popData.atvs, state);
-
-    if (!ret) {
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, state.GetPath());
-    }
-
-    {
-        LOCK(cs_main);
-        auto& pop_mempool = *VeriBlock::GetPop().mempool;
-
-        // TODO: this will eventually be gone
-        altintegration::MempoolResult result = pop_mempool.submitAll(popData);
-        if (!result.context.empty()) {
-            for (auto& it : result.context) {
-                logSubmitResult<altintegration::VbkBlock>(it.first.toHex(), it.second);
-            }
-        }
-        if (!result.vtbs.empty()) {
-            for (auto& it : result.vtbs) {
-                logSubmitResult<altintegration::VTB>(it.first.toHex(), it.second);
-            }
-        }
-        if (!result.atvs.empty()) {
-            for (auto& it : result.atvs) {
-                logSubmitResult<altintegration::ATV>(it.first.toHex(), it.second);
-            }
-        }
-
-        return altintegration::ToJSON<UniValue>(result);
-    }
-}
-
 using VbkTree = altintegration::VbkBlockTree;
 using BtcTree = altintegration::VbkBlockTree::BtcTree;
 
@@ -766,7 +710,6 @@ UniValue getpopparams(const JSONRPCRequest& req)
 
 const CRPCCommand commands[] = {
     {"pop_mining", "getpopparams", &getpopparams, {}},
-    {"pop_mining", "submitpop", &submitpop, {"vbkblocks", "vtbs", "atvs"}},
     {"pop_mining", "submitpopatv", &submitpopatv, {"atv"}},
     {"pop_mining", "submitpopvtb", &submitpopvtb, {"vtb"}},
     {"pop_mining", "submitpopvbkblock", &submitpopvbkblock, {"vbkblock"}},
