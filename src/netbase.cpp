@@ -10,6 +10,7 @@
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/system.h>
+#include <util/time.h>
 
 #include <atomic>
 #include <cstdint>
@@ -269,14 +270,6 @@ CService LookupNumeric(const std::string& name, int portDefault)
     if(!Lookup(name, addr, portDefault, false))
         addr = CService();
     return addr;
-}
-
-struct timeval MillisToTimeval(int64_t nTimeout)
-{
-    struct timeval timeout;
-    timeout.tv_sec  = nTimeout / 1000;
-    timeout.tv_usec = (nTimeout % 1000) * 1000;
-    return timeout;
 }
 
 /** SOCKS version */

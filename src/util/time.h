@@ -6,6 +6,8 @@
 #ifndef BITCOIN_UTIL_TIME_H
 #define BITCOIN_UTIL_TIME_H
 
+#include <compat.h>
+
 #include <chrono>
 #include <stdint.h>
 #include <string>
@@ -56,5 +58,10 @@ T GetTime();
 std::string FormatISO8601DateTime(int64_t nTime);
 std::string FormatISO8601Date(int64_t nTime);
 int64_t ParseISO8601DateTime(const std::string& str);
+
+/**
+ * Convert milliseconds to a struct timeval for e.g. select.
+ */
+struct timeval MillisToTimeval(int64_t nTimeout);
 
 #endif // BITCOIN_UTIL_TIME_H
