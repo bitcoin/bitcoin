@@ -77,4 +77,6 @@ implicit-signed-integer-truncation:test/skiplist_tests.cpp
 implicit-signed-integer-truncation:torcontrol.cpp
 implicit-unsigned-integer-truncation:crypto/*
 implicit-unsigned-integer-truncation:leveldb/*
+# std::variant warning fixed in https://github.com/gcc-mirror/gcc/commit/074436cf8cdd2a9ce75cadd36deb8301f00e55b9
+implicit-unsigned-integer-truncation:std::__detail::__variant::_Variant_storage
 implicit-integer-sign-change:crc32c/*
