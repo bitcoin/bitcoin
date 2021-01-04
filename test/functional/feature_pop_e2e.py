@@ -75,7 +75,7 @@ class PopE2E(BitcoinTestFramework):
         pop_data = self.apm.endorseAltBlock(p, vbk_blocks[0].getHash())
         assert len(pop_data.vtbs) == vtbs_amount
 
-        [self.nodes[0].submitpopvbkblock(b.toVbkEncodingHex()) for b in vbk_blocks]
+        [self.nodes[0].submitpopvbk(b.toVbkEncodingHex()) for b in vbk_blocks]
         [self.nodes[0].submitpopvtb(b.toVbkEncodingHex()) for b in pop_data.vtbs]
         self.nodes[0].submitpopatv(pop_data.atv.toVbkEncodingHex())
 
@@ -100,7 +100,7 @@ class PopE2E(BitcoinTestFramework):
         pop_data = self.apm.endorseAltBlock(p, vbk_blocks[0].getHash())
         assert len(pop_data.vtbs) == vtbs_amount
 
-        [self.nodes[0].submitpopvbkblock(b.toVbkEncodingHex()) for b in vbk_blocks]
+        [self.nodes[0].submitpopvbk(b.toVbkEncodingHex()) for b in vbk_blocks]
         [self.nodes[0].submitpopvtb(b.toVbkEncodingHex()) for b in pop_data.vtbs]
         self.nodes[0].submitpopatv(pop_data.atv.toVbkEncodingHex())
 

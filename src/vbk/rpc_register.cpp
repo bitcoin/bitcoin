@@ -259,7 +259,7 @@ UniValue submitpopvtb(const JSONRPCRequest& request)
 {
     return submitpopIt<altintegration::VTB>(request);
 }
-UniValue submitpopvbkblock(const JSONRPCRequest& request)
+UniValue submitpopvbk(const JSONRPCRequest& request)
 {
     return submitpopIt<altintegration::VbkBlock>(request);
 }
@@ -712,7 +712,7 @@ const CRPCCommand commands[] = {
     {"pop_mining", "getpopparams", &getpopparams, {}},
     {"pop_mining", "submitpopatv", &submitpopatv, {"atv"}},
     {"pop_mining", "submitpopvtb", &submitpopvtb, {"vtb"}},
-    {"pop_mining", "submitpopvbkblock", &submitpopvbkblock, {"vbkblock"}},
+    {"pop_mining", "submitpopvbk", &submitpopvbk, {"vbkblock"}},
     {"pop_mining", "getpopdatabyheight", &getpopdatabyheight, {"blockheight"}},
     {"pop_mining", "getpopdatabyhash", &getpopdatabyhash, {"hash"}},
     {"pop_mining", "getvbkblock", &getvbkblock, {"hash"}},

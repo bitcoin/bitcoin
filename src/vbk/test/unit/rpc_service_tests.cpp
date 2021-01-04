@@ -88,7 +88,7 @@ BOOST_FIXTURE_TEST_CASE(submitpop_test, E2eFixture)
 
     UniValue vbk_blocks_params(UniValue::VARR);
     for (const auto& b : vbk_blocks) {
-        auto res = makeRequest("submitpopvbkblock", altintegration::SerializeToHex(b));
+        auto res = makeRequest("submitpopvbk", altintegration::SerializeToHex(b));
     }
 
     UniValue vtb_params(UniValue::VARR);
