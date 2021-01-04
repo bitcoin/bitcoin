@@ -2814,7 +2814,15 @@ bool CConnman::DisconnectNode(const CSubNet& subnet)
 
 bool CConnman::DisconnectNode(const CNetAddr& addr)
 {
-    return DisconnectNode(CSubNet(addr));
+    bool disconnected = false;
+    LOCK(cs_vNodes);
+    for (CNode* pnode : vNodes) {
+        if (addr == pnode->addr) {
+            pnode->fDisconnect = true;
+            disconnected = true;
+        }
+    }
+    return disconnected;
 }
 
 bool CConnman::DisconnectNode(NodeId id)
