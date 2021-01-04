@@ -5035,15 +5035,9 @@ bool LoadMempool(CTxMemPool& pool)
             pool.PrioritiseTransaction(i.first, i.second);
         }
 
-        // TODO: remove this try except in v0.22
         std::set<uint256> unbroadcast_txids;
-        try {
-          file >> unbroadcast_txids;
-          unbroadcast = unbroadcast_txids.size();
-        } catch (const std::exception&) {
-          // mempool.dat files created prior to v0.21 will not have an
-          // unbroadcast set. No need to log a failure if parsing fails here.
-        }
+        file >> unbroadcast_txids;
+        unbroadcast = unbroadcast_txids.size();
         for (const auto& txid : unbroadcast_txids) {
             // Ensure transactions were accepted to mempool then add to
             // unbroadcast set.
