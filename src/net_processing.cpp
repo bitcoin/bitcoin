@@ -1790,7 +1790,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                 // Relaying a transaction with a recent but unconfirmed parent.
                 if (WITH_LOCK(pfrom.m_tx_relay->cs_tx_inventory, return !pfrom.m_tx_relay->filterInventoryKnown.contains(parent_txid))) {
                     LOCK(cs_main);
-                    State(pfrom)->m_recently_announced_invs.insert(parent_txid);
+                    peer.nodestate.m_recently_announced_invs.insert(parent_txid);
                 }
             }
         } else {
@@ -4226,7 +4226,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
     {
         LOCK(cs_main);
 
-        CNodeState &state = *State(*pto);
+        CNodeState& state = peer->nodestate;
 
         // Address refresh broadcast
         auto current_time = GetTime<std::chrono::microseconds>();
@@ -4566,7 +4566,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         }
                         if (pto->m_tx_relay->pfilter && !pto->m_tx_relay->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                         // Send
-                        State(*pto)->m_recently_announced_invs.insert(hash);
+                        peer->nodestate.m_recently_announced_invs.insert(hash);
                         vInv.push_back(inv);
                         nRelayedTransactions++;
                         {
