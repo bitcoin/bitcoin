@@ -57,6 +57,7 @@ usage() {
 	Additionally, for the following commands:
 	    - bitcoind
 	    - bitcoin-cli
+	    - miner
 
 	A dynamic runtime configuration will be performed. This REQUIRES that the
 	following environment variables are set:
@@ -107,7 +108,7 @@ if [ "${1-}" = '' ] || [ "${1-}" = '--help' ] || [ "${1-}" = '-H' ] ; then
 	usage
 fi
 
-if [ "$1" = 'bitcoind' ] || [ "$1" = 'bitcoin-cli' ] ; then
+if [ "$1" = 'bitcoind' ] || [ "$1" = 'bitcoin-cli' ] || [ "$1" = 'miner' ]; then
 	# if the command is a itcoin-specific one, we need to create bitcoin.conf
 	# interpolating the templates with environment variables, and execute the
 	# command, forcing it to use the configuration file we just generated, and a
@@ -138,6 +139,12 @@ if [ "${COMMAND-}" = 'bitcoin-cli' ]; then
 	exec bitcoin-cli \
 		-conf="${INTERNAL_CONFIG_DIR}/bitcoin.conf" \
 		-datadir="${INTERNAL_DATADIR}" \
+		"$@"
+	# The control flow will never reach here, because we exec-ed.
+fi
+
+if [ "${COMMAND-}" = 'miner' ]; then
+	exec miner \
 		"$@"
 	# The control flow will never reach here, because we exec-ed.
 fi
