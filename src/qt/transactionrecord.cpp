@@ -211,7 +211,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
                     continue;
                 }
 
-                if (!boost::get<CNoDestination>(&wtx.txout_address[nOut]))
+                if (!std::get_if<CNoDestination>(&wtx.txout_address[nOut]))
                 {
                     // Sent to Dash Address
                     sub.type = TransactionRecord::SendToAddress;

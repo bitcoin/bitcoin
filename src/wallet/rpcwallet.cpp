@@ -584,7 +584,7 @@ static UniValue signmessage(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
     }
 
-    const CKeyID *keyID = boost::get<CKeyID>(&dest);
+    const CKeyID *keyID = std::get_if<CKeyID>(&dest);
     if (!keyID) {
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
     }
@@ -3152,7 +3152,7 @@ static UniValue listunspent(const JSONRPCRequest& request)
 
             const SigningProvider* provider = pwallet->GetSigningProvider();
             if (scriptPubKey.IsPayToScriptHash()) {
-                const CScriptID& hash = boost::get<CScriptID>(address);
+                const CScriptID& hash = CScriptID(std::get<CScriptID>(address));
                 CScript redeemScript;
                 if (provider->GetCScript(hash, redeemScript)) {
                     entry.pushKV("redeemScript", HexStr(redeemScript));
@@ -3537,7 +3537,7 @@ static UniValue rescanblockchain(const JSONRPCRequest& request)
     return response;
 }
 
-class DescribeWalletAddressVisitor : public boost::static_visitor<UniValue>
+class DescribeWalletAddressVisitor
 {
 public:
     const SigningProvider * const provider;
@@ -3587,7 +3587,7 @@ static UniValue DescribeWalletAddress(CWallet* pwallet, const CTxDestination& de
         provider = pwallet->GetSigningProvider();
     }
     ret.pushKVs(detail);
-    ret.pushKVs(boost::apply_visitor(DescribeWalletAddressVisitor(provider), dest));
+    ret.pushKVs(std::visit(DescribeWalletAddressVisitor(provider), dest));
     return ret;
 }
 
@@ -3690,7 +3690,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
     ret.pushKV("ischange", pwallet->IsChange(scriptPubKey));
     ScriptPubKeyMan* spk_man = pwallet->GetScriptPubKeyMan();
     if (spk_man) {
-        const CKeyID *key_id = boost::get<CKeyID>(&dest);
+        const CKeyID *key_id = std::get_if<CKeyID>(&dest);
         const CKeyMetadata* meta = nullptr;
         if (key_id != nullptr && !key_id->IsNull()) {
             meta = spk_man->GetMetadata(*key_id);
