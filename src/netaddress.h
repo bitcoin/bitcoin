@@ -462,11 +462,33 @@ class CSubNet
         bool SanityCheck() const;
 
     public:
+        /**
+         * Construct an invalid subnet (empty, `Match()` always returns false).
+         */
         CSubNet();
+
+        /**
+         * Construct from a given network start and number of bits (CIDR mask).
+         * @param[in] addr Network start. Must be IPv4 or IPv6, otherwise an invalid subnet is
+         * created.
+         * @param[in] mask CIDR mask, must be in [0, 32] for IPv4 addresses and in [0, 128] for
+         * IPv6 addresses. Otherwise an invalid subnet is created.
+         */
         CSubNet(const CNetAddr& addr, uint8_t mask);
+
+        /**
+         * Construct from a given network start and mask.
+         * @param[in] addr Network start. Must be IPv4 or IPv6, otherwise an invalid subnet is
+         * created.
+         * @param[in] mask Network mask, must be of the same type as `addr` and not contain 0-bits
+         * followed by 1-bits. Otherwise an invalid subnet is created.
+         */
         CSubNet(const CNetAddr& addr, const CNetAddr& mask);
 
-        //constructor for single ip subnet (<ipv4>/32 or <ipv6>/128)
+        /**
+         * Construct a single-host subnet.
+         * @param[in] addr The sole address to be contained in the subnet, can also be non-IPv[46].
+         */
         explicit CSubNet(const CNetAddr& addr);
 
         bool Match(const CNetAddr &addr) const;
