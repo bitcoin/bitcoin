@@ -2,17 +2,22 @@
 #
 # ItCoin
 #
-# Starts a local itcoin daemon via Docker, computes the information
-# necessary to initialize the system for the first time.
-# Then starts continuously mining blocks at a regular pace.
+# This script is meant for debugging purposes. Assuming
+# initialize-itcoin-docker.sh has been already executed once, restarts the
+# continuous mining process from where it left off. The current datadir is
+# reused: there is no need to delete it.
+#
+# Please note that you need to pass the BLOCKSCRIPT value via command line.
+# You'll need to save it during the inizialization.
 #
 # REQUIREMENTS:
 # - docker
 # - jq
 # - the itcoin docker image must be available and tagged
+# - initialize-itcoin-docker.sh has been started and stopped already
 #
 # USAGE:
-#     initialize-itcoin-docker.sh
+#     continue-mining-docker.sh <BLOCKSCRIPT>
 #
 # Author: muxator <antonio.muci@bancaditalia.it>
 
@@ -36,6 +41,8 @@ BITCOIN_PORT=38333
 RPC_PORT=38332
 ZMQ_PUBHASHTX_PORT=29010
 ZMQ_PUBRAWBLOCK_PORT=29009
+
+WALLET_NAME=itcoin_signer
 
 errecho() {
     # prints to stderr
@@ -66,22 +73,12 @@ trap cleanup EXIT
 # Do not run if the required packages are not installed
 checkPrerequisites
 
+# You will need to save the BLOCKSCRIPT value at first run in order to pass it here.
+BLOCKSCRIPT=$1
+shift
+
 ITCOIN_IMAGE="${ITCOIN_IMAGE_NAME}:${ITCOIN_IMAGE_TAG}"
 errecho "Using itcoin docker image ${ITCOIN_IMAGE}"
-
-KEYPAIR=$(docker run \
-    --rm \
-    "${ITCOIN_IMAGE}" \
-    create-keypair.sh
-)
-
-BLOCKSCRIPT=$(echo "${KEYPAIR}" | jq --raw-output '.blockscript')
-PRIVKEY=$(echo     "${KEYPAIR}" | jq --raw-output '.privkey')
-
-errecho "Creating datadir ${EXTERNAL_DATADIR}. If it already exists this script will fail"
-mkdir "${EXTERNAL_DATADIR}"
-
-echo "Please save this BLOCKSCRIPT value ${BLOCKSCRIPT}: you will need it if you want to run continue-mining-docker.sh"
 
 # Start itcoin daemon
 # Different from the wiki: the wallet is not automatically loaded now. It will
@@ -106,34 +103,17 @@ docker run \
 	"${ITCOIN_IMAGE}" \
 	bitcoind
 
-# wait until the daemon is fully started
-errecho "ItCoin daemon: waiting (at most 10 seconds) for warmup"
-timeout 10 "${MYDIR}/run-docker-bitcoin-cli.sh" -rpcwait -rpcclienttimeout=3 uptime >/dev/null
-errecho "ItCoin daemon: warmed up"
+# Open the wallet WALLET_NAME
+errecho "Load wallet ${WALLET_NAME}"
+"${MYDIR}/run-docker-bitcoin-cli.sh" loadwallet "${WALLET_NAME}" >/dev/null
+errecho "Wallet ${WALLET_NAME} loaded"
 
-# Only the first time: let's create a wallet and call it itcoin_signer
-errecho "Create wallet itcoin_signer"
-"${MYDIR}/run-docker-bitcoin-cli.sh" createwallet itcoin_signer >/dev/null
-errecho "Wallet itcoin_signer created"
-
-# Now we need to import inside itcoin_signer the private key we generated
-# beforehand. This private key will be used to sign blocks.
-errecho "Import private key into itcoin_signer"
-"${MYDIR}/run-docker-bitcoin-cli.sh" importprivkey "${PRIVKEY}"
-errecho "Private key imported into itcoin_signer"
-
-# Generate an address we'll send bitcoins to.
-errecho "Generate an address"
-ADDR=$("${MYDIR}/run-docker-bitcoin-cli.sh" getnewaddress)
-errecho "Address ${ADDR} generated"
-
-# Ask the miner to send bitcoins to that address. Being the first block in the
-# chain, we need to choose a date. We'll use "-1", which means "current time".
-errecho "Mine the first block"
-"${MYDIR}/run-docker-miner.sh" "${ADDR}" --set-block-time -1
-errecho "First block mined"
+# Retrieve the address of the first transaction in this blockchain
+errecho "Retrieve the address of the first transaction we find"
+ADDR=$("${MYDIR}/run-docker-bitcoin-cli.sh" listtransactions | jq --raw-output '.[0].address')
+errecho "Address ${ADDR} retrieved"
 
 # Let's start mining continuously. We'll reuse the same ADDR as before.
-errecho "Keep mining the following blocks"
+errecho "Keep mining eternally"
 "${MYDIR}/run-docker-miner.sh" "${ADDR}" --ongoing
 errecho "You should never reach here"
