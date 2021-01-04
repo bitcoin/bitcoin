@@ -11,6 +11,14 @@ port=${BITCOIN_PORT}
 # JSON-RPC signet port (for example, for bitcoin-cli)
 rpcport=${RPC_PORT}
 
+# The following are INSECURE, hardcoded credentials for JSON-RPC (bitcoin-cli):
+#     User: user
+#     Password: password
+# To create proper unique credentials, please execute /share/rpcauth/rpcauth.py
+# and pass them at runtime via an environment variable.
+rpcauth=user:d0b351db33243819dbe002fe2b41419e$d08af9fd3c691b22c074db3a31538581df2b898dcf8ffec4e5d233263da612ea
+rpcbind=0.0.0.0
+
 # Allow JSON-RPC (bitcoin-cli) connections from any host.
 #
 # This is INSECURE, and should be configured to a restricted value via an
