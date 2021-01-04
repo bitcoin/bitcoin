@@ -18,12 +18,12 @@
 #include <vbk/util.hpp>
 #include <veriblock/alt-util.hpp>
 #include <veriblock/mempool.hpp>
-#include <veriblock/mock_miner.hpp>
+#include <veriblock/mock_miner_2.hpp>
 #include <consensus/merkle.h>
 
 using altintegration::ATV;
 using altintegration::BtcBlock;
-using altintegration::MockMiner;
+using altintegration::MockMiner2;
 using altintegration::PublicationData;
 using altintegration::VbkBlock;
 using altintegration::VTB;
@@ -39,7 +39,7 @@ struct TestLogger : public altintegration::Logger {
 
 struct E2eFixture : public TestChain100Setup {
     CScript cbKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    MockMiner popminer;
+    MockMiner2 popminer;
     altintegration::ValidationState state;
     altintegration::PopContext* pop;
     std::vector<uint8_t> defaultPayoutInfo = {1, 2, 3, 4, 5};

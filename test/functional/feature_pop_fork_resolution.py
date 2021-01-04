@@ -197,8 +197,8 @@ class PopFr(BitcoinTestFramework):
 
         self.sync_all(self.nodes[0:4])
 
-        from pypopminer import MockMiner
-        self.apm = MockMiner()
+        from pypopminer2 import MockMiner2
+        self.apm = MockMiner2()
 
         self._shorter_endorsed_chain_wins()
         self._4_chains_converge()

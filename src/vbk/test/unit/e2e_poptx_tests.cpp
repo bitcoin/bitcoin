@@ -10,10 +10,10 @@
 #include <vbk/test/util/e2e_fixture.hpp>
 #include <vbk/util.hpp>
 #include <veriblock/alt-util.hpp>
-#include <veriblock/mock_miner.hpp>
+#include <veriblock/mock_miner_2.hpp>
 
 using altintegration::BtcBlock;
-using altintegration::MockMiner;
+using altintegration::MockMiner2;
 using altintegration::PublicationData;
 using altintegration::VbkBlock;
 using altintegration::VTB;

@@ -93,8 +93,8 @@ class PoPSync(BitcoinTestFramework):
 
         self.sync_all(self.nodes)
 
-        from pypopminer import MockMiner
-        self.apm = MockMiner()
+        from pypopminer2 import MockMiner2
+        self.apm = MockMiner2()
 
         self._check_pop_sync()
 

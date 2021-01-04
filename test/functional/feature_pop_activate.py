@@ -95,8 +95,8 @@ class PopActivate(BitcoinTestFramework):
 
     def run_test(self):
         """Main test logic"""
-        from pypopminer import MockMiner
-        self.apm = MockMiner()
+        from pypopminer2 import MockMiner2
+        self.apm = MockMiner2()
         self._cannot_endorse()
         self.restart_node(0)
         self._can_endorse()

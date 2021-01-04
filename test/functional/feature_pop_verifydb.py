@@ -51,7 +51,7 @@ class PoPVerifyDB(BitcoinTestFramework):
     def run_test(self):
         """Main test logic"""
 
-        from pypopminer import MockMiner
+        from pypopminer2 import MockMiner2
         self.apm = MockMiner()
         self.addrs = [x.getnewaddress() for x in self.nodes]
         self.endorsed_length = 100

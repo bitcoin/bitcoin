@@ -62,7 +62,7 @@ def create_endorsed_chain(node, apm, size: int, addr: str) -> None:
 
 
 def endorse_block(node, apm, height: int, addr: str, vtbs: Optional[int] = None) -> str:
-    from pypopminer import PublicationData
+    from pypopminer2 import PublicationData
 
     # get pubkey for that address
     pubkey = node.getaddressinfo(addr)['pubkey']
