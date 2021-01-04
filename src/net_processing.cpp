@@ -615,7 +615,7 @@ private:
     CNodeState *State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     CNodeState* State(const CNode& node) EXCLUSIVE_LOCKS_REQUIRED(cs_main) { return State(node.GetId()); }
 
-    void ProcessBlockAvailability(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void ProcessBlockAvailability(CNodeState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void RelayTransaction(const uint256& txid, const uint256& wtxid) override EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ProcessGetBlockData(CNode& pfrom, Peer& peer, const CChainParams& chainparams, const CInv& inv, CConnman& connman);
@@ -715,18 +715,15 @@ bool PeerManagerImpl::MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, co
 }
 
 /** Check whether the last unknown block a peer advertised is not yet known. */
-void PeerManagerImpl::ProcessBlockAvailability(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void PeerManagerImpl::ProcessBlockAvailability(CNodeState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    CNodeState *state = State(nodeid);
-    assert(state != nullptr);
-
-    if (!state->hashLastUnknownBlock.IsNull()) {
-        const CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(state->hashLastUnknownBlock);
+    if (!state.hashLastUnknownBlock.IsNull()) {
+        const CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(state.hashLastUnknownBlock);
         if (pindex && pindex->nChainWork > 0) {
-            if (state->pindexBestKnownBlock == nullptr || pindex->nChainWork >= state->pindexBestKnownBlock->nChainWork) {
-                state->pindexBestKnownBlock = pindex;
+            if (state.pindexBestKnownBlock == nullptr || pindex->nChainWork >= state.pindexBestKnownBlock->nChainWork) {
+                state.pindexBestKnownBlock = pindex;
             }
-            state->hashLastUnknownBlock.SetNull();
+            state.hashLastUnknownBlock.SetNull();
         }
     }
 }
@@ -737,7 +734,7 @@ void PeerManagerImpl::UpdateBlockAvailability(NodeId nodeid, const uint256 &hash
     CNodeState *state = State(nodeid);
     assert(state != nullptr);
 
-    ProcessBlockAvailability(nodeid);
+    ProcessBlockAvailability(*state);
 
     const CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(hash);
     if (pindex && pindex->nChainWork > 0) {
@@ -824,7 +821,7 @@ void PeerManagerImpl::FindNextBlocksToDownload(NodeId nodeid, unsigned int count
     assert(state != nullptr);
 
     // Make sure pindexBestKnownBlock is up to date, we'll need it.
-    ProcessBlockAvailability(nodeid);
+    ProcessBlockAvailability(*state);
 
     if (state->pindexBestKnownBlock == nullptr || state->pindexBestKnownBlock->nChainWork < ::ChainActive().Tip()->nChainWork || state->pindexBestKnownBlock->nChainWork < nMinimumChainWork) {
         // This peer has nothing interesting.
@@ -1356,8 +1353,8 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
         // TODO: Avoid the repeated-serialization here
         if (pnode->GetCommonVersion() < INVALID_CB_NO_BAN_VERSION || pnode->fDisconnect)
             return;
-        ProcessBlockAvailability(pnode->GetId());
         CNodeState &state = *State(*pnode);
+        ProcessBlockAvailability(state);
         // If the peer has, or we announced to them the previous block already,
         // but we don't think they have this one, go ahead and announce it
         if (state.fPreferHeaderAndIDs && (!fWitnessEnabled || state.fWantsCmpctWitness) &&
@@ -4336,7 +4333,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                                  (!state.fPreferHeaderAndIDs || peer->m_blocks_for_headers_relay.size() > 1)) ||
                                  peer->m_blocks_for_headers_relay.size() > MAX_BLOCKS_TO_ANNOUNCE);
             const CBlockIndex *pBestIndex = nullptr; // last header queued for delivery
-            ProcessBlockAvailability(pto->GetId()); // ensure pindexBestKnownBlock is up-to-date
+            ProcessBlockAvailability(state); // ensure pindexBestKnownBlock is up-to-date
 
             if (!fRevertToInv) {
                 bool fFoundStartingHeader = false;
