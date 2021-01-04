@@ -20,6 +20,7 @@
 #include <protocol.h>
 #include <random.h>
 #include <scheduler.h>
+#include <util/sock.h>
 #include <util/strencodings.h>
 #include <util/translation.h>
 
