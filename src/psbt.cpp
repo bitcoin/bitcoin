@@ -401,3 +401,11 @@ bool DecodeRawPSBT(PartiallySignedTransaction& psbt, const std::string& tx_data,
     }
     return true;
 }
+
+uint32_t PartiallySignedTransaction::GetVersion() const
+{
+    if (m_version != std::nullopt) {
+        return *m_version;
+    }
+    return 0;
+}

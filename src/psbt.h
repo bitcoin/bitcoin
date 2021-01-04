@@ -405,6 +405,7 @@ struct PartiallySignedTransaction
     std::optional<uint32_t> m_version;
 
     bool IsNull() const;
+    uint32_t GetVersion() const;
 
     /** Merge psbt into this. The two psbts must have the same underlying CTransaction (i.e. the
       * same actual Bitcoin transaction.) Returns true if the merge succeeded, false otherwise. */
@@ -436,7 +437,7 @@ struct PartiallySignedTransaction
         SerializeToVector(os, *tx);
 
         // PSBT version
-        if (m_version != std::nullopt && *m_version > 0) {
+        if (GetVersion() > 0) {
             SerializeToVector(s, CompactSizeWriter(PSBT_GLOBAL_VERSION));
             SerializeToVector(s, *m_version);
         }
