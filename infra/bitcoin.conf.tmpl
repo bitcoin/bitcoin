@@ -11,6 +11,12 @@ port=${BITCOIN_PORT}
 # JSON-RPC signet port (for example, for bitcoin-cli)
 rpcport=${RPC_PORT}
 
+# Allow JSON-RPC (bitcoin-cli) connections from any host.
+#
+# This is INSECURE, and should be configured to a restricted value via an
+# environment variable, based on a value computed by the orchestrator.
+rpcallowip=0.0.0.0/0
+
 # print logs for the bitcoin protocol events
 debug=net
 
