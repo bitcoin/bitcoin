@@ -51,7 +51,6 @@ struct DBVal {
 struct DBHeightKey {
     int height;
 
-    DBHeightKey() : height(0) {}
     explicit DBHeightKey(int height_in) : height(height_in) {}
 
     template<typename Stream>
