@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <pubkey.h>
 #include <script/descriptor.h>
 #include <script/sign.h>
 #include <script/standard.h>
@@ -25,6 +26,14 @@ void CheckUnparsable(const std::string& prv, const std::string& pub, const std::
     BOOST_CHECK_MESSAGE(!parse_priv, prv);
     BOOST_CHECK_MESSAGE(!parse_pub, pub);
     BOOST_CHECK_EQUAL(error, expected_error);
+}
+
+/** Check that the script is inferred as non-standard */
+void CheckInferRaw(const CScript& script)
+{
+    FlatSigningProvider dummy_provider;
+    std::unique_ptr<Descriptor> desc = InferDescriptor(script, dummy_provider);
+    BOOST_CHECK(desc->ToString().rfind("raw(", 0) == 0);
 }
 
 constexpr int DEFAULT = 0;
@@ -376,6 +385,27 @@ BOOST_AUTO_TEST_CASE(descriptor_test)
     CheckUnparsable("", "addr(asdf)", "Address is not valid"); // Invalid address
     CheckUnparsable("", "raw(asdf)", "Raw script is not hex"); // Invalid script
     CheckUnparsable("", "raw(Ü)#00000000", "Invalid characters in payload"); // Invalid chars
+
+    // A 2of4 but using a direct push rather than OP_2
+    CScript nonminimalmultisig;
+    CKey keys[4];
+    nonminimalmultisig << std::vector<unsigned char>{2};
+    for (int i = 0; i < 4; i++) {
+        keys[i].MakeNewKey(true);
+        nonminimalmultisig << ToByteVector(keys[i].GetPubKey());
+    }
+    nonminimalmultisig << 4 << OP_CHECKMULTISIG;
+    CheckInferRaw(nonminimalmultisig);
+
+    // A 2of4 but using a direct push rather than OP_4
+    nonminimalmultisig.clear();
+    nonminimalmultisig << 2;
+    for (int i = 0; i < 4; i++) {
+        keys[i].MakeNewKey(true);
+        nonminimalmultisig << ToByteVector(keys[i].GetPubKey());
+    }
+    nonminimalmultisig << std::vector<unsigned char>{4} << OP_CHECKMULTISIG;
+    CheckInferRaw(nonminimalmultisig);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
