@@ -225,7 +225,7 @@ private:
      *  [0, 1) and simply multiply it by the size. Then we just shift the result down by
      *  32-bits to get our bucket number. The result has non-uniformity the same as a
      *  mod, but it is much faster to compute. More about this technique can be found at
-     *  http://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/ .
+     *  https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/ .
      *
      * The resulting non-uniformity is also more equally distributed which would be
      *  advantageous for something like linear probing, though it shouldn't matter

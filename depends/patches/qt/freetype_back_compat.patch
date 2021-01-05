@@ -9,7 +9,7 @@ Date:   Tue Aug 18 15:15:08 2020 +0800
     backwards-compatibility.
 
     Qt 5.9 introduced a call to FT_Get_Font_Format(). Replace it with FT_Get_X11_Font_Format()
-    in order to remain compatibile with older freetype, which is still used by e.g. Ubuntu Trusty.
+    in order to remain compatible with older freetype, which is still used by e.g. Ubuntu Trusty.
 
     See #14348.
 
