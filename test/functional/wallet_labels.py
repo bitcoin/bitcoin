@@ -133,6 +133,7 @@ class WalletLabelsTest(BitcoinTestFramework):
         # in the label. This is a no-op.
         change_label(node, labels[2].addresses[0], labels[2], labels[2])
 
+
 class Label:
     def __init__(self, name):
         # Label name
