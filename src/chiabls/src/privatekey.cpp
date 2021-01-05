@@ -95,15 +95,11 @@ PrivateKey::PrivateKey() {
 // Construct a private key from another private key.
 PrivateKey::PrivateKey(const PrivateKey &privateKey) {
     AllocateKeyData();
-    if(privateKey.CheckValid()) {
-        bn_copy(*keydata, *privateKey.keydata);
-    }
+    bn_copy(*keydata, *privateKey.keydata);
 }
 
 PrivateKey::PrivateKey(PrivateKey&& k) {
-    if(k.CheckValid()) {
-        std::swap(keydata, k.keydata);
-    }
+    std::swap(keydata, k.keydata);
     
 }
 
@@ -185,11 +181,10 @@ PrivateKey PrivateKey::Aggregate(std::vector<PrivateKey> const& privateKeys,
         delete[] p;
     }
     delete[] computedTs;
-
-    BLS::CheckRelicErrors();
     if(!aggKey.CheckValid()) {
         throw std::invalid_argument("Aggregate: Given G2 element failed in_subgroup check");
     }
+    BLS::CheckRelicErrors();
     return aggKey;
 }
 

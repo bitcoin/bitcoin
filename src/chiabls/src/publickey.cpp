@@ -70,9 +70,7 @@ PublicKey::PublicKey() {
 }
 
 PublicKey::PublicKey(const PublicKey &pubKey) {
-    if(pubKey.CheckValid()) {
-        g1_copy(q, pubKey.q);
-    }
+    g1_copy(q, pubKey.q);
 }
 
 PublicKey PublicKey::AggregateInsecure(std::vector<PublicKey> const& pubKeys) {
