@@ -33,6 +33,8 @@ INTERNAL_CONFIGDIR="/opt/itcoin-core/configdir"
 EXTERNAL_DATADIR="${MYDIR}/datadir"
 INTERNAL_DATADIR="/opt/itcoin-core/datadir"
 
+BITCOIN_PORT=38333
+
 errecho() {
     # prints to stderr
     >&2 echo $@;
@@ -86,7 +88,9 @@ docker run \
 	--user "$(id --user):$(id --group)" \
 	--detach \
 	--rm \
+	--env BITCOIN_PORT="${BITCOIN_PORT}" \
 	--env BLOCKSCRIPT="${BLOCKSCRIPT}" \
+	--publish "${BITCOIN_PORT}":"${BITCOIN_PORT}" \
 	--tmpfs "${INTERNAL_CONFIGDIR}" \
 	--mount type=bind,source="${EXTERNAL_DATADIR}",target="${INTERNAL_DATADIR}" \
 	"${ITCOIN_IMAGE}" \

@@ -18,6 +18,8 @@ CONTAINER_NAME="itcoind"
 EXTERNAL_DATADIR="${MYDIR}/datadir"
 INTERNAL_DATADIR="/opt/itcoin-core/datadir"
 
+BITCOIN_PORT=38333
+
 # You can use any valid blockscript here.
 #
 # Just for fun, this is a 1-of-2 signet blockscript generated from this data:
@@ -46,7 +48,9 @@ docker run \
 	--name "${CONTAINER_NAME}" \
 	--user "$(id --user):$(id --group)" \
 	--rm \
+	--env BITCOIN_PORT="${BITCOIN_PORT}" \
 	--env BLOCKSCRIPT="${BLOCKSCRIPT}" \
+	--publish "${BITCOIN_PORT}":"${BITCOIN_PORT}" \
 	--tmpfs /opt/itcoin-core/configdir \
 	--mount type=bind,source="${EXTERNAL_DATADIR}",target="${INTERNAL_DATADIR}" \
 	"${ITCOIN_IMAGE}" \

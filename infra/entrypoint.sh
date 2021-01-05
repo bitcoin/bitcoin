@@ -23,7 +23,7 @@
 #
 # EXAMPLE:
 #    docker run --rm arthub.azurecr.io/itcoin-core:git-2a43646f76e4 --help
-#    docker run --rm --env BLOCKSCRIPT=XXX arthub.azurecr.io/itcoin-core:git-2a43646f76e4 bitcoin-cli -help
+#    docker run --rm --env BLOCKSCRIPT=XXX <more variables...> arthub.azurecr.io/itcoin-core:git-2a43646f76e4 bitcoin-cli -help
 #    docker run --rm arthub.azurecr.io/itcoin-core:git-2a43646f76e4 cat /etc/passwd
 #
 # Author: muxator <antonio.muci@bancaditalia.it>
@@ -33,6 +33,7 @@ set -eu
 # This is the set of environment variables that will be supported by the itcoin
 # container when running some bitcoin-specific commands.
 SUPPORTED_VARIABLES=(
+	BITCOIN_PORT
 	BLOCKSCRIPT
 )
 
