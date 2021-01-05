@@ -22,9 +22,9 @@ BOOST_AUTO_TEST_CASE(bip173_testvectors_valid)
         "?1ezyfcl",
     };
     for (const std::string& str : CASES) {
-        auto ret = bech32::Decode(str);
-        BOOST_CHECK(!ret.first.empty());
-        std::string recode = bech32::Encode(ret.first, ret.second);
+        const auto dec = bech32::Decode(str);
+        BOOST_CHECK(dec.encoding == bech32::Encoding::BECH32);
+        std::string recode = bech32::Encode(bech32::Encoding::BECH32, dec.hrp, dec.data);
         BOOST_CHECK(!recode.empty());
         BOOST_CHECK(CaseInsensitiveEqual(str, recode));
     }
@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_CASE(bip173_testvectors_invalid)
         "A12uEL5L",
     };
     for (const std::string& str : CASES) {
-        auto ret = bech32::Decode(str);
-        BOOST_CHECK(ret.first.empty());
+        const auto dec = bech32::Decode(str);
+        BOOST_CHECK(dec.encoding != bech32::Encoding::BECH32);
     }
 }
 
