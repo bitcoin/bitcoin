@@ -24,7 +24,7 @@ static void VerifyScriptBench(benchmark::Bench& bench)
     const int flags = SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH;
     const int witnessversion = 0;
 
-    // Keypair.
+    // Key pair.
     CKey key;
     static const std::array<unsigned char, 32> vchKey = {
         {

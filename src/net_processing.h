@@ -64,7 +64,7 @@ struct Peer {
 
     /** Protects block inventory data members */
     Mutex m_block_inv_mutex;
-    /** List of blocks that we'll anounce via an `inv` message.
+    /** List of blocks that we'll announce via an `inv` message.
      * There is no final sorting before sending, as they are always sent
      * immediately and in the order requested. */
     std::vector<uint256> m_blocks_for_inv_relay GUARDED_BY(m_block_inv_mutex);
