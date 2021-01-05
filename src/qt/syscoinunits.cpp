@@ -105,9 +105,9 @@ QString SyscoinUnits::format(int unit, const CAmount& _nIn, const uint32_t &nAss
     // SYSCOIN 
     CAmount nIn = _nIn;   
     if(nAsset > 0) {
-        CAsset theAsset;
-        if(GetAsset(nAsset, theAsset))
-            nIn = AmountFromValue(ValueFromAssetAmount(_nIn, theAsset.nPrecision));
+        uint8_t nPrecision;
+        if(GetAssetPrecision(nAsset, nPrecision))
+            nIn = AmountFromValue(ValueFromAssetAmount(_nIn, nPrecision));
     }
     // Note: not using straight sprintf here because we do NOT want
     // localized number formatting.

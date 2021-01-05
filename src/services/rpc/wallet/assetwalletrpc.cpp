@@ -139,11 +139,11 @@ bool AssetMintWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, c
                 nTotal += voutAsset.nValue;
                 UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
                 oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
-                oAssetAllocationReceiverOutputObj.__pushKV("amount_sat", voutAsset.nValue);
+                oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nAsset));
                 oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
             }
             oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
-            oAssetAllocationReceiversObj.__pushKV("total", nTotal);
+            oAssetAllocationReceiversObj.__pushKV("total", ValueFromAmount(nTotal, nAsset));
             oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
         }
         entry.__pushKV("allocations", oAssetAllocationReceiversArray);
@@ -155,7 +155,7 @@ bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, 
     entry.__pushKV("txtype", stringFromSyscoinTx(wtx.tx->nVersion));
     entry.__pushKV("asset_guid", assetInfo.nAsset);
     if(IsAssetAllocationTx(wtx.tx->nVersion)) {
-        entry.__pushKV("amount_sat", assetInfo.nValue);
+        entry.__pushKV("amount", ValueFromAmount(assetInfo.nValue, assetInfo.nAsset));
         entry.__pushKV("action", strCategory);
     }
     return true;

@@ -2894,7 +2894,7 @@ RPCHelpMan listunspent()
                             {RPCResult::Type::STR, "label", "The associated label, or \"\" for the default label"},
                             {RPCResult::Type::STR, "scriptPubKey", "the script key"},
                             {RPCResult::Type::STR_AMOUNT, "amount", "the transaction output amount in " + CURRENCY_UNIT},
-                            {RPCResult::Type::STR_AMOUNT, "asset_amount_sat", "the transaction output asset amount in satoshis if asset output"},
+                            {RPCResult::Type::STR_AMOUNT, "asset_amount", "the transaction output asset amount in satoshis if asset output"},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
                             {RPCResult::Type::STR_HEX, "redeemScript", "The redeemScript if scriptPubKey is P2SH"},
                             {RPCResult::Type::STR, "witnessScript", "witnessScript if the scriptPubKey is P2WSH or P2SH-P2WSH"},
@@ -3088,7 +3088,7 @@ RPCHelpMan listunspent()
         entry.pushKV("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
         if(!out.tx->tx->vout[out.i].assetInfo.IsNull()) {
             entry.pushKV("asset_guid", out.tx->tx->vout[out.i].assetInfo.nAsset);
-            entry.pushKV("asset_amount_sat", out.tx->tx->vout[out.i].assetInfo.nValue);
+            entry.pushKV("asset_amount", ValueFromAmount(out.tx->tx->vout[out.i].assetInfo.nValue, out.tx->tx->vout[out.i].assetInfo.nAsset));
         }
         entry.pushKV("confirmations", out.nDepth);
         entry.pushKV("spendable", out.fSpendable);

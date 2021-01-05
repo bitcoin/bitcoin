@@ -614,7 +614,7 @@ static bool rest_getutxos(const util::Ref& context, HTTPRequest* req, const std:
             // SYSCOIN
             if(!coin.out.assetInfo.IsNull()) {
                 utxo.pushKV("asset_guid", coin.out.assetInfo.nAsset);
-                utxo.pushKV("asset_amount_sat", ValueFromAmount(coin.out.assetInfo.nValue));
+                utxo.pushKV("asset_amount", ValueFromAmount(coin.out.assetInfo.nValue, coin.out.assetInfo.nAsset));
             }
             utxos.push_back(utxo);
         }

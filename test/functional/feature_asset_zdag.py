@@ -6,8 +6,6 @@ import time
 from decimal import Decimal
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
-
-ZDAG_NOT_FOUND = -1
 ZDAG_STATUS_OK = 0
 ZDAG_WARNING_RBF = 1
 ZDAG_WARNING_NOT_ZDAG_TX = 2
@@ -223,12 +221,12 @@ class AssetZDAGTest(SyscoinTestFramework):
         out =  self.nodes[0].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
         assert_equal(out[0]['asset_guid'], 123456)
-        assert_equal(out[0]['asset_amount_sat'], 0)
+        assert_equal(out[0]['asset_amount'], 0)
         self.nodes[0].generate(1)
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
         assert_equal(out[0]['asset_guid'], 123456)
-        assert_equal(out[0]['asset_amount_sat'], 0)
+        assert_equal(out[0]['asset_amount'], 0)
         self.sync_blocks()
         # listunspent for node0 should be have just 1 (asset ownership)
         # check that nodes have allocations in listunspent before burning

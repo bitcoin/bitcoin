@@ -11,7 +11,7 @@
 #include <univalue.h>
 #include <util/system.h>
 #include <key_io.h>
-
+std::unordered_map<uint32_t, uint8_t> mapAssetPrecision;
 std::string stringFromSyscoinTx(const int &nVersion) {
     switch (nVersion) {
     case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
@@ -42,7 +42,18 @@ uint32_t GenerateSyscoinGuid(const COutPoint& outPoint) {
     txidArith += outPoint.n;
     return txidArith.GetLow32();
 }
-
+bool GetAssetPrecision(const uint32_t &nAsset, uint8_t& nPrecision) {
+    auto itP = mapAssetPrecision.try_emplace(nAsset, 0);
+    // if added, meaning cache miss then fetch right asset and and fill cache otherwise return cache entry
+    if (itP.second) {
+        CAsset txPos;
+        if (!passetdb || !passetdb->ReadAsset(nAsset, txPos))
+            return false;
+        itP.first->second = txPos.nPrecision;
+    }
+    nPrecision = itP.first->second;
+    return true;
+}
 bool GetAsset(const uint32_t &nAsset,
         CAsset& txPos) {
     if (!passetdb || !passetdb->ReadAsset(nAsset, txPos))

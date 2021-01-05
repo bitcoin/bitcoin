@@ -5,7 +5,7 @@
 
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
-
+from decimal import Decimal
 class AssetAuxFeesTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -27,7 +27,7 @@ class AssetAuxFeesTest(SyscoinTestFramework):
         out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
         assert_equal(out[0]['asset_guid'], self.asset)
-        assert_equal(out[0]['asset_amount_sat'], 106000000)
+        assert_equal(out[0]['asset_amount'], Decimal('1.06'))
         # remove aux fees
         self.nodes[0].assetupdate(self.asset, '', '', 127, '', {}, {})
         self.nodes[0].generate(1)
@@ -37,7 +37,7 @@ class AssetAuxFeesTest(SyscoinTestFramework):
         out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
         assert_equal(out[0]['asset_guid'], self.asset)
-        assert_equal(out[0]['asset_amount_sat'], 106000000)
+        assert_equal(out[0]['asset_amount'], Decimal('1.06'))
         self.nodes[0].generate(1)
         self.sync_blocks()
 

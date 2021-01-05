@@ -5,8 +5,7 @@
 import time
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
-from test_framework.messages import COIN
-
+from decimal import Decimal
 class AssetBurnTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
@@ -102,7 +101,7 @@ class AssetBurnTest(SyscoinTestFramework):
         out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
         assert_equal(out[0]['asset_guid'], 123456)
-        assert_equal(out[0]['asset_amount_sat'], int(0.05*COIN))
+        assert_equal(out[0]['asset_amount'], Decimal('0.05'))
         # in mempool, create more allocations and burn them all accumulating the coins
         self.nodes[1].assetallocationsend(self.asset, self.nodes[1].getnewaddress(), 0.01)
         time.sleep(0.25)

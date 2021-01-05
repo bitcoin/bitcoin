@@ -28,6 +28,7 @@ std::string stringFromSyscoinTx(const int &nVersion);
 std::string assetFromTx(const int &nVersion);
 static CAsset emptyAsset;
 bool GetAsset(const uint32_t &nAsset,CAsset& txPos);
+bool GetAssetPrecision(const uint32_t &nAsset, uint8_t& nPrecision);
 bool GetAssetNotaryKeyID(const uint32_t &nAsset, std::vector<unsigned char>& keyID);
 bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const uint32_t &nAsset, CAssetsMap mapAssetIn, const CAssetsMap &mapAssetOut);
 UniValue AssetPublicDataToJson(const std::string &strPubData);

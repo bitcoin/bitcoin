@@ -43,11 +43,11 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, U
             nTotal += voutAsset.nValue;
             UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
             oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
-            oAssetAllocationReceiverOutputObj.__pushKV("amount_sat", voutAsset.nValue);
+            oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nAsset));
             oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
         }
         oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
-        oAssetAllocationReceiversObj.__pushKV("total", nTotal);
+        oAssetAllocationReceiversObj.__pushKV("total", ValueFromAmount(nTotal, nAsset));
         oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
     }
 
@@ -88,11 +88,11 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const uint
                 nTotal += voutAsset.nValue;
                 UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
                 oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
-                oAssetAllocationReceiverOutputObj.__pushKV("amount_sat", voutAsset.nValue);
+                oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nAsset));
                 oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
             }
             oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
-            oAssetAllocationReceiversObj.__pushKV("total", nTotal);
+            oAssetAllocationReceiversObj.__pushKV("total", ValueFromAmount(nTotal, nAsset));
             oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
         }
         entry.__pushKV("allocations", oAssetAllocationReceiversArray);
@@ -118,11 +118,11 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
             nTotal += voutAsset.nValue;
             UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
             oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
-            oAssetAllocationReceiverOutputObj.__pushKV("amount_sat", voutAsset.nValue);
+            oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nAsset));
             oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
         }
         oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
-        oAssetAllocationReceiversObj.__pushKV("total", nTotal);
+        oAssetAllocationReceiversObj.__pushKV("total", ValueFromAmount(nTotal, nAsset));
         oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
     }
 
@@ -181,15 +181,19 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, const uint256 &hashB
     
     return found;
 }
-
-UniValue ValueFromAmount(const CAmount& amount)
+// SYSCOIN
+UniValue ValueFromAmount(const CAmount& amount, const uint32_t &nAsset)
 {
+    uint8_t nPrecision = 8;
+    if(nAsset > 0) {
+        GetAssetPrecision(nAsset, nPrecision);
+    }
     bool sign = amount < 0;
     int64_t n_abs = (sign ? -amount : amount);
     int64_t quotient = n_abs / COIN;
     int64_t remainder = n_abs % COIN;
     return UniValue(UniValue::VNUM,
-            strprintf("%s%d.%08d", sign ? "-" : "", quotient, remainder));
+            strprintf("%s%d.%0" + itostr(nPrecision) + "d", sign ? "-" : "", quotient, remainder));
 }
 std::string FormatScript(const CScript& script)
 {
