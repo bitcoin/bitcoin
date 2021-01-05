@@ -15,7 +15,7 @@
 #ifndef SRC_BLSPRIVATEKEY_HPP_
 #define SRC_BLSPRIVATEKEY_HPP_
 
-#include "relic_conf.h"
+#include <relic_conf.h>
 
 #if defined GMP && ARITH == GMP
 #include <gmp.h>
@@ -72,7 +72,6 @@ class PrivateKey {
     InsecureSignature SignInsecurePrehashed(const uint8_t *hash) const;
     Signature Sign(const uint8_t *msg, size_t len) const;
     Signature SignPrehashed(const uint8_t *hash) const;
-    bool CheckValid() const;
 
  public:
     // Don't allow public construction, force static methods

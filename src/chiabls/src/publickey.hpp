@@ -18,7 +18,7 @@
 #include <iostream>
 #include <vector>
 
-#include "relic_conf.h"
+#include <relic_conf.h>
 
 #if defined GMP && ARITH == GMP
 #include <gmp.h>
@@ -61,7 +61,6 @@ class PublicKey {
 
     // Returns the first 4 bytes of the serialized pk
     uint32_t GetFingerprint() const;
-    bool CheckValid() const;
 
  public:
     // Don't allow public construction, force static methods

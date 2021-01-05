@@ -21,24 +21,6 @@
 #include "bls.hpp"
 
 namespace bls {
-bool PublicKey::CheckValid() const {
-    if (g1_is_valid(*(g1_t*)&this->q) == 0)
-        return false;
-
-    // check if inside subgroup
-    g1_t point, unity, thisP;
-    bn_t order;
-    bn_new(order);
-
-    g1_get_ord(order);
-    g1_copy(thisP, this->q);
-    g1_mul(point, thisP, order);
-    ep_set_infty(unity);
-    if (g1_cmp(point, unity) != CMP_EQ)
-        return false;
-    bn_free(order);
-    return true;
-}
 PublicKey PublicKey::FromBytes(const uint8_t * key) {
     PublicKey pk = PublicKey();
     uint8_t uncompressed[PUBLIC_KEY_SIZE + 1];
@@ -50,18 +32,13 @@ PublicKey PublicKey::FromBytes(const uint8_t * key) {
         uncompressed[0] = 0x02;   // Insert extra byte for Y=0
     }
     g1_read_bin(pk.q, uncompressed, PUBLIC_KEY_SIZE + 1);
-    if(!pk.CheckValid()) {
-        throw std::invalid_argument("Given G1 element failed in_subgroup check");
-    }
     BLS::CheckRelicErrors();
     return pk;
 }
+
 PublicKey PublicKey::FromG1(const g1_t* pubKey) {
     PublicKey pk = PublicKey();
     g1_copy(pk.q, *pubKey);
-    if(!pk.CheckValid()) {
-        g1_set_infty(pk.q);
-    }
     return pk;
 }
 
@@ -70,9 +47,7 @@ PublicKey::PublicKey() {
 }
 
 PublicKey::PublicKey(const PublicKey &pubKey) {
-    if(pubKey.CheckValid()) {
-        g1_copy(q, pubKey.q);
-    }
+    g1_copy(q, pubKey.q);
 }
 
 PublicKey PublicKey::AggregateInsecure(std::vector<PublicKey> const& pubKeys) {
@@ -130,9 +105,7 @@ PublicKey PublicKey::Aggregate(std::vector<PublicKey> const& pubKeys) {
         delete[] p;
     }
     delete[] computedTs;
-    if(!aggKey.CheckValid()) {
-        throw std::invalid_argument("Given G1 element failed in_subgroup check");
-    }
+
     BLS::CheckRelicErrors();
     return aggKey;
 }
