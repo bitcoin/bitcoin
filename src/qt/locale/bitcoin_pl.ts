@@ -1341,6 +1341,14 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
         <translation>Wybierz pokazywanie lub nie funkcji kontroli monet.</translation>
     </message>
     <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation>Połącz się z siecią Bitcoin przy pomocy oddzielnego SOCKS5 proxy dla sieci TOR.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
+        <translation>Użyj oddzielnego proxy SOCKS&amp;5 aby osiągnąć węzły w ukrytych usługach Tor:</translation>
+    </message>
+    <message>
         <source>&amp;Third party transaction URLs</source>
         <translation>&amp;Zewnętrzny URL podglądu transakcji</translation>
     </message>
@@ -1503,12 +1511,24 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
         <translation>Nie udało się podpisać transakcji: %1</translation>
     </message>
     <message>
+        <source>Could not sign any more inputs.</source>
+        <translation>Nie udało się podpisać więcej wejść.</translation>
+    </message>
+    <message>
+        <source>Signed %1 inputs, but more signatures are still required.</source>
+        <translation>Podpisano %1 wejść, ale potrzebnych jest więcej podpisów.</translation>
+    </message>
+    <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
         <translation>transakcja</translation>
     </message>
     <message>
         <source>Unknown error processing transaction.</source>
         <translation>Nieznany błąd podczas przetwarzania transakcji.</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast failed: %1</source>
+        <translation>Nie udało się rozgłosić transakscji: %1</translation>
     </message>
     <message>
         <source>PSBT copied to clipboard.</source>
@@ -1543,10 +1563,34 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
         <translation>lub</translation>
     </message>
     <message>
+        <source>Transaction has %1 unsigned inputs.</source>
+        <translation>Transakcja ma %1 niepodpisane wejścia.</translation>
+    </message>
+    <message>
+        <source>Transaction is missing some information about inputs.</source>
+        <translation>Transakcja ma niekompletne informacje o niektórych wejściach.</translation>
+    </message>
+    <message>
         <source>Transaction still needs signature(s).</source>
         <translation>Transakcja ciągle oczekuje na podpis(y).</translation>
     </message>
-    </context>
+    <message>
+        <source>(But this wallet cannot sign transactions.)</source>
+        <translation>(Ale ten portfel nie może podipisać transakcji.)</translation>
+    </message>
+    <message>
+        <source>(But this wallet does not have the right keys.)</source>
+        <translation>(Ale ten portfel nie posiada wlaściwych kluczy.)</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation>Transakcja jest w pełni podpisana i gotowa do rozgłoszenia.</translation>
+    </message>
+    <message>
+        <source>Transaction status is unknown.</source>
+        <translation>Status transakcji nie jest znany.</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1710,6 +1754,10 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
     <message>
         <source>Error: %1</source>
         <translation>Błąd: %1</translation>
+    </message>
+    <message>
+        <source>Error initializing settings: %1</source>
+        <translation>Błąd inicjowania ustawień: %1</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
@@ -1888,6 +1936,10 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
     <message>
         <source>Node window</source>
         <translation>Okno węzła</translation>
+    </message>
+    <message>
+        <source>Current block height</source>
+        <translation>Obecna ilość bloków</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2160,7 +2212,11 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
         <source>Could not unlock wallet.</source>
         <translation>Nie można było odblokować portfela.</translation>
     </message>
-    </context>
+    <message>
+        <source>Could not generate new %1 address</source>
+        <translation>Nie udało się wygenerować nowego adresu %1</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -2473,6 +2529,10 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
         <translation>Możesz później zwiększyć opłatę (sygnalizuje podmień-przez-opłatę (RBF), BIP 125).</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>Proszę przejrzeć propozycję transakcji. Zostanie utworzona częściowo podpisana transakcja (ang. PSBT), którą można skopiować, a następnie podpisać np. offline z portfelem %1 lub z innym portfelem zgodnym z PSBT.</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -3379,8 +3439,16 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Błąd</translation>
     </message>
     <message>
+        <source>Unable to decode PSBT from clipboard (invalid base64)</source>
+        <translation>Nie udało się załadować częściowo podpisanej transakcji (nieważny base64)</translation>
+    </message>
+    <message>
         <source>Load Transaction Data</source>
         <translation>Wczytaj dane transakcji</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (*.psbt)</source>
+        <translation>Częściowo Podpisana Transakcja (*.psbt)</translation>
     </message>
     <message>
         <source>PSBT file must be smaller than 100 MiB</source>
@@ -3721,6 +3789,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Musisz przebudować bazę używając parametru -reindex aby wrócić do trybu pełnego. To spowoduje ponowne pobranie całego łańcucha bloków</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation>Błąd: Wystąpił fatalny błąd wewnętrzny, sprawdź szczegóły w debug.log</translation>
     </message>
     <message>
         <source>Disk space is too low!</source>
