@@ -22,7 +22,7 @@
 
 namespace bls {
 bool PublicKey::CheckValid() const {
-    if (g1_is_valid(*(g1_t*)&this->q) == 0)
+    if (g1_is_valid(this->q) == 0)
         return false;
 
     // check if inside subgroup
@@ -51,7 +51,7 @@ PublicKey PublicKey::FromBytes(const uint8_t * key) {
     }
     g1_read_bin(pk.q, uncompressed, PUBLIC_KEY_SIZE + 1);
     if(!pk.CheckValid()) {
-        throw std::invalid_argument("Given G1 element failed in_subgroup check");
+        g1_set_infty(pk.q);
     }
     BLS::CheckRelicErrors();
     return pk;
@@ -131,7 +131,7 @@ PublicKey PublicKey::Aggregate(std::vector<PublicKey> const& pubKeys) {
     }
     delete[] computedTs;
     if(!aggKey.CheckValid()) {
-        throw std::invalid_argument("Given G1 element failed in_subgroup check");
+        throw std::invalid_argument("Aggregate: Given G1 element failed in_subgroup check");
     }
     BLS::CheckRelicErrors();
     return aggKey;
