@@ -100,29 +100,30 @@ int SyscoinUnits::decimals(int unit)
     }
 }
 
-QString SyscoinUnits::format(int unit, const CAmount& _nIn, const uint32_t &nAsset, bool fPlus, SeparatorStyle separators, bool justify)
+QString SyscoinUnits::format(int unit, const CAmount& nIn, const uint32_t &nAsset, bool fPlus, SeparatorStyle separators, bool justify)
 {
     // SYSCOIN 
-    CAmount nIn = _nIn;   
-    if(nAsset > 0) {
-        uint8_t nPrecision;
-        if(GetAssetPrecision(nAsset, nPrecision))
-            nIn = AmountFromValue(ValueFromAssetAmount(_nIn, nPrecision));
+    qint64 coin;
+    int num_decimals;
+     uint8_t nPrecision;
+    if(nAsset > 0 && GetAssetPrecision(nAsset, nPrecision)) {
+        num_decimals = (int)nPrecision;
+        coin = (qint64)pow(10, num_decimals);
+    } else {
+        // Note: not using straight sprintf here because we do NOT want
+        // localized number formatting.
+        if(!valid(unit))
+            return QString(); // Refuse to format invalid unit
+        coin = factor(unit);
+        num_decimals = decimals(unit);
     }
-    // Note: not using straight sprintf here because we do NOT want
-    // localized number formatting.
-    if(!valid(unit))
-        return QString(); // Refuse to format invalid unit
     qint64 n = (qint64)nIn;
-    qint64 coin = factor(unit);
-    int num_decimals = decimals(unit);
     qint64 n_abs = (n > 0 ? n : -n);
     qint64 quotient = n_abs / coin;
     QString quotient_str = QString::number(quotient);
     if (justify) {
         quotient_str = quotient_str.rightJustified(MAX_DIGITS_SYS - num_decimals, ' ');
     }
-
     // Use SI-style thin space separators as these are locale independent and can't be
     // confused with the decimal marker.
     QChar thin_sp(THIN_SP_CP);
