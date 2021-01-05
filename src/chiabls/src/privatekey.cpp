@@ -21,7 +21,7 @@
 #include "privatekey.hpp"
 namespace bls {
 bool PrivateKey::CheckValid() const {
-    if (g2_is_valid(*(g2_t*)this->keydata) == 0)
+    if (g2_is_valid(*(g2_t*)&this->keydata) == 0)
        return false;
 
     // check if inside subgroup
@@ -83,7 +83,7 @@ PrivateKey PrivateKey::FromBytes(const uint8_t* bytes, bool modOrder) {
         }
     }
     if(!k.CheckValid()) {
-        throw std::invalid_argument("FromBytes: Given G2 element failed in_subgroup check");
+        throw std::invalid_argument("Given G2 element failed in_subgroup check");
     }
     return k;
 }
@@ -188,7 +188,7 @@ PrivateKey PrivateKey::Aggregate(std::vector<PrivateKey> const& privateKeys,
 
     BLS::CheckRelicErrors();
     if(!aggKey.CheckValid()) {
-        throw std::invalid_argument("Aggregate: Given G2 element failed in_subgroup check");
+        throw std::invalid_argument("Given G2 element failed in_subgroup check");
     }
     return aggKey;
 }

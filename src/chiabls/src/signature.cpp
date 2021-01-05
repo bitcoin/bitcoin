@@ -144,7 +144,7 @@ std::vector<uint8_t> InsecureSignature::Serialize() const {
 }
 
 bool operator==(InsecureSignature const &a, InsecureSignature const &b) {
-    return g2_cmp(*(g2_t*)&a.sig, *(g2_t*)&b.sig) == CMP_EQ;
+    return g2_cmp(*(g2_t*)&a.sig, *(g2_t*)b.sig) == CMP_EQ;
 }
 
 bool operator!=(InsecureSignature const &a, InsecureSignature const &b) {
