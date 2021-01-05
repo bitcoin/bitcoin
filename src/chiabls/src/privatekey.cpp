@@ -181,9 +181,6 @@ PrivateKey PrivateKey::Aggregate(std::vector<PrivateKey> const& privateKeys,
         delete[] p;
     }
     delete[] computedTs;
-    if(!aggKey.CheckValid()) {
-        throw std::invalid_argument("Aggregate: Given G2 element failed in_subgroup check");
-    }
     BLS::CheckRelicErrors();
     return aggKey;
 }

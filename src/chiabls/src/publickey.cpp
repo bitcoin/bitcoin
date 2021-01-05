@@ -128,9 +128,6 @@ PublicKey PublicKey::Aggregate(std::vector<PublicKey> const& pubKeys) {
         delete[] p;
     }
     delete[] computedTs;
-    if(!aggKey.CheckValid()) {
-        throw std::invalid_argument("Aggregate: Given G1 element failed in_subgroup check");
-    }
     BLS::CheckRelicErrors();
     return aggKey;
 }
