@@ -15,7 +15,7 @@ import os
 from itertools import islice
 from base58 import b58encode_chk, b58decode_chk, b58chars
 import random
-from segwit_addr import bech32_encode, decode_segwit_address, convertbits, CHARSET
+from segwit_addr import bech32_encode, decode_segwit_address, convertbits, CHARSET, Encoding
 
 # key types
 PUBKEY_ADDRESS = 0
@@ -32,6 +32,7 @@ PRIVKEY_REGTEST = 239
 OP_0 = 0x00
 OP_1 = 0x51
 OP_2 = 0x52
+OP_3 = 0x53
 OP_16 = 0x60
 OP_DUP = 0x76
 OP_EQUAL = 0x87
@@ -44,6 +45,7 @@ script_prefix = (OP_HASH160, 20)
 script_suffix = (OP_EQUAL,)
 p2wpkh_prefix = (OP_0, 20)
 p2wsh_prefix = (OP_0, 32)
+p2tr_prefix = (OP_1, 32)
 
 metadata_keys = ['isPrivkey', 'chain', 'isCompressed', 'tryCaseFlip']
 # templates for valid sequences
@@ -65,29 +67,39 @@ templates = [
 ]
 # templates for valid bech32 sequences
 bech32_templates = [
-  # hrp, version, witprog_size, metadata, output_prefix
-  ('bc',    0, 20, (False, 'main',    None, True), p2wpkh_prefix),
-  ('bc',    0, 32, (False, 'main',    None, True), p2wsh_prefix),
-  ('bc',    1,  2, (False, 'main',    None, True), (OP_1, 2)),
-  ('tb',    0, 20, (False, 'test',    None, True), p2wpkh_prefix),
-  ('tb',    0, 32, (False, 'test',    None, True), p2wsh_prefix),
-  ('tb',    2, 16, (False, 'test',    None, True), (OP_2, 16)),
-  ('bcrt',  0, 20, (False, 'regtest', None, True), p2wpkh_prefix),
-  ('bcrt',  0, 32, (False, 'regtest', None, True), p2wsh_prefix),
-  ('bcrt', 16, 40, (False, 'regtest', None, True), (OP_16, 40))
+  # hrp, version, witprog_size, metadata, encoding, output_prefix
+  ('bc',    0, 20, (False, 'main',    None, True), Encoding.BECH32,  p2wpkh_prefix),
+  ('bc',    0, 32, (False, 'main',    None, True), Encoding.BECH32,  p2wsh_prefix),
+  ('bc',    1, 32, (False, 'main',    None, True), Encoding.BECH32M, p2tr_prefix),
+  ('bc',    2,  2, (False, 'main',    None, True), Encoding.BECH32M, (OP_2, 2)),
+  ('tb',    0, 20, (False, 'test',    None, True), Encoding.BECH32,  p2wpkh_prefix),
+  ('tb',    0, 32, (False, 'test',    None, True), Encoding.BECH32,  p2wsh_prefix),
+  ('tb',    1, 32, (False, 'test',    None, True), Encoding.BECH32M, p2tr_prefix),
+  ('tb',    3, 16, (False, 'test',    None, True), Encoding.BECH32M, (OP_3, 16)),
+  ('bcrt',  0, 20, (False, 'regtest', None, True), Encoding.BECH32,  p2wpkh_prefix),
+  ('bcrt',  0, 32, (False, 'regtest', None, True), Encoding.BECH32,  p2wsh_prefix),
+  ('bcrt',  1, 32, (False, 'regtest', None, True), Encoding.BECH32M, p2tr_prefix),
+  ('bcrt', 16, 40, (False, 'regtest', None, True), Encoding.BECH32M, (OP_16, 40))
 ]
 # templates for invalid bech32 sequences
 bech32_ng_templates = [
-  # hrp, version, witprog_size, invalid_bech32, invalid_checksum, invalid_char
-  ('tc',    0, 20, False, False, False),
-  ('tb',   17, 32, False, False, False),
-  ('bcrt',  3,  1, False, False, False),
-  ('bc',   15, 41, False, False, False),
-  ('tb',    0, 16, False, False, False),
-  ('bcrt',  0, 32, True,  False, False),
-  ('bc',    0, 16, True,  False, False),
-  ('tb',    0, 32, False, True,  False),
-  ('bcrt',  0, 20, False, False, True)
+  # hrp, version, witprog_size, encoding, invalid_bech32, invalid_checksum, invalid_char
+  ('tc',    0, 20, Encoding.BECH32,  False, False, False),
+  ('bt',    1, 32, Encoding.BECH32M, False, False, False),
+  ('tb',   17, 32, Encoding.BECH32M, False, False, False),
+  ('bcrt',  3,  1, Encoding.BECH32M, False, False, False),
+  ('bc',   15, 41, Encoding.BECH32M, False, False, False),
+  ('tb',    0, 16, Encoding.BECH32,  False, False, False),
+  ('bcrt',  0, 32, Encoding.BECH32,  True,  False, False),
+  ('bc',    0, 16, Encoding.BECH32,  True,  False, False),
+  ('tb',    0, 32, Encoding.BECH32,  False, True,  False),
+  ('bcrt',  0, 20, Encoding.BECH32,  False, False, True),
+  ('bc',    0, 20, Encoding.BECH32M, False, False, False),
+  ('tb',    0, 32, Encoding.BECH32M, False, False, False),
+  ('bcrt',  0, 20, Encoding.BECH32M, False, False, False),
+  ('bc',    1, 32, Encoding.BECH32,  False, False, False),
+  ('tb',    2, 16, Encoding.BECH32,  False, False, False),
+  ('bcrt', 16, 20, Encoding.BECH32,  False, False, False),
 ]
 
 def is_valid(v):
@@ -127,8 +139,9 @@ def gen_valid_bech32_vector(template):
     hrp = template[0]
     witver = template[1]
     witprog = bytearray(os.urandom(template[2]))
-    dst_prefix = bytearray(template[4])
-    rv = bech32_encode(hrp, [witver] + convertbits(witprog, 8, 5))
+    encoding = template[4]
+    dst_prefix = bytearray(template[5])
+    rv = bech32_encode(hrp, [witver] + convertbits(witprog, 8, 5), encoding)
     return rv, dst_prefix + witprog
 
 def gen_valid_vectors():
@@ -186,22 +199,23 @@ def gen_invalid_bech32_vector(template):
     hrp = template[0]
     witver = template[1]
     witprog = bytearray(os.urandom(template[2]))
+    encoding = template[3]
 
     if no_data:
-        rv = bech32_encode(hrp, [])
+        rv = bech32_encode(hrp, [], encoding)
     else:
         data = [witver] + convertbits(witprog, 8, 5)
-        if template[3] and not no_data:
+        if template[4] and not no_data:
             if template[2] % 5 in {2, 4}:
                 data[-1] |= 1
             else:
                 data.append(0)
-        rv = bech32_encode(hrp, data)
+        rv = bech32_encode(hrp, data, encoding)
 
-    if template[4]:
+    if template[5]:
         i = len(rv) - random.randrange(1, 7)
         rv = rv[:i] + random.choice(CHARSET.replace(rv[i], '')) + rv[i + 1:]
-    if template[5]:
+    if template[6]:
         i = len(hrp) + 1 + random.randrange(0, len(rv) - len(hrp) - 4)
         rv = rv[:i] + rv[i:i + 4].upper() + rv[i + 4:]
 
