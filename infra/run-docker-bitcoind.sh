@@ -36,6 +36,8 @@ BITCOIN_PORT=38333
 BLOCKSCRIPT="51210268b28e68c3263379cc70fd0711daa6647f2b4c86eb5ab9c91c6bbd0a77ab616f2102482a952da354c4997e9e59bdb49a6ee2fb0214bb207e637557fc5e5beb20185552ae"
 
 RPC_PORT=38332
+ZMQ_PUBHASHTX_PORT=29010
+ZMQ_PUBRAWBLOCK_PORT=29009
 
 errecho() {
     # prints to stderr
@@ -53,8 +55,12 @@ docker run \
 	--env BITCOIN_PORT="${BITCOIN_PORT}" \
 	--env BLOCKSCRIPT="${BLOCKSCRIPT}" \
 	--env RPC_PORT="${RPC_PORT}" \
+	--env ZMQ_PUBHASHTX_PORT="${ZMQ_PUBHASHTX_PORT}" \
+	--env ZMQ_PUBRAWBLOCK_PORT="${ZMQ_PUBRAWBLOCK_PORT}" \
 	--publish "${BITCOIN_PORT}":"${BITCOIN_PORT}" \
 	--publish "${RPC_PORT}":"${RPC_PORT}" \
+	--publish "${ZMQ_PUBHASHTX_PORT}":"${ZMQ_PUBHASHTX_PORT}" \
+	--publish "${ZMQ_PUBRAWBLOCK_PORT}":"${ZMQ_PUBRAWBLOCK_PORT}" \
 	--tmpfs /opt/itcoin-core/configdir \
 	--mount type=bind,source="${EXTERNAL_DATADIR}",target="${INTERNAL_DATADIR}" \
 	"${ITCOIN_IMAGE}" \

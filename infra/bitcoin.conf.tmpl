@@ -25,8 +25,17 @@ rpcbind=0.0.0.0
 # environment variable, based on a value computed by the orchestrator.
 rpcallowip=0.0.0.0/0
 
+# Enable publishing of transaction hashes.
+zmqpubhashtx=tcp://0.0.0.0:${ZMQ_PUBHASHTX_PORT}
+
+# Enable publishing of raw block hex.
+zmqpubrawblock=tcp://0.0.0.0:${ZMQ_PUBRAWBLOCK_PORT}
+
 # print logs for the bitcoin protocol events
 debug=net
 
 # print logs for the RPC events (from bitcoin-cli)
 debug=http
+
+# print logs for ZeroMQ events
+debug=zmq
