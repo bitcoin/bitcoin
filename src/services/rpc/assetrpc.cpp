@@ -39,8 +39,8 @@ bool BuildAssetJson(const CAsset& asset, const uint32_t& nAsset, UniValue& oAsse
         asset.auxFeeDetails.ToJson(value);
 		oAsset.__pushKV("auxfee", value);
     }
-	oAsset.__pushKV("total_supply", asset.nTotalSupply);
-	oAsset.__pushKV("max_supply", asset.nMaxSupply);
+	oAsset.__pushKV("total_supply", ValueFromAmount(asset.nTotalSupply, nAsset));
+	oAsset.__pushKV("max_supply", ValueFromAmount(asset.nMaxSupply, nAsset));
 	oAsset.__pushKV("updatecapability_flags", asset.nUpdateCapabilityFlags);
 	oAsset.__pushKV("precision", asset.nPrecision);
 	return true;
