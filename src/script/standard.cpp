@@ -198,9 +198,9 @@ TxoutType Solver(const CScript& scriptPubKey, std::vector<std::vector<unsigned c
     int required;
     std::vector<std::vector<unsigned char>> keys;
     if (MatchMultisig(scriptPubKey, required, keys)) {
-        vSolutionsRet.push_back({static_cast<unsigned char>(required)}); // safe as required is in range 1..16
+        vSolutionsRet.push_back({static_cast<unsigned char>(required)}); // safe as required is in range 1..20
         vSolutionsRet.insert(vSolutionsRet.end(), keys.begin(), keys.end());
-        vSolutionsRet.push_back({static_cast<unsigned char>(keys.size())}); // safe as size is in range 1..16
+        vSolutionsRet.push_back({static_cast<unsigned char>(keys.size())}); // safe as size is in range 1..20
         return TxoutType::MULTISIG;
     }
 
@@ -350,10 +350,11 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
 {
     CScript script;
 
-    script << CScript::EncodeOP_N(nRequired);
+    script << nRequired;
     for (const CPubKey& key : keys)
         script << ToByteVector(key);
-    script << CScript::EncodeOP_N(keys.size()) << OP_CHECKMULTISIG;
+    script << keys.size() << OP_CHECKMULTISIG;
+
     return script;
 }
 
