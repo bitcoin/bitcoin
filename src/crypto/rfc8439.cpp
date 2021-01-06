@@ -28,8 +28,8 @@ inline size_t padded16_size(size_t len)
     return (len % 16 == 0) ? len : (len / 16 + 1) * 16;
 }
 
-std::array<std::byte, POLY1305_TAGLEN> ComputeRFC8439Tag(const std::array<std::byte, POLY1305_KEYLEN>& polykey,
-                                                         Span<const std::byte> aad, Span<const std::byte> ciphertext)
+std::array<std::byte, RFC8439_TAGLEN> ComputeRFC8439Tag(const std::array<std::byte, POLY1305_KEYLEN>& polykey,
+                                                        Span<const std::byte> aad, Span<const std::byte> ciphertext)
 {
     std::vector<std::byte> bytes_to_authenticate;
     auto padded_aad_size = padded16_size(aad.size());
@@ -40,7 +40,7 @@ std::array<std::byte, POLY1305_TAGLEN> ComputeRFC8439Tag(const std::array<std::b
     WriteLE64(reinterpret_cast<unsigned char*>(bytes_to_authenticate.data()) + padded_aad_size + padded_ciphertext_size, aad.size());
     WriteLE64(reinterpret_cast<unsigned char*>(bytes_to_authenticate.data()) + padded_aad_size + padded_ciphertext_size + 8, ciphertext.size());
 
-    std::array<std::byte, POLY1305_TAGLEN> ret_tag;
+    std::array<std::byte, RFC8439_TAGLEN> ret_tag;
     poly1305_auth(reinterpret_cast<unsigned char*>(ret_tag.data()),
                   reinterpret_cast<const unsigned char*>(bytes_to_authenticate.data()),
                   bytes_to_authenticate.size(),
@@ -83,7 +83,7 @@ RFC8439Encrypted RFC8439Encrypt(Span<const std::byte> aad, Span<const std::byte>
 RFC8439Decrypted RFC8439Decrypt(Span<const std::byte> aad, Span<const std::byte> key, const std::array<std::byte, 12>& nonce, const RFC8439Encrypted& encrypted)
 {
     assert(key.size() == RFC8439_KEYLEN);
-    assert(encrypted.tag.size() == POLY1305_TAGLEN);
+    assert(encrypted.tag.size() == RFC8439_TAGLEN);
 
     RFC8439Decrypted ret;
 

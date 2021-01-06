@@ -13,16 +13,16 @@
 #include <vector>
 
 constexpr static size_t RFC8439_KEYLEN = 32;
+constexpr static size_t RFC8439_TAGLEN = POLY1305_TAGLEN;
 
 struct RFC8439Encrypted {
     std::vector<std::byte> ciphertext;
-    std::array<std::byte, POLY1305_TAGLEN> tag;
+    std::array<std::byte, RFC8439_TAGLEN> tag;
 };
 
 struct RFC8439Decrypted {
     bool success;
     std::vector<std::byte> plaintext;
-    std::array<std::byte, POLY1305_TAGLEN> tag;
 };
 
 RFC8439Encrypted RFC8439Encrypt(Span<const std::byte> aad, Span<const std::byte> key, const std::array<std::byte, 12>& nonce, Span<const std::byte> plaintext);
