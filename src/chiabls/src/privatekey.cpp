@@ -20,22 +20,6 @@
 #include "util.hpp"
 #include "privatekey.hpp"
 namespace bls {
-bool PrivateKey::CheckValid() const {
-    if (g2_is_valid(*(g2_t*)this->keydata) == 0)
-       return false;
-
-    // check if inside subgroup
-    g2_t point, unity;
-    bn_t order;
-    bn_new(order);
-    g2_get_ord(order);
-    g2_mul(point, *(g2_t*)this->keydata, order);
-    ep2_set_infty(unity);
-    if (g2_cmp(point, unity) != CMP_EQ)
-        return false;
-    bn_free(order);
-    return true;
-}
 PrivateKey PrivateKey::FromSeed(const uint8_t* seed, size_t seedLen) {
     // "BLS private key seed" in ascii
     const uint8_t hmacKey[] = {66, 76, 83, 32, 112, 114, 105, 118, 97, 116, 101,
@@ -62,9 +46,6 @@ PrivateKey PrivateKey::FromSeed(const uint8_t* seed, size_t seedLen) {
 
     Util::SecFree(skBn);
     Util::SecFree(hash);
-    if(!k.CheckValid()){
-        bn_zero(*k.keydata);
-    }
     return k;
 }
 
@@ -81,9 +62,6 @@ PrivateKey PrivateKey::FromBytes(const uint8_t* bytes, bool modOrder) {
         if (bn_cmp(*k.keydata, ord) > 0) {
             throw std::invalid_argument("Key data too large, must be smaller than group order");
         }
-    }
-    if(!k.CheckValid()) {
-        throw std::invalid_argument("FromBytes: Given G2 element failed in_subgroup check");
     }
     return k;
 }

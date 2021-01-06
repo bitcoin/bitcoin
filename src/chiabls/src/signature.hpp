@@ -65,7 +65,7 @@ class InsecureSignature {
     friend bool operator!=(InsecureSignature const &a, InsecureSignature const &b);
     friend std::ostream &operator<<(std::ostream &os, InsecureSignature const &s);
     InsecureSignature& operator=(const InsecureSignature& rhs);
-
+    bool CheckValid() const;
  public:
     // Prevent public construction, force static method
     InsecureSignature();

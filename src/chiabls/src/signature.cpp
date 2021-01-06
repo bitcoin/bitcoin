@@ -22,6 +22,22 @@
 
 using std::string;
 namespace bls {
+bool InsecureSignature::CheckValid() const {
+    if (g2_is_valid(*(g2_t*)&this->sig) == 0)
+       return false;
+
+    // check if inside subgroup
+    g2_t point, unity;
+    bn_t order;
+    bn_new(order);
+    g2_get_ord(order);
+    g2_mul(point, *(g2_t*)&this->sig, order);
+    ep2_set_infty(unity);
+    if (g2_cmp(point, unity) != CMP_EQ)
+        return false;
+    bn_free(order);
+    return true;
+}
 InsecureSignature InsecureSignature::FromBytes(const uint8_t *data) {
     InsecureSignature sigObj = InsecureSignature();
     uint8_t uncompressed[SIGNATURE_SIZE + 1];
@@ -33,6 +49,9 @@ InsecureSignature InsecureSignature::FromBytes(const uint8_t *data) {
         uncompressed[0] = 0x02;   // Insert extra byte for Y=0
     }
     g2_read_bin(sigObj.sig, uncompressed, SIGNATURE_SIZE + 1);
+    if(!sigObj.CheckValid()){
+        g2_set_infty(sigObj.sig);
+    }
     BLS::CheckRelicErrors();
     return sigObj;
 }
@@ -40,6 +59,9 @@ InsecureSignature InsecureSignature::FromBytes(const uint8_t *data) {
 InsecureSignature InsecureSignature::FromG2(const g2_t* element) {
     InsecureSignature sigObj = InsecureSignature();
     g2_copy(sigObj.sig, *(g2_t*)element);
+    if(!sigObj.CheckValid()) {
+        g2_set_infty(sigObj.sig);
+    }
     return sigObj;
 }
 
