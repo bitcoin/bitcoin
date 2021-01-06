@@ -58,12 +58,12 @@ class AssetReOrgTest(SyscoinTestFramework):
         self.sync_blocks()
         assetInfo = self.nodes[0].assetinfo(self.asset)
         assert_equal(assetInfo['asset_guid'], self.asset)
-        assert_equal(assetInfo['total_supply'], 10000000000)
+        assert_equal(assetInfo['total_supply'], 100.00000000)
         assetInfo = self.nodes[1].assetinfo(self.asset)
-        assert_equal(assetInfo['total_supply'], 10000000000)
+        assert_equal(assetInfo['total_supply'], 100.00000000)
         assert_equal(assetInfo['asset_guid'], self.asset)
         assetInfo = self.nodes[2].assetinfo(self.asset)
-        assert_equal(assetInfo['total_supply'], 10000000000)
+        assert_equal(assetInfo['total_supply'], 100.00000000)
         # revert back to before supply was created
         self.nodes[0].invalidateblock(blockhash)
         self.nodes[1].invalidateblock(blockhash)
@@ -83,12 +83,12 @@ class AssetReOrgTest(SyscoinTestFramework):
         self.nodes[2].reconsiderblock(blockhash)
         assetInfo = self.nodes[0].assetinfo(self.asset)
         assert_equal(assetInfo['asset_guid'], self.asset)
-        assert_equal(assetInfo['total_supply'], 10000000000)
+        assert_equal(assetInfo['total_supply'], 100.00000000)
         assetInfo = self.nodes[1].assetinfo(self.asset)
-        assert_equal(assetInfo['total_supply'], 10000000000)
+        assert_equal(assetInfo['total_supply'], 100.00000000)
         assert_equal(assetInfo['asset_guid'], self.asset)
         assetInfo = self.nodes[2].assetinfo(self.asset)
-        assert_equal(assetInfo['total_supply'], 10000000000)
+        assert_equal(assetInfo['total_supply'], 100.00000000)
 
 
     def basic_asset(self):
