@@ -3,8 +3,8 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <crypto/aes.h>
+#include <crypto/bip324_suite.h>
 #include <crypto/chacha20.h>
-#include <crypto/chacha_poly_aead.h>
 #include <crypto/hkdf_sha256_32.h>
 #include <crypto/hmac_sha256.h>
 #include <crypto/hmac_sha512.h>
@@ -28,6 +28,8 @@
 #include <vector>
 
 #include <boost/test/unit_test.hpp>
+
+static constexpr size_t CHACHA20_ROUND_OUTPUT = 64; // bytes;
 
 BOOST_FIXTURE_TEST_SUITE(crypto_tests, BasicTestingSetup)
 
@@ -849,129 +851,86 @@ BOOST_AUTO_TEST_CASE(hkdf_hmac_sha256_l32_tests)
                 "8da4e775a563c18f715f802a063c5a31b8a11f5c5ee1879ec3454e5f3c738d2d");
 }
 
-static void TestChaCha20Poly1305AEAD(bool must_succeed, unsigned int expected_aad_length, const std::string& hex_m, const std::string& hex_k1, const std::string& hex_k2, const std::string& hex_aad_keystream, const std::string& hex_encrypted_message, const std::string& hex_encrypted_message_seq_999)
+static void TestBIP324CipherSuite(const std::string& hex_contents, const std::string& hex_key_L, const std::string& hex_key_P, const std::string& hex_expected_output_seq_0, const std::string& hex_expected_output_seq_999)
 {
-    // we need two sequence numbers, one for the payload cipher instance...
-    uint32_t seqnr_payload = 0;
-    // ... and one for the AAD (length) cipher instance
-    uint32_t seqnr_aad = 0;
-    // we need to keep track of the position in the AAD cipher instance
-    // keystream since we use the same 64byte output 21 times
-    // (21 times 3 bytes length < 64)
-    int aad_pos = 0;
+    auto key_L_vec = ParseHex(hex_key_L);
+    BIP324Key key_L;
+    memcpy(key_L.data(), key_L_vec.data(), BIP324_KEY_LEN);
 
-    std::vector<unsigned char> aead_K_1 = ParseHex(hex_k1);
-    std::vector<unsigned char> aead_K_2 = ParseHex(hex_k2);
-    std::vector<unsigned char> plaintext_buf = ParseHex(hex_m);
-    std::vector<unsigned char> expected_aad_keystream = ParseHex(hex_aad_keystream);
-    std::vector<unsigned char> expected_ciphertext_and_mac = ParseHex(hex_encrypted_message);
-    std::vector<unsigned char> expected_ciphertext_and_mac_sequence999 = ParseHex(hex_encrypted_message_seq_999);
+    auto key_P_vec = ParseHex(hex_key_P);
+    BIP324Key key_P;
+    memcpy(key_P.data(), key_P_vec.data(), BIP324_KEY_LEN);
 
-    std::vector<unsigned char> ciphertext_buf(plaintext_buf.size() + POLY1305_TAGLEN, 0);
-    std::vector<unsigned char> plaintext_buf_new(plaintext_buf.size(), 0);
-    std::vector<unsigned char> cmp_ctx_buffer(64);
+    const auto original_contents_bytes = ParseHex(hex_contents);
+    auto contents_buf = original_contents_bytes;
+
+    std::vector<unsigned char> encrypted_pkt(BIP324_LENGTH_FIELD_LEN + BIP324_HEADER_LEN + contents_buf.size() + RFC8439_EXPANSION, 0);
+    std::vector<unsigned char> contents_buf_dec(contents_buf.size(), 0);
     uint32_t out_len = 0;
 
-    // create the AEAD instance
-    ChaCha20Poly1305AEAD aead(aead_K_1.data(), aead_K_1.size(), aead_K_2.data(), aead_K_2.size());
+    BIP324CipherSuite suite_enc(key_L, key_P);
+    BIP324CipherSuite suite_dec(key_L, key_P);
 
-    // create a chacha20 instance to compare against
-    ChaCha20 cmp_ctx(aead_K_1.data());
+    BIP324HeaderFlags flags{BIP324_NONE};
+    std::array<std::byte, BIP324_LENGTH_FIELD_LEN> encrypted_pkt_len;
 
-    // encipher
-    bool res = aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, ciphertext_buf.data(), ciphertext_buf.size(), plaintext_buf.data(), plaintext_buf.size(), true);
-    // make sure the operation succeeded if expected to succeed
-    BOOST_CHECK_EQUAL(res, must_succeed);
-    if (!res) return;
-
-    // verify ciphertext & mac against the test vector
-    BOOST_CHECK_EQUAL(expected_ciphertext_and_mac.size(), ciphertext_buf.size());
-    BOOST_CHECK(memcmp(ciphertext_buf.data(), expected_ciphertext_and_mac.data(), ciphertext_buf.size()) == 0);
-
-    // manually construct the AAD keystream
-    cmp_ctx.SetIV(seqnr_aad);
-    cmp_ctx.Seek64(0);
-    cmp_ctx.Keystream(cmp_ctx_buffer.data(), 64);
-    BOOST_CHECK(memcmp(expected_aad_keystream.data(), cmp_ctx_buffer.data(), expected_aad_keystream.size()) == 0);
-    // crypt the 3 length bytes and compare the length
-    uint32_t len_cmp = 0;
-    len_cmp = (ciphertext_buf[0] ^ cmp_ctx_buffer[aad_pos + 0]) |
-              (ciphertext_buf[1] ^ cmp_ctx_buffer[aad_pos + 1]) << 8 |
-              (ciphertext_buf[2] ^ cmp_ctx_buffer[aad_pos + 2]) << 16;
-    BOOST_CHECK_EQUAL(len_cmp, expected_aad_length);
-
-    // encrypt / decrypt 1000 packets
+    // encrypt / decrypt the packet 1000 times
     for (size_t i = 0; i < 1000; ++i) {
-        res = aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, ciphertext_buf.data(), ciphertext_buf.size(), plaintext_buf.data(), plaintext_buf.size(), true);
+        // encrypt
+        auto res = suite_enc.Crypt(MakeByteSpan(contents_buf), MakeWritableByteSpan(encrypted_pkt), flags, true);
         BOOST_CHECK(res);
-        BOOST_CHECK(aead.GetLength(&out_len, seqnr_aad, aad_pos, ciphertext_buf.data()));
-        BOOST_CHECK_EQUAL(out_len, expected_aad_length);
-        res = aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, plaintext_buf_new.data(), plaintext_buf_new.size(), ciphertext_buf.data(), ciphertext_buf.size(), false);
-        BOOST_CHECK(res);
-
-        // make sure we repetitive get the same plaintext
-        BOOST_CHECK(memcmp(plaintext_buf.data(), plaintext_buf_new.data(), plaintext_buf.size()) == 0);
-
-        // compare sequence number 999 against the test vector
-        if (seqnr_payload == 999) {
-            BOOST_CHECK(memcmp(ciphertext_buf.data(), expected_ciphertext_and_mac_sequence999.data(), expected_ciphertext_and_mac_sequence999.size()) == 0);
+        // verify ciphertext & mac against the test vector
+        if (i == 0) {
+            BOOST_CHECK_EQUAL(HexStr(encrypted_pkt), hex_expected_output_seq_0);
+        } else if (i == 999) {
+            BOOST_CHECK_EQUAL(HexStr(encrypted_pkt), hex_expected_output_seq_999);
         }
-        // set nonce and block counter, output the keystream
-        cmp_ctx.SetIV(seqnr_aad);
-        cmp_ctx.Seek64(0);
-        cmp_ctx.Keystream(cmp_ctx_buffer.data(), 64);
 
-        // crypt the 3 length bytes and compare the length
-        len_cmp = 0;
-        len_cmp = (ciphertext_buf[0] ^ cmp_ctx_buffer[aad_pos + 0]) |
-                  (ciphertext_buf[1] ^ cmp_ctx_buffer[aad_pos + 1]) << 8 |
-                  (ciphertext_buf[2] ^ cmp_ctx_buffer[aad_pos + 2]) << 16;
-        BOOST_CHECK_EQUAL(len_cmp, expected_aad_length);
+        memcpy(encrypted_pkt_len.data(), encrypted_pkt.data(), BIP324_LENGTH_FIELD_LEN);
+        out_len = suite_dec.DecryptLength(encrypted_pkt_len);
+        BOOST_CHECK_EQUAL(out_len, contents_buf.size());
 
-        // increment the sequence number(s)
-        // always increment the payload sequence number
-        // increment the AAD keystream position by its size (3)
-        // increment the AAD sequence number if we would hit the 64 byte limit
-        seqnr_payload++;
-        aad_pos += CHACHA20_POLY1305_AEAD_AAD_LEN;
-        if (aad_pos + CHACHA20_POLY1305_AEAD_AAD_LEN > CHACHA20_ROUND_OUTPUT) {
-            aad_pos = 0;
-            seqnr_aad++;
+        res = suite_dec.Crypt({reinterpret_cast<std::byte*>(encrypted_pkt.data()) + BIP324_LENGTH_FIELD_LEN, encrypted_pkt.size() - BIP324_LENGTH_FIELD_LEN}, MakeWritableByteSpan(contents_buf_dec), flags, false);
+        BOOST_CHECK(res);
+        BOOST_CHECK_EQUAL(flags, BIP324_NONE);
+
+        // make sure we always get the same plaintext
+        BOOST_CHECK_EQUAL(contents_buf_dec.size(), original_contents_bytes.size());
+        if (!original_contents_bytes.empty()) {
+            BOOST_CHECK_EQUAL(0, memcmp(contents_buf_dec.data(), original_contents_bytes.data(), original_contents_bytes.size()));
         }
     }
 }
 
-BOOST_AUTO_TEST_CASE(chacha20_poly1305_aead_testvector)
+BOOST_AUTO_TEST_CASE(bip324_cipher_suite_testvectors)
 {
-    /* test chacha20poly1305@bitcoin AEAD */
+    /* test bip324 cipher suite */
 
-    // must fail with no message
-    TestChaCha20Poly1305AEAD(false, 0,
-        "",
-        "0000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000", "", "", "");
+    // encrypting an empty message should result in 20 bytes:
+    // 3 bytes of encrypted length, 1 byte header and 16 bytes MAC
+    TestBIP324CipherSuite(/* plaintext */ "",
+                          /* k_l */ "0000000000000000000000000000000000000000000000000000000000000000",
+                          /* k_p */ "0000000000000000000000000000000000000000000000000000000000000000",
+                          /* ciphertext_and_mac_0 */ "76b8e09fbedcfd1809ff3c10adf8277fcc0581b8",
+                          /* ciphertext_and_mac_999 */ "5dd1ef229ae773099415b4ae56d003d21b4e4a08");
 
-    TestChaCha20Poly1305AEAD(true, 0,
-        /* m  */ "0000000000000000000000000000000000000000000000000000000000000000",
-        /* k1 (AAD) */ "0000000000000000000000000000000000000000000000000000000000000000",
-        /* k2 (payload) */ "0000000000000000000000000000000000000000000000000000000000000000",
-        /* AAD keystream */ "76b8e0ada0f13d90405d6ae55386bd28bdd219b8a08ded1aa836efcc8b770dc7da41597c5157488d7724e03fb8d84a376a43b8f41518a11cc387b669b2ee6586",
-        /* encrypted message & MAC */ "76b8e09f07e7be5551387a98ba977c732d080dcb0f29a048e3656912c6533e32d2fc11829c1b6c1df1f551cd6131ff08",
-        /* encrypted message & MAC at sequence 999 */ "b0a03d5bd2855d60699e7d3a3133fa47be740fe4e4c1f967555e2d9271f31c3aaa7aa16ec62c5e24f040c08bb20c3598");
-    TestChaCha20Poly1305AEAD(true, 1,
-        "0100000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000",
-        "0000000000000000000000000000000000000000000000000000000000000000",
-        "76b8e0ada0f13d90405d6ae55386bd28bdd219b8a08ded1aa836efcc8b770dc7da41597c5157488d7724e03fb8d84a376a43b8f41518a11cc387b669b2ee6586",
-        "77b8e09f07e7be5551387a98ba977c732d080dcb0f29a048e3656912c6533e32baf0c85b6dff8602b06cf52a6aefc62e",
-        "b1a03d5bd2855d60699e7d3a3133fa47be740fe4e4c1f967555e2d9271f31c3a8bd94d54b5ecabbc41ffbb0c90924080");
-    TestChaCha20Poly1305AEAD(true, 255,
-        "ff0000f195e66982105ffb640bb7757f579da31602fc93ec01ac56f85ac3c134a4547b733b46413042c9440049176905d3be59ea1c53f15916155c2be8241a38008b9a26bc35941e2444177c8ade6689de95264986d95889fb60e84629c9bd9a5acb1cc118be563eb9b3a4a472f82e09a7e778492b562ef7130e88dfe031c79db9d4f7c7a899151b9a475032b63fc385245fe054e3dd5a97a5f576fe064025d3ce042c566ab2c507b138db853e3d6959660996546cc9c4a6eafdc777c040d70eaf46f76dad3979e5c5360c3317166a1c894c94a371876a94df7628fe4eaaf2ccb27d5aaae0ad7ad0f9d4b6ad3b54098746d4524d38407a6deb3ab78fab78c9",
-        "ff0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
-        "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
-        "c640c1711e3ee904ac35c57ab9791c8a1c408603a90b77a83b54f6c844cb4b06d94e7fc6c800e165acd66147e80ec45a567f6ce66d05ec0cae679dceeb890017",
-        "3940c1e92da4582ff6f92a776aeb14d014d384eeb30f660dacf70a14a23fd31e91212701334e2ce1acf5199dc84f4d61ddbe6571bca5af874b4c9226c26e650995d157644e1848b96ed6c2102d5489a050e71d29a5a66ece11de5fb5c9558d54da28fe45b0bc4db4e5b88030bfc4a352b4b7068eccf656bae7ad6a35615315fc7c49d4200388d5eca67c2e822e069336c69b40db67e0f3c81209c50f3216a4b89fb3ae1b984b7851a2ec6f68ab12b101ab120e1ea7313bb93b5a0f71185c7fea017ddb92769861c29dba4fbc432280d5dff21b36d1c4c790128b22699950bb18bf74c448cdfe547d8ed4f657d8005fdc0cd7a050c2d46050a44c4376355858981fbe8b184288276e7a93eabc899c4a",
-        "f039c6689eaeef0456685200feaab9d54bbd9acde4410a3b6f4321296f4a8ca2604b49727d8892c57e005d799b2a38e85e809f20146e08eec75169691c8d4f54a0d51a1e1c7b381e0474eb02f994be9415ef3ffcbd2343f0601e1f3b172a1d494f838824e4df570f8e3b0c04e27966e36c82abd352d07054ef7bd36b84c63f9369afe7ed79b94f953873006b920c3fa251a771de1b63da927058ade119aa898b8c97e42a606b2f6df1e2d957c22f7593c1e2002f4252f4c9ae4bf773499e5cfcfe14dfc1ede26508953f88553bf4a76a802f6a0068d59295b01503fd9a600067624203e880fdf53933b96e1f4d9eb3f4e363dd8165a278ff667a41ee42b9892b077cefff92b93441f7be74cf10e6cd");
+    TestBIP324CipherSuite("0000000000000000000000000000000000000000000000000000000000000000",
+                          "0000000000000000000000000000000000000000000000000000000000000000",
+                          "0000000000000000000000000000000000000000000000000000000000000000",
+                          "56b8e09f07e7be5551387a98ba977c732d080dcb0f29a048e3656912c6533e32ee7aed29e7e38bb44c94b6a43c525ffca66c79e9",
+                          "7dd1ef2205b549ef8e0dc60b16342f037e415cfcd3d6111532f8f9e7553e422129d9df0d58e083ad538381c1e30a51a5d296cce2");
+
+    TestBIP324CipherSuite("0100000000000000000000000000000000000000000000000000000000000000",
+                          "0000000000000000000000000000000000000000000000000000000000000000",
+                          "0000000000000000000000000000000000000000000000000000000000000000",
+                          "56b8e09f06e7be5551387a98ba977c732d080dcb0f29a048e3656912c6533e32ee7aed2929449b86c1e4e213676824f2c48e5336",
+                          "7dd1ef2204b549ef8e0dc60b16342f037e415cfcd3d6111532f8f9e7553e422129d9df0d04fc5b2ab5cb70895a90edddbe642c00");
+
+    TestBIP324CipherSuite("fc0000f195e66982105ffb640bb7757f579da31602fc93ec01ac56f85ac3c134a4547b733b46413042c9440049176905d3be59ea1c53f15916155c2be8241a38008b9a26bc35941e2444177c8ade6689de95264986d95889fb60e84629c9bd9a5acb1cc118be563eb9b3a4a472f82e09a7e778492b562ef7130e88dfe031c79db9d4f7c7a899151b9a475032b63fc385245fe054e3dd5a97a5f576fe064025d3ce042c566ab2c507b138db853e3d6959660996546cc9c4a6eafdc777c040d70eaf46f76dad3979e5c5360c3317166a1c894c94a371876a94df7628fe4eaaf2ccb27d5aaae0ad7ad0f9d4b6ad3b54098746d4524d38407a6deb3ab78fab78c9",
+                          "ff0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+                          "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+                          "3940c1184442315c7340b89171039acb48f95287e66e56f7afa7cf00f95044d26fb69d46ac5c16a2d57a1cadc39160644717559e73480734410a3f543c5f231a7d7ed77af2a64681f6a7417283cef85504ac5de9fdea100e6c67ef7a1bfcd888a92a5f1ef2c9074b44b572aa748f29ff61a850ce40470004dff5cc1d926c5abe25ace47a12c5373094a26bab027e008154fb630aa062490b5421e96691a3f79557f7a79e3cfd9100796671ea241703ddf326f113adf1694bbd6e0ca032e16f936e7bfbf174e7ef4af5b53a6a9102e6fa41a8e589290f39a7bc7a6003088c612a43a36c2e9f2e740797ad3a2a1a80e0f67157fb9abc40487077368e94751a266a0b2dac24f0adabd5c6d7ba54316eee951da560",
+                          "2db339c8500d35db91994138b4ab5e698086b4ec7fb66e75d083b18f84a9da7d696be75c349cb1555a58f65f123d4b68e2be2277fd7b38ba26ad93040a22ac8f7782b00d75c7650dcff0442f7ef91980aaabecb2c8cefec5d5eb9d495b5e1768fe316ec2a0d69d46b7289cd2e2049f27d30a6183605651d48ac40e0d06af9ec7012d477e473f2af7842335c36acf4f5bdef45605ca243b9007b5363f095850a78945508cf3fa191b8fe7fc5359d6e00741e6504f1d50904152622f4c0bdeaa0745f00d28b995543621c96d9d9d30fa1fbf403b19a716411b1700e8401a3e1e01bb1546653fbda19d83ba5e561695baea229880ff33058f85754fe9fdc09db4491f47ae64ec030ec6163d2838d9474d40ef0579");
 }
 
 BOOST_AUTO_TEST_CASE(countbits_tests)

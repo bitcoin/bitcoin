@@ -9,10 +9,10 @@
 
 #include <cstring>
 
-#ifndef RFC8439_TIMINGSAFE_BCMP
-#define RFC8439_TIMINGSAFE_BCMP
+#ifndef HAVE_TIMINGSAFE_BCMP
+#define HAVE_TIMINGSAFE_BCMP
 
-int rfc8439_timingsafe_bcmp(const unsigned char* b1, const unsigned char* b2, size_t n)
+int timingsafe_bcmp(const unsigned char* b1, const unsigned char* b2, size_t n)
 {
     const unsigned char *p1 = b1, *p2 = b2;
     int ret = 0;
@@ -22,7 +22,7 @@ int rfc8439_timingsafe_bcmp(const unsigned char* b1, const unsigned char* b2, si
     return (ret != 0);
 }
 
-#endif // RFC8439_TIMINGSAFE_BCMP
+#endif // TIMINGSAFE_BCMP
 
 inline size_t padded16_size(size_t len)
 {
@@ -93,7 +93,7 @@ bool RFC8439Decrypt(const Span<const std::byte> aad, const Span<const std::byte>
 
     ComputeRFC8439Tag(polykey, aad, {input.data(), input.size() - POLY1305_TAGLEN}, tag);
 
-    if (rfc8439_timingsafe_bcmp(reinterpret_cast<const unsigned char*>(input.data() + input.size() - POLY1305_TAGLEN),
+    if (timingsafe_bcmp(reinterpret_cast<const unsigned char*>(input.data() + input.size() - POLY1305_TAGLEN),
                                 reinterpret_cast<const unsigned char*>(tag.data()), POLY1305_TAGLEN) != 0) {
         return false;
     }
