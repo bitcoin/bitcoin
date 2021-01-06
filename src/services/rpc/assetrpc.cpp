@@ -40,7 +40,6 @@ bool BuildAssetJson(const CAsset& asset, const uint32_t& nAsset, UniValue& oAsse
 		oAsset.__pushKV("auxfee", value);
     }
 	oAsset.__pushKV("total_supply", ValueFromAmount(asset.nTotalSupply, nAsset));
-    LogPrintf("max supply %s\n", ValueFromAmount(asset.nMaxSupply, nAsset).write());
 	oAsset.__pushKV("max_supply", ValueFromAmount(asset.nMaxSupply, nAsset));
 	oAsset.__pushKV("updatecapability_flags", asset.nUpdateCapabilityFlags);
 	oAsset.__pushKV("precision", asset.nPrecision);
