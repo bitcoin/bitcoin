@@ -1,7 +1,7 @@
 package=gmp
 $(package)_version=6.2.0
 $(package)_download_path=https://gmplib.org/download/gmp
-$(package)_file_name=gmp-$($(package)_version).tar.gz
+$(package)_file_name=gmp-$($(package)_version).tar.xz
 $(package)_sha256_hash=cadd49052b740ccc3d8075c24ceaefbe5128d44246d91d0ecc818b2f78b0ec9c
 
 define $(package)_set_vars
