@@ -1399,11 +1399,16 @@ void CConnman::CalculateNumConnectionsChangedStats()
     mapSentBytesMsgStats[NET_MESSAGE_COMMAND_OTHER] = 0;
     auto vNodesCopy = CopyNodeVector(CConnman::FullyConnectedOnly);
     for (auto pnode : vNodesCopy) {
-        LOCK(pnode->cs_vRecv);
-        for (const mapMsgCmdSize::value_type &i : pnode->mapRecvBytesPerMsgCmd)
-            mapRecvBytesMsgStats[i.first] += i.second;
-        for (const mapMsgCmdSize::value_type &i : pnode->mapSendBytesPerMsgCmd)
-            mapSentBytesMsgStats[i.first] += i.second;
+        {
+            LOCK(pnode->cs_vRecv);
+            for (const mapMsgCmdSize::value_type &i : pnode->mapRecvBytesPerMsgCmd)
+                mapRecvBytesMsgStats[i.first] += i.second;
+        }
+        {
+            LOCK(pnode->cs_vSend);
+            for (const mapMsgCmdSize::value_type &i : pnode->mapSendBytesPerMsgCmd)
+                mapSentBytesMsgStats[i.first] += i.second;
+        }
         if(pnode->fClient)
             spvNodes++;
         else
@@ -1877,11 +1882,9 @@ void CConnman::SocketHandler()
             break;
         }
 
-        LOCK(pnode->cs_vSend);
-        size_t nBytes = SocketSendData(pnode);
-        if (nBytes) {
-            RecordBytesSent(nBytes);
-        }
+        // Send data
+        size_t bytes_sent = WITH_LOCK(pnode->cs_vSend, return SocketSendData(pnode));
+        if (bytes_sent) RecordBytesSent(bytes_sent);
     }
 
     ReleaseNodeVector(vErrorNodes);
