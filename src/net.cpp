@@ -790,30 +790,30 @@ void V1TransportSerializer::prepareForTransport(CSerializedNetMsg& msg, std::vec
     CVectorWriter{SER_NETWORK, INIT_PROTO_VERSION, header, 0, hdr};
 }
 
-size_t CConnman::SocketSendData(CNode *pnode) const EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_vSend)
+size_t CConnman::SocketSendData(CNode& node) const
 {
-    auto it = pnode->vSendMsg.begin();
+    auto it = node.vSendMsg.begin();
     size_t nSentSize = 0;
 
-    while (it != pnode->vSendMsg.end()) {
-        const auto &data = *it;
-        assert(data.size() > pnode->nSendOffset);
+    while (it != node.vSendMsg.end()) {
+        const auto& data = *it;
+        assert(data.size() > node.nSendOffset);
         int nBytes = 0;
         {
-            LOCK(pnode->cs_hSocket);
-            if (pnode->hSocket == INVALID_SOCKET)
+            LOCK(node.cs_hSocket);
+            if (node.hSocket == INVALID_SOCKET)
                 break;
-            nBytes = send(pnode->hSocket, reinterpret_cast<const char*>(data.data()) + pnode->nSendOffset, data.size() - pnode->nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
+            nBytes = send(node.hSocket, reinterpret_cast<const char*>(data.data()) + node.nSendOffset, data.size() - node.nSendOffset, MSG_NOSIGNAL | MSG_DONTWAIT);
         }
         if (nBytes > 0) {
-            pnode->nLastSend = GetSystemTimeInSeconds();
-            pnode->nSendBytes += nBytes;
-            pnode->nSendOffset += nBytes;
+            node.nLastSend = GetSystemTimeInSeconds();
+            node.nSendBytes += nBytes;
+            node.nSendOffset += nBytes;
             nSentSize += nBytes;
-            if (pnode->nSendOffset == data.size()) {
-                pnode->nSendOffset = 0;
-                pnode->nSendSize -= data.size();
-                pnode->fPauseSend = pnode->nSendSize > nSendBufferMaxSize;
+            if (node.nSendOffset == data.size()) {
+                node.nSendOffset = 0;
+                node.nSendSize -= data.size();
+                node.fPauseSend = node.nSendSize > nSendBufferMaxSize;
                 it++;
             } else {
                 // could not send full message; stop sending more
@@ -823,10 +823,9 @@ size_t CConnman::SocketSendData(CNode *pnode) const EXCLUSIVE_LOCKS_REQUIRED(pno
             if (nBytes < 0) {
                 // error
                 int nErr = WSAGetLastError();
-                if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS)
-                {
+                if (nErr != WSAEWOULDBLOCK && nErr != WSAEMSGSIZE && nErr != WSAEINTR && nErr != WSAEINPROGRESS) {
                     LogPrintf("socket send error %s\n", NetworkErrorString(nErr));
-                    pnode->CloseSocketDisconnect();
+                    node.CloseSocketDisconnect();
                 }
             }
             // couldn't send anything at all
@@ -834,11 +833,11 @@ size_t CConnman::SocketSendData(CNode *pnode) const EXCLUSIVE_LOCKS_REQUIRED(pno
         }
     }
 
-    if (it == pnode->vSendMsg.end()) {
-        assert(pnode->nSendOffset == 0);
-        assert(pnode->nSendSize == 0);
+    if (it == node.vSendMsg.end()) {
+        assert(node.nSendOffset == 0);
+        assert(node.nSendSize == 0);
     }
-    pnode->vSendMsg.erase(pnode->vSendMsg.begin(), it);
+    node.vSendMsg.erase(node.vSendMsg.begin(), it);
     return nSentSize;
 }
 
@@ -1508,7 +1507,7 @@ void CConnman::SocketHandler()
 
         if (sendSet) {
             // Send data
-            size_t bytes_sent = WITH_LOCK(pnode->cs_vSend, return SocketSendData(pnode));
+            size_t bytes_sent = WITH_LOCK(pnode->cs_vSend, return SocketSendData(*pnode));
             if (bytes_sent) RecordBytesSent(bytes_sent);
         }
 
@@ -2992,7 +2991,7 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 
         // If write queue empty, attempt "optimistic write"
         if (optimisticSend == true)
-            nBytesSent = SocketSendData(pnode);
+            nBytesSent = SocketSendData(*pnode);
     }
     if (nBytesSent)
         RecordBytesSent(nBytesSent);
