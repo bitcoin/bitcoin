@@ -6,6 +6,7 @@ import time
 from decimal import Decimal
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
+ZDAG_NOT_FOUND = -1
 ZDAG_STATUS_OK = 0
 ZDAG_WARNING_RBF = 1
 ZDAG_WARNING_NOT_ZDAG_TX = 2
