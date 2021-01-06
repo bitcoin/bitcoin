@@ -223,47 +223,84 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
 {
     const CChainParams& chainparams = Params();
     auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
+    auto connman = MakeUnique<CConnmanTest>(0x1337, 0x1337);
     auto peerLogic = std::make_unique<PeerManager>(chainparams, *connman, banman.get(), *m_node.scheduler,
                                                    *m_node.chainman, *m_node.mempool, false);
 
+    std::vector<CNode*> nodes(3);
+
     banman->ClearBanned();
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
-    CNode dummyNode1(id++, NODE_NETWORK, INVALID_SOCKET, addr1, 0, 0, CAddress(), "", ConnectionType::INBOUND);
-    dummyNode1.SetCommonVersion(PROTOCOL_VERSION);
-    peerLogic->InitializeNode(&dummyNode1);
-    dummyNode1.fSuccessfullyConnected = true;
-    peerLogic->Misbehaving(dummyNode1.GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ ""); // Should be discouraged
+    nodes[0] = new CNode(id++, NODE_NETWORK, INVALID_SOCKET, addr1, 0, 0, CAddress(), "", ConnectionType::INBOUND);
+    nodes[0]->SetCommonVersion(PROTOCOL_VERSION);
+    peerLogic->InitializeNode(nodes[0]);
+    nodes[0]->fSuccessfullyConnected = true;
+    connman->AddNode(*nodes[0]);
+    peerLogic->Misbehaving(nodes[0]->GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ ""); // Should be discouraged
     {
-        LOCK(dummyNode1.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
+        LOCK(nodes[0]->cs_sendProcessing);
+        BOOST_CHECK(peerLogic->SendMessages(nodes[0]));
     }
     BOOST_CHECK(banman->IsDiscouraged(addr1));
+    BOOST_CHECK(nodes[0]->fDisconnect);
     BOOST_CHECK(!banman->IsDiscouraged(ip(0xa0b0c001|0x0000ff00))); // Different IP, not discouraged
 
     CAddress addr2(ip(0xa0b0c002), NODE_NONE);
-    CNode dummyNode2(id++, NODE_NETWORK, INVALID_SOCKET, addr2, 1, 1, CAddress(), "", ConnectionType::INBOUND);
-    dummyNode2.SetCommonVersion(PROTOCOL_VERSION);
-    peerLogic->InitializeNode(&dummyNode2);
-    dummyNode2.fSuccessfullyConnected = true;
-    peerLogic->Misbehaving(dummyNode2.GetId(), DISCOURAGEMENT_THRESHOLD - 1, /* message */ "");
+    nodes[1] = new CNode(id++, NODE_NETWORK, INVALID_SOCKET, addr2, 1, 1, CAddress(), "", ConnectionType::INBOUND);
+    nodes[1]->SetCommonVersion(PROTOCOL_VERSION);
+    peerLogic->InitializeNode(nodes[1]);
+    nodes[1]->fSuccessfullyConnected = true;
+    connman->AddNode(*nodes[1]);
+    peerLogic->Misbehaving(nodes[1]->GetId(), DISCOURAGEMENT_THRESHOLD - 1, /* message */ "");
     {
-        LOCK(dummyNode2.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode2));
+        LOCK(nodes[1]->cs_sendProcessing);
+        BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
     }
     BOOST_CHECK(!banman->IsDiscouraged(addr2)); // 2 not discouraged yet...
+    BOOST_CHECK(!nodes[1]->fDisconnect);
     BOOST_CHECK(banman->IsDiscouraged(addr1));  // ... but 1 still should be
-    peerLogic->Misbehaving(dummyNode2.GetId(), 1, /* message */ "");         // 2 reaches discouragement threshold
+    BOOST_CHECK(nodes[0]->fDisconnect);
+    peerLogic->Misbehaving(nodes[1]->GetId(), 1, /* message */ "");         // 2 reaches discouragement threshold
     {
-        LOCK(dummyNode2.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode2));
+        LOCK(nodes[1]->cs_sendProcessing);
+        BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
     }
-    BOOST_CHECK(banman->IsDiscouraged(addr1));  // Expect both 1 and 2
-    BOOST_CHECK(banman->IsDiscouraged(addr2));  // to be discouraged now
+    // Expect both 1 and 2 to be discouraged now.
+    BOOST_CHECK(banman->IsDiscouraged(addr1));
+    BOOST_CHECK(nodes[0]->fDisconnect);
+    BOOST_CHECK(banman->IsDiscouraged(addr2));
+    BOOST_CHECK(nodes[1]->fDisconnect);
+
+    // Make sure non-IP peers get discouraged and disconnected properly.
+
+    CNetAddr tor_netaddr;
+    BOOST_REQUIRE(
+        tor_netaddr.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"));
+
+    const CAddress addr3(CService(tor_netaddr, Params().GetDefaultPort()), NODE_NONE);
+    nodes[2] = new CNode(id++, NODE_NETWORK, INVALID_SOCKET, addr3, 1, 1, CAddress(), "",
+                         ConnectionType::OUTBOUND_FULL_RELAY);
+    nodes[2]->SetCommonVersion(PROTOCOL_VERSION);
+    peerLogic->InitializeNode(nodes[2]);
+    connman->AddNode(*nodes[2]);
+    nodes[2]->fSuccessfullyConnected = true;
+    peerLogic->Misbehaving(nodes[2]->GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ "");
+    {
+        LOCK(nodes[2]->cs_sendProcessing);
+        BOOST_CHECK(peerLogic->SendMessages(nodes[2]));
+    }
+    BOOST_CHECK(banman->IsDiscouraged(addr1));
+    BOOST_CHECK(banman->IsDiscouraged(addr2));
+    BOOST_CHECK(banman->IsDiscouraged(addr3));
+    for (CNode* node : nodes) {
+        BOOST_CHECK(node->fDisconnect);
+    }
 
     bool dummy;
-    peerLogic->FinalizeNode(dummyNode1, dummy);
-    peerLogic->FinalizeNode(dummyNode2, dummy);
+    for (CNode* node : nodes) {
+        peerLogic->FinalizeNode(*node, dummy);
+    }
+    connman->ClearNodes();
 }
 
 BOOST_AUTO_TEST_CASE(DoS_bantime)
