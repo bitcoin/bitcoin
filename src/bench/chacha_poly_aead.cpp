@@ -25,36 +25,18 @@ static void CHACHA20_POLY1305_AEAD(benchmark::Bench& bench, size_t buffersize, b
 {
     std::vector<unsigned char> in(buffersize + CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN, 0);
     std::vector<unsigned char> out(buffersize + CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN, 0);
-    uint64_t seqnr_payload = 0;
-    uint64_t seqnr_aad = 0;
-    int aad_pos = 0;
     uint32_t len = 0;
     bench.batch(buffersize).unit("byte").run([&] {
         // encrypt or decrypt the buffer with a static key
-        const bool crypt_ok_1 = aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, out.data(), out.size(), in.data(), buffersize, true);
+        const bool crypt_ok_1 = aead.Crypt(out.data(), out.size(), in.data(), buffersize, true);
         assert(crypt_ok_1);
 
         if (include_decryption) {
             // if we decrypt, include the GetLength
-            const bool get_length_ok = aead.GetLength(&len, seqnr_aad, aad_pos, in.data());
+            const bool get_length_ok = aead.DecryptLength(&len, in.data());
             assert(get_length_ok);
-            const bool crypt_ok_2 = aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, out.data(), out.size(), in.data(), buffersize, true);
+            const bool crypt_ok_2 = aead.Crypt(out.data(), out.size(), in.data(), buffersize, true);
             assert(crypt_ok_2);
-        }
-
-        // increase main sequence number
-        seqnr_payload++;
-        // increase aad position (position in AAD keystream)
-        aad_pos += CHACHA20_POLY1305_AEAD_AAD_LEN;
-        if (aad_pos + CHACHA20_POLY1305_AEAD_AAD_LEN > CHACHA20_ROUND_OUTPUT) {
-            aad_pos = 0;
-            seqnr_aad++;
-        }
-        if (seqnr_payload + 1 == std::numeric_limits<uint64_t>::max()) {
-            // reuse of nonce+key is okay while benchmarking.
-            seqnr_payload = 0;
-            seqnr_aad = 0;
-            aad_pos = 0;
         }
     });
 }
