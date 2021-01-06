@@ -9,7 +9,6 @@
 #include <hash.h>
 
 #include <assert.h>
-#include <limits>
 
 /* Number of bytes to process per iteration */
 static constexpr uint64_t BUFFER_SIZE_TINY = 64;
@@ -19,42 +18,27 @@ static constexpr uint64_t BUFFER_SIZE_LARGE = 1024 * 1024;
 static const unsigned char k1[32] = {0};
 static const unsigned char k2[32] = {0};
 
-static ChaCha20Poly1305AEAD aead(k1, 32, k2, 32);
-
 static void CHACHA20_POLY1305_AEAD(benchmark::Bench& bench, size_t buffersize, bool include_decryption)
 {
-    std::vector<unsigned char> in(buffersize + CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN, 0);
-    std::vector<unsigned char> out(buffersize + CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN, 0);
-    uint64_t seqnr_payload = 0;
-    uint64_t seqnr_aad = 0;
-    int aad_pos = 0;
-    uint32_t len = 0;
+    ChaCha20Poly1305AEAD aead_in(k1, 32, k2, 32);
+    ChaCha20Poly1305AEAD aead_out(k1, 32, k2, 32);
+
+    auto plaintext_len = buffersize + CHACHA20_POLY1305_AEAD_AAD_LEN;
+    auto ciphertext_len = plaintext_len + POLY1305_TAGLEN;
+
+    std::vector<unsigned char> in(plaintext_len, 0);
+    std::vector<unsigned char> out(ciphertext_len, 0);
+
     bench.batch(buffersize).unit("byte").run([&] {
         // encrypt or decrypt the buffer with a static key
-        const bool crypt_ok_1 = aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, out.data(), out.size(), in.data(), buffersize, true);
+        const bool crypt_ok_1 = aead_out.Crypt(out.data(), ciphertext_len, in.data(), plaintext_len, true);
         assert(crypt_ok_1);
 
         if (include_decryption) {
-            // if we decrypt, include the GetLength
-            const bool get_length_ok = aead.GetLength(&len, seqnr_aad, aad_pos, in.data());
-            assert(get_length_ok);
-            const bool crypt_ok_2 = aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, out.data(), out.size(), in.data(), buffersize, true);
+            // if we decrypt, we need to decrypt the length first and advance the keystream
+            (void)aead_in.DecryptLength(out.data());
+            const bool crypt_ok_2 = aead_in.Crypt(in.data(), plaintext_len, out.data(), ciphertext_len, false);
             assert(crypt_ok_2);
-        }
-
-        // increase main sequence number
-        seqnr_payload++;
-        // increase aad position (position in AAD keystream)
-        aad_pos += CHACHA20_POLY1305_AEAD_AAD_LEN;
-        if (aad_pos + CHACHA20_POLY1305_AEAD_AAD_LEN > CHACHA20_ROUND_OUTPUT) {
-            aad_pos = 0;
-            seqnr_aad++;
-        }
-        if (seqnr_payload + 1 == std::numeric_limits<uint64_t>::max()) {
-            // reuse of nonce+key is okay while benchmarking.
-            seqnr_payload = 0;
-            seqnr_aad = 0;
-            aad_pos = 0;
         }
     });
 }
