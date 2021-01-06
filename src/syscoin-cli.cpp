@@ -396,15 +396,15 @@ private:
             "* The local addresses table lists each local address broadcast by the node, the port, and the score.\n\n"
             "Examples:\n\n"
             "Connection counts and local addresses only\n"
-            "> bitcoin-cli -netinfo\n\n"
+            "> syscoin-cli -netinfo\n\n"
             "Compact peers listing\n"
-            "> bitcoin-cli -netinfo 1\n\n"
+            "> syscoin-cli -netinfo 1\n\n"
             "Full dashboard\n"
-            "> bitcoin-cli -netinfo 4\n\n"
+            "> syscoin-cli -netinfo 4\n\n"
             "Full live dashboard, adjust --interval or --no-title as needed (Linux)\n"
-            "> watch --interval 1 --no-title bitcoin-cli -netinfo 4\n\n"
+            "> watch --interval 1 --no-title syscoin-cli -netinfo 4\n\n"
             "See this help\n"
-            "> bitcoin-cli -netinfo help\n"};
+            "> syscoin-cli -netinfo help\n"};
     }
     const int64_t m_time_now{GetSystemTimeInSeconds()};
 

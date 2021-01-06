@@ -9,11 +9,11 @@ import requests
 import sys
 
 parser = argparse.ArgumentParser(description='Script to get coins from a faucet.', epilog='You may need to start with double-dash (--) when providing bitcoin-cli arguments.')
-parser.add_argument('-c', '--cmd', dest='cmd', default='bitcoin-cli', help='bitcoin-cli command to use')
+parser.add_argument('-c', '--cmd', dest='cmd', default='syscoin-cli', help='syscoin-cli command to use')
 parser.add_argument('-f', '--faucet', dest='faucet', default='https://signetfaucet.com/claim', help='URL of the faucet')
-parser.add_argument('-a', '--addr', dest='addr', default='', help='Bitcoin address to which the faucet should send')
+parser.add_argument('-a', '--addr', dest='addr', default='', help='Syscoin address to which the faucet should send')
 parser.add_argument('-p', '--password', dest='password', default='', help='Faucet password, if any')
-parser.add_argument('bitcoin_cli_args', nargs='*', help='Arguments to pass on to bitcoin-cli (default: -signet)')
+parser.add_argument('bitcoin_cli_args', nargs='*', help='Arguments to pass on to syscoin-cli (default: -signet)')
 
 args = parser.parse_args()
 

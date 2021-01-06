@@ -160,7 +160,7 @@ class TestSyscoinCli(SyscoinTestFramework):
             assert 'balance' not in cli_get_info_keys
             assert 'balances' not in cli_get_info_keys
 
-            # Test bitcoin-cli -generate.
+            # Test syscoin-cli -generate.
             n1 = 3
             n2 = 4
             w2.walletpassphrase(password, self.rpc_timeout)
@@ -201,7 +201,7 @@ class TestSyscoinCli(SyscoinTestFramework):
             assert_raises_rpc_error(-18, WALLET_NOT_LOADED, self.nodes[0].cli(rpcwallet3, '-generate', 0).echo)
             assert_raises_rpc_error(-18, WALLET_NOT_LOADED, self.nodes[0].cli(rpcwallet3, '-generate', 1, 2, 3).echo)
 
-            # Test bitcoin-cli -generate with -rpcwallet in multiwallet mode.
+            # Test syscoin-cli -generate with -rpcwallet in multiwallet mode.
             self.nodes[0].loadwallet(wallets[2])
             n3 = 4
             n4 = 10
