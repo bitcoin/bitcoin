@@ -11,6 +11,7 @@
 #include <univalue.h>
 #include <util/system.h>
 #include <key_io.h>
+#include <core_io.h>
 std::unordered_map<uint32_t, uint8_t> mapAssetPrecision;
 std::string stringFromSyscoinTx(const int &nVersion) {
     switch (nVersion) {
@@ -47,7 +48,7 @@ bool GetAssetPrecision(const uint32_t &nAsset, uint8_t& nPrecision) {
     // if added, meaning cache miss then fetch right asset and and fill cache otherwise return cache entry
     if (itP.second) {
         CAsset txPos;
-        if (!passetdb || !passetdb->ReadAsset(nAsset, txPos))
+        if (!GetAsset(nAsset, txPos))
             return false;
         itP.first->second = txPos.nPrecision;
     }
@@ -148,11 +149,11 @@ UniValue AssetPublicDataToJson(const std::string &strPubData) {
     }
     return pubDataObj;
 }
-void CAuxFeeDetails::ToJson(UniValue& value) const {
+void CAuxFeeDetails::ToJson(UniValue& value, const uint32_t& nAsset) const {
     UniValue feeStruct(UniValue::VARR);
     for(const auto& auxfee: vecAuxFees) {
         UniValue auxfeeObj(UniValue::VOBJ);
-        auxfeeObj.__pushKV("bound", auxfee.nBound);
+        auxfeeObj.__pushKV("bound", ValueFromAmount(auxfee.nBound, nAsset));
         auxfeeObj.__pushKV("percentage", auxfee.nPercent / 100000.0);
         feeStruct.push_back(auxfeeObj);
     }

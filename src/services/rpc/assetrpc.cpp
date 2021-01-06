@@ -36,10 +36,11 @@ bool BuildAssetJson(const CAsset& asset, const uint32_t& nAsset, UniValue& oAsse
     }
     if (!asset.auxFeeDetails.IsNull()) {
         UniValue value(UniValue::VOBJ);
-        asset.auxFeeDetails.ToJson(value);
+        asset.auxFeeDetails.ToJson(value, nAsset);
 		oAsset.__pushKV("auxfee", value);
     }
 	oAsset.__pushKV("total_supply", ValueFromAmount(asset.nTotalSupply, nAsset));
+    LogPrintf("max supply %s\n", ValueFromAmount(asset.nMaxSupply, nAsset).write());
 	oAsset.__pushKV("max_supply", ValueFromAmount(asset.nMaxSupply, nAsset));
 	oAsset.__pushKV("updatecapability_flags", asset.nUpdateCapabilityFlags);
 	oAsset.__pushKV("precision", asset.nPrecision);
@@ -429,9 +430,8 @@ static RPCHelpMan assetinfo()
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id that created this asset"},
                 {RPCResult::Type::STR, "public_value", "The public value attached to this asset"},
                 {RPCResult::Type::STR_HEX, "contract", "The ethereum contract address"},
-                {RPCResult::Type::NUM, "balance", "The current balance"},
-                {RPCResult::Type::NUM, "total_supply", "The total supply of this asset"},
-                {RPCResult::Type::NUM, "max_supply", "The maximum supply of this asset"},
+                {RPCResult::Type::STR_AMOUNT, "total_supply", "The total supply of this asset"},
+                {RPCResult::Type::STR_AMOUNT, "max_supply", "The maximum supply of this asset"},
                 {RPCResult::Type::NUM, "updatecapability_flags", "The capability flag in decimal"},
                 {RPCResult::Type::NUM, "precision", "The precision of this asset"},
             }},
@@ -478,9 +478,8 @@ static RPCHelpMan listassets()
                         {RPCResult::Type::STR, "symbol", "The asset symbol"},
                         {RPCResult::Type::STR, "public_value", "The public value attached to this asset"},
                         {RPCResult::Type::STR_HEX, "contract", "The ethereum contract address"},
-                        {RPCResult::Type::NUM, "balance", "The current balance"},
-                        {RPCResult::Type::NUM, "total_supply", "The total supply of this asset"},
-                        {RPCResult::Type::NUM, "max_supply", "The maximum supply of this asset"},
+                        {RPCResult::Type::STR_AMOUNT, "total_supply", "The total supply of this asset"},
+                        {RPCResult::Type::STR_AMOUNT, "max_supply", "The maximum supply of this asset"},
                         {RPCResult::Type::NUM, "updatecapability_flags", "The capability flag in decimal"},
                         {RPCResult::Type::NUM, "precision", "The precision of this asset"},
                     }},

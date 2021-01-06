@@ -60,7 +60,7 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
     if (!asset.IsNull()) {
         if(asset.nUpdateMask & ASSET_INIT)  {
             entry.__pushKV("symbol", asset.strSymbol);
-            entry.__pushKV("max_supply", asset.nMaxSupply);
+            entry.__pushKV("max_supply", ValueFromAmount(asset.nMaxSupply, assetInfo.nAsset));
             entry.__pushKV("precision", asset.nPrecision);
         }
 
@@ -75,7 +75,7 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
 
         if(asset.nUpdateMask & ASSET_UPDATE_AUXFEE) {
             UniValue value(UniValue::VOBJ);
-            asset.auxFeeDetails.ToJson(value);
+            asset.auxFeeDetails.ToJson(value, assetInfo.nAsset);
             entry.__pushKV("auxfee", value);
         }
 

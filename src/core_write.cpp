@@ -129,7 +129,7 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
     entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
     if(asset.nUpdateMask & ASSET_INIT) {
 		entry.__pushKV("symbol", asset.strSymbol);
-        entry.__pushKV("max_supply", asset.nMaxSupply);
+        entry.__pushKV("max_supply", ValueFromAmount(asset.nMaxSupply, tx.voutAssets[0].key));
 		entry.__pushKV("precision", asset.nPrecision);
     }
 
@@ -150,7 +150,7 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
 
     if(asset.nUpdateMask & ASSET_UPDATE_AUXFEE) {
         UniValue value(UniValue::VOBJ);
-        asset.auxFeeDetails.ToJson(value);
+        asset.auxFeeDetails.ToJson(value, tx.voutAssets[0].key);
         entry.__pushKV("auxfee", value);
     }
     
@@ -186,12 +186,20 @@ UniValue ValueFromAmount(const CAmount& amount, const uint32_t &nAsset)
 {
     uint8_t nPrecision = 8;
     if(nAsset > 0) {
-        GetAssetPrecision(nAsset, nPrecision);
+        if(!GetAssetPrecision(nAsset, nPrecision)) {
+            nPrecision = 0;
+        }
     }
     bool sign = amount < 0;
     int64_t n_abs = (sign ? -amount : amount);
-    int64_t quotient = n_abs / COIN;
-    int64_t remainder = n_abs % COIN;
+    int64_t quotient = n_abs;
+    int64_t divByAmount = 1;
+    int64_t remainder = 0;
+    if (nPrecision > 0) {
+        divByAmount = pow(10, nPrecision);
+        quotient = n_abs / divByAmount;
+        remainder = n_abs % divByAmount;
+    }
     return UniValue(UniValue::VNUM,
             strprintf("%s%d.%0" + itostr(nPrecision) + "d", sign ? "-" : "", quotient, remainder));
 }

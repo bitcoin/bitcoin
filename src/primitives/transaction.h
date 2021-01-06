@@ -720,7 +720,7 @@ public:
     }
     inline void SetNull() { vecAuxFees.clear(); vchAuxFeeKeyID.clear();}
     inline bool IsNull() const { return (vecAuxFees.empty() && vchAuxFeeKeyID.empty()); }
-    void ToJson(UniValue& json) const;
+    void ToJson(UniValue& json, const uint32_t& nAsset) const;
 };
 class CNotaryDetails {
 public:
