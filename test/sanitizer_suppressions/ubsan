@@ -16,13 +16,7 @@ unsigned-integer-overflow:chain.cpp
 unsigned-integer-overflow:chain.h
 unsigned-integer-overflow:coded_stream.h
 unsigned-integer-overflow:core_write.cpp
-unsigned-integer-overflow:crypto/chacha20.cpp
-unsigned-integer-overflow:crypto/ctaes/ctaes.c
-unsigned-integer-overflow:crypto/poly1305.cpp
-unsigned-integer-overflow:crypto/ripemd160.cpp
-unsigned-integer-overflow:crypto/sha1.cpp
-unsigned-integer-overflow:crypto/sha256.cpp
-unsigned-integer-overflow:crypto/sha512.cpp
+unsigned-integer-overflow:crypto/*
 unsigned-integer-overflow:hash.cpp
 unsigned-integer-overflow:leveldb/db/log_reader.cc
 unsigned-integer-overflow:leveldb/util/bloom.cc
