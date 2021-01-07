@@ -769,10 +769,29 @@ public:
 class NetEventsInterface
 {
 public:
-    virtual bool ProcessMessages(CNode* pnode, std::atomic<bool>& interrupt) = 0;
-    virtual bool SendMessages(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_sendProcessing) = 0;
+    /** Initialize a peer (setup state, queue any initial messages) */
     virtual void InitializeNode(CNode* pnode) = 0;
+
+    /** Handle removal of a peer (clear state) */
     virtual void FinalizeNode(const CNode& node, bool& update_connection_time) = 0;
+
+    /**
+    * Process protocol messages received from a given node
+    *
+    * @param[in]   pnode           The node which we have received messages from.
+    * @param[in]   interrupt       Interrupt condition for processing threads
+    * @return                      True if there is more work to be done
+    */
+    virtual bool ProcessMessages(CNode* pnode, std::atomic<bool>& interrupt) = 0;
+
+    /**
+    * Send queued protocol messages to a given node.
+    *
+    * @param[in]   pnode           The node which we are sending messages to.
+    * @return                      True if there is more work to be done
+    */
+    virtual bool SendMessages(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_sendProcessing) = 0;
+
 
 protected:
     /**
