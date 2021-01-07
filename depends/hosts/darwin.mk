@@ -6,6 +6,8 @@ LD64_VERSION=530
 
 OSX_SDK=$(SDK_PATH)/Xcode-$(XCODE_VERSION)-$(XCODE_BUILD_ID)-extracted-SDK-with-libcxx-headers
 
+darwin_native_binutils=native_cctools
+
 ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
 # FORCE_USE_SYSTEM_CLANG is empty, so we use our depends-managed, pinned clang
 # from llvm.org
@@ -36,6 +38,16 @@ clangxx_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v clang++")
 
 clang_resource_dir=$(shell clang -print-resource-dir)
 endif
+
+cctools_TOOLS=AR RANLIB STRIP NM LIBTOOL OTOOL INSTALL_NAME_TOOL
+
+# Make-only lowercase function
+lc = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
+
+# For well-known tools provided by cctools, make sure that their well-known
+# variable is set to the full path of the tool, just like how AC_PATH_{TOO,PROG}
+# would.
+$(foreach TOOL,$(cctools_TOOLS),$(eval darwin_$(TOOL) = $$(build_prefix)/bin/$$(host)-$(call lc,$(TOOL))))
 
 # Flag explanations:
 #
@@ -112,5 +124,4 @@ darwin_release_CXXFLAGS=$(darwin_release_CFLAGS)
 darwin_debug_CFLAGS=-O1
 darwin_debug_CXXFLAGS=$(darwin_debug_CFLAGS)
 
-darwin_native_binutils=native_cctools
 darwin_cmake_system=Darwin
