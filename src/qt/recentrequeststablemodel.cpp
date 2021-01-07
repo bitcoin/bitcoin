@@ -38,15 +38,17 @@ RecentRequestsTableModel::~RecentRequestsTableModel()
 
 int RecentRequestsTableModel::rowCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent);
-
+    if (parent.isValid()) {
+        return 0;
+    }
     return list.length();
 }
 
 int RecentRequestsTableModel::columnCount(const QModelIndex &parent) const
 {
-    Q_UNUSED(parent);
-
+    if (parent.isValid()) {
+        return 0;
+    }
     return columns.length();
 }
 
