@@ -798,16 +798,17 @@ static RPCHelpMan getblocktemplate()
 
     arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
 
-    UniValue aMutable(UniValue::VARR);
-    aMutable.push_back("time");
-    aMutable.push_back("transactions");
-    aMutable.push_back("prevblock");
+    UniValue aMutable(UniValue::VARR) = {
+        "time",
+        "transactions",
+        "prevblock"
+    };
 
-    UniValue result(UniValue::VOBJ);
-    result.pushKV("capabilities", aCaps);
+    UniValue result(UniValue::VOBJ) = {("capabilities", aCaps)};
 
-    UniValue aRules(UniValue::VARR);
-    aRules.push_back("csv");
+    UniValue aRules(UniValue::VARR) = {
+        "csv"
+    };
     if (!fPreSegWit) aRules.push_back("!segwit");
     UniValue vbavailable(UniValue::VOBJ);
     for (int j = 0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {

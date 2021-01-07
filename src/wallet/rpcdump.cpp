@@ -404,8 +404,7 @@ RPCHelpMan removeprunedfunds()
     LOCK(pwallet->cs_wallet);
 
     uint256 hash(ParseHashV(request.params[0], "txid"));
-    std::vector<uint256> vHash;
-    vHash.push_back(hash);
+    std::vector<uint256> vHash {hash};
     std::vector<uint256> vHashOut;
 
     if (pwallet->ZapSelectTx(vHash, vHashOut) != DBErrors::LOAD_OK) {

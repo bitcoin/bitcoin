@@ -392,13 +392,14 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
     CKeyID hash = key.GetPubKey().GetID();
     CScript scriptPubKey = CScript() << OP_0 << std::vector<unsigned char>(hash.begin(), hash.end());
 
-    std::vector<int> sigHashes;
-    sigHashes.push_back(SIGHASH_NONE | SIGHASH_ANYONECANPAY);
-    sigHashes.push_back(SIGHASH_SINGLE | SIGHASH_ANYONECANPAY);
-    sigHashes.push_back(SIGHASH_ALL | SIGHASH_ANYONECANPAY);
-    sigHashes.push_back(SIGHASH_NONE);
-    sigHashes.push_back(SIGHASH_SINGLE);
-    sigHashes.push_back(SIGHASH_ALL);
+    std::vector<int> sigHashes = {
+            SIGHASH_NONE | SIGHASH_ANYONECANPAY,
+            SIGHASH_SINGLE | SIGHASH_ANYONECANPAY,
+            SIGHASH_ALL | SIGHASH_ANYONECANPAY,
+            SIGHASH_NONE,
+            SIGHASH_SINGLE,
+            SIGHASH_ALL
+    };
 
     // create a big transaction of 4500 inputs signed by the same key
     for(uint32_t ij = 0; ij < 4500; ij++) {
@@ -446,9 +447,8 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
     }
 
     for(uint32_t i = 0; i < mtx.vin.size(); i++) {
-        std::vector<CScriptCheck> vChecks;
+        std::vector<CScriptCheck> vChecks = {CScriptCheck()};
         CScriptCheck check(coins[tx.vin[i].prevout.n].out, tx, i, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false, &txdata);
-        vChecks.push_back(CScriptCheck());
         check.swap(vChecks.back());
         control.Add(vChecks);
     }
@@ -493,9 +493,10 @@ BOOST_AUTO_TEST_CASE(test_witness)
     scriptPubkey2 << ToByteVector(pubkey2) << OP_CHECKSIG;
     scriptPubkey1L << ToByteVector(pubkey1L) << OP_CHECKSIG;
     scriptPubkey2L << ToByteVector(pubkey2L) << OP_CHECKSIG;
-    std::vector<CPubKey> oneandthree;
-    oneandthree.push_back(pubkey1);
-    oneandthree.push_back(pubkey3);
+    std::vector<CPubKey> oneandthree = {
+            pubkey1,
+            pubkey3
+    };
     scriptMulti = GetScriptForMultisig(2, oneandthree);
     BOOST_CHECK(keystore.AddCScript(scriptPubkey1));
     BOOST_CHECK(keystore.AddCScript(scriptPubkey2));

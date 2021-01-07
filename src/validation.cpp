@@ -3152,8 +3152,7 @@ void CChainState::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pi
 
     if (pindexNew->pprev == nullptr || pindexNew->pprev->HaveTxsDownloaded()) {
         // If pindexNew is the genesis block or all parents are BLOCK_VALID_TRANSACTIONS.
-        std::deque<CBlockIndex*> queue;
-        queue.push_back(pindexNew);
+        std::deque<CBlockIndex*> queue = {pindexNew};
 
         // Recursively process any descendant blocks that now may be eligible to be connected.
         while (!queue.empty()) {

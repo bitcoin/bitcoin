@@ -242,11 +242,12 @@ public:
         if (!args.empty()) {
             throw std::runtime_error("-getinfo takes no arguments");
         }
-        UniValue result(UniValue::VARR);
-        result.push_back(JSONRPCRequestObj("getnetworkinfo", NullUniValue, ID_NETWORKINFO));
-        result.push_back(JSONRPCRequestObj("getblockchaininfo", NullUniValue, ID_BLOCKCHAININFO));
-        result.push_back(JSONRPCRequestObj("getwalletinfo", NullUniValue, ID_WALLETINFO));
-        result.push_back(JSONRPCRequestObj("getbalances", NullUniValue, ID_BALANCES));
+        UniValue result(UniValue::VARR) = {
+                JSONRPCRequestObj("getnetworkinfo", NullUniValue, ID_NETWORKINFO),
+                JSONRPCRequestObj("getblockchaininfo", NullUniValue, ID_BLOCKCHAININFO),
+                JSONRPCRequestObj("getwalletinfo", NullUniValue, ID_WALLETINFO),
+                JSONRPCRequestObj("getbalances", NullUniValue, ID_BALANCES)
+        };
         return result;
     }
 

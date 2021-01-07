@@ -98,12 +98,13 @@ TEST(Coding, Varint32) {
 
 TEST(Coding, Varint64) {
   // Construct the list of values to check
-  std::vector<uint64_t> values;
-  // Some special values
-  values.push_back(0);
-  values.push_back(100);
-  values.push_back(~static_cast<uint64_t>(0));
-  values.push_back(~static_cast<uint64_t>(0) - 1);
+  std::vector<uint64_t> values = {
+          // Some special values
+          0,
+          100,
+          (~static_cast<uint64_t>(0)),
+          (~static_cast<uint64_t>(0) - 1)
+  };
   for (uint32_t k = 0; k < 64; k++) {
     // Test values near powers of two
     const uint64_t power = 1ull << k;
