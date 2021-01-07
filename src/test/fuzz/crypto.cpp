@@ -4,6 +4,7 @@
 
 #include <crypto/hmac_sha256.h>
 #include <crypto/hmac_sha512.h>
+#include <crypto/muhash.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
@@ -35,6 +36,7 @@ FUZZ_TARGET(crypto)
     CSHA512 sha512;
     SHA3_256 sha3;
     CSipHasher sip_hasher{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>()};
+    MuHash3072 muhash;
 
     while (fuzzed_data_provider.ConsumeBool()) {
         switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 2)) {
@@ -60,6 +62,12 @@ FUZZ_TARGET(crypto)
             (void)Hash(data);
             (void)Hash160(data);
             (void)sha512.Size();
+
+            if (fuzzed_data_provider.ConsumeBool()) {
+                muhash *= MuHash3072(data);
+            } else {
+                muhash /= MuHash3072(data);
+            }
             break;
         }
         case 1: {
@@ -70,10 +78,11 @@ FUZZ_TARGET(crypto)
             (void)sha256.Reset();
             (void)sha3.Reset();
             (void)sha512.Reset();
+            muhash = MuHash3072();
             break;
         }
         case 2: {
-            switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 9)) {
+            switch (fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 10)) {
             case 0: {
                 data.resize(CHash160::OUTPUT_SIZE);
                 hash160.Finalize(data);
@@ -122,6 +131,11 @@ FUZZ_TARGET(crypto)
             case 9: {
                 data.resize(SHA3_256::OUTPUT_SIZE);
                 sha3.Finalize(data);
+                break;
+            }
+            case 10: {
+                uint256 out;
+                muhash.Finalize(out);
                 break;
             }
             }
