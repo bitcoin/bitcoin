@@ -512,6 +512,7 @@ public:
     const std::string m_help_doc{
         "-netinfo level|\"help\" \n\n"
         "Returns a network peer connections dashboard with information from the remote server.\n"
+        "This human-readable interface will change regularly and is not intended to be a stable API.\n"
         "Under the hood, -netinfo fetches the data by calling getpeerinfo and getnetworkinfo.\n"
         "An optional integer argument from 0 to 4 can be passed for different peers listings.\n"
         "Pass \"help\" to see this detailed help documentation.\n"
