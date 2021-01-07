@@ -314,8 +314,7 @@ private:
         }
         return UNKNOWN_NETWORK;
     }
-    uint8_t m_details_level{0};      //!< Optional user-supplied arg to set dashboard details level
-    bool m_is_help_requested{false}; //!< Optional user-supplied arg to print help documentation
+    uint8_t m_details_level{0}; //!< Optional user-supplied arg to set dashboard details level
     bool DetailsRequested() const { return m_details_level > 0 && m_details_level < 5; }
     bool IsAddressSelected() const { return m_details_level == 2 || m_details_level == 4; }
     bool IsVersionSelected() const { return m_details_level == 3 || m_details_level == 4; }
@@ -367,68 +366,6 @@ private:
         if (conn_type == "addr-fetch") return "addr";
         return "";
     }
-    const UniValue NetinfoHelp()
-    {
-        return std::string{
-            "-netinfo level|\"help\" \n\n"
-            "Returns a network peer connections dashboard with information from the remote server.\n"
-            "Under the hood, -netinfo fetches the data by calling getpeerinfo and getnetworkinfo.\n"
-            "An optional integer argument from 0 to 4 can be passed for different peers listings.\n"
-            "Pass \"help\" to see this detailed help documentation.\n"
-            "If more than one argument is passed, only the first one is read and parsed.\n"
-            "Suggestion: use with the Linux watch(1) command for a live dashboard; see example below.\n\n"
-            "Arguments:\n"
-            "1. level (integer 0-4, optional)  Specify the info level of the peers dashboard (default 0):\n"
-            "                                  0 - Connection counts and local addresses\n"
-            "                                  1 - Like 0 but with a peers listing (without address or version columns)\n"
-            "                                  2 - Like 1 but with an address column\n"
-            "                                  3 - Like 1 but with a version column\n"
-            "                                  4 - Like 1 but with both address and version columns\n"
-            "2. help (string \"help\", optional) Print this help documentation instead of the dashboard.\n\n"
-            "Result:\n\n"
-            "* The peers listing in levels 1-4 displays all of the peers sorted by direction and minimum ping time:\n\n"
-            "  Column   Description\n"
-            "  ------   -----------\n"
-            "  <->      Direction\n"
-            "           \"in\"  - inbound connections are those initiated by the peer\n"
-            "           \"out\" - outbound connections are those initiated by us\n"
-            "  type     Type of peer connection\n"
-            "           \"full\"   - full relay, the default\n"
-            "           \"block\"  - block relay; like full relay but does not relay transactions or addresses\n"
-            "           \"manual\" - peer we manually added using RPC addnode or the -addnode/-connect config options\n"
-            "           \"feeler\" - short-lived connection for testing addresses\n"
-            "           \"addr\"   - address fetch; short-lived connection for requesting addresses\n"
-            "  net      Network the peer connected through (\"ipv4\", \"ipv6\", \"onion\", \"i2p\", or \"cjdns\")\n"
-            "  mping    Minimum observed ping time, in milliseconds (ms)\n"
-            "  ping     Last observed ping time, in milliseconds (ms)\n"
-            "  send     Time since last message sent to the peer, in seconds\n"
-            "  recv     Time since last message received from the peer, in seconds\n"
-            "  txn      Time since last novel transaction received from the peer and accepted into our mempool, in minutes\n"
-            "  blk      Time since last novel block passing initial validity checks received from the peer, in minutes\n"
-            "  hb       High-bandwidth BIP152 compact block relay\n"
-            "           \".\" (to)   - we selected the peer as a high-bandwidth peer\n"
-            "           \"*\" (from) - the peer selected us as a high-bandwidth peer\n"
-            "  age      Duration of connection to the peer, in minutes\n"
-            "  asmap    Mapped AS (Autonomous System) number in the BGP route to the peer, used for diversifying\n"
-            "           peer selection (only displayed if the -asmap config option is set)\n"
-            "  id       Peer index, in increasing order of peer connections since node startup\n"
-            "  address  IP address and port of the peer\n"
-            "  version  Peer version and subversion concatenated, e.g. \"70016/Satoshi:21.0.0/\"\n\n"
-            "* The connection counts table displays the number of peers by direction, network, and the totals\n"
-            "  for each, as well as two special outbound columns for block relay peers and manual peers.\n\n"
-            "* The local addresses table lists each local address broadcast by the node, the port, and the score.\n\n"
-            "Examples:\n\n"
-            "Connection counts and local addresses only\n"
-            "> bitcoin-cli -netinfo\n\n"
-            "Compact peers listing\n"
-            "> bitcoin-cli -netinfo 1\n\n"
-            "Full dashboard\n"
-            "> bitcoin-cli -netinfo 4\n\n"
-            "Full live dashboard, adjust --interval or --no-title as needed (Linux)\n"
-            "> watch --interval 1 --no-title bitcoin-cli -netinfo 4\n\n"
-            "See this help\n"
-            "> bitcoin-cli -netinfo help\n"};
-    }
     const int64_t m_time_now{GetSystemTimeInSeconds()};
 
 public:
@@ -441,8 +378,6 @@ public:
             uint8_t n{0};
             if (ParseUInt8(args.at(0), &n)) {
                 m_details_level = std::min(n, MAX_DETAIL_LEVEL);
-            } else if (args.at(0) == "help") {
-                m_is_help_requested = true;
             } else {
                 throw std::runtime_error(strprintf("invalid -netinfo argument: %s", args.at(0)));
             }
@@ -455,9 +390,6 @@ public:
 
     UniValue ProcessReply(const UniValue& batch_in) override
     {
-        if (m_is_help_requested) {
-            return JSONRPCReplyObj(NetinfoHelp(), NullUniValue, 1);
-        }
         const std::vector<UniValue> batch{JSONRPCProcessBatchReply(batch_in)};
         if (!batch[ID_PEERINFO]["error"].isNull()) return batch[ID_PEERINFO];
         if (!batch[ID_NETWORKINFO]["error"].isNull()) return batch[ID_NETWORKINFO];
@@ -576,6 +508,66 @@ public:
 
         return JSONRPCReplyObj(UniValue{result}, NullUniValue, 1);
     }
+
+    const std::string m_help_doc{
+        "-netinfo level|\"help\" \n\n"
+        "Returns a network peer connections dashboard with information from the remote server.\n"
+        "Under the hood, -netinfo fetches the data by calling getpeerinfo and getnetworkinfo.\n"
+        "An optional integer argument from 0 to 4 can be passed for different peers listings.\n"
+        "Pass \"help\" to see this detailed help documentation.\n"
+        "If more than one argument is passed, only the first one is read and parsed.\n"
+        "Suggestion: use with the Linux watch(1) command for a live dashboard; see example below.\n\n"
+        "Arguments:\n"
+        "1. level (integer 0-4, optional)  Specify the info level of the peers dashboard (default 0):\n"
+        "                                  0 - Connection counts and local addresses\n"
+        "                                  1 - Like 0 but with a peers listing (without address or version columns)\n"
+        "                                  2 - Like 1 but with an address column\n"
+        "                                  3 - Like 1 but with a version column\n"
+        "                                  4 - Like 1 but with both address and version columns\n"
+        "2. help (string \"help\", optional) Print this help documentation instead of the dashboard.\n\n"
+        "Result:\n\n"
+        "* The peers listing in levels 1-4 displays all of the peers sorted by direction and minimum ping time:\n\n"
+        "  Column   Description\n"
+        "  ------   -----------\n"
+        "  <->      Direction\n"
+        "           \"in\"  - inbound connections are those initiated by the peer\n"
+        "           \"out\" - outbound connections are those initiated by us\n"
+        "  type     Type of peer connection\n"
+        "           \"full\"   - full relay, the default\n"
+        "           \"block\"  - block relay; like full relay but does not relay transactions or addresses\n"
+        "           \"manual\" - peer we manually added using RPC addnode or the -addnode/-connect config options\n"
+        "           \"feeler\" - short-lived connection for testing addresses\n"
+        "           \"addr\"   - address fetch; short-lived connection for requesting addresses\n"
+        "  net      Network the peer connected through (\"ipv4\", \"ipv6\", \"onion\", \"i2p\", or \"cjdns\")\n"
+        "  mping    Minimum observed ping time, in milliseconds (ms)\n"
+        "  ping     Last observed ping time, in milliseconds (ms)\n"
+        "  send     Time since last message sent to the peer, in seconds\n"
+        "  recv     Time since last message received from the peer, in seconds\n"
+        "  txn      Time since last novel transaction received from the peer and accepted into our mempool, in minutes\n"
+        "  blk      Time since last novel block passing initial validity checks received from the peer, in minutes\n"
+        "  hb       High-bandwidth BIP152 compact block relay\n"
+        "           \".\" (to)   - we selected the peer as a high-bandwidth peer\n"
+        "           \"*\" (from) - the peer selected us as a high-bandwidth peer\n"
+        "  age      Duration of connection to the peer, in minutes\n"
+        "  asmap    Mapped AS (Autonomous System) number in the BGP route to the peer, used for diversifying\n"
+        "           peer selection (only displayed if the -asmap config option is set)\n"
+        "  id       Peer index, in increasing order of peer connections since node startup\n"
+        "  address  IP address and port of the peer\n"
+        "  version  Peer version and subversion concatenated, e.g. \"70016/Satoshi:21.0.0/\"\n\n"
+        "* The connection counts table displays the number of peers by direction, network, and the totals\n"
+        "  for each, as well as two special outbound columns for block relay peers and manual peers.\n\n"
+        "* The local addresses table lists each local address broadcast by the node, the port, and the score.\n\n"
+        "Examples:\n\n"
+        "Connection counts and local addresses only\n"
+        "> bitcoin-cli -netinfo\n\n"
+        "Compact peers listing\n"
+        "> bitcoin-cli -netinfo 1\n\n"
+        "Full dashboard\n"
+        "> bitcoin-cli -netinfo 4\n\n"
+        "Full live dashboard, adjust --interval or --no-title as needed (Linux)\n"
+        "> watch --interval 1 --no-title bitcoin-cli -netinfo 4\n\n"
+        "See this help\n"
+        "> bitcoin-cli -netinfo help\n"};
 };
 
 /** Process RPC generatetoaddress request. */
@@ -907,6 +899,10 @@ static int CommandLineRPC(int argc, char *argv[])
         if (gArgs.IsArgSet("-getinfo")) {
             rh.reset(new GetinfoRequestHandler());
         } else if (gArgs.GetBoolArg("-netinfo", false)) {
+            if (!args.empty() && args.at(0) == "help") {
+                tfm::format(std::cout, "%s\n", NetinfoRequestHandler().m_help_doc);
+                return 0;
+            }
             rh.reset(new NetinfoRequestHandler());
         } else if (gArgs.GetBoolArg("-generate", false)) {
             const UniValue getnewaddress{GetNewAddress()};
