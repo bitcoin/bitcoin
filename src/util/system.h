@@ -56,7 +56,19 @@ bool error(const char* fmt, const Args&... args)
 }
 
 void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
+
+/**
+ * Ensure file contents are fully committed to disk, using a platform-specific
+ * feature analogous to fsync().
+ */
 bool FileCommit(FILE *file);
+
+/**
+ * Sync directory contents. This is required on some environments to ensure that
+ * newly created files are committed to disk.
+ */
+void DirectoryCommit(const fs::path &dirname);
+
 bool TruncateFile(FILE *file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
