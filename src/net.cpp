@@ -648,25 +648,25 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
 
         if (m_deserializer->Complete()) {
             // decompose a transport agnostic CNetMessage from the deserializer
-            uint32_t out_err_raw_size{0};
-            Optional<CNetMessage> result{m_deserializer->GetMessage(time, out_err_raw_size)};
-            if (!result) {
+            bool reject_message{false};
+            CNetMessage msg = m_deserializer->GetMessage(time, reject_message);
+            if (reject_message) {
                 // Message deserialization failed.  Drop the message but don't disconnect the peer.
                 // store the size of the corrupt message
-                mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER)->second += out_err_raw_size;
+                mapRecvBytesPerMsgCmd.at(NET_MESSAGE_COMMAND_OTHER) += msg.m_raw_message_size;
                 continue;
             }
 
             //store received bytes per message command
             //to prevent a memory DOS, only allow valid commands
-            mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(result->m_command);
+            mapMsgCmdSize::iterator i = mapRecvBytesPerMsgCmd.find(msg.m_command);
             if (i == mapRecvBytesPerMsgCmd.end())
                 i = mapRecvBytesPerMsgCmd.find(NET_MESSAGE_COMMAND_OTHER);
             assert(i != mapRecvBytesPerMsgCmd.end());
-            i->second += result->m_raw_message_size;
+            i->second += msg.m_raw_message_size;
 
             // push the message to the process queue,
-            vRecvMsg.push_back(std::move(*result));
+            vRecvMsg.push_back(std::move(msg));
 
             complete = true;
         }
@@ -699,13 +699,13 @@ int V1TransportDeserializer::readHeader(Span<const uint8_t> msg_bytes)
 
     // Check start string, network magic
     if (memcmp(hdr.pchMessageStart, m_chain_params.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) != 0) {
-        LogPrint(BCLog::NET, "HEADER ERROR - MESSAGESTART (%s, %u bytes), received %s, peer=%d\n", hdr.GetCommand(), hdr.nMessageSize, HexStr(hdr.pchMessageStart), m_node_id);
+        LogPrint(BCLog::NET, "HEADER ERROR - WRONG MESSAGESTART (%s, %u bytes), received %s, peer=%d\n", hdr.GetCommand(), hdr.nMessageSize, HexStr(hdr.pchMessageStart), m_node_id);
         return -1;
     }
 
     // reject messages larger than MAX_SIZE or MAX_PROTOCOL_MESSAGE_LENGTH
     if (hdr.nMessageSize > MAX_SIZE || hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
-        LogPrint(BCLog::NET, "HEADER ERROR - SIZE (%s, %u bytes), peer=%d\n", hdr.GetCommand(), hdr.nMessageSize, m_node_id);
+        LogPrint(BCLog::NET, "HEADER ERROR - PAYLOAD TOO LARGE (%s, %u bytes), peer=%d\n", hdr.GetCommand(), hdr.nMessageSize, m_node_id);
         return -1;
     }
 
@@ -740,16 +740,18 @@ const uint256& V1TransportDeserializer::GetMessageHash() const
     return data_hash;
 }
 
-Optional<CNetMessage> V1TransportDeserializer::GetMessage(const std::chrono::microseconds time, uint32_t& out_err_raw_size)
+CNetMessage V1TransportDeserializer::GetMessage(const std::chrono::microseconds time, bool& reject_message)
 {
+    // Initialize out parameter
+    reject_message = false;
     // decompose a single CNetMessage from the TransportDeserializer
-    Optional<CNetMessage> msg(std::move(vRecv));
+    CNetMessage msg(std::move(vRecv));
 
     // store command string, time, and sizes
-    msg->m_command = hdr.GetCommand();
-    msg->m_time = time;
-    msg->m_message_size = hdr.nMessageSize;
-    msg->m_raw_message_size = hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
+    msg.m_command = hdr.GetCommand();
+    msg.m_time = time;
+    msg.m_message_size = hdr.nMessageSize;
+    msg.m_raw_message_size = hdr.nMessageSize + CMessageHeader::HEADER_SIZE;
 
     uint256 hash = GetMessageHash();
 
@@ -759,17 +761,15 @@ Optional<CNetMessage> V1TransportDeserializer::GetMessage(const std::chrono::mic
     // Check checksum and header command string
     if (memcmp(hash.begin(), hdr.pchChecksum, CMessageHeader::CHECKSUM_SIZE) != 0) {
         LogPrint(BCLog::NET, "CHECKSUM ERROR (%s, %u bytes), expected %s was %s, peer=%d\n",
-                 SanitizeString(msg->m_command), msg->m_message_size,
+                 SanitizeString(msg.m_command), msg.m_message_size,
                  HexStr(Span<uint8_t>(hash.begin(), hash.begin() + CMessageHeader::CHECKSUM_SIZE)),
                  HexStr(hdr.pchChecksum),
                  m_node_id);
-        out_err_raw_size = msg->m_raw_message_size;
-        msg = nullopt;
+        reject_message = true;
     } else if (!hdr.IsCommandValid()) {
-        LogPrint(BCLog::NET, "HEADER ERROR - COMMAND (%s, %u bytes), peer=%d\n",
-                 hdr.GetCommand(), msg->m_message_size, m_node_id);
-        out_err_raw_size = msg->m_raw_message_size;
-        msg = nullopt;
+        LogPrint(BCLog::NET, "HEADER ERROR - INVALID MSGTYPE (%s, %u bytes), peer=%d\n",
+                 hdr.GetCommand(), msg.m_message_size, m_node_id);
+        reject_message = true;
     }
 
     // Always reset the network deserializer (prepare for the next message)
@@ -2951,7 +2951,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
         LogPrint(BCLog::NET, "Added connection peer=%d\n", id);
     }
 
-    m_deserializer = MakeUnique<V1TransportDeserializer>(V1TransportDeserializer(Params(), GetId(), SER_NETWORK, INIT_PROTO_VERSION));
+    m_deserializer = MakeUnique<V1TransportDeserializer>(V1TransportDeserializer(Params(), id, SER_NETWORK, INIT_PROTO_VERSION));
     m_serializer = MakeUnique<V1TransportSerializer>(V1TransportSerializer());
 }
 
