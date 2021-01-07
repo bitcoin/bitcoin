@@ -894,6 +894,7 @@ static RPCHelpMan testmempoolaccept()
                         {RPCResult::Type::OBJ, "", "",
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
+                            {RPCResult::Type::STR_HEX, "wtxid", "The transaction witness hash in hex"},
                             {RPCResult::Type::BOOL, "allowed", "If the mempool allows this tx to be inserted"},
                             {RPCResult::Type::NUM, "vsize", "Virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted (only present when 'allowed' is true)"},
                             {RPCResult::Type::OBJ, "fees", "Transaction fees (only present if 'allowed' is true)",
@@ -930,7 +931,6 @@ static RPCHelpMan testmempoolaccept()
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed. Make sure the tx has at least one input.");
     }
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-    const uint256& tx_hash = tx->GetHash();
 
     const CFeeRate max_raw_tx_fee_rate = request.params[1].isNull() ?
                                              DEFAULT_MAX_RAW_TX_FEE_RATE :
@@ -942,7 +942,8 @@ static RPCHelpMan testmempoolaccept()
 
     UniValue result(UniValue::VARR);
     UniValue result_0(UniValue::VOBJ);
-    result_0.pushKV("txid", tx_hash.GetHex());
+    result_0.pushKV("txid", tx->GetHash().GetHex());
+    result_0.pushKV("wtxid", tx->GetWitnessHash().GetHex());
 
     TxValidationState state;
     bool test_accept_res;
