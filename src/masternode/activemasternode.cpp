@@ -108,7 +108,7 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
     // Check socket connectivity
     LogPrintf("CActiveMasternodeManager::Init -- Checking inbound connection to '%s'\n", activeMasternodeInfo.service.ToString());
     {
-        CNode* pnode = connman.FindNode(static_cast<CService>(activeMasternodeInfo.service));
+        CNode* pnode = connman.FindNode(activeMasternodeInfo.service);
         if (pnode)
         {
             LogPrintf("Failed to open new connection, already connected\n");
