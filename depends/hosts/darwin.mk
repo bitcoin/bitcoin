@@ -7,8 +7,33 @@ LD64_VERSION=530
 OSX_SDK=$(SDK_PATH)/Xcode-$(XCODE_VERSION)-$(XCODE_BUILD_ID)-extracted-SDK-with-libcxx-headers
 
 ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
+# FORCE_USE_SYSTEM_CLANG is empty, so we use our depends-managed, pinned clang
+# from llvm.org
+
+# The native_cctools package is what provides clang when FORCE_USE_SYSTEM_CLANG
+# is empty
+darwin_native_toolchain=native_cctools
+
+clang_prog=$(build_prefix)/bin/clang
+clangxx_prog=$(clang_prog)++
+
 clang_resource_dir=$(build_prefix)/lib/clang/$(native_cctools_clang_version)
 else
+# FORCE_USE_SYSTEM_CLANG is non-empty, so we use the clang from the user's
+# system
+
+darwin_native_toolchain=
+
+# We can't just use $(shell command -v clang) because GNU Make handles builtins
+# in a special way and doesn't know that `command` is a POSIX-standard builtin
+# prior to 1af314465e5dfe3e8baa839a32a72e83c04f26ef, first released in v4.2.90.
+# At the time of writing, GNU Make v4.2.1 is still being used in supported
+# distro releases.
+#
+# Source: https://lists.gnu.org/archive/html/bug-make/2017-11/msg00017.html
+clang_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v clang")
+clangxx_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v clang++")
+
 clang_resource_dir=$(shell clang -print-resource-dir)
 endif
 
@@ -62,7 +87,7 @@ endif
 darwin_CC=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
               -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
               -u LIBRARY_PATH \
-            clang --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
+            $(clang_prog) --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
               -B$(build_prefix)/bin -mlinker-version=$(LD64_VERSION) \
               --sysroot=$(OSX_SDK) \
               -Xclang -internal-externc-isystem$(clang_resource_dir)/include \
@@ -70,7 +95,7 @@ darwin_CC=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
 darwin_CXX=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
                -u OBJC_INCLUDE_PATH -u OBJCPLUS_INCLUDE_PATH -u CPATH \
                -u LIBRARY_PATH \
-             clang++ --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
+             $(clangxx_prog) --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
                -B$(build_prefix)/bin -mlinker-version=$(LD64_VERSION) \
                --sysroot=$(OSX_SDK) \
                -stdlib=libc++ -nostdinc++ \
@@ -88,10 +113,4 @@ darwin_debug_CFLAGS=-O1
 darwin_debug_CXXFLAGS=$(darwin_debug_CFLAGS)
 
 darwin_native_binutils=native_cctools
-ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
-darwin_native_toolchain=native_cctools
-else
-darwin_native_toolchain=
-endif
-
 darwin_cmake_system=Darwin
