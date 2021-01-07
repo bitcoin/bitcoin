@@ -12,6 +12,7 @@
 #include <interfaces/handler.h>
 #include <interfaces/node.h>
 #include <interfaces/wallet.h>
+#include <mapport.h>
 #include <net.h>
 #include <net_processing.h>
 #include <netaddress.h>
@@ -93,15 +94,7 @@ public:
         }
     }
     bool shutdownRequested() override { return ShutdownRequested(); }
-    void mapPort(bool use_upnp) override
-    {
-        if (use_upnp) {
-            StartMapPort();
-        } else {
-            InterruptMapPort();
-            StopMapPort();
-        }
-    }
+    void mapPort(bool use_upnp, bool use_natpmp) override { StartMapPort(use_upnp, use_natpmp); }
     bool getProxy(Network net, proxyType& proxy_info) override { return GetProxy(net, proxy_info); }
     size_t getNodeCount(CConnman::NumConnections flags) override
     {

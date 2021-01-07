@@ -41,6 +41,7 @@ Optional dependencies:
  Library     | Purpose          | Description
  ------------|------------------|----------------------
  miniupnpc   | UPnP Support     | Firewall-jumping support
+ libnatpmp   | NAT-PMP Support  | Firewall-jumping support
  libdb4.8    | Berkeley DB      | Optional, wallet storage (only needed when wallet enabled)
  qt          | GUI              | GUI toolkit (only needed when GUI enabled)
  libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
@@ -99,9 +100,9 @@ SQLite is required for the wallet:
 To build Bitcoin Core without wallet, see [*Disable-wallet mode*](/doc/build-unix.md#disable-wallet-mode)
 
 
-Optional (see `--with-miniupnpc` and `--enable-upnp-default`):
+Optional port mapping libraries (see: `--with-miniupnpc`, and `--enable-upnp-default`, `--with-natpmp`, `--enable-natpmp-default`):
 
-    sudo apt-get install libminiupnpc-dev
+    sudo apt install libminiupnpc-dev libnatpmp-dev
 
 ZMQ dependencies (provides ZMQ API):
 
@@ -133,9 +134,9 @@ Build requirements:
 
     sudo dnf install gcc-c++ libtool make autoconf automake libevent-devel boost-devel libdb4-devel libdb4-cxx-devel python3
 
-Optional (see `--with-miniupnpc` and `--enable-upnp-default`):
+Optional port mapping libraries (see: `--with-miniupnpc`, and `--enable-upnp-default`, `--with-natpmp`, `--enable-natpmp-default`):
 
-    sudo dnf install miniupnpc-devel
+    sudo dnf install miniupnpc-devel libnatpmp-devel
 
 ZMQ dependencies (provides ZMQ API):
 
@@ -158,18 +159,27 @@ Notes
 The release is built with GCC and then "strip bitcoind" to strip the debug
 symbols, which reduces the executable size by about 90%.
 
-
 miniupnpc
 ---------
 
 [miniupnpc](https://miniupnp.tuxfamily.org) may be used for UPnP port mapping.  It can be downloaded from [here](
 https://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
-turned off by default.  See the configure options for upnp behavior desired:
+turned off by default.  See the configure options for UPnP behavior desired:
 
-	--without-miniupnpc      No UPnP support miniupnp not required
+	--without-miniupnpc      No UPnP support, miniupnp not required
 	--disable-upnp-default   (the default) UPnP support turned off by default at runtime
 	--enable-upnp-default    UPnP support turned on by default at runtime
 
+libnatpmp
+---------
+
+[libnatpmp](https://miniupnp.tuxfamily.org/libnatpmp.html) may be used for NAT-PMP port mapping. It can be downloaded
+from [here](https://miniupnp.tuxfamily.org/files/). NAT-PMP support is compiled in and
+turned off by default. See the configure options for NAT-PMP behavior desired:
+
+	--without-natpmp          No NAT-PMP support, libnatpmp not required
+	--disable-natpmp-default  (the default) NAT-PMP support turned off by default at runtime
+	--enable-natpmp-default   NAT-PMP support turned on by default at runtime
 
 Berkeley DB
 -----------
