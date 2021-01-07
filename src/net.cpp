@@ -1441,7 +1441,7 @@ void CConnman::CalculateNumConnectionsChangedStats()
     statsClient.gauge("peers.torConnections", torNodes, 1.0f);
 }
 
-void CConnman::InactivityCheck(CNode *pnode)
+void CConnman::InactivityCheck(CNode *pnode) const
 {
     int64_t nTime = GetSystemTimeInSeconds();
     if (nTime - pnode->nTimeConnected > m_peer_connect_timeout)

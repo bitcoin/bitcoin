@@ -532,7 +532,7 @@ private:
     void DisconnectNodes();
     void NotifyNumConnectionsChanged();
     void CalculateNumConnectionsChangedStats();
-    void InactivityCheck(CNode *pnode);
+    void InactivityCheck(CNode *pnode) const;
     bool GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set);
 #ifdef USE_KQUEUE
     void SocketEventsKqueue(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set, bool fOnlyPoll);

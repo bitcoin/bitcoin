@@ -290,7 +290,7 @@ bool BlockAssembler::TestPackage(uint64_t packageSize, unsigned int packageSigOp
 // Perform transaction-level checks before adding to block:
 // - transaction finality (locktime)
 // - safe TXs in regard to ChainLocks
-bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package)
+bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& package) const
 {
     for (CTxMemPool::txiter it : package) {
         if (!IsFinalTx(it->GetTx(), nHeight, nLockTimeCutoff))

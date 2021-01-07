@@ -430,12 +430,12 @@ TestChainSetup::~TestChainSetup()
     SetMockTime(0);
 }
 
-CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction& tx)
+CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction& tx) const
 {
     return FromTx(MakeTransactionRef(tx));
 }
 
-CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransactionRef& tx)
+CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransactionRef& tx) const
 {
     return CTxMemPoolEntry(tx, nFee, nTime, nHeight,
                            spendsCoinbase, sigOpCount, lp);
