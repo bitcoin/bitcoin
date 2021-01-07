@@ -135,9 +135,9 @@ namespace BCLog {
 
         bool WillLogCategory(LogFlags category) const;
         /** Returns a vector of the log categories */
-        std::vector<LogCategory> LogCategoriesList();
+        std::vector<LogCategory> LogCategoriesList() const;
         /** Returns a string with the log categories */
-        std::string LogCategoriesString()
+        std::string LogCategoriesString() const
         {
             return Join(LogCategoriesList(), ", ", [&](const LogCategory& i) { return i.category; });
         };

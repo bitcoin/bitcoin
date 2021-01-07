@@ -174,7 +174,7 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
     return false;
 }
 
-std::vector<LogCategory> BCLog::Logger::LogCategoriesList()
+std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
 {
     std::vector<LogCategory> ret;
     for (const CLogCategoryDesc& category_desc : LogCategories) {
