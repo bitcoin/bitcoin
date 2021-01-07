@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(merkle_test_LeftSubtreeRightSubtree)
     uint256 root = BlockMerkleRoot(block);
     uint256 rootOfLeftSubtree = BlockMerkleRoot(leftSubtreeBlock);
     uint256 rootOfRightSubtree = BlockMerkleRoot(rightSubtreeBlock);
-    std::vector<uint256> leftRight = {
+    std::vector<uint256> leftRight {
         rootOfLeftSubtree,
         rootOfRightSubtree
     };

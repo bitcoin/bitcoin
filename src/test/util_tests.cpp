@@ -1608,8 +1608,8 @@ BOOST_AUTO_TEST_CASE(test_FormatParagraph)
 
 BOOST_AUTO_TEST_CASE(test_FormatSubVersion)
 {
-    std::vector<std::string> comments = {std::string("comment1")};
-    std::vector<std::string> comments2 = {
+    std::vector<std::string> comments {std::string("comment1")};
+    std::vector<std::string> comments2 {
             std::string("comment1"),
             SanitizeString(std::string("Comment2; .,_?@-; !\"#$%&'()*+/<=>[]\\^`{|}~"), SAFE_CHARS_UA_COMMENT)) // Semicolon is discouraged but not forbidden by BIP-0014
     };

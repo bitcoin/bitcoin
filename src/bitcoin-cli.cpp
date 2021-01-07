@@ -242,7 +242,7 @@ public:
         if (!args.empty()) {
             throw std::runtime_error("-getinfo takes no arguments");
         }
-        UniValue result(UniValue::VARR) = {
+        UniValue result(UniValue::VARR) {
                 JSONRPCRequestObj("getnetworkinfo", NullUniValue, ID_NETWORKINFO),
                 JSONRPCRequestObj("getblockchaininfo", NullUniValue, ID_BLOCKCHAININFO),
                 JSONRPCRequestObj("getwalletinfo", NullUniValue, ID_WALLETINFO),

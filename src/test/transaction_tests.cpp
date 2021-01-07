@@ -392,7 +392,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
     CKeyID hash = key.GetPubKey().GetID();
     CScript scriptPubKey = CScript() << OP_0 << std::vector<unsigned char>(hash.begin(), hash.end());
 
-    std::vector<int> sigHashes = {
+    std::vector<int> sigHashes {
             SIGHASH_NONE | SIGHASH_ANYONECANPAY,
             SIGHASH_SINGLE | SIGHASH_ANYONECANPAY,
             SIGHASH_ALL | SIGHASH_ANYONECANPAY,
@@ -447,7 +447,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
     }
 
     for(uint32_t i = 0; i < mtx.vin.size(); i++) {
-        std::vector<CScriptCheck> vChecks = {CScriptCheck()};
+        std::vector<CScriptCheck> vChecks {CScriptCheck()};
         CScriptCheck check(coins[tx.vin[i].prevout.n].out, tx, i, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false, &txdata);
         check.swap(vChecks.back());
         control.Add(vChecks);
@@ -493,7 +493,7 @@ BOOST_AUTO_TEST_CASE(test_witness)
     scriptPubkey2 << ToByteVector(pubkey2) << OP_CHECKSIG;
     scriptPubkey1L << ToByteVector(pubkey1L) << OP_CHECKSIG;
     scriptPubkey2L << ToByteVector(pubkey2L) << OP_CHECKSIG;
-    std::vector<CPubKey> oneandthree = {
+    std::vector<CPubKey> oneandthree {
             pubkey1,
             pubkey3
     };

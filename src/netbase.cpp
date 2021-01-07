@@ -503,7 +503,7 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials 
     } else {
         return error("Proxy requested wrong authentication method %02x", pchRet1[1]);
     }
-    std::vector<uint8_t> vSocks5 = {
+    std::vector<uint8_t> vSocks5 {
             SOCKSVersion::SOCKS5, // VER protocol version
             SOCKS5Command::CONNECT, // CMD CONNECT
             0x00, // RSV Reserved must be 0

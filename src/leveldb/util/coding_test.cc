@@ -98,7 +98,7 @@ TEST(Coding, Varint32) {
 
 TEST(Coding, Varint64) {
   // Construct the list of values to check
-  std::vector<uint64_t> values = {
+  std::vector<uint64_t> values {
           // Some special values
           0,
           100,
