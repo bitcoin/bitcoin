@@ -128,7 +128,7 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
             connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool());
             break;
         case 26:
-            connman.SetServices(random_service, static_cast<ServiceFlags>(fuzzed_data_provider.ConsumeIntegral<uint64_t>()));
+            connman.SetServices(random_service, ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS));
             break;
         case 27:
             connman.SetTryNewOutboundPeer(fuzzed_data_provider.ConsumeBool());
