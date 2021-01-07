@@ -108,11 +108,6 @@ docker run \
 	"${ITCOIN_IMAGE}" \
 	bitcoind
 
-# wait until the daemon is fully started
-errecho "ItCoin daemon: waiting (at most 10 seconds) for warmup"
-timeout 10 "${MYDIR}/run-docker-bitcoin-cli.sh" -rpcwait -rpcclienttimeout=3 uptime >/dev/null
-errecho "ItCoin daemon: warmed up"
-
 # Only the first time: let's create a wallet and call it itcoin_signer
 errecho "Create wallet itcoin_signer"
 "${MYDIR}/run-docker-bitcoin-cli.sh" createwallet itcoin_signer >/dev/null

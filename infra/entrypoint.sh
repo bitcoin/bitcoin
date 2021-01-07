@@ -64,6 +64,12 @@ usage() {
 	following environment variables are set:
 	$(printf "    - %s\n" "${SUPPORTED_VARIABLES[@]}")
 
+	Before executing any bitcoin-cli or miner commands, the container will issue
+	a health check (bitcoin-cli uptime) against the configured itcoin-core
+	container at RPC_HOST:RPC_PORT.
+	If the health check fails, the container exits and no other actions are
+	taken, otherwise the container proceeds to execute the requested command.
+
 	Please note that, inside the container, the configuration file will be
 	separated form the data directory (this is different from default bitcoin
 	behaviour):
@@ -105,6 +111,42 @@ generateConfigFile() {
 	render-template.sh "${SUPPORTED_VARIABLES[@]}" < /opt/itcoin-core/bitcoin.conf.tmpl > "${INTERNAL_CONFIG_DIR}/bitcoin.conf"
 } # generateConfigFile
 
+# Attempts at most 3 times to connect to the configured remote bitcoind via
+# "bitcoin-cli uptime".
+#
+# - for each attempt, it waits no more than 5 seconds;
+# - before retrying, waits a linearly increasing number of seconds: 1 after the
+#   first attempt, 2 after the second, ...
+#
+# If there isn't any successful response, aborts the container startup.
+waitForBitcoind() {
+	local TIMEOUT=5
+	local MAX_ATTEMPTS=3
+	local INITIAL_WAIT=1
+
+	local N=0
+	until [ "$N" -ge "${MAX_ATTEMPTS}" ]; do
+		{ timeout "${TIMEOUT}" \
+			bitcoin-cli \
+				-conf="${INTERNAL_CONFIG_DIR}/bitcoin.conf" \
+				-datadir="${INTERNAL_DATADIR}" \
+				-rpcwait \
+				-rpcclienttimeout=3 \
+				-rpcconnect="${RPC_HOST}" \
+				uptime > /dev/null
+		} && break # break the loop if the command succeeds
+
+		N=$((N+1))
+		if [ "${N}" = "${MAX_ATTEMPTS}" ]; then
+			>&2 echo "ERROR: could not reach bitcoind at ${RPC_HOST}:${RPC_PORT} after ${N} attempts. Giving up"
+			exit 1
+		else
+			>&2 echo "WARN: could not reach bitcoind at ${RPC_HOST}:${RPC_PORT} with a ${TIMEOUT} seconds timeout. Waiting ${N} seconds before retrying"
+			sleep "${N}"
+		fi
+	done
+} # waitForBitcoind
+
 if [ "${1-}" = '' ] || [ "${1-}" = '--help' ] || [ "${1-}" = '-H' ] ; then
 	usage
 fi
@@ -137,6 +179,7 @@ if [ "${COMMAND-}" = 'bitcoind' ]; then
 fi
 
 if [ "${COMMAND-}" = 'bitcoin-cli' ]; then
+	waitForBitcoind
 	exec bitcoin-cli \
 		-conf="${INTERNAL_CONFIG_DIR}/bitcoin.conf" \
 		-datadir="${INTERNAL_DATADIR}" \
@@ -146,6 +189,7 @@ if [ "${COMMAND-}" = 'bitcoin-cli' ]; then
 fi
 
 if [ "${COMMAND-}" = 'miner' ]; then
+	waitForBitcoind
 	exec miner \
 		--cli="bitcoin-cli -conf=${INTERNAL_CONFIG_DIR}/bitcoin.conf -datadir=${INTERNAL_DATADIR} -rpcconnect=${RPC_HOST}" \
 		"$@"
