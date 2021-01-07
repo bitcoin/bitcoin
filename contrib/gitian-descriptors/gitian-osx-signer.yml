@@ -7,9 +7,13 @@ architectures:
 - "amd64"
 packages:
 - "faketime"
+- "python3-pip"
 remotes:
 - "url": "https://github.com/bitcoin-core/bitcoin-detached-sigs.git"
   "dir": "signature"
+- "url": "https://github.com/achow101/signapple.git"
+  "dir": "signapple"
+  "commit": "c7e73aa27a7615ac9506559173f787e2906b25eb"
 files:
 - "bitcoin-osx-unsigned.tar.gz"
 script: |
@@ -29,6 +33,13 @@ script: |
     echo "\$REAL \$@" >> $WRAP_DIR/${prog}
     chmod +x ${WRAP_DIR}/${prog}
   done
+
+  # Install signapple
+  cd signapple
+  python3 -m pip install -U pip setuptools
+  python3 -m pip install .
+  export PATH="$HOME/.local/bin":$PATH
+  cd ..
 
   UNSIGNED=bitcoin-osx-unsigned.tar.gz
   SIGNED=bitcoin-osx-signed.dmg
