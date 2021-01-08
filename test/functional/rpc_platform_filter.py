@@ -38,7 +38,7 @@ class HTTPBasicsTest(BitcoinTestFramework):
 
         url = urllib.parse.urlparse(self.nodes[0].url)
 
-        def test_command(method, params, auth, expexted_status):
+        def test_command(method, params, auth, expexted_status, should_not_match=False):
             conn = http.client.HTTPConnection(url.hostname, url.port)
             conn.connect()
             body = {"method": method}
@@ -46,8 +46,24 @@ class HTTPBasicsTest(BitcoinTestFramework):
                 body["params"] = params
             conn.request('POST', '/', json.dumps(body), {"Authorization": "Basic " + str_to_b64str(auth)})
             resp = conn.getresponse()
-            assert_equal(resp.status, expexted_status)
+            if should_not_match:
+                assert(resp.status != expexted_status)
+            else:
+                assert_equal(resp.status, expexted_status)
             conn.close()
+
+        whitelisted = ["getbestblockhash", "getblockhash", "getblockcount", "getbestchainlock"]
+        help_output = self.nodes[0].help().split('\n')
+        nonwhitelisted = set()
+
+        for line in help_output:
+            line = line.strip()
+
+            # Ignore blanks, headers and whitelisted
+            if line and not line.startswith('='):
+                command = line.split()[0]
+                if not command in whitelisted:
+                    nonwhitelisted.add(command)
 
         rpcuser_authpair_platform = "platform-user:password123"
         rpcuser_authpair_operator = "operator:otherpassword"
@@ -62,11 +78,15 @@ class HTTPBasicsTest(BitcoinTestFramework):
         test_command("getblockcount", [], rpcuser_authpair_platform, 200)
         test_command("getbestchainlock", [], rpcuser_authpair_platform, 500)
 
-        self.log.info('Try running a not whitelisted command...')
-        test_command("stop", [], rpcuser_authpair_platform, 403)
+        self.log.info('Try running all non-whitelisted commands as each user...')
+        for command in nonwhitelisted:
+            test_command(command, [], rpcuser_authpair_platform, 403)
+            if command != "stop":  # avoid stoping the node while testing
+                # we don't care about the exact status here, should simply be anything else but 403
+                test_command(command, [], rpcuser_authpair_operator, 403, True)
 
         self.log.info('Try running a not whitelisted command as the operator...')
-        test_command("stop", [], rpcuser_authpair_operator, 200)
+        test_command("debug", ["1"], rpcuser_authpair_operator, 200)
 
 
 if __name__ == '__main__':
