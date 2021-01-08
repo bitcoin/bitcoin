@@ -90,7 +90,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         for n in self.nodes:
             n.invalidateblock(oldhash)
         self.sync_all()
-        first_quorum = self.test_dip8_quorum_merkle_root_activation(False)
+        first_quorum = self.test_dip8_quorum_merkle_root_activation(False, True)
 
         # Re-enable ChainLocks again
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
@@ -237,7 +237,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
 
         return d
 
-    def test_dip8_quorum_merkle_root_activation(self, with_initial_quorum):
+    def test_dip8_quorum_merkle_root_activation(self, with_initial_quorum, slow_mode=False):
         if with_initial_quorum:
             self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
             self.wait_for_sporks_same()
@@ -251,7 +251,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
         assert(cbtx["cbTx"]["version"] == 1)
 
-        self.activate_dip8()
+        self.activate_dip8(slow_mode)
 
         # Assert that merkleRootQuorums is present and 0 (we have no quorums yet)
         cbtx = self.nodes[0].getblock(self.nodes[0].getbestblockhash(), 2)["tx"][0]
