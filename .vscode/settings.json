@@ -1,0 +1,26 @@
+{
+    "python.pythonPath": "\"C:\\Program Files\\Python39\"",
+    "cSpell.words": [
+        "Cmds",
+        "Popen",
+        "aarch",
+        "afile",
+        "bitcoind",
+        "cacher",
+        "chdir",
+        "debootstrap",
+        "fnmatch",
+        "gbuild",
+        "gnueabihf",
+        "gsign",
+        "gverify",
+        "libcxx",
+        "lxcbr",
+        "nargs",
+        "osslsigncode",
+        "pushd",
+        "qemu",
+        "riscv",
+        "sigs"
+    ]
+}
