@@ -213,6 +213,8 @@ enum class ConnectionType {
     ADDR_FETCH,
 };
 
+/** Convert ConnectionType enum to a string value */
+std::string ConnectionTypeAsString(ConnectionType conn_type);
 void Discover();
 uint16_t GetListenPort();
 
@@ -307,7 +309,7 @@ public:
     // In case this is a verified MN, this value is the hashed operator pubkey of the MN
     uint256 verifiedPubKeyHash;
     bool m_masternode_connection;
-    std::string m_conn_type_string;
+    ConnectionType m_conn_type;
 };
 
 
@@ -733,7 +735,7 @@ public:
     void MaybeSetAddrName(const std::string& addrNameIn);
 
 
-    std::string ConnectionTypeAsString() const;
+    std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
 
     /** A ping-pong round trip has completed successfully. Update latest and minimum ping times. */
     void PongReceived(std::chrono::microseconds ping_time) {
