@@ -918,7 +918,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(uint8_t llmqType, const uint
             signHeight = ::ChainActive().Height();
         }
         int startBlockHeight = signHeight - signOffset;
-        if (startBlockHeight > ::ChainActive().Height()) {
+        if (startBlockHeight > ::ChainActive().Height() || startBlockHeight < 0) {
             return {};
         }
         pindexStart = ::ChainActive()[startBlockHeight];
