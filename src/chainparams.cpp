@@ -349,10 +349,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000000000000000");
+        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000004b8e46524f7");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x00000c04c5926f539074420b40088d4b099d748d07795df891ca391799b6e54c");
+        consensus.defaultAssumeValid = uint256S("0x0000013d53482bd69c5403f344643668619f77302910e57ffe7b1d375e73cc91");
         consensus.nAuxpowStartHeight = 1;
         consensus.nAuxpowChainId = 8;
         consensus.nAuxpowOldChainId = 4096;
@@ -363,10 +363,10 @@ public:
         consensus.vchSYSXERC20Manager = ParseHex("443d9a14fb6ba2A45465bEC3767186f404Ccea25");
         consensus.vchTokenFreezeMethod = ParseHex("9c6dea23fe3b510bb5d170df49dc74e387692eaa3258c691918cd3aa94f5fb74");
         consensus.nBridgeStartBlock = 1000;
-        consensus.nUTXOAssetsBlock = 0; // TODO find testnet cutoff height
+        consensus.nUTXOAssetsBlock = 540000;
         consensus.nUTXOAssetsBlockProvisioning = consensus.nUTXOAssetsBlock + 10000;
-        consensus.DIP0003Height = 200;
-        consensus.DIP0003EnforcementHeight = 400;
+        consensus.DIP0003Height = 540000;
+        consensus.DIP0003EnforcementHeight = 540000;
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
         pchMessageStart[2] = 0xca;
@@ -376,22 +376,19 @@ public:
         m_assumed_blockchain_size = 30;
         m_assumed_chain_state_size = 2;
 
-        genesis = CreateGenesisBlock(1601498000, 518746, 0x1e0fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1576000000, 297648, 0x1e0fffff, 1, 50 * COIN);
         /*uint256 hash;
         CBlockHeader genesisHeader = genesis.GetBlockHeader();
         GenerateGenesisBlock(genesisHeader, hash);*/
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x00000e92e80d01cb6f46ae338127a3c1e9f9adf199aaffedf247758045886efb"));
+        assert(consensus.hashGenesisBlock == uint256S("0x0000066e1a6b9cfeac8295dce0cc8d9170690a74bc4878cf8a0b412554f5c222"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        /*vSeeds.emplace_back("testnet-seed.syscoin.jonasschnelli.ch");
-        vSeeds.emplace_back("seed.tsys.petertodd.org");
-        vSeeds.emplace_back("seed.testnet.syscoin.sprovoost.nl");
-        vSeeds.emplace_back("testnet-seed.bluematt.me"); // Just a static list of stable node(s), only supports x9
-*/
+        vSeeds.emplace_back("testseed1.syscoin.org");
+        vSeeds.emplace_back("testseed2.syscoin.org");
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,65);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
@@ -424,14 +421,16 @@ public:
         checkpointData = {
             {
                 {360, uint256S("0x00000c04c5926f539074420b40088d4b099d748d07795df891ca391799b6e54c")},
+                {250000, uint256S("0x00000131e97a4cb713338f33b8fa6573c85f1772e4dd7d510ca2281cc0be86e2")},
+                {534114, uint256S("0x0000013d53482bd69c5403f344643668619f77302910e57ffe7b1d375e73cc91")},
             }
         };
 
         chainTxData = ChainTxData{
             // Data from rpc: getchaintxstats 4096 0000000000000037a8cd3e06cd5edbfe9dd1dbcc5dacab279376ef7cfc2b4c75
-            /* nTime    */ 0,
-            /* nTxCount */ 0,
-            /* dTxRate  */ 0
+            /* nTime    */ 1610136593,
+            /* nTxCount */ 538904,
+            /* dTxRate  */ 0.01666588574531774
         };
     }
 };
