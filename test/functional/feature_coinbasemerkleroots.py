@@ -249,6 +249,14 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         assert(cbtx["cbTx"]["version"] == 2)
 
         self.nodes[0].generatetoaddress(nblocks=1, address=self.nodes[0].getnewaddress(label='coinbase'))
+        # NOTE: set slow_mode=True if you are activating dip8 after a huge reorg
+        # or nodes might fail to catch up otherwise due to a large
+        # (MAX_BLOCKS_IN_TRANSIT_PER_PEER = 16 blocks) reorg error.
+        self.log.info("Wait for dip0008 activation")
+        while self.nodes[0].getblockcount() < 200:
+            self.nodes[0].generate(10)
+            if slow_mode:
+                self.sync_blocks()
         self.sync_blocks()
 
         # Assert that merkleRootQuorums is present and 0 (we have no quorums yet)
