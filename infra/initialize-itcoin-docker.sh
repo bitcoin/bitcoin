@@ -107,23 +107,23 @@ docker run \
 
 # wait until the daemon is fully started
 errecho "ItCoin daemon: waiting (at most 10 seconds) for warmup"
-timeout 10 docker exec "${CONTAINER_NAME}" bitcoin-cli -conf="${INTERNAL_CONFIGDIR}"/bitcoin.conf -datadir="${INTERNAL_DATADIR}" -rpcwait -rpcclienttimeout=3 uptime >/dev/null
+timeout 10 "${MYDIR}/run-docker-bitcoin-cli.sh" -rpcwait -rpcclienttimeout=3 uptime >/dev/null
 errecho "ItCoin daemon: warmed up"
 
 # Only the first time: let's create a wallet and call it itcoin_signer
 errecho "Create wallet itcoin_signer"
-docker exec "${CONTAINER_NAME}" bitcoin-cli -conf="${INTERNAL_CONFIGDIR}"/bitcoin.conf -datadir="${INTERNAL_DATADIR}" createwallet itcoin_signer >/dev/null
+"${MYDIR}/run-docker-bitcoin-cli.sh" createwallet itcoin_signer >/dev/null
 errecho "Wallet itcoin_signer created"
 
 # Now we need to import inside itcoin_signer the private key we generated
 # beforehand. This private key will be used to sign blocks.
 errecho "Import private key into itcoin_signer"
-docker exec "${CONTAINER_NAME}" bitcoin-cli -conf="${INTERNAL_CONFIGDIR}"/bitcoin.conf -datadir="${INTERNAL_DATADIR}" importprivkey "${PRIVKEY}"
+"${MYDIR}/run-docker-bitcoin-cli.sh" importprivkey "${PRIVKEY}"
 errecho "Private key imported into itcoin_signer"
 
 # Generate an address we'll send bitcoins to.
 errecho "Generate an address"
-ADDR=$(docker exec "${CONTAINER_NAME}" bitcoin-cli -conf="${INTERNAL_CONFIGDIR}"/bitcoin.conf -datadir="${INTERNAL_DATADIR}" getnewaddress)
+ADDR=$("${MYDIR}/run-docker-bitcoin-cli.sh" getnewaddress)
 errecho "Address ${ADDR} generated"
 
 # Ask the miner to send bitcoins to that address. Being the first block in the
