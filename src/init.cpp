@@ -899,7 +899,6 @@ void PeriodicStats()
         // something went wrong
         LogPrintf("%s: GetUTXOStats failed\n", __func__);
     }
-    statsClient.gauge("transactions.txCacheSize", pcoinsTip->GetCacheSize(), 1.0f);
 
     // short version of GetNetworkHashPS(120, -1);
     CBlockIndex *tip;
@@ -921,12 +920,15 @@ void PeriodicStats()
     int64_t timeDiff = maxTime - minTime;
     double nNetworkHashPS = workDiff.getdouble() / timeDiff;
 
-    statsClient.gauge("network.hashesPerSecond", nNetworkHashPS);
-    statsClient.gauge("network.terahashesPerSecond", nNetworkHashPS / 1e12);
-    statsClient.gauge("network.petahashesPerSecond", nNetworkHashPS / 1e15);
-    statsClient.gauge("network.exahashesPerSecond", nNetworkHashPS / 1e18);
+    statsClient.gaugeDouble("network.hashesPerSecond", nNetworkHashPS);
+    statsClient.gaugeDouble("network.terahashesPerSecond", nNetworkHashPS / 1e12);
+    statsClient.gaugeDouble("network.petahashesPerSecond", nNetworkHashPS / 1e15);
+    statsClient.gaugeDouble("network.exahashesPerSecond", nNetworkHashPS / 1e18);
     // No need for cs_main, we never use null tip here
-    statsClient.gauge("network.difficulty", (double)GetDifficulty(tip));
+    statsClient.gaugeDouble("network.difficulty", (double)GetDifficulty(tip));
+
+    statsClient.gauge("transactions.txCacheSize", pcoinsTip->GetCacheSize(), 1.0f);
+    statsClient.gauge("transactions.totalTransactions", tip->nChainTx, 1.0f);
 
     statsClient.gauge("transactions.mempool.totalTransactions", mempool.size(), 1.0f);
     statsClient.gauge("transactions.mempool.totalTxBytes", (int64_t) mempool.GetTotalTxSize(), 1.0f);
