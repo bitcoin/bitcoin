@@ -64,7 +64,7 @@ static bool WalletAppInit(int argc, char* argv[])
     }
     // Check for -testnet or -regtest parameter (Params() calls are only valid after this clause)
     SelectParams(gArgs.GetChainName());
-    VeriBlock::selectPopConfig(gArgs);
+    VeriBlock::selectPopConfig(gArgs, gArgs.GetChainName(), gArgs.GetChainName());
 
     return true;
 }

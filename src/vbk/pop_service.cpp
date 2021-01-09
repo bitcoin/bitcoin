@@ -24,7 +24,6 @@
 namespace VeriBlock {
 
 static std::shared_ptr<PayloadsProvider> payloads = nullptr;
-static std::vector<altintegration::PopData> disconnected_popdata;
 
 void SetPop(CDBWrapper& db)
 {
@@ -406,18 +405,19 @@ CAmount getCoinbaseSubsidy(const CAmount& subsidy, int32_t height, const CChainP
     return newSubsidy / 100;
 }
 
-void updatePopMempoolForReorg() EXCLUSIVE_LOCKS_REQUIRED(cs_main)
-{
-    auto& pop = GetPop();
-    for (const auto& popData : disconnected_popdata) {
-        pop.mempool->submitAll(popData);
-    }
-    disconnected_popdata.clear();
-}
-
 void addDisconnectedPopdata(const altintegration::PopData& popData) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    disconnected_popdata.push_back(popData);
+    altintegration::ValidationState state;
+    auto& popmp = *VeriBlock::GetPop().mempool;
+    for(const auto& i : popData.context) {
+        popmp.submit(i, state);
+    }
+    for(const auto& i : popData.vtbs) {
+        popmp.submit(i, state);
+    }
+    for(const auto& i : popData.atvs) {
+        popmp.submit(i, state);
+    }
 }
 
 } // namespace VeriBlock

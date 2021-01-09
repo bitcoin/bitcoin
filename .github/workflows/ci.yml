@@ -62,7 +62,7 @@ jobs:
           cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
           mkdir build;
           cd build;
-          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF -DWITH_PYPOPMINER=ON;
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF -DWITH_PYPOPTOOLS=ON;
           make -j2;
           sudo make install
           )
@@ -356,7 +356,7 @@ jobs:
           cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
           mkdir build;
           cd build;
-          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF -DASAN=ON -DWITH_PYPOPMINER=ON;
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF -DASAN=ON -DWITH_PYPOPTOOLS=ON;
           make -j2;
           sudo make install
           )

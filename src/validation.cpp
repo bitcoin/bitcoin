@@ -361,9 +361,6 @@ static void UpdateMempoolForReorg(DisconnectedBlockTransactions& disconnectpool,
 {
     AssertLockHeld(cs_main);
 
-    // VeriBlock
-    VeriBlock::updatePopMempoolForReorg();
-
     std::vector<uint256> vHashUpdate;
     // disconnectpool's insertion_order index sorts the entries from
     // oldest to newest, but the oldest entry will be the last tx from the

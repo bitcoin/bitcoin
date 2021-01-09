@@ -93,7 +93,7 @@ static bool AppInit(int argc, char* argv[])
                 throw std::runtime_error("Mainnet is disabled. Use testnet.");
             }
             SelectParams(gArgs.GetChainName());
-            VeriBlock::selectPopConfig(gArgs);
+            VeriBlock::selectPopConfig(gArgs, gArgs.GetChainName(), gArgs.GetChainName());
         } catch (const std::exception& e) {
             return InitError(strprintf("%s\n", e.what()));
         }
