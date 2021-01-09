@@ -5,15 +5,30 @@
 """Test processing of feefilter messages."""
 
 from decimal import Decimal
+from io import BytesIO
 
-from test_framework.messages import MSG_TX, MSG_WTX, msg_feefilter
-from test_framework.p2p import P2PInterface, p2p_lock
+from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
+from test_framework.messages import (
+    COIN,
+    CTransaction,
+    MSG_TX,
+    MSG_WTX,
+    msg_feefilter
+)
+from test_framework.p2p import (
+    P2PDataStore,
+    P2PInterface,
+    p2p_lock,
+)
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import assert_equal
+from test_framework.util import (
+    assert_equal,
+    hex_str_to_bytes,
+)
 from test_framework.wallet import MiniWallet
 
 
-class FeefilterConn(P2PInterface):
+class FeefilterConn(P2PDataStore):
     feefilter_received = False
 
     def on_feefilter(self, message):
@@ -60,6 +75,7 @@ class FeeFilterTest(BitcoinTestFramework):
 
     def run_test(self):
         self.test_feefilter_forcerelay()
+        self.test_feefilter_violation()
         self.test_feefilter()
 
     def test_feefilter_forcerelay(self):
@@ -71,6 +87,44 @@ class FeeFilterTest(BitcoinTestFramework):
         self.nodes[0].add_p2p_connection(FeefilterConn()).assert_feefilter_received(False)
 
         # Restart to disconnect peers and load default extra_args
+        self.restart_node(0)
+        self.connect_nodes(1, 0)
+
+    def test_feefilter_violation(self):
+        self.log.info("Restart node0 with a really high fee filter")
+        HIGH_FEE_FILTER = Decimal(100000) / COIN
+        self.restart_node(0, extra_args=["-minrelaytxfee={}".format(HIGH_FEE_FILTER)])
+        self.connect_nodes(1, 0)
+
+        assert_equal(self.nodes[1].getpeerinfo()[0]['minfeefilter'], HIGH_FEE_FILTER)
+        miniwallet = MiniWallet(self.nodes[1])
+        miniwallet.generate(100)
+        self.nodes[1].generate(100)
+        self.sync_all()
+
+        self.log.info('Send 100 transactions with feerate below the filter')
+        cheap_txns = []
+        txids = []
+        for _ in range(100):
+            tx = miniwallet.send_self_transfer(fee_rate=Decimal('0.00000150'), from_node=self.nodes[1])
+            transaction = CTransaction()
+            transaction.deserialize(BytesIO(hex_str_to_bytes(tx['hex'])))
+            transaction.rehash()
+            cheap_txns.append(transaction)
+            txids.append(tx['txid'])
+        assert_equal(set(txids), set(self.nodes[1].getrawmempool()))
+        assert_equal(len(self.nodes[0].getrawmempool()), 0)
+
+        self.log.info('Check behavior when feefilter is violated')
+        cheap_peer = self.nodes[0].add_p2p_connection(FeefilterConn())
+        cheap_peer.assert_feefilter_received(True)
+        cheap_peer.send_txs_and_test(cheap_txns[:99], self.nodes[0], success=False, expect_disconnect=False)
+        self.log.info('The 100th violation should cause disconnect')
+        cheap_peer.send_txs_and_test([cheap_txns[99]], self.nodes[0], success=False, expect_disconnect=True)
+
+        # Clear mempool and Restart to disconnect peers and load default extra_args
+        self.nodes[1].generateblock(output=ADDRESS_BCRT1_P2WSH_OP_TRUE, transactions=txids)
+        self.sync_all()
         self.restart_node(0)
         self.connect_nodes(1, 0)
 
