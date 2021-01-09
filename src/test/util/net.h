@@ -23,7 +23,7 @@ struct ConnmanTestMsg : public CConnman {
         vNodes.clear();
     }
 
-    void ProcessMessagesOnce(CNode& node) { m_msgproc->ProcessMessages(&node, flagInterruptMsgProc); }
+    void ProcessMessagesOnce(CNode& node) { m_msgproc->ProcessMessages(node, flagInterruptMsgProc); }
 
     void NodeReceiveMsgBytes(CNode& node, Span<const uint8_t> msg_bytes, bool& complete) const;
 
