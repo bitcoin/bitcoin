@@ -766,15 +766,19 @@ QString NetworkToQString(Network net)
     assert(false);
 }
 
-QString ConnectionTypeToQString(ConnectionType conn_type)
+QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction)
 {
+    QString prefix;
+    if (prepend_direction) {
+        prefix = (conn_type == ConnectionType::INBOUND) ? QObject::tr("Inbound") : QObject::tr("Outbound") + " ";
+    }
     switch (conn_type) {
-    case ConnectionType::INBOUND: return QObject::tr("Inbound");
-    case ConnectionType::OUTBOUND_FULL_RELAY: return QObject::tr("Outbound Full Relay");
-    case ConnectionType::BLOCK_RELAY: return QObject::tr("Outbound Block Relay");
-    case ConnectionType::MANUAL: return QObject::tr("Outbound Manual");
-    case ConnectionType::FEELER: return QObject::tr("Outbound Feeler");
-    case ConnectionType::ADDR_FETCH: return QObject::tr("Outbound Address Fetch");
+    case ConnectionType::INBOUND: return prefix;
+    case ConnectionType::OUTBOUND_FULL_RELAY: return prefix + QObject::tr("Full Relay");
+    case ConnectionType::BLOCK_RELAY: return prefix + QObject::tr("Block Relay");
+    case ConnectionType::MANUAL: return prefix + QObject::tr("Manual");
+    case ConnectionType::FEELER: return prefix + QObject::tr("Feeler");
+    case ConnectionType::ADDR_FETCH: return prefix + QObject::tr("Address Fetch");
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
