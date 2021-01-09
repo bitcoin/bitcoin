@@ -1092,6 +1092,10 @@ bool PeerManager::MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& s
     case TxValidationResult::TX_CONSENSUS:
         Misbehaving(nodeid, 100, message);
         return true;
+    // The node violated our fee filter:
+    case TxValidationResult::TX_MEMPOOL_POLICY:
+        Misbehaving(nodeid, 1, message);
+        return true;
     // Conflicting (but not necessarily invalid) data or different policy:
     case TxValidationResult::TX_RECENT_CONSENSUS_CHANGE:
     case TxValidationResult::TX_INPUTS_NOT_STANDARD:
@@ -1101,7 +1105,6 @@ bool PeerManager::MaybePunishNodeForTx(NodeId nodeid, const TxValidationState& s
     case TxValidationResult::TX_WITNESS_MUTATED:
     case TxValidationResult::TX_WITNESS_STRIPPED:
     case TxValidationResult::TX_CONFLICT:
-    case TxValidationResult::TX_MEMPOOL_POLICY:
         break;
     }
     if (message != "") {
@@ -3021,9 +3024,20 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
 
             // Recursively process any orphan transactions that depended on this one
             ProcessOrphanTx(peer->m_orphan_work_set);
-        }
-        else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS)
-        {
+        } else if (state.GetResult() == TxValidationResult::TX_MEMPOOL_POLICY
+                        && state.GetRejectReason().find("fee") != std::string::npos) {
+            // If the transaction didn't meet fee-related mempool policy,
+            // check if our peer isn't respecting the fee filter we sent them.
+            const CAmount tx_feeperk = CFeeRate(result.m_fee, ptx->GetTotalSize()).GetFeePerK();
+            if (tx_feeperk > pfrom.m_tx_relay->lastSentFeeFilter) {
+                LogPrint(BCLog::MEMPOOLREJ, "%s from peer=%d had a fee of %d, exceeding the fee filter sent, %d\n",
+                    tx.GetHash().ToString(),
+                    pfrom.GetId(),
+                    result.m_fee,
+                    pfrom.m_tx_relay->lastSentFeeFilter);
+                MaybePunishNodeForTx(pfrom.GetId(), state, "violated fee filter");
+            }
+        } else if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
             bool fRejectedParents = false; // It may be the case that the orphans parents have all been rejected
 
             // Deduplicate parent txids, so that we don't have to loop over
