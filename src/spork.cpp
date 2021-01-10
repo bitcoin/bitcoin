@@ -18,7 +18,6 @@ const std::string CSporkManager::SERIALIZATION_VERSION_STRING = "CSporkManager-V
 #define MAKE_SPORK_DEF(name, defaultValue) CSporkDef{name, defaultValue, #name}
 std::vector<CSporkDef> sporkDefs = {
     MAKE_SPORK_DEF(SPORK_9_SUPERBLOCKS_ENABLED,            0), // ON
-    MAKE_SPORK_DEF(SPORK_15_DETERMINISTIC_MNS_ENABLED,     0), // ON
     MAKE_SPORK_DEF(SPORK_17_QUORUM_DKG_ENABLED,            4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_19_CHAINLOCKS_ENABLED,            4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_21_QUORUM_ALL_CONNECTED,          4070908800ULL), // OFF
