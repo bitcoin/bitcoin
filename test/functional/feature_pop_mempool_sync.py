@@ -40,8 +40,8 @@ class PoPMempoolSync(BitcoinTestFramework):
 
         self.sync_all(self.nodes)
 
-        from pypopminer2 import MockMiner2
-        self.apm = MockMiner2()
+        from pypopminer import MockMiner
+        self.apm = MockMiner()
 
         addr0 = self.nodes[0].getnewaddress()
         self.log.info("node0 endorses block 5")

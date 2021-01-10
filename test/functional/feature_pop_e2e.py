@@ -39,7 +39,7 @@ class PopE2E(BitcoinTestFramework):
         self.sync_all()
 
     def _test_case(self):
-        from pypopminer2 import PublicationData
+        from pypopminer import PublicationData
 
         assert len(self.nodes[0].getpeerinfo()) == 1
         assert self.nodes[0].getpeerinfo()[0]['banscore'] == 0
@@ -126,9 +126,9 @@ class PopE2E(BitcoinTestFramework):
 
         self.sync_all(self.nodes)
 
-        from pypopminer2 import MockMiner2
+        from pypopminer import MockMiner
 
-        self.apm = MockMiner2()
+        self.apm = MockMiner()
 
         self._test_case()
        

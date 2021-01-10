@@ -70,8 +70,8 @@ class PopPayouts(BitcoinTestFramework):
         self.nodes[0].generate(nblocks=10)
         self.sync_all(self.nodes)
 
-        from pypopminer2 import MockMiner2
-        self.apm = MockMiner2()
+        from pypopminer import MockMiner
+        self.apm = MockMiner()
 
         self._test_case_vbk(113)
         self._test_case_vbk(13)

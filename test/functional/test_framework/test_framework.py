@@ -607,7 +607,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def skip_if_no_pypopminer(self):
         """Attempt to import the pypopminer package and skip the test if the import fails."""
         try:
-            import pypopminer2  # noqa
+            import pypopminer  # noqa
         except ImportError:
             raise SkipTest("pypopminer module not available.")
 
