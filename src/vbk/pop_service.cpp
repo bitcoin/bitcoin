@@ -18,8 +18,10 @@
 #endif //WIN32
 
 #include "pop_service.hpp"
+#include <utility>
 #include <vbk/p2p_sync.hpp>
 #include <vbk/pop_common.hpp>
+#include <veriblock/crypto/progpow.hpp>
 
 namespace VeriBlock {
 
@@ -279,8 +281,21 @@ void saveTrees(altintegration::BlockBatchAdaptor& batch)
     altintegration::SaveAllTrees(*GetPop().altTree, batch);
 }
 
+template <typename T>
+using onBlockCallback_t = std::function<void(
+    typename T::hash_t,
+    // Note: contains a ptr to temporary object. Do NOT save this pointer.
+    const typename T::index_t*)>;
+
 template <typename BlockTree>
-bool LoadTree(CDBIterator& iter, char blocktype, std::pair<char, std::string> tiptype, BlockTree& out, altintegration::ValidationState& state)
+bool LoadTree(
+    CDBIterator& iter,
+    char blocktype,
+    std::pair<char, std::string> tiptype,
+    BlockTree& out,
+    altintegration::ValidationState& state,
+    // default = do nothing
+    const onBlockCallback_t<BlockTree>& onBlock = {})
 {
     using index_t = typename BlockTree::index_t;
     using block_t = typename index_t::block_t;
@@ -321,6 +336,10 @@ bool LoadTree(CDBIterator& iter, char blocktype, std::pair<char, std::string> ti
         if (iter.GetKey(key) && key.first == blocktype) {
             index_t diskindex;
             if (iter.GetValue(diskindex)) {
+                if(onBlock) {
+                    // if function is set, execute a callback
+                    onBlock(key.second, &diskindex);
+                }
                 blocks.push_back(diskindex);
                 iter.Next();
             } else {
@@ -357,9 +376,23 @@ bool loadTrees(CDBIterator& iter)
     if (!LoadTree(iter, DB_BTC_BLOCK, BlockBatchAdaptor::btctip(), pop.altTree->btc(), state)) {
         return error("%s: failed to load BTC tree %s", __func__, state.toString());
     }
-    if (!LoadTree(iter, DB_VBK_BLOCK, BlockBatchAdaptor::vbktip(), pop.altTree->vbk(), state)) {
+
+    using vbkHash = altintegration::VbkBlockTree::hash_t;
+    using vbkIndex = altintegration::VbkBlockTree::index_t;
+    if (!LoadTree(
+            iter,
+            DB_VBK_BLOCK,
+            BlockBatchAdaptor::vbktip(),
+            pop.altTree->vbk(),
+            state,
+            // on every block, take its hash and warmup progpow header cache
+            [](vbkHash hash, const vbkIndex* index) {
+                auto serializedHeader = altintegration::SerializeToRaw(index->getHeader());
+                altintegration::progpow::insertHeaderCacheEntry(serializedHeader, std::move(hash));
+            })) {
         return error("%s: failed to load VBK tree %s", __func__, state.toString());
     }
+
     if (!LoadTree(iter, DB_ALT_BLOCK, BlockBatchAdaptor::alttip(), *pop.altTree, state)) {
         return error("%s: failed to load ALT tree %s", __func__, state.toString());
     }
@@ -409,13 +442,13 @@ void addDisconnectedPopdata(const altintegration::PopData& popData) EXCLUSIVE_LO
 {
     altintegration::ValidationState state;
     auto& popmp = *VeriBlock::GetPop().mempool;
-    for(const auto& i : popData.context) {
+    for (const auto& i : popData.context) {
         popmp.submit(i, state);
     }
-    for(const auto& i : popData.vtbs) {
+    for (const auto& i : popData.vtbs) {
         popmp.submit(i, state);
     }
-    for(const auto& i : popData.atvs) {
+    for (const auto& i : popData.atvs) {
         popmp.submit(i, state);
     }
 }
