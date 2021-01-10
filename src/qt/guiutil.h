@@ -398,7 +398,7 @@ namespace GUIUtil
     QString NetworkToQString(Network net);
 
     /** Convert enum ConnectionType to QString */
-    QString ConnectionTypeToQString(ConnectionType conn_type);
+    QString ConnectionTypeToQString(ConnectionType conn_type, bool relay_txes);
 
     /** Convert seconds into a QString with days, hours, mins, secs */
     QString formatDurationStr(std::chrono::seconds dur);
