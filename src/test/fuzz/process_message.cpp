@@ -65,9 +65,8 @@ void fuzz_target(const std::vector<uint8_t>& buffer, const std::string& LIMIT_TO
     const bool jump_out_of_ibd{fuzzed_data_provider.ConsumeBool()};
     if (jump_out_of_ibd) chainstate.JumpOutOfIbd();
     CNode& p2p_node = *ConsumeNodeAsUniquePtr(fuzzed_data_provider).release();
+    FillNode(fuzzed_data_provider, p2p_node);
     p2p_node.fSuccessfullyConnected = true;
-    p2p_node.nVersion = PROTOCOL_VERSION;
-    p2p_node.SetCommonVersion(PROTOCOL_VERSION);
     connman.AddTestNode(p2p_node);
     g_setup->m_node.peerman->InitializeNode(&p2p_node);
 
