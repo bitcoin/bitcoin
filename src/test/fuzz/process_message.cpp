@@ -55,20 +55,24 @@ void initialize_process_message()
 void fuzz_target(const std::vector<uint8_t>& buffer, const std::string& LIMIT_TO_MESSAGE_TYPE)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
+
     ConnmanTestMsg& connman = *(ConnmanTestMsg*)g_setup->m_node.connman.get();
     TestChainState& chainstate = *(TestChainState*)&g_setup->m_node.chainman->ActiveChainstate();
+    SetMockTime(1610000000); // any time to successfully reset ibd
     chainstate.ResetIbd();
+
     const std::string random_message_type{fuzzed_data_provider.ConsumeBytesAsString(CMessageHeader::COMMAND_SIZE).c_str()};
     if (!LIMIT_TO_MESSAGE_TYPE.empty() && random_message_type != LIMIT_TO_MESSAGE_TYPE) {
         return;
     }
-    const bool jump_out_of_ibd{fuzzed_data_provider.ConsumeBool()};
-    if (jump_out_of_ibd) chainstate.JumpOutOfIbd();
     CNode& p2p_node = *ConsumeNodeAsUniquePtr(fuzzed_data_provider).release();
     FillNode(fuzzed_data_provider, p2p_node);
     p2p_node.fSuccessfullyConnected = true;
     connman.AddTestNode(p2p_node);
     g_setup->m_node.peerman->InitializeNode(&p2p_node);
+
+    const auto mock_time = ConsumeTime(fuzzed_data_provider);
+    SetMockTime(mock_time);
 
     // fuzzed_data_provider is fully consumed after this call, don't use it
     CDataStream random_bytes_data_stream{fuzzed_data_provider.ConsumeRemainingBytes<unsigned char>(), SER_NETWORK, PROTOCOL_VERSION};
