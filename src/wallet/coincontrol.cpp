@@ -10,8 +10,8 @@ void CCoinControl::SetNull()
 {
     destChange = CNoDestination();
     m_change_type.reset();
-    m_add_inputs = true;
     fAllowOtherInputs = false;
+    m_add_inputs = true;
     fAllowWatchOnly = false;
     m_avoid_partial_spends = gArgs.GetBoolArg("-avoidpartialspends", DEFAULT_AVOIDPARTIALSPENDS);
     m_avoid_address_reuse = false;
