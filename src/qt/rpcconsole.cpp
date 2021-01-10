@@ -16,9 +16,10 @@
 #include <chainparams.h>
 #include <interfaces/node.h>
 #include <netbase.h>
-#include <rpc/server.h>
 #include <rpc/client.h>
+#include <rpc/server.h>
 #include <util/strencodings.h>
+#include <util/string.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 
@@ -459,11 +460,22 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
 
     ui->splitter->restoreState(settings.value("PeersTabSplitterSizes").toByteArray());
 
-    QChar nonbreaking_hyphen(8209);
+    constexpr QChar nonbreaking_hyphen(8209);
+    const std::vector<QString> CONNECTION_TYPE_DOC{
+        tr("Inbound Full/Block Relay: initiated by peer"),
+        tr("Outbound Full Relay: default"),
+        tr("Outbound Block Relay: does not relay transactions or addresses"),
+        tr("Outbound Manual: added using RPC %1 or %2/%3 configuration options")
+            .arg("addnode")
+            .arg(QString(nonbreaking_hyphen) + "addnode")
+            .arg(QString(nonbreaking_hyphen) + "connect"),
+        tr("Outbound Feeler: short-lived, for testing addresses"),
+        tr("Outbound Address Fetch: short-lived, for soliciting addresses")};
+    const QString list{"<ul><li>" + Join(CONNECTION_TYPE_DOC, QString("</li><li>")) + "</li></ul>"};
+    ui->peerConnectionTypeLabel->setToolTip(ui->peerConnectionTypeLabel->toolTip().arg(list));
     ui->dataDir->setToolTip(ui->dataDir->toolTip().arg(QString(nonbreaking_hyphen) + "datadir"));
     ui->blocksDir->setToolTip(ui->blocksDir->toolTip().arg(QString(nonbreaking_hyphen) + "blocksdir"));
     ui->openDebugLogfileButton->setToolTip(ui->openDebugLogfileButton->toolTip().arg(PACKAGE_NAME));
-    ui->peerConnectionTypeLabel->setToolTip(ui->peerConnectionTypeLabel->toolTip().arg("addnode").arg(QString(nonbreaking_hyphen) + "addnode").arg(QString(nonbreaking_hyphen) + "connect"));
 
     if (platformStyle->getImagesOnButtons()) {
         ui->openDebugLogfileButton->setIcon(platformStyle->SingleColorIcon(":/icons/export"));
