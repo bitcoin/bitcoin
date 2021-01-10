@@ -46,7 +46,7 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
         peers.push_back(ConsumeNodeAsUniquePtr(fuzzed_data_provider, i).release());
         CNode& p2p_node = *peers.back();
 
-        const bool successfully_connected{true};
+        const bool successfully_connected{fuzzed_data_provider.ConsumeBool()};
         p2p_node.fSuccessfullyConnected = successfully_connected;
         p2p_node.fPauseSend = false;
         g_setup->m_node.peerman->InitializeNode(&p2p_node);
