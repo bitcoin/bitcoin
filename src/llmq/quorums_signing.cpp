@@ -777,9 +777,30 @@ void CSigningManager::UnregisterRecoveredSigsListener(CRecoveredSigsListener* l)
     recoveredSigsListeners.erase(itRem, recoveredSigsListeners.end());
 }
 
-bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash, bool allowReSign)
+bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash, const uint256& quorumHash, bool allowReSign)
 {
     if (!fMasternodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
+        return false;
+    }
+
+    CQuorumCPtr quorum;
+    if (quorumHash.IsNull()) {
+        // This might end up giving different results on different members
+        // This might happen when we are on the brink of confirming a new quorum
+        // This gives a slight risk of not getting enough shares to recover a signature
+        // But at least it shouldn't be possible to get conflicting recovered signatures
+        // TODO fix this by re-signing when the next block arrives, but only when that block results in a change of the quorum list and no recovered signature has been created in the mean time
+        quorum = SelectQuorumForSigning(llmqType, id);
+    } else {
+        quorum = quorumManager->GetQuorum(llmqType, quorumHash);
+    }
+
+    if (!quorum) {
+        LogPrint(BCLog::LLMQ, "CSigningManager::%s -- failed to select quorum. id=%s, msgHash=%s\n", __func__, id.ToString(), msgHash.ToString());
+        return false;
+    }
+
+    if (!quorum->IsValidMember(activeMasternodeInfo.proTxHash)) {
         return false;
     }
 
@@ -811,21 +832,6 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
         if (!hasVoted) {
             db.WriteVoteForId(llmqType, id, msgHash);
         }
-    }
-
-    // This might end up giving different results on different members
-    // This might happen when we are on the brink of confirming a new quorum
-    // This gives a slight risk of not getting enough shares to recover a signature
-    // But at least it shouldn't be possible to get conflicting recovered signatures
-    // TODO fix this by re-signing when the next block arrives, but only when that block results in a change of the quorum list and no recovered signature has been created in the mean time
-    CQuorumCPtr quorum = SelectQuorumForSigning(llmqType, id);
-    if (!quorum) {
-        LogPrint(BCLog::LLMQ, "CSigningManager::%s -- failed to select quorum. id=%s, msgHash=%s\n", __func__, id.ToString(), msgHash.ToString());
-        return false;
-    }
-
-    if (!quorum->IsValidMember(activeMasternodeInfo.proTxHash)) {
-        return false;
     }
 
     if (allowReSign) {

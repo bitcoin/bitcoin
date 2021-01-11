@@ -383,17 +383,11 @@ UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
     uint256 msgHash = ParseHashV(request.params[3], "msgHash");
 
     if (cmd == "sign") {
+        uint256 quorumHash;
         if (!request.params[4].isNull()) {
-            uint256 quorumHash = ParseHashV(request.params[4], "quorumHash");
-            auto quorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
-            if (!quorum) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
-            }
-            llmq::quorumSigSharesManager->AsyncSign(quorum, id, msgHash);
-            return true;
-        } else {
-            return llmq::quorumSigningManager->AsyncSignIfMember(llmqType, id, msgHash);
+            quorumHash = ParseHashV(request.params[4], "quorumHash");
         }
+        return llmq::quorumSigningManager->AsyncSignIfMember(llmqType, id, msgHash, quorumHash);
     } else if (cmd == "verify") {
         CBLSSignature sig;
         if (!sig.SetHexStr(request.params[4].get_str())) {

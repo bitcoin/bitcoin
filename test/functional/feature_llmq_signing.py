@@ -60,8 +60,14 @@ class LLMQSigningTest(DashTestFramework):
             self.mninfo[i].node.quorum("sign", 100, id, msgHash)
         assert_sigs_nochange(False, False, False, 3)
 
-        # Sign one more share, should result in recovered sig and conflict for msgHashConflict
-        self.mninfo[2].node.quorum("sign", 100, id, msgHash)
+        # Sign one more share and test optional quorumHash parameter.
+        # Should result in recovered sig and conflict for msgHashConflict
+        # 1. Providing an invalid quorum hash should fail and cause no changes for sigs
+        assert(not self.mninfo[2].node.quorum("sign", 100, id, msgHash, msgHash))
+        assert_sigs_nochange(False, False, False, 3)
+        # 2. Providing a valid quorum hash should succeed and finally result in the recovered sig
+        quorumHash = self.mninfo[2].node.quorum("selectquorum", 100, id)["quorumHash"]
+        assert(self.mninfo[2].node.quorum("sign", 100, id, msgHash, quorumHash))
         wait_for_sigs(True, False, True, 15)
 
         # Test `quorum verify` rpc
