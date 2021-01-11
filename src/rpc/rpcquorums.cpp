@@ -299,6 +299,23 @@ void quorum_sign_help()
     );
 }
 
+void quorum_verify_help()
+{
+    throw std::runtime_error(
+            "quorum verify llmqType \"id\" \"msgHash\" \"signature\" ( \"quorumHash\" signHeight )\n"
+            "Test if a quorum signature is valid for a request id and a message hash\n"
+            "\nArguments:\n"
+            "1. llmqType              (int, required) LLMQ type.\n"
+            "2. \"id\"                  (string, required) Request id.\n"
+            "3. \"msgHash\"             (string, required) Message hash.\n"
+            "4. \"signature\"           (string, required) Quorum signature to verify.\n"
+            "5. \"quorumHash\"          (string, optional) The quorum identifier.\n"
+            "                             Set to \"\" if you want to specify signHeight instead.\n"
+            "6. signHeight                (int, optional) The height at which the message was signed.\n"
+            "                             Only works when quorumHash is \"\".\n"
+    );
+}
+
 void quorum_hasrecsig_help()
 {
     throw std::runtime_error(
@@ -343,6 +360,10 @@ UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
             if ((request.params.size() < 4) || (request.params.size() > 5)) {
                 quorum_sign_help();
             }
+        } else if (cmd == "verify") {
+            if (request.params.size() < 5 || request.params.size() > 7) {
+                quorum_verify_help();
+            }
         } else if (cmd == "hasrecsig") {
             quorum_hasrecsig_help();
         } else if (cmd == "getrecsig") {
@@ -375,6 +396,36 @@ UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
         } else {
             return llmq::quorumSigningManager->AsyncSignIfMember(llmqType, id, msgHash);
         }
+    } else if (cmd == "verify") {
+        CBLSSignature sig;
+        if (!sig.SetHexStr(request.params[4].get_str())) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
+        }
+
+        llmq::CQuorumCPtr quorum{nullptr};
+        if (request.params[5].isNull() || (request.params[5].get_str().empty() && !request.params[6].isNull())) {
+            int signHeight{-1};
+            if (!request.params[6].isNull()) {
+                signHeight = ParseInt32V(request.params[6], "signHeight");
+            }
+            // First check against the current active set
+            quorum = llmq::quorumSigningManager->SelectQuorumForSigning(llmqType, id, signHeight, 0);
+            if (!quorum) {
+                // Then check against the previous active set in case it changed recently
+                int signOffset = Params().GetConsensus().llmqs.at(llmqType).dkgInterval;
+                quorum = llmq::quorumSigningManager->SelectQuorumForSigning(llmqType, id, signHeight, signOffset);
+            }
+        } else {
+            uint256 quorumHash = ParseHashV(request.params[5], "quorumHash");
+            quorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
+        }
+
+        if (!quorum) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
+        }
+
+        uint256 signHash = llmq::CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, id, msgHash);
+        return sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash);
     } else if (cmd == "hasrecsig") {
         return llmq::quorumSigningManager->HasRecoveredSig(llmqType, id, msgHash);
     } else if (cmd == "getrecsig") {
@@ -483,6 +534,7 @@ UniValue quorum_dkgsimerror(const JSONRPCRequest& request)
             "  dkgstatus         - Return the status of the current DKG process\n"
             "  memberof          - Checks which quorums the given masternode is a member of\n"
             "  sign              - Threshold-sign a message\n"
+            "  verify            - Test if a quorum signature is valid for a request id and a message hash\n"
             "  hasrecsig         - Test if a valid recovered signature is present\n"
             "  getrecsig         - Get a recovered signature\n"
             "  isconflicting     - Test if a conflict exists\n"
@@ -509,7 +561,7 @@ UniValue quorum(const JSONRPCRequest& request)
         return quorum_dkgstatus(request);
     } else if (command == "memberof") {
         return quorum_memberof(request);
-    } else if (command == "sign" || command == "hasrecsig" || command == "getrecsig" || command == "isconflicting") {
+    } else if (command == "sign" || command == "verify" || command == "hasrecsig" || command == "getrecsig" || command == "isconflicting") {
         return quorum_sigs_cmd(request);
     } else if (command == "selectquorum") {
         return quorum_selectquorum(request);

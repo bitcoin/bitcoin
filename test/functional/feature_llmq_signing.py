@@ -64,6 +64,22 @@ class LLMQSigningTest(DashTestFramework):
         self.mninfo[2].node.quorum("sign", 100, id, msgHash)
         wait_for_sigs(True, False, True, 15)
 
+        # Test `quorum verify` rpc
+        node = self.nodes[0]
+        recsig = node.quorum("getrecsig", 100, id, msgHash)
+        # Find quorum automatically
+        height = node.getblockcount()
+        height_bad = node.getblockheader(recsig["quorumHash"])["height"]
+        hash_bad = node.getblockhash(0)
+        assert(node.quorum("verify", 100, id, msgHash, recsig["sig"]))
+        assert(node.quorum("verify", 100, id, msgHash, recsig["sig"], "", height))
+        assert(not node.quorum("verify", 100, id, msgHashConflict, recsig["sig"]))
+        assert_raises_rpc_error(-8, "quorum not found", node.quorum, "verify", 100, id, msgHash, recsig["sig"], "", height_bad)
+        # Use specifc quorum
+        assert(node.quorum("verify", 100, id, msgHash, recsig["sig"], recsig["quorumHash"]))
+        assert(not node.quorum("verify", 100, id, msgHashConflict, recsig["sig"], recsig["quorumHash"]))
+        assert_raises_rpc_error(-8, "quorum not found", node.quorum, "verify", 100, id, msgHash, recsig["sig"], hash_bad)
+
         recsig_time = self.mocktime
 
         # Mine one more quorum, so that we have 2 active ones, nothing should change
