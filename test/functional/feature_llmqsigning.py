@@ -5,7 +5,8 @@
 
 import time
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import force_finish_mnsync
+from test_framework.util import force_finish_mnsync, assert_raises_rpc_error
+
 '''
 feature_llmqsigning.py
 
@@ -71,6 +72,22 @@ class LLMQSigningTest(DashTestFramework):
         self.mninfo[2].node.quorum_sign(100, id, msgHash)
         self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
+
+        # Test `quorum verify` rpc
+        node = self.nodes[0]
+        recsig = node.quorum_getrecsig(100, id, msgHash)
+        # Find quorum automatically
+        height = node.getblockcount()
+        height_bad = node.getblockheader(recsig["quorumHash"])["height"]
+        hash_bad = node.getblockhash(0)
+        assert(node.quorum_verify(100, id, msgHash, recsig["sig"]))
+        assert(node.quorum_verify(100, id, msgHash, recsig["sig"], "", height))
+        assert(not node.quorum_verify(100, id, msgHashConflict, recsig["sig"]))
+        assert_raises_rpc_error(-8, "quorum not found", node.quorum_verify, 100, id, msgHash, recsig["sig"], "", height_bad)
+        # Use specifc quorum
+        assert(node.quorum_verify(100, id, msgHash, recsig["sig"], recsig["quorumHash"]))
+        assert(not node.quorum_verify(100, id, msgHashConflict, recsig["sig"], recsig["quorumHash"]))
+        assert_raises_rpc_error(-8, "quorum not found", node.quorum_verify, 100, id, msgHash, recsig["sig"], hash_bad)
 
         recsig_time = self.mocktime
 

@@ -360,6 +360,64 @@ static RPCHelpMan quorum_hasrecsig()
     };
 } 
 
+static RPCHelpMan quorum_verify()
+{
+    return RPCHelpMan{"quorum_verify",
+        "\nTest if a quorum signature is valid for a request id and a message hash.\n",
+        {
+            {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type.\n"},  
+            {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id.\n"},   
+            {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash.\n"},   
+            {"signature", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Quorum signature to verify.\n"},
+            {"quorumHash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The quorum identifier. Set to \"\" if you want to specify signHeight instead.\n"},   
+            {"signHeight", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "The height at which the message was signed. Only works when quorumHash is \"\".\n"},                
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+                HelpExampleCli("quorum_verify", "0 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
+            + HelpExampleRpc("quorum_verify", "0, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    uint8_t llmqType = (uint8_t)request.params[0].get_int();
+    if (!Params().GetConsensus().llmqs.count(llmqType)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
+    }
+
+    uint256 id = ParseHashV(request.params[1], "id");
+    uint256 msgHash = ParseHashV(request.params[2], "msgHash");
+    CBLSSignature sig;
+    if (!sig.SetHexStr(request.params[3].get_str())) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
+    }
+       llmq::CQuorumCPtr quorum{nullptr};
+        if (request.params[4].isNull() || (request.params[4].get_str().empty() && !request.params[5].isNull())) {
+            int signHeight{-1};
+            if (!request.params[5].isNull()) {
+                signHeight = request.params[5].get_int();
+            }
+            // First check against the current active set
+            quorum = llmq::quorumSigningManager->SelectQuorumForSigning(llmqType, id, signHeight, 0);
+            if (!quorum) {
+                // Then check against the previous active set in case it changed recently
+                int signOffset = Params().GetConsensus().llmqs.at(llmqType).dkgInterval;
+                quorum = llmq::quorumSigningManager->SelectQuorumForSigning(llmqType, id, signHeight, signOffset);
+            }
+        } else {
+            uint256 quorumHash = ParseHashV(request.params[4], "quorumHash");
+            quorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
+        }
+
+        if (!quorum) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
+        }
+
+        uint256 signHash = llmq::CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, id, msgHash);
+        return sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash);
+},
+    };
+} 
+
 static RPCHelpMan quorum_getrecsig()
 {
     return RPCHelpMan{"quorum_getrecsig",
@@ -519,6 +577,7 @@ static const CRPCCommand commands[] =
     { "evo",                "quorum_selectquorum",         &quorum_selectquorum,                {"llmqType","id"}  },
     { "evo",                "quorum_dkgsimerror",          &quorum_dkgsimerror,                 {"type","rate"}  },
     { "evo",                "quorum_hasrecsig",            &quorum_hasrecsig,                   {"llmqType","id","msgHash"}  },
+    { "evo",                "quorum_verify",               &quorum_verify,                      {"llmqType","id","msgHash","signature","quorumHash","signHeight"}  },
     { "evo",                "quorum_getrecsig",            &quorum_getrecsig,                   {"llmqType","id","msgHash"}  },
     { "evo",                "quorum_isconflicting",        &quorum_isconflicting,               {"llmqType","id","msgHash"}  },
     { "evo",                "quorum_sign",                 &quorum_sign,                        {"llmqType","id","msgHash","quorumHash"}  },
