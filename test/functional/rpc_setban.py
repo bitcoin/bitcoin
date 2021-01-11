@@ -51,10 +51,20 @@ class SetBanTests(BitcoinTestFramework):
         ip_addr = "1.2.3.4"
         assert(not self.is_banned(node, tor_addr))
         assert(not self.is_banned(node, ip_addr))
+
         node.setban(tor_addr, "add")
         assert(self.is_banned(node, tor_addr))
         assert(not self.is_banned(node, ip_addr))
+
+        self.restart_node(1)
+        assert(self.is_banned(node, tor_addr))
+        assert(not self.is_banned(node, ip_addr))
+
         node.setban(tor_addr, "remove")
+        assert(not self.is_banned(self.nodes[1], tor_addr))
+        assert(not self.is_banned(node, ip_addr))
+
+        self.restart_node(1)
         assert(not self.is_banned(self.nodes[1], tor_addr))
         assert(not self.is_banned(node, ip_addr))
 
