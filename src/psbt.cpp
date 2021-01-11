@@ -14,6 +14,7 @@ PartiallySignedTransaction::PartiallySignedTransaction(const CMutableTransaction
 {
     inputs.resize(tx.vin.size(), PSBTInput(GetVersion()));
     outputs.resize(tx.vout.size(), PSBTOutput(GetVersion()));
+    CacheUnsignedTxPieces();
 }
 
 bool PartiallySignedTransaction::IsNull() const
