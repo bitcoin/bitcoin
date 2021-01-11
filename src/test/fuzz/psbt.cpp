@@ -86,8 +86,8 @@ FUZZ_TARGET(psbt)
     for (auto& psbt_in : psbt_merge.inputs) {
         (void)psbt_mut.AddInput(psbt_in);
     }
-    for (unsigned int i = 0; i < psbt_merge.tx->vout.size(); ++i) {
-        Assert(psbt_mut.AddOutput(psbt_merge.tx->vout[i], psbt_merge.outputs[i]));
+    for (const auto& psbt_out : psbt_merge.outputs) {
+        Assert(psbt_mut.AddOutput(psbt_out));
     }
     psbt_mut.unknown.insert(psbt_merge.unknown.begin(), psbt_merge.unknown.end());
 }

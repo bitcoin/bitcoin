@@ -156,11 +156,18 @@ bool PartiallySignedTransaction::AddInput(PSBTInput& psbtin)
     return false;
 }
 
-bool PartiallySignedTransaction::AddOutput(const CTxOut& txout, const PSBTOutput& psbtout)
+bool PartiallySignedTransaction::AddOutput(const PSBTOutput& psbtout)
 {
-    tx->vout.push_back(txout);
-    outputs.push_back(psbtout);
-    return true;
+    if (tx != std::nullopt) {
+        // This is a v0 psbt, do the v0 AddOutput
+        CTxOut txout(*psbtout.amount, *psbtout.script);
+        tx->vout.push_back(txout);
+        outputs.push_back(psbtout);
+        return true;
+    }
+
+    // TOOD: Do PSBTv2
+    return false;
 }
 
 bool PSBTInput::GetUTXO(CTxOut& utxo) const
