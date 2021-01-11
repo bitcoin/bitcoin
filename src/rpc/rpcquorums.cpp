@@ -570,10 +570,83 @@ UniValue quorum(const JSONRPCRequest& request)
     }
 }
 
+void verifyislock_help()
+{
+    throw std::runtime_error(
+            "verifyislock \"id\" \"txid\" \"signature\" ( maxHeight )\n"
+            "Test if a quorum signature is valid for an InstantSend Lock\n"
+            "\nArguments:\n"
+            "1. \"id\"                  (string, required) Request id.\n"
+            "2. \"txid\"                (string, required) The transaction id.\n"
+            "3. \"signature\"           (string, required) The InstantSend Lock signature to verify.\n"
+            "4. maxHeight                 (int, optional) The maximum height to search quorums from.\n"
+    );
+}
+
+UniValue verifyislock(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 3 || request.params.size() > 4) {
+        verifyislock_help();
+    }
+
+    uint256 id = ParseHashV(request.params[0], "id");
+    uint256 txid = ParseHashV(request.params[1], "txid");
+
+    CBLSSignature sig;
+    if (!sig.SetHexStr(request.params[2].get_str())) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
+    }
+
+    CBlockIndex* pindexMined{nullptr};
+    {
+        LOCK(cs_main);
+        CTransactionRef tx;
+        uint256 hash_block;
+        if (!GetTransaction(txid, tx, Params().GetConsensus(), hash_block, true)) {
+            std::string errmsg = fTxIndex
+                  ? "No such mempool or blockchain transaction"
+                  : "No such mempool transaction. Use -txindex to enable blockchain transaction queries";
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg);
+        }
+        if (!hash_block.IsNull()) {
+            pindexMined = LookupBlockIndex(hash_block);
+        }
+    }
+
+    int maxHeight{-1};
+    if (!request.params[3].isNull()) {
+        maxHeight = ParseInt32V(request.params[3], "maxHeight");
+    }
+
+    int signHeight;
+    if (pindexMined == nullptr || pindexMined->nHeight > maxHeight) {
+        signHeight = maxHeight;
+    } else { // pindexMined->nHeight <= maxHeight
+        signHeight = pindexMined->nHeight;
+    }
+
+    // First check against the current active set
+    auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
+    auto quorum = llmq::quorumSigningManager->SelectQuorumForSigning(llmqType, id, signHeight, 0);
+    if (!quorum) {
+        // Then check against the previous active set in case it changed recently
+        int signOffset = Params().GetConsensus().llmqs.at(llmqType).dkgInterval;
+        quorum = llmq::quorumSigningManager->SelectQuorumForSigning(llmqType, id, signHeight, signOffset);
+        if (!quorum) {
+            // None of the above
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
+        }
+    }
+
+    uint256 signHash = llmq::CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, id, txid);
+    return sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash);
+}
+
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)
   //  --------------------- ------------------------  -----------------------
     { "evo",                "quorum",                 &quorum,                 {}  },
+    { "evo",                "verifyislock",           &verifyislock,           {"id", "txid", "signature", "maxHeight"}  },
 };
 
 void RegisterQuorumsRPCCommands(CRPCTable &tableRPC)
