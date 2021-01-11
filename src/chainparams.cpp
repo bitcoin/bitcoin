@@ -162,7 +162,7 @@ CMainParams::CMainParams()
      consensus.BIP66Height = 1;          // 000000002104c8c45e99a8853285a3b592602a3ccde2b832481da85e9e4ba182
      consensus.CSVHeight = 1;            // 00000000025e930139bac5c6c31a403776da130831ab85be56578f3fa75369bb
      consensus.SegwitHeight = 1;         // 00000000002b980fcd729daaa248fd9316a5200e9b367f4ff2c42453e84201ca
-     consensus.powLimit = uint256S("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+     consensus.powLimit = uint256S("000007ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
      consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
      consensus.nPowTargetSpacing = 10 * 60;
      consensus.fPowAllowMinDifficultyBlocks = true;
@@ -186,10 +186,18 @@ CMainParams::CMainParams()
      m_assumed_blockchain_size = 40;
      m_assumed_chain_state_size = 2;
 
-     genesis = CreateGenesisBlockDefault(1296688602, 414098458, 0x1d00ffff, 1, 50 * COIN);
+//     CBlock(hash=0000000fa9a9736fd815daea197d2cf0526e1c4641c365a5e5c811374795fdb6, ver=0x00000001, hashPrevBlock=0000000000000000000000000000000000000000000000000000000000000000, hashMerkleRoot=345a907c247b9500ecb312e5c2b027b0ec3c6bd70ebd428044eadb9f78460046, nTime=1340, nBits=1d1fffff, nNonce=15922192, vtx=1)
+//     CTransaction(hash=345a907c24, ver=1, vin.size=1, vout.size=1, nLockTime=0)
+//     CTxIn(COutPoint(0000000000, 4294967295), coinbase 04ffff1f1d01040956657269426c6f636b)
+//     CScriptWitness()
+//     CTxOut(nValue=50.00000000, scriptPubKey=41047c62bbf7f5aa4dd5c16bad99ac)
+     genesis = VeriBlock::CreateGenesisBlock(
+         1340, 15922192, 0x1d1fffff, 1, 50 * COIN,
+         "047c62bbf7f5aa4dd5c16bad99ac621b857fac4e93de86e45f5ada73404eeb44dedcf377b03c14a24e9d51605d9dd2d8ddaef58760d9c4bb82d9c8f06d96e79488",
+         "VeriBlock");
      consensus.hashGenesisBlock = genesis.GetHash();
-     assert(consensus.hashGenesisBlock == uint256S("0x000000000933ea01ad0ee984209779baaec3ced90fa3f408719526f8d77f4943"));
-     assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
+     assert(consensus.hashGenesisBlock == uint256S("0000000fa9a9736fd815daea197d2cf0526e1c4641c365a5e5c811374795fdb6"));
+     assert(genesis.hashMerkleRoot == uint256S("345a907c247b9500ecb312e5c2b027b0ec3c6bd70ebd428044eadb9f78460046"));
 
      vFixedSeeds.clear();
      vSeeds.clear();

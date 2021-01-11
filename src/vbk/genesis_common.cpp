@@ -3,9 +3,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "genesis_common.hpp"
+#include <consensus/merkle.h>
 #include <util/strencodings.h>
 #include <vbk/merkle.hpp>
-#include "genesis_common.hpp"
 
 namespace VeriBlock {
 
@@ -48,7 +49,7 @@ CBlock CreateGenesisBlock(
     genesis.nVersion = nVersion;
     genesis.vtx.push_back(MakeTransactionRef(std::move(txNew)));
     genesis.hashPrevBlock.SetNull();
-    genesis.hashMerkleRoot = VeriBlock::TopLevelMerkleRoot(nullptr, genesis);
+    genesis.hashMerkleRoot = BlockMerkleRoot(genesis);
     return genesis;
 }
 

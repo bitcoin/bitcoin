@@ -120,11 +120,11 @@ VBK_TESTS = \
     vbk/test/unit/vbk_merkle_tests.cpp \
     vbk/test/unit/block_validation_tests.cpp \
     vbk/test/unit/rpc_service_tests.cpp \
+    vbk/test/unit/genesis_block_tests.cpp \
     vbk/test/unit/forkresolution_tests.cpp
 
 #  vbk/test/unit/updated_mempool_tests.cpp \
 #  vbk/test/unit/rpc_service_tests.cpp \
-#  vbk/test/unit/genesis_block_tests.cpp \
 #  vbk/test/unit/pop_service_tests.cpp \
 #  vbk/test/unit/util_service_tests.cpp \
 #  vbk/test/unit/vbk_merkle_tests.cpp \
