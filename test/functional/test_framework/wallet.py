@@ -58,9 +58,13 @@ class MiniWallet:
         tx.vin[0].scriptSig = CScript([CScript([OP_TRUE])])
         tx_hex = tx.serialize().hex()
 
-        txid = from_node.sendrawtransaction(tx_hex)
-        self._utxos.append({'txid': txid, 'vout': 0, 'value': send_value})
-        tx_info = from_node.getmempoolentry(txid)
-        assert_equal(tx_info['vsize'], vsize)
-        assert_equal(tx_info['fee'], fee)
-        return {'txid': txid, 'hex': tx_hex}
+        tx_info = from_node.testmempoolaccept([tx_hex])[0]
+        self._utxos.append({'txid': tx_info['txid'], 'vout': 0, 'value': send_value})
+        from_node.sendrawtransaction(tx_hex)
+        assert_equal(len(tx_hex) // 2, vsize)
+        # Dash doesn't have `fees` in this RPC result
+        # TODO drop this variable after 19940
+        b19940_done = False
+        if b19940_done:
+            assert_equal(tx_info['fees']['base'], fee)
+        return {'txid': tx_info['txid'], 'hex': tx_hex}
