@@ -5,9 +5,11 @@
 #ifndef BITCOIN_WALLET_COINCONTROL_H
 #define BITCOIN_WALLET_COINCONTROL_H
 
+#include <key.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <primitives/transaction.h>
+#include <script/standard.h>
 
 #include <boost/optional.hpp>
 

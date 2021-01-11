@@ -6,9 +6,9 @@
 
 #include <wallet/walletdb.h>
 
-#include <base58.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
+#include <key_io.h>
 #include <fs.h>
 #include <governance/governance-object.h>
 #include <protocol.h>

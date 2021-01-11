@@ -119,6 +119,7 @@ BITCOIN_CORE_H = \
   addrman.h \
   base58.h \
   batchedlogger.h \
+  bech32.h \
   bip39.h \
   bip39_english.h \
   blockencodings.h \
@@ -176,6 +177,7 @@ BITCOIN_CORE_H = \
   interfaces/node.h \
   interfaces/wallet.h \
   key.h \
+  key_io.h \
   keepass.h \
   keystore.h \
   dbwrapper.h \
@@ -524,6 +526,7 @@ libdash_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libdash_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libdash_common_a_SOURCES = \
   base58.cpp \
+  bech32.cpp \
   bip39.cpp \
   chainparams.cpp \
   coins.cpp \
@@ -532,6 +535,7 @@ libdash_common_a_SOURCES = \
   core_write.cpp \
   hdchain.cpp \
   key.cpp \
+  key_io.cpp \
   keystore.cpp \
   netaddress.cpp \
   netbase.cpp \

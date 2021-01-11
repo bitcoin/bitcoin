@@ -13,8 +13,11 @@
 #include <qt/qvalidatedlineedit.h>
 #include <qt/walletmodel.h>
 
+#include <base58.h>
+#include <chainparams.h>
 #include <primitives/transaction.h>
 #include <interfaces/node.h>
+#include <key_io.h>
 #include <policy/policy.h>
 #include <protocol.h>
 #include <script/script.h>

@@ -9,11 +9,11 @@
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 
-#include <base58.h>
 #include <chainparams.h>
 #include <clientversion.h>
 #include <interfaces/node.h>
 #include <policy/policy.h>
+#include <key_io.h>
 #include <ui_interface.h>
 #include <util.h>
 

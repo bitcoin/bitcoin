@@ -276,9 +276,8 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 {
     CKey sporkKey;
     sporkKey.MakeNewKey(false);
-    CBitcoinSecret sporkSecret(sporkKey);
     sporkManager.SetSporkAddress(EncodeDestination(sporkKey.GetPubKey().GetID()));
-    sporkManager.SetPrivKey(sporkSecret.ToString());
+    sporkManager.SetPrivKey(EncodeSecret(sporkKey));
 
     auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
 

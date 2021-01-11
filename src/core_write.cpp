@@ -4,7 +4,9 @@
 
 #include <core_io.h>
 
-#include <base58.h>
+#include <consensus/consensus.h>
+#include <consensus/validation.h>
+#include <key_io.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <script/standard.h>

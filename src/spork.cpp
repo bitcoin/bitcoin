@@ -4,8 +4,8 @@
 
 #include <spork.h>
 
-#include <base58.h>
 #include <chainparams.h>
+#include <key_io.h>
 #include <validation.h>
 #include <messagesigner.h>
 #include <net_processing.h>

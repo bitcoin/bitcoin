@@ -9,6 +9,7 @@
 #include <qt/walletmodel.h>
 
 #include <interfaces/node.h>
+#include <key_io.h>
 
 #include <QFont>
 #include <QDebug>

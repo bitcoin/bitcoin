@@ -2,9 +2,10 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <base58.h>
 #include <test/data/bip39_vectors.json.h>
+
 #include <key.h>
+#include <key_io.h>
 #include <util.h>
 #include <utilstrencodings.h>
 #include <test/test_dash.h>
@@ -57,10 +58,8 @@ BOOST_AUTO_TEST_CASE(bip39_vectors)
         key.SetMaster(seed.data(), 64);
         pubkey = key.Neuter();
 
-        CBitcoinExtKey b58key;
-        b58key.SetKey(key);
-        // printf("CBitcoinExtKey: %s\n", b58key.ToString().c_str());
-        BOOST_CHECK(b58key.ToString() == test[3].get_str());
+        // printf("CBitcoinExtKey: %s\n", EncodeExtKey(key).c_str());
+        BOOST_CHECK(EncodeExtKey(key) == test[3].get_str());
     }
 }
 
