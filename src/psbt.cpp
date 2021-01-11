@@ -26,7 +26,7 @@ bool PartiallySignedTransaction::IsNull() const
 bool PartiallySignedTransaction::Merge(const PartiallySignedTransaction& psbt)
 {
     // Prohibited to merge two PSBTs over different transactions
-    if (tx->GetHash() != psbt.tx->GetHash()) {
+    if (GetUniqueID() != psbt.GetUniqueID()) {
         return false;
     }
 
@@ -108,6 +108,24 @@ CMutableTransaction PartiallySignedTransaction::GetUnsignedTx() const
         mtx.vout.push_back(txout);
     }
     return mtx;
+}
+
+uint256 PartiallySignedTransaction::GetUniqueID() const
+{
+    if (tx != std::nullopt) {
+        return tx->GetHash();
+    }
+
+    // Get the unsigned transaction
+    CMutableTransaction mtx = GetUnsignedTx();
+    // Compute the locktime
+    bool locktime_success = ComputeTimeLock(mtx.nLockTime);
+    assert(locktime_success);
+    // Set the sequence numbers to 0
+    for (CTxIn& txin : mtx.vin) {
+        txin.nSequence = 0;
+    }
+    return mtx.GetHash();
 }
 
 bool PartiallySignedTransaction::AddInput(const CTxIn& txin, PSBTInput& psbtin)
