@@ -192,6 +192,11 @@ bool PSBTInput::GetUTXO(CTxOut& utxo) const
     return true;
 }
 
+COutPoint PSBTInput::GetOutPoint() const
+{
+    return COutPoint(prev_txid, *prev_out);
+}
+
 bool PSBTInput::IsNull() const
 {
     return !non_witness_utxo && witness_utxo.IsNull() && partial_sigs.empty() && unknown.empty() && hd_keypaths.empty() && redeem_script.empty() && witness_script.empty();
