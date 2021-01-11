@@ -77,7 +77,7 @@ class LLMQSigningTest(DashTestFramework):
         quorumHash = self.mninfo[2].node.quorum_selectquorum(100, id)["quorumHash"]
         assert(self.mninfo[2].node.quorum_sign(100, id, msgHash, quorumHash))
         wait_for_sigs(True, False, True, 15)
-        
+
         self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
 
