@@ -83,8 +83,8 @@ FUZZ_TARGET(psbt)
     psbt_mut = psbt;
     (void)CombinePSBTs(psbt_mut, {psbt_mut, psbt_merge});
     psbt_mut = psbt;
-    for (unsigned int i = 0; i < psbt_merge.tx->vin.size(); ++i) {
-        (void)psbt_mut.AddInput(psbt_merge.tx->vin[i], psbt_merge.inputs[i]);
+    for (auto& psbt_in : psbt_merge.inputs) {
+        (void)psbt_mut.AddInput(psbt_in);
     }
     for (unsigned int i = 0; i < psbt_merge.tx->vout.size(); ++i) {
         Assert(psbt_mut.AddOutput(psbt_merge.tx->vout[i], psbt_merge.outputs[i]));
