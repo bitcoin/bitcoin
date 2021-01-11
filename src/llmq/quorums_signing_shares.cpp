@@ -347,7 +347,7 @@ bool CSigSharesManager::ProcessMessageSigSesAnn(CNode* pfrom, const CSigSesAnn& 
     return true;
 }
 
-bool CSigSharesManager::VerifySigSharesInv(NodeId from, uint8_t llmqType, const CSigSharesInv& inv)
+bool CSigSharesManager::VerifySigSharesInv(uint8_t llmqType, const CSigSharesInv& inv)
 {
     size_t quorumSize = (size_t)Params().GetConsensus().llmqs.at(llmqType).size;
 
@@ -711,7 +711,7 @@ void CSigSharesManager::ProcessPendingSigShares(const std::vector<CSigShare>& si
     cxxtimer::Timer t(true);
     for (auto& sigShare : sigShares) {
         auto quorumKey = std::make_pair(sigShare.llmqType, sigShare.quorumHash);
-        ProcessSigShare(sigShare, connman, quorums.at(quorumKey));
+        ProcessSigShare(sigShare, quorums.at(quorumKey));
     }
     t.stop();
 
@@ -720,7 +720,7 @@ void CSigSharesManager::ProcessPendingSigShares(const std::vector<CSigShare>& si
 }
 
 // sig shares are already verified when entering this method
-void CSigSharesManager::ProcessSigShare(const CSigShare& sigShare, CConnman& connman, const CQuorumCPtr& quorum)
+void CSigSharesManager::ProcessSigShare(const CSigShare& sigShare, const CQuorumCPtr& quorum)
 {
     auto llmqType = quorum->params.type;
 

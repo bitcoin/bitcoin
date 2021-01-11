@@ -423,7 +423,7 @@ private:
     void ProcessPendingSigShares(const std::vector<CSigShare>& sigShares,
             const std::unordered_map<std::pair<uint8_t, uint256>, CQuorumCPtr, StaticSaltedHasher>& quorums);
 
-    void ProcessSigShare(const CSigShare& sigShare, CConnman& connman, const CQuorumCPtr& quorum);
+    void ProcessSigShare(const CSigShare& sigShare, const CQuorumCPtr& quorum);
     void TryRecoverSig(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
 
 private:
