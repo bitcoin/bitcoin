@@ -453,7 +453,7 @@ void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
 
 void CDKGSession::VerifyConnectionAndMinProtoVersions()
 {
-    if (!CLLMQUtils::IsAllMembersConnectedEnabled(params.type)) {
+    if (!CLLMQUtils::IsQuorumPoseEnabled(params.type)) {
         return;
     }
 

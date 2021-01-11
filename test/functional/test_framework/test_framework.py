@@ -965,6 +965,7 @@ class DashTestFramework(BitcoinTestFramework):
 
     def mine_quorum(self, expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None):
         spork21_active = self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] <= 1
+        spork23_active = self.nodes[0].spork('show')['SPORK_23_QUORUM_POSE'] <= 1
 
         if expected_connections is None:
             expected_connections = (self.llmq_size - 1) if spork21_active else 2
@@ -997,7 +998,7 @@ class DashTestFramework(BitcoinTestFramework):
         self.log.info("Waiting for phase 1 (init)")
         self.wait_for_quorum_phase(q, 1, expected_members, None, 0, mninfos_online)
         self.wait_for_quorum_connections(expected_connections, nodes, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
-        if spork21_active:
+        if spork23_active:
             self.wait_for_masternode_probes(mninfos_valid, wait_proc=lambda: self.bump_mocktime(1, nodes=nodes))
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
