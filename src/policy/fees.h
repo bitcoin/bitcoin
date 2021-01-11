@@ -11,6 +11,7 @@
 #include <random.h>
 #include <sync.h>
 
+#include <array>
 #include <map>
 #include <memory>
 #include <string>
@@ -25,9 +26,15 @@ class TxConfirmStats;
 /* Identifier for each of the 3 different TxConfirmStats which will track
  * history over different time horizons. */
 enum class FeeEstimateHorizon {
-    SHORT_HALFLIFE = 0,
-    MED_HALFLIFE = 1,
-    LONG_HALFLIFE = 2
+    SHORT_HALFLIFE,
+    MED_HALFLIFE,
+    LONG_HALFLIFE,
+};
+
+static constexpr auto ALL_FEE_ESTIMATE_HORIZONS = std::array{
+    FeeEstimateHorizon::SHORT_HALFLIFE,
+    FeeEstimateHorizon::MED_HALFLIFE,
+    FeeEstimateHorizon::LONG_HALFLIFE,
 };
 
 std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon);
