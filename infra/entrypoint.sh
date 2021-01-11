@@ -35,6 +35,7 @@ set -eu
 SUPPORTED_VARIABLES=(
 	BITCOIN_PORT
 	BLOCKSCRIPT
+	RPC_HOST
 	RPC_PORT
 	ZMQ_PUBHASHTX_PORT
 	ZMQ_PUBRAWBLOCK_PORT
@@ -139,12 +140,14 @@ if [ "${COMMAND-}" = 'bitcoin-cli' ]; then
 	exec bitcoin-cli \
 		-conf="${INTERNAL_CONFIG_DIR}/bitcoin.conf" \
 		-datadir="${INTERNAL_DATADIR}" \
+		-rpcconnect="${RPC_HOST}" \
 		"$@"
 	# The control flow will never reach here, because we exec-ed.
 fi
 
 if [ "${COMMAND-}" = 'miner' ]; then
 	exec miner \
+		--cli="bitcoin-cli -conf=${INTERNAL_CONFIG_DIR}/bitcoin.conf -datadir=${INTERNAL_DATADIR} -rpcconnect=${RPC_HOST}" \
 		"$@"
 	# The control flow will never reach here, because we exec-ed.
 fi

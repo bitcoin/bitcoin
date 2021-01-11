@@ -37,6 +37,7 @@ BITCOIN_PORT=38333
 # BLOCKSCRIPT is not relevant for bitcoin-cli
 BLOCKSCRIPT="NOT_RELEVANT"
 
+RPC_HOST=$(hostname)
 RPC_PORT=38332
 
 # ZMQ_PUBHASHTX_PORT is not relevant for bitcoin-cli
@@ -60,10 +61,11 @@ docker run \
 	--rm \
 	--env BITCOIN_PORT="${BITCOIN_PORT}" \
 	--env BLOCKSCRIPT="${BLOCKSCRIPT}" \
+	--env RPC_HOST="${RPC_HOST}" \
 	--env RPC_PORT="${RPC_PORT}" \
 	--env ZMQ_PUBHASHTX_PORT="${ZMQ_PUBHASHTX_PORT}" \
 	--env ZMQ_PUBRAWBLOCK_PORT="${ZMQ_PUBRAWBLOCK_PORT}" \
 	--tmpfs /opt/itcoin-core/configdir \
 	--mount type=bind,source="${EXTERNAL_DATADIR}",target="${INTERNAL_DATADIR}",readonly \
 	"${ITCOIN_IMAGE}" \
-	bitcoin-cli -rpcconnect=$(hostname) "${@}"
+	bitcoin-cli "${@}"

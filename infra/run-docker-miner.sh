@@ -31,6 +31,7 @@ BITCOIN_PORT=38333
 # BLOCKSCRIPT is not relevant for miner
 BLOCKSCRIPT="NOT_RELEVANT"
 
+RPC_HOST=$(hostname)
 RPC_PORT=38332
 
 # ZMQ_PUBHASHTX_PORT is not relevant for miner
@@ -57,6 +58,7 @@ docker run \
 	--rm \
 	--env BITCOIN_PORT="${BITCOIN_PORT}" \
 	--env BLOCKSCRIPT="${BLOCKSCRIPT}" \
+	--env RPC_HOST="${RPC_HOST}" \
 	--env RPC_PORT="${RPC_PORT}" \
 	--env ZMQ_PUBHASHTX_PORT="${ZMQ_PUBHASHTX_PORT}" \
 	--env ZMQ_PUBRAWBLOCK_PORT="${ZMQ_PUBRAWBLOCK_PORT}" \
@@ -64,7 +66,6 @@ docker run \
 	--mount type=bind,source="${EXTERNAL_DATADIR}",target="${INTERNAL_DATADIR}",readonly \
 	"${ITCOIN_IMAGE}" \
 	miner \
-		--cli="bitcoin-cli -conf=/opt/itcoin-core/configdir/bitcoin.conf -datadir=/opt/itcoin-core/datadir -rpcconnect=$(hostname)" \
 		generate \
 		--address "${ADDRESS}" \
 		--grind-cmd='bitcoin-util grind' \
