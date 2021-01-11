@@ -133,9 +133,9 @@ public:
 
     void TrySignInstantSendLock(const CTransaction& tx);
 
-    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman);
-    void ProcessMessageInstantSendLock(CNode* pfrom, const CInstantSendLock& islock, CConnman& connman);
-    static bool PreVerifyInstantSendLock(NodeId nodeId, const CInstantSendLock& islock, bool& retBan);
+    void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
+    void ProcessMessageInstantSendLock(CNode* pfrom, const CInstantSendLock& islock);
+    static bool PreVerifyInstantSendLock(const CInstantSendLock& islock, bool& retBan);
     bool ProcessPendingInstantSendLocks();
     std::unordered_set<uint256> ProcessPendingInstantSendLocks(int signOffset, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLock>, StaticSaltedHasher>& pend, bool ban);
     void ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLock& islock);

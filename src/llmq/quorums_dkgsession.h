@@ -307,7 +307,7 @@ public:
     // Phase 1: contribution
     void Contribute(CDKGPendingMessages& pendingMessages);
     void SendContributions(CDKGPendingMessages& pendingMessages);
-    bool PreVerifyMessage(const uint256& hash, const CDKGContribution& qc, bool& retBan) const;
+    bool PreVerifyMessage(const CDKGContribution& qc, bool& retBan) const;
     void ReceiveMessage(const uint256& hash, const CDKGContribution& qc, bool& retBan);
     void VerifyPendingContributions();
 
@@ -315,19 +315,19 @@ public:
     void VerifyAndComplain(CDKGPendingMessages& pendingMessages);
     void VerifyConnectionAndMinProtoVersions();
     void SendComplaint(CDKGPendingMessages& pendingMessages);
-    bool PreVerifyMessage(const uint256& hash, const CDKGComplaint& qc, bool& retBan) const;
+    bool PreVerifyMessage(const CDKGComplaint& qc, bool& retBan) const;
     void ReceiveMessage(const uint256& hash, const CDKGComplaint& qc, bool& retBan);
 
     // Phase 3: justification
     void VerifyAndJustify(CDKGPendingMessages& pendingMessages);
     void SendJustification(CDKGPendingMessages& pendingMessages, const std::set<uint256>& forMembers);
-    bool PreVerifyMessage(const uint256& hash, const CDKGJustification& qj, bool& retBan) const;
+    bool PreVerifyMessage(const CDKGJustification& qj, bool& retBan) const;
     void ReceiveMessage(const uint256& hash, const CDKGJustification& qj, bool& retBan);
 
     // Phase 4: commit
     void VerifyAndCommit(CDKGPendingMessages& pendingMessages);
     void SendCommitment(CDKGPendingMessages& pendingMessages);
-    bool PreVerifyMessage(const uint256& hash, const CDKGPrematureCommitment& qc, bool& retBan) const;
+    bool PreVerifyMessage(const CDKGPrematureCommitment& qc, bool& retBan) const;
     void ReceiveMessage(const uint256& hash, const CDKGPrematureCommitment& qc, bool& retBan);
 
     // Phase 5: aggregate/finalize

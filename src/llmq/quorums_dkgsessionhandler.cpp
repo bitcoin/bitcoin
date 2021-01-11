@@ -122,7 +122,7 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
             params.name, currentHeight, quorumHeight, oldPhase, phase);
 }
 
-void CDKGSessionHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
+void CDKGSessionHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
 {
     // We don't handle messages in the calling thread as deserialization/processing of these would block everything
     if (strCommand == NetMsgType::QCONTRIB) {
@@ -156,10 +156,6 @@ void CDKGSessionHandler::StopThread()
 
 bool CDKGSessionHandler::InitNewQuorum(const CBlockIndex* pindexQuorum)
 {
-    //AssertLockHeld(cs_main);
-
-    const auto& consensus = Params().GetConsensus();
-
     curSession = std::make_shared<CDKGSession>(params, blsWorker, dkgManager);
 
     if (!deterministicMNManager->IsDIP3Enforced(pindexQuorum->nHeight)) {
@@ -449,10 +445,8 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         }
         const auto& msg = *p.second;
 
-        auto hash = ::SerializeHash(msg);
-
         bool ban = false;
-        if (!session.PreVerifyMessage(hash, msg, ban)) {
+        if (!session.PreVerifyMessage(msg, ban)) {
             if (ban) {
                 LogPrint(BCLog::LLMQ_DKG, "%s -- banning node due to failed preverification, peer=%d\n", __func__, p.first);
                 {
@@ -463,7 +457,7 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
             LogPrint(BCLog::LLMQ_DKG, "%s -- skipping message due to failed preverification, peer=%d\n", __func__, p.first);
             continue;
         }
-        hashes.emplace_back(hash);
+        hashes.emplace_back(::SerializeHash(msg));
         preverifiedMessages.emplace_back(p);
     }
     if (preverifiedMessages.empty()) {

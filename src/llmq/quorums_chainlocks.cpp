@@ -88,7 +88,7 @@ CChainLockSig CChainLocksHandler::GetBestChainLock()
     return bestChainLock;
 }
 
-void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
+void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
 {
     if (!AreChainLocksEnabled()) {
         return;

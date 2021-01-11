@@ -3577,12 +3577,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
         governance.ProcessMessage(pfrom, strCommand, vRecv, *connman, enable_bip61);
         CMNAuth::ProcessMessage(pfrom, strCommand, vRecv, *connman);
-        llmq::quorumBlockProcessor->ProcessMessage(pfrom, strCommand, vRecv, *connman);
-        llmq::quorumDKGSessionManager->ProcessMessage(pfrom, strCommand, vRecv, *connman);
-        llmq::quorumSigSharesManager->ProcessMessage(pfrom, strCommand, vRecv, *connman);
-        llmq::quorumSigningManager->ProcessMessage(pfrom, strCommand, vRecv, *connman);
-        llmq::chainLocksHandler->ProcessMessage(pfrom, strCommand, vRecv, *connman);
-        llmq::quorumInstantSendManager->ProcessMessage(pfrom, strCommand, vRecv, *connman);
+        llmq::quorumBlockProcessor->ProcessMessage(pfrom, strCommand, vRecv);
+        llmq::quorumDKGSessionManager->ProcessMessage(pfrom, strCommand, vRecv);
+        llmq::quorumSigSharesManager->ProcessMessage(pfrom, strCommand, vRecv);
+        llmq::quorumSigningManager->ProcessMessage(pfrom, strCommand, vRecv);
+        llmq::chainLocksHandler->ProcessMessage(pfrom, strCommand, vRecv);
+        llmq::quorumInstantSendManager->ProcessMessage(pfrom, strCommand, vRecv);
         return true;
     }
 

@@ -664,7 +664,7 @@ void CInstantSendManager::HandleNewInstantSendLockRecoveredSig(const llmq::CReco
     ProcessInstantSendLock(-1, ::SerializeHash(islock), islock);
 }
 
-void CInstantSendManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
+void CInstantSendManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
 {
     if (!IsInstantSendEnabled()) {
         return;
@@ -673,11 +673,11 @@ void CInstantSendManager::ProcessMessage(CNode* pfrom, const std::string& strCom
     if (strCommand == NetMsgType::ISLOCK) {
         CInstantSendLock islock;
         vRecv >> islock;
-        ProcessMessageInstantSendLock(pfrom, islock, connman);
+        ProcessMessageInstantSendLock(pfrom, islock);
     }
 }
 
-void CInstantSendManager::ProcessMessageInstantSendLock(CNode* pfrom, const llmq::CInstantSendLock& islock, CConnman& connman)
+void CInstantSendManager::ProcessMessageInstantSendLock(CNode* pfrom, const llmq::CInstantSendLock& islock)
 {
     auto hash = ::SerializeHash(islock);
 
@@ -687,7 +687,7 @@ void CInstantSendManager::ProcessMessageInstantSendLock(CNode* pfrom, const llmq
     }
 
     bool ban = false;
-    if (!PreVerifyInstantSendLock(pfrom->GetId(), islock, ban)) {
+    if (!PreVerifyInstantSendLock(islock, ban)) {
         if (ban) {
             LOCK(cs_main);
             Misbehaving(pfrom->GetId(), 100);
@@ -709,7 +709,7 @@ void CInstantSendManager::ProcessMessageInstantSendLock(CNode* pfrom, const llmq
     pendingInstantSendLocks.emplace(hash, std::make_pair(pfrom->GetId(), islock));
 }
 
-bool CInstantSendManager::PreVerifyInstantSendLock(NodeId nodeId, const llmq::CInstantSendLock& islock, bool& retBan)
+bool CInstantSendManager::PreVerifyInstantSendLock(const llmq::CInstantSendLock& islock, bool& retBan)
 {
     retBan = false;
 
@@ -785,7 +785,7 @@ std::unordered_set<uint256> CInstantSendManager::ProcessPendingInstantSendLocks(
     auto llmqType = Params().GetConsensus().llmqTypeInstantSend;
 
     CBLSBatchVerifier<NodeId, uint256> batchVerifier(false, true, 8);
-    std::unordered_map<uint256, std::pair<CQuorumCPtr, CRecoveredSig>> recSigs;
+    std::unordered_map<uint256, CRecoveredSig> recSigs;
 
     size_t verifyCount = 0;
     size_t alreadyVerified = 0;
@@ -830,9 +830,7 @@ std::unordered_set<uint256> CInstantSendManager::ProcessPendingInstantSendLocks(
             recSig.id = id;
             recSig.msgHash = islock.txid;
             recSig.sig = islock.sig;
-            recSigs.emplace(std::piecewise_construct,
-                    std::forward_as_tuple(hash),
-                    std::forward_as_tuple(std::move(quorum), std::move(recSig)));
+            recSigs.emplace(std::piecewise_construct, std::forward_as_tuple(hash), std::forward_as_tuple(std::move(recSig)));
         }
     }
 
@@ -871,13 +869,12 @@ std::unordered_set<uint256> CInstantSendManager::ProcessPendingInstantSendLocks(
         // double-verification of the sig.
         auto it = recSigs.find(hash);
         if (it != recSigs.end()) {
-            auto& quorum = it->second.first;
-            auto& recSig = it->second.second;
+            auto& recSig = it->second;
             if (!quorumSigningManager->HasRecoveredSigForId(llmqType, recSig.id)) {
                 recSig.UpdateHash();
                 LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, islock=%s: passing reconstructed recSig to signing mgr, peer=%d\n", __func__,
                          islock.txid.ToString(), hash.ToString(), nodeId);
-                quorumSigningManager->PushReconstructedRecoveredSig(recSig, quorum);
+                quorumSigningManager->PushReconstructedRecoveredSig(recSig);
             }
         }
     }
