@@ -226,15 +226,16 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     uint32_t nAssetEth = 0;
     const std::vector<unsigned char> &rlpBytes = rlpTxValue[5].toBytes(dev::RLP::VeryStrict);
     std::vector<unsigned char> vchERC20ContractAddress;
-    CTxDestination dest, witnessDest;
-    if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, nERC20Precision, nSPTPrecision, rlpBytes, outputAmount, nAssetEth, witnessDest)) {
+    CTxDestination dest;
+    std::string witnessAddress;
+    if(!parseEthMethodInputData(Params().GetConsensus().vchSYSXBurnMethodSignature, nERC20Precision, nSPTPrecision, rlpBytes, outputAmount, nAssetEth, witnessAddress)) {
         return FormatSyscoinErrorMessage(state, "mint-invalid-tx-data", bSanityCheck);
     }
     if(!ExtractDestination(tx.vout[0].scriptPubKey, dest)) {
         return FormatSyscoinErrorMessage(state, "mint-extract-destination", bSanityCheck);  
     }
     if(!fRegTest) {
-        if(dest != witnessDest) {
+        if(EncodeDestination(dest) != witnessAddress) {
             return FormatSyscoinErrorMessage(state, "mint-mismatch-destination", bSanityCheck);  
         }
     }

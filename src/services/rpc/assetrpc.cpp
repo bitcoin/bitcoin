@@ -14,7 +14,6 @@
 #include <policy/policy.h>
 #include <index/txindex.h>
 #include <core_io.h>
-#include <boost/thread/thread.hpp>
 #include <util/system.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
@@ -244,22 +243,22 @@ static RPCHelpMan convertaddress()
     std::string currentV4Address = "";	
     std::string currentV3Address = "";	
     CTxDestination v4Dest;	
-    if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {	
+    if (auto witness_id = std::get_if<WitnessV0KeyHash>(&dest)) {	
         v4Dest = dest;	
         currentV4Address =  EncodeDestination(v4Dest);	
         currentV3Address =  EncodeDestination(*witness_id);	
     }	
-    else if (auto key_id = boost::get<PKHash>(&dest)) {	
+    else if (auto key_id = std::get_if<PKHash>(&dest)) {	
         v4Dest = WitnessV0KeyHash(*key_id);	
         currentV4Address =  EncodeDestination(v4Dest);	
         currentV3Address =  EncodeDestination(*key_id);	
     }	
-    else if (auto script_id = boost::get<ScriptHash>(&dest)) {	
+    else if (auto script_id = std::get_if<ScriptHash>(&dest)) {	
         v4Dest = *script_id;	
         currentV4Address =  EncodeDestination(v4Dest);	
         currentV3Address =  currentV4Address;	
     }	
-    else if (boost::get<WitnessV0ScriptHash>(&dest)) {	
+    else if (std::get_if<WitnessV0ScriptHash>(&dest)) {	
         v4Dest = dest;	
         currentV4Address =  EncodeDestination(v4Dest);	
         currentV3Address =  currentV4Address;	

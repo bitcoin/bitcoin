@@ -33,7 +33,7 @@
 static CKeyID ParsePubKeyIDFromAddress(const std::string& strAddress, const std::string& paramName)
 {
     CTxDestination dest = DecodeDestination(strAddress);
-    const WitnessV0KeyHash *keyID = boost::get<WitnessV0KeyHash>(&dest);
+    const WitnessV0KeyHash *keyID = std::get_if<WitnessV0KeyHash>(&dest);
     if (!keyID) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s must be a valid P2PWKH address, not %s", paramName, strAddress));
     }
@@ -311,10 +311,10 @@ static RPCHelpMan protx_register()
     CTxDestination txDest;
     ExtractDestination(coin.out.scriptPubKey, txDest);
     CKeyID keyID;
-    if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
+    if (auto witness_id = std::get_if<WitnessV0KeyHash>(&txDest)) {	
         keyID = ToKeyID(*witness_id);
     }	
-    else if (auto key_id = boost::get<PKHash>(&txDest)) {	
+    else if (auto key_id = std::get_if<PKHash>(&txDest)) {	
         keyID = ToKeyID(*key_id);
     }	
     if (keyID.IsNull()) {
@@ -591,10 +591,10 @@ static RPCHelpMan protx_register_prepare()
     CTxDestination txDest;
     ExtractDestination(coin.out.scriptPubKey, txDest);
     CKeyID keyID;
-    if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
+    if (auto witness_id = std::get_if<WitnessV0KeyHash>(&txDest)) {	
         keyID = ToKeyID(*witness_id);
     }	
-    else if (auto key_id = boost::get<PKHash>(&txDest)) {	
+    else if (auto key_id = std::get_if<PKHash>(&txDest)) {	
         keyID = ToKeyID(*key_id);
     }	
     if (keyID.IsNull()) {

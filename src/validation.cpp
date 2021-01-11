@@ -5941,10 +5941,10 @@ bool DownloadFile(const std::string &url, const std::string &dest, const std::st
         for(const auto& sporkAddress: vSporkAddresses) {
             CTxDestination txdest = DecodeDestination(sporkAddress);
             CKeyID keyID;
-            if (auto witness_id = boost::get<WitnessV0KeyHash>(&txdest)) {	
+            if (auto witness_id = std::get_if<WitnessV0KeyHash>(&txdest)) {	
                 keyID = ToKeyID(*witness_id);
             }	
-            else if (auto key_id = boost::get<PKHash>(&txdest)) {	
+            else if (auto key_id = std::get_if<PKHash>(&txdest)) {	
                 keyID = ToKeyID(*key_id);
             }	
             if (keyID.IsNull()) {

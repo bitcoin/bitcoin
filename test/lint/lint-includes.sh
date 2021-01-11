@@ -71,9 +71,6 @@ EXPECTED_BOOST_INCLUDES=(
     boost/thread/mutex.hpp
     boost/thread/shared_mutex.hpp
     boost/thread/thread.hpp
-    boost/variant.hpp
-    boost/variant/apply_visitor.hpp
-    boost/variant/static_visitor.hpp
     boost/exception/diagnostic_information.hpp
     boost/exception/exception.hpp
     boost/exception/info.hpp

@@ -111,7 +111,7 @@ CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision)
         if (!IsValidDestination(txDest)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Invalid auxfee address");
         }
-        if (auto witness_id = boost::get<WitnessV0KeyHash>(&txDest)) {	
+        if (auto witness_id = std::get_if<WitnessV0KeyHash>(&txDest)) {	
             CKeyID keyID = ToKeyID(*witness_id);
             vchAuxFeeKeyID = std::vector<unsigned char>(keyID.begin(), keyID.end());
         } else {
