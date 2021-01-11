@@ -68,7 +68,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.repair_masternodes(True)
         self.close_mn_port(self.mninfo[0])
         self.test_no_banning(3)
-        
+
     def isolate_mn(self, mn):
         mn.node.setnetworkactive(False)
         self.wait_until(lambda: mn.node.getconnectioncount() == 0)

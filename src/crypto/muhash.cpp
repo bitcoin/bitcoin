@@ -123,7 +123,7 @@ inline void square_n_mul(Num3072& in_out, const int sq, const Num3072& mul)
 
 } // namespace
 
-/** Indicates wether d is larger than the modulus. */
+/** Indicates whether d is larger than the modulus. */
 bool Num3072::IsOverflow() const
 {
     if (this->limbs[0] <= std::numeric_limits<limb_t>::max() - MAX_PRIME_DIFF) return false;

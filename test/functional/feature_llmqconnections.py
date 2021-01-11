@@ -68,7 +68,7 @@ class LLMQConnections(DashTestFramework):
         self.log.info("Activating SPORK_21_QUORUM_ALL_CONNECTED")
         self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
         self.wait_for_sporks_same()
-        
+
         self.check_reconnects(4)
 
     def check_reconnects(self, expected_connection_count):
