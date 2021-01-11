@@ -55,9 +55,9 @@
 
 #include <string>
 
-#include <vbk/merkle.hpp>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/thread.hpp>
+#include <vbk/merkle.hpp>
 
 #if defined(NDEBUG)
 #error "Bitcoin cannot be compiled without assertions."
@@ -2647,12 +2647,9 @@ CBlockIndex* CChainState::FindBestChain()
 
         int popComparisonResult = 0;
 
-        if (Params().isPopActive(bestCandidate->nHeight))
-        {
+        if (Params().isPopActive(bestCandidate->nHeight)) {
             popComparisonResult = VeriBlock::compareForks(*bestCandidate, *pindexNew);
-        }
-        else
-        {
+        } else {
             popComparisonResult = CBlockIndexWorkComparator()(bestCandidate, pindexNew) ? -1 : 1;
         }
 
@@ -2918,7 +2915,7 @@ bool CChainState::ActivateBestChain(BlockValidationState& state, const CChainPar
                 assert(pindexBestChain);
                 // if pindexBestHeader is a direct successor of pindexBestChain, pindexBestHeader is still best.
                 // otherwise pindexBestChain is new best pindexBestHeader
-                if(pindexBestHeader == nullptr || pindexBestHeader->GetAncestor(pindexBestChain->nHeight) != pindexBestChain) {
+                if (pindexBestHeader == nullptr || pindexBestHeader->GetAncestor(pindexBestChain->nHeight) != pindexBestChain) {
                     pindexBestHeader = pindexBestChain;
                 }
 
@@ -3388,10 +3385,10 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
         return false;
 
     // VeriBlock: merkle root verification currently depends on a context, so it has been moved to ContextualCheckBlock
-    if(block.nVersion & VeriBlock::POP_BLOCK_VERSION_BIT && block.popData.empty()) {
+    if (block.nVersion & VeriBlock::POP_BLOCK_VERSION_BIT && block.popData.empty()) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop-version", "POP bit is set, but pop data is empty");
     }
-    if(!(block.nVersion & VeriBlock::POP_BLOCK_VERSION_BIT) && !block.popData.empty()) {
+    if (!(block.nVersion & VeriBlock::POP_BLOCK_VERSION_BIT) && !block.popData.empty()) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop-version", "POP bit is NOT set, and pop data is NOT empty");
     }
 
@@ -3853,9 +3850,9 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
     {
         if (!VeriBlock::addAllBlockPayloads(block, state)) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop-payloads",
-                                 strprintf("Can not add POP payloads to block height: %d , hash: %s: %s",
-                                           pindex->nHeight, block.GetHash().ToString(),
-                                           FormatStateMessage(state)));
+                strprintf("Can not add POP payloads to block height: %d , hash: %s: %s",
+                    pindex->nHeight, block.GetHash().ToString(),
+                    FormatStateMessage(state)));
         }
     }
 
@@ -4186,7 +4183,7 @@ bool BlockManager::LoadBlockIndex(
 
     bool hasPopData = VeriBlock::hasPopData(blocktree);
 
-    if(!hasPopData) {
+    if (!hasPopData) {
         LogPrintf("BTC/VBK/ALT tips not found... skipping block index loading\n");
         return true;
     }

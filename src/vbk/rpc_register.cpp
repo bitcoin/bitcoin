@@ -246,9 +246,11 @@ UniValue submitpopIt(const JSONRPCRequest& request)
     LOCK(cs_main);
     auto& mp = *VeriBlock::GetPop().mempool;
     auto idhex = data.getId().toHex();
-    mp.submit<Pop>(data, state);
+    auto result = mp.submit<Pop>(data, state);
     logSubmitResult<Pop>(idhex, state);
-    return altintegration::ToJSON<UniValue>(state);
+
+    bool accepted = result.isAccepted();
+    return altintegration::ToJSON<UniValue>(state, &accepted);
 }
 
 UniValue submitpopatv(const JSONRPCRequest& request)

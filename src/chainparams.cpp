@@ -114,7 +114,7 @@ CMainParams::CMainParams()
     assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
 
     // VeriBlock
-    consensus.VeriBlockPopSecurityHeight = 100;
+    consensus.VeriBlockPopSecurityHeight = 200;
     consensus.ZawyLWMAHeight = 100;
     consensus.nZawyLwmaAveragingWindow = 45;
     assert(consensus.ZawyLWMAHeight > consensus.nZawyLwmaAveragingWindow);
