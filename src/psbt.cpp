@@ -566,3 +566,36 @@ uint32_t PartiallySignedTransaction::GetVersion() const
     }
     return 0;
 }
+
+void PartiallySignedTransaction::SetupFromTx(const CMutableTransaction& tx)
+{
+    tx_version = tx.nVersion;
+    fallback_locktime = tx.nLockTime;
+
+    uint32_t i;
+    for (i = 0; i < tx.vin.size(); ++i) {
+        PSBTInput& input = inputs.at(i);
+        const CTxIn& txin = tx.vin.at(i);
+
+        input.prev_txid = txin.prevout.hash;
+        input.prev_out = txin.prevout.n;
+        input.sequence = txin.nSequence;
+    }
+
+    for (i = 0; i < tx.vout.size(); ++i) {
+        PSBTOutput& output = outputs.at(i);
+        const CTxOut& txout = tx.vout.at(i);
+
+        output.amount = txout.nValue;
+        output.script = txout.scriptPubKey;
+    }
+}
+
+void PartiallySignedTransaction::CacheUnsignedTxPieces()
+{
+    // To make things easier, we split up the global unsigned transaction
+    // and use the PSBTv2 fields for PSBTv0.
+    if (tx != std::nullopt) {
+        SetupFromTx(*tx);
+    }
+}

@@ -1154,6 +1154,8 @@ struct PartiallySignedTransaction
     [[nodiscard]] bool Merge(const PartiallySignedTransaction& psbt);
     bool AddInput(const CTxIn& txin, PSBTInput& psbtin);
     bool AddOutput(const CTxOut& txout, const PSBTOutput& psbtout);
+    void SetupFromTx(const CMutableTransaction& tx);
+    void CacheUnsignedTxPieces();
     PartiallySignedTransaction() {}
     explicit PartiallySignedTransaction(const CMutableTransaction& tx);
     /**
