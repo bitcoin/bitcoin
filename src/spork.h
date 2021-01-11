@@ -26,6 +26,8 @@ enum {
     SPORK_17_QUORUM_DKG_ENABLED                            = 10016,
     SPORK_19_CHAINLOCKS_ENABLED                            = 10018,
     SPORK_21_QUORUM_ALL_CONNECTED                          = 10020,
+    SPORK_23_QUORUM_POSE                                   = 10022,
+
     SPORK_INVALID                                          = -1,
 };
 struct CSporkDef

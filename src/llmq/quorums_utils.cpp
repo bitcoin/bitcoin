@@ -47,16 +47,25 @@ uint256 CLLMQUtils::BuildSignHash(uint8_t llmqType, const uint256& quorumHash, c
     return h.GetHash();
 }
 
-bool CLLMQUtils::IsAllMembersConnectedEnabled(uint8_t llmqType)
+static bool EvalSpork(uint8_t llmqType, int64_t spork_value)
 {
-    auto spork21 = sporkManager.GetSporkValue(SPORK_21_QUORUM_ALL_CONNECTED);
-    if (spork21 == 0) {
+    if (spork_value == 0) {
         return true;
     }
-    if (spork21 == 1 && llmqType != Consensus::LLMQ_400_60 && llmqType != Consensus::LLMQ_400_85) {
+    if (spork_value == 1 && llmqType != Consensus::LLMQ_400_60 && llmqType != Consensus::LLMQ_400_85) {
         return true;
     }
     return false;
+}
+
+bool CLLMQUtils::IsAllMembersConnectedEnabled(uint8_t llmqType)
+{
+    return EvalSpork(llmqType, sporkManager.GetSporkValue(SPORK_21_QUORUM_ALL_CONNECTED));
+}
+
+bool CLLMQUtils::IsQuorumPoseEnabled(uint8_t llmqType)
+{
+    return EvalSpork(llmqType, sporkManager.GetSporkValue(SPORK_23_QUORUM_POSE));
 }
 
 uint256 CLLMQUtils::DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2)
@@ -214,6 +223,10 @@ void CLLMQUtils::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pi
 
 void CLLMQUtils::AddQuorumProbeConnections(uint8_t llmqType, const CBlockIndex *pindexQuorum, const uint256 &myProTxHash, CConnman& connman)
 {
+    if (!CLLMQUtils::IsQuorumPoseEnabled(llmqType)) {
+        return;
+    }
+
     std::vector<CDeterministicMNCPtr> members;
     GetAllQuorumMembers(llmqType, pindexQuorum, members);
     auto curTime = GetAdjustedTime();

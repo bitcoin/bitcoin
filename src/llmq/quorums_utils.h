@@ -31,6 +31,7 @@ public:
     }
 
     static bool IsAllMembersConnectedEnabled(uint8_t llmqType);
+    static bool IsQuorumPoseEnabled(uint8_t llmqType);
     static uint256 DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2);
     static std::set<uint256> GetQuorumConnections(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& forMember, bool onlyOutbound);
     static std::set<uint256> GetQuorumRelayMembers(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& forMember, bool onlyOutbound);

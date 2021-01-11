@@ -1291,7 +1291,7 @@ class DashTestFramework(SyscoinTestFramework):
         wait_until_helper(wait_func, timeout=timeout)
 
     def mine_quorum(self, expected_connections=None, expected_members=None, expected_contributions=None, expected_complaints=0, expected_justifications=0, expected_commitments=None, mninfos_online=None, mninfos_valid=None, bumptime=1):
-        spork21_active = self.nodes[0].spork('show')['SPORK_21_QUORUM_ALL_CONNECTED'] <= 1
+        spork23_active = self.nodes[0].spork('show')['SPORK_23_QUORUM_POSE'] <= 1
 
         if expected_connections is None:
             expected_connections = (self.llmq_size - 1) if spork21_active else 2
@@ -1333,7 +1333,7 @@ class DashTestFramework(SyscoinTestFramework):
         timeout_func()
         self.wait_for_quorum_phase(q, 1, expected_members, None, 0, mninfos_online, wait_proc=timeout_func)
         self.wait_for_quorum_connections(expected_connections, nodes, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done phase 1 (init)"))
-        if spork21_active:
+        if spork23_active:
             self.wait_for_masternode_probes(mninfos_valid, wait_proc=timeout_func)
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].generate(2)
