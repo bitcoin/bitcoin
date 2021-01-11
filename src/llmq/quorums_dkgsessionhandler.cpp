@@ -451,7 +451,7 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         }
 
         bool ban = false;
-        if (!session.PreVerifyMessage(hash, msg, ban)) {
+        if (!session.PreVerifyMessage(msg, ban)) {
             if (ban) {
                 {
                     LOCK(cs_main);

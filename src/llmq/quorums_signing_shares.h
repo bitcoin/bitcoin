@@ -412,19 +412,18 @@ private:
     bool ProcessMessageBatchedSigShares(CNode* pfrom, const CBatchedSigShares& batchedSigShares);
     void ProcessMessageSigShare(NodeId fromId, const CSigShare& sigShare);
 
-    static bool VerifySigSharesInv(NodeId from, uint8_t llmqType, const CSigSharesInv& inv);
-    static bool PreVerifyBatchedSigShares(NodeId nodeId, const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, bool& retBan);
+    static bool VerifySigSharesInv(uint8_t llmqType, const CSigSharesInv& inv);
+    static bool PreVerifyBatchedSigShares(const CSigSharesNodeState::SessionInfo& session, const CBatchedSigShares& batchedSigShares, bool& retBan);
 
     void CollectPendingSigSharesToVerify(size_t maxUniqueSessions,
             std::unordered_map<NodeId, std::vector<CSigShare>>& retSigShares,
             std::unordered_map<std::pair<uint8_t, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums);
     bool ProcessPendingSigShares();
 
-    void ProcessPendingSigSharesFromNode(NodeId nodeId,
-            const std::vector<CSigShare>& sigShares,
+    void ProcessPendingSigShares(const std::vector<CSigShare>& sigShares,
             const std::unordered_map<std::pair<uint8_t, uint256>, CQuorumCPtr, StaticSaltedHasher>& quorums);
 
-    void ProcessSigShare(NodeId nodeId, const CSigShare& sigShare,  const CQuorumCPtr& quorum);
+    void ProcessSigShare(const CSigShare& sigShare, CConnman& connman, const CQuorumCPtr& quorum);
     void TryRecoverSig(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash);
 
 private:

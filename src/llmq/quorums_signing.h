@@ -133,7 +133,7 @@ private:
     PeerManager& peerman;
     // Incoming and not verified yet
     std::unordered_map<NodeId, std::list<CRecoveredSig>> pendingRecoveredSigs;
-    std::unordered_map<uint256, std::pair<CRecoveredSig, CQuorumCPtr>, StaticSaltedHasher> pendingReconstructedRecoveredSigs;
+    std::unordered_map<uint256, CRecoveredSig, StaticSaltedHasher> pendingReconstructedRecoveredSigs;
 
     // must be protected by cs
     FastRandomContext rnd;
@@ -152,7 +152,7 @@ public:
 
     // This is called when a recovered signature was was reconstructed from another P2P message and is known to be valid
     // This is the case for example when a signature appears as part of InstantSend or ChainLocks
-    void PushReconstructedRecoveredSig(const CRecoveredSig& recoveredSig, const CQuorumCPtr& quorum);
+    void PushReconstructedRecoveredSig(const CRecoveredSig& recoveredSig);
 
     // This is called when a recovered signature can be safely removed from the DB. This is only safe when some other
     // mechanism prevents possible conflicts. As an example, ChainLocks prevent conflicts in confirmed TXs InstantSend votes
@@ -162,14 +162,14 @@ public:
 
 private:
     void ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredSig& recoveredSig);
-    static bool PreVerifyRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, bool& retBan);
+    static bool PreVerifyRecoveredSig(const CRecoveredSig& recoveredSig, bool& retBan);
 
     void CollectPendingRecoveredSigsToVerify(size_t maxUniqueSessions,
             std::unordered_map<NodeId, std::list<CRecoveredSig>>& retSigShares,
             std::unordered_map<std::pair<uint8_t, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums);
     void ProcessPendingReconstructedRecoveredSigs();
     bool ProcessPendingRecoveredSigs(); // called from the worker thread of CSigSharesManager
-    void ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig, const CQuorumCPtr& quorum);
+    void ProcessRecoveredSig(NodeId nodeId, const CRecoveredSig& recoveredSig);
     void Cleanup(); // called from the worker thread of CSigSharesManager
 
 public:
