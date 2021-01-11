@@ -315,19 +315,11 @@ static RPCHelpMan quorum_sign()
 
     uint256 id = ParseHashV(request.params[1], "id");
     uint256 msgHash = ParseHashV(request.params[2], "msgHash");
-
+    uint256 quorumHash;
     if (!request.params[3].isNull()) {
-        uint256 quorumHash = ParseHashV(request.params[3], "quorumHash");
-        auto quorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
-        if (!quorum) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
-        }
-        llmq::quorumSigSharesManager->AsyncSign(quorum, id, msgHash);
-        return true;
-    } else {
-        return llmq::quorumSigningManager->AsyncSignIfMember(llmqType, id, msgHash);
-    }
-    
+        quorumHash = ParseHashV(request.params[3], "quorumHash");
+    } 
+    return llmq::quorumSigningManager->AsyncSignIfMember(llmqType, id, msgHash, quorumHash);
 },
     };
 } 

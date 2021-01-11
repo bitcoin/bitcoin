@@ -177,7 +177,7 @@ public:
     void RegisterRecoveredSigsListener(CRecoveredSigsListener* l);
     void UnregisterRecoveredSigsListener(CRecoveredSigsListener* l);
 
-    bool AsyncSignIfMember(uint8_t llmqType, const uint256& id, const uint256& msgHash, bool allowReSign = false);
+    bool AsyncSignIfMember(uint8_t llmqType, const uint256& id, const uint256& msgHash, const uint256& quorumHash = uint256(), bool allowReSign = false);
     bool HasRecoveredSig(uint8_t llmqType, const uint256& id, const uint256& msgHash);
     bool HasRecoveredSigForId(uint8_t llmqType, const uint256& id);
     bool HasRecoveredSigForSession(const uint256& signHash);
