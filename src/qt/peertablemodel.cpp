@@ -185,6 +185,11 @@ QVariant PeerTableModel::data(const QModelIndex &index, int role) const
             default:
                 return QVariant();
         }
+    } else if (role == StatsRole) {
+        switch (index.column()) {
+        case NetNodeId: return QVariant::fromValue(rec);
+        default: return QVariant();
+        }
     }
 
     return QVariant();
@@ -218,11 +223,6 @@ QModelIndex PeerTableModel::index(int row, int column, const QModelIndex &parent
     if (data)
         return createIndex(row, column, data);
     return QModelIndex();
-}
-
-const CNodeCombinedStats *PeerTableModel::getNodeStats(int idx)
-{
-    return priv->index(idx);
 }
 
 void PeerTableModel::refresh()
