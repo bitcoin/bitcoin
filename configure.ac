@@ -23,6 +23,7 @@ BITCOIN_DAEMON_NAME=bitcoind
 BITCOIN_GUI_NAME=bitcoin-qt
 BITCOIN_CLI_NAME=bitcoin-cli
 BITCOIN_TX_NAME=bitcoin-tx
+BITCOIN_UTIL_NAME=bitcoin-util
 BITCOIN_WALLET_TOOL_NAME=bitcoin-wallet
 dnl Multi Process
 BITCOIN_MP_NODE_NAME=bitcoin-node
@@ -571,7 +572,7 @@ CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build bitcoin-cli bitcoin-tx bitcoin-wallet (default=yes)])],
+  [build bitcoin-cli bitcoin-tx bitcoin-util bitcoin-wallet (default=yes)])],
   [build_bitcoin_utils=$withval],
   [build_bitcoin_utils=yes])
 
@@ -592,6 +593,12 @@ AC_ARG_ENABLE([util-wallet],
   [build bitcoin-wallet])],
   [build_bitcoin_wallet=$enableval],
   [build_bitcoin_wallet=$build_bitcoin_utils])
+
+AC_ARG_ENABLE([util-util],
+  [AS_HELP_STRING([--enable-util-util],
+  [build bitcoin-util])],
+  [build_bitcoin_util=$enableval],
+  [build_bitcoin_util=$build_bitcoin_utils])
 
 AC_ARG_WITH([libs],
   [AS_HELP_STRING([--with-libs],
@@ -1209,6 +1216,7 @@ if test "x$enable_fuzz" = "xyes"; then
   build_bitcoin_utils=no
   build_bitcoin_cli=no
   build_bitcoin_tx=no
+  build_bitcoin_util=no
   build_bitcoin_wallet=no
   build_bitcoind=no
   build_bitcoin_libs=no
@@ -1433,7 +1441,7 @@ fi
 dnl univalue check
 
 need_bundled_univalue=yes
-if test x$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononononono; then
+if test x$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnononononononono; then
   need_bundled_univalue=no
 else
   if test x$system_univalue != xno; then
@@ -1515,6 +1523,10 @@ AC_MSG_RESULT($build_bitcoin_tx)
 AC_MSG_CHECKING([whether to build bitcoin-wallet])
 AM_CONDITIONAL([BUILD_BITCOIN_WALLET], [test x$build_bitcoin_wallet = xyes])
 AC_MSG_RESULT($build_bitcoin_wallet)
+
+AC_MSG_CHECKING([whether to build bitcoin-util])
+AM_CONDITIONAL([BUILD_BITCOIN_UTIL], [test x$build_bitcoin_util = xyes])
+AC_MSG_RESULT($build_bitcoin_util)
 
 AC_MSG_CHECKING([whether to build libraries])
 AM_CONDITIONAL([BUILD_BITCOIN_LIBS], [test x$build_bitcoin_libs = xyes])
@@ -1717,6 +1729,7 @@ AC_SUBST(BITCOIN_DAEMON_NAME)
 AC_SUBST(BITCOIN_GUI_NAME)
 AC_SUBST(BITCOIN_CLI_NAME)
 AC_SUBST(BITCOIN_TX_NAME)
+AC_SUBST(BITCOIN_UTIL_NAME)
 AC_SUBST(BITCOIN_WALLET_TOOL_NAME)
 AC_SUBST(BITCOIN_MP_NODE_NAME)
 AC_SUBST(BITCOIN_MP_GUI_NAME)
