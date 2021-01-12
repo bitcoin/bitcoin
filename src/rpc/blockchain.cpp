@@ -2480,41 +2480,41 @@ void RegisterBlockchainRPCCommands(CRPCTable &t)
 {
 // clang-format off
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         argNames
-  //  --------------------- ------------------------  -----------------------  ----------
-    { "blockchain",         "getblockchaininfo",      &getblockchaininfo,      {} },
-    { "blockchain",         "getchaintxstats",        &getchaintxstats,        {"nblocks", "blockhash"} },
-    { "blockchain",         "getblockstats",          &getblockstats,          {"hash_or_height", "stats"} },
-    { "blockchain",         "getbestblockhash",       &getbestblockhash,       {} },
-    { "blockchain",         "getblockcount",          &getblockcount,          {} },
-    { "blockchain",         "getblock",               &getblock,               {"blockhash","verbosity|verbose"} },
-    { "blockchain",         "getblockhash",           &getblockhash,           {"height"} },
-    { "blockchain",         "getblockheader",         &getblockheader,         {"blockhash","verbose"} },
-    { "blockchain",         "getchaintips",           &getchaintips,           {} },
-    { "blockchain",         "getdifficulty",          &getdifficulty,          {} },
-    { "blockchain",         "getmempoolancestors",    &getmempoolancestors,    {"txid","verbose"} },
-    { "blockchain",         "getmempooldescendants",  &getmempooldescendants,  {"txid","verbose"} },
-    { "blockchain",         "getmempoolentry",        &getmempoolentry,        {"txid"} },
-    { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         {} },
-    { "blockchain",         "getrawmempool",          &getrawmempool,          {"verbose", "mempool_sequence"} },
-    { "blockchain",         "gettxout",               &gettxout,               {"txid","n","include_mempool"} },
-    { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        {"hash_type"} },
-    { "blockchain",         "pruneblockchain",        &pruneblockchain,        {"height"} },
-    { "blockchain",         "savemempool",            &savemempool,            {} },
-    { "blockchain",         "verifychain",            &verifychain,            {"checklevel","nblocks"} },
+{ //  category              actor (function)
+  //  --------------------- ------------------------
+    { "blockchain",         &getblockchaininfo,                  },
+    { "blockchain",         &getchaintxstats,                    },
+    { "blockchain",         &getblockstats,                      },
+    { "blockchain",         &getbestblockhash,                   },
+    { "blockchain",         &getblockcount,                      },
+    { "blockchain",         &getblock,                           },
+    { "blockchain",         &getblockhash,                       },
+    { "blockchain",         &getblockheader,                     },
+    { "blockchain",         &getchaintips,                       },
+    { "blockchain",         &getdifficulty,                      },
+    { "blockchain",         &getmempoolancestors,                },
+    { "blockchain",         &getmempooldescendants,              },
+    { "blockchain",         &getmempoolentry,                    },
+    { "blockchain",         &getmempoolinfo,                     },
+    { "blockchain",         &getrawmempool,                      },
+    { "blockchain",         &gettxout,                           },
+    { "blockchain",         &gettxoutsetinfo,                    },
+    { "blockchain",         &pruneblockchain,                    },
+    { "blockchain",         &savemempool,                        },
+    { "blockchain",         &verifychain,                        },
 
-    { "blockchain",         "preciousblock",          &preciousblock,          {"blockhash"} },
-    { "blockchain",         "scantxoutset",           &scantxoutset,           {"action", "scanobjects"} },
-    { "blockchain",         "getblockfilter",         &getblockfilter,         {"blockhash", "filtertype"} },
+    { "blockchain",         &preciousblock,                      },
+    { "blockchain",         &scantxoutset,                       },
+    { "blockchain",         &getblockfilter,                     },
 
     /* Not shown in help */
-    { "hidden",             "invalidateblock",        &invalidateblock,        {"blockhash"} },
-    { "hidden",             "reconsiderblock",        &reconsiderblock,        {"blockhash"} },
-    { "hidden",             "waitfornewblock",        &waitfornewblock,        {"timeout"} },
-    { "hidden",             "waitforblock",           &waitforblock,           {"blockhash","timeout"} },
-    { "hidden",             "waitforblockheight",     &waitforblockheight,     {"height","timeout"} },
-    { "hidden",             "syncwithvalidationinterfacequeue", &syncwithvalidationinterfacequeue, {} },
-    { "hidden",             "dumptxoutset",           &dumptxoutset,           {"path"} },
+    { "hidden",              &invalidateblock,                   },
+    { "hidden",              &reconsiderblock,                   },
+    { "hidden",              &waitfornewblock,                   },
+    { "hidden",              &waitforblock,                      },
+    { "hidden",              &waitforblockheight,                },
+    { "hidden",              &syncwithvalidationinterfacequeue,  },
+    { "hidden",              &dumptxoutset,                      },
 };
 // clang-format on
     for (const auto& c : commands) {

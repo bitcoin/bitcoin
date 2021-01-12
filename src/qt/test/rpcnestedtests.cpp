@@ -33,7 +33,7 @@ static RPCHelpMan rpcNestedTest_rpc()
 }
 
 static const CRPCCommand vRPCCommands[] = {
-    {"test", "rpcNestedTest", &rpcNestedTest_rpc, {"arg1", "arg2", "arg3"}},
+    {"test", &rpcNestedTest_rpc},
 };
 
 void RPCNestedTests::rpcNestedTests()

@@ -249,13 +249,13 @@ static RPCHelpMan getrpcinfo()
 
 // clang-format off
 static const CRPCCommand vRPCCommands[] =
-{ //  category              name                      actor (function)         argNames
-  //  --------------------- ------------------------  -----------------------  ----------
+{ //  category               actor (function)
+  //  ---------------------  -----------------------
     /* Overall control/query calls */
-    { "control",            "getrpcinfo",             &getrpcinfo,             {}  },
-    { "control",            "help",                   &help,                   {"command"}  },
-    { "control",            "stop",                   &stop,                   {"wait"}  },
-    { "control",            "uptime",                 &uptime,                 {}  },
+    { "control",             &getrpcinfo,             },
+    { "control",             &help,                   },
+    { "control",             &stop,                   },
+    { "control",             &uptime,                 },
 };
 // clang-format on
 
