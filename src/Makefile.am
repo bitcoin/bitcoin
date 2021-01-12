@@ -108,13 +108,19 @@ endif
 if BUILD_SYSCOIN_CLI
   bin_PROGRAMS += syscoin-cli
 endif
+
 if BUILD_SYSCOIN_TX
   bin_PROGRAMS += syscoin-tx
 endif
+
 if ENABLE_WALLET
 if BUILD_SYSCOIN_WALLET
   bin_PROGRAMS += syscoin-wallet
 endif
+endif
+
+if BUILD_SYSCOIN_UTIL
+  bin_PROGRAMS += syscoin-util
 endif
 
 .PHONY: FORCE check-symbols check-security
@@ -866,6 +872,27 @@ syscoin_wallet_LDADD = $(LIBSYSCOIN_WALLET_TOOL) $(syscoin_bin_ldadd)
 if TARGET_WINDOWS
 syscoin_wallet_SOURCES += syscoin-wallet-res.rc
 endif
+#
+
+# syscoin-util binary #
+syscoin_util_SOURCES = syscoin-util.cpp
+syscoin_util_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+syscoin_util_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+syscoin_util_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+
+if TARGET_WINDOWS
+syscoin_util_SOURCES += syscoin-util-res.rc
+endif
+
+syscoin_util_LDADD = \
+  $(LIBSYSCOIN_COMMON) \
+  $(LIBSYSCOIN_UTIL) \
+  $(LIBUNIVALUE) \
+  $(LIBSYSCOIN_CONSENSUS) \
+  $(LIBSYSCOIN_CRYPTO) \
+  $(LIBSECP256K1)
+
+syscoin_util_LDADD += $(BOOST_LIBS)
 #
 
 # syscoinconsensus library #

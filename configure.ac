@@ -23,6 +23,7 @@ SYSCOIN_DAEMON_NAME=syscoind
 SYSCOIN_GUI_NAME=syscoin-qt
 SYSCOIN_CLI_NAME=syscoin-cli
 SYSCOIN_TX_NAME=syscoin-tx
+SYSCOIN_UTIL_NAME=syscoin-util
 SYSCOIN_WALLET_TOOL_NAME=syscoin-wallet
 dnl Multi Process
 SYSCOIN_MP_NODE_NAME=syscoin-node
@@ -571,7 +572,7 @@ CPPFLAGS="$CPPFLAGS -DHAVE_BUILD_INFO -D__STDC_FORMAT_MACROS"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build syscoin-cli syscoin-tx syscoin-wallet (default=yes)])],
+  [build syscoin-cli syscoin-tx syscoin-util syscoin-wallet (default=yes)])],
   [build_syscoin_utils=$withval],
   [build_syscoin_utils=yes])
 
@@ -592,6 +593,12 @@ AC_ARG_ENABLE([util-wallet],
   [build syscoin-wallet])],
   [build_syscoin_wallet=$enableval],
   [build_syscoin_wallet=$build_syscoin_utils])
+
+AC_ARG_ENABLE([util-util],
+  [AS_HELP_STRING([--enable-util-util],
+  [build syscoin-util])],
+  [build_syscoin_util=$enableval],
+  [build_syscoin_util=$build_syscoin_utils])
 
 AC_ARG_WITH([libs],
   [AS_HELP_STRING([--with-libs],
@@ -1211,6 +1218,7 @@ if test "x$enable_fuzz" = "xyes"; then
   build_syscoin_utils=no
   build_syscoin_cli=no
   build_syscoin_tx=no
+  build_syscoin_util=no
   build_syscoin_wallet=no
   build_syscoind=no
   build_syscoin_libs=no
@@ -1435,7 +1443,7 @@ fi
 dnl univalue check
 
 need_bundled_univalue=yes
-if test x$build_syscoin_wallet$build_syscoin_cli$build_syscoin_tx$build_syscoind$syscoin_enable_qt$use_tests$use_bench = xnonononononono; then
+if test x$build_syscoin_wallet$build_syscoin_cli$build_syscoin_tx$build_syscoin_util$build_syscoind$syscoin_enable_qt$use_tests$use_bench = xnononononononono; then
   need_bundled_univalue=no
 else
   if test x$system_univalue != xno; then
@@ -1530,6 +1538,10 @@ AC_MSG_RESULT($build_syscoin_tx)
 AC_MSG_CHECKING([whether to build syscoin-wallet])
 AM_CONDITIONAL([BUILD_SYSCOIN_WALLET], [test x$build_syscoin_wallet = xyes])
 AC_MSG_RESULT($build_syscoin_wallet)
+
+AC_MSG_CHECKING([whether to build syscoin-util])
+AM_CONDITIONAL([BUILD_SYSCOIN_UTIL], [test x$build_syscoin_util = xyes])
+AC_MSG_RESULT($build_syscoin_util)
 
 AC_MSG_CHECKING([whether to build libraries])
 AM_CONDITIONAL([BUILD_SYSCOIN_LIBS], [test x$build_syscoin_libs = xyes])
@@ -1741,6 +1753,7 @@ AC_SUBST(SYSCOIN_DAEMON_NAME)
 AC_SUBST(SYSCOIN_GUI_NAME)
 AC_SUBST(SYSCOIN_CLI_NAME)
 AC_SUBST(SYSCOIN_TX_NAME)
+AC_SUBST(SYSCOIN_UTIL_NAME)
 AC_SUBST(SYSCOIN_WALLET_TOOL_NAME)
 AC_SUBST(SYSCOIN_MP_NODE_NAME)
 AC_SUBST(SYSCOIN_MP_GUI_NAME)
