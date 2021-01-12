@@ -54,6 +54,8 @@ size_t& GetNumMsgTypes()
 
 void initialize_process_message()
 {
+    Assert(GetNumMsgTypes() == getAllNetMessageTypes().size()); // If this fails, add or remove the message type below
+
     static const auto testing_setup = MakeFuzzingContext<const TestingSetup>();
     g_setup = testing_setup.get();
     for (int i = 0; i < 2 * COINBASE_MATURITY; i++) {
@@ -104,8 +106,12 @@ void fuzz_target(FuzzBufferType buffer, const std::string& LIMIT_TO_MESSAGE_TYPE
 
 FUZZ_TARGET_INIT(process_message, initialize_process_message) { fuzz_target(buffer, ""); }
 FUZZ_TARGET_MSG(addr);
+FUZZ_TARGET_MSG(addrv2);
 FUZZ_TARGET_MSG(block);
 FUZZ_TARGET_MSG(blocktxn);
+FUZZ_TARGET_MSG(cfcheckpt);
+FUZZ_TARGET_MSG(cfheaders);
+FUZZ_TARGET_MSG(cfilter);
 FUZZ_TARGET_MSG(cmpctblock);
 FUZZ_TARGET_MSG(feefilter);
 FUZZ_TARGET_MSG(filteradd);
@@ -114,16 +120,22 @@ FUZZ_TARGET_MSG(filterload);
 FUZZ_TARGET_MSG(getaddr);
 FUZZ_TARGET_MSG(getblocks);
 FUZZ_TARGET_MSG(getblocktxn);
+FUZZ_TARGET_MSG(getcfcheckpt);
+FUZZ_TARGET_MSG(getcfheaders);
+FUZZ_TARGET_MSG(getcfilters);
 FUZZ_TARGET_MSG(getdata);
 FUZZ_TARGET_MSG(getheaders);
 FUZZ_TARGET_MSG(headers);
 FUZZ_TARGET_MSG(inv);
 FUZZ_TARGET_MSG(mempool);
+FUZZ_TARGET_MSG(merkleblock);
 FUZZ_TARGET_MSG(notfound);
 FUZZ_TARGET_MSG(ping);
 FUZZ_TARGET_MSG(pong);
+FUZZ_TARGET_MSG(sendaddrv2);
 FUZZ_TARGET_MSG(sendcmpct);
 FUZZ_TARGET_MSG(sendheaders);
 FUZZ_TARGET_MSG(tx);
 FUZZ_TARGET_MSG(verack);
 FUZZ_TARGET_MSG(version);
+FUZZ_TARGET_MSG(wtxidrelay);
