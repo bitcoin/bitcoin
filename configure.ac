@@ -34,6 +34,7 @@ BITCOIN_GUI_NAME=dash-qt
 BITCOIN_TEST_NAME=test_dash
 BITCOIN_CLI_NAME=dash-cli
 BITCOIN_TX_NAME=dash-tx
+BITCOIN_UTIL_NAME=dash-util
 BITCOIN_WALLET_TOOL_NAME=dash-wallet
 dnl Multi Process
 BITCOIN_MP_NODE_NAME=dash-node
@@ -740,7 +741,7 @@ CORE_CPPFLAGS="$CORE_CPPFLAGS -DHAVE_BUILD_INFO -DGSL_NO_IOSTREAMS"
 
 AC_ARG_WITH([utils],
   [AS_HELP_STRING([--with-utils],
-  [build dash-cli dash-tx dash-wallet (default=yes)])],
+  [build dash-cli dash-tx dash-util dash-wallet (default=yes)])],
   [build_bitcoin_utils=$withval],
   [build_bitcoin_utils=yes])
 
@@ -761,6 +762,12 @@ AC_ARG_ENABLE([util-wallet],
   [build dash-wallet])],
   [build_bitcoin_wallet=$enableval],
   [build_bitcoin_wallet=$build_bitcoin_utils])
+
+AC_ARG_ENABLE([util-util],
+  [AS_HELP_STRING([--enable-util-util],
+  [build dash-util])],
+  [build_bitcoin_util=$enableval],
+  [build_bitcoin_util=$build_bitcoin_utils])
 
 AC_ARG_WITH([libs],
   [AS_HELP_STRING([--with-libs],
@@ -1429,6 +1436,7 @@ if test "$enable_fuzz" = "yes"; then
   build_bitcoin_utils=no
   build_bitcoin_cli=no
   build_bitcoin_tx=no
+  build_bitcoin_util=no
   build_bitcoin_wallet=no
   build_bitcoind=no
   build_bitcoin_libs=no
@@ -1763,6 +1771,10 @@ AC_MSG_CHECKING([whether to build dash-wallet])
 AM_CONDITIONAL([BUILD_BITCOIN_WALLET], [test $build_bitcoin_wallet = "yes"])
 AC_MSG_RESULT($build_bitcoin_wallet)
 
+AC_MSG_CHECKING([whether to build dash-util])
+AM_CONDITIONAL([BUILD_BITCOIN_UTIL], [test $build_bitcoin_util = "yes"])
+AC_MSG_RESULT($build_bitcoin_util)
+
 AC_MSG_CHECKING([whether to build libraries])
 AM_CONDITIONAL([BUILD_BITCOIN_LIBS], [test $build_bitcoin_libs = "yes"])
 if test "$build_bitcoin_libs" = "yes"; then
@@ -1916,7 +1928,7 @@ else
 fi
 AC_MSG_RESULT($dsymutil_needs_flat)
 
-if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$enable_fuzz_binary$use_bench$use_tests" = "nononononononono"; then
+if test "$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoin_util$build_bitcoind$bitcoin_enable_qt$enable_fuzz_binary$use_bench$use_tests" = "nonononononononono"; then
   AC_MSG_ERROR([No targets! Please specify at least one of: --with-utils --with-libs --with-daemon --with-gui --enable-fuzz(-binary) --enable-bench or --enable-tests])
 fi
 
@@ -1976,6 +1988,7 @@ AC_SUBST(BITCOIN_GUI_NAME)
 AC_SUBST(BITCOIN_TEST_NAME)
 AC_SUBST(BITCOIN_CLI_NAME)
 AC_SUBST(BITCOIN_TX_NAME)
+AC_SUBST(BITCOIN_UTIL_NAME)
 AC_SUBST(BITCOIN_WALLET_TOOL_NAME)
 AC_SUBST(BITCOIN_MP_NODE_NAME)
 AC_SUBST(BITCOIN_MP_GUI_NAME)

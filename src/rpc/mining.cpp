@@ -792,6 +792,8 @@ static RPCHelpMan getblocktemplate()
         // TODO: Maybe recheck connections/IBD and (if something wrong) send an expires-immediately template to stop miners?
     }
 
+    const Consensus::Params& consensusParams = Params().GetConsensus();
+
     // Update block
     static CBlockIndex* pindexPrev;
     static int64_t nStart;
@@ -819,7 +821,6 @@ static RPCHelpMan getblocktemplate()
     }
     CHECK_NONFATAL(pindexPrev);
     CBlock* pblock = &pblocktemplate->block; // pointer for convenience
-    const Consensus::Params& consensusParams = Params().GetConsensus();
 
     // Update nTime
     UpdateTime(pblock, consensusParams, pindexPrev);
