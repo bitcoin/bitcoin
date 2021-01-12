@@ -21,9 +21,6 @@ OUT_OF_RANGE = "Amount out of range"
 class WalletTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 4
-        self.extra_args = [[
-            "-acceptnonstdtxn=1",
-        ]] * self.num_nodes
         self.setup_clean_chain = True
         self.supports_cli = False
 
@@ -281,32 +278,22 @@ class WalletTest(BitcoinTestFramework):
         self.connect_nodes(0, 3)
         self.sync_all()
 
-        # check if we can list zero value tx as available coins
-        # 1. create raw_tx
-        # 2. hex-changed one output to 0.0
-        # 3. sign and send
-        # 4. check if recipient (node0) can list the zero value tx
+        self.log.info('check if we can list zero value tx as available coins')
         usp = self.nodes[1].listunspent(query_options={'minimumAmount': '49.998'})[0]
         inputs = [{"txid": usp['txid'], "vout": usp['vout']}]
-        outputs = {self.nodes[1].getnewaddress(): 49.998, self.nodes[0].getnewaddress(): 11.11}
+        outputs = {self.nodes[1].getnewaddress(): 49.998, self.nodes[0].getnewaddress(): 0}
 
-        raw_tx = self.nodes[1].createrawtransaction(inputs, outputs).replace("c0833842", "00000000")  # replace 11.11 with 0.0 (int32)
+        raw_tx = self.nodes[1].createrawtransaction(inputs, outputs)
         signed_raw_tx = self.nodes[1].signrawtransactionwithwallet(raw_tx)
         decoded_raw_tx = self.nodes[1].decoderawtransaction(signed_raw_tx['hex'])
         zero_value_txid = decoded_raw_tx['txid']
-        self.nodes[1].sendrawtransaction(signed_raw_tx['hex'])
+        self.nodes[1].sendrawtransaction(hexstring=signed_raw_tx['hex'], ignore_rejects=['dust'])
 
-        self.sync_all()
         self.nodes[1].generate(1)  # mine a block
         self.sync_all()
 
         unspent_txs = self.nodes[0].listunspent()  # zero value tx must be in listunspents output
-        found = False
-        for uTx in unspent_txs:
-            if uTx['txid'] == zero_value_txid:
-                found = True
-                assert_equal(uTx['amount'], Decimal('0'))
-        assert found
+        assert_equal(next(uTx for uTx in unspent_txs if uTx['txid'] == zero_value_txid)['amount'], Decimal('0'))
 
         self.log.info("Test -walletbroadcast")
         self.stop_nodes()
