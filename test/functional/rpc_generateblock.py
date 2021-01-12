@@ -25,9 +25,6 @@ class GenerateBlockTest(BitcoinTestFramework):
         self.log.info('Generate an empty block to address')
         hash = node.generateblock(output=miniwallet.address, transactions=[])['hash']
         block = node.getblock(blockhash=hash, verbose=2)
-        tx = block['tx'][0]
-        utxo = {'txid': tx['txid'], 'vout': 0, 'value': tx['vout'][0]['value']}
-        miniwallet._utxos.append(utxo)
         assert_equal(len(block['tx']), 1)
         assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['addresses'][0], miniwallet.address)
 

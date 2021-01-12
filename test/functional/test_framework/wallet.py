@@ -64,8 +64,8 @@ class MiniWallet:
             index = self._utxos.index(utxo)
         return self._utxos.pop(index)
 
-    def send_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None):
-        """Create and send a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
+    def send_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None,  submit_tx=True):
+        """Create and optionally send a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
         self._utxos = sorted(self._utxos, key=lambda k: k['value'])
         utxo_to_spend = utxo_to_spend or self._utxos.pop()  # Pick the largest utxo (if none provided) and hope it covers the fee
         vsize = Decimal(96)
@@ -82,7 +82,8 @@ class MiniWallet:
 
         tx_info = from_node.testmempoolaccept([tx_hex])[0]
         self._utxos.append({'txid': tx_info['txid'], 'vout': 0, 'value': send_value})
-        from_node.sendrawtransaction(tx_hex)
+        if submit_tx:
+            from_node.sendrawtransaction(tx_hex)
         assert_equal(tx_info['vsize'], vsize)
         assert_equal(tx_info['fees']['base'], fee)
         return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex}
