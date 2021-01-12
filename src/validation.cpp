@@ -5797,7 +5797,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 {
     // It's okay to release cs_main before we're done using `coins_cache` because we know
     // that nothing else will be referencing the newly created snapshot_chainstate yet.
-    CCoinsViewCache& coins_cache = *WITH_LOCK(::cs_main, return &snapshot_chainstate.CoinsTip());
+    CCoinsViewCache& coins_cache = WITH_LOCK(::cs_main, return snapshot_chainstate.CoinsTip());
 
     uint256 base_blockhash = metadata.m_base_blockhash;
 
