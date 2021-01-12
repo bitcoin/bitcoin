@@ -144,8 +144,13 @@ static RPCHelpMan help()
         [&](const RPCHelpMan& self, const JSONRPCRequest& jsonRequest) -> UniValue
 {
     std::string strCommand;
-    if (jsonRequest.params.size() > 0)
+    if (jsonRequest.params.size() > 0) {
         strCommand = jsonRequest.params[0].get_str();
+    }
+    if (strCommand == "dump_all_command_conversions") {
+        // Used for testing only, undocumented
+        return tableRPC.dumpArgMap();
+    }
 
     return tableRPC.help(strCommand, jsonRequest);
 },
@@ -477,6 +482,18 @@ std::vector<std::string> CRPCTable::listCommands() const
     std::vector<std::string> commandList;
     for (const auto& i : mapCommands) commandList.emplace_back(i.first);
     return commandList;
+}
+
+UniValue CRPCTable::dumpArgMap() const
+{
+    UniValue ret{UniValue::VARR};
+    for (const auto& cmd : mapCommands) {
+        for (const auto& c : cmd.second) {
+            const auto help = RpcMethodFnType(c->unique_id)();
+            help.AppendArgMap(ret);
+        }
+    }
+    return ret;
 }
 
 void RPCSetTimerInterfaceIfUnset(RPCTimerInterface *iface)

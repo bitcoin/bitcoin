@@ -147,6 +147,10 @@ public:
     */
     std::vector<std::string> listCommands() const;
 
+    /**
+     * Return all named arguments that need to be converted by the client from string to another JSON type
+     */
+    UniValue dumpArgMap() const;
 
     /**
      * Appends a CRPCCommand to the dispatch table.
