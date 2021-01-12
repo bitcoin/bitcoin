@@ -4,7 +4,7 @@ Unauthenticated REST Interface
 The REST API can be enabled with the `-rest` option.
 
 The interface runs on the same port as the JSON-RPC interface, by default port 8332 for mainnet, port 18332 for testnet,
-and port 18443 for regtest.
+port 38332 for signet, and port 18443 for regtest.
 
 REST Interface consistency guarantees
 -------------------------------------
@@ -62,7 +62,7 @@ Given a height: returns hash of block in best-block-chain at height provided.
 
 Returns various state info regarding block chain processing.
 Only supports JSON as output format.
-* chain : (string) current network name (main, test, regtest)
+* chain : (string) current network name (main, test, signet, regtest)
 * blocks : (numeric) the current number of blocks processed in the server
 * headers : (numeric) the current number of headers we have validated
 * bestblockhash : (string) the hash of the currently best block
