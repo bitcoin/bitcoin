@@ -40,25 +40,27 @@ Otherwise, follow the [Guix installation guide][guix/bin-install].
 
 Guix allows us to achieve better binary security by using our CPU time to build
 everything from scratch. However, it doesn't sacrifice user choice in pursuit of
-this: users can decide whether or not to bootstrap and to use substitutes.
+this: users can decide whether or not to bootstrap and to use substitutes
+(pre-built packages).
 
 After installation, you may want to consider [adding substitute
-servers](#speeding-up-builds-with-substitute-servers) to speed up your build if
-that fits your security model (say, if you're just testing that this works).
-This is skippable if you're using the [Dockerfile][fanquake/guix-docker].
+servers](#speeding-up-builds-with-substitute-servers) from which to download
+pre-built packages to speed up your build if that fits your security model (say,
+if you're just testing that this works). Substitute servers are set up by
+default if you're using the [Dockerfile][fanquake/guix-docker].
 
-If you prefer not to use any substitutes, make sure to set
-`ADDITIONAL_GUIX_ENVIRONMENT_FLAGS` like the following snippet. The first build
-will take a while, but the resulting packages will be cached for future builds.
+If you prefer not to use any substitutes, make sure to supply `--no-substitutes`
+like in the following snippet. The first build will take a while, but the
+resulting packages will be cached for future builds.
 
 ```sh
-export ADDITIONAL_GUIX_ENVIRONMENT_FLAGS='--no-substitutes'
+export ADDITIONAL_GUIX_COMMON_FLAGS='--no-substitutes'
 ```
 
 Likewise, to perform a bootstrapped build (takes even longer):
 
 ```sh
-export ADDITIONAL_GUIX_ENVIRONMENT_FLAGS='--bootstrap --no-substitutes'
+export ADDITIONAL_GUIX_COMMON_FLAGS='--no-substitutes' ADDITIONAL_GUIX_ENVIRONMENT_FLAGS='--bootstrap'
 ```
 
 ### Using a version of Guix with `guix time-machine` capabilities
@@ -82,17 +84,6 @@ export PATH="${HOME}/.config/guix/current/bin${PATH:+:}$PATH"
 
 ## Usage
 
-### As a Development Environment
-
-For a Bitcoin Core depends development environment, simply invoke
-
-```sh
-guix environment --manifest=contrib/guix/manifest.scm
-```
-
-And you'll land back in your shell with all the build dependencies required for
-a `depends` build injected into your environment.
-
 ### As a Tool for Deterministic Builds
 
 From the top of a clean Bitcoin Core repository:
@@ -113,10 +104,8 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
 * _**HOSTS**_
 
   Override the space-separated list of platform triples for which to perform a
-  bootstrappable build. _(defaults to "x86\_64-linux-gnu
-  arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu")_
-
-  > Windows and OS X platform triplet support are WIP.
+  bootstrappable build. _(defaults to "x86\_64-linux-gnu arm-linux-gnueabihf
+  aarch64-linux-gnu riscv64-linux-gnu x86_64-w64-mingw32")_
 
 * _**SOURCES_PATH**_
 
@@ -147,12 +136,28 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
   string) is interpreted the same way as not setting `V` at all, and that `V=0`
   has the same effect as `V=1`.
 
-* _**ADDITIONAL_GUIX_ENVIRONMENT_FLAGS**_
+* _**SUBSTITUTE_URLS**_
 
-  Additional flags to be passed to `guix environment`. For a fully-bootstrapped
+  A whitespace-delimited list of URLs from which to download pre-built packages.
+  A URL is only used if its signing key is authorized (refer to the [substitute
+  servers section](#speeding-up-builds-with-substitute-servers) for more
+  details).
+
+* _**ADDITIONAL_GUIX_COMMON_FLAGS**_
+
+  Additional flags to be passed to all `guix` commands. For a fully-bootstrapped
   build, set this to `--bootstrap --no-substitutes` (refer to the [security
   model section](#choosing-your-security-model) for more details). Note that a
   fully-bootstrapped build will take quite a long time on the first run.
+
+* _**ADDITIONAL_GUIX_TIMEMACHINE_FLAGS**_
+
+  Additional flags to be passed to `guix time-machine`.
+
+* _**ADDITIONAL_GUIX_ENVIRONMENT_FLAGS**_
+
+  Additional flags to be passed to the invocation of `guix environment` inside
+  `guix time-machine`.
 
 ## Tips and Tricks
 
@@ -161,14 +166,15 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
 _This whole section is automatically done in the convenience
 [Dockerfiles][fanquake/guix-docker]_
 
-For those who are used to life in the fast _(and trustful)_ lane, you can use
-[substitute servers][guix/substitutes] to enable binary downloads of packages.
+For those who are used to life in the fast _(and trustful)_ lane, you can
+specify [substitute servers][guix/substitutes] from which to download pre-built
+packages.
 
 > For those who only want to use substitutes from the official Guix build farm
 > and have authorized the build farm's signing key during Guix's installation,
 > you don't need to do anything.
 
-#### Authorize the signing keys
+#### Step 1: Authorize the signing keys
 
 For the official Guix build farm at https://ci.guix.gnu.org, run as root:
 
@@ -182,7 +188,7 @@ For dongcarl's substitute server at https://guix.carldong.io, run as root:
 wget -qO- 'https://guix.carldong.io/signing-key.pub' | guix archive --authorize
 ```
 
-#### Use the substitute servers
+#### Step 2: Specify the substitute servers
 
 The official Guix build farm at https://ci.guix.gnu.org is automatically used
 unless the `--no-substitutes` flag is supplied.
@@ -196,7 +202,7 @@ To use dongcarl's substitute server for Bitcoin Core builds after having
 [authorized his signing key](#authorize-the-signing-keys):
 
 ```
-export ADDITIONAL_GUIX_ENVIRONMENT_FLAGS='--substitute-urls="https://guix.carldong.io https://ci.guix.gnu.org"'
+export SUBSTITUTE_URLS='https://guix.carldong.io https://ci.guix.gnu.org'
 ```
 
 ## FAQ
@@ -212,9 +218,9 @@ As mentioned at the bottom of [this manual page][guix/bin-install]:
 
 ### When will Guix be packaged in debian?
 
-Vagrant Cascadian has been making good progress on this
-[here][debian/guix-package]. We have all the pieces needed to put up an APT
-repository and will likely put one up soon.
+Thanks to Vagrant Cascadian's diligent work, Guix is now [in debian
+experimental][debian/guix-experimental]! Hopefully it will make its way into a
+release soon.
 
 [b17e]: http://bootstrappable.org/
 [r12e/source-date-epoch]: https://reproducible-builds.org/docs/source-date-epoch/
@@ -226,5 +232,5 @@ repository and will likely put one up soon.
 [guix/substitute-server-auth]: https://www.gnu.org/software/guix/manual/en/html_node/Substitute-Server-Authorization.html
 [guix/time-machine]: https://guix.gnu.org/manual/en/html_node/Invoking-guix-time_002dmachine.html
 
-[debian/guix-package]: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=850644
+[debian/guix-experimental]: https://packages.debian.org/experimental/guix
 [fanquake/guix-docker]: https://github.com/fanquake/core-review/tree/master/guix
