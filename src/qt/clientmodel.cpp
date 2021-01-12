@@ -18,6 +18,7 @@
 #include <util/threadnames.h>
 #include <validation.h>
 
+#include <functional>
 #include <stdint.h>
 
 #include <QDebug>

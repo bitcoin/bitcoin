@@ -28,6 +28,7 @@
 #include <wallet/coincontrol.h>
 #include <wallet/wallet.h> // for CRecipient
 
+#include <functional>
 #include <stdint.h>
 
 #include <QDebug>
