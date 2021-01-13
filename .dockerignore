@@ -30,6 +30,7 @@
 !/infra/configure-itcoin-core.sh
 !/infra/create-keypair.sh
 !/infra/entrypoint.sh
+!/infra/Makefile
 !/infra/render-template.sh
 !/libbitcoinconsensus.pc.in
 !/Makefile.am

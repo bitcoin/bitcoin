@@ -33,7 +33,7 @@ RUN apt install -y --no-install-recommends \
     libsqlite3-dev \
     libzmqpp-dev
 
-RUN mkdir /opt/itcoin-core-source
+RUN mkdir --parents /opt/itcoin-core-source/infra
 
 WORKDIR /opt/itcoin-core-source
 
@@ -53,15 +53,20 @@ COPY \
 
 COPY \
     /infra/configure-itcoin-core.sh \
+    /infra/Makefile \
     /opt/itcoin-core-source/infra/
 
-RUN infra/configure-itcoin-core.sh
+WORKDIR /opt/itcoin-core-source/infra
+
+RUN ./configure-itcoin-core.sh
 
 # run the build on all the available cores (sparing one), with load limiting.
 RUN make --jobs=$(nproc --ignore=1) --max-load=$(nproc --ignore=1)
 
 # the build is put in /opt/itcoin-core-source/target
 RUN make install
+
+WORKDIR /opt/itcoin-core-source
 
 # strip the debug symbols from the installed target. This shrinks considerably
 # the binaries size. For example, bitcoind goes from 210 MB to 7 MB.
@@ -102,22 +107,9 @@ COPY --from=build-stage \
     /opt/itcoin-core-source/target \
     /opt/itcoin-core/
 
-# test_framework module is a dependency for signet/miner
-COPY \
-    /test/functional/test_framework \
-    /opt/itcoin-core/bin/test_framework
-
 # precompile test_framework module, so that the container can be safely run
 # with --read-only, if desired.
 RUN python3 -m compileall /opt/itcoin-core/bin/test_framework
-
-# This is the signet miner script.
-#
-# The apt packages python3-minimal and libpython3-stdlib were needed because of
-# it.
-COPY \
-    /contrib/signet/miner \
-    /opt/itcoin-core/bin/miner
 
 COPY \
     /infra/bitcoin.conf.tmpl \

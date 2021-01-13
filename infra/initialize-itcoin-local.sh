@@ -57,7 +57,7 @@ PATH_TO_BINARIES=$(realpath "${MYDIR}/../target/bin")
 BITCOIND="${PATH_TO_BINARIES}/bitcoind"
 BITCOIN_CLI="${PATH_TO_BINARIES}/bitcoin-cli"
 BITCOIN_UTIL="${PATH_TO_BINARIES}/bitcoin-util"
-MINER=$(realpath "${MYDIR}/../contrib/signet/miner")
+MINER="${PATH_TO_BINARIES}/miner"
 
 KEYPAIR=$("${MYDIR}/create-keypair.sh")
 
