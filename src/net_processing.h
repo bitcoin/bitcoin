@@ -49,23 +49,6 @@ public:
 
     /** Set the best height */
     virtual void SetBestHeight(int height) = 0;
-
-    /**
-     * Increment peer's misbehavior score. If the new value >= DISCOURAGEMENT_THRESHOLD, mark the node
-     * to be discouraged, meaning the peer might be disconnected and added to the discouragement filter.
-     * Public for unit testing.
-     */
-    virtual void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message) = 0;
-
-    /**
-     * Evict extra outbound peers. If we think our tip may be stale, connect to an extra outbound.
-     * Public for unit testing.
-     */
-    virtual void CheckForStaleTipAndEvictPeers() = 0;
-
-    /** Process a single message from a peer. Public for fuzz testing */
-    virtual void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
-                                const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) = 0;
 };
 
 /** Relay transaction to every node */

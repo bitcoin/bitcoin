@@ -113,13 +113,25 @@ public:
     bool SendMessages(CNode* pto) override EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing);
 
     /** Implement PeerManager */
-    void CheckForStaleTipAndEvictPeers() override;
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) override;
     bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
     void SetBestHeight(int height) override { m_best_height = height; };
-    void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message) override;
+
+    /** Public for testing */
+
+    /**
+     * Increment peer's misbehavior score. If the new value >= DISCOURAGEMENT_THRESHOLD, mark the node
+     * to be discouraged, meaning the peer might be disconnected and added to the discouragement filter.
+     */
+    void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message);
+
+    /** Evict extra outbound peers. If we think our tip may be stale, connect to an extra outbound. */
+    void CheckForStaleTipAndEvictPeers();
+
+    /** Process a single message from a peer */
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
-                        const std::chrono::microseconds time_received, const std::atomic<bool>& interruptMsgProc) override;
+                        const std::chrono::microseconds time_received,
+                        const std::atomic<bool>& interruptMsgProc);
 
 private:
     /** Consider evicting an outbound peer based on the amount of time they've been behind our tip */
