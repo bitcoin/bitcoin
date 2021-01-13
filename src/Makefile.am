@@ -179,6 +179,7 @@ BITCOIN_CORE_H = \
   noui.h \
   optional.h \
   outputtype.h \
+  peerman_impl.h \
   policy/feerate.h \
   policy/fees.h \
   policy/policy.h \
