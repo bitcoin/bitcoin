@@ -310,6 +310,11 @@ struct AssetCoinInfoCompression
         s << VARINT(val.nAsset);
         if(val.nAsset > 0) {
             s << VARINT(CompressAmount(val.nValue));
+            bool bNFT = !val.nNFTID.IsNull();
+            s << bNFT;
+            if(bNFT) {
+                s << val.nNFTID;
+            }
         }
     }
     template<typename Stream, typename I> void Unser(Stream& s, I& val)
@@ -319,6 +324,11 @@ struct AssetCoinInfoCompression
             uint64_t v;
             s >> VARINT(v);
             val.nValue = DecompressAmount(v);
+            bool bNFT;
+            s >> bNFT;
+            if(bNFT) {
+                s >> val.nNFTID;
+            }
         }
     }
 };
@@ -327,16 +337,19 @@ class CAssetCoinInfo {
 public:
 	uint32_t nAsset;
 	CAmount nValue;
+    uint256 nNFTID;
 	CAssetCoinInfo() {
 		SetNull();
         nValue = 0;
+        nNFTID.SetNull();
 	}
-    CAssetCoinInfo(const uint32_t &nAssetIn, const CAmount& nValueIn): nAsset(nAssetIn), nValue(nValueIn) { }
+    CAssetCoinInfo(const uint32_t &nAssetIn, const CAmount& nValueIn, const uint256& nNFTIDIn=uint256()): nAsset(nAssetIn), nValue(nValueIn), nNFTID(nNFTIDIn) {}
  
     friend bool operator==(const CAssetCoinInfo& a, const CAssetCoinInfo& b)
     {
         return (a.nAsset   == b.nAsset &&
-                a.nValue == b.nValue);
+                a.nValue == b.nValue &&
+                a.nNFTID == b.nNFTID &&);
     }
 
     SERIALIZE_METHODS(CAssetCoinInfo, obj) {
@@ -444,21 +457,43 @@ class CAssetOutValue {
 public:
     uint32_t n;
     CAmount nValue;
-
+    uint256 nNFTID;
     SERIALIZE_METHODS(CAssetOutValue, obj) {
         READWRITE(COMPACTSIZE(obj.n), Using<AmountCompression>(obj.nValue));
     }
+    template <typename Stream>
+    inline void Serialize(Stream& s) const {
+        s << COMPACTSIZE(obj.n);
+        s << Using<AmountCompression>(obj.nValue);
+        const bool bNFT = !val.nNFTID.IsNull();
+        s << bNFT;
+        if(bNFT) {
+            s << val.nNFTID;
+        }
+    }
 
-    CAssetOutValue(const uint32_t &nIn, const uint64_t& nAmountIn): n(nIn), nValue(nAmountIn) {}
+
+    template <typename Stream>
+    inline void Unserialize(Stream& s) {
+        s >> COMPACTSIZE(obj.n);
+        s >> Using<AmountCompression>(obj.nValue);
+        bool bNFT;
+        s >> bNFT;
+        if(bNFT) {
+            s >> val.nNFTID;
+        }
+    }
+    CAssetOutValue(const uint32_t &nIn, const uint64_t& nAmountIn, const uint256& nNFTIDIn=uint256()): n(nIn), nValue(nAmountIn), nNFTID(nNFTIDIn) {}
     CAssetOutValue() {
         SetNull();
     }
     inline void SetNull() {
         nValue = 0;
         n = 0;
+        nNFTID.SetNull();
     }
     inline friend bool operator==(const CAssetOutValue &a, const CAssetOutValue &b) {
-		return (a.n == b.n && a.nValue == b.nValue);
+		return (a.n == b.n && a.nValue == b.nValue && a.nNFTID == b.nNFTID);
 	}
     inline friend bool operator!=(const CAssetOutValue &a, const CAssetOutValue &b) {
 		return !(a == b);

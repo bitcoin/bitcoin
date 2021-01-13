@@ -369,10 +369,14 @@ void CMutableTransaction::LoadAssets()
                 if(voutAsset.nValue > MAX_ASSET || voutAsset.nValue < 0) {
                     throw std::ios_base::failure("asset vout value out of range");
                 }
+                if(!voutAsset.nNFTID.IsNull() && voutAsset.nValue != 1) {
+                    throw std::ios_base::failure("asset vout invalid nft");           
+                }
                 // store in vout
                 CAssetCoinInfo& coinInfo = vout[nOut].assetInfo;
                 coinInfo.nAsset = nAsset;
                 coinInfo.nValue = voutAsset.nValue;
+                coinInfo.nNFTID = voutAsset.nNFTID;
             }
         }       
     }
@@ -407,6 +411,7 @@ bool CTransaction::GetAssetValueOut(CAssetsMap &mapAssetOut, std::string &err) c
         bool zeroVal = false;
         for(const auto& voutAsset: it.values) {
             const uint32_t& nOut = voutAsset.n;
+            const bool& bNFT = !voutAsset.nNFTID.IsNull();
             if(nOut >= nVoutSize) {
                 err = "bad-txns-asset-outofrange";
                 return false;
@@ -416,6 +421,10 @@ bool CTransaction::GetAssetValueOut(CAssetsMap &mapAssetOut, std::string &err) c
             if(vout[nOut].assetInfo.nAsset != nAsset || vout[nOut].assetInfo.nValue != nAmount) {
                 err = "bad-txns-asset-out-assetinfo-mismatch";
                 return false;
+            }
+            if(bNFT && nAmount != 1) {
+                err = "bad-txns-asset-out-nft-invalid";
+                return false;             
             }
             nTotal += nAmount;
             if(nAmount == 0) {
