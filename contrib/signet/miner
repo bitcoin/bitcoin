@@ -428,10 +428,13 @@ def do_generate(args):
             action_time = now
             is_mine = True
         elif bestheader["height"] == 0:
-            logging.error("When mining first block in a new signet, must specify --set-block-time")
-            return 1
+            time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson)
+            time_delta *= 100 # 100 blocks
+            logging.info("Backdating time for first block to %d minutes ago" % (time_delta/60))
+            mine_time = now - time_delta
+            action_time = now
+            is_mine = True
         else:
-
             time_delta = next_block_delta(int(bestheader["bits"], 16), bci["bestblockhash"], ultimate_target, args.poisson)
             mine_time = bestheader["time"] + time_delta
 
