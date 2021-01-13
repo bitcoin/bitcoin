@@ -3,7 +3,6 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <sync.h>
 #include <util/system.h>
 
 #ifdef HAVE_BOOST_PROCESS
@@ -11,6 +10,8 @@
 #endif // HAVE_BOOST_PROCESS
 
 #include <chainparamsbase.h>
+#include <sync.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/translation.h>
@@ -310,8 +311,22 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
             key[0] = '-';
 #endif
 
-        if (key[0] != '-')
+        if (key[0] != '-') {
+            if (!m_accept_any_command && m_command.empty()) {
+                // The first non-dash arg is a registered command
+                Optional<unsigned int> flags = GetArgFlags(key);
+                if (!flags || !(*flags & ArgsManager::COMMAND)) {
+                    error = strprintf("Invalid command '%s'", argv[i]);
+                    return false;
+                }
+            }
+            m_command.push_back(key);
+            while (++i < argc) {
+                // The remaining args are command args
+                m_command.push_back(argv[i]);
+            }
             break;
+        }
 
         // Transform --foo to -foo
         if (key.length() > 1 && key[1] == '-')
@@ -357,6 +372,26 @@ Optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const
         }
     }
     return nullopt;
+}
+
+std::optional<const ArgsManager::Command> ArgsManager::GetCommand() const
+{
+    Command ret;
+    LOCK(cs_args);
+    auto it = m_command.begin();
+    if (it == m_command.end()) {
+        // No command was passed
+        return std::nullopt;
+    }
+    if (!m_accept_any_command) {
+        // The registered command
+        ret.command = *(it++);
+    }
+    while (it != m_command.end()) {
+        // The unregistered command and args (if any)
+        ret.args.push_back(*(it++));
+    }
+    return ret;
 }
 
 std::vector<std::string> ArgsManager::GetArgs(const std::string& strArg) const
@@ -504,8 +539,22 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
     m_settings.forced_settings[SettingName(strArg)] = strValue;
 }
 
+void ArgsManager::AddCommand(const std::string& cmd, const std::string& help, const OptionsCategory& cat)
+{
+    Assert(cmd.find('=') == std::string::npos);
+    Assert(cmd.at(0) != '-');
+
+    LOCK(cs_args);
+    m_accept_any_command = false; // latch to false
+    std::map<std::string, Arg>& arg_map = m_available_args[cat];
+    auto ret = arg_map.emplace(cmd, Arg{"", help, ArgsManager::COMMAND});
+    Assert(ret.second); // Fail on duplicate commands
+}
+
 void ArgsManager::AddArg(const std::string& name, const std::string& help, unsigned int flags, const OptionsCategory& cat)
 {
+    Assert((flags & ArgsManager::COMMAND) == 0); // use AddCommand
+
     // Split arg name from its help param
     size_t eq_index = name.find('=');
     if (eq_index == std::string::npos) {

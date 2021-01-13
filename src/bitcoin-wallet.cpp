@@ -33,11 +33,11 @@ static void SetupWalletToolArgs(ArgsManager& argsman)
     argsman.AddArg("-format=<format>", "The format of the wallet file to create. Either \"bdb\" or \"sqlite\". Only used with 'createfromdump'", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -debug is true, 0 otherwise).", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
 
-    argsman.AddArg("info", "Get wallet info", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("create", "Create new wallet file", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("salvage", "Attempt to recover private keys from a corrupt wallet. Warning: 'salvage' is experimental.", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("dump", "Print out all of the wallet key-value records", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
-    argsman.AddArg("createfromdump", "Create new wallet file from dumped records", ArgsManager::ALLOW_ANY, OptionsCategory::COMMANDS);
+    argsman.AddCommand("info", "Get wallet info", OptionsCategory::COMMANDS);
+    argsman.AddCommand("create", "Create new wallet file", OptionsCategory::COMMANDS);
+    argsman.AddCommand("salvage", "Attempt to recover private keys from a corrupt wallet. Warning: 'salvage' is experimental.", OptionsCategory::COMMANDS);
+    argsman.AddCommand("dump", "Print out all of the wallet key-value records", OptionsCategory::COMMANDS);
+    argsman.AddCommand("createfromdump", "Create new wallet file from dumped records", OptionsCategory::COMMANDS);
 }
 
 static bool WalletAppInit(ArgsManager& args, int argc, char* argv[])
@@ -95,25 +95,19 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    std::string method {};
-    for(int i = 1; i < argc; ++i) {
-        if (!IsSwitchChar(argv[i][0])) {
-            if (!method.empty()) {
-                tfm::format(std::cerr, "Error: two methods provided (%s and %s). Only one method should be provided.\n", method, argv[i]);
-                return EXIT_FAILURE;
-            }
-            method = argv[i];
-        }
-    }
-
-    if (method.empty()) {
+    const auto command = args.GetCommand();
+    if (!command) {
         tfm::format(std::cerr, "No method provided. Run `bitcoin-wallet -help` for valid methods.\n");
+        return EXIT_FAILURE;
+    }
+    if (command->args.size() != 0) {
+        tfm::format(std::cerr, "Error: Additional arguments provided (%s). Methods do not take arguments. Please refer to `-help`.\n", Join(command->args, ", "));
         return EXIT_FAILURE;
     }
 
     ECCVerifyHandle globalVerifyHandle;
     ECC_Start();
-    if (!WalletTool::ExecuteWalletToolFunc(args, method)) {
+    if (!WalletTool::ExecuteWalletToolFunc(args, command->command)) {
         return EXIT_FAILURE;
     }
     ECC_Stop();
