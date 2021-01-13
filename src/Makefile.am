@@ -297,6 +297,7 @@ SYSCOIN_CORE_H = \
   util/error.h \
   util/fees.h \
   util/golombrice.h \
+  util/hasher.h \
   util/macros.h \
   util/memory.h \
   util/message.h \
@@ -737,6 +738,7 @@ libsyscoin_util_a_SOURCES = \
   util/bytevectorhash.cpp \
   util/error.cpp \
   util/fees.cpp \
+  util/hasher.cpp \
   util/system.cpp \
   util/message.cpp \
   util/moneystr.cpp \
