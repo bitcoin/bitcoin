@@ -605,7 +605,7 @@ def main():
         sp.add_argument("--descriptor", default=None, type=str, help="Descriptor for block reward payment")
 
     for sp in [solvepsbt, generate, calibrate]:
-        sp.add_argument("--grind-cmd", default=None, type=str, help="Command to grind a block header for proof-of-work")
+        sp.add_argument("--grind-cmd", default=None, type=str, required=(sp==calibrate), help="Command to grind a block header for proof-of-work")
 
     args = parser.parse_args(sys.argv[1:])
 
