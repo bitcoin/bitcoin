@@ -51,6 +51,7 @@
 #include <warnings.h>
 
 #include <vbk/pop_service.hpp>
+#include <vbk/pop_common.hpp>
 #include <vbk/util.hpp>
 
 #include <string>
@@ -3164,7 +3165,7 @@ void CChainState::ResetBlockFailureFlags(CBlockIndex* pindex)
 
     int nHeight = pindex->nHeight;
     auto blockHash = pindex->GetBlockHash().asVector();
-    VeriBlock::GetPop().altTree->revalidateSubtree(blockHash, altintegration::BLOCK_FAILED_BLOCK, true);
+    VeriBlock::GetPop().altTree->revalidateSubtree(blockHash, altintegration::BLOCK_FAILED_BLOCK, false);
 
     // Remove the invalidity flag from this block and all its descendants.
     BlockMap::iterator it = m_blockman.m_block_index.begin();
