@@ -45,6 +45,7 @@ BITCOIN_TESTS =\
   test/bloom_tests.cpp \
   test/bls_tests.cpp \
   test/bswap_tests.cpp \
+  test/checkdatasig_tests.cpp \
   test/checkqueue_tests.cpp \
   test/cachemap_tests.cpp \
   test/cachemultimap_tests.cpp \
@@ -53,6 +54,7 @@ BITCOIN_TESTS =\
   test/crypto_tests.cpp \
   test/cuckoocache_tests.cpp \
   test/denialofservice_tests.cpp \
+  test/dip0020opcodes_tests.cpp \
   test/evo_deterministicmns_tests.cpp \
   test/evo_simplifiedmns_tests.cpp \
   test/getarg_tests.cpp \
@@ -60,6 +62,7 @@ BITCOIN_TESTS =\
   test/hash_tests.cpp \
   test/key_io_tests.cpp \
   test/key_tests.cpp \
+  test/lcg.h \
   test/limitedmap_tests.cpp \
   test/dbwrapper_tests.cpp \
   test/main_tests.cpp \

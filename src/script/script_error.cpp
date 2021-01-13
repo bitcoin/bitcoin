@@ -21,6 +21,8 @@ const char* ScriptErrorString(const ScriptError serror)
             return "Script failed an OP_CHECKMULTISIGVERIFY operation";
         case SCRIPT_ERR_CHECKSIGVERIFY:
             return "Script failed an OP_CHECKSIGVERIFY operation";
+        case SCRIPT_ERR_CHECKDATASIGVERIFY:
+            return "Script failed an OP_CHECKDATASIGVERIFY operation";
         case SCRIPT_ERR_NUMEQUALVERIFY:
             return "Script failed an OP_NUMEQUALVERIFY operation";
         case SCRIPT_ERR_SCRIPT_SIZE:
@@ -49,6 +51,17 @@ const char* ScriptErrorString(const ScriptError serror)
             return "Invalid OP_IF construction";
         case SCRIPT_ERR_INVALID_SPLIT_RANGE:
             return "Invalid OP_SPLIT range";
+        case SCRIPT_ERR_INVALID_OPERAND_SIZE:
+            return "Invalid operand size";
+        case SCRIPT_ERR_INVALID_NUMBER_RANGE:
+            return "Given operand is not a number within the valid range "
+                   "[-2^31...2^31]";
+        case SCRIPT_ERR_IMPOSSIBLE_ENCODING:
+            return "The requested encoding is impossible to satisfy";
+        case SCRIPT_ERR_DIV_BY_ZERO:
+            return "Division by zero error";
+        case SCRIPT_ERR_MOD_BY_ZERO:
+            return "Modulo by zero error";
         case SCRIPT_ERR_NEGATIVE_LOCKTIME:
             return "Negative locktime";
         case SCRIPT_ERR_UNSATISFIED_LOCKTIME:

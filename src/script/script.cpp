@@ -71,9 +71,11 @@ const char* GetOpName(opcodetype opcode)
     // splice ops
     case OP_CAT                    : return "OP_CAT";
     case OP_SPLIT                  : return "OP_SPLIT";
-    case OP_LEFT                   : return "OP_LEFT";
-    case OP_RIGHT                  : return "OP_RIGHT";
     case OP_SIZE                   : return "OP_SIZE";
+
+    // conversion ops
+    case OP_NUM2BIN                : return "OP_NUM2BIN";
+    case OP_BIN2NUM                : return "OP_BIN2NUM";
 
     // bit logic
     case OP_INVERT                 : return "OP_INVERT";
@@ -137,6 +139,9 @@ const char* GetOpName(opcodetype opcode)
     case OP_NOP8                   : return "OP_NOP8";
     case OP_NOP9                   : return "OP_NOP9";
     case OP_NOP10                  : return "OP_NOP10";
+
+    case OP_CHECKDATASIG           : return "OP_CHECKDATASIG";
+    case OP_CHECKDATASIGVERIFY     : return "OP_CHECKDATASIGVERIFY";
 
     case OP_INVALIDOPCODE          : return "OP_INVALIDOPCODE";
 
@@ -304,5 +309,80 @@ bool GetScriptOp(CScriptBase::const_iterator& pc, CScriptBase::const_iterator en
     }
 
     opcodeRet = static_cast<opcodetype>(opcode);
+    return true;
+}
+
+bool CScriptNum::IsMinimallyEncoded(const std::vector<uint8_t>& vch, const size_t nMaxNumSize)
+{
+    if (vch.size() > nMaxNumSize) {
+        return false;
+    }
+
+    if (vch.size() > 0) {
+        // Check that the number is encoded with the minimum possible number
+        // of bytes.
+        //
+        // If the most-significant-byte - excluding the sign bit - is zero
+        // then we're not minimal. Note how this test also rejects the
+        // negative-zero encoding, 0x80.
+        if ((vch.back() & 0x7f) == 0) {
+            // One exception: if there's more than one byte and the most
+            // significant bit of the second-most-significant-byte is set it
+            // would conflict with the sign bit. An example of this case is
+            // +-255, which encode to 0xff00 and 0xff80 respectively.
+            // (big-endian).
+            if (vch.size() <= 1 || (vch[vch.size() - 2] & 0x80) == 0) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+bool CScriptNum::MinimallyEncode(std::vector<uint8_t>& data)
+{
+    if (data.size() == 0) {
+        return false;
+    }
+
+    // If the last byte is not 0x00 or 0x80, we are minimally encoded.
+    uint8_t last = data.back();
+    if (last & 0x7f) {
+        return false;
+    }
+
+    // If the script is one byte long, then we have a zero, which encodes as an
+    // empty array.
+    if (data.size() == 1) {
+        data = {};
+        return true;
+    }
+
+    // If the next byte has its sign bit set, then we are minimally encoded.
+    if (data[data.size() - 2] & 0x80) {
+        return false;
+    }
+
+    // We are not minimally encoded, we need to figure out how much to trim.
+    for (size_t i = data.size() - 1; i > 0; i--) {
+        // We found a non zero byte, time to encode.
+        if (data[i - 1] != 0) {
+            if (data[i - 1] & 0x80) {
+                // We found a byte with its sign bit set so we need one more
+                // byte.
+                data[i++] = last;
+            } else {
+                // the sign bit is clear, we can use it.
+                data[i - 1] |= last;
+            }
+
+            data.resize(i);
+            return true;
+        }
+    }
+
+    // If the whole thing is zeros, then we have a zero (empty array).
+    data = {};
     return true;
 }
