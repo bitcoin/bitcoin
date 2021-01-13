@@ -38,6 +38,8 @@ static void SetupBitcoinUtilArgs(ArgsManager &argsman)
 {
     SetupHelpOptions(argsman);
 
+    argsman.AddArg("-version", "Print version and exit", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+
     SetupChainParamsBaseOptions(argsman);
 }
 
@@ -60,12 +62,14 @@ static int AppInitUtil(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    if (argc < 2 || HelpRequested(gArgs)) {
+    if (argc < 2 || HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
         // First part of help message is specific to this utility
-        std::string strUsage = PACKAGE_NAME " dash-util utility version " + FormatFullVersion() + "\n\n" +
-            "Usage:  dash-util [options] [commands]  Do stuff\n" +
-            "\n";
-        strUsage += gArgs.GetHelpMessage();
+        std::string strUsage = PACKAGE_NAME " dash-util utility version " + FormatFullVersion() + "\n";
+        if (!gArgs.IsArgSet("-version")) {
+            strUsage += "\n"
+                "Usage:  dash-util [options] [commands]  Do stuff\n";
+            strUsage += "\n" + gArgs.GetHelpMessage();
+        }
 
         tfm::format(std::cout, "%s", strUsage);
 

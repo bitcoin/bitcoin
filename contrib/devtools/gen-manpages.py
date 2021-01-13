@@ -12,7 +12,7 @@ BINARIES = [
 'src/dash-cli',
 'src/dash-tx',
 'src/dash-wallet',
-#'src/dash-util',
+'src/dash-util',
 'src/qt/dash-qt',
 ]
 
