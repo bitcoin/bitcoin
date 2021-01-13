@@ -520,7 +520,7 @@ def do_calibrate(args):
         sys.stderr.write("Can only specify one of --nbits or --seconds\n")
         return 1
     if args.nbits is not None and len(args.nbits) != 8:
-        sys.stderr.write("Must specify 8 hex digits for --nbits")
+        sys.stderr.write("Must specify 8 hex digits for --nbits\n")
         return 1
 
     TRIALS = 600 # gets variance down pretty low

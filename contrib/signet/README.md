@@ -25,7 +25,7 @@ To mine the first block in your custom chain, you can run:
 
     cd src/
     CLI="./bitcoin-cli -conf=mysignet.conf"
-    MINER="..contrib/signet/miner"
+    MINER="../contrib/signet/miner"
     GRIND="./bitcoin-util grind"
     ADDR=$($CLI -signet getnewaddress)
     $MINER --cli="$CLI" generate --grind-cmd="$GRIND" --address="$ADDR" --set-block-time=-1
@@ -52,7 +52,7 @@ Instead of specifying --ongoing, you can specify --max-blocks=N to mine N blocks
 
 Instead of using a single address, a ranged descriptor may be provided instead (via the --descriptor parameter), with the reward for the block at height H being sent to the H'th address generated from the descriptor.
 
-Instead of calculating a specific nbits value, --min-nbits can be specified instead, in which case the mininmum signet difficulty will be targeted.
+Instead of calculating a specific nbits value, --min-nbits can be specified instead, in which case the minimum signet difficulty will be targeted.
 
 By default, the signet miner mines blocks at fixed intervals with minimal variation. If you want blocks to appear more randomly, as they do in mainnet, specify the --poisson option.
 
