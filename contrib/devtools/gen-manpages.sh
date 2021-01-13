@@ -14,13 +14,14 @@ SYSCOIND=${SYSCOIND:-$BINDIR/syscoind}
 SYSCOINCLI=${SYSCOINCLI:-$BINDIR/syscoin-cli}
 SYSCOINTX=${SYSCOINTX:-$BINDIR/syscoin-tx}
 WALLET_TOOL=${WALLET_TOOL:-$BINDIR/syscoin-wallet}
+SYSCOINUTIL=${SYSCOINQT:-$BINDIR/syscoin-util}
 SYSCOINQT=${SYSCOINQT:-$BINDIR/qt/syscoin-qt}
 
 [ ! -x $SYSCOIND ] && echo "$SYSCOIND not found or not executable." && exit 1
 
 # Don't allow man pages to be generated for binaries built from a dirty tree
 DIRTY=""
-for cmd in $SYSCOIND $SYSCOINCLI $SYSCOINTX $WALLET_TOOL $SYSCOINQT; do
+for cmd in $SYSCOIND $SYSCOINCLI $SYSCOINTX $WALLET_TOOL $SYSCOINUTIL $SYSCOINQT; do
   VERSION_OUTPUT=$($cmd --version)
   if [[ $VERSION_OUTPUT == *"dirty"* ]]; then
     DIRTY="${DIRTY}${cmd}\n"
@@ -43,7 +44,7 @@ read -r -a SYSVER <<< "$($SYSCOINCLI --version | head -n1 | awk -F'[ -]' '{ prin
 echo "[COPYRIGHT]" > footer.h2m
 $SYSCOIND --version | sed -n '1!p' >> footer.h2m
 
-for cmd in $SYSCOIND $SYSCOINCLI $SYSCOINTX $WALLET_TOOL $SYSCOINQT; do
+for cmd in $SYSCOIND $SYSCOINCLI $SYSCOINTX $WALLET_TOOL $SYSCOINUTIL $SYSCOINQT; do
   cmdname="${cmd##*/}"
   help2man -N --version-string=${SYSVER[0]} --include=footer.h2m -o ${MANDIR}/${cmdname}.1 ${cmd}
   sed -i "s/\\\-${SYSVER[1]}//g" ${MANDIR}/${cmdname}.1

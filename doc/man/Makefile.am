@@ -16,6 +16,10 @@ if BUILD_SYSCOIN_TX
   dist_man1_MANS+=syscoin-tx.1
 endif
 
+if BUILD_SYSCOIN_UTIL
+  dist_man1_MANS+=syscoin-util.1
+endif
+
 if ENABLE_WALLET
 if BUILD_SYSCOIN_WALLET
   dist_man1_MANS+=syscoin-wallet.1
