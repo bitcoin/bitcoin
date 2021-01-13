@@ -9,6 +9,7 @@
 #include <chainparams.h>
 #include <net.h>
 #include <net_processing.h>
+#include <peerman_impl.h>
 #include <pubkey.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
@@ -80,8 +81,8 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 {
     const CChainParams& chainparams = Params();
     auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = PeerManager::make(chainparams, *connman, nullptr, *m_node.scheduler,
-                                       *m_node.chainman, *m_node.mempool, false);
+    auto peerLogic = MakeUnique<PeerManagerImpl>(chainparams, *connman, nullptr, *m_node.scheduler,
+                                                 *m_node.chainman, *m_node.mempool, false);
 
     // Mock an outbound peer
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
@@ -150,8 +151,8 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 {
     const CChainParams& chainparams = Params();
     auto connman = MakeUnique<CConnmanTest>(0x1337, 0x1337);
-    auto peerLogic = PeerManager::make(chainparams, *connman, nullptr, *m_node.scheduler,
-                                       *m_node.chainman, *m_node.mempool, false);
+    auto peerLogic = MakeUnique<PeerManagerImpl>(chainparams, *connman, nullptr, *m_node.scheduler,
+                                                 *m_node.chainman, *m_node.mempool, false);
 
     constexpr int max_outbound_full_relay = MAX_OUTBOUND_FULL_RELAY_CONNECTIONS;
     CConnman::Options options;
@@ -224,8 +225,8 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     const CChainParams& chainparams = Params();
     auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = PeerManager::make(chainparams, *connman, banman.get(), *m_node.scheduler,
-                                       *m_node.chainman, *m_node.mempool, false);
+    auto peerLogic = MakeUnique<PeerManagerImpl>(chainparams, *connman, banman.get(), *m_node.scheduler,
+                                                 *m_node.chainman, *m_node.mempool, false);
 
     banman->ClearBanned();
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
@@ -271,8 +272,8 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     const CChainParams& chainparams = Params();
     auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = PeerManager::make(chainparams, *connman, banman.get(), *m_node.scheduler,
-                                       *m_node.chainman, *m_node.mempool, false);
+    auto peerLogic = MakeUnique<PeerManagerImpl>(chainparams, *connman, banman.get(), *m_node.scheduler,
+                                                 *m_node.chainman, *m_node.mempool, false);
 
     banman->ClearBanned();
     int64_t nStartTime = GetTime();
