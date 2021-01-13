@@ -15,10 +15,11 @@
 #include <util/strencodings.h>
 #include <util/system.h>
 
-#include <vector>
 #include <deque>
+#include <functional>
 #include <set>
 #include <stdlib.h>
+#include <vector>
 
 #include <boost/signals2/signal.hpp>
 #include <boost/algorithm/string/split.hpp>

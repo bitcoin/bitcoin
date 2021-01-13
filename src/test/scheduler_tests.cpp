@@ -9,6 +9,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/thread/thread.hpp>
 
+#include <functional>
 #include <mutex>
 
 BOOST_AUTO_TEST_SUITE(scheduler_tests)
