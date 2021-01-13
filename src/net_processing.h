@@ -51,9 +51,9 @@ public:
     virtual void SetBestHeight(int height) = 0;
 
     // SYSCOIN
-    virtual size_t GetRequestedCount(NodeId nodeId) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    virtual void ReceivedResponse(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
-    virtual void ForgetTxHash(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
+    virtual size_t GetRequestedCount(NodeId nodeId) const EXCLUSIVE_LOCKS_REQUIRED(::cs_main) = 0;
+    virtual void ReceivedResponse(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) = 0;
+    virtual void ForgetTxHash(NodeId nodeId, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) = 0;
     /**
      * Increment peer's misbehavior score. If the new value >= DISCOURAGEMENT_THRESHOLD, mark the node
      * to be discouraged, meaning the peer might be disconnected and added to the discouragement filter.
