@@ -105,7 +105,7 @@ static void WalletShowInfo(CWallet* wallet_instance)
 
 bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command, const std::string& name)
 {
-    fs::path path = fs::absolute(name, GetWalletDir());
+    const fs::path path = fsbridge::AbsPathJoin(GetWalletDir(), name);
 
     if (args.IsArgSet("-format") && command != "createfromdump") {
         tfm::format(std::cerr, "The -format option can only be used with the \"createfromdump\" command.\n");
