@@ -297,6 +297,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/transaction.cpp \
  test/fuzz/tx_in.cpp \
  test/fuzz/tx_out.cpp \
+ test/fuzz/tx_pool.cpp \
  test/fuzz/txrequest.cpp \
  test/fuzz/validation_load_mempool.cpp
 endif # ENABLE_FUZZ_BINARY
