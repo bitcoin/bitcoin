@@ -164,6 +164,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
                          strprintf("%s: inputs missing/spent", __func__));
     }
     CAmount nValueIn = 0;
+    std::unordered_map<uint32_t, CAmount> mapNFTID;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const COutPoint &prevout = tx.vin[i].prevout;
         const Coin& coin = inputs.AccessCoin(prevout);
@@ -176,18 +177,21 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         }
         if (!coin.out.assetInfo.IsNull()) {
             const bool &zeroVal = coin.out.assetInfo.nValue == 0;
-            auto inRes = mapAssetIn.try_emplace(coin.out.assetInfo.nAsset, zeroVal, coin.out.assetInfo.nValue);
+            auto inRes = mapAssetIn.try_emplace(coin.out.assetInfo.nAsset, zeroVal, coin.out.assetInfo.nValue, mapNFTID);
             if (!inRes.second) {
-                inRes.first->second.second += coin.out.assetInfo.nValue;
-                if (!inRes.first->second.first) {
-                    inRes.first->second.first = zeroVal;
+                inRes.first->second.nAmount += coin.out.assetInfo.nValue;
+                if (!inRes.first->second.bZeroVal) {
+                    inRes.first->second.bZeroVal = zeroVal;
                 }
                 // sanity, should never have multiple zero val inputs for an asset
                 else if (zeroVal) {
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-multiple-zero-val-input");
                 }
-                if(!MoneyRangeAsset(inRes.first->second.second) || !MoneyRangeAsset(coin.out.assetInfo.nValue)) {
+                if(!MoneyRangeAsset(inRes.first->second.nAmount) || !MoneyRangeAsset(coin.out.assetInfo.nValue)) {
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalues-outofrange");
+                }
+                if(coin.out.assetInfo.nNFTID > 0) {
+                    inRes.first->second.mapNFTID.emplace(coin.out.assetInfo.nNFTID, coin.out.assetInfo.nValue);
                 }
             }
         }

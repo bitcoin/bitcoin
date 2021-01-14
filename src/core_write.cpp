@@ -44,6 +44,8 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, U
             UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
             oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
             oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nAsset));
+            if(voutAsset.nNFTID > 0)
+                oAssetAllocationReceiverOutputObj.__pushKV("NFTID", voutAsset.nNFTID);
             oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
         }
         oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
@@ -89,6 +91,8 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const uint
                 UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
                 oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
                 oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nAsset));
+                if(voutAsset.nNFTID > 0)
+                    oAssetAllocationReceiverOutputObj.__pushKV("NFTID", voutAsset.nNFTID);
                 oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
             }
             oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
@@ -119,6 +123,8 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
             UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
             oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
             oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nAsset));
+            if(voutAsset.nNFTID > 0)
+                oAssetAllocationReceiverOutputObj.__pushKV("NFTID", voutAsset.nNFTID);
             oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
         }
         oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 

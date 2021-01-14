@@ -82,9 +82,9 @@ bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const
         // add first asset out to in so it matches, the rest should be the same
         // the first one is verified by checksyscoininputs() later on (part of asset send is also)
         // emplace will add if it doesn't exist or update it below
-        auto itIn = mapAssetIn.try_emplace(nAsset, itOut->second.first, itOut->second.second);
+        auto itIn = mapAssetIn.try_emplace(nAsset, itOut->second.bZeroVal, itOut->second.nAmount, itOut->second.mapNFTID);
         if (!itIn.second) {
-            itIn.first->second = std::make_pair(itOut->second.first, itOut->second.second);
+            itIn.first->second = AssetMapOutput(itOut->second.bZeroVal, itOut->second.nAmount, itOut->second.mapNFTID);
         }
     }
     // this will check that all assets with inputs match amounts being sent on outputs

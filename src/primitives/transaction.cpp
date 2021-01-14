@@ -369,9 +369,6 @@ void CMutableTransaction::LoadAssets()
                 if(voutAsset.nValue > MAX_ASSET || voutAsset.nValue < 0) {
                     throw std::ios_base::failure("asset vout value out of range");
                 }
-                if(!voutAsset.nNFTID.IsNull() && voutAsset.nValue != 1) {
-                    throw std::ios_base::failure("asset vout invalid nft");           
-                }
                 // store in vout
                 CAssetCoinInfo& coinInfo = vout[nOut].assetInfo;
                 coinInfo.nAsset = nAsset;
@@ -409,22 +406,21 @@ bool CTransaction::GetAssetValueOut(CAssetsMap &mapAssetOut, std::string &err) c
         const uint32_t &nAsset = it.key;
         const size_t &nVoutSize = vout.size();
         bool zeroVal = false;
+        std::unordered_map<uint32_t, CAmount> mapNFTID;
         for(const auto& voutAsset: it.values) {
             const uint32_t& nOut = voutAsset.n;
-            const bool& bNFT = !voutAsset.nNFTID.IsNull();
             if(nOut >= nVoutSize) {
                 err = "bad-txns-asset-outofrange";
                 return false;
             }
             const CAmount& nAmount = voutAsset.nValue;
+            if(voutAsset.nNFTID > 0) {
+                mapNFTID.emplace(voutAsset.nNFTID, nAmount);
+            }
             // make sure the vout assetinfo matches the asset commitment in OP_RETURN
             if(vout[nOut].assetInfo.nAsset != nAsset || vout[nOut].assetInfo.nValue != nAmount) {
                 err = "bad-txns-asset-out-assetinfo-mismatch";
                 return false;
-            }
-            if(bNFT && nAmount != 1) {
-                err = "bad-txns-asset-out-nft-invalid";
-                return false;             
             }
             nTotal += nAmount;
             if(nAmount == 0) {
@@ -445,7 +441,7 @@ bool CTransaction::GetAssetValueOut(CAssetsMap &mapAssetOut, std::string &err) c
                 return false;
             }
         }
-        auto itRes = mapAssetOut.try_emplace(nAsset, zeroVal, nTotal);
+        auto itRes = mapAssetOut.try_emplace(nAsset, zeroVal, nTotal, mapNFTID);
         if(!itRes.second) {
             err = "bad-txns-asset-not-unique";
             return false;

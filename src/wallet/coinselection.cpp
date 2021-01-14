@@ -400,7 +400,7 @@ void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size
             // if targeting an asset input then ensure we do not get conflicting assets
             if(!nTargetValueAsset.IsNull()) {
                 // at this point we shouldn't get an asset mismatch because groups should have targeted asset or none (0)
-                assert(effective_value_asset.nAsset == output.effective_value_asset.nAsset);
+                assert(effective_value_asset.nAsset == output.effective_value_asset.nAsset && effective_value_asset.nNFTID == output.effective_value_asset.nNFTID);
             }
             m_value_asset += output.effective_value_asset.nValue;
             effective_value_asset.nValue = m_value_asset;

@@ -3089,6 +3089,8 @@ RPCHelpMan listunspent()
         if(!out.tx->tx->vout[out.i].assetInfo.IsNull()) {
             entry.pushKV("asset_guid", out.tx->tx->vout[out.i].assetInfo.nAsset);
             entry.pushKV("asset_amount", ValueFromAmount(out.tx->tx->vout[out.i].assetInfo.nValue, out.tx->tx->vout[out.i].assetInfo.nAsset));
+            if(out.tx->tx->vout[out.i].assetInfo.nNFTID > 0)
+                entry.pushKV("asset_NFTID", out.tx->tx->vout[out.i].assetInfo.nNFTID);
         }
         entry.pushKV("confirmations", out.nDepth);
         entry.pushKV("spendable", out.fSpendable);

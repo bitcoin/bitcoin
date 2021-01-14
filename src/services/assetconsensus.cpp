@@ -249,14 +249,14 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     auto itIn = mapAssetIn.find(nAsset);
     CAmount nTotal;
     if(itIn != mapAssetIn.end()) {
-        nTotal = itOut->second.second - itIn->second.second;
-        if (itIn->second.first != itOut->second.first) {	
+        nTotal = itOut->second.nAmount - itIn->second.nAmount;
+        if (itIn->second.bZeroVal != itOut->second.bZeroVal) {	
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "mint-zeroval-mismatch");	
         }
     } else {
-        nTotal = itOut->second.second;
+        nTotal = itOut->second.nAmount;
         // cannot create zero val output without an input
-        if(itOut->second.first) {
+        if(itOut->second.bZeroVal) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "mint-zeroval-without-input");	
         }
     }
@@ -393,19 +393,19 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             auto itOut = mapAssetOut.find(nAsset);
             if(itOut == mapAssetOut.end()) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-asset-output-notfound", bSanityCheck);             
-            } 
+            }
             // if input for this asset exists, must also include it as change in output, so output-input should be the new amount created
             auto itIn = mapAssetIn.find(nAsset);
             CAmount nTotal;
             if(itIn != mapAssetIn.end()) {
-                nTotal = itOut->second.second - itIn->second.second;
-                if (itIn->second.first != itOut->second.first) {	
+                nTotal = itOut->second.nAmount - itIn->second.nAmount;
+                if (itIn->second.bZeroVal != itOut->second.bZeroVal) {	
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "syscoin-burn-zeroval-mismatch");	
                 }
             } else {
-                nTotal = itOut->second.second;
+                nTotal = itOut->second.nAmount;
                 // cannot create zero val output without an input
-                if(itOut->second.first) {
+                if(itOut->second.bZeroVal) {
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "syscoin-burn-zeroval-without-input");	
                 }
             }
@@ -605,7 +605,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         return FormatSyscoinErrorMessage(state, "asset-output-notfound", bSanityCheck);             
     }
     // check that the first output asset has zero val output
-    if (!itOut->second.first) {
+    if (!itOut->second.bZeroVal) {
         return FormatSyscoinErrorMessage(state, "asset-output-zeroval", bSanityCheck);
     }
     CAsset dbAsset;
@@ -641,7 +641,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if(vecVout.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-size", bSanityCheck);
             }
-            if(itOut->second.second != 0) {
+            if(itOut->second.nAmount != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-zeroval", bSanityCheck);
             }
             if (tx.vout[nOut].nValue < COST_ASSET) {
@@ -758,7 +758,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 return FormatSyscoinErrorMessage(state, "asset-input-notfound", bSanityCheck);           
             }
             // check that the first input asset has zero val input spent
-            if (!itIn->second.first) {
+            if (!itIn->second.bZeroVal) {
                 return FormatSyscoinErrorMessage(state, "asset-input-zeroval", bSanityCheck);
             }
             if (theAsset.nPrecision != storedAssetRef.nPrecision) {
@@ -920,7 +920,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 return FormatSyscoinErrorMessage(state, "asset-input-notfound", bSanityCheck);           
             } 
             // check that the first input asset has zero val input spent
-            if (!itIn->second.first) {
+            if (!itIn->second.bZeroVal) {
                 return FormatSyscoinErrorMessage(state, "asset-input-zeroval", bSanityCheck);
             }
             if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_SUPPLY)) {
@@ -929,7 +929,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             // db will be stored with total supply
             // even though new assets must set this flag, it may be unset by disconnectassetsend
             storedAssetRef.nUpdateMask |= ASSET_UPDATE_SUPPLY;
-            const CAmount &nTotal = itOut->second.second - itIn->second.second;
+            const CAmount &nTotal = itOut->second.nAmount - itIn->second.nAmount;
             storedAssetRef.nTotalSupply += nTotal;
             if (!MoneyRangeAsset(nTotal)) {
                 return FormatSyscoinErrorMessage(state, "asset-amount-outofrange", bSanityCheck);

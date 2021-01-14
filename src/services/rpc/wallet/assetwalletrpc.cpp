@@ -140,6 +140,8 @@ bool AssetMintWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, c
                 UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
                 oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
                 oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nAsset));
+                if(voutAsset.nNFTID > 0)
+                    oAssetAllocationReceiverOutputObj.__pushKV("NFTID", voutAsset.nNFTID);
                 oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
             }
             oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
@@ -156,6 +158,8 @@ bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, 
     entry.__pushKV("asset_guid", assetInfo.nAsset);
     if(IsAssetAllocationTx(wtx.tx->nVersion)) {
         entry.__pushKV("amount", ValueFromAmount(assetInfo.nValue, assetInfo.nAsset));
+        if(assetInfo.nNFTID > 0)
+            entry.__pushKV("NFTID", assetInfo.nNFTID);
         entry.__pushKV("action", strCategory);
     }
     return true;
@@ -1030,7 +1034,8 @@ static RPCHelpMan assetsendmany()
                 {"", RPCArg::Type::OBJ, RPCArg::Optional::NO, "An assetsend obj",
                     {
                         {"address", RPCArg::Type::NUM, RPCArg::Optional::NO, "Address to transfer to"},
-                        {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send"}
+                        {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send"},
+                        {"NFTID", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Optional NFT ID to send"},
                     }
                 }
             },
@@ -1088,6 +1093,10 @@ static RPCHelpMan assetsendmany()
         if(!IsValidDestination(dest)) {
             throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("Invalid destination address %s", toStr));
         }
+        const UniValue &NFTIDObj = find_value(receiverObj, "NFTID");
+        uint32_t nNFTID = 0;
+        if(!NFTIDObj.isNull())
+            nNFTID = NFTIDObj.get_uint();
         const CScript& scriptPubKey = GetScriptForDestination(dest);           
         CAmount nAmount = AssetAmountFromValue(find_value(receiverObj, "amount"), theAsset.nPrecision);
 
@@ -1096,7 +1105,7 @@ static RPCHelpMan assetsendmany()
             theAssetAllocation.voutAssets.emplace_back(CAssetOut(nAsset, vecOut));
             it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
         }
-        it->values.push_back(CAssetOutValue(vecSend.size(), nAmount));
+        it->values.push_back(CAssetOutValue(vecSend.size(), nAmount, nNFTID));
         CTxOut change_prototype_txout(0, scriptPubKey);
         CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
         vecSend.push_back(recp);
@@ -1128,7 +1137,8 @@ static RPCHelpMan assetsend()
     {
         {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid."},
         {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the asset to (creates an asset allocation)."},
-        {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send."}
+        {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send."},
+        {"NFTID", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Optional NFT ID to send"},
     },
     RPCResult{
         RPCResult::Type::OBJ, "", "",
@@ -1136,8 +1146,8 @@ static RPCHelpMan assetsend()
             {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
         }},
     RPCExamples{
-        HelpExampleCli("assetsend", "\"asset_guid\" \"address\" \"amount\"")
-        + HelpExampleRpc("assetsend", "\"asset_guid\", \"address\", \"amount\"")
+        HelpExampleCli("assetsend", "\"asset_guid\" \"address\" \"amount\" \"NFTID\"")
+        + HelpExampleRpc("assetsend", "\"asset_guid\", \"address\", \"amount\", \"NFTID\"")
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -1150,6 +1160,8 @@ static RPCHelpMan assetsend()
     UniValue outputObj(UniValue::VOBJ);
     outputObj.__pushKV("address", params[1].get_str());
     outputObj.__pushKV("amount", request.params[2]);
+    if(!request.params[3].isNull())
+        outputObj.__pushKV("NFTID", request.params[3]);
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(nAsset);
@@ -1172,8 +1184,9 @@ static RPCHelpMan assetallocationsendmany()
                     {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "The assetallocationsend object",
                         {
                             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
-                            {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Address to transfer to"},
-                            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "Amount of asset to send"}
+                            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to transfer to"},
+                            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send"},
+                            {"NFTID", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Optional NFT ID to send"},
                         }
                     },
                     },
@@ -1247,6 +1260,10 @@ static RPCHelpMan assetallocationsendmany()
 
 		const UniValue &receiverObj = receiver.get_obj();
         const uint32_t &nAsset = find_value(receiverObj, "asset_guid").get_uint();
+        const UniValue &NFTIDObj = find_value(receiverObj, "NFTID");
+        uint32_t nNFTID = 0;
+        if(!NFTIDObj.isNull())
+            nNFTID = NFTIDObj.get_uint();
         CAsset theAsset;
         if (!GetAsset(nAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
@@ -1272,7 +1289,7 @@ static RPCHelpMan assetallocationsendmany()
             theAssetAllocation.voutAssets.emplace_back(assetOut);
             itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
         }
-        itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAmount));
+        itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAmount, nNFTID));
 
         CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
         mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
@@ -1741,6 +1758,7 @@ static RPCHelpMan assetallocationsend()
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the allocation to"},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send"},
             {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Allow this transaction to be replaced by a transaction with higher fees via BIP 125. ZDAG is only possible if RBF is disabled."},
+            {"NFTID", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Optional NFT ID to send"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -1748,8 +1766,8 @@ static RPCHelpMan assetallocationsend()
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
             }},
         RPCExamples{
-            HelpExampleCli("assetallocationsend", "\"asset_guid\" \"address\" \"amount\" \"false\"")
-            + HelpExampleRpc("assetallocationsend", "\"asset_guid\", \"address\", \"amount\" \"false\"")
+            HelpExampleCli("assetallocationsend", "\"asset_guid\" \"address\" \"amount\" \"false\" \"NFTID\"")
+            + HelpExampleRpc("assetallocationsend", "\"asset_guid\", \"address\", \"amount\", \"false\", \"NFTID\"")
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -1778,6 +1796,8 @@ static RPCHelpMan assetallocationsend()
     outputObj.__pushKV("asset_guid", nAsset);
     outputObj.__pushKV("address", params[1].get_str());
     outputObj.__pushKV("amount", request.params[2]);
+    if(!request.params[4].isNull())
+        outputObj.__pushKV("NFTID", request.params[4]);
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(output);
@@ -2130,9 +2150,9 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "assetnewtest",                     &assetnewtest,                  {"asset_guid","funding_amount","symbol","description","contract","precision","max_supply","updatecapability_flags","notary_address","notary_details","auxfee_details"}},
     { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","updatecapability_flags","notary_address","notary_details","auxfee_details"}},
     { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address"}},
-    { "syscoinwallet",            "assetsend",                        &assetsend,                     {"asset_guid","address","amount"}},
+    { "syscoinwallet",            "assetsend",                        &assetsend,                     {"asset_guid","address","amount","NFTID"}},
     { "syscoinwallet",            "assetsendmany",                    &assetsendmany,                 {"asset_guid","amounts"}},
-    { "syscoinwallet",            "assetallocationsend",              &assetallocationsend,           {"asset_guid","address","amount","replaceable"}},
+    { "syscoinwallet",            "assetallocationsend",              &assetallocationsend,           {"asset_guid","address","amount","replaceable","NFTID"}},
     { "syscoinwallet",            "assetallocationsendmany",          &assetallocationsendmany,       {"amounts","replaceable","comment","conf_target","estimate_mode"}},
     { "syscoinwallet",            "listunspentasset",                 &listunspentasset,              {"asset_guid","minconf"}},
     { "syscoinwallet",            "signhash",                         &signhash,                      {"address","hash"}},
