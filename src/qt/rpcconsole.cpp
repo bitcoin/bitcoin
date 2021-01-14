@@ -1166,7 +1166,14 @@ void RPCConsole::updateDetailWidget()
         ui->peerPermissions->setText(permissions.join(" & "));
     }
     ui->peerMappedAS->setText(stats->nodeStats.m_mapped_as != 0 ? QString::number(stats->nodeStats.m_mapped_as) : tr("N/A"));
-
+    if (stats->nodeStats.verifiedProRegTxHash.IsNull()) {
+        ui->peerNodeType->setText(tr("Normal"));
+        ui->peerPoSeScore->setText(tr("N/A"));
+    } else {
+        ui->peerNodeType->setText(tr("Masternode"));
+        auto dmn = clientModel->getMasternodeList().GetMNByService(stats->nodeStats.addr);
+        ui->peerPoSeScore->setText(dmn == nullptr ? tr("N/A") : QString::number(dmn->pdmnState->nPoSePenalty));
+    }
     // This check fails for example if the lock was busy and
     // nodeStateStats couldn't be fetched.
     if (stats->fNodeStateStatsAvailable) {
