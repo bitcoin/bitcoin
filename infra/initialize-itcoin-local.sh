@@ -8,8 +8,10 @@
 #
 # REQUIREMENTS:
 # - jq
-# - the itcoin source must already be built with /configure-itcoin.sh && make &&
-#   make install
+# - the itcoin source must already be built with:
+#      ./configure-itcoin.sh && \
+#          make --jobs=$(nproc --ignore=1) --max-load=$(nproc --ignore=1) && \
+#          make install-strip
 #
 # USAGE:
 #     initialize-itcoin-local.sh
