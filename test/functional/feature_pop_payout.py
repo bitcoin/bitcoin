@@ -53,8 +53,9 @@ class PopPayouts(BitcoinTestFramework):
         # endorse block 5
         assert lastblock >= 5
         addr = self.nodes[0].getnewaddress()
-        self.log.info("endorsing block {} on node0 by miner {}".format(lastblock - 5, addr))
-        atv_id = endorse_block(self.nodes[0], self.apm, lastblock - 5, addr)
+        self.endorsed_height = lastblock - 5
+        self.log.info("endorsing block {} on node0 by miner {}".format(self.endorsed_height, addr))
+        atv_id = endorse_block(self.nodes[0], self.apm, self.endorsed_height, addr)
 
         # wait until node[1] gets relayed pop tx
         self.sync_pop_mempools(self.nodes)
@@ -72,8 +73,13 @@ class PopPayouts(BitcoinTestFramework):
 
         assert atv_id in block['pop']['data']['atvs']
 
-        # target height is lastblock - 5 + POP_PAYOUT_DELAY + 1
-        n = lastblock - 5 + POP_PAYOUT_DELAY + 1 - block['height']
+        # target height is lastblock - 5 + POP_PAYOUT_DELAY
+        self.target_payout_block = self.endorsed_height + POP_PAYOUT_DELAY
+        n = self.target_payout_block - block['height']
+        self.log.info("endorsed block height {}, expected payout block height {}".format(
+            self.endorsed_height,
+            self.target_payout_block
+        ))
         payoutblockhash = self.nodes[1].generate(nblocks=n)[-1]
         self.sync_blocks(self.nodes)
         self.log.info("pop rewards paid")

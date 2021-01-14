@@ -2138,11 +2138,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         UpdateCoins(tx, view, i == 0 ? undoDummy : blockundo.vtxundo.back(), pindex->nHeight);
     }
 
-    altintegration::ValidationState _state;
-    if (!VeriBlock::setState(pindex->GetBlockHash(), _state)) {
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop", strprintf("Block %s is POP invalid: %s", pindex->GetBlockHash().ToString(), _state.toString()));
-    }
-
     int64_t nTime3 = GetTimeMicros();
     nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs - 1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
@@ -2150,6 +2145,11 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     assert(pindex->pprev && "previous block ptr is nullptr");
     if (!VeriBlock::checkCoinbaseTxWithPopRewards(*block.vtx[0], nFees, *pindex->pprev, chainparams, state)) {
         return false;
+    }
+
+    altintegration::ValidationState _state;
+    if (!VeriBlock::setState(pindex->GetBlockHash(), _state)) {
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop", strprintf("Block %s is POP invalid: %s", pindex->GetBlockHash().ToString(), _state.toString()));
     }
 
     if (!control.Wait()) {
