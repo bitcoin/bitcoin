@@ -186,12 +186,13 @@ bool parsePayloads(const UniValue& array, std::vector<pop_t>& out, altintegratio
 }
 
 template <typename T>
-static void logSubmitResult(const std::string idhex, const altintegration::ValidationState& state)
+static void logSubmitResult(const std::string idhex, const altintegration::MemPool::SubmitResult& result, const altintegration::ValidationState& state)
 {
-    if (!state.IsValid()) {
+    if (!result.isAccepted()) {
         LogPrintf("rejected to add %s=%s to POP mempool: %s\n", T::name(), idhex, state.toString());
     } else {
-        LogPrintf("accepted %s=%s to POP mempool\n", T::name(), idhex);
+        auto s = strprintf("(state: %s)", state.toString());
+        LogPrintf("accepted %s=%s to POP mempool %s\n", T::name(), idhex, (state.IsValid() ? "" : s));
     }
 }
 
@@ -247,7 +248,7 @@ UniValue submitpopIt(const JSONRPCRequest& request)
     auto& mp = *VeriBlock::GetPop().mempool;
     auto idhex = data.getId().toHex();
     auto result = mp.submit<Pop>(data, state);
-    logSubmitResult<Pop>(idhex, state);
+    logSubmitResult<Pop>(idhex, result, state);
 
     bool accepted = result.isAccepted();
     return altintegration::ToJSON<UniValue>(state, &accepted);
