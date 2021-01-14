@@ -3,8 +3,9 @@
 # ItCoin
 #
 # Starts a local itcoin daemon, computes the information necessary to initialize
-# the system for the first time.
-# Then starts continuously mining blocks at a regular pace.
+# the system for the first time and mines the first block of a new blockchain.
+#
+# Subsequent blocks can be mined calling continue-mining-local.sh
 #
 # REQUIREMENTS:
 # - jq
@@ -105,7 +106,9 @@ errecho "Mine the first block"
 "${MINER}" --cli="${BITCOIN_CLI} -datadir=${DATADIR}" generate --address "${ADDR}" --grind-cmd="${BITCOIN_UTIL} grind" --min-nbits --set-block-time -1
 errecho "First block mined"
 
-# Let's start mining continuously. We'll reuse the same ADDR as before.
-errecho "Keep mining the following blocks"
-"${MINER}" --cli="${BITCOIN_CLI} -datadir=${DATADIR}" generate --address "${ADDR}" --grind-cmd="${BITCOIN_UTIL} grind" --min-nbits --ongoing
-errecho "You should never reach here"
+cat <<-EOF
+
+	To continue the mining process please run:
+
+	    ./continue-mining-local.sh
+EOF

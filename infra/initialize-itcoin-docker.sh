@@ -3,8 +3,11 @@
 # ItCoin
 #
 # Starts a local itcoin daemon via Docker, computes the information
-# necessary to initialize the system for the first time.
-# Then starts continuously mining blocks at a regular pace.
+# necessary to initialize the system for the first time, prints on stdout the
+# signet challenge (=blockscript) of the new blockchain and then mines the
+# first block.
+#
+# Subsequent blocks can be mined calling continue-mining-docker.sh <BLOCKSTRIPT>
 #
 # REQUIREMENTS:
 # - docker
@@ -82,8 +85,6 @@ PRIVKEY=$(echo     "${KEYPAIR}" | jq --raw-output '.privkey')
 errecho "Creating datadir ${EXTERNAL_DATADIR}. If it already exists this script will fail"
 mkdir "${EXTERNAL_DATADIR}"
 
-echo "Please save this BLOCKSCRIPT value ${BLOCKSCRIPT}: you will need it if you want to run continue-mining-docker.sh"
-
 # Start itcoin daemon
 # Different from the wiki: the wallet is not automatically loaded now. It will
 # instead be loaded afterwards, through the cli
@@ -130,7 +131,12 @@ errecho "Mine the first block"
 "${MYDIR}/run-docker-miner.sh" "${ADDR}" --set-block-time -1
 errecho "First block mined"
 
-# Let's start mining continuously. We'll reuse the same ADDR as before.
-errecho "Keep mining the following blocks"
-"${MYDIR}/run-docker-miner.sh" "${ADDR}" --ongoing
-errecho "You should never reach here"
+cat <<-EOF
+
+	To continue the mining process please run:
+
+	    ./continue-mining-docker.sh ${BLOCKSCRIPT}
+
+	Remember to keep in a safe place the value of BLOCKSCRIPT (${BLOCKSCRIPT}),
+	because it won't be saved anywhere.
+EOF
