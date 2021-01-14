@@ -44,6 +44,9 @@ class PrioritiseTransactionTest(BitcoinTestFramework):
         # Test `prioritisetransaction` invalid `fee_delta`
         assert_raises_rpc_error(-1, "JSON value is not an integer as expected", self.nodes[0].prioritisetransaction, txid=txid, fee_delta='foo')
 
+        # Test invalid fee_delta check: -9223372036854775808 (std::numeric_limits<CAmount>::min()) is not a valid fee_delta.
+        assert_raises_rpc_error(-8, "Invalid fee_delta passed", self.nodes[0].prioritisetransaction, txid=txid, fee_delta=-9223372036854775808)
+
         self.txouts = gen_return_txouts()
         self.relayfee = self.nodes[0].getnetworkinfo()['relayfee']
 
