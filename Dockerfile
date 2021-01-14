@@ -63,19 +63,10 @@ RUN ./configure-itcoin-core.sh
 # run the build on all the available cores (sparing one), with load limiting.
 RUN make --jobs=$(nproc --ignore=1) --max-load=$(nproc --ignore=1)
 
-# the build is put in /opt/itcoin-core-source/target
-RUN make install
-
-WORKDIR /opt/itcoin-core-source
-
-# strip the debug symbols from the installed target. This shrinks considerably
-# the binaries size. For example, bitcoind goes from 210 MB to 7 MB.
-RUN strip \
-    target/bin/bitcoind \
-    target/bin/bitcoin-tx \
-    target/bin/bitcoin-util \
-    target/bin/bitcoin-wallet \
-    target/lib/libbitcoinconsensus.a
+# the build is stripped and put in /opt/itcoin-core-source/target
+# Stripping shrinks considerably the binaries size. For example, bitcoind goes
+# from 210 MB to 7 MB.
+RUN make install-strip
 
 # ==============================================================================
 FROM ubuntu:20.04
