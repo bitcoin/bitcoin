@@ -1240,6 +1240,14 @@ void RPCConsole::updateNodeDetail(const CNodeCombinedStats *stats)
     ui->peerDirection->setText(stats->nodeStats.fInbound ? tr("Inbound") : tr("Outbound"));
     ui->peerHeight->setText(QString("%1").arg(QString::number(stats->nodeStats.nStartingHeight)));
     ui->peerWhitelisted->setText(stats->nodeStats.fWhitelisted ? tr("Yes") : tr("No"));
+    if (stats->nodeStats.verifiedProRegTxHash.IsNull()) {
+        ui->peerNodeType->setText(tr("Normal"));
+        ui->peerPoSeScore->setText(tr("N/A"));
+    } else {
+        ui->peerNodeType->setText(tr("Masternode"));
+        auto dmn = clientModel->getMasternodeList().GetMNByService(stats->nodeStats.addr);
+        ui->peerPoSeScore->setText(dmn == nullptr ? tr("N/A") : QString::number(dmn->pdmnState->nPoSePenalty));
+    }
 
     // This check fails for example if the lock was busy and
     // nodeStateStats couldn't be fetched.
