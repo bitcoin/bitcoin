@@ -975,6 +975,34 @@ class CRecoveredSig:
         r += self.sig
         return r
 
+
+class CSigShare:
+    def __init__(self):
+        self.llmqType = 0
+        self.quorumHash = 0
+        self.quorumMember = 0
+        self.id = 0
+        self.msgHash = 0
+        self.sigShare = b'\\x0' * 96
+
+    def deserialize(self, f):
+        self.llmqType = struct.unpack("<B", f.read(1))[0]
+        self.quorumHash = deser_uint256(f)
+        self.quorumMember = struct.unpack("<H", f.read(2))[0]
+        self.id = deser_uint256(f)
+        self.msgHash = deser_uint256(f)
+        self.sigShare = f.read(96)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.llmqType)
+        r += ser_uint256(self.quorumHash)
+        r += struct.pack("<H", self.quorumMember)
+        r += ser_uint256(self.id)
+        r += ser_uint256(self.msgHash)
+        r += self.sigShare
+        return r
+
 # Objects that correspond to messages on the wire
 class msg_version():
     command = b"version"
@@ -1517,3 +1545,21 @@ class msg_islock():
 
     def __repr__(self):
         return "msg_islock(inputs=%s, txid=%064x)" % (repr(self.inputs), self.txid)
+
+
+class msg_qsigshare():
+    command = b"qsigshare"
+
+    def __init__(self, sig_shares=[]):
+        self.sig_shares = sig_shares
+
+    def deserialize(self, f):
+        self.sig_shares = deser_vector(f, CSigShare)
+
+    def serialize(self):
+        r = b""
+        r += ser_vector(self.sig_shares)
+        return r
+
+    def __repr__(self):
+        return "msg_qsigshare(sigShares=%d)" % (len(self.sig_shares))

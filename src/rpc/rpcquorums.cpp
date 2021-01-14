@@ -294,6 +294,8 @@ void quorum_sign_help()
             "2. \"id\"                  (string, required) Request id.\n"
             "3. \"msgHash\"             (string, required) Message hash.\n"
             "4. \"quorumHash\"          (string, optional) The quorum identifier.\n"
+            "5. submit                (bool, optional, default=true) Submits the signature share to the network if this is true."
+        "                             Returns an object containing the signature share if this is false.\n"
     );
 }
 
@@ -355,7 +357,7 @@ UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
     auto cmd = request.params[0].get_str();
     if (request.fHelp || (request.params.size() != 4)) {
         if (cmd == "sign") {
-            if ((request.params.size() < 4) || (request.params.size() > 5)) {
+            if ((request.params.size() < 4) || (request.params.size() > 6)) {
                 quorum_sign_help();
             }
         } else if (cmd == "verify") {
@@ -384,10 +386,46 @@ UniValue quorum_sigs_cmd(const JSONRPCRequest& request)
 
     if (cmd == "sign") {
         uint256 quorumHash;
-        if (!request.params[4].isNull()) {
+        if (!request.params[4].isNull() && !request.params[4].get_str().empty()) {
             quorumHash = ParseHashV(request.params[4], "quorumHash");
         }
-        return llmq::quorumSigningManager->AsyncSignIfMember(llmqType, id, msgHash, quorumHash);
+        bool fSubmit{true};
+        if (!request.params[5].isNull()) {
+            fSubmit = ParseBoolV(request.params[5], "submit");
+        }
+        if (fSubmit) {
+            return llmq::quorumSigningManager->AsyncSignIfMember(llmqType, id, msgHash, quorumHash);
+        } else {
+
+            llmq::CQuorumCPtr pQuorum;
+
+            if (quorumHash.IsNull()) {
+                pQuorum = llmq::quorumSigningManager->SelectQuorumForSigning(llmqType, id);
+            } else {
+                pQuorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
+            }
+
+            if (pQuorum == nullptr) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
+            }
+
+            llmq::CSigShare sigShare = llmq::quorumSigSharesManager->CreateSigShare(pQuorum, id, msgHash);
+
+            if (!sigShare.sigShare.Get().IsValid()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "failed to create sigShare");
+            }
+
+            UniValue obj(UniValue::VOBJ);
+            obj.pushKV("llmqType", llmqType);
+            obj.pushKV("quorumHash", sigShare.quorumHash.ToString());
+            obj.pushKV("quorumMember", sigShare.quorumMember);
+            obj.pushKV("id", id.ToString());
+            obj.pushKV("msgHash", msgHash.ToString());
+            obj.pushKV("signHash", sigShare.GetSignHash().ToString());
+            obj.pushKV("signature", sigShare.sigShare.Get().ToString());
+
+            return obj;
+        }
     } else if (cmd == "verify") {
         CBLSSignature sig;
         if (!sig.SetHexStr(request.params[4].get_str())) {

@@ -1540,30 +1540,45 @@ bool CSigSharesManager::SignPendingSigShares()
     }
 
     for (auto& t : v) {
-        Sign(std::get<0>(t), std::get<1>(t), std::get<2>(t));
+        const CQuorumCPtr pQuorum = std::get<0>(t);
+        CSigShare sigShare = CreateSigShare(pQuorum, std::get<1>(t), std::get<2>(t));
+
+        if (sigShare.sigShare.Get().IsValid()) {
+
+            ProcessSigShare(sigShare, *g_connman, pQuorum);
+
+            if (CLLMQUtils::IsAllMembersConnectedEnabled(pQuorum->params.type)) {
+                LOCK(cs);
+                auto& session = signedSessions[sigShare.GetSignHash()];
+                session.sigShare = sigShare;
+                session.quorum = pQuorum;
+                session.nextAttemptTime = 0;
+                session.attempt = 0;
+            }
+        }
     }
 
     return !v.empty();
 }
 
-void CSigSharesManager::Sign(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash)
+CSigShare CSigSharesManager::CreateSigShare(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash)
 {
     cxxtimer::Timer t(true);
 
     if (!quorum->IsValidMember(activeMasternodeInfo.proTxHash)) {
-        return;
+        return {};
     }
 
     CBLSSecretKey skShare = quorum->GetSkShare();
     if (!skShare.IsValid()) {
         LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- we don't have our skShare for quorum %s\n", __func__, quorum->qc.quorumHash.ToString());
-        return;
+        return {};
     }
 
     int memberIdx = quorum->GetMemberIndex(activeMasternodeInfo.proTxHash);
     if (memberIdx == -1) {
         // this should really not happen (IsValidMember gave true)
-        return;
+        return {};
     }
 
     CSigShare sigShare;
@@ -1578,23 +1593,15 @@ void CSigSharesManager::Sign(const CQuorumCPtr& quorum, const uint256& id, const
     if (!sigShare.sigShare.Get().IsValid()) {
         LogPrintf("CSigSharesManager::%s -- failed to sign sigShare. signHash=%s, id=%s, msgHash=%s, time=%s\n", __func__,
                   signHash.ToString(), sigShare.id.ToString(), sigShare.msgHash.ToString(), t.count());
-        return;
+        return {};
     }
 
     sigShare.UpdateKey();
 
-    LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- signed sigShare. signHash=%s, id=%s, msgHash=%s, llmqType=%d, quorum=%s, time=%s\n", __func__,
+    LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- created sigShare. signHash=%s, id=%s, msgHash=%s, llmqType=%d, quorum=%s, time=%s\n", __func__,
               signHash.ToString(), sigShare.id.ToString(), sigShare.msgHash.ToString(), quorum->params.type, quorum->qc.quorumHash.ToString(), t.count());
-    ProcessSigShare(sigShare, *g_connman, quorum);
 
-    if (CLLMQUtils::IsAllMembersConnectedEnabled(quorum->params.type)) {
-        LOCK(cs);
-        auto& session = signedSessions[sigShare.GetSignHash()];
-        session.sigShare = sigShare;
-        session.quorum = quorum;
-        session.nextAttemptTime = 0;
-        session.attempt = 0;
-    }
+    return sigShare;
 }
 
 // causes all known sigShares to be re-announced
