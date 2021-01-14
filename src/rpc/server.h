@@ -142,10 +142,13 @@ class CRPCTable
 {
 private:
     std::map<std::string, const CRPCCommand*> mapCommands;
+    std::multimap<std::string, std::vector<UniValue>> mapPlatformRestrictions;
 public:
     CRPCTable();
     const CRPCCommand* operator[](const std::string& name) const;
     std::string help(const std::string& name, const std::string& strSubCommand, const JSONRPCRequest& helpreq) const;
+
+    void InitPlatformRestrictions();
 
     /**
      * Execute a method.

@@ -34,15 +34,8 @@ static RPCTimerInterface* timerInterface = nullptr;
 /* Map of name to timer. */
 static std::map<std::string, std::unique_ptr<RPCTimerBase> > deadlineTimers;
 
-// Any commands submitted by this user will have their commands filtered based on the platformAllowedCommands
+// Any commands submitted by this user will have their commands filtered based on the mapPlatformRestrictions
 static const std::string defaultPlatformUser = "platform-user";
-
-static const std::map<std::string, std::set<std::string>> platformAllowedCommands{
-    {"getbestblockhash", {}},
-    {"getblockhash", {}},
-    {"getblockcount", {}},
-    {"getbestchainlock", {}},
-};
 
 static struct CRPCSignals
 {
@@ -267,6 +260,19 @@ std::string CRPCTable::help(const std::string& strCommand, const std::string& st
         strRet = strprintf("help: unknown command: %s\n", strCommand);
     strRet = strRet.substr(0,strRet.size()-1);
     return strRet;
+}
+
+void CRPCTable::InitPlatformRestrictions()
+{
+    mapPlatformRestrictions = {
+        {"getbestblockhash", {}},
+        {"getblockhash", {}},
+        {"getblockcount", {}},
+        {"getbestchainlock", {}},
+        {"quorum", {"sign", Params().GetConsensus().llmqTypePlatform}},
+        {"quorum", {"verify"}},
+        {"verifyislock", {}},
+    };
 }
 
 UniValue help(const JSONRPCRequest& jsonRequest)
@@ -563,16 +569,49 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
     // Before executing the RPC Command, filter commands from platform rpc user
     if (fMasternodeMode && request.authUser == gArgs.GetArg("-platform-user", defaultPlatformUser)) {
 
-        auto it = platformAllowedCommands.find(request.strMethod);
-        // If the requested method is not available in platformAllowedCommands
-        if (it == platformAllowedCommands.end()) {
+        auto it = mapPlatformRestrictions.equal_range(request.strMethod);
+
+        // If the requested method is not available in mapPlatformRestrictions
+        if (it.first == it.second) {
             throw JSONRPCError(RPC_PLATFORM_RESTRICTION, strprintf("Method \"%s\" prohibited", request.strMethod));
         }
 
-        const std::string strFirstParam = !request.params.empty() ? request.params[0].getValStr() : "";
-        // If there are any parameter restrictions for the requested method make sure the first paramter is allowed
-        if (!it->second.empty() && it->second.count(strFirstParam) == 0) {
-            throw JSONRPCError(RPC_PLATFORM_RESTRICTION, strprintf("Parameter \"%s\" prohibited for method \"%s\"", strFirstParam, request.strMethod));
+        bool fValidRequest{false};
+        // Try if any of the mapPlatformRestrictions entries matches the current request
+        for (auto itRequest = it.first; itRequest != it.second; ++itRequest) {
+
+            auto& vecParams = itRequest->second;
+            size_t nRestrictedParamsCount = vecParams.size();
+
+            if (nRestrictedParamsCount > 0) {
+                if (request.params.empty()) {
+                    throw JSONRPCError(RPC_PLATFORM_RESTRICTION, strprintf("Method \"%s\" has parameter restrictions.", request.strMethod));
+                }
+
+                if (request.params.size() < nRestrictedParamsCount) {
+                    continue;
+                }
+
+                bool fMatch{true};
+                for (size_t i = 0; i < nRestrictedParamsCount; ++i) {
+                    if (request.params[i].type() != itRequest->second[i].type() || request.params[i].getValStr() != itRequest->second[i].getValStr()) {
+                        LogPrint(BCLog::RPC, "CRPCTable::%s: Method \"%s\" requires parameter %d to be %s with type %d\n", __func__, request.strMethod, i, itRequest->second[i].getValStr(), itRequest->second[i].type());
+                        fMatch = false;
+                    }
+                }
+
+                if (fMatch) {
+                    fValidRequest = true;
+                    break;
+                }
+            } else {
+                fValidRequest = true;
+                break;
+            }
+        }
+
+        if (!fValidRequest) {
+            throw JSONRPCError(RPC_PLATFORM_RESTRICTION, "Request doesn't comply with the parameter restrictions.");
         }
     }
 

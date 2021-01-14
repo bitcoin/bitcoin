@@ -1748,6 +1748,8 @@ bool AppInitMain()
     GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
     GetMainSignals().RegisterWithMempoolSignals(mempool);
 
+    tableRPC.InitPlatformRestrictions();
+
     /* Register RPC commands regardless of -server setting so they will be
      * available in the GUI RPC console even if external calls are disabled.
      */
