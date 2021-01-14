@@ -24,5 +24,6 @@ static const CAmount COIN = 100000000;
  * */
 static const CAmount MAX_MONEY = 21000000 * COIN;
 inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
+inline bool FeeDeltaRange(const CAmount& fee_delta) { return -MAX_MONEY <= fee_delta && fee_delta <= MAX_MONEY; }
 
 #endif //  BITCOIN_AMOUNT_H

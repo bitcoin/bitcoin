@@ -444,14 +444,14 @@ static RPCHelpMan prioritisetransaction()
                 {
                     {"txid", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The transaction id."},
                     {"dummy", RPCArg::Type::NUM, RPCArg::Optional::OMITTED_NAMED_ARG, "API-Compatibility for previous API. Must be zero or null.\n"
-            "                  DEPRECATED. For forward compatibility use named arguments and omit this parameter."},
-                    {"fee_delta", RPCArg::Type::NUM, RPCArg::Optional::NO, "The fee value (in satoshis) to add (or subtract, if negative).\n"
-            "                  Note, that this value is not a fee rate. It is a value to modify absolute fee of the TX.\n"
-            "                  The fee is not actually paid, only the algorithm for selecting transactions into a block\n"
-            "                  considers the transaction as it would have paid a higher (or lower) fee."},
+                              "DEPRECATED. For forward compatibility use named arguments and omit this parameter."},
+                    {"fee_delta", RPCArg::Type::NUM, RPCArg::Optional::NO, "The fee value (in satoshis) to add (or subtract, if negative). Must be in the range +-" + ToString(MAX_MONEY) + " sat.\n"
+                              "Note, that this value is not a fee rate. It is a value to modify absolute fee of the TX.\n"
+                              "The fee is not actually paid, only the algorithm for selecting transactions into a block\n"
+                              "considers the transaction as it would have paid a higher (or lower) fee."},
                 },
                 RPCResult{
-                    RPCResult::Type::BOOL, "", "Returns true"},
+                    RPCResult::Type::BOOL, "", "Returns true or throws on error"},
                 RPCExamples{
                     HelpExampleCli("prioritisetransaction", "\"txid\" 0.0 10000")
             + HelpExampleRpc("prioritisetransaction", "\"txid\", 0.0, 10000")
@@ -460,15 +460,16 @@ static RPCHelpMan prioritisetransaction()
 {
     LOCK(cs_main);
 
-    uint256 hash(ParseHashV(request.params[0], "txid"));
-    CAmount nAmount = request.params[2].get_int64();
+    const uint256 hash{ParseHashV(request.params[0], "txid")};
+    const CAmount nAmount = request.params[2].get_int64();
 
     if (!(request.params[1].isNull() || request.params[1].get_real() == 0)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Priority is no longer supported, dummy argument to prioritisetransaction must be 0.");
     }
 
-    if (!EnsureMemPool(request.context).PrioritiseTransaction(hash, nAmount)) {
-        throw JSONRPCError(RPC_MISC_ERROR, "PrioritiseTransaction(...) failed. Invalid fee_delta argument?");
+    CTxMemPool& mempool = EnsureMemPool(request.context);
+    if (!mempool.PrioritiseTransaction(hash, nAmount)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid fee_delta passed");
     }
     return true;
 },
