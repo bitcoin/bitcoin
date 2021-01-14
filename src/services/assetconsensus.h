@@ -50,19 +50,16 @@ public:
 class CAssetDB : public CDBWrapper {
 public:
     CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "asset", nCacheSize, fMemory, fWipe) {}
-    bool EraseAsset(const uint32_t& nAsset) {
-        return Erase(nAsset);
+    bool EraseAsset(const uint32_t& nBaseAsset) {
+        return Erase(nBaseAsset);
     }   
-    bool ReadAsset(const uint32_t& nAsset, CAsset& asset) {
-        return Read(nAsset, asset);
+    bool ReadAsset(const uint32_t& nBaseAsset, CAsset& asset) {
+        return Read(nBaseAsset, asset);
     } 
-    bool ReadAssetNotaryKeyID(const uint32_t& nAsset, std::vector<unsigned char>& keyID) {
-        const auto& pair = std::make_pair(nAsset, true);
+    bool ReadAssetNotaryKeyID(const uint32_t& nBaseAsset, std::vector<unsigned char>& keyID) {
+        const auto& pair = std::make_pair(nBaseAsset, true);
         return Exists(pair) && Read(pair, keyID);
     }  
-    bool WriteAssetNotaryKeyID(const uint32_t& nAsset, std::vector<unsigned char>& keyID) {
-        return Write(std::make_pair(nAsset, true), keyID);
-    }
     bool Flush(const AssetMap &mapAssets);
 };
 class CAssetOldDB : public CDBWrapper {

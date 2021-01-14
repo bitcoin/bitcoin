@@ -75,7 +75,7 @@ std::string CTxOutCoin::ToString() const
     if(assetInfo.IsNull())
         return strprintf("CTxOutCoin(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30));
     else
-        return strprintf("CTxOutCoin(nValue=%d.%08d, scriptPubKey=%s, nAsset=%d, nAssetValue=%d.%08d)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30), assetInfo.nAsset, assetInfo.nValue / COIN, assetInfo.nValue % COIN);
+        return strprintf("CTxOutCoin(nValue=%d.%08d, scriptPubKey=%s, nAsset=%llu, nAssetValue=%d.%08d)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30), assetInfo.nAsset, assetInfo.nValue / COIN, assetInfo.nValue % COIN);
 }
 CMutableTransaction::CMutableTransaction() : nVersion(CTransaction::CURRENT_VERSION), nLockTime(0) {}
 // SYSCOIN
@@ -357,7 +357,7 @@ void CMutableTransaction::LoadAssets()
         }
         const size_t &nVoutSize = vout.size();
         for(const auto &it: voutAssets) {
-            const uint32_t &nAsset = it.key;
+            const uint64_t &nAsset = it.key;
             if(it.values.empty()) {
                 throw std::ios_base::failure("asset empty outputs");
             }
@@ -373,7 +373,6 @@ void CMutableTransaction::LoadAssets()
                 CAssetCoinInfo& coinInfo = vout[nOut].assetInfo;
                 coinInfo.nAsset = nAsset;
                 coinInfo.nValue = voutAsset.nValue;
-                coinInfo.nNFTID = voutAsset.nNFTID;
             }
         }       
     }
@@ -403,10 +402,9 @@ bool CTransaction::GetAssetValueOut(CAssetsMap &mapAssetOut, std::string &err) c
             err = "bad-txns-asset-empty";
             return false;
         }
-        const uint32_t &nAsset = it.key;
+        const uint64_t &nAsset = it.key;
         const size_t &nVoutSize = vout.size();
         bool zeroVal = false;
-        std::unordered_map<uint32_t, CAmount> mapNFTID;
         for(const auto& voutAsset: it.values) {
             const uint32_t& nOut = voutAsset.n;
             if(nOut >= nVoutSize) {
@@ -414,9 +412,6 @@ bool CTransaction::GetAssetValueOut(CAssetsMap &mapAssetOut, std::string &err) c
                 return false;
             }
             const CAmount& nAmount = voutAsset.nValue;
-            if(voutAsset.nNFTID > 0) {
-                mapNFTID.emplace(voutAsset.nNFTID, nAmount);
-            }
             // make sure the vout assetinfo matches the asset commitment in OP_RETURN
             if(vout[nOut].assetInfo.nAsset != nAsset || vout[nOut].assetInfo.nValue != nAmount) {
                 err = "bad-txns-asset-out-assetinfo-mismatch";
@@ -441,7 +436,7 @@ bool CTransaction::GetAssetValueOut(CAssetsMap &mapAssetOut, std::string &err) c
                 return false;
             }
         }
-        auto itRes = mapAssetOut.try_emplace(nAsset, zeroVal, nTotal, mapNFTID);
+        auto itRes = mapAssetOut.try_emplace(nAsset, zeroVal, nTotal);
         if(!itRes.second) {
             err = "bad-txns-asset-not-unique";
             return false;

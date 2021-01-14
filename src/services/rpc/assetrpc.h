@@ -8,7 +8,7 @@
 class CAssetDB;
 bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes);
 bool SysTxToJSON(const CTransaction &tx, const uint256& hashBlock, UniValue &entry);
-bool BuildAssetJson(const CAsset& asset, const uint32_t& nAsset, UniValue& oName);
+bool BuildAssetJson(const CAsset& asset, const uint32_t& nBaseAsset, UniValue& oName);
 bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, const uint256 &hashBlock, UniValue& output);
 bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &entry);
 #endif // SYSCOIN_SERVICES_RPC_ASSETRPC_H

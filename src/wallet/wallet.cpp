@@ -2294,7 +2294,7 @@ void CWallet::AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe, const
             // if coin control requested an asset to be funded
             if (coinControlAssetRequested) {
                 // only allowed if asset matches the output or fAllowOtherInputs and output is non-asset
-                const bool& bMatchAssetOrSysOutput = (assetInfo.nAsset == wtx.tx->vout[i].assetInfo.nAsset && assetInfo.nNFTID == wtx.tx->vout[i].assetInfo.nNFTID) || (coinControl->fAllowOtherInputs && !isAssetCoin);
+                const bool& bMatchAssetOrSysOutput = (assetInfo.nAsset == wtx.tx->vout[i].assetInfo.nAsset) || (coinControl->fAllowOtherInputs && !isAssetCoin);
                 if(!bMatchAssetOrSysOutput) {
                     continue;
                 }
@@ -2456,7 +2456,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinIn
             if(fAssetIndex && !group.effective_value_asset.IsNull()) {
                 // if requesting 0 value meaning asset update, only use inputs that are of 0 value as well, otherwise select only positive
                 // only add inputs that are of this asset, don't try to spend other assets even for gas
-                if(group.effective_value_asset.nAsset == nTargetValueAsset.nAsset && group.effective_value_asset.nNFTID == nTargetValueAsset.nNFTID) {
+                if(group.effective_value_asset.nAsset == nTargetValueAsset.nAsset) {
                     utxo_pool_asset.push_back(group);
                 }
             }
@@ -2529,7 +2529,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                 continue;
             nValueRet += out.tx->tx->vout[out.i].nValue;
             // SYSCOIN
-            if(nTargetValueAsset.nAsset == out.tx->tx->vout[out.i].assetInfo.nAsset && nTargetValueAsset.nNFTID == out.tx->tx->vout[out.i].assetInfo.nNFTID)
+            if(nTargetValueAsset.nAsset == out.tx->tx->vout[out.i].assetInfo.nAsset)
                 nValueRetAsset += out.tx->tx->vout[out.i].assetInfo.nValue;
             setCoinsRet.insert(out.GetInputCoin());
         }
@@ -2559,7 +2559,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             CInputCoin coin(wtx.tx, outpoint.n, wtx.GetSpendSize(outpoint.n, false));
             nValueFromPresetInputs += coin.txout.nValue;
             // SYSCOIN
-            if(nTargetValueAsset.nAsset == coin.txout.assetInfo.nAsset && nTargetValueAsset.nNFTID == coin.txout.assetInfo.nNFTID)
+            if(nTargetValueAsset.nAsset == coin.txout.assetInfo.nAsset)
                 nValueFromPresetInputsAsset += coin.txout.assetInfo.nValue;
             if (coin.m_input_bytes <= 0) {
                 return false; // Not solvable, can't estimate size for fee
@@ -2570,7 +2570,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             } else {
                 value_to_select -= coin.txout.nValue;
                 // SYSCOIN
-                if(nTargetValueAsset.nAsset == coin.txout.assetInfo.nAsset && nTargetValueAsset.nNFTID == coin.txout.assetInfo.nNFTID)
+                if(nTargetValueAsset.nAsset == coin.txout.assetInfo.nAsset)
                     value_to_select_asset.nValue -= coin.txout.assetInfo.nValue;
             }
             setPresetCoins.insert(coin);
@@ -2730,7 +2730,7 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
         // get asset
         CAsset theAsset;
         // if asset has notary signature requirement set
-        if(GetAsset(vecOut.key, theAsset) && !theAsset.vchNotaryKeyID.empty()) {
+        if(GetAsset(GetBaseAssetID(vecOut.key), theAsset) && !theAsset.vchNotaryKeyID.empty()) {
             bFilled = false;
             if(!theAsset.notaryDetails.strEndPoint.empty()) {
                 bool fInvalid = false;

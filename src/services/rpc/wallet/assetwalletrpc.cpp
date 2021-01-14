@@ -56,11 +56,12 @@ bool SysWtxToJSON(const CWalletTx& wtx, const CAssetCoinInfo &assetInfo, const s
 bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const std::string &strCategory, UniValue &entry) {
     if(!AllocationWtxToJson(wtx, assetInfo, strCategory, entry))
         return false;
+    const uint32_t &nBaseAsset = GetBaseAssetID(assetInfo.nAsset);
     CAsset asset(*wtx.tx);
     if (!asset.IsNull()) {
         if(asset.nUpdateMask & ASSET_INIT)  {
             entry.__pushKV("symbol", asset.strSymbol);
-            entry.__pushKV("max_supply", ValueFromAmount(asset.nMaxSupply, assetInfo.nAsset));
+            entry.__pushKV("max_supply", ValueFromAmount(asset.nMaxSupply, nBaseAsset));
             entry.__pushKV("precision", asset.nPrecision);
         }
 
@@ -75,7 +76,7 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
 
         if(asset.nUpdateMask & ASSET_UPDATE_AUXFEE) {
             UniValue value(UniValue::VOBJ);
-            asset.auxFeeDetails.ToJson(value, assetInfo.nAsset);
+            asset.auxFeeDetails.ToJson(value, nBaseAsset);
             entry.__pushKV("auxfee", value);
         }
 
@@ -100,7 +101,7 @@ bool AssetAllocationWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetI
          CBurnSyscoin burnSyscoin (*wtx.tx);
          if (!burnSyscoin.IsNull()) {
             CAsset dbAsset;
-            GetAsset(assetInfo.nAsset, dbAsset);
+            GetAsset(GetBaseAssetID(assetInfo.nAsset), dbAsset);
             entry.__pushKV("ethereum_destination", "0x" + HexStr(burnSyscoin.vchEthAddress));
             entry.__pushKV("ethereum_contract", "0x" + HexStr(dbAsset.vchContract));
             return true;
@@ -129,7 +130,8 @@ bool AssetMintWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, c
         for(const auto &it: mintSyscoin.voutAssets) {
             CAmount nTotal = 0;
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-            const uint32_t &nAsset = it.key;
+            const uint64_t &nAsset = it.key;
+            const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
             oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
             if(!it.vchNotarySig.empty()) {
                 oAssetAllocationReceiversObj.__pushKV("notary_sig", HexStr(it.vchNotarySig));
@@ -139,13 +141,11 @@ bool AssetMintWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, c
                 nTotal += voutAsset.nValue;
                 UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
                 oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
-                oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nAsset));
-                if(voutAsset.nNFTID > 0)
-                    oAssetAllocationReceiverOutputObj.__pushKV("NFTID", voutAsset.nNFTID);
+                oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nBaseAsset));
                 oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
             }
             oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
-            oAssetAllocationReceiversObj.__pushKV("total", ValueFromAmount(nTotal, nAsset));
+            oAssetAllocationReceiversObj.__pushKV("total", ValueFromAmount(nTotal, nBaseAsset));
             oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
         }
         entry.__pushKV("allocations", oAssetAllocationReceiversArray);
@@ -157,9 +157,7 @@ bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, 
     entry.__pushKV("txtype", stringFromSyscoinTx(wtx.tx->nVersion));
     entry.__pushKV("asset_guid", assetInfo.nAsset);
     if(IsAssetAllocationTx(wtx.tx->nVersion)) {
-        entry.__pushKV("amount", ValueFromAmount(assetInfo.nValue, assetInfo.nAsset));
-        if(assetInfo.nNFTID > 0)
-            entry.__pushKV("NFTID", assetInfo.nNFTID);
+        entry.__pushKV("amount", ValueFromAmount(assetInfo.nValue, GetBaseAssetID(assetInfo.nAsset)));
         entry.__pushKV("action", strCategory);
     }
     return true;
@@ -340,10 +338,10 @@ static RPCHelpMan syscoinburntoassetallocation()
     LOCK(pwallet->cs_wallet);
 
     EnsureWalletIsUnlocked(pwallet);
-    const uint32_t &nAsset = params[0].get_uint();          	
+    const uint64_t &nAsset = params[0].get_uint64();          	
 	CAssetAllocation theAssetAllocation;
 	CAsset theAsset;
-	if (!GetAsset(nAsset, theAsset))
+	if (!GetAsset(GetBaseAssetID(nAsset), theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
 
     if (!pwallet->CanGetAddresses()) {
@@ -604,9 +602,9 @@ RPCHelpMan assetnew()
     }
     data.clear();
     // generate deterministic guid based on input txid
-    const uint32_t &nAsset = nCustomGuid != 0? nCustomGuid: GenerateSyscoinGuid(mtx.vin[0].prevout);
+    const uint32_t &nBaseAsset = nCustomGuid != 0? nCustomGuid: GenerateSyscoinGuid(mtx.vin[0].prevout);
     newAsset.voutAssets.clear();
-    newAsset.voutAssets.emplace_back(CAssetOut(nAsset, outVec));
+    newAsset.voutAssets.emplace_back(CAssetOut((uint64_t)nBaseAsset, outVec));
     newAsset.SerializeData(data);
     scriptData.clear();
     scriptData << OP_RETURN << data;
@@ -659,7 +657,7 @@ RPCHelpMan assetnew()
     }
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
-    res.__pushKV("asset_guid", nAsset);
+    res.__pushKV("asset_guid", nBaseAsset);
     return res;
 },
     };
@@ -724,7 +722,7 @@ static RPCHelpMan assetnewtest()
 },
     };
 }
-UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn, const uint32_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
+UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn, const uint64_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
     AssertLockHeld(pwallet->cs_wallet);
     CCoinControl coin_control;
     CAmount nMinimumAmountAsset = 0;
@@ -863,7 +861,7 @@ static RPCHelpMan assetupdate()
 
     LOCK(pwallet->cs_wallet);    
     EnsureWalletIsUnlocked(pwallet);
-    const uint32_t &nAsset = params[0].get_uint();
+    const uint64_t &nAsset = params[0].get_uint64();
     std::string strData = "";
     std::string strCategory = "";
     std::string strPubData = params[1].get_str();
@@ -879,7 +877,7 @@ static RPCHelpMan assetupdate()
     
     CAsset theAsset;
 
-    if (!GetAsset( nAsset, theAsset))
+    if (!GetAsset( GetBaseAssetID(nAsset), theAsset))
         throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
     
     
@@ -996,12 +994,12 @@ static RPCHelpMan assettransfer()
 
     LOCK(pwallet->cs_wallet);    
     EnsureWalletIsUnlocked(pwallet);
-    const uint32_t &nAsset = params[0].get_uint();
+    const uint64_t &nAsset = params[0].get_uint64();
     std::string strAddress = params[1].get_str();
    
     CAsset theAsset;
 
-    if (!GetAsset( nAsset, theAsset)) {
+    if (!GetAsset( GetBaseAssetID(nAsset), theAsset)) {
         throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
     }
     const CScript& scriptPubKey = GetScriptForDestination(DecodeDestination(strAddress));
@@ -1069,13 +1067,14 @@ static RPCHelpMan assetsendmany()
     LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
     // gather & validate inputs
-    const uint32_t &nAsset = params[0].get_uint();
+    const uint32_t &nAsset = params[0].get_uint64();
+    const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
     UniValue valueTo = params[1];
     if (!valueTo.isArray())
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Array of receivers not found");
 
     CAsset theAsset;
-    if (!GetAsset(nAsset, theAsset))
+    if (!GetAsset(nBaseAsset, theAsset))
         throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
 
 
@@ -1097,15 +1096,17 @@ static RPCHelpMan assetsendmany()
         uint32_t nNFTID = 0;
         if(!NFTIDObj.isNull())
             nNFTID = NFTIDObj.get_uint();
+        // assign any NFTID and base asset guid into a 64 bit asset GUID which is stored and serialized
+        const uint64_t &nAssetReceiver = CreateAssetID(nNFTID, nBaseAsset);
         const CScript& scriptPubKey = GetScriptForDestination(dest);           
         CAmount nAmount = AssetAmountFromValue(find_value(receiverObj, "amount"), theAsset.nPrecision);
 
-        auto it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
+        auto it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAssetReceiver](const CAssetOut& element){ return element.key == nAssetReceiver;} );
         if(it == theAssetAllocation.voutAssets.end()) {
-            theAssetAllocation.voutAssets.emplace_back(CAssetOut(nAsset, vecOut));
-            it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
+            theAssetAllocation.voutAssets.emplace_back(CAssetOut(nAssetReceiver, vecOut));
+            it = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAssetReceiver](const CAssetOut& element){ return element.key == nAssetReceiver;} );
         }
-        it->values.push_back(CAssetOutValue(vecSend.size(), nAmount, nNFTID));
+        it->values.push_back(CAssetOutValue(vecSend.size(), nAmount));
         CTxOut change_prototype_txout(0, scriptPubKey);
         CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
         vecSend.push_back(recp);
@@ -1155,7 +1156,7 @@ static RPCHelpMan assetsend()
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
     }
     const UniValue &params = request.params;
-    const uint32_t &nAsset = params[0].get_uint();          
+    const uint64_t &nAsset = params[0].get_uint64();          
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
     outputObj.__pushKV("address", params[1].get_str());
@@ -1186,7 +1187,6 @@ static RPCHelpMan assetallocationsendmany()
                             {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
                             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to transfer to"},
                             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send"},
-                            {"NFTID", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Optional NFT ID to send"},
                         }
                     },
                     },
@@ -1259,13 +1259,10 @@ static RPCHelpMan assetallocationsendmany()
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"address\" or \"amount\"}");
 
 		const UniValue &receiverObj = receiver.get_obj();
-        const uint32_t &nAsset = find_value(receiverObj, "asset_guid").get_uint();
-        const UniValue &NFTIDObj = find_value(receiverObj, "NFTID");
-        uint32_t nNFTID = 0;
-        if(!NFTIDObj.isNull())
-            nNFTID = NFTIDObj.get_uint();
+        const uint64_t &nAsset = find_value(receiverObj, "asset_guid").get_uint64();
+        const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
         CAsset theAsset;
-        if (!GetAsset(nAsset, theAsset))
+        if (!GetAsset(nBaseAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         // override RBF if one notarized asset has it enabled
         if(!bOverideRBF && !theAsset.vchNotaryKeyID.empty() && !theAsset.notaryDetails.IsNull()) {
@@ -1289,7 +1286,7 @@ static RPCHelpMan assetallocationsendmany()
             theAssetAllocation.voutAssets.emplace_back(assetOut);
             itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
         }
-        itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAmount, nNFTID));
+        itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAmount));
 
         CRecipient recp = { scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
         mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
@@ -1308,9 +1305,10 @@ static RPCHelpMan assetallocationsendmany()
     }
     // aux fees if applicable
     for(const auto &it: mapAssetTotals) {
-        const uint32_t &nAsset = it.first;
+        const uint64_t &nAsset = it.first;
+        const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
         CAsset theAsset;
-        if (!GetAsset(nAsset, theAsset))
+        if (!GetAsset(nBaseAsset, theAsset))
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         CAmount nAuxFee;
         getAuxFee(theAsset.auxFeeDetails, it.second, nAuxFee);
@@ -1438,10 +1436,10 @@ static RPCHelpMan assetallocationburn()
 
     LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
-    const uint32_t &nAsset = params[0].get_uint();
+    const uint64_t &nAsset = params[0].get_uint64();
     	
 	CAsset theAsset;
-	if (!GetAsset(nAsset, theAsset))
+	if (!GetAsset(GetBaseAssetID(nAsset), theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         
     CAmount nAmount;
@@ -1605,10 +1603,10 @@ static RPCHelpMan assetallocationmint()
 
     LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
-    const uint32_t &nAsset = params[0].get_uint();
+    const uint64_t &nAsset = params[0].get_uint64();
     std::string strAddress = params[1].get_str();
 	CAsset theAsset;
-	if (!GetAsset(nAsset, theAsset))
+	if (!GetAsset(GetBaseAssetID(nAsset), theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");    
     CAmount nAmount;
     try{
@@ -1673,9 +1671,6 @@ static RPCHelpMan assetallocationmint()
     mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
     if(params.size() >= 13 && params[12].isBool() && params[12].get_bool()) {
         // aux fees test
-        CAsset theAsset;
-        if (!GetAsset(nAsset, theAsset))
-            throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         CAmount nAuxFee;
         getAuxFee(theAsset.auxFeeDetails, nAmount, nAuxFee);
         if(nAuxFee > 0 && !theAsset.auxFeeDetails.vchAuxFeeKeyID.empty()){
@@ -1758,7 +1753,6 @@ static RPCHelpMan assetallocationsend()
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the allocation to"},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send"},
             {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Allow this transaction to be replaced by a transaction with higher fees via BIP 125. ZDAG is only possible if RBF is disabled."},
-            {"NFTID", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Optional NFT ID to send"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -1766,8 +1760,8 @@ static RPCHelpMan assetallocationsend()
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
             }},
         RPCExamples{
-            HelpExampleCli("assetallocationsend", "\"asset_guid\" \"address\" \"amount\" \"false\" \"NFTID\"")
-            + HelpExampleRpc("assetallocationsend", "\"asset_guid\", \"address\", \"amount\", \"false\", \"NFTID\"")
+            HelpExampleCli("assetallocationsend", "\"asset_guid\" \"address\" \"amount\" \"false\"")
+            + HelpExampleRpc("assetallocationsend", "\"asset_guid\", \"address\", \"amount\", \"false\"")
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -1778,7 +1772,7 @@ static RPCHelpMan assetallocationsend()
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
     const UniValue &params = request.params;
-    const uint32_t &nAsset = params[0].get_uint();          
+    const uint64_t &nAsset = params[0].get_uint64();          
     bool m_signal_bip125_rbf = pwallet->m_signal_rbf;
     if (!request.params[3].isNull()) {
         m_signal_bip125_rbf = request.params[3].get_bool();
@@ -1796,8 +1790,6 @@ static RPCHelpMan assetallocationsend()
     outputObj.__pushKV("asset_guid", nAsset);
     outputObj.__pushKV("address", params[1].get_str());
     outputObj.__pushKV("amount", request.params[2]);
-    if(!request.params[4].isNull())
-        outputObj.__pushKV("NFTID", request.params[4]);
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(output);
@@ -2152,7 +2144,7 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address"}},
     { "syscoinwallet",            "assetsend",                        &assetsend,                     {"asset_guid","address","amount","NFTID"}},
     { "syscoinwallet",            "assetsendmany",                    &assetsendmany,                 {"asset_guid","amounts"}},
-    { "syscoinwallet",            "assetallocationsend",              &assetallocationsend,           {"asset_guid","address","amount","replaceable","NFTID"}},
+    { "syscoinwallet",            "assetallocationsend",              &assetallocationsend,           {"asset_guid","address","amount","replaceable"}},
     { "syscoinwallet",            "assetallocationsendmany",          &assetallocationsendmany,       {"amounts","replaceable","comment","conf_target","estimate_mode"}},
     { "syscoinwallet",            "listunspentasset",                 &listunspentasset,              {"asset_guid","minconf"}},
     { "syscoinwallet",            "signhash",                         &signhash,                      {"address","hash"}},

@@ -2388,9 +2388,7 @@ static RPCHelpMan scantxoutset()
             // SYSCOIN
             if(!coin.out.assetInfo.IsNull()) {
                 unspent.pushKV("asset_guid", coin.out.assetInfo.nAsset);
-                unspent.pushKV("asset_amount", ValueFromAmount(coin.out.assetInfo.nValue, coin.out.assetInfo.nAsset));
-                if(coin.out.assetInfo.nNFTID > 0)
-                    unspent.pushKV("asset_NFTID", coin.out.assetInfo.nNFTID);
+                unspent.pushKV("asset_amount", ValueFromAmount(coin.out.assetInfo.nValue, GetBaseAssetID(coin.out.assetInfo.nAsset)));
             }
 
             unspents.push_back(unspent);

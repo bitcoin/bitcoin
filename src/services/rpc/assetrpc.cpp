@@ -22,8 +22,8 @@ extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
 
 
-bool BuildAssetJson(const CAsset& asset, const uint32_t& nAsset, UniValue& oAsset) {
-    oAsset.__pushKV("asset_guid", nAsset);
+bool BuildAssetJson(const CAsset& asset, const uint32_t& nBaseAsset, UniValue& oAsset) {
+    oAsset.__pushKV("asset_guid", nBaseAsset);
     oAsset.__pushKV("symbol", DecodeBase64(asset.strSymbol));
 	oAsset.__pushKV("public_value", AssetPublicDataToJson(asset.strPubData));
     oAsset.__pushKV("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
@@ -35,11 +35,11 @@ bool BuildAssetJson(const CAsset& asset, const uint32_t& nAsset, UniValue& oAsse
     }
     if (!asset.auxFeeDetails.IsNull()) {
         UniValue value(UniValue::VOBJ);
-        asset.auxFeeDetails.ToJson(value, nAsset);
+        asset.auxFeeDetails.ToJson(value, nBaseAsset);
 		oAsset.__pushKV("auxfee", value);
     }
-	oAsset.__pushKV("total_supply", ValueFromAmount(asset.nTotalSupply, nAsset));
-	oAsset.__pushKV("max_supply", ValueFromAmount(asset.nMaxSupply, nAsset));
+	oAsset.__pushKV("total_supply", ValueFromAmount(asset.nTotalSupply, nBaseAsset));
+	oAsset.__pushKV("max_supply", ValueFromAmount(asset.nMaxSupply, nBaseAsset));
 	oAsset.__pushKV("updatecapability_flags", asset.nUpdateCapabilityFlags);
 	oAsset.__pushKV("precision", asset.nPrecision);
 	return true;
@@ -94,7 +94,7 @@ bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, c
 	}
 	return true;
 }
-bool FillNotarySig(std::vector<CAssetOut> & voutAssets, const uint32_t& nAsset, const std::vector<unsigned char> &vchSig) {
+bool FillNotarySig(std::vector<CAssetOut> & voutAssets, const uint64_t& nAsset, const std::vector<unsigned char> &vchSig) {
     auto itVout = std::find_if( voutAssets.begin(), voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
     if(itVout != voutAssets.end()) {
         itVout->vchNotarySig = vchSig;
@@ -103,7 +103,7 @@ bool FillNotarySig(std::vector<CAssetOut> & voutAssets, const uint32_t& nAsset, 
     return false;
 }
 
-bool UpdateNotarySignature(CMutableTransaction& mtx, const uint32_t& nAsset, const std::vector<unsigned char> &vchSig) {
+bool UpdateNotarySignature(CMutableTransaction& mtx, const uint64_t& nAsset, const std::vector<unsigned char> &vchSig) {
     std::vector<unsigned char> data;
     bool bFilledNotarySig = false;
      // call API endpoint or notary signatures and fill them in for every asset
@@ -155,7 +155,7 @@ static RPCHelpMan assettransactionnotarize()
 {
 
     const std::string &hexstring = request.params[0].get_str();
-    const uint32_t &nAsset = request.params[1].get_uint();
+    const uint64_t &nAsset = request.params[1].get_uint64();
     std::vector<unsigned char> vchSig = DecodeBase64(request.params[2].get_str().c_str());
     CMutableTransaction mtx;
     if(!DecodeHexTx(mtx, hexstring, false, true)) {
@@ -191,7 +191,7 @@ static RPCHelpMan getnotarysighash()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {	
     const std::string &hexstring = request.params[0].get_str();
-    const uint32_t &nAsset = request.params[1].get_uint();
+    const uint64_t &nAsset = request.params[1].get_uint64();
     CMutableTransaction mtx;
     if(!DecodeHexTx(mtx, hexstring, false, true)) {
         if(!DecodeHexTx(mtx, hexstring, true, true)) {
@@ -202,7 +202,7 @@ static RPCHelpMan getnotarysighash()
     // get asset
     CAsset theAsset;
     // if asset has notary signature requirement set
-    if(GetAsset(nAsset, theAsset) && !theAsset.vchNotaryKeyID.empty()) {
+    if(GetAsset(GetBaseAssetID(nAsset), theAsset) && !theAsset.vchNotaryKeyID.empty()) {
         CTransaction tx(mtx);
         auto itVout = std::find_if( tx.voutAssets.begin(), tx.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
         if(itVout != tx.voutAssets.end()) {
@@ -440,14 +440,13 @@ static RPCHelpMan assetinfo()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const UniValue &params = request.params;
-    const uint32_t &nAsset = params[0].get_uint();
     UniValue oAsset(UniValue::VOBJ);
-
+    const uint32_t &nBaseAsset = GetBaseAssetID(params[0].get_uint64());
     CAsset txPos;
-    if (!passetdb || !passetdb->ReadAsset(nAsset, txPos))
+    if (!GetAsset(nBaseAsset, txPos))
         throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to read from asset DB");
     
-    if(!BuildAssetJson(txPos, nAsset, oAsset))
+    if(!BuildAssetJson(txPos, nBaseAsset, oAsset))
         oAsset.clear();
     return oAsset;
 },

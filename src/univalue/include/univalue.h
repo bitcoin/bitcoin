@@ -191,6 +191,7 @@ public:
     int get_int() const;
     // SYSCOIN
     uint32_t get_uint() const;
+    uint64_t get_uint64() const;
     int64_t get_int64() const;
     double get_real() const;
     const UniValue& get_obj() const;

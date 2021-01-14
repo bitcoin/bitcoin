@@ -35,15 +35,12 @@ struct AssetMapOutput {
     bool bZeroVal;
     // satoshi amount of all outputs
     CAmount nAmount;
-    // mapping of NFT ID and the satoshi amount of the output, equivalence will include all input amounts == all output amount && NFT ID amount input == NFT ID amount output for every NFT
-    std::unordered_map<uint32_t, CAmount> mapNFTID;
-    AssetMapOutput(const bool &bZeroValIn, const CAmount &nAmountIn, const std::unordered_map<uint32_t, CAmount> &mapNFTIDIn): bZeroVal(bZeroValIn), nAmount(nAmountIn), mapNFTID(mapNFTIDIn) {}
+    AssetMapOutput(const bool &bZeroValIn, const CAmount &nAmountIn): bZeroVal(bZeroValIn), nAmount(nAmountIn) {}
     // this is consensus critical, it will ensure input assets and output assets are equal
     friend bool operator==(const AssetMapOutput& a, const AssetMapOutput& b)
     {
         return (a.bZeroVal == b.bZeroVal &&
-                a.nAmount  == b.nAmount &&
-                a.mapNFTID == b.mapNFTID);
+                a.nAmount  == b.nAmount);
     }
 
     friend bool operator!=(const AssetMapOutput& a, const AssetMapOutput& b)
@@ -51,5 +48,5 @@ struct AssetMapOutput {
         return !(a == b);
     }
 };
-typedef std::unordered_map<uint32_t, AssetMapOutput> CAssetsMap;
+typedef std::unordered_map<uint64_t, AssetMapOutput> CAssetsMap;
 #endif //  SYSCOIN_AMOUNT_H

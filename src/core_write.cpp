@@ -33,7 +33,8 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, U
     for(const auto &it: tx.voutAssets) {
         CAmount nTotal = 0;
         UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-        const uint32_t &nAsset = it.key;
+        const uint64_t &nAsset = it.key;
+        const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
         oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
         if(!it.vchNotarySig.empty()) {
             oAssetAllocationReceiversObj.__pushKV("notary_sig", HexStr(it.vchNotarySig));
@@ -43,13 +44,11 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, U
             nTotal += voutAsset.nValue;
             UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
             oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
-            oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nAsset));
-            if(voutAsset.nNFTID > 0)
-                oAssetAllocationReceiverOutputObj.__pushKV("NFTID", voutAsset.nNFTID);
+            oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nBaseAsset));
             oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
         }
         oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
-        oAssetAllocationReceiversObj.__pushKV("total", ValueFromAmount(nTotal, nAsset));
+        oAssetAllocationReceiversObj.__pushKV("total", ValueFromAmount(nTotal, nBaseAsset));
         oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
     }
 
@@ -83,20 +82,19 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const uint
         for(const auto &it: mintSyscoin.voutAssets) {
             CAmount nTotal = 0;
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-            const uint32_t &nAsset = it.key;
+            const uint64_t &nAsset = it.key;
+            const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
             oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
             UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
             for(const auto& voutAsset: it.values){
                 nTotal += voutAsset.nValue;
                 UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
                 oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
-                oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nAsset));
-                if(voutAsset.nNFTID > 0)
-                    oAssetAllocationReceiverOutputObj.__pushKV("NFTID", voutAsset.nNFTID);
+                oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nBaseAsset));
                 oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
             }
             oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
-            oAssetAllocationReceiversObj.__pushKV("total", ValueFromAmount(nTotal, nAsset));
+            oAssetAllocationReceiversObj.__pushKV("total", ValueFromAmount(nTotal, nBaseAsset));
             oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
         }
         entry.__pushKV("allocations", oAssetAllocationReceiversArray);
@@ -115,27 +113,26 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
     for(const auto &it: tx.voutAssets) {
         CAmount nTotal = 0;
         UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
-        const uint32_t &nAsset = it.key;
+        const uint64_t &nAsset = it.key;
+        const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
         oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
         UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
         for(const auto& voutAsset: it.values){
             nTotal += voutAsset.nValue;
             UniValue oAssetAllocationReceiverOutputObj(UniValue::VOBJ);
             oAssetAllocationReceiverOutputObj.__pushKV("n", voutAsset.n);
-            oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nAsset));
-            if(voutAsset.nNFTID > 0)
-                oAssetAllocationReceiverOutputObj.__pushKV("NFTID", voutAsset.nNFTID);
+            oAssetAllocationReceiverOutputObj.__pushKV("amount", ValueFromAmount(voutAsset.nValue, nBaseAsset));
             oAssetAllocationReceiverOutputsArray.push_back(oAssetAllocationReceiverOutputObj);
         }
         oAssetAllocationReceiversObj.__pushKV("outputs", oAssetAllocationReceiverOutputsArray); 
-        oAssetAllocationReceiversObj.__pushKV("total", ValueFromAmount(nTotal, nAsset));
+        oAssetAllocationReceiversObj.__pushKV("total", ValueFromAmount(nTotal, nBaseAsset));
         oAssetAllocationReceiversArray.push_back(oAssetAllocationReceiversObj);
     }
 
     entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
     if(asset.nUpdateMask & ASSET_INIT) {
 		entry.__pushKV("symbol", asset.strSymbol);
-        entry.__pushKV("max_supply", ValueFromAmount(asset.nMaxSupply, tx.voutAssets[0].key));
+        entry.__pushKV("max_supply", ValueFromAmount(asset.nMaxSupply, GetBaseAssetID(tx.voutAssets[0].key)));
 		entry.__pushKV("precision", asset.nPrecision);
     }
 
@@ -156,7 +153,7 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
 
     if(asset.nUpdateMask & ASSET_UPDATE_AUXFEE) {
         UniValue value(UniValue::VOBJ);
-        asset.auxFeeDetails.ToJson(value, tx.voutAssets[0].key);
+        asset.auxFeeDetails.ToJson(value, GetBaseAssetID(tx.voutAssets[0].key));
         entry.__pushKV("auxfee", value);
     }
     
@@ -188,11 +185,11 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, const uint256 &hashB
     return found;
 }
 // SYSCOIN
-UniValue ValueFromAmount(const CAmount& amount, const uint32_t &nAsset)
+UniValue ValueFromAmount(const CAmount& amount, const uint32_t &nBaseAsset)
 {
     uint8_t nPrecision = 8;
-    if(nAsset > 0) {
-        if(!GetAssetPrecision(nAsset, nPrecision)) {
+    if(nBaseAsset > 0) {
+        if(!GetAssetPrecision(nBaseAsset, nPrecision)) {
             nPrecision = 0;
         }
     }

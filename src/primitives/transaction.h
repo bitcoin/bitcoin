@@ -310,7 +310,6 @@ struct AssetCoinInfoCompression
         s << VARINT(val.nAsset);
         if(val.nAsset > 0) {
             s << VARINT(CompressAmount(val.nValue));
-            s << VARINT(val.nNFTID);
         }
     }
     template<typename Stream, typename I> void Unser(Stream& s, I& val)
@@ -320,28 +319,24 @@ struct AssetCoinInfoCompression
             uint64_t v;
             s >> VARINT(v);
             val.nValue = DecompressAmount(v);
-            s >> VARINT(val.nNFTID);
         }
     }
 };
 
 class CAssetCoinInfo {
 public:
-	uint32_t nAsset;
+	uint64_t nAsset;
 	CAmount nValue;
-    uint32_t nNFTID;
 	CAssetCoinInfo() {
 		SetNull();
         nValue = 0;
-        nNFTID = 0;
 	}
-    CAssetCoinInfo(const uint32_t &nAssetIn, const CAmount& nValueIn, const uint32_t& nNFTIDIn=0): nAsset(nAssetIn), nValue(nValueIn), nNFTID(nNFTIDIn) {}
+    CAssetCoinInfo(const uint64_t &nAssetIn, const CAmount& nValueIn): nAsset(nAssetIn), nValue(nValueIn) {}
  
     friend bool operator==(const CAssetCoinInfo& a, const CAssetCoinInfo& b)
     {
         return (a.nAsset == b.nAsset &&
-                a.nValue == b.nValue &&
-                a.nNFTID == b.nNFTID);
+                a.nValue == b.nValue);
     }
 
     SERIALIZE_METHODS(CAssetCoinInfo, obj) {
@@ -449,21 +444,19 @@ class CAssetOutValue {
 public:
     uint32_t n;
     CAmount nValue;
-    uint32_t nNFTID;
     SERIALIZE_METHODS(CAssetOutValue, obj) {
-        READWRITE(COMPACTSIZE(obj.n), Using<AmountCompression>(obj.nValue), VARINT(obj.nNFTID));
+        READWRITE(COMPACTSIZE(obj.n), Using<AmountCompression>(obj.nValue));
     }
-    CAssetOutValue(const uint32_t &nIn, const uint64_t& nAmountIn, const uint32_t& nNFTIDIn=0): n(nIn), nValue(nAmountIn), nNFTID(nNFTIDIn) {}
+    CAssetOutValue(const uint32_t &nIn, const uint64_t& nAmountIn): n(nIn), nValue(nAmountIn) {}
     CAssetOutValue() {
         SetNull();
     }
     inline void SetNull() {
         nValue = 0;
         n = 0;
-        nNFTID = 0;
     }
     inline friend bool operator==(const CAssetOutValue &a, const CAssetOutValue &b) {
-		return (a.n == b.n && a.nValue == b.nValue && a.nNFTID == b.nNFTID);
+		return (a.n == b.n && a.nValue == b.nValue);
 	}
     inline friend bool operator!=(const CAssetOutValue &a, const CAssetOutValue &b) {
 		return !(a == b);
@@ -471,15 +464,15 @@ public:
 };
 class CAssetOut {
 public:
-    uint32_t key;
+    uint64_t key;
     std::vector<CAssetOutValue> values;
     std::vector<unsigned char> vchNotarySig;
     SERIALIZE_METHODS(CAssetOut, obj) {
-        READWRITE(obj.key, obj.values, obj.vchNotarySig);
+        READWRITE(VARINT(obj.key), obj.values, obj.vchNotarySig);
     }
 
-    CAssetOut(const uint32_t &keyIn, const std::vector<CAssetOutValue>& valuesIn): key(keyIn), values(valuesIn) {}
-    CAssetOut(const uint32_t &keyIn, const std::vector<CAssetOutValue>& valuesIn, const std::vector<unsigned char> &vchNotarySigIn): key(keyIn), values(valuesIn), vchNotarySig(vchNotarySigIn) {}
+    CAssetOut(const uint64_t &keyIn, const std::vector<CAssetOutValue>& valuesIn): key(keyIn), values(valuesIn) {}
+    CAssetOut(const uint64_t &keyIn, const std::vector<CAssetOutValue>& valuesIn, const std::vector<unsigned char> &vchNotarySigIn): key(keyIn), values(valuesIn), vchNotarySig(vchNotarySigIn) {}
     CAssetOut() {
 		SetNull();
 	}
@@ -725,7 +718,7 @@ public:
     }
     inline void SetNull() { vecAuxFees.clear(); vchAuxFeeKeyID.clear();}
     inline bool IsNull() const { return (vecAuxFees.empty() && vchAuxFeeKeyID.empty()); }
-    void ToJson(UniValue& json, const uint32_t& nAsset) const;
+    void ToJson(UniValue& json, const uint32_t& nBaseAsset) const;
 };
 class CNotaryDetails {
 public:

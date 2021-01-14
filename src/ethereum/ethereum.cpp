@@ -128,7 +128,7 @@ bool VerifyProof(dev::bytesConstRef path, const dev::RLP& value, const dev::RLP&
  * @param witnessAddress The witness address for the minting
  * @return true if everything is valid
  */
-bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const uint8_t &nERC20Precision, const uint8_t& nLocalPrecision, const std::vector<unsigned char>& vchInputData, CAmount& outputAmount, uint32_t& nAsset, std::string& witnessAddress) {
+bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedMethodHash, const uint8_t &nERC20Precision, const uint8_t& nLocalPrecision, const std::vector<unsigned char>& vchInputData, CAmount& outputAmount, uint64_t& nAsset, std::string& witnessAddress) {
     // total 5 to 7 fields are expected @ 32 bytes each field, > 5 fields if address is bigger, bech32 can be up to 91 characters so it will span up to 3 fields and as little as 1 field
     if(vchInputData.size() < 164 || vchInputData.size() > 228) {
       return false;  
@@ -156,13 +156,17 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     }
     outputAmount = (CAmount)outputAmountArith.GetLow64();
     
-    // convert the vch into a uint32_t (nAsset)
+    // convert the vch into a uint64_t (nAsset)
     // should be in position 68 walking backwards
-    nAsset = static_cast<uint32_t>(vchInputData[67]);
-    nAsset |= static_cast<uint32_t>(vchInputData[66]) << 8;
-    nAsset |= static_cast<uint32_t>(vchInputData[65]) << 16;
-    nAsset |= static_cast<uint32_t>(vchInputData[64]) << 24;
-    
+    nAsset = static_cast<uint64_t>(vchInputData[67]);
+    nAsset |= static_cast<uint64_t>(vchInputData[66]) << 8;
+    nAsset |= static_cast<uint64_t>(vchInputData[65]) << 16;
+    nAsset |= static_cast<uint64_t>(vchInputData[64]) << 24;
+    nAsset |= static_cast<uint64_t>(vchInputData[63]) << 32;
+    nAsset |= static_cast<uint64_t>(vchInputData[62]) << 40;
+    nAsset |= static_cast<uint64_t>(vchInputData[61]) << 48;
+    nAsset |= static_cast<uint64_t>(vchInputData[60]) << 56;
+
     // skip data field marker (32 bytes) + 31 bytes offset to the varint _byte
     const unsigned char &dataLength = vchInputData[131];
     // bech32 addresses to 91 chars (sys1 vs bc1), min length is 9 for min witness address https://en.bitcoin.it/wiki/BIP_0173

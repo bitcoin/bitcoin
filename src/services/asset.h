@@ -27,9 +27,12 @@ uint32_t GenerateSyscoinGuid(const COutPoint& outPoint);
 std::string stringFromSyscoinTx(const int &nVersion);
 std::string assetFromTx(const int &nVersion);
 static CAsset emptyAsset;
-bool GetAsset(const uint32_t &nAsset,CAsset& txPos);
-bool GetAssetPrecision(const uint32_t &nAsset, uint8_t& nPrecision);
-bool GetAssetNotaryKeyID(const uint32_t &nAsset, std::vector<unsigned char>& keyID);
-bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const uint32_t &nAsset, CAssetsMap mapAssetIn, const CAssetsMap &mapAssetOut);
+bool GetAsset(const uint32_t &nBaseAsset,CAsset& txPos);
+bool GetAssetPrecision(const uint32_t &nBaseAsset, uint8_t& nPrecision);
+bool GetAssetNotaryKeyID(const uint32_t &nBaseAsset, std::vector<unsigned char>& keyID);
+bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const uint32_t &nBaseAsset, CAssetsMap mapAssetIn, const CAssetsMap &mapAssetOut);
 UniValue AssetPublicDataToJson(const std::string &strPubData);
+uint32_t GetBaseAssetID(const uint64_t &nAsset);
+uint32_t GetNFTID(const uint64_t &nAsset);
+uint32_t CreateAssetID(const uint32_t &NFTID, const uint32_t &nBaseAsset);
 #endif // SYSCOIN_SERVICES_ASSET_H

@@ -164,7 +164,6 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
                          strprintf("%s: inputs missing/spent", __func__));
     }
     CAmount nValueIn = 0;
-    std::unordered_map<uint32_t, CAmount> mapNFTID;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const COutPoint &prevout = tx.vin[i].prevout;
         const Coin& coin = inputs.AccessCoin(prevout);
@@ -177,7 +176,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
         }
         if (!coin.out.assetInfo.IsNull()) {
             const bool &zeroVal = coin.out.assetInfo.nValue == 0;
-            auto inRes = mapAssetIn.try_emplace(coin.out.assetInfo.nAsset, zeroVal, coin.out.assetInfo.nValue, mapNFTID);
+            auto inRes = mapAssetIn.try_emplace(coin.out.assetInfo.nAsset, zeroVal, coin.out.assetInfo.nValue);
             if (!inRes.second) {
                 inRes.first->second.nAmount += coin.out.assetInfo.nValue;
                 if (!inRes.first->second.bZeroVal) {
@@ -189,9 +188,6 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
                 }
                 if(!MoneyRangeAsset(inRes.first->second.nAmount) || !MoneyRangeAsset(coin.out.assetInfo.nValue)) {
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "bad-txns-asset-inputvalues-outofrange");
-                }
-                if(coin.out.assetInfo.nNFTID > 0) {
-                    inRes.first->second.mapNFTID.emplace(coin.out.assetInfo.nNFTID, coin.out.assetInfo.nValue);
                 }
             }
         }
@@ -214,7 +210,7 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, TxValidationState& state, 
             return state.Invalid(TxValidationResult::TX_CONSENSUS, err);
         }
         // if input was used, validate it against output (note, no fees for assets in == out)
-        if(!CheckTxInputsAssets(tx, state, tx.voutAssets.begin()->key, mapAssetIn, mapAssetOut)) {
+        if(!CheckTxInputsAssets(tx, state, GetBaseAssetID(tx.voutAssets.begin()->key), mapAssetIn, mapAssetOut)) {
             return false; // state filled by CheckTxInputsAssets
         }
     }
