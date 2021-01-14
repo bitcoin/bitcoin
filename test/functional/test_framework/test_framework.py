@@ -625,7 +625,7 @@ class DashTestFramework(BitcoinTestFramework):
 
         self.log.info("Prepared masternode %d: collateral_txid=%s, collateral_vout=%d, protxHash=%s" % (idx, txid, collateral_vout, proTxHash))
 
-    def remove_mastermode(self, idx):
+    def remove_masternode(self, idx):
         mn = self.mninfo[idx]
         rawtx = self.nodes[0].createrawtransaction([{"txid": mn.collateral_txid, "vout": mn.collateral_vout}], {self.nodes[0].getnewaddress(): 999.9999})
         rawtx = self.nodes[0].signrawtransactionwithwallet(rawtx)

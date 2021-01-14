@@ -71,7 +71,7 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         expectedDeleted = [new_mn.proTxHash]
         expectedUpdated = []
         baseBlockHash2 = self.nodes[0].getbestblockhash()
-        self.remove_mastermode(self.mn_count)
+        self.remove_masternode(self.mn_count)
         mnList = self.test_getmnlistdiff(baseBlockHash2, self.nodes[0].getbestblockhash(), mnList, expectedDeleted, expectedUpdated)
 
         # When comparing genesis and best block, we shouldn't see the previously added and then deleted MN
