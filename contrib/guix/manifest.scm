@@ -25,6 +25,13 @@
              (guix profiles)
              (guix utils))
 
+(define-syntax-rule (search-our-patches file-name ...)
+  "Return the list of absolute file names corresponding to each
+FILE-NAME found in ./patches relative to the current file."
+  (parameterize
+      ((%patch-path (list (string-append (dirname (current-filename)) "/patches"))))
+    (list (search-patch file-name) ...)))
+
 (define (make-ssp-fixed-gcc xgcc)
   "Given a XGCC package, return a modified package that uses the SSP function
 from glibc instead of from libssp.so. Our `symbol-check' script will complain if
@@ -150,6 +157,10 @@ chain for " target " development."))
       (home-page (package-home-page pthreads-xgcc))
       (license (package-license pthreads-xgcc)))))
 
+(define (make-nsis-with-sde-support base-nsis)
+  (package-with-extra-patches base-nsis
+    (search-our-patches "nsis-SConstruct-sde-support.patch")))
+
 
 (packages->manifest
  (append
@@ -189,7 +200,9 @@ chain for " target " development."))
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            ;; Windows
-           (list zip (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32") nsis-x86_64))
+           (list zip
+                 (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
+                 (make-nsis-with-sde-support nsis-x86_64)))
           ((string-contains target "riscv64-linux-")
            (list (make-bitcoin-cross-toolchain "riscv64-linux-gnu"
                                                #:base-gcc-for-libc gcc-7)))
