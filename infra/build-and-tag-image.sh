@@ -37,10 +37,11 @@ checkPrerequisites
 # https://stackoverflow.com/questions/59895/how-to-get-the-source-directory-of-a-bash-script-from-within-the-script-itself#246128
 MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-IMAGE_NAME="arthub.azurecr.io/itcoin-core"
-IMAGE_TAG="git-"$("${MYDIR}"/compute-git-hash.sh)
+ITCOIN_IMAGE_NAME="arthub.azurecr.io/itcoin-core"
+ITCOIN_IMAGE_TAG="git-"$("${MYDIR}"/compute-git-hash.sh)
+ITCOIN_IMAGE="${ITCOIN_IMAGE_NAME}:${ITCOIN_IMAGE_TAG}"
 
-docker build --tag "${IMAGE_NAME}:${IMAGE_TAG}" "${MYDIR}/.."
+docker build --tag "${ITCOIN_IMAGE}" "${MYDIR}/.."
 
 # MUXATOR 2020-12-22: as of today, there is no known way to compute the sha256
 # digest of an image that was never pushed to a registry. This is odd, since the
@@ -49,4 +50,7 @@ docker build --tag "${IMAGE_NAME}:${IMAGE_TAG}" "${MYDIR}/.."
 # Since printing the digest is just an experimental functionality, let's ignore
 # errors here.
 echo "EXPERIMENTAL: the sha256 hash of the container we just built is:"
-docker inspect --format='{{index .RepoDigests 0}}' "${IMAGE_NAME}:${IMAGE_TAG}" || true
+docker inspect --format='{{index .RepoDigests 0}}' "${ITCOIN_IMAGE}" 2>/dev/null || echo "Docker hash not found (you can ignore this message)"
+
+echo
+echo "SUCCESS: built image ${ITCOIN_IMAGE}"
