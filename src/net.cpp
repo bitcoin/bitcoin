@@ -821,7 +821,7 @@ void CNode::copyStats(CNodeStats &stats)
         LOCK(cs_mnauth);
         X(verifiedProRegTxHash);
     }
-    X(fMasternode);
+    X(m_masternode_connection);
 }
 #undef X
 
@@ -1340,11 +1340,11 @@ void CConnman::DisconnectNodes()
                 }
 
                 if (fLogIPs) {
-                    LogPrintf("ThreadSocketHandler -- removing node: peer=%d addr=%s nRefCount=%d fInbound=%d fMasternode=%d\n",
-                          pnode->GetId(), pnode->addr.ToString(), pnode->GetRefCount(), pnode->fInbound, pnode->fMasternode);
+                    LogPrintf("ThreadSocketHandler -- removing node: peer=%d addr=%s nRefCount=%d fInbound=%d m_masternode_connection=%d\n",
+                          pnode->GetId(), pnode->addr.ToString(), pnode->GetRefCount(), pnode->fInbound, pnode->m_masternode_connection);
                 } else {
-                    LogPrintf("ThreadSocketHandler -- removing node: peer=%d nRefCount=%d fInbound=%d fMasternode=%d\n",
-                          pnode->GetId(), pnode->GetRefCount(), pnode->fInbound, pnode->fMasternode);
+                    LogPrintf("ThreadSocketHandler -- removing node: peer=%d nRefCount=%d fInbound=%d m_masternode_connection=%d\n",
+                          pnode->GetId(), pnode->GetRefCount(), pnode->fInbound, pnode->m_masternode_connection);
                 }
 
                 // remove from vNodes
@@ -2205,7 +2205,7 @@ void CConnman::ThreadDNSAddressSeed()
         LOCK(cs_vNodes);
         int nRelevant = 0;
         for (auto pnode : vNodes) {
-            nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->fOneShot && !pnode->m_manual_connection && !pnode->fInbound && !pnode->fMasternodeProbe;
+            nRelevant += pnode->fSuccessfullyConnected && !pnode->fFeeler && !pnode->fOneShot && !pnode->m_manual_connection && !pnode->fInbound && !pnode->m_masternode_probe_connection;
         }
         if (nRelevant >= 2) {
             LogPrintf("P2P peers available. Skipped DNS seeding.\n");
@@ -2325,10 +2325,10 @@ int CConnman::GetExtraOutboundCount()
         LOCK(cs_vNodes);
         for (CNode* pnode : vNodes) {
             // don't count outbound masternodes
-            if (pnode->fMasternode) {
+            if (pnode->m_masternode_connection) {
                 continue;
             }
-            if (!pnode->fInbound && !pnode->m_manual_connection && !pnode->fFeeler && !pnode->fDisconnect && !pnode->fOneShot && pnode->fSuccessfullyConnected && !pnode->fMasternodeProbe) {
+            if (!pnode->fInbound && !pnode->m_manual_connection && !pnode->fFeeler && !pnode->fDisconnect && !pnode->fOneShot && pnode->fSuccessfullyConnected && !pnode->m_masternode_probe_connection) {
                 ++nOutbound;
             }
         }
@@ -2399,7 +2399,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         if (!Params().AllowMultipleAddressesFromGroup()) {
             LOCK(cs_vNodes);
             for (CNode* pnode : vNodes) {
-                if (!pnode->fInbound && !pnode->fMasternode && !pnode->m_manual_connection) {
+                if (!pnode->fInbound && !pnode->m_masternode_connection && !pnode->m_manual_connection) {
                     // Netgroups for inbound and addnode peers are not excluded because our goal here
                     // is to not use multiple of our limited outbound slots on a single netgroup
                     // but inbound and addnode peers do not use our outbound slots.  Inbound peers
@@ -2749,7 +2749,7 @@ void CConnman::ThreadOpenMasternodeConnections()
 }
 
 // if successful, this moves the passed grant to the constructed node
-void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler, bool manual_connection, bool fConnectToMasternode, bool fMasternodeProbe)
+void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler, bool manual_connection, bool masternode_connection, bool masternode_probe_connection)
 {
     //
     // Initiate outbound network connection
@@ -2799,10 +2799,10 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         pnode->fFeeler = true;
     if (manual_connection)
         pnode->m_manual_connection = true;
-    if (fConnectToMasternode)
-        pnode->fMasternode = true;
-    if (fMasternodeProbe)
-        pnode->fMasternodeProbe = true;
+    if (masternode_connection)
+        pnode->m_masternode_connection = true;
+    if (masternode_probe_connection)
+        pnode->m_masternode_probe_connection = true;
 
     {
         LOCK(cs_vNodes);
@@ -2849,7 +2849,7 @@ void CConnman::ThreadMessageHandler()
             if (flagInterruptMsgProc)
                 return;
             // Send messages
-            if (!fSkipSendMessagesForMasternodes || !pnode->fMasternode) {
+            if (!fSkipSendMessagesForMasternodes || !pnode->m_masternode_connection) {
                 LOCK(pnode->cs_sendProcessing);
                 m_msgproc->SendMessages(pnode);
             }
@@ -3651,7 +3651,7 @@ void CConnman::RelayTransaction(const CTransaction& tx)
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes)
     {
-        if (pnode->fMasternode)
+        if (pnode->m_masternode_connection)
             continue;
         pnode->PushInventory(inv);
     }
@@ -3660,7 +3660,7 @@ void CConnman::RelayTransaction(const CTransaction& tx)
 void CConnman::RelayInv(CInv &inv, const int minProtoVersion, bool fAllowMasternodeConnections) {
     LOCK(cs_vNodes);
     for (const auto& pnode : vNodes) {
-        if (pnode->nVersion < minProtoVersion || (pnode->fMasternode && !fAllowMasternodeConnections))
+        if (pnode->nVersion < minProtoVersion || (pnode->m_masternode_connection && !fAllowMasternodeConnections))
             continue;
         pnode->PushInventory(inv);
     }
@@ -3670,7 +3670,7 @@ void CConnman::RelayInvFiltered(CInv &inv, const CTransaction& relatedTx, const 
 {
     LOCK(cs_vNodes);
     for (const auto& pnode : vNodes) {
-        if (pnode->nVersion < minProtoVersion || (pnode->fMasternode && !fAllowMasternodeConnections))
+        if (pnode->nVersion < minProtoVersion || (pnode->m_masternode_connection && !fAllowMasternodeConnections))
             continue;
         {
             LOCK(pnode->cs_filter);
@@ -3685,7 +3685,7 @@ void CConnman::RelayInvFiltered(CInv &inv, const uint256& relatedTxHash, const i
 {
     LOCK(cs_vNodes);
     for (const auto& pnode : vNodes) {
-        if (pnode->nVersion < minProtoVersion || (pnode->fMasternode && !fAllowMasternodeConnections))
+        if (pnode->nVersion < minProtoVersion || (pnode->m_masternode_connection && !fAllowMasternodeConnections))
             continue;
         {
             LOCK(pnode->cs_filter);
@@ -3881,8 +3881,8 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     nPingUsecStart = 0;
     nPingUsecTime = 0;
     fPingQueued = false;
-    fMasternode = false;
-    fMasternodeProbe = false;
+    m_masternode_connection = false;
+    m_masternode_probe_connection = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
     fPauseRecv = false;
     fPauseSend = false;
@@ -3991,7 +3991,7 @@ bool CConnman::ForNode(NodeId id, std::function<bool(const CNode* pnode)> cond, 
 
 bool CConnman::IsMasternodeOrDisconnectRequested(const CService& addr) {
     return ForNode(addr, AllNodes, [](CNode* pnode){
-        return pnode->fMasternode || pnode->fDisconnect;
+        return pnode->m_masternode_connection || pnode->fDisconnect;
     });
 }
 

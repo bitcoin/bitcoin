@@ -213,7 +213,7 @@ public:
     bool GetUseAddrmanOutgoing() const { return m_use_addrman_outgoing; };
     void SetNetworkActive(bool active);
     SocketEventsMode GetSocketEventsMode() const { return socketEventsMode; }
-    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false, bool fConnectToMasternode = false, bool fMasternodeProbe = false);
+    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound = nullptr, const char *strDest = nullptr, bool fOneShot = false, bool fFeeler = false, bool manual_connection = false, bool masternode_connection = false, bool masternode_probe_connection = false);
     void OpenMasternodeConnection(const CAddress& addrConnect, bool probe = false);
     bool CheckIncomingNonce(uint64_t nonce);
 
@@ -773,7 +773,7 @@ public:
     CAddress addrBind;
     // In case this is a verified MN, this value is the proTx of the MN
     uint256 verifiedProRegTxHash;
-    bool fMasternode;
+    bool m_masternode_connection;
 };
 
 
@@ -888,9 +888,9 @@ public:
     bool fRelayTxes; //protected by cs_filter
     bool fSentAddr;
     // If 'true' this node will be disconnected on CMasternodeMan::ProcessMasternodeConnections()
-    bool fMasternode;
+    bool m_masternode_connection;
     // If 'true' this node will be disconnected after MNAUTH
-    bool fMasternodeProbe;
+    bool m_masternode_probe_connection;
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
     std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter);

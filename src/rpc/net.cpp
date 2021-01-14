@@ -165,7 +165,7 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
         obj.pushKV("subver", stats.cleanSubVer);
         obj.pushKV("inbound", stats.fInbound);
         obj.pushKV("addnode", stats.m_manual_connection);
-        obj.pushKV("masternode", stats.fMasternode);
+        obj.pushKV("masternode", stats.m_masternode_connection);
         obj.pushKV("startingheight", stats.nStartingHeight);
         if (fStateStats) {
             obj.pushKV("banscore", statestats.nMisbehavior);

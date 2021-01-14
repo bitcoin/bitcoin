@@ -146,7 +146,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
         // they are temporary and should be considered unreliable for a sync process.
         // Inbound connection this early is most likely a "masternode" connection
         // initiated from another node, so skip it too.
-        if(pnode->fMasternode || (fMasternodeMode && pnode->fInbound)) continue;
+        if(pnode->m_masternode_connection || (fMasternodeMode && pnode->fInbound)) continue;
 
         // QUICK MODE (REGTEST ONLY!)
         if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
