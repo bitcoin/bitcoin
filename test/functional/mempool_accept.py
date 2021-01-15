@@ -53,6 +53,8 @@ class MempoolAcceptanceTest(SyscoinTestFramework):
     def check_mempool_result(self, result_expected, *args, **kwargs):
         """Wrapper to check result of testmempoolaccept on node_0's mempool"""
         result_test = self.nodes[0].testmempoolaccept(*args, **kwargs)
+        for r in result_test:
+            r.pop('wtxid')  # Skip check for now
         assert_equal(result_expected, result_test)
         assert_equal(self.nodes[0].getmempoolinfo()['size'], self.mempool_size)  # Must not change mempool state
 

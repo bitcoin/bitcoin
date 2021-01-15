@@ -76,4 +76,4 @@ class MiniWallet:
         from_node.sendrawtransaction(tx_hex)
         assert_equal(tx_info['vsize'], vsize)
         assert_equal(tx_info['fees']['base'], fee)
-        return {'txid': tx_info['txid'], 'wtxid': from_node.decoderawtransaction(tx_hex)['hash'], 'hex': tx_hex}
+        return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex}
