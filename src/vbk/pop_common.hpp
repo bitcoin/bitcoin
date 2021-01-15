@@ -19,7 +19,8 @@ void StopPop();
 
 void SetPopConfig(const altintegration::Config& config);
 
-void SetPop(std::shared_ptr<altintegration::PayloadsProvider>& db);
+void SetPop(const std::shared_ptr<altintegration::PayloadsProvider>& payloads_provider,
+    const std::shared_ptr<altintegration::BlockProvider>& block_provider);
 
 altintegration::BlockIndex<altintegration::AltBlock>* GetAltBlockIndex(const uint256& hash);
 altintegration::BlockIndex<altintegration::AltBlock>* GetAltBlockIndex(const CBlockIndex* index);

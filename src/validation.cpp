@@ -4235,8 +4235,7 @@ bool BlockManager::LoadBlockIndex(
         AssertLockHeld(cs_main);
 
         // load blocks
-        std::unique_ptr<CDBIterator> pcursor(blocktree.NewIterator());
-        if (!VeriBlock::loadTrees(*pcursor)) {
+        if(!VeriBlock::loadTrees(blocktree)) {
             return false;
         }
 

@@ -18,21 +18,50 @@ constexpr const char DB_VBK_TIP = 'w';
 constexpr const char DB_ALT_BLOCK = 'E';
 constexpr const char DB_ALT_TIP = 'e';
 
+template <typename BlockT>
+std::pair<char, std::string> tip_key();
+
+template <>
+inline std::pair<char, std::string> tip_key<altintegration::VbkBlock>()
+{
+    return std::make_pair(DB_VBK_TIP, "vbktip");
+}
+template <>
+inline std::pair<char, std::string> tip_key<altintegration::BtcBlock>()
+{
+    return std::make_pair(DB_BTC_TIP, "btctip");
+}
+template <>
+inline std::pair<char, std::string> tip_key<altintegration::AltBlock>()
+{
+    return std::make_pair(DB_ALT_TIP, "alttip");
+}
+
+template <typename BlockT>
+std::pair<char, typename BlockT::hash_t> block_key(const typename BlockT::hash_t& hash);
+
+
+template <>
+inline std::pair<char, typename altintegration::BtcBlock::hash_t> block_key<altintegration::BtcBlock>(const typename altintegration::BtcBlock::hash_t& hash)
+{
+    return std::make_pair(DB_BTC_BLOCK, hash);
+}
+
+template <>
+inline std::pair<char, typename altintegration::VbkBlock::hash_t> block_key<altintegration::VbkBlock>(const typename altintegration::VbkBlock::hash_t& hash)
+{
+    return std::make_pair(DB_VBK_BLOCK, hash);
+}
+
+template <>
+inline std::pair<char, typename altintegration::AltBlock::hash_t> block_key<altintegration::AltBlock>(const typename altintegration::AltBlock::hash_t& hash)
+{
+    return std::make_pair(DB_ALT_BLOCK, hash);
+}
+
+
 struct BlockBatchAdaptor : public altintegration::BlockBatchAdaptor {
     ~BlockBatchAdaptor() override = default;
-
-    static std::pair<char, std::string> vbktip()
-    {
-        return std::make_pair(DB_VBK_TIP, "vbktip");
-    }
-    static std::pair<char, std::string> btctip()
-    {
-        return std::make_pair(DB_BTC_TIP, "btctip");
-    }
-    static std::pair<char, std::string> alttip()
-    {
-        return std::make_pair(DB_ALT_TIP, "alttip");
-    }
 
     explicit BlockBatchAdaptor(CDBBatch& batch) : batch_(batch)
     {
@@ -40,33 +69,33 @@ struct BlockBatchAdaptor : public altintegration::BlockBatchAdaptor {
 
     bool writeBlock(const altintegration::BlockIndex<altintegration::BtcBlock>& value) override
     {
-        batch_.Write(std::make_pair(DB_BTC_BLOCK, getHash(value)), value);
+        batch_.Write(block_key<altintegration::BtcBlock>(getHash(value)), value);
         return true;
     };
     bool writeBlock(const altintegration::BlockIndex<altintegration::VbkBlock>& value) override
     {
-        batch_.Write(std::make_pair(DB_VBK_BLOCK, getHash(value)), value);
+        batch_.Write(block_key<altintegration::VbkBlock>(getHash(value)), value);
         return true;
     };
     bool writeBlock(const altintegration::BlockIndex<altintegration::AltBlock>& value) override
     {
-        batch_.Write(std::make_pair(DB_ALT_BLOCK, getHash(value)), value);
+        batch_.Write(block_key<altintegration::AltBlock>(getHash(value)), value);
         return true;
     };
 
     bool writeTip(const altintegration::BlockIndex<altintegration::BtcBlock>& value) override
     {
-        batch_.Write(btctip(), getHash(value));
+        batch_.Write(tip_key<altintegration::BtcBlock>(), getHash(value));
         return true;
     };
     bool writeTip(const altintegration::BlockIndex<altintegration::VbkBlock>& value) override
     {
-        batch_.Write(vbktip(), getHash(value));
+        batch_.Write(tip_key<altintegration::VbkBlock>(), getHash(value));
         return true;
     };
     bool writeTip(const altintegration::BlockIndex<altintegration::AltBlock>& value) override
     {
-        batch_.Write(alttip(), getHash(value));
+        batch_.Write(tip_key<altintegration::AltBlock>(), getHash(value));
         return true;
     };
 
