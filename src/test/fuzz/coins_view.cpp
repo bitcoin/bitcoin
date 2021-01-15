@@ -36,9 +36,7 @@ bool operator==(const Coin& a, const Coin& b)
 
 void initialize_coins_view()
 {
-    static const ECCVerifyHandle ecc_verify_handle;
-    ECC_Start();
-    SelectParams(CBaseChainParams::REGTEST);
+    static const auto testing_setup = MakeFuzzingContext<const TestingSetup>();
 }
 
 FUZZ_TARGET_INIT(coins_view, initialize_coins_view)

@@ -15,7 +15,7 @@
 
 void initialize_load_external_block_file()
 {
-    static const auto testing_setup = MakeFuzzingContext<>();
+    static const auto testing_setup = MakeFuzzingContext<const TestingSetup>();
 }
 
 FUZZ_TARGET_INIT(load_external_block_file, initialize_load_external_block_file)
