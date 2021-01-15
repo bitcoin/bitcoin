@@ -1283,8 +1283,11 @@ class CSigShare:
 class msg_qsigshare:
     msgtype = b"qsigshare"
 
-    def __init__(self, sig_shares=[]):
-        self.sig_shares = sig_shares
+    def __init__(self, sig_shares=None):
+        if sig_shares is None:
+            self.sig_shares = []
+        else:    
+            self.sig_shares = sig_shares
 
     def deserialize(self, f):
         self.sig_shares = deser_vector(f, CSigShare)
