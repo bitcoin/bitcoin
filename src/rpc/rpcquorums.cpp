@@ -317,7 +317,7 @@ static RPCHelpMan quorum_sign()
     uint256 id = ParseHashV(request.params[1], "id");
     uint256 msgHash = ParseHashV(request.params[2], "msgHash");
     uint256 quorumHash;
-    if (!request.params[3].isNull()) {
+    if (!request.params[3].isNull() && !request.params[3].get_str().empty()) {
         quorumHash = ParseHashV(request.params[3], "quorumHash");
     }
     bool fSubmit{true};
@@ -608,7 +608,7 @@ static const CRPCCommand commands[] =
     { "evo",                "quorum_verify",               &quorum_verify,                      {"llmqType","id","msgHash","signature","quorumHash","signHeight"}  },
     { "evo",                "quorum_getrecsig",            &quorum_getrecsig,                   {"llmqType","id","msgHash"}  },
     { "evo",                "quorum_isconflicting",        &quorum_isconflicting,               {"llmqType","id","msgHash"}  },
-    { "evo",                "quorum_sign",                 &quorum_sign,                        {"llmqType","id","msgHash","quorumHash"}  },
+    { "evo",                "quorum_sign",                 &quorum_sign,                        {"llmqType","id","msgHash","quorumHash","submit"}  },
 };
 // clang-format on
     for (const auto& c : commands) {

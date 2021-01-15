@@ -1280,8 +1280,8 @@ class CSigShare:
         r += self.sigShare
         return r
 
- class msg_qsigshare:
-    command = b"qsigshare"
+class msg_qsigshare:
+    msgtype = b"qsigshare"
 
     def __init__(self, sig_shares=[]):
         self.sig_shares = sig_shares

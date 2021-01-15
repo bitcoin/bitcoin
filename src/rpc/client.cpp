@@ -267,6 +267,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "quorum_verify", 5, "signHeight" },
     { "quorum_isconflicting", 0, "llmqType" },
     { "quorum_sign", 0, "llmqType" },
+    { "quorum_sign", 4, "submit" },
     { "gobject_prepare", 1, "revision" },
     { "gobject_prepare", 2, "time" },
     { "gobject_prepare", 5, "outputIndex" },

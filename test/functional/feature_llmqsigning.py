@@ -29,11 +29,16 @@ class LLMQSigningTest(DashTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
+    def add_options(self, parser):
+        parser.add_argument("--spork21", dest="spork21", default=False, action="store_true",
+                        help="Test with spork21 enabled")
+
     def run_test(self):
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
-        self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
+        if self.options.spork21:
+            self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
         self.wait_for_sporks_same()
 
         self.mine_quorum()
@@ -106,7 +111,6 @@ class LLMQSigningTest(DashTestFramework):
             mn = self.get_mninfo(q['recoveryMembers'][0])
             # Open a P2P connection to it
             p2p_interface = mn.node.add_p2p_connection(P2PInterface())
-            mn.node.p2p.wait_for_verack()
             # Send the last required QSIGSHARE message to the recovery member
             p2p_interface.send_message(msg_qsigshare([sig_share]))
         else:
@@ -174,26 +178,26 @@ class LLMQSigningTest(DashTestFramework):
             force_finish_mnsync(self.nodes[i])
         wait_for_sigs(True, False, True, 15)
 
+        if self.options.spork21:
+            id = "0000000000000000000000000000000000000000000000000000000000000002"
 
-        id = "0000000000000000000000000000000000000000000000000000000000000002"
-
-        # Isolate the node that is responsible for the recovery of a signature and assert that recovery fails
-        q = self.nodes[0].quorum_selectquorum(100, id)
-        mn = self.get_mninfo(q['recoveryMembers'][0])
-        mn.node.setnetworkactive(False)
-        self.wait_until(lambda: mn.node.getconnectioncount() == 0)
-        for i in range(4):
-            self.mninfo[i].node.quorum_sign(100, id, msgHash)
-        assert_sigs_nochange(False, False, False, 3)
-        # Need to re-connect so that it later gets the recovered sig
-        mn.node.setnetworkactive(True)
-        self.connect_nodes(mn.node.index, 0)
-        # Make sure node0 has received qsendrecsigs from the previously isolated node
-        mn.node.ping()
-        self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
-        self.nodes[0].generate(1)
-        self.sync_blocks()
-        wait_for_sigs(True, False, True, 15)
+            # Isolate the node that is responsible for the recovery of a signature and assert that recovery fails
+            q = self.nodes[0].quorum_selectquorum(100, id)
+            mn = self.get_mninfo(q['recoveryMembers'][0])
+            mn.node.setnetworkactive(False)
+            self.wait_until(lambda: mn.node.getconnectioncount() == 0)
+            for i in range(4):
+                self.mninfo[i].node.quorum_sign(100, id, msgHash)
+            assert_sigs_nochange(False, False, False, 3)
+            # Need to re-connect so that it later gets the recovered sig
+            mn.node.setnetworkactive(True)
+            self.connect_nodes(mn.node.index, 0)
+            # Make sure node0 has received qsendrecsigs from the previously isolated node
+            mn.node.ping()
+            self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
+            self.nodes[0].generate(1)
+            self.sync_blocks()
+            wait_for_sigs(True, False, True, 15)
 
 if __name__ == '__main__':
     LLMQSigningTest().main()

@@ -113,6 +113,7 @@ BASE_SCRIPTS = [
     'wallet_listtransactions.py --descriptors',
     'feature_taproot.py',
     'feature_llmqsigning.py',
+    'feature_llmqsigning.py --spork21',
     'feature_llmqchainlocks.py',
     'feature_llmqconnections.py',
     'feature_llmqdkgerrors.py',
