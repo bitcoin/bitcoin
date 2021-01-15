@@ -1286,7 +1286,7 @@ class msg_qsigshare:
     def __init__(self, sig_shares=None):
         if sig_shares is None:
             self.sig_shares = []
-        else:   
+        else:
             self.sig_shares = sig_shares
 
     def deserialize(self, f):
