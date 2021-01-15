@@ -254,7 +254,7 @@ bool CDKGSession::PreVerifyMessage(const CDKGContribution& qc, bool& retBan) con
     return true;
 }
 
-void CDKGSession::ReceiveMessage(const CDKGContribution& qc, bool& retBan)
+void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGContribution& qc, bool& retBan)
 {
     LOCK(cs_pending);
 
@@ -276,7 +276,7 @@ void CDKGSession::ReceiveMessage(const CDKGContribution& qc, bool& retBan)
             // only relay up to 2 contributions, that's enough to let the other members know about his bad behavior
             return;
         }
-        const uint256 hash = ::SerializeHash(qc);
+
         contributions.try_emplace(hash, qc);
         member->contributions.emplace(hash);
 
@@ -571,7 +571,7 @@ bool CDKGSession::PreVerifyMessage(const CDKGComplaint& qc, bool& retBan) const
     return true;
 }
 
-void CDKGSession::ReceiveMessage(const CDKGComplaint& qc, bool& retBan)
+void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGComplaint& qc, bool& retBan)
 {
     CDKGLogger logger(*this, __func__);
 
@@ -588,7 +588,7 @@ void CDKGSession::ReceiveMessage(const CDKGComplaint& qc, bool& retBan)
             // only relay up to 2 complaints, that's enough to let the other members know about his bad behavior
             return;
         }
-        const uint256 hash = ::SerializeHash(qc);
+
         complaints.try_emplace(hash, qc);
         member->complaints.emplace(hash);
 
@@ -784,7 +784,7 @@ bool CDKGSession::PreVerifyMessage(const CDKGJustification& qj, bool& retBan) co
     return true;
 }
 
-void CDKGSession::ReceiveMessage(const CDKGJustification& qj, bool& retBan)
+void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGJustification& qj, bool& retBan)
 {
     CDKGLogger logger(*this, __func__);
 
@@ -801,7 +801,7 @@ void CDKGSession::ReceiveMessage(const CDKGJustification& qj, bool& retBan)
             // only relay up to 2 justifications, that's enough to let the other members know about his bad behavior
             return;
         }
-        const uint256 hash = ::SerializeHash(qj);
+
         justifications.try_emplace(hash, qj);
         member->justifications.emplace(hash);
 
@@ -1107,7 +1107,7 @@ bool CDKGSession::PreVerifyMessage(const CDKGPrematureCommitment& qc, bool& retB
     return true;
 }
 
-void CDKGSession::ReceiveMessage(const CDKGPrematureCommitment& qc, bool& retBan)
+void CDKGSession::ReceiveMessage(const uint256& hash, const CDKGPrematureCommitment& qc, bool& retBan)
 {
     CDKGLogger logger(*this, __func__);
 
@@ -1118,7 +1118,7 @@ void CDKGSession::ReceiveMessage(const CDKGPrematureCommitment& qc, bool& retBan
     logger.Batch("received premature commitment from %s. validMembers=%d", qc.proTxHash.ToString(), qc.CountValidMembers());
 
     auto member = GetMember(qc.proTxHash);
-    const uint256 hash = ::SerializeHash(qc);
+
     {
         LOCK(invCs);
 
