@@ -1299,7 +1299,7 @@ class msg_qsigshare:
 
     def __repr__(self):
         return "msg_qsigshare(sigShares=%d)" % (len(self.sig_shares))
-       
+
 # Objects that correspond to messages on the wire
 class msg_version:
     __slots__ = ("addrFrom", "addrTo", "nNonce", "nRelay", "nServices",
