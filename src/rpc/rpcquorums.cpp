@@ -299,7 +299,8 @@ static RPCHelpMan quorum_sign()
             {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type.\n"},  
             {"id", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Request id.\n"},   
             {"msgHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Message hash.\n"}, 
-            {"quorumHash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The quorum identifier.\n"},                   
+            {"quorumHash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The quorum identifier.\n"},
+            {"submit", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "Submits the signature share to the network if this is true.\n"},               
         },
         RPCResult{RPCResult::Type::NONE, "", ""},
         RPCExamples{
@@ -318,8 +319,43 @@ static RPCHelpMan quorum_sign()
     uint256 quorumHash;
     if (!request.params[3].isNull()) {
         quorumHash = ParseHashV(request.params[3], "quorumHash");
-    } 
-    return llmq::quorumSigningManager->AsyncSignIfMember(llmqType, id, msgHash, quorumHash);
+    }
+    bool fSubmit{true};
+    if (!request.params[4].isNull()) {
+        fSubmit = request.params[4].get_bool();
+    }
+    if (fSubmit) {
+        return llmq::quorumSigningManager->AsyncSignIfMember(llmqType, id, msgHash, quorumHash);
+    } else {
+        llmq::CQuorumCPtr pQuorum;
+
+        if (quorumHash.IsNull()) {
+            pQuorum = llmq::quorumSigningManager->SelectQuorumForSigning(llmqType, id);
+        } else {
+            pQuorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
+        }
+
+        if (pQuorum == nullptr) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
+        }
+
+        llmq::CSigShare sigShare = llmq::quorumSigSharesManager->CreateSigShare(pQuorum, id, msgHash);
+
+        if (!sigShare.sigShare.Get().IsValid()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "failed to create sigShare");
+        }
+
+        UniValue obj(UniValue::VOBJ);
+        obj.pushKV("llmqType", llmqType);
+        obj.pushKV("quorumHash", sigShare.quorumHash.ToString());
+        obj.pushKV("quorumMember", sigShare.quorumMember);
+        obj.pushKV("id", id.ToString());
+        obj.pushKV("msgHash", msgHash.ToString());
+        obj.pushKV("signHash", sigShare.GetSignHash().ToString());
+        obj.pushKV("signature", sigShare.sigShare.Get().ToString());
+
+        return obj;
+    }
 },
     };
 } 

@@ -483,7 +483,7 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
     }
 
     for (size_t i = 0; i < preverifiedMessages.size(); i++) {
-        NodeId nodeId = preverifiedMessages[i].first;
+        const NodeId &nodeId = preverifiedMessages[i].first;
         if (badNodes.count(nodeId)) {
             continue;
         }

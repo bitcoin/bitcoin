@@ -5,7 +5,14 @@
 
 import time
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import force_finish_mnsync, assert_raises_rpc_error
+from test_framework.util import force_finish_mnsync, assert_raises_rpc_error, assert_equal, hex_str_to_bytes
+from test_framework.p2p import (
+  P2PInterface,
+)
+from test_framework.messages import (
+    msg_qsigshare,
+    CSigShare
+)
 
 '''
 feature_llmqsigning.py
@@ -62,20 +69,50 @@ class LLMQSigningTest(DashTestFramework):
 
         # Initial state
         wait_for_sigs(False, False, False, 1)
+        # Sign first share without any optional parameter, should not result in recovered sig
+        self.mninfo[0].node.quorum_sign(100, id, msgHash)
 
-        # Sign 2 shares, should not result in recovered sig
-        for i in range(2):
-            self.mninfo[i].node.quorum_sign(100, id, msgHash)
         assert_sigs_nochange(False, False, False, 3)
+        # Sign second share and test optional quorumHash parameter, should not result in recovered sig
 
-        # Sign one more share and test optional quorumHash parameter.
-        # Should result in recovered sig and conflict for msgHashConflict
         # 1. Providing an invalid quorum hash should fail and cause no changes for sigs
-        assert(not self.mninfo[2].node.quorum_sign(100, id, msgHash, msgHash))
+        assert(not self.mninfo[1].node.quorum_sign(100, id, msgHash, msgHash))
         assert_sigs_nochange(False, False, False, 3)
-        # 2. Providing a valid quorum hash should succeed and finally result in the recovered sig
-        quorumHash = self.mninfo[2].node.quorum_selectquorum(100, id)["quorumHash"]
-        assert(self.mninfo[2].node.quorum_sign(100, id, msgHash, quorumHash))
+        # 2. Providing a valid quorum hash should succeed and cause no changes for sigss
+        quorumHash = self.mninfo[1].node.quorum_selectquorum(100, id)["quorumHash"]
+        assert(self.mninfo[1].node.quorum_sign(100, id, msgHash, quorumHash))
+        assert_sigs_nochange(False, False, False, 3)
+        # Sign third share and test optional submit parameter if spork21 is enabled, should result in recovered sig
+        # and conflict for msgHashConflict
+        if self.options.spork21:
+            # 1. Providing an invalid quorum hash and set submit=false, should throw an error
+            assert_raises_rpc_error(-8, 'quorum not found', self.mninfo[2].node.quorum_sign, 100, id, msgHash, id, False)
+            # 2. Providing a valid quorum hash and set submit=false, should return a valid sigShare object
+            sig_share_rpc_1 = self.mninfo[2].node.quorum_sign(100, id, msgHash, quorumHash, False)
+            sig_share_rpc_2 = self.mninfo[2].node.quorum_sign(100, id, msgHash, "", False)
+            assert_equal(sig_share_rpc_1, sig_share_rpc_2)
+            assert_sigs_nochange(False, False, False, 3)
+            # 3. Sending the sig share received from RPC to the recovery member through P2P interface, should result
+            # in a recovered sig
+            sig_share = CSigShare()
+            sig_share.llmqType = int(sig_share_rpc_1["llmqType"])
+            sig_share.quorumHash = int(sig_share_rpc_1["quorumHash"], 16)
+            sig_share.quorumMember = int(sig_share_rpc_1["quorumMember"])
+            sig_share.id = int(sig_share_rpc_1["id"], 16)
+            sig_share.msgHash = int(sig_share_rpc_1["msgHash"], 16)
+            sig_share.sigShare = hex_str_to_bytes(sig_share_rpc_1["signature"])
+            # Get the current recovery member of the quorum
+            q = self.nodes[0].quorum_selectquorum(100, id)
+            mn = self.get_mninfo(q['recoveryMembers'][0])
+            # Open a P2P connection to it
+            p2p_interface = mn.node.add_p2p_connection(P2PInterface())
+            mn.node.p2p.wait_for_verack()
+            # Send the last required QSIGSHARE message to the recovery member
+            p2p_interface.send_message(msg_qsigshare([sig_share]))
+        else:
+            # If spork21 is not enabled just sign regularly
+            self.mninfo[2].node.quorum_sign(100, id, msgHash)
+
         wait_for_sigs(True, False, True, 15)
 
         self.bump_mocktime(5)
