@@ -458,7 +458,7 @@ private:
      * lNodesAnnouncingHeaderAndIDs, and keeping that list under a certain size by
      * removing the first element if necessary.
      */
-    void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Stack of nodes which we have set to announce using compact blocks */
     std::list<NodeId> lNodesAnnouncingHeaderAndIDs GUARDED_BY(cs_main);
@@ -739,7 +739,7 @@ static void UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) EXCLUSIV
     }
 }
 
-void PeerManagerImpl::MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+void PeerManagerImpl::MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
     CNodeState* nodestate = State(nodeid);
@@ -755,21 +755,21 @@ void PeerManagerImpl::MaybeSetPeerAsAnnouncingHeaderAndIDs(NodeId nodeid, CConnm
                 return;
             }
         }
-        connman.ForNode(nodeid, [this, &connman](CNode* pfrom) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
+        m_connman.ForNode(nodeid, [this](CNode* pfrom) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
             AssertLockHeld(::cs_main);
             uint64_t nCMPCTBLOCKVersion = (pfrom->GetLocalServices() & NODE_WITNESS) ? 2 : 1;
             if (lNodesAnnouncingHeaderAndIDs.size() >= 3) {
                 // As per BIP152, we only get 3 of our peers to announce
                 // blocks using compact encodings.
-                connman.ForNode(lNodesAnnouncingHeaderAndIDs.front(), [&connman, nCMPCTBLOCKVersion](CNode* pnodeStop){
-                    connman.PushMessage(pnodeStop, CNetMsgMaker(pnodeStop->GetCommonVersion()).Make(NetMsgType::SENDCMPCT, /*fAnnounceUsingCMPCTBLOCK=*/false, nCMPCTBLOCKVersion));
+                m_connman.ForNode(lNodesAnnouncingHeaderAndIDs.front(), [this, nCMPCTBLOCKVersion](CNode* pnodeStop){
+                    m_connman.PushMessage(pnodeStop, CNetMsgMaker(pnodeStop->GetCommonVersion()).Make(NetMsgType::SENDCMPCT, /*fAnnounceUsingCMPCTBLOCK=*/false, nCMPCTBLOCKVersion));
                     // save BIP152 bandwidth state: we select peer to be low-bandwidth
                     pnodeStop->m_bip152_highbandwidth_to = false;
                     return true;
                 });
                 lNodesAnnouncingHeaderAndIDs.pop_front();
             }
-            connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetCommonVersion()).Make(NetMsgType::SENDCMPCT, /*fAnnounceUsingCMPCTBLOCK=*/true, nCMPCTBLOCKVersion));
+            m_connman.PushMessage(pfrom, CNetMsgMaker(pfrom->GetCommonVersion()).Make(NetMsgType::SENDCMPCT, /*fAnnounceUsingCMPCTBLOCK=*/true, nCMPCTBLOCKVersion));
             // save BIP152 bandwidth state: we select peer to be high-bandwidth
             pfrom->m_bip152_highbandwidth_to = true;
             lNodesAnnouncingHeaderAndIDs.push_back(pfrom->GetId());
@@ -1578,7 +1578,7 @@ void PeerManagerImpl::BlockChecked(const CBlock& block, const BlockValidationSta
              !::ChainstateActive().IsInitialBlockDownload() &&
              mapBlocksInFlight.count(hash) == mapBlocksInFlight.size()) {
         if (it != mapBlockSource.end()) {
-            MaybeSetPeerAsAnnouncingHeaderAndIDs(it->second.first, m_connman);
+            MaybeSetPeerAsAnnouncingHeaderAndIDs(it->second.first);
         }
     }
     if (it != mapBlockSource.end())
