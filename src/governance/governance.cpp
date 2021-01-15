@@ -1007,7 +1007,7 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
             // they stay connected for a short period of time and it's possible that we won't get everything we should.
             // Only use outbound connections - inbound connection could be a "masternode" connection
             // initiated from another node, so skip it too.
-            if (pnode->fMasternode || (fMasternodeMode && pnode->IsInboundConn())) continue;
+            if (pnode->m_masternode_connection || (fMasternodeMode && pnode->IsInboundConn())) continue;
             // stop early to prevent setAskFor overflow
             size_t nProjectedSize;
             {
@@ -1208,7 +1208,7 @@ void CGovernanceManager::RequestOrphanObjects(CConnman& connman)
     LogPrint(BCLog::GOBJECT, "CGovernanceObject::RequestOrphanObjects -- number objects = %d\n", vecHashesFiltered.size());
     for (const uint256& nHash : vecHashesFiltered) {
         for (CNode* pnode : vNodesCopy) {
-            if (pnode->fMasternode) {
+            if (pnode->m_masternode_connection) {
                 continue;
             }
             RequestGovernanceObject(pnode, nHash, connman);

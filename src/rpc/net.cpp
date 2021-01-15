@@ -230,7 +230,7 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("bip152_hb_to", stats.m_bip152_highbandwidth_to);
         obj.pushKV("bip152_hb_from", stats.m_bip152_highbandwidth_from);
         // SYSCOIN
-        obj.pushKV("masternode", stats.fMasternode);
+        obj.pushKV("masternode", stats.m_masternode_connection);
         if (fStateStats) {
             obj.pushKV("startingheight", statestats.m_starting_height);
             obj.pushKV("synced_headers", statestats.nSyncHeight);

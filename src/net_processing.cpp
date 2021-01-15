@@ -247,7 +247,7 @@ struct Peer {
 
     // SYSCOIN
     /** This peer's a masternode connection */
-    std::atomic<bool> fMasternode{false};
+    std::atomic<bool> m_masternode_connection{false};
 
     explicit Peer(NodeId id) : m_id(id) {}
 };
@@ -947,7 +947,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, int64_t nTime)
         nProtocolVersion = gArgs.GetArg("-pushversion", PROTOCOL_VERSION);
     }
     m_connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, nProtocolVersion, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
-            nonce, strSubVersion, nNodeStartingHeight, !m_ignore_incoming_txs && pnode.m_tx_relay != nullptr, mnauthChallenge, pnode.fMasternode));
+            nonce, strSubVersion, nNodeStartingHeight, !m_ignore_incoming_txs && pnode.m_tx_relay != nullptr, mnauthChallenge, pnode.m_masternode_connection));
 
     if (fLogIPs) {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, peer=%d\n", nProtocolVersion, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), nodeid);
@@ -1596,7 +1596,7 @@ void PeerManagerImpl::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlock
         for (auto& it : m_peer_map) {
             Peer& peer = *it.second;
             // SYSCOIN
-            if (peer.fMasternode) return;
+            if (peer.m_masternode_connection) return;
             LOCK(peer.m_block_inv_mutex);
             for (const uint256& hash : reverse_iterate(vHashes)) {
                 peer.m_blocks_for_headers_relay.push_back(hash);
@@ -1717,7 +1717,7 @@ void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman&
     connman.ForEachNode([&txid, &wtxid](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
         AssertLockHeld(::cs_main);
         // SYSCOIN only relay to outbound masternodes for efficiency
-        if (!pnode->fMasternode)
+        if (!pnode->m_masternode_connection)
         {
             CNodeState* state = State(pnode->GetId());
             if (state == nullptr) return;
@@ -2775,8 +2775,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             bool fOtherMasternode = false;
             vRecv >> fOtherMasternode;
             if (pfrom.IsInboundConn()) {
-                pfrom.fMasternode = fOtherMasternode;
-                peer->fMasternode = fOtherMasternode;
+                pfrom.m_masternode_connection = fOtherMasternode;
+                peer->m_masternode_connection = fOtherMasternode;
                 if (fOtherMasternode) {
                     LogPrint(BCLog::NET, "peer=%d is an inbound masternode connection, not relaying anything to it\n", pfrom.GetId());
                     if (!fMasternodeMode) {
@@ -2951,7 +2951,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                       pfrom.ConnectionTypeAsString());
         }
         // SYSCOIN
-        if (!pfrom.fMasternodeProbe) {
+        if (!pfrom.m_masternode_probe_connection) {
             CMNAuth::PushMNAUTH(&pfrom, m_connman);
         }
 
@@ -2963,7 +2963,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SENDHEADERS));
         }
         // SYSOCOIN
-        if (pfrom.GetCommonVersion() >= SHORT_IDS_BLOCKS_VERSION && !pfrom.fMasternode) {
+        if (pfrom.GetCommonVersion() >= SHORT_IDS_BLOCKS_VERSION && !pfrom.m_masternode_connection) {
             // Tell our peer we are willing to provide version 1 or 2 cmpctblocks
             // However, we do not request new block announcements using
             // cmpctblock messages.
@@ -2977,7 +2977,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SENDCMPCT, fAnnounceUsingCMPCTBLOCK, nCMPCTBLOCKVersion));
         }
         // SYSCOIN
-        if (!pfrom.fMasternode) {
+        if (!pfrom.m_masternode_connection) {
             // Tell our peer that we're interested in plain LLMQ recovered signatures.
             // Otherwise the peer would only announce/send messages resulting from QRECSIG,
             // SPV nodes should not send this message
@@ -2985,7 +2985,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSENDRECSIGS, true));
         }
 
-        if (gArgs.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS) && !pfrom.fMasternode) {
+        if (gArgs.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS) && !pfrom.m_masternode_connection) {
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QWATCH));
         }
         pfrom.fSuccessfullyConnected = true;
@@ -3066,7 +3066,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         pfrom.fFirstMessageIsMNAUTH = msg_type == NetMsgType::MNAUTH;
         // Note: do not break the flow here
 
-        if (pfrom.fMasternodeProbe && !pfrom.fFirstMessageIsMNAUTH) {
+        if (pfrom.m_masternode_probe_connection && !pfrom.fFirstMessageIsMNAUTH) {
             LogPrint(BCLog::NET, "connection is a masternode probe but first received message is not MNAUTH, peer=%d\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;
@@ -3304,7 +3304,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 break;
             }
             // SYSCOIN
-            if (!pfrom.fMasternode) {
+            if (!pfrom.m_masternode_connection) {
                 WITH_LOCK(peer->m_block_inv_mutex, peer->m_blocks_for_inv_relay.push_back(pindex->GetBlockHash()));
             }
             if (--nLimit <= 0)
@@ -4577,7 +4577,7 @@ void PeerManagerImpl::EvictExtraOutboundPeers(int64_t time_in_seconds)
         m_connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
             AssertLockHeld(::cs_main);
             // SYSCOIN Don't disconnect masternodes just because they were slow in block announcement
-            if (pnode->fMasternode) return;
+            if (pnode->m_masternode_connection) return;
             // Only consider outbound-full-relay peers that are not already
             // marked for disconnection
             if (!pnode->IsFullOutboundConn() || pnode->fDisconnect) return;
@@ -4780,7 +4780,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             pindexBestHeader = ::ChainActive().Tip();
         bool fFetch = state.fPreferredDownload || (nPreferredDownload == 0 && !pto->fClient && !pto->IsAddrFetchConn()); // Download if this is a nice peer, or we have no nice peers and this one might do.
         // SYSCOIN
-        if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex && !pto->fMasternode) {
+        if (!state.fSyncStarted && !pto->fClient && !fImporting && !fReindex && !pto->m_masternode_connection) {
             // Only actively request headers from a single peer, unless we're close to today.
             if ((nSyncStarted == 0 && fFetch) || pindexBestHeader->GetBlockTime() > GetAdjustedTime() - 24 * 60 * 60) {
                 state.fSyncStarted = true;
@@ -4805,7 +4805,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         // Try sending block announcements via headers
         //
         // SYSCOIN
-        if (!pto->fMasternode) {
+        if (!pto->m_masternode_connection) {
             // If we have less than MAX_BLOCKS_TO_ANNOUNCE in our
             // list of block hashes we're relaying, and our peer wants
             // headers announcements, then find the first header
@@ -5188,7 +5188,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         //
         std::vector<CInv> vGetData;
         // SYSCOIN
-        if (!pto->fClient && !pto->fMasternode && ((fFetch && !pto->m_limited_node) || !::ChainstateActive().IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
+        if (!pto->fClient && !pto->m_masternode_connection && ((fFetch && !pto->m_limited_node) || !::ChainstateActive().IsInitialBlockDownload()) && state.nBlocksInFlight < MAX_BLOCKS_IN_TRANSIT_PER_PEER) {
             std::vector<const CBlockIndex*> vToDownload;
             NodeId staller = -1;
             FindNextBlocksToDownload(pto->GetId(), MAX_BLOCKS_IN_TRANSIT_PER_PEER - state.nBlocksInFlight, vToDownload, staller, consensusParams);

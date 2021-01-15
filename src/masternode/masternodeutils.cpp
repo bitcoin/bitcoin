@@ -24,7 +24,7 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
     // Don't disconnect masternode connections when we have less then the desired amount of outbound nodes
     size_t nonMasternodeCount = 0;
     connman.ForEachNode(AllNodes, [&](CNode* pnode) {
-        if (!pnode->IsInboundConn() && !pnode->IsFeelerConn() && !pnode->IsManualConn() && !pnode->fMasternode && !pnode->fMasternodeProbe) {
+        if (!pnode->IsInboundConn() && !pnode->IsFeelerConn() && !pnode->IsManualConn() && !pnode->m_masternode_connection && !pnode->m_masternode_probe_connection) {
             nonMasternodeCount++;
         }
     });
@@ -33,14 +33,14 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
     }
 
     connman.ForEachNode(AllNodes, [&](CNode* pnode) {
-        // we're only disconnecting fMasternode connections
-        if (!pnode->fMasternode) return;
+        // we're only disconnecting m_masternode_connection connections
+        if (!pnode->m_masternode_connection) return;
         // we're only disconnecting outbound connections
         if (pnode->IsInboundConn()) return;
         // we're not disconnecting LLMQ connections
         if (connman.IsMasternodeQuorumNode(pnode)) return;
         // we're not disconnecting masternode probes for at least a few seconds
-        if (pnode->fMasternodeProbe && GetSystemTimeInSeconds() - pnode->nTimeConnected < 5) return;
+        if (pnode->m_masternode_probe_connection && GetSystemTimeInSeconds() - pnode->nTimeConnected < 5) return;
 
         if (fLogIPs) {
             LogPrintf("Closing Masternode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToString());

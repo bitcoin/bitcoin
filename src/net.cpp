@@ -630,7 +630,7 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
         LOCK(cs_mnauth);
         X(verifiedProRegTxHash);
     }
-    X(fMasternode);
+    X(m_masternode_connection);
 
     X(m_conn_type);
 }
@@ -1665,7 +1665,7 @@ void CConnman::ThreadDNSAddressSeed()
                         LOCK(cs_vNodes);
                         for (const CNode* pnode : vNodes) {
                             // SYSCOIN
-                            if (pnode->fSuccessfullyConnected && !pnode->fMasternodeProbe && pnode->IsOutboundOrBlockRelayConn()) ++nRelevant;
+                            if (pnode->fSuccessfullyConnected && !pnode->m_masternode_probe_connection && pnode->IsOutboundOrBlockRelayConn()) ++nRelevant;
                         }
                     }
                     if (nRelevant >= 2) {
@@ -1776,10 +1776,10 @@ int CConnman::GetExtraFullOutboundCount()
         LOCK(cs_vNodes);
         for (const CNode* pnode : vNodes) {
             // SYSCOIN don't count outbound masternodes
-            if (pnode->fMasternode) {
+            if (pnode->m_masternode_connection) {
                 continue;
             }
-            if (pnode->fSuccessfullyConnected && !pnode->fDisconnect && !pnode->fMasternodeProbe && pnode->IsFullOutboundConn()) {
+            if (pnode->fSuccessfullyConnected && !pnode->fDisconnect && !pnode->m_masternode_probe_connection && pnode->IsFullOutboundConn()) {
                 ++full_outbound_peers;
             }
         }
@@ -1871,7 +1871,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             LOCK(cs_vNodes);
             for (const CNode* pnode : vNodes) {
                 // SYSCOIN
-                if (pnode->fMasternode) continue;
+                if (pnode->m_masternode_connection) continue;
                 if (pnode->IsFullOutboundConn()) nOutboundFullRelay++;
                 if (pnode->IsBlockOnlyConn()) nOutboundBlockRelay++;
                 // Netgroups for inbound and manual peers are not excluded because our goal here
@@ -2312,7 +2312,7 @@ void CConnman::ThreadOpenAddedConnections()
 }
 
 // SYSCOIN if successful, this moves the passed grant to the constructed node
-void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, ConnectionType conn_type, bool fConnectToMasternode, bool fMasternodeProbe)
+void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, ConnectionType conn_type, bool masternode_connection, bool m_masternode_probe_connection)
 {
     assert(conn_type != ConnectionType::INBOUND);
 
@@ -2350,10 +2350,10 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         grantOutbound->MoveTo(pnode->grantOutbound);
 
     // SYSCOIN
-    if (fConnectToMasternode)
-        pnode->fMasternode = true;        
-    if (fMasternodeProbe)
-        pnode->fMasternodeProbe = true;
+    if (masternode_connection)
+        pnode->m_masternode_connection = true;        
+    if (m_masternode_probe_connection)
+        pnode->m_masternode_probe_connection = true;
 
     m_msgproc->InitializeNode(pnode);
     {
@@ -2401,7 +2401,7 @@ void CConnman::ThreadMessageHandler()
                 return;
                 
             // SYSCOIN Send messages
-            if (!fSkipSendMessagesForMasternodes || !pnode->fMasternode) {
+            if (!fSkipSendMessagesForMasternodes || !pnode->m_masternode_connection) {
                 LOCK(pnode->cs_sendProcessing);
                 m_msgproc->SendMessages(pnode);
             }
@@ -3241,8 +3241,8 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
     m_deserializer = MakeUnique<V1TransportDeserializer>(V1TransportDeserializer(Params(), GetId(), SER_NETWORK, INIT_PROTO_VERSION));
     m_serializer = MakeUnique<V1TransportSerializer>(V1TransportSerializer());
     // SYSCOIN
-    fMasternode = false;
-    fMasternodeProbe = false;
+    m_masternode_connection = false;
+    m_masternode_probe_connection = false;
 }
 
 CNode::~CNode()
@@ -3315,7 +3315,7 @@ bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
 // SYSCOIN
 bool CConnman::IsMasternodeOrDisconnectRequested(const CService& addr) {
     return ForNode(addr, AllNodes, [](CNode* pnode){
-        return pnode->fMasternode || pnode->fDisconnect;
+        return pnode->m_masternode_connection || pnode->fDisconnect;
     });
 }
 int64_t CConnman::PoissonNextSendInbound(int64_t now, int average_interval_seconds)

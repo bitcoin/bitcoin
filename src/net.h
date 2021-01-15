@@ -288,7 +288,7 @@ public:
     uint32_t m_mapped_as;
     // SYSCOIN In case this is a verified MN, this value is the proTx of the MN
     uint256 verifiedProRegTxHash;
-    bool fMasternode;
+    bool m_masternode_connection;
     ConnectionType m_conn_type;
 };
 
@@ -446,9 +446,9 @@ public:
     std::atomic<int64_t> nTimeFirstMessageReceived;
     std::atomic<bool> fFirstMessageIsMNAUTH;
     // If 'true' this node will be disconnected on CMasternodeMan::ProcessMasternodeConnections()
-    bool fMasternode;
+    bool m_masternode_connection;
     // If 'true' this node will be disconnected after MNAUTH
-    bool fMasternodeProbe;
+    bool m_masternode_probe_connection;
     // Address of this peer
     const CAddress addr;
     // Bind address of our side of the connection
@@ -925,7 +925,7 @@ public:
     void SetNetworkActive(bool active);
     // SYSCOIN
     void OpenMasternodeConnection(const CAddress& addrConnect, bool isProbe = false);
-    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *strDest, ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY, bool fConnectToMasternode = false, bool fMasternodeProbe = false);
+    void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *strDest, ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY, bool masternode_connection = false, bool m_masternode_probe_connection = false);
     bool CheckIncomingNonce(uint64_t nonce);
 
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
