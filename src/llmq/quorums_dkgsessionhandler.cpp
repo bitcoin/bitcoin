@@ -431,43 +431,39 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         return false;
     }
 
-    std::vector<uint256> hashes;
     std::vector<std::pair<NodeId, std::shared_ptr<Message>>> preverifiedMessages;
-    hashes.reserve(msgs.size());
     preverifiedMessages.reserve(msgs.size());
 
     for (const auto& p : msgs) {
+        const NodeId &nodeId = p.first;
         if (!p.second) {
-            LogPrint(BCLog::LLMQ_DKG, "%s -- failed to deserialize message, peer=%d\n", __func__, p.first);
-            peerman.Misbehaving(p.first, 100, "failed to deserialize message");
+            LogPrint(BCLog::LLMQ_DKG, "%s -- failed to deserialize message, peer=%d\n", __func__, nodeId);
+            peerman.Misbehaving(nodeId, 100, "failed to deserialize message");
             continue;
         }
-        const auto& msg = *p.second;
 
-        const uint256& hash = ::SerializeHash(msg);
         {
             LOCK(cs_main);
-            pendingMessages.peerman.ReceivedResponse(p.first, hash);
+            pendingMessages.peerman.ReceivedResponse(nodeId, hash);
         }
 
         bool ban = false;
-        if (!session.PreVerifyMessage(msg, ban)) {
+        if (!session.PreVerifyMessage(*p.second, ban)) {
             if (ban) {
                 {
                     LOCK(cs_main);
-                    pendingMessages.peerman.ForgetTxHash(p.first, hash);
+                    pendingMessages.peerman.ForgetTxHash(nodeId, hash);
                 }
-                LogPrint(BCLog::LLMQ_DKG, "%s -- banning node due to failed preverification, peer=%d\n", __func__, p.first);
-                peerman.Misbehaving(p.first, 100, "banning node due to failed preverification");
+                LogPrint(BCLog::LLMQ_DKG, "%s -- banning node due to failed preverification, peer=%d\n", __func__, nodeId);
+                peerman.Misbehaving(nodeId, 100, "banning node due to failed preverification");
             }
-            LogPrint(BCLog::LLMQ_DKG, "%s -- skipping message due to failed preverification, peer=%d\n", __func__, p.first);
+            LogPrint(BCLog::LLMQ_DKG, "%s -- skipping message due to failed preverification, peer=%d\n", __func__, nodeId);
             continue;
         }
-        hashes.emplace_back(hash);
         preverifiedMessages.emplace_back(p);
         {
             LOCK(cs_main);
-            pendingMessages.peerman.ForgetTxHash(p.first, hash);
+            pendingMessages.peerman.ForgetTxHash(nodeId, hash);
         }
     }
     if (preverifiedMessages.empty()) {
@@ -482,14 +478,13 @@ bool ProcessPendingMessageBatch(CDKGSession& session, CDKGPendingMessages& pendi
         }
     }
 
-    for (size_t i = 0; i < preverifiedMessages.size(); i++) {
-        NodeId nodeId = preverifiedMessages[i].first;
+    for (const auto& p : preverifiedMessages) {
+        const NodeId &nodeId = p.first;
         if (badNodes.count(nodeId)) {
             continue;
         }
-        const auto& msg = *preverifiedMessages[i].second;
         bool ban = false;
-        session.ReceiveMessage(hashes[i], msg, ban);
+        session.ReceiveMessage(*p.second, ban);
         if (ban) {
             LogPrint(BCLog::LLMQ_DKG, "%s -- banning node after ReceiveMessage failed, peer=%d\n", __func__, nodeId);
             peerman.Misbehaving(nodeId, 100, "banning node after ReceiveMessage failed");
