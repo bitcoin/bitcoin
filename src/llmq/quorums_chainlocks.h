@@ -113,8 +113,6 @@ private:
     bool InternalHasChainLock(int nHeight, const uint256& blockHash);
     bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash);
 
-    static void DoInvalidateBlock(const CBlockIndex* pindex);
-
     BlockTxs::mapped_type GetBlockTxs(const uint256& blockHash);
 
     void Cleanup();
