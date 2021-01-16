@@ -1167,7 +1167,7 @@ class DashTestFramework(SyscoinTestFramework):
             all_ok = True
             for node in nodes:
                 s = node.quorum_dkgstatus()
-                if s["session"] == {}:
+                if 'llmq_test' not in s["session"]:
                     continue
                 if "quorumConnections" not in s:
                     all_ok = False
@@ -1198,7 +1198,7 @@ class DashTestFramework(SyscoinTestFramework):
                 return False
             for mn in mninfos:
                 s = mn.node.quorum_dkgstatus()
-                if s["session"] == {}:
+                if 'llmq_test' not in s["session"]:
                     continue
                 if "quorumConnections" not in s:
                     return ret()
