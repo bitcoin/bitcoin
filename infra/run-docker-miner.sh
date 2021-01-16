@@ -42,7 +42,7 @@ ZMQ_PUBRAWBLOCK_PORT="NOT_RELEVANT"
 
 errecho() {
     # prints to stderr
-    >&2 echo $@;
+    >&2 echo "${@}"
 }
 
 ITCOIN_IMAGE="${ITCOIN_IMAGE_NAME}:${ITCOIN_IMAGE_TAG}"

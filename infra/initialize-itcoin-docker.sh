@@ -43,7 +43,7 @@ ZMQ_PUBRAWBLOCK_PORT=29009
 
 errecho() {
     # prints to stderr
-    >&2 echo $@;
+    >&2 echo "${@}"
 }
 
 cleanup() {

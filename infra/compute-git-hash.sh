@@ -21,7 +21,7 @@ MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 errecho() {
     # prints to stderr
-    >&2 echo $@;
+    >&2 echo "${@}"
 }
 
 CANDIDATE_REPO_ROOT=$(realpath "${MYDIR}/..")

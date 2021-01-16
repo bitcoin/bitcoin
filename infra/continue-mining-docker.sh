@@ -47,7 +47,7 @@ WALLET_NAME=itcoin_signer
 
 errecho() {
     # prints to stderr
-    >&2 echo $@;
+    >&2 echo "${@}"
 }
 
 cleanup() {
