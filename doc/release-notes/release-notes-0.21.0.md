@@ -100,7 +100,7 @@ P2P and network changes
 - This release adds support for serving
   [BIP157](https://github.com/bitcoin/bips/blob/master/bip-0157.mediawiki) compact
   filters to peers on the network when enabled using
-  `-blockfilterindex=1 -peercfilters=1`. (#16442)
+  `-blockfilterindex=1 -peerblockfilters=1`. (#16442)
 
 - This release adds support for signets
   ([BIP325](https://github.com/bitcoin/bips/blob/master/bip-0325.mediawiki)) in
