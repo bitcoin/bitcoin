@@ -89,7 +89,7 @@ RUN apt update && \
         libevent-pthreads-2.1-7 \
         libpython3-stdlib \
         libsqlite3-0 \
-        libzmqpp4 \
+        libzmq5 \
         jq \
         python3-minimal \
     && rm -rf /var/lib/apt/lists/*
