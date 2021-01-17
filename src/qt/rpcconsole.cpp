@@ -666,6 +666,7 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         ui->peerWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
         if (!ui->peerWidget->horizontalHeader()->restoreState(m_peer_widget_header_state)) {
+            ui->peerWidget->setColumnWidth(PeerTableModel::Direction, DIRECTION_COLUMN_WIDTH);
             ui->peerWidget->setColumnWidth(PeerTableModel::Address, ADDRESS_COLUMN_WIDTH);
             ui->peerWidget->setColumnWidth(PeerTableModel::Subversion, SUBVERSION_COLUMN_WIDTH);
             ui->peerWidget->setColumnWidth(PeerTableModel::Ping, PING_COLUMN_WIDTH);
