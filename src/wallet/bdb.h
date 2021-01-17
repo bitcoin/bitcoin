@@ -223,6 +223,10 @@ public:
 
 std::string BerkeleyDatabaseVersion();
 
+/** Perform sanity check of runtime BDB version versus linked BDB version.
+ */
+bool BerkeleyDatabaseSanityCheck();
+
 //! Return object giving access to Berkeley database at specified path.
 std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
 
