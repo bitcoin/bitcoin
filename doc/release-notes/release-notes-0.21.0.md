@@ -287,10 +287,9 @@ Wallet
   same with and without APS). Setting it to -1 will disable APS, unless
   `-avoidpartialspends` is set. (#14582)
 
-- The wallet will now avoid partial spends (APS) by default, if this does not
-  result in a difference in fees compared to the non-APS variant. The allowed
-  fee threshold can be adjusted using the new `-maxapsfee` configuration
-  option. (#14582)
+- By default, the wallet will now do partial spends only if it decreases fees
+  compared to avoiding partial spends (APS). The allowed fee threshold can be 
+  adjusted using the new `-maxapsfee` configuration option. (#14582)
 
 - The `createwallet`, `loadwallet`, and `unloadwallet` RPCs now accept
   `load_on_startup` options to modify the settings list. Unless these options
