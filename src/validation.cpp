@@ -3421,7 +3421,6 @@ bool CChainState::InvalidateBlock(BlockValidationState& state, const CChainParam
 // SYSCOIN
 bool CChainState::MarkConflictingBlock(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex *pindex)
 {
-    AssertLockHeld(m_cs_chainstate);
     AssertLockHeld(cs_main);
     AssertLockNotHeld(m_mempool.cs);
     // We first disconnect backwards and then mark the blocks as conflicting.
