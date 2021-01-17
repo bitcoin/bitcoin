@@ -30,6 +30,7 @@
 #include <QAbstractItemModel>
 #include <QDateTime>
 #include <QFont>
+#include <QFontMetrics>
 #include <QKeyEvent>
 #include <QKeySequence>
 #include <QLatin1String>
@@ -681,10 +682,18 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         ui->peerWidget->setContextMenuPolicy(Qt::CustomContextMenu);
 
         if (!ui->peerWidget->horizontalHeader()->restoreState(m_peer_widget_header_state)) {
+            const QFontMetrics fm = ui->peerWidget->fontMetrics();
+            ui->peerWidget->setColumnWidth(PeerTableModel::NetNodeId, GUIUtil::TextWidth(fm, QStringLiteral("99999")));
+            ui->peerWidget->setColumnWidth(PeerTableModel::Age, GUIUtil::TextWidth(fm, GUIUtil::FormatPeerAge(std::chrono::hours{23976 /* 999 days */})));
             ui->peerWidget->setColumnWidth(PeerTableModel::Direction, DIRECTION_COLUMN_WIDTH);
             ui->peerWidget->setColumnWidth(PeerTableModel::Address, ADDRESS_COLUMN_WIDTH);
+            ui->peerWidget->setColumnWidth(PeerTableModel::ConnectionType, GUIUtil::TextWidth(fm, GUIUtil::ConnectionTypeToQString(ConnectionType::ADDR_FETCH /* TODO: Find the WIDEST string? */, /*prepend_direction=*/false)));
+            const auto bytesize_width = GUIUtil::TextWidth(fm, GUIUtil::formatBytes(999'000'000'000) + QStringLiteral("x"));
+            ui->peerWidget->setColumnWidth(PeerTableModel::Network, GUIUtil::TextWidth(fm, qvariant_cast<QString>(model->peerTableSortProxy()->headerData(PeerTableModel::ColumnIndex::Network, Qt::Horizontal, Qt::DisplayRole)) /* TODO: Find the WIDEST string? */ + QStringLiteral("x")));
             ui->peerWidget->setColumnWidth(PeerTableModel::Subversion, SUBVERSION_COLUMN_WIDTH);
             ui->peerWidget->setColumnWidth(PeerTableModel::Ping, PING_COLUMN_WIDTH);
+            ui->peerWidget->setColumnWidth(PeerTableModel::Sent, bytesize_width);
+            ui->peerWidget->setColumnWidth(PeerTableModel::Received, bytesize_width);
         }
         ui->peerWidget->horizontalHeader()->setSectionResizeMode(PeerTableModel::Age, QHeaderView::ResizeToContents);
         ui->peerWidget->horizontalHeader()->setStretchLastSection(true);

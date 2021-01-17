@@ -89,7 +89,7 @@ private:
     const QStringList columns{
         /*: Title of Peers Table column which contains a
             unique number used to identify a connection. */
-        tr("Peer"),
+        tr("id"),
         /*: Title of Peers Table column which indicates the duration (length of time)
             since the peer connection started. */
         tr("Age"),
@@ -111,7 +111,7 @@ private:
         tr("Sent"),
         /*: Title of Peers Table column which indicates the total amount of
             network information we have received from the peer. */
-        tr("Received"),
+        tr("Recv'd"),
         /*: Title of Peers Table column which contains the peer's
             User Agent string. */
         tr("User Agent")};
