@@ -9,6 +9,7 @@
 #include <net.h>
 
 #include <QAbstractTableModel>
+#include <QIcon>
 #include <QList>
 #include <QModelIndex>
 #include <QStringList>
@@ -46,11 +47,12 @@ public:
     void startAutoRefresh();
     void stopAutoRefresh();
 
+    // See also RPCConsole::ColumnWidths in rpcconsole.h
     enum ColumnIndex {
         NetNodeId = 0,
         Age,
-        Address,
         Direction,
+        Address,
         ConnectionType,
         Network,
         Ping,
@@ -81,6 +83,8 @@ private:
     QList<CNodeCombinedStats> m_peers_data{};
     interfaces::Node& m_node;
     const PlatformStyle& m_platform_style;
+    void DrawIcons();
+    QIcon m_icon_conn_in, m_icon_conn_out;
     const QStringList columns{
         /*: Title of Peers Table column which contains a
             unique number used to identify a connection. */
@@ -88,12 +92,10 @@ private:
         /*: Title of Peers Table column which indicates the duration (length of time)
             since the peer connection started. */
         tr("Age"),
+        "",  // Direction column has no title
         /*: Title of Peers Table column which contains the
             IP/Onion/I2P address of the connected peer. */
         tr("Address"),
-        /*: Title of Peers Table column which indicates the direction
-            the peer connection was initiated from. */
-        tr("Direction"),
         /*: Title of Peers Table column which describes the type of
             peer connection. The "type" describes why the connection exists. */
         tr("Type"),
