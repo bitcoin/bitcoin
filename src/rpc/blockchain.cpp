@@ -1519,7 +1519,9 @@ static RPCHelpMan getchaintips()
             "2.  \"headers-only\"          Not all blocks for this branch are available, but the headers are valid\n"
             "3.  \"valid-headers\"         All blocks are available for this branch, but they were never fully validated\n"
             "4.  \"valid-fork\"            This branch is not part of the active chain, but is fully validated\n"
-            "5.  \"active\"                This is the tip of the active main chain, which is certainly valid"},
+            // SYSCOIN
+            "5.  \"conflicting\"           This branch is conflicting via a chainlock invalidation\n"
+            "6.  \"active\"                This is the tip of the active main chain, which is certainly valid"},
                         }}}},
                 RPCExamples{
                     HelpExampleCli("getchaintips", "")
@@ -1574,6 +1576,10 @@ static RPCHelpMan getchaintips()
         } else if (block->nStatus & BLOCK_FAILED_MASK) {
             // This block or one of its ancestors is invalid.
             status = "invalid";
+        // SYSCOIN
+        } else if (block->nStatus & BLOCK_CONFLICT_CHAINLOCK) {
+            // This block or one of its ancestors is conflicting with ChainLocks.
+            status = "conflicting";
         } else if (!block->HaveTxsDownloaded()) {
             // This block cannot be connected because full block data for it or one of its parents is missing.
             status = "headers-only";

@@ -695,8 +695,7 @@ public:
     bool PreciousBlock(BlockValidationState& state, const CChainParams& params, CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
     bool InvalidateBlock(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
     // SYSCOIN
-    bool InvalidateBlocks(BlockValidationState& state, const CChainParams& chainparams, const std::vector<CBlockIndex*> &pindexVec) LOCKS_EXCLUDED(cs_main);
-    bool DoInvalidateBlocks(const CChainParams& params, const std::vector<CBlockIndex*> &invalidatingBlockIndexes) LOCKS_EXCLUDED(::cs_main);
+    bool MarkConflictingBlock(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex, const llmq::CChainLockSig& bestChainLockWithKnownBlock, const bool isEnforced) LOCKS_EXCLUDED(cs_main);
     void ResetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -764,6 +763,8 @@ bool PreciousBlock(BlockValidationState& state, const CChainParams& params, CBlo
 /** Mark a block as invalid. */
 bool InvalidateBlock(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
 // SYSCOIN
+/** Mark a block as conflicting. */
+bool MarkConflictingBlock(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 void EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex, const llmq::CChainLockSig& bestChainLockWithKnownBlock, const bool isEnforced) LOCKS_EXCLUDED(cs_main);
 /** Remove invalidity status from a block and its descendants. */
 void ResetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

@@ -67,7 +67,7 @@ class LLMQChainLocksTest(DashTestFramework):
 
         self.log.info("Isolate node, mine on both parts of the network, and reconnect")
         self.isolate_node(self.nodes[0])
-        self.nodes[0].generate(5)
+        bad_tip = self.nodes[0].generate(5)[-1]
         self.nodes[1].generatetoaddress(1, node0_mining_addr)
         good_tip = self.nodes[1].getbestblockhash()
         self.wait_for_chainlocked_block(self.nodes[1], good_tip)
@@ -78,9 +78,18 @@ class LLMQChainLocksTest(DashTestFramework):
         assert(self.nodes[0].getblock(self.nodes[0].getbestblockhash())["previousblockhash"] == good_tip)
         assert(self.nodes[1].getblock(self.nodes[1].getbestblockhash())["previousblockhash"] == good_tip)
 
+        self.log.info("The tip mined while this node was isolated should be marked conflicting now")
+        found = False
+        for tip in self.nodes[0].getchaintips():
+            if tip["hash"] == bad_tip:
+                assert(tip["status"] == "conflicting")
+                found = True
+                break
+        assert(found)
+
         self.log.info("Keep node connected and let it try to reorg the chain")
         good_tip = self.nodes[0].getbestblockhash()
-        self.log.info("Restart it so that it forgets all the chainlocks from the past")
+        self.log.info("Restart it so that it forgets all the chainlock messages from the past")
         self.stop_node(0)
         self.start_node(0)
         self.connect_nodes(0, 1)
