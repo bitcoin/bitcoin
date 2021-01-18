@@ -14,6 +14,9 @@ m4_define([_CHECK_ATOMIC_testbody], [[
   #include <cstdint>
 
   int main() {
+    std::atomic<bool> lock{true};
+    std::atomic_exchange(&lock, false);
+
     std::atomic<int64_t> a{};
 
     int64_t v = 5;

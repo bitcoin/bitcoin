@@ -25,6 +25,7 @@
 #include <util/system.h>
 #include <util/translation.h>
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <stdio.h>
