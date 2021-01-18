@@ -15,6 +15,7 @@
 #include <QVariant>
 
 class PeerTablePriv;
+class PlatformStyle;
 
 namespace interfaces {
 class Node;
@@ -40,7 +41,7 @@ class PeerTableModel : public QAbstractTableModel
     Q_OBJECT
 
 public:
-    explicit PeerTableModel(interfaces::Node& node, QObject* parent);
+    explicit PeerTableModel(interfaces::Node& node, const PlatformStyle&, QObject* parent);
     ~PeerTableModel();
     void startAutoRefresh();
     void stopAutoRefresh();
@@ -79,6 +80,7 @@ private:
     //! Internal peer data structure.
     QList<CNodeCombinedStats> m_peers_data{};
     interfaces::Node& m_node;
+    const PlatformStyle& m_platform_style;
     const QStringList columns{
         /*: Title of Peers Table column which contains a
             unique number used to identify a connection. */
