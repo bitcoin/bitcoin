@@ -126,8 +126,13 @@ class BIP65Test(BitcoinTestFramework):
         # First we show that this tx is valid except for CLTV by getting it
         # rejected from the mempool for exactly that reason.
         assert_equal(
-            [{'txid': spendtx.hash, 'allowed': False, 'reject-reason': 'non-mandatory-script-verify-flag (Negative locktime)'}],
-            self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0)
+            [{
+                'txid': spendtx.hash,
+                'wtxid': spendtx.getwtxid(),
+                'allowed': False,
+                'reject-reason': 'non-mandatory-script-verify-flag (Negative locktime)',
+            }],
+            self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0),
         )
 
         # Now we verify that a block with this transaction is also invalid.

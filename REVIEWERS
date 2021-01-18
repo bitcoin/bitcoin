@@ -1,20 +1,15 @@
 # ==============================================================================
-#                          Bitcoin Core CODEOWNERS
+#                          Bitcoin Core REVIEWERS
 # ==============================================================================
 
-# Configuration of code ownership and review approvals for the bitcoin/bitcoin
-# repo.
+# Configuration of automated review requests for the bitcoin/bitcoin repo
+# via DrahtBot.
 
-# Order is important; the last matching pattern takes the most precedence.
-# More info on how this file works can be found at:
-# https://help.github.com/articles/about-codeowners/
+# Order is not important; if a modified file or directory matches a fnmatch,
+# the reviewer will be mentioned in a PR comment requesting a review.
 
-# This file is called CODEOWNERS because it is a magic file for GitHub to
-# automatically suggest reviewers. In this project's case, the names below
-# should be thought of as code reviewers rather than owners. Regular
-# contributors are free to add their names to specific directories or files
-# provided that they are willing to provide a review when automatically
-# assigned.
+# Regular contributors are free to add their names to specific directories or
+# files provided that they are willing to provide a review.
 
 # Absence from this list should not be interpreted as a discouragement to
 # review a pull request. Peer review is always welcome and is a critical
@@ -23,12 +18,12 @@
 
 
 # Maintainers
-#   @laanwj
-#   @sipa
 #   @fanquake
 #   @jonasschnelli
+#   @laanwj
 #   @marcofalke
 #   @meshcollider
+#   @sipa
 
 # Docs
 /doc/*[a-zA-Z-].md                          @harding

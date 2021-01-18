@@ -71,9 +71,9 @@ class MiniWallet:
         tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
         tx_hex = tx.serialize().hex()
 
-        txid = from_node.sendrawtransaction(tx_hex)
-        self._utxos.append({'txid': txid, 'vout': 0, 'value': send_value})
-        tx_info = from_node.getmempoolentry(txid)
+        tx_info = from_node.testmempoolaccept([tx_hex])[0]
+        self._utxos.append({'txid': tx_info['txid'], 'vout': 0, 'value': send_value})
+        from_node.sendrawtransaction(tx_hex)
         assert_equal(tx_info['vsize'], vsize)
-        assert_equal(tx_info['fee'], fee)
-        return {'txid': txid, 'wtxid': tx_info['wtxid'], 'hex': tx_hex}
+        assert_equal(tx_info['fees']['base'], fee)
+        return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex}

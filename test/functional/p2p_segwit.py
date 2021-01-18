@@ -37,7 +37,6 @@ from test_framework.messages import (
     msg_tx,
     msg_block,
     msg_no_witness_tx,
-    msg_verack,
     ser_uint256,
     ser_vector,
     sha256,
@@ -146,7 +145,7 @@ def test_witness_block(node, p2p, block, accepted, with_witness=True, reason=Non
 
 class TestP2PConn(P2PInterface):
     def __init__(self, wtxidrelay=False):
-        super().__init__()
+        super().__init__(wtxidrelay=wtxidrelay)
         self.getdataset = set()
         self.last_wtxidrelay = []
         self.lastgetdata = []
@@ -156,13 +155,6 @@ class TestP2PConn(P2PInterface):
     # We'll send the getdata messages explicitly in the test logic.
     def on_inv(self, message):
         pass
-
-    def on_version(self, message):
-        if self.wtxidrelay:
-            super().on_version(message)
-        else:
-            self.send_message(msg_verack())
-            self.nServices = message.nServices
 
     def on_getdata(self, message):
         self.lastgetdata = message.inv
@@ -694,13 +686,35 @@ class SegWitTest(BitcoinTestFramework):
         if not self.segwit_active:
             # Just check mempool acceptance, but don't add the transaction to the mempool, since witness is disallowed
             # in blocks and the tx is impossible to mine right now.
-            assert_equal(self.nodes[0].testmempoolaccept([tx3.serialize_with_witness().hex()]), [{'txid': tx3.hash, 'allowed': True, 'vsize': tx3.get_vsize(), 'fees': { 'base': Decimal('0.00001000')}}])
+            assert_equal(
+                self.nodes[0].testmempoolaccept([tx3.serialize_with_witness().hex()]),
+                [{
+                    'txid': tx3.hash,
+                    'wtxid': tx3.getwtxid(),
+                    'allowed': True,
+                    'vsize': tx3.get_vsize(),
+                    'fees': {
+                        'base': Decimal('0.00001000'),
+                    },
+                }],
+            )
             # Create the same output as tx3, but by replacing tx
             tx3_out = tx3.vout[0]
             tx3 = tx
             tx3.vout = [tx3_out]
             tx3.rehash()
-            assert_equal(self.nodes[0].testmempoolaccept([tx3.serialize_with_witness().hex()]), [{'txid': tx3.hash, 'allowed': True, 'vsize': tx3.get_vsize(), 'fees': { 'base': Decimal('0.00011000')}}])
+            assert_equal(
+                self.nodes[0].testmempoolaccept([tx3.serialize_with_witness().hex()]),
+                [{
+                    'txid': tx3.hash,
+                    'wtxid': tx3.getwtxid(),
+                    'allowed': True,
+                    'vsize': tx3.get_vsize(),
+                    'fees': {
+                        'base': Decimal('0.00011000'),
+                    },
+                }],
+            )
         test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=True)
 
         self.nodes[0].generate(1)

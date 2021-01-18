@@ -444,6 +444,8 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
     * standard: whether the (valid version of) spending is expected to be standard
     * err_msg: a string with an expected error message for failure (or None, if not cared about)
     * sigops_weight: the pre-taproot sigops weight consumed by a successful spend
+    * need_vin_vout_mismatch: whether this test requires being tested in a transaction input that has no corresponding
+                              transaction output.
     """
 
     conf = dict()
@@ -1441,6 +1443,10 @@ class TaprootTest(BitcoinTestFramework):
         self.log.info("Post-activation tests...")
         self.nodes[1].generate(101)
         self.test_spenders(self.nodes[1], spenders_taproot_active(), input_counts=[1, 2, 2, 2, 2, 3])
+
+        # Re-connect nodes in case they have been disconnected
+        self.disconnect_nodes(0, 1)
+        self.connect_nodes(0, 1)
 
         # Transfer value of the largest 500 coins to pre-taproot node.
         addr = self.nodes[0].getnewaddress()

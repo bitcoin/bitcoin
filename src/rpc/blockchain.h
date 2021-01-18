@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2019 The Bitcoin Core developers
+// Copyright (c) 2017-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,6 +15,7 @@ extern RecursiveMutex cs_main;
 
 class CBlock;
 class CBlockIndex;
+class CBlockPolicyEstimator;
 class CTxMemPool;
 class ChainstateManager;
 class UniValue;
@@ -54,5 +55,6 @@ void CalculatePercentilesByWeight(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES],
 NodeContext& EnsureNodeContext(const util::Ref& context);
 CTxMemPool& EnsureMemPool(const util::Ref& context);
 ChainstateManager& EnsureChainman(const util::Ref& context);
+CBlockPolicyEstimator& EnsureFeeEstimator(const util::Ref& context);
 
 #endif

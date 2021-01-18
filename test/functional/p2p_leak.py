@@ -24,8 +24,6 @@ from test_framework.util import (
     assert_greater_than_or_equal,
 )
 
-DISCOURAGEMENT_THRESHOLD = 100
-
 
 class LazyPeer(P2PInterface):
     def __init__(self):
@@ -93,27 +91,16 @@ class P2PLeakTest(BitcoinTestFramework):
         self.num_nodes = 1
 
     def run_test(self):
-        # Peer that never sends a version. We will send a bunch of messages
-        # from this peer anyway and verify eventual disconnection.
-        no_version_disconnect_peer = self.nodes[0].add_p2p_connection(
-            LazyPeer(), send_version=False, wait_for_verack=False)
-
         # Another peer that never sends a version, nor any other messages. It shouldn't receive anything from the node.
         no_version_idle_peer = self.nodes[0].add_p2p_connection(LazyPeer(), send_version=False, wait_for_verack=False)
 
         # Peer that sends a version but not a verack.
         no_verack_idle_peer = self.nodes[0].add_p2p_connection(NoVerackIdlePeer(), wait_for_verack=False)
 
-        # Send enough ping messages (any non-version message will do) prior to sending
-        # version to reach the peer discouragement threshold. This should get us disconnected.
-        for _ in range(DISCOURAGEMENT_THRESHOLD):
-            no_version_disconnect_peer.send_message(msg_ping())
-
         # Wait until we got the verack in response to the version. Though, don't wait for the node to receive the
         # verack, since we never sent one
         no_verack_idle_peer.wait_for_verack()
 
-        no_version_disconnect_peer.wait_until(lambda: no_version_disconnect_peer.ever_connected, check_connected=False)
         no_version_idle_peer.wait_until(lambda: no_version_idle_peer.ever_connected)
         no_verack_idle_peer.wait_until(lambda: no_verack_idle_peer.version_received)
 
@@ -123,13 +110,9 @@ class P2PLeakTest(BitcoinTestFramework):
         #Give the node enough time to possibly leak out a message
         time.sleep(5)
 
-        # Expect this peer to be disconnected for misbehavior
-        assert not no_version_disconnect_peer.is_connected
-
         self.nodes[0].disconnect_p2ps()
 
         # Make sure no unexpected messages came in
-        assert no_version_disconnect_peer.unexpected_msg == False
         assert no_version_idle_peer.unexpected_msg == False
         assert no_verack_idle_peer.unexpected_msg == False
 
@@ -148,7 +131,7 @@ class P2PLeakTest(BitcoinTestFramework):
         p2p_old_peer = self.nodes[0].add_p2p_connection(P2PInterface(), send_version=False, wait_for_verack=False)
         old_version_msg = msg_version()
         old_version_msg.nVersion = 31799
-        with self.nodes[0].assert_debug_log(['peer=4 using obsolete version 31799; disconnecting']):
+        with self.nodes[0].assert_debug_log(['peer=3 using obsolete version 31799; disconnecting']):
             p2p_old_peer.send_message(old_version_msg)
             p2p_old_peer.wait_for_disconnect()
 

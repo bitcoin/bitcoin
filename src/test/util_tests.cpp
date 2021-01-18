@@ -231,7 +231,7 @@ public:
         Optional<std::vector<std::string>> list_value;
         const char* error = nullptr;
 
-        Expect(util::SettingsValue s) : setting(std::move(s)) {}
+        explicit Expect(util::SettingsValue s) : setting(std::move(s)) {}
         Expect& DefaultString() { default_string = true; return *this; }
         Expect& DefaultInt() { default_int = true; return *this; }
         Expect& DefaultBool() { default_bool = true; return *this; }
@@ -1860,7 +1860,7 @@ BOOST_AUTO_TEST_CASE(test_Capitalize)
     BOOST_CHECK_EQUAL(Capitalize("\x00\xfe\xff"), "\x00\xfe\xff");
 }
 
-static std::string SpanToStr(Span<const char>& span)
+static std::string SpanToStr(const Span<const char>& span)
 {
     return std::string(span.begin(), span.end());
 }
@@ -2012,12 +2012,6 @@ struct Tracker
     {
         origin = t.origin;
         copies = t.copies + 1;
-        return *this;
-    }
-    Tracker& operator=(Tracker&& t) noexcept
-    {
-        origin = t.origin;
-        copies = t.copies;
         return *this;
     }
 };

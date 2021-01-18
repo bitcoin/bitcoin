@@ -1,12 +1,5 @@
 ### Global defaults
 
-timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
-container:
-  # https://cirrus-ci.org/faq/#are-there-any-limits
-  # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
-  cpu: 2
-  memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
-  kvm: true  # Use kvm to avoid spurious CI failures in the default virtualization cluster, see https://github.com/bitcoin/bitcoin/issues/20093
 env:
   PACKAGE_MANAGER_INSTALL: "apt-get update && apt-get install -y"
   MAKEJOBS: "-j4"
@@ -15,11 +8,27 @@ env:
   CCACHE_SIZE: "200M"
   CCACHE_DIR: "/tmp/ccache_dir"
 
-### Global task template
-
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
-global_task_template: &GLOBAL_TASK_TEMPLATE
+base_template: &BASE_TEMPLATE
   skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == ""  # No need to run on the read-only mirror, unless it is a PR. https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
+  merge_base_script:
+    - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
+    - bash -c "$PACKAGE_MANAGER_INSTALL git"
+    - git fetch $CIRRUS_REPO_CLONE_URL $CIRRUS_BASE_BRANCH
+    - git config --global user.email "ci@ci.ci"
+    - git config --global user.name "ci"
+    - git merge FETCH_HEAD  # Merge base to detect silent merge conflicts
+  stateful: false  # https://cirrus-ci.org/guide/writing-tasks/#stateful-tasks
+
+global_task_template: &GLOBAL_TASK_TEMPLATE
+  << : *BASE_TEMPLATE
+  timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
+  container:
+    # https://cirrus-ci.org/faq/#are-there-any-limits
+    # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
+    cpu: 2
+    memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
+    kvm: true  # Use kvm to avoid spurious CI failures in the default virtualization cluster, see https://github.com/bitcoin/bitcoin/issues/20093
   ccache_cache:
     folder: "/tmp/ccache_dir"
   depends_built_cache:
@@ -28,15 +37,13 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
     folder: "/tmp/cirrus-ci-build/depends/sdk-sources"
   depends_releases_cache:
     folder: "/tmp/cirrus-ci-build/releases"
-  merge_base_script:
-    - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
-    - bash -c "$PACKAGE_MANAGER_INSTALL git"
-    - git fetch $CIRRUS_REPO_CLONE_URL $CIRRUS_BASE_BRANCH
-    - git config --global user.email "ci@ci.ci"
-    - git config --global user.name "ci"
-    - git merge FETCH_HEAD  # Merge base to detect silent merge conflicts
   ci_script:
     - ./ci/test_run_all.sh
+
+compute_credits_template: &CREDITS_TEMPLATE
+  # https://cirrus-ci.org/pricing/#compute-credits
+  # Only use credits for pull requests to the main repo
+  use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'bitcoin/bitcoin' && $CIRRUS_PR != ""
 
 #task:
 #  name: "Windows"
@@ -55,7 +62,19 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
 #    - choco install python --version=3.7.7 -y
 
 task:
-  name: 'ARM  [GOAL: install]  [buster]  [unit tests, no functional tests]'
+  name: 'lint [bionic]'
+  << : *BASE_TEMPLATE
+  container:
+    image: ubuntu:bionic  # For python 3.6, oldest supported version according to doc/dependencies.md
+    cpu: 1
+    memory: 1G
+  # For faster CI feedback, immediately schedule the linters
+  << : *CREDITS_TEMPLATE
+  lint_script:
+    - ./ci/lint_run_all.sh
+
+task:
+  name: 'ARM [unit tests, no functional tests] [buster]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: debian:buster
@@ -63,7 +82,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_arm.sh"
 
 task:
-  name: 'Win64  [GOAL: deploy]  [unit tests, no gui tests, no boost::process, no functional tests]'
+  name: 'Win64 [unit tests, no gui tests, no boost::process, no functional tests] [bionic]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:bionic
@@ -71,7 +90,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_win64.sh"
 
 task:
-  name: '32-bit + dash  [GOAL: install]  [CentOS 8]  [gui]'
+  name: '32-bit + dash [gui] [CentOS 8]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: centos:8
@@ -80,7 +99,9 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_i686_centos.sh"
 
 task:
-  name: 'x86_64 Linux  [GOAL: install]  [bionic]  [previous releases, uses qt5 dev package and some depends packages] [unsigned char]'
+  name: '[previous releases, uses qt5 dev package and some depends packages] [unsigned char] [bionic]'
+  # For faster CI feedback, immediately schedule a task that compiles most modules
+  << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:bionic
@@ -88,18 +109,18 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
 task:
-  name: 'x86_64 Linux  [GOAL: install]  [focal]  [depends, sanitizers: thread (TSan), no gui]'
+  name: '[depends, sanitizers: thread (TSan), no gui] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
-    cpu: 4  # Double CPU and Memory to avoid timeout
-    memory: 16G
+    cpu: 4  # Double CPU and increase Memory to avoid timeout
+    memory: 24G
   env:
     MAKEJOBS: "-j8"
     FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
 
 task:
-  name: 'x86_64 Linux  [GOAL: install]  [focal]  [depends, sanitizers: memory (MSan)]'
+  name: '[depends, sanitizers: memory (MSan)] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -107,7 +128,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
 
 task:
-  name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer]'
+  name: '[no depends, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -115,7 +136,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
 
 task:
-  name: 'x86_64 Linux  [GOAL: install]  [focal]  [no depends, only system libs, sanitizers: fuzzer,address,undefined]'
+  name: '[no depends, sanitizers: fuzzer,address,undefined] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -123,7 +144,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
 
 task:
-  name: 'x86_64 Linux [GOAL: install]  [focal]  [multiprocess]'
+  name: '[multiprocess] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
@@ -131,7 +152,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_multiprocess.sh"
 
 task:
-  name: 'x86_64 Linux  [GOAL: install]  [bionic]  [no wallet]'
+  name: '[no wallet] [bionic]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:bionic
@@ -139,7 +160,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_nowallet.sh"
 
 task:
-  name: 'macOS 10.14  [GOAL: deploy] [no functional tests]'
+  name: 'macOS 10.14 [gui, no tests] [bionic]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:bionic
@@ -147,9 +168,9 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_mac.sh"
 
 task:
-  name: 'macOS 10.15 native [GOAL: install] [GUI] [no depends]'
+  name: 'macOS 10.15 native [gui] [no depends]'
   macos_brew_addon_script:
-    - brew install boost libevent berkeley-db4 qt miniupnpc ccache zeromq qrencode sqlite libtool automake pkg-config gnu-getopt
+    - brew install boost libevent berkeley-db4 qt miniupnpc libnatpmp ccache zeromq qrencode sqlite libtool automake pkg-config gnu-getopt
   << : *GLOBAL_TASK_TEMPLATE
   osx_instance:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)

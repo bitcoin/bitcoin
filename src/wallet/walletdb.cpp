@@ -426,7 +426,7 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 uint256 checksum;
                 ssValue >> checksum;
                 if ((checksum_valid = Hash(vchPrivKey) != checksum)) {
-                    strErr = "Error reading wallet database: Crypted key corrupt";
+                    strErr = "Error reading wallet database: Encrypted key corrupt";
                     return false;
                 }
             }
@@ -945,7 +945,7 @@ void MaybeCompactWalletDB()
     }
 
     for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
-        WalletDatabase& dbh = pwallet->GetDBHandle();
+        WalletDatabase& dbh = pwallet->GetDatabase();
 
         unsigned int nUpdateCounter = dbh.nUpdateCounter;
 
@@ -1013,13 +1013,10 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
 
     Optional<DatabaseFormat> format;
     if (exists) {
-#ifdef USE_BDB
-        if (ExistsBerkeleyDatabase(path)) {
+        if (IsBDBFile(BDBDataFile(path))) {
             format = DatabaseFormat::BERKELEY;
         }
-#endif
-#ifdef USE_SQLITE
-        if (ExistsSQLiteDatabase(path)) {
+        if (IsSQLiteFile(SQLiteDataFile(path))) {
             if (format) {
                 error = Untranslated(strprintf("Failed to load database path '%s'. Data is in ambiguous format.", path.string()));
                 status = DatabaseStatus::FAILED_BAD_FORMAT;
@@ -1027,7 +1024,6 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
             }
             format = DatabaseFormat::SQLITE;
         }
-#endif
     } else if (options.require_existing) {
         error = Untranslated(strprintf("Failed to load database path '%s'. Path does not exist.", path.string()));
         status = DatabaseStatus::FAILED_NOT_FOUND;

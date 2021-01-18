@@ -11,7 +11,7 @@
 
 #include <assert.h>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(asmap_direct)
 {
     // Encoding: [asmap using 1 bit / byte] 0xFF [addr using 1 bit / byte]
     std::optional<size_t> sep_pos_opt;

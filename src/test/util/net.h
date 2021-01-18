@@ -30,4 +30,35 @@ struct ConnmanTestMsg : public CConnman {
     bool ReceiveMsgFrom(CNode& node, CSerializedNetMsg& ser_msg) const;
 };
 
+constexpr ServiceFlags ALL_SERVICE_FLAGS[]{
+    NODE_NONE,
+    NODE_NETWORK,
+    NODE_BLOOM,
+    NODE_WITNESS,
+    NODE_COMPACT_FILTERS,
+    NODE_NETWORK_LIMITED,
+};
+
+constexpr NetPermissionFlags ALL_NET_PERMISSION_FLAGS[]{
+    NetPermissionFlags::PF_NONE,
+    NetPermissionFlags::PF_BLOOMFILTER,
+    NetPermissionFlags::PF_RELAY,
+    NetPermissionFlags::PF_FORCERELAY,
+    NetPermissionFlags::PF_NOBAN,
+    NetPermissionFlags::PF_MEMPOOL,
+    NetPermissionFlags::PF_ADDR,
+    NetPermissionFlags::PF_DOWNLOAD,
+    NetPermissionFlags::PF_ISIMPLICIT,
+    NetPermissionFlags::PF_ALL,
+};
+
+constexpr ConnectionType ALL_CONNECTION_TYPES[]{
+    ConnectionType::INBOUND,
+    ConnectionType::OUTBOUND_FULL_RELAY,
+    ConnectionType::MANUAL,
+    ConnectionType::FEELER,
+    ConnectionType::BLOCK_RELAY,
+    ConnectionType::ADDR_FETCH,
+};
+
 #endif // BITCOIN_TEST_UTIL_NET_H

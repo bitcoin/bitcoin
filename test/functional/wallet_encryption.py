@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2019 The Bitcoin Core developers
+# Copyright (c) 2016-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test Wallet encryption"""
@@ -78,7 +78,7 @@ class WalletEncryptionTest(BitcoinTestFramework):
         MAX_VALUE = 100000000
         expected_time = int(time.time()) + MAX_VALUE - 600
         self.nodes[0].walletpassphrase(passphrase2, MAX_VALUE - 600)
-        # give buffer for walletpassphrase, since it iterates over all crypted keys
+        # give buffer for walletpassphrase, since it iterates over all encrypted keys
         expected_time_with_buffer = time.time() + MAX_VALUE - 600
         actual_time = self.nodes[0].getwalletinfo()['unlocked_until']
         assert_greater_than_or_equal(actual_time, expected_time)

@@ -20,6 +20,7 @@ Tests correspond to code in rpc/blockchain.cpp.
 
 from decimal import Decimal
 import http.client
+import os
 import subprocess
 
 from test_framework.blocktools import (
@@ -42,7 +43,9 @@ from test_framework.util import (
     assert_raises_rpc_error,
     assert_is_hex_string,
     assert_is_hash_string,
+    get_datadir_path,
 )
+from test_framework.wallet import MiniWallet
 
 
 class BlockchainTest(BitcoinTestFramework):
@@ -63,6 +66,7 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_getnetworkhashps()
         self._test_stopatheight()
         self._test_waitforblockheight()
+        self._test_getblock()
         assert self.nodes[0].verifychain(4, 0)
 
     def mine_chain(self):
@@ -363,6 +367,46 @@ class BlockchainTest(BitcoinTestFramework):
         assert_waitforheight(current_height - 1)
         assert_waitforheight(current_height)
         assert_waitforheight(current_height + 1)
+
+    def _test_getblock(self):
+        node = self.nodes[0]
+
+        miniwallet = MiniWallet(node)
+        miniwallet.generate(5)
+        node.generate(100)
+
+        fee_per_byte = Decimal('0.00000010')
+        fee_per_kb = 1000 * fee_per_byte
+
+        miniwallet.send_self_transfer(fee_rate=fee_per_kb, from_node=node)
+        blockhash = node.generate(1)[0]
+
+        self.log.info("Test that getblock with verbosity 1 doesn't include fee")
+        block = node.getblock(blockhash, 1)
+        assert 'fee' not in block['tx'][1]
+
+        self.log.info('Test that getblock with verbosity 2 includes expected fee')
+        block = node.getblock(blockhash, 2)
+        tx = block['tx'][1]
+        assert 'fee' in tx
+        assert_equal(tx['fee'], tx['vsize'] * fee_per_byte)
+
+        self.log.info("Test that getblock with verbosity 2 still works with pruned Undo data")
+        datadir = get_datadir_path(self.options.tmpdir, 0)
+
+        def move_block_file(old, new):
+            old_path = os.path.join(datadir, self.chain, 'blocks', old)
+            new_path = os.path.join(datadir, self.chain, 'blocks', new)
+            os.rename(old_path, new_path)
+
+        # Move instead of deleting so we can restore chain state afterwards
+        move_block_file('rev00000.dat', 'rev_wrong')
+
+        block = node.getblock(blockhash, 2)
+        assert 'fee' not in block['tx'][1]
+
+        # Restore chain state
+        move_block_file('rev_wrong', 'rev00000.dat')
 
 
 if __name__ == '__main__':

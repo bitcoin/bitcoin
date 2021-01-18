@@ -27,7 +27,7 @@ def xor_bytes(b0, b1):
 def jacobi_symbol(n, k):
     """Compute the Jacobi symbol of n modulo k
 
-    See http://en.wikipedia.org/wiki/Jacobi_symbol
+    See https://en.wikipedia.org/wiki/Jacobi_symbol
 
     For our application k is always prime, so this is the same as the Legendre symbol."""
     assert k > 0 and k & 1, "jacobi symbol is only defined for positive odd k"

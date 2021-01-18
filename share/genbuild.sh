@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (c) 2012-2019 The Bitcoin Core developers
+# Copyright (c) 2012-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,7 +31,7 @@ if [ "${BITCOIN_GENBUILD_NO_GIT}" != "1" ] && [ -e "$(command -v git)" ] && [ "$
     fi
 
     # otherwise generate suffix from git, i.e. string like "59887e8-dirty"
-    GIT_COMMIT=$(git rev-parse --short HEAD)
+    GIT_COMMIT=$(git rev-parse --short=12 HEAD)
     git diff-index --quiet HEAD -- || GIT_COMMIT="$GIT_COMMIT-dirty"
 fi
 

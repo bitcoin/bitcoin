@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2019 The Bitcoin Core developers
+// Copyright (c) 2014-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(signet_parse_tests)
     CMutableTransaction cb;
     cb.vout.emplace_back(0, CScript{});
     block.vtx.push_back(MakeTransactionRef(cb));
-    block.vtx.push_back(MakeTransactionRef(cb)); // Add dummy tx to excercise merkle root code
+    block.vtx.push_back(MakeTransactionRef(cb)); // Add dummy tx to exercise merkle root code
     BOOST_CHECK(!SignetTxs::Create(block, challenge));
     BOOST_CHECK(!CheckSignetBlockSolution(block, signet_params->GetConsensus()));
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2019 The Bitcoin Core developers
+// Copyright (c) 2015-2020 The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -7,6 +7,7 @@
 
 #include <chainparams.h>
 #include <chainparamsbase.h>
+#include <compat.h>
 #include <crypto/hmac_sha256.h>
 #include <net.h>
 #include <netaddress.h>

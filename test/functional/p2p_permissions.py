@@ -38,35 +38,24 @@ class P2PPermissionsTests(BitcoinTestFramework):
             # default permissions (no specific permissions)
             ["-whitelist=127.0.0.1"],
             # Make sure the default values in the command line documentation match the ones here
-            ["relay", "noban", "mempool", "download"],
-            True)
-
-        self.checkpermission(
-            # check without deprecatedrpc=whitelisted
-            ["-whitelist=127.0.0.1"],
-            # Make sure the default values in the command line documentation match the ones here
-            ["relay", "noban", "mempool", "download"],
-            None)
+            ["relay", "noban", "mempool", "download"])
 
         self.checkpermission(
             # no permission (even with forcerelay)
             ["-whitelist=@127.0.0.1", "-whitelistforcerelay=1"],
-            [],
-            False)
+            [])
 
         self.checkpermission(
             # relay permission removed (no specific permissions)
             ["-whitelist=127.0.0.1", "-whitelistrelay=0"],
-            ["noban", "mempool", "download"],
-            True)
+            ["noban", "mempool", "download"])
 
         self.checkpermission(
             # forcerelay and relay permission added
             # Legacy parameter interaction which set whitelistrelay to true
             # if whitelistforcerelay is true
             ["-whitelist=127.0.0.1", "-whitelistforcerelay"],
-            ["forcerelay", "relay", "noban", "mempool", "download"],
-            True)
+            ["forcerelay", "relay", "noban", "mempool", "download"])
 
         # Let's make sure permissions are merged correctly
         # For this, we need to use whitebind instead of bind
@@ -76,39 +65,28 @@ class P2PPermissionsTests(BitcoinTestFramework):
         self.checkpermission(
             ["-whitelist=noban@127.0.0.1"],
             # Check parameter interaction forcerelay should activate relay
-            ["noban", "bloomfilter", "forcerelay", "relay", "download"],
-            False)
+            ["noban", "bloomfilter", "forcerelay", "relay", "download"])
         self.replaceinconfig(1, "whitebind=bloomfilter,forcerelay@" + ip_port, "bind=127.0.0.1")
 
         self.checkpermission(
             # legacy whitelistrelay should be ignored
             ["-whitelist=noban,mempool@127.0.0.1", "-whitelistrelay"],
-            ["noban", "mempool", "download"],
-            False)
-
-        self.checkpermission(
-            # check without deprecatedrpc=whitelisted
-            ["-whitelist=noban,mempool@127.0.0.1", "-whitelistrelay"],
-            ["noban", "mempool", "download"],
-            None)
+            ["noban", "mempool", "download"])
 
         self.checkpermission(
             # legacy whitelistforcerelay should be ignored
             ["-whitelist=noban,mempool@127.0.0.1", "-whitelistforcerelay"],
-            ["noban", "mempool", "download"],
-            False)
+            ["noban", "mempool", "download"])
 
         self.checkpermission(
             # missing mempool permission to be considered legacy whitelisted
             ["-whitelist=noban@127.0.0.1"],
-            ["noban", "download"],
-            False)
+            ["noban", "download"])
 
         self.checkpermission(
             # all permission added
             ["-whitelist=all@127.0.0.1"],
-            ["forcerelay", "noban", "mempool", "bloomfilter", "relay", "download", "addr"],
-            False)
+            ["forcerelay", "noban", "mempool", "bloomfilter", "relay", "download", "addr"])
 
         self.stop_node(1)
         self.nodes[1].assert_start_raises_init_error(["-whitelist=oopsie@127.0.0.1"], "Invalid P2P permission", match=ErrorMatch.PARTIAL_REGEX)
@@ -169,19 +147,13 @@ class P2PPermissionsTests(BitcoinTestFramework):
             reject_reason='Not relaying non-mempool transaction {} from forcerelay peer=0'.format(txid)
         )
 
-    def checkpermission(self, args, expectedPermissions, whitelisted):
-        if whitelisted is not None:
-            args = [*args, '-deprecatedrpc=whitelisted']
+    def checkpermission(self, args, expectedPermissions):
         self.restart_node(1, args)
         self.connect_nodes(0, 1)
         peerinfo = self.nodes[1].getpeerinfo()[0]
-        if whitelisted is None:
-            assert 'whitelisted' not in peerinfo
-        else:
-            assert_equal(peerinfo['whitelisted'], whitelisted)
         assert_equal(len(expectedPermissions), len(peerinfo['permissions']))
         for p in expectedPermissions:
-            if not p in peerinfo['permissions']:
+            if p not in peerinfo['permissions']:
                 raise AssertionError("Expected permissions %r is not granted." % p)
 
     def replaceinconfig(self, nodeid, old, new):

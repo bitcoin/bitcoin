@@ -16,13 +16,7 @@ unsigned-integer-overflow:chain.cpp
 unsigned-integer-overflow:chain.h
 unsigned-integer-overflow:coded_stream.h
 unsigned-integer-overflow:core_write.cpp
-unsigned-integer-overflow:crypto/chacha20.cpp
-unsigned-integer-overflow:crypto/ctaes/ctaes.c
-unsigned-integer-overflow:crypto/poly1305.cpp
-unsigned-integer-overflow:crypto/ripemd160.cpp
-unsigned-integer-overflow:crypto/sha1.cpp
-unsigned-integer-overflow:crypto/sha256.cpp
-unsigned-integer-overflow:crypto/sha512.cpp
+unsigned-integer-overflow:crypto/*
 unsigned-integer-overflow:hash.cpp
 unsigned-integer-overflow:leveldb/db/log_reader.cc
 unsigned-integer-overflow:leveldb/util/bloom.cc
@@ -77,4 +71,6 @@ implicit-signed-integer-truncation:test/skiplist_tests.cpp
 implicit-signed-integer-truncation:torcontrol.cpp
 implicit-unsigned-integer-truncation:crypto/*
 implicit-unsigned-integer-truncation:leveldb/*
+# std::variant warning fixed in https://github.com/gcc-mirror/gcc/commit/074436cf8cdd2a9ce75cadd36deb8301f00e55b9
+implicit-unsigned-integer-truncation:std::__detail::__variant::_Variant_storage
 implicit-integer-sign-change:crc32c/*

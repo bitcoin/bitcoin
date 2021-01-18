@@ -50,6 +50,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         block.solve()
         node.submitblock(ToHex(block))
 
+        # Set correct m_best_block_time, which is used in ResendWalletTransactions
         node.syncwithvalidationinterfacequeue()
         now = int(time.time())
 

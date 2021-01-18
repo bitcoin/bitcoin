@@ -151,6 +151,19 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         assert_equal(rawTxSigned['errors'][1]['witness'], ["304402203609e17b84f6a7d30c80bfa610b5b4542f32a8a0d5447a12fb1366d7f01cc44a0220573a954c4518331561406f90300e8f3358f51928d43c212a8caed02de67eebee01", "025476c2e83188368da1ff3e292e7acafcdb3566bb0ad253f62fc70f07aeee6357"])
         assert not rawTxSigned['errors'][0]['witness']
 
+    def test_fully_signed_tx(self):
+        self.log.info("Test signing a fully signed transaction does nothing")
+        self.nodes[0].walletpassphrase("password", 9999)
+        self.nodes[0].generate(101)
+        rawtx = self.nodes[0].createrawtransaction([], [{self.nodes[0].getnewaddress(): 10}])
+        fundedtx = self.nodes[0].fundrawtransaction(rawtx)
+        signedtx = self.nodes[0].signrawtransactionwithwallet(fundedtx["hex"])
+        assert_equal(signedtx["complete"], True)
+        signedtx2 = self.nodes[0].signrawtransactionwithwallet(signedtx["hex"])
+        assert_equal(signedtx2["complete"], True)
+        assert_equal(signedtx["hex"], signedtx2["hex"])
+        self.nodes[0].walletlock()
+
     def witness_script_test(self):
         self.log.info("Test signing transaction to P2SH-P2WSH addresses without wallet")
         # Create a new P2SH-P2WSH 1-of-1 multisig address:
@@ -231,6 +244,7 @@ class SignRawTransactionsTest(BitcoinTestFramework):
         self.witness_script_test()
         self.OP_1NEGATE_test()
         self.test_with_lock_outputs()
+        self.test_fully_signed_tx()
 
 
 if __name__ == '__main__':

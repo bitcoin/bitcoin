@@ -59,7 +59,7 @@ static void SetupCliArgs(ArgsManager& argsman)
     argsman.AddArg("-datadir=<dir>", "Specify data directory", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-generate", strprintf("Generate blocks immediately, equivalent to RPC generatenewaddress followed by RPC generatetoaddress. Optional positional integer arguments are number of blocks to generate (default: %s) and maximum iterations to try (default: %s), equivalent to RPC generatetoaddress nblocks and maxtries arguments. Example: bitcoin-cli -generate 4 1000", DEFAULT_NBLOCKS, DEFAULT_MAX_TRIES), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-getinfo", "Get general information from the remote server. Note that unlike server-side RPC calls, the results of -getinfo is the result of multiple non-atomic requests. Some entries in the result may represent results from different states (e.g. wallet balance may be as of a different block from the chain state reported)", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-netinfo", "Get network peer connection information from the remote server. An optional integer argument from 0 to 4 can be passed for different peers listings (default: 0).", ArgsManager::ALLOW_INT, OptionsCategory::OPTIONS);
+    argsman.AddArg("-netinfo", "Get network peer connection information from the remote server. An optional integer argument from 0 to 4 can be passed for different peers listings (default: 0). Pass \"help\" for detailed help documentation.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 
     SetupChainParamsBaseOptions(argsman);
     argsman.AddArg("-named", strprintf("Pass named instead of positional arguments (default: %s)", DEFAULT_NAMED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -309,7 +309,8 @@ private:
         }
         return UNKNOWN_NETWORK;
     }
-    uint8_t m_details_level{0}; //!< Optional user-supplied arg to set dashboard details level
+    uint8_t m_details_level{0};      //!< Optional user-supplied arg to set dashboard details level
+    bool m_is_help_requested{false}; //!< Optional user-supplied arg to print help documentation
     bool DetailsRequested() const { return m_details_level > 0 && m_details_level < 5; }
     bool IsAddressSelected() const { return m_details_level == 2 || m_details_level == 4; }
     bool IsVersionSelected() const { return m_details_level == 3 || m_details_level == 4; }
@@ -349,6 +350,62 @@ private:
         const double milliseconds{round(1000 * seconds)};
         return milliseconds > 999999 ? "-" : ToString(milliseconds);
     }
+    const UniValue NetinfoHelp()
+    {
+        return std::string{
+            "-netinfo level|\"help\" \n\n"
+            "Returns a network peer connections dashboard with information from the remote server.\n"
+            "Under the hood, -netinfo fetches the data by calling getpeerinfo and getnetworkinfo.\n"
+            "An optional integer argument from 0 to 4 can be passed for different peers listings.\n"
+            "Pass \"help\" to see this detailed help documentation.\n"
+            "If more than one argument is passed, only the first one is read and parsed.\n"
+            "Suggestion: use with the Linux watch(1) command for a live dashboard; see example below.\n\n"
+            "Arguments:\n"
+            "1. level (integer 0-4, optional)  Specify the info level of the peers dashboard (default 0):\n"
+            "                                  0 - Connection counts and local addresses\n"
+            "                                  1 - Like 0 but with a peers listing (without address or version columns)\n"
+            "                                  2 - Like 1 but with an address column\n"
+            "                                  3 - Like 1 but with a version column\n"
+            "                                  4 - Like 1 but with both address and version columns\n"
+            "2. help (string \"help\", optional) Print this help documentation instead of the dashboard.\n\n"
+            "Result:\n\n"
+            "* The peers listing in levels 1-4 displays all of the peers sorted by direction and minimum ping time:\n\n"
+            "  Column   Description\n"
+            "  ------   -----------\n"
+            "  <->      Direction\n"
+            "           \"in\"  - inbound connections are those initiated by the peer\n"
+            "           \"out\" - outbound connections are those initiated by us\n"
+            "  type     Type of peer connection\n"
+            "           \"full\"   - full relay, the default\n"
+            "           \"block\"  - block relay; like full relay but does not relay transactions or addresses\n"
+            "  net      Network the peer connected through (\"ipv4\", \"ipv6\", \"onion\", \"i2p\", or \"cjdns\")\n"
+            "  mping    Minimum observed ping time, in milliseconds (ms)\n"
+            "  ping     Last observed ping time, in milliseconds (ms)\n"
+            "  send     Time since last message sent to the peer, in seconds\n"
+            "  recv     Time since last message received from the peer, in seconds\n"
+            "  txn      Time since last novel transaction received from the peer and accepted into our mempool, in minutes\n"
+            "  blk      Time since last novel block passing initial validity checks received from the peer, in minutes\n"
+            "  age      Duration of connection to the peer, in minutes\n"
+            "  asmap    Mapped AS (Autonomous System) number in the BGP route to the peer, used for diversifying\n"
+            "           peer selection (only displayed if the -asmap config option is set)\n"
+            "  id       Peer index, in increasing order of peer connections since node startup\n"
+            "  address  IP address and port of the peer\n"
+            "  version  Peer version and subversion concatenated, e.g. \"70016/Satoshi:21.0.0/\"\n\n"
+            "* The connection counts table displays the number of peers by direction, network, and the totals\n"
+            "  for each, as well as a column for block relay peers.\n\n"
+            "* The local addresses table lists each local address broadcast by the node, the port, and the score.\n\n"
+            "Examples:\n\n"
+            "Connection counts and local addresses only\n"
+            "> bitcoin-cli -netinfo\n\n"
+            "Compact peers listing\n"
+            "> bitcoin-cli -netinfo 1\n\n"
+            "Full dashboard\n"
+            "> bitcoin-cli -netinfo 4\n\n"
+            "Full live dashboard, adjust --interval or --no-title as needed (Linux)\n"
+            "> watch --interval 1 --no-title bitcoin-cli -netinfo 4\n\n"
+            "See this help\n"
+            "> bitcoin-cli -netinfo help\n"};
+    }
     const int64_t m_time_now{GetSystemTimeInSeconds()};
 
 public:
@@ -361,6 +418,10 @@ public:
             uint8_t n{0};
             if (ParseUInt8(args.at(0), &n)) {
                 m_details_level = n;
+            } else if (args.at(0) == "help") {
+                m_is_help_requested = true;
+            } else {
+                throw std::runtime_error(strprintf("invalid -netinfo argument: %s", args.at(0)));
             }
         }
         UniValue result(UniValue::VARR);
@@ -371,6 +432,9 @@ public:
 
     UniValue ProcessReply(const UniValue& batch_in) override
     {
+        if (m_is_help_requested) {
+            return JSONRPCReplyObj(NetinfoHelp(), NullUniValue, 1);
+        }
         const std::vector<UniValue> batch{JSONRPCProcessBatchReply(batch_in)};
         if (!batch[ID_PEERINFO]["error"].isNull()) return batch[ID_PEERINFO];
         if (!batch[ID_NETWORKINFO]["error"].isNull()) return batch[ID_NETWORKINFO];
@@ -424,7 +488,7 @@ public:
         // Report detailed peer connections list sorted by direction and minimum ping time.
         if (DetailsRequested() && !m_peers.empty()) {
             std::sort(m_peers.begin(), m_peers.end());
-            result += strprintf("Peer connections sorted by direction and min ping\n<-> relay   net  mping   ping send recv  txn  blk %*s ", m_max_age_length, "age");
+            result += strprintf("<-> relay   net  mping   ping send recv  txn  blk %*s ", m_max_age_length, "age");
             if (m_is_asmap_on) result += " asmap ";
             result += strprintf("%*s %-*s%s\n", m_max_id_length, "id", IsAddressSelected() ? m_max_addr_length : 0, IsAddressSelected() ? "address" : "", IsVersionSelected() ? "version" : "");
             for (const Peer& peer : m_peers) {

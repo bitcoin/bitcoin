@@ -5,6 +5,16 @@ It is possible to run Bitcoin Core as a Tor onion service, and connect to such s
 The following directions assume you have a Tor proxy running on port 9050. Many distributions default to having a SOCKS proxy listening on port 9050, but others may not. In particular, the Tor Browser Bundle defaults to listening on port 9150. See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.html.en#TBBSocksPort) for how to properly
 configure Tor.
 
+## How to see information about your Tor configuration via Bitcoin Core
+
+There are several ways to see your local onion address in Bitcoin Core:
+- in the debug log (grep for "tor:" or "AddLocal")
+- in the output of RPC `getnetworkinfo` in the "localaddresses" section
+- in the output of the CLI `-netinfo` peer connections dashboard
+
+You may set the `-debug=tor` config logging option to have additional
+information in the debug log about your Tor configuration.
+
 
 ## 1. Run Bitcoin Core behind a Tor proxy
 
@@ -37,7 +47,7 @@ In a typical situation, this suffices to run behind a Tor proxy:
 	./bitcoind -proxy=127.0.0.1:9050
 
 
-## 2. Run a Bitcoin Core hidden server
+## 2. Manually create a Bitcoin Core onion service
 
 If you configure your Tor system accordingly, it is possible to make your node also
 reachable from the Tor network. Add these lines to your /etc/tor/torrc (or equivalent
@@ -46,19 +56,23 @@ versions of Tor see [Section 3](#3-automatically-listen-on-tor).*
 
 	HiddenServiceDir /var/lib/tor/bitcoin-service/
 	HiddenServicePort 8333 127.0.0.1:8334
-	HiddenServicePort 18333 127.0.0.1:18334
 
 The directory can be different of course, but virtual port numbers should be equal to
 your bitcoind's P2P listen port (8333 by default), and target addresses and ports
 should be equal to binding address and port for inbound Tor connections (127.0.0.1:8334 by default).
 
-	-externalip=X   You can tell bitcoin about its publicly reachable address using
-	                this option, and this can be a .onion address. Given the above
-	                configuration, you can find your .onion address in
+	-externalip=X   You can tell bitcoin about its publicly reachable addresses using
+	                this option, and this can be an onion address. Given the above
+	                configuration, you can find your onion address in
 	                /var/lib/tor/bitcoin-service/hostname. For connections
 	                coming from unroutable addresses (such as 127.0.0.1, where the
-	                Tor proxy typically runs), .onion addresses are given
+	                Tor proxy typically runs), onion addresses are given
 	                preference for your node to advertise itself with.
+
+	                You can set multiple local addresses with -externalip. The
+	                one that will be rumoured to a particular peer is the most
+	                compatible one and also using heuristics, e.g. the address
+	                with the most incoming connections, etc.
 
 	-listen         You'll need to enable listening for incoming connections, as this
 	                is off by default behind a proxy.
@@ -72,7 +86,7 @@ should be equal to binding address and port for inbound Tor connections (127.0.0
 
 In a typical situation, where you're only reachable via Tor, this should suffice:
 
-	./bitcoind -proxy=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -listen
+	./bitcoind -proxy=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -listen
 
 (obviously, replace the .onion address with your own). It should be noted that you still
 listen on all devices and another node could establish a clearnet connection, when knowing
@@ -85,14 +99,14 @@ as well, use `discover` instead:
 
 	./bitcoind ... -discover
 
-and open port 8333 on your firewall (or use -upnp).
+and open port 8333 on your firewall (or use port mapping, i.e., `-upnp` or `-natpmp`).
 
 If you only want to use Tor to reach .onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:
 
-	./bitcoind -onion=127.0.0.1:9050 -externalip=57qr3yd1nyntf5k.onion -discover
+	./bitcoind -onion=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -discover
 
-## 3. Automatically listen on Tor
+## 3. Automatically create a Bitcoin Core onion service
 
 Starting with Tor version 0.2.7.1 it is possible, through Tor's control socket
 API, to create and destroy 'ephemeral' onion services programmatically.
@@ -130,6 +144,6 @@ in the tor configuration file. The hashed password can be obtained with the comm
 
 - Do not add anything but Bitcoin Core ports to the onion service created in section 2.
   If you run a web service too, create a new onion service for that.
-  Otherwise it is trivial to link them, which may reduce privacy. Hidden
+  Otherwise it is trivial to link them, which may reduce privacy. Onion
   services created automatically (as in section 3) always have only one port
   open.

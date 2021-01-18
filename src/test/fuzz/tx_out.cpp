@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +10,7 @@
 #include <test/fuzz/fuzz.h>
 #include <version.h>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(tx_out)
 {
     CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
     CTxOut tx_out;
