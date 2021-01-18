@@ -167,10 +167,28 @@ class CService : public CNetAddr
         CService(const struct in6_addr& ipv6Addr, unsigned short port);
         explicit CService(const struct sockaddr_in6& addr);
 
-        SERIALIZE_METHODS(CService, obj)
+        /**
+         * Serialize to a stream.
+         */
+        template <typename Stream>
+        void Serialize(Stream& s) const
         {
-            READWRITEAS(CNetAddr, obj);
-            READWRITE(Using<BigEndianFormatter<2>>(obj.port));
+            s << ip;
+            s << WrapBigEndian(port);
+        }
+
+        /**
+         * Unserialize from a stream.
+         */
+        template <typename Stream>
+        void Unserialize(Stream& s)
+        {
+            unsigned char ip_temp[sizeof(ip)];
+            s >> ip_temp;
+            // Use SetLegacyIPv6() so that m_net is set correctly. For example
+            // ::FFFF:0102:0304 should be set as m_net=NET_IPV4 (1.2.3.4).
+            SetLegacyIPv6(ip_temp);
+            s >> WrapBigEndian(port);
         }
 };
 
