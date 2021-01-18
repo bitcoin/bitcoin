@@ -6,6 +6,7 @@
 
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
+#include <qt/platformstyle.h>
 
 #include <interfaces/node.h>
 
@@ -14,9 +15,10 @@
 #include <QList>
 #include <QTimer>
 
-PeerTableModel::PeerTableModel(interfaces::Node& node, QObject* parent) :
+PeerTableModel::PeerTableModel(interfaces::Node& node, const PlatformStyle& platform_style, QObject* parent) :
     QAbstractTableModel(parent),
     m_node(node),
+    m_platform_style(platform_style),
     timer(nullptr)
 {
     // set up timer for auto refresh

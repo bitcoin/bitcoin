@@ -29,7 +29,7 @@
 static int64_t nLastHeaderTipUpdateNotification = 0;
 static int64_t nLastBlockTipUpdateNotification = 0;
 
-ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QObject *parent) :
+ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, const PlatformStyle& platform_style, QObject *parent) :
     QObject(parent),
     m_node(node),
     optionsModel(_optionsModel),
@@ -40,7 +40,7 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     cachedBestHeaderHeight = -1;
     cachedBestHeaderTime = -1;
 
-    peerTableModel = new PeerTableModel(m_node, this);
+    peerTableModel = new PeerTableModel(m_node, platform_style, this);
     m_peer_table_sort_proxy = new PeerTableSortProxy(this);
     m_peer_table_sort_proxy->setSourceModel(peerTableModel);
 
