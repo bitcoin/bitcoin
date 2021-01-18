@@ -39,31 +39,31 @@ int64_t GetAdjustedTime()
 
 #define BITCOIN_TIMEDATA_MAX_SAMPLES 200
 
-static std::set<CNetAddr> setKnown;
-static CMedianFilter<int64_t> vTimeOffsets(BITCOIN_TIMEDATA_MAX_SAMPLES, 0);
-static bool fDone;
+static std::set<CNetAddr> g_sources;
+static CMedianFilter<int64_t> g_time_offsets{BITCOIN_TIMEDATA_MAX_SAMPLES, 0};
+static bool g_warning_emitted;
 
 void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
 {
     LOCK(g_timeoffset_mutex);
     // Ignore duplicates
-    if (setKnown.size() == BITCOIN_TIMEDATA_MAX_SAMPLES)
+    if (g_sources.size() == BITCOIN_TIMEDATA_MAX_SAMPLES)
         return;
-    if (!setKnown.insert(ip).second)
+    if (!g_sources.insert(ip).second)
         return;
 
     // Add data
-    vTimeOffsets.input(nOffsetSample);
-    LogPrint(BCLog::NET, "added time data, samples %d, offset %+d (%+d minutes)\n", vTimeOffsets.size(), nOffsetSample, nOffsetSample / 60);
+    g_time_offsets.input(nOffsetSample);
+    LogPrint(BCLog::NET, "added time data, samples %d, offset %+d (%+d minutes)\n", g_time_offsets.size(), nOffsetSample, nOffsetSample / 60);
 
     // There is a known issue here (see issue #4521):
     //
-    // - The structure vTimeOffsets contains up to 200 elements, after which
+    // - The structure g_time_offsets contains up to 200 elements, after which
     // any new element added to it will not increase its size, replacing the
     // oldest element.
     //
     // - The condition to update nTimeOffset includes checking whether the
-    // number of elements in vTimeOffsets is odd, which will never happen after
+    // number of elements in g_time_offsets is odd, which will never happen after
     // there are 200 elements.
     //
     // But in this case the 'bug' is protective against some attacks, and may
@@ -73,9 +73,9 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
     // So we should hold off on fixing this and clean it up as part of
     // a timing cleanup that strengthens it in a number of other ways.
     //
-    if (vTimeOffsets.size() >= 5 && vTimeOffsets.size() % 2 == 1) {
-        int64_t nMedian = vTimeOffsets.median();
-        std::vector<int64_t> vSorted = vTimeOffsets.sorted();
+    if (g_time_offsets.size() >= 5 && g_time_offsets.size() % 2 == 1) {
+        int64_t nMedian = g_time_offsets.median();
+        std::vector<int64_t> vSorted = g_time_offsets.sorted();
         // Only let other nodes change our time by so much
         int64_t max_adjustment = std::max<int64_t>(0, gArgs.GetIntArg("-maxtimeadjustment", DEFAULT_MAX_TIME_ADJUSTMENT));
         if (nMedian >= -max_adjustment && nMedian <= max_adjustment) {
@@ -83,7 +83,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
         } else {
             nTimeOffset = 0;
 
-            if (!fDone) {
+            if (!g_warning_emitted) {
                 // If nobody has a time different than ours but within 5 minutes of ours, give a warning
                 bool fMatch = false;
                 for (const int64_t nOffset : vSorted) {
@@ -91,7 +91,7 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
                 }
 
                 if (!fMatch) {
-                    fDone = true;
+                    g_warning_emitted = true;
                     bilingual_str strMessage = strprintf(_("Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly."), PACKAGE_NAME);
                     SetMiscWarning(strMessage);
                     uiInterface.ThreadSafeMessageBox(strMessage, "", CClientUIInterface::MSG_WARNING);
@@ -114,7 +114,7 @@ void TestOnlyResetTimeData()
 {
     LOCK(g_timeoffset_mutex);
     nTimeOffset = 0;
-    setKnown.clear();
-    vTimeOffsets = CMedianFilter<int64_t>(BITCOIN_TIMEDATA_MAX_SAMPLES, 0);
-    fDone = false;
+    g_sources.clear();
+    g_time_offsets = CMedianFilter<int64_t>{BITCOIN_TIMEDATA_MAX_SAMPLES, 0};
+    g_warning_emitted = false;
 }
