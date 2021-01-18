@@ -134,7 +134,10 @@ uint256 PartiallySignedTransaction::GetUniqueID() const
 
 bool PartiallySignedTransaction::AddInput(PSBTInput& psbtin)
 {
-    if (std::find_if(inputs.begin(), inputs.end(),
+    // Check required fields are present and this input is not a duplicate
+    if (psbtin.prev_txid.IsNull() ||
+        psbtin.prev_out == std::nullopt ||
+        std::find_if(inputs.begin(), inputs.end(),
         [psbtin](const PSBTInput& psbt) {
             return psbt.prev_txid == psbtin.prev_txid && psbt.prev_out == psbtin.prev_out;
         }
@@ -156,12 +159,71 @@ bool PartiallySignedTransaction::AddInput(PSBTInput& psbtin)
         return true;
     }
 
-    // TODO: Do PSBTv2
-    return false;
+    // No global tx, must be PSBTv2.
+    // Check inputs modifiable flag
+    if (m_tx_modifiable == std::nullopt || !m_tx_modifiable->test(0)) {
+        return false;
+    }
+
+    // Determine if we need to iterate the inputs.
+    // For now, we only do this if the new input has a required time lock.
+    // The BIP states that we should also do this if m_tx_modifiable's bit 2 is set
+    // (Has SIGHASH_SINGLE flag) but since we are only adding inputs at the end of the vector,
+    // we don't care about that.
+    bool iterate_inputs = psbtin.time_locktime != std::nullopt || psbtin.height_locktime != std::nullopt;
+    if (iterate_inputs) {
+        uint32_t old_timelock;
+        if (!ComputeTimeLock(old_timelock)) {
+            return false;
+        }
+
+        std::optional<uint32_t> time_lock = psbtin.time_locktime;
+        std::optional<uint32_t> height_lock = psbtin.height_locktime;
+        bool has_sigs = false;
+        for (const PSBTInput& input : inputs) {
+            if (input.time_locktime != std::nullopt && input.height_locktime == std::nullopt) {
+                height_lock.reset(); // Transaction can no longer have a height locktime
+                if (time_lock == std::nullopt) {
+                    return false;
+                }
+            } else if (input.time_locktime == std::nullopt && input.height_locktime != std::nullopt) {
+                time_lock.reset(); // Transaction can no longer have a time locktime
+                if (height_lock == std::nullopt) {
+                    return false;
+                }
+            }
+            if (input.time_locktime && time_lock != std::nullopt) {
+                time_lock = std::max(time_lock, input.time_locktime);
+            }
+            if (input.height_locktime && height_lock != std::nullopt) {
+                height_lock = std::max(height_lock, input.height_locktime);
+            }
+            if (!input.partial_sigs.empty()) {
+                has_sigs = true;
+            }
+        }
+        uint32_t new_timelock = fallback_locktime.value_or(0);
+        if (height_lock != std::nullopt && *height_lock > 0) {
+            new_timelock = *height_lock;
+        } else if (time_lock != std::nullopt && *time_lock > 0) {
+            new_timelock = *time_lock;
+        }
+        if (has_sigs && old_timelock != new_timelock) {
+            return false;
+        }
+    }
+
+    // Add the input to the end
+    inputs.push_back(psbtin);
+    return true;
 }
 
 bool PartiallySignedTransaction::AddOutput(const PSBTOutput& psbtout)
 {
+    if (psbtout.amount == std::nullopt || !psbtout.script.has_value()) {
+        return false;
+    }
+
     if (tx != std::nullopt) {
         // This is a v0 psbt, do the v0 AddOutput
         CTxOut txout(*psbtout.amount, *psbtout.script);
@@ -170,8 +232,14 @@ bool PartiallySignedTransaction::AddOutput(const PSBTOutput& psbtout)
         return true;
     }
 
-    // TOOD: Do PSBTv2
-    return false;
+    // No global tx, must be PSBTv2
+    // Check outputs are modifiable
+    if (m_tx_modifiable == std::nullopt || !m_tx_modifiable->test(1)) {
+        return false;
+    }
+    outputs.push_back(psbtout);
+
+    return true;
 }
 
 bool PSBTInput::GetUTXO(CTxOut& utxo) const
