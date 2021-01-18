@@ -313,9 +313,9 @@ class SendallTest(BitcoinTestFramework):
         decoded = self.nodes[0].decodepsbt(psbt)
         assert_equal(len(decoded["inputs"]), 1)
         assert_equal(len(decoded["outputs"]), 1)
-        assert_equal(decoded["tx"]["vin"][0]["txid"], utxo["txid"])
-        assert_equal(decoded["tx"]["vin"][0]["vout"], utxo["vout"])
-        assert_equal(decoded["tx"]["vout"][0]["scriptPubKey"]["address"], self.remainder_target)
+        assert_equal(decoded["inputs"][0]["previous_txid"], utxo["txid"])
+        assert_equal(decoded["inputs"][0]["previous_vout"], utxo["vout"])
+        assert_equal(decoded["outputs"][0]["script"]["address"], self.remainder_target)
 
     @cleanup
     def sendall_with_minconf(self):
