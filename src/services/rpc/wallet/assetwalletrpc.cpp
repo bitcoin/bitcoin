@@ -1067,7 +1067,7 @@ static RPCHelpMan assetsendmany()
     LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
     // gather & validate inputs
-    const uint32_t &nAsset = params[0].get_uint64();
+    const uint64_t &nAsset = params[0].get_uint64();
     const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
     UniValue valueTo = params[1];
     if (!valueTo.isArray())
@@ -1918,7 +1918,7 @@ static RPCHelpMan listunspentasset()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 
-    uint32_t nAsset = request.params[0].get_uint();
+    uint64_t nAsset = request.params[0].get_uint64();
     int nMinDepth = 1;
     if (!request.params[1].isNull()) {
         nMinDepth = request.params[1].get_int();

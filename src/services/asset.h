@@ -34,5 +34,5 @@ bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const
 UniValue AssetPublicDataToJson(const std::string &strPubData);
 uint32_t GetBaseAssetID(const uint64_t &nAsset);
 uint32_t GetNFTID(const uint64_t &nAsset);
-uint32_t CreateAssetID(const uint32_t &NFTID, const uint32_t &nBaseAsset);
+uint64_t CreateAssetID(const uint32_t &NFTID, const uint32_t &nBaseAsset);
 #endif // SYSCOIN_SERVICES_ASSET_H

@@ -2964,7 +2964,7 @@ RPCHelpMan listunspent()
     CAmount nMaximumAmountAsset = MAX_ASSET;
     CAmount nMinimumSumAmountAsset = MAX_ASSET;
     uint64_t nMaximumCount = 0;
-    uint32_t nAsset = 0;
+    uint64_t nAsset = 0;
 
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();
@@ -2996,7 +2996,7 @@ RPCHelpMan listunspent()
             nMaximumCount = options["maximumCount"].get_int64();
         // SYSCOIN
         if (options.exists("assetGuid")) {
-            nAsset = options["assetGuid"].get_uint();
+            nAsset = options["assetGuid"].get_uint64();
         }
 
         if (options.exists("minimumAmountAsset"))

@@ -61,12 +61,12 @@ uint32_t GetBaseAssetID(const uint64_t &nAsset) {
 uint32_t GetNFTID(const uint64_t &nAsset) {
     return nAsset >> 32;
 }
-uint32_t CreateAssetID(const uint32_t &NFTID, const uint32_t &nBaseAsset) {
+uint64_t CreateAssetID(const uint32_t &NFTID, const uint32_t &nBaseAsset) {
     return (((uint64_t) NFTID) << 32) | ((uint64_t) nBaseAsset);
 }
-bool GetAsset(const uint32_t &nAsset,
+bool GetAsset(const uint32_t &nBaseAsset,
         CAsset& txPos) {
-    if (!passetdb || !passetdb->ReadAsset(nAsset, txPos))
+    if (!passetdb || !passetdb->ReadAsset(nBaseAsset, txPos))
         return false;
     return true;
 }
@@ -93,7 +93,7 @@ bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const
             if(itOut.first != nBaseAsset && nBaseAssetInternal == nBaseAsset) {
                 // add NFT asset to input so mapAssetIn == mapAssetOut capturing any NFT's belonging to this base asset
                 // the rest of the checks happen in checkassetinputs
-                auto itIn = mapAssetIn.try_emplace(nBaseAsset, itOut.second.bZeroVal, itOut.second.nAmount);
+                auto itIn = mapAssetIn.try_emplace(itOut.first, itOut.second.bZeroVal, itOut.second.nAmount);
                 if (!itIn.second) {
                     itIn.first->second = AssetMapOutput(itOut.second.bZeroVal, itOut.second.nAmount);
                 }   
