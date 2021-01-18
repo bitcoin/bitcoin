@@ -686,12 +686,9 @@ void CInstantSendManager::ProcessMessageInstantSendLock(CNode* pfrom, const llmq
         EraseObjectRequest(pfrom->GetId(), CInv(MSG_ISLOCK, hash));
     }
 
-    bool ban = false;
-    if (!PreVerifyInstantSendLock(islock, ban)) {
-        if (ban) {
-            LOCK(cs_main);
-            Misbehaving(pfrom->GetId(), 100);
-        }
+    if (!PreVerifyInstantSendLock(islock)) {
+        LOCK(cs_main);
+        Misbehaving(pfrom->GetId(), 100);
         return;
     }
 
@@ -709,19 +706,21 @@ void CInstantSendManager::ProcessMessageInstantSendLock(CNode* pfrom, const llmq
     pendingInstantSendLocks.emplace(hash, std::make_pair(pfrom->GetId(), islock));
 }
 
-bool CInstantSendManager::PreVerifyInstantSendLock(const llmq::CInstantSendLock& islock, bool& retBan)
+/**
+ * Handles trivial ISLock verification
+ * @param islock The islock message being undergoing verification
+ * @return returns false if verification failed, otherwise true
+ */
+bool CInstantSendManager::PreVerifyInstantSendLock(const llmq::CInstantSendLock& islock)
 {
-    retBan = false;
-
     if (islock.txid.IsNull() || islock.inputs.empty()) {
-        retBan = true;
         return false;
     }
 
+    // Check that each input is unique
     std::set<COutPoint> dups;
     for (auto& o : islock.inputs) {
         if (!dups.emplace(o).second) {
-            retBan = true;
             return false;
         }
     }
