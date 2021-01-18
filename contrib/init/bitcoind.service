@@ -11,7 +11,11 @@
 
 [Unit]
 Description=Bitcoin daemon
-After=network.target
+Documentation=https://github.com/bitcoin/bitcoin/blob/master/doc/init.md
+
+# https://www.freedesktop.org/wiki/Software/systemd/NetworkTarget/
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 ExecStart=/usr/bin/bitcoind -daemon \
