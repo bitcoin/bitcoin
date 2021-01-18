@@ -175,6 +175,7 @@ def check_host(args) -> int:
         './depends/config.guess').decode())
     if args.download_binary:
         platforms = {
+            'aarch64-*-linux*': 'aarch64-linux-gnu',
             'x86_64-*-linux*': 'x86_64-linux-gnu',
             'x86_64-apple-darwin*': 'osx64',
         }
