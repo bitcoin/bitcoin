@@ -39,18 +39,20 @@ int64_t GetAdjustedTime()
 
 #define BITCOIN_TIMEDATA_MAX_SAMPLES 200
 
+static std::set<CNetAddr> setKnown;
+static CMedianFilter<int64_t> vTimeOffsets(BITCOIN_TIMEDATA_MAX_SAMPLES, 0);
+static bool fDone;
+
 void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
 {
     LOCK(g_timeoffset_mutex);
     // Ignore duplicates
-    static std::set<CNetAddr> setKnown;
     if (setKnown.size() == BITCOIN_TIMEDATA_MAX_SAMPLES)
         return;
     if (!setKnown.insert(ip).second)
         return;
 
     // Add data
-    static CMedianFilter<int64_t> vTimeOffsets(BITCOIN_TIMEDATA_MAX_SAMPLES, 0);
     vTimeOffsets.input(nOffsetSample);
     LogPrint(BCLog::NET, "added time data, samples %d, offset %+d (%+d minutes)\n", vTimeOffsets.size(), nOffsetSample, nOffsetSample / 60);
 
@@ -81,7 +83,6 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
         } else {
             nTimeOffset = 0;
 
-            static bool fDone;
             if (!fDone) {
                 // If nobody has a time different than ours but within 5 minutes of ours, give a warning
                 bool fMatch = false;
@@ -107,4 +108,13 @@ void AddTimeData(const CNetAddr& ip, int64_t nOffsetSample)
             LogPrint(BCLog::NET, "%s\n", log_message);
         }
     }
+}
+
+void TestOnlyResetTimeData()
+{
+    LOCK(g_timeoffset_mutex);
+    nTimeOffset = 0;
+    setKnown.clear();
+    vTimeOffsets = CMedianFilter<int64_t>(BITCOIN_TIMEDATA_MAX_SAMPLES, 0);
+    fDone = false;
 }
