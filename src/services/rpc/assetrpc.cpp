@@ -46,7 +46,7 @@ bool BuildAssetJson(const CAsset& asset, const uint32_t& nBaseAsset, UniValue& o
 }
 bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, const UniValue& oOptions, UniValue& oRes) {
 	std::string strTxid = "";
-    uint32_t nAsset = 0;
+    uint32_t nBaseAsset = 0;
 	if (!oOptions.isNull()) {
 		const UniValue &txid = find_value(oOptions, "txid");
 		if (txid.isStr()) {
@@ -54,7 +54,7 @@ bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, c
 		}
 		const UniValue &assetObj = find_value(oOptions, "asset_guid");
 		if (assetObj.isNum()) {
-			nAsset = assetObj.get_uint();
+			nBaseAsset = assetObj.get_uint();
 		}
 	}
 	std::unique_ptr<CDBIterator> pcursor(passetdb.NewIterator());
@@ -65,7 +65,7 @@ bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, c
 	while (pcursor->Valid()) {
 		try {
             key = 0;
-			if (pcursor->GetKey(key) && key != 0 && (nAsset == 0 || nAsset != key)) {
+			if (pcursor->GetKey(key) && key != 0 && (nBaseAsset == 0 || nBaseAsset != key)) {
 				pcursor->GetValue(txPos);
                 if(txPos.IsNull()){
                     pcursor->Next();

@@ -27,7 +27,7 @@
 #include <rpc/rawtransaction_util.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
-uint32_t nCustomAssetGuid = 0;
+uint64_t nCustomAssetGuid = 0;
 void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient) {
     CRecipient recp = { scriptPubKey, 0, false };
     recipient = recp;
@@ -453,7 +453,7 @@ RPCHelpMan assetnew()
     },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    uint32_t nCustomGuid = nCustomAssetGuid;
+    uint64_t nCustomGuid = nCustomAssetGuid;
     if(nCustomAssetGuid > 0)
         nCustomAssetGuid = 0;
     const UniValue &params = request.params;
@@ -602,9 +602,9 @@ RPCHelpMan assetnew()
     }
     data.clear();
     // generate deterministic guid based on input txid
-    const uint32_t &nBaseAsset = nCustomGuid != 0? nCustomGuid: GenerateSyscoinGuid(mtx.vin[0].prevout);
+    const uint64_t &nAsset = nCustomGuid != 0? nCustomGuid: (uint64_t)GenerateSyscoinGuid(mtx.vin[0].prevout);
     newAsset.voutAssets.clear();
-    newAsset.voutAssets.emplace_back(CAssetOut((uint64_t)nBaseAsset, outVec));
+    newAsset.voutAssets.emplace_back(CAssetOut(nAsset, outVec));
     newAsset.SerializeData(data);
     scriptData.clear();
     scriptData << OP_RETURN << data;
@@ -657,7 +657,7 @@ RPCHelpMan assetnew()
     }
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
-    res.__pushKV("asset_guid", nBaseAsset);
+    res.__pushKV("asset_guid", nAsset);
     return res;
 },
     };
@@ -712,7 +712,7 @@ static RPCHelpMan assetnewtest()
 {
     const UniValue &params = request.params;
     UniValue paramsFund(UniValue::VARR);
-    nCustomAssetGuid = params[0].get_uint();
+    nCustomAssetGuid = params[0].get_uint64();
     for(int i = 1;i<=10;i++)
         paramsFund.push_back(params[i]);
     JSONRPCRequest assetNewRequest(request.context);
@@ -1249,7 +1249,7 @@ static RPCHelpMan assetallocationsendmany()
     CAssetAllocation theAssetAllocation;
     CMutableTransaction mtx;
 	UniValue receivers = valueTo.get_array();
-    std::map<uint32_t, uint64_t> mapAssetTotals;
+    std::map<uint64_t, uint64_t> mapAssetTotals;
     std::vector<CAssetOutValue> vecOut;
     uint8_t bOverideRBF = 0;
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
