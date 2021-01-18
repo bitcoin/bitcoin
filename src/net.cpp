@@ -4268,7 +4268,11 @@ void CConnman::UnregisterEvents(CNode *pnode)
     }
 #endif
 }
-void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Span<const unsigned char>& data, bool is_incoming)
+
+void CaptureMessageToFile(const CAddress& addr,
+                          const std::string& msg_type,
+                          Span<const unsigned char> data,
+                          bool is_incoming)
 {
     // Note: This function captures the message at the time of processing,
     // not at socket receive/send time.
@@ -4295,3 +4299,9 @@ void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Spa
     ser_writedata32(f, size);
     f.write(AsBytes(data));
 }
+
+std::function<void(const CAddress& addr,
+                   const std::string& msg_type,
+                   Span<const unsigned char> data,
+                   bool is_incoming)>
+    CaptureMessage = CaptureMessageToFile;

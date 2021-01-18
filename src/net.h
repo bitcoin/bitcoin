@@ -36,6 +36,7 @@
 #include <condition_variable>
 #include <cstdint>
 #include <deque>
+#include <functional>
 #include <map>
 #include <memory>
 #include <thread>
@@ -1528,7 +1529,17 @@ private:
 std::chrono::microseconds PoissonNextSend(std::chrono::microseconds now, std::chrono::seconds average_interval);
 
 /** Dump binary message to file, with timestamp */
-void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Span<const unsigned char>& data, bool is_incoming);
+void CaptureMessageToFile(const CAddress& addr,
+                          const std::string& msg_type,
+                          Span<const unsigned char> data,
+                          bool is_incoming);
+
+/** Defaults to `CaptureMessageToFile()`, but can be overridden by unit tests. */
+extern std::function<void(const CAddress& addr,
+                          const std::string& msg_type,
+                          Span<const unsigned char> data,
+                          bool is_incoming)>
+    CaptureMessage;
 
 struct NodeEvictionCandidate
 {
