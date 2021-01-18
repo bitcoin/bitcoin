@@ -21,6 +21,7 @@ class AssetNFTTest(SyscoinTestFramework):
         self.basic_assetnft()
         self.basic_overflowassetnft()
         self.basic_multiassetnft()
+        self.basic_zerovalassetnft()
 
     def GetBaseAssetID(self, nAsset):
         return (nAsset & 0xFFFFFFFF)
@@ -106,6 +107,14 @@ class AssetNFTTest(SyscoinTestFramework):
         assert_equal(len(out), 1)
         assert_equal(out[0]['asset_guid'], nftGuidUser1)
         assert_equal(out[0]['asset_amount'], decimal.Decimal('0.00000001'))
-        
+
+    def basic_zerovalassetnft(self):
+        asset = self.nodes[0].assetnew('1', 'NFT', 'asset nft description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
+        nftID = 0xFFFFFFFF
+        self.sync_mempools()
+        self.nodes[1].generate(3)
+        self.sync_blocks()
+        assert_raises_rpc_error(-26, 'asset-nft-output-zeroval', self.nodes[0].assetsend, asset, self.nodes[1].getnewaddress(), 0, nftID)
+
 if __name__ == '__main__':
     AssetNFTTest().main()
