@@ -313,7 +313,7 @@ std::vector<Consensus::LLMQType> CLLMQUtils::GetEnabledQuorumTypes(const CBlockI
     return ret;
 }
 
-Consensus::LLMQParams CLLMQUtils::GetLLMQParams(Consensus::LLMQType llmqType)
+const Consensus::LLMQParams& GetLLMQParams(Consensus::LLMQType llmqType)
 {
     return Params().GetConsensus().llmqs.at(llmqType);
 }
