@@ -85,6 +85,7 @@ Now, you can either build from self-compiled [depends](/depends/README.md) or in
     sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev
 
 BerkeleyDB is required for the wallet.
+To build, follow this [steps](https://github.com/bitcoin/bitcoin/blob/master/doc/build-openbsd.md#building-berkeleydb).
 
 Ubuntu and Debian have their own `libdb-dev` and `libdb++-dev` packages, but these will install
 BerkeleyDB 5.1 or later. This will break binary wallet compatibility with the distributed executables, which
