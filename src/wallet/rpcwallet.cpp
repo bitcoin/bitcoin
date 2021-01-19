@@ -3503,10 +3503,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     CWallet* const pwallet = wallet.get();
 
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !want_psbt) {
-        if (!pwallet->chain().rpcEnableDeprecated("bumpfee")) {
-            throw JSONRPCError(RPC_METHOD_DEPRECATED, "Using bumpfee with wallets that have private keys disabled is deprecated. Use psbtbumpfee instead or restart syscoind with -deprecatedrpc=bumpfee. This functionality will be removed in next version");
-        }
-        want_psbt = true;
+        throw JSONRPCError(RPC_WALLET_ERROR, "bumpfee is not available with wallets that have private keys disabled. Use psbtbumpfee instead.");
     }
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VOBJ});

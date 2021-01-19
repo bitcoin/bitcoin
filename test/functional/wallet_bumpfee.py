@@ -425,6 +425,9 @@ def test_watchonly_psbt(self, peer_node, rbf_node, dest_address):
     original_txid = watcher.sendrawtransaction(psbt_final["hex"])
     assert_equal(len(watcher.decodepsbt(psbt)["tx"]["vin"]), 1)
 
+    # bumpfee can't be used on watchonly wallets
+    assert_raises_rpc_error(-4, "bumpfee is not available with wallets that have private keys disabled. Use psbtbumpfee instead.", watcher.bumpfee, original_txid)
+
     # Bump fee, obnoxiously high to add additional watchonly input
     bumped_psbt = watcher.psbtbumpfee(original_txid, {"fee_rate": HIGH})
     assert_greater_than(len(watcher.decodepsbt(bumped_psbt['psbt'])["tx"]["vin"]), 1)
