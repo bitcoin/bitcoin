@@ -4444,11 +4444,11 @@ public:
         m_wtxid_relay = use_wtxid;
     }
 
-    bool operator()(std::set<uint256>::iterator a, std::set<uint256>::iterator b)
+    bool operator()(std::map<uint256, bool>::iterator a, std::map<uint256, bool>::iterator b)
     {
         /* As std::make_heap produces a max-heap, we want the entries with the
          * fewest ancestors/highest fee to sort later. */
-        return mp->CompareDepthAndScore(*b, *a, m_wtxid_relay);
+        return mp->CompareDepthAndScore(b->first, a->first, m_wtxid_relay);
     }
 };
 }
@@ -4760,7 +4760,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 // Time to send but the peer has requested we not relay transactions.
                 if (fSendTrickle) {
                     LOCK(pto->m_tx_relay->cs_filter);
-                    if (!pto->m_tx_relay->fRelayTxes) pto->m_tx_relay->setInventoryTxToSend.clear();
+                    if (!pto->m_tx_relay->fRelayTxes) pto->m_tx_relay->m_transactions_to_announce.clear();
                 }
 
                 // Respond to BIP35 mempool requests
@@ -4774,7 +4774,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     for (const auto& txinfo : vtxinfo) {
                         const uint256& hash = state.m_wtxid_relay ? txinfo.tx->GetWitnessHash() : txinfo.tx->GetHash();
                         CInv inv(state.m_wtxid_relay ? MSG_WTX : MSG_TX, hash);
-                        pto->m_tx_relay->setInventoryTxToSend.erase(hash);
+                        pto->m_tx_relay->m_transactions_to_announce.erase(hash);
                         // Don't send transactions that peers will not put into their mempool
                         if (txinfo.fee < filterrate.GetFee(txinfo.vsize)) {
                             continue;
@@ -4796,9 +4796,9 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 // Determine transactions to relay
                 if (fSendTrickle) {
                     // Produce a vector with all candidates for sending
-                    std::vector<std::set<uint256>::iterator> vInvTx;
-                    vInvTx.reserve(pto->m_tx_relay->setInventoryTxToSend.size());
-                    for (std::set<uint256>::iterator it = pto->m_tx_relay->setInventoryTxToSend.begin(); it != pto->m_tx_relay->setInventoryTxToSend.end(); it++) {
+                    std::vector<std::map<uint256, bool>::iterator> vInvTx;
+                    vInvTx.reserve(pto->m_tx_relay->m_transactions_to_announce.size());
+                    for (std::map<uint256, bool>::iterator it = pto->m_tx_relay->m_transactions_to_announce.begin(); it != pto->m_tx_relay->m_transactions_to_announce.end(); it++) {
                         vInvTx.push_back(it);
                     }
                     const CFeeRate filterrate{pto->m_tx_relay->minFeeFilter.load()};
@@ -4813,12 +4813,12 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     while (!vInvTx.empty() && nRelayedTransactions < INVENTORY_BROADCAST_MAX) {
                         // Fetch the top element from the heap
                         std::pop_heap(vInvTx.begin(), vInvTx.end(), compareInvMempoolOrder);
-                        std::set<uint256>::iterator it = vInvTx.back();
+                        std::map<uint256, bool>::iterator it = vInvTx.back();
                         vInvTx.pop_back();
-                        uint256 hash = *it;
+                        uint256 hash = it->first;
                         CInv inv(state.m_wtxid_relay ? MSG_WTX : MSG_TX, hash);
                         // Remove it from the to-be-sent set
-                        pto->m_tx_relay->setInventoryTxToSend.erase(it);
+                        pto->m_tx_relay->m_transactions_to_announce.erase(it);
                         // Check if not in the filter already
                         if (pto->m_tx_relay->filterInventoryKnown.contains(hash)) {
                             continue;
