@@ -9,7 +9,6 @@
 #include <dbwrapper.h>
 #include <shutdown.h>
 #include <validation.h>
-#include <vbk/adaptors/block_batch_adaptor.hpp>
 #include <vbk/adaptors/payloads_provider.hpp>
 #include <veriblock/storage/util.hpp>
 
@@ -41,11 +40,6 @@ void SetPop(CDBWrapper& db)
     app.mempool->onAccepted<altintegration::ATV>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::ATV>);
     app.mempool->onAccepted<altintegration::VTB>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::VTB>);
     app.mempool->onAccepted<altintegration::VbkBlock>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::VbkBlock>);
-}
-
-PayloadsProvider& GetPayloadsProvider()
-{
-    return *payloads_provider;
 }
 
 CBlockIndex* compareTipToBlock(CBlockIndex* candidate)
@@ -125,9 +119,6 @@ bool addAllBlockPayloads(const CBlock& block, BlockValidationState& state) EXCLU
         return error("[%s] block %s is not accepted because popData is invalid: %s", __func__, block.GetHash().ToString(),
             instate.toString());
     }
-
-    auto& provider = GetPayloadsProvider();
-    provider.write(block.popData);
 
     GetPop().altTree->acceptBlock(block.GetHash().asVector(), block.popData);
 
@@ -276,20 +267,27 @@ std::vector<BlockBytes> getLastKnownBTCBlocks(size_t blocks)
 
 bool hasPopData(CBlockTreeDB& db)
 {
-    return db.Exists(tip_key<altintegration::BtcBlock>()) && db.Exists(tip_key<altintegration::VbkBlock>()) && db.Exists(tip_key<altintegration::AltBlock>());
+    return db.Exists(details::tip_key<altintegration::BtcBlock>()) && db.Exists(details::tip_key<altintegration::VbkBlock>()) && db.Exists(details::tip_key<altintegration::AltBlock>());
 }
 
-void saveTrees(altintegration::BlockBatchAdaptor& batch)
+bool saveTrees(CDBBatch* batch)
 {
     AssertLockHeld(cs_main);
-    altintegration::SaveAllTrees(*GetPop().altTree, batch);
+
+    altintegration::ValidationState state;
+    block_provider->prepareBatch(batch);
+    if (!altintegration::SaveAllTrees(GetPop(), state)) {
+        return error("%s: failed to save trees %s", __func__, state.toString());
+    }
+    block_provider->closeBatch();
+
+    return true;
 }
-bool loadTrees(CDBWrapper& db)
+bool loadTrees()
 {
-    auto& pop = GetPop();
     altintegration::ValidationState state;
 
-    if (!altintegration::LoadAllTrees(pop, state)) {
+    if (!altintegration::LoadAllTrees(GetPop(), state)) {
         return error("%s: failed to load trees %s", __func__, state.toString());
     }
 

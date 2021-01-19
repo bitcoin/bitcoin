@@ -10,7 +10,6 @@
 #include <leveldb/cache.h>
 #include <leveldb/env.h>
 #include <leveldb/filter_policy.h>
-#include <vbk/adaptors/block_batch_adaptor.hpp>
 #include <memenv.h>
 #include <stdint.h>
 #include <algorithm>
