@@ -55,7 +55,7 @@ enum Network ParseNetwork(const std::string& net_in) {
 std::string GetNetworkName(enum Network net)
 {
     switch (net) {
-    case NET_UNROUTABLE: return "unroutable";
+    case NET_UNROUTABLE: return "not_publicly_routable";
     case NET_IPV4: return "ipv4";
     case NET_IPV6: return "ipv6";
     case NET_ONION: return "onion";
