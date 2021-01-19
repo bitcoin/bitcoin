@@ -23,8 +23,6 @@
 #include <util/system.h>
 #include <uint256.h>
 
-static constexpr uint8_t SIGNET_HEADER[4] = {0xec, 0xc7, 0xda, 0xa2};
-
 static constexpr unsigned int BLOCK_SCRIPT_VERIFY_FLAGS = SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_DERSIG | SCRIPT_VERIFY_NULLDUMMY;
 
 static bool FetchAndClearCommitmentSection(const Span<const uint8_t> header, CScript& witness_commitment, std::vector<uint8_t>& result)
@@ -67,6 +65,12 @@ static uint256 ComputeModifiedMerkleRoot(const CMutableTransaction& cb, const CB
 
 Optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challenge)
 {
+    uint8_t signet_header[4];
+    CHashWriter h(SER_DISK, 0);
+    h << challenge;
+    uint256 hash = h.GetHash();
+    memcpy(signet_header, hash.begin(), 4);
+
     CMutableTransaction tx_to_spend;
     tx_to_spend.nVersion = 0;
     tx_to_spend.nLockTime = 0;
@@ -94,7 +98,7 @@ Optional<SignetTxs> SignetTxs::Create(const CBlock& block, const CScript& challe
     CScript& witness_commitment = modified_cb.vout.at(cidx).scriptPubKey;
 
     std::vector<uint8_t> signet_solution;
-    if (!FetchAndClearCommitmentSection(SIGNET_HEADER, witness_commitment, signet_solution)) {
+    if (!FetchAndClearCommitmentSection(signet_header, witness_commitment, signet_solution)) {
         // no signet solution -- allow this to support OP_TRUE as trivial block challenge
     } else {
         try {
