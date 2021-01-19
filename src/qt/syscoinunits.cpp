@@ -106,7 +106,7 @@ QString SyscoinUnits::format(int unit, const CAmount& nIn, const uint64_t &nAsse
     // SYSCOIN 
     qint64 coin;
     int num_decimals;
-    uint8_t nPrecision;
+    uint8_t nPrecision = 8;
     if(nAsset > 0 && GetAssetPrecision(GetBaseAssetID(nAsset), nPrecision)) {
         num_decimals = (int)nPrecision;
         coin = (qint64)pow(10, num_decimals);
