@@ -118,12 +118,13 @@ CTransactionBuilder::CTransactionBuilder(CWallet* pwalletIn, const CompactTallyI
     coinControl.destChange = tallyItemIn.txdest;
     // Only allow tallyItems inputs for tx creation
     coinControl.fAllowOtherInputs = false;
-    // Select all tallyItem outputs in the coinControl so that CreateTransaction knows what to use
-    for (const auto& outpoint : tallyItem.vecOutPoints) {
-        coinControl.Select(outpoint);
-    }
     // Create dummy tx to calculate the exact required fees upfront for accurate amount and fee calculations
     CMutableTransaction dummyTx;
+    // Select all tallyItem outputs in the coinControl so that CreateTransaction knows what to use
+    for (const auto& coin : tallyItem.vecInputCoins) {
+        coinControl.Select(coin.outpoint);
+        dummyTx.vin.emplace_back(coin.outpoint, CScript());
+    }
     // Get a comparable dummy scriptPubKey, avoid writting/flushing to the actual wallet db
     CScript dummyScript;
     {
@@ -133,12 +134,16 @@ CTransactionBuilder::CTransactionBuilder(CWallet* pwalletIn, const CompactTallyI
         CPubKey dummyPubkey = pwallet->GenerateNewKey(dummyBatch, 0, false);
         dummyBatch.TxnAbort();
         dummyScript = ::GetScriptForDestination(dummyPubkey.GetID());
-    }
-    // Create dummy signatures for all inputs
-    SignatureData dummySignature;
-    ProduceSignature(DummySignatureCreator(pwallet), dummyScript, dummySignature);
-    for (auto out : tallyItem.vecOutPoints) {
-        dummyTx.vin.emplace_back(out, dummySignature.scriptSig);
+        // Create dummy signatures for all inputs
+        int nIn = 0;
+        for (const auto& coin : tallyItem.vecInputCoins) {
+            const CScript& scriptPubKey = coin.txout.scriptPubKey;
+            SignatureData sigdata;
+            bool res = ProduceSignature(DummySignatureCreator(pwallet), scriptPubKey, sigdata);
+            assert(res);
+            UpdateTransaction(dummyTx, nIn, sigdata);
+            nIn++;
+        }
     }
     // Calculate required bytes for the dummy tx with tallyItem's inputs only
     nBytesBase = ::GetSerializeSize(dummyTx, SER_NETWORK, PROTOCOL_VERSION);

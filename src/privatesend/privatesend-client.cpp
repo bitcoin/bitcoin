@@ -1425,12 +1425,12 @@ bool CPrivateSendClientSession::MakeCollateralAmounts(const CompactTallyItem& ta
     if (!CPrivateSendClientOptions::IsEnabled()) return false;
 
     // Denominated input is always a single one, so we can check its amount directly and return early
-    if (!fTryDenominated && tallyItem.vecOutPoints.size() == 1 && CPrivateSend::IsDenominatedAmount(tallyItem.nAmount)) {
+    if (!fTryDenominated && tallyItem.vecInputCoins.size() == 1 && CPrivateSend::IsDenominatedAmount(tallyItem.nAmount)) {
         return false;
     }
 
     // Skip single inputs that can be used as collaterals already
-    if (tallyItem.vecOutPoints.size() == 1 && CPrivateSend::IsCollateralAmount(tallyItem.nAmount)) {
+    if (tallyItem.vecInputCoins.size() == 1 && CPrivateSend::IsCollateralAmount(tallyItem.nAmount)) {
         return false;
     }
 
@@ -1554,7 +1554,7 @@ bool CPrivateSendClientSession::CreateDenominated(CAmount nBalanceToDenominate, 
     if (!CPrivateSendClientOptions::IsEnabled()) return false;
 
     // denominated input is always a single one, so we can check its amount directly and return early
-    if (tallyItem.vecOutPoints.size() == 1 && CPrivateSend::IsDenominatedAmount(tallyItem.nAmount)) {
+    if (tallyItem.vecInputCoins.size() == 1 && CPrivateSend::IsDenominatedAmount(tallyItem.nAmount)) {
         return false;
     }
 

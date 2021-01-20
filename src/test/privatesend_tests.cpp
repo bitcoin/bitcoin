@@ -94,11 +94,11 @@ public:
                     // Skip the change output to only return the requested coins
                     continue;
                 }
-                tallyItem.vecOutPoints.push_back(COutPoint(tx->GetHash(), n));
+                tallyItem.vecInputCoins.emplace_back(tx, n);
                 tallyItem.nAmount += tx->vout[n].nValue;
             }
         }
-        assert(tallyItem.vecOutPoints.size() == vecAmounts.size());
+        assert(tallyItem.vecInputCoins.size() == vecAmounts.size());
         destKey.KeepKey();
         return tallyItem;
     }

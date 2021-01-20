@@ -3325,7 +3325,7 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
             if(!(mine & filter)) continue;
 
             auto itTallyItem = mapTally.find(txdest);
-            if (nMaxOupointsPerAddress != -1 && itTallyItem != mapTally.end() && itTallyItem->second.vecOutPoints.size() >= nMaxOupointsPerAddress) continue;
+            if (nMaxOupointsPerAddress != -1 && itTallyItem != mapTally.end() && itTallyItem->second.vecInputCoins.size() >= nMaxOupointsPerAddress) continue;
 
             if(IsSpent(outpoint.hash, i) || IsLockedCoin(outpoint.hash, i)) continue;
 
@@ -3347,7 +3347,7 @@ bool CWallet::SelectCoinsGroupedByAddresses(std::vector<CompactTallyItem>& vecTa
                 itTallyItem->second.txdest = txdest;
             }
             itTallyItem->second.nAmount += wtx.tx->vout[i].nValue;
-            itTallyItem->second.vecOutPoints.emplace_back(outpoint.hash, i);
+            itTallyItem->second.vecInputCoins.emplace_back(wtx.tx, i);
         }
     }
 
