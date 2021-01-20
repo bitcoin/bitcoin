@@ -22,6 +22,7 @@ class PeerManager;
 */
 enum {
     SPORK_TEST                                             = 10000,
+    SPORK_TEST1                                            = 10001,
     SPORK_9_SUPERBLOCKS_ENABLED                            = 10008,
     SPORK_17_QUORUM_DKG_ENABLED                            = 10016,
     SPORK_19_CHAINLOCKS_ENABLED                            = 10018,

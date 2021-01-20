@@ -23,6 +23,7 @@ std::vector<CSporkDef> sporkDefs = {
     MAKE_SPORK_DEF(SPORK_21_QUORUM_ALL_CONNECTED,          4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_23_QUORUM_POSE,                   4070908800ULL), // OFF
     MAKE_SPORK_DEF(SPORK_TEST,                             4070908800ULL), // OFF
+    MAKE_SPORK_DEF(SPORK_TEST1,                            4070908800ULL), // OFF
 };
 
 CSporkManager sporkManager;
@@ -75,11 +76,9 @@ void CSporkManager::CheckAndRemove()
     while (itActive != mapSporksActive.end()) {
         auto itSignerPair = itActive->second.begin();
         while (itSignerPair != itActive->second.end()) {
-            if (setSporkPubKeyIDs.find(itSignerPair->first) == setSporkPubKeyIDs.end()) {
-                mapSporksByHash.erase(itSignerPair->second.GetHash());
-                continue;
-            }
-            if (!itSignerPair->second.CheckSignature(itSignerPair->first)) {
+            bool fHasValidSig = setSporkPubKeyIDs.find(itSignerPair->first) != setSporkPubKeyIDs.end() &&
+                                itSignerPair->second.CheckSignature(itSignerPair->first);
+            if (!fHasValidSig) {
                 mapSporksByHash.erase(itSignerPair->second.GetHash());
                 itActive->second.erase(itSignerPair++);
                 continue;
