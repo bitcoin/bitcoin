@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_TRACE_H
-#define BITCOIN_UTIL_TRACE_H
+#ifndef SYSCOIN_UTIL_TRACE_H
+#define SYSCOIN_UTIL_TRACE_H
 
 #ifdef ENABLE_TRACING
 
@@ -42,4 +42,4 @@
 #endif
 
 
-#endif /* BITCOIN_UTIL_TRACE_H */
+#endif /* SYSCOIN_UTIL_TRACE_H */
