@@ -364,10 +364,10 @@ public:
         consensus.vchSYSXERC20Manager = ParseHex("443d9a14fb6ba2A45465bEC3767186f404Ccea25");
         consensus.vchTokenFreezeMethod = ParseHex("9c6dea23fe3b510bb5d170df49dc74e387692eaa3258c691918cd3aa94f5fb74");
         consensus.nBridgeStartBlock = 1000;
-        consensus.nUTXOAssetsBlock = 540000;
+        consensus.nUTXOAssetsBlock = 555000;
         consensus.nUTXOAssetsBlockProvisioning = consensus.nUTXOAssetsBlock + 10000;
-        consensus.DIP0003Height = 540000;
-        consensus.DIP0003EnforcementHeight = 540000;
+        consensus.DIP0003Height = 555000;
+        consensus.DIP0003EnforcementHeight = 555000;
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
         pchMessageStart[2] = 0xca;
