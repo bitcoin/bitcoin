@@ -723,6 +723,23 @@ bool BerkeleyBatch::TxnAbort()
     return (ret == 0);
 }
 
+bool BerkeleyDatabaseSanityCheck()
+{
+    int major, minor;
+    DbEnv::version(&major, &minor, nullptr);
+
+    /* If the major version differs, or the minor version of library is *older*
+     * than the header that was compiled against, flag an error.
+     */
+    if (major != DB_VERSION_MAJOR || minor < DB_VERSION_MINOR) {
+        LogPrintf("BerkeleyDB database version conflict: header version is %d.%d, library version is %d.%d\n",
+            DB_VERSION_MAJOR, DB_VERSION_MINOR, major, minor);
+        return false;
+    }
+
+    return true;
+}
+
 std::string BerkeleyDatabaseVersion()
 {
     return DbEnv::version(nullptr, nullptr, nullptr);
