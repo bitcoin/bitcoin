@@ -225,12 +225,18 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     auto connman = MakeUnique<CConnmanTest>(0x1337, 0x1337);
     auto peerLogic = MakeUnique<PeerManager>(chainparams, *connman, banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool);
 
-    const std::array<CAddress, 2> addr{CAddress{ip(0xa0b0c001), NODE_NONE},
-                                       CAddress{ip(0xa0b0c002), NODE_NONE}};
+    CNetAddr tor_netaddr;
+    BOOST_REQUIRE(
+        tor_netaddr.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"));
+    const CService tor_service(tor_netaddr, Params().GetDefaultPort());
+
+    const std::array<CAddress, 3> addr{CAddress{ip(0xa0b0c001), NODE_NONE},
+                                       CAddress{ip(0xa0b0c002), NODE_NONE},
+                                       CAddress{tor_service, NODE_NONE}};
 
     const CNetAddr other_addr{ip(0xa0b0ff01)}; // Not any of addr[].
 
-    std::array<CNode*, 2> nodes;
+    std::array<CNode*, 3> nodes;
 
     banman->ClearBanned();
     nodes[0] = new CNode{id++, NODE_NETWORK, 0, INVALID_SOCKET, addr[0], 0, 0, CAddress(), "", ConnectionType::INBOUND};
@@ -273,6 +279,26 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     BOOST_CHECK(nodes[0]->fDisconnect);
     BOOST_CHECK(banman->IsDiscouraged(addr[1]));
     BOOST_CHECK(nodes[1]->fDisconnect);
+
+    // Make sure non-IP peers are discouraged and disconnected properly.
+
+    nodes[2] = new CNode{id++, NODE_NETWORK, 0, INVALID_SOCKET, addr[2], 1, 1, CAddress(), "",
+                         ConnectionType::OUTBOUND_FULL_RELAY};
+    nodes[2]->SetCommonVersion(PROTOCOL_VERSION);
+    peerLogic->InitializeNode(nodes[2]);
+    nodes[2]->fSuccessfullyConnected = true;
+    connman->AddNode(*nodes[2]);
+    peerLogic->Misbehaving(nodes[2]->GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ "");
+    {
+        LOCK(nodes[2]->cs_sendProcessing);
+        BOOST_CHECK(peerLogic->SendMessages(nodes[2]));
+    }
+    BOOST_CHECK(banman->IsDiscouraged(addr[0]));
+    BOOST_CHECK(banman->IsDiscouraged(addr[1]));
+    BOOST_CHECK(banman->IsDiscouraged(addr[2]));
+    BOOST_CHECK(nodes[0]->fDisconnect);
+    BOOST_CHECK(nodes[1]->fDisconnect);
+    BOOST_CHECK(nodes[2]->fDisconnect);
 
     bool dummy;
     for (CNode* node : nodes) {
