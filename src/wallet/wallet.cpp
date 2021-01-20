@@ -1095,6 +1095,7 @@ void CWallet::MarkDirty()
 
 bool CWallet::AddToWallet(const CWalletTx& wtxIn, bool fFlushOnClose)
 {
+    AssertLockHeld(cs_main); // detect potential deadlocks which might be caused by GetListAtChainTip and IsSpent below
     LOCK(cs_wallet);
 
     WalletBatch batch(*database, "r+", fFlushOnClose);
@@ -1232,6 +1233,7 @@ bool CWallet::AddToWalletIfInvolvingMe(const CTransactionRef& ptx, const CBlockI
 {
     const CTransaction& tx = *ptx;
     {
+        AssertLockHeld(cs_main); // because of AddToWallet
         AssertLockHeld(cs_wallet);
 
         if (pIndex != nullptr) {
