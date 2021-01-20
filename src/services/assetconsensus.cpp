@@ -454,31 +454,18 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
 }
 
 bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, const CTxUndo& txundo, AssetMap &mapAssets) {
-    auto it = tx.voutAssets.begin();
-    const uint64_t &nAsset = it->key;
-    const std::vector<CAssetOutValue> &vecVout = it->values;
-    const int &nOut = GetSyscoinDataOutput(tx);
-    if(nOut < 0) {
-        LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not find data output\n");
-        return false;
-    }
-    CAmount valueIn = 0;
-    bool bFoundIn = false;
-    // build mapAssetIn from txundo information
-    CAssetsMap mapAssetIn;
+    CAmount inAmount = 0;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const Coin& coin = txundo.vprevout[i];
-        if (!coin.out.assetInfo.IsNull() && coin.out.assetInfo.nAsset == nAsset) {
-            valueIn += coin.out.assetInfo.nValue;
-            if(!bFoundIn)
-                bFoundIn = true;
+        if (!coin.out.assetInfo.IsNull()) {
+            inAmount += coin.out.assetInfo.nValue;
         }
     }
-    if(!bFoundIn) {
-        LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not get asset input from mapAssetIn %d\n",nAsset);
-        return false;               
-    } 
-    const uint32_t& nBaseAsset = GetBaseAssetID(nAsset);
+    CAmount outAmount = 0;
+    for (unsigned int i = 0; i < tx.voutAssets.size(); ++i) {
+        outAmount += tx.GetAssetValueOut(tx.voutAssets[i].values);
+    }
+    const uint32_t& nBaseAsset = GetBaseAssetID(tx.voutAssets[0].key);
     auto result = mapAssets.try_emplace(nBaseAsset,  std::move(emptyAsset)); 
     auto mapAsset = result.first;
     const bool& mapAssetNotFound = result.second;
@@ -491,7 +478,12 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, const CTxU
         mapAsset->second = std::move(dbAsset);                        
     }
     CAsset& storedAssetRef = mapAsset->second;
-    storedAssetRef.nTotalSupply -= (tx.GetAssetValueOut(vecVout) - valueIn); 
+    const CAmount &nDiff = (outAmount - inAmount);
+    if(nDiff < 0) {
+        LogPrint(BCLog::SYS,"DisconnectAssetSend: Negative diff of %lld for asset %d\n",nDiff, nBaseAsset);
+        return false;
+    }
+    storedAssetRef.nTotalSupply -= nDiff; 
     if(storedAssetRef.nTotalSupply <= 0) {
         storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_SUPPLY;
     }
