@@ -2964,7 +2964,7 @@ RPCHelpMan listunspent()
     CAmount nMaximumAmountAsset = MAX_ASSET;
     CAmount nMinimumSumAmountAsset = MAX_ASSET;
     uint64_t nMaximumCount = 0;
-    uint32_t nAsset = 0;
+    uint64_t nAsset = 0;
 
     if (!request.params[4].isNull()) {
         const UniValue& options = request.params[4].get_obj();
@@ -2996,7 +2996,7 @@ RPCHelpMan listunspent()
             nMaximumCount = options["maximumCount"].get_int64();
         // SYSCOIN
         if (options.exists("assetGuid")) {
-            nAsset = options["assetGuid"].get_uint();
+            nAsset = options["assetGuid"].get_uint64();
         }
 
         if (options.exists("minimumAmountAsset"))
@@ -3088,7 +3088,7 @@ RPCHelpMan listunspent()
         entry.pushKV("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
         if(!out.tx->tx->vout[out.i].assetInfo.IsNull()) {
             entry.pushKV("asset_guid", out.tx->tx->vout[out.i].assetInfo.nAsset);
-            entry.pushKV("asset_amount", ValueFromAmount(out.tx->tx->vout[out.i].assetInfo.nValue, out.tx->tx->vout[out.i].assetInfo.nAsset));
+            entry.pushKV("asset_amount", ValueFromAmount(out.tx->tx->vout[out.i].assetInfo.nValue, GetBaseAssetID(out.tx->tx->vout[out.i].assetInfo.nAsset)));
         }
         entry.pushKV("confirmations", out.nDepth);
         entry.pushKV("spendable", out.fSpendable);

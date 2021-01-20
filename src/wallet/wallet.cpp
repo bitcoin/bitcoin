@@ -2730,7 +2730,7 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
         // get asset
         CAsset theAsset;
         // if asset has notary signature requirement set
-        if(GetAsset(vecOut.key, theAsset) && !theAsset.vchNotaryKeyID.empty()) {
+        if(GetAsset(GetBaseAssetID(vecOut.key), theAsset) && !theAsset.vchNotaryKeyID.empty()) {
             bFilled = false;
             if(!theAsset.notaryDetails.strEndPoint.empty()) {
                 bool fInvalid = false;

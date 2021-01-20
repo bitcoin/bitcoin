@@ -101,13 +101,13 @@ int SyscoinUnits::decimals(int unit)
     }
 }
 
-QString SyscoinUnits::format(int unit, const CAmount& nIn, const uint32_t &nAsset, bool fPlus, SeparatorStyle separators, bool justify)
+QString SyscoinUnits::format(int unit, const CAmount& nIn, const uint64_t &nAsset, bool fPlus, SeparatorStyle separators, bool justify)
 {
     // SYSCOIN 
     qint64 coin;
     int num_decimals;
-     uint8_t nPrecision;
-    if(nAsset > 0 && GetAssetPrecision(nAsset, nPrecision)) {
+    uint8_t nPrecision = 8;
+    if(nAsset > 0 && GetAssetPrecision(GetBaseAssetID(nAsset), nPrecision)) {
         num_decimals = (int)nPrecision;
         coin = (qint64)pow(10, num_decimals);
     } else {

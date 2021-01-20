@@ -121,6 +121,7 @@ BASE_SCRIPTS = [
     'feature_deterministicmns.py',
     'feature_coinbasemerkleroots.py',
     'feature_asset.py',
+    'feature_asset_nft.py',
     'feature_asset_zdag.py',
     'feature_asset_verify_zdag.py',
     # vv Tests less than 60s vv
