@@ -22,6 +22,7 @@
 
 #include <test/util/setup_common.h>
 
+#include <array>
 #include <stdint.h>
 
 #include <boost/test/unit_test.hpp>
@@ -224,43 +225,51 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
     auto peerLogic = MakeUnique<PeerManager>(chainparams, *connman, banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool);
 
-    banman->ClearBanned();
-    CAddress addr1(ip(0xa0b0c001), NODE_NONE);
-    CNode dummyNode1(id++, NODE_NETWORK, 0, INVALID_SOCKET, addr1, 0, 0, CAddress(), "", ConnectionType::INBOUND);
-    dummyNode1.SetCommonVersion(PROTOCOL_VERSION);
-    peerLogic->InitializeNode(&dummyNode1);
-    dummyNode1.fSuccessfullyConnected = true;
-    peerLogic->Misbehaving(dummyNode1.GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ ""); // Should be discouraged
-    {
-        LOCK(dummyNode1.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode1));
-    }
-    BOOST_CHECK(banman->IsDiscouraged(addr1));
-    BOOST_CHECK(!banman->IsDiscouraged(ip(0xa0b0c001|0x0000ff00))); // Different IP, not discouraged
+    const std::array<CAddress, 2> addr{CAddress{ip(0xa0b0c001), NODE_NONE},
+                                       CAddress{ip(0xa0b0c002), NODE_NONE}};
 
-    CAddress addr2(ip(0xa0b0c002), NODE_NONE);
-    CNode dummyNode2(id++, NODE_NETWORK, 0, INVALID_SOCKET, addr2, 1, 1, CAddress(), "", ConnectionType::INBOUND);
-    dummyNode2.SetCommonVersion(PROTOCOL_VERSION);
-    peerLogic->InitializeNode(&dummyNode2);
-    dummyNode2.fSuccessfullyConnected = true;
-    peerLogic->Misbehaving(dummyNode2.GetId(), DISCOURAGEMENT_THRESHOLD - 1, /* message */ "");
+    const CNetAddr other_addr{ip(0xa0b0ff01)}; // Not any of addr[].
+
+    std::array<CNode*, 2> nodes;
+
+    banman->ClearBanned();
+    nodes[0] = new CNode{id++, NODE_NETWORK, 0, INVALID_SOCKET, addr[0], 0, 0, CAddress(), "", ConnectionType::INBOUND};
+    nodes[0]->SetCommonVersion(PROTOCOL_VERSION);
+    peerLogic->InitializeNode(nodes[0]);
+    nodes[0]->fSuccessfullyConnected = true;
+    peerLogic->Misbehaving(nodes[0]->GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ ""); // Should be discouraged
     {
-        LOCK(dummyNode2.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode2));
+        LOCK(nodes[0]->cs_sendProcessing);
+        BOOST_CHECK(peerLogic->SendMessages(nodes[0]));
     }
-    BOOST_CHECK(!banman->IsDiscouraged(addr2)); // 2 not discouraged yet...
-    BOOST_CHECK(banman->IsDiscouraged(addr1));  // ... but 1 still should be
-    peerLogic->Misbehaving(dummyNode2.GetId(), 1, /* message */ "");         // 2 reaches discouragement threshold
+    BOOST_CHECK(banman->IsDiscouraged(addr[0]));
+    BOOST_CHECK(!banman->IsDiscouraged(other_addr)); // Different address, not discouraged
+
+    nodes[1] = new CNode{id++, NODE_NETWORK, 0, INVALID_SOCKET, addr[1], 1, 1, CAddress(), "", ConnectionType::INBOUND};
+    nodes[1]->SetCommonVersion(PROTOCOL_VERSION);
+    peerLogic->InitializeNode(nodes[1]);
+    nodes[1]->fSuccessfullyConnected = true;
+    peerLogic->Misbehaving(nodes[1]->GetId(), DISCOURAGEMENT_THRESHOLD - 1, /* message */ "");
     {
-        LOCK(dummyNode2.cs_sendProcessing);
-        BOOST_CHECK(peerLogic->SendMessages(&dummyNode2));
+        LOCK(nodes[1]->cs_sendProcessing);
+        BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
     }
-    BOOST_CHECK(banman->IsDiscouraged(addr1));  // Expect both 1 and 2
-    BOOST_CHECK(banman->IsDiscouraged(addr2));  // to be discouraged now
+    BOOST_CHECK(!banman->IsDiscouraged(addr[1])); // [1] not discouraged yet...
+    BOOST_CHECK(banman->IsDiscouraged(addr[0]));  // ... but [0] still should be
+    peerLogic->Misbehaving(nodes[1]->GetId(), 1, /* message */ ""); // [1] reaches discouragement threshold
+    {
+        LOCK(nodes[1]->cs_sendProcessing);
+        BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
+    }
+    // Expect both [0] and [1] to be discouraged now.
+    BOOST_CHECK(banman->IsDiscouraged(addr[0]));
+    BOOST_CHECK(banman->IsDiscouraged(addr[1]));
 
     bool dummy;
-    peerLogic->FinalizeNode(dummyNode1, dummy);
-    peerLogic->FinalizeNode(dummyNode2, dummy);
+    for (CNode* node : nodes) {
+        peerLogic->FinalizeNode(*node, dummy);
+        delete node;
+    }
 }
 
 BOOST_AUTO_TEST_CASE(DoS_bantime)
