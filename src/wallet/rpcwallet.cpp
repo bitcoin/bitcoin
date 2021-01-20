@@ -1336,7 +1336,7 @@ UniValue addmultisigaddress(const JSONRPCRequest& request)
             "       \"address\"                  (string) dash address or hex-encoded public key\n"
             "       ...,\n"
             "     ]\n"
-            "3. \"label\"                        (string, optional) An label to assign the addresses to.\n"
+            "3. \"label\"                        (string, optional) A label to assign the addresses to.\n"
 
             "\nResult:\n"
             "{\n"
