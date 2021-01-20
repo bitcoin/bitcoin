@@ -325,17 +325,17 @@ struct AssetCoinInfoCompression
 
 class CAssetCoinInfo {
 public:
-	uint32_t nAsset;
+	uint64_t nAsset;
 	CAmount nValue;
 	CAssetCoinInfo() {
 		SetNull();
         nValue = 0;
 	}
-    CAssetCoinInfo(const uint32_t &nAssetIn, const CAmount& nValueIn): nAsset(nAssetIn), nValue(nValueIn) { }
+    CAssetCoinInfo(const uint64_t &nAssetIn, const CAmount& nValueIn): nAsset(nAssetIn), nValue(nValueIn) {}
  
     friend bool operator==(const CAssetCoinInfo& a, const CAssetCoinInfo& b)
     {
-        return (a.nAsset   == b.nAsset &&
+        return (a.nAsset == b.nAsset &&
                 a.nValue == b.nValue);
     }
 
@@ -444,11 +444,9 @@ class CAssetOutValue {
 public:
     uint32_t n;
     CAmount nValue;
-
     SERIALIZE_METHODS(CAssetOutValue, obj) {
         READWRITE(COMPACTSIZE(obj.n), Using<AmountCompression>(obj.nValue));
     }
-
     CAssetOutValue(const uint32_t &nIn, const uint64_t& nAmountIn): n(nIn), nValue(nAmountIn) {}
     CAssetOutValue() {
         SetNull();
@@ -466,15 +464,15 @@ public:
 };
 class CAssetOut {
 public:
-    uint32_t key;
+    uint64_t key;
     std::vector<CAssetOutValue> values;
     std::vector<unsigned char> vchNotarySig;
     SERIALIZE_METHODS(CAssetOut, obj) {
-        READWRITE(obj.key, obj.values, obj.vchNotarySig);
+        READWRITE(VARINT(obj.key), obj.values, obj.vchNotarySig);
     }
 
-    CAssetOut(const uint32_t &keyIn, const std::vector<CAssetOutValue>& valuesIn): key(keyIn), values(valuesIn) {}
-    CAssetOut(const uint32_t &keyIn, const std::vector<CAssetOutValue>& valuesIn, const std::vector<unsigned char> &vchNotarySigIn): key(keyIn), values(valuesIn), vchNotarySig(vchNotarySigIn) {}
+    CAssetOut(const uint64_t &keyIn, const std::vector<CAssetOutValue>& valuesIn): key(keyIn), values(valuesIn) {}
+    CAssetOut(const uint64_t &keyIn, const std::vector<CAssetOutValue>& valuesIn, const std::vector<unsigned char> &vchNotarySigIn): key(keyIn), values(valuesIn), vchNotarySig(vchNotarySigIn) {}
     CAssetOut() {
 		SetNull();
 	}
@@ -720,7 +718,7 @@ public:
     }
     inline void SetNull() { vecAuxFees.clear(); vchAuxFeeKeyID.clear();}
     inline bool IsNull() const { return (vecAuxFees.empty() && vchAuxFeeKeyID.empty()); }
-    void ToJson(UniValue& json, const uint32_t& nAsset) const;
+    void ToJson(UniValue& json, const uint32_t& nBaseAsset) const;
 };
 class CNotaryDetails {
 public:

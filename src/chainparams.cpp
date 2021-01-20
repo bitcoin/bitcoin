@@ -262,6 +262,7 @@ public:
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fRequireRoutableExternalIP = true;
+        // TODO: add more addresses here from foundation members
         vSporkAddresses = {"SSZvS59ddqG87koeUPu1J8ivg5yJsQiWGN"};
         nMinSporkKeys = 1;   
         // long living quorum params

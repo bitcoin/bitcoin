@@ -30,7 +30,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
         return FormatSyscoinErrorMessage(state, "mint-unserialize", bSanityCheck);
     }
     auto it = tx.voutAssets.begin();
-    const uint32_t &nAsset = it->key;
+    const uint64_t &nAsset = it->key;
     auto itOut = mapAssetOut.find(nAsset);
     if(itOut == mapAssetOut.end()) {
         return FormatSyscoinErrorMessage(state, "mint-asset-output-notfound", bSanityCheck);             
@@ -223,7 +223,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }
     
     CAmount outputAmount;
-    uint32_t nAssetEth = 0;
+    uint64_t nAssetEth = 0;
     const std::vector<unsigned char> &rlpBytes = rlpTxValue[5].toBytes(dev::RLP::VeryStrict);
     std::vector<unsigned char> vchERC20ContractAddress;
     CTxDestination dest;
@@ -249,14 +249,14 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     auto itIn = mapAssetIn.find(nAsset);
     CAmount nTotal;
     if(itIn != mapAssetIn.end()) {
-        nTotal = itOut->second.second - itIn->second.second;
-        if (itIn->second.first != itOut->second.first) {	
+        nTotal = itOut->second.nAmount - itIn->second.nAmount;
+        if (itIn->second.bZeroVal != itOut->second.bZeroVal) {	
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "mint-zeroval-mismatch");	
         }
     } else {
-        nTotal = itOut->second.second;
+        nTotal = itOut->second.nAmount;
         // cannot create zero val output without an input
-        if(itOut->second.first) {
+        if(itOut->second.bZeroVal) {
             return state.Invalid(TxValidationResult::TX_CONSENSUS, "mint-zeroval-without-input");	
         }
     }
@@ -269,7 +269,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     }
     if(!fJustCheck) {
         if(!bSanityCheck && nHeight > 0) {   
-            LogPrint(BCLog::SYS,"CONNECTED ASSET MINT: op=%s asset=%d hash=%s height=%d fJustCheck=%s\n",
+            LogPrint(BCLog::SYS,"CONNECTED ASSET MINT: op=%s asset=%llu hash=%s height=%d fJustCheck=%s\n",
                 stringFromSyscoinTx(tx.nVersion).c_str(),
                 nAsset,
                 txHash.ToString().c_str(),
@@ -373,7 +373,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
         // get asset
         std::vector<unsigned char> vchNotaryKeyID;
         // if asset has notary signature requirement set
-        if(GetAssetNotaryKeyID(vecOut.key, vchNotaryKeyID)) {
+        if(GetAssetNotaryKeyID(GetBaseAssetID(vecOut.key), vchNotaryKeyID)) {
             if (!CHashSigner::VerifyHash(GetNotarySigHash(tx, vecOut), CKeyID(uint160(vchNotaryKeyID)), vecOut.vchNotarySig)) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-notary-sig", fJustCheck);
             }
@@ -385,7 +385,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
         case SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION:
         {   
             auto it = tx.voutAssets.begin();
-            const uint32_t &nAsset = it->key;
+            const uint64_t &nAsset = it->key;
             const CAmount &nBurnAmount = tx.vout[nOut].nValue;
             if(nBurnAmount <= 0) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-invalid-amount", bSanityCheck);
@@ -393,19 +393,19 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
             auto itOut = mapAssetOut.find(nAsset);
             if(itOut == mapAssetOut.end()) {
                 return FormatSyscoinErrorMessage(state, "syscoin-burn-asset-output-notfound", bSanityCheck);             
-            } 
+            }
             // if input for this asset exists, must also include it as change in output, so output-input should be the new amount created
             auto itIn = mapAssetIn.find(nAsset);
             CAmount nTotal;
             if(itIn != mapAssetIn.end()) {
-                nTotal = itOut->second.second - itIn->second.second;
-                if (itIn->second.first != itOut->second.first) {	
+                nTotal = itOut->second.nAmount - itIn->second.nAmount;
+                if (itIn->second.bZeroVal != itOut->second.bZeroVal) {	
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "syscoin-burn-zeroval-mismatch");	
                 }
             } else {
-                nTotal = itOut->second.second;
+                nTotal = itOut->second.nAmount;
                 // cannot create zero val output without an input
-                if(itOut->second.first) {
+                if(itOut->second.bZeroVal) {
                     return state.Invalid(TxValidationResult::TX_CONSENSUS, "syscoin-burn-zeroval-without-input");	
                 }
             }
@@ -454,43 +454,36 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
 }
 
 bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, const CTxUndo& txundo, AssetMap &mapAssets) {
-    auto it = tx.voutAssets.begin();
-    const uint32_t &nAsset = it->key;
-    const std::vector<CAssetOutValue> &vecVout = it->values;
-    const int &nOut = GetSyscoinDataOutput(tx);
-    if(nOut < 0) {
-        LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not find data output\n");
-        return false;
-    }
-    CAmount valueIn = 0;
-    bool bFoundIn = false;
-    // build mapAssetIn from txundo information
-    CAssetsMap mapAssetIn;
+    CAmount inAmount = 0;
     for (unsigned int i = 0; i < tx.vin.size(); ++i) {
         const Coin& coin = txundo.vprevout[i];
-        if (!coin.out.assetInfo.IsNull() && coin.out.assetInfo.nAsset == nAsset) {
-            valueIn += coin.out.assetInfo.nValue;
-            if(!bFoundIn)
-                bFoundIn = true;
+        if (!coin.out.assetInfo.IsNull()) {
+            inAmount += coin.out.assetInfo.nValue;
         }
     }
-    if(!bFoundIn) {
-        LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not get asset input from mapAssetIn %d\n",nAsset);
-        return false;               
-    } 
-    auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset)); 
+    CAmount outAmount = 0;
+    for (unsigned int i = 0; i < tx.voutAssets.size(); ++i) {
+        outAmount += tx.GetAssetValueOut(tx.voutAssets[i].values);
+    }
+    const uint32_t& nBaseAsset = GetBaseAssetID(tx.voutAssets[0].key);
+    auto result = mapAssets.try_emplace(nBaseAsset,  std::move(emptyAsset)); 
     auto mapAsset = result.first;
     const bool& mapAssetNotFound = result.second;
     if(mapAssetNotFound) {
         CAsset dbAsset;
-        if (!GetAsset(nAsset, dbAsset)) {
-            LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not get asset %d\n",nAsset);
+        if (!GetAsset(nBaseAsset, dbAsset)) {
+            LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not get asset %d\n",nBaseAsset);
             return false;               
         } 
         mapAsset->second = std::move(dbAsset);                        
     }
     CAsset& storedAssetRef = mapAsset->second;
-    storedAssetRef.nTotalSupply -= (tx.GetAssetValueOut(vecVout) - valueIn); 
+    const CAmount &nDiff = (outAmount - inAmount);
+    if(nDiff < 0) {
+        LogPrint(BCLog::SYS,"DisconnectAssetSend: Negative diff of %lld for asset %d\n",nDiff, nBaseAsset);
+        return false;
+    }
+    storedAssetRef.nTotalSupply -= nDiff; 
     if(storedAssetRef.nTotalSupply <= 0) {
         storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_SUPPLY;
     }
@@ -509,13 +502,14 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
         return true;
     }
     auto it = tx.voutAssets.begin();
-    const uint32_t &nAsset = it->key;
-    auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
+    const uint64_t &nAsset = it->key;
+    const uint32_t& nBaseAsset = GetBaseAssetID(nAsset);
+    auto result = mapAssets.try_emplace(nBaseAsset,  std::move(emptyAsset));
     auto mapAsset = result.first;
     const bool &mapAssetNotFound = result.second;
     if(mapAssetNotFound) {
-        if (!GetAsset(nAsset, dbAsset)) {
-            LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Could not get asset %d\n",nAsset);
+        if (!GetAsset(nBaseAsset, dbAsset)) {
+            LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Could not get asset %d\n",nBaseAsset);
             return false;               
         } 
         mapAsset->second = std::move(dbAsset);                    
@@ -570,8 +564,8 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
 
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
     auto it = tx.voutAssets.begin();
-    const uint32_t &nAsset = it->key;
-    mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
+    const uint32_t &nBaseAsset = GetBaseAssetID(it->key);
+    mapAssets.try_emplace(nBaseAsset,  std::move(emptyAsset));
     return true;  
 }
 
@@ -598,22 +592,23 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         return FormatSyscoinErrorMessage(state, "asset-missing-burn-output", bSanityCheck);
     } 
     auto it = tx.voutAssets.begin();
-    const uint32_t &nAsset = it->key;
+    const uint64_t &nAsset = it->key;
+    const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
     const std::vector<CAssetOutValue> &vecVout = it->values;
-    auto itOut = mapAssetOut.find(nAsset);
+    auto itOut = mapAssetOut.find(nBaseAsset);
     if(itOut == mapAssetOut.end()) {
         return FormatSyscoinErrorMessage(state, "asset-output-notfound", bSanityCheck);             
     }
     // check that the first output asset has zero val output
-    if (!itOut->second.first) {
+    if (!itOut->second.bZeroVal) {
         return FormatSyscoinErrorMessage(state, "asset-output-zeroval", bSanityCheck);
     }
     CAsset dbAsset;
-    auto result = mapAssets.try_emplace(nAsset,  std::move(emptyAsset));
+    auto result = mapAssets.try_emplace(nBaseAsset,  std::move(emptyAsset));
     auto mapAsset = result.first;
     const bool & mapAssetNotFound = result.second;    
     if (mapAssetNotFound) {
-        if (!GetAsset(nAsset, dbAsset)) {
+        if (!GetAsset(nBaseAsset, dbAsset)) {
             if (tx.nVersion != SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
                 return FormatSyscoinErrorMessage(state, "asset-non-existing", bSanityCheck);
             }
@@ -633,7 +628,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
         {
-            auto itIn = mapAssetIn.find(nAsset);
+            auto itIn = mapAssetIn.find(nBaseAsset);
             // sanity: asset should never exist as an input because it hasn't been created yet
             if(itIn != mapAssetIn.end()) {
                 return FormatSyscoinErrorMessage(state, "asset-input-found", bSanityCheck);           
@@ -641,13 +636,13 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             if(vecVout.size() != 1) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-size", bSanityCheck);
             }
-            if(itOut->second.second != 0) {
+            if(itOut->second.nAmount != 0) {
                 return FormatSyscoinErrorMessage(state, "asset-invalid-vout-zeroval", bSanityCheck);
             }
             if (tx.vout[nOut].nValue < COST_ASSET) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-fee", bSanityCheck);
             }
-            if (nAsset <= SYSCOIN_TX_MIN_ASSET_GUID) {
+            if (nBaseAsset <= SYSCOIN_TX_MIN_ASSET_GUID) {
                 return FormatSyscoinErrorMessage(state, "asset-guid-too-low", bSanityCheck);
             }
             if (storedAssetRef.nPrecision > 8) {
@@ -730,7 +725,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 return FormatSyscoinErrorMessage(state, "asset-invalid-maxsupply", bSanityCheck);
             }
             if (nHeight >= Params().GetConsensus().nUTXOAssetsBlockProvisioning) {
-                if (nAsset != GenerateSyscoinGuid(tx.vin[0].prevout)) {
+                if (nBaseAsset != GenerateSyscoinGuid(tx.vin[0].prevout)) {
                     return FormatSyscoinErrorMessage(state, "asset-guid-not-deterministic", bSanityCheck);
                 }
                 const std::string& decodedSymbol = DecodeBase64(storedAssetRef.strSymbol);
@@ -753,12 +748,12 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
 
         case SYSCOIN_TX_VERSION_ASSET_UPDATE:
         {
-            auto itIn = mapAssetIn.find(nAsset);
+            auto itIn = mapAssetIn.find(nBaseAsset);
             if(itIn == mapAssetIn.end()) {
                 return FormatSyscoinErrorMessage(state, "asset-input-notfound", bSanityCheck);           
             }
             // check that the first input asset has zero val input spent
-            if (!itIn->second.first) {
+            if (!itIn->second.bZeroVal) {
                 return FormatSyscoinErrorMessage(state, "asset-input-zeroval", bSanityCheck);
             }
             if (theAsset.nPrecision != storedAssetRef.nPrecision) {
@@ -915,21 +910,41 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             
         case SYSCOIN_TX_VERSION_ASSET_SEND:
         {
-            auto itIn = mapAssetIn.find(nAsset);
+            auto itIn = mapAssetIn.find(nBaseAsset);
             if(itIn == mapAssetIn.end()) {
                 return FormatSyscoinErrorMessage(state, "asset-input-notfound", bSanityCheck);           
             } 
             // check that the first input asset has zero val input spent
-            if (!itIn->second.first) {
+            if (!itIn->second.bZeroVal) {
                 return FormatSyscoinErrorMessage(state, "asset-input-zeroval", bSanityCheck);
             }
             if (!(storedAssetRef.nUpdateCapabilityFlags & ASSET_UPDATE_SUPPLY)) {
                 return FormatSyscoinErrorMessage(state, "asset-insufficient-supply-privileges", bSanityCheck);
             }
+            // get all output assets and get base ID and whichever ones match nBaseAsset should be added to input map
+            CAmount inAmount = itIn->second.nAmount;
+            CAmount outAmount = itOut->second.nAmount;
+            // track in/out amounts and add to total for any NFT inputs+outputs
+            for(auto &itOutNFT: mapAssetOut) {
+                const uint32_t& nBaseAssetInternal = GetBaseAssetID(itOutNFT.first);
+                if(itOutNFT.first != nBaseAsset && nBaseAssetInternal == nBaseAsset) {
+                    // NFT output cannot be zero-val
+                    if (itOutNFT.second.bZeroVal) {
+                        return FormatSyscoinErrorMessage(state, "asset-nft-output-zeroval", bSanityCheck);
+                    }
+                    // add all output amounts that match the base asset of the first output
+                    outAmount += itOutNFT.second.nAmount;
+                    // if any inputs from this NFT asset were used add them as input amount
+                    auto itIn = mapAssetIn.find(itOutNFT.first);
+                    if(itIn != mapAssetIn.end()) {
+                       inAmount += itIn->second.nAmount;           
+                    }
+                }
+            }
             // db will be stored with total supply
             // even though new assets must set this flag, it may be unset by disconnectassetsend
             storedAssetRef.nUpdateMask |= ASSET_UPDATE_SUPPLY;
-            const CAmount &nTotal = itOut->second.second - itIn->second.second;
+            const CAmount &nTotal = outAmount - inAmount;
             storedAssetRef.nTotalSupply += nTotal;
             if (!MoneyRangeAsset(nTotal)) {
                 return FormatSyscoinErrorMessage(state, "asset-amount-outofrange", bSanityCheck);
@@ -949,7 +964,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     }
     
     if (!bSanityCheck) {
-        LogPrint(BCLog::SYS,"CONNECTED ASSET: tx=%s asset=%d hash=%s height=%d fJustCheck=%s\n",
+        LogPrint(BCLog::SYS,"CONNECTED ASSET: tx=%s asset=%llu hash=%s height=%d fJustCheck=%s\n",
                 stringFromSyscoinTx(tx.nVersion).c_str(),
                 nAsset,
                 txHash.ToString().c_str(),

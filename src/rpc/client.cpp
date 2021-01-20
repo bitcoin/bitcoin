@@ -233,6 +233,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "assettransfer", 0, "asset_guid" },
     { "assetsend", 0, "asset_guid" },
     { "assetsend", 2, "amount" },
+    { "assetsend", 3, "NFTID" },
     { "assetsendmany", 0, "asset_guid" },
     { "assetsendmany", 1, "amounts" },
     { "assetinfo", 0, "asset_guid" },

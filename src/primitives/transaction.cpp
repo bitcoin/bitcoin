@@ -75,7 +75,7 @@ std::string CTxOutCoin::ToString() const
     if(assetInfo.IsNull())
         return strprintf("CTxOutCoin(nValue=%d.%08d, scriptPubKey=%s)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30));
     else
-        return strprintf("CTxOutCoin(nValue=%d.%08d, scriptPubKey=%s, nAsset=%d, nAssetValue=%d.%08d)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30), assetInfo.nAsset, assetInfo.nValue / COIN, assetInfo.nValue % COIN);
+        return strprintf("CTxOutCoin(nValue=%d.%08d, scriptPubKey=%s, nAsset=%llu, nAssetValue=%d.%08d)", nValue / COIN, nValue % COIN, HexStr(scriptPubKey).substr(0, 30), assetInfo.nAsset, assetInfo.nValue / COIN, assetInfo.nValue % COIN);
 }
 CMutableTransaction::CMutableTransaction() : nVersion(CTransaction::CURRENT_VERSION), nLockTime(0) {}
 // SYSCOIN
@@ -357,7 +357,7 @@ void CMutableTransaction::LoadAssets()
         }
         const size_t &nVoutSize = vout.size();
         for(const auto &it: voutAssets) {
-            const uint32_t &nAsset = it.key;
+            const uint64_t &nAsset = it.key;
             if(it.values.empty()) {
                 throw std::ios_base::failure("asset empty outputs");
             }
@@ -402,7 +402,7 @@ bool CTransaction::GetAssetValueOut(CAssetsMap &mapAssetOut, std::string &err) c
             err = "bad-txns-asset-empty";
             return false;
         }
-        const uint32_t &nAsset = it.key;
+        const uint64_t &nAsset = it.key;
         const size_t &nVoutSize = vout.size();
         bool zeroVal = false;
         for(const auto& voutAsset: it.values) {
