@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
 {
     const CChainParams& chainparams = Params();
     auto banman = MakeUnique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    auto connman = MakeUnique<CConnman>(0x1337, 0x1337);
+    auto connman = MakeUnique<CConnmanTest>(0x1337, 0x1337);
     auto peerLogic = MakeUnique<PeerManager>(chainparams, *connman, banman.get(), *m_node.scheduler, *m_node.chainman, *m_node.mempool);
 
     const std::array<CAddress, 2> addr{CAddress{ip(0xa0b0c001), NODE_NONE},
@@ -237,39 +237,48 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     nodes[0]->SetCommonVersion(PROTOCOL_VERSION);
     peerLogic->InitializeNode(nodes[0]);
     nodes[0]->fSuccessfullyConnected = true;
+    connman->AddNode(*nodes[0]);
     peerLogic->Misbehaving(nodes[0]->GetId(), DISCOURAGEMENT_THRESHOLD, /* message */ ""); // Should be discouraged
     {
         LOCK(nodes[0]->cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(nodes[0]));
     }
     BOOST_CHECK(banman->IsDiscouraged(addr[0]));
+    BOOST_CHECK(nodes[0]->fDisconnect);
     BOOST_CHECK(!banman->IsDiscouraged(other_addr)); // Different address, not discouraged
 
     nodes[1] = new CNode{id++, NODE_NETWORK, 0, INVALID_SOCKET, addr[1], 1, 1, CAddress(), "", ConnectionType::INBOUND};
     nodes[1]->SetCommonVersion(PROTOCOL_VERSION);
     peerLogic->InitializeNode(nodes[1]);
     nodes[1]->fSuccessfullyConnected = true;
+    connman->AddNode(*nodes[1]);
     peerLogic->Misbehaving(nodes[1]->GetId(), DISCOURAGEMENT_THRESHOLD - 1, /* message */ "");
     {
         LOCK(nodes[1]->cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
     }
-    BOOST_CHECK(!banman->IsDiscouraged(addr[1])); // [1] not discouraged yet...
-    BOOST_CHECK(banman->IsDiscouraged(addr[0]));  // ... but [0] still should be
+    // [0] is still discouraged/disconnected.
+    BOOST_CHECK(banman->IsDiscouraged(addr[0]));
+    BOOST_CHECK(nodes[0]->fDisconnect);
+    // [1] is not discouraged/disconnected yet.
+    BOOST_CHECK(!banman->IsDiscouraged(addr[1]));
+    BOOST_CHECK(!nodes[1]->fDisconnect);
     peerLogic->Misbehaving(nodes[1]->GetId(), 1, /* message */ ""); // [1] reaches discouragement threshold
     {
         LOCK(nodes[1]->cs_sendProcessing);
         BOOST_CHECK(peerLogic->SendMessages(nodes[1]));
     }
-    // Expect both [0] and [1] to be discouraged now.
+    // Expect both [0] and [1] to be discouraged/disconnected now.
     BOOST_CHECK(banman->IsDiscouraged(addr[0]));
+    BOOST_CHECK(nodes[0]->fDisconnect);
     BOOST_CHECK(banman->IsDiscouraged(addr[1]));
+    BOOST_CHECK(nodes[1]->fDisconnect);
 
     bool dummy;
     for (CNode* node : nodes) {
         peerLogic->FinalizeNode(*node, dummy);
-        delete node;
     }
+    connman->ClearNodes();
 }
 
 BOOST_AUTO_TEST_CASE(DoS_bantime)
