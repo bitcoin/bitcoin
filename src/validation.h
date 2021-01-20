@@ -648,11 +648,10 @@ public:
     void PruneAndFlush();
 
     /**
-     * Find the best known block, and make it the tip of the block chain
-     *
-     * Make the best chain active, in multiple steps. The result is either failure
-     * or an activated best chain. pblock is either nullptr or a pointer to a block
-     * that is already loaded (to avoid loading it again from disk).
+     * Find the best known block, and make it the tip of the block chain. The
+     * result is either failure or an activated best chain. pblock is either
+     * nullptr or a pointer to a block that is already loaded (to avoid loading
+     * it again from disk).
      *
      * ActivateBestChain is split into steps (see ActivateBestChainStep) so that
      * we avoid holding cs_main for an extended period of time; the length of this
