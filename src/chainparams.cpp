@@ -407,9 +407,9 @@ public:
         fRequireRoutableExternalIP = true;
         m_is_test_chain = true;
 
-        // privKey: cU52TqHDWJg6HoL3keZHBvrJgsCLsduRvDFkPyZ5EmeMwoEHshiT
-        vSporkAddresses = {"TCGpumHyMXC5BmfkaAQXwB7Bf4kbkhM9BX"};
-        nMinSporkKeys = 1;   
+        // privKey: cPi3rb6xiEz7sHtQ9kVjn8rcR2BMgYbhc7Xp4aaZFu6S7An6YTqr
+        vSporkAddresses = {"tsys1qsxsdpwx53u4jqev3tjp0zqp0mm7ucy9ljr7em5", "tsys1qgmafz3mqa7glqy92r549w8qmq5535uc2e8ahjm", "tsys1q68gu0fhcchr27w08sjdxwt3rtgwef0nyh9zwk0"};
+        nMinSporkKeys = 2;   
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
