@@ -124,18 +124,21 @@ public:
     // memory only
     CScript prevPubKey;
     bool fHasSig; // flag to indicate if signed
+    int nRounds;
 
-    CTxDSIn(const CTxIn& txin, const CScript& script) :
+    CTxDSIn(const CTxIn& txin, const CScript& script, int nRounds) :
         CTxIn(txin),
         prevPubKey(script),
-        fHasSig(false)
+        fHasSig(false),
+        nRounds(nRounds)
     {
     }
 
     CTxDSIn() :
         CTxIn(),
         prevPubKey(),
-        fHasSig(false)
+        fHasSig(false),
+        nRounds(-10)
     {
     }
 };

@@ -3246,7 +3246,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
     return true;
 }
 
-bool CWallet::SelectPSInOutPairsByDenominations(int nDenom, CAmount nValueMax, std::vector< std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsRet)
+bool CWallet::SelectTxDSInsByDenomination(int nDenom, CAmount nValueMax, std::vector<CTxDSIn>& vecTxDSInRet)
 {
     LOCK2(cs_main, cs_wallet);
 
@@ -3255,7 +3255,7 @@ bool CWallet::SelectPSInOutPairsByDenominations(int nDenom, CAmount nValueMax, s
     std::set<uint256> setRecentTxIds;
     std::vector<COutput> vCoins;
 
-    vecPSInOutPairsRet.clear();
+    vecTxDSInRet.clear();
 
     if (!CPrivateSend::IsValidDenomination(nDenom)) {
         return false;
@@ -3274,17 +3274,17 @@ bool CWallet::SelectPSInOutPairsByDenominations(int nDenom, CAmount nValueMax, s
         CAmount nValue = out.tx->tx->vout[out.i].nValue;
         if (setRecentTxIds.find(txHash) != setRecentTxIds.end()) continue; // no duplicate txids
         if (nValueTotal + nValue > nValueMax) continue;
+        if (nValue != nDenomAmount) continue;
 
         CTxIn txin = CTxIn(txHash, out.i);
         CScript scriptPubKey = out.tx->tx->vout[out.i].scriptPubKey;
         int nRounds = GetRealOutpointPrivateSendRounds(txin.prevout);
 
-        if (nValue != nDenomAmount) continue;
         nValueTotal += nValue;
-        vecPSInOutPairsRet.emplace_back(CTxDSIn(txin, scriptPubKey), CTxOut(nValue, scriptPubKey, nRounds));
+        vecTxDSInRet.emplace_back(CTxDSIn(txin, scriptPubKey, nRounds));
         setRecentTxIds.emplace(txHash);
-        LogPrint(BCLog::PRIVATESEND, "CWallet::%s -- hash: %s, nValue: %d.%08d, nRounds: %d\n",
-                        __func__, txHash.ToString(), nValue / COIN, nValue % COIN, nRounds);
+        LogPrint(BCLog::PRIVATESEND, "CWallet::%s -- hash: %s, nValue: %d.%08d\n",
+                        __func__, txHash.ToString(), nValue / COIN, nValue % COIN);
     }
 
     LogPrint(BCLog::PRIVATESEND, "CWallet::%s -- setRecentTxIds.size(): %d\n", __func__, setRecentTxIds.size());
@@ -3420,26 +3420,6 @@ bool CWallet::SelectDenominatedAmounts(CAmount nValueMax, std::set<CAmount>& set
     return nValueTotal >= CPrivateSend::GetSmallestDenomination();
 }
 
-bool CWallet::GetCollateralTxDSIn(CTxDSIn& txdsinRet, CAmount& nValueRet) const
-{
-    LOCK2(cs_main, cs_wallet);
-
-    std::vector<COutput> vCoins;
-
-    CCoinControl coin_control;
-    coin_control.nCoinType = CoinType::ONLY_PRIVATESEND_COLLATERAL;
-    AvailableCoins(vCoins, true, &coin_control);
-
-    if (vCoins.empty()) {
-        return false;
-    }
-
-    const auto& out = vCoins.at((int)GetRandInt(vCoins.size()));
-    txdsinRet = CTxDSIn(CTxIn(out.tx->tx->GetHash(), out.i), out.tx->tx->vout[out.i].scriptPubKey);
-    nValueRet = out.tx->tx->vout[out.i].nValue;
-    return true;
-}
-
 bool CWallet::GetMasternodeOutpointAndKeys(COutPoint& outpointRet, CPubKey& pubKeyRet, CKey& keyRet, const std::string& strTxHash, const std::string& strOutputIndex)
 {
     LOCK2(cs_main, cs_wallet);
@@ -3528,50 +3508,6 @@ bool CWallet::HasCollateralInputs(bool fOnlyConfirmed) const
     AvailableCoins(vCoins, fOnlyConfirmed, &coin_control);
 
     return !vCoins.empty();
-}
-
-bool CWallet::CreateCollateralTransaction(CMutableTransaction& txCollateral, std::string& strReason)
-{
-    LOCK2(cs_main, cs_wallet);
-
-    txCollateral.vin.clear();
-    txCollateral.vout.clear();
-
-    CReserveKey reservekey(this);
-    CAmount nValue = 0;
-    CTxDSIn txdsinCollateral;
-
-    if (!GetCollateralTxDSIn(txdsinCollateral, nValue)) {
-        strReason = "PrivateSend requires a collateral transaction and could not locate an acceptable input!";
-        return false;
-    }
-
-    txCollateral.vin.push_back(txdsinCollateral);
-
-    // pay collateral charge in fees
-    // NOTE: no need for protobump patch here,
-    // CPrivateSend::IsCollateralAmount in GetCollateralTxDSIn should already take care of this
-    if (nValue >= CPrivateSend::GetCollateralAmount() * 2) {
-        // make our change address
-        CScript scriptChange;
-        CPubKey vchPubKey;
-        bool success = reservekey.GetReservedKey(vchPubKey, true);
-        assert(success); // should never fail, as we just unlocked
-        scriptChange = GetScriptForDestination(vchPubKey.GetID());
-        reservekey.KeepKey();
-        // return change
-        txCollateral.vout.push_back(CTxOut(nValue - CPrivateSend::GetCollateralAmount(), scriptChange));
-    } else { // nValue < CPrivateSend::GetCollateralAmount() * 2
-        // create dummy data output only and pay everything as a fee
-        txCollateral.vout.push_back(CTxOut(0, CScript() << OP_RETURN));
-    }
-
-    if (!SignSignature(*this, txdsinCollateral.prevPubKey, txCollateral, 0, nValue, SIGHASH_ALL)) {
-        strReason = "Unable to sign collateral transaction!";
-        return false;
-    }
-
-    return true;
 }
 
 bool CWallet::GetBudgetSystemCollateralTX(CTransactionRef& tx, uint256 hash, CAmount amount, const COutPoint& outpoint)
