@@ -457,4 +457,20 @@ public:
         }
         return remote_missing;
     }
+
+    /**
+     * After a reconciliation round passed, transactions missing by our peer are known by short ID.
+     * Look up their full wtxid locally to announce them to the peer.
+     */
+    std::vector<uint256> GetWTXIDsFromShortIDs(const std::vector<uint32_t>& remote_missing_short_ids)
+    {
+        std::vector<uint256> remote_missing;
+        for (size_t i = 0; i < remote_missing_short_ids.size(); ++i) {
+            auto local_tx = m_local_short_id_mapping.find(remote_missing_short_ids[i]);
+            if (local_tx != m_local_short_id_mapping.end()) {
+                remote_missing.push_back(local_tx->second);
+            }
+        }
+        return remote_missing;
+    }
 };
