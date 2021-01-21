@@ -78,6 +78,7 @@ QT_MOC_CPP = \
   qt/moc_transactiondesc.cpp \
   qt/moc_transactiondescdialog.cpp \
   qt/moc_transactionfilterproxy.cpp \
+  qt/moc_transactionoverviewwidget.cpp \
   qt/moc_transactiontablemodel.cpp \
   qt/moc_transactionview.cpp \
   qt/moc_utilitydialog.cpp \
@@ -151,6 +152,7 @@ BITCOIN_QT_H = \
   qt/transactiondesc.h \
   qt/transactiondescdialog.h \
   qt/transactionfilterproxy.h \
+  qt/transactionoverviewwidget.h \
   qt/transactionrecord.h \
   qt/transactiontablemodel.h \
   qt/transactionview.h \
