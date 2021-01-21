@@ -111,17 +111,9 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    // A name must be provided when creating a file
-    if (method == "create" && !args.IsArgSet("-wallet")) {
-        tfm::format(std::cerr, "Wallet name must be provided when creating a new wallet.\n");
-        return EXIT_FAILURE;
-    }
-
-    std::string name = args.GetArg("-wallet", "");
-
     ECCVerifyHandle globalVerifyHandle;
     ECC_Start();
-    if (!WalletTool::ExecuteWalletToolFunc(args, method, name)) {
+    if (!WalletTool::ExecuteWalletToolFunc(args, method)) {
         return EXIT_FAILURE;
     }
     ECC_Stop();
