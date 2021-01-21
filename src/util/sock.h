@@ -143,6 +143,13 @@ public:
                                             std::chrono::milliseconds timeout,
                                             CThreadInterrupt& interrupt) const;
 
+    /**
+     * Check if still connected.
+     * @param[out] err The error string, if the socket has been disconnected.
+     * @return true if connected
+     */
+    virtual bool IsConnected(std::string& errmsg) const;
+
 private:
     /**
      * Contained socket. `INVALID_SOCKET` designates the object is empty.

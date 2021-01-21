@@ -250,6 +250,31 @@ std::string Sock::RecvUntilTerminator(uint8_t terminator,
     }
 }
 
+bool Sock::IsConnected(std::string& errmsg) const
+{
+    if (m_socket == INVALID_SOCKET) {
+        errmsg = "not connected";
+        return false;
+    }
+
+    char c;
+    switch (Recv(&c, sizeof(c), MSG_PEEK)) {
+    case -1: {
+        const int err = WSAGetLastError();
+        if (IOErrorIsPermanent(err)) {
+            errmsg = NetworkErrorString(err);
+            return false;
+        }
+        return true;
+    }
+    case 0:
+        errmsg = "closed";
+        return false;
+    default:
+        return true;
+    }
+}
+
 #ifdef WIN32
 std::string NetworkErrorString(int err)
 {
