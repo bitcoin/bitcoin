@@ -8,6 +8,7 @@
 #include <consensus/amount.h>
 
 #include <QAbstractListModel>
+#include <QDataStream>
 #include <QString>
 
 // U+2009 THIN SPACE = UTF-8 E2 80 89
@@ -45,6 +46,7 @@ public:
         uBTC,
         SAT
     };
+    Q_ENUM(Unit)
 
     enum class SeparatorStyle
     {
@@ -110,5 +112,8 @@ private:
     QList<BitcoinUnits::Unit> unitlist;
 };
 typedef BitcoinUnits::Unit BitcoinUnit;
+
+QDataStream& operator<<(QDataStream& out, const BitcoinUnit& unit);
+QDataStream& operator>>(QDataStream& in, BitcoinUnit& unit);
 
 #endif // BITCOIN_QT_BITCOINUNITS_H
