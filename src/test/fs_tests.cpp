@@ -52,6 +52,23 @@ BOOST_AUTO_TEST_CASE(fsbridge_fstream)
         file >> input_buffer;
         BOOST_CHECK_EQUAL(input_buffer, "bitcoin");
     }
+    {
+        // Join an absolute path and a relative path.
+        fs::path p = fsbridge::AbsPathJoin(tmpfolder, "fs_tests_₿_🏃");
+        BOOST_CHECK(p.is_absolute());
+        BOOST_CHECK_EQUAL(tmpfile1, p);
+    }
+    {
+        // Join two absolute paths.
+        fs::path p = fsbridge::AbsPathJoin(tmpfile1, tmpfile2);
+        BOOST_CHECK(p.is_absolute());
+        BOOST_CHECK_EQUAL(tmpfile2, p);
+    }
+    {
+        // Ensure joining with empty paths does not add trailing path components.
+        BOOST_CHECK_EQUAL(tmpfile1, fsbridge::AbsPathJoin(tmpfile1, ""));
+        BOOST_CHECK_EQUAL(tmpfile1, fsbridge::AbsPathJoin(tmpfile1, {}));
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
