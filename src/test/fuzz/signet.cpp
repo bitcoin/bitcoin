@@ -17,7 +17,7 @@
 
 void initialize_signet()
 {
-    InitializeFuzzingContext(CBaseChainParams::SIGNET);
+    static const auto testing_setup = MakeFuzzingContext<>(CBaseChainParams::SIGNET);
 }
 
 FUZZ_TARGET_INIT(signet, initialize_signet)

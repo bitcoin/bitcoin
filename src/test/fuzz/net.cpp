@@ -22,7 +22,7 @@
 
 void initialize_net()
 {
-    static const BasicTestingSetup basic_testing_setup;
+    static const auto testing_setup = MakeFuzzingContext<>(CBaseChainParams::MAIN);
 }
 
 FUZZ_TARGET_INIT(net, initialize_net)

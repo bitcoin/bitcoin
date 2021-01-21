@@ -26,7 +26,7 @@ int64_t ConsumeBanTimeOffset(FuzzedDataProvider& fuzzed_data_provider) noexcept
 
 void initialize_banman()
 {
-    InitializeFuzzingContext();
+    static const auto testing_setup = MakeFuzzingContext<>();
 }
 
 FUZZ_TARGET_INIT(banman, initialize_banman)
