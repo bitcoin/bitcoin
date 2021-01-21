@@ -579,7 +579,7 @@ void OptionsModel::setDisplayUnit(const QVariant &value)
         QSettings settings;
         m_display_bitcoin_unit = value.value<BitcoinUnit>();
         settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(m_display_bitcoin_unit));
-        Q_EMIT displayUnitChanged(static_cast<int>(m_display_bitcoin_unit));
+        Q_EMIT displayUnitChanged(m_display_bitcoin_unit);
     }
 }
 
