@@ -6,6 +6,7 @@
 #define BITCOIN_QT_OVERVIEWPAGE_H
 
 #include <interfaces/wallet.h>
+#include <qt/bitcoinunits.h>
 
 #include <QWidget>
 #include <memory>
@@ -52,7 +53,7 @@ private:
     WalletModel *walletModel;
     interfaces::WalletBalances m_balances;
     bool m_privacy{false};
-    int nDisplayUnit;
+    BitcoinUnit m_display_bitcoin_unit;
     bool fShowAdvancedCJUI;
     int cachedNumISLocks;
 

@@ -9,6 +9,7 @@
 #include <consensus/amount.h>
 
 #include <QAbstractListModel>
+#include <QDataStream>
 #include <QString>
 
 // U+2009 THIN SPACE = UTF-8 E2 80 89
@@ -39,13 +40,13 @@ public:
     /** Dash units.
       @note Source: https://en.bitcoin.it/wiki/Units . Please add only sensible ones
      */
-    enum Unit
-    {
+    enum class Unit {
         DASH,
         mDASH,
         uDASH,
         duffs
     };
+    Q_ENUM(Unit)
 
     enum class SeparatorStyle
     {
@@ -60,32 +61,30 @@ public:
 
     //! Get list of units, for drop-down box
     static QList<Unit> availableUnits();
-    //! Is unit ID valid?
-    static bool valid(int unit);
     //! Short name
-    static QString name(int unit);
+    static QString name(Unit unit);
     //! Longer description
-    static QString description(int unit);
+    static QString description(Unit unit);
     //! Number of Satoshis (1e-8) per unit
-    static qint64 factor(int unit);
+    static qint64 factor(Unit unit);
     //! Number of decimals left
-    static int decimals(int unit);
+    static int decimals(Unit unit);
     //! Format as string
-    static QString format(int unit, const CAmount& amount, bool plussign = false, SeparatorStyle separators = SeparatorStyle::STANDARD, bool justify = false);
-    static QString simpleFormat(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=SeparatorStyle::STANDARD);
+    static QString format(Unit unit, const CAmount& amount, bool plussign = false, SeparatorStyle separators = SeparatorStyle::STANDARD, bool justify = false);
+    static QString simpleFormat(Unit unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=SeparatorStyle::STANDARD);
     //! Format as string (with unit)
-    static QString formatWithUnit(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=SeparatorStyle::STANDARD);
+    static QString formatWithUnit(Unit unit, const CAmount& amount, bool plussign = false, SeparatorStyle separators = SeparatorStyle::STANDARD);
     //! Format as HTML string (with unit)
-    static QString formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=SeparatorStyle::STANDARD);
+    static QString formatHtmlWithUnit(Unit unit, const CAmount& amount, bool plussign = false, SeparatorStyle separators = SeparatorStyle::STANDARD);
     //! Format as string (with unit) of fixed length to preserve privacy, if it is set.
-    static QString formatWithPrivacy(int unit, const CAmount& amount, SeparatorStyle separators, bool privacy);
+    static QString formatWithPrivacy(Unit unit, const CAmount& amount, SeparatorStyle separators, bool privacy);
     //! Format as string (with unit) but floor value up to "digits" settings
-    static QString floorWithUnit(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=SeparatorStyle::STANDARD);
-    static QString floorHtmlWithPrivacy(int unit, const CAmount& amount, SeparatorStyle separators, bool privacy);
+    static QString floorWithUnit(Unit unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=SeparatorStyle::STANDARD);
+    static QString floorHtmlWithPrivacy(Unit unit, const CAmount& amount, SeparatorStyle separators, bool privacy);
     //! Parse string to coin amount
-    static bool parse(int unit, const QString &value, CAmount *val_out);
+    static bool parse(Unit unit, const QString& value, CAmount* val_out);
     //! Gets title for amount column including current display unit if optionsModel reference available */
-    static QString getAmountColumnTitle(int unit);
+    static QString getAmountColumnTitle(Unit unit);
     ///@}
 
     //! @name AbstractListModel implementation
@@ -111,8 +110,11 @@ public:
     static CAmount maxMoney();
 
 private:
-    QList<BitcoinUnits::Unit> unitlist;
+    QList<Unit> unitlist;
 };
 typedef BitcoinUnits::Unit BitcoinUnit;
+
+QDataStream& operator<<(QDataStream& out, const BitcoinUnit& unit);
+QDataStream& operator>>(QDataStream& in, BitcoinUnit& unit);
 
 #endif // BITCOIN_QT_BITCOINUNITS_H
