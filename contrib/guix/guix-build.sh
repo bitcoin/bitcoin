@@ -65,7 +65,7 @@ else
 fi
 
 ################
-# Check 4: Make sure that build directories do no exist
+# Check 4: Make sure that build directories do not exist
 ################
 
 # Default to building for all supported HOSTs (overridable by environment)
