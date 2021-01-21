@@ -7,10 +7,13 @@ Test script for symbol-check.py
 '''
 import os
 import subprocess
+from typing import List
 import unittest
 
-def call_symbol_check(cc, source, executable, options):
-    subprocess.run([cc,source,'-o',executable] + options, check=True)
+from utils import determine_wellknown_cmd
+
+def call_symbol_check(cc: List[str], source, executable, options):
+    subprocess.run([*cc,source,'-o',executable] + options, check=True)
     p = subprocess.run(['./contrib/devtools/symbol-check.py',executable], stdout=subprocess.PIPE, universal_newlines=True)
     os.remove(source)
     os.remove(executable)
@@ -20,7 +23,7 @@ class TestSymbolChecks(unittest.TestCase):
     def test_ELF(self):
         source = 'test1.c'
         executable = 'test1'
-        cc = 'gcc'
+        cc = determine_wellknown_cmd('CC', 'gcc')
 
         # renameat2 was introduced in GLIBC 2.28, so is newer than the upper limit
         # of glibc for all platforms
@@ -82,7 +85,7 @@ class TestSymbolChecks(unittest.TestCase):
     def test_MACHO(self):
         source = 'test1.c'
         executable = 'test1'
-        cc = 'clang'
+        cc = determine_wellknown_cmd('CC', 'clang')
 
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
@@ -132,7 +135,7 @@ class TestSymbolChecks(unittest.TestCase):
     def test_PE(self):
         source = 'test1.c'
         executable = 'test1.exe'
-        cc = 'x86_64-w64-mingw32-gcc'
+        cc = determine_wellknown_cmd('CC', 'x86_64-w64-mingw32-gcc')
 
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
@@ -182,4 +185,3 @@ class TestSymbolChecks(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
