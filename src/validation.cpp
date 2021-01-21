@@ -3507,7 +3507,16 @@ bool InvalidateBlock(BlockValidationState& state, const CChainParams& chainparam
 }
 void CChainState::ResetBlockFailureFlags(CBlockIndex *pindex) {
     AssertLockHeld(cs_main);
-
+    // SYSCOIN
+    if (!pindex) {
+        if (pindexBestInvalid && pindexBestInvalid->GetAncestor(m_chain.Height()) == m_chain.Tip()) {
+            LogPrintf("%s: the best known invalid block (%s) is ahead of our tip, reconsidering\n",
+                    __func__, pindexBestInvalid->GetBlockHash().ToString());
+            pindex = pindexBestInvalid;
+        } else {
+            return;
+        }
+    }
     int nHeight = pindex->nHeight;
 
     // Remove the invalidity flag from this block and all its descendants.

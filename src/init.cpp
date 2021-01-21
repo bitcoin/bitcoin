@@ -2056,6 +2056,8 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                             failed_verification = true;
                             break;
                         }
+                        // SYSCOIN
+                        ResetBlockFailureFlags(nullptr);
                     }
                 }
             } catch (const std::exception& e) {
