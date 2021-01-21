@@ -6466,8 +6466,8 @@ void DoGethMaintenance() {
         LogPrintf("%s: Starting Geth and Relayer because PID's were uninitialized\n", __func__);
         int wsport = gArgs.GetArg("-gethwebsocketport", 8646);
         int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
-        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
-        const std::string relayerDescriptorURL = gArgs.GetArg("-relayerDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/relayerdescriptor.json");
+        const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/gethdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
+        const std::string relayerDescriptorURL = gArgs.GetArg("-relayerDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/relayerdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/relayerdescriptor.json");
         bGethTestnet = gArgs.GetBoolArg("-gethtestnet", gArgs.GetChainName() != CBaseChainParams::MAIN);
         const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
         if(!StartGethNode(gethDescriptorURL, gethPID, wsport, ethrpcport, mode))
@@ -6526,8 +6526,8 @@ void DoGethMaintenance() {
             int ethrpcport = gArgs.GetArg("-gethrpcport", 8645);
             bGethTestnet = gArgs.GetBoolArg("-gethtestnet", gArgs.GetChainName() != CBaseChainParams::MAIN);
             const std::string mode = gArgs.GetArg("-gethsyncmode", "light");
-            const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
-            const std::string relayerDescriptorURL = gArgs.GetArg("-relayerDescriptorURL", "https://raw.githubusercontent.com/syscoin/descriptors/master/relayerdescriptor.json");
+            const std::string gethDescriptorURL = gArgs.GetArg("-gethDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/gethdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/gethdescriptor.json");
+            const std::string relayerDescriptorURL = gArgs.GetArg("-relayerDescriptorURL", fTestNet? "https://raw.githubusercontent.com/syscoin/descriptors/testnet/relayerdescriptor.json": "https://raw.githubusercontent.com/syscoin/descriptors/master/relayerdescriptor.json");
             if(!StartGethNode(gethDescriptorURL, gethPID, wsport, ethrpcport, mode))
                 LogPrintf("%s: Failed to start Geth\n", __func__); 
             int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
