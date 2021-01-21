@@ -1537,20 +1537,30 @@ bool AppInitParameterInteraction()
     }
 
     if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {
-        std::string llmqTypeChainLocks = gArgs.GetArg("-llmqchainlocks", Params().GetConsensus().llmqs.at(Params().GetConsensus().llmqTypeChainLocks).name);
-        Consensus::LLMQType llmqType = Consensus::LLMQ_NONE;
+        std::string strLLMQTypeChainLocks = gArgs.GetArg("-llmqchainlocks", Params().GetConsensus().llmqs.at(Params().GetConsensus().llmqTypeChainLocks).name);
+        std::string strLLMQTypeInstantSend = gArgs.GetArg("-llmqinstantsend", Params().GetConsensus().llmqs.at(Params().GetConsensus().llmqTypeInstantSend).name);
+        Consensus::LLMQType llmqTypeChainLocks = Consensus::LLMQ_NONE;
+        Consensus::LLMQType llmqTypeInstantSend = Consensus::LLMQ_NONE;
         for (const auto& p : Params().GetConsensus().llmqs) {
-            if (p.second.name == llmqTypeChainLocks) {
-                llmqType = p.first;
-                break;
+            if (p.second.name == strLLMQTypeChainLocks) {
+                llmqTypeChainLocks = p.first;
+            }
+            if (p.second.name == strLLMQTypeInstantSend) {
+                llmqTypeInstantSend = p.first;
             }
         }
-        if (llmqType == Consensus::LLMQ_NONE) {
+        if (llmqTypeChainLocks == Consensus::LLMQ_NONE) {
             return InitError("Invalid LLMQ type specified for -llmqchainlocks.");
         }
-        UpdateDevnetLLMQChainLocks(llmqType);
+        if (llmqTypeInstantSend == Consensus::LLMQ_NONE) {
+            return InitError("Invalid LLMQ type specified for -llmqinstantsend.");
+        }
+        UpdateDevnetLLMQChainLocks(llmqTypeChainLocks);
+        UpdateDevnetLLMQInstantSend(llmqTypeInstantSend);
     } else if (gArgs.IsArgSet("-llmqchainlocks")) {
         return InitError("LLMQ type for ChainLocks can only be overridden on devnet.");
+    } else if (gArgs.IsArgSet("-llmqinstantsend")) {
+        return InitError("LLMQ type for InstantSend can only be overridden on devnet.");
     }
 
     if (chainparams.NetworkIDString() == CBaseChainParams::DEVNET) {

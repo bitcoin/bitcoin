@@ -93,6 +93,7 @@ public:
     void UpdateBudgetParameters(int nMasternodePaymentsStartBlock, int nBudgetPaymentsStartBlock, int nSuperblockStartBlock);
     void UpdateSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSubsidyBlocks, int nHighSubsidyFactor);
     void UpdateLLMQChainLocks(Consensus::LLMQType llmqType);
+    void UpdateLLMQInstantSend(Consensus::LLMQType llmqType);
     void UpdateLLMQTestParams(int size, int threshold);
     void UpdateLLMQDevnetParams(int size, int threshold);
     int PoolMinParticipants() const { return nPoolMinParticipants; }
@@ -180,6 +181,11 @@ void UpdateDevnetSubsidyAndDiffParams(int nMinimumDifficultyBlocks, int nHighSub
  * Allows modifying the LLMQ type for ChainLocks.
  */
 void UpdateDevnetLLMQChainLocks(Consensus::LLMQType llmqType);
+
+/**
+ * Allows modifying the LLMQ type for InstantSend.
+ */
+void UpdateDevnetLLMQInstantSend(Consensus::LLMQType llmqType);
 
 /**
  * Allows modifying parameters of the test LLMQ
