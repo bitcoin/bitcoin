@@ -245,6 +245,7 @@ bool CheckSyscoinMint(const bool &ibd, const CTransaction& tx, const uint256& tx
     if(outputAmount <= 0) {
         return FormatSyscoinErrorMessage(state, "mint-value-negative", bSanityCheck);
     }
+    
     // if input for this asset exists, must also include it as change in output, so output-input should be the new amount created
     auto itIn = mapAssetIn.find(nAsset);
     CAmount nTotal;
@@ -944,12 +945,11 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             // db will be stored with total supply
             // even though new assets must set this flag, it may be unset by disconnectassetsend
             storedAssetRef.nUpdateMask |= ASSET_UPDATE_SUPPLY;
+            // this can go negative, inputing an asset without change and not issuing the equivalent will effectively "burn" out of existence but also reduce the supply so it can issue more in the future
+            // for this you can issue an assetSend inputing assets from user wishing to burn, aswell as zero val input of asset from owner and no output
             const CAmount &nTotal = outAmount - inAmount;
             storedAssetRef.nTotalSupply += nTotal;
-            if (!MoneyRangeAsset(nTotal)) {
-                return FormatSyscoinErrorMessage(state, "asset-amount-outofrange", bSanityCheck);
-            }
-            if (!MoneyRangeAsset(storedAssetRef.nTotalSupply)) {
+            if (nTotal < -MAX_ASSET || nTotal > MAX_ASSET || !MoneyRangeAsset(storedAssetRef.nTotalSupply)) {
                 return FormatSyscoinErrorMessage(state, "asset-supply-outofrange", bSanityCheck);
             }
             if (storedAssetRef.nTotalSupply > storedAssetRef.nMaxSupply) {

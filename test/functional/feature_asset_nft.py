@@ -70,6 +70,7 @@ class AssetNFTTest(SyscoinTestFramework):
         user3 = self.nodes[1].getnewaddress()
         # NFT 0xFFFFFFFF
         user4 = self.nodes[1].getnewaddress()
+        assert_raises_rpc_error(-26, 'bad-txns-asset-multiple-zero-out', self.nodes[0].assetsendmany, asset,[{'address': user1,'amount':0.00000001,'NFTID':nftUser1},{'address': user2,'amount':0.4,'NFTID':nftUser2},{'address': user3,'amount':0.5},{'address': user4,'amount':0.6,'NFTID':nftUser4},{'address': user4,'amount':0}])
         self.nodes[0].assetsendmany(asset,[{'address': user1,'amount':0.00000001,'NFTID':nftUser1},{'address': user2,'amount':0.4,'NFTID':nftUser2},{'address': user3,'amount':0.5},{'address': user4,'amount':0.6,'NFTID':nftUser4}])
         self.nodes[0].generate(3)
         self.sync_blocks()
