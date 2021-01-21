@@ -416,7 +416,7 @@ bool ArgsManager::GetSettingsPath(fs::path* filepath, bool temp) const
     }
     if (filepath) {
         std::string settings = GetArg("-settings", SYSCOIN_SETTINGS_FILENAME);
-        *filepath = fs::absolute(temp ? settings + ".tmp" : settings, GetDataDir(/* net_specific= */ true));
+        *filepath = fsbridge::AbsPathJoin(GetDataDir(/* net_specific= */ true), temp ? settings + ".tmp" : settings);
     }
     return true;
 }
@@ -1476,7 +1476,7 @@ fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific)
     if (path.is_absolute()) {
         return path;
     }
-    return fs::absolute(path, GetDataDir(net_specific));
+    return fsbridge::AbsPathJoin(GetDataDir(net_specific), path);
 }
 
 void ScheduleBatchPriority()

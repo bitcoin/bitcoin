@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <fs.h>
+#include <univalue.h>
 #include <util/check.h>
 #include <util/system.h>
 
@@ -37,6 +38,9 @@ InitWalletDirTestingSetup::InitWalletDirTestingSetup(const std::string& chainNam
 
 InitWalletDirTestingSetup::~InitWalletDirTestingSetup()
 {
+    gArgs.LockSettings([&](util::Settings& settings) {
+        settings.forced_settings.erase("walletdir");
+    });
     fs::current_path(m_cwd);
 }
 
