@@ -7,6 +7,7 @@
 import os
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework import util
 
 
 class ConfArgsTest(BitcoinTestFramework):
@@ -42,10 +43,11 @@ class ConfArgsTest(BitcoinTestFramework):
                 conf.write("wallet=foo\n")
             self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Config setting for -wallet only applied on %s network when in [%s] section.' % (self.chain, self.chain))
 
+        main_conf_file_path = os.path.join(self.options.tmpdir, 'node0', 'bitcoin_main.conf')
+        util.write_config(main_conf_file_path, n=0, chain='', extra_config='includeconf={}\n'.format(inc_conf_file_path))
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
-            conf.write('regtest=0\n') # mainnet
             conf.write('acceptnonstdtxn=1\n')
-        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: acceptnonstdtxn is not currently supported for main chain')
+        self.nodes[0].assert_start_raises_init_error(extra_args=["-conf={}".format(main_conf_file_path)], expected_msg='Error: acceptnonstdtxn is not currently supported for main chain')
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('nono\n')
