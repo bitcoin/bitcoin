@@ -4825,12 +4825,6 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview,
             } else {
                 nGoodTransactions += block.vtx.size();
             }
-            // SYSCOIN must flush for now because disconnect may remove asset data and rolling forward expects it to be clean from db
-            if(passetdb != nullptr){
-                if(!passetdb->Flush(mapAssets) || !pethereumtxmintdb->FlushErase(mapMintKeys) || !pblockindexdb->FlushErase(vecTXIDs)){
-                    return error("VerifyDB(): Error flushing to asset dbs on disconnect %s", pindex->GetBlockHash().ToString());
-                }
-            }
         }
         if (ShutdownRequested()) return true;
     }

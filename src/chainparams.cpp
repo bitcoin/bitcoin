@@ -186,8 +186,10 @@ public:
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 6 * 60 * 60; // 6h retarget
         consensus.nPowTargetSpacing = 1 * 60; // Syscoin: 1 minute
+        // TODO find right chainid
         consensus.nAuxpowChainId = 8;
         consensus.nAuxpowOldChainId = 4096;
+        consensus.nAuxpowStartHeight = 1;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
@@ -207,9 +209,6 @@ public:
 
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256S("0x4c332acd53ca99ab78fb80a3dacffe234674674e0b682350c492d7fe839d128e"); // 419800
-        consensus.nAuxpowChainId = 8;
-        consensus.nAuxpowOldChainId = 4096;
-        consensus.nAuxpowStartHeight = 1;
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 1;
         consensus.nSYSXAsset = 1045909988;
