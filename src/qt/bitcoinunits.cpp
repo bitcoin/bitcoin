@@ -30,60 +30,57 @@ QList<BitcoinUnit> BitcoinUnits::availableUnits()
 
 QString BitcoinUnits::longName(Unit unit)
 {
-    switch(unit)
-    {
+    switch (unit) {
     case Unit::BTC: return QString("BTC");
     case Unit::mBTC: return QString("mBTC");
     case Unit::uBTC: return QString::fromUtf8("µBTC (bits)");
     case Unit::SAT: return QString("Satoshi (sat)");
-    default: return QString("???");
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 QString BitcoinUnits::shortName(Unit unit)
 {
-    switch(unit)
-    {
-    case Unit::uBTC: return QString::fromUtf8("bits");
+    switch (unit) {
+    case Unit::BTC: return longName(unit);
+    case Unit::mBTC: return longName(unit);
+    case Unit::uBTC: return QString("bits");
     case Unit::SAT: return QString("sat");
-    default: return longName(unit);
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 QString BitcoinUnits::description(Unit unit)
 {
-    switch(unit)
-    {
+    switch (unit) {
     case Unit::BTC: return QString("Bitcoins");
     case Unit::mBTC: return QString("Milli-Bitcoins (1 / 1" THIN_SP_UTF8 "000)");
     case Unit::uBTC: return QString("Micro-Bitcoins (bits) (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
     case Unit::SAT: return QString("Satoshi (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-    default: return QString("???");
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 qint64 BitcoinUnits::factor(Unit unit)
 {
-    switch(unit)
-    {
+    switch (unit) {
     case Unit::BTC: return 100'000'000;
     case Unit::mBTC: return 100'000;
     case Unit::uBTC: return 100;
     case Unit::SAT: return 1;
-    default: return 100'000'000;
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 int BitcoinUnits::decimals(Unit unit)
 {
-    switch(unit)
-    {
+    switch (unit) {
     case Unit::BTC: return 8;
     case Unit::mBTC: return 5;
     case Unit::uBTC: return 2;
     case Unit::SAT: return 0;
-    default: return 0;
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 QString BitcoinUnits::format(Unit unit, const CAmount& nIn, bool fPlus, SeparatorStyle separators, bool justify)
