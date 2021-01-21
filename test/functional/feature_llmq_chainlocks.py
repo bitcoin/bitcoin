@@ -91,21 +91,41 @@ class LLMQChainLocksTest(DashTestFramework):
         self.stop_node(0)
         self.start_node(0)
         connect_nodes(self.nodes[0], 1)
-        self.nodes[0].invalidateblock(self.nodes[0].getbestblockhash())
+        assert(self.nodes[0].getbestblockhash() == good_tip)
+        self.nodes[0].invalidateblock(good_tip)
         self.log.info("Now try to reorg the chain")
         self.nodes[0].generate(2)
         time.sleep(6)
         assert(self.nodes[1].getbestblockhash() == good_tip)
-        self.nodes[0].generate(2)
+        bad_tip = self.nodes[0].generate(2)[-1]
         time.sleep(6)
+        assert(self.nodes[0].getbestblockhash() == bad_tip)
         assert(self.nodes[1].getbestblockhash() == good_tip)
 
         self.log.info("Now let the node which is on the wrong chain reorg back to the locked chain")
         self.nodes[0].reconsiderblock(good_tip)
         assert(self.nodes[0].getbestblockhash() != good_tip)
-        self.nodes[1].generatetoaddress(1, node0_mining_addr)
-        self.wait_for_chainlocked_block(self.nodes[0], self.nodes[1].getbestblockhash())
-        assert(self.nodes[0].getbestblockhash() == self.nodes[1].getbestblockhash())
+        good_fork = good_tip
+        good_tip = self.nodes[1].generatetoaddress(1, node0_mining_addr)[-1]  # this should mark bad_tip as conflicting
+        self.wait_for_chainlocked_block(self.nodes[0], good_tip)
+        assert(self.nodes[0].getbestblockhash() == good_tip)
+        found = False
+        for tip in self.nodes[0].getchaintips(2):
+            if tip["hash"] == bad_tip:
+                assert(tip["status"] == "conflicting")
+                found = True
+                break
+        assert(found)
+
+        self.log.info("Should switch to the best non-conflicting tip (not to the most work chain) on restart")
+        assert(int(self.nodes[0].getblock(bad_tip)["chainwork"], 16) > int(self.nodes[1].getblock(good_tip)["chainwork"], 16))
+        self.stop_node(0)
+        self.start_node(0)
+        self.nodes[0].invalidateblock(good_fork)
+        self.stop_node(0)
+        self.start_node(0)
+        time.sleep(1)
+        assert(self.nodes[0].getbestblockhash() == good_tip)
 
         self.log.info("Isolate a node and let it create some transactions which won't get IS locked")
         isolate_node(self.nodes[0])
@@ -114,12 +134,14 @@ class LLMQChainLocksTest(DashTestFramework):
             txs.append(self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1))
         txs += self.create_chained_txs(self.nodes[0], 1)
         self.log.info("Assert that after block generation these TXs are NOT included (as they are \"unsafe\")")
-        self.nodes[0].generate(1)
+        node0_tip = self.nodes[0].generate(1)[-1]
         for txid in txs:
             tx = self.nodes[0].getrawtransaction(txid, 1)
             assert("confirmations" not in tx)
         time.sleep(1)
-        assert(not self.nodes[0].getblock(self.nodes[0].getbestblockhash())["chainlock"])
+        node0_tip_block = self.nodes[0].getblock(node0_tip)
+        assert(not node0_tip_block["chainlock"])
+        assert(node0_tip_block["previousblockhash"] == good_tip)
         self.log.info("Disable LLMQ based InstantSend for a very short time (this never gets propagated to other nodes)")
         self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 4070908800)
         self.log.info("Now the TXs should be included")
