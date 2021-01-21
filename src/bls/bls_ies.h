@@ -12,10 +12,10 @@ class CBLSIESEncryptedBlob
 {
 public:
     CBLSPublicKey ephemeralPubKey;
-    unsigned char iv[16];
+    uint256 ivSeed;
     std::vector<unsigned char> data;
 
-    bool valid{false};
+    uint256 GetIV(size_t idx) const;
 
 public:
     ADD_SERIALIZE_METHODS
@@ -23,22 +23,15 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
-        if (!ser_action.ForRead()) {
-            assert(valid);
-        } else {
-            valid = false;
-        }
         READWRITE(ephemeralPubKey);
-        READWRITE(iv);
+        READWRITE(ivSeed);
         READWRITE(data);
-        if (ser_action.ForRead()) {
-            valid = true;
-        }
-    };
+    }
 
 public:
-    bool Encrypt(const CBLSPublicKey& peerPubKey, const void* data, size_t dataSize);
-    bool Decrypt(const CBLSSecretKey& secretKey, CDataStream& decryptedDataRet) const;
+    bool Encrypt(size_t idx, const CBLSPublicKey& peerPubKey, const void* data, size_t dataSize);
+    bool Decrypt(size_t idx, const CBLSSecretKey& secretKey, CDataStream& decryptedDataRet) const;
+    bool IsValid() const;
 };
 
 template <typename Object>
@@ -49,21 +42,28 @@ public:
     {
     }
 
-    bool Encrypt(const CBLSPublicKey& peerPubKey, const Object& obj, int nVersion)
+    CBLSIESEncryptedObject(const CBLSPublicKey& ephemeralPubKeyIn, const uint256& ivSeedIn, const std::vector<unsigned char>& dataIn)
+    {
+        ephemeralPubKey = ephemeralPubKeyIn;
+        ivSeed = ivSeedIn;
+        data = dataIn;
+    }
+
+    bool Encrypt(size_t idx, const CBLSPublicKey& peerPubKey, const Object& obj, int nVersion)
     {
         try {
             CDataStream ds(SER_NETWORK, nVersion);
             ds << obj;
-            return CBLSIESEncryptedBlob::Encrypt(peerPubKey, ds.data(), ds.size());
+            return CBLSIESEncryptedBlob::Encrypt(idx, peerPubKey, ds.data(), ds.size());
         } catch (std::exception&) {
             return false;
         }
     }
 
-    bool Decrypt(const CBLSSecretKey& secretKey, Object& objRet, int nVersion) const
+    bool Decrypt(size_t idx, const CBLSSecretKey& secretKey, Object& objRet, int nVersion) const
     {
         CDataStream ds(SER_NETWORK, nVersion);
-        if (!CBLSIESEncryptedBlob::Decrypt(secretKey, ds)) {
+        if (!CBLSIESEncryptedBlob::Decrypt(idx, secretKey, ds)) {
             return false;
         }
         try {
@@ -158,6 +158,11 @@ public:
         } catch (std::exception&) {
             return false;
         }
+    }
+
+    CBLSIESEncryptedObject<Object> Get(const size_t idx)
+    {
+        return {ephemeralPubKey, ivSeed, blobs[idx]};
     }
 };
 
