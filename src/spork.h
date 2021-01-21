@@ -138,6 +138,9 @@ private:
     mutable RecursiveMutex cs;
     std::unordered_map<uint256, CSporkMessage, StaticSaltedHasher> mapSporksByHash;
     std::unordered_map<int32_t, std::map<CKeyID, CSporkMessage> > mapSporksActive;
+    
+    std::unordered_map<int32_t, bool> mapSporksCachedActive;
+    mutable std::unordered_map<int32_t, int64_t> mapSporksCachedValues;
 
     std::set<CKeyID> setSporkPubKeyIDs;
     int nMinSporkKeys;
