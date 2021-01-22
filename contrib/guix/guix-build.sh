@@ -65,12 +65,13 @@ else
 fi
 
 ################
-# Check 4: Make sure that build directories do no exist
+# Check 4: Make sure that build directories do not exist
 ################
 
 # Default to building for all supported HOSTs (overridable by environment)
 export HOSTS="${HOSTS:-x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu
-                       x86_64-w64-mingw32}"
+                       x86_64-w64-mingw32
+                       x86_64-apple-darwin18}"
 
 DISTSRC_BASE="${DISTSRC_BASE:-${PWD}}"
 
@@ -105,8 +106,27 @@ for host in $hosts_distsrc_exists; do
 done
 exit 1
 else
+
     mkdir -p "$DISTSRC_BASE"
 fi
+
+################
+# Check 5: When building for darwin, make sure that the macOS SDK exists
+################
+
+for host in $HOSTS; do
+    case "$host" in
+        *darwin*)
+            OSX_SDK="$(make -C "${PWD}/depends" --no-print-directory HOST="$host" print-OSX_SDK | sed 's@^[^=]\+=[[:space:]]\+@@g')"
+            if [ -e "$OSX_SDK" ]; then
+                echo "Found macOS SDK at '${OSX_SDK}', using..."
+            else
+                echo "macOS SDK does not exist at '${OSX_SDK}', please place the extracted, untarred SDK there to perform darwin builds, exiting..."
+                exit 1
+            fi
+            ;;
+    esac
+done
 
 #########
 # Setup #
