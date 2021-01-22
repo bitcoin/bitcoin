@@ -220,7 +220,7 @@ bool CSporkManager::UpdateSpork(SporkId nSporkID, int64_t nValue, CConnman& conn
     return true;
 }
 
-bool CSporkManager::IsSporkActive(SporkId nSporkID)
+bool CSporkManager::IsSporkActive(SporkId nSporkID) const
 {
     LOCK(cs);
     // If nSporkID is cached, and the cached value is true, then return early true
@@ -239,7 +239,7 @@ bool CSporkManager::IsSporkActive(SporkId nSporkID)
     return ret;
 }
 
-int64_t CSporkManager::GetSporkValue(SporkId nSporkID)
+int64_t CSporkManager::GetSporkValue(SporkId nSporkID) const
 {
     LOCK(cs);
 
@@ -257,7 +257,7 @@ int64_t CSporkManager::GetSporkValue(SporkId nSporkID)
     return -1;
 }
 
-SporkId CSporkManager::GetSporkIDByName(const std::string& strName)
+SporkId CSporkManager::GetSporkIDByName(const std::string& strName) const
 {
     auto it = sporkDefsByName.find(strName);
     if (it == sporkDefsByName.end()) {
@@ -267,7 +267,7 @@ SporkId CSporkManager::GetSporkIDByName(const std::string& strName)
     return it->second->sporkId;
 }
 
-std::string CSporkManager::GetSporkNameByID(SporkId nSporkID)
+std::string CSporkManager::GetSporkNameByID(SporkId nSporkID) const
 {
     auto it = sporkDefsById.find(nSporkID);
     if (it == sporkDefsById.end()) {
@@ -277,7 +277,7 @@ std::string CSporkManager::GetSporkNameByID(SporkId nSporkID)
     return it->second->name;
 }
 
-bool CSporkManager::GetSporkByHash(const uint256& hash, CSporkMessage &sporkRet)
+bool CSporkManager::GetSporkByHash(const uint256& hash, CSporkMessage &sporkRet) const
 {
     LOCK(cs);
 
@@ -425,7 +425,7 @@ bool CSporkMessage::CheckSignature(const CKeyID& pubKeyId) const
     return true;
 }
 
-bool CSporkMessage::GetSignerKeyID(CKeyID &retKeyidSporkSigner)
+bool CSporkMessage::GetSignerKeyID(CKeyID &retKeyidSporkSigner) const
 {
     CPubKey pubkeyFromSig;
     // Harden Spork6 so that it is active on testnet and no other networks
@@ -447,7 +447,7 @@ bool CSporkMessage::GetSignerKeyID(CKeyID &retKeyidSporkSigner)
     return true;
 }
 
-void CSporkMessage::Relay(CConnman& connman)
+void CSporkMessage::Relay(CConnman& connman) const
 {
     CInv inv(MSG_SPORK, GetHash());
     connman.RelayInv(inv);
