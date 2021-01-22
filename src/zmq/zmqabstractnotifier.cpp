@@ -13,7 +13,7 @@ CZMQAbstractNotifier::~CZMQAbstractNotifier()
     assert(!psocket);
 }
 // SYSCOIN
-bool CZMQAbstractNotifier::NotifyGovernanceObject(const CGovernanceObject& /*object*/)
+bool CZMQAbstractNotifier::NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& /*object*/)
 {
     return true;
 }
