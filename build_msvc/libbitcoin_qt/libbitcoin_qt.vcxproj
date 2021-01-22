@@ -104,6 +104,7 @@
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_transactiondesc.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_transactiondescdialog.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_transactionfilterproxy.cpp" />
+    <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_transactionoverviewwidget.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_transactionrecord.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_transactiontablemodel.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_transactionview.cpp" />
