@@ -990,6 +990,8 @@ UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDet
         const CTxDestination &voteDest = WitnessV0KeyHash(dmn->pdmnState->keyIDOwner);
         o.pushKV("collateralHash", dmn->collateralOutpoint.hash.ToString());
         o.pushKV("collateralIndex", (int)dmn->collateralOutpoint.n);
+        o.pushKV("collateralHeight", dmn->pdmnState->nCollateralHeight);
+        o.pushKV("votingAddress", EncodeDestination(voteDest));
         if(pwallet) {
             LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
             LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
