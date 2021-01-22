@@ -97,6 +97,7 @@ bool CDKGSession::Init(const CBlockIndex* _pindexQuorum, const std::vector<CDete
     memberIds.resize(members.size());
     receivedVvecs.resize(members.size());
     receivedSkContributions.resize(members.size());
+    vecEncryptedContributions.resize(members.size());
 
     for (size_t i = 0; i < mns.size(); i++) {
         members[i] = std::make_unique<CDKGMember>(mns[i], i);
@@ -343,6 +344,7 @@ void CDKGSession::ReceiveMessage(const CDKGContribution& qc, bool& retBan)
 
     bool verifyPending = false;
     receivedSkContributions[member->idx] = skContribution;
+    vecEncryptedContributions[member->idx] = qc.contributions;
     pendingContributionVerifications.emplace_back(member->idx);
     if (pendingContributionVerifications.size() >= 32) {
         verifyPending = true;
@@ -383,6 +385,9 @@ void CDKGSession::VerifyPendingContributions()
         memberIndexes.emplace_back(idx);
         vvecs.emplace_back(receivedVvecs[idx]);
         skContributions.emplace_back(receivedSkContributions[idx]);
+        // Write here to definitely store one contribution for each member no matter if
+        // our share is valid or not, could be that others are still correct
+        dkgManager.WriteEncryptedContributions(params.type, pindexQuorum, m->dmn->proTxHash, *vecEncryptedContributions[idx]);
     }
 
     auto result = blsWorker.VerifyContributionShares(myId, vvecs, skContributions);
