@@ -236,7 +236,7 @@ bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &tr
     return SendZmqMessage(MSG_RAWTX, &(*ss.begin()), ss.size());
 }
 // SYSCOIN
-bool CZMQPublishHashGovernanceVoteNotifier::NotifyGovernanceVote(const CGovernanceVote &vote)
+bool CZMQPublishHashGovernanceVoteNotifier::NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote)
 {
     uint256 hash = vote.GetHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish hashgovernancevote %s\n", hash.GetHex());
@@ -246,7 +246,7 @@ bool CZMQPublishHashGovernanceVoteNotifier::NotifyGovernanceVote(const CGovernan
     return SendZmqMessage(MSG_HASHGVOTE, data, 32);
 }
 
-bool CZMQPublishHashGovernanceObjectNotifier::NotifyGovernanceObject(const CGovernanceObject &object)
+bool CZMQPublishHashGovernanceObjectNotifier::NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object)
 {
     uint256 hash = object.GetHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish hashgovernanceobject %s\n", hash.GetHex());
@@ -255,19 +255,19 @@ bool CZMQPublishHashGovernanceObjectNotifier::NotifyGovernanceObject(const CGove
         data[31 - i] = hash.begin()[i];
     return SendZmqMessage(MSG_HASHGOBJ, data, 32);
 }
-bool CZMQPublishRawGovernanceVoteNotifier::NotifyGovernanceVote(const CGovernanceVote &vote)
+bool CZMQPublishRawGovernanceVoteNotifier::NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote)
 {
-    uint256 nHash = vote.GetHash();
-    LogPrint(BCLog::ZMQ, "zmq: Publish rawgovernanceobject: hash = %s, vote = %d\n", nHash.ToString(), vote.ToString());
+    uint256 nHash = vote->GetHash();
+    LogPrint(BCLog::ZMQ, "zmq: Publish rawgovernanceobject: hash = %s, vote = %d\n", nHash.ToString(), vote->ToString());
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << vote;
     return SendZmqMessage(MSG_RAWGVOTE, &(*ss.begin()), ss.size());
 }
 
-bool CZMQPublishRawGovernanceObjectNotifier::NotifyGovernanceObject(const CGovernanceObject &govobj)
+bool CZMQPublishRawGovernanceObjectNotifier::NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& govobj)
 {
-    uint256 nHash = govobj.GetHash();
-    LogPrint(BCLog::ZMQ, "zmq: Publish rawgovernanceobject: hash = %s, type = %d\n", nHash.ToString(), govobj.GetObjectType());
+    uint256 nHash = govobj->GetHash();
+    LogPrint(BCLog::ZMQ, "zmq: Publish rawgovernanceobject: hash = %s, type = %d\n", nHash.ToString(), govobj->GetObjectType());
     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
     ss << govobj;
     return SendZmqMessage(MSG_RAWGOBJ, &(*ss.begin()), ss.size());

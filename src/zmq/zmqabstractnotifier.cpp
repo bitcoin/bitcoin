@@ -17,7 +17,7 @@ bool CZMQAbstractNotifier::NotifyGovernanceObject(const CGovernanceObject& /*obj
 {
     return true;
 }
-bool CZMQAbstractNotifier::NotifyGovernanceVote(const CGovernanceVote& /*vote*/)
+bool CZMQAbstractNotifier::NotifyGovernanceVote(const std::shared_ptr<constCGovernanceVote>& /*vote*/)
 {
     return true;
 }

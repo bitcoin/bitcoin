@@ -258,10 +258,10 @@ void CMainSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared
 void CMainSignals::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.SynchronousUpdatedBlockTip(pindexNew, pindexFork, fInitialDownload); });
 }
-void CMainSignals::NotifyGovernanceVote(const CGovernanceVote &vote) {
+void CMainSignals::NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGovernanceVote(vote); });
 }
-void CMainSignals::NotifyGovernanceObject(const CGovernanceObject &object) {
+void CMainSignals::NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyGovernanceObject(object); });
 }
 void CMainSignals::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {

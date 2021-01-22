@@ -60,8 +60,8 @@ public:
     virtual bool NotifyTransaction(const CTransaction &transaction);
     // SYSCOIN
     virtual bool NotifyTransactionMempool(const CTransaction &transaction);
-    virtual bool NotifyGovernanceVote(const CGovernanceVote &vote);
-    virtual bool NotifyGovernanceObject(const CGovernanceObject &object);
+    virtual bool NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
+    virtual bool NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object);
 
 protected:
     void *psocket;

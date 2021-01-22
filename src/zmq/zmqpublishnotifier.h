@@ -60,24 +60,24 @@ public:
 class CZMQPublishHashGovernanceVoteNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyGovernanceVote(const CGovernanceVote &vote) override;
+    bool NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote> &vote) override;
 };
 
 class CZMQPublishHashGovernanceObjectNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyGovernanceObject(const CGovernanceObject &object) override;
+    bool NotifyGovernanceObject(const const std::shared_ptr<const CGovernanceObject> &object) override;
 };
 class CZMQPublishRawGovernanceVoteNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyGovernanceVote(const CGovernanceVote &vote) override;
+    bool NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) override;
 };
 
 class CZMQPublishRawGovernanceObjectNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyGovernanceObject(const CGovernanceObject &object) override;
+    bool NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object) override;
 };
 class CZMQPublishSequenceNotifier : public CZMQAbstractPublishNotifier
 {

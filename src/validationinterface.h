@@ -182,8 +182,8 @@ protected:
 
     // SYSCOIN
     virtual void SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
-    virtual void NotifyGovernanceVote(const CGovernanceVote &vote) {}
-    virtual void NotifyGovernanceObject(const CGovernanceObject &object) {}
+    virtual void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) {}
+    virtual void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject> &object) {}
     virtual void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff) {}
 };
 
@@ -218,8 +218,8 @@ public:
     void ChainStateFlushed(const CBlockLocator &);
     void BlockChecked(const CBlock&, const BlockValidationState&);
     void NewPoWValidBlock(const CBlockIndex *, const std::shared_ptr<const CBlock>&);
-    void NotifyGovernanceVote(const CGovernanceVote &vote);
-    void NotifyGovernanceObject(const CGovernanceObject &object);
+    void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
+    void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object);
     void NotifyMasternodeListChanged(bool undo, const CDeterministicMNList& oldMNList, const CDeterministicMNListDiff& diff);
 };
 
