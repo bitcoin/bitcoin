@@ -1013,7 +1013,7 @@ void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, std::u
     }
 }
 
-void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<NodeId, std::vector<CSigShare>>& sigSharesToSend, const std::unordered_map<uint256, CNode*> &proTxToNode)
+void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<NodeId, std::vector<CSigShare>>& sigSharesToSend, const std::unordered_map<uint256, CNode*, StaticSaltedHasher> &proTxToNode)
 {
     AssertLockHeld(cs);
 
@@ -1131,7 +1131,7 @@ bool CSigSharesManager::SendMessages()
 
     std::vector<CNode*> vNodesCopy;
     connman.CopyNodeVector(vNodesCopy);
-    std::unordered_map<uint256, CNode*> proTxToNode;
+    std::unordered_map<uint256, CNode*, StaticSaltedHasher> proTxToNode;
     for (const auto& pnode : vNodesCopy) {
         LOCK(pnode->cs_mnauth);
         if (pnode->verifiedProRegTxHash.IsNull()) {

@@ -114,12 +114,12 @@ public:
      * This method was introduced along with the multi-signer sporks feature,
      * in order to identify which spork key signed this message.
      */
-    bool GetSignerKeyID(CKeyID& retKeyidSporkSigner);
+    bool GetSignerKeyID(CKeyID& retKeyidSporkSigner) const;
 
     /**
      * Relay is used to send this spork message to other peers.
      */
-    void Relay(CConnman& connman);
+    void Relay(CConnman& connman) const;
 };
 
 /**
@@ -135,12 +135,12 @@ private:
     std::unordered_map<int32_t, CSporkDef*> sporkDefsById;
     std::unordered_map<std::string, CSporkDef*> sporkDefsByName;
 
+    mutable std::unordered_map<int32_t, bool> mapSporksCachedActive;
+    mutable std::unordered_map<int32_t, int64_t> mapSporksCachedValues;
+
     mutable RecursiveMutex cs;
     std::unordered_map<uint256, CSporkMessage, StaticSaltedHasher> mapSporksByHash;
     std::unordered_map<int32_t, std::map<CKeyID, CSporkMessage> > mapSporksActive;
-    
-    std::unordered_map<int32_t, bool> mapSporksCachedActive;
-    mutable std::unordered_map<int32_t, int64_t> mapSporksCachedValues;
 
     std::set<CKeyID> setSporkPubKeyIDs;
     int nMinSporkKeys;
@@ -231,23 +231,23 @@ public:
      * instead, and therefore this method doesn't make sense and should not be
      * used.
      */
-    bool IsSporkActive(int32_t nSporkID);
+    bool IsSporkActive(int32_t nSporkID) const;
 
     /**
      * GetSporkValue returns the spork value given a Spork ID. If no active spork
      * message has yet been received by the node, it returns the default value.
      */
-    int64_t GetSporkValue(int32_t nSporkID);
+    int64_t GetSporkValue(int32_t nSporkID) const;
 
     /**
      * GetSporkIDByName returns the internal Spork ID given the spork name.
      */
-    int32_t GetSporkIDByName(const std::string& strName);
+    int32_t GetSporkIDByName(const std::string& strName) const;
 
     /**
      * GetSporkNameByID returns the spork name as a string, given a Spork ID.
      */
-    std::string GetSporkNameByID(int32_t nSporkID);
+    std::string GetSporkNameByID(int32_t nSporkID) const;
 
     /**
      * GetSporkByHash returns a spork message given a hash of the spork message.
@@ -257,7 +257,7 @@ public:
      * hash-based index of sporks for this reason, and this function is the access
      * point into that index.
      */
-    bool GetSporkByHash(const uint256& hash, CSporkMessage &sporkRet);
+    bool GetSporkByHash(const uint256& hash, CSporkMessage &sporkRet) const;
 
     /**
      * SetSporkAddress is used to set a public key ID which will be used to
