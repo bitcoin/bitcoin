@@ -50,7 +50,7 @@ private:
     std::string strPath;
 
 public:
-    DbEnv m_db_env{DB_CXX_NO_EXCEPTIONS};
+    std::unique_ptr<DbEnv> dbenv{std::make_unique<DbEnv>(DB_CXX_NO_EXCEPTIONS)};
     std::map<fs::path, std::reference_wrapper<BerkeleyDatabase>> m_databases;
     std::unordered_map<std::string, WalletDatabaseFileId> m_fileids;
     std::condition_variable_any m_db_in_use;
@@ -75,7 +75,7 @@ public:
     DbTxn* TxnBegin(int flags = DB_TXN_WRITE_NOSYNC)
     {
         DbTxn* ptxn = nullptr;
-        int ret = m_db_env.txn_begin(nullptr, &ptxn, flags);
+        int ret = dbenv->txn_begin(nullptr, &ptxn, flags);
         if (!ptxn || ret != 0)
             return nullptr;
         return ptxn;
