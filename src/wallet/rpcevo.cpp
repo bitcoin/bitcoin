@@ -987,7 +987,7 @@ UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDet
     }
     UniValue o(UniValue::VOBJ);
     if(detailed == 1) {
-        const CTxDestination &voteDest = WitnessV0KeyHash(dmn->pdmnState->keyIDOwner);
+        const CTxDestination &voteDest = WitnessV0KeyHash(dmn->pdmnState->keyIDVoting);
         o.pushKV("collateralHash", dmn->collateralOutpoint.hash.ToString());
         o.pushKV("collateralIndex", (int)dmn->collateralOutpoint.n);
         o.pushKV("collateralHeight", dmn->pdmnState->nCollateralHeight);
