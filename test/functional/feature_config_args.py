@@ -31,7 +31,7 @@ class ConfArgsTest(BitcoinTestFramework):
         # Check that using non-existent datadir in conf file fails
         conf_file = os.path.join(default_data_dir, "dash.conf")
 
-        # datadir needs to be set before [regtest] section
+        # datadir needs to be set before [chain] section
         conf_file_contents = open(conf_file, encoding='utf8').read()
         with open(conf_file, 'w', encoding='utf8') as f:
             f.write("datadir=" + new_data_dir + "\n")
@@ -43,13 +43,13 @@ class ConfArgsTest(BitcoinTestFramework):
         os.mkdir(new_data_dir)
         self.start_node(0, ['-conf='+conf_file, '-wallet=w1'])
         self.stop_node(0)
-        assert os.path.exists(os.path.join(new_data_dir, 'regtest', 'wallets', 'w1'))
+        assert os.path.exists(os.path.join(new_data_dir, self.chain, 'wallets', 'w1'))
 
         # Ensure command line argument overrides datadir in conf
         os.mkdir(new_data_dir_2)
         self.nodes[0].datadir = new_data_dir_2
         self.start_node(0, ['-datadir='+new_data_dir_2, '-conf='+conf_file, '-wallet=w2'])
-        assert os.path.exists(os.path.join(new_data_dir_2, 'regtest', 'wallets', 'w2'))
+        assert os.path.exists(os.path.join(new_data_dir_2, self.chain, 'wallets', 'w2'))
 
 if __name__ == '__main__':
     ConfArgsTest().main()

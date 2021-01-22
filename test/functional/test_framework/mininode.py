@@ -96,7 +96,7 @@ class P2PConnection(asyncore.dispatcher):
     def is_connected(self):
         return self._conn_open
 
-    def peer_connect(self, dstaddr, dstport, net="regtest", devnet_name=None):
+    def peer_connect(self, dstaddr, dstport, *, net, devnet_name=None):
         self.dstaddr = dstaddr
         self.dstport = dstport
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)

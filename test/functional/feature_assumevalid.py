@@ -73,12 +73,8 @@ class AssumeValidTest(BitcoinTestFramework):
                 break
             try:
                 p2p_conn.send_message(msg_block(self.blocks[i]))
-            # TODO There is a race condition between send_message and on_close which causes an AttributError on Travis
-            # We can reenable the correct exception handling and the assert when Bitcoin 0.16 mininode.py changes have been
-            # backported
-            #except IOError as e:
-            except:
-                #assert not p2p_conn.is_connected
+            except IOError:
+                assert not p2p_conn.is_connected
                 break
 
     def assert_blockchain_height(self, node, height):

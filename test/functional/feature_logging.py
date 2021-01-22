@@ -15,11 +15,11 @@ class LoggingTest(BitcoinTestFramework):
 
     def run_test(self):
         # test default log file name
-        assert os.path.isfile(os.path.join(self.nodes[0].datadir, "regtest", "debug.log"))
+        assert os.path.isfile(os.path.join(self.nodes[0].datadir, self.chain, "debug.log"))
 
         # test alternative log file name in datadir
         self.restart_node(0, ["-debuglogfile=foo.log"])
-        assert os.path.isfile(os.path.join(self.nodes[0].datadir, "regtest", "foo.log"))
+        assert os.path.isfile(os.path.join(self.nodes[0].datadir, self.chain, "foo.log"))
 
         # test alternative log file name outside datadir
         tempname = os.path.join(self.options.tmpdir, "foo.log")
@@ -27,7 +27,7 @@ class LoggingTest(BitcoinTestFramework):
         assert os.path.isfile(tempname)
 
         # check that invalid log (relative) will cause error
-        invdir = os.path.join(self.nodes[0].datadir, "regtest", "foo")
+        invdir = os.path.join(self.nodes[0].datadir, self.chain, "foo")
         invalidname = os.path.join("foo", "foo.log")
         self.stop_node(0)
         exp_stderr = "Error: Could not open debug log file \S+$"
