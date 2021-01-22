@@ -66,7 +66,7 @@ public:
 class CZMQPublishHashGovernanceObjectNotifier : public CZMQAbstractPublishNotifier
 {
 public:
-    bool NotifyGovernanceObject(const const std::shared_ptr<const CGovernanceObject> &object) override;
+    bool NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject> &object) override;
 };
 class CZMQPublishRawGovernanceVoteNotifier : public CZMQAbstractPublishNotifier
 {
