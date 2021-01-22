@@ -12,6 +12,8 @@
 // SYSCOIN
 #include <streams.h>
 #include <pubkey.h>
+#include <chainparams.h>
+#include <validation.h>
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsuggest-override"
@@ -329,11 +331,19 @@ uint64_t DecompressAmount(uint64_t x)
 
 bool CTransaction::HasAssets() const
 {
+    // TODO remove after fork
+    if(::ChainActive().Tip()->nHeight < Params().GetConsensus().nUTXOAssetsBlock) {
+        return false;
+    }
     return IsSyscoinTx(nVersion);
 }
 
 bool CMutableTransaction::HasAssets() const
 {
+    // TODO remove after fork
+    if(::ChainActive().Tip()->nHeight < Params().GetConsensus().nUTXOAssetsBlock) {
+        return false;
+    }
     return IsSyscoinTx(nVersion);
 }
 bool CTransaction::IsMnTx() const
