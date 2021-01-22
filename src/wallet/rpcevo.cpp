@@ -986,9 +986,8 @@ UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDet
         return dmn->proTxHash.ToString();
     }
     UniValue o(UniValue::VOBJ);
-
-    dmn->ToJson(o);
     if(detailed == 1) {
+        const CTxDestination &voteDest = WitnessV0KeyHash(dmn->pdmnState->keyIDOwner);
         o.pushKV("collateralHash", dmn->collateralOutpoint.hash.ToString());
         o.pushKV("collateralIndex", (int)dmn->collateralOutpoint.n);
         if(pwallet) {
@@ -997,14 +996,14 @@ UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDet
             CKey keyVoting;
             spk_man.GetKey(dmn->pdmnState->keyIDVoting, keyVoting);
             o.pushKV("votingKey", EncodeSecret(keyVoting));
-            const auto* address_book_entry = pwallet->FindAddressBookEntry(WitnessV0KeyHash(dmn->pdmnState->keyIDOwner));
+            const auto* address_book_entry = pwallet->FindAddressBookEntry(voteDest);
             if (address_book_entry) {
                 o.pushKV("label", address_book_entry->GetLabel());
             }
         }
         return o;
-    } 
-    else if(detailed >= 2) {
+    } else if(detailed >= 2) {
+        dmn->ToJson(o);
         int confirmations = GetUTXOConfirmations(dmn->collateralOutpoint);
         o.pushKV("confirmations", confirmations);
         if (pwallet) {
