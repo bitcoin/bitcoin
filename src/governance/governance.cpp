@@ -196,7 +196,7 @@ void CGovernanceManager::ProcessMessage(CNode* pfrom, const std::string& strComm
         CGovernanceVote vote;
         vRecv >> vote;
 
-        uint256 nHash = vote.GetHash();
+        const uint256 &nHash = vote.GetHash();
         {
             LOCK(cs_main);
             pfrom->AddKnownTx(nHash);
@@ -619,7 +619,7 @@ void CGovernanceManager::SyncSingleObjVotes(CNode* pnode, const uint256& nProp, 
     auto fileVotes = govobj.GetVoteFile();
 
     for (const auto& vote : fileVotes.GetVotes()) {
-        uint256 nVoteHash = vote.GetHash();
+        const uint256 &nVoteHash = vote.GetHash();
 
         bool onlyVotingKeyAllowed = govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL && vote.GetSignal() == VOTE_SIGNAL_FUNDING;
 
@@ -776,8 +776,8 @@ bool CGovernanceManager::MasternodeRateCheck(const CGovernanceObject& govobj, bo
 bool CGovernanceManager::ProcessVote(CNode* pfrom, const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman)
 {
     ENTER_CRITICAL_SECTION(cs);
-    uint256 nHashVote = vote.GetHash();
-    uint256 nHashGovobj = vote.GetParentHash();
+    const uint256 &nHashVote = vote.GetHash();
+    const uint256 &nHashGovobj = vote.GetParentHash();
 
     if (cmapVoteToObject.HasKey(nHashVote)) {
         LogPrint(BCLog::GOBJECT, "CGovernanceObject::ProcessVote -- skipping known valid vote %s for object %s\n", nHashVote.ToString(), nHashGovobj.ToString());

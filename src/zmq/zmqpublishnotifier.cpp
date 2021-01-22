@@ -238,7 +238,7 @@ bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &tr
 // SYSCOIN
 bool CZMQPublishHashGovernanceVoteNotifier::NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote)
 {
-    uint256 hash = vote.GetHash();
+    const uint256 &hash = vote->GetHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish hashgovernancevote %s\n", hash.GetHex());
     char data[32];
     for (unsigned int i = 0; i < 32; i++)
@@ -248,7 +248,7 @@ bool CZMQPublishHashGovernanceVoteNotifier::NotifyGovernanceVote(const std::shar
 
 bool CZMQPublishHashGovernanceObjectNotifier::NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object)
 {
-    uint256 hash = object.GetHash();
+    const uint256 &hash = object->GetHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish hashgovernanceobject %s\n", hash.GetHex());
     char data[32];
     for (unsigned int i = 0; i < 32; i++)
