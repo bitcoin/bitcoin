@@ -480,10 +480,6 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, const CTxU
     }
     CAsset& storedAssetRef = mapAsset->second;
     const CAmount &nDiff = (outAmount - inAmount);
-    if(nDiff < 0) {
-        LogPrint(BCLog::SYS,"DisconnectAssetSend: Negative diff of %lld for asset %d\n",nDiff, nBaseAsset);
-        return false;
-    }
     storedAssetRef.nTotalSupply -= nDiff; 
     if(storedAssetRef.nTotalSupply <= 0) {
         storedAssetRef.nUpdateMask &= ~ASSET_UPDATE_SUPPLY;
@@ -928,6 +924,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             // track in/out amounts and add to total for any NFT inputs+outputs
             for(auto &itOutNFT: mapAssetOut) {
                 const uint32_t& nBaseAssetInternal = GetBaseAssetID(itOutNFT.first);
+                // skip first asset and ensure base asset matches base of first asset
                 if(itOutNFT.first != nBaseAsset && nBaseAssetInternal == nBaseAsset) {
                     // NFT output cannot be zero-val
                     if (itOutNFT.second.bZeroVal) {
