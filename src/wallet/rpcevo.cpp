@@ -1001,8 +1001,8 @@ UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDet
             if (address_book_entry) {
                 o.pushKV("label", address_book_entry->GetLabel());
             }
-            return o;
         }
+        return o;
     } 
     else if(detailed >= 2) {
         int confirmations = GetUTXOConfirmations(dmn->collateralOutpoint);
