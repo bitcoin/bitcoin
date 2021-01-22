@@ -490,7 +490,7 @@ void CChainLocksHandler::EnforceBestChainLock()
     AssertLockNotHeld(cs);
     AssertLockNotHeld(cs_main);
 
-    CChainLockSig clsig;
+    std::shared_ptr<CChainLockSig> clsig;
     const CBlockIndex* pindex;
     const CBlockIndex* currentBestChainLockBlockIndex;
     {
@@ -500,7 +500,7 @@ void CChainLocksHandler::EnforceBestChainLock()
             return;
         }
 
-        clsig = bestChainLockWithKnownBlock;
+        clsig = std::make_shared<CChainLockSig>(bestChainLockWithKnownBlock);
         pindex = currentBestChainLockBlockIndex = this->bestChainLockBlockIndex;
 
         if (!currentBestChainLockBlockIndex) {
@@ -531,7 +531,7 @@ void CChainLocksHandler::EnforceBestChainLock()
                     assert(false);
                 }
                 LogPrintf("CChainLocksHandler::%s -- CLSIG (%s) marked block %s as conflicting\n",
-                          __func__, clsig.ToString(), jt->second->GetBlockHash().ToString());
+                          __func__, clsig->ToString(), jt->second->GetBlockHash().ToString());
             }
 
             pindex = pindex->pprev;

@@ -5349,11 +5349,11 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, std::string& strBack
     return true;
 }
 
-void CWallet::NotifyTransactionLock(const CTransaction &tx, const llmq::CInstantSendLock& islock)
+void CWallet::NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock)
 {
     LOCK(cs_wallet);
     // Only notify UI if this transaction is in this wallet
-    uint256 txHash = tx.GetHash();
+    uint256 txHash = tx->GetHash();
     std::map<uint256, CWalletTx>::const_iterator mi = mapWallet.find(txHash);
     if (mi != mapWallet.end()){
         NotifyTransactionChanged(this, txHash, CT_UPDATED);
@@ -5368,7 +5368,7 @@ void CWallet::NotifyTransactionLock(const CTransaction &tx, const llmq::CInstant
     }
 }
 
-void CWallet::NotifyChainLock(const CBlockIndex* pindexChainLock, const llmq::CChainLockSig& clsig)
+void CWallet::NotifyChainLock(const CBlockIndex* pindexChainLock, const std::shared_ptr<const llmq::CChainLockSig>& clsig)
 {
     NotifyChainLockReceived(pindexChainLock->nHeight);
 }

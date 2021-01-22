@@ -1245,8 +1245,8 @@ public:
 
     bool GetDecryptedHDChain(CHDChain& hdChainRet);
 
-    void NotifyTransactionLock(const CTransaction &tx, const llmq::CInstantSendLock& islock) override;
-    void NotifyChainLock(const CBlockIndex* pindexChainLock, const llmq::CChainLockSig& clsig) override;
+    void NotifyTransactionLock(const CTransactionRef &tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock) override;
+    void NotifyChainLock(const CBlockIndex* pindexChainLock, const std::shared_ptr<const llmq::CChainLockSig>& clsig) override;
 
     /** Load a CGovernanceObject into m_gobjects. */
     bool LoadGovernanceObject(const CGovernanceObject& obj);

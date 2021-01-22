@@ -679,7 +679,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
         CTransactionRef txConflict;
         uint256 hashBlock;
         if (GetTransaction(conflictLock->txid, txConflict, chainparams.GetConsensus(), hashBlock)) {
-            GetMainSignals().NotifyInstantSendDoubleSpendAttempt(tx, *txConflict);
+            GetMainSignals().NotifyInstantSendDoubleSpendAttempt(ptx, txConflict);
         }
         return state.DoS(10, error("AcceptToMemoryPool : Transaction %s conflicts with locked TX %s",
                                    hash.ToString(), conflictLock->txid.ToString()),

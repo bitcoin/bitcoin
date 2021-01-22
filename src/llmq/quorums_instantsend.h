@@ -97,7 +97,7 @@ private:
     std::unordered_map<uint256, CInstantSendLock*, StaticSaltedHasher> txToCreatingInstantSendLocks;
 
     // Incoming and not verified yet
-    std::unordered_map<uint256, std::pair<NodeId, CInstantSendLock>, StaticSaltedHasher> pendingInstantSendLocks;
+    std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher> pendingInstantSendLocks;
 
     // TXs which are neither IS locked nor ChainLocked. We use this to determine for which TXs we need to retry IS locking
     // of child TXs
@@ -134,11 +134,11 @@ public:
     void TrySignInstantSendLock(const CTransaction& tx);
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
-    void ProcessMessageInstantSendLock(CNode* pfrom, const CInstantSendLock& islock);
+    void ProcessMessageInstantSendLock(CNode* pfrom, const CInstantSendLockPtr& islock);
     static bool PreVerifyInstantSendLock(const CInstantSendLock& islock);
     bool ProcessPendingInstantSendLocks();
-    std::unordered_set<uint256> ProcessPendingInstantSendLocks(int signOffset, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLock>, StaticSaltedHasher>& pend, bool ban);
-    void ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLock& islock);
+    std::unordered_set<uint256> ProcessPendingInstantSendLocks(int signOffset, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban);
+    void ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLockPtr& islock);
 
     void ProcessNewTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, bool allowReSigning);
     void TransactionAddedToMempool(const CTransactionRef& tx);

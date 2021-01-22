@@ -212,7 +212,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     fileVotes.AddVote(vote);
     fDirtyCache = true;
     // SEND NOTIFICATION TO SCRIPT/ZMQ
-    GetMainSignals().NotifyGovernanceVote(vote);
+    GetMainSignals().NotifyGovernanceVote(std::make_shared<const CGovernanceVote>(vote));
     return true;
 }
 

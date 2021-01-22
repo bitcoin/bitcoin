@@ -125,8 +125,8 @@ private:
     CRecoveredSigsDb db;
 
     // Incoming and not verified yet
-    std::unordered_map<NodeId, std::list<CRecoveredSig>> pendingRecoveredSigs;
-    std::unordered_map<uint256, CRecoveredSig, StaticSaltedHasher> pendingReconstructedRecoveredSigs;
+    std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>> pendingRecoveredSigs;
+    std::unordered_map<uint256, std::shared_ptr<const CRecoveredSig>, StaticSaltedHasher> pendingReconstructedRecoveredSigs;
 
     // must be protected by cs
     FastRandomContext rnd;
@@ -145,7 +145,7 @@ public:
 
     // This is called when a recovered signature was was reconstructed from another P2P message and is known to be valid
     // This is the case for example when a signature appears as part of InstantSend or ChainLocks
-    void PushReconstructedRecoveredSig(const CRecoveredSig& recoveredSig);
+    void PushReconstructedRecoveredSig(const std::shared_ptr<const CRecoveredSig>& recoveredSig);
 
     // This is called when a recovered signature can be safely removed from the DB. This is only safe when some other
     // mechanism prevents possible conflicts. As an example, ChainLocks prevent conflicts in confirmed TXs InstantSend votes
@@ -154,15 +154,15 @@ public:
     void TruncateRecoveredSig(Consensus::LLMQType llmqType, const uint256& id);
 
 private:
-    void ProcessMessageRecoveredSig(CNode* pfrom, const CRecoveredSig& recoveredSig);
+    void ProcessMessageRecoveredSig(CNode* pfrom, const std::shared_ptr<const CRecoveredSig>& recoveredSig);
     static bool PreVerifyRecoveredSig(const CRecoveredSig& recoveredSig, bool& retBan);
 
     void CollectPendingRecoveredSigsToVerify(size_t maxUniqueSessions,
-            std::unordered_map<NodeId, std::list<CRecoveredSig>>& retSigShares,
+            std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>>& retSigShares,
             std::unordered_map<std::pair<Consensus::LLMQType, uint256>, CQuorumCPtr, StaticSaltedHasher>& retQuorums);
     void ProcessPendingReconstructedRecoveredSigs();
     bool ProcessPendingRecoveredSigs(); // called from the worker thread of CSigSharesManager
-    void ProcessRecoveredSig(const CRecoveredSig& recoveredSig);
+    void ProcessRecoveredSig(const std::shared_ptr<const CRecoveredSig>& recoveredSig);
     void Cleanup(); // called from the worker thread of CSigSharesManager
 
 public:

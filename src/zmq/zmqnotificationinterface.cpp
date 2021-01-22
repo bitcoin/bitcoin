@@ -167,7 +167,7 @@ void CZMQNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, co
     }
 }
 
-void CZMQNotificationInterface::NotifyChainLock(const CBlockIndex *pindex, const llmq::CChainLockSig& clsig)
+void CZMQNotificationInterface::NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig)
 {
     for (std::list<CZMQAbstractNotifier*>::iterator i = notifiers.begin(); i!=notifiers.end(); )
     {
@@ -221,7 +221,7 @@ void CZMQNotificationInterface::BlockDisconnected(const std::shared_ptr<const CB
     }
 }
 
-void CZMQNotificationInterface::NotifyTransactionLock(const CTransaction &tx, const llmq::CInstantSendLock& islock)
+void CZMQNotificationInterface::NotifyTransactionLock(const CTransactionRef& tx, const std::shared_ptr<const llmq::CInstantSendLock>& islock)
 {
     for (std::list<CZMQAbstractNotifier*>::iterator i = notifiers.begin(); i!=notifiers.end(); )
     {
@@ -238,7 +238,7 @@ void CZMQNotificationInterface::NotifyTransactionLock(const CTransaction &tx, co
     }
 }
 
-void CZMQNotificationInterface::NotifyGovernanceVote(const CGovernanceVote &vote)
+void CZMQNotificationInterface::NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote> &vote)
 {
     for (std::list<CZMQAbstractNotifier*>::iterator i = notifiers.begin(); i != notifiers.end(); )
     {
@@ -255,7 +255,7 @@ void CZMQNotificationInterface::NotifyGovernanceVote(const CGovernanceVote &vote
     }
 }
 
-void CZMQNotificationInterface::NotifyGovernanceObject(const CGovernanceObject &object)
+void CZMQNotificationInterface::NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject> &object)
 {
     for (std::list<CZMQAbstractNotifier*>::iterator i = notifiers.begin(); i != notifiers.end(); )
     {
@@ -272,7 +272,7 @@ void CZMQNotificationInterface::NotifyGovernanceObject(const CGovernanceObject &
     }
 }
 
-void CZMQNotificationInterface::NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx)
+void CZMQNotificationInterface::NotifyInstantSendDoubleSpendAttempt(const CTransactionRef& currentTx, const CTransactionRef& previousTx)
 {
     for (auto it = notifiers.begin(); it != notifiers.end();) {
         CZMQAbstractNotifier *notifier = *it;
@@ -285,7 +285,7 @@ void CZMQNotificationInterface::NotifyInstantSendDoubleSpendAttempt(const CTrans
     }
 }
 
-void CZMQNotificationInterface::NotifyRecoveredSig(const llmq::CRecoveredSig& sig)
+void CZMQNotificationInterface::NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig)
 {
     for (auto it = notifiers.begin(); it != notifiers.end();) {
         CZMQAbstractNotifier *notifier = *it;

@@ -41,13 +41,13 @@ public:
     virtual void Shutdown() = 0;
 
     virtual bool NotifyBlock(const CBlockIndex *pindex);
-    virtual bool NotifyChainLock(const CBlockIndex *pindex, const llmq::CChainLockSig& clsig);
+    virtual bool NotifyChainLock(const CBlockIndex *pindex, const std::shared_ptr<const llmq::CChainLockSig>& clsig);
     virtual bool NotifyTransaction(const CTransaction &transaction);
-    virtual bool NotifyTransactionLock(const CTransaction &transaction, const llmq::CInstantSendLock& islock);
-    virtual bool NotifyGovernanceVote(const CGovernanceVote &vote);
-    virtual bool NotifyGovernanceObject(const CGovernanceObject &object);
-    virtual bool NotifyInstantSendDoubleSpendAttempt(const CTransaction &currentTx, const CTransaction &previousTx);
-    virtual bool NotifyRecoveredSig(const llmq::CRecoveredSig& sig);
+    virtual bool NotifyTransactionLock(const CTransactionRef& transaction, const std::shared_ptr<const llmq::CInstantSendLock>& islock);
+    virtual bool NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote);
+    virtual bool NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject>& object);
+    virtual bool NotifyInstantSendDoubleSpendAttempt(const CTransactionRef& currentTx, const CTransactionRef& previousTx);
+    virtual bool NotifyRecoveredSig(const std::shared_ptr<const llmq::CRecoveredSig>& sig);
 
 protected:
     void *psocket;

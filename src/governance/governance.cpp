@@ -339,7 +339,7 @@ void CGovernanceManager::AddGovernanceObject(CGovernanceObject& govobj, CConnman
     CheckOrphanVotes(govobj, exception, connman);
 
     // SEND NOTIFICATION TO SCRIPT/ZMQ
-    GetMainSignals().NotifyGovernanceObject(govobj);
+    GetMainSignals().NotifyGovernanceObject(std::make_shared<const CGovernanceObject>(govobj));
 }
 
 void CGovernanceManager::UpdateCachesAndClean()

@@ -821,19 +821,19 @@ void CSigSharesManager::TryRecoverSig(const CQuorumCPtr& quorum, const uint256& 
     LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- recovered signature. id=%s, msgHash=%s, time=%d\n", __func__,
               id.ToString(), msgHash.ToString(), t.count());
 
-    CRecoveredSig rs;
-    rs.llmqType = quorum->params.type;
-    rs.quorumHash = quorum->qc.quorumHash;
-    rs.id = id;
-    rs.msgHash = msgHash;
-    rs.sig.Set(recoveredSig);
-    rs.UpdateHash();
+    std::shared_ptr<CRecoveredSig> rs = std::make_shared<CRecoveredSig>();
+    rs->llmqType = quorum->params.type;
+    rs->quorumHash = quorum->qc.quorumHash;
+    rs->id = id;
+    rs->msgHash = msgHash;
+    rs->sig.Set(recoveredSig);
+    rs->UpdateHash();
 
     // There should actually be no need to verify the self-recovered signatures as it should always succeed. Let's
     // however still verify it from time to time, so that we have a chance to catch bugs. We do only this sporadic
     // verification because this is unbatched and thus slow verification that happens here.
     if (((recoveredSigsCounter++) % 100) == 0) {
-        auto signHash = CLLMQUtils::BuildSignHash(rs);
+        auto signHash = CLLMQUtils::BuildSignHash(*rs);
         bool valid = recoveredSig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash);
         if (!valid) {
             // this should really not happen as we have verified all signature shares before
