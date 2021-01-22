@@ -81,8 +81,11 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
             "    \"addrlocal\":\"ip:port\",   (string) Local address as reported by the peer\n"
             "    \"services\":\"xxxxxxxxxxxxxxxx\",   (string) The services offered\n"
             "    \"verified_proregtx_hash\": h, (hex) Only present when the peer is a masternode and succesfully\n"
-            "                               autheticated via MNAUTH. In this case, this field contains the\n"
+            "                               authenticated via MNAUTH. In this case, this field contains the\n"
             "                               protx hash of the masternode\n"
+            "    \"verified_pubkey_hash\":   h, (hex) Only present when the peer is a masternode and succesfully\n"
+            "                               authenticated via MNAUTH. In this case, this field contains the\n"
+            "                               hash of the masternode's operator public key\n"
             "    \"relaytxes\":true|false,    (boolean) Whether peer has asked us to relay transactions to it\n"
             "    \"lastsend\": ttt,           (numeric) The time in seconds since epoch (Jan 1 1970 GMT) of the last send\n"
             "    \"lastrecv\": ttt,           (numeric) The time in seconds since epoch (Jan 1 1970 GMT) of the last receive\n"
@@ -144,6 +147,9 @@ UniValue getpeerinfo(const JSONRPCRequest& request)
         obj.pushKV("services", strprintf("%016x", stats.nServices));
         if (!stats.verifiedProRegTxHash.IsNull()) {
             obj.pushKV("verified_proregtx_hash", stats.verifiedProRegTxHash.ToString());
+        }
+        if (!stats.verifiedPubKeyHash.IsNull()) {
+            obj.pushKV("verified_pubkey_hash", stats.verifiedPubKeyHash.ToString());
         }
         obj.pushKV("relaytxes", stats.fRelayTxes);
         obj.pushKV("lastsend", stats.nLastSend);
