@@ -980,7 +980,7 @@ static bool CheckWalletOwnsScript(CWallet* pwallet, const CScript& script) {
     LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
     return spk_man.IsMine(script);
 }
-UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDeterministicMNCPtr& dmn, bool detailed)
+UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDeterministicMNCPtr& dmn, int detailed)
 {
     if (!detailed) {
         return dmn->proTxHash.ToString();
@@ -988,39 +988,56 @@ UniValue BuildDMNListEntry(const NodeContext& node, CWallet* pwallet, const CDet
     UniValue o(UniValue::VOBJ);
 
     dmn->ToJson(o);
+    if(detailed == 1) {
+        o.pushKV("collateralHash", dmn->collateralOutpoint.hash.ToString());
+        o.pushKV("collateralIndex", (int)dmn->collateralOutpoint.n);
+        if(pwallet) {
+            LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
+            LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
+            CKey keyVoting;
+            spk_man.GetKey(dmn->pdmnState->keyIDVoting, keyVoting);
+            o.pushKV("votingKey", EncodeSecret(keyVoting));
+            const auto* address_book_entry = pwallet->FindAddressBookEntry(WitnessV0KeyHash(dmn->pdmnState->keyIDOwner));
+            if (address_book_entry) {
+                o.pushKV("label", address_book_entry->GetLabel());
+            }
+            return o;
+        }
+    } 
+    else if(detailed >= 2) {
+        int confirmations = GetUTXOConfirmations(dmn->collateralOutpoint);
+        o.pushKV("confirmations", confirmations);
+        if (pwallet) {
+            LOCK2(pwallet->cs_wallet, cs_main);
+            bool hasOwnerKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner);
+            bool hasOperatorKey = false; //CheckWalletOwnsKey(dmn->pdmnState->keyIDOperator);
+            bool hasVotingKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting);
 
-    int confirmations = GetUTXOConfirmations(dmn->collateralOutpoint);
-    o.pushKV("confirmations", confirmations);
-    if (pwallet) {
-        LOCK2(pwallet->cs_wallet, cs_main);
-        bool hasOwnerKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDOwner);
-        bool hasOperatorKey = false; //CheckWalletOwnsKey(dmn->pdmnState->keyIDOperator);
-        bool hasVotingKey = CheckWalletOwnsKey(pwallet, dmn->pdmnState->keyIDVoting);
+            bool ownsCollateral = false;
+            CTransactionRef collateralTx;
+            uint256 tmpHashBlock;
+            uint32_t nBlockHeight;
+            CBlockIndex* blockindex = nullptr;
+            if(pblockindexdb->ReadBlockHeight(dmn->collateralOutpoint.hash, nBlockHeight)){	    
+                blockindex = ::ChainActive()[nBlockHeight];
+            } 
+            collateralTx = GetTransaction(blockindex, node.mempool.get(), dmn->collateralOutpoint.hash, Params().GetConsensus(), tmpHashBlock);
+            if(collateralTx)
+                ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
+        
+            UniValue walletObj(UniValue::VOBJ);
+            walletObj.pushKV("hasOwnerKey", hasOwnerKey);
+            walletObj.pushKV("hasOperatorKey", hasOperatorKey);
+            walletObj.pushKV("hasVotingKey", hasVotingKey);
+            walletObj.pushKV("ownsCollateral", ownsCollateral);
+            walletObj.pushKV("ownsPayeeScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout));
+            walletObj.pushKV("ownsOperatorRewardScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout));
+            o.pushKV("wallet", walletObj);
+        }
 
-        bool ownsCollateral = false;
-        CTransactionRef collateralTx;
-        uint256 tmpHashBlock;
-        uint32_t nBlockHeight;
-        CBlockIndex* blockindex = nullptr;
-        if(pblockindexdb->ReadBlockHeight(dmn->collateralOutpoint.hash, nBlockHeight)){	    
-            blockindex = ::ChainActive()[nBlockHeight];
-        } 
-        collateralTx = GetTransaction(blockindex, node.mempool.get(), dmn->collateralOutpoint.hash, Params().GetConsensus(), tmpHashBlock);
-        if(collateralTx)
-            ownsCollateral = CheckWalletOwnsScript(pwallet, collateralTx->vout[dmn->collateralOutpoint.n].scriptPubKey);
-    
-        UniValue walletObj(UniValue::VOBJ);
-        walletObj.pushKV("hasOwnerKey", hasOwnerKey);
-        walletObj.pushKV("hasOperatorKey", hasOperatorKey);
-        walletObj.pushKV("hasVotingKey", hasVotingKey);
-        walletObj.pushKV("ownsCollateral", ownsCollateral);
-        walletObj.pushKV("ownsPayeeScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptPayout));
-        walletObj.pushKV("ownsOperatorRewardScript", CheckWalletOwnsScript(pwallet, dmn->pdmnState->scriptOperatorPayout));
-        o.pushKV("wallet", walletObj);
+        auto metaInfo = mmetaman.GetMetaInfo(dmn->proTxHash);
+        o.pushKV("metaInfo", metaInfo->ToJson());
     }
-
-    auto metaInfo = mmetaman.GetMetaInfo(dmn->proTxHash);
-    o.pushKV("metaInfo", metaInfo->ToJson());
 
     return o;
 }
@@ -1031,7 +1048,7 @@ static RPCHelpMan protx_list_wallet()
         "\nList only ProTx which are found in your wallet at the given chain height.\n"
         "This will also include ProTx which failed PoSe verification.\n",
         {
-            {"detailed", RPCArg::Type::BOOL, "false", "If true, only the hashes of the ProTx will be returned."},
+            {"detailed", RPCArg::Type::NUM, "0", "If 0, only the hashes of the ProTx will be returned. If 1 returns voting details for each DMN and keys and if 2 returns full details of each DMN"},
             {"height", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Height to look for ProTx transactions, if not specified defaults to current chain-tip"},                   
         },
         RPCResult{RPCResult::Type::NONE, "", ""},
@@ -1054,7 +1071,7 @@ static RPCHelpMan protx_list_wallet()
     }
     LOCK2(pwallet->cs_wallet, cs_main);
 
-    bool detailed = !request.params[0].isNull() ? request.params[0].get_bool() : false;
+    int detailed = !request.params[0].isNull() ? request.params[0].get_int() : 0;
 
     int height = !request.params[1].isNull() ? request.params[1].get_int() : ::ChainActive().Height();
     if (height < 1 || height > ::ChainActive().Height()) {
@@ -1111,7 +1128,7 @@ static RPCHelpMan protx_info_wallet()
     if (!dmn) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("%s not found", proTxHash.ToString()));
     }
-    return BuildDMNListEntry(node, pwallet, dmn, true);
+    return BuildDMNListEntry(node, pwallet, dmn, 2);
 },
     };
 } 
