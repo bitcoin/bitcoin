@@ -1487,37 +1487,47 @@ void CConnman::CalculateNumConnectionsChangedStats()
     statsClient.gauge("peers.torConnections", torNodes, 1.0f);
 }
 
-void CConnman::InactivityCheck(CNode *pnode) const
+bool CConnman::InactivityCheck(const CNode& node) const
 {
-    int64_t nTime = GetSystemTimeInSeconds();
-    if (nTime - pnode->nTimeConnected > m_peer_connect_timeout)
-    {
-        if (pnode->nLastRecv == 0 || pnode->nLastSend == 0)
-        {
-            LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d from %d\n", m_peer_connect_timeout, pnode->nLastRecv != 0, pnode->nLastSend != 0, pnode->GetId());
-            pnode->fDisconnect = true;
-        }
-        else if (nTime - pnode->nLastSend > TIMEOUT_INTERVAL)
-        {
-            LogPrintf("socket sending timeout: %is\n", nTime - pnode->nLastSend);
-            pnode->fDisconnect = true;
-        }
-        else if (nTime - pnode->nLastRecv > TIMEOUT_INTERVAL)
-        {
-            LogPrintf("socket receive timeout: %is\n", nTime - pnode->nLastRecv);
-            pnode->fDisconnect = true;
-        }
-        else if (pnode->nPingNonceSent && pnode->nPingUsecStart + TIMEOUT_INTERVAL * 1000000 < GetTimeMicros())
-        {
-            LogPrintf("ping timeout: %fs\n", 0.000001 * (GetTimeMicros() - pnode->nPingUsecStart));
-            pnode->fDisconnect = true;
-        }
-        else if (!pnode->fSuccessfullyConnected)
-        {
-            LogPrint(BCLog::NET, "version handshake timeout from %d\n", pnode->GetId());
-            pnode->fDisconnect = true;
-        }
+    // Use non-mockable system time (otherwise these timers will pop when we
+    // use setmocktime in the tests).
+    int64_t now = GetSystemTimeInSeconds();
+
+    if (now <= node.nTimeConnected + m_peer_connect_timeout) {
+        // Only run inactivity checks if the peer has been connected longer
+        // than m_peer_connect_timeout.
+        return false;
     }
+
+    if (node.nLastRecv == 0 || node.nLastSend == 0) {
+        LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d from %d\n", m_peer_connect_timeout, node.nLastRecv != 0, node.nLastSend != 0, node.GetId());
+        return true;
+    }
+
+    if (now > node.nLastSend + TIMEOUT_INTERVAL) {
+        LogPrintf("socket sending timeout: %is\n", now - node.nLastSend);
+        return true;
+    }
+
+    if (now > node.nLastRecv + TIMEOUT_INTERVAL) {
+        LogPrintf("socket receive timeout: %is\n", now - node.nLastRecv);
+        return true;
+    }
+
+    if (node.nPingNonceSent && node.nPingUsecStart.load() + TIMEOUT_INTERVAL * 1000000 < GetTimeMicros()) {
+        // We use mockable time for ping timeouts. This means that setmocktime
+        // may cause pings to time out for peers that have been connected for
+        // longer than m_peer_connect_timeout.
+        LogPrintf("ping timeout: %fs\n", 0.000001 * (GetTimeMicros() - node.nPingUsecStart));
+        return true;
+    }
+
+    if (!node.fSuccessfullyConnected) {
+        LogPrint(BCLog::NET, "version handshake timeout from %d\n", node.GetId());
+        return true;
+    }
+
+    return false;
 }
 
 bool CConnman::GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set)
@@ -2036,7 +2046,7 @@ void CConnman::ThreadSocketHandler()
         SocketHandler();
         if (GetTimeMillis() - nLastCleanupNodes > 1000) {
             ForEachNode(AllNodes, [&](CNode* pnode) {
-                InactivityCheck(pnode);
+                if (InactivityCheck(*pnode)) pnode->fDisconnect = true;
             });
             nLastCleanupNodes = GetTimeMillis();
         }
