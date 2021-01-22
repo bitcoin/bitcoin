@@ -207,8 +207,36 @@ static std::string LabelFromValue(const UniValue& value)
  *                                      verify only that fee_rate is greater than 0
  * @throws a JSONRPCError if conf_target, estimate_mode, or fee_rate contain invalid values or are in conflict
  */
-static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const UniValue& conf_target, const UniValue& estimate_mode, const UniValue& fee_rate, bool override_min_fee)
+static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, UniValue conf_target, UniValue estimate_mode, UniValue fee_rate, bool override_min_fee)
 {
+    if (estimate_mode.isStr()) {
+        const auto estimate_mode_str = ToUpper(estimate_mode.get_str());
+        if (estimate_mode_str == "EXPLICIT" ||
+            estimate_mode_str == ToUpper(CURRENCY_UNIT + "/kB") ||
+            estimate_mode_str == ToUpper(CURRENCY_ATOM + "/B")) {
+            if (!fee_rate.isNull()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and fee_rate. For explicit fees, please use fee_rate.");
+            }
+            if (conf_target.isNull()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Selected estimate_mode is deprecated and requires a fee rate in conf_target. Better to upgrade to fee_rate.");
+            }
+            if (estimate_mode_str.at(estimate_mode_str.size() - 2) == '/') {
+                // "sat/B": pretty straightforward
+                fee_rate = conf_target;
+            } else {
+                // "BTC/kB" or "EXPLICIT": Need to convert to sat/vB
+                CAmount fee_rate_amount = AmountFromValue(conf_target);
+                // NOTE: AmountFromValue never allows negative
+                // AmountFromValue gives us satoshis per kvB, so to get sat/vB we just divide out the kilo
+                const int64_t quotient = fee_rate_amount / 1000;
+                const int64_t remainder = fee_rate_amount % 1000;
+                fee_rate.setNumStr(strprintf("%d.%03d", quotient, remainder));
+            }
+            estimate_mode.setNull();
+            conf_target.setNull();
+            override_min_fee = false;
+        }
+    }
     if (!fee_rate.isNull()) {
         if (!conf_target.isNull()) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both conf_target and fee_rate. Please provide either a confirmation target in blocks for automatic fee estimation, or an explicit fee rate.");
