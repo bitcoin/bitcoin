@@ -572,7 +572,7 @@ class TestNode():
 
     def num_test_p2p_connections(self):
         """Return number of test framework p2p connections to the node."""
-        return len([peer for peer in self.getpeerinfo() if peer['subver'] == MY_SUBVERSION.decode("utf-8")])
+        return len([peer for peer in self.getpeerinfo() if peer['subver'] == MY_SUBVERSION])
 
     def disconnect_p2ps(self):
         """Close all p2p connections to the node."""
