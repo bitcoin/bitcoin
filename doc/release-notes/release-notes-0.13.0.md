@@ -325,10 +325,10 @@ Low-level RPC changes
 
 - Asm script outputs replacements for OP_NOP2 and OP_NOP3
 
-  - OP_NOP2 has been renamed to OP_CHECKLOCKTIMEVERIFY by [BIP 
+  - OP_NOP2 has been renamed to OP_CHECKLOCKTIMEVERIFY by [BIP
 65](https://github.com/bitcoin/bips/blob/master/bip-0065.mediawiki)
 
-  - OP_NOP3 has been renamed to OP_CHECKSEQUENCEVERIFY by [BIP 
+  - OP_NOP3 has been renamed to OP_CHECKSEQUENCEVERIFY by [BIP
 112](https://github.com/bitcoin/bips/blob/master/bip-0112.mediawiki)
 
   - The following outputs are affected by this change:

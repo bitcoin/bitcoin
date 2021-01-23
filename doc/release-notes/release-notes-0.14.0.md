@@ -108,7 +108,7 @@ command without running the commands separately.
 
 The nested RPC commands use bracket syntax (i.e. `getwalletinfo()`) and can
 be nested (i.e. `getblock(getblockhash(1))`). Simple queries can be
-done with square brackets where object values are accessed with either an 
+done with square brackets where object values are accessed with either an
 array index or a non-quoted string (i.e. `listunspent()[0][txid]`). Both
 commas and spaces can be used to separate parameters in both the bracket syntax
 and normal RPC command syntax.
@@ -117,9 +117,9 @@ Network Activity Toggle
 -----------------------
 
 A RPC command and GUI toggle have been added to enable or disable all p2p
-network activity. The network status icon in the bottom right hand corner 
+network activity. The network status icon in the bottom right hand corner
 is now the GUI toggle. Clicking the icon will either enable or disable all
-p2p network activity. If network activity is disabled, the icon will 
+p2p network activity. If network activity is disabled, the icon will
 be grayed out with an X on top of it.
 
 Additionally the `setnetworkactive` RPC command has been added which does
@@ -189,7 +189,7 @@ commands such as `prioritisetransaction` so that those changes will not be lost.
 Final Alert
 -----------
 
-The Alert System was [disabled and deprecated](https://bitcoin.org/en/alert/2016-11-01-alert-retirement) in Bitcoin Core 0.12.1 and removed in 0.13.0. 
+The Alert System was [disabled and deprecated](https://bitcoin.org/en/alert/2016-11-01-alert-retirement) in Bitcoin Core 0.12.1 and removed in 0.13.0.
 The Alert System was retired with a maximum sequence final alert which causes any nodes
 supporting the Alert System to display a static hard-coded "Alert Key Compromised" message which also
 prevents any other alerts from overriding it. This final alert is hard-coded into this release
@@ -198,15 +198,15 @@ so that all old nodes receive the final alert.
 GUI Changes
 -----------
 
- - After resetting the options by clicking the `Reset Options` button 
-   in the options dialog or with the `-resetguioptions` startup option, 
-   the user will be prompted to choose the data directory again. This 
-   is to ensure that custom data directories will be kept after the 
-   option reset which clears the custom data directory set via the choose 
+ - After resetting the options by clicking the `Reset Options` button
+   in the options dialog or with the `-resetguioptions` startup option,
+   the user will be prompted to choose the data directory again. This
+   is to ensure that custom data directories will be kept after the
+   option reset which clears the custom data directory set via the choose
    datadir dialog.
 
- - Multiple peers can now be selected in the list of peers in the debug 
-   window. This allows for users to ban or disconnect multiple peers 
+ - Multiple peers can now be selected in the list of peers in the debug
+   window. This allows for users to ban or disconnect multiple peers
    simultaneously instead of banning them one at a time.
 
  - An indicator has been added to the bottom right hand corner of the main
@@ -221,7 +221,7 @@ Low-level RPC changes
    an optional third arg, which was always ignored. Make sure to never pass more
    than two arguments.
 
- - The first boolean argument to `getaddednodeinfo` has been removed. This is 
+ - The first boolean argument to `getaddednodeinfo` has been removed. This is
    an incompatible change.
 
  - RPC command `getmininginfo` loses the "testnet" field in favor of the more
@@ -231,8 +231,8 @@ Low-level RPC changes
    precious. A precious block will be treated as if it were received earlier
    than a competing block.
 
- - A new RPC command `importmulti` has been added which receives an array of 
-   JSON objects representing the intention of importing a public key, a 
+ - A new RPC command `importmulti` has been added which receives an array of
+   JSON objects representing the intention of importing a public key, a
    private key, an address and script/p2sh
 
  - Use of `getrawtransaction` for retrieving confirmed transactions with unspent
@@ -254,7 +254,7 @@ HTTP REST Changes
 -----------------
 
  - UTXO set query (`GET /rest/getutxos/<checkmempool>/<txid>-<n>/<txid>-<n>
-   /.../<txid>-<n>.<bin|hex|json>`) responses were changed to return status 
+   /.../<txid>-<n>.<bin|hex|json>`) responses were changed to return status
    code `HTTP_BAD_REQUEST` (400) instead of `HTTP_INTERNAL_SERVER_ERROR` (500)
    when requests contain invalid parameters.
 

@@ -43,7 +43,7 @@ This release includes a soft fork deployment to enforce [BIP68][],
 [BIP112][] and [BIP113][] using the [BIP9][] deployment mechanism.
 
 The deployment sets the block version number to 0x20000001 between
-midnight 1st May 2016 and midnight 1st May 2017 to signal readiness for 
+midnight 1st May 2016 and midnight 1st May 2017 to signal readiness for
 deployment. The version number consists of 0x20000000 to indicate version
 bits together with setting bit 0 to indicate support for this combined
 deployment, shown as "csv" in the `getblockchaininfo` RPC call.

@@ -1,6 +1,6 @@
 #!/sbin/openrc-run
 
-# backward compatibility for existing gentoo layout 
+# backward compatibility for existing gentoo layout
 #
 if [ -d "/var/lib/bitcoin/.bitcoin" ]; then
 	BITCOIND_DEFAULT_DATADIR="/var/lib/bitcoin/.bitcoin"

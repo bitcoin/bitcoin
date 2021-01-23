@@ -57,7 +57,7 @@ short keys are not compatible with earlier
 versions of Bitcoin-Qt/bitcoind.
 
 New command-line argument -blocknotify=<command>
-that will spawn a shell process to run <command> 
+that will spawn a shell process to run <command>
 when a new block is accepted.
 
 New command-line argument -splash=0 to disable

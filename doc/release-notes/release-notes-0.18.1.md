@@ -84,9 +84,9 @@ not to use coin control features with multiple wallets loaded.
 - #15957 Show "No wallets available" in open menu instead of nothing (meshcollider)
 - #16118 Enable open wallet menu on setWalletController (promag)
 - #16135 Set progressDialog to nullptr (promag)
-- #16231 Fix open wallet menu initialization order (promag) 
-- #16254 Set `AA_EnableHighDpiScaling` attribute early (hebasto) 
-- #16122 Enable console line edit on setClientModel (promag) 
+- #16231 Fix open wallet menu initialization order (promag)
+- #16254 Set `AA_EnableHighDpiScaling` attribute early (hebasto)
+- #16122 Enable console line edit on setClientModel (promag)
 - #16348 Assert QMetaObject::invokeMethod result (promag)
 
 ### Build system

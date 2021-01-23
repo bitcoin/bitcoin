@@ -47,7 +47,7 @@ your machine.
 
 - Additional debug.log logging for diagnosis of network problems, log timestamps by default
 
-- Fix Bitcoin-Qt startup crash when clicking dock icon on OSX 
+- Fix Bitcoin-Qt startup crash when clicking dock icon on OSX
 
 - Fix memory leaks in CKey::SetCompactSignature() and Key::SignCompact()
 

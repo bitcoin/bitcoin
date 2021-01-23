@@ -17,7 +17,7 @@ How to Upgrade
 ==============
 
 If you are running an older version, shut it down. Wait until it has completely
-shut down (which might take a few minutes for older versions), then run the 
+shut down (which might take a few minutes for older versions), then run the
 installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
 or `bitcoind`/`bitcoin-qt` (on Linux).
 
@@ -77,11 +77,11 @@ the vulnerable versions to 0.15.2 or 0.16.3 as soon as possible.
 
 ### Consensus
 - #14247 `4b8a3f5` Fix crash bug with duplicate inputs within a transaction (TheBlueMatt, sdaftuar)
- 
+
 ### RPC
 - #11676 `7af2457` contrib/init: Update openrc-run filename (Luke Dashjr)
 - #11277 `7026845` Fix uninitialized URI in batch RPC requests (Russell Yanofsky)
- 
+
 ### Wallet
 - #11289 `3f1db56` Wrap dumpwallet warning and note scripts aren't dumped (MeshCollider)
 - #11289 `42ea47d` Add wallet backup text to import*, add* and dumpwallet RPCs (MeshCollider)
