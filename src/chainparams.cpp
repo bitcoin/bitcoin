@@ -349,10 +349,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000004fd58c848c5"); // 550k
+        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000004b8e46524f7"); // 550k
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x0000007621f77556404ddf273d01f9293dfbc636d798c4696cdf14eaefafc2f1"); // 550k
+        consensus.defaultAssumeValid = uint256S("0x0000013d53482bd69c5403f344643668619f77302910e57ffe7b1d375e73cc91"); // 550k
         consensus.nAuxpowStartHeight = 1;
         consensus.nAuxpowChainId = 8;
         consensus.nAuxpowOldChainId = 4096;
@@ -363,10 +363,10 @@ public:
         consensus.vchSYSXERC20Manager = ParseHex("443d9a14fb6ba2A45465bEC3767186f404Ccea25");
         consensus.vchTokenFreezeMethod = ParseHex("9c6dea23fe3b510bb5d170df49dc74e387692eaa3258c691918cd3aa94f5fb74");
         consensus.nBridgeStartBlock = 1000;
-        consensus.nUTXOAssetsBlock = 555000;
-        consensus.nUTXOAssetsBlockProvisioning = consensus.nUTXOAssetsBlock + 40000;
-        consensus.DIP0003Height = 540000;
-        consensus.DIP0003EnforcementHeight = 540000;
+        consensus.nUTXOAssetsBlock = 552000;
+        consensus.nUTXOAssetsBlockProvisioning = consensus.nUTXOAssetsBlock + 10000;
+        consensus.DIP0003Height = 552000;
+        consensus.DIP0003EnforcementHeight = 552000;
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
         pchMessageStart[2] = 0xca;
