@@ -322,22 +322,7 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
 }
 inline std::unique_ptr<CNode> ConsumeNodeAsUniquePtr(FuzzedDataProvider& fdp, const std::optional<NodeId>& node_id_in = nullopt) { return ConsumeNode<true>(fdp, node_id_in); }
 
-inline void FillNode(FuzzedDataProvider& fuzzed_data_provider, CNode& node, const std::optional<int32_t>& version_in = std::nullopt) noexcept
-{
-    const ServiceFlags remote_services = ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS);
-    const NetPermissionFlags permission_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
-    const int32_t version = version_in.value_or(fuzzed_data_provider.ConsumeIntegral<int32_t>());
-    const bool filter_txs = fuzzed_data_provider.ConsumeBool();
-
-    node.nServices = remote_services;
-    node.m_permissionFlags = permission_flags;
-    node.nVersion = version;
-    node.SetCommonVersion(version);
-    if (node.m_tx_relay != nullptr) {
-        LOCK(node.m_tx_relay->cs_filter);
-        node.m_tx_relay->fRelayTxes = filter_txs;
-    }
-}
+void FillNode(FuzzedDataProvider& fuzzed_data_provider, CNode& node, const std::optional<int32_t>& version_in = std::nullopt) noexcept;
 
 template <class T = const BasicTestingSetup>
 std::unique_ptr<T> MakeFuzzingContext(const std::string& chain_name = CBaseChainParams::REGTEST, const std::vector<const char*>& extra_args = {})
