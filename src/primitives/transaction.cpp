@@ -12,8 +12,6 @@
 // SYSCOIN
 #include <streams.h>
 #include <pubkey.h>
-#include <chainparams.h>
-#include <validation.h>
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wsuggest-override"
@@ -331,19 +329,11 @@ uint64_t DecompressAmount(uint64_t x)
 
 bool CTransaction::HasAssets() const
 {
-    // TODO remove after fork
-    if(::ChainActive().Tip()->nHeight < Params().GetConsensus().nUTXOAssetsBlock) {
-        return false;
-    }
     return IsSyscoinTx(nVersion);
 }
 
 bool CMutableTransaction::HasAssets() const
 {
-    // TODO remove after fork
-    if(::ChainActive().Tip()->nHeight < Params().GetConsensus().nUTXOAssetsBlock) {
-        return false;
-    }
     return IsSyscoinTx(nVersion);
 }
 bool CTransaction::IsMnTx() const
@@ -359,7 +349,8 @@ void CMutableTransaction::LoadAssets()
     if(HasAssets()) {
         CAssetAllocation allocation(*this);
         if(allocation.IsNull()) {
-            throw std::ios_base::failure("Unknown asset data");
+            // TODO enable
+            //throw std::ios_base::failure("Unknown asset data");
         }
         voutAssets = std::move(allocation.voutAssets);
         if(voutAssets.empty()) {
