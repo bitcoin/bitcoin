@@ -5,7 +5,7 @@
 """Test the wallet balance RPC methods."""
 from decimal import Decimal
 import struct
-
+import time
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE as ADDRESS_WATCHONLY
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
@@ -270,7 +270,9 @@ class WalletTest(SyscoinTestFramework):
         # Now confirm tx_orig
         self.restart_node(1, ['-persistmempool=0'])
         self.connect_nodes(0, 1)
-        self.sync_blocks()
+        # SYSCOIN
+        time.sleep(1)
+        # self.sync_blocks()
         self.nodes[1].sendrawtransaction(tx_orig)
         self.nodes[1].generatetoaddress(1, ADDRESS_WATCHONLY)
         self.sync_all()
