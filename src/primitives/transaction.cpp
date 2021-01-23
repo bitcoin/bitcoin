@@ -349,8 +349,7 @@ void CMutableTransaction::LoadAssets()
     if(HasAssets()) {
         CAssetAllocation allocation(*this);
         if(allocation.IsNull()) {
-            // TODO enable
-            //throw std::ios_base::failure("Unknown asset data");
+            throw std::ios_base::failure("Unknown asset data");
         }
         voutAssets = std::move(allocation.voutAssets);
         if(voutAssets.empty()) {
