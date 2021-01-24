@@ -269,10 +269,10 @@ UniValue RPCConvertNamedValues(const std::string &strMethod, const std::vector<s
 
         if (!rpcCvtTable.convert(strMethod, name)) {
             // insert string value directly
-            params.pushKV(name, value);
+            params.pushKV(std::move(name), std::move(value));
         } else {
             // parse string as JSON, insert bool/number/object/etc. value
-            params.pushKV(name, ParseNonRFCJSONValue(value));
+            params.pushKV(std::move(name), ParseNonRFCJSONValue(value));
         }
     }
 

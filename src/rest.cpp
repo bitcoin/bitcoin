@@ -604,9 +604,9 @@ static bool rest_getutxos(const util::Ref& context, HTTPRequest* req, const std:
             UniValue o(UniValue::VOBJ);
             ScriptPubKeyToUniv(coin.out.scriptPubKey, o, true);
             utxo.pushKV("scriptPubKey", o);
-            utxos.push_back(utxo);
+            utxos.push_back(std::move(utxo));
         }
-        objGetUTXOResponse.pushKV("utxos", utxos);
+        objGetUTXOResponse.pushKV("utxos", std::move(utxos));
 
         // return json string
         std::string strJSON = objGetUTXOResponse.write() + "\n";
