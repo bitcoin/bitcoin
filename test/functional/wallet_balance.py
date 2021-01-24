@@ -270,6 +270,7 @@ class WalletTest(SyscoinTestFramework):
         # Now confirm tx_orig
         self.restart_node(1, ['-persistmempool=0'])
         self.connect_nodes(0, 1)
+        self.nodes[0].generatetoaddress(1, ADDRESS_WATCHONLY)
         self.nodes[1].generatetoaddress(1, ADDRESS_WATCHONLY)
         self.sync_blocks()
         self.nodes[1].sendrawtransaction(tx_orig)
