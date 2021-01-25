@@ -67,6 +67,9 @@ class ZMQTest (BitcoinTestFramework):
         self.num_nodes = 2
         if self.is_wallet_compiled():
             self.requires_wallet = True
+        # This test isn't testing txn relay/timing, so set whitelist on the
+        # peers for instant txn relay. This speeds up the test run time 2-3x.
+        self.extra_args = [["-whitelist=noban@127.0.0.1"]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_py3_zmq()
@@ -93,7 +96,8 @@ class ZMQTest (BitcoinTestFramework):
             socket = self.ctx.socket(zmq.SUB)
             subscribers.append(ZMQSubscriber(socket, topic.encode()))
 
-        self.restart_node(0, ["-zmqpub%s=%s" % (topic, address) for topic, address in services])
+        self.restart_node(0, ["-zmqpub%s=%s" % (topic, address) for topic, address in services] +
+                             self.extra_args[0])
 
         for i, sub in enumerate(subscribers):
             sub.socket.connect(services[i][1])
