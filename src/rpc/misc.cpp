@@ -31,6 +31,7 @@
 // SYSCOIN
 #include <masternode/masternodesync.h>
 #include <spork.h>
+#include <bls/bls.h>
 static RPCHelpMan mnsync()
 {
         return RPCHelpMan{"mnsync",
@@ -308,6 +309,52 @@ static RPCHelpMan getdescriptorinfo()
     };
 }
 
+static RPCHelpMan mnauth()
+{
+    return RPCHelpMan{"mnauth",
+            {"\nOverride MNAUTH processing results for the specified node with a user provided data (-regtest only).\n"},
+            {
+                {"nodeId", RPCArg::Type::NUM, RPCArg::Optional::NO, "Internal peer id of the node the mock data gets added to"},
+                {"proTxHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "proTxHash", "The authenticated proTxHash as hex string"},
+                {"publicKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "publicKey", "The authenticated public key as hex string"},
+            },
+            RPCResult{
+                RPCResult::Type::BOOL, "", "If MNAUTH was overrided or not."
+            },
+            RPCExamples{
+                "Override MNAUTH processing\n" +
+                HelpExampleCli("mnauth", "\"nodeId \"proTxHash\" \"publicKey\"\"")
+            },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    NodeContext& node = EnsureNodeContext(request.context);
+    if(!node.connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+    if (!Params().MineBlocksOnDemand())
+        throw std::runtime_error("mnauth for regression testing (-regtest mode) only");
+
+    int nodeId = request.params[0].get_int();
+    uint256 proTxHash = ParseHashV(request.params[1], "proTxHash");
+    if (proTxHash.IsNull()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "proTxHash invalid");
+    }
+    CBLSPublicKey publicKey;
+    publicKey.SetHexStr(request.params[2].get_str());
+    if (!publicKey.IsValid()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "publicKey invalid");
+    }
+
+    bool fSuccess = node.connman->ForNode(nodeId, [&](CNode* pNode){
+        LOCK(pNode->cs_mnauth);
+        pNode->verifiedProRegTxHash = proTxHash;
+        pNode->verifiedPubKeyHash = publicKey.GetHash();
+        return true;
+    });
+
+    return fSuccess;
+},
+    };
+}
 static RPCHelpMan deriveaddresses()
 {
     return RPCHelpMan{"deriveaddresses",
@@ -836,6 +883,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "mockscheduler",          &mockscheduler,          {"delta_time"}},
     { "hidden",             "echo",                   &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
     { "hidden",             "echojson",               &echojson,               {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
+    { "hidden",             "mnauth",                 &mnauth,                 {"nodeId","proTxHash","publicKey"}},
 };
 // clang-format on
     for (const auto& c : commands) {

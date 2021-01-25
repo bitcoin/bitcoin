@@ -112,6 +112,9 @@ static RPCHelpMan getpeerinfo()
                             {RPCResult::Type::STR_HEX, "verified_proregtx_hash", "Only present when the peer is a masternode and successfully\n"
                                                                                 "authenticated via MNAUTH. In this case, this field contains the\n"
                                                                                 "protx hash of the masternode"},
+                            {RPCResult::Type::STR_HEX, "verified_pubkey_hash", "Only present when the peer is a masternode and successfully\n"
+                                                                                "authenticated via MNAUTH. In this case, this field contains the\n"
+                                                                                "hash of the masternode's operator public key"},
                             {RPCResult::Type::ARR, "servicesnames", "the services offered, in human-readable form",
                             {
                                 {RPCResult::Type::STR, "SERVICE_NAME", "the service name if it is recognised"}
@@ -202,6 +205,9 @@ static RPCHelpMan getpeerinfo()
         obj.pushKV("servicesnames", GetServicesNames(stats.nServices));
         if (!stats.verifiedProRegTxHash.IsNull()) {
             obj.pushKV("verified_proregtx_hash", stats.verifiedProRegTxHash.ToString());
+        }
+        if (!stats.verifiedPubKeyHash.IsNull()) {
+            obj.pushKV("verified_pubkey_hash", stats.verifiedPubKeyHash.ToString());
         }
         obj.pushKV("relaytxes", stats.fRelayTxes);
         obj.pushKV("lastsend", stats.nLastSend);

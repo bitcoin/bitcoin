@@ -629,6 +629,7 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
     {
         LOCK(cs_mnauth);
         X(verifiedProRegTxHash);
+        X(verifiedPubKeyHash);
     }
     X(m_masternode_connection);
 
