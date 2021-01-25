@@ -1530,8 +1530,13 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
                     // Thus, the protocol spec specified allows for us to provide duplicate txn here,
                     // however we MUST always provide at least what the remote peer needs
                     typedef std::pair<unsigned int, uint256> PairType;
-                    for (PairType &pair : merkleBlock.vMatchedTxn)
+                    for (PairType &pair : merkleBlock.vMatchedTxn) {
                         connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::TX, *pblock->vtx[pair.first]));
+                        auto islock = llmq::quorumInstantSendManager->GetInstantSendLockByTxid(pair.second);
+                        if (islock != nullptr) {
+                            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::ISLOCK, *islock));
+                        }
+                    }
                 }
                 // else
                 // no response
