@@ -109,11 +109,6 @@ BOOST_AUTO_TEST_CASE(double_lock_mutex)
     TestDoubleLock<Mutex>(true /* should throw */);
 }
 
-BOOST_AUTO_TEST_CASE(double_lock_boost_mutex)
-{
-    TestDoubleLock<boost::mutex>(true /* should throw */);
-}
-
 BOOST_AUTO_TEST_CASE(double_lock_recursive_mutex)
 {
     TestDoubleLock<RecursiveMutex>(false /* should not throw */);
