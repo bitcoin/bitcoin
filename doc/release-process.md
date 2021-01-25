@@ -328,13 +328,13 @@ syscoin.org (see below for syscoin.org update instructions).
 
       - Install [golang](https://golang.org/doc/install)
 
-      - Install the new Bitcoin Core release
+      - Install the new Syscoin Core release
 
-      - Run bitcoind on regtest
+      - Run syscoind on regtest
 
-      - Clone the [bitcoincore.org repository](https://github.com/bitcoin-core/bitcoincore.org)
+      - Clone the [syscoincore.org repository](https://github.com/syscoin-core/syscoincore.org)
 
-      - Run: `go run generate.go` while being in `contrib/doc-gen` folder, and with bitcoin-cli in PATH
+      - Run: `go run generate.go` while being in `contrib/doc-gen` folder, and with syscoin-cli in PATH
 
       - Add the generated files to git
 
