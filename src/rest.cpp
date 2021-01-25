@@ -254,10 +254,10 @@ static bool rest_block(HTTPRequest* req,
 
         if (IsBlockPruned(pblockindex))
             return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not available (pruned data)");
-
-        if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus()))
-            return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
     }
+
+    if (!ReadBlockFromDisk(block, pblockindex, Params().GetConsensus()))
+        return RESTERR(req, HTTP_NOT_FOUND, hashStr + " not found");
 
     switch (rf) {
     case RetFormat::BINARY: {
