@@ -15,6 +15,7 @@
 
 #include <map>
 #include <unordered_map>
+#include <unordered_lru_cache.h>
 
 class CNode;
 class CConnman;
@@ -32,10 +33,10 @@ private:
     std::map<std::pair<Consensus::LLMQType, uint256>, uint256> minableCommitmentsByQuorum;
     std::map<uint256, CFinalCommitment> minableCommitments;
 
-    std::unordered_map<std::pair<Consensus::LLMQType, uint256>, bool, StaticSaltedHasher> hasMinedCommitmentCache;
+    std::map<Consensus::LLMQType, unordered_lru_cache<uint256, bool, StaticSaltedHasher>> mapHasMinedCommitmentCache;
 
 public:
-    explicit CQuorumBlockProcessor(CEvoDB& _evoDb) : evoDb(_evoDb) {}
+    explicit CQuorumBlockProcessor(CEvoDB& _evoDb);
 
     bool UpgradeDB();
 

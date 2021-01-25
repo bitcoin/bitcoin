@@ -27,6 +27,7 @@ public:
         assert(_maxSize != 0);
     }
 
+    size_t max_size() const { return maxSize; }
 
     template<typename Value2>
     void _emplace(const Key& key, Value2&& v)
