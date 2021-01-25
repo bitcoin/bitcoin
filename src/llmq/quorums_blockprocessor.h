@@ -15,7 +15,7 @@
 
 #include <map>
 #include <unordered_map>
-#include <threadsafety.h>
+#include <unordered_lru_cache.h>
 extern RecursiveMutex cs_main;
 class CNode;
 class CConnman;
@@ -33,10 +33,11 @@ private:
     std::map<std::pair<uint8_t, uint256>, uint256> minableCommitmentsByQuorum;
     std::map<uint256, CFinalCommitment> minableCommitments;
 
-    std::unordered_map<std::pair<uint8_t, uint256>, bool, StaticSaltedHasher> hasMinedCommitmentCache;
+    std::map<uint8_t, unordered_lru_cache<uint256, bool, StaticSaltedHasher>> mapHasMinedCommitmentCache;
 
 public:
-    explicit CQuorumBlockProcessor(CEvoDB& _evoDb, CConnman &_connman) : evoDb(_evoDb), connman(_connman){}
+    explicit CQuorumBlockProcessor(CEvoDB& _evoDb, CConnman &_connman);
+
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, PeerManager& peerman);
 

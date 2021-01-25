@@ -84,9 +84,10 @@ private:
     CEvoDB& evoDb;
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
+
     mutable RecursiveMutex quorumsCacheCs;
-    std::map<std::pair<uint8_t, uint256>, CQuorumPtr> quorumsCache;
-    unordered_lru_cache<std::pair<uint8_t, uint256>, std::vector<CQuorumCPtr>, StaticSaltedHasher, 32> scanQuorumsCache;
+    mutable std::map<uint8_t, unordered_lru_cache<uint256, CQuorumCPtr, StaticSaltedHasher>> mapQuorumsCache;
+    mutable std::map<uint8_t, unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher>> scanQuorumsCache;
 
 public:
     CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager);
@@ -96,18 +97,18 @@ public:
     static bool HasQuorum(uint8_t llmqType, const uint256& quorumHash);
 
     // all these methods will lock cs_main for a short period of time
-    CQuorumCPtr GetQuorum(uint8_t llmqType, const uint256& quorumHash);
-    CQuorumCPtr GetQuorum(uint8_t llmqType, const CBlockIndex* pindexQuorum);
-    void ScanQuorums(uint8_t llmqType, size_t maxCount, std::vector<CQuorumCPtr>& quorums);
+    CQuorumCPtr GetQuorum(uint8_t llmqType, const uint256& quorumHash) const;
+    CQuorumCPtr GetQuorum(uint8_t llmqType, const CBlockIndex* pindexQuorum) const;
+    void ScanQuorums(uint8_t llmqType, size_t nCountRequested, std::vector<CQuorumCPtr>& quorums) const;
 
     // this one is cs_main-free
-    void ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexQuorum, size_t maxCount, std::vector<CQuorumCPtr>& quorums);
+    void ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexStart, size_t nCountRequested, std::vector<CQuorumCPtr>& quorums) const;
 
 private:
     // all private methods here are cs_main-free
     void EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pindexNew);
 
-    bool BuildQuorumFromCommitment(const CFinalCommitment& qc, const CBlockIndex* pindexQuorum, const uint256& minedBlockHash, std::shared_ptr<CQuorum>& quorum) const EXCLUSIVE_LOCKS_REQUIRED(quorumsCacheCs);
+    bool BuildQuorumFromCommitment(const uint8_t llmqType, const CBlockIndex* pindexQuorum, std::shared_ptr<CQuorum>& quorum) const EXCLUSIVE_LOCKS_REQUIRED(quorumsCacheCs);
     bool BuildQuorumContributions(const CFinalCommitment& fqc, std::shared_ptr<CQuorum>& quorum) const;
 };
 
