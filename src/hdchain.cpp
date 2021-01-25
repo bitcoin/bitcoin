@@ -79,6 +79,10 @@ bool CHDChain::SetMnemonic(const SecureString& ssMnemonic, const SecureString& s
         if (!IsNull())
             return false;
 
+        if (ssMnemonicPassphrase.size() > 256) {
+            throw std::runtime_error(std::string(__func__) + ": Mnemonic passphrase is too long, must be at most 256 characters");
+        }
+
         // empty mnemonic i.e. "generate a new one"
         if (ssMnemonic.empty()) {
             ssMnemonicTmp = CMnemonic::Generate(256);

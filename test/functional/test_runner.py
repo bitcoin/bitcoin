@@ -146,6 +146,7 @@ BASE_SCRIPTS= [
     'feature_sporks.py',
     'rpc_getblockstats.py',
     'wallet_encryption.py',
+    'wallet_upgradetohd.py',
     'feature_dersig.py',
     'feature_cltv.py',
     'feature_new_quorum_type_activation.py',

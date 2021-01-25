@@ -408,7 +408,7 @@ bool CCryptoKeyStore::EncryptKeys(CKeyingMaterial& vMasterKeyIn)
     return true;
 }
 
-bool CCryptoKeyStore::EncryptHDChain(const CKeyingMaterial& vMasterKeyIn)
+bool CCryptoKeyStore::EncryptHDChain(const CKeyingMaterial& vMasterKeyIn, const CHDChain& chain)
 {
     LOCK(cs_KeyStore);
     // should call EncryptKeys first
@@ -420,6 +420,11 @@ bool CCryptoKeyStore::EncryptHDChain(const CKeyingMaterial& vMasterKeyIn)
 
     if (cryptedHDChain.IsCrypted())
         return true;
+
+    if (hdChain.IsNull() && !chain.IsNull()) {
+        // Encrypting a new HDChain for an already encrypted non-HD wallet
+        hdChain = chain;
+    }
 
     // make sure seed matches this chain
     if (hdChain.GetID() != hdChain.GetSeedHash())

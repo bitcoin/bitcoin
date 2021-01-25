@@ -3059,6 +3059,112 @@ UniValue listwallets(const JSONRPCRequest& request)
     return obj;
 }
 
+UniValue upgradetohd(const JSONRPCRequest& request)
+{
+    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp)
+        throw std::runtime_error(
+                "upgradetohd\n"
+                "\nUpgrades non-HD wallets to HD.\n"
+                "\nWarning: You will need to make a new backup of your wallet after setting the HD wallet mnemonic.\n"
+                "\nArguments:\n"
+                "1. \"mnemonic\"             (string, optional, default=\"\") Mnemonic as defined in BIP39 to use for the new HD wallet."
+                "                          Use an empty string \"\" to generate a new random mnemonic.\n"
+                "2. \"mnemonicpassphrase\"   (string, optional, default=\"\") Optional mnemonic passphrase as defined in BIP39\n"
+                "3. \"walletpassphrase\"     (string, optional) If your wallet is encrypted you must have your wallet passphrase here\n"
+                "                          If your wallet is not encrypted specifying wallet passphrase will trigger wallet encryption.\n"
+
+                "\nExamples:\n"
+                + HelpExampleCli("upgradetohd", "")
+                + HelpExampleCli("upgradetohd", "\"mnemonicword1 ... mnemonicwordN\"")
+                + HelpExampleCli("upgradetohd", "\"mnemonicword1 ... mnemonicwordN\" \"mnemonicpassphrase\"")
+                + HelpExampleCli("upgradetohd", "\"mnemonicword1 ... mnemonicwordN\" \"mnemonicpassphrase\" \"walletpassphrase\""));
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    // Do not do anything to HD wallets
+    if (pwallet->IsHDEnabled()) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot upgrade a wallet to HD if it is already upgraded to HD.");
+    }
+
+    if (!pwallet->SetMaxVersion(FEATURE_HD)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Cannot downgrade wallet");
+    }
+
+    bool prev_encrypted = pwallet->IsCrypted();
+
+    SecureString secureWalletPassphrase;
+    secureWalletPassphrase.reserve(100);
+    // TODO: get rid of this .c_str() by implementing SecureString::operator=(std::string)
+    // Alternately, find a way to make request.params[0] mlock()'d to begin with.
+    if (request.params[2].isNull()) {
+        if (prev_encrypted) {
+            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "Cannot upgrade encrypted wallet to HD without the wallet passphrase");
+        }
+    } else {
+        secureWalletPassphrase = request.params[2].get_str().c_str();
+        if (!pwallet->Unlock(secureWalletPassphrase)) {
+            throw JSONRPCError(RPC_WALLET_PASSPHRASE_INCORRECT, "The wallet passphrase entered was incorrect");
+        }
+    }
+
+    bool generate_mnemonic = request.params[0].isNull() || request.params[0].get_str().empty();
+
+    SecureString secureMnemonic;
+    secureMnemonic.reserve(256);
+    if (!generate_mnemonic) {
+        if (IsInitialBlockDownload()) {
+            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Cannot set mnemonic while still in Initial Block Download");
+        }
+        secureMnemonic = request.params[0].get_str().c_str();
+    }
+
+    SecureString secureMnemonicPassphrase;
+    secureMnemonicPassphrase.reserve(256);
+    if (!request.params[1].isNull()) {
+        secureMnemonicPassphrase = request.params[1].get_str().c_str();
+    }
+
+    LogPrintf("Upgrading wallet to HD\n");
+    pwallet->SetMinVersion(FEATURE_HD);
+
+    if (prev_encrypted) {
+        if (!pwallet->GenerateNewHDChainEncrypted(secureMnemonic, secureMnemonicPassphrase, secureWalletPassphrase)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Failed to generate encrypted HD wallet");
+        }
+    } else {
+        pwallet->GenerateNewHDChain(secureMnemonic, secureMnemonicPassphrase);
+        if (!secureWalletPassphrase.empty()) {
+            if (!pwallet->EncryptWallet(secureWalletPassphrase)) {
+                throw JSONRPCError(RPC_WALLET_ENCRYPTION_FAILED, "Failed to encrypt HD wallet");
+            }
+        }
+    }
+
+    // If you are generating new mnemonic it is assumed that the addresses have never gotten a transaction before, so you don't need to rescan for transactions
+    if (!generate_mnemonic) {
+        WalletRescanReserver reserver(pwallet);
+        if (!reserver.reserve()) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "Wallet is currently rescanning. Abort existing rescan or wait.");
+        }
+        pwallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, true);
+    }
+
+    if (!prev_encrypted && pwallet->IsCrypted()) {
+        // BDB seems to have a bad habit of writing old data into
+        // slack space in .dat files; that is bad if the old data is
+        // unencrypted private keys. So:
+        StartShutdown();
+        return "Wallet successfully upgraded and encrypted, Dash Core server is stopping. Remember to make a backup before restarting.";
+    }
+
+    return true;
+}
+
 UniValue keepass(const JSONRPCRequest& request)
 {
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
@@ -4158,6 +4264,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "setprivatesendamount",     &setprivatesendamount,     {"amount"} },
     { "wallet",             "signmessage",                      &signmessage,                   {"address","message"} },
     { "wallet",             "signrawtransactionwithwallet",     &signrawtransactionwithwallet,  {"hexstring","prevtxs","sighashtype"} },
+    { "wallet",             "upgradetohd",                      &upgradetohd,                   {"mnemonic", "mnemonicpassphrase", "walletpassphrase"} },
     { "wallet",             "walletlock",                       &walletlock,                    {} },
     { "wallet",             "walletpassphrasechange",           &walletpassphrasechange,        {"oldpassphrase","newpassphrase"} },
     { "wallet",             "walletpassphrase",                 &walletpassphrase,              {"passphrase","timeout","mixingonly"} },
