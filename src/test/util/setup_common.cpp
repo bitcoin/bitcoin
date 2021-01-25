@@ -260,6 +260,55 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
     return block;
 }
 
+
+CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactionRef input_transaction,
+                                                                     int input_vout,
+                                                                     int input_height,
+                                                                     CKey input_signing_key,
+                                                                     CScript output_destination,
+                                                                     CAmount output_amount)
+{
+    // Transaction we will submit to the mempool
+    CMutableTransaction mempool_txn;
+
+    // Create an input
+    COutPoint outpoint_to_spend(input_transaction->GetHash(), input_vout);
+    CTxIn input(outpoint_to_spend);
+    mempool_txn.vin.push_back(input);
+
+    // Create an output
+    CTxOut output(output_amount, output_destination);
+    mempool_txn.vout.push_back(output);
+
+    // Sign the transaction
+    // - Add the signing key to a keystore
+    FillableSigningProvider keystore;
+    keystore.AddKey(input_signing_key);
+    // - Populate a CoinsViewCache with the unspent output
+    CCoinsView coins_view;
+    CCoinsViewCache coins_cache(&coins_view);
+    AddCoins(coins_cache, *input_transaction.get(), input_height);
+    // - Use GetCoin to properly populate utxo_to_spend,
+    Coin utxo_to_spend;
+    assert(coins_cache.GetCoin(outpoint_to_spend, utxo_to_spend));
+    // - Then add it to a map to pass in to SignTransaction
+    std::map<COutPoint, Coin> input_coins;
+    input_coins.insert({outpoint_to_spend, utxo_to_spend});
+    // - Default signature hashing type
+    int nHashType = SIGHASH_ALL;
+    std::map<int, std::string> input_errors;
+    assert(SignTransaction(mempool_txn, &keystore, input_coins, nHashType, input_errors));
+
+    // Add transaction to the mempool
+    {
+        LOCK(cs_main);
+        const MempoolAcceptResult result = AcceptToMemoryPool(*m_node.mempool.get(), MakeTransactionRef(mempool_txn), /* bypass_limits */ false);
+        assert(result.m_result_type == MempoolAcceptResult::ResultType::VALID);
+    }
+
+    return mempool_txn;
+}
+
 TestChain100Setup::~TestChain100Setup()
 {
     gArgs.ForceSetArg("-segwitheight", "0");

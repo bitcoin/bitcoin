@@ -123,6 +123,23 @@ struct TestChain100Setup : public RegTestingSetup {
     //! Mine a series of new blocks on the active chain.
     void mineBlocks(int num_blocks);
 
+    /**
+     * Create a transaction and submit to the mempool.
+     *
+     * @param input_transaction  The transaction to spend
+     * @param input_vout         The vout to spend from the input_transaction
+     * @param input_height       The height of the block that included the input_transaction
+     * @param input_signing_key  The key to spend the input_transaction
+     * @param output_destination Where to send the output
+     * @param output_amount      How much to send
+     */
+    CMutableTransaction CreateValidMempoolTransaction(CTransactionRef input_transaction,
+                                                      int input_vout,
+                                                      int input_height,
+                                                      CKey input_signing_key,
+                                                      CScript output_destination,
+                                                      CAmount output_amount = CAmount(1 * COIN));
+
     ~TestChain100Setup();
 
     bool m_deterministic;
