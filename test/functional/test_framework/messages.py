@@ -28,8 +28,7 @@ import dash_hash
 
 MIN_VERSION_SUPPORTED = 60001
 MY_VERSION = 70214  # MIN_PEER_PROTO_VERSION
-MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
-MY_SUBVERSION_DEVNET = b"/python-mininode-tester:0.0.3,devnet=devnet-%s/"
+MY_SUBVERSION = b"/python-mininode-tester:0.0.3%s/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
 MAX_INV_SZ = 50000
@@ -1014,7 +1013,7 @@ class msg_version():
         self.addrTo = CAddress()
         self.addrFrom = CAddress()
         self.nNonce = random.getrandbits(64)
-        self.strSubVer = MY_SUBVERSION
+        self.strSubVer = MY_SUBVERSION % b""
         self.nStartingHeight = -1
         self.nRelay = MY_RELAY
 

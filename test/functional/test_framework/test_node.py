@@ -18,7 +18,6 @@ import time
 import urllib.parse
 
 from .authproxy import JSONRPCException
-from .messages import MY_SUBVERSION
 from .util import (
     append_config,
     delete_cookie_file,
@@ -299,15 +298,17 @@ class TestNode():
         """Close all p2p connections to the node."""
         for p in self.p2ps:
             p.peer_disconnect()
-        del self.p2ps[:]
 
         # wait for p2p connections to disappear from getpeerinfo()
         def check_peers():
             for p in self.getpeerinfo():
-                if p['subver'] == MY_SUBVERSION.decode():
-                    return False
+                for p2p in self.p2ps:
+                    if p['subver'] == p2p.strSubVer.decode():
+                        return False
             return True
         wait_until(check_peers, timeout=5)
+
+        del self.p2ps[:]
 
 class TestNodeCLIAttr:
     def __init__(self, cli, command):
