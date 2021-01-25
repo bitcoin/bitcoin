@@ -4,6 +4,7 @@
 
 #include <chainparams.h>
 #include <consensus/consensus.h>
+#include <logging.h>
 #include <miner.h>
 #include <node/blockstorage.h>
 #include <script/script.h>
@@ -125,6 +126,7 @@ std::vector<TxIds> TxRebroadcastHandler::GetRebroadcastTransactions(const std::s
     // Use CreateNewBlock to identify rebroadcast candidates
     auto block_template = BlockAssembler(m_chainman.ActiveChainstate(), m_mempool, m_chainparams, options)
                               .CreateNewBlock(CScript());
+    auto after_cnb_time = GetTime<std::chrono::microseconds>();
     rebroadcast_txs.reserve(block_template->block.vtx.size());
 
     LOCK(m_rebroadcast_mutex);
@@ -177,6 +179,15 @@ std::vector<TxIds> TxRebroadcastHandler::GetRebroadcastTransactions(const std::s
 
     TrimMaxRebroadcast();
 
+    auto delta1 = after_cnb_time - start_time;
+    auto delta2 = GetTime<std::chrono::microseconds>() - start_time;
+    LogPrint(BCLog::BENCH, "GetRebroadcastTransactions(): %d us total, %d us spent in CreateNewBlock.\n", delta2.count(), delta1.count());
+    LogPrint(BCLog::NET, "Queued %d transactions for attempted rebroadcast, filtered from %d candidates with cached fee rate of %s.\n", rebroadcast_txs.size(), block_template->block.vtx.size() - 1, m_cached_fee_rate.ToString(FeeEstimateMode::SAT_VB));
+
+    for (TxIds ids : rebroadcast_txs) {
+        LogPrint(BCLog::NET, "Attempting to rebroadcast txid: %s wtxid: %s\n", ids.m_txid.ToString(), ids.m_wtxid.ToString());
+    }
+
     return rebroadcast_txs;
 };
 
@@ -191,17 +202,21 @@ void TxRebroadcastHandler::CacheMinRebroadcastFee()
 
     CBlockIndex* tip;
     CFeeRate current_fee_rate;
+    auto start_time = GetTime<std::chrono::microseconds>();
     {
         LOCK(cs_main);
         tip = m_chainman.ActiveTip();
         current_fee_rate = BlockAssembler(chain_state, m_mempool, m_chainparams, options).MinTxFeeRate();
     }
+    auto delta_time = GetTime<std::chrono::microseconds>() - start_time;
 
     // Update stored information
     LOCK(m_rebroadcast_mutex);
     m_tip_at_cache_time = tip;
     m_previous_cached_fee_rate = m_cached_fee_rate;
     m_cached_fee_rate = current_fee_rate;
+
+    LogPrint(BCLog::BENCH, "Caching minimum fee for rebroadcast to %s, took %d us to calculate.\n", m_cached_fee_rate.ToString(FeeEstimateMode::SAT_VB), delta_time.count());
 };
 
 void TxRebroadcastHandler::TrimMaxRebroadcast()
