@@ -7,6 +7,7 @@
 #include <chain.h>
 #include <clientversion.h>
 #include <core_io.h>
+#include <evo/mnauth.h>
 #include <init.h>
 #include <httpserver.h>
 #include <key_io.h>
@@ -419,6 +420,42 @@ UniValue setmocktime(const JSONRPCRequest& request)
     SetMockTime(request.params[0].get_int64());
 
     return NullUniValue;
+}
+
+UniValue mnauth(const JSONRPCRequest& request)
+{
+    if (request.fHelp || (request.params.size() != 3))
+        throw std::runtime_error(
+            "mnauth nodeId \"proTxHash\" \"publicKey\"\n"
+            "\nOverride MNAUTH processing results for the specified node with a user provided data (-regtest only).\n"
+            "\nArguments:\n"
+            "1. nodeId          (integer, required) Internal peer id of the node the mock data gets added to.\n"
+            "2. \"proTxHash\"     (string, required) The authenticated proTxHash as hex string.\n"
+            "3. \"publicKey\"     (string, required) The authenticated public key as hex string.\n"
+            );
+
+    if (!Params().MineBlocksOnDemand())
+        throw std::runtime_error("mnauth for regression testing (-regtest mode) only");
+
+    int nodeId = ParseInt64V(request.params[0], "nodeId");
+    uint256 proTxHash = ParseHashV(request.params[1], "proTxHash");
+    if (proTxHash.IsNull()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "proTxHash invalid");
+    }
+    CBLSPublicKey publicKey;
+    publicKey.SetHexStr(request.params[2].get_str());
+    if (!publicKey.IsValid()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "publicKey invalid");
+    }
+
+    bool fSuccess = g_connman->ForNode(nodeId, [&](CNode* pNode){
+        LOCK(pNode->cs_mnauth);
+        pNode->verifiedProRegTxHash = proTxHash;
+        pNode->verifiedPubKeyHash = publicKey.GetHash();
+        return true;
+    });
+
+    return fSuccess;
 }
 
 bool getAddressFromIndex(const int &type, const uint160 &hash, std::string &address)
@@ -1123,6 +1160,7 @@ static const CRPCCommand commands[] =
     { "hidden",             "echo",                   &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
     { "hidden",             "echojson",               &echo,                   {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
     { "hidden",             "getinfo",                &getinfo_deprecated,     {}},
+    { "hidden",             "mnauth",                 &mnauth,                 {"nodeId", "proTxHash", "publicKey"}},
 };
 
 void RegisterMiscRPCCommands(CRPCTable &t)
