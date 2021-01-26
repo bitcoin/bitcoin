@@ -17,6 +17,7 @@
 #include <util/system.h>
 
 #include <algorithm>
+#include <functional>
 
 #include <QColor>
 #include <QDateTime>

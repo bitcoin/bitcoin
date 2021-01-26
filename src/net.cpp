@@ -62,6 +62,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <functional>
 #include <unordered_map>
 
 #include <math.h>

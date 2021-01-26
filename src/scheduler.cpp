@@ -8,6 +8,7 @@
 #include <util/time.h>
 
 #include <assert.h>
+#include <functional>
 #include <utility>
 
 CScheduler::CScheduler()
