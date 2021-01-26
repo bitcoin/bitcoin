@@ -14,6 +14,10 @@
 
 struct KeyOriginInfo;
 
+static const bool DEFAULT_WALLET_IMPLICIT_SEGWIT = false;
+
+extern bool g_implicit_segwit;
+
 /** An interface to be implemented by keystores that support signing. */
 class SigningProvider
 {
