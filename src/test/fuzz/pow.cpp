@@ -43,7 +43,10 @@ FUZZ_TARGET_INIT(pow, initialize_pow)
                 current_block.nHeight = current_height;
             }
             if (fuzzed_data_provider.ConsumeBool()) {
-                current_block.nTime = fixed_time + current_height * consensus_params.nPowTargetSpacing;
+                const uint32_t seconds = current_height * consensus_params.nPowTargetSpacing;
+                if (!AdditionOverflow(fixed_time, seconds)) {
+                    current_block.nTime = fixed_time + seconds;
+                }
             }
             if (fuzzed_data_provider.ConsumeBool()) {
                 current_block.nBits = fixed_bits;
