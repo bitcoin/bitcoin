@@ -230,6 +230,12 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, ~verify_flags, txdata, strTest, /* expect_valid */ true)) {
                 BOOST_ERROR("Tx unexpectedly failed: " << strTest);
             }
+            // Check that flags are maximal: transaction should fail if any unset flags are set.
+            for (auto flags_excluding_one: ExcludeIndividualFlags(verify_flags)) {
+                if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, ~flags_excluding_one, txdata, strTest, /* expect_valid */ false)) {
+                    BOOST_ERROR("Too many flags unset: " << strTest);
+                }
+            }
         }
     }
 }
@@ -292,8 +298,15 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
             PrecomputedTransactionData txdata(tx);
             unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
 
+            // Not using FillFlags() in the main test, in order to detect invalid verifyFlags combination
             if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, verify_flags, txdata, strTest, /* expect_valid */ false)) {
                 BOOST_ERROR("Tx unexpectedly passed: " << strTest);
+            }
+            // Check that flags are minimal: transaction should succeed if any set flags are unset.
+            for (auto flags_excluding_one: ExcludeIndividualFlags(verify_flags)) {
+                if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, flags_excluding_one, txdata, strTest, /* expect_valid */ true)) {
+                    BOOST_ERROR("Too many flags set: " << strTest);
+                }
             }
         }
     }
