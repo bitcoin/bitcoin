@@ -896,7 +896,7 @@ void SyscoinGUI::showDebugWindowActivateConsole()
 
 void SyscoinGUI::showHelpMessageClicked()
 {
-    helpMessageDialog->show();
+    GUIUtil::bringToFront(helpMessageDialog);
 }
 
 #ifdef ENABLE_WALLET
