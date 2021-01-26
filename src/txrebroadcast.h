@@ -92,6 +92,9 @@ private:
      *  further rebroadcasts until this filter rolls over.
      * */
     CRollingBloomFilter m_max_filter GUARDED_BY(m_rebroadcast_mutex);
+
+    /** Limit the size of m_attempt_tracker by deleting the oldest entries */
+    void TrimMaxRebroadcast() EXCLUSIVE_LOCKS_REQUIRED(m_rebroadcast_mutex);
 };
 
 #endif // BITCOIN_TXREBROADCAST_H

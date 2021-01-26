@@ -29,6 +29,12 @@ static constexpr int MAX_REBROADCAST_COUNT{6};
  * rebroadcast */
 static constexpr std::chrono::hours MIN_REATTEMPT_INTERVAL{4h};
 
+/** The maximum number of entries permitted in m_attempt_tracker */
+static constexpr int MAX_ENTRIES{500};
+
+/** The maximum age of an entry ~3 months */
+static constexpr std::chrono::hours MAX_ENTRY_AGE{24h * 30 * 3};
+
 struct RebroadcastEntry {
     RebroadcastEntry(std::chrono::microseconds now_time, uint256 wtxid)
         : m_last_attempt(now_time),
@@ -169,6 +175,8 @@ std::vector<TxIds> TxRebroadcastHandler::GetRebroadcastTransactions(const std::s
         rebroadcast_txs.push_back(TxIds(txid, wtxid));
     }
 
+    TrimMaxRebroadcast();
+
     return rebroadcast_txs;
 };
 
@@ -194,4 +202,24 @@ void TxRebroadcastHandler::CacheMinRebroadcastFee()
     m_tip_at_cache_time = tip;
     m_previous_cached_fee_rate = m_cached_fee_rate;
     m_cached_fee_rate = current_fee_rate;
+};
+
+void TxRebroadcastHandler::TrimMaxRebroadcast()
+{
+    AssertLockHeld(m_rebroadcast_mutex);
+    auto min_time = GetTime<std::chrono::microseconds>() - MAX_ENTRY_AGE;
+
+    while (!m_attempt_tracker->empty()) {
+        auto it = m_attempt_tracker->get<index_by_last_attempt>().begin();
+        if (it->m_last_attempt <= min_time || m_attempt_tracker->size() > MAX_ENTRIES) {
+            // Either we last attempted to rebroadcast longer than
+            // MAX_ENTRY_AGE ago, or the attempt tracker is full and this is
+            // the oldest attempt.
+            m_attempt_tracker->get<index_by_last_attempt>().erase(it);
+        } else {
+            // There are no more attempts older than min_time and the attempt
+            // tracker is not full.
+            break;
+        }
+    }
 };
