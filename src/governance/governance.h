@@ -28,16 +28,6 @@ class CGovernanceVote;
 
 extern CGovernanceManager governance;
 
-struct ExpirationInfo {
-    ExpirationInfo(int64_t _nExpirationTime, int _idFrom) :
-        nExpirationTime(_nExpirationTime), idFrom(_idFrom) {}
-
-    int64_t nExpirationTime;
-    NodeId idFrom;
-};
-
-typedef std::pair<CGovernanceObject, ExpirationInfo> object_info_pair_t;
-
 static const int RATE_BUFFER_SIZE = 5;
 
 class CRateCheckBuffer
@@ -103,19 +93,15 @@ public:
         return nMax;
     }
 
-    int GetCount()
+    int GetCount() const
     {
-        int nCount = 0;
         if (fBufferEmpty) {
             return 0;
         }
         if (nDataEnd > nDataStart) {
-            nCount = nDataEnd - nDataStart;
-        } else {
-            nCount = RATE_BUFFER_SIZE - nDataStart + nDataEnd;
+            return nDataEnd - nDataStart;
         }
-
-        return nCount;
+        return RATE_BUFFER_SIZE - nDataStart + nDataEnd;
     }
 
     double GetRate()
@@ -154,7 +140,7 @@ class CGovernanceManager
 
 public: // Types
     struct last_object_rec {
-        last_object_rec(bool fStatusOKIn = true) :
+        explicit last_object_rec(bool fStatusOKIn = true) :
             triggerBuffer(),
             fStatusOK(fStatusOKIn)
         {
@@ -174,43 +160,13 @@ public: // Types
     };
 
 
-    typedef std::map<uint256, CGovernanceObject> object_m_t;
-
-    typedef object_m_t::iterator object_m_it;
-
-    typedef object_m_t::const_iterator object_m_cit;
-
     typedef CacheMap<uint256, CGovernanceObject*> object_ref_cm_t;
-
-    typedef std::map<uint256, CGovernanceVote> vote_m_t;
-
-    typedef vote_m_t::iterator vote_m_it;
-
-    typedef vote_m_t::const_iterator vote_m_cit;
-
-    typedef CacheMap<uint256, CGovernanceVote> vote_cm_t;
 
     typedef CacheMultiMap<uint256, vote_time_pair_t> vote_cmm_t;
 
-    typedef object_m_t::size_type size_type;
-
     typedef std::map<COutPoint, last_object_rec> txout_m_t;
 
-    typedef txout_m_t::iterator txout_m_it;
-
     typedef std::set<uint256> hash_s_t;
-
-    typedef hash_s_t::iterator hash_s_it;
-
-    typedef hash_s_t::const_iterator hash_s_cit;
-
-    typedef std::map<uint256, object_info_pair_t> object_info_m_t;
-
-    typedef object_info_m_t::iterator object_info_m_it;
-
-    typedef std::map<uint256, int64_t> hash_time_m_t;
-
-    typedef hash_time_m_t::iterator hash_time_m_it;
 
 private:
     static const int MAX_CACHE_SIZE = 1000000;
@@ -226,19 +182,19 @@ private:
     int nCachedBlockHeight;
 
     // keep track of the scanning errors
-    object_m_t mapObjects;
+    std::map<uint256, CGovernanceObject> mapObjects;
 
     // mapErasedGovernanceObjects contains key-value pairs, where
     //   key   - governance object's hash
     //   value - expiration time for deleted objects
-    hash_time_m_t mapErasedGovernanceObjects;
+    std::map<uint256, int64_t> mapErasedGovernanceObjects;
 
-    object_m_t mapPostponedObjects;
+    std::map<uint256, CGovernanceObject> mapPostponedObjects;
     hash_s_t setAdditionalRelayObjects;
 
     object_ref_cm_t cmapVoteToObject;
 
-    vote_cm_t cmapInvalidVotes;
+    CacheMap<uint256, CGovernanceVote> cmapInvalidVotes;
 
     vote_cmm_t cmmapOrphanVotes;
 
@@ -279,7 +235,7 @@ public:
 
     CGovernanceManager();
 
-    virtual ~CGovernanceManager() {}
+    virtual ~CGovernanceManager() = default;
 
     /**
      * This is called by AlreadyHave in net_processing.cpp as part of the inventory

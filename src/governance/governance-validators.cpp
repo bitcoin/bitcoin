@@ -315,8 +315,6 @@ bool CProposalValidator::CheckURL(const std::string& strURLIn)
     std::string::size_type nPos = strRest.find(':');
 
     if (nPos != std::string::npos) {
-        //std::string strSchema = strRest.substr(0,nPos);
-
         if (nPos < strRest.size()) {
             strRest = strRest.substr(nPos + 1);
         } else {

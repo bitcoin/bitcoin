@@ -59,7 +59,7 @@ struct vote_instance_t {
     int64_t nTime;
     int64_t nCreationTime;
 
-    vote_instance_t(vote_outcome_enum_t eOutcomeIn = VOTE_OUTCOME_NONE, int64_t nTimeIn = 0, int64_t nCreationTimeIn = 0) :
+    explicit vote_instance_t(vote_outcome_enum_t eOutcomeIn = VOTE_OUTCOME_NONE, int64_t nTimeIn = 0, int64_t nCreationTimeIn = 0) :
         eOutcome(eOutcomeIn),
         nTime(nTimeIn),
         nCreationTime(nCreationTimeIn)
@@ -83,10 +83,6 @@ struct vote_instance_t {
 
 typedef std::map<int, vote_instance_t> vote_instance_m_t;
 
-typedef vote_instance_m_t::iterator vote_instance_m_it;
-
-typedef vote_instance_m_t::const_iterator vote_instance_m_cit;
-
 struct vote_rec_t {
     vote_instance_m_t mapInstances;
 
@@ -108,12 +104,6 @@ class CGovernanceObject
 {
 public: // Types
     typedef std::map<COutPoint, vote_rec_t> vote_m_t;
-
-    typedef vote_m_t::iterator vote_m_it;
-
-    typedef vote_m_t::const_iterator vote_m_cit;
-
-    typedef CacheMultiMap<COutPoint, vote_time_pair_t> vote_cmm_t;
 
 private:
     /// critical section to protect the inner data structures
@@ -160,7 +150,7 @@ private:
     bool fCachedDelete;
 
     /** true == minimum network support has been reached flagging this object as endorsed by an elected representative body
-     * (e.g. business review board / technecial review board /etc)
+     * (e.g. business review board / technical review board /etc)
      */
     bool fCachedEndorsed;
 

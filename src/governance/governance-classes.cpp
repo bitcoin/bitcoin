@@ -137,7 +137,7 @@ void CGovernanceTriggerManager::CleanAndRemove()
     // Remove triggers that are invalid or expired
     LogPrint(BCLog::GOBJECT, "CGovernanceTriggerManager::CleanAndRemove -- mapTrigger.size() = %d\n", mapTrigger.size());
 
-    trigger_m_it it = mapTrigger.begin();
+    auto it = mapTrigger.begin();
     while (it != mapTrigger.end()) {
         bool remove = false;
         CGovernanceObject* pObj = nullptr;
@@ -668,7 +668,7 @@ bool CSuperblock::IsValid(const CTransaction& txNew, int nBlockHeight, CAmount b
 
 bool CSuperblock::IsExpired() const
 {
-    int nExpirationBlocks{0};
+    int nExpirationBlocks;
     // Executed triggers are kept for another superblock cycle (approximately 1 month),
     // other valid triggers are kept for ~1 day only, everything else is pruned after ~1h.
     switch (nStatus) {
