@@ -6,7 +6,6 @@
 #include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
-#include <boost/thread/mutex.hpp>
 
 #include <mutex>
 
@@ -108,11 +107,6 @@ BOOST_AUTO_TEST_CASE(potential_deadlock_detected)
 BOOST_AUTO_TEST_CASE(double_lock_mutex)
 {
     TestDoubleLock<Mutex>(true /* should throw */);
-}
-
-BOOST_AUTO_TEST_CASE(double_lock_boost_mutex)
-{
-    TestDoubleLock<boost::mutex>(true /* should throw */);
 }
 
 BOOST_AUTO_TEST_CASE(double_lock_recursive_mutex)
