@@ -13,8 +13,6 @@
 #include <util/strencodings.h>
 #include <util/threadnames.h>
 
-#include <boost/thread/mutex.hpp>
-
 #include <map>
 #include <mutex>
 #include <set>
@@ -224,7 +222,6 @@ template void EnterCritical(const char*, const char*, int, Mutex*, bool);
 template void EnterCritical(const char*, const char*, int, RecursiveMutex*, bool);
 template void EnterCritical(const char*, const char*, int, std::mutex*, bool);
 template void EnterCritical(const char*, const char*, int, std::recursive_mutex*, bool);
-template void EnterCritical(const char*, const char*, int, boost::mutex*, bool);
 
 void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line)
 {
