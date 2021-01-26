@@ -13,7 +13,6 @@
 #include <util/strencodings.h>
 #include <util/threadnames.h>
 
-
 #include <map>
 #include <mutex>
 #include <set>
