@@ -48,7 +48,6 @@ FUZZ_TARGET_INIT(banman, initialize_banman)
                 [&] {
                     ban_man.ClearBanned();
                 },
-                [] {},
                 [&] {
                     ban_man.IsBanned(ConsumeNetAddr(fuzzed_data_provider));
                 },
@@ -62,7 +61,6 @@ FUZZ_TARGET_INIT(banman, initialize_banman)
                 [&] {
                     ban_man.DumpBanlist();
                 },
-                [] {},
                 [&] {
                     ban_man.Discourage(ConsumeNetAddr(fuzzed_data_provider));
                 });
