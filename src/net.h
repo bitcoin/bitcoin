@@ -12,8 +12,10 @@
 #include <bloom.h>
 #include <chainparams.h>
 #include <compat.h>
+#include <crypto/chacha_poly_aead.h>
 #include <crypto/siphash.h>
 #include <hash.h>
+#include <key.h>
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <optional.h>
@@ -370,6 +372,59 @@ public:
     Optional<CNetMessage> GetMessage(std::chrono::microseconds time, uint32_t& out_err_raw_size) override;
 };
 
+/** V2TransportDeserializer is a transport deserializer after BIP324 */
+class V2TransportDeserializer final : public TransportDeserializer
+{
+private:
+    std::unique_ptr<ChaCha20Poly1305AEAD> m_aead;
+    const NodeId m_node_id;       // Only for logging
+    bool m_in_data = false;       // parsing header (false) or data (true)
+    uint32_t m_message_size = 0;  // expected message size
+    CDataStream vRecv;            // received message data
+    unsigned int m_hdr_pos = 0;   // read pos in header
+    unsigned int m_data_pos = 0;  // read pos in data
+
+public:
+    V2TransportDeserializer(const NodeId node_id, const CPrivKey& k1, const CPrivKey& k2) : m_aead(new ChaCha20Poly1305AEAD(k1.data(), k1.size(), k2.data(), k2.size())), m_node_id(node_id), vRecv(SER_NETWORK, INIT_PROTO_VERSION)
+    {
+        Reset();
+    }
+
+    void Reset()
+    {
+        vRecv.clear();
+        vRecv.resize(CHACHA20_POLY1305_AEAD_AAD_LEN);
+        m_in_data = false;
+        m_hdr_pos = 0;
+        m_message_size = 0;
+        m_data_pos = 0;
+    }
+    bool Complete() const override
+    {
+        if (!m_in_data) {
+            return false;
+        }
+        return (m_message_size + CHACHA20_POLY1305_AEAD_TAG_LEN == m_data_pos);
+    }
+    void SetVersion(int nVersionIn) override
+    {
+        vRecv.SetVersion(nVersionIn);
+    }
+    int readHeader(Span<const uint8_t> msg_bytes);
+    int readData(Span<const uint8_t> msg_bytes);
+    int Read(Span<const uint8_t>& msg_bytes) override
+    {
+        int ret = m_in_data ? readData(msg_bytes) : readHeader(msg_bytes);
+        if (ret < 0) {
+            Reset();
+        } else {
+            msg_bytes = msg_bytes.subspan(ret);
+        }
+        return ret;
+    }
+    Optional<CNetMessage> GetMessage(std::chrono::microseconds time, uint32_t& out_err_raw_size) override;
+};
+
 /** The TransportSerializer prepares messages for the network transport
  */
 class TransportSerializer {
@@ -381,6 +436,21 @@ public:
 
 class V1TransportSerializer  : public TransportSerializer {
 public:
+    void prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) override;
+};
+
+class V2TransportSerializer : public TransportSerializer
+{
+private:
+    std::unique_ptr<ChaCha20Poly1305AEAD> m_aead;
+    CPrivKey m_aead_k1; //keep the keys for a later rekeying
+    CPrivKey m_aead_k2;
+
+public:
+    V2TransportSerializer(const CPrivKey& k1, const CPrivKey& k2) : m_aead(new ChaCha20Poly1305AEAD(k1.data(), k1.size(), k2.data(), k2.size())), m_aead_k1(k1), m_aead_k2(k2)
+    {
+    }
+    // prepare for next message
     void prepareForTransport(CSerializedNetMsg& msg, std::vector<unsigned char>& header) override;
 };
 

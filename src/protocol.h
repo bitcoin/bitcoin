@@ -11,6 +11,7 @@
 #define BITCOIN_PROTOCOL_H
 
 #include <netaddress.h>
+#include <optional.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <uint256.h>
@@ -263,7 +264,17 @@ extern const char* WTXIDRELAY;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
-const std::vector<std::string>& getAllNetMessageTypes();
+const std::map<uint8_t, std::string>& getAllNetMessageTypes();
+
+/** Short Command IDs are a low bandwidth representations of a message type
+ *   The mapping is a peer to peer agreement
+ *
+ *   returns the short command ID for a command (if command has a short ID) */
+Optional<uint8_t> GetShortCommandIDFromCommand(const std::string& cmd);
+
+/** returns the command (string) from a short command ID
+ * returns an empty string if short command ID has not been found */
+bool GetCommandFromShortCommandID(uint8_t shortID, std::string& cmd);
 
 /** nServices flags */
 enum ServiceFlags : uint64_t {

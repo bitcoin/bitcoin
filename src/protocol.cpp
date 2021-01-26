@@ -47,46 +47,45 @@ const char *CFCHECKPT="cfcheckpt";
 const char *WTXIDRELAY="wtxidrelay";
 } // namespace NetMsgType
 
-/** All known message types. Keep this in the same order as the list of
+/** All known message types including the short-ID. Keep this in the same order as the list of
  * messages above and in protocol.h.
  */
-const static std::string allNetMessageTypes[] = {
-    NetMsgType::VERSION,
-    NetMsgType::VERACK,
-    NetMsgType::ADDR,
-    NetMsgType::ADDRV2,
-    NetMsgType::SENDADDRV2,
-    NetMsgType::INV,
-    NetMsgType::GETDATA,
-    NetMsgType::MERKLEBLOCK,
-    NetMsgType::GETBLOCKS,
-    NetMsgType::GETHEADERS,
-    NetMsgType::TX,
-    NetMsgType::HEADERS,
-    NetMsgType::BLOCK,
-    NetMsgType::GETADDR,
-    NetMsgType::MEMPOOL,
-    NetMsgType::PING,
-    NetMsgType::PONG,
-    NetMsgType::NOTFOUND,
-    NetMsgType::FILTERLOAD,
-    NetMsgType::FILTERADD,
-    NetMsgType::FILTERCLEAR,
-    NetMsgType::SENDHEADERS,
-    NetMsgType::FEEFILTER,
-    NetMsgType::SENDCMPCT,
-    NetMsgType::CMPCTBLOCK,
-    NetMsgType::GETBLOCKTXN,
-    NetMsgType::BLOCKTXN,
-    NetMsgType::GETCFILTERS,
-    NetMsgType::CFILTER,
-    NetMsgType::GETCFHEADERS,
-    NetMsgType::CFHEADERS,
-    NetMsgType::GETCFCHECKPT,
-    NetMsgType::CFCHECKPT,
-    NetMsgType::WTXIDRELAY,
+const static std::map<uint8_t, std::string> allNetMessageTypes = {
+    {38, NetMsgType::VERSION},
+    {37, NetMsgType::VERACK},
+    {13, NetMsgType::ADDR},
+    {46, NetMsgType::ADDRV2},
+    {47, NetMsgType::SENDADDRV2},
+    {27, NetMsgType::INV},
+    {24, NetMsgType::GETDATA},
+    {29, NetMsgType::MERKLEBLOCK},
+    {22, NetMsgType::GETBLOCKS},
+    {25, NetMsgType::GETHEADERS},
+    {36, NetMsgType::TX},
+    {26, NetMsgType::HEADERS},
+    {14, NetMsgType::BLOCK},
+    {21, NetMsgType::GETADDR},
+    {28, NetMsgType::MEMPOOL},
+    {31, NetMsgType::PING},
+    {32, NetMsgType::PONG},
+    {30, NetMsgType::NOTFOUND},
+    {20, NetMsgType::FILTERLOAD},
+    {18, NetMsgType::FILTERADD},
+    {19, NetMsgType::FILTERCLEAR},
+    {35, NetMsgType::SENDHEADERS},
+    {17, NetMsgType::FEEFILTER},
+    {34, NetMsgType::SENDCMPCT},
+    {16, NetMsgType::CMPCTBLOCK},
+    {23, NetMsgType::GETBLOCKTXN},
+    {15, NetMsgType::BLOCKTXN},
+    {39, NetMsgType::GETCFILTERS},
+    {40, NetMsgType::CFILTER},
+    {41, NetMsgType::GETCFHEADERS},
+    {42, NetMsgType::CFHEADERS},
+    {43, NetMsgType::GETCFCHECKPT},
+    {44, NetMsgType::CFCHECKPT},
+    {45, NetMsgType::WTXIDRELAY}
 };
-const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
 
 CMessageHeader::CMessageHeader()
 {
@@ -187,9 +186,9 @@ std::string CInv::ToString() const
     }
 }
 
-const std::vector<std::string> &getAllNetMessageTypes()
+const std::map<uint8_t, std::string> &getAllNetMessageTypes()
 {
-    return allNetMessageTypesVec;
+    return allNetMessageTypes;
 }
 
 /**
@@ -235,4 +234,24 @@ GenTxid ToGenTxid(const CInv& inv)
 {
     assert(inv.IsGenTxMsg());
     return {inv.IsMsgWtx(), inv.hash};
+}
+
+Optional<uint8_t> GetShortCommandIDFromCommand(const std::string& cmd)
+{
+    for (const std::pair<uint8_t, std::string> entry : allNetMessageTypes) {
+        if (entry.second == cmd) {
+            return entry.first;
+        }
+    }
+    return {};
+}
+
+bool GetCommandFromShortCommandID(uint8_t shortID, std::string& cmd)
+{
+    auto it = allNetMessageTypes.find(shortID);
+    if (it != allNetMessageTypes.end()) {
+        cmd = it->second;
+        return true;
+    }
+    return false;
 }

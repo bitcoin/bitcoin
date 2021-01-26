@@ -21,9 +21,6 @@ FUZZ_TARGET(crypto_chacha20_poly1305_aead)
     const std::vector<uint8_t> k2 = ConsumeFixedLengthByteVector(fuzzed_data_provider, CHACHA20_POLY1305_AEAD_KEY_LEN);
 
     ChaCha20Poly1305AEAD aead(k1.data(), k1.size(), k2.data(), k2.size());
-    uint64_t seqnr_payload = 0;
-    uint64_t seqnr_aad = 0;
-    int aad_pos = 0;
     size_t buffer_size = fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096);
     std::vector<uint8_t> in(buffer_size + CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN, 0);
     std::vector<uint8_t> out(buffer_size + CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN, 0);
@@ -37,26 +34,12 @@ FUZZ_TARGET(crypto_chacha20_poly1305_aead)
                 out = std::vector<uint8_t>(buffer_size + CHACHA20_POLY1305_AEAD_AAD_LEN + POLY1305_TAGLEN, 0);
             },
             [&] {
-                (void)aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, out.data(), out.size(), in.data(), buffer_size, is_encrypt);
+                (void)aead.Crypt(out.data(), out.size(), in.data(), buffer_size, is_encrypt);
             },
             [&] {
                 uint32_t len = 0;
-                const bool ok = aead.GetLength(&len, seqnr_aad, aad_pos, in.data());
+                const bool ok = aead.DecryptLength(&len, in.data());
                 assert(ok);
-            },
-            [&] {
-                seqnr_payload += 1;
-                aad_pos += CHACHA20_POLY1305_AEAD_AAD_LEN;
-                if (aad_pos + CHACHA20_POLY1305_AEAD_AAD_LEN > CHACHA20_ROUND_OUTPUT) {
-                    aad_pos = 0;
-                    seqnr_aad += 1;
-                }
-            },
-            [&] {
-                seqnr_payload = fuzzed_data_provider.ConsumeIntegral<int>();
-            },
-            [&] {
-                seqnr_aad = fuzzed_data_provider.ConsumeIntegral<int>();
             },
             [&] {
                 is_encrypt = fuzzed_data_provider.ConsumeBool();
