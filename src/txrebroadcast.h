@@ -19,13 +19,13 @@ struct TxIds {
     const uint256 m_wtxid;
 };
 
+class indexed_rebroadcast_set;
+
 class TxRebroadcastHandler
 {
 public:
-    TxRebroadcastHandler(const CTxMemPool& mempool, const ChainstateManager& chainman, const CChainParams& chainparams)
-        : m_mempool(mempool),
-          m_chainman(chainman),
-          m_chainparams(chainparams){};
+    TxRebroadcastHandler(const CTxMemPool& mempool, const ChainstateManager& chainman, const CChainParams& chainparams);
+    ~TxRebroadcastHandler();
 
     /**
      * Identify transaction candidates to be rebroadcast.
@@ -60,6 +60,26 @@ private:
     /** Minimum fee rate for package to be included in block */
     CFeeRate m_cached_fee_rate GUARDED_BY(m_rebroadcast_mutex);
     CFeeRate m_previous_cached_fee_rate GUARDED_BY(m_rebroadcast_mutex);
+
+    /** Keep track of previous rebroadcast attempts.
+     *
+     *  There are circumstances where our mempool might know about transactions
+     *  that will never be mined. Two examples:
+     *  1. A software upgrade tightens policy, but the node has not been
+     *  upgraded and thus is accepting transactions that other nodes on the
+     *  network now reject.
+     *  2. An attacker targets the network by sending conflicting transactions
+     *  to nodes.
+     *
+     *  Under such circumstances, we want to avoid wasting a significant amount
+     *  of network bandwidth. Also we want to let transactions genuinely expire
+     *  from the majority of mempools, unless the source wallet decides to
+     *  rebroadcast the transaction.
+     *
+     *  So, we use this tracker to limit the frequency and the maximum number
+     *  of times we will attempt to rebroadcast a transaction.
+     * */
+    std::unique_ptr<indexed_rebroadcast_set> m_attempt_tracker GUARDED_BY(m_rebroadcast_mutex);
 };
 
 #endif // BITCOIN_TXREBROADCAST_H
