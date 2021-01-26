@@ -4,7 +4,6 @@
 
 #include <governance/governanceobject.h>
 #include <core_io.h>
-#include <governance/governanceclasses.h>
 #include <governance/governancevalidators.h>
 #include <governance/governancevote.h>
 #include <governance/governance.h>
@@ -125,7 +124,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         return false;
     }
 
-    vote_m_it it = mapCurrentMNVotes.try_emplace(vote.GetMasternodeOutpoint()).first;
+    auto it = mapCurrentMNVotes.try_emplace(vote.GetMasternodeOutpoint()).first;
     vote_rec_t& voteRecordRef = it->second;
     vote_signal_enum_t eSignal = vote.GetSignal();
     if (eSignal == VOTE_SIGNAL_NONE) {
@@ -142,7 +141,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_PERMANENT_ERROR, 20);
         return false;
     }
-    vote_instance_m_it it2 = voteRecordRef.mapInstances.try_emplace(int(eSignal)).first;
+    auto it2 = voteRecordRef.mapInstances.try_emplace(int(eSignal)).first;
     vote_instance_t& voteInstanceRef = it2->second;
 
     // Reject obsolete votes
@@ -224,7 +223,7 @@ void CGovernanceObject::ClearMasternodeVotes()
     if(deterministicMNManager)
         deterministicMNManager->GetListAtChainTip(mnList);
 
-    vote_m_it it = mapCurrentMNVotes.begin();
+    auto it = mapCurrentMNVotes.begin();
     while (it != mapCurrentMNVotes.end()) {
         if (!mnList.HasMNByCollateral(it->first)) {
             fileVotes.RemoveVotesFromMasternode(it->first);
@@ -446,7 +445,7 @@ void CGovernanceObject::UpdateLocalValidity()
 {
     // THIS DOES NOT CHECK COLLATERAL, THIS IS CHECKED UPON ORIGINAL ARRIVAL
     fCachedLocalValidity = IsValidLocally(strLocalValidityError, false);
-};
+}
 
 
 bool CGovernanceObject::IsValidLocally(std::string& strError, bool fCheckCollateral) const
@@ -606,7 +605,7 @@ int CGovernanceObject::CountMatchingVotes(vote_signal_enum_t eVoteSignalIn, vote
     int nCount = 0;
     for (const auto& votepair : mapCurrentMNVotes) {
         const vote_rec_t& recVote = votepair.second;
-        vote_instance_m_cit it2 = recVote.mapInstances.find(eVoteSignalIn);
+        auto it2 = recVote.mapInstances.find(eVoteSignalIn);
         if (it2 != recVote.mapInstances.end() && it2->second.eOutcome == eVoteOutcomeIn) {
             ++nCount;
         }
@@ -647,7 +646,7 @@ bool CGovernanceObject::GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint,
 {
     LOCK(cs);
 
-    vote_m_cit it = mapCurrentMNVotes.find(mnCollateralOutpoint);
+    auto it = mapCurrentMNVotes.find(mnCollateralOutpoint);
     if (it == mapCurrentMNVotes.end()) {
         return false;
     }

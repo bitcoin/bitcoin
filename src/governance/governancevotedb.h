@@ -26,15 +26,7 @@ class CGovernanceObjectVoteFile
 public: // Types
     typedef std::list<CGovernanceVote> vote_l_t;
 
-    typedef vote_l_t::iterator vote_l_it;
-
-    typedef vote_l_t::const_iterator vote_l_cit;
-
-    typedef std::map<uint256, vote_l_it> vote_m_t;
-
-    typedef vote_m_t::iterator vote_m_it;
-
-    typedef vote_m_t::const_iterator vote_m_cit;
+    typedef std::map<uint256, vote_l_t::iterator> vote_m_t;
 
 private:
     int nMemoryVotes;
@@ -63,7 +55,7 @@ public:
      */
     bool SerializeVoteToStream(const uint256& nHash, CDataStream& ss) const;
 
-    int GetVoteCount()
+    int GetVoteCount() const 
     {
         return nMemoryVotes;
     }

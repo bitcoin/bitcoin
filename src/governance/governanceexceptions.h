@@ -62,7 +62,7 @@ private:
     int nNodePenalty;
 
 public:
-    CGovernanceException(const std::string& strMessageIn = "",
+    explicit CGovernanceException(const std::string& strMessageIn = "",
         governance_exception_type_enum_t eTypeIn = GOVERNANCE_EXCEPTION_NONE,
         int nNodePenaltyIn = 0) :
         strMessage(),
@@ -74,9 +74,9 @@ public:
         strMessage = ostr.str();
     }
 
-    virtual ~CGovernanceException() noexcept {}
+    ~CGovernanceException() noexcept override = default;
 
-    virtual const char* what() const noexcept override
+    const char* what() const noexcept override
     {
         return strMessage.c_str();
     }

@@ -33,10 +33,8 @@ class CGovernanceTriggerManager
     friend class CGovernanceManager;
 
 private:
-    typedef std::map<uint256, CSuperblock_sptr> trigger_m_t;
-    typedef trigger_m_t::iterator trigger_m_it;
 
-    trigger_m_t mapTrigger;
+    std::map<uint256, CSuperblock_sptr> mapTrigger;
 
     std::vector<CSuperblock_sptr> GetActiveTriggers() EXCLUSIVE_LOCKS_REQUIRED(governance.cs);
     bool AddNewTrigger(uint256 nHash);
@@ -93,8 +91,7 @@ public:
         nAmount(0)
     {
         try {
-            CTxDestination dest = destIn;
-            script = GetScriptForDestination(dest);
+            script = GetScriptForDestination(destIn);
             nAmount = nAmountIn;
             fValid = true;
         } catch (std::exception& e) {
@@ -106,7 +103,7 @@ public:
         }
     }
 
-    bool IsValid() { return fValid; }
+    bool IsValid() const { return fValid; }
 };
 
 
@@ -146,7 +143,7 @@ public:
     static void GetNearestSuperblocksHeights(int nBlockHeight, int& nLastSuperblockRet, int& nNextSuperblockRet);
     static CAmount GetPaymentsLimit(int nBlockHeight);
 
-    int GetStatus() { return nStatus; }
+    int GetStatus() const { return nStatus; }
     void SetStatus(int nStatusIn) { nStatus = nStatusIn; }
 
     // TELL THE ENGINE WE EXECUTED THIS EVENT
@@ -159,7 +156,7 @@ public:
         return pObj;
     }
 
-    int GetBlockHeight()
+    int GetBlockHeight() const
     {
         return nBlockHeight;
     }

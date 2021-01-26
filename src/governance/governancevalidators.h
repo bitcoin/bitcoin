@@ -18,7 +18,7 @@ private:
     std::string strErrorMessages;
 
 public:
-    CProposalValidator(const std::string& strDataHexIn = std::string(), bool fAllowLegacyFormat = true);
+    explicit CProposalValidator(const std::string& strDataHexIn = std::string(), bool fAllowLegacyFormat = true);
 
     bool Validate(bool fCheckExpiration = true);
 
