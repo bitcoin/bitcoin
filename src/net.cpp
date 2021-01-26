@@ -2855,12 +2855,12 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
     : nTimeConnected(GetSystemTimeInSeconds()),
       addr(addrIn),
       addrBind(addrBindIn),
+      m_inbound_onion(inbound_onion),
       nKeyedNetGroup(nKeyedNetGroupIn),
       id(idIn),
       nLocalHostNonce(nLocalHostNonceIn),
       m_conn_type(conn_type_in),
-      nLocalServices(nLocalServicesIn),
-      m_inbound_onion(inbound_onion)
+      nLocalServices(nLocalServicesIn)
 {
     if (inbound_onion) assert(conn_type_in == ConnectionType::INBOUND);
     hSocket = hSocketIn;
