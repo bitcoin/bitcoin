@@ -14,6 +14,14 @@ import subprocess
 import sys
 
 
+def get_fuzz_env(*, target):
+    return {
+        'FUZZ': target,
+        'ASAN_OPTIONS':  # symbolizer disabled due to https://github.com/google/sanitizers/issues/1364#issuecomment-761072085
+        'symbolize=0:detect_stack_use_after_return=1:check_initialization_order=1:strict_init_order=1',
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -129,9 +137,7 @@ def main():
                 os.path.join(config["environment"]["BUILDDIR"], 'src', 'test', 'fuzz', 'fuzz'),
                 '-help=1',
             ],
-            env={
-                'FUZZ': test_list_selection[0]
-            },
+            env=get_fuzz_env(target=test_list_selection[0]),
             timeout=20,
             check=True,
             stderr=subprocess.PIPE,
@@ -186,9 +192,7 @@ def generate_corpus_seeds(*, fuzz_pool, build_dir, seed_dir, targets):
             ' '.join(command),
             subprocess.run(
                 command,
-                env={
-                    'FUZZ': t
-                },
+                env=get_fuzz_env(target=t),
                 check=True,
                 stderr=subprocess.PIPE,
                 universal_newlines=True,
@@ -227,9 +231,7 @@ def merge_inputs(*, fuzz_pool, corpus, test_list, build_dir, merge_dir):
             output = 'Run {} with args {}\n'.format(t, " ".join(args))
             output += subprocess.run(
                 args,
-                env={
-                    'FUZZ': t
-                },
+                env=get_fuzz_env(target=t),
                 check=True,
                 stderr=subprocess.PIPE,
                 universal_newlines=True,
@@ -257,7 +259,12 @@ def run_once(*, fuzz_pool, corpus, test_list, build_dir, use_valgrind):
 
         def job(t, args):
             output = 'Run {} with args {}'.format(t, args)
-            result = subprocess.run(args, env={'FUZZ': t}, stderr=subprocess.PIPE, universal_newlines=True)
+            result = subprocess.run(
+                args,
+                env=get_fuzz_env(target=t),
+                stderr=subprocess.PIPE,
+                universal_newlines=True,
+            )
             output += result.stderr
             return output, result
 
