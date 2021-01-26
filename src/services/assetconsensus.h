@@ -25,7 +25,7 @@ class EthereumTxRoot {
 typedef std::unordered_map<uint32_t, EthereumTxRoot> EthereumTxRootMap;
 class CEthereumTxRootsDB : public CDBWrapper {
 public:
-    explicit CEthereumTxRootsDB(size_t nCacheSize, bool fMemory, bool fWipe);
+    explicit CEthereumTxRootsDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
     bool ReadTxRoots(const uint32_t& nHeight, EthereumTxRoot& txRoot) {
         return Read(nHeight, txRoot);
     } 
@@ -39,14 +39,14 @@ public:
 
 class CEthereumMintedTxDB : public CDBWrapper {
 public:
-    explicit CEthereumMintedTxDB(size_t nCacheSize, bool fMemory, bool fWipe);
+    explicit CEthereumMintedTxDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
     bool FlushErase(const EthereumMintTxMap &mapMintKeys);
     bool FlushWrite(const EthereumMintTxMap &mapMintKeys);
 };
 
 class CAssetDB : public CDBWrapper {
 public:
-    explicit CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe);
+    explicit CAssetDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
     bool EraseAsset(const uint32_t& nBaseAsset) {
         return Erase(nBaseAsset);
     }   
@@ -61,7 +61,7 @@ public:
 };
 class CAssetOldDB : public CDBWrapper {
 public:
-    explicit CAssetOldDB(size_t nCacheSize, bool fMemory, bool fWipe);
+    explicit CAssetOldDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
     bool Empty();
 };
 extern std::unique_ptr<CAssetDB> passetdb;
