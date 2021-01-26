@@ -46,6 +46,9 @@ OSX_INSTALLER_ICONS=$(top_srcdir)/src/qt/res/icons/bitcoin.icns
 OSX_PLIST=$(top_builddir)/share/qt/Info.plist #not installed
 
 DIST_CONTRIB = \
+	       $(top_srcdir)/test/sanitizer_suppressions/lsan \
+	       $(top_srcdir)/test/sanitizer_suppressions/tsan \
+	       $(top_srcdir)/test/sanitizer_suppressions/ubsan \
 	       $(top_srcdir)/contrib/linearize/linearize-data.py \
 	       $(top_srcdir)/contrib/linearize/linearize-hashes.py
 
