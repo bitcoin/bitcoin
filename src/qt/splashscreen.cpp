@@ -18,6 +18,8 @@
 #include <util/system.h>
 #include <util/translation.h>
 
+#include <functional>
+
 #include <QApplication>
 #include <QCloseEvent>
 #include <QPainter>

@@ -19,6 +19,7 @@
 #include <validation.h>
 
 #include <stdint.h>
+#include <functional>
 
 #include <QDebug>
 #include <QThread>
