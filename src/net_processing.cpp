@@ -4212,6 +4212,18 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                 if (!pto->fRelayTxes) pto->setInventoryTxToSend.clear();
             }
 
+            auto queueAndMaybePushInv = [this, pto, &vInv, &msgMaker](const CInv& invIn) {
+                AssertLockHeld(pto->cs_inventory);
+                pto->filterInventoryKnown.insert(invIn.hash);
+                LogPrint(BCLog::NET, "SendMessages -- queued inv: %s  index=%d peer=%d\n", invIn.ToString(), vInv.size(), pto->GetId());
+                vInv.push_back(invIn);
+                if (vInv.size() == MAX_INV_SZ) {
+                    LogPrint(BCLog::NET, "SendMessages -- pushing invs: count=%d peer=%d\n", vInv.size(), pto->GetId());
+                    connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
+                    vInv.clear();
+                }
+            };
+
             // Respond to BIP35 mempool requests
             if (fSendTrickle && pto->fSendMempool) {
                 auto vtxinfo = mempool.infoAll();
@@ -4219,39 +4231,18 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
 
                 LOCK(pto->cs_filter);
 
+                // Send invs for txes and corresponding IS-locks
                 for (const auto& txinfo : vtxinfo) {
                     const uint256& hash = txinfo.tx->GetHash();
-                    int nInvType = MSG_TX;
-                    if (CPrivateSend::GetDSTX(hash)) {
-                        nInvType = MSG_DSTX;
-                    }
-                    CInv inv(nInvType, hash);
                     pto->setInventoryTxToSend.erase(hash);
-                    if (pto->pfilter) {
-                        if (!pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
-                    }
-                    pto->filterInventoryKnown.insert(hash);
+                    if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
 
-                    LogPrint(BCLog::NET, "SendMessages -- queued inv: %s  index=%d peer=%d\n", inv.ToString(), vInv.size(), pto->GetId());
-                    vInv.push_back(inv);
-                    if (vInv.size() == MAX_INV_SZ) {
-                        LogPrint(BCLog::NET, "SendMessages -- pushing inv's: count=%d peer=%d\n", vInv.size(), pto->GetId());
-                        connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
-                        vInv.clear();
-                    }
+                    int nInvType = CPrivateSend::GetDSTX(hash) ? MSG_DSTX : MSG_TX;
+                    queueAndMaybePushInv(CInv(nInvType, hash));
 
                     uint256 islockHash;
                     if (!llmq::quorumInstantSendManager->GetInstantSendLockHashByTxid(hash, islockHash)) continue;
-                    CInv islockInv(MSG_ISLOCK, islockHash);
-                    pto->filterInventoryKnown.insert(islockHash);
-
-                    LogPrint(BCLog::NET, "SendMessages -- queued inv: %s  index=%d peer=%d\n", islockInv.ToString(), vInv.size(), pto->GetId());
-                    vInv.push_back(islockInv);
-                    if (vInv.size() == MAX_INV_SZ) {
-                        LogPrint(BCLog::NET, "SendMessages -- pushing inv's: count=%d peer=%d\n", vInv.size(), pto->GetId());
-                        connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
-                        vInv.clear();
-                    }
+                    queueAndMaybePushInv(CInv(MSG_ISLOCK, islockHash));
                 }
                 pto->timeLastMempoolReq = GetTime();
             }
@@ -4291,11 +4282,6 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     }
                     if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
                     // Send
-                    int nInvType = MSG_TX;
-                    if (CPrivateSend::GetDSTX(hash)) {
-                        nInvType = MSG_DSTX;
-                    }
-                    vInv.push_back(CInv(nInvType, hash));
                     nRelayedTransactions++;
                     {
                         // Expire old relay messages
@@ -4310,11 +4296,8 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                             vRelayExpiration.push_back(std::make_pair(nNow + 15 * 60 * 1000000, ret.first));
                         }
                     }
-                    if (vInv.size() == MAX_INV_SZ) {
-                        connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
-                        vInv.clear();
-                    }
-                    pto->filterInventoryKnown.insert(hash);
+                    int nInvType = CPrivateSend::GetDSTX(hash) ? MSG_DSTX : MSG_TX;
+                    queueAndMaybePushInv(CInv(nInvType, hash));
                 }
             }
 
@@ -4323,12 +4306,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                 if (pto->filterInventoryKnown.contains(inv.hash)) {
                     continue;
                 }
-                vInv.push_back(inv);
-                pto->filterInventoryKnown.insert(inv.hash);
-                if (vInv.size() == MAX_INV_SZ) {
-                    connman->PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
-                    vInv.clear();
-                }
+                queueAndMaybePushInv(inv);
             }
             pto->vInventoryOtherToSend.clear();
         }
