@@ -101,12 +101,6 @@ BOOST_FIXTURE_TEST_SUITE(transaction_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(tx_valid)
 {
     // Read tests from test/data/tx_valid.json
-    // Format is an array of arrays
-    // Inner arrays are either [ "comment" ]
-    // or [[[prevout hash, prevout index, prevout scriptPubKey], [input 2], ...],"], serializedTransaction, verifyFlags
-    // ... where all scripts are stringified scripts.
-    //
-    // verifyFlags is a comma separated list of script verification flags to apply, or "NONE"
     UniValue tests = read_json(std::string(json_tests::tx_valid, json_tests::tx_valid + sizeof(json_tests::tx_valid)));
 
     ScriptError err;
@@ -171,7 +165,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                 if (mapprevOutValues.count(tx.vin[i].prevout)) {
                     amount = mapprevOutValues[tx.vin[i].prevout];
                 }
-                unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
+                unsigned int verify_flags = ~ParseScriptFlags(test[2].get_str());
                 const CScriptWitness *witness = &tx.vin[i].scriptWitness;
                 BOOST_CHECK_MESSAGE(VerifyScript(tx.vin[i].scriptSig, mapprevOutScriptPubKeys[tx.vin[i].prevout],
                                                  witness, verify_flags, TransactionSignatureChecker(&tx, i, amount, txdata), &err),
