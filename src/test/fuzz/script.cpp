@@ -154,13 +154,13 @@ FUZZ_TARGET_INIT(script, initialize_script)
 
     {
         WitnessUnknown witness_unknown_1{};
-        witness_unknown_1.version = fuzzed_data_provider.ConsumeIntegral<int>();
+        witness_unknown_1.version = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
         const std::vector<uint8_t> witness_unknown_program_1 = fuzzed_data_provider.ConsumeBytes<uint8_t>(40);
         witness_unknown_1.length = witness_unknown_program_1.size();
         std::copy(witness_unknown_program_1.begin(), witness_unknown_program_1.end(), witness_unknown_1.program);
 
         WitnessUnknown witness_unknown_2{};
-        witness_unknown_2.version = fuzzed_data_provider.ConsumeIntegral<int>();
+        witness_unknown_2.version = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
         const std::vector<uint8_t> witness_unknown_program_2 = fuzzed_data_provider.ConsumeBytes<uint8_t>(40);
         witness_unknown_2.length = witness_unknown_program_2.size();
         std::copy(witness_unknown_program_2.begin(), witness_unknown_program_2.end(), witness_unknown_2.program);

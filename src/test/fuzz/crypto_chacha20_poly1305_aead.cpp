@@ -45,18 +45,24 @@ FUZZ_TARGET(crypto_chacha20_poly1305_aead)
                 assert(ok);
             },
             [&] {
+                if (AdditionOverflow(seqnr_payload, static_cast<uint64_t>(1))) {
+                    return;
+                }
                 seqnr_payload += 1;
                 aad_pos += CHACHA20_POLY1305_AEAD_AAD_LEN;
                 if (aad_pos + CHACHA20_POLY1305_AEAD_AAD_LEN > CHACHA20_ROUND_OUTPUT) {
                     aad_pos = 0;
+                    if (AdditionOverflow(seqnr_aad, static_cast<uint64_t>(1))) {
+                        return;
+                    }
                     seqnr_aad += 1;
                 }
             },
             [&] {
-                seqnr_payload = fuzzed_data_provider.ConsumeIntegral<int>();
+                seqnr_payload = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
             },
             [&] {
-                seqnr_aad = fuzzed_data_provider.ConsumeIntegral<int>();
+                seqnr_aad = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
             },
             [&] {
                 is_encrypt = fuzzed_data_provider.ConsumeBool();
