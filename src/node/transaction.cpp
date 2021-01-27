@@ -32,6 +32,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     // node.connman is assigned both before chain clients and before RPC server is accepting calls,
     // and reset after chain clients and RPC sever are stopped. node.connman should never be null here.
     assert(node.connman);
+    assert(node.peerman);
     assert(node.mempool);
     std::promise<void> promise;
     uint256 hashTx = tx->GetHash();
@@ -100,7 +101,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         node.mempool->AddUnbroadcastTx(hashTx);
 
         LOCK(cs_main);
-        RelayTransaction(hashTx, tx->GetWitnessHash(), *node.connman);
+        node.peerman->RelayTransaction(hashTx, tx->GetWitnessHash(), *node.connman);
     }
 
     return TransactionError::OK;
