@@ -62,4 +62,68 @@ BOOST_AUTO_TEST_CASE(recency)
     BOOST_CHECK_EQUAL(candidates.front().m_txid, tx_old.GetHash());
 }
 
+BOOST_AUTO_TEST_CASE(max_rebroadcast)
+{
+    // Create a transaction
+    CKey key;
+    key.MakeNewKey(true);
+    CScript output_destination = GetScriptForDestination(PKHash(key.GetPubKey()));
+    CMutableTransaction tx = CreateValidMempoolTransaction(m_coinbase_txns[0], /* vout */ 0, /* input_height */ 0, coinbaseKey, output_destination, CAmount(48 * COIN));
+    uint256 txhsh = tx.GetHash();
+
+    // Instantiate rebroadcast module & mine a block, so when we run
+    // GetRebroadcastTransactions, Chain tip will be beyond m_tip_at_cache_time
+    const auto chain_params = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
+    TxRebroadcastHandler tx_rebroadcast(*m_node.mempool, *m_node.chainman, *chain_params);
+    CBlock recent_block = CreateAndProcessBlock(std::vector<CMutableTransaction>(), CScript());
+    CBlockIndex recent_block_index{recent_block.GetBlockHeader()};
+
+    // Age transaction by 35 minutes, to be older than REBROADCAST_MIN_TX_AGE
+    std::chrono::seconds current_time = GetTime<std::chrono::seconds>();
+    current_time += 35min;
+    SetMockTime(current_time);
+
+    // Update the fee rate to be >0 so the rebroadcast logic doesn't return early
+    CFeeRate cached_fee_rate(100, 100); // 1 sat/vB
+    tx_rebroadcast.UpdateCachedFeeRate(cached_fee_rate);
+
+    // Check that the transaction gets returned to rebroadcast
+    const std::shared_ptr<const CBlock> empty_block;
+    std::vector<TxIds> candidates = tx_rebroadcast.GetRebroadcastTransactions(empty_block, recent_block_index);
+    BOOST_REQUIRE_EQUAL(candidates.size(), 1U);
+    BOOST_CHECK_EQUAL(candidates.front().m_txid, txhsh);
+
+    // Check if transaction was properly added to m_attempt_tracker
+    // The attempt tracker records wtxids, but since this transaction does not
+    // have a witness, the txhsh = wtxhsh so works for look ups.
+    BOOST_CHECK(tx_rebroadcast.CheckRecordedAttempt(txhsh, 1, current_time));
+
+    // Since the transaction was returned within the last
+    // REBROADCAST_MIN_TX_AGE time, check it does not get returned again
+    candidates = tx_rebroadcast.GetRebroadcastTransactions(empty_block, recent_block_index);
+    BOOST_CHECK_EQUAL(candidates.size(), 0U);
+    // And that the m_attempt_tracker entry is not updated
+    BOOST_CHECK(tx_rebroadcast.CheckRecordedAttempt(txhsh, 1, current_time));
+
+    // Bump time by 4 hours, to pass the MIN_INTERVAL time
+    current_time += 4h;
+    SetMockTime(current_time);
+    // Then check that it gets returned for rebroadacst
+    candidates = tx_rebroadcast.GetRebroadcastTransactions(empty_block, recent_block_index);
+    BOOST_REQUIRE_EQUAL(candidates.size(), 1U);
+    // And that m_attempt_tracker is properly updated
+    BOOST_CHECK(tx_rebroadcast.CheckRecordedAttempt(txhsh, 2, current_time));
+
+    // Update the record to have m_count to be MAX_REBROADCAST_COUNT, and last
+    // attempt time of 4 hours ago
+    auto attempt_time = GetTime<std::chrono::microseconds>() - 4h;
+    tx_rebroadcast.UpdateAttempt(txhsh, 4, attempt_time);
+    // Check that transaction is not rebroadcast
+    candidates = tx_rebroadcast.GetRebroadcastTransactions(empty_block, recent_block_index);
+    BOOST_CHECK_EQUAL(candidates.size(), 0U);
+    // Check that the entry is removed from the m_attempt_tracker
+    // And added to the m_max_filter
+    BOOST_CHECK(tx_rebroadcast.CheckMaxAttempt(txhsh));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -54,6 +54,15 @@ public:
     void RemoveFromAttemptTracker(const CTransactionRef& tx);
 
     /** Test only */
+    void UpdateAttempt(const uint256& wtxid, const int count, const std::chrono::microseconds last_attempt_time);
+
+    /** Test only */
+    bool CheckRecordedAttempt(const uint256& wtxid, const int expected_count, const std::chrono::microseconds expected_timestamp) const;
+
+    /** Test only */
+    bool CheckMaxAttempt(const uint256& wtxid) const;
+
+    /** Test only */
     void UpdateCachedFeeRate(const CFeeRate& new_fee_rate);
 
 private:
@@ -62,7 +71,7 @@ private:
     const CChainParams& m_chainparams;
 
     /** Protects internal data members */
-    Mutex m_rebroadcast_mutex;
+    mutable Mutex m_rebroadcast_mutex;
 
     /** Block at time of cache */
     CBlockIndex* m_tip_at_cache_time GUARDED_BY(m_rebroadcast_mutex){nullptr};
