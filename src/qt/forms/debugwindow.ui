@@ -1079,7 +1079,7 @@
                <item row="1" column="0">
                 <widget class="QLabel" name="peerConnectionTypeLabel">
                  <property name="toolTip">
-                   <string>The type of peer connection:&lt;ul&gt;&lt;li&gt;Inbound: initiated by peer&lt;/li&gt;&lt;li&gt;Outbound Full Relay: default&lt;/li&gt;&lt;li&gt;Outbound Block Relay: does not relay transactions or addresses&lt;/li&gt;&lt;li&gt;Outbound Manual: added using RPC %1 or %2/%3 configuration options&lt;/li&gt;&lt;li&gt;Outbound Feeler: short-lived, for testing addresses&lt;/li&gt;&lt;li&gt;Outbound Address Fetch: short-lived, for soliciting addresses&lt;/li&gt;&lt;/ul&gt;</string>
+                   <string>The type of peer connection: %1</string>
                  </property>
                  <property name="text">
                   <string>Connection Type</string>

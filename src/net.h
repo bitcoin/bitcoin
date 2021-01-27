@@ -111,7 +111,8 @@ struct CSerializedNetMsg
  * connection. Aside from INBOUND, all types are initiated by us.
  *
  * If adding or removing types, please update CONNECTION_TYPE_DOC in
- * src/rpc/net.cpp. */
+ * src/rpc/net.cpp and src/qt/rpcconsole.cpp, as well as the descriptions in
+ * src/qt/guiutil.cpp and src/bitcoin-cli.cpp::NetinfoRequestHandler. */
 enum class ConnectionType {
     /**
      * Inbound connections are those initiated by a peer. This is the only
@@ -122,7 +123,7 @@ enum class ConnectionType {
 
     /**
      * These are the default connections that we use to connect with the
-     * network. There is no restriction on what is relayed- by default we relay
+     * network. There is no restriction on what is relayed; by default we relay
      * blocks, addresses & transactions. We automatically attempt to open
      * MAX_OUTBOUND_FULL_RELAY_CONNECTIONS using addresses from our AddrMan.
      */
@@ -130,8 +131,8 @@ enum class ConnectionType {
 
 
     /**
-     * We open manual connections to addresses that users explicitly inputted
-     * via the addnode RPC, or the -connect command line argument. Even if a
+     * We open manual connections to addresses that users explicitly requested
+     * via the addnode RPC or the -addnode/-connect configuration options. Even if a
      * manual connection is misbehaving, we do not automatically disconnect or
      * add it to our discouragement filter.
      */
@@ -150,7 +151,7 @@ enum class ConnectionType {
      * although in our codebase feeler connections encompass test-before-evict as well.
      * We make these connections approximately every FEELER_INTERVAL:
      * first we resolve previously found collisions if they exist (test-before-evict),
-     * otherwise connect to a node from the new table.
+     * otherwise we connect to a node from the new table.
      */
     FEELER,
 
