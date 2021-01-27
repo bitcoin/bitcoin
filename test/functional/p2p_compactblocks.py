@@ -327,7 +327,7 @@ class CompactBlocksTest(BitcoinTestFramework):
         block.rehash()
 
         # Wait until the block was announced (via compact blocks)
-        test_node.wait_until(lambda: "cmpctblock" in test_node.last_message, timeout=30)
+        test_node.wait_until(test_node.received_block_announcement, timeout=30)
 
         # Now fetch and check the compact block
         got_cb_announcement = False
@@ -729,10 +729,11 @@ class CompactBlocksTest(BitcoinTestFramework):
         node.submitblock(block.serialize().hex())
 
         for l in listeners:
-            l.wait_until(lambda: "cmpctblock" in l.last_message, timeout=30)
+            l.wait_until(l.received_block_announcement, timeout=30)
         with p2p_lock:
             for l in listeners:
                 if l.cmpct_version == 2:
+                    assert "cmpctblock" in l.last_message
                     l.last_message["cmpctblock"].header_and_shortids.header.calc_sha256()
                     assert_equal(l.last_message["cmpctblock"].header_and_shortids.header.sha256, block.sha256)
 
