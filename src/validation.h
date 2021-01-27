@@ -817,7 +817,7 @@ private:
     //! This is especially important when, e.g., calling ActivateBestChain()
     //! on all chainstates because we are not able to hold ::cs_main going into
     //! that call.
-    CChainState* m_active_chainstate{nullptr};
+    CChainState* m_active_chainstate GUARDED_BY(::cs_main) {nullptr};
 
     //! If true, the assumed-valid chainstate has been fully validated
     //! by the background validation chainstate.
