@@ -131,7 +131,7 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
 
     entry.__pushKV("allocations", oAssetAllocationReceiversArray); 
     if(asset.nUpdateMask & ASSET_INIT) {
-		entry.__pushKV("symbol", asset.strSymbol);
+		entry.__pushKV("symbol", DecodeBase64(asset.strSymbol));
         entry.__pushKV("max_supply", ValueFromAmount(asset.nMaxSupply, GetBaseAssetID(tx.voutAssets[0].key)));
 		entry.__pushKV("precision", asset.nPrecision);
     }
