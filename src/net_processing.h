@@ -48,7 +48,7 @@ public:
     virtual bool IgnoresIncomingTxs() = 0;
 
     /** Relay transaction to all peers. */
-    virtual void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman& connman)
+    virtual void RelayTransaction(const uint256& txid, const uint256& wtxid)
         EXCLUSIVE_LOCKS_REQUIRED(cs_main) = 0;
 
     /** Send ping message to all peers */
