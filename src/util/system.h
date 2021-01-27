@@ -35,8 +35,6 @@
 #include <utility>
 #include <vector>
 
-#include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
-
 class UniValue;
 
 // Application startup time (used for uptime calculation)
@@ -449,11 +447,6 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         LogPrintf("%s thread start\n", name);
         func();
         LogPrintf("%s thread exit\n", name);
-    }
-    catch (const boost::thread_interrupted&)
-    {
-        LogPrintf("%s thread interrupt\n", name);
-        throw;
     }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, name);
