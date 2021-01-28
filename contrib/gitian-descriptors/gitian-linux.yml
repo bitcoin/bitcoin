@@ -27,6 +27,12 @@ packages:
 #  - aarch64-linux-gnu
 - "binutils-aarch64-linux-gnu"
 - "g++-8-aarch64-linux-gnu"
+#  - powerpc64-linux-gnu
+- "binutils-powerpc64-linux-gnu"
+- "g++-8-powerpc64-linux-gnu"
+#  - powerpc64le-linux-gnu
+- "binutils-powerpc64le-linux-gnu"
+- "g++-8-powerpc64le-linux-gnu"
 #  - riscv64-linux-gnu
 - "binutils-riscv64-linux-gnu"
 - "g++-8-riscv64-linux-gnu"
@@ -38,7 +44,7 @@ script: |
   set -e -o pipefail
 
   WRAP_DIR=$HOME/wrapped
-  HOSTS="x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu"
+  HOSTS="x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu powerpc64-linux-gnu powerpc64le-linux-gnu riscv64-linux-gnu"
   CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
   FAKETIME_HOST_PROGS="gcc g++"
   FAKETIME_PROGS="date ar ranlib nm"
@@ -64,7 +70,7 @@ script: |
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
     echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${prog}
     echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
-    echo "\$REAL \$@" >> $WRAP_DIR/${prog}
+    echo "exec \"\$REAL\" \"\$@\"" >> $WRAP_DIR/${prog}
     chmod +x ${WRAP_DIR}/${prog}
   done
   }
@@ -78,7 +84,13 @@ script: |
             echo "REAL=\`which -a ${i}-${prog}-8 | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
             echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${i}-${prog}
             echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
-            echo "\$REAL \"\$@\"" >> $WRAP_DIR/${i}-${prog}
+            if [ "${i:0:11}" = "powerpc64le" ]; then
+                echo "exec \"\$REAL\" -mcpu=power8 -mtune=power9 \"\$@\"" >> $WRAP_DIR/${i}-${prog}
+            elif [ "${i:0:9}" = "powerpc64" ]; then
+                echo "exec \"\$REAL\" -mcpu=970 -mtune=power9 \"\$@\"" >> $WRAP_DIR/${i}-${prog}
+            else
+                echo "exec \"\$REAL\" \"\$@\"" >> $WRAP_DIR/${i}-${prog}
+            fi
             chmod +x ${WRAP_DIR}/${i}-${prog}
         fi
     done
@@ -118,7 +130,7 @@ script: |
   # Extract the git archive into a dir for each host and build
   for i in ${HOSTS}; do
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
-    if [ "${i}" = "riscv64-linux-gnu" ]; then
+    if [ "${i}" = "riscv64-linux-gnu" ] || [ "${i}" = "powerpc64-linux-gnu" ] || [ "${i}" = "powerpc64le-linux-gnu" ]; then
       # Workaround for https://bugs.launchpad.net/ubuntu/+source/gcc-8-cross-ports/+bug/1853740
       # TODO: remove this when no longer needed
       HOST_LDFLAGS="${HOST_LDFLAGS_BASE} -Wl,-z,noexecstack"
