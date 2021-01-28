@@ -3584,6 +3584,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         CMNAuth::ProcessMessage(pfrom, strCommand, vRecv, *connman);
         llmq::quorumBlockProcessor->ProcessMessage(pfrom, strCommand, vRecv);
         llmq::quorumDKGSessionManager->ProcessMessage(pfrom, strCommand, vRecv);
+        llmq::quorumManager->ProcessMessage(pfrom, strCommand, vRecv);
         llmq::quorumSigSharesManager->ProcessMessage(pfrom, strCommand, vRecv);
         llmq::quorumSigningManager->ProcessMessage(pfrom, strCommand, vRecv);
         llmq::chainLocksHandler->ProcessMessage(pfrom, strCommand, vRecv);
