@@ -2411,10 +2411,10 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     node.scheduler->scheduleEvery([banman]{
         banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL);
-    // SYSCOIN
-    if(!fRegTest && !fSigNet && (fMasternodeMode || gArgs.IsArgSet("-gethsyncmode"))) {
+    // SYSCOIN disable Geth for now as we find more optimized way to bridge with Eth
+    /*if(!fRegTest && !fSigNet && (fMasternodeMode || gArgs.IsArgSet("-gethsyncmode"))) {
         node.scheduler->scheduleEvery([&] { DoGethMaintenance(); }, std::chrono::seconds{15});
-    } 
+    } */
 #if HAVE_SYSTEM
     StartupNotify(args);
 #endif
