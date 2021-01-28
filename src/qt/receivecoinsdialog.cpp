@@ -6,6 +6,7 @@
 #include <qt/forms/ui_receivecoinsdialog.h>
 
 #include <qt/addresstablemodel.h>
+#include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/receiverequestdialog.h>
 #include <qt/recentrequeststablemodel.h>
@@ -18,7 +19,7 @@
 #include <QTextDocument>
 
 ReceiveCoinsDialog::ReceiveCoinsDialog(QWidget* parent) :
-    QDialog(parent),
+    QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::ReceiveCoinsDialog),
     model(nullptr)
 {

@@ -35,7 +35,7 @@
 #include <QTimer>
 
 OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
-    QDialog(parent),
+    QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::OptionsDialog),
     model(nullptr),
     mapper(nullptr),

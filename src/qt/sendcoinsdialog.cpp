@@ -57,7 +57,7 @@ int getIndexForConfTarget(int target) {
 }
 
 SendCoinsDialog::SendCoinsDialog(bool _fCoinJoin, QWidget* parent) :
-    QDialog(parent),
+    QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::SendCoinsDialog),
     clientModel(nullptr),
     model(nullptr),

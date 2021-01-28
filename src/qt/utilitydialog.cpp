@@ -30,7 +30,7 @@
 
 /** "Help message" or "About" dialog box */
 HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, HelpMode helpMode) :
-    QDialog(parent),
+    QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::HelpMessageDialog)
 {
     ui->setupUi(this);

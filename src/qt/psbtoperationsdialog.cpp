@@ -19,7 +19,7 @@
 
 
 PSBTOperationsDialog::PSBTOperationsDialog(
-    QWidget* parent, WalletModel* wallet_model, ClientModel* client_model) : QDialog(parent),
+    QWidget* parent, WalletModel* wallet_model, ClientModel* client_model) : QDialog(parent, GUIUtil::dialog_flags),
                                                                              m_ui(new Ui::PSBTOperationsDialog),
                                                                              m_wallet_model(wallet_model),
                                                                              m_client_model(client_model)
