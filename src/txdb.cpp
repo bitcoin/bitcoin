@@ -234,10 +234,7 @@ bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockF
     }
 
     // write BTC/VBK/ALT blocks
-    if(!VeriBlock::saveTrees(&batch)) {
-        return false;
-    }
-
+    VeriBlock::saveTrees(&batch);
     return WriteBatch(batch, true);
 }
 

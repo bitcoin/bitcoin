@@ -16,47 +16,13 @@ constexpr const char DB_VBK_PREFIX = '^';
 constexpr const char DB_VTB_PREFIX = '<';
 constexpr const char DB_ATV_PREFIX = '>';
 
-struct PayloadsProvider : public altintegration::PayloadsProvider,
-                          public altintegration::details::PayloadsReader,
-                          public altintegration::details::PayloadsWriter {
-    using base = altintegration::PayloadsProvider;
+struct PayloadsProvider : public altintegration::PayloadsStorage {
     using key_t = std::vector<uint8_t>;
     using value_t = std::vector<uint8_t>;
 
     ~PayloadsProvider() = default;
 
     PayloadsProvider(CDBWrapper& db) : db_(db) {}
-
-    altintegration::details::PayloadsReader& getPayloadsReader() override
-    {
-        return *this;
-    }
-
-    altintegration::details::PayloadsWriter& getPayloadsWriter() override
-    {
-        return *this;
-    }
-
-    void writePayloads(const std::vector<altintegration::ATV>& atvs) override
-    {
-        for (const auto& atv : atvs) {
-            db_.Write(std::make_pair(DB_ATV_PREFIX, atv.getId()), atv);
-        }
-    }
-
-    void writePayloads(const std::vector<altintegration::VTB>& vtbs) override
-    {
-        for (const auto& vtb : vtbs) {
-            db_.Write(std::make_pair(DB_VTB_PREFIX, vtb.getId()), vtb);
-        }
-    }
-
-    void writePayloads(const std::vector<altintegration::VbkBlock>& vbks) override
-    {
-        for (const auto& vbk : vbks) {
-            db_.Write(std::make_pair(DB_VBK_PREFIX, vbk.getId()), vbk);
-        }
-    }
 
     void writePayloads(const altintegration::PopData& payloads) override
     {

@@ -1498,7 +1498,7 @@ bool AppInitMain(NodeContext& node)
                 // fails if it's still open from the previous loop. Close it first:
                 pblocktree.reset();
                 pblocktree.reset(new CBlockTreeDB(nBlockTreeDBCache, false, fReset));
-                VeriBlock::SetPop(*pblocktree);
+                VeriBlock::InitPopContext(*pblocktree);
 
                 if (fReset) {
                     pblocktree->WriteReindexing(true);

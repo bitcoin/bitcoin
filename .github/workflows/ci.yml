@@ -21,6 +21,10 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
       - name: Extract branch name & commit
         id: extract_branch
         run: |
@@ -43,23 +47,26 @@ jobs:
         run: echo "VERIBLOCK_POP_CPP_VERSION=$(awk -F '=' '/\$\(package\)_version/{print $NF}' $PWD/depends/packages/veriblock-pop-cpp.mk | head -n1)" >> $GITHUB_ENV
       - name: veriblock-pop-cpp release version
         run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
-      - name: add bitcoin ppa
-        run: sudo add-apt-repository ppa:bitcoin/bitcoin
-      - name: run apt update
-        run: sudo apt-get update
-      - name: install build requirements
-        run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 ccache
-      - name: install dependencies
-        run: sudo apt-get install libevent-dev python3-zmq python3-dev libboost-python-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev
+      - name: install apt-get deps
+        run: |
+          sudo add-apt-repository ppa:bitcoin/bitcoin
+          sudo apt-get update
+          sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils ccache python3 python3-pip python3-setuptools python-setuptools
+          sudo apt-get install libevent-dev python3-zmq python3-dev libboost-python-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev
       - name: install veriblock-pop-cpp
         env:
           BUILD_TYPE: Release
         run: |
           (
+          pip3 install wheel
+          sudo su;
           cd /opt;
           wget https://github.com/VeriBlock/alt-integration-cpp/archive/${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
           tar -xf ${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
           cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
+          python3 setup.py install
+          python3 setup.py test
+          rm -rf build
           mkdir build;
           cd build;
           cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF -DWITH_PYPOPTOOLS=ON;
@@ -90,6 +97,15 @@ jobs:
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
           source: vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz
           target: ${{ secrets.ARTIFACT_PATH }}
+      - name: upload artifacts to public mirrors
+        if: success()
+        uses: appleboy/scp-action@master
+        with:
+          host: "mirror1.veriblock.org, mirror2.veriblock.org"
+          username: ${{ secrets.MIRROR_ARTIFACTS_USER }}
+          key: ${{ secrets.MIRROR_ARTIFACTS_KEY }}
+          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-linux-x64.tar.gz
+          target: "artifacts/vbtc"
       - name: make check
         timeout-minutes: 60
         run: make check
@@ -109,6 +125,10 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
       - name: Extract branch name & commit
         id: extract_branch
         run: |
@@ -138,7 +158,7 @@ jobs:
       - name: run apt update
         run: sudo apt-get update
       - name: install build requirements
-        run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git g++-mingw-w64-x86-64 ccache nsis
+        run: sudo apt-get install python3 python3-pip python3-setuptools build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git g++-mingw-w64-x86-64 ccache nsis python-setuptools
       - name: set the default mingw32 g++ compiler option to posix
         run: sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
       - name: strip out problematic Windows %PATH% imported var
@@ -176,12 +196,26 @@ jobs:
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
           source: vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip
           target: ${{ secrets.ARTIFACT_PATH }}
+      - name: upload artifacts to public mirrors
+        if: success()
+        uses: appleboy/scp-action@master
+        with:
+          host: "mirror1.veriblock.org, mirror2.veriblock.org"
+          username: ${{ secrets.MIRROR_ARTIFACTS_USER }}
+          key: ${{ secrets.MIRROR_ARTIFACTS_KEY }}
+          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-win64-qt.zip
+          target: "artifacts/vbtc"
+
 
   x86_64-apple-darwin16:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
         uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
       - name: Extract branch name & commit
         id: extract_branch
         run: |
@@ -211,7 +245,7 @@ jobs:
       - name: run apt update
         run: sudo apt-get update
       - name: install build requirements
-        run: sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools ccache
+        run: sudo apt-get install python3 python3-pip python3-setuptools python-setuptools curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools ccache
       - name: download and extract macos sdk
         run: |
           wget -P depends/sdk-sources https://github.com/phracker/MacOSX-SDKs/releases/download/10.15/MacOSX10.14.sdk.tar.xz
@@ -250,12 +284,26 @@ jobs:
           passphrase: ${{ secrets.ARTIFACT_KEY_PASSPHRASE }}
           source: vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip
           target: ${{ secrets.ARTIFACT_PATH }}
+      - name: upload artifacts to public mirrors
+        if: success()
+        uses: appleboy/scp-action@master
+        with:
+          host: "mirror1.veriblock.org, mirror2.veriblock.org"
+          username: ${{ secrets.MIRROR_ARTIFACTS_USER }}
+          key: ${{ secrets.MIRROR_ARTIFACTS_KEY }}
+          source: vBitcoin-${{ steps.extract_branch.outputs.branch }}-${{ steps.extract_branch.outputs.git_hash }}-macos-qt.zip
+          target: "artifacts/vbtc"
+
 
   macos-native:
     runs-on: macos-latest
     steps:
       - name: checkout
         uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
       - name: Extract branch name & commit
         id: extract_branch
         run: |
@@ -315,6 +363,10 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
       - name: Extract branch name & commit
         id: extract_branch
         run: |
@@ -340,7 +392,7 @@ jobs:
       - name: run apt update
         run: sudo apt-get update
       - name: install build requirements
-        run: sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 ccache
+        run: sudo apt-get install python3-setuptools python-setuptools build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 ccache
       - name: install dependencies
         run: sudo apt-get install clang-8 llvm-8 python3-zmq python3-dev libboost-python-dev qtbase5-dev qttools5-dev-tools libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libqrencode-dev
       - name: install veriblock-pop-cpp
@@ -350,13 +402,18 @@ jobs:
           BUILD_TYPE: Debug
         run: |
           (
+          pip3 install wheel
+          sudo su;
           cd /opt;
           wget https://github.com/VeriBlock/alt-integration-cpp/archive/${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
           tar -xf ${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
           cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
+          python3 setup.py install
+          python3 setup.py test
+          rm -rf build
           mkdir build;
           cd build;
-          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF -DASAN=ON -DWITH_PYPOPTOOLS=ON;
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF -DASAN=ON;
           make -j2;
           sudo make install
           )

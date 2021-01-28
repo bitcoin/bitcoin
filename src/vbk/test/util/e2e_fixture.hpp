@@ -18,12 +18,12 @@
 #include <vbk/util.hpp>
 #include <veriblock/alt-util.hpp>
 #include <veriblock/mempool.hpp>
-#include <veriblock/mock_miner_2.hpp>
+#include <veriblock/mock_miner.hpp>
 #include <consensus/merkle.h>
 
 using altintegration::ATV;
 using altintegration::BtcBlock;
-using altintegration::MockMiner2;
+using altintegration::MockMiner;
 using altintegration::PublicationData;
 using altintegration::VbkBlock;
 using altintegration::VTB;
@@ -39,7 +39,7 @@ struct TestLogger : public altintegration::Logger {
 
 struct E2eFixture : public TestChain100Setup {
     CScript cbKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    MockMiner2 popminer;
+    MockMiner popminer;
     altintegration::ValidationState state;
     altintegration::PopContext* pop;
     std::vector<uint8_t> defaultPayoutInfo = {1, 2, 3, 4, 5};
@@ -102,8 +102,7 @@ struct E2eFixture : public TestChain100Setup {
         }
 
         auto publicationdata = createPublicationData(endorsed, payoutInfo);
-        auto vbktx = popminer.createVbkTxEndorsingAltBlock(publicationdata);
-        auto atv = popminer.applyATV(vbktx, state);
+        auto atv = popminer.endorseAltBlock(publicationdata);
         BOOST_CHECK(state.IsValid());
         return atv;
     }
@@ -186,14 +185,7 @@ struct E2eFixture : public TestChain100Setup {
             throw std::logic_error("can not find VBK block at height " + std::to_string(height));
         }
 
-        auto btctx = popminer.createBtcTxEndorsingVbkBlock(endorsed->getHeader());
-        auto* btccontaining = popminer.mineBtcBlocks(1);
-        auto vbktx = popminer.createVbkPopTxEndorsingVbkBlock(btccontaining->getHeader(), btctx, endorsed->getHeader(), getLastKnownBTCblock());
-        auto* vbkcontaining = popminer.mineVbkBlocks(1);
-
-        auto vtbs = popminer.vbkPayloads[vbkcontaining->getHash()];
-        BOOST_CHECK(vtbs.size() == 1);
-        return vtbs[0];
+        return popminer.endorseVbkBlock(endorsed->getHeader());
     }
 
     PublicationData createPublicationData(CBlockIndex* endorsed, const std::vector<uint8_t>& payoutInfo)

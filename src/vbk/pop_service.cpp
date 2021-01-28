@@ -25,16 +25,10 @@
 
 namespace VeriBlock {
 
-static std::shared_ptr<PayloadsProvider> payloads_provider = nullptr;
-static std::shared_ptr<BlockProvider> block_provider = nullptr;
-
-void SetPop(CDBWrapper& db)
+void InitPopContext(CDBWrapper& db)
 {
-    payloads_provider = std::make_shared<PayloadsProvider>(db);
-    block_provider = std::make_shared<BlockProvider>(db);
-
-    SetPop(std::shared_ptr<altintegration::PayloadsProvider>(payloads_provider),
-        std::shared_ptr<altintegration::BlockProvider>(block_provider));
+    auto payloads_provider = std::make_shared<PayloadsProvider>(db);
+    SetPop(payloads_provider);
 
     auto& app = GetPop();
     app.mempool->onAccepted<altintegration::ATV>(VeriBlock::p2p::offerPopDataToAllNodes<altintegration::ATV>);
@@ -267,27 +261,23 @@ std::vector<BlockBytes> getLastKnownBTCBlocks(size_t blocks)
 
 bool hasPopData(CBlockTreeDB& db)
 {
-    return db.Exists(details::tip_key<altintegration::BtcBlock>()) && db.Exists(details::tip_key<altintegration::VbkBlock>()) && db.Exists(details::tip_key<altintegration::AltBlock>());
+    return db.Exists(tip_key<altintegration::BtcBlock>()) &&
+           db.Exists(tip_key<altintegration::VbkBlock>()) &&
+           db.Exists(tip_key<altintegration::AltBlock>());
 }
 
-bool saveTrees(CDBBatch* batch)
+void saveTrees(CDBBatch* batch)
 {
     AssertLockHeld(cs_main);
-
-    altintegration::ValidationState state;
-    block_provider->prepareBatch(batch);
-    if (!altintegration::SaveAllTrees(GetPop(), state)) {
-        return error("%s: failed to save trees %s", __func__, state.toString());
-    }
-    block_provider->closeBatch();
-
-    return true;
+    VeriBlock::BlockBatch b(*batch);
+    altintegration::SaveAllTrees(*GetPop().altTree, b);
 }
-bool loadTrees()
+bool loadTrees(CDBWrapper& db)
 {
     altintegration::ValidationState state;
 
-    if (!altintegration::LoadAllTrees(GetPop(), state)) {
+    BlockReader reader(db);
+    if (!altintegration::LoadAllTrees(GetPop(), reader, state)) {
         return error("%s: failed to load trees %s", __func__, state.toString());
     }
 

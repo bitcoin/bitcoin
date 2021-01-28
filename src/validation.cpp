@@ -4235,7 +4235,7 @@ bool BlockManager::LoadBlockIndex(
         AssertLockHeld(cs_main);
 
         // load blocks
-        if(!VeriBlock::loadTrees()) {
+        if(!VeriBlock::loadTrees(blocktree)) {
             return false;
         }
 

@@ -31,7 +31,7 @@ class PopInit(BitcoinTestFramework):
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
-        self.skip_if_no_pypopminer()
+        self.skip_if_no_pypoptools()
 
     def setup_network(self):
         self.setup_nodes()
@@ -84,7 +84,7 @@ class PopInit(BitcoinTestFramework):
 
         self.sync_all(self.nodes)
 
-        from pypopminer import MockMiner
+        from pypoptools.pypopminer import MockMiner
         self.apm = MockMiner()
 
         self._restart_init_test()

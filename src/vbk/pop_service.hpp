@@ -26,7 +26,7 @@ namespace VeriBlock {
 using BlockBytes = std::vector<uint8_t>;
 using PoPRewards = std::map<CScript, CAmount>;
 
-void SetPop(CDBWrapper& db);
+void InitPopContext(CDBWrapper& db);
 
 CBlockIndex* compareTipToBlock(CBlockIndex* candidate);
 bool acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state);
@@ -45,16 +45,14 @@ std::vector<BlockBytes> getLastKnownBTCBlocks(size_t blocks);
 //! returns true if all tips are stored in database, false otherwise
 bool hasPopData(CBlockTreeDB& db);
 altintegration::PopData getPopData();
-bool saveTrees(CDBBatch* batch);
-bool loadTrees();
+void saveTrees(CDBBatch* batch);
+bool loadTrees(CDBWrapper& db);
 
 void removePayloadsFromMempool(const altintegration::PopData& popData);
 
 int compareForks(const CBlockIndex& left, const CBlockIndex& right);
 
 CAmount getCoinbaseSubsidy(const CAmount& subsidy, int32_t height, const CChainParams& params);
-
-void updatePopMempoolForReorg();
 
 void addDisconnectedPopdata(const altintegration::PopData& popData);
 

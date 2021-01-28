@@ -113,7 +113,7 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
     GetMainSignals().RegisterBackgroundSignalScheduler(scheduler);
 
     pblocktree.reset(new CBlockTreeDB(1 << 20, true));
-    VeriBlock::SetPop(*pblocktree);
+    VeriBlock::InitPopContext(*pblocktree);
 
     g_chainstate = MakeUnique<CChainState>();
     ::ChainstateActive().InitCoinsDB(
