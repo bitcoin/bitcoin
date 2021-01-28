@@ -897,23 +897,23 @@ void RegisterAssetRPCCommands(CRPCTable &t)
 {
 // clang-format off
 static const CRPCCommand commands[] =
-{ //  category              name                                actor (function)                argNames
-    //  --------------------- ------------------------          -----------------------         ----------
-    { "syscoin",            "syscoingettxroots",                &syscoingettxroots,             {"height"} },
-    { "syscoin",            "syscoingetspvproof",               &syscoingetspvproof,            {"txid","blockhash"} },
-    { "syscoin",            "convertaddress",                   &convertaddress,                {"address"} },
-    { "syscoin",            "syscoindecoderawtransaction",      &syscoindecoderawtransaction,   {"hexstring"}},
-    { "syscoin",            "assetinfo",                        &assetinfo,                     {"asset_guid"}},
-    { "syscoin",            "listassets",                       &listassets,                    {"count","from","options"} },
-    { "syscoin",            "assetallocationverifyzdag",        &assetallocationverifyzdag,     {"txid"} },
-    { "syscoin",            "syscoinsetethstatus",              &syscoinsetethstatus,           {"syncing_status","highest_block"} },
-    { "syscoin",            "syscoinsetethheaders",             &syscoinsetethheaders,          {"headers"} },
-    { "syscoin",            "syscoinclearethheaders",           &syscoinclearethheaders,        {} },
-    { "syscoin",            "syscoinstopgeth",                  &syscoinstopgeth,               {} },
-    { "syscoin",            "syscoinstartgeth",                 &syscoinstartgeth,              {} },
-    { "syscoin",            "syscoincheckmint",                 &syscoincheckmint,              {"bridge_transfer_id"} },
-    { "syscoin",            "assettransactionnotarize",         &assettransactionnotarize,      {"hex","asset_guid","signature"} },
-    { "syscoin",            "getnotarysighash",                 &getnotarysighash,              {"hex","asset_guid"} },
+{ //  category              name                                actor (function)        
+    //  --------------------- ------------------------          -----------------------
+    { "syscoin",            &syscoingettxroots,             },
+    { "syscoin",            &syscoingetspvproof,            },
+    { "syscoin",            &convertaddress,                },
+    { "syscoin",            &syscoindecoderawtransaction,   },
+    { "syscoin",            &assetinfo,                     },
+    { "syscoin",            &listassets,                    },
+    { "syscoin",            &assetallocationverifyzdag,     },
+    { "syscoin",            &syscoinsetethstatus,           },
+    { "syscoin",            &syscoinsetethheaders,          },
+    { "syscoin",            &syscoinclearethheaders,        },
+    { "syscoin",            &syscoinstopgeth,               },
+    { "syscoin",            &syscoinstartgeth,              },
+    { "syscoin",            &syscoincheckmint,              },
+    { "syscoin",            &assettransactionnotarize,      },
+    { "syscoin",            &getnotarysighash,              },
 };
 // clang-format on
     for (const auto& c : commands) {

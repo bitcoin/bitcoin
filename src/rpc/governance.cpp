@@ -765,20 +765,20 @@ void RegisterGovernanceRPCCommands(CRPCTable &t)
 {
 // clang-format off
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         argNames
-//  --------------------- ------------------------  -----------------------  ----------
-    { "governance",               "getgovernanceinfo",      &getgovernanceinfo,      {} },
-    { "governance",               "getsuperblockbudget",    &getsuperblockbudget,    {"index"} },
-    { "governance",               "gobject_count",          &gobject_count,          {"mode"} },
-    { "governance",               "gobject_deserialize",    &gobject_deserialize,    {"hex_data"} },
-    { "governance",               "gobject_check",          &gobject_check,          {"hex_data"} },
-    { "governance",               "gobject_getcurrentvotes",          &gobject_getcurrentvotes,          {"governanceHash","txid","vout"} },
-    { "governance",               "gobject_get",            &gobject_get,            {"governanceHash"} },
-    { "governance",               "gobject_submit",         &gobject_submit,         {"parentHash","revision","time","dataHex","feeTxid"} },
-    { "governance",               "gobject_vote_conf",      &gobject_vote_conf,      {"governanceHash","vote","voteOutome"} },
-    { "governance",               "gobject_list",           &gobject_list,           {"signal","type"} },
-    { "governance",               "gobject_diff",           &gobject_diff,           {"signal","type"} },
-    { "governance",               "voteraw",                &voteraw,                {"collateralTxHash","collateralTxIndex","governanceHash","voteSignal","voteOutcome","time","voteSig"} },
+{ //  category              name                      actor (function)    
+//  --------------------- ------------------------  -----------------------
+    { "governance",               &getgovernanceinfo,      },
+    { "governance",               &getsuperblockbudget,    },
+    { "governance",               &gobject_count,          },
+    { "governance",               &gobject_deserialize,    },
+    { "governance",               &gobject_check,          },
+    { "governance",               &gobject_getcurrentvotes,},
+    { "governance",               &gobject_get,            },
+    { "governance",               &gobject_submit,         },
+    { "governance",               &gobject_vote_conf,      },
+    { "governance",               &gobject_list,           },
+    { "governance",               &gobject_diff,           },
+    { "governance",               &voteraw,                },
 
 };
 // clang-format on

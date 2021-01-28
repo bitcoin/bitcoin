@@ -598,17 +598,17 @@ void RegisterQuorumsRPCCommands(CRPCTable &t)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)
   //  --------------------- ------------------------  -----------------------
-    { "evo",                "quorum_list",                 &quorum_list,                        {"count"}  },
-    { "evo",                "quorum_info",                 &quorum_info,                        {"llmqType","quorumHash","includeSkShare"}  },
-    { "evo",                "quorum_dkgstatus",            &quorum_dkgstatus,                   {"detail_level"}  },
-    { "evo",                "quorum_memberof",             &quorum_memberof,                    {"proTxHash","scanQuorumsCount"}  },
-    { "evo",                "quorum_selectquorum",         &quorum_selectquorum,                {"llmqType","id"}  },
-    { "evo",                "quorum_dkgsimerror",          &quorum_dkgsimerror,                 {"type","rate"}  },
-    { "evo",                "quorum_hasrecsig",            &quorum_hasrecsig,                   {"llmqType","id","msgHash"}  },
-    { "evo",                "quorum_verify",               &quorum_verify,                      {"llmqType","id","msgHash","signature","quorumHash","signHeight"}  },
-    { "evo",                "quorum_getrecsig",            &quorum_getrecsig,                   {"llmqType","id","msgHash"}  },
-    { "evo",                "quorum_isconflicting",        &quorum_isconflicting,               {"llmqType","id","msgHash"}  },
-    { "evo",                "quorum_sign",                 &quorum_sign,                        {"llmqType","id","msgHash","quorumHash","submit"}  },
+    { "evo",                &quorum_list,                        },
+    { "evo",                &quorum_info,                        },
+    { "evo",                &quorum_dkgstatus,                   },
+    { "evo",                &quorum_memberof,                    },
+    { "evo",                &quorum_selectquorum,                },
+    { "evo",                &quorum_dkgsimerror,                 },
+    { "evo",                &quorum_hasrecsig,                   },
+    { "evo",                &quorum_verify,                      },
+    { "evo",                &quorum_getrecsig,                   },
+    { "evo",                &quorum_isconflicting,               },
+    { "evo",                &quorum_sign,                        },
 };
 // clang-format on
     for (const auto& c : commands) {

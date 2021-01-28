@@ -14,7 +14,6 @@ fi
 export COMMIT_RANGE
 
 test/lint/check-doc.py
-test/lint/check-rpc-mappings.py .
 test/lint/lint-all.sh
 
 if [ "$CIRRUS_REPO_FULL_NAME" = "syscoin/syscoin" ] && [ -n "$CIRRUS_CRON" ]; then

@@ -377,12 +377,12 @@ Span<const CRPCCommand> GetGovernanceWalletRPCCommands()
 {
 // clang-format off
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         argNames
-//  --------------------- ------------------------  -----------------------  ----------
-    { "governancewallet",               "gobject_vote_alias",     &gobject_vote_alias,      {"governanceHash","vote","voteOutome","protxHash"} },
-    { "governancewallet",               "gobject_vote_many",      &gobject_vote_many,       {"governanceHash","vote","voteOutome"} },
-    { "governancewallet",               "gobject_prepare",        &gobject_prepare,         {"parentHash","revision","time","dataHex","outputHash","outputIndex"} },
-    { "governancewallet",               "gobject_list_prepared",  &gobject_list_prepared,   {"count"} },
+{ //  category              name                      actor (function)       
+//  --------------------- ------------------------  ----------------------- 
+    { "governancewallet",            &gobject_vote_alias,      },
+    { "governancewallet",            &gobject_vote_many,       },
+    { "governancewallet",            &gobject_prepare,         },
+    { "governancewallet",            &gobject_list_prepared,   },
 };
 // clang-format on
     return MakeSpan(commands);

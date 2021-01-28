@@ -1140,15 +1140,15 @@ Span<const CRPCCommand> GetEvoWalletRPCCommands()
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)
   //  --------------------- ------------------------  -----------------------
-    { "evowallet",                "protx_list_wallet",                  &protx_list_wallet,                   {"detailed","height"}  },
-    { "evowallet",                "protx_info_wallet",                  &protx_info_wallet,                   {"proTxHash"}  },
-    { "evowallet",                "protx_register",                     &protx_register,                      {"collateralHash","collateralIndex","ipAndPort","ownerAddress","operatorPubKey","votingAddress","operatorReward","payoutAddress","fundAddress","submit"}  },
-    { "evowallet",                "protx_register_fund",                &protx_register_fund,                 {"collateralAddress","ipAndPort","ownerAddress","operatorPubKey","votingAddress","operatorReward","payoutAddress","fundAddress","submit"} },
-    { "evowallet",                "protx_register_prepare",             &protx_register_prepare,              {"collateralHash","collateralIndex","ipAndPort","ownerAddress","operatorPubKey","votingAddress","operatorReward","payoutAddress","fundAddress"}  },
-    { "evowallet",                "protx_register_submit",              &protx_register_submit,               {"tx","sig"}  },
-    { "evowallet",                "protx_update_service",               &protx_update_service,                {"proTxHash","ipAndPort","operatorKey","operatorPayoutAddress","feeSourceAddress"}  },
-    { "evowallet",                "protx_update_registrar",             &protx_update_registrar,              {"proTxHash","operatorPubKey","votingAddress","payoutAddress","feeSourceAddress"}  },
-    { "evowallet",                "protx_revoke",                       &protx_revoke,                        {"proTxHash","operatorKey","reason","feeSourceAddress"}  },
+    { "evowallet",              &protx_list_wallet,                 },
+    { "evowallet",              &protx_info_wallet,                 },
+    { "evowallet",              &protx_register,                    },
+    { "evowallet",              &protx_register_fund,               },
+    { "evowallet",              &protx_register_prepare,            },
+    { "evowallet",              &protx_register_submit,             },
+    { "evowallet",              &protx_update_service,              },
+    { "evowallet",              &protx_update_registrar,            },
+    { "evowallet",              &protx_revoke,                      },
 };
 // clang-format on
     return MakeSpan(commands);

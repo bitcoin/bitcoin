@@ -596,16 +596,16 @@ void RegisterMasternodeRPCCommands(CRPCTable &t)
 {
 // clang-format off
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         argNames
-//  --------------------- ------------------------  -----------------------  ----------
-    { "masternode",               "masternode_connect",         &masternode_connect,      {"address"} },
-    { "masternode",               "masternode_list",            &masternode_list,         {"mode","filter"} },
-    { "masternode",               "masternode_winners",         &masternode_winners,      {"count","filter"} },
-    { "masternode",               "masternode_payments",        &masternode_payments,     {"blockhash","count"} },
-    { "masternode",               "masternode_count",           &masternode_count,        {} },
-    { "masternode",               "masternode_winner",          &masternode_winner,       {} },
-    { "masternode",               "masternode_status",          &masternode_status,       {} },
-    { "masternode",               "masternode_current",         &masternode_current,      {} },
+{ //  category              name                      actor (function)  
+//  --------------------- ------------------------  -----------------------
+    { "masternode",            &masternode_connect,      },
+    { "masternode",            &masternode_list,         },
+    { "masternode",            &masternode_winners,      },
+    { "masternode",            &masternode_payments,     },
+    { "masternode",            &masternode_count,        },
+    { "masternode",            &masternode_winner,       },
+    { "masternode",            &masternode_status,       },
+    { "masternode",            &masternode_current,      },
 };
 // clang-format on
     for (const auto& c : commands) {

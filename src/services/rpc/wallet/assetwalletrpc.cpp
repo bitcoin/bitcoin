@@ -2380,31 +2380,31 @@ Span<const CRPCCommand> GetAssetWalletRPCCommands()
 // clang-format off
 static const CRPCCommand commands[] =
 { 
-    //  category              name                                actor (function)                argNames
-    //  --------------------- ------------------------          -----------------------         ----------
+    //  category              name                                actor (function)      
+    //  --------------------- ------------------------          -----------------------
 
    /* assets using the blockchain, coins/points/service backed tokens*/
-    { "syscoinwallet",            "syscoinburntoassetallocation",     &syscoinburntoassetallocation,  {"asset_guid","amount"} }, 
-    { "syscoinwallet",            "convertaddresswallet",             &convertaddresswallet,          {"address","label","rescan"} },
-    { "syscoinwallet",            "assetallocationburn",              &assetallocationburn,           {"asset_guid","amount","ethereum_destination_address"} }, 
-    { "syscoinwallet",            "assetallocationmint",              &assetallocationmint,           {"asset_guid","address","amount","blocknumber","bridge_transfer_id","tx_hex","txroot_hex","txmerkleproof_hex","merklerootpath_hex","receipt_hex","receiptroot_hex","receiptmerkleproof_hex","auxfee_test"} },     
-    { "syscoinwallet",            "assetnew",                         &assetnew,                      {"funding_amount","symbol","description","contract","precision","max_supply","updatecapability_flags","notary_address","notary_details","auxfee_details"}},
-    { "syscoinwallet",            "assetnewtest",                     &assetnewtest,                  {"asset_guid","funding_amount","symbol","description","contract","precision","max_supply","updatecapability_flags","notary_address","notary_details","auxfee_details"}},
-    { "syscoinwallet",            "assetupdate",                      &assetupdate,                   {"asset_guid","description","contract","updatecapability_flags","notary_address","notary_details","auxfee_details"}},
-    { "syscoinwallet",            "assettransfer",                    &assettransfer,                 {"asset_guid","address"}},
-    { "syscoinwallet",            "assetsend",                        &assetsend,                     {"asset_guid","address","amount","NFTID"}},
-    { "syscoinwallet",            "assetsendmany",                    &assetsendmany,                 {"asset_guid","amounts"}},
-    { "syscoinwallet",            "assetallocationsend",              &assetallocationsend,           {"asset_guid","address","amount","replaceable"}},
-    { "syscoinwallet",            "assetallocationsendmany",          &assetallocationsendmany,       {"amounts","replaceable","comment","conf_target","estimate_mode"}},
-    { "syscoinwallet",            "listunspentasset",                 &listunspentasset,              {"asset_guid","minconf"}},
-    { "syscoinwallet",            "signhash",                         &signhash,                      {"address","hash"}},
-    { "syscoinwallet",            "signmessagebech32",                &signmessagebech32,             {"address","message"}},
-    { "syscoinwallet",            "addressbalance",                   &addressbalance,                {"addresses","minconf","maxconf"}},
-    { "syscoinwallet",            "assetallocationbalance",           &assetallocationbalance,        {"asset_guid","addresses","minconf","maxconf","verbose"}},
-    { "syscoinwallet",            "sendfrom",                         &sendfrom,                      {"funding_address","address","amount","minconf","maxconf"}},
+    { "syscoinwallet",            &syscoinburntoassetallocation,  }, 
+    { "syscoinwallet",            &convertaddresswallet,          },
+    { "syscoinwallet",            &assetallocationburn,           }, 
+    { "syscoinwallet",            &assetallocationmint,           },     
+    { "syscoinwallet",            &assetnew,                      },
+    { "syscoinwallet",            &assetnewtest,                  },
+    { "syscoinwallet",            &assetupdate,                   },
+    { "syscoinwallet",            &assettransfer,                 },
+    { "syscoinwallet",            &assetsend,                     },
+    { "syscoinwallet",            &assetsendmany,                 },
+    { "syscoinwallet",            &assetallocationsend,           },
+    { "syscoinwallet",            &assetallocationsendmany,       },
+    { "syscoinwallet",            &listunspentasset,              },
+    { "syscoinwallet",            &signhash,                      },
+    { "syscoinwallet",            &signmessagebech32,             },
+    { "syscoinwallet",            &addressbalance,                },
+    { "syscoinwallet",            &assetallocationbalance,        },
+    { "syscoinwallet",            &sendfrom,                      },
 
     /** Auxpow wallet functions */
-    { "syscoinwallet",             "getauxblock",                      &getauxblock,                   {"hash","auxpow"} },
+    { "syscoinwallet",            &getauxblock,                   },
 };
 // clang-format on
     return MakeSpan(commands);

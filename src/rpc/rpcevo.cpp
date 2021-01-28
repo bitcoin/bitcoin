@@ -226,11 +226,11 @@ void RegisterEvoRPCCommands(CRPCTable &t)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)
   //  --------------------- ------------------------  -----------------------
-    { "evo",                "bls_generate",                &bls_generate,                {}  },
-    { "evo",                "bls_fromsecret",              &bls_fromsecret,              {"secret"}  },
-    { "evo",                "protx_list",                  &protx_list,                  {"type","detailed","height"}  },
-    { "evo",                "protx_info",                  &protx_info,                  {"proTxHash"}  },
-    { "evo",                "protx_diff",                  &protx_diff,                  {"baseBlock","block"}  },
+    { "evo",                &bls_generate,                },
+    { "evo",                &bls_fromsecret,              },
+    { "evo",                &protx_list,                  },
+    { "evo",                &protx_info,                  },
+    { "evo",                &protx_diff,                  },
 };
 // clang-format on
     for (const auto& c : commands) {

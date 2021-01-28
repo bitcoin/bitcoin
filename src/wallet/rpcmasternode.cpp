@@ -47,9 +47,9 @@ Span<const CRPCCommand> GetMasternodeWalletRPCCommands()
 {
 // clang-format off
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         argNames
-//  --------------------- ------------------------  -----------------------  ----------
-    { "masternode",               "masternode_outputs",         &masternode_outputs,      {} },
+{ //  category              name                      actor (function)        
+//  --------------------- ------------------------  ----------------------- 
+    { "masternode",           &masternode_outputs,      },
 
 };
 // clang-format on
