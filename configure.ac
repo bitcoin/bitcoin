@@ -813,8 +813,14 @@ AX_GCC_FUNC_ATTRIBUTE([dllimport])
 if test x$use_glibc_compat != xno; then
   AX_CHECK_LINK_FLAG([[-Wl,--wrap=__divmoddi4]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=__divmoddi4"])
   AX_CHECK_LINK_FLAG([[-Wl,--wrap=log2f]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=log2f"])
+  dnl SYSCOIN
   AX_CHECK_LINK_FLAG([[-Wl,--wrap=getrandom]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=getrandom"])
   AX_CHECK_LINK_FLAG([[-Wl,--wrap=fmemopen]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=fmemopen"])
+  case $host in
+    powerpc64* | ppc64*)
+      AX_CHECK_LINK_FLAG([[-Wl,--no-tls-get-addr-optimize]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--no-tls-get-addr-optimize"])
+    ;;
+  esac
 else
   AC_SEARCH_LIBS([clock_gettime],[rt])
 fi
