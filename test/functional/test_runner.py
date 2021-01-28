@@ -245,6 +245,7 @@ BASE_SCRIPTS = [
     'mining_basic.py',
     'rpc_named_arguments.py',
     'wallet_listsinceblock.py',
+    'wallet_listdescriptors.py --descriptors',
     'p2p_leak.py',
     'p2p_compactblocks.py',
     'p2p_connect_to_devnet.py',
