@@ -23,6 +23,7 @@
 #include <services/asset.h>
 #include <node/transaction.h>
 #include <rpc/auxpow_miner.h>
+#include <services/rpc/assetrpc.h>
 #include <messagesigner.h>
 #include <rpc/rawtransaction_util.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
@@ -1944,6 +1945,164 @@ static RPCHelpMan listunspentasset()
 },
     };
 }
+
+static RPCHelpMan addressbalance() {
+    return RPCHelpMan{"addressbalance",	
+        "\nShow the Syscoin balance of an array of addresses in your wallet.\n",	
+        {	
+                {"addresses", RPCArg::Type::ARR, RPCArg::Optional::NO, "The syscoin addresses to filter",
+                    {
+                        {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "syscoin address"},
+                    },
+                },
+                {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum confirmations to filter"},
+                {"maxconf", RPCArg::Type::NUM, /* default */ "9999999", "The maximum confirmations to filter"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::NUM, "amount", "Syscoin balance of the addressn"},
+            }},	
+        RPCExamples{	
+            HelpExampleCli("addressbalance", "\"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\" 6 9999999")
+            + HelpExampleRpc("addressbalance", "\"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\", 6, 9999999")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{	
+    int nMinDepth = 1;
+    if (!request.params[1].isNull()) {
+        nMinDepth = request.params[1].get_int();
+    }
+    int nMaxDepth = 9999999;
+    if (!request.params[2].isNull()) {
+        nMaxDepth = request.params[1].get_int();
+    }
+    UniValue paramsFund(UniValue::VARR);
+    paramsFund.push_back(nMinDepth);
+    paramsFund.push_back(nMaxDepth);
+    paramsFund.push_back(request.params[0]);
+    JSONRPCRequest requestSpent(request.context);
+    requestSpent.params = paramsFund;
+    requestSpent.URI = request.URI;
+    const UniValue &resUTXOs = listunspent().HandleRequest(requestSpent);
+    CAmount nTotalAmount = 0;
+    const UniValue &resUTXOArr = resUTXOs.get_array();
+    if(!resUTXOArr.isNull()) {
+        for(size_t i =0;i<resUTXOArr.size();i++) {
+            nTotalAmount += AmountFromValue(find_value(resUTXOArr[i].get_obj(), "amount"));
+        }
+    }
+    UniValue res(UniValue::VOBJ);
+    res.__pushKV("amount", ValueFromAmount(nTotalAmount));
+    return res;
+},
+    };
+}
+
+static RPCHelpMan assetallocationbalance() {
+    return RPCHelpMan{"assetallocationbalance",	
+        "\nShow asset and allocated balance information pertaining to an asset owned in your wallet.\n",	
+        {	
+                {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The syscoin asset guid to get the information of."},
+                {"addresses", RPCArg::Type::ARR, /* default */ "empty array", "The syscoin addresses to filter",
+                    {
+                        {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "syscoin address"},
+                    },
+                },
+                {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum confirmations to filter"},
+                {"maxconf", RPCArg::Type::NUM, /* default */ "9999999", "The maximum confirmations to filter"},
+                {"verbose", RPCArg::Type::BOOL, /* default */ "false", "If false, return just balances, otherwise return asset information as well as balances"},
+        },
+        {
+            RPCResult{"for verbose = false",
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::STR_AMOUNT, "amount", "the balance output amount in " + CURRENCY_UNIT},
+                    {RPCResult::Type::STR_AMOUNT, "asset_amount", "the balance asset amount in satoshis"},
+                }
+            },
+            RPCResult{"for verbose = true",
+                RPCResult::Type::OBJ, "", "",
+                {
+                    {RPCResult::Type::NUM, "asset_guid", "The guid of the asset"},
+                    {RPCResult::Type::STR, "symbol", "The asset symbol"},
+                    {RPCResult::Type::STR_HEX, "txid", "The transaction id that created this asset"},
+                    {RPCResult::Type::STR, "public_value", "The public value attached to this asset"},
+                    {RPCResult::Type::STR_HEX, "contract", "The ethereum contract address"},
+                    {RPCResult::Type::STR_AMOUNT, "total_supply", "The total supply of this asset"},
+                    {RPCResult::Type::STR_AMOUNT, "max_supply", "The maximum supply of this asset"},
+                    {RPCResult::Type::NUM, "updatecapability_flags", "The capability flag in decimal"},
+                    {RPCResult::Type::NUM, "precision", "The precision of this asset"},
+                    {RPCResult::Type::STR_AMOUNT, "amount", "the balance output amount in " + CURRENCY_UNIT},
+                    {RPCResult::Type::STR_AMOUNT, "asset_amount", "the balance asset amount in satoshis"},
+                }
+            }
+        },	
+        RPCExamples{	
+            HelpExampleCli("assetallocationbalance", "552723762 \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\" 6 9999999")
+            + HelpExampleRpc("assetallocationbalance", "552723762, \"[\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\"]\", 6, 9999999")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{	
+    uint64_t nAsset = request.params[0].get_uint64();
+    UniValue oAsset(UniValue::VOBJ);
+    const uint32_t &nBaseAsset = GetBaseAssetID(request.params[0].get_uint64());
+    CAsset theAsset;
+    if (!GetAsset(nBaseAsset, theAsset))
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to read from asset DB");
+    
+    int nMinDepth = 1;
+    if (!request.params[2].isNull()) {
+        nMinDepth = request.params[2].get_int();
+    }
+    int nMaxDepth = 9999999;
+    if (!request.params[3].isNull()) {
+        nMaxDepth = request.params[3].get_int();
+    }
+    // Accept either a bool (true) or a num (>=1) to indicate verbose output.
+    bool fVerbose = false;
+    if (!request.params[4].isNull()) {
+        fVerbose = request.params[4].isNum() ? (request.params[4].get_int() != 0) : request.params[4].get_bool();
+    }
+    if(fVerbose && !BuildAssetJson(theAsset, nBaseAsset, oAsset))
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to create asset JSON");
+
+    bool include_unsafe = true;
+    UniValue paramsFund(UniValue::VARR);
+    UniValue includeSafe(UniValue::VBOOL);
+    includeSafe.setBool(include_unsafe);
+    paramsFund.push_back(nMinDepth);
+    paramsFund.push_back(nMaxDepth);
+    paramsFund.push_back(request.params[1]);
+    paramsFund.push_back(includeSafe);
+    
+    UniValue options(UniValue::VOBJ);
+    options.__pushKV("assetGuid", nAsset);
+    paramsFund.push_back(options);
+    JSONRPCRequest requestSpent(request.context);
+    requestSpent.params = paramsFund;
+    requestSpent.URI = request.URI;
+    const UniValue &resUTXOs = listunspent().HandleRequest(requestSpent);  
+    CAmount nTotalAmount = 0;
+    CAmount nAssetTotalAmount = 0;
+    const UniValue &resUTXOArr = resUTXOs.get_array();
+    if(!resUTXOArr.isNull()) {
+        for(size_t i =0;i<resUTXOArr.size();i++) {
+            const UniValue &utxoObj = resUTXOArr[i].get_obj();
+            nTotalAmount += AmountFromValue(find_value(utxoObj, "amount"));
+            const UniValue &assetAmountVal = find_value(utxoObj, "asset_amount");
+            if(!assetAmountVal.isNull()) {
+                nAssetTotalAmount += AssetAmountFromValue(assetAmountVal, theAsset.nPrecision);
+            }
+        }
+    }
+    oAsset.__pushKV("amount", ValueFromAmount(nTotalAmount));
+    oAsset.__pushKV("asset_amount", ValueFromAssetAmount(nAssetTotalAmount, theAsset.nPrecision));
+    return oAsset;
+},
+    };
+}
+
 namespace
 {
 
@@ -2149,7 +2308,9 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "listunspentasset",                 &listunspentasset,              {"asset_guid","minconf"}},
     { "syscoinwallet",            "signhash",                         &signhash,                      {"address","hash"}},
     { "syscoinwallet",            "signmessagebech32",                &signmessagebech32,             {"address","message"}},
-    
+    { "syscoinwallet",            "addressbalance",                   &addressbalance,                {"addresses","minconf","maxconf"}},
+    { "syscoinwallet",            "assetallocationbalance",           &assetallocationbalance,        {"asset_guid","addresses","minconf","maxconf","verbose"}},
+
     /** Auxpow wallet functions */
     { "syscoinwallet",             "getauxblock",                      &getauxblock,                   {"hash","auxpow"} },
 };
