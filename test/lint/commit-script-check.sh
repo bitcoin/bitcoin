@@ -27,14 +27,16 @@ function verify_script () {
   function command_not_found_handle () {
     return 0;
   }
-  # check for "-i ''" args being passed to sed
+  # check for "-i" args being passed to sed
   function sed () {
     local i=1
     local n=$(( $# + 1 ))
     while [ $i -lt $n ]; do
       local j=$(( i + 1 ))
-      if [[ ${!i} == "-i" ]] && [[ ${!j} == "" ]]; then
-        echo '' > $FLAG_FILE
+      if [[ ${!i} == "-i" ]]; then
+        if [[ ${!j} == "" ]] || [[ -e ${!j} ]]; then
+          echo '' > $FLAG_FILE
+        fi
       fi
       i=$(( i + 1 ))
     done
@@ -61,7 +63,7 @@ for commit in $(git rev-list --reverse $1); do
             echo "Failed"
             RET=1
         elif verify_script "$SCRIPT"; then
-            echo ERROR: You are using BSD sed syntax \("sed -i ''"\) which is incompatible with GNU sed
+            echo ERROR: You are using BSD sed syntax for "-i" option, which is incompatible with GNU sed
             RET=1
         else
             verify_script "$SCRIPT"
