@@ -1859,27 +1859,27 @@ void RegisterRawTransactionRPCCommands(CRPCTable &t)
 {
 // clang-format off
 static const CRPCCommand commands[] =
-{ //  category              name                            actor (function)            argNames
-  //  --------------------- ------------------------        -----------------------     ----------
-    { "rawtransactions",    "getrawtransaction",            &getrawtransaction,         {"txid","verbose","blockhash"} },
-    { "rawtransactions",    "createrawtransaction",         &createrawtransaction,      {"inputs","outputs","locktime","replaceable"} },
-    { "rawtransactions",    "decoderawtransaction",         &decoderawtransaction,      {"hexstring","iswitness"} },
-    { "rawtransactions",    "decodescript",                 &decodescript,              {"hexstring"} },
-    { "rawtransactions",    "sendrawtransaction",           &sendrawtransaction,        {"hexstring","maxfeerate"} },
-    { "rawtransactions",    "combinerawtransaction",        &combinerawtransaction,     {"txs"} },
-    { "rawtransactions",    "signrawtransactionwithkey",    &signrawtransactionwithkey, {"hexstring","privkeys","prevtxs","sighashtype"} },
-    { "rawtransactions",    "testmempoolaccept",            &testmempoolaccept,         {"rawtxs","maxfeerate"} },
-    { "rawtransactions",    "decodepsbt",                   &decodepsbt,                {"psbt"} },
-    { "rawtransactions",    "combinepsbt",                  &combinepsbt,               {"txs"} },
-    { "rawtransactions",    "finalizepsbt",                 &finalizepsbt,              {"psbt", "extract"} },
-    { "rawtransactions",    "createpsbt",                   &createpsbt,                {"inputs","outputs","locktime","replaceable"} },
-    { "rawtransactions",    "converttopsbt",                &converttopsbt,             {"hexstring","permitsigdata","iswitness"} },
-    { "rawtransactions",    "utxoupdatepsbt",               &utxoupdatepsbt,            {"psbt", "descriptors"} },
-    { "rawtransactions",    "joinpsbts",                    &joinpsbts,                 {"txs"} },
-    { "rawtransactions",    "analyzepsbt",                  &analyzepsbt,               {"psbt"} },
+{ //  category               actor (function)
+  //  ---------------------  -----------------------
+    { "rawtransactions",     &getrawtransaction,          },
+    { "rawtransactions",     &createrawtransaction,       },
+    { "rawtransactions",     &decoderawtransaction,       },
+    { "rawtransactions",     &decodescript,               },
+    { "rawtransactions",     &sendrawtransaction,         },
+    { "rawtransactions",     &combinerawtransaction,      },
+    { "rawtransactions",     &signrawtransactionwithkey,  },
+    { "rawtransactions",     &testmempoolaccept,          },
+    { "rawtransactions",     &decodepsbt,                 },
+    { "rawtransactions",     &combinepsbt,                },
+    { "rawtransactions",     &finalizepsbt,               },
+    { "rawtransactions",     &createpsbt,                 },
+    { "rawtransactions",     &converttopsbt,              },
+    { "rawtransactions",     &utxoupdatepsbt,             },
+    { "rawtransactions",     &joinpsbts,                  },
+    { "rawtransactions",     &analyzepsbt,                },
 
-    { "blockchain",         "gettxoutproof",                &gettxoutproof,             {"txids", "blockhash"} },
-    { "blockchain",         "verifytxoutproof",             &verifytxoutproof,          {"proof"} },
+    { "blockchain",          &gettxoutproof,              },
+    { "blockchain",          &verifytxoutproof,           },
 };
 // clang-format on
     for (const auto& c : commands) {

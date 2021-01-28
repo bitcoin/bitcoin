@@ -336,6 +336,8 @@ public:
     RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, RPCMethodImpl fun);
 
     std::string ToString() const;
+    /** Append the named args that need to be converted from string to another JSON type */
+    void AppendArgMap(UniValue& arr) const;
     UniValue HandleRequest(const JSONRPCRequest& request)
     {
         Check(request);
