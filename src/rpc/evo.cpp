@@ -1869,37 +1869,37 @@ void RegisterEvoRPCCommands(CRPCTable &tableRPC)
 {
 // clang-format off
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)
-  //  --------------------- ------------------------  -----------------------
-    { "evo",                "bls",                              &bls_help,                      {"command"}  },
-    { "evo",                "bls", "generate",                  &bls_generate,                  {"legacy"}  },
-    { "evo",                "bls", "fromsecret",                &bls_fromsecret,                {"secret", "legacy"}  },
-    { "evo",                "protx",                            &protx_help,                    {"command"}  },
+{ //  category              actor (function)
+  //  --------------------- -----------------------
+    { "evo",                &bls_help,                         },
+    { "evo",                &bls_generate,                     },
+    { "evo",                &bls_fromsecret,                   },
+    { "evo",                &protx_help,                       },
 #ifdef ENABLE_WALLET
-    { "evo",                "protx", "register",                &protx_register,                {"collateralHash", "collateralIndex", "ipAndPort", "ownerAddress", "operatorPubKey", "votingAddress", "operatorReward", "payoutAddress", "feeSourceAddress", "submit"}  },
-    { "evo",                "protx", "register_evo",            &protx_register_evo,            {"collateralHash", "collateralIndex", "ipAndPort", "ownerAddress", "operatorPubKey", "votingAddress", "operatorReward", "payoutAddress", "platformNodeID", "platformP2PPort", "platformHTTPPort", "feeSourceAddress", "submit"}  },
-    { "evo",                "protx", "register_hpmn",           &protx_register_hpmn,           {"collateralHash", "collateralIndex", "ipAndPort", "ownerAddress", "operatorPubKey", "votingAddress", "operatorReward", "payoutAddress", "platformNodeID", "platformP2PPort", "platformHTTPPort", "feeSourceAddress", "submit"}  },
-    { "evo",                "protx", "register_legacy",         &protx_register_legacy,         {"collateralHash", "collateralIndex", "ipAndPort", "ownerAddress", "operatorPubKey", "votingAddress", "operatorReward", "payoutAddress", "feeSourceAddress", "submit"}  },
-    { "evo",                "protx", "register_fund",           &protx_register_fund,           {"collateralAddress", "ipAndPort", "ownerAddress", "operatorPubKey", "votingAddress", "operatorReward", "payoutAddress", "fundAddress", "submit"}  },
-    { "evo",                "protx", "register_fund_legacy",    &protx_register_fund_legacy,    {"collateralAddress", "ipAndPort", "ownerAddress", "operatorPubKey", "votingAddress", "operatorReward", "payoutAddress", "fundAddress", "submit"}  },
-    { "evo",                "protx", "register_fund_evo",       &protx_register_fund_evo,       {"collateralAddress", "ipAndPort", "ownerAddress", "operatorPubKey", "votingAddress", "operatorReward", "payoutAddress", "platformNodeID", "platformP2PPort", "platformHTTPPort", "fundAddress", "submit"}  },
-    { "evo",                "protx", "register_fund_hpmn",       &protx_register_fund_hpmn,     {"collateralAddress", "ipAndPort", "ownerAddress", "operatorPubKey", "votingAddress", "operatorReward", "payoutAddress", "platformNodeID", "platformP2PPort", "platformHTTPPort", "fundAddress", "submit"}  },
-    { "evo",                "protx", "register_prepare",        &protx_register_prepare,        {"collateralHash", "collateralIndex", "ipAndPort", "ownerAddress", "operatorPubKey", "votingAddress", "operatorReward", "payoutAddress", "feeSourceAddress"}  },
-    { "evo",                "protx", "register_prepare_evo",    &protx_register_prepare_evo,    {"collateralHash", "collateralIndex", "ipAndPort", "ownerAddress", "operatorPubKey", "votingAddress", "operatorReward", "payoutAddress", "platformNodeID", "platformP2PPort", "platformHTTPPort", "feeSourceAddress"}  },
-    { "evo",                "protx", "register_prepare_hpmn",   &protx_register_prepare_hpmn,   {"collateralHash", "collateralIndex", "ipAndPort", "ownerAddress", "operatorPubKey", "votingAddress", "operatorReward", "payoutAddress", "platformNodeID", "platformP2PPort", "platformHTTPPort", "feeSourceAddress"}  },
-    { "evo",                "protx", "register_prepare_legacy", &protx_register_prepare_legacy, {"collateralHash", "collateralIndex", "ipAndPort", "ownerAddress", "operatorPubKey", "votingAddress", "operatorReward", "payoutAddress", "feeSourceAddress"}  },
-    { "evo",                "protx", "update_service",          &protx_update_service,          {"proTxHash", "ipAndPort", "operatorKey", "operatorPayoutAddress", "feeSourceAddress"}  },
-    { "evo",                "protx", "update_service_evo",      &protx_update_service_evo,      {"proTxHash", "ipAndPort", "operatorKey", "platformNodeID", "platformP2PPort", "platformHTTPPort", "operatorPayoutAddress", "feeSourceAddress"}  },
-    { "evo",                "protx", "update_service_hpmn",     &protx_update_service_hpmn,     {"proTxHash", "ipAndPort", "operatorKey", "platformNodeID", "platformP2PPort", "platformHTTPPort", "operatorPayoutAddress", "feeSourceAddress"}  },
-    { "evo",                "protx", "register_submit",         &protx_register_submit,         {"tx", "sig"}  },
-    { "evo",                "protx", "update_registrar",        &protx_update_registrar,        {"proTxHash", "operatorPubKey", "votingAddress", "payoutAddress", "feeSourceAddress"}  },
-    { "evo",                "protx", "update_registrar_legacy", &protx_update_registrar_legacy, {"proTxHash", "operatorPubKey", "votingAddress", "payoutAddress", "feeSourceAddress"}  },
-    { "evo",                "protx", "revoke",                  &protx_revoke,                  {"proTxHash", "operatorKey", "reason", "feeSourceAddress"}  },
+    { "evo",                &protx_register,                   },
+    { "evo",                &protx_register_evo,               },
+    { "evo",                &protx_register_hpmn,              },
+    { "evo",                &protx_register_legacy,            },
+    { "evo",                &protx_register_fund,              },
+    { "evo",                &protx_register_fund_legacy,       },
+    { "evo",                &protx_register_fund_evo,          },
+    { "evo",                &protx_register_fund_hpmn,         },
+    { "evo",                &protx_register_prepare,           },
+    { "evo",                &protx_register_prepare_evo,       },
+    { "evo",                &protx_register_prepare_hpmn,      },
+    { "evo",                &protx_register_prepare_legacy,    },
+    { "evo",                &protx_update_service,             },
+    { "evo",                &protx_update_service_evo,         },
+    { "evo",                &protx_update_service_hpmn,        },
+    { "evo",                &protx_register_submit,            },
+    { "evo",                &protx_update_registrar,           },
+    { "evo",                &protx_update_registrar_legacy,    },
+    { "evo",                &protx_revoke,                     },
 #endif
-    { "evo",                "protx", "list",                    &protx_list,                    {"type", "detailed", "height"}  },
-    { "evo",                "protx", "info",                    &protx_info,                    {"proTxHash", "blockHash"}  },
-    { "evo",                "protx", "diff",                    &protx_diff,                    {"baseBlock", "block", "extended"}  },
-    { "evo",                "protx", "listdiff",                &protx_listdiff,                {"baseBlock", "block"}  },
+    { "evo",                &protx_list,                       },
+    { "evo",                &protx_info,                       },
+    { "evo",                &protx_diff,                       },
+    { "evo",                &protx_listdiff,                   },
 };
 // clang-format on
     for (const auto& command : commands) {

@@ -281,15 +281,15 @@ void RegisterCoinJoinRPCCommands(CRPCTable &t)
 {
 // clang-format off
 static const CRPCCommand commands[] =
-    { //  category              name                          actor (function)         argNames
-      //  ------------------------------------------------------------------------------------------------------
-        { "dash",               "getpoolinfo",                &getpoolinfo,            {} },
-        { "dash",               "getcoinjoininfo",            &getcoinjoininfo,        {} },
+{ //  category               actor (function)
+  //  ---------------------  -----------------------
+    { "dash",                &getpoolinfo,            },
+    { "dash",                &getcoinjoininfo,        },
 #ifdef ENABLE_WALLET
-        { "dash",               "coinjoin",                   &coinjoin,               {"command"} },
-        { "dash",               "coinjoin", "reset",          &coinjoin_reset,         {} },
-        { "dash",               "coinjoin", "start",          &coinjoin_start,         {} },
-        { "dash",               "coinjoin", "stop",           &coinjoin_stop,          {} },
+    { "dash",                &coinjoin,               },
+    { "dash",                &coinjoin_reset,         },
+    { "dash",                &coinjoin_start,         },
+    { "dash",                &coinjoin_stop,          },
 #endif // ENABLE_WALLET
 };
 // clang-format on

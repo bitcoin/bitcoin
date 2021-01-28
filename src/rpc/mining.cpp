@@ -416,17 +416,24 @@ static RPCHelpMan generateblock()
     };
 }
 #else
-static UniValue generatetoaddress(const JSONRPCRequest& request)
+static RPCHelpMan generatetoaddress()
 {
-    throw JSONRPCError(RPC_METHOD_NOT_FOUND, "This call is not available because RPC miner isn't compiled");
+    return RPCHelpMan{"generatetoaddress", "This call is not available because RPC miner isn't compiled", {}, {}, RPCExamples{""}, [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "This call is not available because RPC miner isn't compiled");
+    }};
 }
-static UniValue generatetodescriptor(const JSONRPCRequest& request)
+
+static RPCHelpMan generatetodescriptor()
 {
-    throw JSONRPCError(RPC_METHOD_NOT_FOUND, "This call is not available because RPC miner isn't compiled");
+    return RPCHelpMan{"generatetodescriptor", "This call is not available because RPC miner isn't compiled", {}, {}, RPCExamples{""}, [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "This call is not available because RPC miner isn't compiled");
+    }};
 }
-static UniValue generateblock(const JSONRPCRequest& request)
+static RPCHelpMan generateblock()
 {
-    throw JSONRPCError(RPC_METHOD_NOT_FOUND, "This call is not available because RPC miner isn't compiled");
+    return RPCHelpMan{"generateblock", "This call is not available because RPC miner isn't compiled", {}, {}, RPCExamples{""}, [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+        throw JSONRPCError(RPC_METHOD_NOT_FOUND, "This call is not available because RPC miner isn't compiled");
+    }};
 }
 #endif // ENABLE_MINER
 
@@ -1295,29 +1302,30 @@ void RegisterMiningRPCCommands(CRPCTable &t)
 {
 // clang-format off
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         argNames
-  //  --------------------- ------------------------  -----------------------  ----------
-    { "mining",             "getnetworkhashps",       &getnetworkhashps,       {"nblocks","height"} },
-    { "mining",             "getmininginfo",          &getmininginfo,          {} },
-    { "mining",             "prioritisetransaction",  &prioritisetransaction,  {"txid","fee_delta"} },
-    { "mining",             "getblocktemplate",       &getblocktemplate,       {"template_request"} },
-    { "mining",             "submitblock",            &submitblock,            {"hexdata","dummy"} },
-    { "mining",             "submitheader",           &submitheader,           {"hexdata"} },
+{ //  category               actor (function)
+  //  ---------------------  -----------------------
+    { "mining",              &getnetworkhashps,        },
+    { "mining",              &getmininginfo,           },
+    { "mining",              &prioritisetransaction,   },
+    { "mining",              &getblocktemplate,        },
+    { "mining",              &submitblock,             },
+    { "mining",              &submitheader,            },
 
 #if ENABLE_MINER
-    { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
-    { "generating",         "generatetodescriptor",   &generatetodescriptor,   {"num_blocks","descriptor","maxtries"} },
-    { "generating",         "generateblock",          &generateblock,          {"output","transactions"} },
+    { "generating",          &generatetoaddress,       },
+    { "generating",          &generatetodescriptor,    },
+    { "generating",          &generateblock,           },
 #else
-    { "hidden",             "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} }, // Hidden as it isn't functional, just an error to let people know if miner isn't compiled
-    { "hidden",             "generatetodescriptor",   &generatetodescriptor,   {"num_blocks","descriptor","maxtries"} },
-    { "hidden",             "generateblock",          &generateblock,          {"address","transactions"} },
+// Hidden as it isn't functional, just an error to let people know if miner isn't compiled
+    { "hidden",              &generatetoaddress,       },
+    { "hidden",              &generatetodescriptor,    },
+    { "hidden",              &generateblock,           },
 #endif // ENABLE_MINER
 
-    { "util",               "estimatesmartfee",       &estimatesmartfee,       {"conf_target", "estimate_mode"} },
+    { "util",                &estimatesmartfee,        },
 
-    { "hidden",             "estimaterawfee",         &estimaterawfee,         {"conf_target", "threshold"} },
-    { "hidden",             "generate",               &generate,               {} },
+    { "hidden",              &estimaterawfee,          },
+    { "hidden",              &generate,                },
 };
 // clang-format on
     for (const auto& c : commands) {

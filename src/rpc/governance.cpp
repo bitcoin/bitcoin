@@ -1057,28 +1057,27 @@ void RegisterGovernanceRPCCommands(CRPCTable &t)
 {
 // clang-format off
 static const CRPCCommand commands[] =
-{ //  category              name                      actor (function)         argNames
-  //  --------------------- ------------------------  -----------------------  ----------
+{ //  category              actor (function)
+  //  --------------------- -----------------------
     /* Dash features */
-    { "dash",               "getgovernanceinfo",          &getgovernanceinfo,       {} },
-    { "dash",               "getsuperblockbudget",        &getsuperblockbudget,     {"index"} },
-    { "dash",               "gobject",                    &gobject,                 {"command"} },
-    { "dash",               "gobject", "count",           &gobject_count,           {"mode"} },
-    { "dash",               "gobject", "deserialize",     &gobject_deserialize,     {"hex_data"} },
-    { "dash",               "gobject", "check",           &gobject_check,           {"hex_data"} },
+    { "dash",               &getgovernanceinfo,         },
+    { "dash",               &getsuperblockbudget,       },
+    { "dash",               &gobject,                   },
+    { "dash",               &gobject_count,             },
+    { "dash",               &gobject_deserialize,       },
+    { "dash",               &gobject_check,             },
 #ifdef ENABLE_WALLET
-    { "dash",               "gobject", "prepare",         &gobject_prepare,         {"parent-hash", "revision", "time", "data-hex", "use-IS", "outputHash", "outputIndex"} },
-    { "dash",               "gobject", "list-prepared",   &gobject_list_prepared,   {"count"} },
-    { "dash",               "gobject", "vote-many",       &gobject_vote_many,       {"governance-hash", "vote", "vote-outcome"} },
-    { "dash",               "gobject", "vote-alias",      &gobject_vote_alias,      {"governance-hash", "vote", "vote-outcome", "protx-hash"} },
+    { "dash",               &gobject_prepare,           },
+    { "dash",               &gobject_list_prepared,     },
+    { "dash",               &gobject_vote_many,         },
+    { "dash",               &gobject_vote_alias,        },
 #endif
-    { "dash",               "gobject", "submit",          &gobject_submit,          {"parent-hash", "revision", "time", "data-hex", "fee-txid"} },
-    { "dash",               "gobject", "list",            &gobject_list,            {"signal", "type"} },
-    { "dash",               "gobject", "diff",            &gobject_diff,            {"signal", "type"} },
-    { "dash",               "gobject", "get",             &gobject_get,             {"governance-hash"} },
-    { "dash",               "gobject", "getcurrentvotes", &gobject_getcurrentvotes, {"governance-hash", "txid", "vout"} },
-    { "dash",               "voteraw",                    &voteraw,                 {"mn-collateral-tx-hash","mn-collateral-tx-index","governance-hash","vote-signal","vote-outcome","time","vote-sig"} },
-
+    { "dash",               &gobject_submit,            },
+    { "dash",               &gobject_list,              },
+    { "dash",               &gobject_diff,              },
+    { "dash",               &gobject_get,               },
+    { "dash",               &gobject_getcurrentvotes,   },
+    { "dash",               &voteraw,                   },
 };
 // clang-format on
     for (const auto& command : commands) {
