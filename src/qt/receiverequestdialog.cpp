@@ -19,7 +19,7 @@
 #endif
 
 ReceiveRequestDialog::ReceiveRequestDialog(QWidget *parent) :
-    QDialog(parent),
+    QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::ReceiveRequestDialog),
     model(nullptr)
 {
