@@ -2905,6 +2905,7 @@ RPCHelpMan listunspent()
                             {RPCResult::Type::STR, "label", "The associated label, or \"\" for the default label"},
                             {RPCResult::Type::STR, "scriptPubKey", "the script key"},
                             {RPCResult::Type::STR_AMOUNT, "amount", "the transaction output amount in " + CURRENCY_UNIT},
+                            {RPCResult::Type::NUM, "asset_guid", "the transaction output asset guid if asset output"},
                             {RPCResult::Type::STR_AMOUNT, "asset_amount", "the transaction output asset amount in satoshis if asset output"},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
                             {RPCResult::Type::STR_HEX, "redeemScript", "The redeemScript if scriptPubKey is P2SH"},

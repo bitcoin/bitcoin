@@ -28,6 +28,7 @@
 #include <rpc/rawtransaction_util.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
+UniValue SendMoney(CWallet* const pwallet, const CCoinControl &coin_control, std::vector<CRecipient> &recipients, mapValue_t map_value, bool verbose);
 uint64_t nCustomAssetGuid = 0;
 void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient) {
     CRecipient recp = { scriptPubKey, 0, false };
@@ -2103,6 +2104,96 @@ static RPCHelpMan assetallocationbalance() {
     };
 }
 
+static RPCHelpMan sendfrom() {
+    return RPCHelpMan{"sendfrom",	
+        "\nSend an amount to a given address from a specified address.\n",	
+        {	
+            {"funding_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to send from"},
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to send to."},
+            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
+            {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum confirmations to filter"},
+            {"maxconf", RPCArg::Type::NUM, /* default */ "9999999", "The maximum confirmations to filter"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR_HEX, "txid", "The transaction id."
+            }},	
+        },
+        RPCExamples{	
+            HelpExampleCli("sendfrom",  "\\\"" + EXAMPLE_ADDRESS[0] + "\\\" \\\"" + EXAMPLE_ADDRESS[1] + "\\\" 0.1")
+            + HelpExampleRpc("sendfrom", "\\\"" + EXAMPLE_ADDRESS[0] + "\\\",\\\"" + EXAMPLE_ADDRESS[1] + "\\\", 0.1")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{	
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    if (!wallet) return NullUniValue;
+    CWallet* const pwallet = wallet.get();
+
+    // Make sure the results are valid at least up to the most recent block
+    // the user could have gotten from another RPC command prior to now
+    pwallet->BlockUntilSyncedToCurrentChain();
+
+    LOCK(pwallet->cs_wallet);
+    int nMinDepth = 1;
+    if (!request.params[3].isNull()) {
+        nMinDepth = request.params[3].get_int();
+    }
+    int nMaxDepth = 9999999;
+    if (!request.params[4].isNull()) {
+        nMaxDepth = request.params[4].get_int();
+    }
+    const std::string& strFromAddress = request.params[0].get_str();
+    const CTxDestination &from = DecodeDestination(strFromAddress);
+    if (!IsValidDestination(from)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid from address");
+    }
+    UniValue paramsFund(UniValue::VARR);
+    UniValue paramsAddress(UniValue::VARR);
+    paramsAddress.push_back(strFromAddress);
+    paramsFund.push_back(nMinDepth);
+    paramsFund.push_back(nMaxDepth);
+    paramsFund.push_back(paramsAddress);
+    JSONRPCRequest requestSpent(request.context);
+    requestSpent.params = paramsFund;
+    requestSpent.URI = request.URI;
+    const UniValue &resUTXOs = listunspent().HandleRequest(requestSpent);
+    const UniValue &resUTXOArr = resUTXOs.get_array();
+    CCoinControl coin_control;
+    if(!resUTXOArr.isNull()) {
+        for(size_t i =0;i<resUTXOArr.size();i++) {
+            const UniValue& utxoObj = resUTXOArr[i].get_obj();
+            const uint256 &txid = ParseHashO(utxoObj, "txid");
+            const int &nOut = find_value(utxoObj, "vout").get_int();
+            const UniValue& assetObj = find_value(utxoObj, "asset_guid");
+            // since we are sending SYS, don't send asset on any UTXO's
+            if(assetObj.isNull()) {
+                coin_control.Select(COutPoint(txid, nOut));
+            }
+        }
+    }
+
+    const CTxDestination &dest = DecodeDestination(request.params[1].get_str());
+    if (!IsValidDestination(dest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid to address");
+    }
+    // Amount
+    CAmount nAmount = AmountFromValue(request.params[2]);
+    if (nAmount <= 0)
+        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
+    if(!coin_control.HasSelected())
+        throw JSONRPCError(RPC_TYPE_ERROR, "Could not find inputs to select");
+    coin_control.fAllowOtherInputs = false;
+    coin_control.destChange = from;
+    EnsureWalletIsUnlocked(pwallet);
+    mapValue_t mapValue;
+    const CRecipient & recipient = {GetScriptForDestination(dest), nAmount, false};
+	std::vector<CRecipient> vecSend;
+	vecSend.push_back(recipient);
+    return SendMoney(pwallet, coin_control, vecSend, mapValue, false); 
+},
+    };
+}
 namespace
 {
 
@@ -2310,6 +2401,7 @@ static const CRPCCommand commands[] =
     { "syscoinwallet",            "signmessagebech32",                &signmessagebech32,             {"address","message"}},
     { "syscoinwallet",            "addressbalance",                   &addressbalance,                {"addresses","minconf","maxconf"}},
     { "syscoinwallet",            "assetallocationbalance",           &assetallocationbalance,        {"asset_guid","addresses","minconf","maxconf","verbose"}},
+    { "syscoinwallet",            "sendfrom",                         &sendfrom,                      {"funding_address","address","amount","minconf","maxconf"}},
 
     /** Auxpow wallet functions */
     { "syscoinwallet",             "getauxblock",                      &getauxblock,                   {"hash","auxpow"} },

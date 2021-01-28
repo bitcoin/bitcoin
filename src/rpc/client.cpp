@@ -64,6 +64,8 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "assetallocationbalance", 2, "minconf" },
     { "assetallocationbalance", 3, "maxconf" },
     { "assetallocationbalance", 4, "verbose" },
+    { "sendfrom", 3, "minconf" },
+    { "sendfrom", 4, "maxconf" },
     { "getblockhash", 0, "height" },
     { "waitforblockheight", 0, "height" },
     { "waitforblockheight", 1, "timeout" },
