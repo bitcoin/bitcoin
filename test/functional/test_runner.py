@@ -238,6 +238,7 @@ BASE_SCRIPTS = [
     'rpc_named_arguments.py',
     'wallet_listsinceblock.py',
     'wallet_listsinceblock.py --descriptors',
+    'wallet_listdescriptors.py --descriptors',
     'p2p_leak.py',
     'wallet_encryption.py',
     'wallet_encryption.py --descriptors',
