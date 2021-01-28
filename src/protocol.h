@@ -282,6 +282,8 @@ extern const char *QGETSIGSHARES;
 extern const char *QBSIGSHARES;
 extern const char *QSIGREC;
 extern const char *QSIGSHARE;
+extern const char* QGETDATA;
+extern const char* QDATA;
 extern const char *CLSIG;
 extern const char *MNAUTH;
 }; // namespace NetMsgType

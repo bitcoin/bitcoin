@@ -592,6 +592,63 @@ static RPCHelpMan quorum_dkgsimerror()
     };
 } 
 
+
+static RPCHelpMan quorum_getdata()
+{
+    return RPCHelpMan{"quorum_dkgsimerror",
+         "quorum getdata nodeId llmqType \"quorumHash\" dataMask ( \"proTxHash\" )\n",
+        {
+            {"nodeId", RPCArg::Type::NUM, RPCArg::Optional::NO, "The internal nodeId of the peer to request quorum data from.\n"},
+            {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "The quorum type related to the quorum data being requested.\n"}, 
+            {"quorumHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The quorum hash related to the quorum data being requested.\n"},
+            {"dataMask", RPCArg::Type::NUM, RPCArg::Optional::NO, " Specify what data to request.\n"
+                        "Possible values: 1 - Request quorum verification vector\n"
+                        "2 - Request encrypted contributions for member defined by \"proTxHash\". \"proTxHash\" must be specified if this option is used.\n"
+                        "3 - Request both, 1 and 2\n"},
+            {"proTxHash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "The proTxHash the contributions will be requested for. Must be member of the specified LLMQ.\n"},                                        
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+                HelpExampleCli("quorum_getdata", "1 1 1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 2")
+            + HelpExampleRpc("quorum_getdata", "1, 1, \"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", 2")
+        },
+    [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    NodeContext& node = EnsureNodeContext(request.context);
+    if(!node.connman)
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+    int nodeId = request.params[0].get_int();
+    uint8_t llmqType = static_cast<uint8_t>(request.params[1].get_uint());
+    uint256 quorumHash = ParseHashV(request.params[2], "quorumHash");
+    uint16_t nDataMask = static_cast<uint16_t>(request.params[3].get_uint());
+    uint256 proTxHash;
+
+    // Check if request wants ENCRYPTED_CONTRIBUTIONS data
+    if (nDataMask & llmq::CQuorumDataRequest::ENCRYPTED_CONTRIBUTIONS) {
+        if (!request.params[4].isNull()) {
+            proTxHash = ParseHashV(request.params[4], "proTxHash");
+            if (proTxHash.IsNull()) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "proTxHash invalid");
+            }
+        } else {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "proTxHash missing");
+        }
+    }
+
+    const CBlockIndex* pQuorumIndex{nullptr};
+    {
+        LOCK(cs_main);
+        pQuorumIndex = g_chainman.m_blockman.LookupBlockIndex(quorumHash);
+    }
+    bool fSuccess = node.connman->ForNode(nodeId, AllNodes, [&](CNode* pNode){
+        return llmq::quorumManager->RequestQuorumData(pNode, llmqType, pQuorumIndex, nDataMask, proTxHash);
+    });
+    return fSuccess;
+},
+    };
+} 
+
+
 void RegisterQuorumsRPCCommands(CRPCTable &t)
 {
 // clang-format off
@@ -609,6 +666,7 @@ static const CRPCCommand commands[] =
     { "evo",                &quorum_getrecsig,                   },
     { "evo",                &quorum_isconflicting,               },
     { "evo",                &quorum_sign,                        },
+    { "evo",                &quorum_getdata,                        },
 };
 // clang-format on
     for (const auto& c : commands) {

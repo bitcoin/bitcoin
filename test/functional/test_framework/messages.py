@@ -1303,6 +1303,39 @@ class msg_qsigshare:
     def __repr__(self):
         return "msg_qsigshare(sigShares=%d)" % (len(self.sig_shares))
 
+class CBLSPublicKey:
+    def __init__(self):
+        self.data = b'\\x0' * 48
+
+    def deserialize(self, f):
+        self.data = f.read(48)
+
+    def serialize(self):
+        r = b""
+        r += self.data
+        return r
+
+
+class CBLSIESEncryptedSecretKey:
+    def __init__(self):
+        self.ephemeral_pubKey = b'\\x0' * 48
+        self.iv = b'\\x0' * 32
+        self.data = b'\\x0' * 32
+
+    def deserialize(self, f):
+        self.ephemeral_pubKey = f.read(48)
+        self.iv = f.read(32)
+        data_size = deser_compact_size(f)
+        self.data = f.read(data_size)
+
+    def serialize(self):
+        r = b""
+        r += self.ephemeral_pubKey
+        r += self.iv
+        r += ser_compact_size(len(self.data))
+        r += self.data
+        return r
+
 # Objects that correspond to messages on the wire
 class msg_version:
     __slots__ = ("addrFrom", "addrTo", "nNonce", "nRelay", "nServices",
@@ -2181,3 +2214,92 @@ class msg_cfcheckpt:
     def __repr__(self):
         return "msg_cfcheckpt(filter_type={:#x}, stop_hash={:x})".format(
             self.filter_type, self.stop_hash)
+
+class msg_qwatch():
+    msgtype = b"qwatch"
+
+    def __init__(self):
+        pass
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        return b""
+
+    def __repr__(self):
+        return "msg_qwatch()"
+
+
+class msg_qgetdata():
+     __slots__ = ("quorum_hash", "quorum_type", "data_mask", "protx_hash")
+    command = b"qgetdata"
+
+    def __init__(self, quorum_hash=0, quorum_type=-1, data_mask=0, protx_hash=0):
+        self.quorum_hash = quorum_hash
+        self.quorum_type = quorum_type
+        self.data_mask = data_mask
+        self.protx_hash = protx_hash
+
+    def deserialize(self, f):
+        self.quorum_type = struct.unpack("<B", f.read(1))[0]
+        self.quorum_hash = deser_uint256(f)
+        self.data_mask = struct.unpack("<H", f.read(2))[0]
+        self.protx_hash = deser_uint256(f)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.quorum_type)
+        r += ser_uint256(self.quorum_hash)
+        r += struct.pack("<H", self.data_mask)
+        r += ser_uint256(self.protx_hash)
+        return r
+
+    def __repr__(self):
+        return "msg_qgetdata(quorum_hash=%064x, quorum_type=%d, data_mask=%d, protx_hash=%064x)" % (
+                                                                                self.quorum_hash,
+                                                                                self.quorum_type,
+                                                                                self.data_mask,
+                                                                                self.protx_hash)
+class msg_qdata():
+    __slots__ = ("quorum_type", "quorum_hash", "data_mask", "protx_hash","error", "quorum_vvec","enc_contributions")
+    msgtype = b"qdata"
+
+    def __init__(self):
+        self.quorum_type = 0
+        self.quorum_hash = 0
+        self.data_mask = 0
+        self.protx_hash = 0
+        self.error = 0
+        self.quorum_vvec = list()
+        self.enc_contributions = list()
+
+    def deserialize(self, f):
+        self.quorum_type = struct.unpack("<B", f.read(1))[0]
+        self.quorum_hash = deser_uint256(f)
+        self.data_mask = struct.unpack("<H", f.read(2))[0]
+        self.protx_hash = deser_uint256(f)
+        self.error = struct.unpack("<B", f.read(1))[0]
+        if self.error == 0:
+            if self.data_mask & 0x01:
+                self.quorum_vvec = deser_vector(f, CBLSPublicKey)
+            if self.data_mask & 0x02:
+                self.enc_contributions = deser_vector(f, CBLSIESEncryptedSecretKey)
+
+    def serialize(self):
+        r = b""
+        r += struct.pack("<B", self.quorum_type)
+        r += ser_uint256(self.quorum_hash)
+        r += struct.pack("<H", self.data_mask)
+        r += ser_uint256(self.protx_hash)
+        r += struct.pack("<B", self.error)
+        if self.error == 0:
+            if self.data_mask & 0x01:
+                r += ser_vector(self.quorum_vvec)
+            if self.data_mask & 0x02:
+                r += ser_vector(self.enc_contributions)
+        return r
+
+    def __repr__(self):
+        return "msg_qdata(error=%d, quorum_vvec=%d, enc_contributions=%d)" % (self.error, len(self.quorum_vvec),
+                                                                                          len(self.enc_contributions))
