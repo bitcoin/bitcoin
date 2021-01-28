@@ -60,10 +60,12 @@ void fuzz_target(const std::vector<uint8_t>& buffer, const std::string& LIMIT_TO
         return;
     }
     CNode& p2p_node = *ConsumeNodeAsUniquePtr(fuzzed_data_provider).release();
-    FillNode(fuzzed_data_provider, p2p_node);
-    p2p_node.fSuccessfullyConnected = true;
+
+    const bool successfully_connected{true};
+    p2p_node.fSuccessfullyConnected = successfully_connected;
     connman.AddTestNode(p2p_node);
     g_setup->m_node.peerman->InitializeNode(&p2p_node);
+    FillNode(fuzzed_data_provider, p2p_node, /* init_version */ successfully_connected);
 
     const auto mock_time = ConsumeTime(fuzzed_data_provider);
     SetMockTime(mock_time);
