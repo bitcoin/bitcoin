@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Copyright (c) 2017-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -17,6 +17,38 @@ if test "x$1" = "x"; then
     exit 1
 fi
 
+function verify_script () {
+  local SCRIPT=$1
+  # use file to trigger error since pipe commands are executed in subshell (can't use vars)
+  local FLAG_FILE=/tmp/CSC_ERROR_$$
+  (
+  export PATH='/invalid'
+  # ignore commands other than 'sed'
+  function command_not_found_handle () {
+    return 0;
+  }
+  # check for "-i ''" args being passed to sed
+  function sed () {
+    local i=1
+    local n=$(( $# + 1 ))
+    while [ $i -lt $n ]; do
+      local j=$(( i + 1 ))
+      if [[ ${!i} == "-i" ]] && [[ ${!j} == "" ]]; then
+        echo '' > $FLAG_FILE
+      fi
+      i=$(( i + 1 ))
+    done
+  }
+  eval $SCRIPT
+  )
+  if [ -e $FLAG_FILE ]; then
+    rm $FLAG_FILE
+    return 0
+  else
+    return 1
+  fi
+}
+
 RET=0
 PREV_BRANCH=$(git name-rev --name-only HEAD)
 PREV_HEAD=$(git rev-parse HEAD)
@@ -28,7 +60,11 @@ for commit in $(git rev-list --reverse $1); do
             echo "Error: missing script for: $commit"
             echo "Failed"
             RET=1
+        elif verify_script "$SCRIPT"; then
+            echo ERROR: You are using BSD sed syntax \("sed -i ''"\) which is incompatible with GNU sed
+            RET=1
         else
+            verify_script "$SCRIPT"
             echo "Running script for: $commit"
             echo "$SCRIPT"
             (eval "$SCRIPT")
