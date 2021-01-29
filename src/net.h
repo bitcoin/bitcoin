@@ -931,10 +931,11 @@ public:
     void OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *strDest, ConnectionType conn_type = ConnectionType::OUTBOUND_FULL_RELAY, bool masternode_connection = false, bool m_masternode_probe_connection = false);
     bool CheckIncomingNonce(uint64_t nonce);
 
-    bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
+    bool ForNode(NodeId id, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func);
 
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
     // SYSCOIN
+    bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
     bool ForNode(const CService& addr, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func);
 
     template<typename Callable>

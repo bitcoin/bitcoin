@@ -349,7 +349,7 @@ static RPCHelpMan mnauth()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "publicKey invalid");
     }
 
-    bool fSuccess = node.connman->ForNode(nodeId, [&](CNode* pNode){
+    bool fSuccess = node.connman->ForNode(nodeId, AllNodes, [&](CNode* pNode){
         LOCK(pNode->cs_mnauth);
         pNode->verifiedProRegTxHash = proTxHash;
         pNode->verifiedPubKeyHash = publicKey.GetHash();

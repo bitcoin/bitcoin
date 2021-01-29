@@ -5031,6 +5031,18 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                             vInv.clear();
                         }
                     }
+                    // SYSCOIN Send an inv for the best ChainLock we have
+                    const auto& clsig = llmq::chainLocksHandler->GetBestChainLock();
+                    if (!clsig.IsNull()) {
+                        uint256 chainlockHash = ::SerializeHash(clsig);
+                        CInv inv(MSG_CLSIG, chainlockHash);
+                        vInv.push_back(inv);
+                        pto->m_tx_relay->filterInventoryKnown.insert(inv.hash);
+                        if (vInv.size() == MAX_INV_SZ) {
+                            m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
+                            vInv.clear();
+                        }
+                    }
                     pto->m_tx_relay->m_last_mempool_req = GetTime<std::chrono::seconds>();
                 }
 
