@@ -335,22 +335,19 @@ public:
      * * nNew
      * * nTried
      * * number of "new" buckets XOR 2**30
-     * * all nNew addrinfos in vvNew
-     * * all nTried addrinfos in vvTried
-     * * for each bucket:
+     * * all new addresses (total count: nNew)
+     * * all tried addresses (total count: nTried)
+     * * for each new bucket:
      *   * number of elements
-     *   * for each element: index
+     *   * for each element: index in the serialized "all new addresses"
      * * asmap checksum
      *
      * 2**30 is xorred with the number of buckets to make addrman deserializer v0 detect it
      * as incompatible. This is necessary because it did not check the version number on
      * deserialization.
      *
-     * Notice that vvTried, mapAddr and vVector are never encoded explicitly;
+     * vvNew, vvTried, mapInfo, mapAddr and vRandom are never encoded explicitly;
      * they are instead reconstructed from the other information.
-     *
-     * vvNew is serialized, but only used if ADDRMAN_NEW_BUCKET_COUNT and the asmap checksum
-     * didn't change, otherwise it is reconstructed as well.
      *
      * This format is more complex, but significantly smaller (at most 1.5 MiB), and supports
      * changes to the ADDRMAN_ parameters without breaking the on-disk structure.
