@@ -4245,6 +4245,14 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     if (!llmq::quorumInstantSendManager->GetInstantSendLockHashByTxid(hash, islockHash)) continue;
                     queueAndMaybePushInv(CInv(MSG_ISLOCK, islockHash));
                 }
+
+                // Send an inv for the best ChainLock we have
+                const auto& clsig = llmq::chainLocksHandler->GetBestChainLock();
+                if (!clsig.IsNull()) {
+                    uint256 chainlockHash = ::SerializeHash(clsig);
+                    queueAndMaybePushInv(CInv(MSG_CLSIG, chainlockHash));
+                }
+
                 pto->timeLastMempoolReq = GetTime();
             }
 
