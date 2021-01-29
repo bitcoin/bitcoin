@@ -60,6 +60,7 @@ BOOST_AUTO_TEST_CASE(netbase_properties)
     BOOST_CHECK(ResolveIP("FC00::").IsRFC4193());
     BOOST_CHECK(ResolveIP("2001::2").IsRFC4380());
     BOOST_CHECK(ResolveIP("2001:10::").IsRFC4843());
+    BOOST_CHECK(ResolveIP("2001:20::").IsRFC7343());
     BOOST_CHECK(ResolveIP("FE80::").IsRFC4862());
     BOOST_CHECK(ResolveIP("64:FF9B::").IsRFC6052());
     BOOST_CHECK(ResolveIP("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca").IsTor());
@@ -135,6 +136,14 @@ BOOST_AUTO_TEST_CASE(onioncat_test)
 
 }
 
+BOOST_AUTO_TEST_CASE(embedded_test)
+{
+    CNetAddr addr1(ResolveIP("1.2.3.4"));
+    CNetAddr addr2(ResolveIP("::FFFF:0102:0304"));
+    BOOST_CHECK(addr2.IsIPv4());
+    BOOST_CHECK_EQUAL(addr1.ToString(), addr2.ToString());
+}
+
 BOOST_AUTO_TEST_CASE(subnet_test)
 {
 
@@ -155,9 +164,13 @@ BOOST_AUTO_TEST_CASE(subnet_test)
     BOOST_CHECK(ResolveSubNet("1.2.2.1/24").Match(ResolveIP("1.2.2.4")));
     BOOST_CHECK(ResolveSubNet("1.2.2.110/31").Match(ResolveIP("1.2.2.111")));
     BOOST_CHECK(ResolveSubNet("1.2.2.20/26").Match(ResolveIP("1.2.2.63")));
-    // All-Matching IPv6 Matches arbitrary IPv4 and IPv6
+    // All-Matching IPv6 Matches arbitrary IPv6
     BOOST_CHECK(ResolveSubNet("::/0").Match(ResolveIP("1:2:3:4:5:6:7:1234")));
-    BOOST_CHECK(ResolveSubNet("::/0").Match(ResolveIP("1.2.3.4")));
+    // But not `::` or `0.0.0.0` because they are considered invalid addresses
+    BOOST_CHECK(!ResolveSubNet("::/0").Match(ResolveIP("::")));
+    BOOST_CHECK(!ResolveSubNet("::/0").Match(ResolveIP("0.0.0.0")));
+    // Addresses from one network (IPv4) don't belong to subnets of another network (IPv6)
+    BOOST_CHECK(!ResolveSubNet("::/0").Match(ResolveIP("1.2.3.4")));
     // All-Matching IPv4 does not Match IPv6
     BOOST_CHECK(!ResolveSubNet("0.0.0.0/0").Match(ResolveIP("1:2:3:4:5:6:7:1234")));
     // Invalid subnets Match nothing (not even invalid addresses)
