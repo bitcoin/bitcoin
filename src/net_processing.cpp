@@ -29,6 +29,7 @@
 #include <tinyformat.h>
 #include <txmempool.h>
 #include <txorphanage.h>
+#include <txrebroadcast.h>
 #include <txrequest.h>
 #include <util/check.h> // For NDEBUG compile time check
 #include <util/strencodings.h>
@@ -339,6 +340,7 @@ private:
     ChainstateManager& m_chainman;
     CTxMemPool& m_mempool;
     TxRequestTracker m_txrequest GUARDED_BY(::cs_main);
+    const std::unique_ptr<TxRebroadcastHandler> m_txrebroadcast;
 
     /** The height of the best chain */
     std::atomic<int> m_best_height{-1};
@@ -1272,6 +1274,7 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
       m_banman(banman),
       m_chainman(chainman),
       m_mempool(pool),
+      m_txrebroadcast{std::make_unique<TxRebroadcastHandler>(m_mempool, m_chainman, m_chainparams)},
       m_stale_tip_check_time(0),
       m_ignore_incoming_txs(ignore_incoming_txs)
 {
@@ -1424,6 +1427,7 @@ void PeerManagerImpl::UpdatedBlockTip(const std::shared_ptr<const CBlock>& block
         }
     }
 
+    // Queue the new blocks for announcement to peers
     {
         LOCK(m_peer_mutex);
         for (auto& it : m_peer_map) {
@@ -1432,6 +1436,16 @@ void PeerManagerImpl::UpdatedBlockTip(const std::shared_ptr<const CBlock>& block
             for (const uint256& hash : reverse_iterate(vHashes)) {
                 peer.m_blocks_for_headers_relay.push_back(hash);
             }
+        }
+    }
+
+    // Rebroadcast selected mempool transactions
+    const std::vector<TxIds> rebroadcast_txs = m_txrebroadcast->GetRebroadcastTransactions(block, *pindexNew);
+    {
+        LOCK(cs_main);
+
+        for (auto ids : rebroadcast_txs) {
+            _RelayTransaction(ids.m_txid, ids.m_wtxid);
         }
     }
 
