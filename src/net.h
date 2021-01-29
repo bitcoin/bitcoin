@@ -287,7 +287,7 @@ public:
     // Network the peer connected through
     Network m_network;
     uint32_t m_mapped_as;
-    // SYSOIN In case this is a verified MN, this value is the proTx of the MN
+    // SYSCOIN In case this is a verified MN, this value is the proTx of the MN
     uint256 verifiedProRegTxHash;
     // In case this is a verified MN, this value is the hashed operator pubkey of the MN
     uint256 verifiedPubKeyHash;
