@@ -886,6 +886,7 @@ static const CRPCCommand commands[] =
     { "hidden",             &echo,                    },
     { "hidden",             &echojson,                },
     // SYSCOIN
+    { "syscoin",            &mnauth,                  },
     { "syscoin",            &mnsync,                  },
     { "syscoin",            &spork,                   },
     { "util",               &getindexinfo,            },
