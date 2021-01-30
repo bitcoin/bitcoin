@@ -269,10 +269,11 @@ static bool InitRPCAuthentication()
             file.open(path);
             if (!file.is_open()) continue;
             std::string rpcauth;
-            std::getline(file, rpcauth);
-            std::vector<std::string> fields;
-            boost::split(fields, rpcauth, boost::is_any_of(":$"));
-            if (fields.size() == 3) g_rpcauth.push_back(fields);
+            while (std::getline(file, rpcauth)) {
+                std::vector<std::string> fields;
+                boost::split(fields, rpcauth, boost::is_any_of(":$"));
+                if (fields.size() == 3) g_rpcauth.push_back(fields);
+            }
         }
     }
 

@@ -40,8 +40,8 @@ def main():
     password_hmac = password_to_hmac(salt, args.password)
 
     if args.output:
-        file = open(args.output, "x", encoding="utf8")
-        file.write('{0}:{1}${2}'.format(args.username, salt, password_hmac))
+        file = open(args.output, "a", encoding="utf8")
+        file.write("{0}:{1}${2}\n".format(args.username, salt, password_hmac))
         print('Your password:\n{0}'.format(args.password))
     else:
         print('String to be appended to bitcoin.conf:')
