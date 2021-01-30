@@ -14,6 +14,7 @@
 #include <script/signingprovider.h>
 #include <script/standard.h>
 #include <serialize.h>
+#include <txorphanage.h>
 #include <util/memory.h>
 #include <util/string.h>
 #include <util/system.h>
@@ -45,15 +46,6 @@ struct CConnmanTest : public CConnman {
 
 // Tests these internal-to-net_processing.cpp methods:
 extern bool AddOrphanTx(const CTransactionRef& tx, NodeId peer);
-extern void EraseOrphansFor(NodeId peer);
-extern unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
-
-struct COrphanTx {
-    CTransactionRef tx;
-    NodeId fromPeer;
-    int64_t nTimeExpire;
-};
-extern std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
 
 static CService ip(uint32_t i)
 {
