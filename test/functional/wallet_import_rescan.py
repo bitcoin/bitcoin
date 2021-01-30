@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test wallet import RPCs.
@@ -22,7 +22,6 @@ happened previously.
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.address import AddressType
 from test_framework.util import (
-    connect_nodes,
     assert_equal,
     set_node_times,
 )
@@ -160,13 +159,12 @@ class ImportRescanTest(BitcoinTestFramework):
 
         # Import keys with pruning disabled
         self.start_nodes(extra_args=[[]] * self.num_nodes)
-        for n in self.nodes:
-            n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase')
+        self.import_deterministic_coinbase_privkeys()
         self.stop_nodes()
 
         self.start_nodes()
         for i in range(1, self.num_nodes):
-            connect_nodes(self.nodes[i], 0)
+            self.connect_nodes(i, 0)
 
     def run_test(self):
         # Create one transaction on node 0 with a unique amount for
@@ -183,6 +181,7 @@ class ImportRescanTest(BitcoinTestFramework):
             self.nodes[0].generate(1)  # Generate one block for each send
             variant.confirmation_height = self.nodes[0].getblockcount()
             variant.timestamp = self.nodes[0].getblockheader(self.nodes[0].getbestblockhash())["time"]
+        self.sync_all() # Conclude sync before calling setmocktime to avoid timeouts
 
         # Generate a block further in the future (past the rescan window).
         assert_equal(self.nodes[0].getrawmempool(), [])

@@ -11,6 +11,7 @@
 #include <script/descriptor.h>
 #include <script/interpreter.h>
 #include <script/script.h>
+#include <script/script_error.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
 #include <script/standard.h>
@@ -21,7 +22,14 @@
 #include <univalue.h>
 #include <util/memory.h>
 
-void initialize()
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <optional>
+#include <string>
+#include <vector>
+
+void initialize_script()
 {
     // Fuzzers using pubkey must hold an ECCVerifyHandle.
     static const ECCVerifyHandle verify_handle;
@@ -29,10 +37,10 @@ void initialize()
     SelectParams(CBaseChainParams::REGTEST);
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET_INIT(script, initialize_script)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
-    const Optional<CScript> script_opt = ConsumeDeserializable<CScript>(fuzzed_data_provider);
+    const std::optional<CScript> script_opt = ConsumeDeserializable<CScript>(fuzzed_data_provider);
     if (!script_opt) return;
     const CScript script{*script_opt};
 
@@ -40,7 +48,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     if (CompressScript(script, compressed)) {
         const unsigned int size = compressed[0];
         compressed.erase(compressed.begin());
-        assert(size >= 0 && size <= 5);
+        assert(size <= 5);
         CScript decompressed_script;
         const bool ok = DecompressScript(decompressed_script, size, compressed);
         assert(ok);
@@ -50,12 +58,10 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     CTxDestination address;
     (void)ExtractDestination(script, address);
 
-    txnouttype type_ret;
+    TxoutType type_ret;
     std::vector<CTxDestination> addresses;
     int required_ret;
     (void)ExtractDestinations(script, type_ret, addresses, required_ret);
-
-    (void)GetScriptForWitness(script);
 
     const FlatSigningProvider signing_provider;
     (void)InferDescriptor(script, signing_provider);
@@ -64,8 +70,23 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 
     (void)IsSolvable(signing_provider, script);
 
-    txnouttype which_type;
-    (void)IsStandard(script, which_type);
+    TxoutType which_type;
+    bool is_standard_ret = IsStandard(script, which_type);
+    if (!is_standard_ret) {
+        assert(which_type == TxoutType::NONSTANDARD ||
+               which_type == TxoutType::NULL_DATA ||
+               which_type == TxoutType::MULTISIG);
+    }
+    if (which_type == TxoutType::NONSTANDARD) {
+        assert(!is_standard_ret);
+    }
+    if (which_type == TxoutType::NULL_DATA) {
+        assert(script.IsUnspendable());
+    }
+    if (script.IsUnspendable()) {
+        assert(which_type == TxoutType::NULL_DATA ||
+               which_type == TxoutType::NONSTANDARD);
+    }
 
     (void)RecursiveDynamicUsage(script);
 
@@ -76,7 +97,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)script.IsPayToScriptHash();
     (void)script.IsPayToWitnessScriptHash();
     (void)script.IsPushOnly();
-    (void)script.IsUnspendable();
     (void)script.GetSigOpCount(/* fAccurate= */ false);
 
     (void)FormatScript(script);
@@ -101,7 +121,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         }
     }
 
-    const Optional<CScript> other_script = ConsumeDeserializable<CScript>(fuzzed_data_provider);
+    const std::optional<CScript> other_script = ConsumeDeserializable<CScript>(fuzzed_data_provider);
     if (other_script) {
         {
             CScript script_mut{script};
@@ -118,5 +138,41 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             (void)CountWitnessSigOps(script, *other_script, &wit, flags);
             wit.SetNull();
         }
+    }
+
+    (void)GetOpName(ConsumeOpcodeType(fuzzed_data_provider));
+    (void)ScriptErrorString(static_cast<ScriptError>(fuzzed_data_provider.ConsumeIntegralInRange<int>(0, SCRIPT_ERR_ERROR_COUNT)));
+
+    {
+        const std::vector<uint8_t> bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);
+        CScript append_script{bytes.begin(), bytes.end()};
+        append_script << fuzzed_data_provider.ConsumeIntegral<int64_t>();
+        append_script << ConsumeOpcodeType(fuzzed_data_provider);
+        append_script << CScriptNum{fuzzed_data_provider.ConsumeIntegral<int64_t>()};
+        append_script << ConsumeRandomLengthByteVector(fuzzed_data_provider);
+    }
+
+    {
+        WitnessUnknown witness_unknown_1{};
+        witness_unknown_1.version = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
+        const std::vector<uint8_t> witness_unknown_program_1 = fuzzed_data_provider.ConsumeBytes<uint8_t>(40);
+        witness_unknown_1.length = witness_unknown_program_1.size();
+        std::copy(witness_unknown_program_1.begin(), witness_unknown_program_1.end(), witness_unknown_1.program);
+
+        WitnessUnknown witness_unknown_2{};
+        witness_unknown_2.version = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
+        const std::vector<uint8_t> witness_unknown_program_2 = fuzzed_data_provider.ConsumeBytes<uint8_t>(40);
+        witness_unknown_2.length = witness_unknown_program_2.size();
+        std::copy(witness_unknown_program_2.begin(), witness_unknown_program_2.end(), witness_unknown_2.program);
+
+        (void)(witness_unknown_1 == witness_unknown_2);
+        (void)(witness_unknown_1 < witness_unknown_2);
+    }
+
+    {
+        const CTxDestination tx_destination_1 = ConsumeTxDestination(fuzzed_data_provider);
+        const CTxDestination tx_destination_2 = ConsumeTxDestination(fuzzed_data_provider);
+        (void)(tx_destination_1 == tx_destination_2);
+        (void)(tx_destination_1 < tx_destination_2);
     }
 }

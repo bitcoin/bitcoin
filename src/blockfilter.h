@@ -144,8 +144,8 @@ public:
 
     template <typename Stream>
     void Serialize(Stream& s) const {
-        s << m_block_hash
-          << static_cast<uint8_t>(m_filter_type)
+        s << static_cast<uint8_t>(m_filter_type)
+          << m_block_hash
           << m_filter.GetEncoded();
     }
 
@@ -154,8 +154,8 @@ public:
         std::vector<unsigned char> encoded_filter;
         uint8_t filter_type;
 
-        s >> m_block_hash
-          >> filter_type
+        s >> filter_type
+          >> m_block_hash
           >> encoded_filter;
 
         m_filter_type = static_cast<BlockFilterType>(filter_type);

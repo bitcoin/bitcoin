@@ -15,13 +15,13 @@ typedef struct {
     unsigned char sig[64];
 } bench_recover_data;
 
-void bench_recover(void* arg) {
+void bench_recover(void* arg, int iters) {
     int i;
     bench_recover_data *data = (bench_recover_data*)arg;
     secp256k1_pubkey pubkey;
     unsigned char pubkeyc[33];
 
-    for (i = 0; i < 20000; i++) {
+    for (i = 0; i < iters; i++) {
         int j;
         size_t pubkeylen = 33;
         secp256k1_ecdsa_recoverable_signature sig;
@@ -51,9 +51,11 @@ void bench_recover_setup(void* arg) {
 int main(void) {
     bench_recover_data data;
 
+    int iters = get_iters(20000);
+
     data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_VERIFY);
 
-    run_benchmark("ecdsa_recover", bench_recover, bench_recover_setup, NULL, &data, 10, 20000);
+    run_benchmark("ecdsa_recover", bench_recover, bench_recover_setup, NULL, &data, 10, iters);
 
     secp256k1_context_destroy(data.ctx);
     return 0;

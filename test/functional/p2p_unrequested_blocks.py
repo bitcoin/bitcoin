@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test processing of unrequested blocks.
 
-Setup: two nodes, node0+node1, not connected to each other. Node1 will have
+Setup: two nodes, node0 + node1, not connected to each other. Node1 will have
 nMinimumChainWork set to 0x10, so it won't process low-work unrequested blocks.
 
 We have one P2PInterface connection to node0 called test_node, and one to node1
@@ -54,13 +54,12 @@ Node1 is unused in tests 3-7:
 import time
 
 from test_framework.blocktools import create_block, create_coinbase, create_tx_with_script
-from test_framework.messages import CBlockHeader, CInv, msg_block, msg_headers, msg_inv
-from test_framework.mininode import mininode_lock, P2PInterface
+from test_framework.messages import CBlockHeader, CInv, MSG_BLOCK, msg_block, msg_headers, msg_inv
+from test_framework.p2p import p2p_lock, P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
-    connect_nodes,
 )
 
 
@@ -71,18 +70,10 @@ class AcceptBlockTest(BitcoinTestFramework):
         self.extra_args = [[], ["-minimumchainwork=0x10"]]
 
     def setup_network(self):
-        # Node0 will be used to test behavior of processing unrequested blocks
-        # from peers which are not whitelisted, while Node1 will be used for
-        # the whitelisted case.
-        # Node2 will be used for non-whitelisted peers to test the interaction
-        # with nMinimumChainWork.
         self.setup_nodes()
 
     def run_test(self):
-        # Setup the p2p connections
-        # test_node connects to node0 (not whitelisted)
         test_node = self.nodes[0].add_p2p_connection(P2PInterface())
-        # min_work_node connects to node1 (whitelisted)
         min_work_node = self.nodes[1].add_p2p_connection(P2PInterface())
 
         # 1. Have nodes mine a block (leave IBD)
@@ -207,13 +198,13 @@ class AcceptBlockTest(BitcoinTestFramework):
         # 6. Try to get node to request the missing block.
         # Poke the node with an inv for block at height 3 and see if that
         # triggers a getdata on block 2 (it should if block 2 is missing).
-        with mininode_lock:
+        with p2p_lock:
             # Clear state so we can check the getdata request
             test_node.last_message.pop("getdata", None)
-            test_node.send_message(msg_inv([CInv(2, block_h3.sha256)]))
+            test_node.send_message(msg_inv([CInv(MSG_BLOCK, block_h3.sha256)]))
 
         test_node.sync_with_ping()
-        with mininode_lock:
+        with p2p_lock:
             getdata = test_node.last_message["getdata"]
 
         # Check that the getdata includes the right block
@@ -226,7 +217,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         self.nodes[0].getblock(all_blocks[286].hash)
         assert_equal(self.nodes[0].getbestblockhash(), all_blocks[286].hash)
         assert_raises_rpc_error(-1, "Block not found on disk", self.nodes[0].getblock, all_blocks[287].hash)
-        self.log.info("Successfully reorged to longer chain from non-whitelisted peer")
+        self.log.info("Successfully reorged to longer chain")
 
         # 8. Create a chain which is invalid at a height longer than the
         # current chain, but which has more blocks on top of that
@@ -292,7 +283,7 @@ class AcceptBlockTest(BitcoinTestFramework):
         test_node.wait_for_disconnect()
 
         # 9. Connect node1 to node0 and ensure it is able to sync
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(0, 1)
         self.sync_blocks([self.nodes[0], self.nodes[1]])
         self.log.info("Successfully synced nodes 1 and 0")
 

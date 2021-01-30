@@ -168,6 +168,10 @@
         <translation>Veski dulkóðað</translation>
     </message>
     <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Veski sem á að dulkóða</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
         <translation>MIKILVÆGT: Nýja dulkóðaða veskisskráin þarf að koma í staðinn fyrir öll fyrri afrit sem þú hefur gert af upprunalegu veskisskránni. Af öryggisástæðum munu öll fyrri afrit af ódulkóðaða veskinu verða óvirk um leið og þú byrjar að nota nýja, dulkóðaða veskið.</translation>
     </message>
@@ -491,11 +495,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Veskið er &lt;b&gt;dulkóðað&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Alvarleg villa átti sér stað. Bitcoin getur ekki haldið áfram með öruggum hætti og stoppar hér.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -691,7 +691,10 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Innistæða á færslugildum sem eru einungis til skoðunar</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -721,10 +724,6 @@
     <message>
         <source>Block chain</source>
         <translation>Blokkarkeðja</translation>
-    </message>
-    <message>
-        <source>Current number of blocks</source>
-        <translation>Núverandi fjöldi blokka</translation>
     </message>
     <message>
         <source>Starting Block</source>
@@ -757,22 +756,10 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>Address</source>
-        <translation>Vistfang</translation>
+        <source>Amount:</source>
+        <translation>Upphæð:</translation>
     </message>
-    <message>
-        <source>Amount</source>
-        <translation>Upphæð</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Merki</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Veski</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -920,6 +907,10 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Flytja gögn í flipanum í skrá</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Villa</translation>
     </message>
     </context>
 <context>

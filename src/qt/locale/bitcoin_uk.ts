@@ -39,7 +39,7 @@
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Экспорт</translation>
+        <translation>&amp;Експортувати</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
@@ -70,8 +70,10 @@
         <translation>Це ваші адреси Bitcoin для надсилання платежів. Завжди перевіряйте суму та адресу одержувача перед відправленням монет.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Це ваші біткойн-адреси для отримання платежів. Використовуйте кнопку "Створити нову адресу прийому" на вкладці отримання, для створення нових адрес.</translation>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation>Це ваші Біткойн адреси для отримання платежів. Використовуйте кнопку "Створити нову адресу для отримання" на вкладці отримання, щоб створити нові адреси.
+Підпис можливий лише з адресами типу "legacy".</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -91,7 +93,7 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Файли (*.csv) розділеі комами</translation>
+        <translation>Файли (*.csv) розділені комами</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -181,7 +183,7 @@
     </message>
     <message>
         <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Введіть новий пароль для гаманця.&lt;br/&gt; Будь ласка, використовуйте парол з &lt;b&gt;десяти або більше випадкових символів&lt;/b&gt;, або &lt;b&gt; вісім або більше слів&lt;/b&gt;.</translation>
+        <translation>Введіть новий пароль для гаманця.&lt;br/&gt; Будь ласка, використовуйте пароль з &lt;b&gt;десяти або більше випадкових символів&lt;/b&gt;, або &lt;b&gt; вісім або більше слів&lt;/b&gt;.</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
@@ -399,11 +401,11 @@
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Підтвердіть, що Ви є власником повідомлення підписавши його Вашою Bitcoin-адресою</translation>
+        <translation>Підтвердіть, що Ви є власником повідомлення підписавши його Вашою Біткойн адресою</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
-        <translation>Перевірте повідомлення для впевненості, що воно підписано вказаною Bitcoin-адресою</translation>
+        <translation>Перевірте повідомлення для впевненості, що воно підписано вказаною Біткойн адресою</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -482,6 +484,22 @@
         <translation>Синхронізовано</translation>
     </message>
     <message>
+        <source>&amp;Load PSBT from file...</source>
+        <translation>&amp;Завантажити PSBT з файлу...</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction</source>
+        <translation>Завантажте Частково Підписану Транзакцію Біткойн</translation>
+    </message>
+    <message>
+        <source>Load PSBT from clipboard...</source>
+        <translation>Скопіювати PSBT у буфер обміну</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <translation>Завантажте Частково Підписану Біткойн Транзакцію з буфера обміну</translation>
+    </message>
+    <message>
         <source>Node window</source>
         <translation>Вікно вузлів</translation>
     </message>
@@ -511,19 +529,35 @@
     </message>
     <message>
         <source>Close Wallet...</source>
-        <translation>закрити Гаманець ...</translation>
+        <translation>Закрити Гаманець ...</translation>
     </message>
     <message>
         <source>Close wallet</source>
         <translation>Закрити гаманець</translation>
     </message>
     <message>
+        <source>Close All Wallets...</source>
+        <translation>Закрити Всі Гаманці...</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Закрити всі гаманці</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Показати довідку %1 для отримання переліку можливих параметрів командного рядка.</translation>
     </message>
     <message>
+        <source>&amp;Mask values</source>
+        <translation>&amp;Значення маски</translation>
+    </message>
+    <message>
+        <source>Mask the values in the Overview tab</source>
+        <translation>Маскуйте значення на вкладці Огляд</translation>
+    </message>
+    <message>
         <source>default wallet</source>
-        <translation>гаманець за змовчуванням</translation>
+        <translation>типовий гаманець</translation>
     </message>
     <message>
         <source>No wallets available</source>
@@ -630,8 +664,12 @@
         <translation>&lt;b&gt;Зашифрований&lt;/b&gt; гаманець &lt;b&gt;заблоковано&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Сталася фатальна помилка. Гаманець буде закрито.</translation>
+        <source>Original message:</source>
+        <translation>Первинне повідомлення:</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation>Сталася фатальна помилка. %1 більше не може продовжувати безпечно і вийде.</translation>
     </message>
 </context>
 <context>
@@ -835,6 +873,14 @@
         <translation>Створити пустий гаманець</translation>
     </message>
     <message>
+        <source>Use descriptors for scriptPubKey management</source>
+        <translation>Використовуйте дескриптори для управління scriptPubKey</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation>Дешифрування гаманця</translation>
+    </message>
+    <message>
         <source>Create</source>
         <translation>Створити</translation>
     </message>
@@ -936,7 +982,7 @@
     <name>Intro</name>
     <message>
         <source>Welcome</source>
-        <translation>Добро пожаловать</translation>
+        <translation>Ласкаво просимо</translation>
     </message>
     <message>
         <source>Welcome to %1.</source>
@@ -1006,7 +1052,11 @@
         <source>(of %n GB needed)</source>
         <translation><numerusform>(в той час, як необхідно %n ГБ)</numerusform><numerusform>(в той час, як необхідно %n ГБ)</numerusform><numerusform>(в той час, як необхідно %n ГБ)</numerusform><numerusform>(в той час, як необхідно %n ГБ)</numerusform></translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation><numerusform>(%n ГБ, необхідний для повного ланцюга)</numerusform><numerusform>(%n ГБ, необхідних для повного ланцюга)</numerusform><numerusform>(%n ГБ, необхідних для повного ланцюга)</numerusform><numerusform>(%n ГБ, необхідних для повного ланцюга)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -1089,7 +1139,7 @@
     </message>
     <message>
         <source>default wallet</source>
-        <translation>гаманець за змовчуванням</translation>
+        <translation>типовий гаманець</translation>
     </message>
     <message>
         <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
@@ -1129,10 +1179,6 @@
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
         <translation>Показує, чи типово використовується проксі SOCKS5 для досягнення рівної участі для цього типу мережі.</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Використовуйте окремі проксі-сервери SOCKS&amp;5 для підключення до вузлів через приховані сервіси Tor:</translation>
     </message>
     <message>
         <source>Hide the icon from the system tray.</source>
@@ -1267,10 +1313,6 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Підключатися до мережі Bitcoin через окремий SOCKS5 проксі для прихованих сервісів Tor.</translation>
-    </message>
-    <message>
         <source>&amp;Window</source>
         <translation>&amp;Вікно</translation>
     </message>
@@ -1309,6 +1351,14 @@
     <message>
         <source>Whether to show coin control features or not.</source>
         <translation>Показати або сховати керування входами.</translation>
+    </message>
+    <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation>Підключіться до мережі Біткойн через окремий проксі-сервер SOCKS5 для сервісів Tor.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
+        <translation>Використовуйте окремий проксі-сервер SOCKS&amp;5, щоб дістатися до вузлів через послуги Tor:</translation>
     </message>
     <message>
         <source>&amp;Third party transaction URLs</source>
@@ -1445,6 +1495,133 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Поточний сукупний баланс в адресах для спостереження</translation>
     </message>
+    <message>
+        <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
+        <translation>Режим конфіденційності активований для вкладки Огляд. Щоб демаскувати значення, зніміть прапорець Параметри-&gt; Маскувати значення.</translation>
+    </message>
+</context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation>Діалог</translation>
+    </message>
+    <message>
+        <source>Sign Tx</source>
+        <translation>Знак Tx</translation>
+    </message>
+    <message>
+        <source>Broadcast Tx</source>
+        <translation>Трансляція Tx</translation>
+    </message>
+    <message>
+        <source>Copy to Clipboard</source>
+        <translation>Копіювати у буфер обміну</translation>
+    </message>
+    <message>
+        <source>Save...</source>
+        <translation>Зберегти...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Завершити</translation>
+    </message>
+    <message>
+        <source>Failed to load transaction: %1</source>
+        <translation>Не вдалося завантажити транзакцію: %1</translation>
+    </message>
+    <message>
+        <source>Failed to sign transaction: %1</source>
+        <translation>Не вдалося підписати транзакцію: %1</translation>
+    </message>
+    <message>
+        <source>Could not sign any more inputs.</source>
+        <translation>Не вдалося підписати більше входів.</translation>
+    </message>
+    <message>
+        <source>Signed %1 inputs, but more signatures are still required.</source>
+        <translation>Підписано %1 введення, але все одно потрібно більше підписів.</translation>
+    </message>
+    <message>
+        <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
+        <translation>Угода успішно підписана. Транзакція готова до трансляції.</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation>Невідома помилка обробки транзакції.</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast successfully! Transaction ID: %1</source>
+        <translation>Трансакція успішно транслюється! Ідентифікатор транзакції: %1</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast failed: %1</source>
+        <translation>Помилка трансляції транзакції: %1</translation>
+    </message>
+    <message>
+        <source>PSBT copied to clipboard.</source>
+        <translation>PSBT скопійовано в буфер обміну.</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Зберегти дані транзакції</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>Частково підписана транзакція (Binary) (* .psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk.</source>
+        <translation>PSBT збережено на диск.</translation>
+    </message>
+    <message>
+        <source> * Sends %1 to %2</source>
+        <translation>* Надсилає від %1 до %2</translation>
+    </message>
+    <message>
+        <source>Unable to calculate transaction fee or total transaction amount.</source>
+        <translation>Неможливо розрахувати комісію за транзакцію або загальну суму транзакції.</translation>
+    </message>
+    <message>
+        <source>Pays transaction fee: </source>
+        <translation>Оплачує комісію за транзакцію:</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Всього</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>або</translation>
+    </message>
+    <message>
+        <source>Transaction has %1 unsigned inputs.</source>
+        <translation>Транзакція містить %1 непідписаних входів.</translation>
+    </message>
+    <message>
+        <source>Transaction is missing some information about inputs.</source>
+        <translation>У транзакції бракує певної інформації про вхідні дані.</translation>
+    </message>
+    <message>
+        <source>Transaction still needs signature(s).</source>
+        <translation>Для транзакції все ще потрібні підпис(и).</translation>
+    </message>
+    <message>
+        <source>(But this wallet cannot sign transactions.)</source>
+        <translation>(Але цей гаманець не може підписувати транзакції.)</translation>
+    </message>
+    <message>
+        <source>(But this wallet does not have the right keys.)</source>
+        <translation>(Але цей гаманець не має правильних ключів.)</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation>Транзакція повністю підписана і готова до трансляції.</translation>
+    </message>
+    <message>
+        <source>Transaction status is unknown.</source>
+        <translation>Статус транзакції невідомий.</translation>
+    </message>
 </context>
 <context>
     <name>PaymentServer</name>
@@ -1524,7 +1701,7 @@
     </message>
     <message>
         <source>Enter a Bitcoin address (e.g. %1)</source>
-        <translation>Введіть адресу Bitcoin (наприклад %1)</translation>
+        <translation>Введіть адресу Біткойн (наприклад %1)</translation>
     </message>
     <message>
         <source>%1 d</source>
@@ -1609,6 +1786,10 @@
     <message>
         <source>Error: %1</source>
         <translation>Помилка: %1</translation>
+    </message>
+    <message>
+        <source>Error initializing settings: %1</source>
+        <translation>Помилка ініціалізації налаштувань: %1</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
@@ -1709,10 +1890,6 @@
         <translation>Ланцюг блоків</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Поточне число блоків</translation>
-    </message>
-    <message>
         <source>Memory Pool</source>
         <translation>Пул пам'яті</translation>
     </message>
@@ -1757,10 +1934,6 @@
         <translation>Виберіть учасника для перегляду детальнішої інформації</translation>
     </message>
     <message>
-        <source>Whitelisted</source>
-        <translation>В білому списку</translation>
-    </message>
-    <message>
         <source>Direction</source>
         <translation>Напрямок</translation>
     </message>
@@ -1781,12 +1954,24 @@
         <translation>Синхронізовані Блоки</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>Картована автономна система, що використовується для диверсифікації вибору вузлів.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>Картована Автономна Система</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>Клієнт користувача</translation>
     </message>
     <message>
         <source>Node window</source>
         <translation>Вікно вузлів</translation>
+    </message>
+    <message>
+        <source>Current block height</source>
+        <translation>Поточна висота блоку</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -1801,12 +1986,12 @@
         <translation>Збільшити розмір шрифту</translation>
     </message>
     <message>
-        <source>Services</source>
-        <translation>Сервіси</translation>
+        <source>Permissions</source>
+        <translation>Дозволи</translation>
     </message>
     <message>
-        <source>Ban Score</source>
-        <translation>Очки бану</translation>
+        <source>Services</source>
+        <translation>Сервіси</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -1957,14 +2142,6 @@
         <translation>Вихідний</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>Так</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Ні</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>Невідома</translation>
     </message>
@@ -2063,12 +2240,40 @@
         <source>Copy amount</source>
         <translation>Копіювати суму</translation>
     </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Неможливо розблокувати гаманець.</translation>
+    </message>
+    <message>
+        <source>Could not generate new %1 address</source>
+        <translation>Не можливо згенерувати нову %1 адресу</translation>
+    </message>
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>QR-Код</translation>
+        <source>Request payment to ...</source>
+        <translation>Запит на оплату до ...</translation>
+    </message>
+    <message>
+        <source>Address:</source>
+        <translation>Адреса:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>Сума:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Мітка:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Повідомлення:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Гаманець:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2089,30 +2294,6 @@
     <message>
         <source>Payment information</source>
         <translation>Інформація про платіж</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Адрес</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Сума</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Мітка</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Повідомлення</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Гаманець</translation>
     </message>
 </context>
 <context>
@@ -2361,8 +2542,20 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Ви впевнені, що хочете відправити?</translation>
     </message>
     <message>
-        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
-        <translation>Перегляньте пропозицію щодо транзакцій. Це призведе до частково підписаної трансакції Bitcoin (PSBT), яку ви можете скопіювати та підписати, наприклад, офлайн-гаманецем %1 або гаманцем, сумісний з PSBT.</translation>
+        <source>Create Unsigned</source>
+        <translation>Створити без підпису</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Зберегти дані транзакції</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>Частково підписана транзакція (Binary) (* .psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT saved</source>
+        <translation>PSBT збережено</translation>
     </message>
     <message>
         <source>or</source>
@@ -2371,6 +2564,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
         <translation>Ви можете збільшити комісію пізніше (сигналізує Заміна-Через-Комісію, BIP-125).</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>Перегляньте свою пропозицію щодо транзакції. Це призведе до частково Підписаної Транзакції Біткойна (PSBT), яку ви можете зберегти або скопіювати, а потім підписати, наприклад, офлайн-гаманцем %1 або апаратним гаманецем, сумісний з PSBT.</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -2401,16 +2598,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Підтвердити запропоновану комісію</translation>
     </message>
     <message>
-        <source>Copy PSBT to clipboard</source>
-        <translation>Скопіювати PSBT у буфер обміну</translation>
-    </message>
-    <message>
         <source>Send</source>
         <translation>Відправити</translation>
-    </message>
-    <message>
-        <source>PSBT copied</source>
-        <translation>PSBT скопійовано</translation>
     </message>
     <message>
         <source>Watch-only balance:</source>
@@ -2489,11 +2678,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Обрати ранiш використовувану адресу</translation>
+        <translation>Обрати ранiше використану адресу</translation>
     </message>
     <message>
         <source>The Bitcoin address to send the payment to</source>
-        <translation>Адреса Bitcoin для відправлення платежу</translation>
+        <translation>Адреса Біткойн для відправлення платежу</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -2541,7 +2730,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Enter a label for this address to add it to the list of used addresses</source>
-        <translation>Введіть мітку для цієї адреси для додавання її в список використаних адрес</translation>
+        <translation>Введіть мітку цієї адреси для додавання її в перелік використаних адрес</translation>
     </message>
     <message>
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
@@ -2587,7 +2776,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Choose previously used address</source>
-        <translation>Обрати ранiш використовувану адресу</translation>
+        <translation>Обрати ранiше використану адресу</translation>
     </message>
     <message>
         <source>Alt+A</source>
@@ -3118,7 +3307,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Текст, разделённый запятыми (*.csv)</translation>
+        <translation>Файли (*.csv) розділені комами</translation>
     </message>
     <message>
         <source>Confirmed</source>
@@ -3138,11 +3327,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Label</source>
-        <translation>Метка</translation>
+        <translation>Мітка</translation>
     </message>
     <message>
         <source>Address</source>
-        <translation>Адрес</translation>
+        <translation>Адреса</translation>
     </message>
     <message>
         <source>ID</source>
@@ -3150,7 +3339,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>Экспорт не удался</translation>
+        <translation>Помилка експорту</translation>
     </message>
     <message>
         <source>There was an error trying to save the transaction history to %1.</source>
@@ -3184,7 +3373,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <name>WalletController</name>
     <message>
         <source>Close wallet</source>
-        <translation>закрити Гаманець</translation>
+        <translation>Закрити гаманець</translation>
     </message>
     <message>
         <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
@@ -3194,12 +3383,26 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Якщо занадто довго закривати гаманець, це може призвести до необхідності повторної синхронізації всієї ланцюга, якщо ввімкнено обрізку.</translation>
     </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Закрити всі гаманці</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close all wallets?</source>
+        <translation>Ви впевнені, що хочете закрити всі гаманці?</translation>
+    </message>
 </context>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Жоден гаманець не завантажено.</translation>
+        <source>No wallet has been loaded.
+Go to File &gt; Open Wallet to load a wallet.
+- OR -</source>
+        <translation>Жоден гаманець не завантажений. Перейдіть у меню Файл&gt; Відкрити гаманець, щоб завантажити гаманець. - АБО -</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Створити новий гаманець</translation>
     </message>
 </context>
 <context>
@@ -3258,18 +3461,42 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>default wallet</source>
-        <translation>гаманець за змовчуванням</translation>
+        <translation>типовий гаманець</translation>
     </message>
 </context>
 <context>
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Экспорт</translation>
+        <translation>&amp;Експортувати</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Экспортировать данные текущей вкладки в файл</translation>
+        <translation>Експортувати дані з поточної вкладки в файл</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Помилка</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT from clipboard (invalid base64)</source>
+        <translation>Не вдається декодувати PSBT з буфера обміну (недійсний base64)</translation>
+    </message>
+    <message>
+        <source>Load Transaction Data</source>
+        <translation>Завантажити дані транзакції</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (*.psbt)</source>
+        <translation>Частково підписана транзакція (* .psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT file must be smaller than 100 MiB</source>
+        <translation>Файл PSBT повинен бути менше 100 Мб</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT</source>
+        <translation>Не вдається декодувати PSBT</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
@@ -3315,10 +3542,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Операція відсікання: остання синхронізація вмісту гаманцю не обмежується діями над скороченими данними. Вам необхідно зробити переіндексацію -reindex (заново завантажити веcь ланцюжок блоків в разі появи скороченого ланцюга)</translation>
     </message>
     <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Помилка: Сталася фатальна помилка (детальніший опис наведено в debug.log)</translation>
-    </message>
-    <message>
         <source>Pruning blockstore...</source>
         <translation>Скорочення кількості блоків...</translation>
     </message>
@@ -3329,10 +3552,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>The %s developers</source>
         <translation>Розробники %s</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>Неможливо створити ключ зміни адреси. У внутрішній пулі клавіш немає клавіш і жоден ключ не може генерувати.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3347,12 +3566,28 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Помилка читання %s! Всі ключі зчитано правильно, але записи в адресній книзі, або дані транзакцій можуть бути відсутніми чи невірними.</translation>
     </message>
     <message>
+        <source>More than one onion bind address is provided. Using %s for the automatically created Tor onion service.</source>
+        <translation>Надано більше однієї адреси прив'язки служби Tor. Використання %s для автоматично створеної служби Tor.</translation>
+    </message>
+    <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation>Перевірте правильність дати та часу комп'ютера. Якщо ваш годинник  налаштовано невірно, %s не буде працювати належним чином.</translation>
     </message>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation>Будь ласка, зробіть внесок, якщо ви знаходите %s корисним. Відвідайте %s для отримання додаткової інформації про програмне забезпечення.</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare the statement to fetch sqlite wallet schema version: %s</source>
+        <translation>SQLiteDatabase: Не вдалося підготувати оператор для отримання версії схеми гаманця: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare the statement to fetch the application id: %s</source>
+        <translation>SQLiteDatabase: Не вдалося підготувати оператор для отримання ідентифікатора програми: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
+        <translation>SQLiteDatabase: Невідома версія схеми гаманця %d. Підтримується лише версія %d</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
@@ -3381,14 +3616,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
         <translation>Попередження: неможливо досягти консенсусу з підключеними вузлами! Вам, або іншим вузлам необхідно оновити програмне забезпечення.</translation>
-    </message>
-    <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d з останніх 100 блоків мають неочікувану версію</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s пошкоджено, відновлення невдале</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>
@@ -3467,6 +3694,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Помилка пересканування гаманця під час ініціалізації</translation>
     </message>
     <message>
+        <source>Failed to verify database</source>
+        <translation>Не вдалося перевірити базу даних</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>Імпорт...</translation>
     </message>
@@ -3495,6 +3726,30 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Невірна сума для зарезервованої комісії -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
+        <source>SQLiteDatabase: Failed to execute statement to verify database: %s</source>
+        <translation>SQLiteDatabase: Не вдалося виконати оператор для перевірки бази даних: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to fetch sqlite wallet schema version: %s</source>
+        <translation>QLiteDatabase: Не вдалося отримати версію схеми гаманця: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to fetch the application id: %s</source>
+        <translation>SQLiteDatabase: Не вдалося отримати ідентифікатор програми: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare statement to verify database: %s</source>
+        <translation>SQLiteDatabase: Не вдалося підготувати оператор для перевірки бази даних: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to read database verification error: %s</source>
+        <translation>SQLiteDatabase: Не вдалося прочитати помилку перевірки бази даних: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
+        <translation>SQLiteDatabase: Несподіваний ідентифікатор програми. Очікується %u, отримано %u</translation>
+    </message>
+    <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation>Зазначений каталог блоків "%s" не існує.</translation>
     </message>
@@ -3513,10 +3768,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Loading P2P addresses...</source>
         <translation>Завантаження P2P адрес...</translation>
-    </message>
-    <message>
-        <source>Error: Disk space is too low!</source>
-        <translation>Помилка: замало дискового простору!</translation>
     </message>
     <message>
         <source>Loading banlist...</source>
@@ -3583,6 +3834,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Помилка: Не вдалося налаштувати прослуховування вхідних підключень (listen повернув помилку: %s)</translation>
     </message>
     <message>
+        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
+        <translation>%s пошкоджено. Спробуйте скористатися інструментом гаманця bitcoin-wallet для відновлення або відновлення резервної копії.</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use version 169900 or no version specified.</source>
+        <translation>Неможливо оновити спліт-гаманець, що не є HD, без оновлення, щоб підтримати попередньо розділений пул ключів. Будь ласка, використовуйте версію 169900 або не вказану версію.</translation>
+    </message>
+    <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>Неприпустима сума для -maxtxfee = &lt;amount&gt;: «%s» ( плата повинна бути, принаймні %s, щоб запобігти зависанню транзакцій)</translation>
     </message>
@@ -3591,8 +3850,32 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Залишок від суми транзакції зі сплатою комісії занадто малий</translation>
     </message>
     <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation>Ця помилка може статися, якщо цей гаманець не було чисто вимкнено і востаннє завантажений за допомогою збірки з новою версією Berkeley DB. Якщо так, будь ласка, використовуйте програмне забезпечення, яке востаннє завантажувало цей гаманець</translation>
+    </message>
+    <message>
+        <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
+        <translation>Це максимальна комісія за транзакцію, яку ви сплачуєте (на додаток до звичайної комісії), щоб надавати пріоритет частковому уникненню витрат перед регулярним вибором монет.</translation>
+    </message>
+    <message>
+        <source>Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.</source>
+        <translation>Транзакція потребує наявності адреси для отримання решти, але ми не змогли її згенерувати. Будь ласка, спочатку виконайте регенерацію пулу ключів.</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Вам необхідно перебудувати базу даних з використанням -reindex для завантаження повного ланцюжка блоків.</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation>Виникла фатальна внутрішня помилка, див. debug.log для деталей</translation>
+    </message>
+    <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation>Неможливо встановити -peerblockfilters без -blockfilterindex.</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation>Місця на диску занадто мало!</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3605,6 +3888,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Error: Disk space is low for %s</source>
         <translation>Помилка: для %s бракує місця на диску</translation>
+    </message>
+    <message>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>Помилка: Пул ключів закінчився, потрібно викликати keypoolrefill вдруге</translation>
+    </message>
+    <message>
+        <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
+        <translation>Ставка комісії (%s) нижча за встановлену мінімальну ставку комісії (%s)</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>
@@ -3625,6 +3916,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>Необхідно вказати порт для -whitebind: «%s»</translation>
+    </message>
+    <message>
+        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
+        <translation>Не вказано проксі-сервер.  Використовуйте -проксі=&lt;ip&gt; або -проксі=&lt;ip:port&gt;.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -blockfilterindex.</source>
@@ -3700,10 +3995,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Попередження: активовано невідомі нові правила (versionbit %i)</translation>
     </message>
     <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Видалення всіх транзакцій з гаманця...</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>Встановлено дуже велике значення -maxtxfee! Такі великі комісії можуть бути сплачені окремою транзакцією.</translation>
     </message>
@@ -3714,10 +4005,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Загальна довжина рядку мережевої версії (%i) перевищує максимально допустиму (%i). Зменшіть число чи розмір коментарів клієнта користувача.</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Попередження: файл гаманця пошкоджено, дані врятовано! Оригінальний %s збережено як %s в %s; якщо ваш баланс або транзакції некорректно відображаються, ви повинні відновити його з резервної копії.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -3733,7 +4020,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
-        <translation>Кошелёк будет избегать оплат меньших, нежели минимальная комиссия передачи.</translation>
+        <translation>Гаманець не переведе кошти, якщо комісія становить менше мінімальної плати за транзакцію.</translation>
     </message>
     <message>
         <source>This is the minimum transaction fee you pay on every transaction.</source>
@@ -3745,7 +4032,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>
-        <translation>Сумма транзакции не должна быть отрицательной</translation>
+        <translation>Сума транзакції не повинна бути від'ємною</translation>
     </message>
     <message>
         <source>Transaction has too long of a mempool chain</source>
@@ -3764,10 +4051,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>Недостатньо коштів</translation>
     </message>
     <message>
-        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
-        <translation>Неможливо оновити не-HD гаманець без оновлення підтримки пулу ключів. Будь-ласка використовуйте -upgradewallet=169900 чи -upgradewallet без вказівки версії. </translation>
-    </message>
-    <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>
         <translation>Оцінка комісії не вдалася. Fallbackfee вимкнено. Зачекайте кілька блоків або ввімкніть -fallbackfee.</translation>
     </message>
@@ -3777,7 +4060,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Cannot write to data directory '%s'; check permissions.</source>
-        <translation>Неможливо записати до каталог даних '%s'; перевірте дозвіл.</translation>
+        <translation>Неможливо записати до каталогу даних '%s'; перевірте дозвіл.</translation>
     </message>
     <message>
         <source>Loading block index...</source>

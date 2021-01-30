@@ -70,7 +70,7 @@ SECP256K1_API int secp256k1_ecdsa_recoverable_signature_serialize_compact(
 /** Create a recoverable ECDSA signature.
  *
  *  Returns: 1: signature created
- *           0: the nonce generation function failed, or the private key was invalid.
+ *           0: the nonce generation function failed, or the secret key was invalid.
  *  Args:    ctx:    pointer to a context object, initialized for signing (cannot be NULL)
  *  Out:     sig:    pointer to an array where the signature will be placed (cannot be NULL)
  *  In:      msg32:  the 32-byte message hash being signed (cannot be NULL)

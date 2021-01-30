@@ -5,8 +5,8 @@
 #include <blockfilter.h>
 #include <serialize.h>
 #include <streams.h>
-#include <test/fuzz/fuzz.h>
 #include <test/fuzz/FuzzedDataProvider.h>
+#include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <util/bytevectorhash.h>
 #include <util/golombrice.h>
@@ -54,7 +54,7 @@ std::vector<uint64_t> BuildHashedSet(const std::unordered_set<std::vector<uint8_
 }
 } // namespace
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(golomb_rice)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     std::vector<uint8_t> golomb_rice_data;

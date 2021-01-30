@@ -26,6 +26,8 @@ public:
     CTxDestination destChange;
     //! Override the default change type if set, ignored if destChange is set
     Optional<OutputType> m_change_type;
+    //! If false, only selected inputs are used
+    bool m_add_inputs;
     //! If false, allows unselected inputs, but requires all selected inputs be used
     bool fAllowOtherInputs;
     //! Includes watch only addresses which are solvable

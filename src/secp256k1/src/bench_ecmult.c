@@ -18,7 +18,6 @@
 #include "secp256k1.c"
 
 #define POINTS 32768
-#define ITERS 10000
 
 typedef struct {
     /* Setup once in advance */
@@ -55,16 +54,16 @@ static int bench_callback(secp256k1_scalar* sc, secp256k1_ge* ge, size_t idx, vo
     return 1;
 }
 
-static void bench_ecmult(void* arg) {
+static void bench_ecmult(void* arg, int iters) {
     bench_data* data = (bench_data*)arg;
 
-    size_t count = data->count;
     int includes_g = data->includes_g;
-    size_t iters = 1 + ITERS / count;
-    size_t iter;
+    int iter;
+    int count = data->count;
+    iters = iters / data->count;
 
     for (iter = 0; iter < iters; ++iter) {
-        data->ecmult_multi(&data->ctx->ecmult_ctx, data->scratch, &data->output[iter], data->includes_g ? &data->scalars[data->offset1] : NULL, bench_callback, arg, count - includes_g);
+        data->ecmult_multi(&data->ctx->error_callback, &data->ctx->ecmult_ctx, data->scratch, &data->output[iter], data->includes_g ? &data->scalars[data->offset1] : NULL, bench_callback, arg, count - includes_g);
         data->offset1 = (data->offset1 + count) % POINTS;
         data->offset2 = (data->offset2 + count - 1) % POINTS;
     }
@@ -76,10 +75,10 @@ static void bench_ecmult_setup(void* arg) {
     data->offset2 = (data->count * 0x7f6f537b + 0x6a1a8f49) % POINTS;
 }
 
-static void bench_ecmult_teardown(void* arg) {
+static void bench_ecmult_teardown(void* arg, int iters) {
     bench_data* data = (bench_data*)arg;
-    size_t iters = 1 + ITERS / data->count;
-    size_t iter;
+    int iter;
+    iters = iters / data->count;
     /* Verify the results in teardown, to avoid doing comparisons while benchmarking. */
     for (iter = 0; iter < iters; ++iter) {
         secp256k1_gej tmp;
@@ -104,10 +103,10 @@ static void generate_scalar(uint32_t num, secp256k1_scalar* scalar) {
     CHECK(!overflow);
 }
 
-static void run_test(bench_data* data, size_t count, int includes_g) {
+static void run_test(bench_data* data, size_t count, int includes_g, int num_iters) {
     char str[32];
     static const secp256k1_scalar zero = SECP256K1_SCALAR_CONST(0, 0, 0, 0, 0, 0, 0, 0);
-    size_t iters = 1 + ITERS / count;
+    size_t iters = 1 + num_iters / count;
     size_t iter;
 
     data->count = count;
@@ -130,7 +129,7 @@ static void run_test(bench_data* data, size_t count, int includes_g) {
 
     /* Run the benchmark. */
     sprintf(str, includes_g ? "ecmult_%ig" : "ecmult_%i", (int)count);
-    run_benchmark(str, bench_ecmult, bench_ecmult_setup, bench_ecmult_teardown, data, 10, count * (1 + ITERS / count));
+    run_benchmark(str, bench_ecmult, bench_ecmult_setup, bench_ecmult_teardown, data, 10, count * iters);
 }
 
 int main(int argc, char **argv) {
@@ -138,6 +137,8 @@ int main(int argc, char **argv) {
     int i, p;
     secp256k1_gej* pubkeys_gej;
     size_t scratch_size;
+
+    int iters = get_iters(10000);
 
     data.ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
     scratch_size = secp256k1_strauss_scratch_size(POINTS) + STRAUSS_SCRATCH_OBJECTS*16;
@@ -154,7 +155,7 @@ int main(int argc, char **argv) {
         } else if(have_flag(argc, argv, "simple")) {
             printf("Using simple algorithm:\n");
             data.ecmult_multi = secp256k1_ecmult_multi_var;
-            secp256k1_scratch_space_destroy(data.scratch);
+            secp256k1_scratch_space_destroy(data.ctx, data.scratch);
             data.scratch = NULL;
         } else {
             fprintf(stderr, "%s: unrecognized argument '%s'.\n", argv[0], argv[1]);
@@ -167,8 +168,8 @@ int main(int argc, char **argv) {
     data.scalars = malloc(sizeof(secp256k1_scalar) * POINTS);
     data.seckeys = malloc(sizeof(secp256k1_scalar) * POINTS);
     data.pubkeys = malloc(sizeof(secp256k1_ge) * POINTS);
-    data.expected_output = malloc(sizeof(secp256k1_gej) * (ITERS + 1));
-    data.output = malloc(sizeof(secp256k1_gej) * (ITERS + 1));
+    data.expected_output = malloc(sizeof(secp256k1_gej) * (iters + 1));
+    data.output = malloc(sizeof(secp256k1_gej) * (iters + 1));
 
     /* Generate a set of scalars, and private/public keypairs. */
     pubkeys_gej = malloc(sizeof(secp256k1_gej) * POINTS);
@@ -185,18 +186,24 @@ int main(int argc, char **argv) {
     free(pubkeys_gej);
 
     for (i = 1; i <= 8; ++i) {
-        run_test(&data, i, 1);
+        run_test(&data, i, 1, iters);
     }
 
-    for (p = 0; p <= 11; ++p) {
-        for (i = 9; i <= 16; ++i) {
-            run_test(&data, i << p, 1);
+    /* This is disabled with low count of iterations because the loop runs 77 times even with iters=1
+    * and the higher it goes the longer the computation takes(more points)
+    * So we don't run this benchmark with low iterations to prevent slow down */
+     if (iters > 2) {
+        for (p = 0; p <= 11; ++p) {
+            for (i = 9; i <= 16; ++i) {
+                run_test(&data, i << p, 1, iters);
+            }
         }
     }
-    secp256k1_context_destroy(data.ctx);
+
     if (data.scratch != NULL) {
-        secp256k1_scratch_space_destroy(data.scratch);
+        secp256k1_scratch_space_destroy(data.ctx, data.scratch);
     }
+    secp256k1_context_destroy(data.ctx);
     free(data.scalars);
     free(data.pubkeys);
     free(data.seckeys);

@@ -14,7 +14,7 @@ Generate 427 more blocks.
 """
 import time
 
-from test_framework.blocktools import create_coinbase, create_block, create_transaction, add_witness_commitment
+from test_framework.blocktools import NORMAL_GBT_REQUEST_PARAMS, create_block, create_transaction, add_witness_commitment
 from test_framework.messages import CTransaction
 from test_framework.script import CScript
 from test_framework.test_framework import BitcoinTestFramework
@@ -37,23 +37,32 @@ def trueDummy(tx):
 class NULLDUMMYTest(BitcoinTestFramework):
 
     def set_test_params(self):
-        self.num_nodes = 1
+        # Need two nodes only so GBT doesn't complain that it's not connected
+        self.num_nodes = 2
         self.setup_clean_chain = True
         # This script tests NULLDUMMY activation, which is part of the 'segwit' deployment, so we go through
         # normal segwit activation here (and don't use the default always-on behaviour).
         self.extra_args = [[
             '-segwitheight=432',
             '-addresstype=legacy',
-        ]]
+        ]] * 2
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        self.address = self.nodes[0].getnewaddress()
-        self.ms_address = self.nodes[0].addmultisigaddress(1, [self.address])['address']
-        self.wit_address = self.nodes[0].getnewaddress(address_type='p2sh-segwit')
-        self.wit_ms_address = self.nodes[0].addmultisigaddress(1, [self.address], '', 'p2sh-segwit')['address']
+        self.nodes[0].createwallet(wallet_name='wmulti', disable_private_keys=True)
+        wmulti = self.nodes[0].get_wallet_rpc('wmulti')
+        w0 = self.nodes[0].get_wallet_rpc(self.default_wallet_name)
+        self.address = w0.getnewaddress()
+        self.pubkey = w0.getaddressinfo(self.address)['pubkey']
+        self.ms_address = wmulti.addmultisigaddress(1, [self.pubkey])['address']
+        self.wit_address = w0.getnewaddress(address_type='p2sh-segwit')
+        self.wit_ms_address = wmulti.addmultisigaddress(1, [self.pubkey], '', 'p2sh-segwit')['address']
+        if not self.options.descriptors:
+            # Legacy wallets need to import these so that they are watched by the wallet. This is unnecessary (and does not need to be tested) for descriptor wallets
+            wmulti.importaddress(self.ms_address)
+            wmulti.importaddress(self.wit_ms_address)
 
         self.coinbase_blocks = self.nodes[0].generate(2)  # Block 2
         coinbase_txid = []
@@ -61,7 +70,6 @@ class NULLDUMMYTest(BitcoinTestFramework):
             coinbase_txid.append(self.nodes[0].getblock(i)['tx'][0])
         self.nodes[0].generate(427)  # Block 429
         self.lastblockhash = self.nodes[0].getbestblockhash()
-        self.tip = int("0x" + self.lastblockhash, 0)
         self.lastblockheight = 429
         self.lastblocktime = int(time.time()) + 429
 
@@ -102,8 +110,10 @@ class NULLDUMMYTest(BitcoinTestFramework):
         self.block_submit(self.nodes[0], test6txs, True, True)
 
     def block_submit(self, node, txs, witness=False, accept=False):
-        block = create_block(self.tip, create_coinbase(self.lastblockheight + 1), self.lastblocktime + 1)
-        block.nVersion = 4
+        tmpl = node.getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
+        assert_equal(tmpl['previousblockhash'], self.lastblockhash)
+        assert_equal(tmpl['height'], self.lastblockheight + 1)
+        block = create_block(tmpl=tmpl, ntime=self.lastblocktime + 1)
         for tx in txs:
             tx.rehash()
             block.vtx.append(tx)
@@ -114,7 +124,6 @@ class NULLDUMMYTest(BitcoinTestFramework):
         assert_equal(None if accept else 'block-validation-failed', node.submitblock(block.serialize().hex()))
         if (accept):
             assert_equal(node.getbestblockhash(), block.hash)
-            self.tip = block.sha256
             self.lastblockhash = block.hash
             self.lastblocktime += 1
             self.lastblockheight += 1

@@ -34,30 +34,26 @@ How to Upgrade
 ==============
 
 If you are running an older version, shut it down. Wait until it has completely
-shut down (which might take a few minutes for older versions), then run the
+shut down (which might take a few minutes in some cases), then run the
 installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
 or `bitcoind`/`bitcoin-qt` (on Linux).
 
 Upgrading directly from a version of Bitcoin Core that has reached its EOL is
-possible, but it might take some time if the datadir needs to be migrated. Old
+possible, but it might take some time if the data directory needs to be migrated. Old
 wallet versions of Bitcoin Core are generally supported.
 
 Compatibility
 ==============
 
-Bitcoin Core is supported and extensively tested on operating systems using
-the Linux kernel, macOS 10.12+, and Windows 7 and newer. It is not recommended
-to use Bitcoin Core on unsupported systems.
+Bitcoin Core is supported and extensively tested on operating systems
+using the Linux kernel, macOS 10.14+, and Windows 7 and newer.  Bitcoin
+Core should also work on most other Unix-like systems but is not as
+frequently tested on them.  It is not recommended to use Bitcoin Core on
+unsupported systems.
 
-Bitcoin Core should also work on most other Unix-like systems but is not
-as frequently tested on them.
-
-From Bitcoin Core 0.20.0 onwards, macOS versions earlier than 10.12 are no
+From Bitcoin Core 0.22.0 onwards, macOS versions earlier than 10.14 are no
 longer supported. Additionally, Bitcoin Core does not yet change appearance
 when macOS "dark mode" is activated.
-
-In addition to previously supported CPU platforms, this release's pre-compiled
-distribution provides binaries for the RISC-V platform.
 
 Notable changes
 ===============
@@ -67,6 +63,11 @@ P2P and network changes
 
 Updated RPCs
 ------------
+- `getpeerinfo` no longer returns the following fields: `addnode`, `banscore`,
+  and `whitelisted`, which were previously deprecated in 0.21. Instead of
+  `addnode`, the `connection_type` field returns manual. Instead of
+  `whitelisted`, the `permissions` field indicates if the peer has special
+  privileges. The `banscore` field has simply been removed. (#20755)
 
 Changes to Wallet or GUI related RPCs can be found in the GUI or Wallet section below.
 
@@ -76,30 +77,30 @@ New RPCs
 Build System
 ------------
 
-Updated settings
-----------------
-
-Changes to Wallet or GUI related settings can be found in the GUI or Wallet  section below.
-
 New settings
 ------------
 
+Updated settings
+----------------
+
+Changes to Wallet or GUI related settings can be found in the GUI or Wallet section below.
+
+- Passing an invalid `-rpcauth` argument now cause bitcoind to fail to start.  (#20461)
+
+Tools and Utilities
+-------------------
+
 Wallet
 ------
-
-#### Wallet RPC changes
-
-- The `upgradewallet` RPC replaces the `-upgradewallet` command line option.
-  (#15761)
-- The `settxfee` RPC will fail if the fee was set higher than the `-maxtxfee`
-  command line setting. The wallet will already fail to create transactions
-  with fees higher than `-maxtxfee`. (#18467)
 
 GUI changes
 -----------
 
 Low-level changes
 =================
+
+RPC
+---
 
 Tests
 -----

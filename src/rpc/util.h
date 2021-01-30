@@ -1,10 +1,11 @@
-// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Copyright (c) 2017-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_RPC_UTIL_H
 #define BITCOIN_RPC_UTIL_H
 
+#include <node/coinstats.h>
 #include <node/transaction.h>
 #include <outputtype.h>
 #include <protocol.h>
@@ -18,9 +19,8 @@
 #include <util/check.h>
 
 #include <string>
+#include <variant>
 #include <vector>
-
-#include <boost/variant.hpp>
 
 /**
  * String used to describe UNIX epoch time in documentation, factored out to a
@@ -76,6 +76,8 @@ extern uint256 ParseHashV(const UniValue& v, std::string strName);
 extern uint256 ParseHashO(const UniValue& o, std::string strKey);
 extern std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName);
 extern std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey);
+
+CoinStatsHashType ParseHashType(const UniValue& param, const CoinStatsHashType default_type);
 
 extern CAmount AmountFromValue(const UniValue& value);
 extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);
@@ -141,9 +143,10 @@ struct RPCArg {
          */
         OMITTED,
     };
-    using Fallback = boost::variant<Optional, /* default value for optional args */ std::string>;
+    using Fallback = std::variant<Optional, /* default value for optional args */ std::string>;
     const std::string m_names; //!< The name of the arg (can be empty for inner args, can contain multiple aliases separated by | for named request arguments)
     const Type m_type;
+    const bool m_hidden;
     const std::vector<RPCArg> m_inner; //!< Only used for arrays or dicts
     const Fallback m_fallback;
     const std::string m_description;
@@ -156,9 +159,11 @@ struct RPCArg {
         const Fallback fallback,
         const std::string description,
         const std::string oneline_description = "",
-        const std::vector<std::string> type_str = {})
+        const std::vector<std::string> type_str = {},
+        const bool hidden = false)
         : m_names{std::move(name)},
           m_type{std::move(type)},
+          m_hidden{hidden},
           m_fallback{std::move(fallback)},
           m_description{std::move(description)},
           m_oneline_description{std::move(oneline_description)},
@@ -177,6 +182,7 @@ struct RPCArg {
         const std::vector<std::string> type_str = {})
         : m_names{std::move(name)},
           m_type{std::move(type)},
+          m_hidden{false},
           m_inner{std::move(inner)},
           m_fallback{std::move(fallback)},
           m_description{std::move(description)},
@@ -326,8 +332,17 @@ class RPCHelpMan
 {
 public:
     RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples);
+    using RPCMethodImpl = std::function<UniValue(const RPCHelpMan&, const JSONRPCRequest&)>;
+    RPCHelpMan(std::string name, std::string description, std::vector<RPCArg> args, RPCResults results, RPCExamples examples, RPCMethodImpl fun);
 
     std::string ToString() const;
+    /** Append the named args that need to be converted from string to another JSON type */
+    void AppendArgMap(UniValue& arr) const;
+    UniValue HandleRequest(const JSONRPCRequest& request)
+    {
+        Check(request);
+        return m_fun(*this, request);
+    }
     /** If the supplied number of args is neither too small nor too high */
     bool IsValidNumArgs(size_t num_args) const;
     /**
@@ -340,8 +355,12 @@ public:
         }
     }
 
-private:
+    std::vector<std::string> GetArgNames() const;
+
     const std::string m_name;
+
+private:
+    const RPCMethodImpl m_fun;
     const std::string m_description;
     const std::vector<RPCArg> m_args;
     const RPCResults m_results;

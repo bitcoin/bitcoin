@@ -67,9 +67,21 @@
  * Thread-safe.
  */
 void GetRandBytes(unsigned char* buf, int num) noexcept;
+/** Generate a uniform random integer in the range [0..range). Precondition: range > 0 */
 uint64_t GetRand(uint64_t nMax) noexcept;
-std::chrono::microseconds GetRandMicros(std::chrono::microseconds duration_max) noexcept;
-std::chrono::milliseconds GetRandMillis(std::chrono::milliseconds duration_max) noexcept;
+/** Generate a uniform random duration in the range [0..max). Precondition: max.count() > 0 */
+template <typename D>
+D GetRandomDuration(typename std::common_type<D>::type max) noexcept
+// Having the compiler infer the template argument from the function argument
+// is dangerous, because the desired return value generally has a different
+// type than the function argument. So std::common_type is used to force the
+// call site to specify the type of the return value.
+{
+    assert(max.count() > 0);
+    return D{GetRand(max.count())};
+};
+constexpr auto GetRandMicros = GetRandomDuration<std::chrono::microseconds>;
+constexpr auto GetRandMillis = GetRandomDuration<std::chrono::milliseconds>;
 int GetRandInt(int nMax) noexcept;
 uint256 GetRandHash() noexcept;
 

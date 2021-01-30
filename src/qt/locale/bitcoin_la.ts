@@ -341,11 +341,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Cassidile &lt;b&gt;cifratum&lt;/b&gt; est et iam nunc &lt;b&gt;seratum&lt;/b&gt;</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Error fatalis accidit.  Bitcoin nondum pergere tute potest, et exibit.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -595,6 +591,9 @@
     </message>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    </context>
+<context>
     <name>PaymentServer</name>
     <message>
         <source>Cannot start bitcoin: click-to-pay handler</source>
@@ -669,10 +668,6 @@
         <translation>Catena frustorum</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Numerus frustorum iam nunc</translation>
-    </message>
-    <message>
         <source>Last block time</source>
         <translation>Hora postremi frusti</translation>
     </message>
@@ -715,34 +710,30 @@
         <source>Copy amount</source>
         <translation>Copia quantitatem</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Non potuisse cassidile reserare</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Amount:</source>
+        <translation>Quantitas:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Titulus:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Nuntius:</translation>
+    </message>
     <message>
         <source>Copy &amp;Address</source>
         <translation>&amp;Copia Inscriptionem</translation>
     </message>
-    <message>
-        <source>Address</source>
-        <translation>Inscriptio</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Quantitas</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Titulus</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Nuntius</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Cassidile</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -1318,6 +1309,10 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Exporta data in hac tabella in plicam</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Error</translation>
     </message>
     <message>
         <source>Backup Wallet</source>

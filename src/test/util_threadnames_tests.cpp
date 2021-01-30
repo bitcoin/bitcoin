@@ -53,8 +53,6 @@ std::set<std::string> RenameEnMasse(int num_threads)
  */
 BOOST_AUTO_TEST_CASE(util_threadnames_test_rename_threaded)
 {
-    BOOST_CHECK_EQUAL(util::ThreadGetInternalName(), "");
-
 #if !defined(HAVE_THREAD_LOCAL)
     // This test doesn't apply to platforms where we don't have thread_local.
     return;
@@ -62,7 +60,7 @@ BOOST_AUTO_TEST_CASE(util_threadnames_test_rename_threaded)
 
     std::set<std::string> names = RenameEnMasse(100);
 
-    BOOST_CHECK_EQUAL(names.size(), 100);
+    BOOST_CHECK_EQUAL(names.size(), 100U);
 
     // Names "test_thread.[n]" should exist for n = [0, 99]
     for (int i = 0; i < 100; ++i) {

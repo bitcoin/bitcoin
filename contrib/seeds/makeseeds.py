@@ -34,7 +34,8 @@ PATTERN_AGENT = re.compile(
     r"0.17.(0|0.1|1|2|99)|"
     r"0.18.(0|1|99)|"
     r"0.19.(0|1|99)|"
-    r"0.20.99"
+    r"0.20.(0|1|99)|"
+    r"0.21.99"
     r")")
 
 def parseline(line):
@@ -135,7 +136,7 @@ def lookup_asn(net, ip):
             ipaddr = res.rstrip('.')            # 2.0.0.1.4.8.6.0.b.0.0.2.0.0.2.3
             prefix = '.origin6'
 
-        asn = int([x.to_text() for x in dns.resolver.query('.'.join(
+        asn = int([x.to_text() for x in dns.resolver.resolve('.'.join(
                    reversed(ipaddr.split('.'))) + prefix + '.asn.cymru.com',
                    'TXT').response.answer][0].split('\"')[1].split(' ')[0])
         return asn

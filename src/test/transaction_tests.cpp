@@ -24,6 +24,7 @@
 #include <util/strencodings.h>
 #include <validation.h>
 
+#include <functional>
 #include <map>
 #include <string>
 
@@ -57,6 +58,7 @@ static std::map<std::string, unsigned int> mapFlagNames = {
     {std::string("DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM"), (unsigned int)SCRIPT_VERIFY_DISCOURAGE_UPGRADABLE_WITNESS_PROGRAM},
     {std::string("WITNESS_PUBKEYTYPE"), (unsigned int)SCRIPT_VERIFY_WITNESS_PUBKEYTYPE},
     {std::string("CONST_SCRIPTCODE"), (unsigned int)SCRIPT_VERIFY_CONST_SCRIPTCODE},
+    {std::string("TAPROOT"), (unsigned int)SCRIPT_VERIFY_TAPROOT},
 };
 
 unsigned int ParseScriptFlags(std::string strFlags)
@@ -304,7 +306,7 @@ BOOST_AUTO_TEST_CASE(test_Get)
     t1.vout[0].nValue = 90*CENT;
     t1.vout[0].scriptPubKey << OP_1;
 
-    BOOST_CHECK(AreInputsStandard(CTransaction(t1), coins));
+    BOOST_CHECK(AreInputsStandard(CTransaction(t1), coins, false));
 }
 
 static void CreateCreditAndSpend(const FillableSigningProvider& keystore, const CScript& outscript, CTransactionRef& output, CMutableTransaction& input, bool success = true)
@@ -361,6 +363,8 @@ static CScript PushAll(const std::vector<valtype>& values)
             result << OP_0;
         } else if (v.size() == 1 && v[0] >= 1 && v[0] <= 16) {
             result << CScript::EncodeOP_N(v[0]);
+        } else if (v.size() == 1 && v[0] == 0x81) {
+            result << OP_1NEGATE;
         } else {
             result << v;
         }
@@ -425,12 +429,10 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
 
     // check all inputs concurrently, with the cache
     PrecomputedTransactionData txdata(tx);
-    boost::thread_group threadGroup;
     CCheckQueue<CScriptCheck> scriptcheckqueue(128);
     CCheckQueueControl<CScriptCheck> control(&scriptcheckqueue);
 
-    for (int i=0; i<20; i++)
-        threadGroup.create_thread(std::bind(&CCheckQueue<CScriptCheck>::Thread, std::ref(scriptcheckqueue)));
+    scriptcheckqueue.StartWorkerThreads(20);
 
     std::vector<Coin> coins;
     for(uint32_t i = 0; i < mtx.vin.size(); i++) {
@@ -452,9 +454,7 @@ BOOST_AUTO_TEST_CASE(test_big_witness_transaction)
 
     bool controlCheck = control.Wait();
     assert(controlCheck);
-
-    threadGroup.interrupt_all();
-    threadGroup.join_all();
+    scriptcheckqueue.StopWorkerThreads();
 }
 
 SignatureData CombineSignatures(const CMutableTransaction& input1, const CMutableTransaction& input2, const CTransactionRef tx)
@@ -499,13 +499,19 @@ BOOST_AUTO_TEST_CASE(test_witness)
     BOOST_CHECK(keystore.AddCScript(scriptPubkey1L));
     BOOST_CHECK(keystore.AddCScript(scriptPubkey2L));
     BOOST_CHECK(keystore.AddCScript(scriptMulti));
-    BOOST_CHECK(keystore.AddCScript(GetScriptForWitness(scriptPubkey1)));
-    BOOST_CHECK(keystore.AddCScript(GetScriptForWitness(scriptPubkey2)));
-    BOOST_CHECK(keystore.AddCScript(GetScriptForWitness(scriptPubkey1L)));
-    BOOST_CHECK(keystore.AddCScript(GetScriptForWitness(scriptPubkey2L)));
-    BOOST_CHECK(keystore.AddCScript(GetScriptForWitness(scriptMulti)));
+    CScript destination_script_1, destination_script_2, destination_script_1L, destination_script_2L, destination_script_multi;
+    destination_script_1 = GetScriptForDestination(WitnessV0KeyHash(pubkey1));
+    destination_script_2 = GetScriptForDestination(WitnessV0KeyHash(pubkey2));
+    destination_script_1L = GetScriptForDestination(WitnessV0KeyHash(pubkey1L));
+    destination_script_2L = GetScriptForDestination(WitnessV0KeyHash(pubkey2L));
+    destination_script_multi = GetScriptForDestination(WitnessV0ScriptHash(scriptMulti));
+    BOOST_CHECK(keystore.AddCScript(destination_script_1));
+    BOOST_CHECK(keystore.AddCScript(destination_script_2));
+    BOOST_CHECK(keystore.AddCScript(destination_script_1L));
+    BOOST_CHECK(keystore.AddCScript(destination_script_2L));
+    BOOST_CHECK(keystore.AddCScript(destination_script_multi));
     BOOST_CHECK(keystore2.AddCScript(scriptMulti));
-    BOOST_CHECK(keystore2.AddCScript(GetScriptForWitness(scriptMulti)));
+    BOOST_CHECK(keystore2.AddCScript(destination_script_multi));
     BOOST_CHECK(keystore2.AddKeyPubKey(key3, pubkey3));
 
     CTransactionRef output1, output2;
@@ -537,8 +543,8 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CheckWithFlag(output1, input2, STANDARD_SCRIPT_VERIFY_FLAGS, false);
 
     // Witness pay-to-compressed-pubkey (v0).
-    CreateCreditAndSpend(keystore, GetScriptForWitness(scriptPubkey1), output1, input1);
-    CreateCreditAndSpend(keystore, GetScriptForWitness(scriptPubkey2), output2, input2);
+    CreateCreditAndSpend(keystore, destination_script_1, output1, input1);
+    CreateCreditAndSpend(keystore, destination_script_2, output2, input2);
     CheckWithFlag(output1, input1, 0, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, true);
@@ -549,9 +555,9 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CheckWithFlag(output1, input2, STANDARD_SCRIPT_VERIFY_FLAGS, false);
 
     // P2SH witness pay-to-compressed-pubkey (v0).
-    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(GetScriptForWitness(scriptPubkey1))), output1, input1);
-    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(GetScriptForWitness(scriptPubkey2))), output2, input2);
-    ReplaceRedeemScript(input2.vin[0].scriptSig, GetScriptForWitness(scriptPubkey1));
+    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(destination_script_1)), output1, input1);
+    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(destination_script_2)), output2, input2);
+    ReplaceRedeemScript(input2.vin[0].scriptSig, destination_script_1);
     CheckWithFlag(output1, input1, 0, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_WITNESS | SCRIPT_VERIFY_P2SH, true);
@@ -587,12 +593,12 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CheckWithFlag(output1, input2, STANDARD_SCRIPT_VERIFY_FLAGS, false);
 
     // Signing disabled for witness pay-to-uncompressed-pubkey (v1).
-    CreateCreditAndSpend(keystore, GetScriptForWitness(scriptPubkey1L), output1, input1, false);
-    CreateCreditAndSpend(keystore, GetScriptForWitness(scriptPubkey2L), output2, input2, false);
+    CreateCreditAndSpend(keystore, destination_script_1L, output1, input1, false);
+    CreateCreditAndSpend(keystore, destination_script_2L, output2, input2, false);
 
     // Signing disabled for P2SH witness pay-to-uncompressed-pubkey (v1).
-    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(GetScriptForWitness(scriptPubkey1L))), output1, input1, false);
-    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(GetScriptForWitness(scriptPubkey2L))), output2, input2, false);
+    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(destination_script_1L)), output1, input1, false);
+    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(destination_script_2L)), output2, input2, false);
 
     // Normal 2-of-2 multisig
     CreateCreditAndSpend(keystore, scriptMulti, output1, input1, false);
@@ -616,10 +622,10 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
 
     // Witness 2-of-2 multisig
-    CreateCreditAndSpend(keystore, GetScriptForWitness(scriptMulti), output1, input1, false);
+    CreateCreditAndSpend(keystore, destination_script_multi, output1, input1, false);
     CheckWithFlag(output1, input1, 0, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false);
-    CreateCreditAndSpend(keystore2, GetScriptForWitness(scriptMulti), output2, input2, false);
+    CreateCreditAndSpend(keystore2, destination_script_multi, output2, input2, false);
     CheckWithFlag(output2, input2, 0, true);
     CheckWithFlag(output2, input2, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false);
     BOOST_CHECK(*output1 == *output2);
@@ -628,10 +634,10 @@ BOOST_AUTO_TEST_CASE(test_witness)
     CheckWithFlag(output1, input1, STANDARD_SCRIPT_VERIFY_FLAGS, true);
 
     // P2SH witness 2-of-2 multisig
-    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(GetScriptForWitness(scriptMulti))), output1, input1, false);
+    CreateCreditAndSpend(keystore, GetScriptForDestination(ScriptHash(destination_script_multi)), output1, input1, false);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output1, input1, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false);
-    CreateCreditAndSpend(keystore2, GetScriptForDestination(ScriptHash(GetScriptForWitness(scriptMulti))), output2, input2, false);
+    CreateCreditAndSpend(keystore2, GetScriptForDestination(ScriptHash(destination_script_multi)), output2, input2, false);
     CheckWithFlag(output2, input2, SCRIPT_VERIFY_P2SH, true);
     CheckWithFlag(output2, input2, SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS, false);
     BOOST_CHECK(*output1 == *output2);
@@ -716,12 +722,12 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
     BOOST_CHECK_EQUAL(reason, "scriptpubkey");
 
-    // MAX_OP_RETURN_RELAY-byte TX_NULL_DATA (standard)
+    // MAX_OP_RETURN_RELAY-byte TxoutType::NULL_DATA (standard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
     BOOST_CHECK_EQUAL(MAX_OP_RETURN_RELAY, t.vout[0].scriptPubKey.size());
     BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
 
-    // MAX_OP_RETURN_RELAY+1-byte TX_NULL_DATA (non-standard)
+    // MAX_OP_RETURN_RELAY+1-byte TxoutType::NULL_DATA (non-standard)
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3804678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef3800");
     BOOST_CHECK_EQUAL(MAX_OP_RETURN_RELAY + 1, t.vout[0].scriptPubKey.size());
     reason.clear();
@@ -745,15 +751,17 @@ BOOST_AUTO_TEST_CASE(test_IsStandard)
     BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
     BOOST_CHECK_EQUAL(reason, "scriptpubkey");
 
-    // TX_NULL_DATA w/o PUSHDATA
+    // TxoutType::NULL_DATA w/o PUSHDATA
     t.vout.resize(1);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN;
     BOOST_CHECK(IsStandardTx(CTransaction(t), reason));
 
-    // Only one TX_NULL_DATA permitted in all cases
+    // Only one TxoutType::NULL_DATA permitted in all cases
     t.vout.resize(2);
     t.vout[0].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
+    t.vout[0].nValue = 0;
     t.vout[1].scriptPubKey = CScript() << OP_RETURN << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38");
+    t.vout[1].nValue = 0;
     reason.clear();
     BOOST_CHECK(!IsStandardTx(CTransaction(t), reason));
     BOOST_CHECK_EQUAL(reason, "multi-op-return");

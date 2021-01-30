@@ -5,12 +5,12 @@
 #include <qt/modaloverlay.h>
 #include <qt/forms/ui_modaloverlay.h>
 
+#include <chainparams.h>
 #include <qt/guiutil.h>
 
-#include <chainparams.h>
-
-#include <QResizeEvent>
+#include <QEasingCurve>
 #include <QPropertyAnimation>
+#include <QResizeEvent>
 
 ModalOverlay::ModalOverlay(bool enable_wallet, QWidget *parent) :
 QWidget(parent),
@@ -33,6 +33,11 @@ userClosed(false)
         ui->infoText->setVisible(false);
         ui->infoTextStrong->setText(tr("%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.").arg(PACKAGE_NAME));
     }
+
+    m_animation.setTargetObject(this);
+    m_animation.setPropertyName("pos");
+    m_animation.setDuration(300 /* ms */);
+    m_animation.setEasingCurve(QEasingCurve::OutQuad);
 }
 
 ModalOverlay::~ModalOverlay()
@@ -48,6 +53,9 @@ bool ModalOverlay::eventFilter(QObject * obj, QEvent * ev) {
             if (!layerIsVisible)
                 setGeometry(0, height(), width(), height());
 
+            if (m_animation.endValue().toPoint().y() > 0) {
+                m_animation.setEndValue(QPoint(0, height()));
+            }
         }
         else if (ev->type() == QEvent::ChildAdded) {
             raise();
@@ -163,17 +171,15 @@ void ModalOverlay::showHide(bool hide, bool userRequested)
     if ( (layerIsVisible && !hide) || (!layerIsVisible && hide) || (!hide && userClosed && !userRequested))
         return;
 
+    Q_EMIT triggered(hide);
+
     if (!isVisible() && !hide)
         setVisible(true);
 
-    setGeometry(0, hide ? 0 : height(), width(), height());
-
-    QPropertyAnimation* animation = new QPropertyAnimation(this, "pos");
-    animation->setDuration(300);
-    animation->setStartValue(QPoint(0, hide ? 0 : this->height()));
-    animation->setEndValue(QPoint(0, hide ? this->height() : 0));
-    animation->setEasingCurve(QEasingCurve::OutQuad);
-    animation->start(QAbstractAnimation::DeleteWhenStopped);
+    m_animation.setStartValue(QPoint(0, hide ? 0 : height()));
+    // The eventFilter() updates the endValue if it is required for QEvent::Resize.
+    m_animation.setEndValue(QPoint(0, hide ? height() : 0));
+    m_animation.start(QAbstractAnimation::KeepWhenStopped);
     layerIsVisible = !hide;
 }
 

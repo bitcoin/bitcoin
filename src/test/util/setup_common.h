@@ -11,13 +11,14 @@
 #include <node/context.h>
 #include <pubkey.h>
 #include <random.h>
-#include <scheduler.h>
+#include <stdexcept>
 #include <txmempool.h>
+#include <util/check.h>
 #include <util/string.h>
 
 #include <type_traits>
 
-#include <boost/thread.hpp>
+#include <boost/thread/thread.hpp>
 
 /** This is connected to the logger. Can be used to redirect logs to any other log */
 extern const std::function<void(const std::string&)> G_TEST_LOG_FUN;
@@ -82,14 +83,21 @@ private:
     const fs::path m_path_root;
 };
 
-/** Testing setup that configures a complete environment.
- * Included are coins database, script check threads setup.
+/** Testing setup that performs all steps up until right before
+ * ChainstateManager gets initialized. Meant for testing ChainstateManager
+ * initialization behaviour.
  */
-struct TestingSetup : public BasicTestingSetup {
+struct ChainTestingSetup : public BasicTestingSetup {
     boost::thread_group threadGroup;
 
+    explicit ChainTestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
+    ~ChainTestingSetup();
+};
+
+/** Testing setup that configures a complete environment.
+ */
+struct TestingSetup : public ChainTestingSetup {
     explicit TestingSetup(const std::string& chainName = CBaseChainParams::MAIN, const std::vector<const char*>& extra_args = {});
-    ~TestingSetup();
 };
 
 /** Identical to TestingSetup, but chain set to regtest */
@@ -102,15 +110,16 @@ class CBlock;
 struct CMutableTransaction;
 class CScript;
 
-//
-// Testing fixture that pre-creates a
-// 100-block REGTEST-mode block chain
-//
+/**
+ * Testing fixture that pre-creates a 100-block REGTEST-mode block chain
+ */
 struct TestChain100Setup : public RegTestingSetup {
     TestChain100Setup();
 
-    // Create a new block with just given transactions, coinbase paying to
-    // scriptPubKey, and try to add it to the current chain.
+    /**
+     * Create a new block with just given transactions, coinbase paying to
+     * scriptPubKey, and try to add it to the current chain.
+     */
     CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
                                  const CScript& scriptPubKey);
 
@@ -136,8 +145,8 @@ struct TestMemPoolEntryHelper
         nFee(0), nTime(0), nHeight(1),
         spendsCoinbase(false), sigOpCost(4) { }
 
-    CTxMemPoolEntry FromTx(const CMutableTransaction& tx);
-    CTxMemPoolEntry FromTx(const CTransactionRef& tx);
+    CTxMemPoolEntry FromTx(const CMutableTransaction& tx) const;
+    CTxMemPoolEntry FromTx(const CTransactionRef& tx) const;
 
     // Change the default value
     TestMemPoolEntryHelper &Fee(CAmount _fee) { nFee = _fee; return *this; }
@@ -151,5 +160,23 @@ CBlock getBlock13b8a();
 
 // define an implicit conversion here so that uint256 may be used directly in BOOST_CHECK_*
 std::ostream& operator<<(std::ostream& os, const uint256& num);
+
+/**
+ * BOOST_CHECK_EXCEPTION predicates to check the specific validation error.
+ * Use as
+ * BOOST_CHECK_EXCEPTION(code that throws, exception type, HasReason("foo"));
+ */
+class HasReason
+{
+public:
+    explicit HasReason(const std::string& reason) : m_reason(reason) {}
+    bool operator()(const std::exception& e) const
+    {
+        return std::string(e.what()).find(m_reason) != std::string::npos;
+    };
+
+private:
+    const std::string m_reason;
+};
 
 #endif

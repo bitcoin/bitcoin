@@ -12,7 +12,7 @@
   </ItemGroup>
     <ItemDefinitionGroup>
     <ClCompile>
-      <PreprocessorDefinitions>ENABLE_MODULE_ECDH;ENABLE_MODULE_RECOVERY;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>ENABLE_MODULE_ECDH;ENABLE_MODULE_RECOVERY;ENABLE_MODULE_EXTRAKEYS;ENABLE_MODULE_SCHNORRSIG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
        <AdditionalIncludeDirectories>..\..\src\secp256k1;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
      </ClCompile>
   </ItemDefinitionGroup>

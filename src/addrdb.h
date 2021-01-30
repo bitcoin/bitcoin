@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,18 +11,11 @@
 #include <serialize.h>
 
 #include <string>
-#include <map>
+#include <vector>
 
-class CSubNet;
+class CAddress;
 class CAddrMan;
 class CDataStream;
-
-typedef enum BanReason
-{
-    BanReasonUnknown          = 0,
-    BanReasonNodeMisbehaving  = 1,
-    BanReasonManuallyAdded    = 2
-} BanReason;
 
 class CBanEntry
 {
@@ -31,7 +24,6 @@ public:
     int nVersion;
     int64_t nCreateTime;
     int64_t nBanUntil;
-    uint8_t banReason;
 
     CBanEntry()
     {
@@ -44,31 +36,17 @@ public:
         nCreateTime = nCreateTimeIn;
     }
 
-    explicit CBanEntry(int64_t n_create_time_in, BanReason ban_reason_in) : CBanEntry(n_create_time_in)
+    SERIALIZE_METHODS(CBanEntry, obj)
     {
-        banReason = ban_reason_in;
+        uint8_t ban_reason = 2; //! For backward compatibility
+        READWRITE(obj.nVersion, obj.nCreateTime, obj.nBanUntil, ban_reason);
     }
-
-    SERIALIZE_METHODS(CBanEntry, obj) { READWRITE(obj.nVersion, obj.nCreateTime, obj.nBanUntil, obj.banReason); }
 
     void SetNull()
     {
         nVersion = CBanEntry::CURRENT_VERSION;
         nCreateTime = 0;
         nBanUntil = 0;
-        banReason = BanReasonUnknown;
-    }
-
-    std::string banReasonToString() const
-    {
-        switch (banReason) {
-        case BanReasonNodeMisbehaving:
-            return "node misbehaving";
-        case BanReasonManuallyAdded:
-            return "manually added";
-        default:
-            return "unknown";
-        }
     }
 };
 
@@ -94,5 +72,21 @@ public:
     bool Write(const banmap_t& banSet);
     bool Read(banmap_t& banSet);
 };
+
+/**
+ * Dump the anchor IP address database (anchors.dat)
+ *
+ * Anchors are last known outgoing block-relay-only peers that are
+ * tried to re-connect to on startup.
+ */
+void DumpAnchors(const fs::path& anchors_db_path, const std::vector<CAddress>& anchors);
+
+/**
+ * Read the anchor IP address database (anchors.dat)
+ *
+ * Deleting anchors.dat is intentional as it avoids renewed peering to anchors after
+ * an unclean shutdown and thus potential exploitation of the anchor peer policy.
+ */
+std::vector<CAddress> ReadAnchors(const fs::path& anchors_db_path);
 
 #endif // BITCOIN_ADDRDB_H

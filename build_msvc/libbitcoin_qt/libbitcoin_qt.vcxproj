@@ -35,6 +35,7 @@
     <ClCompile Include="..\..\src\qt\paymentserver.cpp" />
     <ClCompile Include="..\..\src\qt\peertablemodel.cpp" />
     <ClCompile Include="..\..\src\qt\platformstyle.cpp" />
+    <ClCompile Include="..\..\src\qt\psbtoperationsdialog.cpp" />
     <ClCompile Include="..\..\src\qt\qrimagewidget.cpp" />
     <ClCompile Include="..\..\src\qt\qvalidatedlineedit.cpp" />
     <ClCompile Include="..\..\src\qt\qvaluecombobox.cpp" />
@@ -87,6 +88,7 @@
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_paymentserver.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_peertablemodel.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_platformstyle.cpp" />
+    <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_psbtoperationsdialog.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_qrimagewidget.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_qvalidatedlineedit.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_qvaluecombobox.cpp" />
@@ -102,6 +104,7 @@
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_transactiondesc.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_transactiondescdialog.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_transactionfilterproxy.cpp" />
+    <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_transactionoverviewwidget.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_transactionrecord.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_transactiontablemodel.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_transactionview.cpp" />

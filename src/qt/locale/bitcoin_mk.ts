@@ -349,6 +349,9 @@
     </message>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    </context>
+<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -465,8 +468,12 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>QR Код</translation>
+        <source>Amount:</source>
+        <translation>Сума:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Порака:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -480,15 +487,7 @@
         <source>&amp;Save Image...</source>
         <translation>&amp;Сними Слика...</translation>
     </message>
-    <message>
-        <source>Amount</source>
-        <translation>Сума</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Паричник</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -596,6 +595,10 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Експортирај ги податоците од активното јазиче во датотека</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Грешка</translation>
     </message>
     </context>
 <context>

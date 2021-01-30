@@ -4,6 +4,7 @@
 
 #include <util/settings.h>
 
+#include <tinyformat.h>
 #include <univalue.h>
 
 namespace util {
@@ -12,12 +13,13 @@ namespace {
 enum class Source {
    FORCED,
    COMMAND_LINE,
+   RW_SETTINGS,
    CONFIG_FILE_NETWORK_SECTION,
    CONFIG_FILE_DEFAULT_SECTION
 };
 
 //! Merge settings from multiple sources in precedence order:
-//! Forced config > command line > config file network-specific section > config file default section
+//! Forced config > command line > read-write settings file > config file network-specific section > config file default section
 //!
 //! This function is provided with a callback function fn that contains
 //! specific logic for how to merge the sources.
@@ -31,6 +33,10 @@ static void MergeSettings(const Settings& settings, const std::string& section, 
     // Merge in the command-line options
     if (auto* values = FindKey(settings.command_line_options, name)) {
         fn(SettingsSpan(*values), Source::COMMAND_LINE);
+    }
+    // Merge in the read-write settings
+    if (const SettingsValue* value = FindKey(settings.rw_settings, name)) {
+        fn(SettingsSpan(*value), Source::RW_SETTINGS);
     }
     // Merge in the network-specific section of the config file
     if (!section.empty()) {
@@ -48,6 +54,62 @@ static void MergeSettings(const Settings& settings, const std::string& section, 
     }
 }
 } // namespace
+
+bool ReadSettings(const fs::path& path, std::map<std::string, SettingsValue>& values, std::vector<std::string>& errors)
+{
+    values.clear();
+    errors.clear();
+
+    fsbridge::ifstream file;
+    file.open(path);
+    if (!file.is_open()) return true; // Ok for file not to exist.
+
+    SettingsValue in;
+    if (!in.read(std::string{std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()})) {
+        errors.emplace_back(strprintf("Unable to parse settings file %s", path.string()));
+        return false;
+    }
+
+    if (file.fail()) {
+        errors.emplace_back(strprintf("Failed reading settings file %s", path.string()));
+        return false;
+    }
+    file.close(); // Done with file descriptor. Release while copying data.
+
+    if (!in.isObject()) {
+        errors.emplace_back(strprintf("Found non-object value %s in settings file %s", in.write(), path.string()));
+        return false;
+    }
+
+    const std::vector<std::string>& in_keys = in.getKeys();
+    const std::vector<SettingsValue>& in_values = in.getValues();
+    for (size_t i = 0; i < in_keys.size(); ++i) {
+        auto inserted = values.emplace(in_keys[i], in_values[i]);
+        if (!inserted.second) {
+            errors.emplace_back(strprintf("Found duplicate key %s in settings file %s", in_keys[i], path.string()));
+        }
+    }
+    return errors.empty();
+}
+
+bool WriteSettings(const fs::path& path,
+    const std::map<std::string, SettingsValue>& values,
+    std::vector<std::string>& errors)
+{
+    SettingsValue out(SettingsValue::VOBJ);
+    for (const auto& value : values) {
+        out.__pushKV(value.first, value.second);
+    }
+    fsbridge::ofstream file;
+    file.open(path);
+    if (file.fail()) {
+        errors.emplace_back(strprintf("Error: Unable to open settings file %s for writing", path.string()));
+        return false;
+    }
+    file << out.write(/* prettyIndent= */ 1, /* indentLevel= */ 4) << std::endl;
+    file.close();
+    return true;
+}
 
 SettingsValue GetSetting(const Settings& settings,
     const std::string& section,

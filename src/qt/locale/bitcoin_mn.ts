@@ -439,6 +439,13 @@
     </message>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>or</source>
+        <translation>эсвэл</translation>
+    </message>
+    </context>
+<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -501,10 +508,6 @@
         <translation>Блокийн цуваа</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>Одоогийн блокийн тоо</translation>
-    </message>
-    <message>
         <source>Last block time</source>
         <translation>Сүүлийн блокийн хугацаа</translation>
     </message>
@@ -559,34 +562,26 @@
         <source>Copy amount</source>
         <translation>Хэмжээг санах</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Түрүйвчийн цоожийг тайлж чадсангүй</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Amount:</source>
+        <translation>Хэмжээ:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Зурвас:</translation>
+    </message>
     <message>
         <source>Copy &amp;Address</source>
         <translation>Хаягийг &amp;Хуулбарлах</translation>
     </message>
-    <message>
-        <source>Address</source>
-        <translation>Хаяг</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Хэмжээ</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Шошго</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Зурвас</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Түрүйвч</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -993,11 +988,7 @@
     </context>
 <context>
     <name>WalletFrame</name>
-    <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Ямар ч түрүйвч ачааллагдсангүй.</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>WalletModel</name>
     <message>
@@ -1014,6 +1005,10 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Сонгогдсон таб дээрхи дата-г экспортлох</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Алдаа</translation>
     </message>
     </context>
 <context>

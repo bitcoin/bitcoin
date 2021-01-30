@@ -62,10 +62,12 @@ void AppTests::appTests()
     }
 #endif
 
-    BasicTestingSetup test{CBaseChainParams::REGTEST}; // Create a temp data directory to backup the gui settings to
-    ECC_Stop(); // Already started by the common test setup, so stop it to avoid interference
-    LogInstance().DisconnectTestLogger();
+    fs::create_directories([] {
+        BasicTestingSetup test{CBaseChainParams::REGTEST}; // Create a temp data directory to backup the gui settings to
+        return GetDataDir() / "blocks";
+    }());
 
+    qRegisterMetaType<interfaces::BlockAndHeaderTipInfo>("interfaces::BlockAndHeaderTipInfo");
     m_app.parameterSetup();
     m_app.createOptionsModel(true /* reset settings */);
     QScopedPointer<const NetworkStyle> style(NetworkStyle::instantiate(Params().NetworkIDString()));
@@ -80,9 +82,13 @@ void AppTests::appTests()
     m_app.exec();
 
     // Reset global state to avoid interfering with later tests.
+    LogInstance().DisconnectTestLogger();
     AbortShutdown();
-    UnloadBlockIndex();
-    WITH_LOCK(::cs_main, g_chainman.Reset());
+    {
+        LOCK(cs_main);
+        UnloadBlockIndex(/* mempool */ nullptr, g_chainman);
+        g_chainman.Reset();
+    }
 }
 
 //! Entry point for BitcoinGUI tests.

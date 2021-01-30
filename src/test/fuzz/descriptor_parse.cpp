@@ -8,13 +8,14 @@
 #include <test/fuzz/fuzz.h>
 #include <util/memory.h>
 
-void initialize()
+void initialize_descriptor_parse()
 {
     static const ECCVerifyHandle verify_handle;
-    SelectParams(CBaseChainParams::REGTEST);
+    ECC_Start();
+    SelectParams(CBaseChainParams::MAIN);
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET_INIT(descriptor_parse, initialize_descriptor_parse)
 {
     const std::string descriptor(buffer.begin(), buffer.end());
     FlatSigningProvider signing_provider;

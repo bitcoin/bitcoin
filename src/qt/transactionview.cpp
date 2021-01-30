@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +8,7 @@
 #include <qt/bitcoinunits.h>
 #include <qt/csvmodelwriter.h>
 #include <qt/editaddressdialog.h>
+#include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/platformstyle.h>
 #include <qt/transactiondescdialog.h>
@@ -16,7 +17,7 @@
 #include <qt/transactiontablemodel.h>
 #include <qt/walletmodel.h>
 
-#include <ui_interface.h>
+#include <node/ui_interface.h>
 
 #include <QApplication>
 #include <QComboBox>
@@ -36,8 +37,7 @@
 #include <QVBoxLayout>
 
 TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *parent) :
-    QWidget(parent), model(nullptr), transactionProxyModel(nullptr),
-    transactionView(nullptr), abandonAction(nullptr), bumpFeeAction(nullptr), columnResizingFixer(nullptr)
+    QWidget(parent)
 {
     // Build filter row
     setContentsMargins(0,0,0,0);
@@ -152,8 +152,8 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     abandonAction = new QAction(tr("Abandon transaction"), this);
     bumpFeeAction = new QAction(tr("Increase transaction fee"), this);
     bumpFeeAction->setObjectName("bumpFeeAction");
-    QAction *copyAddressAction = new QAction(tr("Copy address"), this);
-    QAction *copyLabelAction = new QAction(tr("Copy label"), this);
+    copyAddressAction = new QAction(tr("Copy address"), this);
+    copyLabelAction = new QAction(tr("Copy label"), this);
     QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
     QAction *copyTxIDAction = new QAction(tr("Copy transaction ID"), this);
     QAction *copyTxHexAction = new QAction(tr("Copy raw transaction"), this);
@@ -237,7 +237,7 @@ void TransactionView::setModel(WalletModel *_model)
         if (_model->getOptionsModel())
         {
             // Add third party transaction URLs to context menu
-            QStringList listUrls = _model->getOptionsModel()->getThirdPartyTxUrls().split("|", QString::SkipEmptyParts);
+            QStringList listUrls = GUIUtil::SplitSkipEmptyParts(_model->getOptionsModel()->getThirdPartyTxUrls(), "|");
             for (int i = 0; i < listUrls.size(); ++i)
             {
                 QString url = listUrls[i].trimmed();
@@ -275,30 +275,30 @@ void TransactionView::chooseDate(int idx)
         break;
     case Today:
         transactionProxyModel->setDateRange(
-                QDateTime(current),
+                GUIUtil::StartOfDay(current),
                 TransactionFilterProxy::MAX_DATE);
         break;
     case ThisWeek: {
         // Find last Monday
         QDate startOfWeek = current.addDays(-(current.dayOfWeek()-1));
         transactionProxyModel->setDateRange(
-                QDateTime(startOfWeek),
+                GUIUtil::StartOfDay(startOfWeek),
                 TransactionFilterProxy::MAX_DATE);
 
         } break;
     case ThisMonth:
         transactionProxyModel->setDateRange(
-                QDateTime(QDate(current.year(), current.month(), 1)),
+                GUIUtil::StartOfDay(QDate(current.year(), current.month(), 1)),
                 TransactionFilterProxy::MAX_DATE);
         break;
     case LastMonth:
         transactionProxyModel->setDateRange(
-                QDateTime(QDate(current.year(), current.month(), 1).addMonths(-1)),
-                QDateTime(QDate(current.year(), current.month(), 1)));
+                GUIUtil::StartOfDay(QDate(current.year(), current.month(), 1).addMonths(-1)),
+                GUIUtil::StartOfDay(QDate(current.year(), current.month(), 1)));
         break;
     case ThisYear:
         transactionProxyModel->setDateRange(
-                QDateTime(QDate(current.year(), 1, 1)),
+                GUIUtil::StartOfDay(QDate(current.year(), 1, 1)),
                 TransactionFilterProxy::MAX_DATE);
         break;
     case Range:
@@ -395,10 +395,11 @@ void TransactionView::contextualMenu(const QPoint &point)
     hash.SetHex(selection.at(0).data(TransactionTableModel::TxHashRole).toString().toStdString());
     abandonAction->setEnabled(model->wallet().transactionCanBeAbandoned(hash));
     bumpFeeAction->setEnabled(model->wallet().transactionCanBeBumped(hash));
+    copyAddressAction->setEnabled(GUIUtil::hasEntryData(transactionView, 0, TransactionTableModel::AddressRole));
+    copyLabelAction->setEnabled(GUIUtil::hasEntryData(transactionView, 0, TransactionTableModel::LabelRole));
 
-    if(index.isValid())
-    {
-        contextMenu->popup(transactionView->viewport()->mapToGlobal(point));
+    if (index.isValid()) {
+        GUIUtil::PopupMenu(contextMenu, transactionView->viewport()->mapToGlobal(point));
     }
 }
 
@@ -582,8 +583,8 @@ void TransactionView::dateRangeChanged()
     if(!transactionProxyModel)
         return;
     transactionProxyModel->setDateRange(
-            QDateTime(dateFrom->date()),
-            QDateTime(dateTo->date()).addDays(1));
+            GUIUtil::StartOfDay(dateFrom->date()),
+            GUIUtil::StartOfDay(dateTo->date()).addDays(1));
 }
 
 void TransactionView::focusTransaction(const QModelIndex &idx)

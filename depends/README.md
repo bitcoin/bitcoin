@@ -25,7 +25,7 @@ Common `host-platform-triplets` for cross compilation are:
 - `i686-pc-linux-gnu` for Linux 32 bit
 - `x86_64-pc-linux-gnu` for x86 Linux
 - `x86_64-w64-mingw32` for Win64
-- `x86_64-apple-darwin16` for macOS
+- `x86_64-apple-darwin18` for macOS
 - `arm-linux-gnueabihf` for Linux ARM 32 bit
 - `aarch64-linux-gnu` for Linux ARM 64 bit
 - `powerpc64-linux-gnu` for Linux POWER 64-bit (big endian)
@@ -44,7 +44,7 @@ The paths are automatically configured and no other options are needed unless ta
 
 #### For macOS cross compilation
 
-    sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools
+    sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python3-setuptools libtinfo5 xorriso
 
 #### For Win64 cross compilation
 
@@ -80,20 +80,31 @@ For linux S390X cross compilation:
     sudo apt-get install g++-s390x-linux-gnu binutils-s390x-linux-gnu
 
 ### Dependency Options
-The following can be set when running make: make FOO=bar
 
-    SOURCES_PATH: downloaded sources will be placed here
-    BASE_CACHE: built packages will be placed here
-    SDK_PATH: Path where sdk's can be found (used by macOS)
-    FALLBACK_DOWNLOAD_PATH: If a source file can't be fetched, try here before giving up
-    NO_QT: Don't download/build/cache qt and its dependencies
-    NO_QR: Don't download/build/cache packages needed for enabling qrencode
-    NO_ZMQ: Don't download/build/cache packages needed for enabling zeromq
-    NO_WALLET: Don't download/build/cache libs needed to enable the wallet
-    NO_UPNP: Don't download/build/cache packages needed for enabling upnp
-    DEBUG: disable some optimizations and enable more runtime checking
-    HOST_ID_SALT: Optional salt to use when generating host package ids
-    BUILD_ID_SALT: Optional salt to use when generating build package ids
+The following can be set when running make: `make FOO=bar`
+
+- `SOURCES_PATH`: Downloaded sources will be placed here
+- `BASE_CACHE`: Built packages will be placed here
+- `SDK_PATH`: Path where SDKs can be found (used by macOS)
+- `FALLBACK_DOWNLOAD_PATH`: If a source file can't be fetched, try here before giving up
+- `NO_QT`: Don't download/build/cache Qt and its dependencies
+- `NO_QR`: Don't download/build/cache packages needed for enabling qrencode
+- `NO_ZMQ`: Don't download/build/cache packages needed for enabling ZeroMQ
+- `NO_WALLET`: Don't download/build/cache libs needed to enable the wallet
+- `NO_BDB`: Don't download/build/cache BerkeleyDB
+- `NO_SQLITE`: Don't download/build/cache SQLite
+- `NO_UPNP`: Don't download/build/cache packages needed for enabling UPnP
+- `NO_NATPMP`: Don't download/build/cache packages needed for enabling NAT-PMP</dd>
+- `ALLOW_HOST_PACKAGES`: Packages that are missed in dependencies (due to `NO_*` option or
+  build script logic) are searched for among the host system packages using
+  `pkg-config`. It allows building with packages of other (newer) versions
+- `MULTIPROCESS`: Build libmultiprocess (experimental, requires CMake)
+- `DEBUG`: Disable some optimizations and enable more runtime checking
+- `HOST_ID_SALT`: Optional salt to use when generating host package ids
+- `BUILD_ID_SALT`: Optional salt to use when generating build package ids
+- `FORCE_USE_SYSTEM_CLANG`: (EXPERTS ONLY) When cross-compiling for macOS, use Clang found in the
+  system's `$PATH` rather than the default prebuilt release of Clang
+  from llvm.org. Clang 8 or later is required.
 
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
 options will be passed to bitcoin's configure. In this case, `--disable-wallet`.

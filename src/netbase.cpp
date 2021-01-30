@@ -12,6 +12,8 @@
 #include <util/system.h>
 
 #include <atomic>
+#include <cstdint>
+#include <limits>
 
 #ifndef WIN32
 #include <fcntl.h>
@@ -28,9 +30,9 @@
 #endif
 
 // Settings
-static RecursiveMutex cs_proxyInfos;
-static proxyType proxyInfo[NET_MAX] GUARDED_BY(cs_proxyInfos);
-static proxyType nameProxy GUARDED_BY(cs_proxyInfos);
+static Mutex g_proxyinfo_mutex;
+static proxyType proxyInfo[NET_MAX] GUARDED_BY(g_proxyinfo_mutex);
+static proxyType nameProxy GUARDED_BY(g_proxyinfo_mutex);
 int nConnectTimeout = DEFAULT_CONNECT_TIMEOUT;
 bool fNameLookup = DEFAULT_NAME_LOOKUP;
 
@@ -50,14 +52,20 @@ enum Network ParseNetwork(const std::string& net_in) {
     return NET_UNROUTABLE;
 }
 
-std::string GetNetworkName(enum Network net) {
-    switch(net)
-    {
+std::string GetNetworkName(enum Network net)
+{
+    switch (net) {
+    case NET_UNROUTABLE: return "unroutable";
     case NET_IPV4: return "ipv4";
     case NET_IPV6: return "ipv6";
     case NET_ONION: return "onion";
-    default: return "";
-    }
+    case NET_I2P: return "i2p";
+    case NET_CJDNS: return "cjdns";
+    case NET_INTERNAL: return "internal";
+    case NET_MAX: assert(false);
+    } // no default case, so the compiler can warn about missing cases
+
+    assert(false);
 }
 
 bool static LookupIntern(const std::string& name, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
@@ -711,14 +719,14 @@ bool SetProxy(enum Network net, const proxyType &addrProxy) {
     assert(net >= 0 && net < NET_MAX);
     if (!addrProxy.IsValid())
         return false;
-    LOCK(cs_proxyInfos);
+    LOCK(g_proxyinfo_mutex);
     proxyInfo[net] = addrProxy;
     return true;
 }
 
 bool GetProxy(enum Network net, proxyType &proxyInfoOut) {
     assert(net >= 0 && net < NET_MAX);
-    LOCK(cs_proxyInfos);
+    LOCK(g_proxyinfo_mutex);
     if (!proxyInfo[net].IsValid())
         return false;
     proxyInfoOut = proxyInfo[net];
@@ -744,13 +752,13 @@ bool GetProxy(enum Network net, proxyType &proxyInfoOut) {
 bool SetNameProxy(const proxyType &addrProxy) {
     if (!addrProxy.IsValid())
         return false;
-    LOCK(cs_proxyInfos);
+    LOCK(g_proxyinfo_mutex);
     nameProxy = addrProxy;
     return true;
 }
 
 bool GetNameProxy(proxyType &nameProxyOut) {
-    LOCK(cs_proxyInfos);
+    LOCK(g_proxyinfo_mutex);
     if(!nameProxy.IsValid())
         return false;
     nameProxyOut = nameProxy;
@@ -758,12 +766,12 @@ bool GetNameProxy(proxyType &nameProxyOut) {
 }
 
 bool HaveNameProxy() {
-    LOCK(cs_proxyInfos);
+    LOCK(g_proxyinfo_mutex);
     return nameProxy.IsValid();
 }
 
 bool IsProxy(const CNetAddr &addr) {
-    LOCK(cs_proxyInfos);
+    LOCK(g_proxyinfo_mutex);
     for (int i = 0; i < NET_MAX; i++) {
         if (addr == static_cast<CNetAddr>(proxyInfo[i].proxy))
             return true;
@@ -798,11 +806,11 @@ bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int
         ProxyCredentials random_auth;
         static std::atomic_int counter(0);
         random_auth.username = random_auth.password = strprintf("%i", counter++);
-        if (!Socks5(strDest, (unsigned short)port, &random_auth, hSocket)) {
+        if (!Socks5(strDest, (uint16_t)port, &random_auth, hSocket)) {
             return false;
         }
     } else {
-        if (!Socks5(strDest, (unsigned short)port, 0, hSocket)) {
+        if (!Socks5(strDest, (uint16_t)port, 0, hSocket)) {
             return false;
         }
     }
@@ -837,8 +845,8 @@ bool LookupSubNet(const std::string& strSubnet, CSubNet& ret)
         if (slash != strSubnet.npos)
         {
             std::string strNetmask = strSubnet.substr(slash + 1);
-            int32_t n;
-            if (ParseInt32(strNetmask, &n)) {
+            uint8_t n;
+            if (ParseUInt8(strNetmask, &n)) {
                 // If valid number, assume CIDR variable-length subnet masking
                 ret = CSubNet(network, n);
                 return ret.IsValid();

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,9 +23,8 @@ struct WalletTxStatus;
 class TransactionStatus
 {
 public:
-    TransactionStatus():
-        countsForBalance(false), sortKey(""),
-        matures_in(0), status(Unconfirmed), depth(0), open_for(0), cur_num_blocks(-1)
+    TransactionStatus() : countsForBalance(false), sortKey(""),
+                          matures_in(0), status(Unconfirmed), depth(0), open_for(0)
     { }
 
     enum Status {
@@ -61,8 +60,8 @@ public:
                       finalization */
     /**@}*/
 
-    /** Current number of blocks (to know whether cached status is still valid) */
-    int cur_num_blocks;
+    /** Current block hash (to know whether cached status is still valid) */
+    uint256 m_cur_block_hash{};
 
     bool needsUpdate;
 };
@@ -138,11 +137,11 @@ public:
 
     /** Update status from core wallet tx.
      */
-    void updateStatus(const interfaces::WalletTxStatus& wtx, int numBlocks, int64_t block_time);
+    void updateStatus(const interfaces::WalletTxStatus& wtx, const uint256& block_hash, int numBlocks, int64_t block_time);
 
     /** Return whether a status update is needed.
      */
-    bool statusUpdateNeeded(int numBlocks) const;
+    bool statusUpdateNeeded(const uint256& block_hash) const;
 };
 
 #endif // BITCOIN_QT_TRANSACTIONRECORD_H

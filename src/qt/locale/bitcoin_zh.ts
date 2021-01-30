@@ -132,6 +132,10 @@
         <translation>重复新密码</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>显示密码</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>加密钱包</translation>
     </message>
@@ -170,6 +174,30 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>加密钱包</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>输入钱包的新密码。&lt;br/&gt;密码中请使用&lt;b&gt;10个或更多随机字符&lt;/b&gt;，或&lt;b&gt;8个或更多的单词&lt;/b&gt;。</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>输入钱包的旧密码和新密码。</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>记住，加密您的钱包并不能完全保护您的比特币不被您电脑中的恶意软件窃取。</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>钱包即将被加密编码。</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>你的钱包即将被加密编码。</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>你的钱包已被加密编码。</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -290,6 +318,14 @@
         <translation>打开 &amp;URI...</translation>
     </message>
     <message>
+        <source>Create Wallet...</source>
+        <translation>创建钱包</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>创建一个新的钱包</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation>钱包：</translation>
     </message>
@@ -393,6 +429,10 @@
         <source>&amp;Command-line options</source>
         <translation>&amp;命令行选项</translation>
     </message>
+    <message numerus="yes">
+        <source>%n active connection(s) to Bitcoin network</source>
+        <translation><numerusform>%n 活跃的链接到比特币网络</numerusform></translation>
+    </message>
     <message>
         <source>Indexing blocks on disk...</source>
         <translation>索引磁盘上的区块...</translation>
@@ -400,6 +440,10 @@
     <message>
         <source>Processing blocks on disk...</source>
         <translation>处理磁盘上的区块...</translation>
+    </message>
+    <message numerus="yes">
+        <source>Processed %n block(s) of transaction history.</source>
+        <translation><numerusform>已处理 %n 的历史交易区块</numerusform></translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -430,12 +474,24 @@
         <translation>最新的</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation>结点窗口</translation>
+    </message>
+    <message>
+        <source>Open node debugging and diagnostic console</source>
+        <translation>打开结点的调试和诊断控制台</translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation>&amp;发送地址</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
         <translation>&amp;接受地址</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI</source>
+        <translation>打开比特币: URI</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -488,6 +544,10 @@
     <message>
         <source>Connecting to peers...</source>
         <translation>连接到节点...</translation>
+    </message>
+    <message>
+        <source>Catching up...</source>
+        <translation>跟进中</translation>
     </message>
     <message>
         <source>Date: %1
@@ -553,11 +613,7 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>钱包是&lt;b&gt;加密的&lt;/b&gt;，目前&lt;b&gt;已锁定&lt;/b&gt;</translation>
     </message>
-    <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>发生了致命错误。比特币无法继续安全运行，将退出。</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -607,6 +663,14 @@
     <message>
         <source>Amount</source>
         <translation>总计</translation>
+    </message>
+    <message>
+        <source>Received with label</source>
+        <translation>收到，夹带标签</translation>
+    </message>
+    <message>
+        <source>Received with address</source>
+        <translation>收到，夹带地址</translation>
     </message>
     <message>
         <source>Date</source>
@@ -694,6 +758,38 @@
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Create Wallet</source>
+        <translation>创建钱包</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>钱包名称</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>编码钱包。钱包将会根据你选择的密码进行加密编码。</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>加密钱包</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>禁用这个钱包的私钥。禁用私钥的钱包将没有私钥，也不能使用HD种子或者导入的私钥。对于仅供查看的钱包这是理想的设置。</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>禁用私钥</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>创建一个空白钱包。空白钱包没有起始的私钥和脚本。稍后可以倒入私钥和地址、设置HD种子。</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>创建空白钱包</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -943,6 +1039,9 @@
     </message>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    </context>
+<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -960,6 +1059,10 @@
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>Node window</source>
+        <translation>结点窗口</translation>
+    </message>
     <message>
         <source>Last block time</source>
         <translation>最后的区块时间</translation>
@@ -1007,20 +1110,20 @@
         <source>Copy amount</source>
         <translation>复制金额</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>不能解锁钱包</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>Address</source>
-        <translation>地址</translation>
+        <source>Amount:</source>
+        <translation>总计：</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>总计</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>标签</translation>
+        <source>Wallet:</source>
+        <translation>钱包：</translation>
     </message>
     </context>
 <context>
@@ -1328,7 +1431,11 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </context>
 <context>
     <name>WalletFrame</name>
-    </context>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>创建一个新的钱包</translation>
+    </message>
+</context>
 <context>
     <name>WalletModel</name>
     <message>
@@ -1345,6 +1452,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>将当前选项卡中的数据导出到文件</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>错误</translation>
     </message>
     </context>
 <context>

@@ -10,18 +10,17 @@
 #include <interfaces/chain.h>
 #include <interfaces/wallet.h>
 #include <node/context.h>
+#include <util/check.h>
 #include <wallet/wallet.h>
 
 #include <memory>
 
 /** Testing setup and teardown for wallet.
  */
-struct WalletTestingSetup: public TestingSetup {
+struct WalletTestingSetup : public TestingSetup {
     explicit WalletTestingSetup(const std::string& chainName = CBaseChainParams::MAIN);
 
-    NodeContext m_node;
-    std::unique_ptr<interfaces::Chain> m_chain = interfaces::MakeChain(m_node);
-    std::unique_ptr<interfaces::ChainClient> m_chain_client = interfaces::MakeWalletClient(*m_chain, {});
+    std::unique_ptr<interfaces::WalletClient> m_wallet_client = interfaces::MakeWalletClient(*m_node.chain, *Assert(m_node.args));
     CWallet m_wallet;
     std::unique_ptr<interfaces::Handler> m_chain_notifications_handler;
 };

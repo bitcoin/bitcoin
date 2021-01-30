@@ -43,8 +43,8 @@ static bool CheckFilterLookups(BlockFilterIndex& filter_index, const CBlockIndex
     BOOST_CHECK(filter_index.LookupFilterHashRange(block_index->nHeight, block_index,
                                                    filter_hashes));
 
-    BOOST_CHECK_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filter_hashes.size(), 1);
+    BOOST_CHECK_EQUAL(filters.size(), 1U);
+    BOOST_CHECK_EQUAL(filter_hashes.size(), 1U);
 
     BOOST_CHECK_EQUAL(filter.GetHash(), expected_filter.GetHash());
     BOOST_CHECK_EQUAL(filter_header, expected_filter.ComputeHeader(last_header));
@@ -94,7 +94,7 @@ bool BuildChainTestingSetup::BuildChain(const CBlockIndex* pindex,
         CBlockHeader header = block->GetBlockHeader();
 
         BlockValidationState state;
-        if (!ProcessNewBlockHeaders({header}, state, Params(), &pindex)) {
+        if (!Assert(m_node.chainman)->ProcessNewBlockHeaders({header}, state, Params(), &pindex)) {
             return false;
         }
     }
@@ -171,7 +171,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     uint256 chainA_last_header = last_header;
     for (size_t i = 0; i < 2; i++) {
         const auto& block = chainA[i];
-        BOOST_REQUIRE(ProcessNewBlock(Params(), block, true, nullptr));
+        BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
     }
     for (size_t i = 0; i < 2; i++) {
         const auto& block = chainA[i];
@@ -189,7 +189,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     uint256 chainB_last_header = last_header;
     for (size_t i = 0; i < 3; i++) {
         const auto& block = chainB[i];
-        BOOST_REQUIRE(ProcessNewBlock(Params(), block, true, nullptr));
+        BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
     }
     for (size_t i = 0; i < 3; i++) {
         const auto& block = chainB[i];
@@ -220,7 +220,7 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     // Reorg back to chain A.
      for (size_t i = 2; i < 4; i++) {
          const auto& block = chainA[i];
-         BOOST_REQUIRE(ProcessNewBlock(Params(), block, true, nullptr));
+         BOOST_REQUIRE(Assert(m_node.chainman)->ProcessNewBlock(Params(), block, true, nullptr));
      }
 
      // Check that chain A and B blocks can be retrieved.
@@ -255,8 +255,9 @@ BOOST_FIXTURE_TEST_CASE(blockfilter_index_initial_sync, BuildChainTestingSetup)
     BOOST_CHECK(filter_index.LookupFilterRange(0, tip, filters));
     BOOST_CHECK(filter_index.LookupFilterHashRange(0, tip, filter_hashes));
 
-    BOOST_CHECK_EQUAL(filters.size(), tip->nHeight + 1);
-    BOOST_CHECK_EQUAL(filter_hashes.size(), tip->nHeight + 1);
+    assert(tip->nHeight >= 0);
+    BOOST_CHECK_EQUAL(filters.size(), tip->nHeight + 1U);
+    BOOST_CHECK_EQUAL(filter_hashes.size(), tip->nHeight + 1U);
 
     filters.clear();
     filter_hashes.clear();

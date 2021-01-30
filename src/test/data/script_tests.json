@@ -678,7 +678,7 @@
 ["0 0x02 0x0000 0", "CHECKMULTISIGVERIFY 1", "", "OK"],
 
 ["While not really correctly DER encoded, the empty signature is allowed by"],
-["STRICTENC to provide a compact way to provide a delibrately invalid signature."],
+["STRICTENC to provide a compact way to provide a deliberately invalid signature."],
 ["0", "0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 CHECKSIG NOT", "STRICTENC", "OK"],
 ["0 0", "1 0x21 0x02865c40293a680cb9c020e7b1e106d8c1916d3cef99aa431a56d253e69256dac0 1 CHECKMULTISIG NOT", "STRICTENC", "OK"],
 

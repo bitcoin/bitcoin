@@ -4,7 +4,6 @@
 
 #include <chainparams.h>
 #include <key_io.h>
-#include <optional.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -17,14 +16,14 @@
 #include <string>
 #include <vector>
 
-void initialize()
+void initialize_message()
 {
     static const ECCVerifyHandle ecc_verify_handle;
     ECC_Start();
     SelectParams(CBaseChainParams::REGTEST);
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET_INIT(message, initialize_message)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const std::string random_message = fuzzed_data_provider.ConsumeRandomLengthString(1024);

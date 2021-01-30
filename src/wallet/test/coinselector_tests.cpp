@@ -24,14 +24,12 @@ BOOST_FIXTURE_TEST_SUITE(coinselector_tests, WalletTestingSetup)
 // we repeat those tests this many times and only complain if all iterations of the test fail
 #define RANDOM_REPEATS 5
 
-std::vector<std::unique_ptr<CWalletTx>> wtxn;
-
 typedef std::set<CInputCoin> CoinSet;
 
 static std::vector<COutput> vCoins;
 static NodeContext testNode;
 static auto testChain = interfaces::MakeChain(testNode);
-static CWallet testWallet(testChain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+static CWallet testWallet(testChain.get(), "", CreateDummyWalletDatabase());
 static CAmount balance = 0;
 
 CoinEligibilityFilter filter_standard(1, 6, 0);
@@ -66,7 +64,8 @@ static void add_coin(CWallet& wallet, const CAmount& nValue, int nAge = 6*24, bo
     if (spendable) {
         CTxDestination dest;
         std::string error;
-        assert(wallet.GetNewDestination(OutputType::BECH32, "", dest, error));
+        const bool destination_ok = wallet.GetNewDestination(OutputType::BECH32, "", dest, error);
+        assert(destination_ok);
         tx.vout[nInput].scriptPubKey = GetScriptForDestination(dest);
     }
     if (fIsFromMe) {
@@ -74,16 +73,14 @@ static void add_coin(CWallet& wallet, const CAmount& nValue, int nAge = 6*24, bo
         // so stop vin being empty, and cache a non-zero Debit to fake out IsFromMe()
         tx.vin.resize(1);
     }
-    std::unique_ptr<CWalletTx> wtx = MakeUnique<CWalletTx>(&wallet, MakeTransactionRef(std::move(tx)));
+    CWalletTx* wtx = wallet.AddToWallet(MakeTransactionRef(std::move(tx)), /* confirm= */ {});
     if (fIsFromMe)
     {
         wtx->m_amounts[CWalletTx::DEBIT].Set(ISMINE_SPENDABLE, 1);
         wtx->m_is_cache_empty = false;
     }
-    COutput output(wtx.get(), nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
+    COutput output(wtx, nInput, nAge, true /* spendable */, true /* solvable */, true /* safe */);
     vCoins.push_back(output);
-    wallet.AddToWallet(*wtx.get());
-    wtxn.emplace_back(std::move(wtx));
 }
 static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = false, int nInput=0, bool spendable = false)
 {
@@ -93,7 +90,6 @@ static void add_coin(const CAmount& nValue, int nAge = 6*24, bool fIsFromMe = fa
 static void empty_wallet(void)
 {
     vCoins.clear();
-    wtxn.clear();
     balance = 0;
 }
 
@@ -288,7 +284,7 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
     // Make sure that can use BnB when there are preset inputs
     empty_wallet();
     {
-        std::unique_ptr<CWallet> wallet = MakeUnique<CWallet>(m_chain.get(), WalletLocation(), WalletDatabase::CreateMock());
+        std::unique_ptr<CWallet> wallet = MakeUnique<CWallet>(m_node.chain.get(), "", CreateMockWalletDatabase());
         bool firstRun;
         wallet->LoadWallet(firstRun);
         wallet->SetupLegacyScriptPubKeyMan();
@@ -457,7 +453,7 @@ BOOST_AUTO_TEST_CASE(knapsack_solver_test)
         BOOST_CHECK( testWallet.SelectCoinsMinConf(1 * MIN_CHANGE, filter_confirmed, GroupCoins(vCoins), setCoinsRet, nValueRet, coin_selection_params, bnb_used));
         BOOST_CHECK_EQUAL(nValueRet, 1 * MIN_CHANGE); // we should get the exact amount
 
-        // run the 'mtgox' test (see http://blockexplorer.com/tx/29a3efd3ef04f9153d47a990bd7b048a4b2d213daaa5fb8ed670fb85f13bdbcf)
+        // run the 'mtgox' test (see https://blockexplorer.com/tx/29a3efd3ef04f9153d47a990bd7b048a4b2d213daaa5fb8ed670fb85f13bdbcf)
         // they tried to consolidate 10 50k coins into one 500k coin, and ended up with 50k in change
         empty_wallet();
         for (int j = 0; j < 20; j++)

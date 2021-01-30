@@ -92,12 +92,13 @@ private:
 
     friend class PartiallyDownloadedBlock;
 
-    static const int SHORTTXIDS_LENGTH = 6;
 protected:
     std::vector<uint64_t> shorttxids;
     std::vector<PrefilledTransaction> prefilledtxn;
 
 public:
+    static constexpr int SHORTTXIDS_LENGTH = 6;
+
     CBlockHeader header;
 
     // Dummy for deserialization
@@ -125,7 +126,7 @@ class PartiallyDownloadedBlock {
 protected:
     std::vector<CTransactionRef> txn_available;
     size_t prefilled_count = 0, mempool_count = 0, extra_count = 0;
-    CTxMemPool* pool;
+    const CTxMemPool* pool;
 public:
     CBlockHeader header;
     explicit PartiallyDownloadedBlock(CTxMemPool* poolIn) : pool(poolIn) {}

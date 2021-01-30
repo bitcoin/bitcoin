@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019 The Bitcoin Core developers
+# Copyright (c) 2019-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPC misc output."""
@@ -27,8 +27,8 @@ class RpcMiscTest(BitcoinTestFramework):
         self.log.info("test CHECK_NONFATAL")
         assert_raises_rpc_error(
             -1,
-            "Internal bug detected: 'request.params.size() != 100'",
-            lambda: node.echo(*[0] * 100),
+            'Internal bug detected: \'request.params[9].get_str() != "trigger_internal_bug"\'',
+            lambda: node.echo(arg9='trigger_internal_bug'),
         )
 
         self.log.info("test getmemoryinfo")
@@ -60,6 +60,34 @@ class RpcMiscTest(BitcoinTestFramework):
         assert_equal(node.logging()['qt'], False)
         node.logging(include=['qt'])
         assert_equal(node.logging()['qt'], True)
+
+        self.log.info("test getindexinfo")
+        # Without any indices running the RPC returns an empty object
+        assert_equal(node.getindexinfo(), {})
+
+        # Restart the node with indices and wait for them to sync
+        self.restart_node(0, ["-txindex", "-blockfilterindex"])
+        self.wait_until(lambda: all(i["synced"] for i in node.getindexinfo().values()))
+
+        # Returns a list of all running indices by default
+        assert_equal(
+            node.getindexinfo(),
+            {
+                "txindex": {"synced": True, "best_block_height": 200},
+                "basic block filter index": {"synced": True, "best_block_height": 200}
+            }
+        )
+
+        # Specifying an index by name returns only the status of that index
+        assert_equal(
+            node.getindexinfo("txindex"),
+            {
+                "txindex": {"synced": True, "best_block_height": 200},
+            }
+        )
+
+        # Specifying an unknown index name returns an empty result
+        assert_equal(node.getindexinfo("foo"), {})
 
 
 if __name__ == '__main__':

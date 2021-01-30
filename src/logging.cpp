@@ -22,8 +22,8 @@ BCLog::Logger& LogInstance()
  * access the logger. When the shutdown sequence is fully audited and tested,
  * explicit destruction of these objects can be implemented by changing this
  * from a raw pointer to a std::unique_ptr.
- * Since the destructor is never called, the logger and all its members must
- * have a trivial destructor.
+ * Since the ~Logger() destructor is never called, the Logger class and all
+ * its subclasses must have implicitly-defined destructors.
  *
  * This method of initialization was originally introduced in
  * ee3374234c60aba2cc4c5cd5cac1c0aefc2d817c.
@@ -41,7 +41,7 @@ static int FileWriteStr(const std::string &str, FILE *fp)
 
 bool BCLog::Logger::StartLogging()
 {
-    std::lock_guard<std::mutex> scoped_lock(m_cs);
+    StdLockGuard scoped_lock(m_cs);
 
     assert(m_buffering);
     assert(m_fileout == nullptr);
@@ -80,7 +80,7 @@ bool BCLog::Logger::StartLogging()
 
 void BCLog::Logger::DisconnectTestLogger()
 {
-    std::lock_guard<std::mutex> scoped_lock(m_cs);
+    StdLockGuard scoped_lock(m_cs);
     m_buffering = true;
     if (m_fileout != nullptr) fclose(m_fileout);
     m_fileout = nullptr;
@@ -95,15 +95,7 @@ void BCLog::Logger::EnableCategory(BCLog::LogFlags flag)
 bool BCLog::Logger::EnableCategory(const std::string& str)
 {
     BCLog::LogFlags flag;
-    if (!GetLogCategory(flag, str)) {
-        if (str == "db") {
-            // DEPRECATION: Added in 0.20, should start returning an error in 0.21
-            LogPrintf("Warning: logging category 'db' is deprecated, use 'walletdb' instead\n");
-            EnableCategory(BCLog::WALLETDB);
-            return true;
-        }
-        return false;
-    }
+    if (!GetLogCategory(flag, str)) return false;
     EnableCategory(flag);
     return true;
 }
@@ -182,7 +174,7 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
     return false;
 }
 
-std::vector<LogCategory> BCLog::Logger::LogCategoriesList()
+std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
 {
     std::vector<LogCategory> ret;
     for (const CLogCategoryDesc& category_desc : LogCategories) {
@@ -246,7 +238,7 @@ namespace BCLog {
 
 void BCLog::Logger::LogPrintStr(const std::string& str)
 {
-    std::lock_guard<std::mutex> scoped_lock(m_cs);
+    StdLockGuard scoped_lock(m_cs);
     std::string str_prefixed = LogEscapeMessage(str);
 
     if (m_log_threadnames && m_started_new_line) {

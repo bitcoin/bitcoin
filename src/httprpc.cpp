@@ -9,7 +9,6 @@
 #include <httpserver.h>
 #include <rpc/protocol.h>
 #include <rpc/server.h>
-#include <ui_interface.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -69,6 +68,8 @@ private:
 static std::string strRPCUserColonPass;
 /* Stored RPC timer interface (for unregistration) */
 static std::unique_ptr<HTTPRPCTimerInterface> httpRPCTimerInterface;
+/* List of -rpcauth values */
+static std::vector<std::vector<std::string>> g_rpcauth;
 /* RPC Auth Whitelist */
 static std::map<std::string, std::set<std::string>> g_rpc_whitelist;
 static bool g_rpc_whitelist_default = false;
@@ -100,15 +101,7 @@ static bool multiUserAuthorized(std::string strUserPass)
     std::string strUser = strUserPass.substr(0, strUserPass.find(':'));
     std::string strPass = strUserPass.substr(strUserPass.find(':') + 1);
 
-    for (const std::string& strRPCAuth : gArgs.GetArgs("-rpcauth")) {
-        //Search for multi-user login/pass "rpcauth" from config
-        std::vector<std::string> vFields;
-        boost::split(vFields, strRPCAuth, boost::is_any_of(":$"));
-        if (vFields.size() != 3) {
-            //Incorrect formatting in config file
-            continue;
-        }
-
+    for (const auto& vFields : g_rpcauth) {
         std::string strName = vFields[0];
         if (!TimingResistantEqual(strName, strUser)) {
             continue;
@@ -151,7 +144,7 @@ static bool RPCAuthorized(const std::string& strAuth, std::string& strAuthUserna
     return multiUserAuthorized(strUserPass);
 }
 
-static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
+static bool HTTPReq_JSONRPC(const util::Ref& context, HTTPRequest* req)
 {
     // JSONRPC handles only POST
     if (req->GetRequestMethod() != HTTPRequest::POST) {
@@ -166,7 +159,7 @@ static bool HTTPReq_JSONRPC(HTTPRequest* req, const std::string &)
         return false;
     }
 
-    JSONRPCRequest jreq;
+    JSONRPCRequest jreq(context);
     jreq.peerAddr = req->GetPeer().ToString();
     if (!RPCAuthorized(authHeader.second, jreq.authUser)) {
         LogPrintf("ThreadRPCServer incorrect password attempt from %s\n", jreq.peerAddr);
@@ -249,11 +242,8 @@ static bool InitRPCAuthentication()
 {
     if (gArgs.GetArg("-rpcpassword", "") == "")
     {
-        LogPrintf("No rpcpassword set - using random cookie authentication.\n");
+        LogPrintf("Using random cookie authentication.\n");
         if (!GenerateAuthCookie(&strRPCUserColonPass)) {
-            uiInterface.ThreadSafeMessageBox(
-                _("Error: A fatal internal error occurred, see debug.log for details").translated, // Same message as AbortNode
-                "", CClientUIInterface::MSG_ERROR);
             return false;
         }
     } else {
@@ -263,6 +253,16 @@ static bool InitRPCAuthentication()
     if (gArgs.GetArg("-rpcauth","") != "")
     {
         LogPrintf("Using rpcauth authentication.\n");
+        for (const std::string& rpcauth : gArgs.GetArgs("-rpcauth")) {
+            std::vector<std::string> fields;
+            boost::split(fields, rpcauth, boost::is_any_of(":$"));
+            if (fields.size() == 3) {
+                g_rpcauth.push_back(fields);
+            } else {
+                LogPrintf("Invalid -rpcauth argument.\n");
+                return false;
+            }
+        }
     }
 
     g_rpc_whitelist_default = gArgs.GetBoolArg("-rpcwhitelistdefault", gArgs.IsArgSet("-rpcwhitelist"));
@@ -288,15 +288,16 @@ static bool InitRPCAuthentication()
     return true;
 }
 
-bool StartHTTPRPC()
+bool StartHTTPRPC(const util::Ref& context)
 {
     LogPrint(BCLog::RPC, "Starting HTTP RPC server\n");
     if (!InitRPCAuthentication())
         return false;
 
-    RegisterHTTPHandler("/", true, HTTPReq_JSONRPC);
+    auto handle_rpc = [&context](HTTPRequest* req, const std::string&) { return HTTPReq_JSONRPC(context, req); };
+    RegisterHTTPHandler("/", true, handle_rpc);
     if (g_wallet_init_interface.HasWalletSupport()) {
-        RegisterHTTPHandler("/wallet/", false, HTTPReq_JSONRPC);
+        RegisterHTTPHandler("/wallet/", false, handle_rpc);
     }
     struct event_base* eventBase = EventBase();
     assert(eventBase);

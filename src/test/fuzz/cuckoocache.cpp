@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <cuckoocache.h>
-#include <optional.h>
 #include <script/sigcache.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -27,7 +26,7 @@ struct RandomHasher {
 };
 } // namespace
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(cuckoocache)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     fuzzed_data_provider_ptr = &fuzzed_data_provider;

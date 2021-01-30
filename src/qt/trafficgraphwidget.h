@@ -25,7 +25,7 @@ public:
     int getGraphRangeMins() const;
 
 protected:
-    void paintEvent(QPaintEvent *);
+    void paintEvent(QPaintEvent *) override;
 
 public Q_SLOTS:
     void updateRates();

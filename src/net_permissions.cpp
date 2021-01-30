@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,8 +8,20 @@
 #include <util/system.h>
 #include <util/translation.h>
 
+const std::vector<std::string> NET_PERMISSIONS_DOC{
+    "bloomfilter (allow requesting BIP37 filtered blocks and transactions)",
+    "noban (do not ban for misbehavior; implies download)",
+    "forcerelay (relay transactions that are already in the mempool; implies relay)",
+    "relay (relay even in -blocksonly mode, and unlimited transaction announcements)",
+    "mempool (allow requesting BIP35 mempool contents)",
+    "download (allow getheaders during IBD, no disconnect after maxuploadtarget limit)",
+    "addr (responses to GETADDR avoid hitting the cache and contain random records with the most up-to-date info)"
+};
+
+namespace {
+
 // The parse the following format "perm1,perm2@xxxxxx"
-bool TryParsePermissionFlags(const std::string str, NetPermissionFlags& output, size_t& readen, std::string& error)
+bool TryParsePermissionFlags(const std::string str, NetPermissionFlags& output, size_t& readen, bilingual_str& error)
 {
     NetPermissionFlags flags = PF_NONE;
     const auto atSeparator = str.find('@');
@@ -36,11 +48,13 @@ bool TryParsePermissionFlags(const std::string str, NetPermissionFlags& output, 
             else if (permission == "noban") NetPermissions::AddFlag(flags, PF_NOBAN);
             else if (permission == "forcerelay") NetPermissions::AddFlag(flags, PF_FORCERELAY);
             else if (permission == "mempool") NetPermissions::AddFlag(flags, PF_MEMPOOL);
+            else if (permission == "download") NetPermissions::AddFlag(flags, PF_DOWNLOAD);
             else if (permission == "all") NetPermissions::AddFlag(flags, PF_ALL);
             else if (permission == "relay") NetPermissions::AddFlag(flags, PF_RELAY);
+            else if (permission == "addr") NetPermissions::AddFlag(flags, PF_ADDR);
             else if (permission.length() == 0); // Allow empty entries
             else {
-                error = strprintf(_("Invalid P2P permission: '%s'").translated, permission);
+                error = strprintf(_("Invalid P2P permission: '%s'"), permission);
                 return false;
             }
         }
@@ -48,8 +62,10 @@ bool TryParsePermissionFlags(const std::string str, NetPermissionFlags& output, 
     }
 
     output = flags;
-    error = "";
+    error = Untranslated("");
     return true;
+}
+
 }
 
 std::vector<std::string> NetPermissions::ToStrings(NetPermissionFlags flags)
@@ -60,10 +76,12 @@ std::vector<std::string> NetPermissions::ToStrings(NetPermissionFlags flags)
     if (NetPermissions::HasFlag(flags, PF_FORCERELAY)) strings.push_back("forcerelay");
     if (NetPermissions::HasFlag(flags, PF_RELAY)) strings.push_back("relay");
     if (NetPermissions::HasFlag(flags, PF_MEMPOOL)) strings.push_back("mempool");
+    if (NetPermissions::HasFlag(flags, PF_DOWNLOAD)) strings.push_back("download");
+    if (NetPermissions::HasFlag(flags, PF_ADDR)) strings.push_back("addr");
     return strings;
 }
 
-bool NetWhitebindPermissions::TryParse(const std::string str, NetWhitebindPermissions& output, std::string& error)
+bool NetWhitebindPermissions::TryParse(const std::string str, NetWhitebindPermissions& output, bilingual_str& error)
 {
     NetPermissionFlags flags;
     size_t offset;
@@ -76,17 +94,17 @@ bool NetWhitebindPermissions::TryParse(const std::string str, NetWhitebindPermis
         return false;
     }
     if (addrBind.GetPort() == 0) {
-        error = strprintf(_("Need to specify a port with -whitebind: '%s'").translated, strBind);
+        error = strprintf(_("Need to specify a port with -whitebind: '%s'"), strBind);
         return false;
     }
 
     output.m_flags = flags;
     output.m_service = addrBind;
-    error = "";
+    error = Untranslated("");
     return true;
 }
 
-bool NetWhitelistPermissions::TryParse(const std::string str, NetWhitelistPermissions& output, std::string& error)
+bool NetWhitelistPermissions::TryParse(const std::string str, NetWhitelistPermissions& output, bilingual_str& error)
 {
     NetPermissionFlags flags;
     size_t offset;
@@ -96,12 +114,12 @@ bool NetWhitelistPermissions::TryParse(const std::string str, NetWhitelistPermis
     CSubNet subnet;
     LookupSubNet(net, subnet);
     if (!subnet.IsValid()) {
-        error = strprintf(_("Invalid netmask specified in -whitelist: '%s'").translated, net);
+        error = strprintf(_("Invalid netmask specified in -whitelist: '%s'"), net);
         return false;
     }
 
     output.m_flags = flags;
     output.m_subnet = subnet;
-    error = "";
+    error = Untranslated("");
     return true;
 }

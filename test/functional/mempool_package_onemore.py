@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test descendant package tracking carve-out allowing one final transaction in
@@ -31,7 +31,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         for (txid, vout) in zip(parent_txids, vouts):
             inputs.append({'txid' : txid, 'vout' : vout})
         outputs = {}
-        for i in range(num_outputs):
+        for _ in range(num_outputs):
             outputs[node.getnewaddress()] = send_value
         rawtx = node.createrawtransaction(inputs, outputs, 0, True)
         signedtx = node.signrawtransactionwithwallet(rawtx)

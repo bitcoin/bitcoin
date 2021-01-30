@@ -7,11 +7,13 @@
 #define BITCOIN_ADDRMAN_H
 
 #include <clientversion.h>
+#include <config/bitcoin-config.h>
 #include <netaddress.h>
 #include <protocol.h>
 #include <random.h>
 #include <sync.h>
 #include <timedata.h>
+#include <tinyformat.h>
 #include <util/system.h>
 
 #include <fs.h>
@@ -153,12 +155,6 @@ public:
 //! how recent a successful connection should be before we allow an address to be evicted from tried
 #define ADDRMAN_REPLACEMENT_HOURS 4
 
-//! the maximum percentage of nodes to return in a getaddr call
-#define ADDRMAN_GETADDR_MAX_PCT 23
-
-//! the maximum number of nodes to return in a getaddr call
-#define ADDRMAN_GETADDR_MAX 2500
-
 //! Convenience
 #define ADDRMAN_TRIED_BUCKET_COUNT (1 << ADDRMAN_TRIED_BUCKET_COUNT_LOG2)
 #define ADDRMAN_NEW_BUCKET_COUNT (1 << ADDRMAN_NEW_BUCKET_COUNT_LOG2)
@@ -181,6 +177,28 @@ protected:
     mutable RecursiveMutex cs;
 
 private:
+    //! Serialization versions.
+    enum Format : uint8_t {
+        V0_HISTORICAL = 0,    //!< historic format, before commit e6b343d88
+        V1_DETERMINISTIC = 1, //!< for pre-asmap files
+        V2_ASMAP = 2,         //!< for files including asmap version
+        V3_BIP155 = 3,        //!< same as V2_ASMAP plus addresses are in BIP155 format
+    };
+
+    //! The maximum format this software knows it can unserialize. Also, we always serialize
+    //! in this format.
+    //! The format (first byte in the serialized stream) can be higher than this and
+    //! still this software may be able to unserialize the file - if the second byte
+    //! (see `lowest_compatible` in `Unserialize()`) is less or equal to this.
+    static constexpr Format FILE_FORMAT = Format::V3_BIP155;
+
+    //! The initial value of a field that is incremented every time an incompatible format
+    //! change is made (such that old software versions would not be able to parse and
+    //! understand the new file format). This is 32 because we overtook the "key size"
+    //! field which was 32 historically.
+    //! @note Don't increment this. Increment `lowest_compatible` in `Serialize()` instead.
+    static constexpr uint8_t INCOMPATIBILITY_BASE = 32;
+
     //! last used nId
     int nIdCount GUARDED_BY(cs);
 
@@ -261,10 +279,20 @@ protected:
 #endif
 
     //! Select several addresses at once.
-    void GetAddr_(std::vector<CAddress> &vAddr) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void GetAddr_(std::vector<CAddress> &vAddr, size_t max_addresses, size_t max_pct) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    //! Mark an entry as currently-connected-to.
-    void Connected_(const CService &addr, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    /** We have successfully connected to this peer. Calling this function
+     *  updates the CAddress's nTime, which is used in our IsTerrible()
+     *  decisions and gossiped to peers. Callers should be careful that updating
+     *  this information doesn't leak topology information to network spies.
+     *
+     *  net_processing calls this function when it *disconnects* from a peer to
+     *  not leak information about currently connected peers.
+     *
+     * @param[in]   addr     The address of the peer we were connected to
+     * @param[in]   nTime    The time that we were last connected to this peer
+     */
+    void Connected_(const CService& addr, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Update an entry's service bits.
     void SetServices_(const CService &addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -291,9 +319,19 @@ public:
 
 
     /**
-     * serialized format:
-     * * version byte (1 for pre-asmap files, 2 for files including asmap version)
-     * * 0x20 + nKey (serialized as if it were a vector, for backward compatibility)
+     * Serialized format.
+     * * format version byte (@see `Format`)
+     * * lowest compatible format version byte. This is used to help old software decide
+     *   whether to parse the file. For example:
+     *   * Bitcoin Core version N knows how to parse up to format=3. If a new format=4 is
+     *     introduced in version N+1 that is compatible with format=3 and it is known that
+     *     version N will be able to parse it, then version N+1 will write
+     *     (format=4, lowest_compatible=3) in the first two bytes of the file, and so
+     *     version N will still try to parse it.
+     *   * Bitcoin Core version N+2 introduces a new incompatible format=5. It will write
+     *     (format=5, lowest_compatible=5) and so any versions that do not know how to parse
+     *     format=5 will not try to read the file.
+     * * nKey
      * * nNew
      * * nTried
      * * number of "new" buckets XOR 2**30
@@ -319,14 +357,22 @@ public:
      * We don't use SERIALIZE_METHODS since the serialization and deserialization code has
      * very little in common.
      */
-    template<typename Stream>
-    void Serialize(Stream &s) const
+    template <typename Stream>
+    void Serialize(Stream& s_) const
     {
         LOCK(cs);
 
-        unsigned char nVersion = 2;
-        s << nVersion;
-        s << ((unsigned char)32);
+        // Always serialize in the latest version (FILE_FORMAT).
+
+        OverrideStream<Stream> s(&s_, s_.GetType(), s_.GetVersion() | ADDRV2_FORMAT);
+
+        s << static_cast<uint8_t>(FILE_FORMAT);
+
+        // Increment `lowest_compatible` iff a newly introduced format is incompatible with
+        // the previous one.
+        static constexpr uint8_t lowest_compatible = Format::V3_BIP155;
+        s << static_cast<uint8_t>(INCOMPATIBILITY_BASE + lowest_compatible);
+
         s << nKey;
         s << nNew;
         s << nTried;
@@ -376,23 +422,41 @@ public:
         s << asmap_version;
     }
 
-    template<typename Stream>
-    void Unserialize(Stream& s)
+    template <typename Stream>
+    void Unserialize(Stream& s_)
     {
         LOCK(cs);
 
         Clear();
-        unsigned char nVersion;
-        s >> nVersion;
-        unsigned char nKeySize;
-        s >> nKeySize;
-        if (nKeySize != 32) throw std::ios_base::failure("Incorrect keysize in addrman deserialization");
+
+        Format format;
+        s_ >> Using<CustomUintFormatter<1>>(format);
+
+        int stream_version = s_.GetVersion();
+        if (format >= Format::V3_BIP155) {
+            // Add ADDRV2_FORMAT to the version so that the CNetAddr and CAddress
+            // unserialize methods know that an address in addrv2 format is coming.
+            stream_version |= ADDRV2_FORMAT;
+        }
+
+        OverrideStream<Stream> s(&s_, s_.GetType(), stream_version);
+
+        uint8_t compat;
+        s >> compat;
+        const uint8_t lowest_compatible = compat - INCOMPATIBILITY_BASE;
+        if (lowest_compatible > FILE_FORMAT) {
+            throw std::ios_base::failure(strprintf(
+                "Unsupported format of addrman database: %u. It is compatible with formats >=%u, "
+                "but the maximum supported by this version of %s is %u.",
+                format, lowest_compatible, PACKAGE_NAME, static_cast<uint8_t>(FILE_FORMAT)));
+        }
+
         s >> nKey;
         s >> nNew;
         s >> nTried;
         int nUBuckets = 0;
         s >> nUBuckets;
-        if (nVersion != 0) {
+        if (format >= Format::V1_DETERMINISTIC) {
             nUBuckets ^= (1 << 30);
         }
 
@@ -455,7 +519,7 @@ public:
             supplied_asmap_version = SerializeHash(m_asmap);
         }
         uint256 serialized_asmap_version;
-        if (nVersion > 1) {
+        if (format >= Format::V2_ASMAP) {
             s >> serialized_asmap_version;
         }
 
@@ -463,13 +527,13 @@ public:
             CAddrInfo &info = mapInfo[n];
             int bucket = entryToBucket[n];
             int nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
-            if (nVersion == 2 && nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && vvNew[bucket][nUBucketPos] == -1 &&
+            if (format >= Format::V2_ASMAP && nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && vvNew[bucket][nUBucketPos] == -1 &&
                 info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS && serialized_asmap_version == supplied_asmap_version) {
                 // Bucketing has not changed, using existing bucket positions for the new table
                 vvNew[bucket][nUBucketPos] = n;
                 info.nRefCount++;
             } else {
-                // In case the new table data cannot be used (nVersion unknown, bucket count wrong or new asmap),
+                // In case the new table data cannot be used (format unknown, bucket count wrong or new asmap),
                 // try to give them a reference based on their primary source address.
                 LogPrint(BCLog::ADDRMAN, "Bucketing method was updated, re-bucketing addrman entries from disk\n");
                 bucket = info.GetNewBucket(nKey, m_asmap);
@@ -638,19 +702,19 @@ public:
     }
 
     //! Return a bunch of addresses, selected at random.
-    std::vector<CAddress> GetAddr()
+    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct)
     {
         Check();
         std::vector<CAddress> vAddr;
         {
             LOCK(cs);
-            GetAddr_(vAddr);
+            GetAddr_(vAddr, max_addresses, max_pct);
         }
         Check();
         return vAddr;
     }
 
-    //! Mark an entry as currently-connected-to.
+    //! Outer function for Connected_()
     void Connected(const CService &addr, int64_t nTime = GetAdjustedTime())
     {
         LOCK(cs);

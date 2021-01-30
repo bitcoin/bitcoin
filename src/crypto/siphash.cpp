@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2018 The Bitcoin Core developers
+// Copyright (c) 2016-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,7 +49,7 @@ CSipHasher& CSipHasher::Write(const unsigned char* data, size_t size)
 {
     uint64_t v0 = v[0], v1 = v[1], v2 = v[2], v3 = v[3];
     uint64_t t = tmp;
-    int c = count;
+    uint8_t c = count;
 
     while (size--) {
         t |= ((uint64_t)(*(data++))) << (8 * (c % 8));

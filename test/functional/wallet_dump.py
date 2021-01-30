@@ -106,6 +106,8 @@ class WalletDumpTest(BitcoinTestFramework):
         self.start_nodes()
 
     def run_test(self):
+        self.nodes[0].createwallet("dump")
+
         wallet_unenc_dump = os.path.join(self.nodes[0].datadir, "wallet.unencrypted.dump")
         wallet_enc_dump = os.path.join(self.nodes[0].datadir, "wallet.encrypted.dump")
 
@@ -116,7 +118,7 @@ class WalletDumpTest(BitcoinTestFramework):
         test_addr_count = 10
         addrs = []
         for address_type in ['legacy', 'p2sh-segwit', 'bech32']:
-            for i in range(0, test_addr_count):
+            for _ in range(test_addr_count):
                 addr = self.nodes[0].getnewaddress(address_type=address_type)
                 vaddr = self.nodes[0].getaddressinfo(addr)  # required to get hd keypath
                 addrs.append(vaddr)
@@ -190,8 +192,8 @@ class WalletDumpTest(BitcoinTestFramework):
         assert_raises_rpc_error(-8, "already exists", lambda: self.nodes[0].dumpwallet(wallet_enc_dump))
 
         # Restart node with new wallet, and test importwallet
-        self.stop_node(0)
-        self.start_node(0, ['-wallet=w2'])
+        self.restart_node(0)
+        self.nodes[0].createwallet("w2")
 
         # Make sure the address is not IsMine before import
         result = self.nodes[0].getaddressinfo(multisig_addr)
@@ -202,6 +204,11 @@ class WalletDumpTest(BitcoinTestFramework):
         # Now check IsMine is true
         result = self.nodes[0].getaddressinfo(multisig_addr)
         assert result['ismine']
+
+        self.log.info('Check that wallet is flushed')
+        with self.nodes[0].assert_debug_log(['Flushing wallet.dat'], timeout=20):
+            self.nodes[0].getnewaddress()
+
 
 if __name__ == '__main__':
     WalletDumpTest().main()

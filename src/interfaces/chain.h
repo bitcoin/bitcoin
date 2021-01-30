@@ -7,20 +7,25 @@
 
 #include <optional.h>               // For Optional and nullopt
 #include <primitives/transaction.h> // For CTransactionRef
+#include <util/settings.h>          // For util::SettingsValue
 
+#include <functional>
 #include <memory>
 #include <stddef.h>
 #include <stdint.h>
 #include <string>
 #include <vector>
 
+class ArgsManager;
 class CBlock;
 class CFeeRate;
 class CRPCCommand;
 class CScheduler;
 class Coin;
 class uint256;
+enum class MemPoolRemovalReason;
 enum class RBFTransactionState;
+struct bilingual_str;
 struct CBlockLocator;
 struct FeeCalculation;
 struct NodeContext;
@@ -39,6 +44,10 @@ public:
     FoundBlock& time(int64_t& time) { m_time = &time; return *this; }
     FoundBlock& maxTime(int64_t& max_time) { m_max_time = &max_time; return *this; }
     FoundBlock& mtpTime(int64_t& mtp_time) { m_mtp_time = &mtp_time; return *this; }
+    //! Return whether block is in the active (most-work) chain.
+    FoundBlock& inActiveChain(bool& in_active_chain) { m_in_active_chain = &in_active_chain; return *this; }
+    //! Return next block in the active chain if current block is in the active chain.
+    FoundBlock& nextBlock(const FoundBlock& next_block) { m_next_block = &next_block; return *this; }
     //! Read block data from disk. If the block exists but doesn't have data
     //! (for example due to pruning), the CBlock variable will be set to null.
     FoundBlock& data(CBlock& data) { m_data = &data; return *this; }
@@ -48,6 +57,8 @@ public:
     int64_t* m_time = nullptr;
     int64_t* m_max_time = nullptr;
     int64_t* m_mtp_time = nullptr;
+    bool* m_in_active_chain = nullptr;
+    const FoundBlock* m_next_block = nullptr;
     CBlock* m_data = nullptr;
 };
 
@@ -72,9 +83,9 @@ public:
 //!   wallet cache it, fee estimation being driven by node mempool, wallet
 //!   should be the consumer.
 //!
-//! * The `guessVerificationProgress`, `getBlockHeight`, `getBlockHash`, etc
-//!   methods can go away if rescan logic is moved on the node side, and wallet
-//!   only register rescan request.
+//! * `guessVerificationProgress` and similar methods can go away if rescan
+//!   logic moves out of the wallet, and the wallet just requests scans from the
+//!   node (https://github.com/bitcoin/bitcoin/issues/11756)
 class Chain
 {
 public:
@@ -85,24 +96,12 @@ public:
     //! any blocks)
     virtual Optional<int> getHeight() = 0;
 
-    //! Get block height above genesis block. Returns 0 for genesis block,
-    //! 1 for following block, and so on. Returns nullopt for a block not
-    //! included in the current chain.
-    virtual Optional<int> getBlockHeight(const uint256& hash) = 0;
-
     //! Get block hash. Height must be valid or this function will abort.
     virtual uint256 getBlockHash(int height) = 0;
 
     //! Check that the block is available on disk (i.e. has not been
     //! pruned), and contains transactions.
     virtual bool haveBlockOnDisk(int height) = 0;
-
-    //! Return height of the first block in the chain with timestamp equal
-    //! or greater than the given time and height equal or greater than the
-    //! given height, or nullopt if there is no block with a high enough
-    //! timestamp and height. Also return the block hash as an optional output parameter
-    //! (to avoid the cost of a second lookup in case this information is needed.)
-    virtual Optional<int> findFirstBlockWithTimeAndHeight(int64_t time, int height, uint256* hash) = 0;
 
     //! Get locator for the current chain tip.
     virtual CBlockLocator getTipLocator() = 0;
@@ -124,11 +123,6 @@ public:
     //! with a high enough timestamp and height. Optionally return block
     //! information.
     virtual bool findFirstBlockWithTimeAndHeight(int64_t min_time, int min_height, const FoundBlock& block={}) = 0;
-
-    //! Find next block if block is part of current chain. Also flag if
-    //! there was a reorg and the specified block hash is no longer in the
-    //! current chain, and optionally return block information.
-    virtual bool findNextBlock(const uint256& block_hash, int block_height, const FoundBlock& next={}, bool* reorg=nullptr) = 0;
 
     //! Find ancestor of block at specified height and optionally return
     //! ancestor information.
@@ -224,10 +218,10 @@ public:
     virtual void initMessage(const std::string& message) = 0;
 
     //! Send init warning.
-    virtual void initWarning(const std::string& message) = 0;
+    virtual void initWarning(const bilingual_str& message) = 0;
 
     //! Send init error.
-    virtual void initError(const std::string& message) = 0;
+    virtual void initError(const bilingual_str& message) = 0;
 
     //! Send progress indicator.
     virtual void showProgress(const std::string& title, int progress, bool resume_possible) = 0;
@@ -237,8 +231,8 @@ public:
     {
     public:
         virtual ~Notifications() {}
-        virtual void transactionAddedToMempool(const CTransactionRef& tx) {}
-        virtual void transactionRemovedFromMempool(const CTransactionRef& ptx) {}
+        virtual void transactionAddedToMempool(const CTransactionRef& tx, uint64_t mempool_sequence) {}
+        virtual void transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) {}
         virtual void blockConnected(const CBlock& block, int height) {}
         virtual void blockDisconnected(const CBlock& block, int height) {}
         virtual void updatedBlockTip() {}
@@ -264,6 +258,12 @@ public:
 
     //! Current RPC serialization flags.
     virtual int rpcSerializationFlags() = 0;
+
+    //! Return <datadir>/settings.json setting value.
+    virtual util::SettingsValue getRwSetting(const std::string& name) = 0;
+
+    //! Write a setting to <datadir>/settings.json.
+    virtual bool updateRwSetting(const std::string& name, const util::SettingsValue& value) = 0;
 
     //! Synchronously send transactionAddedToMempool notifications about all
     //! current mempool transactions to the specified handler and return after
@@ -303,23 +303,10 @@ public:
 
     //! Set mock time.
     virtual void setMockTime(int64_t time) = 0;
-
-    //! Return interfaces for accessing wallets (if any).
-    virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;
 };
 
 //! Return implementation of Chain interface.
 std::unique_ptr<Chain> MakeChain(NodeContext& node);
-
-//! Return implementation of ChainClient interface for a wallet client. This
-//! function will be undefined in builds where ENABLE_WALLET is false.
-//!
-//! Currently, wallets are the only chain clients. But in the future, other
-//! types of chain clients could be added, such as tools for monitoring,
-//! analysis, or fee estimation. These clients need to expose their own
-//! MakeXXXClient functions returning their implementations of the ChainClient
-//! interface.
-std::unique_ptr<ChainClient> MakeWalletClient(Chain& chain, std::vector<std::string> wallet_filenames);
 
 } // namespace interfaces
 

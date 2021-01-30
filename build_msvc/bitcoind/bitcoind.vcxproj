@@ -63,6 +63,10 @@
     <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@ENABLE_WALLET_TRUE@" By=""></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
+                  Replace="@USE_BDB_TRUE@" By=""></ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)"
+                  Replace="@USE_SQLITE_TRUE@" By=""></ReplaceInFile>
+    <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@BUILD_BITCOIN_CLI_TRUE@" By=""></ReplaceInFile>
     <ReplaceInFile FilePath="$(ConfigIniOut)"
                   Replace="@BUILD_BITCOIND_TRUE@" By=""></ReplaceInFile>

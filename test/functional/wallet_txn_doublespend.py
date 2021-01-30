@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet accounts properly when there is a double-spend conflict."""
@@ -8,8 +8,6 @@ from decimal import Decimal
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    connect_nodes,
-    disconnect_nodes,
     find_output,
 )
 
@@ -28,8 +26,7 @@ class TxnMallTest(BitcoinTestFramework):
     def setup_network(self):
         # Start with split network:
         super().setup_network()
-        disconnect_nodes(self.nodes[1], 2)
-        disconnect_nodes(self.nodes[2], 1)
+        self.disconnect_nodes(1, 2)
 
     def run_test(self):
         # All nodes should start with 1,250 BTC:
@@ -117,7 +114,7 @@ class TxnMallTest(BitcoinTestFramework):
         self.nodes[2].generate(1)
 
         # Reconnect the split network, and sync chain:
-        connect_nodes(self.nodes[1], 2)
+        self.connect_nodes(1, 2)
         self.nodes[2].generate(1)  # Mine another block to make sure we sync
         self.sync_blocks()
         assert_equal(self.nodes[0].gettransaction(doublespend_txid)["confirmations"], 2)

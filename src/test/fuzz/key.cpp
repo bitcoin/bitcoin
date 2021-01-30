@@ -26,14 +26,14 @@
 #include <string>
 #include <vector>
 
-void initialize()
+void initialize_key()
 {
     static const ECCVerifyHandle ecc_verify_handle;
     ECC_Start();
     SelectParams(CBaseChainParams::REGTEST);
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET_INIT(key, initialize_key)
 {
     const CKey key = [&] {
         CKey k;
@@ -85,7 +85,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(negated_key == key);
     }
 
-    const uint256 random_uint256 = Hash(buffer.begin(), buffer.end());
+    const uint256 random_uint256 = Hash(buffer);
 
     {
         CKey child_key;
@@ -108,7 +108,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(pubkey.IsCompressed());
         assert(pubkey.IsValid());
         assert(pubkey.IsFullyValid());
-        assert(HexToPubKey(HexStr(pubkey.begin(), pubkey.end())) == pubkey);
+        assert(HexToPubKey(HexStr(pubkey)) == pubkey);
         assert(GetAllDestinationsForKey(pubkey).size() == 3);
     }
 
@@ -157,25 +157,25 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(ok_add_key_pubkey);
         assert(fillable_signing_provider_pub.HaveKey(pubkey.GetID()));
 
-        txnouttype which_type_tx_pubkey;
+        TxoutType which_type_tx_pubkey;
         const bool is_standard_tx_pubkey = IsStandard(tx_pubkey_script, which_type_tx_pubkey);
         assert(is_standard_tx_pubkey);
-        assert(which_type_tx_pubkey == txnouttype::TX_PUBKEY);
+        assert(which_type_tx_pubkey == TxoutType::PUBKEY);
 
-        txnouttype which_type_tx_multisig;
+        TxoutType which_type_tx_multisig;
         const bool is_standard_tx_multisig = IsStandard(tx_multisig_script, which_type_tx_multisig);
         assert(is_standard_tx_multisig);
-        assert(which_type_tx_multisig == txnouttype::TX_MULTISIG);
+        assert(which_type_tx_multisig == TxoutType::MULTISIG);
 
         std::vector<std::vector<unsigned char>> v_solutions_ret_tx_pubkey;
-        const txnouttype outtype_tx_pubkey = Solver(tx_pubkey_script, v_solutions_ret_tx_pubkey);
-        assert(outtype_tx_pubkey == txnouttype::TX_PUBKEY);
+        const TxoutType outtype_tx_pubkey = Solver(tx_pubkey_script, v_solutions_ret_tx_pubkey);
+        assert(outtype_tx_pubkey == TxoutType::PUBKEY);
         assert(v_solutions_ret_tx_pubkey.size() == 1);
         assert(v_solutions_ret_tx_pubkey[0].size() == 33);
 
         std::vector<std::vector<unsigned char>> v_solutions_ret_tx_multisig;
-        const txnouttype outtype_tx_multisig = Solver(tx_multisig_script, v_solutions_ret_tx_multisig);
-        assert(outtype_tx_multisig == txnouttype::TX_MULTISIG);
+        const TxoutType outtype_tx_multisig = Solver(tx_multisig_script, v_solutions_ret_tx_multisig);
+        assert(outtype_tx_multisig == TxoutType::MULTISIG);
         assert(v_solutions_ret_tx_multisig.size() == 3);
         assert(v_solutions_ret_tx_multisig[0].size() == 1);
         assert(v_solutions_ret_tx_multisig[1].size() == 33);

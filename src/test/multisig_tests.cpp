@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(multisig_IsStandard)
     for (int i = 0; i < 4; i++)
         key[i].MakeNewKey(true);
 
-    txnouttype whichType;
+    TxoutType whichType;
 
     CScript a_and_b;
     a_and_b << OP_2 << ToByteVector(key[0].GetPubKey()) << ToByteVector(key[1].GetPubKey()) << OP_2 << OP_CHECKMULTISIG;

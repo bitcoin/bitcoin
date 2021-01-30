@@ -67,52 +67,52 @@ static void FillAddrMan(CAddrMan& addrman)
 
 /* Benchmarks */
 
-static void AddrManAdd(benchmark::State& state)
+static void AddrManAdd(benchmark::Bench& bench)
 {
     CreateAddresses();
 
     CAddrMan addrman;
 
-    while (state.KeepRunning()) {
+    bench.run([&] {
         AddAddressesToAddrMan(addrman);
         addrman.Clear();
-    }
+    });
 }
 
-static void AddrManSelect(benchmark::State& state)
+static void AddrManSelect(benchmark::Bench& bench)
 {
     CAddrMan addrman;
 
     FillAddrMan(addrman);
 
-    while (state.KeepRunning()) {
+    bench.run([&] {
         const auto& address = addrman.Select();
         assert(address.GetPort() > 0);
-    }
+    });
 }
 
-static void AddrManGetAddr(benchmark::State& state)
+static void AddrManGetAddr(benchmark::Bench& bench)
 {
     CAddrMan addrman;
 
     FillAddrMan(addrman);
 
-    while (state.KeepRunning()) {
-        const auto& addresses = addrman.GetAddr();
+    bench.run([&] {
+        const auto& addresses = addrman.GetAddr(2500, 23);
         assert(addresses.size() > 0);
-    }
+    });
 }
 
-static void AddrManGood(benchmark::State& state)
+static void AddrManGood(benchmark::Bench& bench)
 {
     /* Create many CAddrMan objects - one to be modified at each loop iteration.
      * This is necessary because the CAddrMan::Good() method modifies the
      * object, affecting the timing of subsequent calls to the same method and
      * we want to do the same amount of work in every loop iteration. */
 
-    const uint64_t numLoops = state.m_num_iters * state.m_num_evals;
+    bench.epochs(5).epochIterations(1);
 
-    std::vector<CAddrMan> addrmans(numLoops);
+    std::vector<CAddrMan> addrmans(bench.epochs() * bench.epochIterations());
     for (auto& addrman : addrmans) {
         FillAddrMan(addrman);
     }
@@ -128,13 +128,13 @@ static void AddrManGood(benchmark::State& state)
     };
 
     uint64_t i = 0;
-    while (state.KeepRunning()) {
+    bench.run([&] {
         markSomeAsGood(addrmans.at(i));
         ++i;
-    }
+    });
 }
 
-BENCHMARK(AddrManAdd, 5);
-BENCHMARK(AddrManSelect, 1000000);
-BENCHMARK(AddrManGetAddr, 500);
-BENCHMARK(AddrManGood, 2);
+BENCHMARK(AddrManAdd);
+BENCHMARK(AddrManSelect);
+BENCHMARK(AddrManGetAddr);
+BENCHMARK(AddrManGood);

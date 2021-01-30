@@ -21,12 +21,12 @@
 
 #include <cassert>
 
-void initialize()
+void initialize_transaction()
 {
     SelectParams(CBaseChainParams::REGTEST);
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET_INIT(transaction, initialize_transaction)
 {
     CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
     try {
@@ -42,7 +42,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
             return CTransaction(deserialize, ds);
         } catch (const std::ios_base::failure&) {
             valid_tx = false;
-            return CTransaction();
+            return CTransaction{CMutableTransaction{}};
         }
     }();
     bool valid_mutable_tx = true;
@@ -95,7 +95,8 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 
     CCoinsView coins_view;
     const CCoinsViewCache coins_view_cache(&coins_view);
-    (void)AreInputsStandard(tx, coins_view_cache);
+    (void)AreInputsStandard(tx, coins_view_cache, false);
+    (void)AreInputsStandard(tx, coins_view_cache, true);
     (void)IsWitnessStandard(tx, coins_view_cache);
 
     UniValue u(UniValue::VOBJ);

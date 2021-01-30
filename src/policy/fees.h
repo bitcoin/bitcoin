@@ -11,6 +11,7 @@
 #include <random.h>
 #include <sync.h>
 
+#include <array>
 #include <map>
 #include <memory>
 #include <string>
@@ -25,9 +26,15 @@ class TxConfirmStats;
 /* Identifier for each of the 3 different TxConfirmStats which will track
  * history over different time horizons. */
 enum class FeeEstimateHorizon {
-    SHORT_HALFLIFE = 0,
-    MED_HALFLIFE = 1,
-    LONG_HALFLIFE = 2
+    SHORT_HALFLIFE,
+    MED_HALFLIFE,
+    LONG_HALFLIFE,
+};
+
+static constexpr auto ALL_FEE_ESTIMATE_HORIZONS = std::array{
+    FeeEstimateHorizon::SHORT_HALFLIFE,
+    FeeEstimateHorizon::MED_HALFLIFE,
+    FeeEstimateHorizon::LONG_HALFLIFE,
 };
 
 std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon);
@@ -43,13 +50,6 @@ enum class FeeReason {
     PAYTXFEE,
     FALLBACK,
     REQUIRED,
-};
-
-/* Used to determine type of fee estimation requested */
-enum class FeeEstimateMode {
-    UNSET,        //!< Use default settings based on other criteria
-    ECONOMICAL,   //!< Force estimateSmartFee to use non-conservative estimates
-    CONSERVATIVE, //!< Force estimateSmartFee to use conservative estimates
 };
 
 /* Used to return detailed information about a feerate bucket */
@@ -145,9 +145,9 @@ private:
 
     /** Decay of .962 is a half-life of 18 blocks or about 3 hours */
     static constexpr double SHORT_DECAY = .962;
-    /** Decay of .998 is a half-life of 144 blocks or about 1 day */
+    /** Decay of .9952 is a half-life of 144 blocks or about 1 day */
     static constexpr double MED_DECAY = .9952;
-    /** Decay of .9995 is a half-life of 1008 blocks or about 1 week */
+    /** Decay of .99931 is a half-life of 1008 blocks or about 1 week */
     static constexpr double LONG_DECAY = .99931;
 
     /** Require greater than 60% of X feerate transactions to be confirmed within Y/2 blocks*/
@@ -222,6 +222,9 @@ public:
     /** Calculation of highest target that estimates are tracked for */
     unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const;
 
+    /** Drop still unconfirmed transactions and record current estimations, if the fee estimation file is present. */
+    void Flush();
+
 private:
     mutable RecursiveMutex m_cs_fee_estimator;
 
@@ -280,7 +283,7 @@ public:
     /** Create new FeeFilterRounder */
     explicit FeeFilterRounder(const CFeeRate& minIncrementalFee);
 
-    /** Quantize a minimum fee for privacy purpose before broadcast **/
+    /** Quantize a minimum fee for privacy purpose before broadcast. Not thread-safe due to use of FastRandomContext */
     CAmount round(CAmount currentMinFee);
 
 private:

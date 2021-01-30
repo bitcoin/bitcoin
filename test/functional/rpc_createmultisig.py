@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2019 The Bitcoin Core developers
+# Copyright (c) 2015-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test multisig RPCs"""
-
-from test_framework.authproxy import JSONRPCException
-from test_framework.descriptors import descsum_create, drop_origins
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import (
-    assert_raises_rpc_error,
-    assert_equal,
-)
-from test_framework.key import ECPubKey, ECKey, bytes_to_wif
-
 import binascii
 import decimal
 import itertools
 import json
 import os
+
+from test_framework.authproxy import JSONRPCException
+from test_framework.descriptors import descsum_create, drop_origins
+from test_framework.key import ECPubKey, ECKey
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    assert_raises_rpc_error,
+    assert_equal,
+)
+from test_framework.wallet_util import bytes_to_wif
 
 class RpcCreateMultiSigTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -129,7 +129,8 @@ class RpcCreateMultiSigTest(BitcoinTestFramework):
             try:
                 node1.loadwallet('wmulti')
             except JSONRPCException as e:
-                if e.error['code'] == -18 and 'Wallet wmulti not found' in e.error['message']:
+                path = os.path.join(self.options.tmpdir, "node1", "regtest", "wallets", "wmulti")
+                if e.error['code'] == -18 and "Wallet file verification failed. Failed to load database path '{}'. Path does not exist.".format(path) in e.error['message']:
                     node1.createwallet(wallet_name='wmulti', disable_private_keys=True)
                 else:
                     raise

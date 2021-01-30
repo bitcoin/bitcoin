@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -28,12 +28,13 @@ class SplashScreen : public QWidget
     Q_OBJECT
 
 public:
-    explicit SplashScreen(interfaces::Node& node, Qt::WindowFlags f, const NetworkStyle *networkStyle);
+    explicit SplashScreen(const NetworkStyle *networkStyle);
     ~SplashScreen();
+    void setNode(interfaces::Node& node);
 
 protected:
-    void paintEvent(QPaintEvent *event);
-    void closeEvent(QCloseEvent *event);
+    void paintEvent(QPaintEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
 
 public Q_SLOTS:
     /** Hide the splash screen window and schedule the splash screen object for deletion */
@@ -42,23 +43,27 @@ public Q_SLOTS:
     /** Show message and progress */
     void showMessage(const QString &message, int alignment, const QColor &color);
 
+    /** Handle wallet load notifications. */
+    void handleLoadWallet();
+
 protected:
-    bool eventFilter(QObject * obj, QEvent * ev);
+    bool eventFilter(QObject * obj, QEvent * ev) override;
 
 private:
     /** Connect core signals to splash screen */
     void subscribeToCoreSignals();
     /** Disconnect core signals to splash screen */
     void unsubscribeFromCoreSignals();
-    /** Connect wallet signals to splash screen */
-    void ConnectWallet(std::unique_ptr<interfaces::Wallet> wallet);
+    /** Initiate shutdown */
+    void shutdown();
 
     QPixmap pixmap;
     QString curMessage;
     QColor curColor;
     int curAlignment;
 
-    interfaces::Node& m_node;
+    interfaces::Node* m_node = nullptr;
+    bool m_shutdown = false;
     std::unique_ptr<interfaces::Handler> m_handler_init_message;
     std::unique_ptr<interfaces::Handler> m_handler_show_progress;
     std::unique_ptr<interfaces::Handler> m_handler_load_wallet;

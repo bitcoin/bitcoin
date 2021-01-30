@@ -46,4 +46,10 @@ typedef struct {
     (d6) | (((uint64_t)(d7)) << 32) \
 }}
 
+#define SECP256K1_FE_STORAGE_CONST_GET(d) \
+    (uint32_t)(d.n[3] >> 32), (uint32_t)d.n[3], \
+    (uint32_t)(d.n[2] >> 32), (uint32_t)d.n[2], \
+    (uint32_t)(d.n[1] >> 32), (uint32_t)d.n[1], \
+    (uint32_t)(d.n[0] >> 32), (uint32_t)d.n[0]
+
 #endif /* SECP256K1_FIELD_REPR_H */

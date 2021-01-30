@@ -1,4 +1,4 @@
-// Copyright (c) 2010-2019 The Bitcoin Core developers
+// Copyright (c) 2010-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -32,9 +32,9 @@ enum class TransactionError {
     MAX_FEE_EXCEEDED,
 };
 
-std::string TransactionErrorString(const TransactionError error);
+bilingual_str TransactionErrorString(const TransactionError error);
 
-std::string ResolveErrMsg(const std::string& optname, const std::string& strBind);
+bilingual_str ResolveErrMsg(const std::string& optname, const std::string& strBind);
 
 bilingual_str AmountHighWarn(const std::string& optname);
 

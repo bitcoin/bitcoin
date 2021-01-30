@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019 The Bitcoin Core developers
+# Copyright (c) 2019-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test descriptor wallet function."""
@@ -16,19 +16,27 @@ class WalletDescriptorTest(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.num_nodes = 1
         self.extra_args = [['-keypool=100']]
+        self.wallet_names = []
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
+        self.skip_if_no_sqlite()
 
     def run_test(self):
+        # Make a legacy wallet and check it is BDB
+        self.nodes[0].createwallet(wallet_name="legacy1", descriptors=False)
+        wallet_info = self.nodes[0].getwalletinfo()
+        assert_equal(wallet_info['format'], 'bdb')
+        self.nodes[0].unloadwallet("legacy1")
+
         # Make a descriptor wallet
         self.log.info("Making a descriptor wallet")
         self.nodes[0].createwallet(wallet_name="desc1", descriptors=True)
-        self.nodes[0].unloadwallet("")
 
         # A descriptor wallet should have 100 addresses * 3 types = 300 keys
         self.log.info("Checking wallet info")
         wallet_info = self.nodes[0].getwalletinfo()
+        assert_equal(wallet_info['format'], 'sqlite')
         assert_equal(wallet_info['keypoolsize'], 300)
         assert_equal(wallet_info['keypoolsize_hd_internal'], 300)
         assert 'keypoololdest' not in wallet_info
@@ -107,7 +115,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
         assert_equal(info2['desc'], info3['desc'])
 
         self.log.info("Test that getnewaddress still works after keypool is exhausted in an encrypted wallet")
-        for i in range(0, 500):
+        for _ in range(500):
             send_wrpc.getnewaddress()
 
         self.log.info("Test that unlock is needed when deriving only hardened keys in an encrypted wallet")
@@ -120,7 +128,7 @@ class WalletDescriptorTest(BitcoinTestFramework):
         }])
         send_wrpc.walletlock()
         # Exhaust keypool of 100
-        for i in range(0, 100):
+        for _ in range(100):
             send_wrpc.getnewaddress(address_type='bech32')
         # This should now error
         assert_raises_rpc_error(-12, "Keypool ran out, please call keypoolrefill first", send_wrpc.getnewaddress, '', 'bech32')

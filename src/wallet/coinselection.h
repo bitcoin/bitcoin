@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018 The Bitcoin Core developers
+// Copyright (c) 2017-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +8,8 @@
 #include <amount.h>
 #include <primitives/transaction.h>
 #include <random.h>
+
+class CFeeRate;
 
 //! target minimum change amount
 static constexpr CAmount MIN_CHANGE{COIN / 100};
@@ -36,6 +38,8 @@ public:
     COutPoint outpoint;
     CTxOut txout;
     CAmount effective_value;
+    CAmount m_fee{0};
+    CAmount m_long_term_fee{0};
 
     /** Pre-computed estimated size of this output as a fully-signed input in a transaction. Can be -1 if it could not be calculated */
     int m_input_bytes{-1};
@@ -91,6 +95,10 @@ struct OutputGroup
     void Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants);
     std::vector<CInputCoin>::iterator Discard(const CInputCoin& output);
     bool EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const;
+
+    //! Update the OutputGroup's fee, long_term_fee, and effective_value based on the given feerates
+    void SetFees(const CFeeRate effective_feerate, const CFeeRate long_term_feerate);
+    OutputGroup GetPositiveOnlyGroup();
 };
 
 bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_value, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret, CAmount not_input_fees);

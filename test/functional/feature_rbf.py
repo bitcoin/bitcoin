@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the RBF code."""
@@ -376,7 +376,7 @@ class ReplaceByFeeTest(BitcoinTestFramework):
         split_value = int((initial_nValue-fee)/(MAX_REPLACEMENT_LIMIT+1))
 
         outputs = []
-        for i in range(MAX_REPLACEMENT_LIMIT+1):
+        for _ in range(MAX_REPLACEMENT_LIMIT+1):
             outputs.append(CTxOut(split_value, CScript([1])))
 
         splitting_tx = CTransaction()

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,19 +18,15 @@ enum class OutputType {
     LEGACY,
     P2SH_SEGWIT,
     BECH32,
-
-    /**
-     * Special output type for change outputs only. Automatically choose type
-     * based on address type setting and the types other of non-change outputs
-     * (see -changetype option documentation and implementation in
-     * CWallet::TransactionChangeType for details).
-     */
-    CHANGE_AUTO,
 };
 
-extern const std::array<OutputType, 3> OUTPUT_TYPES;
+static constexpr auto OUTPUT_TYPES = std::array{
+    OutputType::LEGACY,
+    OutputType::P2SH_SEGWIT,
+    OutputType::BECH32,
+};
 
-NODISCARD bool ParseOutputType(const std::string& str, OutputType& output_type);
+[[nodiscard]] bool ParseOutputType(const std::string& str, OutputType& output_type);
 const std::string& FormatOutputType(OutputType type);
 
 /**

@@ -14,7 +14,7 @@ Developer Notes
         - [Compiling for debugging](#compiling-for-debugging)
         - [Compiling for gprof profiling](#compiling-for-gprof-profiling)
         - [`debug.log`](#debuglog)
-        - [Testnet and Regtest modes](#testnet-and-regtest-modes)
+        - [Signet, testnet, and regtest modes](#signet-testnet-and-regtest-modes)
         - [DEBUG_LOCKORDER](#debug_lockorder)
         - [Valgrind suppressions file](#valgrind-suppressions-file)
         - [Compiling for test coverage](#compiling-for-test-coverage)
@@ -135,7 +135,7 @@ Refer to [/test/functional/README.md#style-guidelines](/test/functional/README.m
 Coding Style (Doxygen-compatible comments)
 ------------------------------------------
 
-Bitcoin Core uses [Doxygen](http://www.doxygen.nl/) to generate its official documentation.
+Bitcoin Core uses [Doxygen](https://www.doxygen.nl/) to generate its official documentation.
 
 Use Doxygen-compatible comment blocks for functions, methods, and fields.
 
@@ -156,7 +156,7 @@ For example, to describe a function use:
 bool function(int arg1, const char *arg2, std::string& arg3)
 ```
 
-A complete list of `@xxx` commands can be found at http://www.doxygen.nl/manual/commands.html.
+A complete list of `@xxx` commands can be found at https://www.doxygen.nl/manual/commands.html.
 As Doxygen recognizes the comments by the delimiters (`/**` and `*/` in this case), you don't
 *need* to provide any commands for a comment to be valid; just a description text is fine.
 
@@ -203,7 +203,7 @@ Also not picked up by Doxygen:
  */
 ```
 
-A full list of comment syntaxes picked up by Doxygen can be found at http://www.doxygen.nl/manual/docblocks.html,
+A full list of comment syntaxes picked up by Doxygen can be found at https://www.doxygen.nl/manual/docblocks.html,
 but the above styles are favored.
 
 Recommendations:
@@ -216,7 +216,7 @@ Recommendations:
 
 - Backticks aren't required when referring to functions Doxygen already knows
   about; it will build hyperlinks for these automatically. See
-  http://www.doxygen.nl/manual/autolink.html for complete info.
+  https://www.doxygen.nl/manual/autolink.html for complete info.
 
 - Avoid linking to external documentation; links can break.
 
@@ -259,14 +259,15 @@ on all categories (and give you a very large `debug.log` file).
 The Qt code routes `qDebug()` output to `debug.log` under category "qt": run with `-debug=qt`
 to see it.
 
-### Testnet and Regtest modes
+### Signet, testnet, and regtest modes
 
-Run with the `-testnet` option to run with "play bitcoins" on the test network, if you
-are testing multi-machine code that needs to operate across the internet.
+If you are testing multi-machine code that needs to operate across the internet,
+you can run with either the `-signet` or the `-testnet` config option to test
+with "play bitcoins" on a test network.
 
-If you are testing something that can run on one machine, run with the `-regtest` option.
-In regression test mode, blocks can be created on-demand; see [test/functional/](/test/functional) for tests
-that run in `-regtest` mode.
+If you are testing something that can run on one machine, run with the
+`-regtest` option.  In regression test mode, blocks can be created on demand;
+see [test/functional/](/test/functional) for tests that run in `-regtest` mode.
 
 ### DEBUG_LOCKORDER
 
@@ -275,6 +276,33 @@ multi-threading bugs can be very difficult to track down. The `--enable-debug`
 configure option adds `-DDEBUG_LOCKORDER` to the compiler flags. This inserts
 run-time checks to keep track of which locks are held and adds warnings to the
 `debug.log` file if inconsistencies are detected.
+
+### Assertions and Checks
+
+The util file `src/util/check.h` offers helpers to protect against coding and
+internal logic bugs. They must never be used to validate user, network or any
+other input.
+
+* `assert` or `Assert` should be used to document assumptions when any
+  violation would mean that it is not safe to continue program execution. The
+  code is always compiled with assertions enabled.
+   - For example, a nullptr dereference or any other logic bug in validation
+     code means the program code is faulty and must terminate immediately.
+* `CHECK_NONFATAL` should be used for recoverable internal logic bugs. On
+  failure, it will throw an exception, which can be caught to recover from the
+  error.
+   - For example, a nullptr dereference or any other logic bug in RPC code
+     means that the RPC code is faulty and can not be executed. However, the
+     logic bug can be shown to the user and the program can continue to run.
+* `Assume` should be used to document assumptions when program execution can
+  safely continue even if the assumption is violated. In debug builds it
+  behaves like `Assert`/`assert` to notify developers and testers about
+  nonfatal errors. In production it doesn't warn or log anything, though the
+  expression is always evaluated.
+   - For example it can be assumed that a variable is only initialized once,
+     but a failed assumption does not result in a fatal bug. A failed
+     assumption may or may not result in a slightly degraded user experience,
+     but it is safe to continue program execution.
 
 ### Valgrind suppressions file
 
@@ -516,7 +544,7 @@ General Bitcoin Core
   - *Rationale*: RPC allows for better automatic testing. The test suite for
     the GUI is very limited.
 
-- Make sure pull requests pass Travis CI before merging.
+- Make sure pull requests pass CI before merging.
 
   - *Rationale*: Makes sure that they pass thorough testing, and that the tester will keep passing
      on the master branch. Otherwise, all new pull requests will start failing the tests, resulting in
@@ -619,6 +647,19 @@ class A
 
   - *Rationale*: Easier to understand what is happening, thus easier to spot mistakes, even for those
   that are not language lawyers.
+
+- Use `Span` as function argument when it can operate on any range-like container.
+
+  - *Rationale*: Compared to `Foo(const vector<int>&)` this avoids the need for a (potentially expensive)
+    conversion to vector if the caller happens to have the input stored in another type of container.
+    However, be aware of the pitfalls documented in [span.h](../src/span.h).
+
+```cpp
+void Foo(Span<const int> data);
+
+std::vector<int> vec{1,2,3};
+Foo(vec);
+```
 
 - Prefer `enum class` (scoped enumerations) over `enum` (traditional enumerations) where possible.
 
@@ -732,6 +773,53 @@ the upper cycle, etc.
 
 Threads and synchronization
 ----------------------------
+
+- Prefer `Mutex` type to `RecursiveMutex` one
+
+- Consistently use [Clang Thread Safety Analysis](https://clang.llvm.org/docs/ThreadSafetyAnalysis.html) annotations to
+  get compile-time warnings about potential race conditions in code. Combine annotations in function declarations with
+  run-time asserts in function definitions:
+
+```C++
+// txmempool.h
+class CTxMemPool
+{
+public:
+    ...
+    mutable RecursiveMutex cs;
+    ...
+    void UpdateTransactionsFromBlock(...) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, cs);
+    ...
+}
+
+// txmempool.cpp
+void CTxMemPool::UpdateTransactionsFromBlock(...)
+{
+    AssertLockHeld(::cs_main);
+    AssertLockHeld(cs);
+    ...
+}
+```
+
+```C++
+// validation.h
+class ChainstateManager
+{
+public:
+    ...
+    bool ProcessNewBlock(...) EXCLUSIVE_LOCKS_REQUIRED(!::cs_main);
+    ...
+}
+
+// validation.cpp
+bool ChainstateManager::ProcessNewBlock(...)
+{
+    AssertLockNotHeld(::cs_main);
+    ...
+    LOCK(::cs_main);
+    ...
+}
+```
 
 - Build and run tests with `-DDEBUG_LOCKORDER` to verify that no potential
   deadlocks are introduced. As of 0.12, this is defined by default when
@@ -874,7 +962,7 @@ Others are external projects without a tight relationship with our project. Chan
 be sent upstream, but bugfixes may also be prudent to PR against Bitcoin Core so that they can be integrated
 quickly. Cosmetic changes should be purely taken upstream.
 
-There is a tool in `test/lint/git-subtree-check.sh` to check a subtree directory for consistency with
+There is a tool in `test/lint/git-subtree-check.sh` ([instructions](../test/lint#git-subtree-checksh)) to check a subtree directory for consistency with
 its upstream repository.
 
 Current subtrees include:
@@ -949,7 +1037,7 @@ Scripted diffs
 --------------
 
 For reformatting and refactoring commits where the changes can be easily automated using a bash script, we use
-scripted-diff commits. The bash script is included in the commit message and our Travis CI job checks that
+scripted-diff commits. The bash script is included in the commit message and our CI job checks that
 the result of the script is identical to the commit. This aids reviewers since they can verify that the script
 does exactly what it is supposed to do. It is also helpful for rebasing (since the same script can just be re-run
 on the new master commit).

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019 The Bitcoin Core developers
+# Copyright (c) 2019-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test getdescriptorinfo RPC.
@@ -17,6 +17,7 @@ class DescriptorTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [["-disablewallet"]]
+        self.wallet_names = []
 
     def test_desc(self, desc, isrange, issolvable, hasprivatekeys):
         info = self.nodes[0].getdescriptorinfo(desc)

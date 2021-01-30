@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2019 The Bitcoin Core developers
+# Copyright (c) 2018-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,15 +13,16 @@ def setup():
     programs = ['ruby', 'git', 'make', 'wget', 'curl']
     if args.kvm:
         programs += ['apt-cacher-ng', 'python-vm-builder', 'qemu-kvm', 'qemu-utils']
-    elif args.docker and not os.path.isfile('/lib/systemd/system/docker.service'):
-        dockers = ['docker.io', 'docker-ce']
-        for i in dockers:
-            return_code = subprocess.call(['sudo', 'apt-get', 'install', '-qq', i])
-            if return_code == 0:
-                break
-        if return_code != 0:
-            print('Cannot find any way to install Docker.', file=sys.stderr)
-            sys.exit(1)
+    elif args.docker:
+        if not os.path.isfile('/lib/systemd/system/docker.service'):
+            dockers = ['docker.io', 'docker-ce']
+            for i in dockers:
+                return_code = subprocess.call(['sudo', 'apt-get', 'install', '-qq', i])
+                if return_code == 0:
+                    break
+            if return_code != 0:
+                print('Cannot find any way to install Docker.', file=sys.stderr)
+                sys.exit(1)
     else:
         programs += ['apt-cacher-ng', 'lxc', 'debootstrap']
     subprocess.check_call(['sudo', 'apt-get', 'install', '-qq'] + programs)
@@ -209,7 +210,7 @@ def main():
     args.macos = 'm' in args.os
 
     # Disable for MacOS if no SDK found
-    if args.macos and not os.path.isfile('gitian-builder/inputs/MacOSX10.14.sdk.tar.gz'):
+    if args.macos and not os.path.isfile('gitian-builder/inputs/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz'):
         print('Cannot build for MacOS, SDK does not exist. Will build for other OSes')
         args.macos = False
 

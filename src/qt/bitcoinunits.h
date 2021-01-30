@@ -46,11 +46,11 @@ public:
         SAT
     };
 
-    enum SeparatorStyle
+    enum class SeparatorStyle
     {
-        separatorNever,
-        separatorStandard,
-        separatorAlways
+        NEVER,
+        STANDARD,
+        ALWAYS
     };
 
     //! @name Static API
@@ -72,11 +72,13 @@ public:
     //! Number of decimals left
     static int decimals(int unit);
     //! Format as string
-    static QString format(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
+    static QString format(int unit, const CAmount& amount, bool plussign = false, SeparatorStyle separators = SeparatorStyle::STANDARD, bool justify = false);
     //! Format as string (with unit)
-    static QString formatWithUnit(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
+    static QString formatWithUnit(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=SeparatorStyle::STANDARD);
     //! Format as HTML string (with unit)
-    static QString formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=separatorStandard);
+    static QString formatHtmlWithUnit(int unit, const CAmount& amount, bool plussign=false, SeparatorStyle separators=SeparatorStyle::STANDARD);
+    //! Format as string (with unit) of fixed length to preserve privacy, if it is set.
+    static QString formatWithPrivacy(int unit, const CAmount& amount, SeparatorStyle separators, bool privacy);
     //! Parse string to coin amount
     static bool parse(int unit, const QString &value, CAmount *val_out);
     //! Gets title for amount column including current display unit if optionsModel reference available */
@@ -90,8 +92,8 @@ public:
         /** Unit identifier */
         UnitRole = Qt::UserRole
     };
-    int rowCount(const QModelIndex &parent) const;
-    QVariant data(const QModelIndex &index, int role) const;
+    int rowCount(const QModelIndex &parent) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
     ///@}
 
     static QString removeSpaces(QString text)

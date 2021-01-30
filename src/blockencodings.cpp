@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2019 The Bitcoin Core developers
+// Copyright (c) 2016-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -105,13 +105,12 @@ ReadStatus PartiallyDownloadedBlock::InitData(const CBlockHeaderAndShortTxIDs& c
     std::vector<bool> have_txn(txn_available.size());
     {
     LOCK(pool->cs);
-    const std::vector<std::pair<uint256, CTxMemPool::txiter> >& vTxHashes = pool->vTxHashes;
-    for (size_t i = 0; i < vTxHashes.size(); i++) {
-        uint64_t shortid = cmpctblock.GetShortID(vTxHashes[i].first);
+    for (size_t i = 0; i < pool->vTxHashes.size(); i++) {
+        uint64_t shortid = cmpctblock.GetShortID(pool->vTxHashes[i].first);
         std::unordered_map<uint64_t, uint16_t>::iterator idit = shorttxids.find(shortid);
         if (idit != shorttxids.end()) {
             if (!have_txn[idit->second]) {
-                txn_available[idit->second] = vTxHashes[i].second->GetSharedTx();
+                txn_available[idit->second] = pool->vTxHashes[i].second->GetSharedTx();
                 have_txn[idit->second]  = true;
                 mempool_count++;
             } else {

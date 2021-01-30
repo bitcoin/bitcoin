@@ -1,8 +1,38 @@
 # ThreadSanitizer suppressions
 # ============================
+#
+# https://github.com/google/sanitizers/wiki/ThreadSanitizerSuppressions
 
-# WalletBatch (unidentified deadlock)
-deadlock:WalletBatch
+# double locks (TODO fix)
+mutex:g_genesis_wait_mutex
+mutex:Interrupt
+mutex:CThreadInterrupt
+mutex:CConnman::Interrupt
+mutex:CConnman::WakeMessageHandler
+mutex:CConnman::ThreadOpenConnections
+mutex:CConnman::ThreadOpenAddedConnections
+mutex:CConnman::SocketHandler
+mutex:UpdateTip
+mutex:PeerManagerImpl::UpdatedBlockTip
+mutex:g_best_block_mutex
+
+# race (TODO fix)
+race:CConnman::WakeMessageHandler
+race:CConnman::ThreadMessageHandler
+race:fHaveGenesis
+race:ProcessNewBlock
+race:ThreadImport
+race:LoadWallet
+race:WalletBatch::WriteHDChain
+race:BerkeleyBatch
+race:BerkeleyDatabase
+race:DatabaseBatch
+race:leveldb::DBImpl::DeleteObsoleteFiles
+race:zmq::*
+race:bitcoin-qt
+
+# deadlock (TODO fix)
+deadlock:CChainState::ConnectTip
 
 # Intentional deadlock in tests
 deadlock:TestPotentialDeadLockDetected
@@ -14,3 +44,15 @@ deadlock:src/qt/test/*
 # External libraries
 deadlock:libdb
 race:libzmq
+
+# Intermittent issues
+# -------------------
+#
+# Suppressions that follow might only happen intermittently, thus they are not
+# reproducible. Make sure to include a link to a full trace.
+
+# https://github.com/bitcoin/bitcoin/issues/20618
+race:CZMQAbstractPublishNotifier::SendZmqMessage
+
+# https://github.com/bitcoin/bitcoin/pull/20218, https://github.com/bitcoin/bitcoin/pull/20745
+race:epoll_ctl

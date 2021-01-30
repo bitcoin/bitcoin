@@ -6,11 +6,12 @@
 #define BITCOIN_INTERFACES_WALLET_H
 
 #include <amount.h>                    // For CAmount
+#include <interfaces/chain.h>          // For ChainClient
 #include <pubkey.h>                    // For CKeyID and CScriptID (definitions needed in CTxDestination instantiation)
 #include <script/standard.h>           // For CTxDestination
 #include <support/allocators/secure.h> // For SecureString
-#include <ui_interface.h>              // For ChangeType
 #include <util/message.h>
+#include <util/ui_change_type.h>
 
 #include <functional>
 #include <map>
@@ -31,6 +32,7 @@ enum class TransactionError;
 enum isminetype : unsigned int;
 struct CRecipient;
 struct PartiallySignedTransaction;
+struct WalletContext;
 struct bilingual_str;
 typedef uint8_t isminefilter;
 
@@ -197,16 +199,14 @@ public:
         bool sign,
         bool bip32derivs,
         PartiallySignedTransaction& psbtx,
-        bool& complete) = 0;
+        bool& complete,
+        size_t* n_signed) = 0;
 
     //! Get balances.
     virtual WalletBalances getBalances() = 0;
 
-    //! Get balances if possible without waiting for chain and wallet locks.
-    virtual bool tryGetBalances(WalletBalances& balances,
-        int& num_blocks,
-        bool force,
-        int cached_num_blocks) = 0;
+    //! Get balances if possible without blocking.
+    virtual bool tryGetBalances(WalletBalances& balances, uint256& block_hash) = 0;
 
     //! Get balance.
     virtual CAmount getBalance() = 0;
@@ -258,9 +258,6 @@ public:
     // Get default address type.
     virtual OutputType getDefaultAddressType() = 0;
 
-    // Get default change type.
-    virtual OutputType getDefaultChangeType() = 0;
-
     //! Get max tx fee.
     virtual CAmount getDefaultMaxTxFee() = 0;
 
@@ -304,6 +301,34 @@ public:
 
     //! Return pointer to internal wallet class, useful for testing.
     virtual CWallet* wallet() { return nullptr; }
+};
+
+//! Wallet chain client that in addition to having chain client methods for
+//! starting up, shutting down, and registering RPCs, also has additional
+//! methods (called by the GUI) to load and create wallets.
+class WalletClient : public ChainClient
+{
+public:
+    //! Create new wallet.
+    virtual std::unique_ptr<Wallet> createWallet(const std::string& name, const SecureString& passphrase, uint64_t wallet_creation_flags, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
+
+   //! Load existing wallet.
+   virtual std::unique_ptr<Wallet> loadWallet(const std::string& name, bilingual_str& error, std::vector<bilingual_str>& warnings) = 0;
+
+   //! Return default wallet directory.
+   virtual std::string getWalletDir() = 0;
+
+   //! Return available wallets in wallet directory.
+   virtual std::vector<std::string> listWalletDir() = 0;
+
+   //! Return interfaces for accessing wallets (if any).
+   virtual std::vector<std::unique_ptr<Wallet>> getWallets() = 0;
+
+   //! Register handler for load wallet messages. This callback is triggered by
+   //! createWallet and loadWallet above, and also triggered when wallets are
+   //! loaded at startup or by RPC.
+   using LoadWalletFn = std::function<void(std::unique_ptr<Wallet> wallet)>;
+   virtual std::unique_ptr<Handler> handleLoadWallet(LoadWalletFn fn) = 0;
 };
 
 //! Information about one wallet address.
@@ -383,6 +408,10 @@ struct WalletTxOut
 //! Return implementation of Wallet interface. This function is defined in
 //! dummywallet.cpp and throws if the wallet component is not compiled.
 std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet);
+
+//! Return implementation of ChainClient interface for a wallet client. This
+//! function will be undefined in builds where ENABLE_WALLET is false.
+std::unique_ptr<WalletClient> MakeWalletClient(Chain& chain, ArgsManager& args);
 
 } // namespace interfaces
 

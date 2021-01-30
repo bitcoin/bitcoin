@@ -1,15 +1,14 @@
-// Copyright (c) 2017-2019 The Bitcoin Core developers
+// Copyright (c) 2017-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <index/disktxpos.h>
 #include <index/txindex.h>
+#include <node/ui_interface.h>
 #include <shutdown.h>
-#include <ui_interface.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <validation.h>
-
-#include <boost/thread.hpp>
 
 constexpr char DB_BEST_BLOCK = 'B';
 constexpr char DB_TXINDEX = 't';
@@ -17,40 +16,9 @@ constexpr char DB_TXINDEX_BLOCK = 'T';
 
 std::unique_ptr<TxIndex> g_txindex;
 
-struct CDiskTxPos : public FlatFilePos
-{
-    unsigned int nTxOffset; // after header
 
-    ADD_SERIALIZE_METHODS;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITEAS(FlatFilePos, *this);
-        READWRITE(VARINT(nTxOffset));
-    }
-
-    CDiskTxPos(const FlatFilePos &blockIn, unsigned int nTxOffsetIn) : FlatFilePos(blockIn.nFile, blockIn.nPos), nTxOffset(nTxOffsetIn) {
-    }
-
-    CDiskTxPos() {
-        SetNull();
-    }
-
-    void SetNull() {
-        FlatFilePos::SetNull();
-        nTxOffset = 0;
-    }
-};
-
-/**
- * Access to the txindex database (indexes/txindex/)
- *
- * The database stores a block locator of the chain the database is synced to
- * so that the TxIndex can efficiently determine the point it last stopped at.
- * A locator is used instead of a simple hash of the chain tip because blocks
- * and block index entries may not be flushed to disk until after this database
- * is updated.
- */
+/** Access to the txindex database (indexes/txindex/) */
 class TxIndex::DB : public BaseIndex::DB
 {
 public:
@@ -152,7 +120,6 @@ bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& 
     bool interrupted = false;
     std::unique_ptr<CDBIterator> cursor(block_tree_db.NewIterator());
     for (cursor->Seek(begin_key); cursor->Valid(); cursor->Next()) {
-        boost::this_thread::interruption_point();
         if (ShutdownRequested()) {
             interrupted = true;
             break;

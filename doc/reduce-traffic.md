@@ -23,7 +23,7 @@ longer serving historic blocks (blocks older than one week).
 Keep in mind that new nodes require other nodes that are willing to serve
 historic blocks.
 
-Whitelisted peers will never be disconnected, although their traffic counts for
+Peers with the `download` permission will never be disconnected, although their traffic counts for
 calculating the target.
 
 ## 2. Disable "listening" (`-listen=0`)
@@ -50,7 +50,7 @@ Be reminded of the effects of this setting.
   Doing so disables the automatic broadcasting of transactions from wallet. Not
   relaying other's transactions could hurt your privacy if used while a wallet
   is loaded or if you use the node to broadcast transactions.
-- If a peer is whitelisted and "-whitelistforcerelay" is set to "1" (which will
-  also set "whitelistrelay" to "1"), we will still receive and relay their transactions.
+- If a peer has the forcerelay permission, we will still receive and relay
+  their transactions.
 - It makes block propagation slower because compact block relay can only be
   used when transaction relay is enabled.

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,7 +14,7 @@
 
 #include <vector>
 
-static void AssembleBlock(benchmark::State& state)
+static void AssembleBlock(benchmark::Bench& bench)
 {
     TestingSetup test_setup{
         CBaseChainParams::REGTEST,
@@ -49,14 +49,14 @@ static void AssembleBlock(benchmark::State& state)
 
         for (const auto& txr : txs) {
             TxValidationState state;
-            bool ret{::AcceptToMemoryPool(*test_setup.m_node.mempool, state, txr, nullptr /* plTxnReplaced */, false /* bypass_limits */, /* nAbsurdFee */ 0)};
+            bool ret{::AcceptToMemoryPool(*test_setup.m_node.mempool, state, txr, nullptr /* plTxnReplaced */, false /* bypass_limits */)};
             assert(ret);
         }
     }
 
-    while (state.KeepRunning()) {
+    bench.run([&] {
         PrepareBlock(test_setup.m_node, SCRIPT_PUB);
-    }
+    });
 }
 
-BENCHMARK(AssembleBlock, 700);
+BENCHMARK(AssembleBlock);

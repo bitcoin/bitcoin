@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2019 The Bitcoin Core developers
+// Copyright (c) 2014-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -38,7 +38,7 @@ class CCoinsViewTest : public CCoinsView
     std::map<COutPoint, Coin> map_;
 
 public:
-    NODISCARD bool GetCoin(const COutPoint& outpoint, Coin& coin) const override
+    [[nodiscard]] bool GetCoin(const COutPoint& outpoint, Coin& coin) const override
     {
         std::map<COutPoint, Coin>::const_iterator it = map_.find(outpoint);
         if (it == map_.end()) {
@@ -538,7 +538,7 @@ BOOST_AUTO_TEST_CASE(ccoins_serialization)
     CDataStream tmp(SER_DISK, CLIENT_VERSION);
     uint64_t x = 3000000000ULL;
     tmp << VARINT(x);
-    BOOST_CHECK_EQUAL(HexStr(tmp.begin(), tmp.end()), "8a95c0bb00");
+    BOOST_CHECK_EQUAL(HexStr(tmp), "8a95c0bb00");
     CDataStream ss5(ParseHex("00008a95c0bb00"), SER_DISK, CLIENT_VERSION);
     try {
         Coin cc5;

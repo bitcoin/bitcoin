@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (c) 2017-2019 The Bitcoin Core developers
+# Copyright (c) 2017-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,7 +37,7 @@ for commit in $(git rev-list --reverse $1); do
         git reset --quiet --hard HEAD
      else
         if git rev-list "--format=%b" -n1 $commit | grep -q '^-\(BEGIN\|END\)[ a-zA-Z]*-$'; then
-            echo "Error: script block marker but no scripted-diff in title"
+            echo "Error: script block marker but no scripted-diff in title of commit $commit"
             echo "Failed"
             RET=1
         fi

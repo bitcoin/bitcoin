@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -291,18 +291,6 @@ public:
 
     // Get an estimate of LevelDB memory usage (in bytes).
     size_t DynamicMemoryUsage() const;
-
-    // not available for LevelDB; provide for compatibility with BDB
-    bool Flush()
-    {
-        return true;
-    }
-
-    bool Sync()
-    {
-        CDBBatch batch(*this);
-        return WriteBatch(batch, true);
-    }
 
     CDBIterator *NewIterator()
     {

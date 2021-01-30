@@ -40,12 +40,12 @@
 #include <set>
 #include <vector>
 
-void initialize()
+void initialize_integer()
 {
     SelectParams(CBaseChainParams::REGTEST);
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET_INIT(integer, initialize_integer)
 {
     if (buffer.size() < sizeof(uint256) + sizeof(uint160)) {
         return;

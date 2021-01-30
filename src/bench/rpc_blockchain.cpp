@@ -7,11 +7,15 @@
 
 #include <rpc/blockchain.h>
 #include <streams.h>
+#include <test/util/setup_common.h>
 #include <validation.h>
 
 #include <univalue.h>
 
-static void BlockToJsonVerbose(benchmark::State& state) {
+static void BlockToJsonVerbose(benchmark::Bench& bench)
+{
+    TestingSetup test_setup{};
+
     CDataStream stream(benchmark::data::block413567, SER_NETWORK, PROTOCOL_VERSION);
     char a = '\0';
     stream.write(&a, 1); // Prevent compaction
@@ -24,9 +28,9 @@ static void BlockToJsonVerbose(benchmark::State& state) {
     blockindex.phashBlock = &blockHash;
     blockindex.nBits = 403014710;
 
-    while (state.KeepRunning()) {
+    bench.run([&] {
         (void)blockToJSON(block, &blockindex, &blockindex, /*verbose*/ true);
-    }
+    });
 }
 
-BENCHMARK(BlockToJsonVerbose, 10);
+BENCHMARK(BlockToJsonVerbose);

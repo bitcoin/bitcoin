@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <amount.h>
-#include <optional.h>
 #include <policy/fees.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -14,7 +13,7 @@
 #include <string>
 #include <vector>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET(fees)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const CFeeRate minimal_incremental_fee{ConsumeMoney(fuzzed_data_provider)};

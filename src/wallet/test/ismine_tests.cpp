@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2019 The Bitcoin Core developers
+// Copyright (c) 2017-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -27,15 +27,14 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
     CKey uncompressedKey;
     uncompressedKey.MakeNewKey(false);
     CPubKey uncompressedPubkey = uncompressedKey.GetPubKey();
-    NodeContext node;
-    std::unique_ptr<interfaces::Chain> chain = interfaces::MakeChain(node);
+    std::unique_ptr<interfaces::Chain>& chain = m_node.chain;
 
     CScript scriptPubKey;
     isminetype result;
 
     // P2PK compressed
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         scriptPubKey = GetScriptForRawPubKey(pubkeys[0]);
@@ -52,7 +51,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2PK uncompressed
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         scriptPubKey = GetScriptForRawPubKey(uncompressedPubkey);
@@ -69,7 +68,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2PKH compressed
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         scriptPubKey = GetScriptForDestination(PKHash(pubkeys[0]));
@@ -86,7 +85,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2PKH uncompressed
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         scriptPubKey = GetScriptForDestination(PKHash(uncompressedPubkey));
@@ -103,7 +102,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2SH
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
@@ -127,7 +126,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // (P2PKH inside) P2SH inside P2SH (invalid)
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
@@ -145,7 +144,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // (P2PKH inside) P2SH inside P2WSH (invalid)
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
@@ -163,11 +162,11 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WPKH inside P2WSH (invalid)
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
-        CScript witnessscript = GetScriptForDestination(WitnessV0KeyHash(PKHash(pubkeys[0])));
+        CScript witnessscript = GetScriptForDestination(WitnessV0KeyHash(pubkeys[0]));
         scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(witnessscript));
 
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(witnessscript));
@@ -179,7 +178,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // (P2PKH inside) P2WSH inside P2WSH (invalid)
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
@@ -197,12 +196,12 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WPKH compressed
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
 
-        scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(PKHash(pubkeys[0])));
+        scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(pubkeys[0]));
 
         // Keystore implicitly has key and P2SH redeemScript
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddCScript(scriptPubKey));
@@ -212,12 +211,12 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WPKH uncompressed
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(uncompressedKey));
 
-        scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(PKHash(uncompressedPubkey)));
+        scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uncompressedPubkey));
 
         // Keystore has key, but no P2SH redeemScript
         result = keystore.GetLegacyScriptPubKeyMan()->IsMine(scriptPubKey);
@@ -231,7 +230,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // scriptPubKey multisig
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
@@ -262,7 +261,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2SH multisig
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(uncompressedKey));
@@ -283,7 +282,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WSH multisig with compressed keys
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
@@ -309,7 +308,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WSH multisig with uncompressed key
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(uncompressedKey));
@@ -335,7 +334,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // P2WSH multisig wrapped in P2SH
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
 
@@ -362,7 +361,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // OP_RETURN
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
@@ -376,7 +375,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // witness unspendable
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
@@ -390,7 +389,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // witness unknown
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));
@@ -404,7 +403,7 @@ BOOST_AUTO_TEST_CASE(ismine_standard)
 
     // Nonstandard
     {
-        CWallet keystore(chain.get(), WalletLocation(), WalletDatabase::CreateDummy());
+        CWallet keystore(chain.get(), "", CreateDummyWalletDatabase());
         keystore.SetupLegacyScriptPubKeyMan();
         LOCK(keystore.GetLegacyScriptPubKeyMan()->cs_KeyStore);
         BOOST_CHECK(keystore.GetLegacyScriptPubKeyMan()->AddKey(keys[0]));

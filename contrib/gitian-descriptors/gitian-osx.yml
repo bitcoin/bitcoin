@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-core-osx-0.21"
+name: "bitcoin-core-osx-22"
 enable_cache: true
 distro: "ubuntu"
 suites:
@@ -28,19 +28,20 @@ packages:
 - "python3-dev"
 - "python3-setuptools"
 - "fonts-tuffy"
+- "xorriso"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
 files:
-- "MacOSX10.14.sdk.tar.gz"
+- "Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz"
 script: |
   set -e -o pipefail
 
   WRAP_DIR=$HOME/wrapped
-  HOSTS="x86_64-apple-darwin16"
-  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests GENISOIMAGE=$WRAP_DIR/genisoimage"
+  HOSTS="x86_64-apple-darwin18"
+  CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests XORRISOFS=${WRAP_DIR}/xorrisofs DMG=${WRAP_DIR}/dmg"
   FAKETIME_HOST_PROGS=""
-  FAKETIME_PROGS="ar ranlib date dmg genisoimage"
+  FAKETIME_PROGS="ar ranlib date dmg xorrisofs"
 
   export QT_RCC_TEST=1
   export QT_RCC_SOURCE_DATE_OVERRIDE=1
@@ -62,7 +63,7 @@ script: |
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
     echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${prog}
     echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
-    echo "\$REAL \$@" >> $WRAP_DIR/${prog}
+    echo "exec \"\$REAL\" \"\$@\"" >> $WRAP_DIR/${prog}
     chmod +x ${WRAP_DIR}/${prog}
   done
   }
@@ -74,7 +75,7 @@ script: |
         echo "REAL=\`which -a ${i}-${prog} | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
         echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${i}-${prog}
         echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
-        echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
+        echo "exec \"\$REAL\" \"\$@\"" >> $WRAP_DIR/${i}-${prog}
         chmod +x ${WRAP_DIR}/${i}-${prog}
     done
   done
@@ -90,7 +91,7 @@ script: |
   BASEPREFIX="${PWD}/depends"
 
   mkdir -p ${BASEPREFIX}/SDKs
-  tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/MacOSX10.14.sdk.tar.gz
+  tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz
 
   # Build dependencies for each host
   for i in $HOSTS; do
@@ -103,9 +104,15 @@ script: |
   create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
   export PATH=${WRAP_DIR}:${PATH}
 
-  # Create the git archive, and define DISTNAME and GIT_ARCHIVE variables.
-  # shellcheck source=contrib/gitian-descriptors/make_git_archive
-  source contrib/gitian-descriptors/make_git_archive
+  # Define DISTNAME variable.
+  # shellcheck source=contrib/gitian-descriptors/assign_DISTNAME
+  source contrib/gitian-descriptors/assign_DISTNAME
+
+  GIT_ARCHIVE="${OUTDIR}/src/${DISTNAME}.tar.gz"
+
+  # Create the source tarball
+  mkdir -p "$(dirname "$GIT_ARCHIVE")"
+  git archive --prefix="${DISTNAME}/" --output="$GIT_ARCHIVE" HEAD
 
   ORIGPATH="$PATH"
   # Extract the git archive into a dir for each host and build
@@ -115,7 +122,7 @@ script: |
     cd distsrc-${i}
     INSTALLPATH="${PWD}/installed/${DISTNAME}"
     mkdir -p ${INSTALLPATH}
-    tar -xf $GIT_ARCHIVE
+    tar --strip-components=1 -xf "${GIT_ARCHIVE}"
 
     ./autogen.sh
     CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS}
@@ -126,21 +133,17 @@ script: |
 
     make osx_volname
     make deploydir
-    OSX_VOLNAME="$(cat osx_volname)"
     mkdir -p unsigned-app-${i}
     cp osx_volname unsigned-app-${i}/
     cp contrib/macdeploy/detached-sig-apply.sh unsigned-app-${i}
     cp contrib/macdeploy/detached-sig-create.sh unsigned-app-${i}
-    cp ${BASEPREFIX}/${i}/native/bin/dmg ${BASEPREFIX}/${i}/native/bin/genisoimage unsigned-app-${i}
-    cp ${BASEPREFIX}/${i}/native/bin/${i}-codesign_allocate unsigned-app-${i}/codesign_allocate
-    cp ${BASEPREFIX}/${i}/native/bin/${i}-pagestuff unsigned-app-${i}/pagestuff
+    cp ${BASEPREFIX}/${i}/native/bin/dmg unsigned-app-${i}
     mv dist unsigned-app-${i}
     pushd unsigned-app-${i}
     find . | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ${OUTDIR}/${DISTNAME}-osx-unsigned.tar.gz
     popd
 
-    make deploy
-    ${WRAP_DIR}/dmg dmg "${OSX_VOLNAME}.dmg" ${OUTDIR}/${DISTNAME}-osx-unsigned.dmg
+    make deploy OSX_DMG="${OUTDIR}/${DISTNAME}-osx-unsigned.dmg"
 
     cd installed
     find . -name "lib*.la" -delete

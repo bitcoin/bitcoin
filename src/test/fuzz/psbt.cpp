@@ -17,12 +17,12 @@
 #include <string>
 #include <vector>
 
-void initialize()
+void initialize_psbt()
 {
     static const ECCVerifyHandle verify_handle;
 }
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+FUZZ_TARGET_INIT(psbt, initialize_psbt)
 {
     PartiallySignedTransaction psbt_mut;
     const std::string raw_psbt{buffer.begin(), buffer.end()};
@@ -39,7 +39,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     }
 
     (void)psbt.IsNull();
-    (void)psbt.IsSane();
 
     Optional<CMutableTransaction> tx = psbt.tx;
     if (tx) {
@@ -50,7 +49,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     for (const PSBTInput& input : psbt.inputs) {
         (void)PSBTInputSigned(input);
         (void)input.IsNull();
-        (void)input.IsSane();
     }
 
     for (const PSBTOutput& output : psbt.outputs) {

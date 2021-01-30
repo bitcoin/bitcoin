@@ -16,7 +16,7 @@
 #endif  // CRC32C_TESTS_BUILT_WITH_GLOG
 
 #include "./crc32c_arm64.h"
-#include "./crc32c_arm64_linux_check.h"
+#include "./crc32c_arm64_check.h"
 #include "./crc32c_internal.h"
 #include "./crc32c_sse42.h"
 #include "./crc32c_sse42_check.h"
@@ -58,8 +58,8 @@ BENCHMARK_REGISTER_F(CRC32CBenchmark, Portable)
 
 #if HAVE_ARM64_CRC32C
 
-BENCHMARK_DEFINE_F(CRC32CBenchmark, ArmLinux)(benchmark::State& state) {
-  if (!crc32c::CanUseArm64Linux()) {
+BENCHMARK_DEFINE_F(CRC32CBenchmark, ArmCRC32C)(benchmark::State& state) {
+  if (!crc32c::CanUseArm64Crc32()) {
     state.SkipWithError("ARM CRC32C instructions not available or not enabled");
     return;
   }
@@ -69,7 +69,7 @@ BENCHMARK_DEFINE_F(CRC32CBenchmark, ArmLinux)(benchmark::State& state) {
     crc = crc32c::ExtendArm64(crc, block_buffer_, block_size_);
   state.SetBytesProcessed(state.iterations() * block_size_);
 }
-BENCHMARK_REGISTER_F(CRC32CBenchmark, ArmLinux)
+BENCHMARK_REGISTER_F(CRC32CBenchmark, ArmCRC32C)
     ->RangeMultiplier(16)
     ->Range(256, 16777216);  // Block size.
 

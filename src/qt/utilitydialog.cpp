@@ -28,8 +28,8 @@
 #include <QVBoxLayout>
 
 /** "Help message" or "About" dialog box */
-HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, bool about) :
-    QDialog(parent),
+HelpMessageDialog::HelpMessageDialog(QWidget *parent, bool about) :
+    QDialog(parent, GUIUtil::dialog_flags),
     ui(new Ui::HelpMessageDialog)
 {
     ui->setupUi(this);

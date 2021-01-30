@@ -20,8 +20,20 @@ Tests correspond to code in rpc/blockchain.cpp.
 
 from decimal import Decimal
 import http.client
+import os
 import subprocess
 
+from test_framework.blocktools import (
+    create_block,
+    create_coinbase,
+    TIME_GENESIS_BLOCK,
+)
+from test_framework.messages import (
+    CBlockHeader,
+    FromHex,
+    msg_block,
+)
+from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -31,18 +43,9 @@ from test_framework.util import (
     assert_raises_rpc_error,
     assert_is_hex_string,
     assert_is_hash_string,
+    get_datadir_path,
 )
-from test_framework.blocktools import (
-    create_block,
-    create_coinbase,
-    TIME_GENESIS_BLOCK,
-)
-from test_framework.messages import (
-    msg_block,
-)
-from test_framework.mininode import (
-    P2PInterface,
-)
+from test_framework.wallet import MiniWallet
 
 
 class BlockchainTest(BitcoinTestFramework):
@@ -63,6 +66,7 @@ class BlockchainTest(BitcoinTestFramework):
         self._test_getnetworkhashps()
         self._test_stopatheight()
         self._test_waitforblockheight()
+        self._test_getblock()
         assert self.nodes[0].verifychain(4, 0)
 
     def mine_chain(self):
@@ -146,7 +150,19 @@ class BlockchainTest(BitcoinTestFramework):
                         'possible': True,
                     },
                 },
-                'active': False}
+                'active': False
+            },
+            'taproot': {
+                'type': 'bip9',
+                'bip9': {
+                    'status': 'active',
+                    'start_time': -1,
+                    'timeout': 9223372036854775807,
+                    'since': 0
+                },
+                'height': 0,
+                'active': True
+            }
         })
 
     def _test_getchaintxstats(self):
@@ -241,6 +257,17 @@ class BlockchainTest(BitcoinTestFramework):
         del res['disk_size'], res3['disk_size']
         assert_equal(res, res3)
 
+        self.log.info("Test hash_type option for gettxoutsetinfo()")
+        # Adding hash_type 'hash_serialized_2', which is the default, should
+        # not change the result.
+        res4 = node.gettxoutsetinfo(hash_type='hash_serialized_2')
+        del res4['disk_size']
+        assert_equal(res, res4)
+
+        # hash_type none should not return a UTXO set hash.
+        res5 = node.gettxoutsetinfo(hash_type='none')
+        assert 'hash_serialized_2' not in res5
+
     def _test_getblockheader(self):
         node = self.nodes[0]
 
@@ -268,6 +295,14 @@ class BlockchainTest(BitcoinTestFramework):
         assert isinstance(header['version'], int)
         assert isinstance(int(header['versionHex'], 16), int)
         assert isinstance(header['difficulty'], Decimal)
+
+        # Test with verbose=False, which should return the header as hex.
+        header_hex = node.getblockheader(blockhash=besthash, verbose=False)
+        assert_is_hex_string(header_hex)
+
+        header = FromHex(CBlockHeader(), header_hex)
+        header.calc_sha256()
+        assert_equal(header.hash, besthash)
 
     def _test_getdifficulty(self):
         difficulty = self.nodes[0].getdifficulty()
@@ -298,7 +333,7 @@ class BlockchainTest(BitcoinTestFramework):
     def _test_waitforblockheight(self):
         self.log.info("Test waitforblockheight")
         node = self.nodes[0]
-        node.add_p2p_connection(P2PInterface())
+        peer = node.add_p2p_connection(P2PInterface())
 
         current_height = node.getblock(node.getbestblockhash())['height']
 
@@ -315,7 +350,7 @@ class BlockchainTest(BitcoinTestFramework):
         def solve_and_send_block(prevhash, height, time):
             b = create_block(prevhash, create_coinbase(height), time)
             b.solve()
-            node.p2p.send_and_ping(msg_block(b))
+            peer.send_and_ping(msg_block(b))
             return b
 
         b21f = solve_and_send_block(int(b20hash, 16), 21, b20['time'] + 1)
@@ -332,6 +367,46 @@ class BlockchainTest(BitcoinTestFramework):
         assert_waitforheight(current_height - 1)
         assert_waitforheight(current_height)
         assert_waitforheight(current_height + 1)
+
+    def _test_getblock(self):
+        node = self.nodes[0]
+
+        miniwallet = MiniWallet(node)
+        miniwallet.generate(5)
+        node.generate(100)
+
+        fee_per_byte = Decimal('0.00000010')
+        fee_per_kb = 1000 * fee_per_byte
+
+        miniwallet.send_self_transfer(fee_rate=fee_per_kb, from_node=node)
+        blockhash = node.generate(1)[0]
+
+        self.log.info("Test that getblock with verbosity 1 doesn't include fee")
+        block = node.getblock(blockhash, 1)
+        assert 'fee' not in block['tx'][1]
+
+        self.log.info('Test that getblock with verbosity 2 includes expected fee')
+        block = node.getblock(blockhash, 2)
+        tx = block['tx'][1]
+        assert 'fee' in tx
+        assert_equal(tx['fee'], tx['vsize'] * fee_per_byte)
+
+        self.log.info("Test that getblock with verbosity 2 still works with pruned Undo data")
+        datadir = get_datadir_path(self.options.tmpdir, 0)
+
+        def move_block_file(old, new):
+            old_path = os.path.join(datadir, self.chain, 'blocks', old)
+            new_path = os.path.join(datadir, self.chain, 'blocks', new)
+            os.rename(old_path, new_path)
+
+        # Move instead of deleting so we can restore chain state afterwards
+        move_block_file('rev00000.dat', 'rev_wrong')
+
+        block = node.getblock(blockhash, 2)
+        assert 'fee' not in block['tx'][1]
+
+        # Restore chain state
+        move_block_file('rev_wrong', 'rev00000.dat')
 
 
 if __name__ == '__main__':

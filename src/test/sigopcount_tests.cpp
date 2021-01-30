@@ -154,8 +154,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
 
     // P2WPKH witness program
     {
-        CScript p2pk = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
-        CScript scriptPubKey = GetScriptForWitness(p2pk);
+        CScript scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(pubkey));
         CScript scriptSig = CScript();
         CScriptWitness scriptWitness;
         scriptWitness.stack.push_back(std::vector<unsigned char>(0));
@@ -183,8 +182,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
 
     // P2WPKH nested in P2SH
     {
-        CScript p2pk = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
-        CScript scriptSig = GetScriptForWitness(p2pk);
+        CScript scriptSig = GetScriptForDestination(WitnessV0KeyHash(pubkey));
         CScript scriptPubKey = GetScriptForDestination(ScriptHash(scriptSig));
         scriptSig = CScript() << ToByteVector(scriptSig);
         CScriptWitness scriptWitness;
@@ -199,7 +197,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
     // P2WSH witness program
     {
         CScript witnessScript = CScript() << 1 << ToByteVector(pubkey) << ToByteVector(pubkey) << 2 << OP_CHECKMULTISIGVERIFY;
-        CScript scriptPubKey = GetScriptForWitness(witnessScript);
+        CScript scriptPubKey = GetScriptForDestination(WitnessV0ScriptHash(witnessScript));
         CScript scriptSig = CScript();
         CScriptWitness scriptWitness;
         scriptWitness.stack.push_back(std::vector<unsigned char>(0));
@@ -215,7 +213,7 @@ BOOST_AUTO_TEST_CASE(GetTxSigOpCost)
     // P2WSH nested in P2SH
     {
         CScript witnessScript = CScript() << 1 << ToByteVector(pubkey) << ToByteVector(pubkey) << 2 << OP_CHECKMULTISIGVERIFY;
-        CScript redeemScript = GetScriptForWitness(witnessScript);
+        CScript redeemScript = GetScriptForDestination(WitnessV0ScriptHash(witnessScript));
         CScript scriptPubKey = GetScriptForDestination(ScriptHash(redeemScript));
         CScript scriptSig = CScript() << ToByteVector(redeemScript);
         CScriptWitness scriptWitness;

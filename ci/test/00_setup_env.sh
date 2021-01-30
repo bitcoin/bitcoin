@@ -31,15 +31,25 @@ export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch}
 export HOST=${HOST:-$("$BASE_ROOT_DIR/depends/config.guess")}
 # Whether to prefer BusyBox over GNU utilities
 export USE_BUSY_BOX=${USE_BUSY_BOX:-false}
+
 export RUN_UNIT_TESTS=${RUN_UNIT_TESTS:-true}
 export RUN_FUNCTIONAL_TESTS=${RUN_FUNCTIONAL_TESTS:-true}
-export TEST_PREVIOUS_RELEASES=${TEST_PREVIOUS_RELEASES:-false}
+export RUN_SECURITY_TESTS=${RUN_SECURITY_TESTS:-false}
+# By how much to scale the test_runner timeouts (option --timeout-factor).
+# This is needed because some ci machines have slow CPU or disk, so sanitizers
+# might be slow or a reindex might be waiting on disk IO.
+export TEST_RUNNER_TIMEOUT_FACTOR=${TEST_RUNNER_TIMEOUT_FACTOR:-40}
+export TEST_RUNNER_ENV=${TEST_RUNNER_ENV:-}
 export RUN_FUZZ_TESTS=${RUN_FUZZ_TESTS:-false}
+export EXPECTED_TESTS_DURATION_IN_SECONDS=${EXPECTED_TESTS_DURATION_IN_SECONDS:-1000}
+
 export CONTAINER_NAME=${CONTAINER_NAME:-ci_unnamed}
 export DOCKER_NAME_TAG=${DOCKER_NAME_TAG:-ubuntu:18.04}
 # Randomize test order.
 # See https://www.boost.org/doc/libs/1_71_0/libs/test/doc/html/boost_test/utf_reference/rt_param_reference/random.html
 export BOOST_TEST_RANDOM=${BOOST_TEST_RANDOM:-1}
+# See man 7 debconf
+export DEBIAN_FRONTEND=noninteractive
 export CCACHE_SIZE=${CCACHE_SIZE:-100M}
 export CCACHE_TEMPDIR=${CCACHE_TEMPDIR:-/tmp/.ccache-temp}
 export CCACHE_COMPRESS=${CCACHE_COMPRESS:-1}

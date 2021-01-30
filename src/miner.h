@@ -84,7 +84,7 @@ struct CompareTxIterByAncestorCount {
     {
         if (a->GetCountWithAncestors() != b->GetCountWithAncestors())
             return a->GetCountWithAncestors() < b->GetCountWithAncestors();
-        return CTxMemPool::CompareIteratorByHash()(a, b);
+        return CompareIteratorByHash()(a, b);
     }
 };
 
@@ -128,8 +128,6 @@ class BlockAssembler
 private:
     // The constructed block template
     std::unique_ptr<CBlockTemplate> pblocktemplate;
-    // A convenience pointer that always refers to the CBlock in pblocktemplate
-    CBlock* pblock;
 
     // Configuration parameters for the block size
     bool fIncludeWitness;
@@ -187,7 +185,7 @@ private:
       * locktime, premature-witness, serialized size (if necessary)
       * These checks should always succeed, and they're here
       * only as an extra check in case of suboptimal node configuration */
-    bool TestPackageTransactions(const CTxMemPool::setEntries& package);
+    bool TestPackageTransactions(const CTxMemPool::setEntries& package) const;
     /** Return true if given transaction from mapTx has already been evaluated,
       * or if the transaction's cached data in mapTx is incorrect. */
     bool SkipMapTxEntry(CTxMemPool::txiter it, indexed_modified_transaction_set& mapModifiedTx, CTxMemPool::setEntries& failedTx) EXCLUSIVE_LOCKS_REQUIRED(m_mempool.cs);
