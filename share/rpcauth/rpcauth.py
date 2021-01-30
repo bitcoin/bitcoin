@@ -40,8 +40,8 @@ def main():
     rpcauth = f'{args.username}:{salt}${password_hmac}'
 
     if args.output:
-        file = open(args.output, "x", encoding="utf8")
-        file.write(rpcauth)
+        file = open(args.output, "a", encoding="utf8")
+        file.write(rpcauth + "\n")
 
     if args.json:
         odict={'username':args.username, 'password':args.password}

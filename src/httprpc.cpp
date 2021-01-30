@@ -339,13 +339,14 @@ static bool InitRPCAuthentication()
             file.open(path);
             if (!file.is_open()) continue;
             std::string rpcauth;
-            std::getline(file, rpcauth);
-            std::vector<std::string> fields{SplitString(rpcauth, ':')};
-            const std::vector<std::string> salt_hmac{SplitString(fields.back(), '$')};
-            if (fields.size() == 2 && salt_hmac.size() == 2) {
-                fields.pop_back();
-                fields.insert(fields.end(), salt_hmac.begin(), salt_hmac.end());
-                g_rpcauth.push_back(fields);
+            while (std::getline(file, rpcauth)) {
+                std::vector<std::string> fields{SplitString(rpcauth, ':')};
+                const std::vector<std::string> salt_hmac{SplitString(fields.back(), '$')};
+                if (fields.size() == 2 && salt_hmac.size() == 2) {
+                    fields.pop_back();
+                    fields.insert(fields.end(), salt_hmac.begin(), salt_hmac.end());
+                    g_rpcauth.push_back(fields);
+                }
             }
         }
     }
