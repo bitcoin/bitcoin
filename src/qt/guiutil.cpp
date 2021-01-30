@@ -766,10 +766,10 @@ QString NetworkToQString(Network net)
     assert(false);
 }
 
-QString ConnectionTypeToQString(ConnectionType conn_type, bool relay_txes)
+QString ConnectionTypeToQString(ConnectionType conn_type)
 {
     switch (conn_type) {
-    case ConnectionType::INBOUND: return relay_txes ? QObject::tr("Inbound Full Relay") : QObject::tr("Inbound Block Relay");
+    case ConnectionType::INBOUND: return QObject::tr("Inbound");
     case ConnectionType::OUTBOUND_FULL_RELAY: return QObject::tr("Outbound Full Relay");
     case ConnectionType::BLOCK_RELAY: return QObject::tr("Outbound Block Relay");
     case ConnectionType::MANUAL: return QObject::tr("Outbound Manual");

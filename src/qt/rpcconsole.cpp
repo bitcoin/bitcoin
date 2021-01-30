@@ -462,7 +462,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
 
     constexpr QChar nonbreaking_hyphen(8209);
     const std::vector<QString> CONNECTION_TYPE_DOC{
-        tr("Inbound Full/Block Relay: initiated by peer"),
+        tr("Inbound: initiated by peer"),
         tr("Outbound Full Relay: default"),
         tr("Outbound Block Relay: does not relay transactions or addresses"),
         tr("Outbound Manual: added using RPC %1 or %2/%3 configuration options")
@@ -1120,7 +1120,7 @@ void RPCConsole::updateDetailWidget()
     ui->timeoffset->setText(GUIUtil::formatTimeOffset(stats->nodeStats.nTimeOffset));
     ui->peerVersion->setText(QString::number(stats->nodeStats.nVersion));
     ui->peerSubversion->setText(QString::fromStdString(stats->nodeStats.cleanSubVer));
-    ui->peerConnectionType->setText(GUIUtil::ConnectionTypeToQString(stats->nodeStats.m_conn_type, stats->nodeStats.fRelayTxes));
+    ui->peerConnectionType->setText(GUIUtil::ConnectionTypeToQString(stats->nodeStats.m_conn_type));
     ui->peerNetwork->setText(GUIUtil::NetworkToQString(stats->nodeStats.m_network));
     if (stats->nodeStats.m_permissionFlags == PF_NONE) {
         ui->peerPermissions->setText(tr("N/A"));
