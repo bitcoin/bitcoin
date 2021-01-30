@@ -24,6 +24,13 @@ class UTXOSetHashTest(BitcoinTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
+    def test_deterministic_hash_results(self):
+        self.log.info("Test deterministic UTXO set hash results")
+
+        # These depend on the setup_clean_chain option, the chain loaded from the cache
+        assert_equal(self.nodes[0].gettxoutsetinfo()['hash_serialized_2'], "b32ec1dda5a53cd025b95387aad344a801825fe46a60ff952ce26528f01d3be8")
+        assert_equal(self.nodes[0].gettxoutsetinfo("muhash")['muhash'], "dd5ad2a105c2d29495f577245c357409002329b9f4d6182c0af3dc2f462555c8")
+
     def test_muhash_implementation(self):
         self.log.info("Test MuHash implementation consistency")
 
@@ -71,6 +78,7 @@ class UTXOSetHashTest(BitcoinTestFramework):
         assert_equal(finalized[::-1].hex(), node_muhash)
 
     def run_test(self):
+        self.test_deterministic_hash_results()
         self.test_muhash_implementation()
 
 
