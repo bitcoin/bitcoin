@@ -106,3 +106,16 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
     return nEvicted;
 }
 
+void AddChildrenToWorkSet(const CTransaction& tx, std::set<uint256>& orphan_work_set)
+{
+    AssertLockHeld(g_cs_orphans);
+    for (unsigned int i = 0; i < tx.vout.size(); i++) {
+        const auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(tx.GetHash(), i));
+        if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
+            for (const auto& elem : it_by_prev->second) {
+                orphan_work_set.insert(elem->first);
+            }
+        }
+    }
+}
+

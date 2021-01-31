@@ -2121,14 +2121,7 @@ void PeerManagerImpl::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
         if (result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
             LogPrint(BCLog::MEMPOOL, "   accepted orphan tx %s\n", orphanHash.ToString());
             RelayTransaction(orphanHash, porphanTx->GetWitnessHash(), m_connman);
-            for (unsigned int i = 0; i < porphanTx->vout.size(); i++) {
-                auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(orphanHash, i));
-                if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
-                    for (const auto& elem : it_by_prev->second) {
-                        orphan_work_set.insert(elem->first);
-                    }
-                }
-            }
+            AddChildrenToWorkSet(*porphanTx, orphan_work_set);
             EraseOrphanTx(orphanHash);
             for (const CTransactionRef& removedTx : result.m_replaced_transactions.value()) {
                 AddToCompactExtraTransactions(removedTx);
@@ -3147,14 +3140,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             m_txrequest.ForgetTxHash(tx.GetHash());
             m_txrequest.ForgetTxHash(tx.GetWitnessHash());
             RelayTransaction(tx.GetHash(), tx.GetWitnessHash(), m_connman);
-            for (unsigned int i = 0; i < tx.vout.size(); i++) {
-                auto it_by_prev = mapOrphanTransactionsByPrev.find(COutPoint(txid, i));
-                if (it_by_prev != mapOrphanTransactionsByPrev.end()) {
-                    for (const auto& elem : it_by_prev->second) {
-                        peer->m_orphan_work_set.insert(elem->first);
-                    }
-                }
-            }
+            AddChildrenToWorkSet(tx, peer->m_orphan_work_set);
 
             pfrom.nLastTXTime = GetTime();
 
