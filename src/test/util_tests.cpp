@@ -785,7 +785,7 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
     BOOST_CHECK(test_args.ParseParameters(3, (char**)argv_both, error));
-    BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
+    BOOST_CHECK_EQUAL(test_args.GetChainName(), "Invalid combination of -regtest, -signet, -testnet or -chain");
 
     BOOST_CHECK(test_args.ParseParameters(0, (char**)argv_testnet, error));
     test_args.ReadConfigString(testnetconf);
@@ -795,17 +795,9 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(2, (char**)argv_regtest, error));
-    test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
-
     BOOST_CHECK(test_args.ParseParameters(3, (char**)argv_test_no_reg, error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
-
-    BOOST_CHECK(test_args.ParseParameters(3, (char**)argv_both, error));
-    test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
 
     // check setting the network to test (and thus making
     // [test] regtest=1 potentially relevant) doesn't break things
@@ -819,17 +811,9 @@ BOOST_AUTO_TEST_CASE(util_GetChainName)
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
 
-    BOOST_CHECK(test_args.ParseParameters(2, (char**)argv_regtest, error));
-    test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
-
     BOOST_CHECK(test_args.ParseParameters(2, (char**)argv_test_no_reg, error));
     test_args.ReadConfigString(testnetconf);
     BOOST_CHECK_EQUAL(test_args.GetChainName(), "test");
-
-    BOOST_CHECK(test_args.ParseParameters(3, (char**)argv_both, error));
-    test_args.ReadConfigString(testnetconf);
-    BOOST_CHECK_THROW(test_args.GetChainName(), std::runtime_error);
 }
 
 // Test different ways settings can be merged, and verify results. This test can
@@ -1099,12 +1083,7 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
         BOOST_CHECK_EQUAL(error, "");
 
         desc += " || ";
-        try {
-            desc += parser.GetChainName();
-        } catch (const std::runtime_error& e) {
-            desc += "error: ";
-            desc += e.what();
-        }
+        desc += parser.GetChainName();
         desc += "\n";
 
         out_sha.Write(MakeUCharSpan(desc));
@@ -1131,7 +1110,7 @@ BOOST_FIXTURE_TEST_CASE(util_ChainMerge, ChainMergeTestingSetup)
     // Results file is formatted like:
     //
     //   <input> || <output>
-    BOOST_CHECK_EQUAL(out_sha_hex, "f263493e300023b6509963887444c41386f44b63bc30047eb8402e8c1144854c");
+    BOOST_CHECK_EQUAL(out_sha_hex, "2d624b0755a88d8a3d52f878eb07dd6bbb6f5cd91f651e51abc8434f2ef63294");
 }
 
 BOOST_AUTO_TEST_CASE(util_ReadWriteSettings)
