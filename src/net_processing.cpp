@@ -1509,14 +1509,7 @@ bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid)
 
     const uint256& hash = gtxid.GetHash();
 
-    {
-        LOCK(g_cs_orphans);
-        if (!gtxid.IsWtxid() && mapOrphanTransactions.count(hash)) {
-            return true;
-        } else if (gtxid.IsWtxid() && g_orphans_by_wtxid.count(hash)) {
-            return true;
-        }
-    }
+    if (HaveOrphanTx(gtxid)) return true;
 
     {
         LOCK(m_recent_confirmed_transactions_mutex);

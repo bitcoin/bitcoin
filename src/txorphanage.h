@@ -27,6 +27,7 @@ int EraseOrphanTx(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
 void EraseOrphansFor(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
 unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
 void AddChildrenToWorkSet(const CTransaction& tx, std::set<uint256>& orphan_work_set) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+bool HaveOrphanTx(const GenTxid& gtxid) EXCLUSIVE_LOCKS_REQUIRED(!g_cs_orphans);
 
 /** Map from txid to orphan transaction record. Limited by
  *  -maxorphantx/DEFAULT_MAX_ORPHAN_TRANSACTIONS */
