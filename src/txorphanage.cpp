@@ -55,7 +55,8 @@ int EraseOrphanTx(const uint256& txid)
 
 void EraseOrphansFor(NodeId peer)
 {
-    LOCK(g_cs_orphans);
+    AssertLockHeld(g_cs_orphans);
+
     int nErased = 0;
     std::map<uint256, COrphanTx>::iterator iter = mapOrphanTransactions.begin();
     while (iter != mapOrphanTransactions.end())
@@ -71,7 +72,7 @@ void EraseOrphansFor(NodeId peer)
 
 unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
 {
-    LOCK(g_cs_orphans);
+    AssertLockHeld(g_cs_orphans);
 
     unsigned int nEvicted = 0;
     static int64_t nNextSweep;

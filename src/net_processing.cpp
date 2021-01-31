@@ -1003,7 +1003,7 @@ void PeerManagerImpl::FinalizeNode(const CNode& node, bool& fUpdateConnectionTim
     for (const QueuedBlock& entry : state->vBlocksInFlight) {
         mapBlocksInFlight.erase(entry.hash);
     }
-    EraseOrphansFor(nodeid);
+    WITH_LOCK(g_cs_orphans, EraseOrphansFor(nodeid));
     m_txrequest.DisconnectedPeer(nodeid);
     nPreferredDownload -= state->fPreferredDownload;
     nPeersWithValidatedDownloads -= (state->nBlocksInFlightValidHeaders != 0);
