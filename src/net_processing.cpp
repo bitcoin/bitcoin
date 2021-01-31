@@ -2073,10 +2073,10 @@ void PeerManagerImpl::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
         const uint256 orphanHash = *orphan_work_set.begin();
         orphan_work_set.erase(orphan_work_set.begin());
 
-        auto orphan_it = mapOrphanTransactions.find(orphanHash);
-        if (orphan_it == mapOrphanTransactions.end()) continue;
+        const COrphanTx* orphantx = GetOrphanTx(orphanHash);
+        if (orphantx == nullptr) continue;
 
-        const CTransactionRef porphanTx = orphan_it->second.tx;
+        const CTransactionRef porphanTx = orphantx->tx;
         const MempoolAcceptResult result = AcceptToMemoryPool(m_mempool, porphanTx, false /* bypass_limits */);
         const TxValidationState& state = result.m_state;
 
@@ -2093,10 +2093,10 @@ void PeerManagerImpl::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
             if (state.IsInvalid()) {
                 LogPrint(BCLog::MEMPOOL, "   invalid orphan tx %s from peer=%d. %s\n",
                     orphanHash.ToString(),
-                    orphan_it->second.fromPeer,
+                    orphantx->fromPeer,
                     state.ToString());
                 // Maybe punish peer that gave us an invalid orphan tx
-                MaybePunishNodeForTx(orphan_it->second.fromPeer, state);
+                MaybePunishNodeForTx(orphantx->fromPeer, state);
             }
             // Has inputs but not accepted to mempool
             // Probably non-standard or insufficient fee

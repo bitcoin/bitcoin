@@ -128,3 +128,11 @@ bool HaveOrphanTx(const GenTxid& gtxid)
     }
 }
 
+COrphanTx* GetOrphanTx(const uint256& txid)
+{
+    AssertLockHeld(g_cs_orphans);
+
+    const auto it = mapOrphanTransactions.find(txid);
+    if (it == mapOrphanTransactions.end()) return nullptr;
+    return &it->second;
+}
