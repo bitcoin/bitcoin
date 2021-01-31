@@ -444,22 +444,26 @@ private:
     /** Number of peers from which we're downloading blocks. */
     int nPeersWithValidatedDownloads GUARDED_BY(cs_main) = 0;
 
-};
-} // namespace
-
-namespace {
     /** Storage for orphan information */
     TxOrphanage m_orphanage;
 
-    /** Number of preferable block download peers. */
-    int nPreferredDownload GUARDED_BY(cs_main) = 0;
+    void AddToCompactExtraTransactions(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+
+    bool AddOrphanTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
 
     /** Orphan/conflicted/etc transactions that are kept for compact block reconstruction.
      *  The last -blockreconstructionextratxn/DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN of
      *  these are kept in a ring buffer */
-    static std::vector<std::pair<uint256, CTransactionRef>> vExtraTxnForCompact GUARDED_BY(g_cs_orphans);
+    std::vector<std::pair<uint256, CTransactionRef>> vExtraTxnForCompact GUARDED_BY(g_cs_orphans);
     /** Offset into vExtraTxnForCompact to insert the next tx */
-    static size_t vExtraTxnForCompactIt GUARDED_BY(g_cs_orphans) = 0;
+    size_t vExtraTxnForCompactIt GUARDED_BY(g_cs_orphans) = 0;
+};
+} // namespace
+
+namespace {
+
+    /** Number of preferable block download peers. */
+    int nPreferredDownload GUARDED_BY(cs_main) = 0;
 } // namespace
 
 namespace {
@@ -1062,7 +1066,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats)
 // Orphan handling
 //
 
-static void AddToCompactExtraTransactions(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx)
 {
     size_t max_extra_txn = gArgs.GetArg("-blockreconstructionextratxn", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN);
     if (max_extra_txn <= 0)
@@ -1073,7 +1077,7 @@ static void AddToCompactExtraTransactions(const CTransactionRef& tx) EXCLUSIVE_L
     vExtraTxnForCompactIt = (vExtraTxnForCompactIt + 1) % max_extra_txn;
 }
 
-bool AddOrphanTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+bool PeerManagerImpl::AddOrphanTx(const CTransactionRef& tx, NodeId peer)
 {
     if (!m_orphanage.AddTx(tx, peer)) {
         return false;
