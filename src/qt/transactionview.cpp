@@ -143,6 +143,20 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     transactionView->setTabKeyNavigation(false);
     transactionView->setContextMenuPolicy(Qt::CustomContextMenu);
     transactionView->installEventFilter(this);
+    transactionView->setAlternatingRowColors(true);
+    transactionView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    transactionView->setSelectionMode(QAbstractItemView::ExtendedSelection);
+    transactionView->horizontalHeader()->setSortIndicator(TransactionTableModel::Date, Qt::DescendingOrder);
+    transactionView->setSortingEnabled(true);
+    transactionView->verticalHeader()->hide();
+
+    transactionView->setColumnWidth(TransactionTableModel::Status, STATUS_COLUMN_WIDTH);
+    transactionView->setColumnWidth(TransactionTableModel::Watchonly, WATCHONLY_COLUMN_WIDTH);
+    transactionView->setColumnWidth(TransactionTableModel::Date, DATE_COLUMN_WIDTH);
+    transactionView->setColumnWidth(TransactionTableModel::Type, TYPE_COLUMN_WIDTH);
+    transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
+    transactionView->horizontalHeader()->setMinimumSectionSize(MINIMUM_COLUMN_WIDTH);
+    transactionView->horizontalHeader()->setStretchLastSection(true);
 
     // Actions
     abandonAction = new QAction(tr("Abandon transaction"), this);
@@ -210,24 +224,8 @@ void TransactionView::setModel(WalletModel *_model)
         transactionProxyModel->setDynamicSortFilter(true);
         transactionProxyModel->setSortCaseSensitivity(Qt::CaseInsensitive);
         transactionProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-
         transactionProxyModel->setSortRole(Qt::EditRole);
-
         transactionView->setModel(transactionProxyModel);
-        transactionView->setAlternatingRowColors(true);
-        transactionView->setSelectionBehavior(QAbstractItemView::SelectRows);
-        transactionView->setSelectionMode(QAbstractItemView::ExtendedSelection);
-        transactionView->horizontalHeader()->setSortIndicator(TransactionTableModel::Date, Qt::DescendingOrder);
-        transactionView->setSortingEnabled(true);
-        transactionView->verticalHeader()->hide();
-
-        transactionView->setColumnWidth(TransactionTableModel::Status, STATUS_COLUMN_WIDTH);
-        transactionView->setColumnWidth(TransactionTableModel::Watchonly, WATCHONLY_COLUMN_WIDTH);
-        transactionView->setColumnWidth(TransactionTableModel::Date, DATE_COLUMN_WIDTH);
-        transactionView->setColumnWidth(TransactionTableModel::Type, TYPE_COLUMN_WIDTH);
-        transactionView->setColumnWidth(TransactionTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
-        transactionView->horizontalHeader()->setMinimumSectionSize(MINIMUM_COLUMN_WIDTH);
-        transactionView->horizontalHeader()->setStretchLastSection(true);
 
         if (_model->getOptionsModel())
         {
