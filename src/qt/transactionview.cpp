@@ -126,27 +126,23 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     vlayout->setContentsMargins(0,0,0,0);
     vlayout->setSpacing(0);
 
-    QTableView *view = new QTableView(this);
+    transactionView = new QTableView(this);
+    transactionView->setObjectName("transactionView");
     vlayout->addLayout(hlayout);
     vlayout->addWidget(createDateRangeWidget());
-    vlayout->addWidget(view);
+    vlayout->addWidget(transactionView);
     vlayout->setSpacing(0);
-    int width = view->verticalScrollBar()->sizeHint().width();
+    int width = transactionView->verticalScrollBar()->sizeHint().width();
     // Cover scroll bar width with spacing
     if (platformStyle->getUseExtraSpacing()) {
         hlayout->addSpacing(width+2);
     } else {
         hlayout->addSpacing(width);
     }
-    // Always show scroll bar
-    view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
-    view->setTabKeyNavigation(false);
-    view->setContextMenuPolicy(Qt::CustomContextMenu);
-
-    view->installEventFilter(this);
-
-    transactionView = view;
-    transactionView->setObjectName("transactionView");
+    transactionView->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
+    transactionView->setTabKeyNavigation(false);
+    transactionView->setContextMenuPolicy(Qt::CustomContextMenu);
+    transactionView->installEventFilter(this);
 
     // Actions
     abandonAction = new QAction(tr("Abandon transaction"), this);
@@ -183,8 +179,8 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     connect(search_widget, &QLineEdit::textChanged, prefix_typing_delay, static_cast<void (QTimer::*)()>(&QTimer::start));
     connect(prefix_typing_delay, &QTimer::timeout, this, &TransactionView::changedSearch);
 
-    connect(view, &QTableView::doubleClicked, this, &TransactionView::doubleClicked);
-    connect(view, &QTableView::customContextMenuRequested, this, &TransactionView::contextualMenu);
+    connect(transactionView, &QTableView::doubleClicked, this, &TransactionView::doubleClicked);
+    connect(transactionView, &QTableView::customContextMenuRequested, this, &TransactionView::contextualMenu);
 
     connect(bumpFeeAction, &QAction::triggered, this, &TransactionView::bumpFee);
     connect(abandonAction, &QAction::triggered, this, &TransactionView::abandonTx);
