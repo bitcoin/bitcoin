@@ -19,6 +19,7 @@ import tempfile
 import time
 import copy
 
+from typing import List
 from .authproxy import JSONRPCException
 from . import coverage
 from .p2p import NetworkThread
@@ -94,14 +95,11 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
 
     This class also contains various public and private helper methods."""
 
-    chain = None  # type: str
-    setup_clean_chain = None  # type: bool
-
     def __init__(self):
         """Sets test framework defaults. Do not override this method. Instead, override the set_test_params() method"""
-        self.chain = 'regtest'
-        self.setup_clean_chain = False
-        self.nodes = []
+        self.chain: str = 'regtest'
+        self.setup_clean_chain: bool = False
+        self.nodes: List[TestNode] = []
         self.network_thread = None
         self.rpc_timeout = 60  # Wait for up to 60 seconds for the RPC server to respond
         self.supports_cli = True
