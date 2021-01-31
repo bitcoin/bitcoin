@@ -284,15 +284,23 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     peerLogic->FinalizeNode(dummyNode, dummy);
 }
 
-static CTransactionRef RandomOrphan()
+class TxOrphanageTest : public TxOrphanage
 {
-    std::map<uint256, COrphanTx>::iterator it;
-    LOCK2(cs_main, g_cs_orphans);
-    it = mapOrphanTransactions.lower_bound(InsecureRand256());
-    if (it == mapOrphanTransactions.end())
-        it = mapOrphanTransactions.begin();
-    return it->second.tx;
-}
+public:
+    inline size_t CountOrphans() const EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+    {
+        return mapOrphanTransactions.size();
+    }
+
+    CTransactionRef RandomOrphan() EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
+    {
+        std::map<uint256, COrphanTx>::iterator it;
+        it = mapOrphanTransactions.lower_bound(InsecureRand256());
+        if (it == mapOrphanTransactions.end())
+            it = mapOrphanTransactions.begin();
+        return it->second.tx;
+    }
+};
 
 static void MakeNewKeyWithFastRandomContext(CKey& key)
 {
@@ -312,6 +320,7 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
     // signature's R and S values have leading zeros.
     g_insecure_rand_ctx = FastRandomContext(ArithToUint256(arith_uint256(33)));
 
+    TxOrphanageTest orphanage;
     CKey key;
     MakeNewKeyWithFastRandomContext(key);
     FillableSigningProvider keystore;
@@ -331,13 +340,13 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].nValue = 1*CENT;
         tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
 
-        OrphanageAddTx(MakeTransactionRef(tx), i);
+        orphanage.AddTx(MakeTransactionRef(tx), i);
     }
 
     // ... and 50 that depend on other orphans:
     for (int i = 0; i < 50; i++)
     {
-        CTransactionRef txPrev = RandomOrphan();
+        CTransactionRef txPrev = orphanage.RandomOrphan();
 
         CMutableTransaction tx;
         tx.vin.resize(1);
@@ -348,13 +357,13 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         tx.vout[0].scriptPubKey = GetScriptForDestination(PKHash(key.GetPubKey()));
         BOOST_CHECK(SignSignature(keystore, *txPrev, tx, 0, SIGHASH_ALL));
 
-        OrphanageAddTx(MakeTransactionRef(tx), i);
+        orphanage.AddTx(MakeTransactionRef(tx), i);
     }
 
     // This really-big orphan should be ignored:
     for (int i = 0; i < 10; i++)
     {
-        CTransactionRef txPrev = RandomOrphan();
+        CTransactionRef txPrev = orphanage.RandomOrphan();
 
         CMutableTransaction tx;
         tx.vout.resize(1);
@@ -372,24 +381,24 @@ BOOST_AUTO_TEST_CASE(DoS_mapOrphans)
         for (unsigned int j = 1; j < tx.vin.size(); j++)
             tx.vin[j].scriptSig = tx.vin[0].scriptSig;
 
-        BOOST_CHECK(!OrphanageAddTx(MakeTransactionRef(tx), i));
+        BOOST_CHECK(!orphanage.AddTx(MakeTransactionRef(tx), i));
     }
 
     // Test EraseOrphansFor:
     for (NodeId i = 0; i < 3; i++)
     {
-        size_t sizeBefore = mapOrphanTransactions.size();
-        EraseOrphansFor(i);
-        BOOST_CHECK(mapOrphanTransactions.size() < sizeBefore);
+        size_t sizeBefore = orphanage.CountOrphans();
+        orphanage.EraseForPeer(i);
+        BOOST_CHECK(orphanage.CountOrphans() < sizeBefore);
     }
 
     // Test LimitOrphanTxSize() function:
-    LimitOrphanTxSize(40);
-    BOOST_CHECK(mapOrphanTransactions.size() <= 40);
-    LimitOrphanTxSize(10);
-    BOOST_CHECK(mapOrphanTransactions.size() <= 10);
-    LimitOrphanTxSize(0);
-    BOOST_CHECK(mapOrphanTransactions.empty());
+    orphanage.LimitOrphans(40);
+    BOOST_CHECK(orphanage.CountOrphans() <= 40);
+    orphanage.LimitOrphans(10);
+    BOOST_CHECK(orphanage.CountOrphans() <= 10);
+    orphanage.LimitOrphans(0);
+    BOOST_CHECK(orphanage.CountOrphans() == 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

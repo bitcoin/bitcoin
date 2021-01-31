@@ -16,14 +16,7 @@ static constexpr int64_t ORPHAN_TX_EXPIRE_INTERVAL = 5 * 60;
 
 RecursiveMutex g_cs_orphans;
 
-std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
-std::map<uint256, std::map<uint256, COrphanTx>::iterator> g_orphans_by_wtxid GUARDED_BY(g_cs_orphans);
-
-    std::map<COutPoint, std::set<std::map<uint256, COrphanTx>::iterator, IteratorComparator>> mapOrphanTransactionsByPrev GUARDED_BY(g_cs_orphans);
-
-    std::vector<std::map<uint256, COrphanTx>::iterator> g_orphan_list GUARDED_BY(g_cs_orphans);
-
-bool OrphanageAddTx(const CTransactionRef& tx, NodeId peer)
+bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
 {
     AssertLockHeld(g_cs_orphans);
 
@@ -59,8 +52,9 @@ bool OrphanageAddTx(const CTransactionRef& tx, NodeId peer)
     return true;
 }
 
-int EraseOrphanTx(const uint256& txid)
+int TxOrphanage::EraseTx(const uint256& txid)
 {
+    AssertLockHeld(g_cs_orphans);
     std::map<uint256, COrphanTx>::iterator it = mapOrphanTransactions.find(txid);
     if (it == mapOrphanTransactions.end())
         return 0;
@@ -90,7 +84,7 @@ int EraseOrphanTx(const uint256& txid)
     return 1;
 }
 
-void EraseOrphansFor(NodeId peer)
+void TxOrphanage::EraseForPeer(NodeId peer)
 {
     AssertLockHeld(g_cs_orphans);
 
@@ -101,13 +95,13 @@ void EraseOrphansFor(NodeId peer)
         std::map<uint256, COrphanTx>::iterator maybeErase = iter++; // increment to avoid iterator becoming invalid
         if (maybeErase->second.fromPeer == peer)
         {
-            nErased += EraseOrphanTx(maybeErase->second.tx->GetHash());
+            nErased += EraseTx(maybeErase->second.tx->GetHash());
         }
     }
     if (nErased > 0) LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx from peer=%d\n", nErased, peer);
 }
 
-unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
+unsigned int TxOrphanage::LimitOrphans(unsigned int nMaxOrphans)
 {
     AssertLockHeld(g_cs_orphans);
 
@@ -123,7 +117,7 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
         {
             std::map<uint256, COrphanTx>::iterator maybeErase = iter++;
             if (maybeErase->second.nTimeExpire <= nNow) {
-                nErased += EraseOrphanTx(maybeErase->second.tx->GetHash());
+                nErased += EraseTx(maybeErase->second.tx->GetHash());
             } else {
                 nMinExpTime = std::min(maybeErase->second.nTimeExpire, nMinExpTime);
             }
@@ -137,13 +131,13 @@ unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans)
     {
         // Evict a random orphan:
         size_t randompos = rng.randrange(g_orphan_list.size());
-        EraseOrphanTx(g_orphan_list[randompos]->first);
+        EraseTx(g_orphan_list[randompos]->first);
         ++nEvicted;
     }
     return nEvicted;
 }
 
-void AddChildrenToWorkSet(const CTransaction& tx, std::set<uint256>& orphan_work_set)
+void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx, std::set<uint256>& orphan_work_set)
 {
     AssertLockHeld(g_cs_orphans);
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
@@ -156,7 +150,7 @@ void AddChildrenToWorkSet(const CTransaction& tx, std::set<uint256>& orphan_work
     }
 }
 
-bool HaveOrphanTx(const GenTxid& gtxid)
+bool TxOrphanage::HaveTx(const GenTxid& gtxid)
 {
     LOCK(g_cs_orphans);
     if (gtxid.IsWtxid()) {
@@ -166,7 +160,7 @@ bool HaveOrphanTx(const GenTxid& gtxid)
     }
 }
 
-COrphanTx* GetOrphanTx(const uint256& txid)
+TxOrphanage::COrphanTx* TxOrphanage::GetTx(const uint256& txid)
 {
     AssertLockHeld(g_cs_orphans);
 
@@ -175,7 +169,7 @@ COrphanTx* GetOrphanTx(const uint256& txid)
     return &it->second;
 }
 
-void EraseOrphansForBlock(const CBlock& block)
+void TxOrphanage::EraseForBlock(const CBlock& block)
 {
     LOCK(g_cs_orphans);
 
@@ -200,7 +194,7 @@ void EraseOrphansForBlock(const CBlock& block)
     if (vOrphanErase.size()) {
         int nErased = 0;
         for (const uint256& orphanHash : vOrphanErase) {
-            nErased += EraseOrphanTx(orphanHash);
+            nErased += EraseTx(orphanHash);
         }
         LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx included or conflicted by block\n", nErased);
     }
