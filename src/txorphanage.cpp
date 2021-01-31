@@ -118,3 +118,13 @@ void AddChildrenToWorkSet(const CTransaction& tx, std::set<uint256>& orphan_work
     }
 }
 
+bool HaveOrphanTx(const GenTxid& gtxid)
+{
+    LOCK(g_cs_orphans);
+    if (gtxid.IsWtxid()) {
+        return g_orphans_by_wtxid.count(gtxid.GetHash()) > 0;
+    } else {
+        return mapOrphanTransactions.count(gtxid.GetHash()) > 0;
+    }
+}
+
