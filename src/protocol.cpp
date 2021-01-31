@@ -5,7 +5,6 @@
 
 #include <protocol.h>
 
-#include <util/strencodings.h>
 #include <util/system.h>
 
 static std::atomic<bool> g_initial_block_download_completed(false);
@@ -86,7 +85,7 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::CFCHECKPT,
     NetMsgType::WTXIDRELAY,
 };
-const static std::vector<std::string> allNetMessageTypesVec(allNetMessageTypes, allNetMessageTypes+ARRAYLEN(allNetMessageTypes));
+const static std::vector<std::string> allNetMessageTypesVec(std::begin(allNetMessageTypes), std::end(allNetMessageTypes));
 
 CMessageHeader::CMessageHeader()
 {
