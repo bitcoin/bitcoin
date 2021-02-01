@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
 
 BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 {
-    std::vector<char> in;
+    std::vector<uint8_t> in;
     std::vector<char> expected_xor;
     std::vector<unsigned char> key;
     CDataStream ds(in, 0, 0);
