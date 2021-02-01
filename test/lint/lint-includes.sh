@@ -61,8 +61,6 @@ EXPECTED_BOOST_INCLUDES=(
     boost/multi_index_container.hpp
     boost/optional.hpp
     boost/pool/pool_alloc.hpp
-    boost/preprocessor/cat.hpp
-    boost/preprocessor/stringize.hpp
     boost/signals2/connection.hpp
     boost/signals2/optional_last_value.hpp
     boost/signals2/signal.hpp

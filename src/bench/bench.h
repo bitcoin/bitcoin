@@ -5,6 +5,8 @@
 #ifndef BITCOIN_BENCH_BENCH_H
 #define BITCOIN_BENCH_BENCH_H
 
+#include <util/macros.h>
+
 #include <chrono>
 #include <functional>
 #include <map>
@@ -12,8 +14,6 @@
 #include <vector>
 
 #include <bench/nanobench.h>
-#include <boost/preprocessor/cat.hpp>
-#include <boost/preprocessor/stringize.hpp>
 
 /*
  * Usage:
@@ -56,8 +56,8 @@ public:
     static void RunAll(const Args& args);
 };
 }
-// BENCHMARK(foo) expands to:  benchmark::BenchRunner bench_11foo("foo");
+// BENCHMARK(foo) expands to:  benchmark::BenchRunner bench_11foo("foo", foo);
 #define BENCHMARK(n) \
-    benchmark::BenchRunner BOOST_PP_CAT(bench_, BOOST_PP_CAT(__LINE__, n))(BOOST_PP_STRINGIZE(n), n);
+    benchmark::BenchRunner PASTE2(bench_, PASTE2(__LINE__, n))(STRINGIZE(n), n);
 
 #endif // BITCOIN_BENCH_BENCH_H
