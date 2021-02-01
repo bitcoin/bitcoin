@@ -535,7 +535,7 @@ def test_change_script_match(self, rbf_node, dest_address):
 
     def get_change_address(tx):
         tx_details = rbf_node.getrawtransaction(tx, 1)
-        txout_addresses = [txout['scriptPubKey']['addresses'][0] for txout in tx_details["vout"]]
+        txout_addresses = [txout['scriptPubKey']['address'] for txout in tx_details["vout"]]
         return [address for address in txout_addresses if rbf_node.getaddressinfo(address)["ischange"]]
 
     # Check that there is only one change output

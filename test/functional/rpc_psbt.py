@@ -158,17 +158,17 @@ class PSBTTest(BitcoinTestFramework):
         p2sh_p2wpkh_pos = -1
         decoded = self.nodes[0].decoderawtransaction(signed_tx)
         for out in decoded['vout']:
-            if out['scriptPubKey']['addresses'][0] == p2sh:
+            if out['scriptPubKey']['address'] == p2sh:
                 p2sh_pos = out['n']
-            elif out['scriptPubKey']['addresses'][0] == p2wsh:
+            elif out['scriptPubKey']['address'] == p2wsh:
                 p2wsh_pos = out['n']
-            elif out['scriptPubKey']['addresses'][0] == p2wpkh:
+            elif out['scriptPubKey']['address'] == p2wpkh:
                 p2wpkh_pos = out['n']
-            elif out['scriptPubKey']['addresses'][0] == p2sh_p2wsh:
+            elif out['scriptPubKey']['address'] == p2sh_p2wsh:
                 p2sh_p2wsh_pos = out['n']
-            elif out['scriptPubKey']['addresses'][0] == p2sh_p2wpkh:
+            elif out['scriptPubKey']['address'] == p2sh_p2wpkh:
                 p2sh_p2wpkh_pos = out['n']
-            elif out['scriptPubKey']['addresses'][0] == p2pkh:
+            elif out['scriptPubKey']['address'] == p2pkh:
                 p2pkh_pos = out['n']
 
         inputs = [{"txid": txid, "vout": p2wpkh_pos}, {"txid": txid, "vout": p2sh_p2wpkh_pos}, {"txid": txid, "vout": p2pkh_pos}]

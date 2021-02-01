@@ -95,11 +95,8 @@ $ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff76
          "scriptPubKey" : {
             "asm" : "OP_DUP OP_HASH160 1c7cebb529b86a04c683dfa87be49de35bcf589e OP_EQUALVERIFY OP_CHECKSIG",
             "hex" : "76a9141c7cebb529b86a04c683dfa87be49de35bcf589e88ac",
-            "reqSigs" : 1,
             "type" : "pubkeyhash",
-            "addresses" : [
-               "mi7as51dvLJsizWnTMurtRmrP8hG2m1XvD"
-            ]
+            "address" : "mi7as51dvLJsizWnTMurtRmrP8hG2m1XvD"
          }
       }
    ]
