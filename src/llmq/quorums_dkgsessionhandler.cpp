@@ -518,7 +518,7 @@ void CDKGSessionHandler::HandleDKGRound()
     const CBlockIndex* pindexQuorum;
     {
         LOCK(cs_main);
-        pindexQuorum = LookupBlockIndex(curQuorumHash);
+        pindexQuorum = g_chainman.m_blockman.LookupBlockIndex(curQuorumHash);
     }
 
     if (!InitNewQuorum(pindexQuorum)) {

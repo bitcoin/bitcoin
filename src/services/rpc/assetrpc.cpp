@@ -534,7 +534,7 @@ static RPCHelpMan syscoingetspvproof()
     uint256 hashBlock;
     if (!request.params[1].isNull()) {
         hashBlock = ParseHashV(request.params[1], "blockhash");
-        pblockindex = LookupBlockIndex(hashBlock);
+        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hashBlock);
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
@@ -555,7 +555,7 @@ static RPCHelpMan syscoingetspvproof()
         tx = GetTransaction(nullptr, nullptr, txhash, Params().GetConsensus(), hashBlock);
         if(!tx || hashBlock.IsNull())
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
-        pblockindex = LookupBlockIndex(hashBlock);
+        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hashBlock);
         if (!pblockindex) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction index corrupt");
         }

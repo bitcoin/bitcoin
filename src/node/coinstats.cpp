@@ -63,7 +63,7 @@ static bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, T hash_obj, const
     stats.hashBlock = pcursor->GetBestBlock();
     {
         LOCK(cs_main);
-        stats.nHeight = LookupBlockIndex(stats.hashBlock)->nHeight;
+        stats.nHeight = g_chainman.m_blockman.LookupBlockIndex(stats.hashBlock)->nHeight;
     }
 
     PrepareHash(hash_obj, stats);

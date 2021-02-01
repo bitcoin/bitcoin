@@ -152,7 +152,7 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
     connman.RelayOtherInv(inv);
     {
         LOCK(cs_main);
-        pindex = LookupBlockIndex(clsig.blockHash);
+        pindex = g_chainman.m_blockman.LookupBlockIndex(clsig.blockHash);
         if (pindex == nullptr) {
             // we don't know the block/header for this CLSIG yet, so bail out for now
             // when the block or the header later comes in, we will enforce the correct chain

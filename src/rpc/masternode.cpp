@@ -335,7 +335,7 @@ RPCHelpMan masternode_payments()
     } else {
         LOCK(cs_main);
         uint256 blockHash = ParseHashV(request.params[0], "blockhash");
-        pindex = LookupBlockIndex(blockHash);
+        pindex = g_chainman.m_blockman.LookupBlockIndex(blockHash);
         if (pindex == nullptr) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }

@@ -181,14 +181,14 @@ bool BuildSimplifiedMNListDiff(const uint256& baseBlockHash, const uint256& bloc
     mnListDiffRet = CSimplifiedMNListDiff();
     const CBlockIndex* baseBlockIndex = ::ChainActive().Genesis();
     if (!baseBlockHash.IsNull()) {
-        baseBlockIndex = LookupBlockIndex(baseBlockHash);
+        baseBlockIndex = g_chainman.m_blockman.LookupBlockIndex(baseBlockHash);
         if (!baseBlockIndex) {
             errorRet = strprintf("block %s not found", baseBlockHash.ToString());
             return false;
         }
     }
     
-    const CBlockIndex* blockIndex = LookupBlockIndex(blockHash);
+    const CBlockIndex* blockIndex = g_chainman.m_blockman.LookupBlockIndex(blockHash);
     if (!blockIndex) {
         errorRet = strprintf("block %s not found", blockHash.ToString());
         return false;

@@ -71,7 +71,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         const CBlockIndex* pquorumIndex;
         {
             LOCK(cs_main);
-            pquorumIndex = LookupBlockIndex(qc.quorumHash);
+            pquorumIndex = g_chainman.m_blockman.LookupBlockIndex(qc.quorumHash);
             if (!pquorumIndex) {
                 LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- unknown block %s in commitment, peer=%d\n", __func__,
                         qc.quorumHash.ToString(), pfrom->GetId());
@@ -234,7 +234,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-height");
     }
 
-    auto quorumIndex = LookupBlockIndex(qc.quorumHash);
+    auto quorumIndex = g_chainman.m_blockman.LookupBlockIndex(qc.quorumHash);
     if(!quorumIndex) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-block-index");
     }
