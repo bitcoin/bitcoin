@@ -313,6 +313,33 @@ std::vector<Consensus::LLMQType> CLLMQUtils::GetEnabledQuorumTypes(const CBlockI
     return ret;
 }
 
+bool CLLMQUtils::QuorumDataRecoveryEnabled()
+{
+    return gArgs.GetBoolArg("-llmq-data-recovery", DEFAULT_ENABLE_QUORUM_DATA_RECOVERY);
+}
+
+std::set<Consensus::LLMQType> CLLMQUtils::GetEnabledQuorumVvecSyncTypes()
+{
+    std::set<Consensus::LLMQType> setQuorumVvecSyncTypes;
+    for (const std::string& strLLMQType : gArgs.GetArgs("-llmq-qvvec-sync")) {
+        Consensus::LLMQType llmqType = Consensus::LLMQ_NONE;
+        for (const auto& p : Params().GetConsensus().llmqs) {
+            if (p.second.name == strLLMQType) {
+                llmqType = p.first;
+                break;
+            }
+        }
+        if (llmqType == Consensus::LLMQ_NONE) {
+            throw std::invalid_argument(strprintf("Invalid llmqType in -llmq-qvvec-sync: %s", strLLMQType));
+        }
+        if (setQuorumVvecSyncTypes.count(llmqType) > 0) {
+            throw std::invalid_argument(strprintf("Duplicated llmqType in -llmq-qvvec-sync: %s", strLLMQType));
+        }
+        setQuorumVvecSyncTypes.emplace(llmqType);
+    }
+    return setQuorumVvecSyncTypes;
+}
+
 const Consensus::LLMQParams& GetLLMQParams(Consensus::LLMQType llmqType)
 {
     return Params().GetConsensus().llmqs.at(llmqType);

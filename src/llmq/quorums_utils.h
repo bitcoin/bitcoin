@@ -22,6 +22,8 @@ namespace llmq
 extern CCriticalSection cs_llmq_vbc;
 extern VersionBitsCache llmq_versionbitscache;
 
+static const bool DEFAULT_ENABLE_QUORUM_DATA_RECOVERY = true;
+
 class CLLMQUtils
 {
 public:
@@ -51,6 +53,12 @@ public:
     static bool IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quorumHash);
     static bool IsQuorumTypeEnabled(Consensus::LLMQType llmqType, const CBlockIndex* pindex);
     static std::vector<Consensus::LLMQType> GetEnabledQuorumTypes(const CBlockIndex* pindex);
+
+    /// Returns the state of `-llmq-data-recovery`
+    static bool QuorumDataRecoveryEnabled();
+
+    /// Returns the values given by `-llmq-qvvec-sync`
+    static std::set<Consensus::LLMQType> GetEnabledQuorumVvecSyncTypes();
 
     template<typename NodesContainer, typename Continue, typename Callback>
     static void IterateNodesRandom(NodesContainer& nodeStates, Continue&& cont, Callback&& callback, FastRandomContext& rnd)

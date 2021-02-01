@@ -64,6 +64,7 @@
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_init.h>
 #include <llmq/quorums_blockprocessor.h>
+#include <llmq/quorums_utils.h>
 
 #include <statsd_client.h>
 
@@ -1595,6 +1596,16 @@ bool AppInitParameterInteraction()
         }
     } else if (gArgs.IsArgSet("-llmqtestparams")) {
         return InitError("LLMQ test params can only be overridden on regtest.");
+    }
+
+    try {
+        const bool fRecoveryEnabled{llmq::CLLMQUtils::QuorumDataRecoveryEnabled()};
+        const bool fQuorumVvecRequestsEnabled{llmq::CLLMQUtils::GetEnabledQuorumVvecSyncTypes().size() > 0};
+        if (!fRecoveryEnabled && fQuorumVvecRequestsEnabled) {
+            InitWarning("-llmq-qvvec-sync set but recovery is disabled due to -llmq-data-recovery=0");
+        }
+    } catch (const std::invalid_argument& e) {
+        return InitError(e.what());
     }
 
     if (gArgs.IsArgSet("-maxorphantx")) {
