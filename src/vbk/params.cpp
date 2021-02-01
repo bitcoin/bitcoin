@@ -129,7 +129,7 @@ void selectPopConfig(
         } else {
             popconfig.setVBK(vbkstart, parseBlocks(vbkblocks), param);
         }
-    } else if (btcnet == "regtest") {
+    } else if (vbknet == "regtest") {
         auto param = std::make_shared<altintegration::VbkChainParamsRegTest>();
         if (popautoconfig) {
             popconfig.setVBK(0, {}, param);
