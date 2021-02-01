@@ -2397,23 +2397,21 @@ const CTxOut& CWallet::FindNonChangeParentOutput(const CTransaction& tx, int out
     }
     return ptx->vout[n];
 }
-// SYSCOIN
-bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<OutputGroup> groups,
+
+bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<COutput> coins,
                                  std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params, bool& bnb_used) const
 {
+    // SYSCOIN
     CAssetCoinInfo nTargetValueAsset;
     CAmount nValueRetAsset;
-    return SelectCoinsMinConf(nTargetValue, nTargetValueAsset, eligibility_filter, groups, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used);
+    return SelectCoinsMinConf(nTargetValue, nTargetValueAsset, eligibility_filter, coins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used);
 }
-bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinInfo& nTargetValueAsset, const CoinEligibilityFilter& eligibility_filter, std::vector<OutputGroup> groups,
+bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinInfo& nTargetValueAsset, const CoinEligibilityFilter& eligibility_filter, std::vector<COutput> coins,
                                  std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, CAmount& nValueRetAsset, const CoinSelectionParams& coin_selection_params, bool& bnb_used) const
 {
     setCoinsRet.clear();
     nValueRet = 0;
     CAmount nValueRetInternal = 0;
-    std::vector<OutputGroup> utxo_pool;
-    // SYSCOIN
-    std::vector<OutputGroup> utxo_pool_asset;
     // SYSCOIN bnb and asset spending not compliant with bnb since assets bnb spending would create waste for gas, and gas bnb would create waste for assets
     // maybe research this to see if we can add extra constraint to do both asset bnb and gas bnb together
     if (coin_selection_params.use_bnb && nTargetValueAsset.IsNull()) {
@@ -2423,53 +2421,36 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinIn
         temp.m_confirm_target = 1008;
         CFeeRate long_term_feerate = GetMinimumFeeRate(*this, temp, &feeCalc);
 
+        // Get the feerate for effective value.
+        // When subtracting the fee from the outputs, we want the effective feerate to be 0
+        CFeeRate effective_feerate{0};
+        if (!coin_selection_params.m_subtract_fee_outputs) {
+            effective_feerate = coin_selection_params.effective_fee;
+        }
+        // SYSCOIN
+        std::vector<OutputGroup> groups;
+        GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, effective_feerate, long_term_feerate, eligibility_filter, true /* positive_only */, groups);
+
         // Calculate cost of change
         CAmount cost_of_change = GetDiscardRate(*this).GetFee(coin_selection_params.change_spend_size) + coin_selection_params.effective_fee.GetFee(coin_selection_params.change_output_size);
 
-        // Filter by the min conf specs and add to utxo_pool and calculate effective value
-        for (OutputGroup& group : groups) {
-            if (!group.EligibleForSpending(eligibility_filter)) continue;
-
-            if (coin_selection_params.m_subtract_fee_outputs) {
-                // Set the effective feerate to 0 as we don't want to use the effective value since the fees will be deducted from the output
-                group.SetFees(CFeeRate(0) /* effective_feerate */, long_term_feerate);
-            } else {
-                group.SetFees(coin_selection_params.effective_fee, long_term_feerate);
-            }
-
-            OutputGroup pos_group = group.GetPositiveOnlyGroup();
-            if (pos_group.effective_value > 0) utxo_pool.push_back(pos_group);
-        }
         // Calculate the fees for things that aren't inputs
         CAmount not_input_fees = coin_selection_params.effective_fee.GetFee(coin_selection_params.tx_noinputs_size);
         bnb_used = true;
-        return SelectCoinsBnB(utxo_pool, nTargetValue, cost_of_change, setCoinsRet, nValueRet, not_input_fees);
+        return SelectCoinsBnB(groups, nTargetValue, cost_of_change, setCoinsRet, nValueRet, not_input_fees);
     } else {
+        bnb_used = false;
+        // SYSCOIN Filter by the min conf specs and add to utxo_pool
         // Filter by the min conf specs and add to utxo_pool
-        const bool& bAsset = !nTargetValueAsset.IsNull();
-        for (const OutputGroup& group : groups) {
-            if (!group.EligibleForSpending(eligibility_filter)) continue;
-            // SYSCOIN fund two separate groups of utxo's for asset/gas
-            // for asset only if assetindex is set (otherwise bAssetSolver should always be false and fail)
-            // you shouldn't be spending asset without assetindex set because sys spends can use those utxo's inadvertently
-            // exchanges/services that are not asset aware will be able to spend assets sent to them as regular sys utxos (un-colouring the asset portion of the utxo as a result)
-            if(fAssetIndex && !group.effective_value_asset.IsNull()) {
-                // if requesting 0 value meaning asset update, only use inputs that are of 0 value as well, otherwise select only positive
-                // only add inputs that are of this asset, don't try to spend other assets even for gas
-                if(group.effective_value_asset.nAsset == nTargetValueAsset.nAsset) {
-                    utxo_pool_asset.push_back(group);
-                }
-            }
-            else {
-                utxo_pool.push_back(group);
-            } 
-        }
+        const bool bAsset = !nTargetValueAsset.IsNull();
+        std::vector<OutputGroup> groups, groupAssets;
+        GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, CFeeRate(0), CFeeRate(0), eligibility_filter, false /* positive_only */, groups, nTargetValueAsset, &groupAssets);
+        
         // SYSCOIN
         bool bAssetSolver = true;
         CAmount nTarget = nTargetValue;
-        if(bAsset) {
-            bnb_used = false;            
-            bAssetSolver = KnapsackSolver(nTargetValueAsset, utxo_pool_asset, setCoinsRet, nValueRetAsset);
+        if(bAsset) {       
+            bAssetSolver = KnapsackSolver(nTargetValueAsset, groupAssets, setCoinsRet, nValueRetAsset);
             // from returned coins, see if we need to also add more gas or do we have enough already
             for(const auto& inputCoin: setCoinsRet) {
                 nValueRet += inputCoin.effective_value;
@@ -2477,22 +2458,22 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinIn
             // remove attached gas from asset inputs from how much we thought we needed before
             nTarget -= nValueRet;
         }
-        bool bBaseSysSolver = nTarget <= 0 || KnapsackSolver(nTarget, utxo_pool, setCoinsRet, nValueRetInternal);
+        bool bBaseSysSolver = nTarget <= 0 || KnapsackSolver(nTarget, groups, setCoinsRet, nValueRetInternal);
         // add new gas value to returned amount
         nValueRet += nValueRetInternal;
         // reduce target by amount returned
         nTarget -= nValueRetInternal;
         // if funding asset but not enough gas found in non-asset utxo's look in asset utxo's for gas
         if(bAsset && !bBaseSysSolver && nTarget > 0) {
-            // remove previously selected coins setCoinsRet from utxo_pool_asset
+            // remove previously selected coins setCoinsRet from groupAssets
             // this is so we don't doubly select coins when trying to find enough gas
-            for(auto& outputGroup: utxo_pool_asset){
+            for(auto& outputGroup: groupAssets){
                 for(const auto& inputCoin: setCoinsRet) {
                     outputGroup.Discard(inputCoin);
                 }
             }
             // only look for reduced target coins
-            bBaseSysSolver = KnapsackSolver(nTarget, utxo_pool_asset, setCoinsRet, nValueRetInternal);
+            bBaseSysSolver = KnapsackSolver(nTarget, groupAssets, setCoinsRet, nValueRetInternal);
             // add new gas value to returned amount
             nValueRet += nValueRetInternal;
             // from returned coins, tally total asset amount. setCoinsRet is cumulative throughout KnapsackSolver calls
@@ -2604,20 +2585,19 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         Shuffle(vCoins.begin(), vCoins.end(), FastRandomContext());
     }
     // SYSCOIN
-    std::vector<OutputGroup> groups = GroupOutputs(vCoins, !coin_control.m_avoid_partial_spends, max_ancestors, nTargetValueAsset);
-    // SYSCOIN
     int min_conf_theirs = 1;
     // if spending asset allow to spend with 0 conf
     if(value_to_select_asset.nValue > 0)
         min_conf_theirs = 0;
+    // SYSCOIN
     bool res = (value_to_select <= 0 && value_to_select_asset.nValue <= 0) ||
-        SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(1, 6, 0), groups, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used) ||
-        SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(1, 1, 0), groups, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, min_conf_theirs, 2), groups, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, min_conf_theirs, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)), groups, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, min_conf_theirs, max_ancestors/2, max_descendants/2), groups, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, min_conf_theirs, max_ancestors-1, max_descendants-1), groups, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used)) ||
-        (m_spend_zero_conf_change && !fRejectLongChains && SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, min_conf_theirs, std::numeric_limits<uint64_t>::max()), groups, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used));
+        SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(1, 6, 0), vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used) ||
+        SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(1, 1, 0), vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, min_conf_theirs, 2), vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, min_conf_theirs, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)), vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, min_conf_theirs, max_ancestors/2, max_descendants/2), vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, min_conf_theirs, max_ancestors-1, max_descendants-1, true /* include_partial_groups */), vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used)) ||
+        (m_spend_zero_conf_change && !fRejectLongChains && SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, min_conf_theirs, std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max(), true /* include_partial_groups */), vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used));
 
     // because SelectCoinsMinConf clears the setCoinsRet, we now add the possible inputs to the coinset
     util::insert(setCoinsRet, setPresetCoins);
@@ -3228,6 +3208,7 @@ bool CWallet::CreateTransactionInternal(
             // SYSCOIN
             AvailableCoins(vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 1, MAX_ASSET, MAX_ASSET, 0, false, nValueToSelectAsset);
             CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
+            coin_selection_params.m_avoid_partial_spends = coin_control.m_avoid_partial_spends;
 
             // Create change script that will be used if we need change
             // TODO: pass in scriptChange instead of reservedest so
@@ -4776,53 +4757,119 @@ bool CWalletTx::IsImmatureCoinBase() const
     return GetBlocksToMaturity() > 0;
 }
 // SYSCOIN
-std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outputs, bool single_coin, const size_t max_ancestors, const CAssetCoinInfo& nTargetValueAsset) const {
-    std::vector<OutputGroup> groups;
-    std::map<CTxDestination, OutputGroup> gmap;
-    std::set<CTxDestination> full_groups;
+void CWallet::GroupOutputs(const std::vector<COutput>& outputs, bool separate_coins, const CFeeRate& effective_feerate, const CFeeRate& long_term_feerate, const CoinEligibilityFilter& filter, bool positive_only, std::vector<OutputGroup> &groups_out, const CAssetCoinInfo& nTargetValueAsset, std::vector<OutputGroup> *groupsassets_out) const
+{
+    // SYSCOIN
+    // std::vector<OutputGroup> groups_out;
+    if (separate_coins) {
+        // Single coin means no grouping. Each COutput gets its own OutputGroup.
+        for (const COutput& output : outputs) {
+            // Skip outputs we cannot spend
+            if (!output.fSpendable) continue;
 
-    for (const auto& output : outputs) {
-        if (output.fSpendable) {
-            CTxDestination dst;
-            CInputCoin input_coin = output.GetInputCoin();
             size_t ancestors, descendants;
             chain().getTransactionAncestry(output.tx->GetHash(), ancestors, descendants);
-            if (!single_coin && ExtractDestination(output.tx->tx->vout[output.i].scriptPubKey, dst)) {
-                auto it = gmap.find(dst);
-                if (it != gmap.end()) {
-                    // Limit output groups to no more than OUTPUT_GROUP_MAX_ENTRIES
-                    // number of entries, to protect against inadvertently creating
-                    // a too-large transaction when using -avoidpartialspends to
-                    // prevent breaking consensus or surprising users with a very
-                    // high amount of fees.
-                    if (it->second.m_outputs.size() >= OUTPUT_GROUP_MAX_ENTRIES) {
-                        groups.push_back(it->second);
-                        it->second = OutputGroup{};
-                        full_groups.insert(dst);
+            CInputCoin input_coin = output.GetInputCoin();
+
+            // Make an OutputGroup containing just this output
+            OutputGroup group{effective_feerate, long_term_feerate};
+            // SYSCOIN
+            group.Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, positive_only, nTargetValueAsset);
+
+            // Check the OutputGroup's eligibility. Only add the eligible ones.
+            if (positive_only && group.effective_value <= 0) continue;
+            // SYSCOIN fund two separate groups of utxo's for asset/gas
+            // for asset only if assetindex is set (otherwise bAssetSolver should always be false and fail)
+            // you shouldn't be spending asset without assetindex set because sys spends can use those utxo's inadvertently
+            // exchanges/services that are not asset aware will be able to spend assets sent to them as regular sys utxos (un-colouring the asset portion of the utxo as a result)
+            if (group.m_outputs.size() > 0 && group.EligibleForSpending(filter)) {
+                if(fAssetIndex && !group.effective_value_asset.IsNull()) {
+                    // if requesting 0 value meaning asset update, only use inputs that are of 0 value as well, otherwise select only positive
+                    // only add inputs that are of this asset, don't try to spend other assets even for gas
+                    if(groupsassets_out && group.effective_value_asset.nAsset == nTargetValueAsset.nAsset) {
+                        groupsassets_out->push_back(group);
                     }
-                    // SYSCOIN
-                    it->second.Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, nTargetValueAsset);
-                } else {
-                    // SYSCOIN
-                    gmap[dst].Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, nTargetValueAsset);
                 }
-            } else {
-                // SYSCOIN
-                groups.emplace_back(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, nTargetValueAsset);
+                else {
+                    groups_out.push_back(group);
+                }
+            }
+        }
+        // SYSCOIN
+        // return groups_out;
+    }
+
+    // We want to combine COutputs that have the same scriptPubKey into single OutputGroups
+    // except when there are more than OUTPUT_GROUP_MAX_ENTRIES COutputs grouped in an OutputGroup.
+    // To do this, we maintain a map where the key is the scriptPubKey and the value is a vector of OutputGroups.
+    // For each COutput, we check if the scriptPubKey is in the map, and if it is, the COutput's CInputCoin is added
+    // to the last OutputGroup in the vector for the scriptPubKey. When the last OutputGroup has
+    // OUTPUT_GROUP_MAX_ENTRIES CInputCoins, a new OutputGroup is added to the end of the vector.
+    std::map<CScript, std::vector<OutputGroup>> spk_to_groups_map;
+    for (const auto& output : outputs) {
+        // Skip outputs we cannot spend
+        if (!output.fSpendable) continue;
+
+        size_t ancestors, descendants;
+        chain().getTransactionAncestry(output.tx->GetHash(), ancestors, descendants);
+        CInputCoin input_coin = output.GetInputCoin();
+        CScript spk = input_coin.txout.scriptPubKey;
+
+        std::vector<OutputGroup>& groups = spk_to_groups_map[spk];
+
+        if (groups.size() == 0) {
+            // No OutputGroups for this scriptPubKey yet, add one
+            groups.emplace_back(effective_feerate, long_term_feerate);
+        }
+
+        // Get the last OutputGroup in the vector so that we can add the CInputCoin to it
+        // A pointer is used here so that group can be reassigned later if it is full.
+        OutputGroup* group = &groups.back();
+
+        // Check if this OutputGroup is full. We limit to OUTPUT_GROUP_MAX_ENTRIES when using -avoidpartialspends
+        // to avoid surprising users with very high fees.
+        if (group->m_outputs.size() >= OUTPUT_GROUP_MAX_ENTRIES) {
+            // The last output group is full, add a new group to the vector and use that group for the insertion
+            groups.emplace_back(effective_feerate, long_term_feerate);
+            group = &groups.back();
+        }
+
+        // SYSCOIN Add the input_coin to group
+        group->Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, positive_only, nTargetValueAsset);
+    }
+
+    // Now we go through the entire map and pull out the OutputGroups
+    for (const auto& spk_and_groups_pair: spk_to_groups_map) {
+        const std::vector<OutputGroup>& groups_per_spk= spk_and_groups_pair.second;
+
+        // Go through the vector backwards. This allows for the first item we deal with being the partial group.
+        for (auto group_it = groups_per_spk.rbegin(); group_it != groups_per_spk.rend(); group_it++) {
+            const OutputGroup& group = *group_it;
+
+            // Don't include partial groups if there are full groups too and we don't want partial groups
+            if (group_it == groups_per_spk.rbegin() && groups_per_spk.size() > 1 && !filter.m_include_partial_groups) {
+                continue;
+            }
+
+            // Check the OutputGroup's eligibility. Only add the eligible ones.
+            if (positive_only && group.effective_value <= 0) continue;
+            // SYSCOIN
+            if (group.m_outputs.size() > 0 && group.EligibleForSpending(filter)) {
+                if(fAssetIndex && !group.effective_value_asset.IsNull()) {
+                    // if requesting 0 value meaning asset update, only use inputs that are of 0 value as well, otherwise select only positive
+                    // only add inputs that are of this asset, don't try to spend other assets even for gas
+                    if(groupsassets_out && group.effective_value_asset.nAsset == nTargetValueAsset.nAsset) {
+                        groupsassets_out->push_back(group);
+                    }
+                }
+                else {
+                    groups_out.push_back(group);
+                }
             }
         }
     }
-    if (!single_coin) {
-        for (auto& it : gmap) {
-            auto& group = it.second;
-            if (full_groups.count(it.first) > 0) {
-                // Make this unattractive as we want coin selection to avoid it if possible
-                group.m_ancestors = max_ancestors - 1;
-            }
-            groups.push_back(group);
-        }
-    }
-    return groups;
+    // SYSCOIN
+    // return groups_out;
 }
 
 bool CWallet::IsCrypted() const
