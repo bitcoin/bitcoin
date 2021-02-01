@@ -15,6 +15,12 @@
 namespace llmq
 {
 
+// Use a separate cache instance instead of versionbitscache to avoid locking cs_main
+// and dealing with all kinds of deadlocks.
+extern RecursiveMutex cs_llmq_vbc;
+
+static const bool DEFAULT_ENABLE_QUORUM_DATA_RECOVERY = true;
+
 class CLLMQUtils
 {
 public:
@@ -41,6 +47,12 @@ public:
     static void AddQuorumProbeConnections(uint8_t llmqType, const CBlockIndex* pindexQuorum, const uint256& myProTxHash, CConnman& connman);
 
     static bool IsQuorumActive(uint8_t llmqType, const uint256& quorumHash);
+
+    /// Returns the state of `-llmq-data-recovery`
+    static bool QuorumDataRecoveryEnabled();
+
+    /// Returns the values given by `-llmq-qvvec-sync`
+    static std::set<uint8_t> GetEnabledQuorumVvecSyncTypes();
 
     template<typename NodesContainer, typename Continue, typename Callback>
     static void IterateNodesRandom(NodesContainer& nodeStates, Continue&& cont, Callback&& callback, FastRandomContext& rnd)

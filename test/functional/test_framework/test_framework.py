@@ -925,6 +925,10 @@ class DashTestFramework(SyscoinTestFramework):
         # LLMQ default test params (no need to pass -llmqtestparams)
         self.llmq_size = 3
         self.llmq_threshold = 2
+        # This is nRequestTimeout in dash-q-recovery thread
+        self.quorum_data_thread_request_timeout_seconds = 10
+        # This is EXPIRATION_TIMEOUT in CQuorumDataRequest
+        self.quorum_data_request_expiration_timeout = 300
 
     def confirm_mns(self):
         while True:
@@ -1423,8 +1427,8 @@ class DashTestFramework(SyscoinTestFramework):
         return None
 
     def test_mn_quorum_data(self, test_mn, quorum_type_in, quorum_hash_in, expect_secret=True):
-        quorum_info = test_mn.node.quorum_info(quorum_type_in, quorum_hash_in, expect_secret)
-        if expect_secret and "secretKeyShare" not in quorum_info:
+        quorum_info = test_mn.node.quorum_info(quorum_type_in, quorum_hash_in, True)
+        if expect_secret != ("secretKeyShare" in quorum_info):
             return False
         if "members" not in quorum_info or len(quorum_info["members"]) == 0:
             return False
@@ -1440,8 +1444,10 @@ class DashTestFramework(SyscoinTestFramework):
             valid = 0
             if recover:
                 if self.mocktime % 2:
-                    self.bump_mocktime(self.quorum_data_request_expire_timeout + 1)
+                    self.bump_mocktime(self.quorum_data_request_expiration_timeout + 1)
                     self.nodes[0].generate(1)
+                else:
+                    self.bump_mocktime(self.quorum_data_thread_request_timeout_seconds + 1)
 
             for test_mn in mns:
                 valid += self.test_mn_quorum_data(test_mn, quorum_type_in, quorum_hash_in, expect_secret)

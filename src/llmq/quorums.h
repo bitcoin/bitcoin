@@ -135,6 +135,11 @@ public:
  * will also contain the secret key share and the quorum verification vector. The quorum vvec is then used to recover
  * the public key shares of individual members, which are needed to verify signature shares of these members.
  */
+
+class CQuorum;
+typedef std::shared_ptr<CQuorum> CQuorumPtr;
+typedef std::shared_ptr<const CQuorum> CQuorumCPtr;
+
 class CQuorum
 {
     friend class CQuorumManager;
@@ -153,11 +158,13 @@ private:
     // Recovery of public key shares is very slow, so we start a background thread that pre-populates a cache so that
     // the public key shares are ready when needed later
     mutable CBLSWorkerCache blsCache;
-    std::atomic<bool> stopCachePopulatorThread;
+    std::atomic<bool> stopQuorumThreads;
     std::thread cachePopulatorThread;
+    mutable CThreadInterrupt interruptQuorumDataReceived;
+    mutable std::atomic<bool> fQuorumDataRecoveryThreadRunning{false};
 
 public:
-    CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker) : params(_params), blsCache(_blsWorker), stopCachePopulatorThread(false) {}
+    CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker);
     ~CQuorum();
     void Init(const CFinalCommitment& _qc, const CBlockIndex* _pindexQuorum, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
 
@@ -175,9 +182,12 @@ private:
     void WriteContributions(CEvoDB& evoDb);
     bool ReadContributions(CEvoDB& evoDb);
     static void StartCachePopulatorThread(std::shared_ptr<CQuorum> _this);
+    static void StartQuorumDataRecoveryThread(CConnman &connman, const CQuorumCPtr _this, const CBlockIndex* pIndex, uint16_t nDataMask);
+    /// Returns the start offset for the masternode with the given proTxHash. This offset is applied when picking data recovery members of a quorum's
+    /// memberlist and is calculated based on a list of all member of all active quorums for the given llmqType in a way that each member
+    /// should receive the same number of request if all active llmqType members requests data from one llmqType quorum.
+    size_t GetQuorumRecoveryStartOffset(const CBlockIndex* pIndex) const;
 };
-typedef std::shared_ptr<CQuorum> CQuorumPtr;
-typedef std::shared_ptr<const CQuorum> CQuorumCPtr;
 
 /**
  * The quorum manager maintains quorums which were mined on chain. When a quorum is requested from the manager,
@@ -198,6 +208,8 @@ private:
 
 public:
     CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager);
+
+    void TriggerQuorumDataRecoveryThreads(const CBlockIndex* pIndex) const;
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 

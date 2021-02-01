@@ -281,5 +281,31 @@ bool CLLMQUtils::IsQuorumActive(uint8_t llmqType, const uint256& quorumHash)
     return false;
 }
 
+bool CLLMQUtils::QuorumDataRecoveryEnabled()
+{
+    return gArgs.GetBoolArg("-llmq-data-recovery", DEFAULT_ENABLE_QUORUM_DATA_RECOVERY);
+}
+
+std::set<uint8_t> CLLMQUtils::GetEnabledQuorumVvecSyncTypes()
+{
+    std::set<uint8_t> setQuorumVvecSyncTypes;
+    for (const std::string& strLLMQType : gArgs.GetArgs("-llmq-qvvec-sync")) {
+        uint8_t llmqType = Consensus::LLMQ_NONE;
+        for (const auto& p : Params().GetConsensus().llmqs) {
+            if (p.second.name == strLLMQType) {
+                llmqType = p.first;
+                break;
+            }
+        }
+        if (llmqType == Consensus::LLMQ_NONE) {
+            throw std::invalid_argument(strprintf("Invalid llmqType in -llmq-qvvec-sync: %s", strLLMQType));
+        }
+        if (setQuorumVvecSyncTypes.count(llmqType) > 0) {
+            throw std::invalid_argument(strprintf("Duplicated llmqType in -llmq-qvvec-sync: %s", strLLMQType));
+        }
+        setQuorumVvecSyncTypes.emplace(llmqType);
+    }
+    return setQuorumVvecSyncTypes;
+}
 
 } // namespace llmq
