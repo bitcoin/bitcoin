@@ -135,7 +135,7 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
     }
 
     {
-        LOCK2(cs_main, cs);
+        LOCK(cs);
 
         if (InternalHasConflictingChainLock(clsig.nHeight, clsig.blockHash)) {
             // This should not happen. If it happens, it means that a malicious entity controls a large part of the MN
@@ -144,12 +144,15 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
                       __func__, clsig.ToString(), bestChainLock.ToString(), from);
             return;
         }
+    }
 
+    CInv inv(MSG_CLSIG, hash);
+    g_connman->RelayInv(inv, LLMQS_PROTO_VERSION);
+
+    {
+        LOCK2(cs_main, cs);
         bestChainLockHash = hash;
         bestChainLock = clsig;
-
-        CInv inv(MSG_CLSIG, hash);
-        g_connman->RelayInv(inv, LLMQS_PROTO_VERSION);
 
         const CBlockIndex* pindex = LookupBlockIndex(clsig.blockHash);
         if (!pindex) {
