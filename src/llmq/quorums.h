@@ -165,7 +165,7 @@ public:
     int GetMemberIndex(const uint256& proTxHash) const;
 
     CBLSPublicKey GetPubKeyShare(size_t memberIdx) const;
-    CBLSSecretKey GetSkShare() const;
+    const CBLSSecretKey& GetSkShare() const;
 
 private:
     void WriteContributions(CEvoDB& evoDb);

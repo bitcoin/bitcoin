@@ -1569,7 +1569,7 @@ CSigShare CSigSharesManager::CreateSigShare(const CQuorumCPtr& quorum, const uin
         return {};
     }
 
-    CBLSSecretKey skShare = quorum->GetSkShare();
+    const CBLSSecretKey& skShare = quorum->GetSkShare();
     if (!skShare.IsValid()) {
         LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- we don't have our skShare for quorum %s\n", __func__, quorum->qc.quorumHash.ToString());
         return {};
