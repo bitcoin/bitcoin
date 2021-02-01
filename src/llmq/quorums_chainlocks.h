@@ -13,7 +13,6 @@
 #include <atomic>
 #include <unordered_set>
 
-#include <boost/thread.hpp>
 
 class CBlockIndex;
 class CConnman;

@@ -67,9 +67,8 @@ EXPECTED_BOOST_INCLUDES=(
     boost/signals2/optional_last_value.hpp
     boost/signals2/signal.hpp
     boost/test/unit_test.hpp
-    boost/thread/condition_variable.hpp
+    boost/thread/lock_types.hpp
     boost/thread/shared_mutex.hpp
-    boost/thread/thread.hpp
     boost/exception/diagnostic_information.hpp
     boost/exception/exception.hpp
     boost/exception/info.hpp
@@ -79,7 +78,6 @@ EXPECTED_BOOST_INCLUDES=(
     boost/throw_exception.hpp
     boost/tuple/tuple.hpp
     boost/pool/pool_alloc.hpp
-    boost/thread.hpp
 )
 
 for BOOST_INCLUDE in $(git grep '^#include <boost/' -- "*.cpp" "*.h" | cut -f2 -d: | cut -f2 -d'<' | cut -f1 -d'>' | sort -u); do

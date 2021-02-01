@@ -9,7 +9,6 @@
 #include <ethereum/address.h>
 #include <services/asset.h>
 #include <script/standard.h>
-#include <boost/thread/thread.hpp>
 #include <util/system.h>
 #include <messagesigner.h>
 #include <util/rbf.h>

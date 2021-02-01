@@ -35,7 +35,6 @@
 #include <utility>
 #include <vector>
 
-#include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
 // SYSCOIN
 #include <ctpl.h>
 #include <amount.h>
@@ -494,11 +493,6 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         LogPrintf("%s thread start\n", strName);
         func();
         LogPrintf("%s thread exit\n", strName);
-    }
-    catch (const boost::thread_interrupted&)
-    {
-        LogPrintf("%s thread interrupt\n", strName);
-        throw;
     }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, strName.c_str());
