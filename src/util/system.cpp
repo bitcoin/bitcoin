@@ -12,6 +12,7 @@
 #include <random.h>
 #include <serialize.h>
 #include <stacktraces.h>
+#include <util/getuniquepath.h>
 #include <util/strencodings.h>
 
 #include <stdarg.h>
@@ -190,7 +191,7 @@ void ReleaseDirectoryLocks()
 
 bool DirIsWritable(const fs::path& directory)
 {
-    fs::path tmpFile = directory / fs::unique_path();
+    fs::path tmpFile = GetUniquePath(directory);
 
     FILE* file = fsbridge::fopen(tmpFile, "a");
     if (!file) return false;
