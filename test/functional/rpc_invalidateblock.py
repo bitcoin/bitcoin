@@ -60,5 +60,32 @@ class InvalidateTest(BitcoinTestFramework):
         if node1height < 4:
             raise AssertionError("Node 1 reorged to a lower height: %d"%node1height)
 
+        self.log.info("Make sure ResetBlockFailureFlags does the job correctly")
+        self.restart_node(0, extra_args=["-checkblocks=5"])
+        self.restart_node(1, extra_args=["-checkblocks=5"])
+        connect_nodes_bi(self.nodes, 0, 1)
+        self.nodes[0].generate(10)
+        self.sync_blocks(self.nodes[0:2])
+        newheight = self.nodes[0].getblockcount()
+        for j in range(2):
+            self.restart_node(0, extra_args=["-checkblocks=5"])
+            tip = self.nodes[0].generate(10)[-1]
+            self.nodes[1].generate(9)
+            connect_nodes(self.nodes[0], 1)
+            self.sync_blocks(self.nodes[0:2])
+            assert_equal(self.nodes[0].getblockcount(), newheight + 10 * (j + 1))
+            assert_equal(self.nodes[1].getblockcount(), newheight + 10 * (j + 1))
+            assert_equal(self.nodes[1].getbestblockhash(), tip)
+
+        tip = self.nodes[1].getbestblockhash()
+        self.nodes[1].invalidateblock(self.nodes[1].getblockhash(newheight + 1))
+        self.nodes[1].invalidateblock(self.nodes[1].getblockhash(newheight + 1))
+
+        assert_equal(self.nodes[1].getblockcount(), newheight)
+        self.restart_node(1, extra_args=["-checkblocks=5"])
+        wait_until(lambda: self.nodes[1].getblockcount() == newheight + 20)
+        assert_equal(tip, self.nodes[1].getbestblockhash())
+
+
 if __name__ == '__main__':
     InvalidateTest().main()

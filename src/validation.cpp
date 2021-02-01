@@ -3412,6 +3412,17 @@ bool CChainState::ResetBlockFailureFlags(CBlockIndex *pindex) {
         if (pindex->nStatus & BLOCK_FAILED_MASK) {
             pindex->nStatus &= ~BLOCK_FAILED_MASK;
             setDirtyBlockIndex.insert(pindex);
+            m_failed_blocks.erase(pindex);
+            // Mark all nearest BLOCK_FAILED_CHILD descendants (if any) as BLOCK_FAILED_VALID
+            auto itp = mapPrevBlockIndex.equal_range(pindex->GetBlockHash());
+            for (auto jt = itp.first; jt != itp.second; ++jt) {
+                if (jt->second->nStatus & BLOCK_FAILED_CHILD) {
+                    jt->second->nStatus |= BLOCK_FAILED_VALID;
+                    m_failed_blocks.insert(jt->second);
+                    setDirtyBlockIndex.insert(jt->second);
+                    setBlockIndexCandidates.erase(jt->second);
+                }
+            }
         }
         pindex = pindex->pprev;
     }
