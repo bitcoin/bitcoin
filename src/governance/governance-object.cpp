@@ -305,7 +305,7 @@ void CGovernanceObject::SetMasternodeOutpoint(const COutPoint& outpoint)
 bool CGovernanceObject::Sign(const CBLSSecretKey& key)
 {
     CBLSSignature sig = key.Sign(GetSignatureHash());
-    if (!key.IsValid()) {
+    if (!sig.IsValid()) {
         return false;
     }
     sig.GetBuf(vchSig);
