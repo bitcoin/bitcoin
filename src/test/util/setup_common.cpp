@@ -185,7 +185,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     }
 
     BlockValidationState state;
-    if (!ActivateBestChain(state, chainparams)) {
+    if (!::ChainstateActive().ActivateBestChain(state, chainparams)) {
         throw std::runtime_error(strprintf("ActivateBestChain failed. (%s)", state.ToString()));
     }
 
