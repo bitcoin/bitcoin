@@ -300,8 +300,26 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& group
 
  ******************************************************************************/
 
-void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants) {
+void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants, bool positive_only) {
+    // Compute the effective value first
+    const CAmount coin_fee = output.m_input_bytes < 0 ? 0 : m_effective_feerate.GetFee(output.m_input_bytes);
+    const CAmount ev = output.txout.nValue - coin_fee;
+
+    // Filter for positive only here before adding the coin
+    if (positive_only && ev <= 0) return;
+
     m_outputs.push_back(output);
+    CInputCoin& coin = m_outputs.back();
+
+    coin.m_fee = coin_fee;
+    fee += coin.m_fee;
+
+    coin.m_long_term_fee = coin.m_input_bytes < 0 ? 0 : m_long_term_feerate.GetFee(coin.m_input_bytes);
+    long_term_fee += coin.m_long_term_fee;
+
+    coin.effective_value = ev;
+    effective_value += coin.effective_value;
+
     m_from_me &= from_me;
     m_value += output.txout.nValue;
     m_depth = std::min(m_depth, depth);
@@ -312,20 +330,6 @@ void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size
     // descendants is the count as seen from the top ancestor, not the descendants as seen from the
     // coin itself; thus, this value is counted as the max, not the sum
     m_descendants = std::max(m_descendants, descendants);
-    effective_value += output.effective_value;
-    fee += output.m_fee;
-    long_term_fee += output.m_long_term_fee;
-}
-
-std::vector<CInputCoin>::iterator OutputGroup::Discard(const CInputCoin& output) {
-    auto it = m_outputs.begin();
-    while (it != m_outputs.end() && it->outpoint != output.outpoint) ++it;
-    if (it == m_outputs.end()) return it;
-    m_value -= output.txout.nValue;
-    effective_value -= output.effective_value;
-    fee -= output.m_fee;
-    long_term_fee -= output.m_long_term_fee;
-    return m_outputs.erase(it);
 }
 
 bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const
@@ -333,36 +337,4 @@ bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_f
     return m_depth >= (m_from_me ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs)
         && m_ancestors <= eligibility_filter.max_ancestors
         && m_descendants <= eligibility_filter.max_descendants;
-}
-
-void OutputGroup::SetFees(const CFeeRate effective_feerate, const CFeeRate long_term_feerate)
-{
-    fee = 0;
-    long_term_fee = 0;
-    effective_value = 0;
-    for (CInputCoin& coin : m_outputs) {
-        coin.m_fee = coin.m_input_bytes < 0 ? 0 : effective_feerate.GetFee(coin.m_input_bytes);
-        fee += coin.m_fee;
-
-        coin.m_long_term_fee = coin.m_input_bytes < 0 ? 0 : long_term_feerate.GetFee(coin.m_input_bytes);
-        long_term_fee += coin.m_long_term_fee;
-
-        coin.effective_value = coin.txout.nValue - coin.m_fee;
-        effective_value += coin.effective_value;
-    }
-}
-
-OutputGroup OutputGroup::GetPositiveOnlyGroup()
-{
-    OutputGroup group(*this);
-    for (auto it = group.m_outputs.begin(); it != group.m_outputs.end(); ) {
-        const CInputCoin& coin = *it;
-        // Only include outputs that are positive effective value (i.e. not dust)
-        if (coin.effective_value <= 0) {
-            it = group.Discard(coin);
-        } else {
-            ++it;
-        }
-    }
-    return group;
 }
