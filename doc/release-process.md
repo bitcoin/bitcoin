@@ -5,8 +5,7 @@ Release Process
 
 ### Before every release candidate
 
-
-* Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/syscoin/syscoin/blob/master/doc/translation_process.md#synchronising-translations).
+* Update translations see [translation_process.md](https://github.com/syscoin/syscoin/blob/master/doc/translation_process.md#synchronising-translations).
 * Update manpages, see [gen-manpages.sh](https://github.com/syscoin/syscoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
 * Update release candidate version in `configure.ac` (`CLIENT_VERSION_RC`).
 
@@ -52,6 +51,13 @@ Release Process
 - Merge the release notes from the wiki into the branch.
 - Ensure the "Needs release note" label is removed from all relevant pull requests and issues.
 
+#### Tagging a release (candidate)
+
+To tag the version (or release candidate) in git, use the `make-tag.py` script from [syscoin-maintainer-tools](https://github.com/bitcoin-core/syscoin-maintainer-tools). From the root of the repository run:
+
+    ../syscoin-maintainer-tools/make-tag.py v(new version, e.g. 4.2.0)
+
+This will perform a few last-minute consistency checks in the build system files, and if they pass, create a signed tag.
 
 ## Building
 
@@ -73,20 +79,11 @@ Open a draft of the release notes for collaborative editing at https://github.co
 
 For the period during which the notes are being edited on the wiki, the version on the branch should be wiped and replaced with a link to the wiki which should be used for all announcements until `-final`.
 
-Write the release notes. `git shortlog` helps a lot, for example:
-
-    git shortlog --no-merges v(current version, e.g. 0.19.2)..v(new version, e.g. 4.1.3)
-
-(or ping @wumpus on IRC, he has specific tooling to generate the list of merged pulls
-and sort them into categories based on labels).
+Generate the change log. As this is a huge amount of work to do manually, there is the `list-pulls` script to do a pre-sorting step based on github PR metadata. See the [documentation in the README.md](https://github.com/syscoin-core/syscoin-maintainer-tools/blob/master/README.md#list-pulls).
 
 Generate list of authors:
 
     git log --format='- %aN' v(current version, e.g. 4.1.3)..v(new version, e.g. 4.1.3) | sort -fiu
-
-Tag the version (or release candidate) in git:
-
-    git tag -s v(new version, e.g. 4.1.3)
 
 ### Setup and perform Gitian builds
 
