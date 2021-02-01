@@ -44,9 +44,9 @@ class MiniWallet:
     def generate(self, num_blocks):
         """Generate blocks with coinbase outputs to the internal address, and append the outputs to the internal list"""
         blocks = self._test_node.generatetoaddress(num_blocks, self._address)
-        for b in blocks:
-            cb_tx = self._test_node.getblock(blockhash=b, verbosity=2)['tx'][0]
-            self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value']})
+        cb_txs = map(lambda b: self._test_node.getblock(blockhash=b, verbosity=2)['tx'][0], blocks)
+        cb_utxos = map(lambda cb_tx: {'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value']}, cb_txs)
+        self._utxos.extend(list(cb_utxos))
         return blocks
 
     def get_address(self):
@@ -69,8 +69,8 @@ class MiniWallet:
 
     def send_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None):
         """Create and send a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
-        self._utxos = sorted(self._utxos, key=lambda k: k['value'])
-        utxo_to_spend = utxo_to_spend or self._utxos.pop()  # Pick the largest utxo (if none provided) and hope it covers the fee
+        utxos = sorted(self._utxos, key=lambda k: k['value'])
+        utxo_to_spend = utxo_to_spend or utxos.pop()  # Pick the largest utxo (if none provided) and hope it covers the fee
         vsize = Decimal(96)
         send_value = satoshi_round(utxo_to_spend['value'] - fee_rate * (vsize / 1000))
         fee = utxo_to_spend['value'] - send_value
@@ -84,8 +84,11 @@ class MiniWallet:
         tx_hex = tx.serialize().hex()
 
         tx_info = from_node.testmempoolaccept([tx_hex])[0]
-        self._utxos.append({'txid': tx_info['txid'], 'vout': 0, 'value': send_value})
+        utxos.append({'txid': tx_info['txid'], 'vout': 0, 'value': send_value})
         from_node.sendrawtransaction(tx_hex)
         assert_equal(tx_info['vsize'], vsize)
         assert_equal(tx_info['fees']['base'], fee)
+        # update our internal utxo set after `sendrawtransaction` and the above assertions succeed to ensure a thrown exception
+        # doesn't mutate state and leave an unwanted side-effect (in case the caller of `send_self_transfer` handles this exception)
+        self._utxos = utxos
         return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex}
