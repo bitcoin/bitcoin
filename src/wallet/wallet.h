@@ -756,7 +756,7 @@ public:
                     const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params, bool& bnb_used) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     bool SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, const CAssetCoinInfo& nTargetValueAsset, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, CAmount& nValueRetAsset,
-                    const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params, bool& bnb_used) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+                    const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params, bool& bnb_used, const int& nVersion=0) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
 
     /** Get a name for this wallet for logging/debugging purposes.
@@ -820,7 +820,7 @@ public:
      * populate vCoins with vector of available COutputs.
      */
     // SYSCOIN
-    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe = true, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const CAmount& nMinimumAmountAsset = 0, const CAmount& nMaximumAmountAsset = MAX_ASSET, const CAmount& nMinimumSumAmountAsset = MAX_ASSET, const uint64_t nMaximumCount = 0, const bool bIncludeLocked = false, const CAssetCoinInfo& assetInfo=CAssetCoinInfo()) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    void AvailableCoins(std::vector<COutput>& vCoins, bool fOnlySafe = true, const CCoinControl* coinControl = nullptr, const CAmount& nMinimumAmount = 1, const CAmount& nMaximumAmount = MAX_MONEY, const CAmount& nMinimumSumAmount = MAX_MONEY, const CAmount& nMinimumAmountAsset = 0, const CAmount& nMaximumAmountAsset = MAX_ASSET, const CAmount& nMinimumSumAmountAsset = MAX_ASSET, const uint64_t nMaximumCount = 0, const bool bIncludeLocked = false, const CAssetCoinInfo& assetInfo=CAssetCoinInfo(), const int &txVersion=0) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /**
      * Return list of available coins and locked coins grouped by non-change output address.
@@ -841,8 +841,8 @@ public:
     bool SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<COutput> coins,
         std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params, bool& bnb_used) const;
     // SYSCOIN
-    bool SelectCoinsMinConf(const CAmount& nTargetValue, const CAssetCoinInfo& nTargetValueAsset, const CoinEligibilityFilter& eligibility_filter, std::vector<COutput> coins,
-        std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, CAmount& nValueRetAsset, const CoinSelectionParams& coin_selection_params, bool& bnb_used) const;
+    bool SelectCoinsMinConf(const CAmount& nTargetValue, CAssetCoinInfo nTargetValueAsset, const CoinEligibilityFilter& eligibility_filter, std::vector<COutput> coins,
+        std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, CAmount& nValueRetAsset, const CoinSelectionParams& coin_selection_params, bool& bnb_used, const int& nVersion=0) const;
 
     bool IsSpent(const uint256& hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 

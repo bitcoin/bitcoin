@@ -39,19 +39,19 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
         self.nodes[2].importprivkey(self.nodes[0].dumpprivkey(useraddress0))
         self.nodes[0].assetsend(self.asset, useraddress0, 1.5)
         self.nodes[0].generate(1)
-        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001, False)['txid']
+        tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001, 0, False)['txid']
         time.sleep(0.25)
-        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001, False)['txid']
+        tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001, 0, False)['txid']
         time.sleep(0.25)
-        tx3 = self.nodes[0].assetallocationsend(self.asset, useraddress0, 1, False)['txid']
+        tx3 = self.nodes[0].assetallocationsend(self.asset, useraddress0, 1, 0, False)['txid']
         time.sleep(0.25)
         self.sync_mempools(self.nodes[0:3],timeout=30)
         time.sleep(0.25)
-        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress0, 1, False)['txid']
+        tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress0, 1, 0, False)['txid']
         # dbl spend outputs from tx3 (tx4 and tx5 should be flagged as conflict)
-        tx4a = self.nodes[2].assetallocationsend(self.asset, useraddress0, 1, False)['txid']
+        tx4a = self.nodes[2].assetallocationsend(self.asset, useraddress0, 1, 0, False)['txid']
         time.sleep(0.25)
-        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.0001, False)['txid']
+        tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.0001, 0, False)['txid']
         time.sleep(0.25)
         tx6 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 1)['txid']
         time.sleep(0.25)

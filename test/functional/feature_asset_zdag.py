@@ -56,22 +56,22 @@ class AssetZDAGTest(SyscoinTestFramework):
         out =  self.nodes[2].listunspent()
         assert_equal(len(out), 4)
         # this will use 1 sys utxo and 1 asset utxo and send it to change address owned by node2
-        self.nodes[1].assetallocationsend(self.asset, newaddress1, 0.4, False)
+        self.nodes[1].assetallocationsend(self.asset, newaddress1, 0.4, 0, False)
         time.sleep(0.25)
         self.sync_mempools(self.nodes[0:3], timeout=30)
         # node3 should have 2 less utxos because they were sent to change on node2
         out =  self.nodes[2].listunspent(minconf=0)
         assert_equal(len(out), 2)
         time.sleep(0.25)
-        tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, 1, False)['txid']
+        tx1 = self.nodes[1].assetallocationsend(self.asset, newaddress1, 1, 0, False)['txid']
         # dbl spend
-        tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.9, False)['txid']
+        tx2 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.9, 0, False)['txid']
         time.sleep(0.25)
         # use tx2 to build tx3
-        tx3 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.05, False)['txid']
+        tx3 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.05, 0, False)['txid']
         time.sleep(0.25)
         # use tx3 to build tx4
-        tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.025, False)['txid']
+        tx4 = self.nodes[2].assetallocationsend(self.asset, newaddress1, 0.025, 0, False)['txid']
         time.sleep(0.25)
         self.sync_mempools(self.nodes[0:3], timeout=30)
         for i in range(3):
