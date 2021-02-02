@@ -222,6 +222,11 @@ BOOST_AUTO_TEST_CASE(tx_valid)
             PrecomputedTransactionData txdata(tx);
             unsigned int verify_flags = ParseScriptFlags(test[2].get_str());
 
+            // Check that the test gives a valid combination of flags (otherwise VerifyScript will throw). Don't edit the flags.
+            if (~verify_flags != FillFlags(~verify_flags)) {
+                BOOST_ERROR("Bad test flags: " << strTest);
+            }
+
             if (!CheckTxScripts(tx, mapprevOutScriptPubKeys, mapprevOutValues, ~verify_flags, txdata, strTest, /* expect_valid */ true)) {
                 BOOST_ERROR("Tx unexpectedly failed: " << strTest);
             }
