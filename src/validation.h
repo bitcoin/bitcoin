@@ -40,7 +40,7 @@ class CBlockIndex;
 class CBlockTreeDB;
 class CBlockUndo;
 class CChainParams;
-class CCheckpointData;
+struct CCheckpointData;
 class CInv;
 class CConnman;
 class CScriptCheck;
