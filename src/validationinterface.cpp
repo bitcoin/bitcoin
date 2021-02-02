@@ -255,6 +255,12 @@ void CMainSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NewPoWValidBlock(pindex, block); });
 }
 // SYSCOIN
+void CMainSignals::AcceptedBlockHeader(const CBlockIndex *pindexNew) {
+    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.AcceptedBlockHeader(pindexNew); });
+}
+void CMainSignals::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload) {
+    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NotifyHeaderTip(pindexNew, fInitialDownload); });
+}
 void CMainSignals::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
     m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.SynchronousUpdatedBlockTip(pindexNew, pindexFork, fInitialDownload); });
 }

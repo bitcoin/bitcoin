@@ -105,7 +105,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
             bReturn = true;
         }
 
-        if (!bestChainLock.IsNull() && clsig.nHeight <= bestChainLock.nHeight) {
+        if (!bestChainLockWithKnownBlock.IsNull() && clsig.nHeight <= bestChainLockWithKnownBlock.nHeight) {
             // no need to process/relay older CLSIGs
             bReturn = true;
         }
@@ -131,26 +131,34 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
     {
         LOCK(cs_main);
         pindex = g_chainman.m_blockman.LookupBlockIndex(clsig.blockHash);
-        if (pindex == nullptr) {
-            // we don't know the block/header for this CLSIG yet, so bail out for now
-            // when the block or the header later comes in, we will enforce the correct chain
-            return;
-        }
-
-        if (pindex->nHeight != clsig.nHeight) {
-            // Should not happen, same as the conflict check from above.
-            LogPrintf("CChainLocksHandler::%s -- height of CLSIG (%s) does not match the specified block's height (%d)\n",
-                    __func__, clsig.ToString(), pindex->nHeight);
-            return;
-        }
-        peerman.ForgetTxHash(from, hash);
     }
     {
         LOCK(cs);
         bestChainLockHash = hash;
         bestChainLock = clsig;
-        bestChainLockBlockIndex = pindex;
+
+        if (pindex != nullptr) {
+
+            if (pindex->nHeight != clsig.nHeight) {
+                // Should not happen, same as the conflict check from above.
+                LogPrintf("CChainLocksHandler::%s -- height of CLSIG (%s) does not match the specified block's height (%d)\n",
+                        __func__, clsig.ToString(), pindex->nHeight);
+                // Note: not relaying clsig here
+                return;
+            }
+
+            bestChainLockWithKnownBlock = bestChainLock;
+            bestChainLockBlockIndex = pindex;
+        }
+        // else if (pindex == nullptr)
+        // Note: make sure to still relay clsig further.
     }
+    {
+        LOCK(cs_main);
+        peerman.ForgetTxHash(from, hash);
+    }
+    // Note: do not hold cs while calling RelayInv
+    AssertLockNotHeld(cs);
     connman.RelayOtherInv(CInv(MSG_CLSIG, hash));
     CheckActiveState();
     EnforceBestChainLock(bestChainLockBlockIndex, bestChainLock, enforced);
@@ -158,6 +166,27 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
               __func__, clsig.ToString(), from);
 }
 
+void CChainLocksHandler::AcceptedBlockHeader(const CBlockIndex* pindexNew)
+{
+    LOCK2(cs_main, cs);
+
+    if (pindexNew->GetBlockHash() == bestChainLock.blockHash) {
+        LogPrintf("CChainLocksHandler::%s -- block header %s came in late, updating and enforcing\n", __func__, pindexNew->GetBlockHash().ToString());
+
+        if (bestChainLock.nHeight != pindexNew->nHeight) {
+            // Should not happen, same as the conflict check from ProcessNewChainLock.
+            LogPrintf("CChainLocksHandler::%s -- height of CLSIG (%s) does not match the specified block's height (%d)\n",
+                      __func__, bestChainLock.ToString(), pindexNew->nHeight);
+            return;
+        }
+
+        // when EnforceBestChainLock is called later, it might end up invalidating other chains but not activating the
+        // CLSIG locked chain. This happens when only the header is known but the block is still missing yet. The usual
+        // block processing logic will handle this when the block arrives
+        bestChainLockWithKnownBlock = bestChainLock;
+        bestChainLockBlockIndex = pindexNew;
+    }
+}
 
 void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload)
 {
@@ -181,7 +210,8 @@ void CChainLocksHandler::CheckActiveState()
             // us with some stale values which we should not try to enforce anymore (there probably was a good reason
             // to disable spork19)
             bestChainLockHash = uint256();
-            bestChainLock = CChainLockSig();
+            bestChainLock = bestChainLockWithKnownBlock = CChainLockSig();
+            bestChainLockBlockIndex = nullptr;
         }
     }
 }
@@ -222,7 +252,7 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
             return;
         }
 
-        if (bestChainLock.nHeight >= nHeight) {
+        if (bestChainLockWithKnownBlock.nHeight >= nHeight) {
             // already got the same CLSIG or a better one
             return;
         }
@@ -241,7 +271,7 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
 
     {
         LOCK(cs);
-        if (bestChainLock.nHeight >= nHeight) {
+        if (bestChainLockWithKnownBlock.nHeight >= nHeight) {
             // might have happened while we didn't hold cs
             return;
         }
@@ -267,7 +297,7 @@ void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recove
             // this is not what we signed, so lets not create a CLSIG for it
             return;
         }
-        if (bestChainLock.nHeight >= lastSignedHeight) {
+        if (bestChainLockWithKnownBlock.nHeight >= lastSignedHeight) {
             // already got the same or a better CLSIG through the CLSIG message
             return;
         }

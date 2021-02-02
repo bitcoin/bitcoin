@@ -23,6 +23,18 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
     UpdatedBlockTip(::ChainActive().Tip(), nullptr, ::ChainstateActive().IsInitialBlockDownload());
 }
 
+void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
+{
+    if(llmq::quorumManager)
+        llmq::chainLocksHandler->AcceptedBlockHeader(pindexNew);
+    masternodeSync.AcceptedBlockHeader(pindexNew);
+}
+
+void CDSNotificationInterface::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload)
+{
+    masternodeSync.NotifyHeaderTip(pindexNew, fInitialDownload, connman);
+}
+
 void CDSNotificationInterface::SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
 {
     if (pindexNew == pindexFork || ShutdownRequested()) // blocks were disconnected without any new ones

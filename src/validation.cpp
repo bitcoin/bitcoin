@@ -3122,6 +3122,8 @@ static bool NotifyHeaderTip(CChainState& chainstate) LOCKS_EXCLUDED(cs_main) {
     // Send block tip changed notifications without cs_main
     if (fNotify) {
         uiInterface.NotifyHeaderTip(GetSynchronizationState(fInitialBlockDownload), pindexHeader);
+        // SYSCOIN
+        GetMainSignals().NotifyHeaderTip(pindexHeader, fInitialBlockDownload);
     }
     return fNotify;
 }
@@ -4236,6 +4238,9 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
     if (ppindex)
         *ppindex = pindex;
 
+    // SYSCOIN Notify external listeners about accepted block header
+    GetMainSignals().AcceptedBlockHeader(pindex);
+    
     return true;
 }
 

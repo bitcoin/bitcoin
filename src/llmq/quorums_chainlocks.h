@@ -50,6 +50,7 @@ private:
     uint256 bestChainLockHash;
     CChainLockSig bestChainLock;
 
+    CChainLockSig bestChainLockWithKnownBlock;
     const CBlockIndex* bestChainLockBlockIndex{nullptr};
     int32_t lastSignedHeight{-1};
     uint256 lastSignedRequestId;
@@ -74,6 +75,7 @@ public:
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
     void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash);
+    void AcceptedBlockHeader(const CBlockIndex* pindexNew);
     void UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload);
     void CheckActiveState();
     void TrySignChainTip(const CBlockIndex* pindexNew);

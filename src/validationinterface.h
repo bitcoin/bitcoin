@@ -181,6 +181,8 @@ protected:
     friend class CMainSignals;
 
     // SYSCOIN
+    virtual void AcceptedBlockHeader(const CBlockIndex *pindexNew) {}
+    virtual void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload) {}
     virtual void SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {}
     virtual void NotifyGovernanceVote(const std::shared_ptr<const CGovernanceVote>& vote) {}
     virtual void NotifyGovernanceObject(const std::shared_ptr<const CGovernanceObject> &object) {}
@@ -210,6 +212,8 @@ public:
 
     void UpdatedBlockTip(const CBlockIndex *, const CBlockIndex *, bool fInitialDownload);
     // SYSCOIN
+    void AcceptedBlockHeader(const CBlockIndex *pindexNew);
+    void NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload);
     void SynchronousUpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload);
     void TransactionAddedToMempool(const CTransactionRef&, uint64_t mempool_sequence);
     void TransactionRemovedFromMempool(const CTransactionRef&, MemPoolRemovalReason, uint64_t mempool_sequence);
