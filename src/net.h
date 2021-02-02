@@ -20,6 +20,7 @@
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
+#include <span.h>
 #include <streams.h>
 #include <sync.h>
 #include <threadinterrupt.h>
@@ -75,6 +76,8 @@ static constexpr uint64_t DEFAULT_MAX_UPLOAD_TARGET = 0;
 static const bool DEFAULT_BLOCKSONLY = false;
 /** -peertimeout default */
 static const int64_t DEFAULT_PEER_CONNECT_TIMEOUT = 60;
+/** Number of file descriptors required for message capture **/
+static const int NUM_FDS_MESSAGE_CAPTURE = 1;
 
 static const bool DEFAULT_FORCEDNSSEED = false;
 static const size_t DEFAULT_MAXRECEIVEBUFFER = 5 * 1000;
@@ -1240,6 +1243,9 @@ inline std::chrono::microseconds PoissonNextSend(std::chrono::microseconds now, 
 {
     return std::chrono::microseconds{PoissonNextSend(now.count(), average_interval.count())};
 }
+
+/** Dump binary message to file, with timestamp */
+void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Span<const unsigned char>& data, bool is_incoming);
 
 struct NodeEvictionCandidate
 {

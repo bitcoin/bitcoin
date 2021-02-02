@@ -4045,14 +4045,12 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
     }
 
     // Don't bother if send buffer is too full to respond anyway
-    if (pfrom->fPauseSend)
-        return false;
+    if (pfrom->fPauseSend) return false;
 
     std::list<CNetMessage> msgs;
     {
         LOCK(pfrom->cs_vProcessMsg);
-        if (pfrom->vProcessMsg.empty())
-            return false;
+        if (pfrom->vProcessMsg.empty()) return false;
         // Just take one message
         msgs.splice(msgs.begin(), pfrom->vProcessMsg, pfrom->vProcessMsg.begin());
         pfrom->nProcessQueueSize -= msgs.front().m_raw_message_size;
@@ -4060,6 +4058,10 @@ bool PeerManagerImpl::ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt
         fMoreWork = !pfrom->vProcessMsg.empty();
     }
     CNetMessage& msg(msgs.front());
+
+    if (gArgs.GetBoolArg("-capturemessages", false)) {
+        CaptureMessage(pfrom->addr, msg.m_command, MakeUCharSpan(msg.m_recv), /* incoming */ true);
+    }
 
     msg.SetVersion(pfrom->GetCommonVersion());
     const std::string& msg_type = msg.m_command;

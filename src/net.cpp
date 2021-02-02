@@ -2879,6 +2879,9 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
 {
     size_t nMessageSize = msg.data.size();
     LogPrint(BCLog::NET, "sending %s (%d bytes) peer=%d\n",  SanitizeString(msg.m_type), nMessageSize, pnode->GetId());
+    if (gArgs.GetBoolArg("-capturemessages", false)) {
+        CaptureMessage(pnode->addr, msg.m_type, msg.data, /* incoming */ false);
+    }
 
     // make sure we use the appropriate network transport format
     std::vector<unsigned char> serializedHeader;
@@ -2894,18 +2897,14 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
         pnode->mapSendBytesPerMsgCmd[msg.m_type] += nTotalSize;
         pnode->nSendSize += nTotalSize;
 
-        if (pnode->nSendSize > nSendBufferMaxSize)
-            pnode->fPauseSend = true;
+        if (pnode->nSendSize > nSendBufferMaxSize) pnode->fPauseSend = true;
         pnode->vSendMsg.push_back(std::move(serializedHeader));
-        if (nMessageSize)
-            pnode->vSendMsg.push_back(std::move(msg.data));
+        if (nMessageSize) pnode->vSendMsg.push_back(std::move(msg.data));
 
         // If write queue empty, attempt "optimistic write"
-        if (optimisticSend == true)
-            nBytesSent = SocketSendData(*pnode);
+        if (optimisticSend) nBytesSent = SocketSendData(*pnode);
     }
-    if (nBytesSent)
-        RecordBytesSent(nBytesSent);
+    if (nBytesSent) RecordBytesSent(nBytesSent);
 }
 
 bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
@@ -2947,4 +2946,32 @@ uint64_t CConnman::CalculateKeyedNetGroup(const CAddress& ad) const
     std::vector<unsigned char> vchNetGroup(ad.GetGroup(addrman.m_asmap));
 
     return GetDeterministicRandomizer(RANDOMIZER_ID_NETGROUP).Write(vchNetGroup.data(), vchNetGroup.size()).Finalize();
+}
+
+void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Span<const unsigned char>& data, bool is_incoming)
+{
+    // Note: This function captures the message at the time of processing,
+    // not at socket receive/send time.
+    // This ensures that the messages are always in order from an application
+    // layer (processing) perspective.
+    auto now = GetTime<std::chrono::microseconds>();
+
+    // Windows folder names can not include a colon
+    std::string clean_addr = addr.ToString();
+    std::replace(clean_addr.begin(), clean_addr.end(), ':', '_');
+
+    fs::path base_path = GetDataDir() / "message_capture" / clean_addr;
+    fs::create_directories(base_path);
+
+    fs::path path = base_path / (is_incoming ? "msgs_recv.dat" : "msgs_sent.dat");
+    CAutoFile f(fsbridge::fopen(path, "ab"), SER_DISK, CLIENT_VERSION);
+
+    ser_writedata64(f, now.count());
+    f.write(msg_type.data(), msg_type.length());
+    for (auto i = msg_type.length(); i < CMessageHeader::COMMAND_SIZE; ++i) {
+        f << '\0';
+    }
+    uint32_t size = data.size();
+    ser_writedata32(f, size);
+    f.write((const char*)data.data(), data.size());
 }
