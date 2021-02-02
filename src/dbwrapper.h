@@ -157,7 +157,7 @@ public:
     // SYSCOIN
     CDataStream GetKey() {
         leveldb::Slice slKey = piter->key();
-        return CDataStream(slKey.data(), slKey.data() + slKey.size(), SER_DISK, CLIENT_VERSION);
+        return CDataStream(MakeUCharSpan(slKey), SER_DISK, CLIENT_VERSION);
     }
     template<typename V> bool GetValue(V& value) {
         leveldb::Slice slValue = piter->value();
@@ -242,7 +242,7 @@ public:
 
     bool ReadDataStream(const CDataStream& ssKey, CDataStream& ssValue) const
     {
-        leveldb::Slice slKey(ssKey.data(), ssKey.size());
+        leveldb::Slice slKey((const char*)ssKey.data(), ssKey.size());
 
         std::string strValue;
         leveldb::Status status = pdb->Get(readoptions, slKey, &strValue);
@@ -252,7 +252,7 @@ public:
             LogPrintf("LevelDB read failure: %s\n", status.ToString());
             dbwrapper_private::HandleError(status);
         }
-        CDataStream ssValueTmp(strValue.data(), strValue.data() + strValue.size(), SER_DISK, CLIENT_VERSION);
+        CDataStream ssValueTmp(MakeUCharSpan(strValue), SER_DISK, CLIENT_VERSION);
         ssValueTmp.Xor(obfuscate_key);
         ssValue = std::move(ssValueTmp);
         return true;

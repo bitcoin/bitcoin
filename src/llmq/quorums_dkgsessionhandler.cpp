@@ -31,7 +31,7 @@ void CDKGPendingMessages::PushPendingMessage(CNode* pfrom, CDataStream& vRecv)
     // this will also consume the data, even if we bail out early
     auto pm = std::make_shared<CDataStream>(std::move(vRecv));
     CHashWriter hw(SER_GETHASH, 0);
-    hw.write(pm->data(), pm->size());
+    hw.write((const char*)pm->data(), pm->size());
     const uint256 &hash = hw.GetHash();
     LOCK2(cs_main, cs);
     peerman.ReceivedResponse(from, hash);
