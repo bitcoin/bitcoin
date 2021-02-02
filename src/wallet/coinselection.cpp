@@ -205,7 +205,7 @@ static void ApproximateBestSubset(const std::vector<OutputGroup>& groups, const 
                 //the selection random.
                 if (nPass == 0 ? insecure_rand.randbool() : !vfIncluded[i])
                 {
-                    nTotal += bAsset? groups[i].m_value_asset: groups[i].m_value;
+                    nTotal += bAsset? groups[i].effective_value_asset.nValue: groups[i].m_value;
                     vfIncluded[i] = true;
                     if (nTotal >= nTargetValue)
                     {
@@ -215,7 +215,7 @@ static void ApproximateBestSubset(const std::vector<OutputGroup>& groups, const 
                             nBest = nTotal;
                             vfBest = vfIncluded;
                         }
-                        nTotal -= bAsset? groups[i].m_value_asset: groups[i].m_value;
+                        nTotal -= bAsset? groups[i].effective_value_asset.nValue: groups[i].m_value;
                         vfIncluded[i] = false;
                     }
                 }
@@ -318,14 +318,14 @@ bool KnapsackSolver(const CAssetCoinInfo& nTargetValueAsset, std::vector<OutputG
     Shuffle(groups.begin(), groups.end(), FastRandomContext());
 
     for (const OutputGroup& group : groups) {
-        if (group.m_value_asset == nTargetValue) {
+        if (group.effective_value_asset.nValue == nTargetValue) {
             util::insert(setCoinsRet, group.m_outputs);
-            nValueRet += group.m_value_asset;
+            nValueRet += group.effective_value_asset.nValue;
             return true;
-        } else if (group.m_value_asset < nTargetValue) {
+        } else if (group.effective_value_asset.nValue < nTargetValue) {
             applicable_groups.push_back(group);
-            nTotalLower += group.m_value_asset;
-        } else if (!lowest_larger || group.m_value_asset < lowest_larger->m_value_asset) {
+            nTotalLower += group.effective_value_asset.nValue;
+        } else if (!lowest_larger || group.effective_value_asset.nValue < lowest_larger->effective_value_asset.nValue) {
             lowest_larger = group;
         }
     }
@@ -333,7 +333,7 @@ bool KnapsackSolver(const CAssetCoinInfo& nTargetValueAsset, std::vector<OutputG
     if (nTotalLower == nTargetValue) {
         for (const auto& group : applicable_groups) {
             util::insert(setCoinsRet, group.m_outputs);
-            nValueRet += group.m_value_asset;
+            nValueRet += group.effective_value_asset.nValue;
         }
         return true;
     }
@@ -341,7 +341,7 @@ bool KnapsackSolver(const CAssetCoinInfo& nTargetValueAsset, std::vector<OutputG
     if (nTotalLower < nTargetValue) {
         if (!lowest_larger) return false;
         util::insert(setCoinsRet, lowest_larger->m_outputs);
-        nValueRet += lowest_larger->m_value_asset;
+        nValueRet += lowest_larger->effective_value_asset.nValue;
         return true;
     }
 
@@ -355,14 +355,14 @@ bool KnapsackSolver(const CAssetCoinInfo& nTargetValueAsset, std::vector<OutputG
     // If we have a bigger coin and (either the stochastic approximation didn't find a good solution,
     //                                   or the next bigger coin is closer), return the bigger coin
     if (lowest_larger &&
-        ((nBest != nTargetValue && nBest < nTargetValue) || lowest_larger->m_value_asset <= nBest)) {
+        ((nBest != nTargetValue && nBest < nTargetValue) || lowest_larger->effective_value_asset.nValue <= nBest)) {
         util::insert(setCoinsRet, lowest_larger->m_outputs);
-        nValueRet += lowest_larger->m_value_asset;
+        nValueRet += lowest_larger->effective_value_asset.nValue;
     } else {
         for (unsigned int i = 0; i < applicable_groups.size(); i++) {
             if (vfBest[i]) {
                 util::insert(setCoinsRet, applicable_groups[i].m_outputs);
-                nValueRet += applicable_groups[i].m_value_asset;
+                nValueRet += applicable_groups[i].effective_value_asset.nValue;
             }
         }
 
@@ -370,7 +370,7 @@ bool KnapsackSolver(const CAssetCoinInfo& nTargetValueAsset, std::vector<OutputG
             LogPrint(BCLog::SELECTCOINS, "SelectCoins() best subset: "); /* Continued */
             for (unsigned int i = 0; i < applicable_groups.size(); i++) {
                 if (vfBest[i]) {
-                    LogPrint(BCLog::SELECTCOINS, "%s asset ", FormatMoney(applicable_groups[i].m_value_asset)); /* Continued */
+                    LogPrint(BCLog::SELECTCOINS, "%s asset ", FormatMoney(applicable_groups[i].effective_value_asset.nValue)); /* Continued */
                 }
             }
             LogPrint(BCLog::SELECTCOINS, "total asset %s\n", FormatMoney(nBest));
@@ -392,7 +392,7 @@ void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size
     const CAmount ev = output.txout.nValue - coin_fee;
 
     // Filter for positive only here before adding the coin
-    if (positive_only && ev <= 0) { LogPrintf("skipping ev %lld\n", ev); return;}
+    if (positive_only && ev <= 0) return;
 
     m_outputs.push_back(output);
     CInputCoin& coin = m_outputs.back();
@@ -412,7 +412,6 @@ void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size
     if(!output.effective_value_asset.IsNull()) {
         if(effective_value_asset.IsNull()){
             effective_value_asset = output.effective_value_asset;
-            m_value_asset = effective_value_asset.nValue;
         }
         else {
             // if targeting an asset input then ensure we do not get conflicting assets
@@ -420,8 +419,7 @@ void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size
                 // at this point we shouldn't get an asset mismatch because groups should have targeted asset or none (0)
                 assert(effective_value_asset.nAsset == output.effective_value_asset.nAsset);
             }
-            m_value_asset += output.effective_value_asset.nValue;
-            effective_value_asset.nValue = m_value_asset;
+            effective_value_asset.nValue += output.effective_value_asset.nValue;
         }
     }
     m_depth = std::min(m_depth, depth);
@@ -441,8 +439,7 @@ std::vector<CInputCoin>::iterator OutputGroup::Discard(const CInputCoin& output)
     m_value -= output.txout.nValue;
     effective_value -= output.effective_value;
     // SYSCOIN
-    m_value_asset -= output.effective_value_asset.nValue;
-    effective_value_asset.nValue = m_value_asset;
+    effective_value_asset.nValue -= output.effective_value_asset.nValue;
     fee -= output.m_fee;
     long_term_fee -= output.m_long_term_fee;
     return m_outputs.erase(it);

@@ -87,7 +87,6 @@ struct OutputGroup
     CAmount long_term_fee{0};
     CFeeRate m_long_term_feerate{0};
     // SYSCOIN
-    CAmount m_value_asset{0};
     CAssetCoinInfo effective_value_asset;
     OutputGroup() {}
     OutputGroup(const CFeeRate& effective_feerate, const CFeeRate& long_term_feerate) :

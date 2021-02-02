@@ -4797,6 +4797,7 @@ void CWallet::GroupOutputs(const std::vector<COutput>& outputs, bool separate_co
         }
         // SYSCOIN
         // return groups_out;
+        return;
     }
 
     // We want to combine COutputs that have the same scriptPubKey into single OutputGroups
