@@ -54,7 +54,7 @@ bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, c
 		}
 		const UniValue &assetObj = find_value(oOptions, "asset_guid");
 		if (assetObj.isNum()) {
-			nBaseAsset = assetObj.get_uint();
+			nBaseAsset = assetObj.get_uint64();
 		}
 	}
 	std::unique_ptr<CDBIterator> pcursor(passetdb.NewIterator());
@@ -432,6 +432,7 @@ static RPCHelpMan assetinfo()
                 {RPCResult::Type::STR_AMOUNT, "max_supply", "The maximum supply of this asset"},
                 {RPCResult::Type::NUM, "updatecapability_flags", "The capability flag in decimal"},
                 {RPCResult::Type::NUM, "precision", "The precision of this asset"},
+                {RPCResult::Type::NUM, "NFTID", "The NFT ID of the asset if applicable"},
             }},
         RPCExamples{
             HelpExampleCli("assetinfo", "\"assetguid\"")
@@ -441,13 +442,17 @@ static RPCHelpMan assetinfo()
 {
     const UniValue &params = request.params;
     UniValue oAsset(UniValue::VOBJ);
-    const uint32_t &nBaseAsset = GetBaseAssetID(params[0].get_uint64());
+    const uint64_t &nAsset = params[0].get_uint64();
+    const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
     CAsset txPos;
     if (!GetAsset(nBaseAsset, txPos))
         throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to read from asset DB");
     
     if(!BuildAssetJson(txPos, nBaseAsset, oAsset))
         oAsset.clear();
+    if(nAsset != nBaseAsset) {
+        oAsset.__pushKV("NFTID", GetNFTID(nAsset));
+    }
     return oAsset;
 },
     };
