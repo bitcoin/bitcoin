@@ -229,6 +229,11 @@ public:
     XOnlyPubKey(const XOnlyPubKey&) = default;
     XOnlyPubKey& operator=(const XOnlyPubKey&) = default;
 
+    /** Determine if this pubkey is fully valid. This is true for approximately 50% of all
+     *  possible 32-byte arrays. If false, VerifySchnorr and CreatePayToContract will always
+     *  fail. */
+    bool IsFullyValid() const;
+
     /** Construct an x-only pubkey from exactly 32 bytes. */
     explicit XOnlyPubKey(Span<const unsigned char> bytes);
 

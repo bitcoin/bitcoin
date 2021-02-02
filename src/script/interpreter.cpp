@@ -1484,8 +1484,8 @@ template PrecomputedTransactionData::PrecomputedTransactionData(const CTransacti
 template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTransaction& txTo);
 
 static const CHashWriter HASHER_TAPSIGHASH = TaggedHash("TapSighash");
-static const CHashWriter HASHER_TAPLEAF = TaggedHash("TapLeaf");
-static const CHashWriter HASHER_TAPBRANCH = TaggedHash("TapBranch");
+const CHashWriter HASHER_TAPLEAF = TaggedHash("TapLeaf");
+const CHashWriter HASHER_TAPBRANCH = TaggedHash("TapBranch");
 
 static bool HandleMissingData(MissingDataBehavior mdb)
 {

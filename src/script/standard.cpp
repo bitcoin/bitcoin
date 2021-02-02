@@ -6,8 +6,11 @@
 #include <script/standard.h>
 
 #include <crypto/sha256.h>
+#include <hash.h>
 #include <pubkey.h>
+#include <script/interpreter.h>
 #include <script/script.h>
+#include <util/strencodings.h>
 
 #include <string>
 
@@ -370,3 +373,99 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
 bool IsValidDestination(const CTxDestination& dest) {
     return dest.index() != 0;
 }
+
+/*static*/ TaprootBuilder::NodeInfo TaprootBuilder::Combine(NodeInfo&& a, NodeInfo&& b)
+{
+    NodeInfo ret;
+    /* Lexicographically sort a and b's hash, and compute parent hash. */
+    if (a.hash < b.hash) {
+        ret.hash = (CHashWriter(HASHER_TAPBRANCH) << a.hash << b.hash).GetSHA256();
+    } else {
+        ret.hash = (CHashWriter(HASHER_TAPBRANCH) << b.hash << a.hash).GetSHA256();
+    }
+    return ret;
+}
+
+void TaprootBuilder::Insert(TaprootBuilder::NodeInfo&& node, int depth)
+{
+    assert(depth >= 0 && (size_t)depth <= TAPROOT_CONTROL_MAX_NODE_COUNT);
+    /* We cannot insert a leaf at a lower depth while a deeper branch is unfinished. Doing
+     * so would mean the Add() invocations do not correspond to a DFS traversal of a
+     * binary tree. */
+    if ((size_t)depth + 1 < m_branch.size()) {
+        m_valid = false;
+        return;
+    }
+    /* As long as an entry in the branch exists at the specified depth, combine it and propagate up.
+     * The 'node' variable is overwritten here with the newly combined node. */
+    while (m_valid && m_branch.size() > (size_t)depth && m_branch[depth].has_value()) {
+        node = Combine(std::move(node), std::move(*m_branch[depth]));
+        m_branch.pop_back();
+        if (depth == 0) m_valid = false; /* Can't propagate further up than the root */
+        --depth;
+    }
+    if (m_valid) {
+        /* Make sure the branch is big enough to place the new node. */
+        if (m_branch.size() <= (size_t)depth) m_branch.resize((size_t)depth + 1);
+        assert(!m_branch[depth].has_value());
+        m_branch[depth] = std::move(node);
+    }
+}
+
+/*static*/ bool TaprootBuilder::ValidDepths(const std::vector<int>& depths)
+{
+    std::vector<bool> branch;
+    for (int depth : depths) {
+        // This inner loop corresponds to effectively the same logic on branch
+        // as what Insert() performs on the m_branch variable. Instead of
+        // storing a NodeInfo object, just remember whether or not there is one
+        // at that depth.
+        if (depth < 0 || (size_t)depth > TAPROOT_CONTROL_MAX_NODE_COUNT) return false;
+        if ((size_t)depth + 1 < branch.size()) return false;
+        while (branch.size() > (size_t)depth && branch[depth]) {
+            branch.pop_back();
+            if (depth == 0) return false;
+            --depth;
+        }
+        if (branch.size() <= (size_t)depth) branch.resize((size_t)depth + 1);
+        assert(!branch[depth]);
+        branch[depth] = true;
+    }
+    // And this check corresponds to the IsComplete() check on m_branch.
+    return branch.size() == 0 || (branch.size() == 1 && branch[0]);
+}
+
+TaprootBuilder& TaprootBuilder::Add(int depth, const CScript& script, int leaf_version)
+{
+    assert((leaf_version & ~TAPROOT_LEAF_MASK) == 0);
+    if (!IsValid()) return *this;
+    /* Construct NodeInfo object with leaf hash. */
+    NodeInfo node;
+    node.hash = (CHashWriter{HASHER_TAPLEAF} << uint8_t(leaf_version) << script).GetSHA256();
+    /* Insert into the branch. */
+    Insert(std::move(node), depth);
+    return *this;
+}
+
+TaprootBuilder& TaprootBuilder::AddOmitted(int depth, const uint256& hash)
+{
+    if (!IsValid()) return *this;
+    /* Construct NodeInfo object with the hash directly, and insert it into the branch. */
+    NodeInfo node;
+    node.hash = hash;
+    Insert(std::move(node), depth);
+    return *this;
+}
+
+TaprootBuilder& TaprootBuilder::Finalize(const XOnlyPubKey& internal_key)
+{
+    /* Can only call this function when IsComplete() is true. */
+    assert(IsComplete());
+    m_internal_key = internal_key;
+    auto ret = m_internal_key.CreateTapTweak(m_branch.size() == 0 ? nullptr : &m_branch[0]->hash);
+    assert(ret.has_value());
+    std::tie(m_output_key, std::ignore) = *ret;
+    return *this;
+}
+
+WitnessV1Taproot TaprootBuilder::GetOutput() { return WitnessV1Taproot{m_output_key}; }
