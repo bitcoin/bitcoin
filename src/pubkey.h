@@ -236,7 +236,20 @@ public:
      * sigbytes must be exactly 64 bytes.
      */
     bool VerifySchnorr(const uint256& msg, Span<const unsigned char> sigbytes) const;
-    bool CheckPayToContract(const XOnlyPubKey& base, const uint256& hash, bool parity) const;
+
+    /** Compute the Taproot tweak as specified in BIP341, with *this as internal
+     * key:
+     *  - if merkle_root == nullptr: H_TapTweak(xonly_pubkey)
+     *  - otherwise:                 H_TapTweak(xonly_pubkey || *merkle_root)
+     *
+     * Note that the behavior of this function with merkle_root != nullptr is
+     * consensus critical.
+     */
+    uint256 ComputeTapTweakHash(const uint256* merkle_root) const;
+
+    /** Verify that this is a Taproot tweaked output point, against a specified internal key,
+     *  Merkle root, and parity. */
+    bool CheckTapTweak(const XOnlyPubKey& internal, const uint256& merkle_root, bool parity) const;
 
     const unsigned char& operator[](int pos) const { return *(m_keydata.begin() + pos); }
     const unsigned char* data() const { return m_keydata.begin(); }
