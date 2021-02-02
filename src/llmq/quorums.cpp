@@ -83,7 +83,7 @@ CBLSPublicKey CQuorum::GetPubKeyShare(size_t memberIdx) const
     return blsCache.BuildPubKeyShare(m->proTxHash, quorumVvec, CBLSId::FromHash(m->proTxHash));
 }
 
-CBLSSecretKey CQuorum::GetSkShare() const
+const CBLSSecretKey &CQuorum::GetSkShare() const
 {
     return skShare;
 }
@@ -245,19 +245,18 @@ bool CQuorumManager::BuildQuorumContributions(const CFinalCommitment& fqc, std::
         return false;
     }
 
-    BLSVerificationVectorPtr quorumVvec;
-    CBLSSecretKey skShare;
 
     cxxtimer::Timer t2(true);
-    quorumVvec = blsWorker.BuildQuorumVerificationVector(vvecs);
-    if (quorumVvec == nullptr) {
+    quorum->quorumVvec = blsWorker.BuildQuorumVerificationVector(vvecs);
+    if (quorum->quorumVvec == nullptr) {
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- failed to build quorumVvec\n", __func__);
         // without the quorum vvec, there can't be a skShare, so we fail here. Failure is not fatal here, as it still
         // allows to use the quorum as a non-member (verification through the quorum pub key)
         return false;
     }
-    skShare = blsWorker.AggregateSecretKeys(skContributions);
-    if (!skShare.IsValid()) {
+	quorum->skShare = blsWorker.AggregateSecretKeys(skContributions);
+    if (!quorum->skShare.IsValid()) {
+        quorum->skShare.Reset();
         LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- failed to build skShare\n", __func__);
         // We don't bail out here as this is not a fatal error and still allows us to recover public key shares (as we
         // have a valid quorum vvec at this point)
@@ -265,9 +264,6 @@ bool CQuorumManager::BuildQuorumContributions(const CFinalCommitment& fqc, std::
     t2.stop();
 
     LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- built quorum vvec and skShare. time=%d\n", __func__, t2.count());
-
-    quorum->quorumVvec = quorumVvec;
-    quorum->skShare = skShare;
 
     return true;
 }
