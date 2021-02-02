@@ -1,0 +1,21 @@
+{
+    "postCreateCommand": "./autogen.sh && ./configure --with-incompatible-bdb && make -C src/ bench/data/block413567.raw.h config/bitcoin-config.h test/data/asmap.raw.h",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "runArgs": [
+        "--cap-add=SYS_PTRACE",
+        "--security-opt",
+        "seccomp=unconfined"
+    ],
+    "remoteUser": "vscode",
+    "settings": {
+        "terminal.integrated.shell.linux": "/bin/bash",
+        "terminal.integrated.shellArgs.linux": ["-l"]
+    },
+    "name": "",
+    "extensions": [
+        "ms-python.python",
+        "ms-vscode.cpptools"
+    ]
+}

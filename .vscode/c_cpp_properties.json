@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "defines": [
+                "HAVE_CONFIG_H"
+            ],
+            "includePath": [
+                "${workspaceFolder}/src/**",
+                "/usr/include/"
+            ],
+            "intelliSenseMode": "gcc-x64",
+            "name": "",
+            "compilerPath": "/usr/bin/gcc",
+            "cppStandard": "gnu++11",
+            "cStandard": "gnu11"
+        }
+    ],
+    "version": 4
+}
