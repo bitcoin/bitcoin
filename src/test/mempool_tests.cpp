@@ -602,7 +602,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTests)
     // [tx1]
     //
     CTransactionRef tx1 = make_tx(MK_OUTPUTS(10 * COIN));
-    pool.addUnchecked(tx1->GetHash(), entry.Fee(10000LL).FromTx(tx1));
+    pool.addUnchecked(tx1->GetHash(), entry.Fee(10000LL).FromTx(*tx1));
 
     // Ancestors / descendants should be 1 / 1 (itself / itself)
     pool.GetTransactionAncestry(tx1->GetHash(), ancestors, descendants);
@@ -614,7 +614,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTests)
     // [tx1].0 <- [tx2]
     //
     CTransactionRef tx2 = make_tx(MK_OUTPUTS(495 * CENT, 5 * COIN), MK_INPUTS(tx1));
-    pool.addUnchecked(tx2->GetHash(), entry.Fee(10000LL).FromTx(tx2));
+    pool.addUnchecked(tx2->GetHash(), entry.Fee(10000LL).FromTx(*tx2));
 
     // Ancestors / descendants should be:
     // transaction  ancestors   descendants
@@ -633,7 +633,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTests)
     // [tx1].0 <- [tx2].0 <- [tx3]
     //
     CTransactionRef tx3 = make_tx(MK_OUTPUTS(290 * CENT, 200 * CENT), MK_INPUTS(tx2));
-    pool.addUnchecked(tx3->GetHash(), entry.Fee(10000LL).FromTx(tx3));
+    pool.addUnchecked(tx3->GetHash(), entry.Fee(10000LL).FromTx(*tx3));
 
     // Ancestors / descendants should be:
     // transaction  ancestors   descendants
@@ -658,7 +658,7 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTests)
     //              \---1 <- [tx4]
     //
     CTransactionRef tx4 = make_tx(MK_OUTPUTS(290 * CENT, 250 * CENT), MK_INPUTS(tx2), MK_INPUT_IDX(1));
-    pool.addUnchecked(tx4->GetHash(), entry.Fee(10000LL).FromTx(tx4));
+    pool.addUnchecked(tx4->GetHash(), entry.Fee(10000LL).FromTx(*tx4));
 
     // Ancestors / descendants should be:
     // transaction  ancestors   descendants
@@ -695,13 +695,13 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTests)
         CTransactionRef& tyi = *ty[i];
         tyi = make_tx(MK_OUTPUTS(v), i > 0 ? MK_INPUTS(*ty[i-1]) : std::vector<CTransactionRef>());
         v -= 50 * CENT;
-        pool.addUnchecked(tyi->GetHash(), entry.Fee(10000LL).FromTx(tyi));
+        pool.addUnchecked(tyi->GetHash(), entry.Fee(10000LL).FromTx(*tyi));
         pool.GetTransactionAncestry(tyi->GetHash(), ancestors, descendants);
         BOOST_CHECK_EQUAL(ancestors, i+1);
         BOOST_CHECK_EQUAL(descendants, i+1);
     }
     CTransactionRef ty6 = make_tx(MK_OUTPUTS(5 * COIN), MK_INPUTS(tx3, ty5));
-    pool.addUnchecked(ty6->GetHash(), entry.Fee(10000LL).FromTx(ty6));
+    pool.addUnchecked(ty6->GetHash(), entry.Fee(10000LL).FromTx(*ty6));
 
     // Ancestors / descendants should be:
     // transaction  ancestors           descendants
