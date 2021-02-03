@@ -4,11 +4,11 @@ Sample init scripts and service configuration for bitcoind
 Sample scripts and configuration files for systemd, Upstart and OpenRC
 can be found in the contrib/init folder.
 
-    contrib/init/bitcoind.service:    systemd service unit configuration
-    contrib/init/bitcoind.openrc:     OpenRC compatible SysV style init script
-    contrib/init/bitcoind.openrcconf: OpenRC conf.d file
-    contrib/init/bitcoind.conf:       Upstart service configuration file
-    contrib/init/bitcoind.init:       CentOS compatible SysV style init script
+	contrib/init/bitcoind.service:    systemd service unit configuration
+	contrib/init/bitcoind.openrc:     OpenRC compatible SysV style init script
+	contrib/init/bitcoind.openrcconf: OpenRC conf.d file
+	contrib/init/bitcoind.conf:       Upstart service configuration file
+	contrib/init/bitcoind.init:       CentOS compatible SysV style init script
 
 Service User
 ---------------------------------
@@ -53,11 +53,12 @@ Paths
 
 All three configurations assume several paths that might need to be adjusted.
 
-Binary:              `/usr/bin/bitcoind`
-Configuration file:  `/etc/bitcoin/bitcoin.conf`
-Data directory:      `/var/lib/bitcoind`
-PID file:            `/var/run/bitcoind/bitcoind.pid` (OpenRC and Upstart) or `/run/bitcoind/bitcoind.pid` (systemd)
-Lock file:           `/var/lock/subsys/bitcoind` (CentOS)
+	Binary:              /usr/bin/bitcoind
+	Configuration file:  /etc/bitcoin/bitcoin.conf
+	Data directory:      /var/lib/bitcoind
+	PID file:            /var/run/bitcoind/bitcoind.pid (OpenRC and Upstart) or
+                         /run/bitcoind/bitcoind.pid (systemd)
+	Lock file:           /var/lock/subsys/bitcoind (CentOS)
 
 The PID directory (if applicable) and data directory should both be owned by the
 bitcoin user and group. It is advised for security reasons to make the
@@ -83,10 +84,10 @@ OpenRC).
 
 ### macOS
 
-Binary:              `/usr/local/bin/bitcoind`
-Configuration file:  `~/Library/Application Support/Bitcoin/bitcoin.conf`
-Data directory:      `~/Library/Application Support/Bitcoin`
-Lock file:           `~/Library/Application Support/Bitcoin/.lock`
+	Binary:              /usr/local/bin/bitcoind
+	Configuration file:  ~/Library/Application Support/Bitcoin/bitcoin.conf
+	Data directory:      ~/Library/Application Support/Bitcoin
+	Lock file:           ~/Library/Application Support/Bitcoin/.lock
 
 Installing Service Configuration
 -----------------------------------
