@@ -34,7 +34,7 @@ def test_load_unload(node, name):
             node.loadwallet(name)
             node.unloadwallet(name)
         except JSONRPCException as e:
-            if e.error['code'] == -4 and 'Wallet already being loading' in e.error['message']:
+            if e.error['code'] == -4 and 'Wallet already loading' in e.error['message']:
                 got_loading_error = True
                 return
 

@@ -235,7 +235,7 @@ std::shared_ptr<CWallet> LoadWallet(interfaces::Chain& chain, const std::string&
 {
     auto result = WITH_LOCK(g_loading_wallet_mutex, return g_loading_wallet_set.insert(name));
     if (!result.second) {
-        error = Untranslated("Wallet already being loading.");
+        error = Untranslated("Wallet already loading.");
         status = DatabaseStatus::FAILED_LOAD;
         return nullptr;
     }
