@@ -39,7 +39,7 @@ class AssetNFTTest(SyscoinTestFramework):
         self.sync_mempools()
         self.nodes[1].generate(3)
         self.sync_blocks()
-        self.nodes[0].assetsend(asset, self.nodes[1].getnewaddress(), 1.1, nftID)
+        self.nodes[0].assetsend(asset, self.nodes[1].getnewaddress(), 1.1, 0, nftID)
         self.nodes[0].generate(3)
         self.sync_blocks()
         out = self.nodes[1].listunspent(query_options={'assetGuid': nftGuid, 'minimumAmountAsset': 1.1})
@@ -51,7 +51,7 @@ class AssetNFTTest(SyscoinTestFramework):
         self.sync_mempools()
         self.nodes[1].generate(3)
         self.sync_blocks()
-        assert_raises_rpc_error(-1, 'JSON integer out of range', self.nodes[0].assetsend, asset, self.nodes[1].getnewaddress(), 1, nftID)
+        assert_raises_rpc_error(-1, 'JSON integer out of range', self.nodes[0].assetsend, asset, self.nodes[1].getnewaddress(), 1, 0, nftID)
 
     def basic_multiassetnft(self):
         asset = self.nodes[0].assetnew('1', 'NFT', 'asset nft description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
@@ -115,7 +115,7 @@ class AssetNFTTest(SyscoinTestFramework):
         self.sync_mempools()
         self.nodes[1].generate(3)
         self.sync_blocks()
-        assert_raises_rpc_error(-26, 'asset-nft-output-zeroval', self.nodes[0].assetsend, asset, self.nodes[1].getnewaddress(), 0, nftID)
+        assert_raises_rpc_error(-26, 'asset-nft-output-zeroval', self.nodes[0].assetsend, asset, self.nodes[1].getnewaddress(), 0, 0, nftID)
 
 if __name__ == '__main__':
     AssetNFTTest().main()
