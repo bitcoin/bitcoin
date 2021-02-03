@@ -73,6 +73,7 @@ from test_framework.messages import (
     msg_getmnlistd,
     msg_mnlistdiff,
     msg_clsig,
+    msg_qsendrecsigs,
 )
 from test_framework.util import (
     MAX_NODES,
@@ -121,7 +122,7 @@ MESSAGEMAP = {
     b"govsync": None,
     b"mnlistdiff": msg_mnlistdiff,
     b"qfcommit": None,
-    b"qsendrecsigs": None,
+    b"qsendrecsigs": msg_qsendrecsigs,
     b"spork": None,
 }
 
@@ -420,6 +421,7 @@ class P2PInterface(P2PConnection):
     # SYSCOIN
     def on_mnlistdiff(self, message): pass
     def on_clsig(self, message): pass
+    def on_qsendrecsigs(self, message): pass
     def on_inv(self, message):
         want = msg_getdata()
         for i in message.inv:

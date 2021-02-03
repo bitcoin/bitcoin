@@ -2987,7 +2987,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // Otherwise the peer would only announce/send messages resulting from QRECSIG,
             // SPV nodes should not send this message
             // as they are usually only interested in the higher level messages
-            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSENDRECSIGS, true));
+            m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSENDRECSIGS));
         }
 
         if (gArgs.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS) && !pfrom.m_masternode_connection) {
@@ -3150,9 +3150,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     }
     // SYSCOIN
     if (msg_type == NetMsgType::QSENDRECSIGS) {
-        bool b;
-        vRecv >> b;
-        pfrom.fSendRecSigs = b;
+        pfrom.fSendRecSigs = true;
         return;
     }
     if (msg_type == NetMsgType::INV) {

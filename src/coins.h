@@ -24,7 +24,7 @@
  *
  * Serialized format:
  * - VARINT((coinbase ? 1 : 0) | (height << 1))
- * - the non-spent CTxOut (via TxOutCompression)
+ * - the non-spent CTxOutCoin (via TxOutCoinCompression)
  */
 class Coin
 {

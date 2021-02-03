@@ -1986,6 +1986,22 @@ class msg_mnlistdiff():
     def __repr__(self):
         return "msg_mnlistdiff(baseBlockHash=%064x, blockHash=%064x)" % (self.baseBlockHash, self.blockHash)
 
+class msg_qsendrecsigs():
+    __slots__ = ()
+    msgtype = b"qsendrecsigs"
+
+    def __init__(self):
+        pass
+
+    def deserialize(self, f):
+        pass
+
+    def serialize(self):
+        return b""
+
+    def __repr__(self):
+        return "msg_qsendrecsigs()"
+
 class msg_clsig():
     msgtype = b"clsig"
 
