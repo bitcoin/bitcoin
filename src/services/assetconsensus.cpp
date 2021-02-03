@@ -942,7 +942,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             // even though new assets must set this flag, it may be unset by disconnectassetsend
             storedAssetRef.nUpdateMask |= ASSET_UPDATE_SUPPLY;
             // this can go negative, inputing an asset without change and not issuing the equivalent will effectively "burn" out of existence but also reduce the supply so it can issue more in the future
-            // for this you can issue an assetSend inputing assets from user wishing to burn, aswell as zero val input of asset from owner and no output
+            // for this you can issue an assetSend inputing assets from user wishing to burn, as well as zero val input of asset from owner and no output
             const CAmount &nTotal = outAmount - inAmount;
             storedAssetRef.nTotalSupply += nTotal;
             if (nTotal < -MAX_ASSET || nTotal > MAX_ASSET || !MoneyRangeAsset(storedAssetRef.nTotalSupply)) {

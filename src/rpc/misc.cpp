@@ -324,7 +324,7 @@ static RPCHelpMan mnauth()
                 {"publicKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "publicKey", "The authenticated public key as hex string"},
             },
             RPCResult{
-                RPCResult::Type::BOOL, "", "If MNAUTH was overrided or not."
+                RPCResult::Type::BOOL, "", "If MNAUTH was overridden or not."
             },
             RPCExamples{
                 "Override MNAUTH processing\n" +

@@ -37,7 +37,7 @@ class AssetTest(SyscoinTestFramework):
         assert_equal(assetInfo['asset_guid'], asset)
         # ensure only 1 zero-val output allowed
         assert_raises_rpc_error(-26, 'bad-txns-asset-multiple-zero-out', self.nodes[0].assetsend, asset, self.nodes[0].getnewaddress(), 0)
-    
+
     #  gas can be extracted using assetsend/assetallocationsend as needed
     def asset_gas_asset(self):
         self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 151.5)
@@ -99,7 +99,7 @@ class AssetTest(SyscoinTestFramework):
         assert_equal(len(out), 1)
         assert_equal(out[0]['amount'], decimal.Decimal('0.4'))
         assert('asset_guid' not in out[0])
- 
+
     def asset_issue_check_supply(self):
         asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
         self.sync_mempools()

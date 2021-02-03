@@ -3564,7 +3564,7 @@ void EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex, const llmq
 CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, enum BlockStatus nStatus)
 {
     // SYSCOIN
-    assert(!(nStatus & BLOCK_FAILED_MASK)); // no failed blocks alowed
+    assert(!(nStatus & BLOCK_FAILED_MASK)); // no failed blocks allowed
     AssertLockHeld(cs_main);
 
     // Check for duplicate
