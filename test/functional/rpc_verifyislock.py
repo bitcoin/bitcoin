@@ -5,7 +5,7 @@
 
 from test_framework.messages import CTransaction, FromHex, hash256, ser_compact_size, ser_string
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_raises_rpc_error
+from test_framework.util import assert_raises_rpc_error, wait_until
 
 '''
 rpc_verifyislock.py
@@ -38,7 +38,7 @@ class RPCVerifyISLockTest(DashTestFramework):
             request_id_buf += txin.prevout.serialize()
         request_id = hash256(request_id_buf)[::-1].hex()
 
-        assert(node.quorum("hasrecsig", 100, request_id, txid))
+        wait_until(lambda: node.quorum("hasrecsig", 100, request_id, txid))
 
         rec_sig = node.quorum("getrecsig", 100, request_id, txid)['sig']
         assert(node.verifyislock(request_id, txid, rec_sig))
