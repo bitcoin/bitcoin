@@ -1183,8 +1183,13 @@ class DashTestFramework(SyscoinTestFramework):
             self.wait_for_chainlocked_block(node, block_hash, timeout=timeout)
 
     def wait_for_best_chainlock(self, node, block_hash, timeout=15):
-        wait_until_helper(lambda: node.getbestchainlock()["blockhash"] == block_hash, timeout=timeout)
-
+        def check_cl():
+            try:
+                self.bump_mocktime(1)
+                return node.getbestchainlock()["blockhash"] == block_hash
+            except:
+                return False
+        wait_until_helper(check_cl, timeout=timeout, sleep=0.5)
 
     def wait_for_sporks_same(self, timeout=30):
         def check_sporks_same():
@@ -1421,6 +1426,20 @@ class DashTestFramework(SyscoinTestFramework):
         self.log.info("New quorum: height=%d, quorumHash=%s, minedBlock=%s" % (quorum_info["height"], new_quorum, quorum_info["minedBlock"]))
 
         return new_quorum
+
+    def get_recovered_sig(self, rec_sig_id, rec_sig_msg_hash, llmq_type=100, node=None):
+        node = self.nodes[0] if node is None else node
+        rec_sig = None
+        time_start = time.time()
+        while time.time() - time_start < 10:
+            try:
+                self.bump_mocktime(5, nodes=self.nodes)
+                rec_sig = node.quorum_getrecsig(llmq_type, rec_sig_id, rec_sig_msg_hash)
+                break
+            except JSONRPCException:
+                time.sleep(0.1)
+        assert(rec_sig is not None)
+        return rec_sig
 
     def get_quorum_masternodes(self, q):
         qi = self.nodes[0].quorum_info(100, q)

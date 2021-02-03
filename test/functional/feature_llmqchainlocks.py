@@ -4,15 +4,39 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import time
-
+import struct
 from test_framework.test_framework import DashTestFramework
-
+from test_framework.messages import CInv, hash256, msg_clsig, msg_inv, ser_string, uint256_from_str
+from test_framework.util import hex_str_to_bytes
+from test_framework.p2p import (
+  P2PInterface,
+)
+from test_framework.blocktools import (
+  create_block,
+  create_coinbase,
+)
 '''
 feature_llmqchainlocks.py
 
 Checks LLMQs based ChainLocks
 
 '''
+class TestP2PConn(P2PInterface):
+    def __init__(self):
+        super().__init__()
+        self.clsigs = {}
+
+    def send_clsig(self, clsig):
+        clhash = uint256_from_str(hash256(clsig.serialize()))
+        self.clsigs[clhash] = clsig
+
+        inv = msg_inv([CInv(20, clhash)])
+        self.send_message(inv)
+
+    def on_getdata(self, message):
+        for inv in message.inv:
+            if inv.hash in self.clsigs:
+                self.send_message(self.clsigs[inv.hash])
 
 class LLMQChainLocksTest(DashTestFramework):
     def set_test_params(self):
@@ -151,6 +175,51 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Re-enable network on first node and wait for chainlock")
         self.reconnect_isolated_node(self.nodes[0], 1)
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[0].getbestblockhash(), timeout=30)
+        
+        self.log.info("Send fake future clsigs and see if this breaks ChainLocks")
+        for i in range(len(self.nodes)):
+            if i != 0:
+                self.connect_nodes(i, 0)
+        SIGN_HEIGHT_OFFSET = 20
+        p2p_node = self.nodes[0].add_p2p_connection(TestP2PConn())
+        p2p_node.wait_for_verack()
+        self.log.info("Should accept fake clsig but won't sign the same height twice (normally)")
+        (fake_clsig1, fake_block_hash1) = self.create_fake_clsig(1)
+        p2p_node.send_clsig(fake_clsig1)
+        for node in self.nodes:
+            self.wait_for_best_chainlock(node, fake_block_hash1, timeout=15)
+        tip = self.nodes[0].generate(1)[-1]
+        for node in self.nodes:
+            self.wait_for_chainlocked_block(node, tip, expected=False, timeout=15)
+        self.log.info("Shouldn't accept fake clsig for 'tip + SIGN_HEIGHT_OFFSET + 1' block height")
+        (fake_clsig2, fake_block_hash2) = self.create_fake_clsig(SIGN_HEIGHT_OFFSET + 1)
+        p2p_node.send_clsig(fake_clsig2)
+        time.sleep(5)
+        # Note: fake_block_hash1 is a blockhash for the fake_clsig1 we accepted initially, not for the new fake_clsig2
+        assert(self.nodes[0].getbestchainlock()["blockhash"] == fake_block_hash1)
+        self.log.info("Should accept fake clsig for 'tip + SIGN_HEIGHT_OFFSET' but new clsigs should still be formed")
+        (fake_clsig3, fake_block_hash3) = self.create_fake_clsig(SIGN_HEIGHT_OFFSET)
+        p2p_node.send_clsig(fake_clsig3)
+        self.bump_mocktime(7, nodes=self.nodes)
+        for node in self.nodes:
+            self.wait_for_best_chainlock(node, fake_block_hash3, timeout=15)
+        tip = self.nodes[0].generate(1)[-1]
+        self.bump_mocktime(7, nodes=self.nodes)
+        self.wait_for_chainlocked_block_all_nodes(tip, timeout=15)
+        self.nodes[0].disconnect_p2ps()
+
+    def create_fake_clsig(self, height_offset):
+        # create a fake block height_offset blocks ahead of the tip
+        height = self.nodes[0].getblockcount() + height_offset
+        fake_block = create_block(0xff, create_coinbase(height))
+        # create a fake clsig for that block
+        request_id_buf = ser_string(b"clsig") + struct.pack("<I", height)
+        request_id = hash256(request_id_buf)[::-1].hex()
+        for mn in self.mninfo:
+            mn.node.quorum_sign(100, request_id, fake_block.hash)
+        recSig = self.get_recovered_sig(request_id, fake_block.hash)
+        fake_clsig = msg_clsig(height, fake_block.sha256, hex_str_to_bytes(recSig['sig']))
+        return (fake_clsig, fake_block.hash)
 
     def create_chained_txs(self, node, amount):
         txid = node.sendtoaddress(node.getnewaddress(), amount)
