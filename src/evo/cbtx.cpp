@@ -9,9 +9,9 @@
 #include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
 
+#include <chain.h>
 #include <chainparams.h>
 #include <consensus/merkle.h>
-#include <validation.h>
 
 bool CheckCbTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
 {
