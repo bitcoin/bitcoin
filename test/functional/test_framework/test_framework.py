@@ -1367,7 +1367,7 @@ class DashTestFramework(SyscoinTestFramework):
 
         self.log.info("Waiting final commitment")
         self.wait_for_quorum_commitment(q, nodes, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done final commitment"))
-        
+
         self.log.info("Mining final commitment")
         self.bump_mocktime(1, nodes=nodes)
         self.nodes[0].getblocktemplate({"rules": ["segwit"]}) # this calls CreateNewBlock
