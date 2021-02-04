@@ -9,7 +9,7 @@ Note
 Always use absolute paths to configure and compile Bitcoin Core and the dependencies.
 For example, when specifying the path of the dependency:
 
-	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
+    ../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
 
 Here BDB_PREFIX must be an absolute path - it is defined using $(pwd) which ensures
 the usage of the absolute path.
@@ -166,9 +166,9 @@ miniupnpc
 https://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
 turned off by default.  See the configure options for UPnP behavior desired:
 
-	--without-miniupnpc      No UPnP support, miniupnp not required
-	--disable-upnp-default   (the default) UPnP support turned off by default at runtime
-	--enable-upnp-default    UPnP support turned on by default at runtime
+    --without-miniupnpc      No UPnP support, miniupnp not required
+    --disable-upnp-default   (the default) UPnP support turned off by default at runtime
+    --enable-upnp-default    UPnP support turned on by default at runtime
 
 libnatpmp
 ---------
@@ -177,9 +177,9 @@ libnatpmp
 from [here](https://miniupnp.tuxfamily.org/files/). NAT-PMP support is compiled in and
 turned off by default. See the configure options for NAT-PMP behavior desired:
 
-	--without-natpmp          No NAT-PMP support, libnatpmp not required
-	--disable-natpmp-default  (the default) NAT-PMP support turned off by default at runtime
-	--enable-natpmp-default   NAT-PMP support turned on by default at runtime
+    --without-natpmp          No NAT-PMP support, libnatpmp not required
+    --disable-natpmp-default  (the default) NAT-PMP support turned off by default at runtime
+    --enable-natpmp-default   NAT-PMP support turned on by default at runtime
 
 Berkeley DB
 -----------
@@ -199,9 +199,9 @@ Boost
 -----
 If you need to build Boost yourself:
 
-	sudo su
-	./bootstrap.sh
-	./bjam install
+    sudo su
+    ./bootstrap.sh
+    ./bjam install
 
 
 Security
@@ -212,8 +212,8 @@ This can be disabled with:
 
 Hardening Flags:
 
-	./configure --enable-hardening
-	./configure --disable-hardening
+    ./configure --enable-hardening
+    ./configure --disable-hardening
 
 
 Hardening enables the following features:
@@ -228,7 +228,7 @@ Hardening enables the following features:
 
     To test that you have built PIE executable, install scanelf, part of paxutils, and use:
 
-    	scanelf -e ./bitcoin
+        scanelf -e ./bitcoin
 
     The output should contain:
 
@@ -245,8 +245,8 @@ Hardening enables the following features:
     `scanelf -e ./bitcoin`
 
     The output should contain:
-	STK/REL/PTL
-	RW- R-- RW-
+    STK/REL/PTL
+    RW- R-- RW-
 
     The STK RW- means that the stack is readable and writeable but not executable.
 
