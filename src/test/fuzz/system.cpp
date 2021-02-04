@@ -54,7 +54,7 @@ FUZZ_TARGET(system)
                 if (args_manager.GetArgFlags(argument_name) != nullopt) {
                     return;
                 }
-                args_manager.AddArg(argument_name, fuzzed_data_provider.ConsumeRandomLengthString(16), fuzzed_data_provider.ConsumeIntegral<unsigned int>(), options_category);
+                args_manager.AddArg(argument_name, fuzzed_data_provider.ConsumeRandomLengthString(16), fuzzed_data_provider.ConsumeIntegral<unsigned int>() & ~ArgsManager::COMMAND, options_category);
             },
             [&] {
                 // Avoid hitting:
