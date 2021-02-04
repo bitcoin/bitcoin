@@ -474,11 +474,12 @@ public:
     /**
      * Allows modifying the Version Bits regtest parameters.
      */
-    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int startheight, int timeoutheight, int min_activation_height)
+    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int startheight, int timeoutheight, int min_activation_height, bool lockinontimeout)
     {
         consensus.vDeployments[d].startheight = startheight;
         consensus.vDeployments[d].timeoutheight = timeoutheight;
         consensus.vDeployments[d].m_min_activation_height = min_activation_height;
+        consensus.vDeployments[d].lockinontimeout = lockinontimeout;
     }
     void UpdateActivationParametersFromArgs(const ArgsManager& args);
 };
@@ -546,8 +547,12 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
     for (const std::string& strDeployment : args.GetArgs("-vbparams")) {
         std::vector<std::string> vDeploymentParams;
         boost::split(vDeploymentParams, strDeployment, boost::is_any_of(":"));
-        if (vDeploymentParams.size() < 3 || vDeploymentParams.size() > 4) {
-            throw std::runtime_error("Version bits parameters malformed, expecting deployment:@startheight:@timeoutheight[:@min_activation_height]");
+        if (vDeploymentParams.size() == 3 && vDeploymentParams[1].compare(0, 2, "@-") == 0) {
+            // Don't require lockinontimeout for always/never-active special cases
+            vDeploymentParams.emplace_back("0");
+        }
+        if (vDeploymentParams.size() < 4 || vDeploymentParams.size() > 5) {
+            throw std::runtime_error("Version bits parameters malformed, expecting deployment:@startheight:@timeoutheight[:@min_activation_height]:lockinontimeout");
         }
         int32_t startheight = 0, timeoutheight = 0, min_activation_height = 0;
         if (vDeploymentParams[1].empty() || vDeploymentParams[1].front() != '@' || !ParseInt32(vDeploymentParams[1].substr(1), &startheight)) {
@@ -556,8 +561,14 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
         if (vDeploymentParams[2].empty() || vDeploymentParams[2].front() != '@' || !ParseInt32(vDeploymentParams[2].substr(1), &timeoutheight)) {
             throw std::runtime_error(strprintf("Invalid timeoutheight (%s)", vDeploymentParams[2]));
         }
-        if (vDeploymentParams.size() == 4 && (vDeploymentParams[3].front() != '@' || !ParseInt32(vDeploymentParams[3].substr(1), &min_activation_height))) {
+        if (vDeploymentParams.size() == 5 && (vDeploymentParams[3].front() != '@' || !ParseInt32(vDeploymentParams[3].substr(1), &min_activation_height))) {
             throw std::runtime_error(strprintf("Invalid min_activation_height (%s)", vDeploymentParams[3]));
+        }
+        bool lockinontimeout = false;
+        if (vDeploymentParams.back().size() != 1 || (vDeploymentParams.back().front() != '0' && vDeploymentParams.back().front() != '1')) {
+            throw std::runtime_error(strprintf("Invalid lockinontimeout (%s)", vDeploymentParams.back()));
+        } else {
+            lockinontimeout = (vDeploymentParams.back().front() == '1');
         }
         std::string error;
         if (!CheckVBitsHeights(error, consensus, startheight, timeoutheight, min_activation_height)) {
@@ -566,9 +577,9 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
         bool found = false;
         for (int j=0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
             if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].name) {
-                UpdateVersionBitsParameters(Consensus::DeploymentPos(j), startheight, timeoutheight, min_activation_height);
+                UpdateVersionBitsParameters(Consensus::DeploymentPos(j), startheight, timeoutheight, min_activation_height, lockinontimeout);
                 found = true;
-                LogPrintf("Setting version bits activation parameters for %s to startheight=%ld, timeoutheight=%ld, min_activation_height=%ld\n", vDeploymentParams[0], startheight, timeoutheight, min_activation_height);
+                LogPrintf("Setting version bits activation parameters for %s to startheight=%ld, timeoutheight=%ld, min_activation_height=%ld, lockinontimeout=%d\n", vDeploymentParams[0], startheight, timeoutheight, min_activation_height, lockinontimeout);
                 break;
             }
         }

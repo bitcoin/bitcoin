@@ -15,8 +15,8 @@ class Bip8Test(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.extra_args = [
             ['-vbparams=testdummy:@-2:@-2'], # Node 0 has TestDummy inactive
-            ['-vbparams=testdummy:@144:@{}'.format(144 * 3)], # Node 1 has regular activation window
-            ['-vbparams=testdummy:@144:@{}:@{}'.format(144 * 3, 144 * 5)], # Node 2 has minimum activation height
+            ['-vbparams=testdummy:@144:@{}:0'.format(144 * 3)], # Node 1 has regular activation window
+            ['-vbparams=testdummy:@144:@{}:@{}:0'.format(144 * 3, 144 * 5)], # Node 2 has minimum activation height
             ['-vbparams=testdummy:@-2:@-2'], # Node 3 has TestDummy inactive, but will be restarted with different params
         ]
 
@@ -57,6 +57,7 @@ class Bip8Test(BitcoinTestFramework):
 
         if restart:
             # Restart this node and check that the status is what we expect
+            restart.extra_args[0] += ':0'  # LockinOnTimeout
             self.restart_node(restart.node, restart.extra_args)
             info = self.nodes[restart.node].getblockchaininfo()
             assert_equal(info["blocks"], height)
@@ -78,18 +79,18 @@ class Bip8Test(BitcoinTestFramework):
         self.log.info("Checking -vbparams")
         self.stop_node(3)
         self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@-2:@1"], expected_msg="Error: When one of startheight or timeoutheight is -2, both must be -2")
-        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@1:@-2"], expected_msg="Error: When one of startheight or timeoutheight is -2, both must be -2")
-        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@1:@1"], expected_msg="Error: Invalid startheight (1), must be a multiple of 144")
-        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@144:@1"], expected_msg="Error: Invalid timeoutheight (1), must be a multiple of 144")
-        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@144:@144:@-1"], expected_msg="Error: Invalid minimum activation height (-1), cannot be negative")
-        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@144:@144:@1"], expected_msg="Error: Invalid minimum activation height (1), must be a multiple of 144")
-        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@288:@144"], expected_msg="Error: Invalid timeoutheight (144), must be at least two periods greater than the startheight (288)")
+        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@1:@-2:0"], expected_msg="Error: When one of startheight or timeoutheight is -2, both must be -2")
+        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@1:@1:0"], expected_msg="Error: Invalid startheight (1), must be a multiple of 144")
+        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@144:@1:0"], expected_msg="Error: Invalid timeoutheight (1), must be a multiple of 144")
+        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@144:@144:@-1:0"], expected_msg="Error: Invalid minimum activation height (-1), cannot be negative")
+        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@144:@144:@1:0"], expected_msg="Error: Invalid minimum activation height (1), must be a multiple of 144")
+        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@288:@144:0"], expected_msg="Error: Invalid timeoutheight (144), must be at least two periods greater than the startheight (288)")
         self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@-3:@144"], expected_msg="Error: Invalid startheight (-3), cannot be negative (except for never or always active special cases)")
-        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@144:@-1"], expected_msg="Error: Invalid timeoutheight (-1), cannot be negative (except for never or always active special cases)")
-        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@{}:@144".format(0x7fffffff + 1)], expected_msg="Error: Invalid startheight (@{})".format(0x7fffffff + 1))
-        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@144:@{}".format(0x7fffffff + 1)], expected_msg="Error: Invalid timeoutheight (@{})".format(0x7fffffff + 1))
-        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@{}:@144".format(-(0x7fffffff + 2))], expected_msg="Error: Invalid startheight (@{})".format(-(0x7fffffff + 2)))
-        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@144:@{}".format(-(0x7fffffff + 2))], expected_msg="Error: Invalid timeoutheight (@{})".format(-(0x7fffffff + 2)))
+        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@144:@-1:0"], expected_msg="Error: Invalid timeoutheight (-1), cannot be negative (except for never or always active special cases)")
+        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@{}:@144:0".format(0x7fffffff + 1)], expected_msg="Error: Invalid startheight (@{})".format(0x7fffffff + 1))
+        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@144:@{}:0".format(0x7fffffff + 1)], expected_msg="Error: Invalid timeoutheight (@{})".format(0x7fffffff + 1))
+        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@{}:@144:0".format(-(0x7fffffff + 2))], expected_msg="Error: Invalid startheight (@{})".format(-(0x7fffffff + 2)))
+        self.nodes[3].assert_start_raises_init_error(extra_args=["-vbparams=testdummy:@144:@{}:0".format(-(0x7fffffff + 2))], expected_msg="Error: Invalid timeoutheight (@{})".format(-(0x7fffffff + 2)))
         self.start_node(3, self.extra_args[3])
 
         self.height = 0
