@@ -332,8 +332,7 @@ enum class IntrRecvError {
  * @param data The buffer where the read bytes should be stored.
  * @param len The number of bytes to read into the specified buffer.
  * @param timeout The total timeout in milliseconds for this read.
- * @param hSocket The socket (has to be in non-blocking mode) from which to read
- *                bytes.
+ * @param sock The socket (has to be in non-blocking mode) from which to read bytes.
  *
  * @returns An IntrRecvError indicating the resulting status of this read.
  *          IntrRecvError::OK only if all of the specified number of bytes were
@@ -343,7 +342,7 @@ enum class IntrRecvError {
  *      Sockets can be made non-blocking with SetSocketNonBlocking(const
  *      SOCKET&, bool).
  */
-static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, const Sock& hSocket)
+static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, const Sock& sock)
 {
     int64_t curTime = GetTimeMillis();
     int64_t endTime = curTime + timeout;
@@ -351,7 +350,7 @@ static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, c
     // (in millis) to break off in case of an interruption.
     const int64_t maxWait = 1000;
     while (len > 0 && curTime < endTime) {
-        ssize_t ret = hSocket.Recv(data, len, 0); // Optimistically try the recv first
+        ssize_t ret = sock.Recv(data, len, 0); // Optimistically try the recv first
         if (ret > 0) {
             len -= ret;
             data += ret;
@@ -363,7 +362,7 @@ static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, c
                 // Only wait at most maxWait milliseconds at a time, unless
                 // we're approaching the end of the specified total timeout
                 int timeout_ms = std::min(endTime - curTime, maxWait);
-                if (!hSocket.Wait(std::chrono::milliseconds{timeout_ms}, Sock::RECV)) {
+                if (!sock.Wait(std::chrono::milliseconds{timeout_ms}, Sock::RECV)) {
                     return IntrRecvError::NetworkError;
                 }
             } else {
@@ -417,7 +416,7 @@ static std::string Socks5ErrorString(uint8_t err)
  * @param port The destination port.
  * @param auth The credentials with which to authenticate with the specified
  *             SOCKS5 proxy.
- * @param hSocket The SOCKS5 proxy socket.
+ * @param sock The SOCKS5 proxy socket.
  *
  * @returns Whether or not the operation succeeded.
  *
@@ -427,7 +426,7 @@ static std::string Socks5ErrorString(uint8_t err)
  * @see <a href="https://www.ietf.org/rfc/rfc1928.txt">RFC1928: SOCKS Protocol
  *      Version 5</a>
  */
-static bool Socks5(const std::string& strDest, int port, const ProxyCredentials* auth, const Sock& hSocket)
+static bool Socks5(const std::string& strDest, int port, const ProxyCredentials* auth, const Sock& sock)
 {
     IntrRecvError recvr;
     LogPrint(BCLog::NET, "SOCKS5 connecting %s\n", strDest);
@@ -445,12 +444,12 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials*
         vSocks5Init.push_back(0x01); // 1 method identifier follows...
         vSocks5Init.push_back(SOCKS5Method::NOAUTH);
     }
-    ssize_t ret = hSocket.Send(vSocks5Init.data(), vSocks5Init.size(), MSG_NOSIGNAL);
+    ssize_t ret = sock.Send(vSocks5Init.data(), vSocks5Init.size(), MSG_NOSIGNAL);
     if (ret != (ssize_t)vSocks5Init.size()) {
         return error("Error sending to proxy");
     }
     uint8_t pchRet1[2];
-    if ((recvr = InterruptibleRecv(pchRet1, 2, SOCKS5_RECV_TIMEOUT, hSocket)) != IntrRecvError::OK) {
+    if ((recvr = InterruptibleRecv(pchRet1, 2, SOCKS5_RECV_TIMEOUT, sock)) != IntrRecvError::OK) {
         LogPrintf("Socks5() connect to %s:%d failed: InterruptibleRecv() timeout or other failure\n", strDest, port);
         return false;
     }
@@ -467,13 +466,13 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials*
         vAuth.insert(vAuth.end(), auth->username.begin(), auth->username.end());
         vAuth.push_back(auth->password.size());
         vAuth.insert(vAuth.end(), auth->password.begin(), auth->password.end());
-        ret = hSocket.Send(vAuth.data(), vAuth.size(), MSG_NOSIGNAL);
+        ret = sock.Send(vAuth.data(), vAuth.size(), MSG_NOSIGNAL);
         if (ret != (ssize_t)vAuth.size()) {
             return error("Error sending authentication to proxy");
         }
         LogPrint(BCLog::PROXY, "SOCKS5 sending proxy authentication %s:%s\n", auth->username, auth->password);
         uint8_t pchRetA[2];
-        if ((recvr = InterruptibleRecv(pchRetA, 2, SOCKS5_RECV_TIMEOUT, hSocket)) != IntrRecvError::OK) {
+        if ((recvr = InterruptibleRecv(pchRetA, 2, SOCKS5_RECV_TIMEOUT, sock)) != IntrRecvError::OK) {
             return error("Error reading proxy authentication response");
         }
         if (pchRetA[0] != 0x01 || pchRetA[1] != 0x00) {
@@ -493,12 +492,12 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials*
     vSocks5.insert(vSocks5.end(), strDest.begin(), strDest.end());
     vSocks5.push_back((port >> 8) & 0xFF);
     vSocks5.push_back((port >> 0) & 0xFF);
-    ret = hSocket.Send(vSocks5.data(), vSocks5.size(), MSG_NOSIGNAL);
+    ret = sock.Send(vSocks5.data(), vSocks5.size(), MSG_NOSIGNAL);
     if (ret != (ssize_t)vSocks5.size()) {
         return error("Error sending to proxy");
     }
     uint8_t pchRet2[4];
-    if ((recvr = InterruptibleRecv(pchRet2, 4, SOCKS5_RECV_TIMEOUT, hSocket)) != IntrRecvError::OK) {
+    if ((recvr = InterruptibleRecv(pchRet2, 4, SOCKS5_RECV_TIMEOUT, sock)) != IntrRecvError::OK) {
         if (recvr == IntrRecvError::Timeout) {
             /* If a timeout happens here, this effectively means we timed out while connecting
              * to the remote node. This is very common for Tor, so do not print an
@@ -522,16 +521,16 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials*
     uint8_t pchRet3[256];
     switch (pchRet2[3])
     {
-        case SOCKS5Atyp::IPV4: recvr = InterruptibleRecv(pchRet3, 4, SOCKS5_RECV_TIMEOUT, hSocket); break;
-        case SOCKS5Atyp::IPV6: recvr = InterruptibleRecv(pchRet3, 16, SOCKS5_RECV_TIMEOUT, hSocket); break;
+        case SOCKS5Atyp::IPV4: recvr = InterruptibleRecv(pchRet3, 4, SOCKS5_RECV_TIMEOUT, sock); break;
+        case SOCKS5Atyp::IPV6: recvr = InterruptibleRecv(pchRet3, 16, SOCKS5_RECV_TIMEOUT, sock); break;
         case SOCKS5Atyp::DOMAINNAME:
         {
-            recvr = InterruptibleRecv(pchRet3, 1, SOCKS5_RECV_TIMEOUT, hSocket);
+            recvr = InterruptibleRecv(pchRet3, 1, SOCKS5_RECV_TIMEOUT, sock);
             if (recvr != IntrRecvError::OK) {
                 return error("Error reading from proxy");
             }
             int nRecv = pchRet3[0];
-            recvr = InterruptibleRecv(pchRet3, nRecv, SOCKS5_RECV_TIMEOUT, hSocket);
+            recvr = InterruptibleRecv(pchRet3, nRecv, SOCKS5_RECV_TIMEOUT, sock);
             break;
         }
         default: return error("Error: malformed proxy response");
@@ -539,7 +538,7 @@ static bool Socks5(const std::string& strDest, int port, const ProxyCredentials*
     if (recvr != IntrRecvError::OK) {
         return error("Error reading from proxy");
     }
-    if ((recvr = InterruptibleRecv(pchRet3, 2, SOCKS5_RECV_TIMEOUT, hSocket)) != IntrRecvError::OK) {
+    if ((recvr = InterruptibleRecv(pchRet3, 2, SOCKS5_RECV_TIMEOUT, sock)) != IntrRecvError::OK) {
         return error("Error reading from proxy");
     }
     LogPrint(BCLog::NET, "SOCKS5 connected %s\n", strDest);
@@ -764,7 +763,7 @@ bool IsProxy(const CNetAddr &addr) {
  * @param proxy The SOCKS5 proxy.
  * @param strDest The destination service to which to connect.
  * @param port The destination port.
- * @param hSocket The socket on which to connect to the SOCKS5 proxy.
+ * @param sock The socket on which to connect to the SOCKS5 proxy.
  * @param nTimeout Wait this many milliseconds for the connection to the SOCKS5
  *                 proxy to be established.
  * @param[out] outProxyConnectionFailed Whether or not the connection to the
@@ -772,10 +771,10 @@ bool IsProxy(const CNetAddr &addr) {
  *
  * @returns Whether or not the operation succeeded.
  */
-bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, int port, const Sock& hSocket, int nTimeout, bool& outProxyConnectionFailed)
+bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, int port, const Sock& sock, int nTimeout, bool& outProxyConnectionFailed)
 {
     // first connect to proxy server
-    if (!ConnectSocketDirectly(proxy.proxy, hSocket.Get(), nTimeout, true)) {
+    if (!ConnectSocketDirectly(proxy.proxy, sock.Get(), nTimeout, true)) {
         outProxyConnectionFailed = true;
         return false;
     }
@@ -784,11 +783,11 @@ bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, int
         ProxyCredentials random_auth;
         static std::atomic_int counter(0);
         random_auth.username = random_auth.password = strprintf("%i", counter++);
-        if (!Socks5(strDest, (uint16_t)port, &random_auth, hSocket)) {
+        if (!Socks5(strDest, (uint16_t)port, &random_auth, sock)) {
             return false;
         }
     } else {
-        if (!Socks5(strDest, (uint16_t)port, 0, hSocket)) {
+        if (!Socks5(strDest, (uint16_t)port, 0, sock)) {
             return false;
         }
     }
