@@ -35,7 +35,7 @@ bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, U
         UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
         const uint64_t &nAsset = it.key;
         const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
-        oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
+        oAssetAllocationReceiversObj.__pushKV("asset_guid", UniValue(nAsset).write());
         if(!it.vchNotarySig.empty()) {
             oAssetAllocationReceiversObj.__pushKV("notary_sig", HexStr(it.vchNotarySig));
         }
@@ -84,7 +84,7 @@ bool AssetMintTxToJson(const CTransaction& tx, const uint256& txHash, const uint
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
             const uint64_t &nAsset = it.key;
             const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
-            oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
+            oAssetAllocationReceiversObj.__pushKV("asset_guid", UniValue(nAsset).write());
             UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
             for(const auto& voutAsset: it.values){
                 nTotal += voutAsset.nValue;
@@ -115,7 +115,7 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
         UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
         const uint64_t &nAsset = it.key;
         const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
-        oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
+        oAssetAllocationReceiversObj.__pushKV("asset_guid", UniValue(nAsset).write());
         UniValue oAssetAllocationReceiverOutputsArray(UniValue::VARR);
         for(const auto& voutAsset: it.values){
             nTotal += voutAsset.nValue;

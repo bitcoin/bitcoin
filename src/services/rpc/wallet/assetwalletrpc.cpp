@@ -134,7 +134,7 @@ bool AssetMintWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, c
             UniValue oAssetAllocationReceiversObj(UniValue::VOBJ);
             const uint64_t &nAsset = it.key;
             const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
-            oAssetAllocationReceiversObj.__pushKV("asset_guid", nAsset);
+            oAssetAllocationReceiversObj.__pushKV("asset_guid", UniValue(nAsset).write());
             if(!it.vchNotarySig.empty()) {
                 oAssetAllocationReceiversObj.__pushKV("notary_sig", HexStr(it.vchNotarySig));
             }
@@ -157,7 +157,7 @@ bool AssetMintWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, c
 
 bool AllocationWtxToJson(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const std::string &strCategory, UniValue &entry) {
     entry.__pushKV("txtype", stringFromSyscoinTx(wtx.tx->nVersion));
-    entry.__pushKV("asset_guid", assetInfo.nAsset);
+    entry.__pushKV("asset_guid", UniValue(assetInfo.nAsset).write());
     if(IsAssetAllocationTx(wtx.tx->nVersion)) {
         entry.__pushKV("amount", ValueFromAmount(assetInfo.nValue, GetBaseAssetID(assetInfo.nAsset)));
         entry.__pushKV("action", strCategory);
@@ -315,7 +315,7 @@ static RPCHelpMan syscoinburntoassetallocation()
     return RPCHelpMan{"syscoinburntoassetallocation",
         "\nBurns Syscoin to the SYSX asset\n",
         {
-            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid of SYSX"},
+            {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset guid of SYSX"},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of SYS to burn."},
         },
         RPCResult{
@@ -340,7 +340,9 @@ static RPCHelpMan syscoinburntoassetallocation()
     LOCK(pwallet->cs_wallet);
 
     EnsureWalletIsUnlocked(pwallet);
-    const uint64_t &nAsset = params[0].get_uint64();          	
+    uint64_t nAsset;
+    if(!ParseUInt64(params[0].get_str(), &nAsset))
+        throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");        	
 	CAssetAllocation theAssetAllocation;
 	CAsset theAsset;
 	if (!GetAsset(GetBaseAssetID(nAsset), theAsset))
@@ -447,7 +449,7 @@ RPCHelpMan assetnew()
         RPCResult::Type::OBJ, "", "",
         {
             {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
-            {RPCResult::Type::NUM, "asset_guid", "The unique identifier of the new asset"}
+            {RPCResult::Type::STR, "asset_guid", "The unique identifier of the new asset"}
         }},
     RPCExamples{
     HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 127 \"notary_address\" {} {}")
@@ -659,7 +661,7 @@ RPCHelpMan assetnew()
     }
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
-    res.__pushKV("asset_guid", nAsset);
+    res.__pushKV("asset_guid", UniValue(nAsset).write());
     return res;
 },
     };
@@ -670,7 +672,7 @@ static RPCHelpMan assetnewtest()
     return RPCHelpMan{"assetnewtest",
     "\nCreate a new asset for testing purposes with a specific asset_guid. Used by functional tests.\n",
     {
-        {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Create asset with this GUID. Only on regtest."},
+        {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "Create asset with this GUID. Only on regtest."},
         {"funding_amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Fund resulting UTXO owning the asset by this much SYS for gas."},
         {"symbol", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset symbol (1-8 characters)"},
         {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
@@ -704,7 +706,7 @@ static RPCHelpMan assetnewtest()
         RPCResult::Type::OBJ, "", "",
         {
             {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
-            {RPCResult::Type::NUM, "asset_guid", "The unique identifier of the new asset"}
+            {RPCResult::Type::STR, "asset_guid", "The unique identifier of the new asset"}
         }},
     RPCExamples{
     HelpExampleCli("assetnew", "1 \"CAT\" \"publicvalue\" \"contractaddr\" 8 1000 127 \"notary_address\" {} {}")
@@ -714,7 +716,8 @@ static RPCHelpMan assetnewtest()
 {
     const UniValue &params = request.params;
     UniValue paramsFund(UniValue::VARR);
-    nCustomAssetGuid = params[0].get_uint64();
+    if(!ParseUInt64(params[0].get_str(), &nCustomAssetGuid))
+        throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");    
     for(int i = 1;i<=10;i++)
         paramsFund.push_back(params[i]);
     JSONRPCRequest assetNewRequest(request.context);
@@ -814,7 +817,7 @@ static RPCHelpMan assetupdate()
     return RPCHelpMan{"assetupdate",
         "\nPerform an update on an asset you control.\n",
         {
-            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
+            {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset guid"},
             {"description", RPCArg::Type::STR, RPCArg::Optional::NO, "Public description of the token."},
             {"contract",  RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Ethereum token contract for SyscoinX bridge. Leave empty for no smart contract bridge."},
             {"updatecapability_flags", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask 1 represents the ability to update public data field, 2 for updating the smart contract field, 4 for updating supply, 8 for updating notary address, 16 for updating notary details, 32 for updating auxfee details, 64 for ability to update the capability flags (this field). 127 for all. 0 for none (not updatable)."},
@@ -863,7 +866,10 @@ static RPCHelpMan assetupdate()
 
     LOCK(pwallet->cs_wallet);    
     EnsureWalletIsUnlocked(pwallet);
-    const uint64_t &nBaseAsset = GetBaseAssetID(params[0].get_uint64());
+    uint64_t nAsset;
+    if(!ParseUInt64(params[0].get_str(), &nAsset))
+        throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
+    const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
     std::string strData = "";
     std::string strCategory = "";
     std::string strPubData = params[1].get_str();
@@ -951,7 +957,7 @@ static RPCHelpMan assetupdate()
     }
     theAsset.nUpdateMask = nUpdateMask;
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
-    theAsset.voutAssets.emplace_back(CAssetOut(nBaseAsset, outVec));
+    theAsset.voutAssets.emplace_back(CAssetOut((uint64_t)nBaseAsset, outVec));
     std::vector<unsigned char> data;
     theAsset.SerializeData(data);
     CScript scriptData;
@@ -959,7 +965,7 @@ static RPCHelpMan assetupdate()
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
     std::vector<CRecipient> vecSend;
-    return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_UPDATE, nBaseAsset, pwallet, vecSend, opreturnRecipient);
+    return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_UPDATE, (uint64_t)nBaseAsset, pwallet, vecSend, opreturnRecipient);
 },
     };
 } 
@@ -969,7 +975,7 @@ static RPCHelpMan assettransfer()
     return RPCHelpMan{"assettransfer",
         "\nPerform a transfer of ownership on an asset you control.\n",
         {
-            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
+            {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset guid"},
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "New owner of asset."},
         },
         RPCResult{
@@ -996,7 +1002,10 @@ static RPCHelpMan assettransfer()
 
     LOCK(pwallet->cs_wallet);    
     EnsureWalletIsUnlocked(pwallet);
-    const uint64_t &nBaseAsset = GetBaseAssetID(params[0].get_uint64());
+    uint64_t nAsset;
+    if(!ParseUInt64(params[0].get_str(), &nAsset))
+        throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
+    const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
     std::string strAddress = params[1].get_str();
    
     CAsset theAsset;
@@ -1009,7 +1018,7 @@ static RPCHelpMan assettransfer()
     CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
     theAsset.ClearAsset();
     std::vector<CAssetOutValue> outVec = {CAssetOutValue(0, 0)};
-    theAsset.voutAssets.emplace_back(CAssetOut(nBaseAsset, outVec));
+    theAsset.voutAssets.emplace_back(CAssetOut((uint64_t)nBaseAsset, outVec));
 
     std::vector<unsigned char> data;
     theAsset.SerializeData(data);
@@ -1018,7 +1027,7 @@ static RPCHelpMan assettransfer()
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
     std::vector<CRecipient> vecSend;
-    return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_UPDATE, nBaseAsset, pwallet, vecSend, opreturnRecipient, &recp);
+    return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_UPDATE, (uint64_t)nBaseAsset, pwallet, vecSend, opreturnRecipient, &recp);
 },
     };
 }
@@ -1028,15 +1037,15 @@ static RPCHelpMan assetsendmany()
     return RPCHelpMan{"assetsendmany",
     "\nSend an asset you own to another address/addresses as an asset allocation. Maximum recipients is 250.\n",
     {
-        {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid."},
+        {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset guid."},
         {"amounts", RPCArg::Type::ARR, RPCArg::Optional::NO, "Array of asset send objects.",
             {
                 {"", RPCArg::Type::OBJ, RPCArg::Optional::NO, "An assetsend obj",
                     {
-                        {"address", RPCArg::Type::NUM, RPCArg::Optional::NO, "Address to transfer to"},
+                        {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to transfer to"},
                         {"asset_amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send"},
                         {"sys_amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "Amount of Syscoin to send"},
-                        {"NFTID", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Optional NFT ID to send"},
+                        {"NFTID", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Optional NFT ID to send"},
                     }
                 }
             },
@@ -1070,7 +1079,9 @@ static RPCHelpMan assetsendmany()
     LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
     // gather & validate inputs
-    const uint64_t &nAsset = params[0].get_uint64();
+    uint64_t nAsset;
+    if(!ParseUInt64(params[0].get_str(), &nAsset))
+        throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
     const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
     UniValue valueTo = params[1];
     if (!valueTo.isArray())
@@ -1098,8 +1109,10 @@ static RPCHelpMan assetsendmany()
         }
         const UniValue &NFTIDObj = find_value(receiverObj, "NFTID");
         uint32_t nNFTID = 0;
-        if(!NFTIDObj.isNull())
-            nNFTID = NFTIDObj.get_uint();
+        if(!NFTIDObj.isNull()) {
+            if(!ParseUInt32(NFTIDObj.get_str(), &nNFTID))
+                throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse NFTID");
+        }
         // assign any NFTID and base asset guid into a 64 bit asset GUID which is stored and serialized
         const uint64_t &nAssetReceiver = CreateAssetID(nNFTID, nBaseAsset);
         
@@ -1152,13 +1165,13 @@ static RPCHelpMan assetsendmany()
         const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
         const CAmount &nAmountSys = itAsset.second.first;
         const CAmount &nAmount = itAsset.second.second;
-        assetsObj.__pushKV("asset_guid", nAsset);
+        assetsObj.__pushKV("asset_guid", UniValue(nAsset).write());
         if(nBaseAsset != nAsset) {
-            assetsObj.__pushKV("base_asset_guid", nBaseAsset);
-            assetsObj.__pushKV("NFTID", GetNFTID(nAsset));
+            assetsObj.__pushKV("base_asset_guid", UniValue(nBaseAsset).write());
+            assetsObj.__pushKV("NFTID", UniValue(GetNFTID(nAsset)).write());
         }
         assetsObj.__pushKV("amount", ValueFromAssetAmount(nAmount, theAsset.nPrecision));
-            assetsObj.__pushKV("sys_amount", ValueFromAmount(nAmountSys));
+        assetsObj.__pushKV("sys_amount", ValueFromAmount(nAmountSys));
         assetsArr.push_back(assetsObj);
     }
     ret.__pushKV("assets_issued", assetsArr);
@@ -1172,11 +1185,11 @@ static RPCHelpMan assetsend()
     return RPCHelpMan{"assetsend",
     "\nSend an asset you own to another address.\n",
     {
-        {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid."},
+        {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "The asset guid."},
         {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the asset to (creates an asset allocation)."},
         {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send."},
         {"sys_amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "Amount of syscoin to send."},
-        {"NFTID", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Optional NFT ID to send"},
+        {"NFTID", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Optional NFT ID to send"},
     },
     RPCResult{
         RPCResult::Type::OBJ, "", "",
@@ -1192,17 +1205,16 @@ static RPCHelpMan assetsend()
     if(!fAssetIndex) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
     }
-    const UniValue &params = request.params;
-    const uint64_t &nAsset = params[0].get_uint64();          
+    const UniValue &params = request.params;     
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
-    outputObj.__pushKV("address", params[1].get_str());
-    outputObj.__pushKV("amount", request.params[2]);
-    outputObj.__pushKV("sys_amount", request.params[3]);
-    outputObj.__pushKV("NFTID", request.params[4]);
+    outputObj.__pushKV("address", params[1]);
+    outputObj.__pushKV("amount", params[2]);
+    outputObj.__pushKV("sys_amount", params[3]);
+    outputObj.__pushKV("NFTID", params[4]);
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
-    paramsFund.push_back(nAsset);
+    paramsFund.push_back(params[0]);
     paramsFund.push_back(output);
     JSONRPCRequest requestMany(request.context);
     requestMany.params = paramsFund;
@@ -1221,7 +1233,7 @@ static RPCHelpMan assetallocationsendmany()
                 {
                     {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "The assetallocationsend object",
                         {
-                            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
+                            {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset guid"},
                             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Address to transfer to"},
                             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send"},
                             {"sys_amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "Amount of Syscoin to send"},
@@ -1297,7 +1309,9 @@ static RPCHelpMan assetallocationsendmany()
 			throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "expected object with {\"address\" or \"amount\"}");
 
 		const UniValue &receiverObj = receiver.get_obj();
-        const uint64_t &nAsset = find_value(receiverObj, "asset_guid").get_uint64();
+        uint64_t nAsset;
+        if(!ParseUInt64(find_value(receiverObj, "asset_guid").get_str(), &nAsset))
+            throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
         const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
         CAsset theAsset;
         if (!GetAsset(nBaseAsset, theAsset))
@@ -1457,13 +1471,13 @@ static RPCHelpMan assetallocationsendmany()
             throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         const CAmount &nAmountSys = itAsset.second.first;
         const CAmount &nAmount = itAsset.second.second;
-        assetsObj.__pushKV("asset_guid", nAsset);
+        assetsObj.__pushKV("asset_guid", UniValue(nAsset).write());
         if(nBaseAsset != nAsset) {
-            assetsObj.__pushKV("base_asset_guid", nBaseAsset);
-            assetsObj.__pushKV("NFTID", GetNFTID(nAsset));
+            assetsObj.__pushKV("base_asset_guid", UniValue(nBaseAsset).write());
+            assetsObj.__pushKV("NFTID", UniValue(GetNFTID(nAsset)).write());
         }
         assetsObj.__pushKV("amount", ValueFromAssetAmount(nAmount, theAsset.nPrecision));
-            assetsObj.__pushKV("sys_amount", ValueFromAmount(nAmountSys));
+        assetsObj.__pushKV("sys_amount", ValueFromAmount(nAmountSys));
         assetsArr.push_back(assetsObj);
     }
     ret.__pushKV("assetallocations_sent", assetsArr);
@@ -1477,7 +1491,7 @@ static RPCHelpMan assetallocationburn()
     return RPCHelpMan{"assetallocationburn",
         "\nBurn an asset allocation in order to use the bridge or move back to Syscoin\n",
         {
-            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
+            {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset guid"},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to burn to SYSX"},
             {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The 20 byte (40 character) hex string of the ethereum destination address. Omit or leave empty to burn to Syscoin."}
         },
@@ -1505,8 +1519,9 @@ static RPCHelpMan assetallocationburn()
 
     LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
-    const uint64_t &nAsset = params[0].get_uint64();
-    	
+    uint64_t nAsset;
+    if(!ParseUInt64(params[0].get_str(), &nAsset))
+        throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");   	
 	CAsset theAsset;
 	if (!GetAsset(GetBaseAssetID(nAsset), theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
@@ -1637,7 +1652,7 @@ static RPCHelpMan assetallocationmint()
     return RPCHelpMan{"assetallocationmint",
         "\nMint assetallocation to come back from the bridge\n",
         {
-            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "Asset guid"},
+            {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset guid"},
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Mint to this address."},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to mint.  Note that fees (in SYS) will be taken from the owner address"},
             {"blocknumber", RPCArg::Type::NUM, RPCArg::Optional::NO, "Block number of the block that included the burn transaction on Ethereum."},
@@ -1672,7 +1687,9 @@ static RPCHelpMan assetallocationmint()
 
     LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(pwallet);
-    const uint64_t &nAsset = params[0].get_uint64();
+    uint64_t nAsset;
+    if(!ParseUInt64(params[0].get_str(), &nAsset))
+        throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");   
     std::string strAddress = params[1].get_str();
 	CAsset theAsset;
 	if (!GetAsset(GetBaseAssetID(nAsset), theAsset))
@@ -1818,7 +1835,7 @@ static RPCHelpMan assetallocationsend()
     return RPCHelpMan{"assetallocationsend",
         "\nSend an asset allocation you own to another address.\n",
         {
-            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid"},
+            {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "The asset guid"},
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the allocation to"},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send"},
             {"sys_amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "Amount of syscoin to send"},
@@ -1841,11 +1858,10 @@ static RPCHelpMan assetallocationsend()
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (!wallet) return NullUniValue;
     CWallet* const pwallet = wallet.get();
-    const UniValue &params = request.params;
-    const uint64_t &nAsset = params[0].get_uint64();          
+    const UniValue &params = request.params;  
     bool m_signal_bip125_rbf = pwallet->m_signal_rbf;
-    if (!request.params[4].isNull()) {
-        m_signal_bip125_rbf = request.params[4].get_bool();
+    if (!params[4].isNull()) {
+        m_signal_bip125_rbf = params[4].get_bool();
     }  
     UniValue replaceableObj(UniValue::VBOOL);
     UniValue commentObj(UniValue::VSTR);
@@ -1857,10 +1873,10 @@ static RPCHelpMan assetallocationsend()
     feeObj.setStr("UNSET");
     UniValue output(UniValue::VARR);
     UniValue outputObj(UniValue::VOBJ);
-    outputObj.__pushKV("asset_guid", nAsset);
-    outputObj.__pushKV("address", params[1].get_str());
-    outputObj.__pushKV("amount", request.params[2]);
-    outputObj.__pushKV("sys_amount", request.params[3]);
+    outputObj.__pushKV("asset_guid", params[0]);
+    outputObj.__pushKV("address", params[1]);
+    outputObj.__pushKV("amount", params[2]);
+    outputObj.__pushKV("sys_amount", params[3]);
     output.push_back(outputObj);
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(output);
@@ -1976,7 +1992,7 @@ static RPCHelpMan listunspentasset()
     return RPCHelpMan{"listunspentasset",
     "\nHelper function which just calls listunspent to find unspent UTXO's for an asset.",   
     {	
-        {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The syscoin asset guid to get the information of."},	
+        {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin asset guid to get the information of."},	
         {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum confirmations to filter"},	
     },	
     RPCResult{
@@ -1989,7 +2005,6 @@ static RPCHelpMan listunspentasset()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 
-    uint64_t nAsset = request.params[0].get_uint64();
     int nMinDepth = 1;
     if (!request.params[1].isNull()) {
         nMinDepth = request.params[1].get_int();
@@ -2006,7 +2021,7 @@ static RPCHelpMan listunspentasset()
     paramsFund.push_back(includeSafe);
     
     UniValue options(UniValue::VOBJ);
-    options.__pushKV("assetGuid", nAsset);
+    options.__pushKV("assetGuid", request.params[0]);
     paramsFund.push_back(options);
     JSONRPCRequest requestSpent(request.context);
     requestSpent.params = paramsFund;
@@ -2073,7 +2088,7 @@ static RPCHelpMan assetallocationbalance() {
     return RPCHelpMan{"assetallocationbalance",	
         "\nShow asset and allocated balance information pertaining to an asset owned in your wallet.\n",	
         {	
-                {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The syscoin asset guid to get the information of."},
+                {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin asset guid to get the information of."},
                 {"addresses", RPCArg::Type::ARR, /* default */ "empty array", "The syscoin addresses to filter",
                     {
                         {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "syscoin address"},
@@ -2094,7 +2109,7 @@ static RPCHelpMan assetallocationbalance() {
             RPCResult{"for verbose = true",
                 RPCResult::Type::OBJ, "", "",
                 {
-                    {RPCResult::Type::NUM, "asset_guid", "The guid of the asset"},
+                    {RPCResult::Type::STR, "asset_guid", "The guid of the asset"},
                     {RPCResult::Type::STR, "symbol", "The asset symbol"},
                     {RPCResult::Type::STR_HEX, "txid", "The transaction id that created this asset"},
                     {RPCResult::Type::STR, "public_value", "The public value attached to this asset"},
@@ -2114,9 +2129,11 @@ static RPCHelpMan assetallocationbalance() {
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {	
-    uint64_t nAsset = request.params[0].get_uint64();
+    uint64_t nAsset;
+    if(!ParseUInt64(request.params[0].get_str(), &nAsset))
+        throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
     UniValue oAsset(UniValue::VOBJ);
-    const uint32_t &nBaseAsset = GetBaseAssetID(request.params[0].get_uint64());
+    const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
     CAsset theAsset;
     if (!GetAsset(nBaseAsset, theAsset))
         throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to read from asset DB");

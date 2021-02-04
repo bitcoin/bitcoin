@@ -615,7 +615,7 @@ static bool rest_getutxos(const util::Ref& context, HTTPRequest* req, const std:
             utxo.pushKV("scriptPubKey", o);
             // SYSCOIN
             if(!coin.out.assetInfo.IsNull()) {
-                utxo.pushKV("asset_guid", coin.out.assetInfo.nAsset);
+                utxo.pushKV("asset_guid", UniValue(coin.out.assetInfo.nAsset).write());
                 utxo.pushKV("asset_amount", ValueFromAmount(coin.out.assetInfo.nValue, GetBaseAssetID(coin.out.assetInfo.nAsset)));
             }
             utxos.push_back(utxo);

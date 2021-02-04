@@ -2394,7 +2394,7 @@ static RPCHelpMan scantxoutset()
             unspent.pushKV("height", (int32_t)coin.nHeight);
             // SYSCOIN
             if(!coin.out.assetInfo.IsNull()) {
-                unspent.pushKV("asset_guid", coin.out.assetInfo.nAsset);
+                unspent.pushKV("asset_guid", UniValue(coin.out.assetInfo.nAsset).write());
                 unspent.pushKV("asset_amount", ValueFromAmount(coin.out.assetInfo.nValue, GetBaseAssetID(coin.out.assetInfo.nAsset)));
             }
 

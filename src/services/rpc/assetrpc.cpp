@@ -23,7 +23,7 @@ extern CTxDestination DecodeDestination(const std::string& str);
 
 
 bool BuildAssetJson(const CAsset& asset, const uint32_t& nBaseAsset, UniValue& oAsset) {
-    oAsset.__pushKV("asset_guid", nBaseAsset);
+    oAsset.__pushKV("asset_guid", UniValue(nBaseAsset).write());
     oAsset.__pushKV("symbol", DecodeBase64(asset.strSymbol));
 	oAsset.__pushKV("public_value", AssetPublicDataToJson(asset.strPubData));
     oAsset.__pushKV("contract", asset.vchContract.empty()? "" : "0x"+HexStr(asset.vchContract));
@@ -53,8 +53,11 @@ bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, c
 			strTxid = txid.get_str();
 		}
 		const UniValue &assetObj = find_value(oOptions, "asset_guid");
-		if (assetObj.isNum()) {
-			nBaseAsset = assetObj.get_uint64();
+		if (assetObj.isStr()) {
+            uint64_t nAsset;
+            if(!ParseUInt64(assetObj.get_str(), &nAsset))
+                throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
+            nBaseAsset = GetBaseAssetID(nAsset);
 		}
 	}
 	std::unique_ptr<CDBIterator> pcursor(passetdb.NewIterator());
@@ -139,7 +142,7 @@ static RPCHelpMan assettransactionnotarize()
         "\nUpdate notary signature on an asset transaction. Will require re-signing transaction before submitting to network.\n",	
         {	
             {"hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction to notarize."},
-            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset to notarize."},
+            {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "The guid of the asset to notarize."},
             {"signature", RPCArg::Type::STR, RPCArg::Optional::NO, "Base64 encoded notary signature to add to transaction."}	
         },
         RPCResult{
@@ -155,7 +158,9 @@ static RPCHelpMan assettransactionnotarize()
 {
 
     const std::string &hexstring = request.params[0].get_str();
-    const uint64_t &nAsset = request.params[1].get_uint64();
+    uint64_t nAsset;
+    if(!ParseUInt64(request.params[1].get_str(), &nAsset))
+         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
     std::vector<unsigned char> vchSig = DecodeBase64(request.params[2].get_str().c_str());
     CMutableTransaction mtx;
     if(!DecodeHexTx(mtx, hexstring, false, true)) {
@@ -177,7 +182,7 @@ static RPCHelpMan getnotarysighash()
         "\nGet sighash for notary to sign off on, use assettransactionnotarize to update the transaction after re-singing once sighash is used to create a notarized signature.\n",	
         {	
             {"hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction to get sighash for."},
-            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The guid of the asset to sighash for."}
+            {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "The guid of the asset to sighash for."}
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -191,7 +196,9 @@ static RPCHelpMan getnotarysighash()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {	
     const std::string &hexstring = request.params[0].get_str();
-    const uint64_t &nAsset = request.params[1].get_uint64();
+    uint64_t nAsset;
+    if(!ParseUInt64(request.params[1].get_str(), &nAsset))
+         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
     CMutableTransaction mtx;
     if(!DecodeHexTx(mtx, hexstring, false, true)) {
         if(!DecodeHexTx(mtx, hexstring, true, true)) {
@@ -365,7 +372,7 @@ static RPCHelpMan syscoindecoderawtransaction()
             {RPCResult::Type::STR, "txtype", "The syscoin transaction type"},
             {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
             {RPCResult::Type::STR_HEX, "blockhash", "Block confirming the transaction, if any"},
-            {RPCResult::Type::NUM, "asset_guid", "The guid of the asset"},
+            {RPCResult::Type::STR, "asset_guid", "The guid of the asset"},
             {RPCResult::Type::STR, "symbol", "The asset symbol"},
             {RPCResult::Type::ARR, "allocations", "(array of json receiver objects)",
                 {
@@ -418,12 +425,12 @@ static RPCHelpMan assetinfo()
     return RPCHelpMan{"assetinfo",
         "\nShow stored values of a single asset and its.\n",
         {
-            {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::NO, "The asset guid"}
+            {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "The asset guid"}
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
             {
-                {RPCResult::Type::NUM, "asset_guid", "The guid of the asset"},
+                {RPCResult::Type::STR, "asset_guid", "The guid of the asset"},
                 {RPCResult::Type::STR, "symbol", "The asset symbol"},
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id that created this asset"},
                 {RPCResult::Type::STR, "public_value", "The public value attached to this asset"},
@@ -432,7 +439,7 @@ static RPCHelpMan assetinfo()
                 {RPCResult::Type::STR_AMOUNT, "max_supply", "The maximum supply of this asset"},
                 {RPCResult::Type::NUM, "updatecapability_flags", "The capability flag in decimal"},
                 {RPCResult::Type::NUM, "precision", "The precision of this asset"},
-                {RPCResult::Type::NUM, "NFTID", "The NFT ID of the asset if applicable"},
+                {RPCResult::Type::STR, "NFTID", "The NFT ID of the asset if applicable"},
             }},
         RPCExamples{
             HelpExampleCli("assetinfo", "\"assetguid\"")
@@ -442,7 +449,9 @@ static RPCHelpMan assetinfo()
 {
     const UniValue &params = request.params;
     UniValue oAsset(UniValue::VOBJ);
-    const uint64_t &nAsset = params[0].get_uint64();
+    uint64_t nAsset;
+    if(!ParseUInt64(params[0].get_str(), &nAsset))
+         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
     const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
     CAsset txPos;
     if (!GetAsset(nBaseAsset, txPos))
@@ -451,7 +460,7 @@ static RPCHelpMan assetinfo()
     if(!BuildAssetJson(txPos, nBaseAsset, oAsset))
         oAsset.clear();
     if(nAsset != nBaseAsset) {
-        oAsset.__pushKV("NFTID", GetNFTID(nAsset));
+        oAsset.__pushKV("NFTID", UniValue(GetNFTID(nAsset)).write());
     }
     return oAsset;
 },
@@ -467,7 +476,7 @@ static RPCHelpMan listassets()
             {"from", RPCArg::Type::NUM, "0", "The number of results to skip."},
             {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "A json object with options to filter results.",
                 {
-                    {"asset_guid", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Asset GUID to filter"},
+                    {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Asset GUID to filter"},
                 }
                 }
             },
@@ -476,7 +485,7 @@ static RPCHelpMan listassets()
                 {
                     {RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::NUM, "asset_guid", "The guid of the asset"},
+                        {RPCResult::Type::STR, "asset_guid", "The guid of the asset"},
                         {RPCResult::Type::STR, "symbol", "The asset symbol"},
                         {RPCResult::Type::STR, "public_value", "The public value attached to this asset"},
                         {RPCResult::Type::STR_HEX, "contract", "The ethereum contract address"},

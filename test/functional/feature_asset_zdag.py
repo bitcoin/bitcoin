@@ -187,7 +187,7 @@ class AssetZDAGTest(SyscoinTestFramework):
 
     def burn_zdag_doublespend_chain(self):
         # SYSX guid on regtest is 123456
-        self.basic_asset(123456)
+        self.basic_asset('123456')
         self.nodes[0].generate(1)
         useraddress1 = self.nodes[1].getnewaddress()
         useraddress2 = self.nodes[2].getnewaddress()
@@ -221,12 +221,12 @@ class AssetZDAGTest(SyscoinTestFramework):
         # listunspent for node0 should be have just 1 (asset ownership) in mempool
         out =  self.nodes[0].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
-        assert_equal(out[0]['asset_guid'], 123456)
+        assert_equal(out[0]['asset_guid'], '123456')
         assert_equal(out[0]['asset_amount'], 0)
         self.nodes[0].generate(1)
         out =  self.nodes[0].listunspent(query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
-        assert_equal(out[0]['asset_guid'], 123456)
+        assert_equal(out[0]['asset_guid'], '123456')
         assert_equal(out[0]['asset_amount'], 0)
         self.sync_blocks()
         # listunspent for node0 should be have just 1 (asset ownership)

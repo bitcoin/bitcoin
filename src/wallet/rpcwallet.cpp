@@ -2883,7 +2883,7 @@ RPCHelpMan listunspent()
                               "See description of \"safe\" attribute below."},
                     {"query_options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "JSON with query options",
                         {
-                            {"assetGuid", RPCArg::Type::NUM, /* default */ "0", "Asset GUID to filter. 0(default) for Syscoin."},
+                            {"assetGuid", RPCArg::Type::STR, /* default */ "0", "Asset GUID to filter. 0(default) for Syscoin."},
                             {"minimumAmount", RPCArg::Type::AMOUNT, /* default */ "0", "Minimum value of each UTXO in " + CURRENCY_UNIT + ""},
                             {"minimumAmountAsset", RPCArg::Type::AMOUNT, /* default */ "0", "Minimum asset value of each UTXO"},
                             {"maximumAmount", RPCArg::Type::AMOUNT, /* default */ "unlimited", "Maximum value of each UTXO in " + CURRENCY_UNIT + ""},
@@ -2905,7 +2905,7 @@ RPCHelpMan listunspent()
                             {RPCResult::Type::STR, "label", "The associated label, or \"\" for the default label"},
                             {RPCResult::Type::STR, "scriptPubKey", "the script key"},
                             {RPCResult::Type::STR_AMOUNT, "amount", "the transaction output amount in " + CURRENCY_UNIT},
-                            {RPCResult::Type::NUM, "asset_guid", "the transaction output asset guid if asset output"},
+                            {RPCResult::Type::STR, "asset_guid", "the transaction output asset guid if asset output"},
                             {RPCResult::Type::STR_AMOUNT, "asset_amount", "the transaction output asset amount in satoshis if asset output"},
                             {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
                             {RPCResult::Type::STR_HEX, "redeemScript", "The redeemScript if scriptPubKey is P2SH"},
@@ -2988,7 +2988,7 @@ RPCHelpMan listunspent()
                 {"minimumSumAmount", UniValueType()},
                 {"maximumCount", UniValueType(UniValue::VNUM)},
                 // SYSCOIN
-                {"assetGuid", UniValueType(UniValue::VNUM)},
+                {"assetGuid", UniValueType(UniValue::VSTR)},
                 {"minimumAmountAsset", UniValueType()},
                 {"maximumAmountAsset", UniValueType()},
                 {"minimumSumAmountAsset", UniValueType()},
@@ -3008,7 +3008,8 @@ RPCHelpMan listunspent()
             nMaximumCount = options["maximumCount"].get_int64();
         // SYSCOIN
         if (options.exists("assetGuid")) {
-            nAsset = options["assetGuid"].get_uint64();
+            if(!ParseUInt64(options["assetGuid"].get_str(), &nAsset))
+                throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
         }
 
         if (options.exists("minimumAmountAsset"))
@@ -3099,7 +3100,7 @@ RPCHelpMan listunspent()
         entry.pushKV("scriptPubKey", HexStr(scriptPubKey));
         entry.pushKV("amount", ValueFromAmount(out.tx->tx->vout[out.i].nValue));
         if(!out.tx->tx->vout[out.i].assetInfo.IsNull()) {
-            entry.pushKV("asset_guid", out.tx->tx->vout[out.i].assetInfo.nAsset);
+            entry.pushKV("asset_guid", UniValue(out.tx->tx->vout[out.i].assetInfo.nAsset).write());
             entry.pushKV("asset_amount", ValueFromAmount(out.tx->tx->vout[out.i].assetInfo.nValue, GetBaseAssetID(out.tx->tx->vout[out.i].assetInfo.nAsset)));
         }
         entry.pushKV("confirmations", out.nDepth);

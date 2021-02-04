@@ -24,17 +24,20 @@ class AssetNFTTest(SyscoinTestFramework):
         self.basic_zerovalassetnft()
 
     def GetBaseAssetID(self, nAsset):
-        return (nAsset & 0xFFFFFFFF)
+        baseId = (int(nAsset) & 0xFFFFFFFF)
+        return str(baseId)
 
     def GetNFTID(self, nAsset):
-        return nAsset >> 32
+        nftId = int(nAsset) >> 32
+        return str(nftId)
 
     def CreateAssetID(self, NFTID, nBaseAsset):
-        return (NFTID << 32) | nBaseAsset
+        assetId = (int(NFTID) << 32) | int(nBaseAsset)
+        return str(assetId)
 
     def basic_assetnft(self):
         asset = self.nodes[0].assetnew('1', 'NFT', 'asset nft description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
-        nftID = 1
+        nftID = '1'
         nftGuid = self.CreateAssetID(nftID, asset)
         self.sync_mempools()
         self.nodes[1].generate(3)
@@ -47,11 +50,11 @@ class AssetNFTTest(SyscoinTestFramework):
 
     def basic_overflowassetnft(self):
         asset = self.nodes[0].assetnew('1', 'NFT', 'asset nft description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
-        nftID = 0xFFFFFFFF + 1
+        nftID = str(0xFFFFFFFF + 1)
         self.sync_mempools()
         self.nodes[1].generate(3)
         self.sync_blocks()
-        assert_raises_rpc_error(-1, 'JSON integer out of range', self.nodes[0].assetsend, asset, self.nodes[1].getnewaddress(), 1, 0, nftID)
+        assert_raises_rpc_error(-32602, 'Could not parse NFTID', self.nodes[0].assetsend, asset, self.nodes[1].getnewaddress(), 1, 0, nftID)
 
     def basic_multiassetnft(self):
         asset = self.nodes[0].assetnew('1', 'NFT', 'asset nft description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
@@ -59,9 +62,9 @@ class AssetNFTTest(SyscoinTestFramework):
         self.nodes[1].generate(3)
         self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1)
         self.sync_blocks()
-        nftUser1 = 1
-        nftUser2 = 2
-        nftUser4 = 0xFFFFFFFF
+        nftUser1 = '1'
+        nftUser2 = '2'
+        nftUser4 = str(0xFFFFFFFF)
         # NFT 1
         user1 = self.nodes[1].getnewaddress()
         # NFT 2
@@ -111,7 +114,7 @@ class AssetNFTTest(SyscoinTestFramework):
 
     def basic_zerovalassetnft(self):
         asset = self.nodes[0].assetnew('1', 'NFT', 'asset nft description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
-        nftID = 0xFFFFFFFF
+        nftID = str(0xFFFFFFFF)
         self.sync_mempools()
         self.nodes[1].generate(3)
         self.sync_blocks()

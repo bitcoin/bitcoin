@@ -80,7 +80,7 @@ class AssetBurnTest(SyscoinTestFramework):
 
     def basic_burn_asset_multiple(self):
         # SYSX guid on regtest is 123456
-        self.basic_asset(123456)
+        self.basic_asset('123456')
         self.nodes[0].generate(1)
         self.sync_blocks()
         self.nodes[0].assetsend(self.asset, self.nodes[1].getnewaddress(), 1)
@@ -100,7 +100,7 @@ class AssetBurnTest(SyscoinTestFramework):
         assert(prebalance + 0.94 <= postbalance)
         out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 1)
-        assert_equal(out[0]['asset_guid'], 123456)
+        assert_equal(out[0]['asset_guid'], '123456')
         assert_equal(out[0]['asset_amount'], Decimal('0.05'))
         # in mempool, create more allocations and burn them all accumulating the coins
         self.nodes[1].assetallocationsend(self.asset, self.nodes[1].getnewaddress(), 0.01)
