@@ -103,10 +103,8 @@ static void WalletShowInfo(CWallet* wallet_instance)
     tfm::format(std::cout, "Address Book: %zu\n", wallet_instance->m_address_book.size());
 }
 
-bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command, const std::string& name)
+bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command)
 {
-    const fs::path path = fsbridge::AbsPathJoin(GetWalletDir(), name);
-
     if (args.IsArgSet("-format") && command != "createfromdump") {
         tfm::format(std::cerr, "The -format option can only be used with the \"createfromdump\" command.\n");
         return false;
@@ -119,6 +117,12 @@ bool ExecuteWalletToolFunc(const ArgsManager& args, const std::string& command, 
         tfm::format(std::cerr, "The -descriptors option can only be used with the 'create' command.\n");
         return false;
     }
+    if (command == "create" && !args.IsArgSet("-wallet")) {
+        tfm::format(std::cerr, "Wallet name must be provided when creating a new wallet.\n");
+        return false;
+    }
+    const std::string name = args.GetArg("-wallet", "");
+    const fs::path path = fsbridge::AbsPathJoin(GetWalletDir(), name);
 
     if (command == "create") {
         DatabaseOptions options;
