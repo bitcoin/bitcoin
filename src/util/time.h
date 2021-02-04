@@ -43,7 +43,12 @@ int64_t GetTimeMicros();
 /** Returns the system time (not mockable) */
 int64_t GetSystemTimeInSeconds(); // Like GetTime(), but not mockable
 
-/** For testing. Set e.g. with the setmocktime rpc, or -mocktime argument */
+/**
+ * DEPRECATED
+ * Use SetMockTime with chrono type
+ *
+ * @param[in] nMockTimeIn Time in seconds.
+ */
 void SetMockTime(int64_t nMockTimeIn);
 
 /** For testing. Set e.g. with the setmocktime rpc, or -mocktime argument */
