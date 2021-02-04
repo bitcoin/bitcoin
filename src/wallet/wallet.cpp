@@ -2364,12 +2364,6 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
     nValueRet = 0;
 
     if (coin_selection_params.use_bnb) {
-        // Get long term estimate
-        FeeCalculation feeCalc;
-        CCoinControl temp;
-        temp.m_confirm_target = 1008;
-        CFeeRate long_term_feerate = GetMinimumFeeRate(*this, temp, &feeCalc);
-
         // Get the feerate for effective value.
         // When subtracting the fee from the outputs, we want the effective feerate to be 0
         CFeeRate effective_feerate{0};
@@ -2377,7 +2371,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
             effective_feerate = coin_selection_params.effective_fee;
         }
 
-        std::vector<OutputGroup> groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, effective_feerate, long_term_feerate, eligibility_filter, true /* positive_only */);
+        std::vector<OutputGroup> groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, effective_feerate, coin_selection_params.m_long_term_feerate, eligibility_filter, true /* positive_only */);
 
         // Calculate cost of change
         CAmount cost_of_change = GetDiscardRate(*this).GetFee(coin_selection_params.change_spend_size) + coin_selection_params.effective_fee.GetFee(coin_selection_params.change_output_size);
@@ -2819,6 +2813,11 @@ bool CWallet::CreateTransactionInternal(
                 error = _("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.");
                 return false;
             }
+
+            // Get long term estimate
+            CCoinControl cc_temp;
+            cc_temp.m_confirm_target = chain().estimateMaxBlocks();
+            coin_selection_params.m_long_term_feerate = GetMinimumFeeRate(*this, cc_temp, nullptr);
 
             nFeeRet = 0;
             bool pick_new_inputs = true;
