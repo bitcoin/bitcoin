@@ -42,7 +42,7 @@ public:
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
 
-    bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state);
+    bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, bool fJustCheck);
     bool UndoBlock(const CBlock& block, const CBlockIndex* pindex);
 
     void AddMinableCommitment(const CFinalCommitment& fqc);
@@ -59,7 +59,7 @@ public:
 
 private:
     static bool GetCommitmentsFromBlock(const CBlock& block, const CBlockIndex* pindex, std::map<Consensus::LLMQType, CFinalCommitment>& ret, CValidationState& state);
-    bool ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, CValidationState& state);
+    bool ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, CValidationState& state, bool fJustCheck);
     static bool IsMiningPhase(Consensus::LLMQType llmqType, int nHeight);
     bool IsCommitmentRequired(Consensus::LLMQType llmqType, int nHeight);
     static uint256 GetQuorumBlockHash(Consensus::LLMQType llmqType, int nHeight);
