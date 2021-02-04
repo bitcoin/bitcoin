@@ -148,7 +148,7 @@ SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
 time-machine() {
     # shellcheck disable=SC2086
     guix time-machine --url=https://github.com/dongcarl/guix.git \
-                      --commit=b066c25026f21fb57677aa34692a5034338e7ee3 \
+                      --commit=7d6bd44da57926e0d4af25eba723a61c82beef98 \
                       --max-jobs="$MAX_JOBS" \
                       --keep-failed \
                       ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
