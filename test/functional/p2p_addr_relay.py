@@ -47,7 +47,6 @@ class AddrReceiver(P2PInterface):
 
 class AddrTest(SyscoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = False
         self.num_nodes = 1
 
     def run_test(self):
