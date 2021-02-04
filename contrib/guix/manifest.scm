@@ -52,28 +52,28 @@ we link against libssp.so, and thus will ensure that this works properly.
 Taken from:
 http://www.linuxfromscratch.org/hlfs/view/development/chapter05/gcc-pass1.html"
   (package
-   (inherit xgcc)
-   (arguments
-    (substitute-keyword-arguments (package-arguments xgcc)
-      ((#:make-flags flags)
-       `(cons "gcc_cv_libc_provides_ssp=yes" ,flags))))))
+    (inherit xgcc)
+    (arguments
+     (substitute-keyword-arguments (package-arguments xgcc)
+       ((#:make-flags flags)
+        `(cons "gcc_cv_libc_provides_ssp=yes" ,flags))))))
 
 (define (make-gcc-rpath-link xgcc)
   "Given a XGCC package, return a modified package that replace each instance of
 -rpath in the default system spec that's inserted by Guix with -rpath-link"
   (package
-   (inherit xgcc)
-   (arguments
-    (substitute-keyword-arguments (package-arguments xgcc)
-      ((#:phases phases)
-       `(modify-phases ,phases
-          (add-after 'pre-configure 'replace-rpath-with-rpath-link
-            (lambda _
-              (substitute* (cons "gcc/config/rs6000/sysv4.h"
-                                 (find-files "gcc/config"
-                                             "^gnu-user.*\\.h$"))
-                (("-rpath=") "-rpath-link="))
-              #t))))))))
+    (inherit xgcc)
+    (arguments
+     (substitute-keyword-arguments (package-arguments xgcc)
+       ((#:phases phases)
+        `(modify-phases ,phases
+           (add-after 'pre-configure 'replace-rpath-with-rpath-link
+             (lambda _
+               (substitute* (cons "gcc/config/rs6000/sysv4.h"
+                                  (find-files "gcc/config"
+                                              "^gnu-user.*\\.h$"))
+                 (("-rpath=") "-rpath-link="))
+               #t))))))))
 
 (define (make-cross-toolchain target
                               base-gcc-for-libc
@@ -127,18 +127,18 @@ chain for " target " development."))
       (license (package-license xgcc)))))
 
 (define* (make-bitcoin-cross-toolchain target
-                                  #:key
-                                  (base-gcc-for-libc gcc-7)
-                                  (base-kernel-headers linux-libre-headers-5.4)
-                                  (base-libc glibc)  ; glibc 2.31
-                                  (base-gcc (make-gcc-rpath-link gcc-8)))
+                                       #:key
+                                       (base-gcc-for-libc gcc-7)
+                                       (base-kernel-headers linux-libre-headers-5.4)
+                                       (base-libc glibc)  ; glibc 2.31
+                                       (base-gcc (make-gcc-rpath-link gcc-8)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
   (make-cross-toolchain target
-                   base-gcc-for-libc
-                   base-kernel-headers
-                   base-libc
-                   base-gcc))
+                        base-gcc-for-libc
+                        base-kernel-headers
+                        base-libc
+                        base-gcc))
 
 (define (make-gcc-with-pthreads gcc)
   (package-with-extra-configure-variable gcc "--enable-threads" "posix"))
@@ -177,22 +177,22 @@ chain for " target " development."))
 
 (define-public font-tuffy
   (package
-   (name "font-tuffy")
-   (version "20120614")
-   (source
-    (origin
-     (method url-fetch)
-     (uri (string-append "http://tulrich.com/fonts/tuffy-" version ".tar.gz"))
-     (file-name (string-append name "-" version ".tar.gz"))
-     (sha256
-      (base32
-       "02vf72bgrp30vrbfhxjw82s115z27dwfgnmmzfb0n9wfhxxfpyf6"))))
-   (build-system font-build-system)
-   (home-page "http://tulrich.com/fonts/")
-   (synopsis "The Tuffy Truetype Font Family")
-   (description
-    "Thatcher Ulrich's first outline font design. He started with the goal of producing a neutral, readable sans-serif text font. There are lots of \"expressive\" fonts out there, but he wanted to start with something very plain and clean, something he might want to actually use. ")
-   (license license:public-domain)))
+    (name "font-tuffy")
+    (version "20120614")
+    (source
+     (origin
+       (method url-fetch)
+       (uri (string-append "http://tulrich.com/fonts/tuffy-" version ".tar.gz"))
+       (file-name (string-append name "-" version ".tar.gz"))
+       (sha256
+        (base32
+         "02vf72bgrp30vrbfhxjw82s115z27dwfgnmmzfb0n9wfhxxfpyf6"))))
+    (build-system font-build-system)
+    (home-page "http://tulrich.com/fonts/")
+    (synopsis "The Tuffy Truetype Font Family")
+    (description
+     "Thatcher Ulrich's first outline font design. He started with the goal of producing a neutral, readable sans-serif text font. There are lots of \"expressive\" fonts out there, but he wanted to start with something very plain and clean, something he might want to actually use. ")
+    (license license:public-domain)))
 
 (define-public lief
   (package
