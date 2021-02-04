@@ -65,7 +65,6 @@ def assert_balances(node, mine):
 class AvoidReuseTest(BitcoinTestFramework):
 
     def set_test_params(self):
-        self.setup_clean_chain = False
         self.num_nodes = 2
         # This test isn't testing txn relay/timing, so set whitelist on the
         # peers for instant txn relay. This speeds up the test run time 2-3x.

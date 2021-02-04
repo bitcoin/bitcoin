@@ -17,7 +17,6 @@ def check_node_connections(*, node, num_in, num_out):
 
 class P2PAddConnections(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = False
         self.num_nodes = 2
 
     def setup_network(self):
