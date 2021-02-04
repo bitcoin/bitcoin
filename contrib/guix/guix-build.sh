@@ -150,6 +150,7 @@ time-machine() {
     guix time-machine --url=https://github.com/dongcarl/guix.git \
                       --commit=b066c25026f21fb57677aa34692a5034338e7ee3 \
                       --max-jobs="$MAX_JOBS" \
+                      --keep-failed \
                       ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
                       ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_TIMEMACHINE_FLAGS} \
                       -- "$@"
@@ -259,6 +260,12 @@ EOF
         #     make the downloaded depends sources available to it. The sources
         #     should have been downloaded prior to this invocation.
         #
+        #   --keep-failed     keep build tree of failed builds
+        #
+        #     When builds of the Guix environment itself (not Bitcoin Core)
+        #     fail, it is useful for the build tree to be kept for debugging
+        #     purposes.
+        #
         #  ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"}
         #
         #                     fetch substitute from SUBSTITUTE_URLS if they are
@@ -281,6 +288,7 @@ EOF
                                  ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
                                  ${BASE_CACHE:+--share="$BASE_CACHE"} \
                                  --max-jobs="$MAX_JOBS" \
+                                 --keep-failed \
                                  ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
                                  ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS} \
                                  -- env HOST="$host" \
