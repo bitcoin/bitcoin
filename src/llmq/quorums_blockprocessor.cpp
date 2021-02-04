@@ -138,7 +138,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
     }
 }
 
-bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state)
+bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
     bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().DIP0003Height;
@@ -183,7 +183,7 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
 
     for (auto& p : qcs) {
         auto& qc = p.second;
-        if (!ProcessCommitment(pindex->nHeight, blockHash, qc, state)) {
+        if (!ProcessCommitment(pindex->nHeight, blockHash, qc, state, fJustCheck)) {
             return false;
         }
     }
@@ -198,7 +198,7 @@ static std::tuple<std::string, uint8_t, uint32_t> BuildInversedHeightKey(uint8_t
     return std::make_tuple(DB_MINED_COMMITMENT_BY_INVERSED_HEIGHT, llmqType, htobe32(std::numeric_limits<uint32_t>::max() - (uint32_t)nMinedHeight));
 }
 
-bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, BlockValidationState& state)
+bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockHash, const CFinalCommitment& qc, BlockValidationState& state, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
     auto& params = Params().GetConsensus().llmqs.at(qc.llmqType);
@@ -243,6 +243,10 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
 
     if (!qc.Verify(members, true)) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-invalid");
+    }
+
+    if (fJustCheck) {
+        return true;
     }
 
     // Store commitment in DB

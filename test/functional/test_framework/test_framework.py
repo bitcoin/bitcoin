@@ -1363,11 +1363,16 @@ class DashTestFramework(SyscoinTestFramework):
         self.sync_blocks(nodes)
 
         self.log.info("Waiting for phase 6 (mining)")
-
         self.wait_for_quorum_phase(q, 6, expected_members, None, 0, mninfos_online, wait_proc=timeout_func1, done_proc=lambda: self.log.info("Done phase 6 (mining))"))
 
         self.log.info("Waiting final commitment")
         self.wait_for_quorum_commitment(q, nodes, wait_proc=timeout_func, done_proc=lambda: self.log.info("Done final commitment"))
+        
+        self.log.info("Mining final commitment")
+        self.bump_mocktime(1, nodes=nodes)
+        self.nodes[0].getblocktemplate() # this calls CreateNewBlock
+        self.nodes[0].generate(1)
+        self.sync_blocks(nodes)
 
         self.log.info("Waiting for quorum to appear in the list")
         self.wait_for_quorum_list(q, nodes)
