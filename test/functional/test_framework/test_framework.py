@@ -1370,7 +1370,7 @@ class DashTestFramework(SyscoinTestFramework):
         
         self.log.info("Mining final commitment")
         self.bump_mocktime(1, nodes=nodes)
-        self.nodes[0].getblocktemplate() # this calls CreateNewBlock
+        self.nodes[0].getblocktemplate({"rules": ["segwit"]}) # this calls CreateNewBlock
         self.nodes[0].generate(1)
         self.sync_blocks(nodes)
 
