@@ -12,7 +12,6 @@ from test_framework.test_framework import BitcoinTestFramework
 class GetAddressInfoLabelDeprecationTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.setup_clean_chain = False
         # Start node[0] with -deprecatedrpc=label, and node[1] without.
         self.extra_args = [["-deprecatedrpc=label"], []]
 

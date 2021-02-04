@@ -15,7 +15,6 @@ from test_framework.util import (
 
 class CreateWalletWatchonlyTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.setup_clean_chain = False
         self.num_nodes = 1
         self.supports_cli = True
 
