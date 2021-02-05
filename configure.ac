@@ -1257,8 +1257,10 @@ if test "x$enable_fuzz" = "xyes"; then
       #include <cstdint>
       #include <cstddef>
       extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) { return 0; }
-      /* unterminated comment to remove the main function ...
-    ]],[[]])])
+      /* comment to remove the main function ...
+     ]],[[
+      */ int not_main() {
+     ]])])
 else
   SYSCOIN_QT_INIT
 
