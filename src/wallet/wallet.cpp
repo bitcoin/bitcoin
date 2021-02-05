@@ -2708,14 +2708,14 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
     UniValue reqObj(UniValue::VOBJ);
     reqObj.pushKV("tx", strHex); 
     std::string reqJSON = reqObj.write();
-    bool bFilled = false;
+    std::map<uint32_t, std::vector<unsigned char> > mapSigs;
     // fill notary signatures for assets that require them
     for(auto& vecOut: voutAssets) {
         // get asset
         CAsset theAsset;
+        const uint32_t &nBaseAssetID = GetBaseAssetID(vecOut.key);
         // if asset has notary signature requirement set
-        if(GetAsset(GetBaseAssetID(vecOut.key), theAsset) && !theAsset.vchNotaryKeyID.empty()) {
-            bFilled = false;
+        if(mapSigs.find(nBaseAssetID) == mapSigs.end() && GetAsset(nBaseAssetID, theAsset) && !theAsset.vchNotaryKeyID.empty()) {
             if(!theAsset.notaryDetails.strEndPoint.empty()) {
                 bool fInvalid = false;
                 const std::string &strEndPoint = DecodeBase64(theAsset.notaryDetails.strEndPoint, &fInvalid);
@@ -2726,21 +2726,39 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
                 if(response != nullptr) {
                     UniValue resObj;
                     if(resObj.read((const char*)response)) {
-                        const UniValue &sigObj = find_value(resObj, "sig");  
-                        if(sigObj.isStr()) {
-                            // get signature from end-point
-                            vecOut.vchNotarySig = DecodeBase64(sigObj.get_str().c_str(), &fInvalid);
-                            if (fInvalid) {
-                                strError = "Malformed base64 encoding for notary signature";
-                            }
-                            // ensure sig is 65 bytes exactly for ECDSA
-                            if(vecOut.vchNotarySig.size() == 65)
-                                bFilled = true;
-                            else {
-                                strError = strprintf("Invalid signature size %d (required 65)\n", vecOut.vchNotarySig.size());
+                        const UniValue &sigsObj = find_value(resObj, "sigs");  
+                        if(sigsObj.isArray()) {
+                            const UniValue &sigsArr = resObj.get_array();  
+                            for(size_t i = 0;i<sigsArr.size();i++) {
+                                const UniValue &sigArrObj = sigsArr[i].get_obj();  
+                                if(sigArrObj.isNull())
+                                    continue;
+                                const UniValue &assetObj =  find_value(sigArrObj, "asset");
+                                if(!assetObj.isNum()) {
+                                    strError = "Invalid asset guid";
+                                    continue;
+                                }
+                                const uint32_t &nAsset = assetObj.get_uint();
+                                const UniValue &sigObj =  find_value(sigArrObj, "sig");
+                                if(!sigObj.isStr()) {
+                                    strError = "Invalid signature";
+                                    continue;
+                                }
+                                const std::string &strSig = sigObj.get_str();
+                                // get signature from end-point
+                                const std::vector<unsigned char> &vchSig = DecodeBase64(strSig.c_str(), &fInvalid);
+                                if (fInvalid) {
+                                    strError = "Malformed base64 encoding for notary signature";
+                                }
+                                // ensure compact sig is 65 bytes exactly for ECDSA
+                                if(vchSig.size() == 65)
+                                    mapSigs.try_emplace(nAsset, vchSig);
+                                else {
+                                    strError = strprintf("Invalid signature size %d (required 65)\n", vchSig.size());
+                                }
                             }
                         } else {
-                            strError = "Cannot find signature field in JSON response from endpoint";
+                            strError = "Cannot find signatures field in JSON response from endpoint";
                         }
                     } else {
                         strError = "Cannot read response from endpoint";
@@ -2748,13 +2766,16 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
                     free(response);
                 }
             }
-            if(!bFilled)
-                break;
         }
+    }
+    for(auto& vecOut: voutAssets) {
+        auto it = mapSigs.find(GetBaseAssetID(vecOut.key));
+        if(it != mapSigs.end())
+            vecOut.vchNotarySig = it->second;
     }
     if(curl)
         curl_easy_cleanup(curl);
-    return bFilled;
+    return !mapSigs.empty();
 }
 
 bool UpdateNotarySignatureFromEndpoint(CMutableTransaction& mtx, std::string& strError) {
