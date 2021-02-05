@@ -166,7 +166,7 @@ struct SectionInfo
 class ArgsManager
 {
 public:
-    enum Flags {
+    enum Flags : uint32_t {
         // Boolean options can accept negation syntax -noOPTION or -noOPTION=1
         ALLOW_BOOL = 0x01,
         ALLOW_INT = 0x02,
