@@ -2708,14 +2708,13 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
     UniValue reqObj(UniValue::VOBJ);
     reqObj.pushKV("tx", strHex); 
     std::string reqJSON = reqObj.write();
-    std::map<uint32_t, std::vector<unsigned char> > mapSigs;
+    std::map<uint64_t, std::vector<unsigned char> > mapSigs;
     // fill notary signatures for assets that require them
     for(auto& vecOut: voutAssets) {
         // get asset
         CAsset theAsset;
-        const uint32_t &nBaseAssetID = GetBaseAssetID(vecOut.key);
         // if asset has notary signature requirement set
-        if(mapSigs.find(nBaseAssetID) == mapSigs.end() && GetAsset(nBaseAssetID, theAsset) && !theAsset.vchNotaryKeyID.empty()) {
+        if(mapSigs.find(vecOut.key) == mapSigs.end() && GetAsset(GetBaseAssetID(vecOut.key), theAsset) && !theAsset.vchNotaryKeyID.empty()) {
             if(!theAsset.notaryDetails.strEndPoint.empty()) {
                 bool fInvalid = false;
                 const std::string &strEndPoint = DecodeBase64(theAsset.notaryDetails.strEndPoint, &fInvalid);
@@ -2734,11 +2733,13 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
                                 if(sigArrObj.isNull())
                                     continue;
                                 const UniValue &assetObj =  find_value(sigArrObj, "asset");
-                                if(!assetObj.isNum()) {
+                                if(!assetObj.isStr()) {
                                     strError = "Invalid asset guid";
                                     continue;
                                 }
-                                const uint32_t &nAsset = assetObj.get_uint();
+                                uint64_t nAsset;
+                                if(!ParseUInt64(assetObj.get_str(), &nAsset))
+                                    throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
                                 const UniValue &sigObj =  find_value(sigArrObj, "sig");
                                 if(!sigObj.isStr()) {
                                     strError = "Invalid signature";
@@ -2769,7 +2770,7 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
         }
     }
     for(auto& vecOut: voutAssets) {
-        auto it = mapSigs.find(GetBaseAssetID(vecOut.key));
+        auto it = mapSigs.find(vecOut.key);
         if(it != mapSigs.end())
             vecOut.vchNotarySig = it->second;
     }
