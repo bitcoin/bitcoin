@@ -31,9 +31,6 @@ for i in range(10):
 class AddrReceiver(P2PInterface):
     addrv2_received_and_checked = False
 
-    def __init__(self):
-        super().__init__(support_addrv2 = True)
-
     def on_addrv2(self, message):
         for addr in message.addrs:
             assert_equal(addr.nServices, 9)
@@ -61,7 +58,9 @@ class AddrTest(BitcoinTestFramework):
             addr_source.send_and_ping(msg)
 
         self.log.info('Check that addrv2 message content is relayed and added to addrman')
-        addr_receiver = self.nodes[0].add_p2p_connection(AddrReceiver())
+        addr_receiver = self.nodes[0].add_p2p_connection(AddrReceiver(support_addrv2=True))
+        # Add an additional receiver that is an inbound-block-relay (disabletx) peer.
+        block_relay_peer = self.nodes[0].add_p2p_connection(AddrReceiver(support_addrv2=True, disabletx=True))
         msg.addrs = ADDRS
         with self.nodes[0].assert_debug_log([
                 'Added 10 addresses from 127.0.0.1: 0 tried',
@@ -73,6 +72,7 @@ class AddrTest(BitcoinTestFramework):
             addr_receiver.wait_for_addrv2()
 
         assert addr_receiver.addrv2_received_and_checked
+        assert_equal(block_relay_peer.addrv2_received_and_checked, 0)
 
 
 if __name__ == '__main__':
