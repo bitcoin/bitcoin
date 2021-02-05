@@ -30,7 +30,6 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include <vector>
 
 namespace {
 const TestingSetup* g_setup;
@@ -46,7 +45,7 @@ void initialize_process_message()
     SyncWithValidationInterfaceQueue();
 }
 
-void fuzz_target(const std::vector<uint8_t>& buffer, const std::string& LIMIT_TO_MESSAGE_TYPE)
+void fuzz_target(FuzzBufferType buffer, const std::string& LIMIT_TO_MESSAGE_TYPE)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 

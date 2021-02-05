@@ -59,8 +59,7 @@ static bool read_stdin(std::vector<uint8_t>& data)
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     static const auto& test_one_input = *Assert(g_test_one_input);
-    const std::vector<uint8_t> input(data, data + size);
-    test_one_input(input);
+    test_one_input({data, size});
     return 0;
 }
 
