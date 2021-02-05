@@ -23,6 +23,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
     p2p_port,
 )
+from test_framework.wallet import MiniWallet
 
 
 def assert_net_servicesnames(servicesflag, servicenames):
@@ -44,6 +45,9 @@ class NetTest(DashTestFramework):
         self.supports_cli = False
 
     def run_test(self):
+        # We need miniwallet to make a transaction
+        self.wallet = MiniWallet(self.nodes[0])
+        self.wallet.generate(1)
         # Get out of IBD for the getpeerinfo tests.
         self.nodes[0].generate(101)
         # Wait for one ping/pong to finish so that we can be sure that there is no chatter between nodes for some time
@@ -163,8 +167,7 @@ class NetTest(DashTestFramework):
     def test_getpeerinfo(self):
         self.log.info("Test getpeerinfo")
         # Create a few getpeerinfo last_block/last_transaction values.
-        if self.is_wallet_compiled():
-            self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1)
+        self.wallet.send_self_transfer(from_node=self.nodes[0]) # Make a transaction so we can see it in the getpeerinfo results
         self.nodes[1].generate(1)
         self.sync_all()
         time_now = self.mocktime

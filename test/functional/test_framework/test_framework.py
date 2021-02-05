@@ -222,9 +222,9 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         parser.add_argument('--timeout-factor', dest="timeout_factor", type=float, default=1.0, help='adjust test timeouts by a factor. Setting it to 0 disables all timeouts')
 
         group = parser.add_mutually_exclusive_group()
-        group.add_argument("--descriptors", default=False, action="store_true",
+        group.add_argument("--descriptors", action='store_const', const=True,
                             help="Run test using a descriptor wallet", dest='descriptors')
-        group.add_argument("--legacy-wallet", default=False, action="store_false",
+        group.add_argument("--legacy-wallet", action='store_const', const=False,
                             help="Run test using legacy wallets", dest='descriptors')
 
         self.add_options(parser)
@@ -239,6 +239,17 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         # To keep TestShell from failing with an "unrecognized argument" error, we add a dummy "-f" argument
         # source: https://stackoverflow.com/questions/48796169/how-to-fix-ipykernel-launcher-py-error-unrecognized-arguments-in-jupyter/56349168#56349168
         parser.add_argument("-f", "--fff", help="a dummy argument to fool ipython", default="1")
+
+        if self.options.descriptors is None:
+            # Prefer BDB unless it isn't available
+            if self.is_bdb_compiled():
+                self.options.descriptors = False
+            elif self.is_sqlite_compiled():
+                self.options.descriptors = True
+            else:
+                # If neither are compiled, tests requiring a wallet will be skipped and the value of self.options.descriptors won't matter
+                # It still needs to exist and be None in order for tests to work however.
+                self.options.descriptors = None
 
         PortSeed.n = self.options.port_seed
 
