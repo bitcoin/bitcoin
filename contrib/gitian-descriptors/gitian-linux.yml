@@ -30,11 +30,11 @@ packages:
 - "binutils-aarch64-linux-gnu"
 - "g++-8-aarch64-linux-gnu"
 #  - powerpc64-linux-gnu
-- "binutils-powerpc64-linux-gnu"
-- "g++-8-powerpc64-linux-gnu"
+# - "binutils-powerpc64-linux-gnu"
+# - "g++-8-powerpc64-linux-gnu"
 #  - powerpc64le-linux-gnu
-- "binutils-powerpc64le-linux-gnu"
-- "g++-8-powerpc64le-linux-gnu"
+# - "binutils-powerpc64le-linux-gnu"
+# - "g++-8-powerpc64le-linux-gnu"
 #  - riscv64-linux-gnu
 remotes:
 - "url": "https://github.com/syscoin/syscoin.git"
