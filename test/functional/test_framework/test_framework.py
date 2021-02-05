@@ -115,6 +115,9 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         self.wallet_names = None
         # SYSCOIN
         self.mocktime = None
+        # By default the wallet is not required. Set to true by skip_if_no_wallet().
+        # When False, we ignore wallet_names regardless of what it is.
+        self.requires_wallet = False
         self.set_test_params()
         assert self.wallet_names is None or len(self.wallet_names) <= self.num_nodes
         if self.options.timeout_factor == 0 :
@@ -190,14 +193,29 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
         parser.add_argument('--timeout-factor', dest="timeout_factor", type=float, default=1.0, help='adjust test timeouts by a factor. Setting it to 0 disables all timeouts')
 
         group = parser.add_mutually_exclusive_group()
-        group.add_argument("--descriptors", default=False, action="store_true",
+        group.add_argument("--descriptors", action='store_const', const=True,
                             help="Run test using a descriptor wallet", dest='descriptors')
-        group.add_argument("--legacy-wallet", default=False, action="store_false",
+        group.add_argument("--legacy-wallet", action='store_const', const=False,
                             help="Run test using legacy wallets", dest='descriptors')
 
         self.add_options(parser)
         self.options = parser.parse_args()
         self.options.previous_releases_path = previous_releases_path
+
+        config = configparser.ConfigParser()
+        config.read_file(open(self.options.configfile))
+        self.config = config
+
+        if self.options.descriptors is None:
+            # Prefer BDB unless it isn't available
+            if self.is_bdb_compiled():
+                self.options.descriptors = False
+            elif self.is_sqlite_compiled():
+                self.options.descriptors = True
+            else:
+                # If neither are compiled, tests requiring a wallet will be skipped and the value of self.options.descriptors won't matter
+                # It still needs to exist and be None in order for tests to work however.
+                self.options.descriptors = None
 
     def setup(self):
         """Call this method to start up the test framework object with options set."""
@@ -208,9 +226,8 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
 
         self.options.cachedir = os.path.abspath(self.options.cachedir)
 
-        config = configparser.ConfigParser()
-        config.read_file(open(self.options.configfile))
-        self.config = config
+        config = self.config
+
         fname_syscoind = os.path.join(
             config["environment"]["BUILDDIR"],
             "src",
@@ -383,7 +400,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
             extra_args = self.extra_args
         self.add_nodes(self.num_nodes, extra_args)
         self.start_nodes()
-        if self.is_wallet_compiled():
+        if self.requires_wallet:
             self.import_deterministic_coinbase_privkeys()
         if not self.setup_clean_chain:
             for n in self.nodes:
@@ -793,10 +810,13 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
 
     def skip_if_no_wallet(self):
         """Skip the running test if wallet has not been compiled."""
+        self.requires_wallet = True
         if not self.is_wallet_compiled():
             raise SkipTest("wallet has not been compiled.")
         if self.options.descriptors:
             self.skip_if_no_sqlite()
+        else:
+            self.skip_if_no_bdb()
 
     def skip_if_no_sqlite(self):
         """Skip the running test if sqlite has not been compiled."""

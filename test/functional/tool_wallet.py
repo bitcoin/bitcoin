@@ -350,7 +350,8 @@ class ToolWalletTest(SyscoinTestFramework):
 
         self.log.info('Checking createfromdump')
         self.do_tool_createfromdump("load", "wallet.dump")
-        self.do_tool_createfromdump("load-bdb", "wallet.dump", "bdb")
+        if self.is_bdb_compiled():
+            self.do_tool_createfromdump("load-bdb", "wallet.dump", "bdb")
         if self.is_sqlite_compiled():
             self.do_tool_createfromdump("load-sqlite", "wallet.dump", "sqlite")
 
