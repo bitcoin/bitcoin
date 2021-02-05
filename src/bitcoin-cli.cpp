@@ -300,7 +300,6 @@ class NetinfoRequestHandler : public BaseRequestHandler
 {
 private:
     static constexpr int8_t UNKNOWN_NETWORK{-1};
-    static constexpr int8_t NET_I2P{3}; // pos of "i2p" in m_networks
     static constexpr uint8_t m_networks_size{4};
     static constexpr uint8_t MAX_DETAIL_LEVEL{4};
     const std::array<std::string, m_networks_size> m_networks{{"ipv4", "ipv6", "onion", "i2p"}};
@@ -319,7 +318,6 @@ private:
     bool IsAddressSelected() const { return m_details_level == 2 || m_details_level == 4; }
     bool IsVersionSelected() const { return m_details_level == 3 || m_details_level == 4; }
     bool m_is_asmap_on{false};
-    bool m_is_i2p_on{false};
     size_t m_max_addr_length{0};
     size_t m_max_age_length{3};
     size_t m_max_id_length{2};
@@ -404,7 +402,6 @@ public:
             const std::string network{peer["network"].get_str()};
             const int8_t network_id{NetworkStringToId(network)};
             if (network_id == UNKNOWN_NETWORK) continue;
-            m_is_i2p_on |= (network_id == NET_I2P);
             const bool is_outbound{!peer["inbound"].get_bool()};
             const bool is_block_relay{!peer["relaytxes"].get_bool()};
             const std::string conn_type{peer["connection_type"].get_str()};
@@ -477,13 +474,14 @@ public:
 
         // Report peer connection totals by type.
         result += "        ipv4    ipv6   onion";
-        if (m_is_i2p_on) result += "     i2p";
+        const bool any_i2p_peers = m_counts.at(2).at(3); // false if total i2p peers count is 0, otherwise true
+        if (any_i2p_peers) result += "     i2p";
         result += "   total   block";
         if (m_manual_peers_count) result += "  manual";
         const std::array<std::string, 3> rows{{"in", "out", "total"}};
         for (uint8_t i = 0; i < 3; ++i) {
             result += strprintf("\n%-5s  %5i   %5i   %5i", rows.at(i), m_counts.at(i).at(0), m_counts.at(i).at(1), m_counts.at(i).at(2)); // ipv4/ipv6/onion peers counts
-            if (m_is_i2p_on) result += strprintf("   %5i", m_counts.at(i).at(3)); // i2p peers count
+            if (any_i2p_peers) result += strprintf("   %5i", m_counts.at(i).at(3)); // i2p peers count
             result += strprintf("   %5i", m_counts.at(i).at(m_networks_size)); // total peers count
             if (i == 1) { // the outbound row has two extra columns for block relay and manual peer counts
                 result += strprintf("   %5i", m_block_relay_peers_count);
