@@ -403,7 +403,8 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             n = self.nodes[i]
             if wallet_name is not None:
                 n.createwallet(wallet_name=wallet_name, descriptors=self.options.descriptors, load_on_startup=True)
-            n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase')
+            if self.chain != "main":
+                n.importprivkey(privkey=n.get_deterministic_priv_key().key, label='coinbase')
 
     def run_test(self):
         """Tests must override this method to define test logic"""
