@@ -2363,7 +2363,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
     std::vector<OutputGroup> utxo_pool;
     if (coin_selection_params.use_bnb) {
         // Calculate cost of change
-        CAmount cost_of_change = GetDiscardRate(*this).GetFee(coin_selection_params.change_spend_size) + coin_selection_params.effective_fee.GetFee(coin_selection_params.change_output_size);
+        CAmount cost_of_change = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size) + coin_selection_params.effective_fee.GetFee(coin_selection_params.change_output_size);
 
         // Filter by the min conf specs and add to utxo_pool and calculate effective value
         for (OutputGroup& group : groups) {
@@ -2805,7 +2805,8 @@ bool CWallet::CreateTransactionInternal(
             CTxOut change_prototype_txout(0, scriptChange);
             coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
 
-            CFeeRate discard_rate = GetDiscardRate(*this);
+            // Set discard feerate
+            coin_selection_params.m_discard_feerate = GetDiscardRate(*this);
 
             // Get the fee rate to use effective values in coin selection
             coin_selection_params.effective_fee = GetMinimumFeeRate(*this, coin_control, &feeCalc);
@@ -2924,7 +2925,7 @@ bool CWallet::CreateTransactionInternal(
                     // Never create dust outputs; if we would, just
                     // add the dust to the fee.
                     // The nChange when BnB is used is always going to go to fees.
-                    if (IsDust(newTxOut, discard_rate) || bnb_used)
+                    if (IsDust(newTxOut, coin_selection_params.m_discard_feerate) || bnb_used)
                     {
                         nChangePosInOut = -1;
                         nFeeRet += nChange;
@@ -2976,7 +2977,7 @@ bool CWallet::CreateTransactionInternal(
                     if (nChangePosInOut == -1 && nSubtractFeeFromAmount == 0 && pick_new_inputs) {
                         unsigned int tx_size_with_change = nBytes + coin_selection_params.change_output_size + 2; // Add 2 as a buffer in case increasing # of outputs changes compact size
                         CAmount fee_needed_with_change = coin_selection_params.effective_fee.GetFee(tx_size_with_change);
-                        CAmount minimum_value_for_change = GetDustThreshold(change_prototype_txout, discard_rate);
+                        CAmount minimum_value_for_change = GetDustThreshold(change_prototype_txout, coin_selection_params.m_discard_feerate);
                         if (nFeeRet >= fee_needed_with_change + minimum_value_for_change) {
                             pick_new_inputs = false;
                             nFeeRet = fee_needed_with_change;
