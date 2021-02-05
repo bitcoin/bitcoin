@@ -3093,15 +3093,25 @@ void CChainState::ResetBlockFailureFlags(CBlockIndex *pindex) {
         }
         it++;
     }
+	
+	CBlockIndex *pindexFirstInvalid = nullptr;
 
     // Remove the invalidity flag from all ancestors too.
     while (pindex != nullptr) {
         if (pindex->nStatus & BLOCK_FAILED_MASK) {
+			if (pindex->nStatus & BLOCK_FAILED_VALID) {
+				pindexFirstInvalid = pindex;
+			}
             pindex->nStatus &= ~BLOCK_FAILED_MASK;
             setDirtyBlockIndex.insert(pindex);
             m_blockman.m_failed_blocks.erase(pindex);
         }
         pindex = pindex->pprev;
+    }
+	
+	//Remove the invalidity flag from all descendants of the first invalid ancestor block
+    if (pindexFirstInvalid != nullptr) {
+        ResetBlockFailureFlags(pindexFirstInvalid);
     }
 }
 
