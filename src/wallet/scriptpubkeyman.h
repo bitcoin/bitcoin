@@ -438,6 +438,8 @@ public:
     bool HaveWatchOnly() const;
     //! Remove a watch only script from the keystore
     bool RemoveWatchOnly(const CScript &dest);
+    //! Remove a watch only script and superfluous scripts from the keystore
+    bool PurgeWatchOnly(const CScript& dest);
     bool AddWatchOnly(const CScript& dest, int64_t nCreateTime) EXCLUSIVE_LOCKS_REQUIRED(cs_KeyStore);
 
     //! Fetches a pubkey from mapWatchKeys if it exists there

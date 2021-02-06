@@ -471,14 +471,47 @@ class WalletTest(BitcoinTestFramework):
                                 {"address": address_to_import},
                                 {"spendable": False})
 
-            # 5. Import private key of the previously imported address on node1
+            # 5. Remove the address from node1
+            self.nodes[1].removeaddress(address_to_import)
+
+            # 6. Validate that the address is no longer in the wallet
+            assert not self.nodes[1].getaddressinfo(address_to_import)["iswatchonly"]
+
+            # 7. Attempt to remove address again
+            assert_raises_rpc_error(-4, "The wallet does not contain this address or script", self.nodes[1].removeaddress, address_to_import)
+
+            # 8. Re-import the address
+            self.nodes[1].importaddress(address_to_import)
+
+            # 9. Import private key of the previously imported address on node1
             priv_key = self.nodes[2].dumpprivkey(address_to_import)
             self.nodes[1].importprivkey(priv_key)
 
-            # 6. Check that the unspents are now spendable on node1
+            # 10. Check that the unspents are now spendable on node1
             assert_array_result(self.nodes[1].listunspent(),
                                 {"address": address_to_import},
                                 {"spendable": True})
+
+            # 11. Attempt to remove address after owning private key
+            assert_raises_rpc_error(-4, "The wallet contains the private key for this address", self.nodes[1].removeaddress, address_to_import)
+
+            # Check for removeaddress affecting other addresses
+            # Send some coins to generate new UTXO
+            address_to_import2 = self.nodes[2].getnewaddress()
+            txid = self.nodes[0].sendtoaddress(address_to_import2, 1)
+            self.nodes[0].generate(1)
+            self.sync_all(self.nodes[0:3])
+
+            # Import the new address from node2 to node1
+            self.nodes[1].importaddress(address_to_import2)
+            assert self.nodes[1].getaddressinfo(address_to_import2)["iswatchonly"]
+
+            # Remove the address from node1
+            self.nodes[1].removeaddress(address_to_import2)
+
+            # Check the address was removed and other address is unaffected
+            assert not self.nodes[1].getaddressinfo(address_to_import2)["iswatchonly"]
+            assert self.nodes[1].getaddressinfo(address_to_import)["ismine"]
 
         # Mine a block from node0 to an address from node1
         coinbase_addr = self.nodes[1].getnewaddress()

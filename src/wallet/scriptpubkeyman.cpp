@@ -867,6 +867,35 @@ bool LegacyScriptPubKeyMan::RemoveWatchOnly(const CScript &dest)
     return true;
 }
 
+bool LegacyScriptPubKeyMan::PurgeWatchOnly(const CScript& dest)
+{
+    {
+        LOCK(cs_KeyStore);
+        setWatchOnly.erase(dest);
+        CPubKey pubKey;
+        if (ExtractPubKey(dest, pubKey)) {
+            CKeyID key_id = pubKey.GetID();
+            mapWatchKeys.erase(key_id);
+            mapKeyMetadata.erase(key_id);
+            if (pubKey.IsCompressed()) {
+                CScript script = GetScriptForDestination(WitnessV0KeyHash(key_id));
+                CScriptID id(script);
+                mapScripts.erase(id);
+                m_script_metadata.erase(id);
+            }
+        }
+    }
+
+    if (!HaveWatchOnly()) {
+        NotifyWatchonlyChanged(false);
+    }
+    if (!WalletBatch(m_storage.GetDatabase()).EraseWatchOnly(dest)) {
+        return false;
+    }
+
+    return true;
+}
+
 bool LegacyScriptPubKeyMan::LoadWatchOnly(const CScript &dest)
 {
     return AddWatchOnlyInMem(dest);

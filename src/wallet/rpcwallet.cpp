@@ -4544,6 +4544,7 @@ RPCHelpMan abortrescan();
 RPCHelpMan dumpprivkey();
 RPCHelpMan importprivkey();
 RPCHelpMan importaddress();
+RPCHelpMan removeaddress();
 RPCHelpMan importpubkey();
 RPCHelpMan dumpwallet();
 RPCHelpMan importwallet();
@@ -4602,6 +4603,7 @@ static const CRPCCommand commands[] =
     { "wallet",             &listwallets,                    },
     { "wallet",             &loadwallet,                     },
     { "wallet",             &lockunspent,                    },
+    { "wallet",             &removeaddress,                  },
     { "wallet",             &removeprunedfunds,              },
     { "wallet",             &rescanblockchain,               },
     { "wallet",             &send,                           },
