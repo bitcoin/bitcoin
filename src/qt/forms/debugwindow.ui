@@ -1079,10 +1079,10 @@
                <item row="1" column="0">
                 <widget class="QLabel" name="peerConnectionTypeLabel">
                  <property name="toolTip">
-                   <string>The type of peer connection: %1</string>
+                   <string>The direction and type of peer connection: %1</string>
                  </property>
                  <property name="text">
-                  <string>Connection Type</string>
+                  <string>Direction/Type</string>
                  </property>
                 </widget>
                </item>
