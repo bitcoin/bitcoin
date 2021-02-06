@@ -1,6 +1,6 @@
 # Build private network and test (BTC-ECC)
 
-Writer: Hyunjun Jung, junghj85@gist.ac.kr
+Writer: Hyunjun Jung, junghj85@gist.ac.kr, Ha-young Park (mintyoung@gm.gist.ac.kr)
 
 Contact PI: Proof. Heung-No Lee, heungno@gist.ac.kr
 
