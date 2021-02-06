@@ -280,12 +280,14 @@ struct Peer {
         std::atomic<CAmount> m_fee_filter_received{0};
     };
 
-    Mutex m_tx_relay_mutex;
-
-    /** Transaction relay data. Will be a nullptr if we're not relaying
-     *  transactions with this peer (e.g. if it's a block-relay-only peer).
-     *  Users should access this with the GetTxRelay() getter. */
-    std::unique_ptr<TxRelay> m_tx_relay GUARDED_BY(m_tx_relay_mutex);
+    /* Initializes a TxRelay struct for this peer. Can be called at most once for a peer. */
+    TxRelay* SetTxRelay()
+    {
+        LOCK(m_tx_relay_mutex);
+        Assume(!m_tx_relay);
+        m_tx_relay = std::make_unique<Peer::TxRelay>();
+        return m_tx_relay.get();
+    };
 
     TxRelay* GetTxRelay()
     {
@@ -350,10 +352,17 @@ struct Peer {
     /** Work queue of items requested by this peer **/
     std::deque<CInv> m_getdata_requests GUARDED_BY(m_getdata_requests_mutex);
 
-    explicit Peer(NodeId id, bool tx_relay)
-        : m_id(id)
-        , m_tx_relay(tx_relay ? std::make_unique<TxRelay>() : nullptr)
+    Peer(NodeId id)
+        : m_id{id}
     {}
+
+private:
+    Mutex m_tx_relay_mutex;
+
+    /** Transaction relay data. Will be a nullptr if we're not relaying
+     *  transactions with this peer (e.g. if it's a block-relay-only peer or
+     *  the peer has sent us fRelay=false with bloom filters disabled). */
+    std::unique_ptr<TxRelay> m_tx_relay GUARDED_BY(m_tx_relay_mutex);
 };
 
 using PeerRef = std::shared_ptr<Peer>;
@@ -1210,7 +1219,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, const Peer& peer)
     CService addr_you = addr.IsRoutable() && !IsProxy(addr) && addr.IsAddrV1Compatible() ? addr : CService();
     uint64_t your_services{addr.nServices};
 
-    const bool tx_relay = !m_ignore_incoming_txs && peer.m_tx_relay != nullptr && !pnode.IsFeelerConn();
+    const bool tx_relay = !m_ignore_incoming_txs && !pnode.IsBlockOnlyConn() && !pnode.IsFeelerConn();
     m_connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, PROTOCOL_VERSION, my_services, nTime,
             your_services, addr_you, // Together the pre-version-31402 serialization of CAddress "addrYou" (without nTime)
             my_services, CService(), // Together the pre-version-31402 serialization of CAddress "addrMe" (without nTime)
@@ -1265,7 +1274,7 @@ void PeerManagerImpl::InitializeNode(CNode *pnode)
         m_node_states.emplace_hint(m_node_states.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(pnode->IsInboundConn()));
         assert(m_txrequest.Count(nodeid) == 0);
     }
-    PeerRef peer = std::make_shared<Peer>(nodeid, /*tx_relay=*/ !pnode->IsBlockOnlyConn());
+    PeerRef peer = std::make_shared<Peer>(nodeid);
     {
         LOCK(m_peer_mutex);
         m_peer_map.emplace_hint(m_peer_map.end(), nodeid, peer);
@@ -2085,7 +2094,8 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
         const CInv &inv = *it++;
 
         if (tx_relay == nullptr) {
-            // Ignore GETDATA requests for transactions from blocks-only peers.
+            // Ignore GETDATA requests for transactions from block-relay-only
+            // peers and peers that asked us not to announce transactions.
             continue;
         }
 
@@ -2748,7 +2758,13 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         // set nodes not capable of serving the complete blockchain history as "limited nodes"
         pfrom.m_limited_node = (!(nServices & NODE_NETWORK) && (nServices & NODE_NETWORK_LIMITED));
 
-        if (auto tx_relay = peer->GetTxRelay(); tx_relay != nullptr) {
+        // We only initialize the m_tx_relay data structure if:
+        // - this isn't an outbound block-relay-only connection; and
+        // - fRelay=true or we're offering NODE_BLOOM to this peer
+        //   (NODE_BLOOM means that the peer may turn on tx relay later)
+        if (!pfrom.IsBlockOnlyConn() &&
+            (fRelay || (pfrom.GetLocalServices() & NODE_BLOOM))) {
+            auto* const tx_relay = peer->SetTxRelay();
             {
                 LOCK(tx_relay->m_bloom_filter_mutex);
                 tx_relay->m_relay_txs = fRelay; // set to true after we get the first filter* message
@@ -3081,7 +3097,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         // Reject tx INVs when the -blocksonly setting is enabled, or this is a
         // block-relay-only peer
-        bool reject_tx_invs{m_ignore_incoming_txs || (peer->GetTxRelay() == nullptr)};
+        bool reject_tx_invs{m_ignore_incoming_txs || pfrom.IsBlockOnlyConn()};
 
         // Allow peers with relay permission to send data other than blocks in blocks only mode
         if (pfrom.HasPermission(NetPermissionFlags::Relay)) {
@@ -3356,9 +3372,9 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
     if (msg_type == NetMsgType::TX) {
         // Stop processing the transaction early if
-        // 1) We are in blocks only mode and peer has no relay permission
+        // 1) We are in blocks only mode and peer has no relay permission; OR
         // 2) This peer is a block-relay-only peer
-        if ((m_ignore_incoming_txs && !pfrom.HasPermission(NetPermissionFlags::Relay)) || (peer->GetTxRelay() == nullptr)) {
+        if ((m_ignore_incoming_txs && !pfrom.HasPermission(NetPermissionFlags::Relay)) || pfrom.IsBlockOnlyConn()) {
             LogPrint(BCLog::NET, "transaction sent in violation of protocol peer=%d\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;
