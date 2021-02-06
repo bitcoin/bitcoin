@@ -3094,7 +3094,7 @@ void CChainState::ResetBlockFailureFlags(CBlockIndex *pindex) {
         it++;
     }
 	
-	CBlockIndex *pindexFirstInvalid = nullptr;
+   CBlockIndex *pindexFirstInvalid = nullptr;
 
     // Remove the invalidity flag from all ancestors too.
     while (pindex != nullptr) {
