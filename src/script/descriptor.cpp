@@ -939,7 +939,7 @@ std::unique_ptr<PubkeyProvider> ParsePubkey(uint32_t key_exp_index, const Span<c
 }
 
 /** Parse a script in a particular context. */
-std::unique_ptr<DescriptorImpl> ParseScript(uint32_t key_exp_index, Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
+std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const char>& sp, ParseScriptContext ctx, FlatSigningProvider& out, std::string& error)
 {
     using namespace spanparsing;
 
@@ -948,16 +948,19 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t key_exp_index, Span<const c
     if (Func("pk", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, ctx != ParseScriptContext::P2WSH, out, error);
         if (!pubkey) return nullptr;
+        ++key_exp_index;
         return std::make_unique<PKDescriptor>(std::move(pubkey));
     }
     if (Func("pkh", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, ctx != ParseScriptContext::P2WSH, out, error);
         if (!pubkey) return nullptr;
+        ++key_exp_index;
         return std::make_unique<PKHDescriptor>(std::move(pubkey));
     }
     if (ctx == ParseScriptContext::TOP && Func("combo", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, true, out, error);
         if (!pubkey) return nullptr;
+        ++key_exp_index;
         return std::make_unique<ComboDescriptor>(std::move(pubkey));
     } else if (ctx != ParseScriptContext::TOP && Func("combo", expr)) {
         error = "Cannot have combo in non-top level";
@@ -1011,6 +1014,7 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t key_exp_index, Span<const c
     if (ctx != ParseScriptContext::P2WSH && Func("wpkh", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, false, out, error);
         if (!pubkey) return nullptr;
+        key_exp_index++;
         return std::make_unique<WPKHDescriptor>(std::move(pubkey));
     } else if (ctx == ParseScriptContext::P2WSH && Func("wpkh", expr)) {
         error = "Cannot have wpkh within wsh";
@@ -1177,7 +1181,8 @@ std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProv
 {
     Span<const char> sp{descriptor};
     if (!CheckChecksum(sp, require_checksum, error)) return nullptr;
-    auto ret = ParseScript(0, sp, ParseScriptContext::TOP, out, error);
+    uint32_t key_exp_index = 0;
+    auto ret = ParseScript(key_exp_index, sp, ParseScriptContext::TOP, out, error);
     if (sp.size() == 0 && ret) return std::unique_ptr<Descriptor>(std::move(ret));
     return nullptr;
 }
