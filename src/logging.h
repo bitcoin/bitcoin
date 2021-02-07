@@ -17,6 +17,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <map>
 
 static const bool DEFAULT_LOGTIMEMICROS = false;
 static const bool DEFAULT_LOGIPS        = false;
@@ -158,6 +159,9 @@ static inline bool LogAcceptCategory(BCLog::LogFlags category)
 /** Return true if str parses as a log category and set the flag */
 bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str);
 
+// get debug flag's log category descriptive name
+bool GetLogCategoryName(const BCLog::LogFlags flag, std::string& name);
+
 // Be conservative when using LogPrintf/error or other things which
 // unconditionally log to debug.log! It should not be the case that an inbound
 // peer can fill up a user's disk with debug.log entries.
@@ -177,12 +181,29 @@ static inline void LogPrintf(const char* fmt, const Args&... args)
     }
 }
 
+template <typename... Args>
+static inline void LogCategoryPrintf(const BCLog::LogFlags category, const char* fmt, const Args&... args)
+{
+    if (LogInstance().Enabled()) {
+        std::string log_msg;
+        std::string category_name;
+        if (!GetLogCategoryName(category, category_name)) category_name = "UNKNOWN";
+        try {
+            log_msg = tfm::format(fmt, args...);
+        } catch (tinyformat::format_error& fmterr) {
+            /* Original format string will have newline so don't add one here */
+            log_msg = "Error \"" + std::string(fmterr.what()) + "\" while formatting log message: " + fmt;
+        }
+        LogInstance().LogPrintStr("[" + category_name + "] " + log_msg);
+    }
+}
+
 // Use a macro instead of a function for conditional logging to prevent
 // evaluating arguments when logging for the category is not enabled.
 #define LogPrint(category, ...)              \
     do {                                     \
         if (LogAcceptCategory((category))) { \
-            LogPrintf(__VA_ARGS__);          \
+            LogCategoryPrintf(category, __VA_ARGS__);          \
         }                                    \
     } while (0)
 

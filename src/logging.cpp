@@ -6,7 +6,7 @@
 #include <logging.h>
 #include <util/threadnames.h>
 #include <util/time.h>
-
+#include <map>
 #include <mutex>
 
 const char * const DEFAULT_DEBUGLOGFILE = "debug.log";
@@ -172,6 +172,26 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str)
         }
     }
     return false;
+}
+
+typedef std::map<uint32_t, std::string> LogCategoryMap;
+
+// read array of struct into map of flag->name
+LogCategoryMap GetLogCategoryMap() {
+    LogCategoryMap category_map;
+    for (const CLogCategoryDesc& category_desc : LogCategories) {
+        category_map[category_desc.flag] = category_desc.category;
+    }
+    return category_map;
+}
+const LogCategoryMap LogCategoryNames = GetLogCategoryMap();
+
+bool GetLogCategoryName(const BCLog::LogFlags flag, std::string& name)
+{
+    LogCategoryMap::const_iterator search_result = LogCategoryNames.find(flag);
+    if (search_result == LogCategoryNames.end()) return false;
+    name = search_result->second;
+    return true;
 }
 
 std::vector<LogCategory> BCLog::Logger::LogCategoriesList() const
