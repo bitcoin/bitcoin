@@ -3,7 +3,7 @@ name: "bitcoin-core-linux-22"
 enable_cache: true
 distro: "ubuntu"
 suites:
-- "bionic"
+- "focal"
 architectures:
 - "amd64"
 packages:
@@ -15,6 +15,8 @@ packages:
 - "ca-certificates"
 - "curl"
 - "faketime"
+- "g++-8"
+- "gcc-8"
 - "git"
 - "libtool"
 - "patch"
@@ -107,7 +109,7 @@ script: |
   BASEPREFIX="${PWD}/depends"
   # Build dependencies for each host
   for i in $HOSTS; do
-    make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
+    make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}" CC=${i}-gcc-8 CXX=${i}-g++-8
   done
 
   # Faketime for binaries
@@ -130,7 +132,7 @@ script: |
   # Extract the git archive into a dir for each host and build
   for i in ${HOSTS}; do
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
-    if [ "${i}" = "riscv64-linux-gnu" ] || [ "${i}" = "powerpc64-linux-gnu" ] || [ "${i}" = "powerpc64le-linux-gnu" ]; then
+    if [ "${i}" = "powerpc64-linux-gnu" ]; then
       # Workaround for https://bugs.launchpad.net/ubuntu/+source/gcc-8-cross-ports/+bug/1853740
       # TODO: remove this when no longer needed
       HOST_LDFLAGS="${HOST_LDFLAGS_BASE} -Wl,-z,noexecstack"
@@ -144,7 +146,7 @@ script: |
     tar --strip-components=1 -xf "${GIT_ARCHIVE}"
 
     ./autogen.sh
-    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}"
+    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}" CC=${i}-gcc-8 CXX=${i}-g++-8
     make ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
     make ${MAKEOPTS} -C src check-symbols
