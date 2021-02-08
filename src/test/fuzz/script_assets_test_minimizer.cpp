@@ -28,12 +28,12 @@
 //
 // (normal build)
 // $ mkdir dump
-// $ for N in $(seq 1 10); do TEST_DUMP_DIR=dump test/functional/feature_taproot --dumptests; done
+// $ for N in $(seq 1 10); do TEST_DUMP_DIR=dump test/functional/feature_taproot.py --dumptests; done
 // $ ...
 //
-// (fuzz test build)
+// (libFuzzer build)
 // $ mkdir dump-min
-// $ ./src/test/fuzz/script_assets_test_minimizer -merge=1 dump-min/ dump/
+// $ FUZZ=script_assets_test_minimizer ./src/test/fuzz/fuzz -merge=1 -use_value_profile=1 dump-min/ dump/
 // $ (echo -en '[\n'; cat dump-min/* | head -c -2; echo -en '\n]') >script_assets_test.json
 
 namespace {
