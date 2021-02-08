@@ -25,10 +25,15 @@ void initialize_addrman()
 class CAddrManDeterministic : public CAddrMan
 {
 public:
-    void MakeDeterministic(const uint256& random_seed)
+    explicit CAddrManDeterministic(FuzzedDataProvider& fuzzed_data_provider)
     {
-        WITH_LOCK(cs, insecure_rand = FastRandomContext{random_seed});
-        Clear();
+        WITH_LOCK(cs, insecure_rand = FastRandomContext{ConsumeUInt256(fuzzed_data_provider)});
+        if (fuzzed_data_provider.ConsumeBool()) {
+            m_asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
+            if (!SanityCheckASMap(m_asmap)) {
+                m_asmap.clear();
+            }
+        }
     }
 };
 
@@ -36,14 +41,7 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    CAddrManDeterministic addr_man;
-    addr_man.MakeDeterministic(ConsumeUInt256(fuzzed_data_provider));
-    if (fuzzed_data_provider.ConsumeBool()) {
-        addr_man.m_asmap = ConsumeRandomLengthBitVector(fuzzed_data_provider);
-        if (!SanityCheckASMap(addr_man.m_asmap)) {
-            addr_man.m_asmap.clear();
-        }
-    }
+    CAddrManDeterministic addr_man{fuzzed_data_provider};
     if (fuzzed_data_provider.ConsumeBool()) {
         const std::vector<uint8_t> serialized_data{ConsumeRandomLengthByteVector(fuzzed_data_provider)};
         CDataStream ds(serialized_data, SER_DISK, INIT_PROTO_VERSION);
