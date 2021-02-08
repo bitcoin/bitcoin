@@ -1,0 +1,195 @@
+#!/usr/bin/env bash
+#
+# Copyright (c) 2018 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+#
+# Check for circular dependencies
+
+export LC_ALL=C
+
+EXPECTED_CIRCULAR_DEPENDENCIES=(
+    "chainparamsbase -> util -> chainparamsbase"
+    "checkpoints -> validation -> checkpoints"
+    # "index/txindex -> validation -> index/txindex"
+    "policy/fees -> txmempool -> policy/fees"
+    "policy/policy -> validation -> policy/policy"
+    "qt/addresstablemodel -> qt/walletmodel -> qt/addresstablemodel"
+    "qt/bantablemodel -> qt/clientmodel -> qt/bantablemodel"
+    "qt/bitcoingui -> qt/utilitydialog -> qt/bitcoingui"
+    "qt/bitcoingui -> qt/walletframe -> qt/bitcoingui"
+    "qt/bitcoingui -> qt/walletview -> qt/bitcoingui"
+    "qt/clientmodel -> qt/peertablemodel -> qt/clientmodel"
+    "qt/paymentserver -> qt/walletmodel -> qt/paymentserver"
+    "qt/recentrequeststablemodel -> qt/walletmodel -> qt/recentrequeststablemodel"
+    "qt/transactiontablemodel -> qt/walletmodel -> qt/transactiontablemodel"
+    "qt/walletmodel -> qt/walletmodeltransaction -> qt/walletmodel"
+    "rpc/rawtransaction -> wallet/rpcwallet -> rpc/rawtransaction"
+    "txmempool -> validation -> txmempool"
+    "validation -> validationinterface -> validation"
+    "wallet/fees -> wallet/wallet -> wallet/fees"
+    "wallet/rpcwallet -> wallet/wallet -> wallet/rpcwallet"
+    "wallet/wallet -> wallet/walletdb -> wallet/wallet"
+    "policy/fees -> policy/policy -> validation -> policy/fees"
+    "qt/addressbookpage -> qt/bitcoingui -> qt/walletview -> qt/addressbookpage"
+    "txmempool -> validation -> validationinterface -> txmempool"
+    "qt/addressbookpage -> qt/bitcoingui -> qt/walletview -> qt/receivecoinsdialog -> qt/addressbookpage"
+    "qt/addressbookpage -> qt/bitcoingui -> qt/walletview -> qt/signverifymessagedialog -> qt/addressbookpage"
+    "qt/addressbookpage -> qt/bitcoingui -> qt/walletview -> qt/sendcoinsdialog -> qt/sendcoinsentry -> qt/addressbookpage"
+    # Dash
+    "evo/cbtx -> evo/simplifiedmns -> evo/cbtx"
+    "evo/cbtx -> evo/specialtx -> evo/cbtx"
+    "evo/deterministicmns -> evo/providertx -> evo/deterministicmns"
+    "evo/deterministicmns -> evo/simplifiedmns -> evo/deterministicmns"
+    "evo/deterministicmns -> evo/specialtx -> evo/deterministicmns"
+    "evo/deterministicmns -> llmq/quorums_commitment -> evo/deterministicmns"
+    "evo/deterministicmns -> llmq/quorums_utils -> evo/deterministicmns"
+    "evo/deterministicmns -> validation -> evo/deterministicmns"
+    "evo/mnauth -> net_processing -> evo/mnauth"
+    "evo/providertx -> validation -> evo/providertx"
+    "evo/specialtx -> llmq/quorums_blockprocessor -> evo/specialtx"
+    "evo/specialtx -> llmq/quorums_commitment -> evo/specialtx"
+    "evo/specialtx -> validation -> evo/specialtx"
+    "governance/governance -> governance/governance-classes -> governance/governance"
+    "governance/governance -> governance/governance-object -> governance/governance"
+    "governance/governance -> init -> governance/governance"
+    "governance/governance -> masternode/masternode-sync -> governance/governance"
+    "governance/governance -> net_processing -> governance/governance"
+    "governance/governance-object -> governance/governance-validators -> governance/governance-object"
+    "governance/governance-object -> governance/governance-vote -> governance/governance-object"
+    "governance/governance-object -> validationinterface -> governance/governance-object"
+    "init -> masternode/masternode-sync -> init"
+    "init -> masternode/masternode-utils -> init"
+    "init -> net_processing -> init"
+    "init -> netfulfilledman -> init"
+    "init -> privatesend/privatesend-server -> init"
+    "init -> rpc/server -> init"
+    "init -> txdb -> init"
+    "init -> validation -> init"
+    "init -> validationinterface -> init"
+    "llmq/quorums -> llmq/quorums_init -> llmq/quorums"
+    "llmq/quorums -> llmq/quorums_utils -> llmq/quorums"
+    "llmq/quorums_blockprocessor -> net_processing -> llmq/quorums_blockprocessor"
+    "llmq/quorums_chainlocks -> llmq/quorums_instantsend -> llmq/quorums_chainlocks"
+    "llmq/quorums_chainlocks -> net_processing -> llmq/quorums_chainlocks"
+    "llmq/quorums_chainlocks -> validation -> llmq/quorums_chainlocks"
+    "llmq/quorums_dkgsessionmgr -> net_processing -> llmq/quorums_dkgsessionmgr"
+    "llmq/quorums_instantsend -> net_processing -> llmq/quorums_instantsend"
+    "llmq/quorums_instantsend -> txmempool -> llmq/quorums_instantsend"
+    "llmq/quorums_instantsend -> validation -> llmq/quorums_instantsend"
+    "llmq/quorums_instantsend -> wallet/wallet -> llmq/quorums_instantsend"
+    "llmq/quorums_signing -> llmq/quorums_signing_shares -> llmq/quorums_signing"
+    "llmq/quorums_signing -> net_processing -> llmq/quorums_signing"
+    "llmq/quorums_signing_shares -> net_processing -> llmq/quorums_signing_shares"
+    "logging -> util -> logging"
+    "masternode/masternode-payments -> net_processing -> masternode/masternode-payments"
+    "masternode/masternode-payments -> validation -> masternode/masternode-payments"
+    "masternode/masternode-sync -> net -> masternode/masternode-sync"
+    "net -> netmessagemaker -> net"
+    "net_processing -> privatesend/privatesend-server -> net_processing"
+    "net_processing -> spork -> net_processing"
+    "netaddress -> netbase -> netaddress"
+    "qt/appearancewidget -> qt/guiutil -> qt/appearancewidget"
+    "qt/bitcoinaddressvalidator -> qt/guiutil -> qt/bitcoinaddressvalidator"
+    "qt/bitcoingui -> qt/guiutil -> qt/bitcoingui"
+    "qt/guiutil -> qt/optionsdialog -> qt/guiutil"
+    "qt/guiutil -> qt/qvalidatedlineedit -> qt/guiutil"
+    "core_io -> evo/cbtx -> evo/deterministicmns -> core_io"
+    "core_io -> evo/cbtx -> evo/simplifiedmns -> core_io"
+    "dsnotificationinterface -> governance/governance -> init -> dsnotificationinterface"
+    "evo/cbtx -> evo/deterministicmns -> validation -> evo/cbtx"
+    "evo/deterministicmns -> validationinterface -> governance/governance-vote -> evo/deterministicmns"
+    "evo/deterministicmns -> llmq/quorums_utils -> masternode/masternode-meta -> evo/deterministicmns"
+    "evo/deterministicmns -> llmq/quorums_utils -> net -> evo/deterministicmns"
+    "evo/simplifiedmns -> llmq/quorums_blockprocessor -> net_processing -> evo/simplifiedmns"
+    "governance/governance-classes -> init -> masternode/masternode-payments -> governance/governance-classes"
+    "httprpc -> httpserver -> init -> httprpc"
+    "httpserver -> init -> httpserver"
+    "init -> llmq/quorums_init -> llmq/quorums_signing -> init"
+    "init -> llmq/quorums_init -> llmq/quorums_signing_shares -> init"
+    "init -> masternode/masternode-utils -> privatesend/privatesend-client -> init"
+    "llmq/quorums -> llmq/quorums_init -> llmq/quorums_chainlocks -> llmq/quorums"
+    "llmq/quorums -> llmq/quorums_init -> llmq/quorums_signing -> llmq/quorums"
+    "llmq/quorums -> llmq/quorums_init -> llmq/quorums_signing_shares -> llmq/quorums"
+    "llmq/quorums_blockprocessor -> net_processing -> llmq/quorums_init -> llmq/quorums_blockprocessor"
+    "llmq/quorums_chainlocks -> net_processing -> llmq/quorums_init -> llmq/quorums_chainlocks"
+    "llmq/quorums_chainlocks -> net -> privatesend/privatesend -> llmq/quorums_chainlocks"
+    "llmq/quorums_chainlocks -> net_processing -> validationinterface -> llmq/quorums_chainlocks"
+    "llmq/quorums_chainlocks -> llmq/quorums_instantsend -> wallet/wallet -> llmq/quorums_chainlocks"
+    "llmq/quorums_dkgsession -> llmq/quorums_dkgsessionmgr -> llmq/quorums_dkgsessionhandler -> llmq/quorums_dkgsession"
+    "llmq/quorums_dkgsessionhandler -> llmq/quorums_init -> llmq/quorums_dkgsessionmgr -> llmq/quorums_dkgsessionhandler"
+    "llmq/quorums_dkgsessionmgr -> net_processing -> llmq/quorums_init -> llmq/quorums_dkgsessionmgr"
+    "llmq/quorums_init -> llmq/quorums_instantsend -> net_processing -> llmq/quorums_init"
+    "llmq/quorums_instantsend -> wallet/wallet -> privatesend/privatesend -> llmq/quorums_instantsend"
+    "llmq/quorums_instantsend -> net_processing -> privatesend/privatesend-server -> llmq/quorums_instantsend"
+    "llmq/quorums_instantsend -> net_processing -> validationinterface -> llmq/quorums_instantsend"
+    "logging -> util -> random -> logging"
+    "logging -> util -> sync -> logging"
+    "logging -> util -> stacktraces -> logging"
+    "masternode/activemasternode -> net -> privatesend/privatesend -> masternode/activemasternode"
+    "masternode/masternode-payments -> net_processing -> privatesend/privatesend-client -> masternode/masternode-payments"
+    "masternode/masternode-sync -> net -> privatesend/privatesend -> masternode/masternode-sync"
+    "net -> privatesend/privatesend -> spork -> net"
+    "privatesend/privatesend-client -> privatesend/privatesend-util -> wallet/wallet -> privatesend/privatesend-client"
+    "qt/appearancewidget -> qt/guiutil -> qt/optionsdialog -> qt/appearancewidget"
+    "qt/bitcoinaddressvalidator -> qt/guiutil -> qt/qvalidatedlineedit -> qt/bitcoinaddressvalidator"
+    "qt/guiutil -> qt/optionsdialog -> qt/optionsmodel -> qt/guiutil"
+    "bloom -> evo/cbtx -> evo/simplifiedmns -> merkleblock -> bloom"
+    "bloom -> evo/cbtx -> llmq/quorums_blockprocessor -> net -> bloom"
+    "evo/deterministicmns -> evo/simplifiedmns -> llmq/quorums_blockprocessor -> llmq/quorums_debug -> evo/deterministicmns"
+    "evo/deterministicmns -> validationinterface -> governance/governance-vote -> masternode/masternode-sync -> evo/deterministicmns"
+    "evo/deterministicmns -> evo/simplifiedmns -> llmq/quorums_blockprocessor -> net_processing -> evo/deterministicmns"
+    "evo/specialtx -> llmq/quorums_blockprocessor -> net_processing -> txmempool -> evo/specialtx"
+    "governance/governance-vote -> masternode/masternode-sync -> validation -> validationinterface -> governance/governance-vote"
+    "init -> llmq/quorums_init -> llmq/quorums_instantsend -> wallet/wallet -> init"
+    "core_io -> evo/cbtx -> llmq/quorums_blockprocessor -> net -> privatesend/privatesend -> core_io"
+    "core_io -> evo/cbtx -> llmq/quorums_blockprocessor -> net_processing -> privatesend/privatesend-client -> core_io"
+    "core_io -> evo/cbtx -> llmq/quorums_blockprocessor -> net_processing -> privatesend/privatesend-server -> core_io"
+    "evo/deterministicmns -> evo/simplifiedmns -> llmq/quorums_blockprocessor -> net_processing -> privatesend/privatesend-client -> evo/deterministicmns"
+    "evo/providertx -> evo/specialtx -> llmq/quorums_blockprocessor -> net_processing -> txmempool -> evo/providertx"
+    "governance/governance -> init -> llmq/quorums_init -> llmq/quorums_instantsend -> wallet/wallet -> governance/governance"
+    "evo/deterministicmns -> evo/simplifiedmns -> llmq/quorums_blockprocessor -> net_processing -> privatesend/privatesend-server -> masternode/activemasternode -> evo/deterministicmns"
+    "evo/providertx -> evo/specialtx -> llmq/quorums_blockprocessor -> net_processing -> privatesend/privatesend-server -> masternode/activemasternode -> evo/providertx"
+    "evo/providertx -> evo/specialtx -> llmq/quorums_blockprocessor -> net_processing -> privatesend/privatesend-client -> privatesend/privatesend-util -> wallet/wallet -> evo/providertx"
+    "core_io -> evo/cbtx -> llmq/quorums_blockprocessor -> net_processing -> privatesend/privatesend-client -> privatesend/privatesend-util -> wallet/wallet -> governance/governance-object -> core_io"
+)
+
+EXIT_CODE=0
+
+CIRCULAR_DEPENDENCIES=()
+
+IFS=$'\n'
+for CIRC in $(cd src && ../contrib/devtools/circular-dependencies.py {*,*/*,*/*/*}.{h,cpp} | sed -e 's/^Circular dependency: //'); do
+    CIRCULAR_DEPENDENCIES+=($CIRC)
+    IS_EXPECTED_CIRC=0
+    for EXPECTED_CIRC in "${EXPECTED_CIRCULAR_DEPENDENCIES[@]}"; do
+        if [[ "${CIRC}" == "${EXPECTED_CIRC}" ]]; then
+            IS_EXPECTED_CIRC=1
+            break
+        fi
+    done
+    if [[ ${IS_EXPECTED_CIRC} == 0 ]]; then
+        echo "A new circular dependency in the form of \"${CIRC}\" appears to have been introduced."
+        echo
+        EXIT_CODE=1
+    fi
+done
+
+for EXPECTED_CIRC in "${EXPECTED_CIRCULAR_DEPENDENCIES[@]}"; do
+    IS_PRESENT_EXPECTED_CIRC=0
+    for CIRC in "${CIRCULAR_DEPENDENCIES[@]}"; do
+        if [[ "${CIRC}" == "${EXPECTED_CIRC}" ]]; then
+            IS_PRESENT_EXPECTED_CIRC=1
+            break
+        fi
+    done
+    if [[ ${IS_PRESENT_EXPECTED_CIRC} == 0 ]]; then
+        echo "Good job! The circular dependency \"${EXPECTED_CIRC}\" is no longer present."
+        echo "Please remove it from EXPECTED_CIRCULAR_DEPENDENCIES in $0"
+        echo "to make sure this circular dependency is not accidentally reintroduced."
+        echo
+        EXIT_CODE=1
+    fi
+done
+
+exit ${EXIT_CODE}

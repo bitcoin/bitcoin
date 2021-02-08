@@ -8,9 +8,9 @@
 
 #include <stacktraces.h>
 #include <fs.h>
+#include <logging.h>
 #include <random.h>
 #include <streams.h>
-#include <util.h>
 #include <utilstrencodings.h>
 
 #include <mutex>

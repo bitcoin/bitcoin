@@ -8,7 +8,6 @@
 
 #include <chainparams.h>
 #include <clientversion.h>
-#include <core_io.h>
 #include <hash.h>
 #include <messagesigner.h>
 #include <script/standard.h>
