@@ -1792,7 +1792,7 @@ void PeerManagerImpl::ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& 
     } else {
         // Send block from disk
         std::shared_ptr<CBlock> pblockRead = std::make_shared<CBlock>();
-        if (!ReadBlockFromDisk(*pblockRead, pindex, m_chainparams.GetConsensus())) {
+        if (!ReadBlockFromDisk(*pblockRead, pindex, m_chainparams.GetConsensus()), false) {
             assert(!"cannot load block from disk");
         }
         pblock = pblockRead;
@@ -3227,7 +3227,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
             if (pindex->nHeight >= m_chainman.ActiveChain().Height() - MAX_BLOCKTXN_DEPTH) {
                 CBlock block;
-                bool ret = ReadBlockFromDisk(block, pindex, m_chainparams.GetConsensus());
+                bool ret = ReadBlockFromDisk(block, pindex, m_chainparams.GetConsensus(), false);
                 assert(ret);
 
                 SendBlockTransactions(pfrom, block, req);
@@ -3298,7 +3298,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         LogPrint(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom.GetId());
         for (; pindex; pindex = m_chainman.ActiveChain().Next(pindex))
         {
-            const CBlockHeader header = pindex->GetBlockHeader(m_chainparams.GetConsensus());
+            const CBlockHeader header = pindex->GetBlockHeader(m_chainparams.GetConsensus(), false);
             ++nCount;
             nSize += GetSerializeSize(header, PROTOCOL_VERSION);
             vHeaders.push_back(header);
@@ -4748,14 +4748,14 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     pBestIndex = pindex;
                     if (fFoundStartingHeader) {
                         // add this to the headers message
-                        vHeaders.push_back(pindex->GetBlockHeader(consensusParams));
+                        vHeaders.push_back(pindex->GetBlockHeader(consensusParams, false));
                     } else if (PeerHasHeader(&state, pindex)) {
                         continue; // keep looking for the first new block
                     } else if (pindex->pprev == nullptr || PeerHasHeader(&state, pindex->pprev)) {
                         // Peer doesn't have this header but they do have the prior one.
                         // Start sending headers.
                         fFoundStartingHeader = true;
-                        vHeaders.push_back(pindex->GetBlockHeader(consensusParams));
+                        vHeaders.push_back(pindex->GetBlockHeader(consensusParams, false));
                     } else {
                         // Peer doesn't have this header or the prior one -- nothing will
                         // connect, so bail out.
@@ -4788,7 +4788,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     }
                     if (!fGotBlockFromCache) {
                         CBlock block;
-                        bool ret = ReadBlockFromDisk(block, pBestIndex, consensusParams);
+                        bool ret = ReadBlockFromDisk(block, pBestIndex, consensusParams, false);
                         assert(ret);
                         CBlockHeaderAndShortTxIDs cmpctblock(block, state.fWantsCmpctWitness);
                         m_connman.PushMessage(pto, msgMaker.Make(nSendFlags, NetMsgType::CMPCTBLOCK, cmpctblock));

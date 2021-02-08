@@ -347,7 +347,7 @@ bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& st
    both a block and its header.  */
 
 template<typename T>
-static bool ReadBlockOrHeader(T& block, const FlatFilePos& pos, const Consensus::Params& consensusParams)
+static bool ReadBlockOrHeader(T& block, const FlatFilePos& pos, const Consensus::Params& consensusParams, bool fCheckPOW)
 {
     block.SetNull();
 
@@ -365,7 +365,7 @@ static bool ReadBlockOrHeader(T& block, const FlatFilePos& pos, const Consensus:
     }
 
     // Check the header
-    if (!CheckProofOfWork(block, consensusParams))
+    if (!CheckProofOfWork(block, consensusParams, fCheckPOW))
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
 
     // Signet only: check block solution
@@ -376,7 +376,7 @@ static bool ReadBlockOrHeader(T& block, const FlatFilePos& pos, const Consensus:
     return true;
 }
 template<typename T>
-static bool ReadBlockOrHeader(T& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
+static bool ReadBlockOrHeader(T& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams, bool fCheckPOW)
 {
     FlatFilePos blockPos;
     {
@@ -384,26 +384,26 @@ static bool ReadBlockOrHeader(T& block, const CBlockIndex* pindex, const Consens
         blockPos = pindex->GetBlockPos();
     }
 
-    if (!ReadBlockOrHeader(block, blockPos, consensusParams))
+    if (!ReadBlockOrHeader(block, blockPos, consensusParams, fCheckPOW))
         return false;
     if (block.GetHash() != pindex->GetBlockHash())
         return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
                 pindex->ToString(), pindex->GetBlockPos().ToString());
     return true;
 }
-bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams)
+bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams, bool fCheckPOW)
 {
-    return ReadBlockOrHeader(block, pos, consensusParams);
+    return ReadBlockOrHeader(block, pos, consensusParams, fCheckPOW);
 }
 
- bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
+ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams, bool fCheckPOW)
 {
-    return ReadBlockOrHeader(block, pindex, consensusParams);
+    return ReadBlockOrHeader(block, pindex, consensusParams, fCheckPOW);
 }
 
- bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
+ bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams, bool fCheckPOW)
 {
-    return ReadBlockOrHeader(block, pindex, consensusParams);
+    return ReadBlockOrHeader(block, pindex, consensusParams, fCheckPOW);
 }
 
 static bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos, const CMessageHeader::MessageStartChars& messageStart)

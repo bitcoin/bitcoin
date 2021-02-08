@@ -1263,7 +1263,7 @@ CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMe
 //
 // CBlock and CBlockIndex
 //
-bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params)
+bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params, bool fCheckPOW)
 {
     /* Except for legacy blocks with full version 1, ensure that
        the chain ID is correct.  Legacy blocks are not allowed since
@@ -1304,11 +1304,12 @@ bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params
     /* We have auxpow.  Check it.  */
     if (!block.IsAuxpow())
         return error("%s : auxpow on block with non-auxpow version", __func__);
-
-    if (!CheckProofOfWork(block.auxpow->getParentBlockHash(), block.nBits, params))
-        return error("%s : AUX proof of work failed", __func__);
-    if (!block.auxpow->check(block.GetHash(), block.GetChainId(), params))
-        return error("%s : AUX POW is not valid", __func__);
+    if(fCheckPOW) {
+        if (!CheckProofOfWork(block.auxpow->getParentBlockHash(), block.nBits, params))
+            return error("%s : AUX proof of work failed", __func__);
+        if (!block.auxpow->check(block.GetHash(), block.GetChainId(), params))
+            return error("%s : AUX POW is not valid", __func__);
+    }
 
     return true;
 }
