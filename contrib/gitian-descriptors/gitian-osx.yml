@@ -3,7 +3,7 @@ name: "dash-osx-0.17"
 enable_cache: true
 distro: "ubuntu"
 suites:
-- "bionic"
+- "focal"
 architectures:
 - "amd64"
 packages:
@@ -30,6 +30,7 @@ packages:
 - "ccache"
 - "cmake"
 - "xorriso"
+- "libtinfo5"
 remotes:
 - "url": "https://github.com/dashpay/dash.git"
   "dir": "dash"
