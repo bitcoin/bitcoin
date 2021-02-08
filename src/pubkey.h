@@ -316,4 +316,10 @@ public:
     ~ECCVerifyHandle();
 };
 
+typedef struct secp256k1_context_struct secp256k1_context;
+
+/** Access to the internal secp256k1 context used for verification. Only intended to be used
+ *  by key.cpp. */
+const secp256k1_context* GetVerifyContext();
+
 #endif // BITCOIN_PUBKEY_H
