@@ -9,7 +9,6 @@
 
 #include <cassert>
 #include <cstdint>
-#include <netinet/in.h>
 #include <vector>
 
 FUZZ_TARGET(netaddress)

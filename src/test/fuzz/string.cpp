@@ -78,7 +78,9 @@ FUZZ_TARGET(string)
     }
     (void)SanitizeString(random_string_1);
     (void)SanitizeString(random_string_1, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 3));
+#ifndef WIN32
     (void)ShellEscape(random_string_1);
+#endif // WIN32
     int port_out;
     std::string host_out;
     SplitHostPort(random_string_1, port_out, host_out);
