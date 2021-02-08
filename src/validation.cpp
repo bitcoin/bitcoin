@@ -256,7 +256,12 @@ bool TestLockPointValidity(CChain& active_chain, const LockPoints* lp)
     return true;
 }
 
-bool CheckSequenceLocks(CChainState& active_chainstate, const CTxMemPool& pool, const CTransaction& tx, int flags, LockPoints* lp, bool useExistingLockPoints)
+bool CheckSequenceLocks(CChainState& active_chainstate,
+                        const CTxMemPool& pool,
+                        const CTransaction& tx,
+                        int flags,
+                        LockPoints* lp,
+                        bool useExistingLockPoints)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(pool.cs);

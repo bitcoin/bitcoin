@@ -266,7 +266,12 @@ bool TestLockPointValidity(CChain& active_chain, const LockPoints* lp) EXCLUSIVE
  *
  * See consensus/consensus.h for flag definitions.
  */
-bool CheckSequenceLocks(CChainState& active_chainstate, const CTxMemPool& pool, const CTransaction& tx, int flags, LockPoints* lp = nullptr, bool useExistingLockPoints = false) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, pool.cs);
+bool CheckSequenceLocks(CChainState& active_chainstate,
+                        const CTxMemPool& pool,
+                        const CTransaction& tx,
+                        int flags,
+                        LockPoints* lp = nullptr,
+                        bool useExistingLockPoints = false) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, pool.cs);
 
 /**
  * Closure representing one script verification
