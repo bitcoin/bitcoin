@@ -29,8 +29,6 @@ MAX_SCRIPT_ELEMENT_SIZE = 520
 LOCKTIME_THRESHOLD = 500000000
 ANNEX_TAG = 0x50
 
-OPCODE_NAMES = {}  # type: Dict[CScriptOp, str]
-
 LEAF_VERSION_TAPSCRIPT = 0xc0
 
 def hash160(s):
@@ -47,7 +45,6 @@ def bn2vch(v):
     # Serialize to bytes
     return encoded_v.to_bytes(n_bytes, 'little')
 
-_opcode_instances = []  # type: List[CScriptOp]
 class CScriptOp(int):
     """A single script opcode"""
     __slots__ = ()
@@ -110,6 +107,9 @@ class CScriptOp(int):
             assert len(_opcode_instances) == n
             _opcode_instances.append(super().__new__(cls, n))
             return _opcode_instances[n]
+
+OPCODE_NAMES: Dict[CScriptOp, str] = {}
+_opcode_instances: List[CScriptOp] = []
 
 # Populate opcode instance table
 for n in range(0xff + 1):
