@@ -13,7 +13,7 @@ export PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine-binfmt wine64 file"
 export RUN_FUNCTIONAL_TESTS=false
 export RUN_SECURITY_TESTS="true"
 export GOAL="deploy"
-export BITCOIN_CONFIG="--enable-reduce-exports --disable-gui-tests --without-boost-process"
+export BITCOIN_CONFIG="--enable-reduce-exports --disable-fuzz-binary --disable-gui-tests --without-boost-process"
 
 # Compiler for MinGW-w64 causes false -Wreturn-type warning.
 # See https://sourceforge.net/p/mingw-w64/bugs/306/
