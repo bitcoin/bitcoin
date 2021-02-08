@@ -194,7 +194,7 @@ static inline void LogCategoryPrintf(const BCLog::LogFlags category, const char*
             /* Original format string will have newline so don't add one here */
             log_msg = "Error \"" + std::string(fmterr.what()) + "\" while formatting log message: " + fmt;
         }
-        LogInstance().LogPrintStr("[" + category_name + "] " + log_msg);
+        LogInstance().LogPrintStr("[lc:" + category_name + "] " + log_msg);
     }
 }
 
