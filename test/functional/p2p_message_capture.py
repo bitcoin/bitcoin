@@ -42,17 +42,17 @@ def mini_parser(dat_file):
             if not tmp_header_raw:
                 break
             tmp_header = BytesIO(tmp_header_raw)
-            int.from_bytes(tmp_header.read(TIME_SIZE), "little")      # type: int
+            tmp_header.read(TIME_SIZE) # skip the timestamp field
             raw_msgtype = tmp_header.read(MSGTYPE_SIZE)
             raw_msgtype_split = raw_msgtype.split(b'\x00', 1)
-            msgtype = raw_msgtype_split[0]     # type: bytes
+            msgtype: bytes = raw_msgtype_split[0]
             # SYSCOIN
             if len(raw_msgtype_split) > 1:
                 remainder =  raw_msgtype_split[1]
             assert(len(msgtype) > 0)
             assert(msgtype in MESSAGEMAP)
             assert(len(remainder) == 0 or not remainder.decode().isprintable())
-            length = int.from_bytes(tmp_header.read(LENGTH_SIZE), "little")  # type: int
+            length: int = int.from_bytes(tmp_header.read(LENGTH_SIZE), "little")
             data = f_in.read(length)
             assert_equal(len(data), length)
 
