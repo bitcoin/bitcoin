@@ -1256,10 +1256,10 @@ static RPCHelpMan assetallocationsendmany()
                 {RPCResult::Type::STR_HEX, "txid", "The transaction id"},
             }},
         RPCExamples{
-            HelpExampleCli("assetallocationsendmany", "\'[{\"asset_guid\":1045909988,\"address\":\"sysaddress1\",\"amount\":100},{\"asset_guid\":1045909988,\"address\":\"sysaddress2\",\"amount\":200}]\' \"false\"")
-            + HelpExampleCli("assetallocationsendmany", "\"[{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"true\"")
-            + HelpExampleRpc("assetallocationsendmany", "\'[{\"asset_guid\":1045909988,\"address\":\"sysaddress1\",\"amount\":100},{\"asset_guid\":1045909988,\"address\":\"sysaddress2\",\"amount\":200}]\',\"false\"")
-            + HelpExampleRpc("assetallocationsendmany", "\"[{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"asset_guid\\\":1045909988,\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\",\"true\"")
+            HelpExampleCli("assetallocationsendmany", "\'[{\"asset_guid\":\"1045909988\",\"address\":\"sysaddress1\",\"amount\":100},{\"asset_guid\":\"1045909988\",\"address\":\"sysaddress2\",\"amount\":200}]\' \"false\"")
+            + HelpExampleCli("assetallocationsendmany", "\"[{\\\"asset_guid\\\":\"1045909988\",\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"asset_guid\\\":\"1045909988\",\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\" \"true\"")
+            + HelpExampleRpc("assetallocationsendmany", "\'[{\"asset_guid\":\"1045909988\",\"address\":\"sysaddress1\",\"amount\":100},{\"asset_guid\":\"1045909988\",\"address\":\"sysaddress2\",\"amount\":200}]\',\"false\"")
+            + HelpExampleRpc("assetallocationsendmany", "\"[{\\\"asset_guid\\\":\"1045909988\",\\\"address\\\":\\\"sysaddress1\\\",\\\"amount\\\":100},{\\\"asset_guid\\\":\"1045909988\",\\\"address\\\":\\\"sysaddress2\\\",\\\"amount\\\":200}]\",\"true\"")
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {

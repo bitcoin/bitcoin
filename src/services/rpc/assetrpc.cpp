@@ -499,8 +499,8 @@ static RPCHelpMan listassets()
             RPCExamples{
             HelpExampleCli("listassets", "0")
             + HelpExampleCli("listassets", "10 10")
-            + HelpExampleCli("listassets", "0 0 '{\"asset_guid\":3473733}'")
-            + HelpExampleRpc("listassets", "0, 0, '{\"asset_guid\":3473733}'")
+            + HelpExampleCli("listassets", "0 0 '{\"asset_guid\":\"3473733\"}'")
+            + HelpExampleRpc("listassets", "0, 0, '{\"asset_guid\":\"3473733\"}'")
             },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {

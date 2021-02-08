@@ -170,7 +170,7 @@ SYSCOIN_TESTS += \
   wallet/test/scriptpubkeyman_tests.cpp
 
 FUZZ_SUITE_LD_COMMON +=\
- $(LIBBITCOIN_WALLET) \
+ $(LIBSYSCOIN_WALLET) \
  $(SQLITE_LIBS) \
  $(BDB_LIBS)
 
