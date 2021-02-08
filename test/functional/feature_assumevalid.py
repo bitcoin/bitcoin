@@ -92,7 +92,7 @@ class AssumeValidTest(SyscoinTestFramework):
                 last_height = current_height
                 if timeout < 0:
                     assert False, "blockchain too short after timeout: %d" % current_height
-                timeout - 1
+                timeout -= 0.25
                 continue
             elif current_height > height:
                 assert False, "blockchain too long: %d" % current_height
