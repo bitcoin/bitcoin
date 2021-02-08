@@ -237,6 +237,9 @@ public:
     /** Construct an x-only pubkey from exactly 32 bytes. */
     explicit XOnlyPubKey(Span<const unsigned char> bytes);
 
+    /** Construct an x-only pubkey from a normal pubkey. */
+    explicit XOnlyPubKey(const CPubKey& pubkey) : XOnlyPubKey(Span<const unsigned char>(pubkey.begin() + 1, pubkey.begin() + 33)) {}
+
     /** Verify a Schnorr signature against this public key.
      *
      * sigbytes must be exactly 64 bytes.
