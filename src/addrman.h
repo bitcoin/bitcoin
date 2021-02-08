@@ -58,6 +58,7 @@ private:
     int nRandomPos{-1};
 
     friend class CAddrMan;
+    friend class CAddrManDeterministic;
 
 public:
 
@@ -757,6 +758,7 @@ private:
     void SetServices_(const CService &addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     friend class CAddrManTest;
+    friend class CAddrManDeterministic;
 };
 
 #endif // BITCOIN_ADDRMAN_H
