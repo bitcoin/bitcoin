@@ -973,8 +973,8 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         if (!pubkey) return nullptr;
         ++key_exp_index;
         return std::make_unique<ComboDescriptor>(std::move(pubkey));
-    } else if (ctx != ParseScriptContext::TOP && Func("combo", expr)) {
-        error = "Cannot have combo in non-top level";
+    } else if (Func("combo", expr)) {
+        error = "Can only have combo() at top level";
         return nullptr;
     }
     if ((sorted_multi = Func("sortedmulti", expr)) || Func("multi", expr)) {
@@ -1022,29 +1022,29 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         }
         return std::make_unique<MultisigDescriptor>(thres, std::move(providers), sorted_multi);
     }
-    if (ctx != ParseScriptContext::P2WSH && Func("wpkh", expr)) {
+    if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH) && Func("wpkh", expr)) {
         auto pubkey = ParsePubkey(key_exp_index, expr, ParseScriptContext::P2WPKH, out, error);
         if (!pubkey) return nullptr;
         key_exp_index++;
         return std::make_unique<WPKHDescriptor>(std::move(pubkey));
-    } else if (ctx == ParseScriptContext::P2WSH && Func("wpkh", expr)) {
-        error = "Cannot have wpkh within wsh";
+    } else if (Func("wpkh", expr)) {
+        error = "Can only have wpkh() at top level or inside sh()";
         return nullptr;
     }
     if (ctx == ParseScriptContext::TOP && Func("sh", expr)) {
         auto desc = ParseScript(key_exp_index, expr, ParseScriptContext::P2SH, out, error);
         if (!desc || expr.size()) return nullptr;
         return std::make_unique<SHDescriptor>(std::move(desc));
-    } else if (ctx != ParseScriptContext::TOP && Func("sh", expr)) {
-        error = "Cannot have sh in non-top level";
+    } else if (Func("sh", expr)) {
+        error = "Can only have sh() at top level";
         return nullptr;
     }
-    if (ctx != ParseScriptContext::P2WSH && Func("wsh", expr)) {
+    if ((ctx == ParseScriptContext::TOP || ctx == ParseScriptContext::P2SH) && Func("wsh", expr)) {
         auto desc = ParseScript(key_exp_index, expr, ParseScriptContext::P2WSH, out, error);
         if (!desc || expr.size()) return nullptr;
         return std::make_unique<WSHDescriptor>(std::move(desc));
-    } else if (ctx == ParseScriptContext::P2WSH && Func("wsh", expr)) {
-        error = "Cannot have wsh within wsh";
+    } else if (Func("wsh", expr)) {
+        error = "Can only have wsh() at top level or inside sh()";
         return nullptr;
     }
     if (ctx == ParseScriptContext::TOP && Func("addr", expr)) {
@@ -1054,6 +1054,9 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
             return nullptr;
         }
         return std::make_unique<AddressDescriptor>(std::move(dest));
+    } else if (Func("addr", expr)) {
+        error = "Can only have addr() at top level";
+        return nullptr;
     }
     if (ctx == ParseScriptContext::TOP && Func("raw", expr)) {
         std::string str(expr.begin(), expr.end());
@@ -1063,6 +1066,9 @@ std::unique_ptr<DescriptorImpl> ParseScript(uint32_t& key_exp_index, Span<const 
         }
         auto bytes = ParseHex(str);
         return std::make_unique<RawDescriptor>(CScript(bytes.begin(), bytes.end()));
+    } else if (Func("raw", expr)) {
+        error = "Can only have raw() at top level";
+        return nullptr;
     }
     if (ctx == ParseScriptContext::P2SH) {
         error = "A function is needed within P2SH";
