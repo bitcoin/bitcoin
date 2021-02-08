@@ -525,6 +525,18 @@ public:
         return false;
     }
 
+    virtual bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, bool priv, bool normalized) const
+    {
+        size_t pos = 0;
+        for (const auto& scriptarg : m_subdescriptor_args) {
+            if (pos++) ret += ",";
+            std::string tmp;
+            if (!scriptarg->ToStringHelper(arg, tmp, priv, normalized)) return false;
+            ret += std::move(tmp);
+        }
+        return true;
+    }
+
     bool ToStringHelper(const SigningProvider* arg, std::string& out, bool priv, bool normalized) const
     {
         std::string extra = ToStringExtra();
@@ -542,13 +554,10 @@ public:
             }
             ret += std::move(tmp);
         }
-        for (const auto& scriptarg : m_subdescriptor_args) {
-            if (pos++) ret += ",";
-            std::string tmp;
-            if (!scriptarg->ToStringHelper(arg, tmp, priv, normalized)) return false;
-            ret += std::move(tmp);
-        }
-        out = std::move(ret) + ")";
+        std::string subscript;
+        if (!ToStringSubScriptHelper(arg, subscript, priv, normalized)) return false;
+        if (pos && subscript.size()) ret += ',';
+        out = std::move(ret) + std::move(subscript) + ")";
         return true;
     }
 
