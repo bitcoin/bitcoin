@@ -2727,7 +2727,7 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
                     if(resObj.read((const char*)response)) {
                         const UniValue &sigsObj = find_value(resObj, "sigs");  
                         if(sigsObj.isArray()) {
-                            const UniValue &sigsArr = resObj.get_array();  
+                            const UniValue &sigsArr = sigsObj.get_array();  
                             for(size_t i = 0;i<sigsArr.size();i++) {
                                 const UniValue &sigArrObj = sigsArr[i].get_obj();  
                                 if(sigArrObj.isNull())
