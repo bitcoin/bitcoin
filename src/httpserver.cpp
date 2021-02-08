@@ -346,7 +346,7 @@ static void libevent_log_cb(int severity, const char *msg)
     if (severity >= EVENT_LOG_WARN) // Log warn messages and higher without debug category
         LogPrintf("libevent: %s\n", msg);
     else
-        LogPrint(BCLog::LIBEVENT, "libevent: %s\n", msg);
+        LogPrint(BCLog::LIBEVENT, "%s\n", msg);
 }
 
 bool InitHTTPServer()

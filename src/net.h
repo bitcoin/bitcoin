@@ -944,7 +944,7 @@ public:
     bool GetTryNewOutboundPeer();
 
     void StartExtraBlockRelayPeers() {
-        LogPrint(BCLog::NET, "net: enabling extra block-relay-only peers\n");
+        LogPrint(BCLog::NET, "enabling extra block-relay-only peers\n");
         m_start_extra_block_relay_peers = true;
     }
 
