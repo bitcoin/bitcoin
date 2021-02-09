@@ -17,7 +17,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 // SYSCOIN
-#include <math.h>
+#include <cmath>
 const std::string UNIX_EPOCH_TIME = "UNIX epoch time";
 // SYSCOIN
 const std::string EXAMPLE_ADDRESS[2] = {"sys1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl", "sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee"};

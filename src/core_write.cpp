@@ -22,7 +22,7 @@
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
 #include <llmq/quorums_commitment.h>
-
+#include <cmath>
 bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, UniValue &entry) {
     const uint256& txHash = tx.GetHash();
     entry.__pushKV("txtype", stringFromSyscoinTx(tx.nVersion));

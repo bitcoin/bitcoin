@@ -8,7 +8,7 @@
 #include <logging.h>
 #include <util/strencodings.h>
 #include <key_io.h>
-
+#include <cmath>
 int nibblesToTraverse(const std::string &encodedPartialPath, const std::string &path, int pathPtr) {
   std::string partialPath;
   // typecast as the character

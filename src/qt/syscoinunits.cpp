@@ -11,7 +11,7 @@
 #include <primitives/transaction.h>
 #include <services/asset.h>
 #include <rpc/util.h>
-#include <math.h>
+#include <cmath>
 static constexpr auto MAX_DIGITS_SYS = 16;
 SyscoinUnits::SyscoinUnits(QObject *parent):
         QAbstractListModel(parent),
