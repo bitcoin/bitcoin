@@ -53,11 +53,12 @@ Paths
 
 All three configurations assume several paths that might need to be adjusted.
 
-Binary:              `/usr/bin/syscoind`  
-Configuration file:  `/etc/syscoin/syscoin.conf`  
-Data directory:      `/var/lib/syscoind`  
-PID file:            `/var/run/syscoind/syscoind.pid` (OpenRC and Upstart) or `/run/syscoind/syscoind.pid` (systemd)
-Lock file:           `/var/lock/subsys/syscoind` (CentOS)  
+    Binary:              /usr/bin/syscoind
+    Configuration file:  /etc/syscoin/syscoin.conf
+    Data directory:      /var/lib/syscoind
+    PID file:            /var/run/syscoind/syscoind.pid (OpenRC and Upstart) or
+                         /run/syscoind/syscoind.pid (systemd)
+    Lock file:           /var/lock/subsys/syscoind (CentOS)
 
 The PID directory (if applicable) and data directory should both be owned by the
 syscoin user and group. It is advised for security reasons to make the
@@ -83,10 +84,10 @@ OpenRC).
 
 ### macOS
 
-Binary:              `/usr/local/bin/syscoind`  
-Configuration file:  `~/Library/Application Support/Syscoin/syscoin.conf`  
-Data directory:      `~/Library/Application Support/Syscoin`  
-Lock file:           `~/Library/Application Support/Syscoin/.lock`  
+    Binary:              /usr/local/bin/syscoind
+    Configuration file:  ~/Library/Application Support/Syscoin/syscoin.conf
+    Data directory:      ~/Library/Application Support/Syscoin
+    Lock file:           ~/Library/Application Support/Syscoin/.lock
 
 Installing Service Configuration
 -----------------------------------
