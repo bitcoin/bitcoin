@@ -13,6 +13,7 @@
 #include <test/util/setup_common.h>
 #include <test/util/str.h>
 #include <uint256.h>
+#include <util/getuniquepath.h>
 #include <util/message.h> // For MessageSign(), MessageVerify(), MESSAGE_MAGIC
 #include <util/moneystr.h>
 #include <util/spanparsing.h>
@@ -1816,7 +1817,7 @@ BOOST_AUTO_TEST_CASE(test_DirIsWritable)
     BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), true);
 
     // Should not be able to write to a non-existent dir.
-    tmpdirname = tmpdirname / fs::unique_path();
+    tmpdirname = GetUniquePath(tmpdirname);
     BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), false);
 
     fs::create_directory(tmpdirname);
