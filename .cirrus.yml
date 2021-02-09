@@ -82,10 +82,10 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_arm.sh"
 
 task:
-  name: 'Win64 [unit tests, no gui tests, no boost::process, no functional tests] [bionic]'
+  name: 'Win64 [unit tests, no gui tests, no boost::process, no functional tests] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:bionic
+    image: ubuntu:focal
   env:
     FILE_ENV: "./ci/test/00_setup_env_win64.sh"
 
