@@ -198,13 +198,16 @@ UniValue ValueFromAmount(const CAmount& amount, const uint32_t &nBaseAsset)
     int64_t quotient = n_abs;
     int64_t divByAmount = 1;
     int64_t remainder = 0;
+    std::string strPrecision = "0";
     if (nPrecision > 0) {
-        divByAmount = pow(10, nPrecision);
+        divByAmount = pow(10.0, nPrecision);
         quotient = n_abs / divByAmount;
         remainder = n_abs % divByAmount;
+        strPrecision = itostr(nPrecision);
     }
+
     return UniValue(UniValue::VNUM,
-            strprintf("%s%d.%0" + itostr(nPrecision) + "d", sign ? "-" : "", quotient, remainder));
+        strprintf("%s%d.%0" + strPrecision + "d", sign ? "-" : "", quotient, remainder));
 }
 std::string FormatScript(const CScript& script)
 {
