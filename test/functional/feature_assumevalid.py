@@ -173,6 +173,8 @@ class AssumeValidTest(SyscoinTestFramework):
 
         # Send blocks to node2. Block 102 will be rejected.
         self.send_blocks_until_disconnected(p2p2)
+        # SYSCOIN
+        self.bump_mocktime(5)
         self.wait_until(lambda: self.nodes[2].getblockcount() >= 101)
         assert_equal(self.nodes[2].getblockcount(), 101)
 
