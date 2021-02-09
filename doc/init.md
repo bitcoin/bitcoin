@@ -53,11 +53,11 @@ Paths
 
 All three configurations assume several paths that might need to be adjusted.
 
-Binary:              `/usr/bin/dashd`
-Configuration file:  `/etc/dashcore/dash.conf`
-Data directory:      `/var/lib/dashd`
-PID file:            `/var/run/dashd/dashd.pid` (OpenRC and Upstart) or `/run/dashd/dashd.pid` (systemd)
-Lock file:           `/var/lock/subsys/dashd` (CentOS)
+    Binary:              /usr/bin/dashd
+    Configuration file:  /etc/dashcore/dash.conf
+    Data directory:      /var/lib/dashd
+    PID file:            /var/run/dashd/dashd.pid (OpenRC and Upstart) or /run/dashd/dashd.pid (systemd)
+    Lock file:           /var/lock/subsys/dashd (CentOS)
 
 The PID directory (if applicable) and data directory should both be owned by the
 dashcore user and group. It is advised for security reasons to make the
@@ -83,10 +83,10 @@ OpenRC).
 
 ### macOS
 
-Binary:              `/usr/local/bin/dashd`
-Configuration file:  `~/Library/Application Support/DashCore/dash.conf`
-Data directory:      `~/Library/Application Support/DashCore`
-Lock file:           `~/Library/Application Support/DashCore/.lock`
+    Binary:              /usr/local/bin/dashd
+    Configuration file:  ~/Library/Application Support/DashCore/dash.conf
+    Data directory:      ~/Library/Application Support/DashCore
+    Lock file:           ~/Library/Application Support/DashCore/.lock
 
 Installing Service Configuration
 -----------------------------------

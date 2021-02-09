@@ -9,7 +9,7 @@ Note
 Always use absolute paths to configure and compile Dash Core and the dependencies.
 For example, when specifying the path of the dependency:
 
-	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
+    ../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
 
 Here BDB_PREFIX must be an absolute path - it is defined using $(pwd) which ensures
 the usage of the absolute path.
@@ -227,9 +227,9 @@ Boost
 -----
 If you need to build Boost yourself:
 
-	sudo su
-	./bootstrap.sh
-	./bjam install
+    sudo su
+    ./bootstrap.sh
+    ./bjam install
 
 
 Security
@@ -240,8 +240,8 @@ This can be disabled with:
 
 Hardening Flags:
 
-	./configure --enable-hardening
-	./configure --disable-hardening
+    ./configure --enable-hardening
+    ./configure --disable-hardening
 
 
 Hardening enables the following features:
@@ -256,7 +256,7 @@ Hardening enables the following features:
 
     To test that you have built PIE executable, install scanelf, part of paxutils, and use:
 
-    	scanelf -e ./dashd
+        scanelf -e ./dashd
 
     The output should contain:
 
@@ -273,8 +273,8 @@ Hardening enables the following features:
     `scanelf -e ./dashd`
 
     The output should contain:
-	STK/REL/PTL
-	RW- R-- RW-
+    STK/REL/PTL
+    RW- R-- RW-
 
     The STK RW- means that the stack is readable and writeable but not executable.
 
