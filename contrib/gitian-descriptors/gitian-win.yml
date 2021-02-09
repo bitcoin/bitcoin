@@ -3,7 +3,7 @@ name: "syscoin-core-win-4.2"
 enable_cache: true
 distro: "ubuntu"
 suites:
-- "focal"
+- "bionic"
 architectures:
 - "amd64"
 packages:
