@@ -49,10 +49,9 @@ jobs:
         run: echo Using veriblock-pop-cpp version $VERIBLOCK_POP_CPP_VERSION
       - name: install apt-get deps
         run: |
-          sudo add-apt-repository ppa:bitcoin/bitcoin
           sudo apt-get update
-          sudo apt-get install build-essential libtool autotools-dev automake pkg-config bsdmainutils ccache python3 python3-pip python3-setuptools python-setuptools
-          sudo apt-get install libevent-dev python3-zmq python3-dev libboost-python-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libdb4.8-dev libdb4.8++-dev
+          sudo apt-get install libdb++-dev build-essential libtool autotools-dev automake pkg-config bsdmainutils ccache python3 python3-pip python3-setuptools python-setuptools
+          sudo apt-get install libevent-dev python3-zmq python3-dev libboost-python-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev
       - name: install veriblock-pop-cpp
         env:
           BUILD_TYPE: Release
@@ -77,6 +76,7 @@ jobs:
         run: ./autogen.sh
       - name: configure
         run: ./configure
+          --with-incompatible-bdb
           --without-gui
           --enable-werror
           --disable-bench
@@ -394,7 +394,11 @@ jobs:
       - name: install build requirements
         run: sudo apt-get install python3-setuptools python-setuptools build-essential libtool autotools-dev automake pkg-config bsdmainutils python3 ccache
       - name: install dependencies
-        run: sudo apt-get install clang-8 llvm-8 python3-zmq python3-dev libboost-python-dev qtbase5-dev qttools5-dev-tools libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev libdb5.3++-dev libminiupnpc-dev libzmq3-dev libqrencode-dev
+        run: |
+          sudo apt-get install clang-8 llvm-8 python3-zmq python3-dev libboost-python-dev qtbase5-dev \
+            qttools5-dev-tools libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev \
+            libboost-test-dev libboost-thread-dev libminiupnpc-dev libzmq3-dev libqrencode-dev \
+            libdb++-dev
       - name: install veriblock-pop-cpp
         env:
           CC: clang-8
