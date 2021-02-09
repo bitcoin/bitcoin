@@ -29,7 +29,7 @@ outgoing connections, but more is possible.
 	-onion=ip:port  Set the proxy server to use for Tor onion services. You do not
 	                need to set this if it's the same as -proxy. You can use -onion=0
 	                to explicitly disable access to onion services.
-			
+
 **Note:** _Only the -proxy option sets the proxy for DNS requests with -onion they will not route over Tor, so use -proxy if you have privacy concerns._
 
 	-listen         When using -proxy, listening is disabled by default. If you want
@@ -210,3 +210,13 @@ for normal IPv4/IPv6 communication, use:
   Otherwise it is trivial to link them, which may reduce privacy. Onion
   services created automatically (as in section 2) always have only one port
   open.
+
+- If you are in an environment that does not permit direct Tor connections,
+  and does not permit the public bridges, then considering the trade-offs
+  it probably isn't safe enough to use the Tor network. Example: few places
+  in China and India
+
+- If someone is operating in paranoid mode then the correct move is to not
+  listen at all on the node they are trying to protect, because any listening
+  lets attackers actively connect into them. Frequently changing local onion
+  address will not be helpful.
