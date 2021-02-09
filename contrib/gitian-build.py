@@ -39,7 +39,7 @@ def setup():
     if args.docker:
         make_image_prog += ['--docker']
     elif not args.kvm:
-        make_image_prog += ['--lxc']
+        make_image_prog += ['--lxc', '--disksize', '13000']
     subprocess.check_call(make_image_prog)
     os.chdir(workdir)
     if args.is_focal and not args.kvm and not args.docker:
