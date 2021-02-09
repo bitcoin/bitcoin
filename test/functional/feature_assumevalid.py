@@ -29,11 +29,9 @@ Start three nodes:
       block 200. node2 will reject block 102 since it's assumed valid, but it
       isn't buried by at least two weeks' work.
 """
+import time
 
-from test_framework.blocktools import (
-    create_block,
-    create_coinbase,
-)
+from test_framework.blocktools import (create_block, create_coinbase)
 from test_framework.key import ECKey
 from test_framework.messages import (
     CBlockHeader,
@@ -79,6 +77,26 @@ class AssumeValidTest(SyscoinTestFramework):
                 p2p_conn.send_message(msg_block(self.blocks[i]))
             except IOError:
                 assert not p2p_conn.is_connected
+                break
+
+    def assert_blockchain_height(self, node, height):
+        """Wait until the blockchain is no longer advancing and verify it's reached the expected height."""
+        last_height = node.getblock(node.getbestblockhash())['height']
+        timeout = 30
+        while True:
+            time.sleep(1)
+            # SYSCOIN
+            self.bump_mocktime(1)
+            current_height = node.getblock(node.getbestblockhash())['height']
+            if current_height != last_height:
+                last_height = current_height
+                if timeout < 0:
+                    assert False, "blockchain too short after timeout: %d" % current_height
+                timeout -= 0.25
+                continue
+            elif current_height > height:
+                assert False, "blockchain too long: %d" % current_height
+            elif current_height == height:
                 break
 
     def run_test(self):
@@ -161,8 +179,7 @@ class AssumeValidTest(SyscoinTestFramework):
 
         # Send blocks to node0. Block 102 will be rejected.
         self.send_blocks_until_disconnected(p2p0)
-        self.wait_until(lambda: self.nodes[0].getblockcount() >= 101)
-        assert_equal(self.nodes[0].getblockcount(), 101)
+        self.assert_blockchain_height(self.nodes[0], 101)
 
         # Send all blocks to node1. All blocks will be accepted.
         for i in range(2202):
@@ -175,8 +192,7 @@ class AssumeValidTest(SyscoinTestFramework):
         self.send_blocks_until_disconnected(p2p2)
         # SYSCOIN
         self.bump_mocktime(5)
-        self.wait_until(lambda: self.nodes[2].getblockcount() >= 101)
-        assert_equal(self.nodes[2].getblockcount(), 101)
+        self.assert_blockchain_height(self.nodes[2], 101)
 
 
 if __name__ == '__main__':
