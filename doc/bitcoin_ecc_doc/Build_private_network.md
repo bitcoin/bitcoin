@@ -89,7 +89,11 @@ $ make
 $ sudo make install
 ```
 
+If you get an error when execute `./configure` then try this.
 
+'''shell 
+$ sudo apt-get install libdb++-dev 
+'''
 
 ### 1.7 Execute bitcoin core
 
