@@ -11,9 +11,7 @@ import sys
 def setup():
     global args, workdir
     programs = ['ruby', 'git', 'make', 'wget', 'curl']
-    if args.kvm:
-        programs += ['apt-cacher-ng', 'python-vm-builder', 'qemu-kvm', 'qemu-utils']
-    elif args.docker:
+    if args.docker:
         if not os.path.isfile('/lib/systemd/system/docker.service'):
             dockers = ['docker.io', 'docker-ce']
             for i in dockers:
@@ -38,11 +36,11 @@ def setup():
     make_image_prog = ['bin/make-base-vm', '--suite', 'focal', '--arch', 'amd64']
     if args.docker:
         make_image_prog += ['--docker']
-    elif not args.kvm:
+    else:
         make_image_prog += ['--lxc', '--disksize', '13000']
     subprocess.check_call(make_image_prog)
     os.chdir(workdir)
-    if args.is_focal and not args.kvm and not args.docker:
+    if args.is_focal and not args.docker:
         subprocess.check_call(['sudo', 'sed', '-i', 's/lxcbr0/br0/', '/etc/default/lxc-net'])
         print('Reboot is required')
         sys.exit(0)
@@ -165,7 +163,6 @@ def main():
     parser.add_argument('-o', '--os', dest='os', default='lwm', help='Specify which Operating Systems the build is for. Default is %(default)s. l for Linux, w for Windows, m for MacOS')
     parser.add_argument('-j', '--jobs', dest='jobs', default='2', help='Number of processes to use. Default %(default)s')
     parser.add_argument('-m', '--memory', dest='memory', default='2000', help='Memory to allocate in MiB. Default %(default)s')
-    parser.add_argument('-k', '--kvm', action='store_true', dest='kvm', help='Use KVM instead of LXC')
     parser.add_argument('-d', '--docker', action='store_true', dest='docker', help='Use Docker instead of LXC')
     parser.add_argument('-S', '--setup', action='store_true', dest='setup', help='Set up the Gitian building environment. Only works on Debian-based systems (Ubuntu, Debian)')
     parser.add_argument('-D', '--detach-sign', action='store_true', dest='detach_sign', help='Create the assert file for detached signing. Will not commit anything.')
@@ -178,9 +175,6 @@ def main():
 
     args.is_focal = b'focal' in subprocess.check_output(['lsb_release', '-cs'])
 
-    if args.kvm and args.docker:
-        raise Exception('Error: cannot have both kvm and docker')
-
     # Ensure no more than one environment variable for gitian-builder (USE_LXC, USE_VBOX, USE_DOCKER) is set as they
     # can interfere (e.g., USE_LXC being set shadows USE_DOCKER; for details see gitian-builder/libexec/make-clean-vm).
     os.environ['USE_LXC'] = ''
@@ -188,7 +182,7 @@ def main():
     os.environ['USE_DOCKER'] = ''
     if args.docker:
         os.environ['USE_DOCKER'] = '1'
-    elif not args.kvm:
+    else:
         os.environ['USE_LXC'] = '1'
         if 'GITIAN_HOST_IP' not in os.environ.keys():
             os.environ['GITIAN_HOST_IP'] = '10.0.3.1'
