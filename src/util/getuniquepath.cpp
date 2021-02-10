@@ -1,5 +1,9 @@
-#include <random.h>
+// Copyright (c) 2021 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include <fs.h>
+#include <random.h>
 #include <util/strencodings.h>
 
 fs::path GetUniquePath(const fs::path& base)

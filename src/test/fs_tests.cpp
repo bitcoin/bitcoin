@@ -4,8 +4,8 @@
 //
 #include <fs.h>
 #include <test/util/setup_common.h>
-#include <util/system.h>
 #include <util/getuniquepath.h>
+#include <util/system.h>
 
 #include <boost/test/unit_test.hpp>
 
