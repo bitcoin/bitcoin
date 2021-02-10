@@ -207,6 +207,25 @@ def check_PE_NX(executable) -> bool:
     bits = get_PE_dll_characteristics(executable)
     return (bits & IMAGE_DLL_CHARACTERISTICS_NX_COMPAT) == IMAGE_DLL_CHARACTERISTICS_NX_COMPAT
 
+def check_PE_control_flow_instrumentation(executable) -> bool:
+    '''
+    Check control flow instrumentation for PE.
+    We check that main starts with a endbr64 instruction.
+    Because it relies on the symbol table being present this check only works on unstripped binaries.
+    '''
+
+    if executable.endswith('test_bitcoin.exe'):
+        # TODO: why doesn't test_bitcoin.exe receive instrumentation?
+        # It does contain 'enbr64' instructions, but only in the functions
+        # coming from ZeroMQ.
+        return True
+
+    stdout = run_command([OBJDUMP_CMD, '--disassemble=main', '--section=.text', executable])
+    split = stdout.splitlines()
+    if "<main>:" in split[6] and "endbr64" in split[7]:
+        return True
+    return False
+
 def get_MACHO_executable_flags(executable) -> List[str]:
     stdout = run_command([OTOOL_CMD, '-vh', executable])
 
@@ -286,7 +305,8 @@ CHECKS = {
     ('DYNAMIC_BASE', check_PE_DYNAMIC_BASE),
     ('HIGH_ENTROPY_VA', check_PE_HIGH_ENTROPY_VA),
     ('NX', check_PE_NX),
-    ('RELOC_SECTION', check_PE_RELOC_SECTION)
+    ('RELOC_SECTION', check_PE_RELOC_SECTION),
+    ('control_flow', check_PE_control_flow_instrumentation),
 ],
 'MACHO': [
     ('PIE', check_MACHO_PIE),
