@@ -11,6 +11,7 @@
 void TestChainState::ResetIbd()
 {
     m_cached_finished_ibd = false;
+    fs::remove(GetDataDir() / ".ibd_complete");
     assert(IsInitialBlockDownload());
 }
 
