@@ -151,7 +151,7 @@ static void SignSpecialTxPayloadByHash(const CMutableTransaction& tx, SpecialTxP
     uint256 hash = ::SerializeHash(payload);
     payload.sig = key.Sign(hash);
 }
-static UniValue SignAndSendSpecialTx(const util::Ref& context, const CMutableTransaction& tx, bool fSubmit = true)
+static UniValue SignAndSendSpecialTx(const JSONRPCRequest& request, const CMutableTransaction& tx, bool fSubmit = true)
 {
     {
         LOCK(cs_main);
@@ -165,14 +165,16 @@ static UniValue SignAndSendSpecialTx(const util::Ref& context, const CMutableTra
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
     ds << tx;
 
-    JSONRPCRequest signRequest(context);
+    JSONRPCRequest signRequest(request.context);
+    signRequest.URI = request.URI;
     signRequest.params.setArray();
     signRequest.params.push_back(HexStr(ds));
     UniValue signResult = signrawtransactionwithwallet().HandleRequest(signRequest);
     if (!fSubmit) {
         return signResult["hex"].get_str();
     }
-    JSONRPCRequest sendRequest(context);
+    JSONRPCRequest sendRequest(request.context);
+    sendRequest.URI = request.URI;
     sendRequest.params.setArray();
     sendRequest.params.push_back(signResult["hex"].get_str());
     return sendrawtransaction().HandleRequest(sendRequest);
@@ -332,7 +334,7 @@ static RPCHelpMan protx_register()
     }
     SignSpecialTxPayloadByString(tx, ptx, key);
     SetTxPayload(tx, ptx);
-    return SignAndSendSpecialTx(request.context,  tx, fSubmit);
+    return SignAndSendSpecialTx(request,  tx, fSubmit);
 },
     };
 }
@@ -464,7 +466,7 @@ static RPCHelpMan protx_register_fund()
     ptx.collateralOutpoint.n = collateralIndex;
 
     SetTxPayload(tx, ptx);
-    return SignAndSendSpecialTx(request.context, tx, fSubmit);
+    return SignAndSendSpecialTx(request, tx, fSubmit);
 },
     };
 }  
@@ -654,7 +656,7 @@ static RPCHelpMan protx_register_submit()
     ptx.vchSig = DecodeBase64(request.params[1].get_str().c_str());
 
     SetTxPayload(tx, ptx);
-    return SignAndSendSpecialTx(request.context, tx);
+    return SignAndSendSpecialTx(request, tx);
 },
     };
 }  
@@ -760,7 +762,7 @@ static RPCHelpMan protx_update_service()
     SignSpecialTxPayloadByHash(tx, ptx, keyOperator);
     SetTxPayload(tx, ptx);
 
-    return SignAndSendSpecialTx(request.context, tx);
+    return SignAndSendSpecialTx(request, tx);
 },
     };
 }  
@@ -864,7 +866,7 @@ static RPCHelpMan protx_update_registrar()
     SignSpecialTxPayloadByHash(tx, ptx, keyOwner);
     SetTxPayload(tx, ptx);
 
-    return SignAndSendSpecialTx(request.context, tx);
+    return SignAndSendSpecialTx(request, tx);
 },
     };
 }  
@@ -957,7 +959,7 @@ static RPCHelpMan protx_revoke()
     SignSpecialTxPayloadByHash(tx, ptx, keyOperator);
     SetTxPayload(tx, ptx);
 
-    return SignAndSendSpecialTx(request.context, tx);
+    return SignAndSendSpecialTx(request, tx);
 },
     };
 } 
