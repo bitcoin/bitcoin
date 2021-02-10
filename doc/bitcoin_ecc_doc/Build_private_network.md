@@ -97,9 +97,9 @@ $ sudo apt-get install libdb++-dev
 
 ### 1.7 Execute bitcoin core
 
-```shell
+'''shell
 $ bitcoind -txindex -daemon
-```
+'''
 
 
 
