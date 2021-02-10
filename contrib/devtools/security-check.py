@@ -143,6 +143,29 @@ def check_ELF_separate_code(executable):
                 return False
     return True
 
+def check_ELF_control_flow_instrumentation(executable) -> bool:
+    '''
+    Check control flow instrumentation for ELF.
+    We check that the function main starts with a endbr64 instruction.
+    Because it relies on the symbol table being present this check only works on unstripped binaries.
+    '''
+    elf = pixie.load(executable)
+
+    if elf.hdr.e_machine is not pixie.EM_X86_64:
+        return True
+
+    # find main symbol
+    main = elf.symbol_by_name(b'main')
+    # get containing section and contents
+    sec = elf.sections[main.st_shndx]
+    contents = sec.contents()
+    # compute address in section
+    offset = main.st_value - sec.sh_addr
+    assert(offset >= 0 and (offset + 4) <= len(contents))
+    # check if instruction is endbr64
+    inst = contents[offset:offset+4]
+    return inst == b'\xf3\x0f\x1e\xfa'
+
 def get_PE_dll_characteristics(executable) -> int:
     '''Get PE DllCharacteristics bits'''
     stdout = run_command([OBJDUMP_CMD, '-x',  executable])
@@ -257,6 +280,7 @@ CHECKS = {
     ('RELRO', check_ELF_RELRO),
     ('Canary', check_ELF_Canary),
     ('separate_code', check_ELF_separate_code),
+    ('control_flow', check_ELF_control_flow_instrumentation),
 ],
 'PE': [
     ('DYNAMIC_BASE', check_PE_DYNAMIC_BASE),

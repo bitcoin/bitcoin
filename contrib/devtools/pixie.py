@@ -5,6 +5,7 @@
 '''
 Compact, self-contained ELF implementation for bitcoin-core security checks.
 '''
+import itertools
 import struct
 import types
 from typing import Dict, List, Optional, Union, Tuple
@@ -35,6 +36,7 @@ ET_DYN = 3
 
 # relevant values for sh_type
 SHT_PROGBITS = 1
+SHT_SYMTAB = 2
 SHT_STRTAB = 3
 SHT_DYNAMIC = 6
 SHT_DYNSYM = 11
@@ -201,11 +203,14 @@ def _lookup_string(data: bytes, index: int) -> bytes:
     return data[index:endx]
 
 VERSYM_S = BiStruct('H') # .gnu_version section has a single 16-bit integer per symbol in the linked section
-def _parse_symbol_table(section: Section, strings: bytes, eh: ELFHeader, versym: bytes, verneed: Dict[int, bytes]) -> List[Symbol]:
+def _parse_symbol_table(section: Section, strings: bytes, eh: ELFHeader, versym: Optional[bytes], verneed: Optional[Dict[int, bytes]]) -> List[Symbol]:
     '''Parse symbol table, return a list of symbols.'''
     data = section.contents()
     symbols = []
-    versym_iter = (verneed.get(v[0]) for v in VERSYM_S[eh.ei_data].iter_unpack(versym))
+    if versym is not None:
+        versym_iter = (verneed.get(v[0]) for v in VERSYM_S[eh.ei_data].iter_unpack(versym))
+    else:
+        versym_iter = itertools.repeat(None)
     for ofs, version in zip(range(0, len(data), section.sh_entsize), versym_iter):
         symbols.append(Symbol(data, ofs, eh, section, strings, version))
     return symbols
@@ -254,6 +259,7 @@ class ELFFile:
         self.hdr = ELFHeader(self.data, 0)
         self._load_sections()
         self._load_program_headers()
+        self._load_symbols()
         self._load_dyn_symbols()
         self._load_dyn_tags()
         self._section_to_segment_mapping()
@@ -273,6 +279,13 @@ class ELFFile:
         for idx in range(self.hdr.e_phnum):
             offset = self.hdr.e_phoff + idx * self.hdr.e_phentsize
             self.program_headers.append(ProgramHeader(self.data, offset, self.hdr))
+
+    def _load_symbols(self) -> None:
+        self.symbols = []
+        for idx, section in enumerate(self.sections):
+            if section.sh_type == SHT_SYMTAB: # find symbol tables
+                strtab_data = self.sections[section.sh_link].contents() # associated string table
+                self.symbols += _parse_symbol_table(section, strtab_data, self.hdr, None, None)
 
     def _load_dyn_symbols(self) -> None:
         # first, load 'verneed' section
@@ -316,6 +329,19 @@ class ELFFile:
         '''Return the values of all dyn tags with the specified tag.'''
         return [val for (tag, val) in self.dyn_tags if tag == tag_in]
 
+    def section_by_name(self, name: bytes) -> Section:
+        res = [section for section in self.sections if section.name == name]
+        if res:
+            return res[0]
+        else:
+            raise KeyError
+
+    def symbol_by_name(self, name: bytes) -> Symbol:
+        res = [symbol for symbol in self.symbols if symbol.name == name]
+        if res:
+            return res[0]
+        else:
+            raise KeyError
 
 def load(filename: str) -> ELFFile:
     with open(filename, 'rb') as f:
