@@ -7,6 +7,7 @@
 #include <config/bitcoin-config.h>
 #endif
 
+#include <compat.h>
 #include <util/time.h>
 
 #include <util/check.h>
@@ -116,4 +117,17 @@ int64_t ParseISO8601DateTime(const std::string& str)
     if (ptime.is_not_a_date_time() || epoch > ptime)
         return 0;
     return (ptime - epoch).total_seconds();
+}
+
+struct timeval MillisToTimeval(int64_t nTimeout)
+{
+    struct timeval timeout;
+    timeout.tv_sec  = nTimeout / 1000;
+    timeout.tv_usec = (nTimeout % 1000) * 1000;
+    return timeout;
+}
+
+struct timeval MillisToTimeval(std::chrono::milliseconds ms)
+{
+    return MillisToTimeval(count_milliseconds(ms));
 }
