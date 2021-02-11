@@ -99,8 +99,7 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
     std::vector<valtype> vSolutions;
     whichTypeRet = Solver(scriptPubKey, vSolutions);
 
-    switch (whichTypeRet)
-    {
+    switch (whichTypeRet) {
     case TxoutType::NONSTANDARD:
     case TxoutType::NULL_DATA:
         return false;
@@ -151,10 +150,8 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
         }
         return ok;
     }
-
-    default:
-        return false;
-    }
+    } // no default case, so the compiler can warn about missing cases
+    assert(false);
 }
 
 static CScript PushAll(const std::vector<valtype>& values)
