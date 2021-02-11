@@ -45,8 +45,9 @@ int64_t GetSystemTimeInSeconds(); // Like GetTime(), but not mockable
 
 /** For testing. Set e.g. with the setmocktime rpc, or -mocktime argument */
 void SetMockTime(int64_t nMockTimeIn);
+
 /** For testing */
-int64_t GetMockTime();
+std::chrono::seconds GetMockTime();
 
 /** Return system time (or mocked time, if set) */
 template <typename T>
