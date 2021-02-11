@@ -480,19 +480,21 @@ public:
         const CChainParams& m_chainparams;
         const int64_t m_accept_time;
         const bool m_bypass_limits;
-        /*
-         * Return any outpoints which were not previously present in the coins
-         * cache, but were added as a result of validating the tx for mempool
-         * acceptance. This allows the caller to optionally remove the cache
-         * additions if the associated transaction ends up being rejected by
-         * the mempool.
-         */
-        std::vector<COutPoint>& m_coins_to_uncache;
         const bool m_test_accept;
     };
 
     // Single transaction acceptance
-    MempoolAcceptResult AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    MempoolAcceptResult AcceptSingleTransaction(const CTransactionRef& ptx, const ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    // Uncache all coins in m_coins_to_uncache. If the tx is accepted to mempool,
+    // MemPoolAccept should clear m_coins_to_uncache before destruction.
+    ~MemPoolAccept()
+    {
+        assert(std::addressof(::ChainstateActive()) == std::addressof(m_active_chainstate));
+        for (const COutPoint& hashTx : m_coins_to_uncache) {
+            m_active_chainstate.CoinsTip().Uncache(hashTx);
+        }
+    }
 
 private:
     // All the intermediate state that gets passed between the various levels
@@ -520,7 +522,7 @@ private:
     // Looks up inputs, calculates feerate, considers replacement, evaluates
     // package limits, etc. As this function can be invoked for "free" by a peer,
     // only tests that are fast should be done here (to avoid CPU DoS).
-    bool PreChecks(ATMPArgs& args, Workspace& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
+    bool PreChecks(const ATMPArgs& args, Workspace& ws) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_pool.cs);
 
     // Run the script checks using our policy flags. As this can be slow, we should
     // only invoke this on transactions that have otherwise passed policy checks.
@@ -559,6 +561,16 @@ private:
 
     CChainState& m_active_chainstate;
 
+    /**
+    * Track any outpoints which were not previously present in the coins
+    * cache, but were added as a result of validating the tx for mempool
+    * acceptance. Unless the tx is accepted to mempool (where it would be
+    * beneficial to keep the coins in cache), uncache the coins to prevent
+    * memory DoS in case we receive a large number of invalid transactions
+    * that attempt to overrun the in-memory coins cache.
+    */
+    std::vector<COutPoint> m_coins_to_uncache;
+
     // The package limits in effect at the time of invocation.
     const size_t m_limit_ancestors;
     const size_t m_limit_ancestor_size;
@@ -568,7 +580,7 @@ private:
     size_t m_limit_descendant_size;
 };
 
-bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
+bool MemPoolAccept::PreChecks(const ATMPArgs& args, Workspace& ws)
 {
     const CTransactionRef& ptx = ws.m_ptx;
     const CTransaction& tx = *ws.m_ptx;
@@ -577,7 +589,6 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // Copy/alias what we need out of args
     const int64_t nAcceptTime = args.m_accept_time;
     const bool bypass_limits = args.m_bypass_limits;
-    std::vector<COutPoint>& coins_to_uncache = args.m_coins_to_uncache;
 
     // Alias what we need out of ws
     TxValidationState& state = ws.m_state;
@@ -669,7 +680,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     m_viewmempool.SetBackend(m_active_chainstate.CoinsTip());
     for (const CTxIn& txin : tx.vin) {
         if (!coins_cache.HaveCoinInCache(txin.prevout)) {
-            coins_to_uncache.push_back(txin.prevout);
+            m_coins_to_uncache.push_back(txin.prevout);
         }
 
         // Note: this call may add txin.prevout to the coins cache
@@ -1052,7 +1063,7 @@ bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
     return true;
 }
 
-MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs& args)
+MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef& ptx, const ATMPArgs& args)
 {
     AssertLockHeld(cs_main);
     LOCK(m_pool.cs); // mempool "read lock" (held through GetMainSignals().TransactionAddedToMempool())
@@ -1080,6 +1091,8 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
 
     GetMainSignals().TransactionAddedToMempool(ptx, m_pool.GetAndIncrementSequence());
 
+    // Don't uncache coins when the transaction is accepted to mempool.
+    m_coins_to_uncache.clear();
     return MempoolAcceptResult(std::move(ws.m_replaced_transactions), ws.m_base_fees);
 }
 
@@ -1092,21 +1105,11 @@ static MempoolAcceptResult AcceptToMemoryPoolWithTime(const CChainParams& chainp
                                                       bool bypass_limits, bool test_accept)
                                                       EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    std::vector<COutPoint> coins_to_uncache;
-    MemPoolAccept::ATMPArgs args { chainparams, nAcceptTime, bypass_limits, coins_to_uncache, test_accept };
-
+    const MemPoolAccept::ATMPArgs args { chainparams, nAcceptTime, bypass_limits, test_accept };
     assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
     const MempoolAcceptResult result = MemPoolAccept(pool, active_chainstate).AcceptSingleTransaction(tx, args);
-    if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
-        // Remove coins that were not present in the coins cache before calling ATMPW;
-        // this is to prevent memory DoS in case we receive a large number of
-        // invalid transactions that attempt to overrun the in-memory coins cache
-        // (`CCoinsViewCache::cacheCoins`).
 
-        for (const COutPoint& hashTx : coins_to_uncache)
-            active_chainstate.CoinsTip().Uncache(hashTx);
-    }
-    // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits
+    // Ensure our coins cache is still within its size limits
     BlockValidationState state_dummy;
     active_chainstate.FlushStateToDisk(chainparams, state_dummy, FlushStateMode::PERIODIC);
     return result;
