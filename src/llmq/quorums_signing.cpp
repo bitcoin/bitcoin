@@ -621,7 +621,8 @@ bool CSigningManager::ProcessPendingRecoveredSigs()
 
     ProcessPendingReconstructedRecoveredSigs();
 
-    CollectPendingRecoveredSigsToVerify(32, recSigsByNode, quorums);
+    const size_t nMaxBatchSize{32};
+    CollectPendingRecoveredSigsToVerify(nMaxBatchSize, recSigsByNode, quorums);
     if (recSigsByNode.empty()) {
         return false;
     }
@@ -675,7 +676,7 @@ bool CSigningManager::ProcessPendingRecoveredSigs()
         }
     }
 
-    return true;
+    return recSigsByNode.size() >= nMaxBatchSize;
 }
 
 // signature must be verified already

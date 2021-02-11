@@ -159,7 +159,7 @@ public:
     void ResolveBlockConflicts(const uint256& islockHash, const CInstantSendLock& islock);
     void RemoveChainLockConflictingLock(const uint256& islockHash, const CInstantSendLock& islock);
     static void AskNodesForLockedTx(const uint256& txid);
-    bool ProcessPendingRetryLockTxs();
+    void ProcessPendingRetryLockTxs();
 
     bool AlreadyHave(const CInv& inv);
     bool GetInstantSendLockByHash(const uint256& hash, CInstantSendLock& ret);
