@@ -59,7 +59,7 @@ First, install the general dependencies:
 
     sudo apt update
     sudo apt upgrade
-    sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git qtbase5-dev qttools5-dev-tools libssl-dev libdb++-dev libminiupnpc-dev libevent-dev libcurl4-openssl-dev libgmp3-dev
+    sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git cmake qtbase5-dev qttools5-dev-tools libssl-dev libdb++-dev libminiupnpc-dev libevent-dev libcurl4-openssl-dev libgmp3-dev
 
 A host toolchain (`build-essential`) is necessary because some dependency
 packages need to build host utilities that are used in the build process.
