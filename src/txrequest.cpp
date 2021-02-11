@@ -543,7 +543,7 @@ public:
     void DisconnectedPeer(NodeId peer)
     {
         auto& index = m_index.get<ByPeer>();
-        auto it = index.lower_bound(ByPeerView{peer, false, uint256::ZERO});
+        auto it = index.lower_bound(ByPeerView{peer, false, uint256::ZEROV});
         while (it != index.end() && it->m_peer == peer) {
             // Check what to continue with after this iteration. 'it' will be deleted in what follows, so we need to
             // decide what to continue with afterwards. There are a number of cases to consider:
@@ -607,7 +607,7 @@ public:
 
         // Find all CANDIDATE_BEST announcements for this peer.
         std::vector<const Announcement*> selected;
-        auto it_peer = m_index.get<ByPeer>().lower_bound(ByPeerView{peer, true, uint256::ZERO});
+        auto it_peer = m_index.get<ByPeer>().lower_bound(ByPeerView{peer, true, uint256::ZEROV});
         while (it_peer != m_index.get<ByPeer>().end() && it_peer->m_peer == peer &&
             it_peer->GetState() == State::CANDIDATE_BEST) {
             selected.emplace_back(&*it_peer);

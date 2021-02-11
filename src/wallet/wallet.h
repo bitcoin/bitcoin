@@ -281,7 +281,7 @@ private:
     /** Constant used in hashBlock to indicate tx has been abandoned, only used at
      * serialization/deserialization to avoid ambiguity with conflicted.
      */
-    static constexpr const uint256& ABANDON_HASH = uint256::ONE;
+    static constexpr const uint256& ABANDON_HASH = uint256::ONEV;
 
 public:
     /**

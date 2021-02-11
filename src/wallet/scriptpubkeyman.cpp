@@ -665,7 +665,7 @@ std::unique_ptr<CKeyMetadata> LegacyScriptPubKeyMan::GetMetadata(const CTxDestin
 
 uint256 LegacyScriptPubKeyMan::GetID() const
 {
-    return uint256::ONE;
+    return uint256::ONEV;
 }
 
 /**
