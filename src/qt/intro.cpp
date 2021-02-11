@@ -194,8 +194,7 @@ bool Intro::showIfNeeded(bool& did_show_intro, bool& prune)
     /* 1) Default data directory for operating system */
     QString dataDir = GUIUtil::getDefaultDataDirectory();
     /* 2) Allow QSettings to override default dir */
-    // SYSCOIN
-    dataDir = settings.value("strDataDirSyscoin", dataDir).toString();
+    dataDir = settings.value("strDataDir", dataDir).toString();
 
     if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir)) || gArgs.GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR) || settings.value("fReset", false).toBool() || gArgs.GetBoolArg("-resetguisettings", false))
     {
@@ -236,8 +235,7 @@ bool Intro::showIfNeeded(bool& did_show_intro, bool& prune)
         // Additional preferences:
         prune = intro.ui->prune->isChecked();
 
-        // SYSCOIN
-        settings.setValue("strDataDirSyscoin", dataDir);
+        settings.setValue("strDataDir", dataDir);
         settings.setValue("fReset", false);
     }
     /* Only override -datadir if different from the default, to make it possible to
