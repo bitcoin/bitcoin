@@ -28,7 +28,8 @@ struct MinerTestingSetup : public TestingSetup {
     void TestPackageSelection(const CChainParams& chainparams, const CScript& scriptPubKey, const std::vector<CTransactionRef>& txFirst) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs);
     bool TestSequenceLocks(const CTransaction& tx, int flags) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, m_node.mempool->cs)
     {
-        return CheckSequenceLocks(::ChainstateActive(), *m_node.mempool, tx, flags);
+        CCoinsViewMemPool viewMempool(&m_node.chainman->ActiveChainstate().CoinsTip(), *m_node.mempool);
+        return CheckSequenceLocks(m_node.chainman->ActiveChain().Tip(), viewMempool, tx, flags);
     }
     BlockAssembler AssemblerForTest(const CChainParams& params);
 };
