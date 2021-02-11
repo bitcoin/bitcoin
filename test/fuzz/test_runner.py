@@ -225,6 +225,8 @@ def merge_inputs(*, fuzz_pool, corpus, test_list, src_dir, build_dir, merge_dir)
         args = [
             os.path.join(build_dir, 'src', 'test', 'fuzz', 'fuzz'),
             '-merge=1',
+            '-shuffle=0',
+            '-prefer_small=1',
             '-use_value_profile=1',  # Also done by oss-fuzz https://github.com/google/oss-fuzz/issues/1406#issuecomment-387790487
             os.path.join(corpus, t),
             os.path.join(merge_dir, t),
