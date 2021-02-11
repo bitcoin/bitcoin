@@ -13,15 +13,15 @@
 
 const std::function<void(const std::string&)> G_TEST_LOG_FUN{};
 
-std::map<std::string_view, std::tuple<TypeTestOneInput, TypeInitialize>>& FuzzTargets()
+std::map<std::string_view, std::tuple<TypeTestOneInput, TypeInitialize, TypeHidden>>& FuzzTargets()
 {
-    static std::map<std::string_view, std::tuple<TypeTestOneInput, TypeInitialize>> g_fuzz_targets;
+    static std::map<std::string_view, std::tuple<TypeTestOneInput, TypeInitialize, TypeHidden>> g_fuzz_targets;
     return g_fuzz_targets;
 }
 
-void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target, TypeInitialize init)
+void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target, TypeInitialize init, TypeHidden hidden)
 {
-    const auto it_ins = FuzzTargets().try_emplace(name, std::move(target), std::move(init));
+    const auto it_ins = FuzzTargets().try_emplace(name, std::move(target), std::move(init), hidden);
     Assert(it_ins.second);
 }
 
@@ -31,6 +31,7 @@ void initialize()
 {
     if (std::getenv("PRINT_ALL_FUZZ_TARGETS_AND_ABORT")) {
         for (const auto& t : FuzzTargets()) {
+            if (std::get<2>(t.second)) continue;
             std::cout << t.first << std::endl;
         }
         Assert(false);
