@@ -20,18 +20,19 @@ information in the debug log about your Tor configuration.
 
 The first step is running Bitcoin Core behind a Tor proxy. This will already anonymize all
 outgoing connections, but more is possible.
-
+<pre>
     -proxy=ip:port  Set the proxy server. If SOCKS5 is selected (default), this proxy
                     server will be used to try to reach .onion addresses as well.
                     You need to use -noonion or -onion=0 to explicitly disable
                     outbound access to onion services.
 
+                    <b>Note:</b> <i>Only the -proxy option sets the proxy for DNS requests;
+                    with -onion they will not route over Tor, so use -proxy if you
+                    have privacy concerns.</i>
+
     -onion=ip:port  Set the proxy server to use for Tor onion services. You do not
                     need to set this if it's the same as -proxy. You can use -onion=0
                     to explicitly disable access to onion services.
-                    Note: Only the -proxy option sets the proxy for DNS requests;
-                    with -onion they will not route over Tor, so use -proxy if you
-                    have privacy concerns.
 
     -listen         When using -proxy, listening is disabled by default. If you want
                     to manually configure an onion service (see section 3), you'll
@@ -50,7 +51,7 @@ outgoing connections, but more is possible.
                     connections will be enabled when you use -proxy or -onion. Use
                     -noonion or -onion=0 if you want to be sure there are no outbound
                     onion connections over the default proxy or your defined -proxy.
-
+</pre>
 In a typical situation, this suffices to run behind a Tor proxy:
 
     ./bitcoind -proxy=127.0.0.1:9050
@@ -146,7 +147,6 @@ password` (refer to the [Tor Dev
 Manual](https://2019.www.torproject.org/docs/tor-manual.html.en) for more
 details).
 
-
 ## 3. Manually create a Bitcoin Core onion service
 
 You can also manually configure your node to be reachable from the Tor network.
@@ -211,3 +211,105 @@ for normal IPv4/IPv6 communication, use:
   Otherwise it is trivial to link them, which may reduce privacy. Onion
   services created automatically (as in section 2) always have only one port
   open.
+
+- In some regions of the world the Tor network is monitored or blocked.
+  If you are in an environment that does not permit direct Tor connections or the use
+  of Tor bridges, then considering the trade-offs, it may not be safe to use Tor.
+
+- For maximum privacy, it is preferable to disable accepting incoming connections.
+
+- Users can download packages with [torsocks](https://gitlab.torproject.org/legacy/trac/-/wikis/doc/torsocks) for better security and privacy.
+
+- Trade-offs involved in using `onlynet=onion`:
+
+  The `onlynet=onion` configuration option can potentially ensure the node attempts to only
+  connect over Tor. It is more private when you combine it with no reachable IPv4/IPv6 address,
+  in particular if you want to broadcast transactions without them being correlatable with your IP.
+
+  **Sybil Attacks**
+
+  On the other hand, if you only make random Tor connections, you're much more vulnerable to Sybil attacks.
+  As Tor addresses may be created at no cost, an attacker can potentially flood the network with many Tor
+  nodes and receive all of the outbound Tor connections an `onlynet=tor` node makes.
+
+  This is significantly less a concern with IPv4/IPv6 (especially with asmap) due to the cost of obtaining IPs in many
+  networks. It's also alleviated if you make `-addnode` connections to trusted peers (even if they're onion addresses).
+
+  If all of your connections are controlled by a Sybil attacker, they can easily prevent you from seeing confirmed transactions
+  and, with more difficulty, even trick your node into falsely reporting a transaction as confirmed on the blockchain with most
+  cumulative “chainwork”.
+
+  **Network Partitioning**
+
+  If too many nodes use `onlynet=onion`, it could become difficult for onion nodes to communicate with clearnet nodes,
+  preventing the Tor network from seeing recent transactions and blocks. It is essential that some nodes access both
+  clearnet and Tor, or use `onlynet=i2p` with `onlynet=onion`.
+
+## Setup Guide: Debian/Ubuntu
+
+Assuming you already have an installation of Bitcoin Core:
+
+**1. Install Tor:**
+
+To install Tor, run:
+
+```
+sudo apt install tor
+```
+
+**2. Edit Tor configuration file:**
+
+Open the `torrc` file with your text editor. This example uses nano:
+
+```
+sudo nano /etc/tor/torrc
+```
+Ensure that `torrc` has these settings, and save:
+
+```
+ControlPort 9051
+CookieAuthentication 1
+CookieAuthFileGroupReadable 1
+```
+
+**3. Add user to Tor group ("satoshi" in this example):**
+
+```
+sudo usermod -a -G debian-tor satoshi
+```
+
+**4. Restart System**
+
+```
+sudo reboot
+```
+
+**5. Edit Bitcoin configuration file**
+
+Open the `bitcoin.conf` [file](https://en.bitcoin.it/wiki/Running_Bitcoin#Bitcoin.conf_Configuration_File) with your text editor.
+Edit the file so that it contains these settings:
+
+```
+listen=1
+proxy=127.0.0.1:9050
+torcontrol=127.0.0.1:9051
+debug=tor
+```
+
+**6. Confirmation**
+
+You should be all set up to run a node through the Tor Network.
+You can confirm that everything is set up correctly by running
+`getnetworkinfo` or `-netinfo` and checking that the local
+addresses they return include the onion service.
+
+```
+$ bitcoin-cli getnetworkinfo
+"localaddresses": [
+  {
+    "address": "omy7kj7zwvfg5luayideh73uqb2latkoyyy5h65y4atv3fymnlxlzwqd.onion",
+    "port": 8333,
+    "score": 4
+  }
+]
+```
