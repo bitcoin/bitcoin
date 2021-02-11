@@ -59,7 +59,7 @@ First, install the general dependencies:
 
     sudo apt update
     sudo apt upgrade
-    sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git
+    sudo apt install build-essential libtool autotools-dev automake pkg-config bsdmainutils curl git qtbase5-dev qttools5-dev-tools libssl-dev libdb++-dev libminiupnpc-dev libevent-dev libcurl4-openssl-dev libgmp3-dev
 
 A host toolchain (`build-essential`) is necessary because some dependency
 packages need to build host utilities that are used in the build process.
@@ -98,15 +98,18 @@ is to temporarily disable WSL support for Win32 applications.
 
 Build using:
 
-    PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g') # strip out problematic Windows %PATH% imported var
-    sudo bash -c "echo 0 > /proc/sys/fs/binfmt_misc/status" # Disable WSL support for Win32 applications.
-    cd depends
-    make HOST=x86_64-w64-mingw32
-    cd ..
-    ./autogen.sh # not required when building from tarball
-    CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
-    make
-    sudo bash -c "echo 1 > /proc/sys/fs/binfmt_misc/status" # Enable WSL support for Win32 applications.
+```bash
+PATH=$(echo "$PATH" | sed -e 's/:\/mnt.*//g') # Strip out problematic Windows %PATH% imported var.
+sudo bash -c "echo 0 > /proc/sys/fs/binfmt_misc/status" # Disable WSL support for Win32 applications.
+cd depends
+make HOST=x86_64-w64-mingw32
+cd ..
+./autogen.sh # Not required when building from tarball.
+./contrib/install_db4.sh `pwd` # Not required when BerkeleyDB 4.8 is installed globally.
+CONFIG_SITE=$PWD/depends/x86_64-w64-mingw32/share/config.site ./configure --prefix=/
+make
+sudo bash -c "echo 1 > /proc/sys/fs/binfmt_misc/status" # Enable WSL support for Win32 applications.
+```
 
 ## Depends system
 
