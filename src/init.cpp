@@ -1198,10 +1198,6 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         if (!g_enabled_filter_types.empty()) {
             return InitError(_("Prune mode is incompatible with -blockfilterindex."));
         }
-        // SYSCOIN
-        if (!args.GetBoolArg("-disablegovernance", false)) {
-            return InitError(_("Prune mode is incompatible with -disablegovernance=false."));
-        }
     }
 
     // -bind and -whitebind can't be set when not listening
