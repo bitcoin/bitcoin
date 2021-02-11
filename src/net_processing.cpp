@@ -536,25 +536,26 @@ private:
     std::unique_ptr<CRollingBloomFilter> recentRejects GUARDED_BY(cs_main);
     uint256 hashRecentRejectsChainTip GUARDED_BY(cs_main);
 
-    /*
+    /**
      * Filter for transactions that have been recently confirmed.
      * We use this to avoid requesting transactions that have already been
-     * confirnmed.
+     * confirmed.
      */
     Mutex m_recent_confirmed_transactions_mutex;
     std::unique_ptr<CRollingBloomFilter> m_recent_confirmed_transactions GUARDED_BY(m_recent_confirmed_transactions_mutex);
 
-    /* Returns a bool indicating whether we requested this block.
+    /** Returns a bool indicating whether we requested this block.
      * Also used if a block was /not/ received and timed out or started with another peer
      */
     bool MarkBlockAsReceived(const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-    /* Mark a block as in flight
+    /** Mark a block as in flight
      * Returns false, still setting pit, if the block was already in flight from the same peer
      * pit will only be valid as long as the same cs_main lock is being held
      */
     bool MarkBlockAsInFlight(NodeId nodeid, const uint256& hash, const CBlockIndex* pindex = nullptr, std::list<QueuedBlock>::iterator** pit = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+    /** Determine if tip may be stale based on when last blocks was received */
     bool TipMayBeStale() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Update pindexLastCommonBlock and add not-in-flight missing successors to vBlocks, until it has
