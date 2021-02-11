@@ -193,6 +193,7 @@ details).
   ]
   ```
 
+
 ## 3. Manually create a Bitcoin Core onion service
 
 You can also manually configure your node to be reachable from the Tor network.
