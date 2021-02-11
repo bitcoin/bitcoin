@@ -125,15 +125,15 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
         LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
         return;
     }
-    SOCKET hSocket = sockPtr->Get();
-    if (hSocket == INVALID_SOCKET) {
+    
+    if (sockPtr->Get() == INVALID_SOCKET) {
         state = MASTERNODE_ERROR;
         strError = "Could not create socket to connect to " + activeMasternodeInfo.service.ToString();
         LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
         return;
     }
-    bool fConnected = ConnectSocketDirectly(activeMasternodeInfo.service, hSocket, nConnectTimeout, true) && IsSelectableSocket(hSocket);
-    CloseSocket(hSocket);
+    bool fConnected = ConnectSocketDirectly(activeMasternodeInfo.service, sockPtr->Get(), nConnectTimeout, true) && IsSelectableSocket(sockPtr->Get());
+    sockPtr->Reset();
 
     if (!fConnected && Params().RequireRoutableExternalIP()) {
         state = MASTERNODE_ERROR;
