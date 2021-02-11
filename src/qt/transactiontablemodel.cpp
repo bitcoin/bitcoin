@@ -4,7 +4,6 @@
 
 #include <qt/transactiontablemodel.h>
 
-#include <qt/addresstablemodel.h>
 #include <qt/guiutil.h>
 #include <qt/optionsmodel.h>
 #include <qt/transactiondesc.h>
@@ -205,6 +204,15 @@ public:
             int64_t adjustedTime;
             if (rec->statusUpdateNeeded(numBlocks, parent->getChainLockHeight()) && wallet.tryGetTxStatus(rec->hash, wtx, adjustedTime)) {
                 rec->updateStatus(wtx, numBlocks, adjustedTime, parent->getChainLockHeight());
+                // Update label
+                if (IsValidDestination(rec->txDest)) {
+                    std::string name;
+                    if (wallet.getAddress(rec->txDest, &name)) {
+                        rec->status.label = QString::fromStdString(name);
+                    } else {
+                        rec->status.label = "";
+                    }
+                }
             }
             return rec;
         }
@@ -451,9 +459,9 @@ QVariant TransactionTableModel::addressColor(const TransactionRecord *wtx) const
     case TransactionRecord::PrivateSend:
     case TransactionRecord::RecvWithPrivateSend:
         {
-        QString label = walletModel->getAddressTableModel()->labelForDestination(wtx->txDest);
-        if(label.isEmpty())
+        if (wtx->status.label.isEmpty()) {
             return GUIUtil::getThemedQColor(GUIUtil::ThemedColor::BAREADDRESS);
+        }
         } break;
     case TransactionRecord::SendToSelf:
     case TransactionRecord::PrivateSendCreateDenominations:
