@@ -636,7 +636,8 @@ bool CSigSharesManager::ProcessPendingSigShares()
     std::unordered_map<NodeId, std::vector<CSigShare>> sigSharesByNodes;
     std::unordered_map<std::pair<uint8_t, uint256>, CQuorumCPtr, StaticSaltedHasher> quorums;
 
-    CollectPendingSigSharesToVerify(32, sigSharesByNodes, quorums);
+    const size_t nMaxBatchSize{32};
+    CollectPendingSigSharesToVerify(nMaxBatchSize, sigSharesByNodes, quorums);
     if (sigSharesByNodes.empty()) {
         return false;
     }
@@ -701,7 +702,7 @@ bool CSigSharesManager::ProcessPendingSigShares()
         ProcessPendingSigShares(v, quorums);
     }
 
-    return true;
+    return sigSharesByNodes.size() >= nMaxBatchSize;
 }
 
 // It's ensured that no duplicates are passed to this method
@@ -1493,12 +1494,12 @@ void CSigSharesManager::WorkThreadMain()
             continue;
         }
 
-        bool didWork = false;
+        bool fMoreWork{false};
 
         RemoveBannedNodeStates();
-        didWork |= quorumSigningManager->ProcessPendingRecoveredSigs();
-        didWork |= ProcessPendingSigShares();
-        didWork |= SignPendingSigShares();
+        fMoreWork |= quorumSigningManager->ProcessPendingRecoveredSigs();
+        fMoreWork |= ProcessPendingSigShares();
+        SignPendingSigShares();
 
         if (GetTimeMillis() - lastSendTime > 100) {
             SendMessages();
@@ -1509,10 +1510,8 @@ void CSigSharesManager::WorkThreadMain()
         quorumSigningManager->Cleanup();
 
         // TODO Wakeup when pending signing is needed?
-        if (!didWork) {
-            if (!workInterrupt.sleep_for(std::chrono::milliseconds(100))) {
-                return;
-            }
+        if (!fMoreWork && !workInterrupt.sleep_for(std::chrono::milliseconds(100))) {
+            return;
         }
     }
 }
@@ -1523,7 +1522,7 @@ void CSigSharesManager::AsyncSign(const CQuorumCPtr& quorum, const uint256& id, 
     pendingSigns.emplace_back(quorum, id, msgHash);
 }
 
-bool CSigSharesManager::SignPendingSigShares()
+void CSigSharesManager::SignPendingSigShares()
 {
     std::vector<std::tuple<const CQuorumCPtr, uint256, uint256>> v;
     {
@@ -1549,8 +1548,6 @@ bool CSigSharesManager::SignPendingSigShares()
             }
         }
     }
-
-    return !v.empty();
 }
 
 CSigShare CSigSharesManager::CreateSigShare(const CQuorumCPtr& quorum, const uint256& id, const uint256& msgHash)
