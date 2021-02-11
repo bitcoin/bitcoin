@@ -946,44 +946,35 @@ static RPCHelpMan testmempoolaccept()
     result_0.pushKV("txid", tx->GetHash().GetHex());
     result_0.pushKV("wtxid", tx->GetWitnessHash().GetHex());
 
-    TxValidationState state;
-    bool test_accept_res;
-    CAmount fee{0};
-    {
-        LOCK(cs_main);
-        test_accept_res = AcceptToMemoryPool(mempool, state, std::move(tx),
-            nullptr /* plTxnReplaced */, false /* bypass_limits */, /* test_accept */ true, &fee);
-    }
-
-    // Check that fee does not exceed maximum fee
-    if (test_accept_res && max_raw_tx_fee && fee > max_raw_tx_fee) {
-        result_0.pushKV("allowed", false);
-        result_0.pushKV("reject-reason", "max-fee-exceeded");
-        result.push_back(std::move(result_0));
-        return result;
-    }
-    result_0.pushKV("allowed", test_accept_res);
+    const MempoolAcceptResult accept_result = WITH_LOCK(cs_main, return AcceptToMemoryPool(mempool, std::move(tx),
+                                                  false /* bypass_limits */, /* test_accept */ true));
 
     // Only return the fee and vsize if the transaction would pass ATMP.
     // These can be used to calculate the feerate.
-    if (test_accept_res) {
-        result_0.pushKV("vsize", virtual_size);
-        UniValue fees(UniValue::VOBJ);
-        fees.pushKV("base", ValueFromAmount(fee));
-        result_0.pushKV("fees", fees);
+    if (accept_result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
+        const CAmount fee = accept_result.m_base_fees.value();
+        // Check that fee does not exceed maximum fee
+        if (max_raw_tx_fee && fee > max_raw_tx_fee) {
+            result_0.pushKV("allowed", false);
+            result_0.pushKV("reject-reason", "max-fee-exceeded");
+        } else {
+            result_0.pushKV("allowed", true);
+            result_0.pushKV("vsize", virtual_size);
+            UniValue fees(UniValue::VOBJ);
+            fees.pushKV("base", ValueFromAmount(fee));
+            result_0.pushKV("fees", fees);
+        }
+        result.push_back(std::move(result_0));
     } else {
-        if (state.IsInvalid()) {
-            if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
-                result_0.pushKV("reject-reason", "missing-inputs");
-            } else {
-                result_0.pushKV("reject-reason", strprintf("%s", state.GetRejectReason()));
-            }
+        result_0.pushKV("allowed", false);
+        const TxValidationState state = accept_result.m_state;
+        if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
+            result_0.pushKV("reject-reason", "missing-inputs");
         } else {
             result_0.pushKV("reject-reason", state.GetRejectReason());
         }
+        result.push_back(std::move(result_0));
     }
-
-    result.push_back(std::move(result_0));
     return result;
 },
     };
