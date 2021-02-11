@@ -598,6 +598,12 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-debugexclude=<category>", strprintf(_("Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.")));
     strUsage += HelpMessageOpt("-disablegovernance", strprintf(_("Disable governance validation (0-1, default: %u)"), 0));
     strUsage += HelpMessageOpt("-help-debug", _("Show all debugging options (usage: --help -help-debug)"));
+    strUsage += HelpMessageOpt("-highsubsidyblocks=<n>", _("The number of blocks with a higher than normal subsidy to mine at the start of a devnet (default: 0)"));
+    strUsage += HelpMessageOpt("-highsubsidyfactor=<n>", _("The factor to multiply the normal block subsidy by while in the highsubsidyblocks window of a devnet (default: 1)"));
+    strUsage += HelpMessageOpt("-llmqchainlocks=<quorum name>", _("Override the default LLMQ type used for ChainLocks on a devnet. Allows using ChainLocks with smaller LLMQs. (default: llmq50_60)"));
+    strUsage += HelpMessageOpt("-llmqdevnetparams=<size:threshold>", _("Override the default LLMQ size for the LLMQ_DEVNET quorum (default: 10:6)"));
+    strUsage += HelpMessageOpt("-llmqinstantsend=<quorum name>", _("Override the default LLMQ type used for InstantSend on a devnet. Allows using InstantSend with smaller LLMQs. (default: llmq50_60)"));
+    strUsage += HelpMessageOpt("-llmqtestparams=<size:threshold>", _("Override the default LLMQ size for the LLMQ_TEST quorum (default: 3:2)"));
     strUsage += HelpMessageOpt("-logips", strprintf(_("Include IP addresses in debug output (default: %u)"), DEFAULT_LOGIPS));
     if (showDebug)
     {
@@ -610,6 +616,7 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-logtimestamps", strprintf(_("Prepend debug output with timestamp (default: %u)"), DEFAULT_LOGTIMESTAMPS));
     strUsage += HelpMessageOpt("-maxtxfee=<amt>", strprintf(_("Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)"),
         CURRENCY_UNIT, FormatMoney(DEFAULT_TRANSACTION_MAXFEE)));
+    strUsage += HelpMessageOpt("-minimumdifficultyblocks=<n>", _("The number of blocks that can be mined with the minimum difficulty at the start of a devnet (default: 0)"));
     strUsage += HelpMessageOpt("-minsporkkeys=<n>", strprintf(_("Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.")));
     if (showDebug)
     {
@@ -619,10 +626,13 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-printtodebuglog", strprintf(_("Send trace/debug info to debug.log file (default: %u)"), 1));
     strUsage += HelpMessageOpt("-shrinkdebugfile", _("Shrink debug.log file on client startup (default: 1 when no -debug)"));
     strUsage += HelpMessageOpt("-sporkaddr=<dashaddress>", strprintf(_("Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.")));
+    strUsage += HelpMessageOpt("-sporkkey=<privatekey>", _("Set the private key to be used for signing spork messages."));
     strUsage += HelpMessageOpt("-uacomment=<cmt>", _("Append comment to the user agent string"));
     AppendParamsHelpMessages(strUsage, showDebug);
 
     strUsage += HelpMessageGroup(_("Masternode options:"));
+    strUsage += HelpMessageOpt("-llmq-data-recovery=<n>", _("Enable automated quorum data recovery (default: 1)"));
+    strUsage += HelpMessageOpt("-llmq-qvvec-sync=<quorum name>", _("Defines from which LLMQ type the masternode should sync quorum verification vectors. Can be used multiple times with different LLMQ types."));
     strUsage += HelpMessageOpt("-masternodeblsprivkey=<hex>", _("Set the masternode BLS private key and enable the client to act as a masternode"));
     strUsage += HelpMessageOpt("-platform-user=<user>", _("Set the username for the \"platform user\", a restricted user intended to be used by Dash Platform, to the specified username."));
 
