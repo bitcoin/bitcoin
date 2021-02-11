@@ -876,7 +876,9 @@ static RPCHelpMan sendrawtransaction()
 static RPCHelpMan testmempoolaccept()
 {
     return RPCHelpMan{"testmempoolaccept",
-                "\nReturns result of mempool acceptance tests indicating if raw transaction (serialized, hex-encoded) would be accepted by mempool.\n"
+                "\nReturns result of mempool acceptance tests indicating if raw transaction(s) (serialized, hex-encoded) would be accepted by mempool.\n"
+                "\nIf multiple transactions are passed in, they must be sorted in order of dependency and not conflict with each other.\n"
+                "\nThe maximum number of transactions allowed is determined by the mempool descendant policy (-limitdescendantcount).\n"
                 "\nThis checks if the transaction violates the consensus or policy rules.\n"
                 "\nSee sendrawtransaction call.\n",
                 {
@@ -890,13 +892,15 @@ static RPCHelpMan testmempoolaccept()
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "The result of the mempool acceptance test for each raw transaction in the input array.\n"
-                        "Length is exactly one for now.",
+                        "Returns results for each transaction in the same order they were passed in.\n"
+                        "It is possible for transactions to not be fully validated ('allowed' unset) if an earlier transaction failed.\n",
                     {
                         {RPCResult::Type::OBJ, "", "",
                         {
                             {RPCResult::Type::STR_HEX, "txid", "The transaction hash in hex"},
                             {RPCResult::Type::STR_HEX, "wtxid", "The transaction witness hash in hex"},
-                            {RPCResult::Type::BOOL, "allowed", "If the mempool allows this tx to be inserted"},
+                            {RPCResult::Type::BOOL, "allowed", "Whether this tx would be accepted to the mempool and passes client-specified maxfeerate.\n"
+                                                               "If not present, the tx was not fully validated due to a failure in another tx in the list."},
                             {RPCResult::Type::NUM, "vsize", "Virtual transaction size as defined in BIP 141. This is different from actual serialized size for witness transactions as witness data is discounted (only present when 'allowed' is true)"},
                             {RPCResult::Type::OBJ, "fees", "Transaction fees (only present if 'allowed' is true)",
                             {
@@ -923,59 +927,69 @@ static RPCHelpMan testmempoolaccept()
         UniValueType(), // VNUM or VSTR, checked inside AmountFromValue()
     });
 
-    if (request.params[0].get_array().size() != 1) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Array must contain exactly one raw transaction for now");
+    // A package would not be accepted to the mempool if it had more transactions than the descendant count limit.
+    const unsigned int max_transactions = gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT);
+    if (request.params[0].get_array().size() > max_transactions) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Array cannot contain more than " + ToString(max_transactions) + " transactions.");
     }
 
-    CMutableTransaction mtx;
-    if (!DecodeHexTx(mtx, request.params[0].get_array()[0].get_str())) {
-        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed. Make sure the tx has at least one input.");
-    }
-    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
-
+    const UniValue raw_transactions = request.params[0].get_array();
     const CFeeRate max_raw_tx_fee_rate = request.params[1].isNull() ?
                                              DEFAULT_MAX_RAW_TX_FEE_RATE :
                                              CFeeRate(AmountFromValue(request.params[1]));
 
     CTxMemPool& mempool = EnsureMemPool(request.context);
-    int64_t virtual_size = GetVirtualTransactionSize(*tx);
-    CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
+    std::vector<CTransactionRef> txns;
 
-    UniValue result(UniValue::VARR);
-    UniValue result_0(UniValue::VOBJ);
-    result_0.pushKV("txid", tx->GetHash().GetHex());
-    result_0.pushKV("wtxid", tx->GetWitnessHash().GetHex());
+    for (unsigned int i = 0; i < raw_transactions.size(); ++i) {
+        CMutableTransaction mtx;
+        if (!DecodeHexTx(mtx, raw_transactions[i].get_str())) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed. Make sure the tx has at least one input.");
+        }
+        txns.emplace_back(MakeTransactionRef(std::move(mtx)));
+    }
 
-    const MempoolAcceptResult accept_result = WITH_LOCK(cs_main, return AcceptToMemoryPool(::ChainstateActive(), mempool, std::move(tx),
-                                                  false /* bypass_limits */, /* test_accept */ true));
+    std::vector<MempoolAcceptResult> validation_results =
+        WITH_LOCK(cs_main, return ProcessNewPackage(::ChainstateActive(), mempool, txns, /* test_accept */ true));
+
+    UniValue rpc_result(UniValue::VARR);
 
     // Only return the fee and vsize if the transaction would pass ATMP.
     // These can be used to calculate the feerate.
-    if (accept_result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
-        const CAmount fee = accept_result.m_base_fees.value();
-        // Check that fee does not exceed maximum fee
-        if (max_raw_tx_fee && fee > max_raw_tx_fee) {
-            result_0.pushKV("allowed", false);
-            result_0.pushKV("reject-reason", "max-fee-exceeded");
+    for (const MempoolAcceptResult& accept_result : validation_results) {
+        UniValue result_inner(UniValue::VOBJ);
+        const CTransaction tx = accept_result.m_tx;
+        result_inner.pushKV("txid", tx.GetHash().GetHex());
+        result_inner.pushKV("wtxid", tx.GetWitnessHash().GetHex());
+        if (accept_result.m_result_type == MempoolAcceptResult::ResultType::VALID) {
+            const CAmount fee = accept_result.m_base_fees.value();
+            // Check that fee does not exceed maximum fee
+            const int64_t virtual_size = GetVirtualTransactionSize(tx);
+            const CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
+            if (max_raw_tx_fee && fee > max_raw_tx_fee) {
+                result_inner.pushKV("allowed", false);
+                result_inner.pushKV("reject-reason", "max-fee-exceeded");
+            } else {
+                result_inner.pushKV("allowed", true);
+                result_inner.pushKV("vsize", virtual_size);
+                UniValue fees(UniValue::VOBJ);
+                fees.pushKV("base", ValueFromAmount(fee));
+                result_inner.pushKV("fees", fees);
+            }
+        } else if (accept_result.m_result_type == MempoolAcceptResult::ResultType::INVALID) {
+            result_inner.pushKV("allowed", false);
+            const TxValidationState state = accept_result.m_state;
+            if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
+                result_inner.pushKV("reject-reason", "missing-inputs");
+            } else {
+                result_inner.pushKV("reject-reason", state.GetRejectReason());
+            }
         } else {
-            result_0.pushKV("allowed", true);
-            result_0.pushKV("vsize", virtual_size);
-            UniValue fees(UniValue::VOBJ);
-            fees.pushKV("base", ValueFromAmount(fee));
-            result_0.pushKV("fees", fees);
+            CHECK_NONFATAL(accept_result.m_result_type == MempoolAcceptResult::ResultType::UNFINISHED);
         }
-        result.push_back(std::move(result_0));
-    } else {
-        result_0.pushKV("allowed", false);
-        const TxValidationState state = accept_result.m_state;
-        if (state.GetResult() == TxValidationResult::TX_MISSING_INPUTS) {
-            result_0.pushKV("reject-reason", "missing-inputs");
-        } else {
-            result_0.pushKV("reject-reason", state.GetRejectReason());
-        }
-        result.push_back(std::move(result_0));
+        rpc_result.push_back(result_inner);
     }
-    return result;
+    return rpc_result;
 },
     };
 }
