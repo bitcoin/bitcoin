@@ -118,7 +118,14 @@ void CActiveMasternodeManager::Init(const CBlockIndex* pindex)
             return;
         }
     }
-    SOCKET hSocket = CreateSocket(activeMasternodeInfo.service);
+    std::unique_ptr<Sock> sockPtr = CreateSockTCP(activeMasternodeInfo.service);
+    if(!sockPtr) {
+        state = MASTERNODE_ERROR;
+        strError = "Could not create socket to connect to " + activeMasternodeInfo.service.ToString();
+        LogPrintf("CActiveMasternodeManager::Init -- ERROR: %s\n", strError);
+        return;
+    }
+    SOCKET hSocket = sockPtr->Get();
     if (hSocket == INVALID_SOCKET) {
         state = MASTERNODE_ERROR;
         strError = "Could not create socket to connect to " + activeMasternodeInfo.service.ToString();
