@@ -12,7 +12,10 @@
 #include <compat.h>
 #include <netaddress.h>
 #include <serialize.h>
+#include <util/sock.h>
 
+#include <functional>
+#include <memory>
 #include <stdint.h>
 #include <string>
 #include <vector>
@@ -51,21 +54,25 @@ bool Lookup(const std::string& name, CService& addr, int portDefault, bool fAllo
 bool Lookup(const std::string& name, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions);
 CService LookupNumeric(const std::string& name, int portDefault = 0);
 bool LookupSubNet(const std::string& strSubnet, CSubNet& subnet);
-SOCKET CreateSocket(const CService &addrConnect);
+
+/**
+ * Create a TCP socket in the given address family.
+ * @param[in] address_family The socket is created in the same address family as this address.
+ * @return pointer to the created Sock object or unique_ptr that owns nothing in case of failure
+ */
+std::unique_ptr<Sock> CreateSockTCP(const CService& address_family);
+
+/**
+ * Socket factory. Defaults to `CreateSockTCP()`, but can be overridden by unit tests.
+ */
+extern std::function<std::unique_ptr<Sock>(const CService&)> CreateSock;
+
 bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocketRet, int nTimeout, bool manual_connection);
-bool ConnectThroughProxy(const proxyType &proxy, const std::string& strDest, int port, const SOCKET& hSocketRet, int nTimeout, bool& outProxyConnectionFailed);
-/** Return readable error string for a network error code */
-std::string NetworkErrorString(int err);
-/** Close socket and set hSocket to INVALID_SOCKET */
-bool CloseSocket(SOCKET& hSocket);
+bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, int port, const Sock& sock, int nTimeout, bool& outProxyConnectionFailed);
 /** Disable or enable blocking-mode for a socket */
 bool SetSocketNonBlocking(const SOCKET& hSocket, bool fNonBlocking);
 /** Set the TCP_NODELAY flag on a socket */
 bool SetSocketNoDelay(const SOCKET& hSocket);
-/**
- * Convert milliseconds to a struct timeval for e.g. select.
- */
-struct timeval MillisToTimeval(int64_t nTimeout);
 void InterruptSocks5(bool interrupt);
 
 #endif // BITCOIN_NETBASE_H

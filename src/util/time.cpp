@@ -7,7 +7,10 @@
 #include <config/bitcoin-config.h>
 #endif
 
+#include <compat.h>
 #include <util/time.h>
+
+#include <util/check.h>
 
 #include <atomic>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -18,7 +21,7 @@
 
 void UninterruptibleSleep(const std::chrono::microseconds& n) { std::this_thread::sleep_for(n); }
 
-static std::atomic<int64_t> nMockTime(0); //!< For unit testing
+static std::atomic<int64_t> nMockTime(0); //!< For testing
 
 int64_t GetTime()
 {
@@ -46,6 +49,7 @@ template std::chrono::microseconds GetTime();
 
 void SetMockTime(int64_t nMockTimeIn)
 {
+    Assert(nMockTimeIn >= 0);
     nMockTime.store(nMockTimeIn, std::memory_order_relaxed);
 }
 
@@ -113,4 +117,17 @@ int64_t ParseISO8601DateTime(const std::string& str)
     if (ptime.is_not_a_date_time() || epoch > ptime)
         return 0;
     return (ptime - epoch).total_seconds();
+}
+
+struct timeval MillisToTimeval(int64_t nTimeout)
+{
+    struct timeval timeout;
+    timeout.tv_sec  = nTimeout / 1000;
+    timeout.tv_usec = (nTimeout % 1000) * 1000;
+    return timeout;
+}
+
+struct timeval MillisToTimeval(std::chrono::milliseconds ms)
+{
+    return MillisToTimeval(count_milliseconds(ms));
 }

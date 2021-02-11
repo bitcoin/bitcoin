@@ -283,15 +283,9 @@ BOOST_AUTO_TEST_CASE(mempool_locks_reorg)
         // Add the txs to the tx pool
         {
             LOCK(cs_main);
-            TxValidationState state;
-            std::list<CTransactionRef> plTxnReplaced;
             for (const auto& tx : txs) {
-                BOOST_REQUIRE(AcceptToMemoryPool(
-                    *m_node.mempool,
-                    state,
-                    tx,
-                    &plTxnReplaced,
-                    /* bypass_limits */ false));
+                const MempoolAcceptResult result = AcceptToMemoryPool(*m_node.mempool, tx, false /* bypass_limits */);
+                BOOST_REQUIRE(result.m_result_type == MempoolAcceptResult::ResultType::VALID);
             }
         }
 

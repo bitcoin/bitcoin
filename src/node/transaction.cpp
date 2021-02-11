@@ -50,22 +50,22 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     }
     if (!node.mempool->exists(hashTx)) {
         // Transaction is not already in the mempool.
-        TxValidationState state;
         if (max_tx_fee > 0) {
             // First, call ATMP with test_accept and check the fee. If ATMP
             // fails here, return error immediately.
-            CAmount fee{0};
-            if (!AcceptToMemoryPool(*node.mempool, state, tx,
-                nullptr /* plTxnReplaced */, false /* bypass_limits */, /* test_accept */ true, &fee)) {
-                return HandleATMPError(state, err_string);
-            } else if (fee > max_tx_fee) {
+            const MempoolAcceptResult result = AcceptToMemoryPool(*node.mempool, tx, false /* bypass_limits */,
+                                                                  true /* test_accept */);
+            if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
+                return HandleATMPError(result.m_state, err_string);
+            } else if (result.m_base_fees.value() > max_tx_fee) {
                 return TransactionError::MAX_FEE_EXCEEDED;
             }
         }
         // Try to submit the transaction to the mempool.
-        if (!AcceptToMemoryPool(*node.mempool, state, tx,
-                nullptr /* plTxnReplaced */, false /* bypass_limits */)) {
-            return HandleATMPError(state, err_string);
+        const MempoolAcceptResult result = AcceptToMemoryPool(*node.mempool, tx, false /* bypass_limits */,
+                                                              false /* test_accept */);
+        if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
+            return HandleATMPError(result.m_state, err_string);
         }
 
         // Transaction was accepted to the mempool.

@@ -17,8 +17,8 @@
 #include <node/coinstats.h>
 #include <node/context.h>
 #include <node/utxo_snapshot.h>
-#include <policy/fees.h>
 #include <policy/feerate.h>
+#include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
 #include <primitives/transaction.h>
@@ -156,21 +156,11 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
 
 UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, bool txDetails)
 {
-    // Serialize passed information without accessing chain state of the active chain!
-    AssertLockNotHeld(cs_main); // For performance reasons
+    UniValue result = blockheaderToJSON(tip, blockindex);
 
-    UniValue result(UniValue::VOBJ);
-    result.pushKV("hash", blockindex->GetBlockHash().GetHex());
-    const CBlockIndex* pnext;
-    int confirmations = ComputeNextBlockAndDepth(tip, blockindex, pnext);
-    result.pushKV("confirmations", confirmations);
     result.pushKV("strippedsize", (int)::GetSerializeSize(block, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS));
     result.pushKV("size", (int)::GetSerializeSize(block, PROTOCOL_VERSION));
     result.pushKV("weight", (int)::GetBlockWeight(block));
-    result.pushKV("height", blockindex->nHeight);
-    result.pushKV("version", block.nVersion);
-    result.pushKV("versionHex", strprintf("%08x", block.nVersion));
-    result.pushKV("merkleroot", block.hashMerkleRoot.GetHex());
     UniValue txs(UniValue::VARR);
     if (txDetails) {
         CBlockUndo blockUndo;
@@ -189,18 +179,7 @@ UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIn
         }
     }
     result.pushKV("tx", txs);
-    result.pushKV("time", block.GetBlockTime());
-    result.pushKV("mediantime", (int64_t)blockindex->GetMedianTimePast());
-    result.pushKV("nonce", (uint64_t)block.nNonce);
-    result.pushKV("bits", strprintf("%08x", block.nBits));
-    result.pushKV("difficulty", GetDifficulty(blockindex));
-    result.pushKV("chainwork", blockindex->nChainWork.GetHex());
-    result.pushKV("nTx", (uint64_t)blockindex->nTx);
 
-    if (blockindex->pprev)
-        result.pushKV("previousblockhash", blockindex->pprev->GetBlockHash().GetHex());
-    if (pnext)
-        result.pushKV("nextblockhash", pnext->GetBlockHash().GetHex());
     return result;
 }
 
@@ -1500,6 +1479,7 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool)
     ret.pushKV("size", (int64_t)pool.size());
     ret.pushKV("bytes", (int64_t)pool.GetTotalTxSize());
     ret.pushKV("usage", (int64_t)pool.DynamicMemoryUsage());
+    ret.pushKV("total_fee", ValueFromAmount(pool.GetTotalFee()));
     size_t maxmempool = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     ret.pushKV("maxmempool", (int64_t) maxmempool);
     ret.pushKV("mempoolminfee", ValueFromAmount(std::max(pool.GetMinFee(maxmempool), ::minRelayTxFee).GetFeePerK()));
@@ -1520,6 +1500,7 @@ static RPCHelpMan getmempoolinfo()
                         {RPCResult::Type::NUM, "size", "Current tx count"},
                         {RPCResult::Type::NUM, "bytes", "Sum of all virtual transaction sizes as defined in BIP 141. Differs from actual serialized size because witness data is discounted"},
                         {RPCResult::Type::NUM, "usage", "Total memory usage for the mempool"},
+                        {RPCResult::Type::STR_AMOUNT, "total_fee", "Total fees for the mempool in " + CURRENCY_UNIT + ", ignoring modified fees through prioritizetransaction"},
                         {RPCResult::Type::NUM, "maxmempool", "Maximum memory usage for the mempool"},
                         {RPCResult::Type::STR_AMOUNT, "mempoolminfee", "Minimum fee rate in " + CURRENCY_UNIT + "/kB for tx to be accepted. Is the maximum of minrelaytxfee and minimum mempool fee"},
                         {RPCResult::Type::STR_AMOUNT, "minrelaytxfee", "Current minimum relay fee for transactions"},
