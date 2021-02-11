@@ -2850,6 +2850,9 @@ void PeerManagerImpl::ProcessMessage(
 
         vRecv >> nVersion >> nServiceInt >> nTime >> addrMe;
         nSendVersion = std::min(nVersion, PROTOCOL_VERSION);
+        if (nTime < 0) {
+            nTime = 0;
+        }
         nServices = ServiceFlags(nServiceInt);
         if (!pfrom.fInbound)
         {
