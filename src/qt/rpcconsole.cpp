@@ -1178,8 +1178,9 @@ void RPCConsole::updateDetailWidget()
         ui->peerPermissions->setText(permissions.join(" & "));
     }
     ui->peerMappedAS->setText(stats->nodeStats.m_mapped_as != 0 ? QString::number(stats->nodeStats.m_mapped_as) : tr("N/A"));
-    if (stats->nodeStats.verifiedProRegTxHash.IsNull()) {
-        ui->peerNodeType->setText(tr("Normal"));
+    auto dmn = clientModel->getMasternodeList().GetMNByService(stats->nodeStats.addr);
+    if (dmn == nullptr) {
+        ui->peerNodeType->setText(tr("Regular"));
         ui->peerPoSeScore->setText(tr("N/A"));
     } else {
         if (stats->nodeStats.verifiedProRegTxHash.IsNull()) {
