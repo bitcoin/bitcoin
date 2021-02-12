@@ -59,7 +59,7 @@ ssize_t Sock::Recv(void* buf, size_t len, int flags) const
     return recv(m_socket, static_cast<char*>(buf), len, flags);
 }
 
-bool Sock::Wait(std::chrono::milliseconds timeout, Event requested) const
+bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
 #ifdef USE_POLL
     pollfd fd;
@@ -72,7 +72,21 @@ bool Sock::Wait(std::chrono::milliseconds timeout, Event requested) const
         fd.events |= POLLOUT;
     }
 
-    return poll(&fd, 1, count_milliseconds(timeout)) != SOCKET_ERROR;
+    if (poll(&fd, 1, count_milliseconds(timeout)) == SOCKET_ERROR) {
+        return false;
+    }
+
+    if (occurred != nullptr) {
+        *occurred = 0;
+        if (fd.revents & POLLIN) {
+            *occurred |= RECV;
+        }
+        if (fd.revents & POLLOUT) {
+            *occurred |= SEND;
+        }
+    }
+
+    return true;
 #else
     if (!IsSelectableSocket(m_socket)) {
         return false;
@@ -93,7 +107,21 @@ bool Sock::Wait(std::chrono::milliseconds timeout, Event requested) const
 
     timeval timeout_struct = MillisToTimeval(timeout);
 
-    return select(m_socket + 1, &fdset_recv, &fdset_send, nullptr, &timeout_struct) != SOCKET_ERROR;
+    if (select(m_socket + 1, &fdset_recv, &fdset_send, nullptr, &timeout_struct) == SOCKET_ERROR) {
+        return false;
+    }
+
+    if (occurred != nullptr) {
+        *occurred = 0;
+        if (FD_ISSET(m_socket, &fdset_recv)) {
+            *occurred |= RECV;
+        }
+        if (FD_ISSET(m_socket, &fdset_send)) {
+            *occurred |= SEND;
+        }
+    }
+
+    return true;
 #endif /* USE_POLL */
 }
 
