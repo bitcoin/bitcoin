@@ -192,7 +192,8 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
         id++, NODE_NETWORK, hSocket, addr,
         /* nKeyedNetGroupIn = */ 0,
         /* nLocalHostNonceIn = */ 0,
-        CAddress(), pszDest, ConnectionType::OUTBOUND_FULL_RELAY);
+        CAddress(), pszDest, ConnectionType::OUTBOUND_FULL_RELAY,
+        /* inbound_onion = */ false);
     BOOST_CHECK(pnode1->IsFullOutboundConn() == true);
     BOOST_CHECK(pnode1->IsManualConn() == false);
     BOOST_CHECK(pnode1->IsBlockOnlyConn() == false);
@@ -679,7 +680,7 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     in_addr ipv4AddrPeer;
     ipv4AddrPeer.s_addr = 0xa0b0c001;
     CAddress addr = CAddress(CService(ipv4AddrPeer, 7777), NODE_NETWORK);
-    std::unique_ptr<CNode> pnode = MakeUnique<CNode>(0, NODE_NETWORK, INVALID_SOCKET, addr, 0, 0, CAddress{}, std::string{}, ConnectionType::OUTBOUND_FULL_RELAY);
+    std::unique_ptr<CNode> pnode = MakeUnique<CNode>(0, NODE_NETWORK, INVALID_SOCKET, addr, /* nKeyedNetGroupIn */ 0, /* nLocalHostNonceIn */ 0, CAddress{}, /* pszDest */ std::string{}, ConnectionType::OUTBOUND_FULL_RELAY, /* inbound_onion */ false);
     pnode->fSuccessfullyConnected.store(true);
 
     // the peer claims to be reaching us via IPv6
