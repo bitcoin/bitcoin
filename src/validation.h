@@ -833,9 +833,7 @@ private:
     //! using this pointer (e.g. net_processing).
     //!
     //! Once this pointer is set to a corresponding chainstate, it will not
-    //! be reset until init.cpp:Shutdown(). This means it is safe to acquire
-    //! the contents of this pointer with ::cs_main held, release the lock,
-    //! and then use the reference without concern of it being deconstructed.
+    //! be reset until init.cpp:Shutdown().
     //!
     //! This is especially important when, e.g., calling ActivateBestChain()
     //! on all chainstates because we are not able to hold ::cs_main going into
@@ -846,9 +844,7 @@ private:
     //! non-null, it is always our active chainstate.
     //!
     //! Once this pointer is set to a corresponding chainstate, it will not
-    //! be reset until init.cpp:Shutdown(). This means it is safe to acquire
-    //! the contents of this pointer with ::cs_main held, release the lock,
-    //! and then use the reference without concern of it being deconstructed.
+    //! be reset until init.cpp:Shutdown().
     //!
     //! This is especially important when, e.g., calling ActivateBestChain()
     //! on all chainstates because we are not able to hold ::cs_main going into
@@ -859,9 +855,7 @@ private:
     //! most-work chain.
     //!
     //! Once this pointer is set to a corresponding chainstate, it will not
-    //! be reset until init.cpp:Shutdown(). This means it is safe to acquire
-    //! the contents of this pointer with ::cs_main held, release the lock,
-    //! and then use the reference without concern of it being deconstructed.
+    //! be reset until init.cpp:Shutdown().
     //!
     //! This is especially important when, e.g., calling ActivateBestChain()
     //! on all chainstates because we are not able to hold ::cs_main going into
