@@ -5,7 +5,6 @@
 """Test various command line arguments and configuration file parameters."""
 
 import os
-import time
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework import util
@@ -149,59 +148,60 @@ class ConfArgsTest(BitcoinTestFramework):
         self.stop_node(0)
 
     def test_seed_peers(self):
-        self.log.info('Test seed peers, this will take about 2 minutes')
+        self.log.info('Test seed peers')
         default_data_dir = self.nodes[0].datadir
 
         # No peers.dat exists and -dnsseed=1
         # We expect the node will use DNS Seeds, but Regtest mode has 0 DNS seeds
         # So after 60 seconds, the node should fallback to fixed seeds (this is a slow test)
         assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
-        start = time.time()
+        START = 1613146990
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Loaded 0 addresses from peers.dat",
                 "0 addresses found from DNS seeds",
-                "Adding fixed seeds as 60 seconds have passed and addrman is empty"], timeout=80):
-            self.start_node(0, extra_args=['-dnsseed=1'])
-        assert time.time() - start >= 60
+                "Adding fixed seeds as 60 seconds have passed and addrman is empty",
+        ]):
+            self.start_node(0, extra_args=['-dnsseed=1', f'-mocktime={START}'])
+            self.nodes[0].setmocktime(START + 61)
+        util.assert_equal(self.nodes[0].uptime(), 61)
         self.stop_node(0)
 
         # No peers.dat exists and -dnsseed=0
         # We expect the node will fallback immediately to fixed seeds
         assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
-        start = time.time()
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Loaded 0 addresses from peers.dat",
                 "DNS seeding disabled",
-                "Adding fixed seeds as -dnsseed=0, -addnode is not provided and and all -seednode(s) attempted\n"]):
-            self.start_node(0, extra_args=['-dnsseed=0'])
-        assert time.time() - start < 60
+                "Adding fixed seeds as -dnsseed=0, -addnode is not provided and all -seednode(s) attempted\n",
+        ]):
+            self.start_node(0, extra_args=['-dnsseed=0', f'-mocktime={START}'])
+        util.assert_equal(self.nodes[0].uptime(), 0)
         self.stop_node(0)
 
         # No peers.dat exists and dns seeds are disabled.
         # We expect the node will not add fixed seeds when explicitly disabled.
         assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
-        start = time.time()
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Loaded 0 addresses from peers.dat",
                 "DNS seeding disabled",
-                "Fixed seeds are disabled"]):
-            self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=0'])
-        assert time.time() - start < 60
+                "Fixed seeds are disabled",
+        ]):
+            self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=0', f'-mocktime={START}'])
+        util.assert_equal(self.nodes[0].uptime(), 0)
         self.stop_node(0)
 
         # No peers.dat exists and -dnsseed=0, but a -addnode is provided
         # We expect the node will allow 60 seconds prior to using fixed seeds
         assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
-        start = time.time()
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Loaded 0 addresses from peers.dat",
                 "DNS seeding disabled",
-                "Adding fixed seeds as 60 seconds have passed and addrman is empty"],
-                timeout=80):
-            self.start_node(0, extra_args=['-dnsseed=0', '-addnode=fakenodeaddr'])
-        assert time.time() - start >= 60
+                "Adding fixed seeds as 60 seconds have passed and addrman is empty",
+        ]):
+            self.start_node(0, extra_args=['-dnsseed=0', '-addnode=fakenodeaddr', f'-mocktime={START}'])
+            self.nodes[0].setmocktime(START + 61)
+        util.assert_equal(self.nodes[0].uptime(), 61)
         self.stop_node(0)
-
 
     def run_test(self):
         self.stop_node(0)
