@@ -65,8 +65,6 @@ EXPECTED_BOOST_INCLUDES=(
     boost/signals2/optional_last_value.hpp
     boost/signals2/signal.hpp
     boost/test/unit_test.hpp
-    boost/thread/lock_types.hpp
-    boost/thread/shared_mutex.hpp
     boost/exception/diagnostic_information.hpp
     boost/exception/exception.hpp
     boost/exception/info.hpp
