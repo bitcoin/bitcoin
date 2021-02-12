@@ -9,6 +9,7 @@
 #include <test/util/setup_common.h>
 #include <test/util/wallet.h>
 #include <validationinterface.h>
+#include <wallet/receive.h>
 #include <wallet/wallet.h>
 
 #include <optional>
@@ -35,11 +36,11 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
     }
     SyncWithValidationInterfaceQueue();
 
-    auto bal = wallet.GetBalance(); // Cache
+    auto bal = GetBalance(wallet); // Cache
 
     bench.run([&] {
         if (set_dirty) wallet.MarkDirty();
-        bal = wallet.GetBalance();
+        bal = GetBalance(wallet);
         if (add_mine) assert(bal.m_mine_trusted > 0);
         if (add_watchonly) assert(bal.m_watchonly_trusted > 0);
     });
