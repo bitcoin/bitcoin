@@ -1813,7 +1813,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
                 LOCK2(m_addr_fetches_mutex, cs_vAddedNodes);
                 if (m_addr_fetches.empty() && vAddedNodes.empty()) {
                     add_fixed_seeds_now = true;
-                    LogPrintf("Adding fixed seeds as -dnsseed=0, -addnode is not provided and and all -seednode(s) attempted\n");
+                    LogPrintf("Adding fixed seeds as -dnsseed=0, -addnode is not provided and all -seednode(s) attempted\n");
                 }
             }
 
