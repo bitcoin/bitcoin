@@ -886,10 +886,10 @@ endif
 #
 
 # syscoin-util binary #
-bitcoin_util_SOURCES = syscoin-util.cpp
-bitcoin_util_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
-bitcoin_util_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bitcoin_util_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+syscoin_util_SOURCES = syscoin-util.cpp
+syscoin_util_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+syscoin_util_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+syscoin_util_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 if TARGET_WINDOWS
 syscoin_util_SOURCES += syscoin-util-res.rc

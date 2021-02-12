@@ -13,10 +13,10 @@ from test_framework.messages import (
     FromHex,
 )
 from test_framework.muhash import MuHash3072
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
 
-class UTXOSetHashTest(BitcoinTestFramework):
+class UTXOSetHashTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True
