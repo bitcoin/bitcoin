@@ -39,6 +39,7 @@ class UniValue;
 
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
+void SetStartupTime();
 
 extern const char * const BITCOIN_CONF_FILENAME;
 extern const char * const BITCOIN_SETTINGS_FILENAME;

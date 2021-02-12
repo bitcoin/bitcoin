@@ -71,7 +71,7 @@
 #include <univalue.h>
 
 // Application startup time (used for uptime calculation)
-const int64_t nStartupTime = GetTime();
+std::optional<std::chrono::seconds> g_startup_time{};
 
 const char * const BITCOIN_CONF_FILENAME = "bitcoin.conf";
 const char * const BITCOIN_SETTINGS_FILENAME = "settings.json";
@@ -1353,7 +1353,12 @@ std::string CopyrightHolders(const std::string& strPrefix)
 // Obtain the application startup time (used for uptime calculation)
 int64_t GetStartupTime()
 {
-    return nStartupTime;
+    return count_seconds(*Assert(g_startup_time));
+}
+void SetStartupTime()
+{
+    Assert(!g_startup_time);
+    g_startup_time = GetTime<std::chrono::seconds>();
 }
 
 fs::path AbsPathForConfigVal(const fs::path& path, bool net_specific)
