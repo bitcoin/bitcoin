@@ -6,6 +6,7 @@
 #include <node/coinstats.h>
 
 #include <coins.h>
+#include <crypto/muhash.h>
 #include <hash.h>
 #include <serialize.h>
 #include <uint256.h>
@@ -24,31 +25,47 @@ static uint64_t GetBogoSize(const CScript& scriptPubKey)
            scriptPubKey.size() /* scriptPubKey */;
 }
 
-static void ApplyStats(CCoinsStats& stats, CHashWriter& ss, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
+static void ApplyHash(CCoinsStats& stats, CHashWriter& ss, const uint256& hash, const std::map<uint32_t, Coin>& outputs, std::map<uint32_t, Coin>::const_iterator it)
 {
-    assert(!outputs.empty());
-    ss << hash;
-    ss << VARINT(outputs.begin()->second.nHeight * 2 + outputs.begin()->second.fCoinBase ? 1u : 0u);
-    stats.nTransactions++;
-    for (const auto& output : outputs) {
-        ss << VARINT(output.first + 1);
-        ss << output.second.out.scriptPubKey;
-        ss << VARINT_MODE(output.second.out.nValue, VarIntMode::NONNEGATIVE_SIGNED);
-        stats.nTransactionOutputs++;
-        stats.nTotalAmount += output.second.out.nValue;
-        stats.nBogoSize += GetBogoSize(output.second.out.scriptPubKey);
+    if (it == outputs.begin()) {
+        ss << hash;
+        ss << VARINT(it->second.nHeight * 2 + it->second.fCoinBase ? 1u : 0u);
     }
-    ss << VARINT(0u);
+
+    ss << VARINT(it->first + 1);
+    ss << it->second.out.scriptPubKey;
+    ss << VARINT_MODE(it->second.out.nValue, VarIntMode::NONNEGATIVE_SIGNED);
+
+    if (it == std::prev(outputs.end())) {
+        ss << VARINT(0u);
+    }
 }
 
-static void ApplyStats(CCoinsStats& stats, std::nullptr_t, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
+static void ApplyHash(CCoinsStats& stats, std::nullptr_t, const uint256& hash, const std::map<uint32_t, Coin>& outputs, std::map<uint32_t, Coin>::const_iterator it) {}
+
+static void ApplyHash(CCoinsStats& stats, MuHash3072& muhash, const uint256& hash, const std::map<uint32_t, Coin>& outputs, std::map<uint32_t, Coin>::const_iterator it)
+{
+    COutPoint outpoint = COutPoint(hash, it->first);
+    Coin coin = it->second;
+
+    CDataStream ss(SER_DISK, PROTOCOL_VERSION);
+    ss << outpoint;
+    ss << static_cast<uint32_t>(coin.nHeight * 2 + coin.fCoinBase);
+    ss << coin.out;
+    muhash.Insert(MakeUCharSpan(ss));
+}
+
+template <typename T>
+static void ApplyStats(CCoinsStats& stats, T& hash_obj, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
 {
     assert(!outputs.empty());
     stats.nTransactions++;
-    for (const auto& output : outputs) {
+    for (auto it = outputs.begin(); it != outputs.end(); ++it) {
+        ApplyHash(stats, hash_obj, hash, outputs, it);
+
         stats.nTransactionOutputs++;
-        stats.nTotalAmount += output.second.out.nValue;
-        stats.nBogoSize += GetBogoSize(output.second.out.scriptPubKey);
+        stats.nTotalAmount += it->second.out.nValue;
+        stats.nBogoSize += GetBogoSize(it->second.out.scriptPubKey);
     }
 }
 
@@ -104,6 +121,10 @@ bool GetUTXOStats(CCoinsView* view, CCoinsStats& stats, CoinStatsHashType hash_t
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         return GetUTXOStats(view, stats, ss, interruption_point);
     }
+    case(CoinStatsHashType::MUHASH): {
+        MuHash3072 muhash;
+        return GetUTXOStats(view, stats, muhash, interruption_point);
+    }
     case(CoinStatsHashType::NONE): {
         return GetUTXOStats(view, stats, nullptr, interruption_point);
     }
@@ -116,10 +137,18 @@ static void PrepareHash(CHashWriter& ss, const CCoinsStats& stats)
 {
     ss << stats.hashBlock;
 }
+// MuHash does not need the prepare step
+static void PrepareHash(MuHash3072& muhash, CCoinsStats& stats) {}
 static void PrepareHash(std::nullptr_t, CCoinsStats& stats) {}
 
 static void FinalizeHash(CHashWriter& ss, CCoinsStats& stats)
 {
     stats.hashSerialized = ss.GetHash();
+}
+static void FinalizeHash(MuHash3072& muhash, CCoinsStats& stats)
+{
+    uint256 out;
+    muhash.Finalize(out);
+    stats.hashSerialized = out;
 }
 static void FinalizeHash(std::nullptr_t, CCoinsStats& stats) {}

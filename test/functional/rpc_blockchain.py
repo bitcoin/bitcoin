@@ -268,6 +268,18 @@ class BlockchainTest(BitcoinTestFramework):
         res5 = node.gettxoutsetinfo(hash_type='none')
         assert 'hash_serialized_2' not in res5
 
+        # hash_type muhash should return a different UTXO set hash.
+        res6 = node.gettxoutsetinfo(hash_type='muhash')
+        assert 'muhash' in res6
+        assert(res['hash_serialized_2'] != res6['muhash'])
+
+        # muhash should not be included in gettxoutset unless requested.
+        for r in [res, res2, res3, res4, res5]:
+            assert 'muhash' not in r
+
+        # Unknown hash_type raises an error
+        assert_raises_rpc_error(-8, "foohash is not a valid hash_type", node.gettxoutsetinfo, "foohash")
+
     def _test_getblockheader(self):
         node = self.nodes[0]
 
