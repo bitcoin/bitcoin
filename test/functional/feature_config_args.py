@@ -149,20 +149,21 @@ class ConfArgsTest(BitcoinTestFramework):
         self.stop_node(0)
 
     def test_seed_peers(self):
-        self.log.info('Test seed peers, this will take about 2 minutes')
+        self.log.info('Test seed peers')
         default_data_dir = self.nodes[0].datadir
 
         # No peers.dat exists and -dnsseed=1
         # We expect the node will use DNS Seeds, but Regtest mode has 0 DNS seeds
         # So after 60 seconds, the node should fallback to fixed seeds (this is a slow test)
         assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
-        start = time.time()
+        start = int(time.time())
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Loaded 0 addresses from peers.dat",
-                "0 addresses found from DNS seeds",
-                "Adding fixed seeds as 60 seconds have passed and addrman is empty"], timeout=80):
-            self.start_node(0, extra_args=['-dnsseed=1'])
-        assert time.time() - start >= 60
+                "0 addresses found from DNS seeds"]):
+            self.start_node(0, extra_args=['-dnsseed=1 -mocktime={}'.format(start)])
+        with self.nodes[0].assert_debug_log(expected_msgs=[
+                "Adding fixed seeds as 60 seconds have passed and addrman is empty"]):
+            self.nodes[0].setmocktime(start + 65)
         self.stop_node(0)
 
         # No peers.dat exists and -dnsseed=0
@@ -172,7 +173,7 @@ class ConfArgsTest(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Loaded 0 addresses from peers.dat",
                 "DNS seeding disabled",
-                "Adding fixed seeds as -dnsseed=0, -addnode is not provided and and all -seednode(s) attempted\n"]):
+                "Adding fixed seeds as -dnsseed=0, -addnode is not provided and all -seednode(s) attempted\n"]):
             self.start_node(0, extra_args=['-dnsseed=0'])
         assert time.time() - start < 60
         self.stop_node(0)
@@ -192,14 +193,14 @@ class ConfArgsTest(BitcoinTestFramework):
         # No peers.dat exists and -dnsseed=0, but a -addnode is provided
         # We expect the node will allow 60 seconds prior to using fixed seeds
         assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
-        start = time.time()
+        start = int(time.time())
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Loaded 0 addresses from peers.dat",
-                "DNS seeding disabled",
-                "Adding fixed seeds as 60 seconds have passed and addrman is empty"],
-                timeout=80):
-            self.start_node(0, extra_args=['-dnsseed=0', '-addnode=fakenodeaddr'])
-        assert time.time() - start >= 60
+                "DNS seeding disabled"]):
+            self.start_node(0, extra_args=['-dnsseed=0', '-addnode=fakenodeaddr -mocktime={}'.format(start)])
+        with self.nodes[0].assert_debug_log(expected_msgs=[
+                "Adding fixed seeds as 60 seconds have passed and addrman is empty"]):
+            self.nodes[0].setmocktime(start + 65)
         self.stop_node(0)
 
 
