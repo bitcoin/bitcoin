@@ -27,8 +27,8 @@ class UTXOSetHashTest(SyscoinTestFramework):
     def test_deterministic_hash_results(self):
         self.log.info("Test deterministic UTXO set hash results")
 
-        # These depend on the setup_clean_chain option, the chain loaded from the cache
-        assert_equal(self.nodes[0].gettxoutsetinfo()['hash_serialized_2'], "b32ec1dda5a53cd025b95387aad344a801825fe46a60ff952ce26528f01d3be8")
+        # SYSCOIN These depend on the setup_clean_chain option, the chain loaded from the cache
+        assert_equal(self.nodes[0].gettxoutsetinfo()['hash_serialized_2'], "32475e55721edf432bca939af60390767d5aaadea93ee75b8183f555fe3ea209")
         assert_equal(self.nodes[0].gettxoutsetinfo("muhash")['muhash'], "dd5ad2a105c2d29495f577245c357409002329b9f4d6182c0af3dc2f462555c8")
 
     def test_muhash_implementation(self):
