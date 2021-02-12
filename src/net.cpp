@@ -11,6 +11,7 @@
 
 #include <banman.h>
 #include <clientversion.h>
+#include <compat.h>
 #include <consensus/consensus.h>
 #include <crypto/sha256.h>
 #include <net_permissions.h>
@@ -71,16 +72,6 @@ static constexpr std::chrono::seconds MAX_UPLOAD_TIMEFRAME{60 * 60 * 24};
 
 // We add a random period time (0 to 1 seconds) to feeler connections to prevent synchronization.
 #define FEELER_SLEEP_WINDOW 1
-
-// MSG_NOSIGNAL is not available on some platforms, if it doesn't exist define it as 0
-#if !defined(MSG_NOSIGNAL)
-#define MSG_NOSIGNAL 0
-#endif
-
-// MSG_DONTWAIT is not available on some platforms, if it doesn't exist define it as 0
-#if !defined(MSG_DONTWAIT)
-#define MSG_DONTWAIT 0
-#endif
 
 /** Used to pass flags to the Bind() function */
 enum BindFlags {

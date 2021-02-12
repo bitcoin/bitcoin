@@ -5,6 +5,7 @@
 
 #include <netbase.h>
 
+#include <compat.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <util/sock.h>
@@ -28,10 +29,6 @@
 
 #ifdef USE_POLL
 #include <poll.h>
-#endif
-
-#if !defined(MSG_NOSIGNAL)
-#define MSG_NOSIGNAL 0
 #endif
 
 // Settings

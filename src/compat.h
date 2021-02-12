@@ -96,4 +96,14 @@ bool static inline IsSelectableSocket(const SOCKET& s) {
 #endif
 }
 
+// MSG_NOSIGNAL is not available on some platforms, if it doesn't exist define it as 0
+#if !defined(MSG_NOSIGNAL)
+#define MSG_NOSIGNAL 0
+#endif
+
+// MSG_DONTWAIT is not available on some platforms, if it doesn't exist define it as 0
+#if !defined(MSG_DONTWAIT)
+#define MSG_DONTWAIT 0
+#endif
+
 #endif // BITCOIN_COMPAT_H
