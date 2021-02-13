@@ -259,6 +259,11 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
     unsigned int curFarBucket = maxbucketindex;
     unsigned int bestFarBucket = maxbucketindex;
 
+    // We'll always group buckets into sets that meet sufficientTxVal --
+    // this ensures that we're using consistent groups between different
+    // confirmation targets.
+    double partialNum = 0;
+
     bool foundAnswer = false;
     unsigned int bins = unconfTxs.size();
     bool newBucketRange = true;
@@ -274,6 +279,7 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
         }
         curFarBucket = bucket;
         nConf += confAvg[periodTarget - 1][bucket];
+        partialNum += txCtAvg[bucket];
         totalNum += txCtAvg[bucket];
         failNum += failAvg[periodTarget - 1][bucket];
         for (unsigned int confct = confTarget; confct < GetMaxConfirms(); confct++)
@@ -283,7 +289,14 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
         // we can test for success
         // (Only count the confirmed data points, so that each confirmation count
         // will be looking at the same amount of data and same bucket breaks)
-        if (totalNum >= sufficientTxVal / (1 - decay)) {
+
+        if (partialNum < sufficientTxVal / (1 - decay)) {
+            // the buckets we've added in this round aren't sufficient
+            // so keep adding
+            continue;
+        } else {
+            partialNum = 0; // reset for the next range we'll add
+
             double curPct = nConf / (totalNum + failNum + extraNum);
 
             // Check to see if we are no longer getting confirmed at the success rate
