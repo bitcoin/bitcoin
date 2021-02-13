@@ -217,11 +217,11 @@ As mentioned at the bottom of [this manual page][guix/bin-install]:
 >
 >     make guix-binary.x86_64-linux.tar.xz
 
-### When will Guix be packaged in debian?
+### Is Guix packaged in my operating system?
 
-Thanks to Vagrant Cascadian's diligent work, Guix is now [in debian
-experimental][debian/guix-experimental]! Hopefully it will make its way into a
-release soon.
+Guix is shipped starting with [Debian Bullseye][debian/guix-bullseye] and
+[Ubuntu 21.04 "Hirsute Hippo"][ubuntu/guix-hirsute]. Other operating systems
+are working on packaging Guix as well.
 
 [b17e]: http://bootstrappable.org/
 [r12e/source-date-epoch]: https://reproducible-builds.org/docs/source-date-epoch/
@@ -233,5 +233,6 @@ release soon.
 [guix/substitute-server-auth]: https://www.gnu.org/software/guix/manual/en/html_node/Substitute-Server-Authorization.html
 [guix/time-machine]: https://guix.gnu.org/manual/en/html_node/Invoking-guix-time_002dmachine.html
 
-[debian/guix-experimental]: https://packages.debian.org/experimental/guix
+[debian/guix-bullseye]: https://packages.debian.org/bullseye/guix
+[ubuntu/guix-hirsute]: https://packages.ubuntu.com/hirsute/guix
 [fanquake/guix-docker]: https://github.com/fanquake/core-review/tree/master/guix
