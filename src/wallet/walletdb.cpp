@@ -554,13 +554,6 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
                 strErr = "Invalid governance object: LoadGovernanceObject";
                 return false;
             }
-        } else if (strType == DBKeys::FLAGS) {
-            uint64_t flags;
-            ssValue >> flags;
-            if (!pwallet->LoadWalletFlags(flags)) {
-                strErr = "Error reading wallet database: Unknown non-tolerable wallet flags found";
-                return false;
-            }
         } else if (strType == DBKeys::OLD_KEY) {
             strErr = "Found unsupported 'wkey' record, try loading with version 0.17";
             return false;
@@ -665,7 +658,8 @@ ReadKeyValue(CWallet* pwallet, CDataStream& ssKey, CDataStream& ssValue,
         } else if (strType != DBKeys::BESTBLOCK && strType != DBKeys::BESTBLOCK_NOMERKLE &&
                    strType != DBKeys::MINVERSION && strType != DBKeys::ACENTRY &&
                    strType != DBKeys::VERSION && strType != DBKeys::SETTINGS &&
-                   strType != DBKeys::PRIVATESEND_SALT && strType != DBKeys::COINJOIN_SALT) {
+                   strType != DBKeys::PRIVATESEND_SALT && strType != DBKeys::COINJOIN_SALT &&
+                   strType != DBKeys::FLAGS) {
             wss.m_unknown_records++;
         }
     } catch (const std::exception& e) {
@@ -709,6 +703,16 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
             if (nMinVersion > FEATURE_LATEST)
                 return DBErrors::TOO_NEW;
             pwallet->LoadMinVersion(nMinVersion);
+        }
+
+        // Load wallet flags, so they are known when processing other records.
+        // The FLAGS key is absent during wallet creation.
+        uint64_t flags;
+        if (m_batch->Read(DBKeys::FLAGS, flags)) {
+            if (!pwallet->LoadWalletFlags(flags)) {
+                pwallet->WalletLogPrintf("Error reading wallet database: Unknown non-tolerable wallet flags found\n");
+                return DBErrors::CORRUPT;
+            }
         }
 
         // Get cursor
