@@ -25,16 +25,16 @@ class SettingsTest(BitcoinTestFramework):
         conf = Path(node.datadir, "bitcoin.conf")
         version = node.getnetworkinfo()["version"]
 
-        # Assert empty settings file is created on startup
+        self.log.info("Test empty settings file is created on startup")
         with settings.open() as fp:
             assert_equal(json.load(fp), {})
 
-        # Assert client version is saved in settings file on shutdown
+        self.log.info("Test client version is saved in settings file on shutdown")
         self.stop_node(0)
         with settings.open() as fp:
             assert_equal(json.load(fp), {"lastrunversion": version})
 
-        # Assert settings are parsed and logged
+        self.log.info("Test settings are parsed and logged on startup")
         with settings.open("w") as fp:
             json.dump({"lastrunversion": "3.14", "string": "string", "num": 5, "bool": True, "null": None, "list": [6, 7]}, fp)
         with node.assert_debug_log(expected_msgs=[
@@ -53,41 +53,41 @@ class SettingsTest(BitcoinTestFramework):
             self.start_node(0)
             self.stop_node(0)
 
-        # Assert settings are unchanged after shutdown, except lastrunversion, which is updated
+        self.log.info("Test settings are unchanged after shutdown, except lastrunversion, which is updated")
         with settings.open() as fp:
             assert_equal(json.load(fp), {
                 "string": "string", "num": 5, "bool": True, "null": None, "list": [6, 7],
                 "lastrunversion": version,
             })
 
-        # Test invalid json
+        self.log.info("Test invalid json")
         with settings.open("w") as fp:
             fp.write("invalid json")
         node.assert_start_raises_init_error(expected_msg='Unable to parse settings file', match=ErrorMatch.PARTIAL_REGEX)
 
-        # Test invalid json object
+        self.log.info("Test invalid json object")
         with settings.open("w") as fp:
             fp.write('"string"')
         node.assert_start_raises_init_error(expected_msg='Found non-object value "string" in settings file', match=ErrorMatch.PARTIAL_REGEX)
 
-        # Test invalid settings file containing duplicate keys
+        self.log.info("Test invalid settings file containing duplicate keys")
         with settings.open("w") as fp:
             fp.write('{"key": 1, "key": 2}')
         node.assert_start_raises_init_error(expected_msg='Found duplicate key key in settings file', match=ErrorMatch.PARTIAL_REGEX)
 
-        # Test invalid settings file is ignored with command line -nosettings
+        self.log.info("Test invalid settings file is ignored with command line -nosettings")
         with node.assert_debug_log(expected_msgs=['Command-line arg: settings=false']):
             self.start_node(0, extra_args=["-nosettings"])
             self.stop_node(0)
 
-        # Test invalid settings file is ignored with config file -nosettings
+        self.log.info("Test invalid settings file is ignored with config file -nosettings")
         with conf.open('a') as conf:
             conf.write('nosettings=1\n')
         with node.assert_debug_log(expected_msgs=['Config file arg: [regtest] settings=false']):
             self.start_node(0)
             self.stop_node(0)
 
-        # Test alternate settings path
+        self.log.info("Test alternate settings path")
         altsettings = Path(node.datadir, "altsettings.json")
         with altsettings.open("w") as fp:
             fp.write('{"key": "value"}')
