@@ -23,15 +23,20 @@ class SettingsTest(BitcoinTestFramework):
         node, = self.nodes
         settings = Path(node.datadir, self.chain, "settings.json")
         conf = Path(node.datadir, "bitcoin.conf")
+        version = node.getnetworkinfo()["version"]
 
-        # Assert empty settings file was created
-        self.stop_node(0)
+        # Assert empty settings file is created on startup
         with settings.open() as fp:
             assert_equal(json.load(fp), {})
 
+        # Assert client version is saved in settings file on shutdown
+        self.stop_node(0)
+        with settings.open() as fp:
+            assert_equal(json.load(fp), {"lastrunversion": version})
+
         # Assert settings are parsed and logged
         with settings.open("w") as fp:
-            json.dump({"string": "string", "num": 5, "bool": True, "null": None, "list": [6, 7]}, fp)
+            json.dump({"lastrunversion": "3.14", "string": "string", "num": 5, "bool": True, "null": None, "list": [6, 7]}, fp)
         with node.assert_debug_log(expected_msgs=[
                 'Ignoring unknown rw_settings value bool',
                 'Ignoring unknown rw_settings value list',
@@ -43,13 +48,17 @@ class SettingsTest(BitcoinTestFramework):
                 'Setting file arg: bool = true',
                 'Setting file arg: null = null',
                 'Setting file arg: list = [6,7]',
+                'Setting file arg: lastrunversion = "3.14"',
         ]):
             self.start_node(0)
             self.stop_node(0)
 
-        # Assert settings are unchanged after shutdown
+        # Assert settings are unchanged after shutdown, except lastrunversion, which is updated
         with settings.open() as fp:
-            assert_equal(json.load(fp), {"string": "string", "num": 5, "bool": True, "null": None, "list": [6, 7]})
+            assert_equal(json.load(fp), {
+                "string": "string", "num": 5, "bool": True, "null": None, "list": [6, 7],
+                "lastrunversion": version,
+            })
 
         # Test invalid json
         with settings.open("w") as fp:
@@ -85,6 +94,8 @@ class SettingsTest(BitcoinTestFramework):
         with node.assert_debug_log(expected_msgs=['Setting file arg: key = "value"']):
             self.start_node(0, extra_args=["-settings={}".format(altsettings)])
             self.stop_node(0)
+        with altsettings.open() as fp:
+            assert_equal(json.load(fp), {"key": "value", "lastrunversion": version})
 
 
 if __name__ == '__main__':

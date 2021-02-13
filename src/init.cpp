@@ -15,6 +15,7 @@
 #include <blockfilter.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <clientversion.h>
 #include <compat/sanity.h>
 #include <consensus/validation.h>
 #include <fs.h>
@@ -284,6 +285,11 @@ void Shutdown(NodeContext& node)
         g_zmq_notification_interface = nullptr;
     }
 #endif
+
+    if (!node.args->IsArgNegated("-settings")) {
+        // Persist client version to <datadir>/settings.json file.
+        node.chain->updateRwSetting("lastrunversion", util::SettingsValue{CLIENT_VERSION});
+    }
 
     node.chain_clients.clear();
     UnregisterAllValidationInterfaces();
