@@ -326,8 +326,8 @@ void CQuorumManager::ScanQuorums(uint8_t llmqType, const CBlockIndex* pindexStar
     for (auto& quorumIndex : quorumIndexes) {
         assert(quorumIndex);
         auto quorum = GetQuorum(llmqType, quorumIndex);
-        assert(quorum != nullptr);
-        vecResultQuorums.emplace_back(quorum);
+        if(quorum)
+            vecResultQuorums.emplace_back(quorum);
     }
 
     size_t nCountResult{vecResultQuorums.size()};

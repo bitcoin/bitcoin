@@ -366,7 +366,7 @@ public:
         consensus.nUTXOAssetsBlock = 545000;
         consensus.nUTXOAssetsBlockProvisioning = consensus.nUTXOAssetsBlock + 10000;
         consensus.DIP0003Height = 545000;
-        consensus.DIP0003EnforcementHeight = 545000;
+        consensus.DIP0003EnforcementHeight = 572500;
         pchMessageStart[0] = 0xce;
         pchMessageStart[1] = 0xe2;
         pchMessageStart[2] = 0xca;
