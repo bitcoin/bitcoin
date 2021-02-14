@@ -45,9 +45,9 @@ class CInstantSendDb
 private:
     CDBWrapper& db;
 
-    unordered_lru_cache<uint256, CInstantSendLockPtr, StaticSaltedHasher, 10000> islockCache;
-    unordered_lru_cache<uint256, uint256, StaticSaltedHasher, 10000> txidCache;
-    unordered_lru_cache<COutPoint, uint256, SaltedOutpointHasher, 10000> outpointCache;
+    mutable unordered_lru_cache<uint256, CInstantSendLockPtr, StaticSaltedHasher, 10000> islockCache;
+    mutable unordered_lru_cache<uint256, uint256, StaticSaltedHasher, 10000> txidCache;
+    mutable unordered_lru_cache<COutPoint, uint256, SaltedOutpointHasher, 10000> outpointCache;
 
 public:
     explicit CInstantSendDb(CDBWrapper& _db) : db(_db) {}
@@ -60,22 +60,22 @@ public:
     static void WriteInstantSendLockArchived(CDBBatch& batch, const uint256& hash, int nHeight);
     std::unordered_map<uint256, CInstantSendLockPtr> RemoveConfirmedInstantSendLocks(int nUntilHeight);
     void RemoveArchivedInstantSendLocks(int nUntilHeight);
-    bool HasArchivedInstantSendLock(const uint256& islockHash);
-    size_t GetInstantSendLockCount();
+    bool HasArchivedInstantSendLock(const uint256& islockHash) const;
+    size_t GetInstantSendLockCount() const;
 
-    CInstantSendLockPtr GetInstantSendLockByHash(const uint256& hash);
-    uint256 GetInstantSendLockHashByTxid(const uint256& txid);
-    CInstantSendLockPtr GetInstantSendLockByTxid(const uint256& txid);
-    CInstantSendLockPtr GetInstantSendLockByInput(const COutPoint& outpoint);
+    CInstantSendLockPtr GetInstantSendLockByHash(const uint256& hash) const;
+    uint256 GetInstantSendLockHashByTxid(const uint256& txid) const;
+    CInstantSendLockPtr GetInstantSendLockByTxid(const uint256& txid) const;
+    CInstantSendLockPtr GetInstantSendLockByInput(const COutPoint& outpoint) const;
 
-    std::vector<uint256> GetInstantSendLocksByParent(const uint256& parent);
+    std::vector<uint256> GetInstantSendLocksByParent(const uint256& parent) const;
     std::vector<uint256> RemoveChainedInstantSendLocks(const uint256& islockHash, const uint256& txid, int nHeight);
 };
 
 class CInstantSendManager : public CRecoveredSigsListener
 {
 private:
-    CCriticalSection cs;
+    mutable CCriticalSection cs;
     CInstantSendDb db;
 
     std::thread workThread;
@@ -121,11 +121,11 @@ public:
 
 public:
     bool ProcessTx(const CTransaction& tx, bool allowReSigning, const Consensus::Params& params);
-    bool CheckCanLock(const CTransaction& tx, bool printDebug, const Consensus::Params& params);
-    bool CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash, CAmount* retValue, const Consensus::Params& params);
-    bool IsLocked(const uint256& txHash);
-    bool IsConflicted(const CTransaction& tx);
-    CInstantSendLockPtr GetConflictingLock(const CTransaction& tx);
+    bool CheckCanLock(const CTransaction& tx, bool printDebug, const Consensus::Params& params) const;
+    bool CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash, CAmount* retValue, const Consensus::Params& params) const;
+    bool IsLocked(const uint256& txHash) const;
+    bool IsConflicted(const CTransaction& tx) const;
+    CInstantSendLockPtr GetConflictingLock(const CTransaction& tx) const;
 
     virtual void HandleNewRecoveredSig(const CRecoveredSig& recoveredSig);
     void HandleNewInputLockRecoveredSig(const CRecoveredSig& recoveredSig, const uint256& txid);
@@ -140,7 +140,6 @@ public:
     std::unordered_set<uint256> ProcessPendingInstantSendLocks(int signOffset, const std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher>& pend, bool ban);
     void ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLockPtr& islock);
 
-    void ProcessNewTransaction(const CTransactionRef& tx, const CBlockIndex* pindex, bool allowReSigning);
     void TransactionAddedToMempool(const CTransactionRef& tx);
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted);
     void BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexDisconnected);
@@ -161,12 +160,12 @@ public:
     static void AskNodesForLockedTx(const uint256& txid);
     void ProcessPendingRetryLockTxs();
 
-    bool AlreadyHave(const CInv& inv);
-    bool GetInstantSendLockByHash(const uint256& hash, CInstantSendLock& ret);
-    CInstantSendLockPtr GetInstantSendLockByTxid(const uint256& txid);
-    bool GetInstantSendLockHashByTxid(const uint256& txid, uint256& ret);
+    bool AlreadyHave(const CInv& inv) const;
+    bool GetInstantSendLockByHash(const uint256& hash, CInstantSendLock& ret) const;
+    CInstantSendLockPtr GetInstantSendLockByTxid(const uint256& txid) const;
+    bool GetInstantSendLockHashByTxid(const uint256& txid, uint256& ret) const;
 
-    size_t GetInstantSendLockCount();
+    size_t GetInstantSendLockCount() const;
 
     void WorkThreadMain();
 };
