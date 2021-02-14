@@ -151,6 +151,8 @@ Tools and Utilities
   useful to see if the node knows enough addresses in a network to use options
   like `-onlynet=<network>` or to upgrade to this release of Bitcoin Core 22.0
   that supports Tor v3 only.  (#21595)
+- A new `bitcoinconsensus_verify_script_with_spent_outputs` function is available in libconsensus which optionally accepts the spent outputs of the transaction being verified. (#21158)
+- A new `bitcoinconsensus_SCRIPT_FLAGS_VERIFY_TAPROOT` flag is available in libconsensus that will verify scripts with the Taproot spending rules. (#21158)
 
 Wallet
 ------
