@@ -66,6 +66,11 @@ tool to clean up patches automatically before submission.
     on the same line as the `if`, without braces. In every other case,
     braces are required, and the `then` and `else` clauses must appear
     correctly indented on a new line.
+  - There's no hard limit on line width, but prefer to keep lines to <100
+    characters if doing so does not decrease readability. Break up long
+    function declarations over multiple lines using the Clang Format
+    [AlignAfterOpenBracket](https://clang.llvm.org/docs/ClangFormatStyleOptions.html)
+    style option.
 
 - **Symbol naming conventions**. These are preferred in new code, but are not
 required when doing so would need changes to significant pieces of existing
