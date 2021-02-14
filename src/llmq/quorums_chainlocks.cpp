@@ -104,11 +104,13 @@ void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
     }
 }
 
-void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLockSig& clsig, const uint256& hash)
+void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CChainLockSig& clsig, const uint256& hash)
 {
+    CInv clsigInv(MSG_CLSIG, hash);
+
     if (from != -1) {
         LOCK(cs_main);
-        EraseObjectRequest(from, CInv(MSG_CLSIG, hash));
+        EraseObjectRequest(from, clsigInv);
     }
 
     {
@@ -123,9 +125,8 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
         }
     }
 
-    uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, clsig.nHeight));
-    uint256 msgHash = clsig.blockHash;
-    if (!quorumSigningManager->VerifyRecoveredSig(Params().GetConsensus().llmqTypeChainLocks, clsig.nHeight, requestId, msgHash, clsig.sig)) {
+    const uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, clsig.nHeight));
+    if (!quorumSigningManager->VerifyRecoveredSig(Params().GetConsensus().llmqTypeChainLocks, clsig.nHeight, requestId, clsig.blockHash, clsig.sig)) {
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
         if (from != -1) {
             LOCK(cs_main);
@@ -134,20 +135,7 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
         return;
     }
 
-    {
-        LOCK(cs);
-
-        if (InternalHasConflictingChainLock(clsig.nHeight, clsig.blockHash)) {
-            // This should not happen. If it happens, it means that a malicious entity controls a large part of the MN
-            // network. In this case, we don't allow him to reorg older chainlocks.
-            LogPrintf("CChainLocksHandler::%s -- new CLSIG (%s) tries to reorg previous CLSIG (%s), peer=%d\n",
-                      __func__, clsig.ToString(), bestChainLock.ToString(), from);
-            return;
-        }
-    }
-
-    CInv inv(MSG_CLSIG, hash);
-    g_connman->RelayInv(inv, LLMQS_PROTO_VERSION);
+    g_connman->RelayInv(clsigInv, LLMQS_PROTO_VERSION);
 
     {
         LOCK2(cs_main, cs);
