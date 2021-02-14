@@ -12,14 +12,14 @@
 
 namespace {
 
-/** A class that deserializes a single CTransaction one time. */
+/** A class that deserializes a generic object. */
 class TxInputStream
 {
 public:
-    TxInputStream(int nVersionIn, const unsigned char *txTo, size_t txToLen) :
+    TxInputStream(int nVersionIn, const unsigned char *data, size_t dataLen) :
     m_version(nVersionIn),
-    m_data(txTo),
-    m_remaining(txToLen)
+    m_data(data),
+    m_remaining(dataLen)
     {}
 
     void read(char* pch, size_t nSize)
