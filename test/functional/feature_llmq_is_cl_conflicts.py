@@ -8,7 +8,7 @@ from decimal import Decimal
 from test_framework.blocktools import get_masternode_payment, create_coinbase, create_block
 from test_framework.mininode import *
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import assert_raises_rpc_error, get_bip9_status
+from test_framework.util import assert_equal, assert_raises_rpc_error, get_bip9_status
 
 '''
 feature_llmq_is_cl_conflicts.py
@@ -67,10 +67,14 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
         self.test_chainlock_overrides_islock(False)
-        self.test_chainlock_overrides_islock(True)
+        self.test_chainlock_overrides_islock(True, False)
+        self.test_chainlock_overrides_islock(True, True)
         self.test_islock_overrides_nonchainlock()
 
-    def test_chainlock_overrides_islock(self, test_block_conflict):
+    def test_chainlock_overrides_islock(self, test_block_conflict, mine_confllicting=False):
+        if not test_block_conflict:
+            assert not mine_confllicting
+
         # create three raw TXs, they will conflict with each other
         rawtx1 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)['hex']
         rawtx2 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)['hex']
@@ -104,12 +108,29 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
             assert(submit_result == "conflict-tx-lock")
 
         cl = self.create_chainlock(self.nodes[0].getblockcount() + 1, block)
+
+        if mine_confllicting:
+            islock_tip = self.nodes[0].generate(1)[-1]
+
         self.test_node.send_clsig(cl)
 
         for node in self.nodes:
             self.wait_for_best_chainlock(node, block.hash)
 
         self.sync_blocks()
+
+        if mine_confllicting:
+            # The tip with IS-locked txes should be marked conflicting now
+            found1 = False
+            found2 = False
+            for tip in self.nodes[0].getchaintips(2):
+                if tip["hash"] == islock_tip:
+                    assert tip["status"] == "conflicting"
+                    found1 = True
+                elif tip["hash"] == block.hash:
+                    assert tip["status"] == "active"
+                    found2 = True
+            assert found1 and found2
 
         # At this point all nodes should be in sync and have the same "best chainlock"
 
@@ -139,14 +160,34 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         for node in self.nodes:
             self.wait_for_instantlock(rawtx5_txid, node)
 
-        # Lets verify that the ISLOCKs got pruned
-        for node in self.nodes:
-            assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx1_txid, True)
-            assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx4_txid, True)
-            rawtx = node.getrawtransaction(rawtx2_txid, True)
-            assert(rawtx['chainlock'])
-            assert(rawtx['instantlock'])
-            assert(not rawtx['instantlock_internal'])
+        if mine_confllicting:
+            # Lets verify that the ISLOCKs got pruned and conflicting txes were mined but never confirmed
+            for node in self.nodes:
+                rawtx = node.getrawtransaction(rawtx1_txid, True)
+                assert not rawtx['chainlock']
+                assert not rawtx['instantlock']
+                assert not rawtx['instantlock_internal']
+                assert_equal(rawtx['confirmations'], 0)
+                assert_equal(rawtx['height'], -1)
+                rawtx = node.getrawtransaction(rawtx4_txid, True)
+                assert not rawtx['chainlock']
+                assert not rawtx['instantlock']
+                assert not rawtx['instantlock_internal']
+                assert_equal(rawtx['confirmations'], 0)
+                assert_equal(rawtx['height'], -1)
+                rawtx = node.getrawtransaction(rawtx2_txid, True)
+                assert rawtx['chainlock']
+                assert rawtx['instantlock']
+                assert not rawtx['instantlock_internal']
+        else:
+            # Lets verify that the ISLOCKs got pruned
+            for node in self.nodes:
+                assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx1_txid, True)
+                assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx4_txid, True)
+                rawtx = node.getrawtransaction(rawtx2_txid, True)
+                assert rawtx['chainlock']
+                assert rawtx['instantlock']
+                assert not rawtx['instantlock_internal']
 
     def test_islock_overrides_nonchainlock(self):
         # create two raw TXs, they will conflict with each other
