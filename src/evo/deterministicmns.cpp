@@ -659,11 +659,15 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
         }
     });
     // decrease PoSe ban score
-    const auto& llmq = fRegTest? Params().GetConsensus().llmqs.at(Consensus::LLMQ_TEST): Params().GetConsensus().llmqs.at(Consensus::LLMQ_50_60);
-    const int minsToCheckAllMN = llmq.dkgInterval * (newList.GetAllMNsCount() / llmq.size);
-    // we should allow penalties to go down by 33 over the course of minsToCheckAllMN
-    const int modHeightDecrease = minsToCheckAllMN / 33;
-    if(modHeightDecrease == 0 || (nHeight % modHeightDecrease) == 0) {
+    if(!fRegTest) {
+        const auto& llmq = Params().GetConsensus().llmqs.at(Consensus::LLMQ_50_60);
+        const int minsToCheckAllMN = llmq.dkgInterval * (newList.GetAllMNsCount() / llmq.size);
+        // we should allow penalties to go down by 33 over the course of minsToCheckAllMN
+        const int modHeightDecrease = minsToCheckAllMN / 33;
+        if(modHeightDecrease == 0 || (nHeight % modHeightDecrease) == 0) {
+            DecreasePoSePenalties(newList);
+        }
+    } else {
         DecreasePoSePenalties(newList);
     }
 
