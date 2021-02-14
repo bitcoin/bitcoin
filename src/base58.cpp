@@ -54,20 +54,30 @@ static const int8_t mapBase58[256] = {
     // Process the characters.
     static_assert(sizeof(mapBase58)/sizeof(mapBase58[0]) == 256, "mapBase58.size() should be 256"); // guarantee not out of range
     while (*psz && !IsSpace(*psz)) {
-        // Decode base58 character
-        int carry = mapBase58[(uint8_t)*psz];
-        if (carry == -1)  // Invalid b58 character
-            return false;
+        // Decode at most 9 base58 characters at once without risking an overflow. The largest value carry
+        // can possibly have is 58^9-1 + 58^9 * 0xFF = 0x1A63'6A90'B079'FFFF, which fits into a 64bit number.
+        uint64_t carry = 0;
+        int numBytes = 0;
+        uint64_t multiplier = 1;
+        while (*psz && !IsSpace(*psz) && numBytes < 9) {
+            auto ch = mapBase58[(uint8_t)*psz];
+            if (ch == -1)  // Invalid b58 character
+                return false;
+            carry = carry * 58 + ch;
+            multiplier *= 58;
+            ++numBytes;
+            psz++;
+        }
+
         int i = 0;
         for (std::vector<unsigned char>::reverse_iterator it = b256.rbegin(); (carry != 0 || i < length) && (it != b256.rend()); ++it, ++i) {
-            carry += 58 * (*it);
+            carry += multiplier * (*it);
             *it = carry % 256;
             carry /= 256;
         }
         assert(carry == 0);
         length = i;
         if (length + zeroes > max_ret_len) return false;
-        psz++;
     }
     // Skip trailing spaces.
     while (IsSpace(*psz))
@@ -98,18 +108,28 @@ std::string EncodeBase58(Span<const unsigned char> input)
     std::vector<unsigned char> b58(size);
     // Process the bytes.
     while (input.size() > 0) {
-        int carry = input[0];
+        // Encode at most 7 input bytes at once without risking an overflow. The largest value carry
+        // can possibly have is by having only 0xFF as input bytes, and 0x39 in b58:
+        // 256^7-1 + 256^7 * 0x39 = 0x39FF'FFFF'FFFF'FFFF, which still fits into the 64bit.
+        uint64_t carry = 0;
+        int numBytes = 0;
+        uint64_t multiplier = 1;
+        while (input.size() > 0 && numBytes < 7) {
+            carry = carry * 256 + input[0];
+            multiplier *= 256;
+            ++numBytes;
+            input = input.subspan(1);
+        }
         int i = 0;
-        // Apply "b58 = b58 * 256 + ch".
+        // Apply "b58 = b58 * 256^numBytes + carry".
         for (std::vector<unsigned char>::reverse_iterator it = b58.rbegin(); (carry != 0 || i < length) && (it != b58.rend()); it++, i++) {
-            carry += 256 * (*it);
+            carry += multiplier * (*it);
             *it = carry % 58;
             carry /= 58;
         }
 
         assert(carry == 0);
         length = i;
-        input = input.subspan(1);
     }
     // Skip leading zeroes in base58 result.
     std::vector<unsigned char>::iterator it = b58.begin() + (size - length);
