@@ -316,7 +316,7 @@ void CQuorum::StartQuorumDataRecoveryThread(CConnman &connman, const CQuorumCPtr
                 }
             });
             _this->interruptQuorumDataReceived.reset();
-            _this->interruptQuorumDataReceived.sleep_for(std::chrono::seconds(nRequestTimeout));
+            _this->interruptQuorumDataReceived.sleep_for(std::chrono::seconds(1));
         }
         _this->fQuorumDataRecoveryThreadRunning = false;
         printLog("Done");
