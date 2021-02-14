@@ -26,7 +26,7 @@ bool TransactionRecord::showTransaction()
 /*
  * Decompose CWallet transaction to model transaction records.
  */
-QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interfaces::WalletTx& wtx)
+QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wallet& wallet, const interfaces::WalletTx& wtx)
 {
     QList<TransactionRecord> parts;
     int64_t nTime = wtx.time;
@@ -59,6 +59,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                     sub.type = TransactionRecord::RecvWithAddress;
                     sub.strAddress = EncodeDestination(wtx.txout_address[i]);
                     sub.txDest = wtx.txout_address[i];
+                    sub.updateLabel(wallet);
                 }
                 else
                 {
@@ -118,6 +119,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                     // Sent to Dash Address
                     sub.strAddress = EncodeDestination(address);
                     sub.txDest = address;
+                    sub.updateLabel(wallet);
                 }
                 else
                 {
@@ -210,6 +212,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const interface
                     sub.type = TransactionRecord::SendToAddress;
                     sub.strAddress = EncodeDestination(wtx.txout_address[nOut]);
                     sub.txDest = wtx.txout_address[nOut];
+                    sub.updateLabel(wallet);
                 }
                 else
                 {
@@ -328,6 +331,18 @@ bool TransactionRecord::statusUpdateNeeded(int numBlocks, int chainLockHeight) c
 {
     return status.cur_num_blocks != numBlocks || status.needsUpdate
         || (!status.lockedByChainLocks && status.cachedChainLockHeight != chainLockHeight);
+}
+
+void TransactionRecord::updateLabel(interfaces::Wallet& wallet)
+{
+    if (IsValidDestination(txDest)) {
+        std::string name;
+        if (wallet.getAddress(txDest, &name)) {
+            label = QString::fromStdString(name);
+        } else {
+            label = "";
+        }
+    }
 }
 
 QString TransactionRecord::getTxHash() const
