@@ -2022,7 +2022,7 @@ void PeerManagerImpl::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
         const uint256 orphanHash = *orphan_work_set.begin();
         orphan_work_set.erase(orphan_work_set.begin());
 
-        const TxOrphanage::COrphanTx* orphantx = m_orphanage.GetTx(orphanHash);
+        const TxOrphanage::OrphanTx* orphantx = m_orphanage.GetTx(orphanHash);
         if (orphantx == nullptr) continue;
 
         const CTransactionRef porphanTx = orphantx->tx;
