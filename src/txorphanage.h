@@ -23,7 +23,7 @@ struct COrphanTx {
     size_t list_pos;
 };
 
-int EraseOrphanTx(uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+int EraseOrphanTx(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
 void EraseOrphansFor(NodeId peer);
 unsigned int LimitOrphanTxSize(unsigned int nMaxOrphans);
 
