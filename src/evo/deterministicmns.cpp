@@ -658,18 +658,8 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
             newList.UpdateMN(dmn->proTxHash, newState);
         }
     });
-    // decrease PoSe ban score
-    if(!fRegTest) {
-        const auto& llmq = Params().GetConsensus().llmqs.at(Consensus::LLMQ_50_60);
-        const int minsToCheckAllMN = llmq.dkgInterval * (newList.GetAllMNsCount() / llmq.size);
-        // we should allow penalties to go down by 33 over the course of minsToCheckAllMN
-        const int modHeightDecrease = minsToCheckAllMN / 33;
-        if(modHeightDecrease == 0 || (nHeight % modHeightDecrease) == 0) {
-            DecreasePoSePenalties(newList);
-        }
-    } else {
-        DecreasePoSePenalties(newList);
-    }
+
+    DecreasePoSePenalties(newList);
 
     // coinbase can be quorum commitments
     // qcIn passed in by createnewblock, but connectblock will pass in null, use gettxpayload there if version is for mn quorum
@@ -900,7 +890,7 @@ void CDeterministicMNManager::HandleQuorumCommitment(const llmq::CFinalCommitmen
         if (!qc.validMembers[i]) {
             // punish MN for failed DKG participation
             // The idea is to immediately ban a MN when it fails 2 DKG sessions with only a few blocks in-between
-            // If there were enough blocks between failures, the MN has a chance to recover as he reduces his penalty over time
+            // If there were enough blocks between failures, the MN has a chance to recover as he reduces his penalty by 1 every block
             // If it however fails 3 times in the timespan of a single payment cycle, it should definitely get banned
             mnList.PoSePunish(members[i]->proTxHash, mnList.CalcPenalty(66), debugLogs);
         }
