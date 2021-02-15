@@ -2067,7 +2067,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                 case(MSG_SPORK): {
                     CSporkMessage spork;
                     if(sporkManager.GetSporkByHash(inv.hash, spork)) {
-                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SPORK, spork));
+                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SPORK, spork));
                         push = true;
                     }
                     break;
@@ -2086,7 +2086,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                     }
                     LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: topush = %d, inv = %s\n", topush, inv.ToString());
                     if(topush) {
-                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
+                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
                         push = true;
                     }
                     break;
@@ -2104,7 +2104,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                     }
                     if(topush) {
                         LogPrint(BCLog::NET, "ProcessGetData -- pushing: inv = %s\n", inv.ToString());
-                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
+                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
                         push = true;
                     }
                     break;
@@ -2112,7 +2112,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                 case(MSG_QUORUM_FINAL_COMMITMENT): {
                     llmq::CFinalCommitment o;
                     if (llmq::quorumBlockProcessor->GetMinableCommitmentByHash(inv.hash, o)) {
-                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QFCOMMITMENT, o));
+                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QFCOMMITMENT, o));
                         push = true;
                     }
                     break;
@@ -2121,7 +2121,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                 case(MSG_QUORUM_CONTRIB): {
                     llmq::CDKGContribution o;
                     if (llmq::quorumDKGSessionManager->GetContribution(inv.hash, o)) {
-                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCONTRIB, o));
+                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCONTRIB, o));
                         push = true;
                     }
                     break;
@@ -2129,7 +2129,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                 case(MSG_QUORUM_COMPLAINT): {
                     llmq::CDKGComplaint o;
                     if (llmq::quorumDKGSessionManager->GetComplaint(inv.hash, o)) {
-                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCOMPLAINT, o));
+                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QCOMPLAINT, o));
                         push = true;
                     }
                     break;
@@ -2137,7 +2137,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                 case(MSG_QUORUM_JUSTIFICATION): {
                     llmq::CDKGJustification o;
                     if (llmq::quorumDKGSessionManager->GetJustification(inv.hash, o)) {
-                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QJUSTIFICATION, o));
+                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QJUSTIFICATION, o));
                         push = true;
                     }
                     break;
@@ -2145,7 +2145,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                 case(MSG_QUORUM_PREMATURE_COMMITMENT): {
                     llmq::CDKGPrematureCommitment o;
                     if (llmq::quorumDKGSessionManager->GetPrematureCommitment(inv.hash, o)) {
-                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QPCOMMITMENT, o));
+                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QPCOMMITMENT, o));
                         push = true;
                     }
                     break;
@@ -2153,7 +2153,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                 case(MSG_QUORUM_RECOVERED_SIG): {
                     llmq::CRecoveredSig o;
                     if (llmq::quorumSigningManager->GetRecoveredSigForGetData(inv.hash, o)) {
-                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSIGREC, o));
+                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QSIGREC, o));
                         push = true;
                     }
                     break;
@@ -2161,7 +2161,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                 case(MSG_CLSIG): {
                     llmq::CChainLockSig o;
                     if (llmq::chainLocksHandler->GetChainLockByHash(inv.hash, o)) {
-                        connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::CLSIG, o));
+                        m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::CLSIG, o));
                         push = true;
                     }
                     break;
