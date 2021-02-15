@@ -17,20 +17,28 @@
 
 namespace VeriBlock {
 
-bool AltChainParamsVBTC::checkBlockHeader(const std::vector<uint8_t>& bytes, const std::vector<uint8_t>& root) const noexcept
+bool AltChainParamsVBTC::checkBlockHeader(const std::vector<uint8_t>& bytes, const std::vector<uint8_t>& root, altintegration::ValidationState& state) const noexcept
 {
     const CChainParams& params = Params();
 
     try {
         // this throws
         auto header = VeriBlock::headerFromBytes(bytes);
-        return
-            /* top level merkle `root` calculated by library is same as in endorsed header */
-            header.hashMerkleRoot.asVector() == root &&
-            /* and POW of endorsed header is valid */
-            CheckProofOfWork(header.GetHash(), header.nBits, params.GetConsensus());
+
+        /* top level merkle `root` calculated by library is same as in endorsed header */
+        auto actual = header.hashMerkleRoot.asVector();
+        if(actual != root) {
+            return state.Invalid("bad-merkle-root", strprintf("Expected %s, got %s", HexStr(root), HexStr(actual)));
+        }
+
+        /* and POW of endorsed header is valid */
+        if(!CheckProofOfWork(header.GetHash(), header.nBits, params.GetConsensus())) {
+            return state.Invalid("bad-pow", "Bad proof of work");
+        }
+
+        return true;
     } catch (...) {
-        return false;
+        return state.Invalid("bad-header", "Can not parse block header");
     }
 }
 
