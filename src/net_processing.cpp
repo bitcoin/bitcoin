@@ -353,7 +353,7 @@ class PeerManagerImpl final : public PeerManager
 public:
     PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
                     CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                    bool ignore_incoming_txs);
+                    const ArgsManager& args);
 
     /** Overridden from CValidationInterface. */
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
@@ -633,8 +633,70 @@ private:
     // Fee calculator helpers for SendMessages()
     FeeFilterRounder m_filter_rounder GUARDED_BY(cs_main) {CFeeRate{DEFAULT_MIN_RELAY_TX_FEE}};
     const CAmount MAX_FILTER GUARDED_BY(cs_main) {m_filter_rounder.round(MAX_MONEY)};
+
+    // Cache command-line/config-file parameters
+    const size_t m_max_extra_txn;
+    const unsigned int nMaxOrphanTx;
+    const bool m_capture_messages;
+    const bool m_enable_feefilter;
+    const uint64_t m_maxmempool_bytes;
 };
 } // namespace
+
+std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
+                                               CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool,
+                                               const ArgsManager& args)
+{
+    return std::make_unique<PeerManagerImpl>(chainparams, connman, banman, scheduler, chainman, pool, args);
+}
+
+template<typename T, typename F>
+static inline T bounds_check_cast(F v)
+{
+    return static_cast<T>(std::clamp(v, static_cast<F>(std::numeric_limits<F>::min()), static_cast<F>(std::numeric_limits<F>::max())));
+}
+
+PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
+                                 CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool,
+                                 const ArgsManager& args)
+    : m_chainparams(chainparams),
+      m_connman(connman),
+      m_banman(banman),
+      m_chainman(chainman),
+      m_mempool(pool),
+      m_stale_tip_check_time(0),
+      m_ignore_incoming_txs{args.GetBoolArg("-blocksonly", DEFAULT_BLOCKSONLY)},
+      m_max_extra_txn{bounds_check_cast<unsigned int>(args.GetArg("-blockreconstructionextratxn", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN))},
+      nMaxOrphanTx{bounds_check_cast<unsigned int>(args.GetArg("-maxorphantx", DEFAULT_MAX_ORPHAN_TRANSACTIONS))},
+      m_capture_messages{args.GetBoolArg("-capturemessages", false)},
+      m_enable_feefilter{args.GetBoolArg("-feefilter", DEFAULT_FEEFILTER)},
+      m_maxmempool_bytes{bounds_check_cast<uint64_t>(args.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000)}
+{
+    // Initialize global variables that cannot be constructed at startup.
+    recentRejects.reset(new CRollingBloomFilter(120000, 0.000001));
+
+    // Blocks don't typically have more than 4000 transactions, so this should
+    // be at least six blocks (~1 hr) worth of transactions that we can store,
+    // inserting both a txid and wtxid for every observed transaction.
+    // If the number of transactions appearing in a block goes up, or if we are
+    // seeing getdata requests more than an hour after initial announcement, we
+    // can increase this number.
+    // The false positive rate of 1/1M should come out to less than 1
+    // transaction per day that would be inadvertently ignored (which is the
+    // same probability that we have in the reject filter).
+    m_recent_confirmed_transactions.reset(new CRollingBloomFilter(48000, 0.000001));
+
+    // Stale tip checking and peer eviction are on two different timers, but we
+    // don't want them to get out of sync due to drift in the scheduler, so we
+    // combine them in one function and schedule at the quicker (peer-eviction)
+    // timer.
+    static_assert(EXTRA_PEER_CHECK_INTERVAL < STALE_CHECK_INTERVAL, "peer eviction timer should be less than stale tip check timer");
+    scheduler.scheduleEvery([this] { this->CheckForStaleTipAndEvictPeers(); }, std::chrono::seconds{EXTRA_PEER_CHECK_INTERVAL});
+
+    // schedule next run for 10-15 minutes in the future
+    const std::chrono::milliseconds delta = std::chrono::minutes{10} + GetRandMillis(std::chrono::minutes{5});
+    scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
+}
 
 namespace {
 CNodeState *PeerManagerImpl::State(NodeId pnode) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
@@ -1113,7 +1175,7 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats)
 
 void PeerManagerImpl::AddToCompactExtraTransactions(const CTransactionRef& tx)
 {
-    size_t max_extra_txn = gArgs.GetArg("-blockreconstructionextratxn", DEFAULT_BLOCK_RECONSTRUCTION_EXTRA_TXN);
+    size_t max_extra_txn = m_max_extra_txn;
     if (max_extra_txn <= 0)
         return;
     if (!vExtraTxnForCompact.size())
@@ -1234,50 +1296,6 @@ static bool BlockRequestAllowed(const CBlockIndex* pindex, const Consensus::Para
     return pindex->IsValid(BLOCK_VALID_SCRIPTS) && (pindexBestHeader != nullptr) &&
         (pindexBestHeader->GetBlockTime() - pindex->GetBlockTime() < STALE_RELAY_AGE_LIMIT) &&
         (GetBlockProofEquivalentTime(*pindexBestHeader, *pindex, *pindexBestHeader, consensusParams) < STALE_RELAY_AGE_LIMIT);
-}
-
-std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
-                                               CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                                               bool ignore_incoming_txs)
-{
-    return std::make_unique<PeerManagerImpl>(chainparams, connman, banman, scheduler, chainman, pool, ignore_incoming_txs);
-}
-
-PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
-                                 CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                                 bool ignore_incoming_txs)
-    : m_chainparams(chainparams),
-      m_connman(connman),
-      m_banman(banman),
-      m_chainman(chainman),
-      m_mempool(pool),
-      m_stale_tip_check_time(0),
-      m_ignore_incoming_txs(ignore_incoming_txs)
-{
-    // Initialize global variables that cannot be constructed at startup.
-    recentRejects.reset(new CRollingBloomFilter(120000, 0.000001));
-
-    // Blocks don't typically have more than 4000 transactions, so this should
-    // be at least six blocks (~1 hr) worth of transactions that we can store,
-    // inserting both a txid and wtxid for every observed transaction.
-    // If the number of transactions appearing in a block goes up, or if we are
-    // seeing getdata requests more than an hour after initial announcement, we
-    // can increase this number.
-    // The false positive rate of 1/1M should come out to less than 1
-    // transaction per day that would be inadvertently ignored (which is the
-    // same probability that we have in the reject filter).
-    m_recent_confirmed_transactions.reset(new CRollingBloomFilter(48000, 0.000001));
-
-    // Stale tip checking and peer eviction are on two different timers, but we
-    // don't want them to get out of sync due to drift in the scheduler, so we
-    // combine them in one function and schedule at the quicker (peer-eviction)
-    // timer.
-    static_assert(EXTRA_PEER_CHECK_INTERVAL < STALE_CHECK_INTERVAL, "peer eviction timer should be less than stale tip check timer");
-    scheduler.scheduleEvery([this] { this->CheckForStaleTipAndEvictPeers(); }, std::chrono::seconds{EXTRA_PEER_CHECK_INTERVAL});
-
-    // schedule next run for 10-15 minutes in the future
-    const std::chrono::milliseconds delta = std::chrono::minutes{10} + GetRandMillis(std::chrono::minutes{5});
-    scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
 }
 
 /**
@@ -3146,7 +3164,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 m_txrequest.ForgetTxHash(tx.GetWitnessHash());
 
                 // DoS prevention: do not allow m_orphanage to grow unbounded (see CVE-2012-3789)
-                unsigned int nMaxOrphanTx = (unsigned int)std::max((int64_t)0, gArgs.GetArg("-maxorphantx", DEFAULT_MAX_ORPHAN_TRANSACTIONS));
                 unsigned int nEvicted = m_orphanage.LimitOrphans(nMaxOrphanTx);
                 if (nEvicted > 0) {
                     LogPrint(BCLog::MEMPOOL, "orphanage overflow, removed %u tx\n", nEvicted);
@@ -3931,7 +3948,7 @@ bool PeerManagerImpl::ProcessMessages(CNode& node, std::atomic<bool>& interruptM
     }
     CNetMessage& msg(msgs.front());
 
-    if (gArgs.GetBoolArg("-capturemessages", false)) {
+    if (m_capture_messages) {
         CaptureMessage(node.addr, msg.m_command, MakeUCharSpan(msg.m_recv), /* incoming */ true);
     }
 
@@ -4725,10 +4742,10 @@ bool PeerManagerImpl::SendMessages(CNode& node)
         //
         // Message: feefilter
         //
-        if (node.m_tx_relay != nullptr && node.GetCommonVersion() >= FEEFILTER_VERSION && gArgs.GetBoolArg("-feefilter", DEFAULT_FEEFILTER) &&
+        if (node.m_tx_relay != nullptr && node.GetCommonVersion() >= FEEFILTER_VERSION && m_enable_feefilter &&
             !node.HasPermission(PF_FORCERELAY) // peers with the forcerelay permission should not filter txs to us
         ) {
-            CAmount currentFilter = m_mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
+            CAmount currentFilter = m_mempool.GetMinFee(m_maxmempool_bytes).GetFeePerK();
             AssertLockHeld(cs_main);
             if (m_chainman.ActiveChainstate().IsInitialBlockDownload()) {
                 // Received tx-inv messages are discarded when the active

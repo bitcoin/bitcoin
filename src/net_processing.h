@@ -10,6 +10,7 @@
 #include <sync.h>
 #include <validationinterface.h>
 
+class ArgsManager;
 class CChainParams;
 class CTxMemPool;
 class ChainstateManager;
@@ -38,7 +39,7 @@ class PeerManager : public CValidationInterface, public NetEventsInterface
 public:
     static std::unique_ptr<PeerManager> make(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
                                              CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                                             bool ignore_incoming_txs);
+                                             const ArgsManager& args);
     virtual ~PeerManager() { }
 
     /** Relay transaction to every node */
