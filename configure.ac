@@ -338,6 +338,11 @@ AC_ARG_ENABLE([werror],
     [enable_werror=$enableval],
     [enable_werror=no])
 
+AC_ARG_WITH([boost-process],
+    [AS_HELP_STRING([--with-boost-process],[Opt in to using Boost Process (default is no)])],
+    [boost_process=$withval],
+    [boost_process=no])
+
 AC_LANG_PUSH([C++])
 
 dnl Check for a flag to turn compiler warnings into errors. This is helpful for checks which may
@@ -1388,8 +1393,15 @@ fi
 AX_BOOST_SYSTEM
 AX_BOOST_FILESYSTEM
 
-dnl Opt-in to boost-process
-AS_IF([ test x$with_boost_process != x ], [ AX_BOOST_PROCESS ], [ ax_cv_boost_process=no ] )
+dnl Opt-in to Boost Process
+if test "x$boost_process" != xno; then
+AC_MSG_CHECKING(for Boost Process)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <boost/process.hpp>]],
+ [[ boost::process::child* child = new boost::process::child; delete child; ]])],
+ [ AC_MSG_RESULT(yes); AC_DEFINE([HAVE_BOOST_PROCESS],,[define if Boost::Process is available])],
+ [ AC_MSG_ERROR([Boost::Process is not available!])]
+)
+fi
 
 if test x$suppress_external_warnings != xno; then
     BOOST_CPPFLAGS=SUPPRESS_WARNINGS($BOOST_CPPFLAGS)
@@ -1876,7 +1888,7 @@ esac
 
 echo
 echo "Options used to compile and link:"
-echo "  boost process = $ax_cv_boost_process"
+echo "  boost process = $with_boost_process"
 echo "  multiprocess  = $build_multiprocess"
 echo "  with libs     = $build_bitcoin_libs"
 echo "  with wallet   = $enable_wallet"
