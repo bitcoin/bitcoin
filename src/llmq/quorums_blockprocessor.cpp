@@ -241,7 +241,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     std::vector<CDeterministicMNCPtr> members;
     CLLMQUtils::GetAllQuorumMembers(params.type, quorumIndex, members);
 
-    if (!qc.Verify(members, true)) {
+    if (!qc.Verify(members, true) && nHeight >= Params().GetConsensus().DIP0003EnforcementHeight) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-invalid");
     }
 
