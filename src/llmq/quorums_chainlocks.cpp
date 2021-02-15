@@ -90,7 +90,7 @@ void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
     }
 }
 
-void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLockSig& clsig, const uint256&hash )
+void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CChainLockSig& clsig, const uint256&hash )
 {
     bool enforced;
     if (from != -1) {
@@ -116,9 +116,8 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
         return;
     }
 
-    uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, clsig.nHeight));
-    uint256 msgHash = clsig.blockHash;
-    if (!quorumSigningManager->VerifyRecoveredSig(Params().GetConsensus().llmqTypeChainLocks, clsig.nHeight, requestId, msgHash, clsig.sig)) {
+    const uint256 requestId = ::SerializeHash(std::make_pair(CLSIG_REQUESTID_PREFIX, clsig.nHeight));
+    if (!quorumSigningManager->VerifyRecoveredSig(Params().GetConsensus().llmqTypeChainLocks, clsig.nHeight, requestId, clsig.blockHash, clsig.sig)) {
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
         if (from != -1) {
             LOCK(cs_main);
@@ -127,29 +126,8 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
         }
         return;
     }
-    bool clsSigInternalConflict = false;
-    {
-        LOCK(cs);
-        if (InternalHasConflictingChainLock(clsig.nHeight, clsig.blockHash)) {
-            // This should not happen. If it happens, it means that a malicious entity controls a large part of the MN
-            // network. In this case, we don't allow him to reorg older chainlocks.
-            LogPrintf("CChainLocksHandler::%s -- new CLSIG (%s) tries to reorg previous CLSIG (%s), peer=%d\n",
-                      __func__, clsig.ToString(), bestChainLock.ToString(), from);
-            clsSigInternalConflict = true;
-        } else {
-            bestChainLockHash = hash;
-            bestChainLock = clsig;
-        }
-    }
-    if(clsSigInternalConflict) {
-        LOCK(cs_main);
-        peerman.ForgetTxHash(from, hash);
-        return;
-    }
     // don't hold lock while relaying which locks nodes/mempool
-    CInv inv(MSG_CLSIG, hash);
     const CBlockIndex* pindex;
-    connman.RelayOtherInv(inv);
     {
         LOCK(cs_main);
         pindex = g_chainman.m_blockman.LookupBlockIndex(clsig.blockHash);
@@ -171,6 +149,7 @@ void CChainLocksHandler::ProcessNewChainLock(NodeId from, const llmq::CChainLock
         LOCK(cs);
         bestChainLockBlockIndex = pindex;
     }
+    connman.RelayOtherInv(CInv(MSG_CLSIG, hash));
     CheckActiveState();
     EnforceBestChainLock(bestChainLockBlockIndex, bestChainLock, enforced);
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- processed new CLSIG (%s), peer=%d\n",
