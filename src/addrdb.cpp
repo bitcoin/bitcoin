@@ -167,7 +167,10 @@ void DumpAnchors(const fs::path& anchors_db_path, const std::vector<CAddress>& a
 std::vector<CAddress> ReadAnchors(const fs::path& anchors_db_path)
 {
     std::vector<CAddress> anchors;
-    if (DeserializeFileDB(anchors_db_path, anchors)) {
+    if (!fs::exists(anchors_db_path)) {
+        LogPrintf("Could not find anchors file %s\n", anchors_db_path);
+        anchors.clear();
+    } else if (DeserializeFileDB(anchors_db_path, anchors)) {
         LogPrintf("Loaded %i addresses from %s\n", anchors.size(), anchors_db_path.filename());
     } else {
         anchors.clear();
