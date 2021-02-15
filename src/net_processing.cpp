@@ -4023,10 +4023,14 @@ bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode)
         return false;
     }
 
-    if (pnode.addr.IsLocal()) {
-        // We disconnect local peers for bad behavior but don't discourage (since that would discourage
-        // all peers on the same local address)
-        LogPrintf("Warning: disconnecting but not discouraging local peer %d!\n", peer_id);
+    if (pnode.addr.IsLocal() || pnode.m_inbound_onion) {
+        // We disconnect local or onion peers for bad behavior but don't discourage
+        // (since that would discourage all peers on the same address)
+        if (pnode.m_inbound_onion) {
+            LogPrint(BCLog::NET, "Warning: disconnecting but not discouraging onion peer %d!\n", peer_id);
+        } else {
+            LogPrintf("Warning: disconnecting but not discouraging local peer %d!\n", peer_id);
+        }
         pnode.fDisconnect = true;
         return true;
     }
