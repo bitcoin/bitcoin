@@ -36,14 +36,14 @@ public:
     void EraseForBlock(const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(!g_cs_orphans);
 
     /** Limit the orphanage to the given maximum */
-    unsigned int LimitOrphans(unsigned int nMaxOrphans) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+    unsigned int LimitOrphans(unsigned int max_orphans) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
 
     /** Add any orphans that list a particular tx as a parent into a peer's work set
      * (ie orphans that may have found their final missing parent, and so should be reconsidered for the mempool) */
     void AddChildrenToWorkSet(const CTransaction& tx, std::set<uint256>& orphan_work_set) const EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
 
 protected:
-    struct COrphanTx {
+    struct OrphanTx {
         CTransactionRef tx;
         NodeId fromPeer;
         int64_t nTimeExpire;
@@ -52,9 +52,9 @@ protected:
 
     /** Map from txid to orphan transaction record. Limited by
      *  -maxorphantx/DEFAULT_MAX_ORPHAN_TRANSACTIONS */
-    std::map<uint256, COrphanTx> mapOrphanTransactions GUARDED_BY(g_cs_orphans);
+    std::map<uint256, OrphanTx> m_orphans GUARDED_BY(g_cs_orphans);
 
-    using OrphanMap = decltype(mapOrphanTransactions);
+    using OrphanMap = decltype(m_orphans);
 
     struct IteratorComparator
     {
@@ -65,16 +65,16 @@ protected:
         }
     };
 
-    /** Index from the parents' COutPoint into the mapOrphanTransactions. Used
-     *  to remove orphan transactions from the mapOrphanTransactions */
-    std::map<COutPoint, std::set<OrphanMap::iterator, IteratorComparator>> mapOrphanTransactionsByPrev GUARDED_BY(g_cs_orphans);
+    /** Index from the parents' COutPoint into the m_orphans. Used
+     *  to remove orphan transactions from the m_orphans */
+    std::map<COutPoint, std::set<OrphanMap::iterator, IteratorComparator>> m_outpoint_to_orphan_it GUARDED_BY(g_cs_orphans);
 
     /** Orphan transactions in vector for quick random eviction */
-    std::vector<OrphanMap::iterator> g_orphan_list GUARDED_BY(g_cs_orphans);
+    std::vector<OrphanMap::iterator> m_orphan_list GUARDED_BY(g_cs_orphans);
 
-    /** Index from wtxid into the mapOrphanTransactions to lookup orphan
+    /** Index from wtxid into the m_orphans to lookup orphan
      *  transactions using their witness ids. */
-    std::map<uint256, OrphanMap::iterator> g_orphans_by_wtxid GUARDED_BY(g_cs_orphans);
+    std::map<uint256, OrphanMap::iterator> m_wtxid_to_orphan_it GUARDED_BY(g_cs_orphans);
 };
 
 #endif // BITCOIN_TXORPHANAGE_H

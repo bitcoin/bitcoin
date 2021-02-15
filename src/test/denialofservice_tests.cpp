@@ -289,15 +289,15 @@ class TxOrphanageTest : public TxOrphanage
 public:
     inline size_t CountOrphans() const EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
     {
-        return mapOrphanTransactions.size();
+        return m_orphans.size();
     }
 
     CTransactionRef RandomOrphan() EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans)
     {
-        std::map<uint256, COrphanTx>::iterator it;
-        it = mapOrphanTransactions.lower_bound(InsecureRand256());
-        if (it == mapOrphanTransactions.end())
-            it = mapOrphanTransactions.begin();
+        std::map<uint256, OrphanTx>::iterator it;
+        it = m_orphans.lower_bound(InsecureRand256());
+        if (it == m_orphans.end())
+            it = m_orphans.begin();
         return it->second.tx;
     }
 };
