@@ -104,6 +104,9 @@ class NetTest(BitcoinTestFramework):
         assert_equal(peer_info[1][0]['connection_type'], 'manual')
         assert_equal(peer_info[1][1]['connection_type'], 'inbound')
 
+        # Check dynamically generated networks list in getpeerinfo help output.
+        assert "(ipv4, ipv6, onion, not_publicly_routable)" in self.nodes[0].help("getpeerinfo")
+
     def test_getnettotals(self):
         self.log.info("Test getnettotals")
         # Test getnettotals and getpeerinfo by doing a ping. The bytes
@@ -151,6 +154,9 @@ class NetTest(BitcoinTestFramework):
         network_info = [node.getnetworkinfo() for node in self.nodes]
         for info in network_info:
             assert_net_servicesnames(int(info["localservices"], 0x10), info["localservicesnames"])
+
+        # Check dynamically generated networks list in getnetworkinfo help output.
+        assert "(ipv4, ipv6, onion)" in self.nodes[0].help("getnetworkinfo")
 
     def test_getaddednodeinfo(self):
         self.log.info("Test getaddednodeinfo")
