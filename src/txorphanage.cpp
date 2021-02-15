@@ -22,9 +22,9 @@ std::map<uint256, std::map<uint256, COrphanTx>::iterator> g_orphans_by_wtxid GUA
 
     std::vector<std::map<uint256, COrphanTx>::iterator> g_orphan_list GUARDED_BY(g_cs_orphans);
 
-int EraseOrphanTx(uint256 hash)
+int EraseOrphanTx(const uint256& txid)
 {
-    std::map<uint256, COrphanTx>::iterator it = mapOrphanTransactions.find(hash);
+    std::map<uint256, COrphanTx>::iterator it = mapOrphanTransactions.find(txid);
     if (it == mapOrphanTransactions.end())
         return 0;
     for (const CTxIn& txin : it->second.tx->vin)
