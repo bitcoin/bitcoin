@@ -192,14 +192,15 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
         id++, NODE_NETWORK, hSocket, addr,
         /* nKeyedNetGroupIn = */ 0,
         /* nLocalHostNonceIn = */ 0,
-        CAddress(), pszDest, ConnectionType::OUTBOUND_FULL_RELAY);
+        CAddress(), pszDest, ConnectionType::OUTBOUND_FULL_RELAY,
+        /* inbound_onion = */ false);
     BOOST_CHECK(pnode1->IsFullOutboundConn() == true);
     BOOST_CHECK(pnode1->IsManualConn() == false);
     BOOST_CHECK(pnode1->IsBlockOnlyConn() == false);
     BOOST_CHECK(pnode1->IsFeelerConn() == false);
     BOOST_CHECK(pnode1->IsAddrFetchConn() == false);
     BOOST_CHECK(pnode1->IsInboundConn() == false);
-    BOOST_CHECK(pnode1->IsInboundOnion() == false);
+    BOOST_CHECK(pnode1->m_inbound_onion == false);
     BOOST_CHECK_EQUAL(pnode1->ConnectedThroughNetwork(), Network::NET_IPV4);
 
     std::unique_ptr<CNode> pnode2 = MakeUnique<CNode>(
@@ -214,7 +215,7 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK(pnode2->IsFeelerConn() == false);
     BOOST_CHECK(pnode2->IsAddrFetchConn() == false);
     BOOST_CHECK(pnode2->IsInboundConn() == true);
-    BOOST_CHECK(pnode2->IsInboundOnion() == false);
+    BOOST_CHECK(pnode2->m_inbound_onion == false);
     BOOST_CHECK_EQUAL(pnode2->ConnectedThroughNetwork(), Network::NET_IPV4);
 
     std::unique_ptr<CNode> pnode3 = MakeUnique<CNode>(
@@ -229,7 +230,7 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK(pnode3->IsFeelerConn() == false);
     BOOST_CHECK(pnode3->IsAddrFetchConn() == false);
     BOOST_CHECK(pnode3->IsInboundConn() == false);
-    BOOST_CHECK(pnode3->IsInboundOnion() == false);
+    BOOST_CHECK(pnode3->m_inbound_onion == false);
     BOOST_CHECK_EQUAL(pnode3->ConnectedThroughNetwork(), Network::NET_IPV4);
 
     std::unique_ptr<CNode> pnode4 = MakeUnique<CNode>(
@@ -244,7 +245,7 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK(pnode4->IsFeelerConn() == false);
     BOOST_CHECK(pnode4->IsAddrFetchConn() == false);
     BOOST_CHECK(pnode4->IsInboundConn() == true);
-    BOOST_CHECK(pnode4->IsInboundOnion() == true);
+    BOOST_CHECK(pnode4->m_inbound_onion == true);
     BOOST_CHECK_EQUAL(pnode4->ConnectedThroughNetwork(), Network::NET_ONION);
 }
 
@@ -679,7 +680,7 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     in_addr ipv4AddrPeer;
     ipv4AddrPeer.s_addr = 0xa0b0c001;
     CAddress addr = CAddress(CService(ipv4AddrPeer, 7777), NODE_NETWORK);
-    std::unique_ptr<CNode> pnode = MakeUnique<CNode>(0, NODE_NETWORK, INVALID_SOCKET, addr, 0, 0, CAddress{}, std::string{}, ConnectionType::OUTBOUND_FULL_RELAY);
+    std::unique_ptr<CNode> pnode = MakeUnique<CNode>(0, NODE_NETWORK, INVALID_SOCKET, addr, /* nKeyedNetGroupIn */ 0, /* nLocalHostNonceIn */ 0, CAddress{}, /* pszDest */ std::string{}, ConnectionType::OUTBOUND_FULL_RELAY, /* inbound_onion */ false);
     pnode->fSuccessfullyConnected.store(true);
 
     // the peer claims to be reaching us via IPv6
