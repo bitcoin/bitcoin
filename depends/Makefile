@@ -2,7 +2,7 @@
 
 # Pattern rule to print variables, e.g. make print-top_srcdir
 print-%:
-	@echo $* = $($*)
+	@echo '$*' = '$($*)'
 
 # When invoking a sub-make, keep only the command line variable definitions
 # matching the pattern in the filter function.
@@ -112,19 +112,27 @@ include builders/$(build_os).mk
 include builders/default.mk
 include packages/packages.mk
 
+full_env=$(shell printenv)
+
 build_id_string:=$(BUILD_ID_SALT)
-build_id_string+=$(shell $(build_CC) --version 2>/dev/null)
-build_id_string+=$(shell $(build_AR) --version 2>/dev/null)
-build_id_string+=$(shell $(build_CXX) --version 2>/dev/null)
-build_id_string+=$(shell $(build_RANLIB) --version 2>/dev/null)
-build_id_string+=$(shell $(build_STRIP) --version 2>/dev/null)
+
+# GCC only prints COLLECT_LTO_WRAPPER when invoked with just "-v", but we want
+# the information from "-v -E -" as well, so just include both.
+#
+# '3>&1 1>&2 2>&3 > /dev/null' is supposed to swap stdin and stdout and silence
+# stdin, since we only want the stderr output
+build_id_string+=$(shell $(build_CC) -v < /dev/null 3>&1 1>&2 2>&3 > /dev/null) $(shell $(build_CC) -v -E - < /dev/null 3>&1 1>&2 2>&3 > /dev/null)
+build_id_string+=$(shell $(build_AR) --version 2>/dev/null) $(filter AR_%,$(full_env)) ZERO_AR_DATE=$(ZERO_AR_DATE)
+build_id_string+=$(shell $(build_CXX) -v < /dev/null 3>&1 1>&2 2>&3 > /dev/null) $(shell $(build_CXX) -v -E - < /dev/null 3>&1 1>&2 2>&3 > /dev/null)
+build_id_string+=$(shell $(build_RANLIB) --version 2>/dev/null) $(filter RANLIB_%,$(full_env))
+build_id_string+=$(shell $(build_STRIP) --version 2>/dev/null) $(filter STRIP_%,$(full_env))
 
 $(host_arch)_$(host_os)_id_string:=$(HOST_ID_SALT)
-$(host_arch)_$(host_os)_id_string+=$(shell $(host_CC) --version 2>/dev/null)
-$(host_arch)_$(host_os)_id_string+=$(shell $(host_AR) --version 2>/dev/null)
-$(host_arch)_$(host_os)_id_string+=$(shell $(host_CXX) --version 2>/dev/null)
-$(host_arch)_$(host_os)_id_string+=$(shell $(host_RANLIB) --version 2>/dev/null)
-$(host_arch)_$(host_os)_id_string+=$(shell $(host_STRIP) --version 2>/dev/null)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_CC) -v < /dev/null 3>&1 1>&2 2>&3 > /dev/null) $(shell $(host_CC) -v -E - < /dev/null 3>&1 1>&2 2>&3 > /dev/null)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_AR) --version 2>/dev/null) $(filter AR_%,$(full_env)) ZERO_AR_DATE=$(ZERO_AR_DATE)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_CXX) -v < /dev/null 3>&1 1>&2 2>&3 > /dev/null) $(shell $(host_CXX) -v -E - < /dev/null 3>&1 1>&2 2>&3 > /dev/null)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_RANLIB) --version 2>/dev/null) $(filter RANLIB_%,$(full_env))
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_STRIP) --version 2>/dev/null) $(filter STRIP_%,$(full_env))
 
 ifneq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
 # Make sure that cache is invalidated when switching between system and
@@ -132,6 +140,9 @@ ifneq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
 build_id_string+=system_clang
 $(host_arch)_$(host_os)_id_string+=system_clang
 endif
+
+build_id_string+=GUIX_ENVIRONMENT=$(GUIX_ENVIRONMENT)
+$(host_arch)_$(host_os)_id_string+=GUIX_ENVIRONMENT=$(GUIX_ENVIRONMENT)
 
 qrencode_packages_$(NO_QR) = $(qrencode_packages)
 
