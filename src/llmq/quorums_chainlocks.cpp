@@ -147,6 +147,8 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
     }
     {
         LOCK(cs);
+        bestChainLockHash = hash;
+        bestChainLock = clsig;
         bestChainLockBlockIndex = pindex;
     }
     connman.RelayOtherInv(CInv(MSG_CLSIG, hash));
