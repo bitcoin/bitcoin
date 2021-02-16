@@ -167,12 +167,12 @@ bool CQuorumBlockProcessor::ProcessBlock(const CBlock& block, const CBlockIndex*
         bool hasCommitmentInNewBlock = qcs.count(type) != 0;
         bool isCommitmentRequired = IsCommitmentRequired(type, pindex->nHeight);
 
-        if (hasCommitmentInNewBlock && !isCommitmentRequired && pindex->nHeight >= Params().GetConsensus().DIP0003EnforcementHeight) {
+        if (hasCommitmentInNewBlock && !isCommitmentRequired) {
             // If we're either not in the mining phase or a non-null commitment was mined already, reject the block
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-not-allowed");
         }
 
-        if (!hasCommitmentInNewBlock && isCommitmentRequired && pindex->nHeight >= Params().GetConsensus().DIP0003EnforcementHeight) {
+        if (!hasCommitmentInNewBlock && isCommitmentRequired) {
             // If no non-null commitment was mined for the mining phase yet and the new block does not include
             // a (possibly null) commitment, the block should be rejected.
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-missing");
@@ -210,10 +210,10 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
         quorumHash = qc.quorumHash;
     }
 
-    if (quorumHash.IsNull() && nHeight >= Params().GetConsensus().DIP0003EnforcementHeight) {
+    if (quorumHash.IsNull()) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-block");
     }
-    if (quorumHash != qc.quorumHash && nHeight >= Params().GetConsensus().DIP0003EnforcementHeight) {
+    if (quorumHash != qc.quorumHash) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-block");
     }
 
@@ -229,7 +229,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-dup");
     }
 
-    if (!IsMiningPhase(params.type, nHeight) && nHeight >= Params().GetConsensus().DIP0003EnforcementHeight) {
+    if (!IsMiningPhase(params.type, nHeight)) {
         // should not happen as it's already handled in ProcessBlock
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-height");
     }
@@ -241,7 +241,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     std::vector<CDeterministicMNCPtr> members;
     CLLMQUtils::GetAllQuorumMembers(params.type, quorumIndex, members);
 
-    if (!qc.Verify(members, true) && nHeight >= Params().GetConsensus().DIP0003EnforcementHeight) {
+    if (!qc.Verify(members, true)) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-invalid");
     }
 

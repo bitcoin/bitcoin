@@ -90,7 +90,7 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, BlockV
             // pass the state returned by the function above
             return false;
         }
-        if (calculatedMerkleRoot != cbTx.merkleRootMNList && pindex->nHeight >= Params().GetConsensus().DIP0003EnforcementHeight) {
+        if (calculatedMerkleRoot != cbTx.merkleRootMNList) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-mnmerkleroot");
         }
 
@@ -102,7 +102,7 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, BlockV
             // pass the state returned by the function above
             return false;
         }
-        if (calculatedMerkleRoot != cbTx.merkleRootQuorums && pindex->nHeight >= Params().GetConsensus().DIP0003EnforcementHeight) {
+        if (calculatedMerkleRoot != cbTx.merkleRootQuorums) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cbtx-quorummerkleroot");
         }
         
@@ -207,7 +207,7 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
                 llmq::CFinalCommitment qc;
                 uint256 minedBlockHash;
                 bool found = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p2->GetBlockHash(), qc, minedBlockHash);
-                if (!found && (pindexPrev->nHeight +1 ) >= Params().GetConsensus().DIP0003EnforcementHeight) return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "commitment-not-found");
+                if (!found) return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "commitment-not-found");
                 v.emplace_back(::SerializeHash(qc));
                 hashCount++;
             }
@@ -271,7 +271,7 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
     int64_t nTime5 = GetTimeMicros(); nTimeMerkle += nTime5 - nTime4;
     LogPrint(BCLog::BENCHMARK, "            - ComputeMerkleRoot: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeMerkle * 0.000001);
 
-    if (mutated && (pindexPrev->nHeight +1 ) >= Params().GetConsensus().DIP0003EnforcementHeight) {
+    if (mutated) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "mutated-calc-cbtx-quorummerkleroot");
     }
 
