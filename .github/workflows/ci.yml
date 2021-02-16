@@ -119,6 +119,10 @@ jobs:
         if: always()
         timeout-minutes: 60
         run: python3 test/functional/test_runner.py
+      - name: run pop integration tests
+        if: always()
+        timeout-minutes: 60
+        run: python3 test/integration/test_runner.py
 
   x86_64-w64-mingw32:
     runs-on: ubuntu-latest
@@ -357,6 +361,10 @@ jobs:
         if: always()
         timeout-minutes: 60
         run: python3 test/functional/test_runner.py
+      - name: run pop integration tests
+        if: always()
+        timeout-minutes: 60
+        run: python3 test/integration/test_runner.py
 
   linux-asan:
     runs-on: ubuntu-latest
@@ -454,3 +462,7 @@ jobs:
         if: always()
         timeout-minutes: 180
         run: python3 test/functional/test_runner.py
+      - name: run pop integration tests
+        if: always()
+        timeout-minutes: 60
+        run: python3 test/integration/test_runner.py
