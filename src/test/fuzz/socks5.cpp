@@ -11,9 +11,16 @@
 #include <string>
 #include <vector>
 
+namespace {
+int default_socks5_recv_timeout;
+};
+
+extern int g_socks5_recv_timeout;
+
 void initialize_socks5()
 {
     static const auto testing_setup = MakeNoLogFileContext<const BasicTestingSetup>();
+    default_socks5_recv_timeout = g_socks5_recv_timeout;
 }
 
 FUZZ_TARGET_INIT(socks5, initialize_socks5)
@@ -23,6 +30,9 @@ FUZZ_TARGET_INIT(socks5, initialize_socks5)
     proxy_credentials.username = fuzzed_data_provider.ConsumeRandomLengthString(512);
     proxy_credentials.password = fuzzed_data_provider.ConsumeRandomLengthString(512);
     InterruptSocks5(fuzzed_data_provider.ConsumeBool());
+    // Set FUZZED_SOCKET_FAKE_LATENCY=1 to exercise recv timeout code paths. This
+    // will slow down fuzzing.
+    g_socks5_recv_timeout = (fuzzed_data_provider.ConsumeBool() && std::getenv("FUZZED_SOCKET_FAKE_LATENCY") != nullptr) ? 1 : default_socks5_recv_timeout;
     FuzzedSock fuzzed_sock = ConsumeSock(fuzzed_data_provider);
     // This Socks5(...) fuzzing harness would have caught CVE-2017-18350 within
     // a few seconds of fuzzing.

@@ -642,6 +642,9 @@ public:
             }
             return len;
         }
+        if (m_fuzzed_data_provider.ConsumeBool() && std::getenv("FUZZED_SOCKET_FAKE_LATENCY") != nullptr) {
+            std::this_thread::sleep_for(std::chrono::milliseconds{2});
+        }
         return random_bytes.size();
     }
 
