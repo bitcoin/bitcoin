@@ -135,12 +135,12 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
         return;
     }
 
-    g_connman->RelayInv(clsigInv, LLMQS_PROTO_VERSION);
-
     {
         LOCK2(cs_main, cs);
         bestChainLockHash = hash;
         bestChainLock = clsig;
+
+        g_connman->RelayInv(clsigInv, LLMQS_PROTO_VERSION);
 
         const CBlockIndex* pindex = LookupBlockIndex(clsig.blockHash);
         if (!pindex) {
