@@ -47,11 +47,15 @@ CCoinsViewDB::CCoinsViewDB(fs::path ldb_path, size_t nCacheSize, bool fMemory, b
 
 void CCoinsViewDB::ResizeCache(size_t new_cache_size)
 {
-    // Have to do a reset first to get the original `m_db` state to release its
-    // filesystem lock.
-    m_db.reset();
-    m_db = MakeUnique<CDBWrapper>(
-        m_ldb_path, new_cache_size, m_is_memory, /*fWipe*/ false, /*obfuscate*/ true);
+    // We can't do this operation with an in-memory DB since we'll lose all the coins upon
+    // reset.
+    if (!m_is_memory) {
+        // Have to do a reset first to get the original `m_db` state to release its
+        // filesystem lock.
+        m_db.reset();
+        m_db = MakeUnique<CDBWrapper>(
+            m_ldb_path, new_cache_size, m_is_memory, /*fWipe*/ false, /*obfuscate*/ true);
+    }
 }
 
 bool CCoinsViewDB::GetCoin(const COutPoint &outpoint, Coin &coin) const {

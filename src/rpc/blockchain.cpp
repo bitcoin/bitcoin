@@ -2531,13 +2531,28 @@ static RPCHelpMan dumptxoutset()
     }
 
     FILE* file{fsbridge::fopen(temppath, "wb")};
-    CAutoFile afile{file, SER_DISK, CLIENT_VERSION};
     // SYSCOIN
     FILE* filejson{fsbridge::fopen(temppathjson, "w")};
+    CAutoFile afile{file, SER_DISK, CLIENT_VERSION};
+    NodeContext& node = EnsureNodeContext(request.context);
+    // SYSCOIN
+    UniValue result = CreateUTXOSnapshot(node, node.chainman->ActiveChainstate(), afile, filejson);
+    fclose(filejson);
+    fs::rename(temppath, path);
+    fs::rename(temppathjson, pathjson);
+    result.pushKV("path", path.string());
+    // SYSCOIN
+    result.pushKV("pathjson", pathjson.string());
+    return result;
+},
+    };
+}
+
+UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFile& afile, FILE* filejson)
+{
     std::unique_ptr<CCoinsViewCursor> pcursor;
     CCoinsStats stats;
     CBlockIndex* tip;
-    NodeContext& node = EnsureNodeContext(request.context);
 
     {
         // We need to lock cs_main to ensure that the coinsdb isn't written to
@@ -2554,13 +2569,13 @@ static RPCHelpMan dumptxoutset()
         //
         LOCK(::cs_main);
 
-        ::ChainstateActive().ForceFlushStateToDisk();
+        chainstate.ForceFlushStateToDisk();
 
-        if (!GetUTXOStats(&::ChainstateActive().CoinsDB(), stats, CoinStatsHashType::NONE, node.rpc_interruption_point)) {
+        if (!GetUTXOStats(&chainstate.CoinsDB(), stats, CoinStatsHashType::NONE, node.rpc_interruption_point)) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
         }
 
-        pcursor = std::unique_ptr<CCoinsViewCursor>(::ChainstateActive().CoinsDB().Cursor());
+        pcursor = std::unique_ptr<CCoinsViewCursor>(chainstate.CoinsDB().Cursor());
         tip = g_chainman.m_blockman.LookupBlockIndex(stats.hashBlock);
         CHECK_NONFATAL(tip);
     }
@@ -2579,7 +2594,7 @@ static RPCHelpMan dumptxoutset()
             afile << key;
             afile << coin;
             CTxDestination dest;
-            if(ExtractDestination(coin.out.scriptPubKey, dest)) {
+            if(filejson && ExtractDestination(coin.out.scriptPubKey, dest)) {
                 fprintf(filejson, "%s,%s\n", EncodeDestination(dest).c_str(), ValueFromAmount(coin.out.nValue).write().c_str());
             }
         }
@@ -2589,19 +2604,12 @@ static RPCHelpMan dumptxoutset()
 
 
     afile.fclose();
-    fclose(filejson);
-    fs::rename(temppath, path);
-    fs::rename(temppathjson, pathjson);
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("coins_written", stats.coins_count);
     result.pushKV("base_hash", tip->GetBlockHash().ToString());
     result.pushKV("base_height", tip->nHeight);
-    result.pushKV("path", path.string());
-    result.pushKV("pathjson", pathjson.string());
     return result;
-},
-    };
 }
 
 void RegisterBlockchainRPCCommands(CRPCTable &t)

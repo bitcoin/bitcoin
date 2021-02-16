@@ -8,7 +8,6 @@
 #include <chainparamsseeds.h>
 #include <consensus/merkle.h>
 #include <hash.h> // for signet block challenge hash
-#include <tinyformat.h>
 #include <util/system.h>
 #include <util/strencodings.h>
 #include <versionbitsinfo.h>
@@ -293,6 +292,10 @@ public:
             }
         };
 
+        m_assumeutxo_data = MapAssumeutxo{
+         // TODO to be specified in a future patch.
+        };
+
         chainTxData = ChainTxData{
             // Data from rpc: getchaintxstats 43200 83460c100beedfdc467142fef347fc8369adc4a7feecbdc0462048f3493385f2 
             /* nTime    */ 1584566854,
@@ -424,6 +427,10 @@ public:
                 {250000, uint256S("0x00000131e97a4cb713338f33b8fa6573c85f1772e4dd7d510ca2281cc0be86e2")},
                 {534114, uint256S("0x0000013d53482bd69c5403f344643668619f77302910e57ffe7b1d375e73cc91")},
             }
+        };
+
+        m_assumeutxo_data = MapAssumeutxo{
+            // TODO to be specified in a future patch.
         };
 
         chainTxData = ChainTxData{
@@ -681,6 +688,17 @@ public:
                 {0, uint256S("0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206")},
             }
         };*/
+        // SYSCOIN
+        m_assumeutxo_data = MapAssumeutxo{
+            {
+                110,
+                {uint256S("0x5316c1e1065fa7e70a854eb44478eae73716392867cfba50c810a1a0a0c5a06c"), 110},
+            },
+            {
+                210,
+                {uint256S("0x9c5ed99ef98544b34f8920b6d1802f72ac28ae6e2bd2bd4c316ff10c230df3f2"), 210},
+            },
+        };
 
         chainTxData = ChainTxData{
             0,
@@ -802,4 +820,9 @@ void UpdateLLMQTestParams(int size, int threshold)
 {
     auto* params = const_cast<CChainParams*> (globalChainParams.get ());
     params->UpdateLLMQTestParams(size, threshold);
+}
+std::ostream& operator<<(std::ostream& o, const AssumeutxoData& aud)
+{
+    o << strprintf("AssumeutxoData(%s, %s)", aud.hash_serialized.ToString(), aud.nChainTx);
+    return o;
 }
