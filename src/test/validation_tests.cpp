@@ -5,6 +5,7 @@
 #include <chainparams.h>
 #include <net.h>
 #include <signet.h>
+#include <uint256.h>
 #include <validation.h>
 
 #include <test/util/setup_common.h>
@@ -117,6 +118,29 @@ BOOST_AUTO_TEST_CASE(signet_parse_tests)
     block.vtx.at(0) = MakeTransactionRef(cb);
     BOOST_CHECK(!SignetTxs::Create(block, challenge));
     BOOST_CHECK(!CheckSignetBlockSolution(block, signet_params->GetConsensus()));
+}
+
+//! Test retrieval of valid assumeutxo values.
+BOOST_AUTO_TEST_CASE(test_assumeutxo)
+{
+    const auto params = CreateChainParams(*m_node.args, CBaseChainParams::REGTEST);
+
+    // These heights don't have assumeutxo configurations associated, per the contents
+    // of chainparams.cpp.
+    std::vector<int> bad_heights{0, 100, 111, 115, 209, 211};
+
+    for (auto empty : bad_heights) {
+        const auto out = ExpectedAssumeutxo(empty, *params);
+        BOOST_CHECK(!out);
+    }
+
+    const auto out110 = *ExpectedAssumeutxo(110, *params);
+    BOOST_CHECK_EQUAL(out110.hash_serialized, uint256S("76fd7334ac7c1baf57ddc0c626f073a655a35d98a4258cd1382c8cc2b8392e10"));
+    BOOST_CHECK_EQUAL(out110.nChainTx, (unsigned int)110);
+
+    const auto out210 = *ExpectedAssumeutxo(210, *params);
+    BOOST_CHECK_EQUAL(out210.hash_serialized, uint256S("9c5ed99ef98544b34f8920b6d1802f72ac28ae6e2bd2bd4c316ff10c230df3f2"));
+    BOOST_CHECK_EQUAL(out210.nChainTx, (unsigned int)210);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

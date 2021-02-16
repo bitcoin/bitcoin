@@ -55,6 +55,18 @@ static void ApplyHash(CCoinsStats& stats, MuHash3072& muhash, const uint256& has
     muhash.Insert(MakeUCharSpan(ss));
 }
 
+//! Warning: be very careful when changing this! assumeutxo and UTXO snapshot
+//! validation commitments are reliant on the hash constructed by this
+//! function.
+//!
+//! If the construction of this hash is changed, it will invalidate
+//! existing UTXO snapshots. This will not result in any kind of consensus
+//! failure, but it will force clients that were expecting to make use of
+//! assumeutxo to do traditional IBD instead.
+//!
+//! It is also possible, though very unlikely, that a change in this
+//! construction could cause a previously invalid (and potentially malicious)
+//! UTXO snapshot to be considered valid.
 template <typename T>
 static void ApplyStats(CCoinsStats& stats, T& hash_obj, const uint256& hash, const std::map<uint32_t, Coin>& outputs)
 {
