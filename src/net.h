@@ -1018,8 +1018,8 @@ public:
 
     void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 
-    /** Return true if the peer has been connected for long enough to do inactivity checks. */
-    bool RunInactivityChecks(const CNode& node) const;
+    /** Return true if we should disconnect the peer for failing an inactivity check. */
+    bool ShouldRunInactivityChecks(const CNode& node, std::optional<int64_t> now=std::nullopt) const;
 
 private:
     struct ListenSocket {
