@@ -5940,7 +5940,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     const uint64_t coins_count = metadata.m_coins_count;
     uint64_t coins_left = metadata.m_coins_count;
 
-    printf("[snapshot] loading coins from snapshot %s\n", base_blockhash.ToString().c_str());
+    LogPrintf("[snapshot] loading coins from snapshot %s\n", base_blockhash.ToString());
     int64_t flush_now{0};
     int64_t coins_processed{0};
 
@@ -5948,7 +5948,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
         try {
             coins_file >> outpoint;
         } catch (const std::ios_base::failure&) {
-            printf("[snapshot] bad snapshot - no coins left after deserializing %d coins\n",
+            LogPrintf("[snapshot] bad snapshot - no coins left after deserializing %d coins\n",
                 coins_count - coins_left);
             return false;
         }
@@ -5959,7 +5959,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
         ++coins_processed;
 
         if (coins_processed % 1000000 == 0) {
-            printf("[snapshot] %d coins loaded (%.2f%%, %.2f MB)\n",
+            LogPrintf("[snapshot] %d coins loaded (%.2f%%, %.2f MB)\n",
                 coins_processed,
                 static_cast<float>(coins_processed) * 100 / static_cast<float>(coins_count),
                 coins_cache.DynamicMemoryUsage() / (1000 * 1000));
@@ -5979,7 +5979,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 
             if (snapshot_cache_state >=
                     CoinsCacheSizeState::CRITICAL) {
-                printf("[snapshot] flushing coins cache (%.2f MB)... ", /* Continued */
+                LogPrintf("[snapshot] flushing coins cache (%.2f MB)... ", /* Continued */
                     coins_cache.DynamicMemoryUsage() / (1000 * 1000));
                 flush_now = GetTimeMillis();
 
@@ -5989,7 +5989,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
                 coins_cache.SetBestBlock(GetRandHash());
 
                 coins_cache.Flush();
-                printf("done (%.2fms)\n", GetTimeMillis() - flush_now);
+                LogPrintf("done (%.2fms)\n", GetTimeMillis() - flush_now);
             }
         }
     }
@@ -6009,15 +6009,15 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
         out_of_coins = true;
     }
     if (!out_of_coins) {
-        printf("[snapshot] bad snapshot - coins left over after deserializing %d coins\n",
+        LogPrintf("[snapshot] bad snapshot - coins left over after deserializing %d coins\n",
             coins_count);
         return false;
     }
 
-    printf("[snapshot] loaded %d (%.2f MB) coins from snapshot %s\n",
+    LogPrintf("[snapshot] loaded %d (%.2f MB) coins from snapshot %s\n",
         coins_count,
         coins_cache.DynamicMemoryUsage() / (1000 * 1000),
-        base_blockhash.ToString().c_str());
+        base_blockhash.ToString());
 
     LogPrintf("[snapshot] flushing snapshot chainstate to disk\n");
     // No need to acquire cs_main since this chainstate isn't being used yet.
@@ -6033,7 +6033,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     CCoinsViewDB* snapshot_coinsdb = WITH_LOCK(::cs_main, return &snapshot_chainstate.CoinsDB());
 
     if (!GetUTXOStats(snapshot_coinsdb, stats, CoinStatsHashType::HASH_SERIALIZED, breakpoint_fnc)) {
-        printf("[snapshot] failed to generate coins stats\n");
+        LogPrintf("[snapshot] failed to generate coins stats\n");
         return false;
     }
 
@@ -6057,8 +6057,8 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     }
 
     if (snapshot_start_block == nullptr) {
-        printf("[snapshot] timed out waiting for snapshot start blockheader %s\n",
-            base_blockhash.ToString().c_str());
+        LogPrintf("[snapshot] timed out waiting for snapshot start blockheader %s\n",
+            base_blockhash.ToString());
         return false;
     }
 
@@ -6068,7 +6068,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     auto maybe_au_data = ExpectedAssumeutxo(base_height, ::Params());
 
     if (!maybe_au_data) {
-        printf("[snapshot] assumeutxo height in snapshot metadata not recognized " /* Continued */
+        LogPrintf("[snapshot] assumeutxo height in snapshot metadata not recognized " /* Continued */
             "(%d) - refusing to load snapshot\n", base_height);
         return false;
     }
@@ -6076,8 +6076,8 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     const AssumeutxoData& au_data = *maybe_au_data;
 
     if (stats.hashSerialized != au_data.hash_serialized) {
-        printf("[snapshot] bad snapshot content hash: expected %s, got %s\n",
-            au_data.hash_serialized.ToString().c_str(), stats.hashSerialized.ToString().c_str());
+        LogPrintf("[snapshot] bad snapshot content hash: expected %s, got %s\n",
+            au_data.hash_serialized.ToString(), stats.hashSerialized.ToString());
         return false;
     }
 
@@ -6114,7 +6114,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
     index->nChainTx = metadata.m_nchaintx;
     snapshot_chainstate.setBlockIndexCandidates.insert(snapshot_start_block);
 
-    printf("[snapshot] validated snapshot (%.2f MB)\n",
+    LogPrintf("[snapshot] validated snapshot (%.2f MB)\n",
         coins_cache.DynamicMemoryUsage() / (1000 * 1000));
     return true;
 }
