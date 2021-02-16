@@ -15,7 +15,7 @@ Checks intra quorum connections
 
 class LLMQConnections(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(15, 14, [["-whitelist=127.0.0.1"]] * 15, fast_dip3_enforcement=True)
+        self.set_dash_test_params(15, 14, [["-whitelist=noban@127.0.0.1"]] * 15, fast_dip3_enforcement=True)
         self.set_dash_llmq_test_params(5, 3)
 
     def skip_test_if_missing_module(self):
