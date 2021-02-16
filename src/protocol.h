@@ -264,7 +264,7 @@ extern const char* WTXIDRELAY;
  * Indicates that a node will not relay transactions, and (for now) also
  * not relay addresses. This can be used by nodes implementing
  * block-relay-only connections.
- * @since protocol version 70017.
+ * @since protocol version 70017 as described by BIP 338.
  */
 extern const char* DISABLETX;
 }; // namespace NetMsgType
