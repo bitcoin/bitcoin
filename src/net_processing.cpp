@@ -219,6 +219,13 @@ struct Peer {
     /** This peer's reported block height when we connected */
     std::atomic<int> m_starting_height{-1};
 
+    /** The pong reply we're expecting, or 0 if no pong expected. */
+    std::atomic<uint64_t> m_ping_nonce_sent{0};
+    /** When the last ping was sent, or 0 if no ping was ever sent */
+    std::atomic<std::chrono::microseconds> m_ping_start{0us};
+    /** Whether a ping has been requested by the user */
+    std::atomic<bool> m_ping_queued{false};
+
     /** Set of txids to reconsider once their parent transactions have been accepted **/
     std::set<uint256> m_orphan_work_set GUARDED_BY(g_cs_orphans);
 
@@ -256,6 +263,7 @@ public:
     void CheckForStaleTipAndEvictPeers() override;
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) override;
     bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
+    void SendPings() override;
     void SetBestHeight(int height) override { m_best_height = height; };
     void Misbehaving(const NodeId pnode, const int howmuch, const std::string& message) override;
     void ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
@@ -302,9 +310,10 @@ private:
     /** Maybe disconnect a peer and discourage future connections from its address.
      *
      * @param[in]   pnode     The node to check.
+     * @param[in]   peer      The peer object to check.
      * @return                True if the peer was marked for disconnection in this function
      */
-    bool MaybeDiscourageAndDisconnect(CNode& pnode);
+    bool MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer);
 
     void ProcessOrphanTx(std::set<uint256>& orphan_work_set) EXCLUSIVE_LOCKS_REQUIRED(cs_main, g_cs_orphans);
     /** Process a single headers message from a peer. */
@@ -322,6 +331,10 @@ private:
 
     /** Send a version message to a peer */
     void PushNodeVersion(CNode& pnode, int64_t nTime);
+
+    /** Send a ping message every PING_INTERVAL or if requested via RPC. May
+     *  mark the peer to be disconnected if a ping has timed out. */
+    void MaybeSendPing(CNode& node_to, Peer& peer);
 
     const CChainParams& m_chainparams;
     CConnman& m_connman;
@@ -1088,6 +1101,18 @@ bool PeerManagerImpl::GetNodeStateStats(NodeId nodeid, CNodeStateStats &stats)
     PeerRef peer = GetPeerRef(nodeid);
     if (peer == nullptr) return false;
     stats.m_starting_height = peer->m_starting_height;
+    // It is common for nodes with good ping times to suddenly become lagged,
+    // due to a new block arriving or other large transfer.
+    // Merely reporting pingtime might fool the caller into thinking the node was still responsive,
+    // since pingtime does not update until the ping is complete, which might take a while.
+    // So, if a ping is taking an unusually long time in flight,
+    // the caller can immediately detect that this is happening.
+    std::chrono::microseconds ping_wait{0};
+    if ((0 != peer->m_ping_nonce_sent) && (0 != peer->m_ping_start.load().count())) {
+        ping_wait = GetTime<std::chrono::microseconds>() - peer->m_ping_start.load();
+    }
+
+    stats.m_ping_wait_usec = count_microseconds(ping_wait);
 
     return true;
 }
@@ -1625,6 +1650,12 @@ bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid) EXCLUSIVE_LOCKS_REQUIR
 bool static AlreadyHaveBlock(const uint256& block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     return g_chainman.m_blockman.LookupBlockIndex(block_hash) != nullptr;
+}
+
+void PeerManagerImpl::SendPings()
+{
+    LOCK(m_peer_mutex);
+    for(auto& it : m_peer_map) it.second->m_ping_queued = true;
 }
 
 void RelayTransaction(const uint256& txid, const uint256& wtxid, const CConnman& connman)
@@ -3837,15 +3868,14 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             vRecv >> nonce;
 
             // Only process pong message if there is an outstanding ping (old ping without nonce should never pong)
-            if (pfrom.nPingNonceSent != 0) {
-                if (nonce == pfrom.nPingNonceSent) {
+            if (peer->m_ping_nonce_sent != 0) {
+                if (nonce == peer->m_ping_nonce_sent) {
                     // Matching pong received, this ping is no longer outstanding
                     bPingFinished = true;
-                    const auto ping_time = ping_end - pfrom.m_ping_start.load();
+                    const auto ping_time = ping_end - peer->m_ping_start.load();
                     if (ping_time.count() >= 0) {
-                        // Successful ping time measurement, replace previous
-                        pfrom.nPingUsecTime = count_microseconds(ping_time);
-                        pfrom.nMinPingUsecTime = std::min(pfrom.nMinPingUsecTime.load(), count_microseconds(ping_time));
+                        // Let connman know about this successful ping-pong
+                        pfrom.PongReceived(ping_time);
                     } else {
                         // This should never happen
                         sProblem = "Timing mishap";
@@ -3872,12 +3902,12 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             LogPrint(BCLog::NET, "pong peer=%d: %s, %x expected, %x received, %u bytes\n",
                 pfrom.GetId(),
                 sProblem,
-                pfrom.nPingNonceSent,
+                peer->m_ping_nonce_sent,
                 nonce,
                 nAvail);
         }
         if (bPingFinished) {
-            pfrom.nPingNonceSent = 0;
+            peer->m_ping_nonce_sent = 0;
         }
         return;
     }
@@ -3996,43 +4026,39 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     return;
 }
 
-bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode)
+bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer)
 {
-    const NodeId peer_id{pnode.GetId()};
-    PeerRef peer = GetPeerRef(peer_id);
-    if (peer == nullptr) return false;
-
     {
-        LOCK(peer->m_misbehavior_mutex);
+        LOCK(peer.m_misbehavior_mutex);
 
         // There's nothing to do if the m_should_discourage flag isn't set
-        if (!peer->m_should_discourage) return false;
+        if (!peer.m_should_discourage) return false;
 
-        peer->m_should_discourage = false;
+        peer.m_should_discourage = false;
     } // peer.m_misbehavior_mutex
 
     if (pnode.HasPermission(PF_NOBAN)) {
         // We never disconnect or discourage peers for bad behavior if they have the NOBAN permission flag
-        LogPrintf("Warning: not punishing noban peer %d!\n", peer_id);
+        LogPrintf("Warning: not punishing noban peer %d!\n", peer.m_id);
         return false;
     }
 
     if (pnode.IsManualConn()) {
         // We never disconnect or discourage manual peers for bad behavior
-        LogPrintf("Warning: not punishing manually connected peer %d!\n", peer_id);
+        LogPrintf("Warning: not punishing manually connected peer %d!\n", peer.m_id);
         return false;
     }
 
     if (pnode.addr.IsLocal()) {
         // We disconnect local peers for bad behavior but don't discourage (since that would discourage
         // all peers on the same local address)
-        LogPrintf("Warning: disconnecting but not discouraging local peer %d!\n", peer_id);
+        LogPrintf("Warning: disconnecting but not discouraging local peer %d!\n", peer.m_id);
         pnode.fDisconnect = true;
         return true;
     }
 
     // Normal case: Disconnect the peer and discourage all nodes sharing the address
-    LogPrint(BCLog::NET, "Disconnecting and discouraging peer %d!\n", peer_id);
+    LogPrint(BCLog::NET, "Disconnecting and discouraging peer %d!\n", peer.m_id);
     if (m_banman) m_banman->Discourage(pnode.addr);
     m_connman.DisconnectNode(pnode.addr);
     return true;
@@ -4295,6 +4321,50 @@ void PeerManagerImpl::CheckForStaleTipAndEvictPeers()
     }
 }
 
+void PeerManagerImpl::MaybeSendPing(CNode& node_to, Peer& peer)
+{
+    // Use mockable time for ping timeouts.
+    // This means that setmocktime may cause pings to time out.
+    auto now = GetTime<std::chrono::microseconds>();
+
+    if (m_connman.RunInactivityChecks(node_to) && peer.m_ping_nonce_sent &&
+        now > peer.m_ping_start.load() + std::chrono::seconds{TIMEOUT_INTERVAL}) {
+        LogPrint(BCLog::NET, "ping timeout: %fs peer=%d\n", 0.000001 * count_microseconds(now - peer.m_ping_start.load()), peer.m_id);
+        node_to.fDisconnect = true;
+        return;
+    }
+
+    const CNetMsgMaker msgMaker(node_to.GetCommonVersion());
+    bool pingSend = false;
+
+    if (peer.m_ping_queued) {
+        // RPC ping request by user
+        pingSend = true;
+    }
+
+    if (peer.m_ping_nonce_sent == 0 && now > peer.m_ping_start.load() + PING_INTERVAL) {
+        // Ping automatically sent as a latency probe & keepalive.
+        pingSend = true;
+    }
+
+    if (pingSend) {
+        uint64_t nonce = 0;
+        while (nonce == 0) {
+            GetRandBytes((unsigned char*)&nonce, sizeof(nonce));
+        }
+        peer.m_ping_queued = false;
+        peer.m_ping_start = now;
+        if (node_to.GetCommonVersion() > BIP0031_VERSION) {
+            peer.m_ping_nonce_sent = nonce;
+            m_connman.PushMessage(&node_to, msgMaker.Make(NetMsgType::PING, nonce));
+        } else {
+            // Peer is too old to support ping command with nonce, pong will never arrive.
+            peer.m_ping_nonce_sent = 0;
+            m_connman.PushMessage(&node_to, msgMaker.Make(NetMsgType::PING));
+        }
+    }
+}
+
 namespace {
 class CompareInvMempoolOrder
 {
@@ -4319,11 +4389,12 @@ public:
 bool PeerManagerImpl::SendMessages(CNode* pto)
 {
     PeerRef peer = GetPeerRef(pto->GetId());
+    if (!peer) return false;
     const Consensus::Params& consensusParams = m_chainparams.GetConsensus();
 
     // We must call MaybeDiscourageAndDisconnect first, to ensure that we'll
     // disconnect misbehaving peers even before the version handshake is complete.
-    if (MaybeDiscourageAndDisconnect(*pto)) return true;
+    if (MaybeDiscourageAndDisconnect(*pto, *peer)) return true;
 
     // Don't send anything until the version handshake is complete
     if (!pto->fSuccessfullyConnected || pto->fDisconnect)
@@ -4332,34 +4403,10 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
     // If we get here, the outgoing message serialization version is set and can't change.
     const CNetMsgMaker msgMaker(pto->GetCommonVersion());
 
-    //
-    // Message: ping
-    //
-    bool pingSend = false;
-    if (pto->fPingQueued) {
-        // RPC ping request by user
-        pingSend = true;
-    }
-    if (pto->nPingNonceSent == 0 && pto->m_ping_start.load() + PING_INTERVAL < GetTime<std::chrono::microseconds>()) {
-        // Ping automatically sent as a latency probe & keepalive.
-        pingSend = true;
-    }
-    if (pingSend) {
-        uint64_t nonce = 0;
-        while (nonce == 0) {
-            GetRandBytes((unsigned char*)&nonce, sizeof(nonce));
-        }
-        pto->fPingQueued = false;
-        pto->m_ping_start = GetTime<std::chrono::microseconds>();
-        if (pto->GetCommonVersion() > BIP0031_VERSION) {
-            pto->nPingNonceSent = nonce;
-            m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::PING, nonce));
-        } else {
-            // Peer is too old to support ping command with nonce, pong will never arrive.
-            pto->nPingNonceSent = 0;
-            m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::PING));
-        }
-    }
+    MaybeSendPing(*pto, *peer);
+
+    // MaybeSendPing may have marked peer for disconnection
+    if (pto->fDisconnect) return true;
 
     {
         LOCK(cs_main);

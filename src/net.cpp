@@ -601,21 +601,8 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
         stats.minFeeFilter = 0;
     }
 
-    // It is common for nodes with good ping times to suddenly become lagged,
-    // due to a new block arriving or other large transfer.
-    // Merely reporting pingtime might fool the caller into thinking the node was still responsive,
-    // since pingtime does not update until the ping is complete, which might take a while.
-    // So, if a ping is taking an unusually long time in flight,
-    // the caller can immediately detect that this is happening.
-    std::chrono::microseconds ping_wait{0};
-    if ((0 != nPingNonceSent) && (0 != m_ping_start.load().count())) {
-        ping_wait = GetTime<std::chrono::microseconds>() - m_ping_start.load();
-    }
-
-    // Raw ping time is in microseconds, but show it to user as whole seconds (Bitcoin users should be well used to small numbers with many decimal places by now :)
-    stats.m_ping_usec = nPingUsecTime;
-    stats.m_min_ping_usec  = nMinPingUsecTime;
-    stats.m_ping_wait_usec = count_microseconds(ping_wait);
+    stats.m_ping_usec = m_last_ping_time;
+    stats.m_min_ping_usec = m_min_ping_time;
 
     // Leave string empty if addrLocal invalid (not filled in yet)
     CService addrLocalUnlocked = GetAddrLocal();
@@ -837,7 +824,7 @@ size_t CConnman::SocketSendData(CNode& node) const
 
 static bool ReverseCompareNodeMinPingTime(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
 {
-    return a.nMinPingUsecTime > b.nMinPingUsecTime;
+    return a.m_min_ping_time > b.m_min_ping_time;
 }
 
 static bool ReverseCompareNodeTimeConnected(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b)
@@ -992,7 +979,7 @@ bool CConnman::AttemptToEvictConnection()
                 peer_relay_txes = node->m_tx_relay->fRelayTxes;
                 peer_filter_not_null = node->m_tx_relay->pfilter != nullptr;
             }
-            NodeEvictionCandidate candidate = {node->GetId(), node->nTimeConnected, node->nMinPingUsecTime,
+            NodeEvictionCandidate candidate = {node->GetId(), node->nTimeConnected, node->m_min_ping_time,
                                                node->nLastBlockTime, node->nLastTXTime,
                                                HasAllDesirableServiceFlags(node->nServices),
                                                peer_relay_txes, peer_filter_not_null, node->nKeyedNetGroup,
@@ -1221,17 +1208,16 @@ void CConnman::NotifyNumConnectionsChanged()
     }
 }
 
+bool CConnman::RunInactivityChecks(const CNode& node) const
+{
+    return GetSystemTimeInSeconds() > node.nTimeConnected + m_peer_connect_timeout;
+}
+
 bool CConnman::InactivityCheck(const CNode& node) const
 {
     // Use non-mockable system time (otherwise these timers will pop when we
     // use setmocktime in the tests).
     int64_t now = GetSystemTimeInSeconds();
-
-    if (now <= node.nTimeConnected + m_peer_connect_timeout) {
-        // Only run inactivity checks if the peer has been connected longer
-        // than m_peer_connect_timeout.
-        return false;
-    }
 
     if (node.nLastRecv == 0 || node.nLastSend == 0) {
         LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d peer=%d\n", m_peer_connect_timeout, node.nLastRecv != 0, node.nLastSend != 0, node.GetId());
@@ -1245,14 +1231,6 @@ bool CConnman::InactivityCheck(const CNode& node) const
 
     if (now > node.nLastRecv + TIMEOUT_INTERVAL) {
         LogPrint(BCLog::NET, "socket receive timeout: %is peer=%d\n", now - node.nLastRecv, node.GetId());
-        return true;
-    }
-
-    if (node.nPingNonceSent && node.m_ping_start.load() + std::chrono::seconds{TIMEOUT_INTERVAL} < GetTime<std::chrono::microseconds>()) {
-        // We use mockable time for ping timeouts. This means that setmocktime
-        // may cause pings to time out for peers that have been connected for
-        // longer than m_peer_connect_timeout.
-        LogPrint(BCLog::NET, "ping timeout: %fs peer=%d\n", 0.000001 * count_microseconds(GetTime<std::chrono::microseconds>() - node.m_ping_start.load()), node.GetId());
         return true;
     }
 
@@ -1537,7 +1515,7 @@ void CConnman::SocketHandler()
             if (bytes_sent) RecordBytesSent(bytes_sent);
         }
 
-        if (InactivityCheck(*pnode)) pnode->fDisconnect = true;
+        if (RunInactivityChecks(*pnode) && InactivityCheck(*pnode)) pnode->fDisconnect = true;
     }
     {
         LOCK(cs_vNodes);

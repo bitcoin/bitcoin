@@ -794,7 +794,7 @@ std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(const int n_c
         candidates.push_back({
             /* id */ id,
             /* nTimeConnected */ static_cast<int64_t>(random_context.randrange(100)),
-            /* nMinPingUsecTime */ static_cast<int64_t>(random_context.randrange(100)),
+            /* m_min_ping_time */ static_cast<int64_t>(random_context.randrange(100)),
             /* nLastBlockTime */ static_cast<int64_t>(random_context.randrange(100)),
             /* nLastTXTime */ static_cast<int64_t>(random_context.randrange(100)),
             /* fRelevantServices */ random_context.randbool(),
@@ -854,7 +854,7 @@ BOOST_AUTO_TEST_CASE(node_eviction_test)
             // from eviction.
             BOOST_CHECK(!IsEvicted(
                 number_of_nodes, [](NodeEvictionCandidate& candidate) {
-                    candidate.nMinPingUsecTime = candidate.id;
+                    candidate.m_min_ping_time = candidate.id;
                 },
                 {0, 1, 2, 3, 4, 5, 6, 7}, random_context));
 
@@ -901,7 +901,7 @@ BOOST_AUTO_TEST_CASE(node_eviction_test)
             BOOST_CHECK(!IsEvicted(
                 number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
                     candidate.nKeyedNetGroup = number_of_nodes - candidate.id; // 4 protected
-                    candidate.nMinPingUsecTime = candidate.id;                 // 8 protected
+                    candidate.m_min_ping_time = candidate.id;                 // 8 protected
                     candidate.nLastTXTime = number_of_nodes - candidate.id;    // 4 protected
                     candidate.nLastBlockTime = number_of_nodes - candidate.id; // 4 protected
                 },
