@@ -1,0 +1,84 @@
+// Copyright (c) 2021 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+#ifndef BITCOIN_TXORPHANAGE_H
+#define BITCOIN_TXORPHANAGE_H
+
+#include <net.h>
+#include <primitives/transaction.h>
+#include <sync.h>
+
+/** Guards orphan transactions and extra txs for compact blocks */
+extern RecursiveMutex g_cs_orphans;
+
+/** Data structure to keep track of orphan transactions
+ */
+class TxOrphanage {
+public:
+    struct OrphanTx {
+        CTransactionRef tx;
+        NodeId fromPeer;
+        int64_t nTimeExpire;
+        size_t list_pos;
+    };
+
+    /** Add a new orphan transaction */
+    bool AddTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+
+    /** Check if we already have an orphan transaction (by txid or wtxid) */
+    bool HaveTx(const GenTxid& gtxid) EXCLUSIVE_LOCKS_REQUIRED(!g_cs_orphans);
+
+    /** Get the details of an orphan transaction (returns nullptr if not found) */
+    OrphanTx* GetTx(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+
+    /** Erase an orphan by txid */
+    int EraseTx(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+
+    /** Erase all orphans announced by a peer (eg, after that peer disconnects) */
+    void EraseForPeer(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+
+    /** Erase all orphans included in / invalidated by a new block */
+    void EraseForBlock(const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(!g_cs_orphans);
+
+    /** Limit the orphanage to the given maximum */
+    unsigned int LimitOrphans(unsigned int max_orphans) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+
+    /** A set of orphans to be tested for potential acceptance into the mempool */
+    using WorkSet = std::set<uint256>;
+
+    /** Add any orphans that list a particular tx as a parent into a peer's work set */
+    void AddChildrenToWorkSet(const CTransaction& tx, WorkSet& orphan_work_set) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+
+protected:
+    /** Map from txid to orphan transaction record. Limited by
+     *  -maxorphantx/DEFAULT_MAX_ORPHAN_TRANSACTIONS */
+    std::map<uint256, OrphanTx> m_orphans GUARDED_BY(g_cs_orphans);
+
+    using OrphanMap = decltype(m_orphans);
+
+    struct IteratorComparator
+    {
+        template<typename I>
+        bool operator()(const I& a, const I& b) const
+        {
+            return &(*a) < &(*b);
+        }
+    };
+
+    /** Index from the parents' COutPoint into the m_orphans. Used
+     *  to remove orphan transactions from the m_orphans */
+    std::map<COutPoint, std::set<OrphanMap::iterator, IteratorComparator>> m_outpoint_to_orphan_it GUARDED_BY(g_cs_orphans);
+
+    /** Orphan transactions in vector for quick random eviction */
+    std::vector<OrphanMap::iterator> m_orphan_list GUARDED_BY(g_cs_orphans);
+
+    /** Index from wtxid into the m_orphans to lookup orphan
+     *  transactions using their witness ids. */
+    std::map<uint256, OrphanMap::iterator> m_wtxid_to_orphan_it GUARDED_BY(g_cs_orphans);
+
+    /** Timestamp for next sweep of orphans by LimitOrphanTxSize */
+    int64_t m_next_sweep GUARDED_BY(g_cs_orphans) = 0;
+};
+
+#endif // BITCOIN_TXORPHANAGE_H

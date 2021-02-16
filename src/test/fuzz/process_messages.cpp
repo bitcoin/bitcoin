@@ -13,6 +13,7 @@
 #include <test/util/net.h>
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
+#include <txorphanage.h>
 #include <util/memory.h>
 #include <validation.h>
 #include <validationinterface.h>
@@ -49,7 +50,7 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
         const bool successfully_connected{fuzzed_data_provider.ConsumeBool()};
         p2p_node.fSuccessfullyConnected = successfully_connected;
         p2p_node.fPauseSend = false;
-        g_setup->m_node.peerman->InitializeNode(&p2p_node);
+        g_setup->m_node.peerman->InitializeNode(p2p_node);
         FillNode(fuzzed_data_provider, p2p_node, /* init_version */ successfully_connected);
 
         connman.AddTestNode(p2p_node);
@@ -76,7 +77,7 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
         }
         {
             LOCK(random_node.cs_sendProcessing);
-            g_setup->m_node.peerman->SendMessages(&random_node);
+            g_setup->m_node.peerman->SendMessages(random_node);
         }
     }
     SyncWithValidationInterfaceQueue();

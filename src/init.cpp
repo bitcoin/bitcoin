@@ -52,6 +52,7 @@
 #include <torcontrol.h>
 #include <txdb.h>
 #include <txmempool.h>
+#include <txorphanage.h>
 #include <util/asmap.h>
 #include <util/check.h>
 #include <util/moneystr.h>
@@ -1410,7 +1411,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
     assert(!node.peerman);
     node.peerman = PeerManager::make(chainparams, *node.connman, node.banman.get(),
-                                     *node.scheduler, chainman, *node.mempool, ignores_incoming_txs);
+                                     *node.scheduler, chainman, *node.mempool, gArgs);
     RegisterValidationInterface(node.peerman.get());
 
     // sanitize comments per BIP-0014, format user agent and check total size
