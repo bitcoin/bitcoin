@@ -34,6 +34,8 @@ from collections import namedtuple
 MIN_VERSION_SUPPORTED = 60001
 MY_VERSION = 70016  # past wtxid relay
 MY_SUBVERSION = b"/python-p2p-tester:0.0.3/"
+# SYSCOIN
+MY_SUBVERSIONARG = b"/python-p2p-tester:0.0.3%s/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
 MAX_LOCATOR_SZ = 101
@@ -2232,8 +2234,8 @@ class msg_qwatch():
 
 
 class msg_qgetdata():
-     __slots__ = ("quorum_hash", "quorum_type", "data_mask", "protx_hash")
-    command = b"qgetdata"
+    __slots__ = ("quorum_hash", "quorum_type", "data_mask", "protx_hash")
+    msgtype = b"qgetdata"
 
     def __init__(self, quorum_hash=0, quorum_type=-1, data_mask=0, protx_hash=0):
         self.quorum_hash = quorum_hash

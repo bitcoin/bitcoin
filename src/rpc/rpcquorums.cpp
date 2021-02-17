@@ -595,7 +595,7 @@ static RPCHelpMan quorum_dkgsimerror()
 
 static RPCHelpMan quorum_getdata()
 {
-    return RPCHelpMan{"quorum_dkgsimerror",
+    return RPCHelpMan{"quorum_getdata",
          "quorum getdata nodeId llmqType \"quorumHash\" dataMask ( \"proTxHash\" )\n",
         {
             {"nodeId", RPCArg::Type::NUM, RPCArg::Optional::NO, "The internal nodeId of the peer to request quorum data from.\n"},
@@ -666,7 +666,7 @@ static const CRPCCommand commands[] =
     { "evo",                &quorum_getrecsig,                   },
     { "evo",                &quorum_isconflicting,               },
     { "evo",                &quorum_sign,                        },
-    { "evo",                &quorum_getdata,                        },
+    { "evo",                &quorum_getdata,                     },
 };
 // clang-format on
     for (const auto& c : commands) {

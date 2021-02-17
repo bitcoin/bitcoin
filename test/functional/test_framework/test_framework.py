@@ -925,7 +925,7 @@ class DashTestFramework(SyscoinTestFramework):
         # LLMQ default test params (no need to pass -llmqtestparams)
         self.llmq_size = 3
         self.llmq_threshold = 2
-        # This is nRequestTimeout in dash-q-recovery thread
+        # This is nRequestTimeout in syscoin-q-recovery thread
         self.quorum_data_thread_request_timeout_seconds = 10
         # This is EXPIRATION_TIMEOUT in CQuorumDataRequest
         self.quorum_data_request_expiration_timeout = 300

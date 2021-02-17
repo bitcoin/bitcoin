@@ -76,6 +76,8 @@ from test_framework.messages import (
     msg_qsendrecsigs,
     msg_qgetdata,
     msg_qdata,
+    MY_SUBVERSION,
+    MY_SUBVERSIONARG,
 )
 from test_framework.util import (
     MAX_NODES,
@@ -161,7 +163,7 @@ class P2PConnection(asyncio.Protocol):
     def is_connected(self):
         return self._transport is not None
 
-    def peer_connect_helper(self, dstaddr, dstport, net, timeout_factor):
+    def peer_connect_helper(self, dstaddr, dstport, net, timeout_factor, uacomment=None):
         assert not self.is_connected
         self.timeout_factor = timeout_factor
         self.dstaddr = dstaddr
@@ -170,9 +172,15 @@ class P2PConnection(asyncio.Protocol):
         self.on_connection_send_msg = None
         self.recvbuf = b""
         self.magic_bytes = MAGIC_BYTES[net]
+        # SYSCOIN
+        self.uacomment = uacomment
+        if self.uacomment is not None:
+            self.strSubVer = MY_SUBVERSIONARG % ("(%s)" % self.uacomment).encode()
+        else:
+            self.strSubVer = MY_SUBVERSION
 
-    def peer_connect(self, dstaddr, dstport, *, net, timeout_factor):
-        self.peer_connect_helper(dstaddr, dstport, net, timeout_factor)
+    def peer_connect(self, dstaddr, dstport, *, net, timeout_factor, uacomment=None):
+        self.peer_connect_helper(dstaddr, dstport, net, timeout_factor, uacomment)
 
         loop = NetworkThread.network_event_loop
         logger.debug('Connecting to Bitcoin Node: %s:%d' % (self.dstaddr, self.dstport))
@@ -353,6 +361,8 @@ class P2PInterface(P2PConnection):
         vt.addrTo.port = self.dstport
         vt.addrFrom.ip = "0.0.0.0"
         vt.addrFrom.port = 0
+        # SYSCOIN
+        vt.strSubVer = self.strSubVer
         self.on_connection_send_msg = vt  # Will be sent in connection_made callback
 
     def peer_connect(self, *args, services=NODE_NETWORK | NODE_WITNESS, send_version=True, **kwargs):

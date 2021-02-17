@@ -4413,6 +4413,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
     } else if(msg_type == NetMsgType::QGETDATA ||
               msg_type == NetMsgType::QDATA) {
         llmq::quorumManager->ProcessMessage(&pfrom, msg_type, vRecv);
+        return;
     } else if(msg_type == NetMsgType::QSIGSHARE || 
             msg_type == NetMsgType::QSIGSESANN ||
             msg_type == NetMsgType::QSIGSHARESINV || 
