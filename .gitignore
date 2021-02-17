@@ -60,6 +60,7 @@ src/qt/bitcoin-qt.includes
 .deps
 .dirstamp
 .libs
+.vscode
 .*.swp
 *.*~*
 *.bak
@@ -105,7 +106,6 @@ litecoin-qt_test
 
 # Resources cpp
 qrc_*.cpp
-
 # Mac specific
 .DS_Store
 build
@@ -117,7 +117,7 @@ releases
 *.gcno
 *.gcda
 /*.info
-test_bitcoin.coverage/
+test_litecoin.coverage/
 total.coverage/
 fuzz.coverage/
 coverage_percent.txt

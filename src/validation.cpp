@@ -52,6 +52,14 @@
 #include <string>
 
 #include <boost/algorithm/string/replace.hpp>
+<<<<<<< HEAD
+=======
+#include <boost/thread.hpp>
+
+#if defined(NDEBUG)
+# error "Litecoin cannot be compiled without assertions."
+#endif
+>>>>>>> 5d6decbfe... Litecoin: Branding
 
 #define MICRO 0.000001
 #define MILLI 0.001

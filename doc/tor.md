@@ -1,6 +1,6 @@
-# TOR SUPPORT IN BITCOIN
+# TOR SUPPORT IN LITECOIN
 
-It is possible to run Bitcoin Core as a Tor onion service, and connect to such services.
+It is possible to run Litecoin Core as a Tor onion service, and connect to such services.
 
 The following directions assume you have a Tor proxy running on port 9050. Many distributions default to having a SOCKS proxy listening on port 9050, but others may not. In particular, the Tor Browser Bundle defaults to listening on port 9150. See [Tor Project FAQ:TBBSocksPort](https://www.torproject.org/docs/faq.html.en#TBBSocksPort) for how to properly
 configure Tor.
@@ -16,9 +16,9 @@ You may set the `-debug=tor` config logging option to have additional
 information in the debug log about your Tor configuration.
 
 
-## 1. Run Bitcoin Core behind a Tor proxy
+## 1. Run Litecoin Core behind a Tor proxy
 
-The first step is running Bitcoin Core behind a Tor proxy. This will already anonymize all
+The first step is running Litecoin Core behind a Tor proxy. This will already anonymize all
 outgoing connections, but more is possible.
 
 	-proxy=ip:port  Set the proxy server. If SOCKS5 is selected (default), this proxy
@@ -44,28 +44,28 @@ outgoing connections, but more is possible.
 
 In a typical situation, this suffices to run behind a Tor proxy:
 
-	./bitcoind -proxy=127.0.0.1:9050
+	./litecoind -proxy=127.0.0.1:9050
 
 
-## 2. Run a Bitcoin Core hidden server
+## 2. Run a Litecoin Core hidden server
 
 If you configure your Tor system accordingly, it is possible to make your node also
 reachable from the Tor network. Add these lines to your /etc/tor/torrc (or equivalent
 config file): *Needed for Tor version 0.2.7.0 and older versions of Tor only. For newer
 versions of Tor see [Section 3](#3-automatically-listen-on-tor).*
 
-	HiddenServiceDir /var/lib/tor/bitcoin-service/
-	HiddenServicePort 9333 127.0.0.1:9334
-	HiddenServicePort 19333 127.0.0.1:19334
+	HiddenServiceDir /var/lib/tor/litecoin-service/
+	HiddenServicePort 9333 127.0.0.1:9333
+	HiddenServicePort 19335 127.0.0.1:19335
 
 The directory can be different of course, but virtual port numbers should be equal to
 your litecoind's P2P listen port (9333 by default), and target addresses and ports
 should be equal to binding address and port for inbound Tor connections (127.0.0.1:9334 by default).
 
-	-externalip=X   You can tell bitcoin about its publicly reachable addresses using
+	-externalip=X   You can tell litecoin about its publicly reachable addresses using
 	                this option, and this can be an onion address. Given the above
 	                configuration, you can find your onion address in
-	                /var/lib/tor/bitcoin-service/hostname. For connections
+	                /var/lib/tor/litecoin-service/hostname. For connections
 	                coming from unroutable addresses (such as 127.0.0.1, where the
 	                Tor proxy typically runs), onion addresses are given
 	                preference for your node to advertise itself with.
@@ -87,50 +87,50 @@ should be equal to binding address and port for inbound Tor connections (127.0.0
 
 In a typical situation, where you're only reachable via Tor, this should suffice:
 
-	./bitcoind -proxy=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -listen
+	./litecoind -proxy=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -listen
 
 (obviously, replace the .onion address with your own). It should be noted that you still
 listen on all devices and another node could establish a clearnet connection, when knowing
 your address. To mitigate this, additionally bind the address of your Tor proxy:
 
-	./bitcoind ... -bind=127.0.0.1
+	./litecoind ... -bind=127.0.0.1
 
 If you don't care too much about hiding your node, and want to be reachable on IPv4
 as well, use `discover` instead:
 
-	./bitcoind ... -discover
+	./litecoind ... -discover
 
 and open port 9333 on your firewall (or use -upnp).
 
 If you only want to use Tor to reach .onion addresses, but not use it as a proxy
 for normal IPv4/IPv6 communication, use:
 
-	./bitcoind -onion=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -discover
+	./litecoind -onion=127.0.0.1:9050 -externalip=7zvj7a2imdgkdbg4f2dryd5rgtrn7upivr5eeij4cicjh65pooxeshid.onion -discover
 
 ## 3. Automatically listen on Tor
 
 Starting with Tor version 0.2.7.1 it is possible, through Tor's control socket
 API, to create and destroy 'ephemeral' onion services programmatically.
-Bitcoin Core has been updated to make use of this.
+Litecoin Core has been updated to make use of this.
 
 This means that if Tor is running (and proper authentication has been configured),
-Bitcoin Core automatically creates an onion service to listen on. This will positively
+Litecoin Core automatically creates an onion service to listen on. This will positively
 affect the number of available .onion nodes.
 
-This new feature is enabled by default if Bitcoin Core is listening (`-listen`), and
+This new feature is enabled by default if Litecoin Core is listening (`-listen`), and
 requires a Tor connection to work. It can be explicitly disabled with `-listenonion=0`
 and, if not disabled, configured using the `-torcontrol` and `-torpassword` settings.
 To show verbose debugging information, pass `-debug=tor`.
 
 Connecting to Tor's control socket API requires one of two authentication methods to be
 configured. It also requires the control socket to be enabled, e.g. put `ControlPort 9051`
-in `torrc` config file. For cookie authentication the user running bitcoind must have read
+in `torrc` config file. For cookie authentication the user running litecoind must have read
 access to the `CookieAuthFile` specified in Tor configuration. In some cases this is
 preconfigured and the creation of an onion service is automatic. If permission problems
 are seen with `-debug=tor` they can be resolved by adding both the user running Tor and
-the user running bitcoind to the same group and setting permissions appropriately. On
-Debian-based systems the user running bitcoind can be added to the debian-tor group,
-which has the appropriate permissions. Before starting bitcoind you will need to re-login
+the user running litecoind to the same group and setting permissions appropriately. On
+Debian-based systems the user running litecoind can be added to the debian-tor group,
+which has the appropriate permissions. Before starting litecoind you will need to re-login
 to allow debian-tor group to be applied. Otherwise you will see the following notice: "tor:
 Authentication cookie /run/tor/control.authcookie could not be opened (check permissions)"
 on debug.log.
@@ -143,7 +143,7 @@ in the tor configuration file. The hashed password can be obtained with the comm
 
 ## 4. Privacy recommendations
 
-- Do not add anything but Bitcoin Core ports to the onion service created in section 2.
+- Do not add anything but Litecoin Core ports to the onion service created in section 2.
   If you run a web service too, create a new onion service for that.
   Otherwise it is trivial to link them, which may reduce privacy. Hidden
   services created automatically (as in section 3) always have only one port
