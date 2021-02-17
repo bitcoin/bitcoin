@@ -180,6 +180,11 @@ and untracked files and directories will be wiped, allowing you to start anew.
 EOF
 }
 
+# Create SOURCES_PATH and BASE_CACHE if they are non-empty so that we can map
+# them into the container
+[ -z "$SOURCES_PATH" ] || mkdir -p "$SOURCES_PATH"
+[ -z "$BASE_CACHE" ]   || mkdir -p "$BASE_CACHE"
+
 # Deterministically build Bitcoin Core
 # shellcheck disable=SC2153
 for host in $HOSTS; do
@@ -274,6 +279,7 @@ EOF
                                  --share="$OUTDIR"=/outdir \
                                  --expose="$(git rev-parse --git-common-dir)" \
                                  ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
+                                 ${BASE_CACHE:+--share="$BASE_CACHE"} \
                                  --max-jobs="$MAX_JOBS" \
                                  ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
                                  ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS} \
@@ -282,6 +288,7 @@ EOF
                                         SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:?unable to determine value}" \
                                         ${V:+V=1} \
                                         ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"} \
+                                        ${BASE_CACHE:+BASE_CACHE="$BASE_CACHE"} \
                                         DISTSRC="$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")" \
                                         OUTDIR=/outdir \
                                       bash -c "cd /bitcoin && bash contrib/guix/libexec/build.sh"

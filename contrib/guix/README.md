@@ -114,6 +114,12 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
   depends tree. Setting this to the same directory across multiple builds of the
   depends tree can eliminate unnecessary redownloading of package sources.
 
+* _**BASE_CACHE**_
+
+  Set the depends tree cache for built packages. This is passed through to the
+  depends tree. Setting this to the same directory across multiple builds of the
+  depends tree can eliminate unnecessary building of packages.
+
 * _**MAX_JOBS**_
 
   Override the maximum number of jobs to run simultaneously, you might want to

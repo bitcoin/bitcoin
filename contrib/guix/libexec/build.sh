@@ -167,6 +167,7 @@ esac
 make -C depends --jobs="$MAX_JOBS" HOST="$HOST" \
                                    ${V:+V=1} \
                                    ${SOURCES_PATH+SOURCES_PATH="$SOURCES_PATH"} \
+                                   ${BASE_CACHE+BASE_CACHE="$BASE_CACHE"} \
                                    i686_linux_CC=i686-linux-gnu-gcc \
                                    i686_linux_CXX=i686-linux-gnu-g++ \
                                    i686_linux_AR=i686-linux-gnu-ar \
