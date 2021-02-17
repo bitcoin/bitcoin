@@ -173,7 +173,14 @@ static Consensus::LLMQParams llmq400_60 = {
         .keepOldConnections = 5,
         .recoveryMembers = 100,
 };
-
+void CChainParams::UpdateLLMQV17Params(int size, int threshold) {
+    consensus.llmqs.emplace(Consensus::LLMQ_TEST_V17, llmq_test_v17);
+    auto& params = consensus.llmqs.at(Consensus::LLMQ_TEST_V17);
+    params.size = size;
+    params.minSize = threshold;
+    params.threshold = threshold;
+    params.dkgBadVotesThreshold = threshold;
+}
 /**
  * Main network
  */
@@ -589,7 +596,6 @@ public:
         nMinSporkKeys = 1;
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_TEST] = llmq_test;
-        consensus.llmqs[Consensus::LLMQ_TEST_V17] = llmq_test_v17;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_TEST;
         nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
         fAllowMultiplePorts = true;
@@ -697,7 +703,6 @@ public:
         nMinSporkKeys = 1; 
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_TEST] = llmq_test;
-        consensus.llmqs[Consensus::LLMQ_TEST_V17] = llmq_test_v17;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_TEST;
         nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
         fAllowMultiplePorts = true;
@@ -842,6 +847,11 @@ void UpdateLLMQTestParams(int size, int threshold)
 {
     auto* params = const_cast<CChainParams*> (globalChainParams.get ());
     params->UpdateLLMQTestParams(size, threshold);
+}
+void UpdateLLMQV17Params(int size, int threshold)
+{
+    auto* params = const_cast<CChainParams*> (globalChainParams.get ());
+    params->UpdateLLMQV17Params(size, threshold);
 }
 std::ostream& operator<<(std::ostream& o, const AssumeutxoData& aud)
 {

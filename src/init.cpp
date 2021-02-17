@@ -533,6 +533,7 @@ void SetupServerArgs(NodeContext& node)
     argsman.AddArg("-assetindex=<n>", strprintf("Wallet is Asset aware, won't spend assets when sending only Syscoin (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);		
     argsman.AddArg("-dip3params=<n:m>", "DIP3 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);	
     argsman.AddArg("-llmqtestparams=<n:m>", "LLMQ params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
+    argsman.AddArg("-llmqv17params=<n:m>", "LLMQ v17 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mncollateral=<n>", strprintf("Masternode Collateral required, used for testing only (default: %u)", DEFAULT_MN_COLLATERAL_REQUIRED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-watchquorums=<n>", strprintf("Watch and validate quorum communication (default: %u)", llmq::DEFAULT_WATCH_QUORUMS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1377,7 +1378,17 @@ bool AppInitParameterInteraction(const ArgsManager& args)
             }
             UpdateLLMQTestParams(size, threshold);
         }
-    } else if (args.IsArgSet("-llmqtestparams")) {
+        if (args.IsArgSet("-llmqv17params")) {
+            std::string s = args.GetArg("-llmqv17params", "");
+            std::vector<std::string> v;
+            boost::split(v, s, boost::is_any_of(":"));
+            int size, threshold;
+            if (v.size() != 2 || !ParseInt32(v[0], &size) || !ParseInt32(v[1], &threshold)) {
+                return InitError(Untranslated("Invalid -llmqv17params specified"));
+            }
+            UpdateLLMQV17Params(size, threshold);
+        }
+    } else if (args.IsArgSet("-llmqtestparams") || args.IsArgSet("-llmqv17params")) {
         return InitError(Untranslated("LLMQ test params can only be overridden on regtest."));
     }
     // Option to startup with mocktime set (used for regression testing):

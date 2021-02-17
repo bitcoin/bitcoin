@@ -23,7 +23,7 @@ llmq_type_strings = {llmq_test: 'llmq_test', llmq_test_v17: 'llmq_test_v17'}
 
 class LLMQ_Data_Recovery(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(9, 8, [["-whitelist=noban@127.0.0.1"]] * 9, fast_dip3_enforcement=True)
+        self.set_dash_test_params(9, 8, [["-llmqv17params=3:2","-whitelist=noban@127.0.0.1"]] * 9, fast_dip3_enforcement=True)
         self.set_dash_llmq_test_params(4, 3)
 
     def skip_test_if_missing_module(self):

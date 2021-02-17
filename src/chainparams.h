@@ -121,6 +121,7 @@ public:
     const std::vector<std::string>& SporkAddresses() const { return vSporkAddresses; }
     int MinSporkKeys() const { return nMinSporkKeys; }
     void UpdateLLMQTestParams(int size, int threshold);
+    void UpdateLLMQV17Params(int size, int threshold);
     /** Require addresses specified with "-externalip" parameter to be routable */
     bool RequireRoutableExternalIP() const { return fRequireRoutableExternalIP; }
     /** How long to wait until we allow retrying of a LLMQ connection  */
@@ -182,4 +183,5 @@ void SelectParams(const std::string& chain);
  * Allows modifying parameters of the test LLMQ
  */
 void UpdateLLMQTestParams(int size, int threshold);
+void UpdateLLMQV17Params(int size, int threshold);
 #endif // SYSCOIN_CHAINPARAMS_H
