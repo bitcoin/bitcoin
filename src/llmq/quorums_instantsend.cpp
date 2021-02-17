@@ -185,9 +185,9 @@ void CInstantSendDb::RemoveArchivedInstantSendLocks(int nUntilHeight)
     db.WriteBatch(batch);
 }
 
-bool CInstantSendDb::HasArchivedInstantSendLock(const uint256& islockHash) const
+bool CInstantSendDb::KnownInstantSendLock(const uint256& islockHash) const
 {
-    return db.Exists(std::make_tuple(std::string(DB_ARCHIVED_BY_HASH), islockHash));
+    return GetInstantSendLockByHash(islockHash) != nullptr || db.Exists(std::make_tuple(std::string(DB_ARCHIVED_BY_HASH), islockHash));
 }
 
 size_t CInstantSendDb::GetInstantSendLockCount() const
@@ -682,10 +682,7 @@ void CInstantSendManager::ProcessMessageInstantSendLock(CNode* pfrom, const llmq
     }
 
     LOCK(cs);
-    if (db.GetInstantSendLockByHash(hash) != nullptr) {
-        return;
-    }
-    if (pendingInstantSendLocks.count(hash)) {
+    if (pendingInstantSendLocks.count(hash) || db.KnownInstantSendLock(hash)) {
         return;
     }
 
@@ -874,27 +871,6 @@ std::unordered_set<uint256> CInstantSendManager::ProcessPendingInstantSendLocks(
 
 void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& hash, const CInstantSendLockPtr& islock)
 {
-    CTransactionRef tx;
-    uint256 hashBlock;
-    const CBlockIndex* pindexMined = nullptr;
-    // we ignore failure here as we must be able to propagate the lock even if we don't have the TX locally
-    if (GetTransaction(islock->txid, tx, Params().GetConsensus(), hashBlock)) {
-        if (!hashBlock.IsNull()) {
-            {
-                LOCK(cs_main);
-                pindexMined = LookupBlockIndex(hashBlock);
-            }
-
-            // Let's see if the TX that was locked by this islock is already mined in a ChainLocked block. If yes,
-            // we can simply ignore the islock, as the ChainLock implies locking of all TXs in that chain
-            if (llmq::chainLocksHandler->HasChainLock(pindexMined->nHeight, pindexMined->GetBlockHash())) {
-                LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txlock=%s, islock=%s: dropping islock as it already got a ChainLock in block %s, peer=%d\n", __func__,
-                         islock->txid.ToString(), hash.ToString(), hashBlock.ToString(), from);
-                return;
-            }
-        }
-    }
-
     {
         LOCK(cs);
 
@@ -904,11 +880,33 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
         creatingInstantSendLocks.erase(islock->GetRequestId());
         txToCreatingInstantSendLocks.erase(islock->txid);
 
-        CInstantSendLockPtr otherIsLock;
-        if (db.GetInstantSendLockByHash(hash)) {
+        if (db.KnownInstantSendLock(hash)) {
             return;
         }
-        otherIsLock = db.GetInstantSendLockByTxid(islock->txid);
+    }
+
+    CTransactionRef tx;
+    uint256 hashBlock;
+    const CBlockIndex* pindexMined{nullptr};
+    // we ignore failure here as we must be able to propagate the lock even if we don't have the TX locally
+    if (GetTransaction(islock->txid, tx, Params().GetConsensus(), hashBlock) && !hashBlock.IsNull()) {
+        {
+            LOCK(cs_main);
+            pindexMined = LookupBlockIndex(hashBlock);
+        }
+
+        // Let's see if the TX that was locked by this islock is already mined in a ChainLocked block. If yes,
+        // we can simply ignore the islock, as the ChainLock implies locking of all TXs in that chain
+        if (pindexMined != nullptr && llmq::chainLocksHandler->HasChainLock(pindexMined->nHeight, pindexMined->GetBlockHash())) {
+            LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txlock=%s, islock=%s: dropping islock as it already got a ChainLock in block %s, peer=%d\n", __func__,
+                     islock->txid.ToString(), hash.ToString(), hashBlock.ToString(), from);
+            return;
+        }
+    }
+
+    {
+        LOCK(cs);
+        CInstantSendLockPtr otherIsLock = db.GetInstantSendLockByTxid(islock->txid);
         if (otherIsLock != nullptr) {
             LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: duplicate islock, other islock=%s, peer=%d\n", __func__,
                      islock->txid.ToString(), hash.ToString(), ::SerializeHash(*otherIsLock).ToString(), from);
@@ -1417,7 +1415,7 @@ bool CInstantSendManager::AlreadyHave(const CInv& inv) const
     }
 
     LOCK(cs);
-    return db.GetInstantSendLockByHash(inv.hash) != nullptr || pendingInstantSendLocks.count(inv.hash) != 0 || db.HasArchivedInstantSendLock(inv.hash);
+    return pendingInstantSendLocks.count(inv.hash) != 0 || db.KnownInstantSendLock(inv.hash);
 }
 
 bool CInstantSendManager::GetInstantSendLockByHash(const uint256& hash, llmq::CInstantSendLock& ret) const
@@ -1463,7 +1461,7 @@ bool CInstantSendManager::IsLocked(const uint256& txHash) const
     }
 
     LOCK(cs);
-    return db.GetInstantSendLockByTxid(txHash) != nullptr;
+    return db.KnownInstantSendLock(db.GetInstantSendLockHashByTxid(txHash));
 }
 
 bool CInstantSendManager::IsConflicted(const CTransaction& tx) const
