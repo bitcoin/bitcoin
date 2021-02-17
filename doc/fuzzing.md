@@ -127,7 +127,7 @@ To quickly get started fuzzing Syscoin Core using [libFuzzer](https://llvm.org/d
 
 ```sh
 $ git clone https://github.com/syscoin/syscoin
-$ cd bitcoin/
+$ cd syscoin/
 $ ./autogen.sh
 $ CC=clang CXX=clang++ ./configure --enable-fuzz --with-sanitizers=address,fuzzer,undefined
 # macOS users: If you have problem with this step then make sure to read "macOS hints for
@@ -237,7 +237,7 @@ To quickly get started fuzzing Syscoin Core using [`afl-fuzz`](https://github.co
 
 ```sh
 $ git clone https://github.com/syscoin/syscoin
-$ cd bitcoin/
+$ cd syscoin/
 $ git clone https://github.com/google/afl
 $ make -C afl/
 $ make -C afl/llvm_mode/
@@ -257,15 +257,15 @@ $ FUZZ=bech32 afl/afl-fuzz -i inputs/ -o outputs/ -- src/test/fuzz/fuzz
 
 Read the [`afl-fuzz` documentation](https://github.com/google/afl) for more information.
 
-# Fuzzing Bitcoin Core using Honggfuzz
+# Fuzzing Syscoin Core using Honggfuzz
 
 ## Quickstart guide
 
-To quickly get started fuzzing Bitcoin Core using [Honggfuzz](https://github.com/google/honggfuzz):
+To quickly get started fuzzing Syscoin Core using [Honggfuzz](https://github.com/google/honggfuzz):
 
 ```sh
-$ git clone https://github.com/bitcoin/bitcoin
-$ cd bitcoin/
+$ git clone https://github.com/syscoin/syscoin
+$ cd syscoin/
 $ ./autogen.sh
 $ git clone https://github.com/google/honggfuzz
 $ cd honggfuzz/
@@ -279,10 +279,10 @@ $ FUZZ=process_message honggfuzz/honggfuzz -i inputs/ -- src/test/fuzz/fuzz
 
 Read the [Honggfuzz documentation](https://github.com/google/honggfuzz/blob/master/docs/USAGE.md) for more information.
 
-## Fuzzing the Bitcoin Core P2P layer using Honggfuzz NetDriver
+## Fuzzing the Syscoin Core P2P layer using Honggfuzz NetDriver
 
-Honggfuzz NetDriver allows for very easy fuzzing of TCP servers such as Bitcoin
-Core without having to write any custom fuzzing harness. The `bitcoind` server
+Honggfuzz NetDriver allows for very easy fuzzing of TCP servers such as Syscoin
+Core without having to write any custom fuzzing harness. The `syscoind` server
 process is largely fuzzed without modification.
 
 This makes the fuzzing highly realistic: a bug reachable by the fuzzer is likely
@@ -291,10 +291,10 @@ also remotely triggerable by an untrusted peer.
 To quickly get started fuzzing the P2P layer using Honggfuzz NetDriver:
 
 ```sh
-$ mkdir bitcoin-honggfuzz-p2p/
-$ cd bitcoin-honggfuzz-p2p/
-$ git clone https://github.com/bitcoin/bitcoin
-$ cd bitcoin/
+$ mkdir syscoin-honggfuzz-p2p/
+$ cd syscoin-honggfuzz-p2p/
+$ git clone https://github.com/syscoin/syscoin
+$ cd syscoin/
 $ ./autogen.sh
 $ git clone https://github.com/google/honggfuzz
 $ cd honggfuzz/
@@ -305,10 +305,10 @@ $ CC=$(pwd)/honggfuzz/hfuzz_cc/hfuzz-clang \
       ./configure --disable-wallet --with-gui=no \
                   --with-sanitizers=address,undefined
 $ git apply << "EOF"
-diff --git a/src/bitcoind.cpp b/src/bitcoind.cpp
+diff --git a/src/syscoind.cpp b/src/syscoind.cpp
 index 455a82e39..2faa3f80f 100644
---- a/src/bitcoind.cpp
-+++ b/src/bitcoind.cpp
+--- a/src/syscoind.cpp
++++ b/src/syscoind.cpp
 @@ -158,7 +158,11 @@ static bool AppInit(int argc, char* argv[])
      return fRet;
  }
@@ -344,11 +344,11 @@ index cf987b699..636a4176a 100644
                   SanitizeString(msg->m_command), msg->m_message_size,
                   HexStr(Span<uint8_t>(hash.begin(), hash.begin() + CMessageHeader::CHECKSUM_SIZE)),
 EOF
-$ make -C src/ bitcoind
+$ make -C src/ syscoind
 $ mkdir -p inputs/
 $ honggfuzz/honggfuzz --exit_upon_crash --quiet --timeout 4 -n 1 -Q \
       -E HFND_TCP_PORT=18444 -f inputs/ -- \
-          src/bitcoind -regtest -discover=0 -dns=0 -dnsseed=0 -listenonion=0 \
+          src/syscoind -regtest -discover=0 -dns=0 -dnsseed=0 -listenonion=0 \
                        -nodebuglogfile -bind=127.0.0.1:18444 -logthreadnames \
                        -debug
 ```
