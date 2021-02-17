@@ -11,11 +11,101 @@
 #include <wallet/ismine.h>
 #include <threadsafety.h>
 #include <tinyformat.h>
+#include <util/overloaded.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 
 #include <list>
+#include <variant>
 #include <vector>
+
+//! State of transaction confirmed in a block.
+struct TxStateConfirmed {
+    uint256 confirmed_block_hash;
+    int confirmed_block_height;
+    int position_in_block;
+
+    explicit TxStateConfirmed(const uint256& block_hash, int height, int index) : confirmed_block_hash(block_hash), confirmed_block_height(height), position_in_block(index) {}
+};
+
+//! State of transaction added to mempool.
+struct TxStateInMempool {
+};
+
+//! State of rejected transaction that conflicts with a confirmed block.
+struct TxStateConflicted {
+    uint256 conflicting_block_hash;
+    int conflicting_block_height;
+
+    explicit TxStateConflicted(const uint256& block_hash, int height) : conflicting_block_hash(block_hash), conflicting_block_height(height) {}
+};
+
+//! State of transaction not confirmed or conflicting with a known block and
+//! not in the mempool. May conflict with the mempool, or with an unknown block,
+//! or be abandoned, never broadcast, or rejected from the mempool for another
+//! reason.
+struct TxStateInactive {
+    bool abandoned;
+
+    explicit TxStateInactive(bool abandoned = false) : abandoned(abandoned) {}
+};
+
+//! State of transaction loaded in an unrecognized state with unexpected hash or
+//! index values. Treated as inactive (with serialized hash and index values
+//! preserved) by default, but may enter another state if transaction is added
+//! to the mempool, or confirmed, or abandoned, or found conflicting.
+struct TxStateUnrecognized {
+    uint256 block_hash;
+    int index;
+
+    TxStateUnrecognized(const uint256& block_hash, int index) : block_hash(block_hash), index(index) {}
+};
+
+//! All possible CWalletTx states
+using TxState = std::variant<TxStateConfirmed, TxStateInMempool, TxStateConflicted, TxStateInactive, TxStateUnrecognized>;
+
+//! Subset of states transaction sync logic is implemented to handle.
+using SyncTxState = std::variant<TxStateConfirmed, TxStateInMempool, TxStateInactive>;
+
+//! Try to interpret deserialized TxStateUnrecognized data as a recognized state.
+static inline TxState TxStateInterpretSerialized(TxStateUnrecognized data)
+{
+    if (data.block_hash == uint256::ZERO) {
+        if (data.index == 0) return TxStateInactive{};
+    } else if (data.block_hash == uint256::ONE) {
+        if (data.index == -1) return TxStateInactive{/*abandoned=*/true};
+    } else if (data.index >= 0) {
+        return TxStateConfirmed{data.block_hash, /*height=*/-1, data.index};
+    } else if (data.index == -1) {
+        return TxStateConflicted{data.block_hash, /*height=*/-1};
+    }
+    return data;
+}
+
+//! Get TxState serialized block hash. Inverse of TxStateInterpretSerialized.
+static inline uint256 TxStateSerializedBlockHash(const TxState& state)
+{
+    return std::visit(util::Overloaded{
+        [](const TxStateInactive& inactive) { return inactive.abandoned ? uint256::ONE : uint256::ZERO; },
+        [](const TxStateInMempool& in_mempool) { return uint256::ZERO; },
+        [](const TxStateConfirmed& confirmed) { return confirmed.confirmed_block_hash; },
+        [](const TxStateConflicted& conflicted) { return conflicted.conflicting_block_hash; },
+        [](const TxStateUnrecognized& unrecognized) { return unrecognized.block_hash; }
+    }, state);
+}
+
+//! Get TxState serialized block index. Inverse of TxStateInterpretSerialized.
+static inline int TxStateSerializedIndex(const TxState& state)
+{
+    return std::visit(util::Overloaded{
+        [](const TxStateInactive& inactive) { return inactive.abandoned ? -1 : 0; },
+        [](const TxStateInMempool& in_mempool) { return 0; },
+        [](const TxStateConfirmed& confirmed) { return confirmed.position_in_block; },
+        [](const TxStateConflicted& conflicted) { return -1; },
+        [](const TxStateUnrecognized& unrecognized) { return unrecognized.index; }
+    }, state);
+}
+
 
 typedef std::map<std::string, std::string> mapValue_t;
 
@@ -45,12 +135,6 @@ public:
  */
 class CWalletTx
 {
-private:
-    /** Constant used in hashBlock to indicate tx has been abandoned, only used at
-     * serialization/deserialization to avoid ambiguity with conflicted.
-     */
-    static constexpr const uint256& ABANDON_HASH = uint256::ONE;
-
 public:
     /**
      * Key/value map with information about the transaction.
@@ -111,11 +195,9 @@ public:
      */
     mutable bool m_is_cache_empty{true};
     mutable bool fChangeCached;
-    mutable bool fInMempool;
     mutable CAmount nChangeCached;
 
-    CWalletTx(CTransactionRef arg)
-        : tx(std::move(arg))
+    CWalletTx(CTransactionRef tx, const TxState& state) : tx(std::move(tx)), m_state(state)
     {
         Init();
     }
@@ -129,44 +211,12 @@ public:
         nTimeSmart = 0;
         fFromMe = false;
         fChangeCached = false;
-        fInMempool = false;
         nChangeCached = 0;
         nOrderPos = -1;
-        m_confirm = Confirmation{};
     }
 
     CTransactionRef tx;
-
-    /** New transactions start as UNCONFIRMED. At BlockConnected,
-     * they will transition to CONFIRMED. In case of reorg, at BlockDisconnected,
-     * they roll back to UNCONFIRMED. If we detect a conflicting transaction at
-     * block connection, we update conflicted tx and its dependencies as CONFLICTED.
-     * If tx isn't confirmed and outside of mempool, the user may switch it to ABANDONED
-     * by using the abandontransaction call. This last status may be override by a CONFLICTED
-     * or CONFIRMED transition.
-     */
-    enum Status {
-        UNCONFIRMED,
-        CONFIRMED,
-        CONFLICTED,
-        ABANDONED
-    };
-
-    /** Confirmation includes tx status and a triplet of {block height/block hash/tx index in block}
-     * at which tx has been confirmed. All three are set to 0 if tx is unconfirmed or abandoned.
-     * Meaning of these fields changes with CONFLICTED state where they instead point to block hash
-     * and block height of the deepest conflicting tx.
-     */
-    struct Confirmation {
-        Status status;
-        int block_height;
-        uint256 hashBlock;
-        int nIndex;
-        Confirmation(Status status = UNCONFIRMED, int block_height = 0, uint256 block_hash = uint256(), int block_index = 0)
-            : status{status}, block_height{block_height}, hashBlock{block_hash}, nIndex{block_index} {}
-    };
-
-    Confirmation m_confirm;
+    TxState m_state;
 
     template<typename Stream>
     void Serialize(Stream& s) const
@@ -184,8 +234,8 @@ public:
         std::vector<uint8_t> dummy_vector1; //!< Used to be vMerkleBranch
         std::vector<uint8_t> dummy_vector2; //!< Used to be vtxPrev
         bool dummy_bool = false; //!< Used to be fSpent
-        uint256 serializedHash = isAbandoned() ? ABANDON_HASH : m_confirm.hashBlock;
-        int serializedIndex = isAbandoned() || isConflicted() ? -1 : m_confirm.nIndex;
+        uint256 serializedHash = TxStateSerializedBlockHash(m_state);
+        int serializedIndex = TxStateSerializedIndex(m_state);
         s << tx << serializedHash << dummy_vector1 << serializedIndex << dummy_vector2 << mapValueCopy << vOrderForm << fTimeReceivedIsTxTime << nTimeReceived << fFromMe << dummy_bool;
     }
 
@@ -197,24 +247,11 @@ public:
         std::vector<uint256> dummy_vector1; //!< Used to be vMerkleBranch
         std::vector<CMerkleTx> dummy_vector2; //!< Used to be vtxPrev
         bool dummy_bool; //! Used to be fSpent
+        uint256 serialized_block_hash;
         int serializedIndex;
-        s >> tx >> m_confirm.hashBlock >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> mapValue >> vOrderForm >> fTimeReceivedIsTxTime >> nTimeReceived >> fFromMe >> dummy_bool;
+        s >> tx >> serialized_block_hash >> dummy_vector1 >> serializedIndex >> dummy_vector2 >> mapValue >> vOrderForm >> fTimeReceivedIsTxTime >> nTimeReceived >> fFromMe >> dummy_bool;
 
-        /* At serialization/deserialization, an nIndex == -1 means that hashBlock refers to
-         * the earliest block in the chain we know this or any in-wallet ancestor conflicts
-         * with. If nIndex == -1 and hashBlock is ABANDON_HASH, it means transaction is abandoned.
-         * In same context, an nIndex >= 0 refers to a confirmed transaction (if hashBlock set) or
-         * unconfirmed one. Older clients interpret nIndex == -1 as unconfirmed for backward
-         * compatibility (pre-commit 9ac63d6).
-         */
-        if (serializedIndex == -1 && m_confirm.hashBlock == ABANDON_HASH) {
-            setAbandoned();
-        } else if (serializedIndex == -1) {
-            setConflicted();
-        } else if (!m_confirm.hashBlock.IsNull()) {
-            m_confirm.nIndex = serializedIndex;
-            setConfirmed();
-        }
+        m_state = TxStateInterpretSerialized({serialized_block_hash, serializedIndex});
 
         const auto it_op = mapValue.find("n");
         nOrderPos = (it_op != mapValue.end()) ? LocaleIndependentAtoi<int64_t>(it_op->second) : -1;
@@ -250,20 +287,13 @@ public:
 
     int64_t GetTxTime() const;
 
-    bool isAbandoned() const { return m_confirm.status == CWalletTx::ABANDONED; }
-    void setAbandoned()
-    {
-        m_confirm.status = CWalletTx::ABANDONED;
-        m_confirm.hashBlock = uint256();
-        m_confirm.block_height = 0;
-        m_confirm.nIndex = 0;
-    }
-    bool isConflicted() const { return m_confirm.status == CWalletTx::CONFLICTED; }
-    void setConflicted() { m_confirm.status = CWalletTx::CONFLICTED; }
-    bool isUnconfirmed() const { return m_confirm.status == CWalletTx::UNCONFIRMED; }
-    void setUnconfirmed() { m_confirm.status = CWalletTx::UNCONFIRMED; }
-    bool isConfirmed() const { return m_confirm.status == CWalletTx::CONFIRMED; }
-    void setConfirmed() { m_confirm.status = CWalletTx::CONFIRMED; }
+    template<typename T> const T* state() const { return std::get_if<T>(&m_state); }
+    template<typename T> T* state() { return std::get_if<T>(&m_state); }
+
+    bool isAbandoned() const { return state<TxStateInactive>() && state<TxStateInactive>()->abandoned; }
+    bool isConflicted() const { return state<TxStateConflicted>(); }
+    bool isUnconfirmed() const { return !isAbandoned() && !isConflicted() && !isConfirmed(); }
+    bool isConfirmed() const { return state<TxStateConfirmed>(); }
     const uint256& GetHash() const { return tx->GetHash(); }
     bool IsCoinBase() const { return tx->IsCoinBase(); }
 

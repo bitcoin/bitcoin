@@ -159,6 +159,7 @@ BITCOIN_TESTS += \
   wallet/test/wallet_tests.cpp \
   wallet/test/walletdb_tests.cpp \
   wallet/test/wallet_crypto_tests.cpp \
+  wallet/test/wallet_transaction_tests.cpp \
   wallet/test/coinselector_tests.cpp \
   wallet/test/init_tests.cpp \
   wallet/test/ismine_tests.cpp \
