@@ -150,7 +150,6 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.extra_args = [[
             '-whitelist=noban@127.0.0.1',
-            '-blockversion=536870912'
             '-addresstype=legacy',
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
         ]]
