@@ -804,4 +804,61 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
     }
 }
 
+// Check SelectCoinsGroupedByAddresses() behaviour
+BOOST_FIXTURE_TEST_CASE(select_coins_grouped_by_addresses, ListCoinsTestingSetup)
+{
+    // Check initial balance from one mature coinbase transaction.
+    BOOST_CHECK_EQUAL(wallet->GetAvailableBalance(), 500 * COIN);
+
+    std::vector<CompactTallyItem> vecTally;
+    BOOST_CHECK(wallet->SelectCoinsGroupedByAddresses(vecTally, false /*fSkipDenominated*/, false /*fAnonymizable*/,
+                                                                false /*fSkipUnconfirmed*/, 100/*nMaxOupointsPerAddress*/));
+    BOOST_CHECK_EQUAL(vecTally.size(), 1);
+    BOOST_CHECK_EQUAL(vecTally.at(0).nAmount, 500 * COIN);
+    BOOST_CHECK_EQUAL(vecTally.at(0).vecInputCoins.size(), 1);
+    vecTally.clear();
+
+    // Create two conflicting transactions, add one to the wallet and mine the other one.
+    CTransactionRef tx1;
+    CTransactionRef tx2;
+    CReserveKey reservekey1(wallet.get());
+    CReserveKey reservekey2(wallet.get());
+    CAmount fee;
+    int changePos = -1;
+    std::string error;
+    CCoinControl dummy;
+    BOOST_CHECK(wallet->CreateTransaction({CRecipient{GetScriptForRawPubKey({}), 2 * COIN, true /* subtract fee */}},
+                                        tx1, reservekey1, fee, changePos, error, dummy));
+    BOOST_CHECK(wallet->CreateTransaction({CRecipient{GetScriptForRawPubKey({}), 1 * COIN, true /* subtract fee */}},
+                                        tx2, reservekey2, fee, changePos, error, dummy));
+    CValidationState state;
+    BOOST_CHECK(wallet->CommitTransaction(tx1, {}, {}, {}, reservekey1, nullptr, state));
+    reservekey2.KeepKey();
+    BOOST_CHECK_EQUAL(wallet->GetAvailableBalance(), 0);
+    CreateAndProcessBlock({CMutableTransaction(*tx2)}, GetScriptForRawPubKey({}));
+
+    // Reveal the mined tx, it should conflict with the one we have in the wallet already.
+    WalletRescanReserver reserver(wallet.get());
+    reserver.reserve();
+    BOOST_CHECK_EQUAL(wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver), nullptr);
+    {
+        LOCK(wallet->cs_wallet);
+        const auto& conflicts = wallet->GetConflicts(tx2->GetHash());
+        BOOST_CHECK_EQUAL(conflicts.size(), 2);
+        BOOST_CHECK_EQUAL(conflicts.count(tx1->GetHash()), 1);
+        BOOST_CHECK_EQUAL(conflicts.count(tx2->GetHash()), 1);
+    }
+
+    // Committed tx is the one that should be marked as "conflicting".
+    // Make sure that available balance and SelectCoinsGroupedByAddresses results match.
+    BOOST_CHECK(wallet->SelectCoinsGroupedByAddresses(vecTally, false /*fSkipDenominated*/, false /*fAnonymizable*/,
+                                                                false /*fSkipUnconfirmed*/, 100/*nMaxOupointsPerAddress*/));
+    BOOST_CHECK_EQUAL(vecTally.size(), 2);
+    BOOST_CHECK_EQUAL(vecTally.at(0).vecInputCoins.size(), 1);
+    BOOST_CHECK_EQUAL(vecTally.at(1).vecInputCoins.size(), 1);
+    BOOST_CHECK_EQUAL(vecTally.at(0).nAmount + vecTally.at(1).nAmount, (500 + 499) * COIN);
+    BOOST_CHECK_EQUAL(wallet->GetAvailableBalance(), (500 + 499) * COIN);
+    vecTally.clear();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
