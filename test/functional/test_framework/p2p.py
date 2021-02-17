@@ -186,13 +186,13 @@ class P2PConnection(asyncio.Protocol):
         if net == "devnet":
             devnet_name = "devnet1"  # see initialize_datadir()
             if self.uacomment is None:
-                self.strSubVer = MY_SUBVERSION % ("(devnet.devnet-%s)" % devnet_name).encode()
+                self.strSubVer = MY_SUBVERSION % ("(devnet.devnet-%s)" % devnet_name)
             else:
-                self.strSubVer = MY_SUBVERSION % ("(devnet.devnet-%s,%s)" % (devnet_name, self.uacomment)).encode()
+                self.strSubVer = MY_SUBVERSION % ("(devnet.devnet-%s,%s)" % (devnet_name, self.uacomment))
         elif self.uacomment is not None:
-            self.strSubVer = MY_SUBVERSION % ("(%s)" % self.uacomment).encode()
+            self.strSubVer = MY_SUBVERSION % ("(%s)" % self.uacomment)
         else:
-            self.strSubVer = MY_SUBVERSION % b""
+            self.strSubVer = MY_SUBVERSION % ""
 
     def peer_connect(self, dstaddr, dstport, *, net, timeout_factor, uacomment=None):
         self.peer_connect_helper(dstaddr, dstport, net, timeout_factor, uacomment)
