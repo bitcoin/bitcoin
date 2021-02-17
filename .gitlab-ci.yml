@@ -171,7 +171,7 @@ x86_64-unknown-linux-gnu-debug:
     HOST: x86_64-unknown-linux-gnu
     DEP_OPTS: "DEBUG=1"
 
-x86_64-unknown-linux-gnu-nowalet:
+x86_64-unknown-linux-gnu-nowallet:
   extends:
     - .build-depends-template
     - .skip-in-fast-mode-template
@@ -242,7 +242,7 @@ linux64_nowallet-build:
     - .build-template
     - .skip-in-fast-mode-template
   needs:
-    - x86_64-unknown-linux-gnu-nowalet
+    - x86_64-unknown-linux-gnu-nowallet
   variables:
     BUILD_TARGET: linux64_nowallet
 
