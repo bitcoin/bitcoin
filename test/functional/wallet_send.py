@@ -289,14 +289,14 @@ class WalletSendTest(BitcoinTestFramework):
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode,
                 expect_error=(-8, "Invalid conf_target, must be between 1 and 1008"))  # max value of 1008 per src/policy/fees.h
         msg = 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"'
-        for target, mode in product([-1, 0], ["btc/kb", "sat/b"]):
+        for target, mode in product([-1, 0], ["ltc/kb", "sat/b"]):
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode, expect_error=(-8, msg))
         for mode in ["", "foo", Decimal("3.141592")]:
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode=mode, expect_error=(-8, msg))
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=0.1, arg_estimate_mode=mode, expect_error=(-8, msg))
             assert_raises_rpc_error(-8, msg, w0.send, {w1.getnewaddress(): 1}, 0.1, mode)
 
-        for mode in ["economical", "conservative", "btc/kb", "sat/b"]:
+        for mode in ["economical", "conservative", "ltc/kb", "sat/b"]:
             self.log.debug("{}".format(mode))
             for k, v in {"string": "true", "object": {"foo": "bar"}}.items():
                 self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=v, estimate_mode=mode,

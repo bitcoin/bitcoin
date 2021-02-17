@@ -64,7 +64,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 4, using # in rpcpassword can be ambiguous and should be avoided')
 
         inc_conf_file2_path = os.path.join(self.nodes[0].datadir, 'include2.conf')
-        with open(os.path.join(self.nodes[0].datadir, 'bitcoin.conf'), 'a', encoding='utf-8') as conf:
+        with open(os.path.join(self.nodes[0].datadir, 'litecoin.conf'), 'a', encoding='utf-8') as conf:
             conf.write('includeconf={}\n'.format(inc_conf_file2_path))
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
