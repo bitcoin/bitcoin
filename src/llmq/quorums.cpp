@@ -212,7 +212,7 @@ void CQuorum::StartQuorumDataRecoveryThread(CConnman &connman, const CQuorumCPtr
         return;
     }
     _this->fQuorumDataRecoveryThreadRunning = true;
-    std::thread(&TraceThread<std::function<void()>>, "syscoin-q-recovery", [&] {
+    std::thread(&TraceThread<std::function<void()>>, "syscoin-q-recovery", [&connman, _this, pIndex, nDataMaskIn] {
         size_t nTries{0};
         uint16_t nDataMask{nDataMaskIn};
         int64_t nTimeLastSuccess{0};

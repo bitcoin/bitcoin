@@ -21,10 +21,13 @@ llmq_test_v17 = 102
 llmq_type_strings = {llmq_test: 'llmq_test', llmq_test_v17: 'llmq_test_v17'}
 
 
-class QuorumDataRecoveryTest(DashTestFramework):
+class LLMQ_Data_Recovery(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(9, 7, [["-whitelist=noban@127.0.0.1"]] * 9, fast_dip3_enforcement=True)
+        self.set_dash_test_params(9, 8, [["-whitelist=noban@127.0.0.1"]] * 9, fast_dip3_enforcement=True)
         self.set_dash_llmq_test_params(4, 3)
+
+    def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
 
     def restart_mn(self, mn, reindex=False, qvvec_sync=[], qdata_recovery_enabled=True):
         args = self.extra_args[mn.nodeIdx] + ['-masternodeblsprivkey=%s' % mn.keyOperator,
@@ -35,7 +38,7 @@ class QuorumDataRecoveryTest(DashTestFramework):
             args.append('-llmq-qvvec-sync=%s' % llmq_type_strings[llmq_type])
         self.restart_node(mn.nodeIdx, args)
         force_finish_mnsync(mn.node)
-        self.connect_nodes(mn.node, 0)
+        self.connect_nodes(mn.node.index, 0)
         self.sync_blocks()
 
     def restart_mns(self, mns=None, exclude=[], reindex=False, qvvec_sync=[], qdata_recovery_enabled=True):
@@ -176,4 +179,4 @@ class QuorumDataRecoveryTest(DashTestFramework):
 
 
 if __name__ == '__main__':
-    QuorumDataRecoveryTest().main()
+    LLMQ_Data_Recovery().main()
