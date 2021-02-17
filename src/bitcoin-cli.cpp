@@ -512,12 +512,12 @@ public:
         "Returns a network peer connections dashboard with information from the remote server.\n"
         "This human-readable interface will change regularly and is not intended to be a stable API.\n"
         "Under the hood, -netinfo fetches the data by calling getpeerinfo and getnetworkinfo.\n"
-        "An optional integer argument from 0 to 4 can be passed for different peers listings.\n"
+        + strprintf("An optional integer argument from 0 to %d can be passed for different peers listings; %d to 255 are parsed as %d.\n", MAX_DETAIL_LEVEL, MAX_DETAIL_LEVEL, MAX_DETAIL_LEVEL) +
         "Pass \"help\" to see this detailed help documentation.\n"
         "If more than one argument is passed, only the first one is read and parsed.\n"
         "Suggestion: use with the Linux watch(1) command for a live dashboard; see example below.\n\n"
         "Arguments:\n"
-        "1. level (integer 0-4, optional)  Specify the info level of the peers dashboard (default 0):\n"
+        + strprintf("1. level (integer 0-%d, optional)  Specify the info level of the peers dashboard (default 0):\n", MAX_DETAIL_LEVEL) +
         "                                  0 - Connection counts and local addresses\n"
         "                                  1 - Like 0 but with a peers listing (without address or version columns)\n"
         "                                  2 - Like 1 but with an address column\n"
@@ -525,7 +525,7 @@ public:
         "                                  4 - Like 1 but with both address and version columns\n"
         "2. help (string \"help\", optional) Print this help documentation instead of the dashboard.\n\n"
         "Result:\n\n"
-        "* The peers listing in levels 1-4 displays all of the peers sorted by direction and minimum ping time:\n\n"
+        + strprintf("* The peers listing in levels 1-%d displays all of the peers sorted by direction and minimum ping time:\n\n", MAX_DETAIL_LEVEL) +
         "  Column   Description\n"
         "  ------   -----------\n"
         "  <->      Direction\n"
@@ -562,9 +562,9 @@ public:
         "Compact peers listing\n"
         "> bitcoin-cli -netinfo 1\n\n"
         "Full dashboard\n"
-        "> bitcoin-cli -netinfo 4\n\n"
+        + strprintf("> bitcoin-cli -netinfo %d\n\n", MAX_DETAIL_LEVEL) +
         "Full live dashboard, adjust --interval or --no-title as needed (Linux)\n"
-        "> watch --interval 1 --no-title bitcoin-cli -netinfo 4\n\n"
+        + strprintf("> watch --interval 1 --no-title bitcoin-cli -netinfo %d\n\n", MAX_DETAIL_LEVEL) +
         "See this help\n"
         "> bitcoin-cli -netinfo help\n"};
 };
