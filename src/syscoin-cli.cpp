@@ -302,6 +302,7 @@ private:
     static constexpr int8_t UNKNOWN_NETWORK{-1};
     static constexpr int8_t NET_I2P{3}; // pos of "i2p" in m_networks
     static constexpr uint8_t m_networks_size{4};
+    static constexpr uint8_t MAX_DETAIL_LEVEL{4};
     const std::array<std::string, m_networks_size> m_networks{{"ipv4", "ipv6", "onion", "i2p"}};
     std::array<std::array<uint16_t, m_networks_size + 1>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total)
     uint8_t m_block_relay_peers_count{0};
@@ -439,7 +440,7 @@ public:
         if (!args.empty()) {
             uint8_t n{0};
             if (ParseUInt8(args.at(0), &n)) {
-                m_details_level = n;
+                m_details_level = std::min(n, MAX_DETAIL_LEVEL);
             } else if (args.at(0) == "help") {
                 m_is_help_requested = true;
             } else {
