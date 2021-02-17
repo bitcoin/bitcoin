@@ -73,7 +73,7 @@ def get_mininode_id(node, uacomment=None):
             for p2p in node.p2ps:
                 if uacomment is not None and p2p.uacomment != uacomment:
                     continue
-                if p["subver"] == p2p.strSubVer.decode():
+                if p["subver"] == p2p.strSubVer:
                     return p["id"]
         return None
     wait_until_helper(lambda: get_id() is not None, timeout=10)

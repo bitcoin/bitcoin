@@ -175,7 +175,7 @@ class P2PConnection(asyncio.Protocol):
         # SYSCOIN
         self.uacomment = uacomment
         if self.uacomment is not None:
-            self.strSubVer = MY_SUBVERSIONARG % ("(%s)" % self.uacomment).encode()
+            self.strSubVer = MY_SUBVERSIONARG % ("(%s)" % self.uacomment)
         else:
             self.strSubVer = MY_SUBVERSION
 
