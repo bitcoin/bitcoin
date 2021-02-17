@@ -861,7 +861,7 @@ if test x$use_hardening != xno; then
 
   dnl -fcf-protection used with Clang 7 causes ld to emit warnings:
   dnl ld: error: ... <corrupt x86 feature size: 0x8>
-  dnl Use CHECK_LINK_FLAG & --fatal-warnings to ensure we wont use the flag in this case.
+  dnl Use CHECK_LINK_FLAG & --fatal-warnings to ensure we won't use the flag in this case.
   AX_CHECK_LINK_FLAG([-fcf-protection=full],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fcf-protection=full"],, [[$LDFLAG_WERROR]])
 
   dnl stack-clash-protection does not work properly when building for Windows.

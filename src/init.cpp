@@ -106,7 +106,6 @@
 #include <boost/algorithm/string/split.hpp>
 #include <flatdatabase.h>
 #include <llmq/quorums_init.h>
-#include <llmq/quorums_utils.h>
 #include <evo/deterministicmns.h>
 #include <curl/curl.h>
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
