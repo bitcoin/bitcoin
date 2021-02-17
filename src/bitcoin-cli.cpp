@@ -320,6 +320,7 @@ class NetinfoRequestHandler : public BaseRequestHandler
 private:
     static constexpr int8_t UNKNOWN_NETWORK{-1};
     static constexpr uint8_t m_networks_size{3};
+    static constexpr uint8_t MAX_DETAIL_LEVEL{4};
     const std::array<std::string, m_networks_size> m_networks{{"ipv4", "ipv6", "onion"}};
     std::array<std::array<uint16_t, m_networks_size + 2>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total/block-relay)
     int8_t NetworkStringToId(const std::string& str) const
@@ -437,7 +438,7 @@ public:
         if (!args.empty()) {
             uint8_t n{0};
             if (ParseUInt8(args.at(0), &n)) {
-                m_details_level = n;
+                m_details_level = std::min(n, MAX_DETAIL_LEVEL);
             } else if (args.at(0) == "help") {
                 m_is_help_requested = true;
             } else {
