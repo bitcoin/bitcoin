@@ -23,8 +23,7 @@ llmq_type_strings = {llmq_test: 'llmq_test', llmq_test_v17: 'llmq_test_v17'}
 
 class QuorumDataRecoveryTest(DashTestFramework):
     def set_test_params(self):
-        extra_args = [["-vbparams=v17:0:999999999999:10:8:6:5"] for _ in range(9)]
-        self.set_dash_test_params(9, 7, fast_dip3_enforcement=True, extra_args=extra_args)
+        self.set_dash_test_params(9, 7, [["-whitelist=noban@127.0.0.1"]] * 9, fast_dip3_enforcement=True)
         self.set_dash_llmq_test_params(4, 3)
 
     def restart_mn(self, mn, reindex=False, qvvec_sync=[], qdata_recovery_enabled=True):
@@ -59,7 +58,7 @@ class QuorumDataRecoveryTest(DashTestFramework):
         return None
 
     def get_member_mns(self, quorum_type, quorum_hash):
-        members = self.nodes[0].quorum("info", quorum_type, quorum_hash)["members"]
+        members = self.nodes[0].quorum_info(quorum_type, quorum_hash)["members"]
         mns = []
         for member in members:
             if member["valid"]:

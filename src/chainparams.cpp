@@ -115,6 +115,26 @@ static Consensus::LLMQParams llmq_test = {
 };
 
 
+// this one is for testing only
+static Consensus::LLMQParams llmq_test_v17 = {
+        .type = Consensus::LLMQ_TEST_V17,
+        .name = "llmq_test_v17",
+        .size = 3,
+        .minSize = 2,
+        .threshold = 2,
+
+        .dkgInterval = 24, // one DKG per hour
+        .dkgPhaseBlocks = 2,
+        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
+        .dkgMiningWindowEnd = 18,
+        .dkgBadVotesThreshold = 2,
+
+        .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
+
+        .keepOldConnections = 3,
+        .recoveryMembers = 3,
+};
+
 static Consensus::LLMQParams llmq50_60 = {
         .type = Consensus::LLMQ_50_60,
         .name = "llmq_50_60",
@@ -569,6 +589,7 @@ public:
         nMinSporkKeys = 1;
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_TEST] = llmq_test;
+        consensus.llmqs[Consensus::LLMQ_TEST_V17] = llmq_test_v17;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_TEST;
         nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
         fAllowMultiplePorts = true;
@@ -676,6 +697,7 @@ public:
         nMinSporkKeys = 1; 
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_TEST] = llmq_test;
+        consensus.llmqs[Consensus::LLMQ_TEST_V17] = llmq_test_v17;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_TEST;
         nLLMQConnectionRetryTimeout = 1; // must be lower then the LLMQ signing session timeout so that tests have control over failing behavior
         fAllowMultiplePorts = true;
