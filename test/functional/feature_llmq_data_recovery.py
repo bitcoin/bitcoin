@@ -29,7 +29,9 @@ class LLMQ_Data_Recovery(DashTestFramework):
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
-    def restart_mn(self, mn, reindex=False, qvvec_sync=[], qdata_recovery_enabled=True):
+    def restart_mn(self, mn, reindex=False, qvvec_sync=None, qdata_recovery_enabled=True):
+        if qvvec_sync is None:
+            qvvec_sync = []
         args = self.extra_args[mn.nodeIdx] + ['-masternodeblsprivkey=%s' % mn.keyOperator,
                                               '-llmq-data-recovery=%d' % qdata_recovery_enabled]
         if reindex:
@@ -41,14 +43,22 @@ class LLMQ_Data_Recovery(DashTestFramework):
         self.connect_nodes(mn.node.index, 0)
         self.sync_blocks()
 
-    def restart_mns(self, mns=None, exclude=[], reindex=False, qvvec_sync=[], qdata_recovery_enabled=True):
+    def restart_mns(self, mns=None, exclude=None, reindex=False, qvvec_sync=None, qdata_recovery_enabled=True):
+        if exclude is None:
+            exclude = []
+        if qvvec_sync is None:
+            qvvec_sync = []
         for mn in self.mninfo if mns is None else mns:
             if mn not in exclude:
                 self.restart_mn(mn, reindex, qvvec_sync, qdata_recovery_enabled)
         self.wait_for_sporks_same()
 
-    def test_mns(self, quorum_type_in, quorum_hash_in, valid_mns=[], all_mns=[], expect_secret=True,
+    def test_mns(self, quorum_type_in, quorum_hash_in, valid_mns=None, all_mns=None, expect_secret=True,
                  recover=False, timeout=120):
+        if valid_mns is None:
+            valid_mns = []
+        if all_mns is None:
+            all_mns = []
         for mn in all_mns:
             if mn not in valid_mns:
                 assert not self.test_mn_quorum_data(mn, quorum_type_in, quorum_hash_in, False)

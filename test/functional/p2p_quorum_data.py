@@ -144,6 +144,7 @@ class QuorumDataMessagesTest(DashTestFramework):
             if node0.getblockcount() % 2:
                 node0.generate(1)
                 self.sync_blocks()
+
         def test_basics():
             self.log.info("Testing basics of QGETDATA/QDATA")
             p2p_node0 = p2p_connection(node0)
