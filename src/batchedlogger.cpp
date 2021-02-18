@@ -19,6 +19,6 @@ void CBatchedLogger::Flush()
     if (!accept || msg.empty()) {
         return;
     }
-    LogInstance().LogPrintStr(strprintf("%s:\n%s", header, msg), "", "" 0);
+    LogInstance().LogPrintStr(strprintf("%s:\n%s", header, msg), "", "", 0);
     msg.clear();
 }
