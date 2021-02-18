@@ -19,7 +19,10 @@ class FeatureBlockfilterindexPruneTest(BitcoinTestFramework):
         # test basic pruning compatibility & filter access of pruned blocks
         self.log.info("check if we can access a blockfilter when pruning is enabled but no blocks are actually pruned")
         assert len(self.nodes[1].getblockfilter(self.nodes[1].getbestblockhash())['filter']) > 0
-        self.nodes[1].generate(500)
+        # Mine two batches of blocks to avoid hitting NODE_NETWORK_LIMITED_MIN_BLOCKS disconnection
+        self.nodes[1].generate(250)
+        self.sync_all()
+        self.nodes[1].generate(250)
         self.sync_all()
         self.log.info("prune some blocks")
         pruneheight = self.nodes[1].pruneblockchain(400)
