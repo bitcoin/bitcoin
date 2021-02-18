@@ -382,6 +382,12 @@ UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vecto
 {
     EnsureWalletIsUnlocked(wallet);
 
+    // This function is only used by sendtoaddress and sendmany.
+    // This should always try to sign, if we don't have private keys, don't try to do anything here.
+    if (wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
+    }
+
     if (coin_control.IsUsingCoinJoin()) {
         map_value["DS"] = "1";
     }
@@ -392,7 +398,7 @@ UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vecto
     bilingual_str error;
     CTransactionRef tx;
     FeeCalculation fee_calc_out;
-    bool fCreated = wallet.CreateTransaction(recipients, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, !wallet.IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS));
+    const bool fCreated = wallet.CreateTransaction(recipients, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, true);
     if (!fCreated) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
     }
