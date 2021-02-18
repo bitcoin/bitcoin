@@ -219,11 +219,10 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 
     // We can't make transactions until we have inputs
     // Therefore, load 110 blocks :)
-    static_assert(sizeof(blockinfo) / sizeof(*blockinfo) == 110, "Should have 110 blocks to import");
+    static_assert(std::size(blockinfo) == 110, "Should have 110 blocks to import");
     int baseheight = 0;
     std::vector<CTransactionRef> txFirst;
-    for (unsigned int i = 0; i < sizeof(blockinfo)/sizeof(*blockinfo); ++i)
-    {
+    for (const auto& bi : blockinfo) {
         CBlock *pblock = &pblocktemplate->block; // pointer for convenience
         {
             LOCK(cs_main);
@@ -232,7 +231,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             CMutableTransaction txCoinbase(*pblock->vtx[0]);
             txCoinbase.nVersion = 1;
             txCoinbase.vin[0].scriptSig = CScript();
-            txCoinbase.vin[0].scriptSig.push_back(blockinfo[i].extranonce);
+            txCoinbase.vin[0].scriptSig.push_back(bi.extranonce);
             txCoinbase.vin[0].scriptSig.push_back(::ChainActive().Height());
             txCoinbase.vout.resize(1); // Ignore the (optional) segwit commitment added by CreateNewBlock (as the hardcoded nonces don't account for this)
             txCoinbase.vout[0].scriptPubKey = CScript();
@@ -242,7 +241,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             if (txFirst.size() < 4)
                 txFirst.push_back(pblock->vtx[0]);
             pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
-            pblock->nNonce = blockinfo[i].nonce;
+            pblock->nNonce = bi.nonce;
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
         BOOST_CHECK(Assert(m_node.chainman)->ProcessNewBlock(chainparams, shared_pblock, true, nullptr));
