@@ -23,7 +23,7 @@ CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const ui
 }
 
 #define LogPrintfFinalCommitment(...) do { \
-    LogInstance().LogPrintStr(strprintf("CFinalCommitment::%s -- %s", __func__, tinyformat::format(__VA_ARGS__))); \
+    LogInstance().LogPrintStr(strprintf("CFinalCommitment::%s -- %s", __func__, tinyformat::format(__VA_ARGS__)), __func__, "", 0); \
 } while(0)
 
 bool CFinalCommitment::Verify(const std::vector<CDeterministicMNCPtr>& members, bool checkSigs) const
