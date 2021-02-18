@@ -30,7 +30,6 @@ import threading
 from test_framework.messages import (
     CBlockHeader,
     MAX_HEADERS_RESULTS,
-    MIN_VERSION_SUPPORTED,
     msg_addr,
     msg_addrv2,
     msg_block,
@@ -76,17 +75,27 @@ from test_framework.messages import (
     msg_qsendrecsigs,
     msg_qgetdata,
     msg_qdata,
-    MY_SUBVERSION,
-    MY_SUBVERSIONARG,
 )
 from test_framework.util import (
     MAX_NODES,
     p2p_port,
     wait_until_helper,
 )
-
 logger = logging.getLogger("TestFramework.p2p")
 
+# The minimum P2P version that this test framework supports
+MIN_P2P_VERSION_SUPPORTED = 60001
+# The P2P version that this test framework implements and sends in its `version` message
+# Version 70016 supports wtxid relay
+P2P_VERSION = 70016
+# The services that this test framework offers in its `version` message
+P2P_SERVICES = NODE_NETWORK | NODE_WITNESS
+# The P2P user agent string that this test framework sends in its `version` message
+P2P_SUBVERSION = "/python-p2p-tester:0.0.3/"
+# Value for relay that this test framework sends in its `version` message
+P2P_VERSION_RELAY = 1
+# SYSCOIN
+P2P_SUBVERSIONARG = "/python-p2p-tester:0.0.3%s/"
 MESSAGEMAP = {
     b"addr": msg_addr,
     b"addrv2": msg_addrv2,
@@ -175,9 +184,9 @@ class P2PConnection(asyncio.Protocol):
         # SYSCOIN
         self.uacomment = uacomment
         if self.uacomment is not None:
-            self.strSubVer = MY_SUBVERSIONARG % ("(%s)" % self.uacomment)
+            self.strSubVer = P2P_SUBVERSIONARG % ("(%s)" % self.uacomment)
         else:
-            self.strSubVer = MY_SUBVERSION
+            self.strSubVer = P2P_SUBVERSION
 
     def peer_connect(self, dstaddr, dstport, *, net, timeout_factor, uacomment=None):
         self.peer_connect_helper(dstaddr, dstport, net, timeout_factor, uacomment)
@@ -356,6 +365,9 @@ class P2PInterface(P2PConnection):
     def peer_connect_send_version(self, services):
         # Send a version msg
         vt = msg_version()
+        vt.nVersion = P2P_VERSION
+        vt.strSubVer = P2P_SUBVERSION
+        vt.relay = P2P_VERSION_RELAY
         vt.nServices = services
         vt.addrTo.ip = self.dstaddr
         vt.addrTo.port = self.dstport
@@ -365,7 +377,7 @@ class P2PInterface(P2PConnection):
         vt.strSubVer = self.strSubVer
         self.on_connection_send_msg = vt  # Will be sent in connection_made callback
 
-    def peer_connect(self, *args, services=NODE_NETWORK | NODE_WITNESS, send_version=True, **kwargs):
+    def peer_connect(self, *args, services=P2P_SERVICES, send_version=True, **kwargs):
         create_conn = super().peer_connect(*args, **kwargs)
 
         if send_version:
@@ -455,7 +467,7 @@ class P2PInterface(P2PConnection):
         pass
 
     def on_version(self, message):
-        assert message.nVersion >= MIN_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_VERSION_SUPPORTED)
+        assert message.nVersion >= MIN_P2P_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_P2P_VERSION_SUPPORTED)
         if message.nVersion >= 70016 and self.wtxidrelay:
             self.send_message(msg_wtxidrelay())
         if self.support_addrv2:
