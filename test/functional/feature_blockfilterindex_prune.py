@@ -39,8 +39,8 @@ class FeatureBlockfilterindexPruneTest(BitcoinTestFramework):
         assert_greater_than(pruneheight_new, pruneheight)
         self.stop_node(1)
         self.log.info("make sure we get an init error when starting the node again with block filters")
-        self.nodes[1].assert_start_raises_init_error(extra_args=self.extra_args[1])
-        self.nodes[1].assert_debug_log(["basic block filter index best block of the index goes beyond pruned data. Please disable the index or reindex (which will download the whole blockchain again)"])
+        with self.nodes[1].assert_debug_log(["basic block filter index best block of the index goes beyond pruned data. Please disable the index or reindex (which will download the whole blockchain again)"]):
+            self.nodes[1].assert_start_raises_init_error(extra_args=self.extra_args[1])
         self.log.info("make sure the node starts again with the -reindex arg")
         reindex_args = self.extra_args[1]
         reindex_args.append("-reindex")
