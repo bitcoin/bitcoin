@@ -10,7 +10,7 @@ Version 2 compact blocks are post-segwit (wtxids)
 import random
 
 from test_framework.blocktools import create_block, NORMAL_GBT_REQUEST_PARAMS, add_witness_commitment
-from test_framework.messages import BlockTransactions, BlockTransactionsRequest, calculate_shortid, CBlock, CBlockHeader, CInv, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, FromHex, HeaderAndShortIDs, msg_no_witness_block, msg_no_witness_blocktxn, msg_cmpctblock, msg_getblocktxn, msg_getdata, msg_getheaders, msg_headers, msg_inv, msg_sendcmpct, msg_sendheaders, msg_tx, msg_block, msg_blocktxn, MSG_BLOCK, MSG_CMPCT_BLOCK, MSG_WITNESS_FLAG, NODE_NETWORK, P2PHeaderAndShortIDs, PrefilledTransaction, ser_uint256, ToHex
+from test_framework.messages import BlockTransactions, BlockTransactionsRequest, calculate_shortid, CBlock, CBlockHeader, CInv, COutPoint, CTransaction, CTxIn, CTxInWitness, CTxOut, FromHex, HeaderAndShortIDs, msg_no_witness_block, msg_no_witness_blocktxn, msg_cmpctblock, msg_getblocktxn, msg_getdata, msg_getheaders, msg_headers, msg_inv, msg_sendcmpct, msg_sendheaders, msg_tx, msg_block, msg_blocktxn, MSG_BLOCK, MSG_CMPCT_BLOCK, MSG_WITNESS_FLAG, MSG_WTX, NODE_NETWORK, P2PHeaderAndShortIDs, PrefilledTransaction, ser_uint256, ToHex
 from test_framework.p2p import p2p_lock, P2PInterface
 from test_framework.script import CScript, OP_TRUE, OP_DROP
 from test_framework.test_framework import BitcoinTestFramework
@@ -462,6 +462,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         utxo = self.utxos.pop(0)
         block = self.build_block_with_transactions(node, utxo, 5)
         self.utxos.append([block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue])
+        sha256 = block.vtx[1].calc_sha256(with_witness=True)
+        test_node.send_message(msg_inv(inv=[CInv(MSG_WTX, sha256)]))
+        test_node.wait_for_getdata([sha256], 5)
         test_node.send_and_ping(msg_tx(block.vtx[1]))
         assert block.vtx[1].hash in node.getrawmempool()
 
@@ -479,6 +482,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         block = self.build_block_with_transactions(node, utxo, 10)
         self.utxos.append([block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue])
         for tx in block.vtx[1:]:
+            sha256 = tx.calc_sha256(with_witness=True)
+            test_node.send_message(msg_inv(inv=[CInv(MSG_WTX, sha256)]))
+            test_node.wait_for_getdata([sha256], 5)
             test_node.send_message(msg_tx(tx))
         test_node.sync_with_ping()
         # Make sure all transactions were accepted.
@@ -508,6 +514,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         self.utxos.append([block.vtx[-1].sha256, 0, block.vtx[-1].vout[0].nValue])
         # Relay the first 5 transactions from the block in advance
         for tx in block.vtx[1:6]:
+            sha256 = tx.calc_sha256(with_witness=True)
+            test_node.send_message(msg_inv(inv=[CInv(MSG_WTX, sha256)]))
+            test_node.wait_for_getdata([sha256], 5)
             test_node.send_message(msg_tx(tx))
         test_node.sync_with_ping()
         # Make sure all transactions were accepted.
@@ -733,6 +742,9 @@ class CompactBlocksTest(BitcoinTestFramework):
         block, cmpct_block = announce_cmpct_block(node, stalling_peer)
 
         for tx in block.vtx[1:]:
+            sha256 = tx.calc_sha256(with_witness=True)
+            delivery_peer.send_message(msg_inv(inv=[CInv(MSG_WTX, sha256)]))
+            delivery_peer.wait_for_getdata([sha256], 5)
             delivery_peer.send_message(msg_tx(tx))
         delivery_peer.sync_with_ping()
         mempool = node.getrawmempool()
@@ -748,6 +760,9 @@ class CompactBlocksTest(BitcoinTestFramework):
 
         block, cmpct_block = announce_cmpct_block(node, stalling_peer)
         for tx in block.vtx[1:]:
+            sha256 = tx.calc_sha256(with_witness=True)
+            delivery_peer.send_message(msg_inv(inv=[CInv(MSG_WTX, sha256)]))
+            delivery_peer.wait_for_getdata([sha256], 5)
             delivery_peer.send_message(msg_tx(tx))
         delivery_peer.sync_with_ping()
 

@@ -26,6 +26,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.extra_args = [[
             "-acceptnonstdtxn=1",
+            "-whitelist=relay@127.0.0.1"
         ]]
         self.setup_clean_chain = True
 
@@ -76,6 +77,7 @@ class InvalidTxRequestTest(BitcoinTestFramework):
                 [tx], node, success=False,
                 expect_disconnect=template.expect_disconnect,
                 reject_reason=template.reject_reason,
+                relay=True
             )
 
             if template.expect_disconnect:
@@ -121,16 +123,16 @@ class InvalidTxRequestTest(BitcoinTestFramework):
 
         self.log.info('Send the orphans ... ')
         # Send valid orphan txs from p2ps[0]
-        node.p2ps[0].send_txs_and_test([tx_orphan_1, tx_orphan_2_no_fee, tx_orphan_2_valid], node, success=False)
+        node.p2ps[0].send_txs_and_test([tx_orphan_1, tx_orphan_2_no_fee, tx_orphan_2_valid], node, success=False, expect_disconnect=False, reject_reason=None, relay=True)
         # Send invalid tx from p2ps[1]
-        node.p2ps[1].send_txs_and_test([tx_orphan_2_invalid], node, success=False)
+        node.p2ps[1].send_txs_and_test([tx_orphan_2_invalid], node, success=False, expect_disconnect=False, reject_reason=None, relay=True)
 
         assert_equal(0, node.getmempoolinfo()['size'])  # Mempool should be empty
         assert_equal(2, len(node.getpeerinfo()))  # p2ps[1] is still connected
 
         self.log.info('Send the withhold tx ... ')
         with node.assert_debug_log(expected_msgs=["bad-txns-in-belowout"]):
-            node.p2ps[0].send_txs_and_test([tx_withhold], node, success=True)
+            node.p2ps[0].send_txs_and_test([tx_withhold], node, success=True, expect_disconnect=False, reject_reason=None, relay=True)
 
         # Transactions that should end up in the mempool
         expected_mempool = {
@@ -155,14 +157,14 @@ class InvalidTxRequestTest(BitcoinTestFramework):
             orphan_tx_pool[i].vout.append(CTxOut(nValue=11 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
 
         with node.assert_debug_log(['mapOrphan overflow, removed 1 tx']):
-            node.p2ps[0].send_txs_and_test(orphan_tx_pool, node, success=False)
+            node.p2ps[0].send_txs_and_test(orphan_tx_pool, node, success=False, expect_disconnect=False, reject_reason=None, relay=True)
 
         rejected_parent = CTransaction()
         rejected_parent.vin.append(CTxIn(outpoint=COutPoint(tx_orphan_2_invalid.sha256, 0)))
         rejected_parent.vout.append(CTxOut(nValue=11 * COIN, scriptPubKey=SCRIPT_PUB_KEY_OP_TRUE))
         rejected_parent.rehash()
         with node.assert_debug_log(['not keeping orphan with rejected parents {}'.format(rejected_parent.hash)]):
-            node.p2ps[0].send_txs_and_test([rejected_parent], node, success=False)
+            node.p2ps[0].send_txs_and_test([rejected_parent], node, success=False, expect_disconnect=False, reject_reason=None, relay=True)
 
 
 if __name__ == '__main__':

@@ -16,7 +16,7 @@ Therefore, this test is limited to the remaining protection criteria.
 import time
 
 from test_framework.blocktools import create_block, create_coinbase
-from test_framework.messages import CTransaction, FromHex, msg_pong, msg_tx
+from test_framework.messages import CInv, CTransaction, FromHex, msg_inv, msg_pong, msg_tx, MSG_WTX
 from test_framework.p2p import P2PDataStore, P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
@@ -85,7 +85,11 @@ class P2PEvict(BitcoinTestFramework):
                     'scriptPubKey': prevtx['vout'][0]['scriptPubKey']['hex'],
                 }],
             )['hex']
-            txpeer.send_message(msg_tx(FromHex(CTransaction(), sigtx)))
+            tx = FromHex(CTransaction(), sigtx)
+            sha256 = tx.calc_sha256(with_witness=True)
+            txpeer.send_message(msg_inv(inv=[CInv(MSG_WTX, sha256)]))
+            txpeer.wait_for_getdata([sha256], 5)
+            txpeer.send_message(msg_tx(tx))
             protected_peers.add(current_peer)
 
         self.log.info("Create 8 peers and protect them from eviction by having faster pings")
