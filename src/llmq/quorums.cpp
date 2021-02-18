@@ -842,10 +842,7 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& strCommand,
             }
         }
         pQuorum->WriteContributions(evoDb);
-        {
-            LOCK(quorumsCacheCs);
-            pQuorum->interruptQuorumDataReceived();
-        }
+        pQuorum->interruptQuorumDataReceived.reset();
         return;
     }
 }
