@@ -35,10 +35,10 @@ namespace llmq
 class CDKGLogger : public CBatchedLogger
 {
 public:
-    CDKGLogger(const CDKGSession& _quorumDkg, std::string_view _func) :
-        CDKGLogger(_quorumDkg.params.name, _quorumDkg.quorumIndex, _quorumDkg.m_quorum_base_block_index->GetBlockHash(), _quorumDkg.m_quorum_base_block_index->nHeight, _quorumDkg.AreWeMember(), _func){};
-    CDKGLogger(std::string_view _llmqTypeName, int _quorumIndex, const uint256& _quorumHash, int _height, bool _areWeMember, std::string_view _func) :
-        CBatchedLogger(BCLog::LLMQ_DKG, strprintf("QuorumDKG(type=%s, quorumIndex=%d, height=%d, member=%d, func=%s)", _llmqTypeName, _quorumIndex, _height, _areWeMember, _func)){};
+    CDKGLogger(const CDKGSession& _quorumDkg, std::string_view _func, int source_line) :
+        CDKGLogger(_quorumDkg.params.name, _quorumDkg.quorumIndex, _quorumDkg.m_quorum_base_block_index->GetBlockHash(), _quorumDkg.m_quorum_base_block_index->nHeight, _quorumDkg.AreWeMember(), _func, source_line){};
+    CDKGLogger(std::string_view _llmqTypeName, int _quorumIndex, const uint256& _quorumHash, int _height, bool _areWeMember, std::string_view _func, int source_line) :
+        CBatchedLogger(BCLog::LLMQ_DKG, strprintf("QuorumDKG(type=%s, qIndex=%d, h=%d, member=%d)", _llmqTypeName, _quorumIndex, _height, _areWeMember), __FILE__, source_line){};
 };
 
 static std::array<std::atomic<double>, ToUnderlying(DKGError::type::_COUNT)> simDkgErrorMap{};
@@ -100,7 +100,7 @@ bool CDKGSession::Init(gsl::not_null<const CBlockIndex*> _pQuorumBaseBlockIndex,
         }
     }
 
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     if (LogAcceptCategory(BCLog::LLMQ) && IsQuorumRotationEnabled(params, m_quorum_base_block_index)) {
         int cycleQuorumBaseHeight = m_quorum_base_block_index->nHeight - quorumIndex;
@@ -140,7 +140,7 @@ bool CDKGSession::Init(gsl::not_null<const CBlockIndex*> _pQuorumBaseBlockIndex,
 
 void CDKGSession::Contribute(CDKGPendingMessages& pendingMessages)
 {
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     if (!AreWeMember()) {
         return;
@@ -161,7 +161,7 @@ void CDKGSession::Contribute(CDKGPendingMessages& pendingMessages)
 
 void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
 {
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     assert(AreWeMember());
 
@@ -214,7 +214,7 @@ void CDKGSession::SendContributions(CDKGPendingMessages& pendingMessages)
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
 bool CDKGSession::PreVerifyMessage(const CDKGContribution& qc, bool& retBan) const
 {
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     retBan = false;
 
@@ -262,7 +262,7 @@ void CDKGSession::ReceiveMessage(const CDKGContribution& qc, bool& retBan)
 {
     LOCK(cs_pending);
 
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     retBan = false;
 
@@ -357,7 +357,7 @@ void CDKGSession::VerifyPendingContributions()
 {
     AssertLockHeld(cs_pending);
 
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     cxxtimer::Timer t1(true);
 
@@ -418,7 +418,7 @@ void CDKGSession::VerifyAndComplain(CDKGPendingMessages& pendingMessages)
         VerifyPendingContributions();
     }
 
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     // we check all members if they sent us their contributions
     // we consider members as bad if they missed to send anything or if they sent multiple
@@ -454,7 +454,7 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions() const
         return;
     }
 
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     std::unordered_map<uint256, int, StaticSaltedHasher> protoMap;
     connman.ForEachNode([&](const CNode* pnode) {
@@ -489,7 +489,7 @@ void CDKGSession::VerifyConnectionAndMinProtoVersions() const
 
 void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages)
 {
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     assert(AreWeMember());
 
@@ -532,7 +532,7 @@ void CDKGSession::SendComplaint(CDKGPendingMessages& pendingMessages)
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
 bool CDKGSession::PreVerifyMessage(const CDKGComplaint& qc, bool& retBan) const
 {
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     retBan = false;
 
@@ -574,7 +574,7 @@ bool CDKGSession::PreVerifyMessage(const CDKGComplaint& qc, bool& retBan) const
 
 void CDKGSession::ReceiveMessage(const CDKGComplaint& qc, bool& retBan)
 {
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     retBan = false;
 
@@ -641,7 +641,7 @@ void CDKGSession::VerifyAndJustify(CDKGPendingMessages& pendingMessages)
         return;
     }
 
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     std::set<uint256> justifyFor;
 
@@ -678,7 +678,7 @@ void CDKGSession::VerifyAndJustify(CDKGPendingMessages& pendingMessages)
 
 void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const std::set<uint256>& forMembers)
 {
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     assert(AreWeMember());
 
@@ -727,7 +727,7 @@ void CDKGSession::SendJustification(CDKGPendingMessages& pendingMessages, const 
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
 bool CDKGSession::PreVerifyMessage(const CDKGJustification& qj, bool& retBan) const
 {
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     retBan = false;
 
@@ -785,7 +785,7 @@ bool CDKGSession::PreVerifyMessage(const CDKGJustification& qj, bool& retBan) co
 
 void CDKGSession::ReceiveMessage(const CDKGJustification& qj, bool& retBan)
 {
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     retBan = false;
 
@@ -883,7 +883,7 @@ void CDKGSession::VerifyAndCommit(CDKGPendingMessages& pendingMessages)
         return;
     }
 
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     std::vector<size_t> badMembers;
     badMembers.reserve(members.size());
@@ -924,7 +924,7 @@ void CDKGSession::VerifyAndCommit(CDKGPendingMessages& pendingMessages)
 
 void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
 {
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     assert(AreWeMember());
 
@@ -1039,7 +1039,7 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
 // only performs cheap verifications, but not the signature of the message. this is checked with batched verification
 bool CDKGSession::PreVerifyMessage(const CDKGPrematureCommitment& qc, bool& retBan) const
 {
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     retBan = false;
 
@@ -1100,7 +1100,7 @@ bool CDKGSession::PreVerifyMessage(const CDKGPrematureCommitment& qc, bool& retB
 
 void CDKGSession::ReceiveMessage(const CDKGPrematureCommitment& qc, bool& retBan)
 {
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     retBan = false;
 
@@ -1183,7 +1183,7 @@ std::vector<CFinalCommitment> CDKGSession::FinalizeCommitments()
         return {};
     }
 
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
 
     using Key = std::vector<bool>;
     std::map<Key, std::vector<CDKGPrematureCommitment>> commitmentsMap;
@@ -1309,7 +1309,7 @@ void CDKGSession::MarkBadMember(size_t idx)
 
 void CDKGSession::RelayInvToParticipants(const CInv& inv) const
 {
-    CDKGLogger logger(*this, __func__);
+    CDKGLogger logger(*this, __func__, __LINE__);
     std::stringstream ss;
     for (const auto& r : relayMembers) {
         ss << r.ToString().substr(0, 4) << " | ";
