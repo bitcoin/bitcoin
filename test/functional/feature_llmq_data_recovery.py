@@ -174,8 +174,7 @@ class LLMQ_Data_Recovery(DashTestFramework):
         self.test_llmq_qvvec_sync([llmq_test])
         self.test_llmq_qvvec_sync([llmq_test, llmq_test_v17])
         self.log.info("Test invalid command line parameter values")
-        node.stop_node()
-        node.wait_until_stopped()
+        node.stop_node(wait=1000, wait_until_stopped=True)
         node.assert_start_raises_init_error(["-llmq-qvvec-sync=0"],
                                             "Error: Invalid llmqType in -llmq-qvvec-sync: 0")
         node.assert_start_raises_init_error(["-llmq-qvvec-sync=llmq-test"],
