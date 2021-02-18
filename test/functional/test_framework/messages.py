@@ -31,11 +31,6 @@ import time
 from test_framework.siphash import siphash256
 from test_framework.util import hex_str_to_bytes, assert_equal
 
-MIN_VERSION_SUPPORTED = 60001
-MY_VERSION = 70016  # past wtxid relay
-MY_SUBVERSION = "/python-p2p-tester:0.0.3/"
-MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
-
 MAX_LOCATOR_SZ = 101
 MAX_BLOCK_BASE_SIZE = 1000000
 MAX_BLOOM_FILTER_SIZE = 36000
@@ -326,22 +321,20 @@ class CBlockLocator:
     __slots__ = ("nVersion", "vHave")
 
     def __init__(self):
-        self.nVersion = MY_VERSION
         self.vHave = []
 
     def deserialize(self, f):
-        self.nVersion = struct.unpack("<i", f.read(4))[0]
+        struct.unpack("<i", f.read(4))[0]  # Ignore version field.
         self.vHave = deser_uint256_vector(f)
 
     def serialize(self):
         r = b""
-        r += struct.pack("<i", self.nVersion)
+        r += struct.pack("<i", 0)  # Bitcoin Core ignores version field. Set it to 0.
         r += ser_uint256_vector(self.vHave)
         return r
 
     def __repr__(self):
-        return "CBlockLocator(nVersion=%i vHave=%s)" \
-            % (self.nVersion, repr(self.vHave))
+        return "CBlockLocator(vHave=%s)" % (repr(self.vHave))
 
 
 class COutPoint:
@@ -1023,20 +1016,20 @@ class CMerkleBlock:
 
 # Objects that correspond to messages on the wire
 class msg_version:
-    __slots__ = ("addrFrom", "addrTo", "nNonce", "nRelay", "nServices",
+    __slots__ = ("addrFrom", "addrTo", "nNonce", "relay", "nServices",
                  "nStartingHeight", "nTime", "nVersion", "strSubVer")
     msgtype = b"version"
 
     def __init__(self):
-        self.nVersion = MY_VERSION
-        self.nServices = NODE_NETWORK | NODE_WITNESS
+        self.nVersion = 0
+        self.nServices = 0
         self.nTime = int(time.time())
         self.addrTo = CAddress()
         self.addrFrom = CAddress()
         self.nNonce = random.getrandbits(64)
-        self.strSubVer = MY_SUBVERSION
+        self.strSubVer = ''
         self.nStartingHeight = -1
-        self.nRelay = MY_RELAY
+        self.relay = 0
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<i", f.read(4))[0]
@@ -1055,11 +1048,11 @@ class msg_version:
         if self.nVersion >= 70001:
             # Relay field is optional for version 70001 onwards
             try:
-                self.nRelay = struct.unpack("<b", f.read(1))[0]
+                self.relay = struct.unpack("<b", f.read(1))[0]
             except:
-                self.nRelay = 0
+                self.relay = 0
         else:
-            self.nRelay = 0
+            self.relay = 0
 
     def serialize(self):
         r = b""
@@ -1071,14 +1064,14 @@ class msg_version:
         r += struct.pack("<Q", self.nNonce)
         r += ser_string(self.strSubVer.encode('utf-8'))
         r += struct.pack("<i", self.nStartingHeight)
-        r += struct.pack("<b", self.nRelay)
+        r += struct.pack("<b", self.relay)
         return r
 
     def __repr__(self):
-        return 'msg_version(nVersion=%i nServices=%i nTime=%s addrTo=%s addrFrom=%s nNonce=0x%016X strSubVer=%s nStartingHeight=%i nRelay=%i)' \
+        return 'msg_version(nVersion=%i nServices=%i nTime=%s addrTo=%s addrFrom=%s nNonce=0x%016X strSubVer=%s nStartingHeight=%i relay=%i)' \
             % (self.nVersion, self.nServices, time.ctime(self.nTime),
                repr(self.addrTo), repr(self.addrFrom), self.nNonce,
-               self.strSubVer, self.nStartingHeight, self.nRelay)
+               self.strSubVer, self.nStartingHeight, self.relay)
 
 
 class msg_verack:

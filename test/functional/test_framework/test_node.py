@@ -23,9 +23,10 @@ import sys
 
 from .authproxy import JSONRPCException
 from .descriptors import descsum_create
-from .messages import MY_SUBVERSION
+from .p2p import P2P_SUBVERSION
 from .util import (
     MAX_NODES,
+    assert_equal,
     append_config,
     delete_cookie_file,
     get_auth_cookie,
@@ -545,6 +546,11 @@ class TestNode():
             # in comparison to the upside of making tests less fragile and unexpected intermittent errors less likely.
             p2p_conn.sync_with_ping()
 
+            # Consistency check that the Bitcoin Core has received our user agent string. This checks the
+            # node's newest peer. It could be racy if another Bitcoin Core node has connected since we opened
+            # our connection, but we don't expect that to happen.
+            assert_equal(self.getpeerinfo()[-1]['subver'], P2P_SUBVERSION)
+
         return p2p_conn
 
     def add_outbound_p2p_connection(self, p2p_conn, *, p2p_idx, connection_type="outbound-full-relay", **kwargs):
@@ -572,7 +578,7 @@ class TestNode():
 
     def num_test_p2p_connections(self):
         """Return number of test framework p2p connections to the node."""
-        return len([peer for peer in self.getpeerinfo() if peer['subver'] == MY_SUBVERSION])
+        return len([peer for peer in self.getpeerinfo() if peer['subver'] == P2P_SUBVERSION])
 
     def disconnect_p2ps(self):
         """Close all p2p connections to the node."""
