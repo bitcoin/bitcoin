@@ -3154,6 +3154,16 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         LOCK2(cs_main, g_cs_orphans);
 
+        // Do no not process unrequested transactions to mitigate potential DoS risks.
+        // We check both identifiers as txid may happen on a wtxid-relay link due to
+        // parent-orphan fetching.
+        bool is_expected = tx.HasWitness() ? m_txrequest.ExpectedTx(pfrom.GetId(), wtxid) || m_txrequest.ExpectedTx(pfrom.GetId(), txid)
+            : m_txrequest.ExpectedTx(pfrom.GetId(), txid);
+        if (!pfrom.HasPermission(PF_RELAY) && !is_expected) {
+            LogPrint(BCLog::NET, "unrequested transaction from peer=%d\n", pfrom.GetId());
+            return;
+        }
+
         CNodeState* nodestate = State(pfrom.GetId());
 
         const uint256& hash = nodestate->m_wtxid_relay ? wtxid : txid;
