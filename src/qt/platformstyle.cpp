@@ -23,7 +23,6 @@ static const struct {
     /* Other: linux, unix, ... */
     {"other", true, true, false}
 };
-static const unsigned platform_styles_count = sizeof(platform_styles)/sizeof(*platform_styles);
 
 namespace {
 /* Local functions for colorizing single-color images */
@@ -121,15 +120,13 @@ QIcon PlatformStyle::TextColorIcon(const QIcon& icon) const
 
 const PlatformStyle *PlatformStyle::instantiate(const QString &platformId)
 {
-    for (unsigned x=0; x<platform_styles_count; ++x)
-    {
-        if (platformId == platform_styles[x].platformId)
-        {
+    for (const auto& platform_style : platform_styles) {
+        if (platformId == platform_style.platformId) {
             return new PlatformStyle(
-                    platform_styles[x].platformId,
-                    platform_styles[x].imagesOnButtons,
-                    platform_styles[x].colorizeIcons,
-                    platform_styles[x].useExtraSpacing);
+                    platform_style.platformId,
+                    platform_style.imagesOnButtons,
+                    platform_style.colorizeIcons,
+                    platform_style.useExtraSpacing);
         }
     }
     return nullptr;
