@@ -1139,11 +1139,11 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
             CloseSocket(hSocket);
             return;
         }
-        if(fMasternodeMode && !fGethSynced) {
+        /*if(fMasternodeMode && !fGethSynced) {
             LogPrintf("AcceptConnection -- Geth is not synced yet, skipping inbound connection attempt\n");
             CloseSocket(hSocket);
             return;
-        }
+        }*/
     }
     NodeId id = GetNewNodeId();
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
