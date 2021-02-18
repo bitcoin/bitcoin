@@ -14,7 +14,19 @@
 
 typedef std::vector<unsigned char> valtype;
 
-MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn) : txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn, MissingDataBehavior::FAIL) {}
+MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, int nHashTypeIn)
+    : txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn), checker(txTo, nIn, amountIn, MissingDataBehavior::FAIL),
+      m_txdata(nullptr)
+{
+}
+
+MutableTransactionSignatureCreator::MutableTransactionSignatureCreator(const CMutableTransaction* txToIn, unsigned int nInIn, const CAmount& amountIn, const PrecomputedTransactionData* txdata, int nHashTypeIn)
+    : txTo(txToIn), nIn(nInIn), nHashType(nHashTypeIn), amount(amountIn),
+      checker(txdata ? MutableTransactionSignatureChecker(txTo, nIn, amount, *txdata, MissingDataBehavior::FAIL) :
+          MutableTransactionSignatureChecker(txTo, nIn, amount, MissingDataBehavior::FAIL)),
+      m_txdata(txdata)
+{
+}
 
 bool MutableTransactionSignatureCreator::CreateSig(const SigningProvider& provider, std::vector<unsigned char>& vchSig, const CKeyID& address, const CScript& scriptCode, SigVersion sigversion) const
 {
@@ -26,10 +38,10 @@ bool MutableTransactionSignatureCreator::CreateSig(const SigningProvider& provid
     if (sigversion == SigVersion::WITNESS_V0 && !key.IsCompressed())
         return false;
 
-    // Signing for witness scripts needs the amount.
-    if (sigversion == SigVersion::WITNESS_V0 && amount < 0) return false;
+    // Signing without known amount does not work in witness scripts.
+    if (sigversion == SigVersion::WITNESS_V0 && !MoneyRange(amount)) return false;
 
-    uint256 hash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion);
+    uint256 hash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, m_txdata);
     if (!key.Sign(hash, vchSig))
         return false;
     vchSig.push_back((unsigned char)nHashType);
