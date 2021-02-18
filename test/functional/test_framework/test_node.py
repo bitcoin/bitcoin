@@ -115,6 +115,8 @@ class TestNode():
 
         if self.version_is_at_least(190000):
             self.args.append("-logthreadnames")
+        if self.version_is_at_least(219900):
+            self.args.append("-logsourcelocations")
 
         self.cli = TestNodeCLI(bitcoin_cli, self.datadir)
         self.use_cli = use_cli

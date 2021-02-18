@@ -67,6 +67,7 @@ FUZZ_TARGET(string)
     }
     OutputType output_type;
     (void)ParseOutputType(random_string_1, output_type);
+    (void)RemovePrefix(random_string_1, random_string_2);
     (void)ResolveErrMsg(random_string_1, random_string_2);
     try {
         (void)RPCConvertNamedValues(random_string_1, random_string_vector);
