@@ -9,6 +9,7 @@ from test_framework.util import (
     assert_greater_than,
 )
 
+
 class FeatureBlockfilterindexPruneTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
@@ -17,21 +18,21 @@ class FeatureBlockfilterindexPruneTest(BitcoinTestFramework):
     def run_test(self):
         # test basic pruning compatibility & filter access of pruned blocks
         self.log.info("check if we can access a blockfilter when pruning is enabled but no blocks are actually pruned")
-        assert(len(self.nodes[1].getblockfilter(self.nodes[1].getbestblockhash())['filter']) > 0)
+        assert len(self.nodes[1].getblockfilter(self.nodes[1].getbestblockhash())['filter']) > 0
         self.nodes[1].generate(500)
         self.sync_all()
         self.log.info("prune some blocks")
         pruneheight = self.nodes[1].pruneblockchain(400)
-        assert(pruneheight != 0)
+        assert pruneheight != 0
         self.log.info("check if we can access the tips blockfilter when we have pruned some blocks")
-        assert(len(self.nodes[1].getblockfilter(self.nodes[1].getbestblockhash())['filter']) > 0)
+        assert len(self.nodes[1].getblockfilter(self.nodes[1].getbestblockhash())['filter']) > 0
         self.log.info("check if we can access the blockfilter of a pruned block")
-        assert(len(self.nodes[1].getblockfilter(self.nodes[1].getblockhash(2))['filter']) > 0)
+        assert len(self.nodes[1].getblockfilter(self.nodes[1].getblockhash(2))['filter']) > 0
         self.log.info("start node without blockfilterindex")
         self.stop_node(1)
         self.start_node(1, extra_args=self.extra_args[0])
         self.log.info("make sure accessing the blockfilters throws an error")
-        assert_raises_rpc_error(-1,"Index is not enabled for filtertype basic", self.nodes[1].getblockfilter, self.nodes[1].getblockhash(2))
+        assert_raises_rpc_error(-1, "Index is not enabled for filtertype basic", self.nodes[1].getblockfilter, self.nodes[1].getblockhash(2))
         self.nodes[1].generate(1000)
         self.log.info("prune below the blockfilterindexes best block while blockfilters are disabled")
         pruneheight_new = self.nodes[1].pruneblockchain(1000)
@@ -44,6 +45,7 @@ class FeatureBlockfilterindexPruneTest(BitcoinTestFramework):
         reindex_args = self.extra_args[1]
         reindex_args.append("-reindex")
         self.start_node(1, extra_args=reindex_args)
+
 
 if __name__ == '__main__':
     FeatureBlockfilterindexPruneTest().main()
