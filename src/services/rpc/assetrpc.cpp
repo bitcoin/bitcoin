@@ -68,8 +68,8 @@ bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, c
 	while (pcursor->Valid()) {
 		try {
             key = 0;
-			if (pcursor->GetKey(key) && key != 0 && (nBaseAsset == 0 || nBaseAsset != key)) {
-				pcursor->GetValue(txPos);
+            txPos.SetNull();
+			if (pcursor->GetKey(key) && key != 0 && pcursor->GetValue(txPos) && (nBaseAsset == 0 || nBaseAsset != key)) {
                 if(txPos.IsNull()){
                     pcursor->Next();
                     continue;
