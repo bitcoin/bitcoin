@@ -19,8 +19,6 @@ struct CompareScoreMN
 
 void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
 {
-    std::vector<CDeterministicMNCPtr> vecDmns; // will be empty when no wallet
-
     // Don't disconnect masternode connections when we have less then the desired amount of outbound nodes
     size_t nonMasternodeCount = 0;
     connman.ForEachNode(AllNodes, [&](CNode* pnode) {

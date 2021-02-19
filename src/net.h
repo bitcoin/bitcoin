@@ -939,13 +939,7 @@ public:
     void PushMessage(CNode* pnode, CSerializedNetMsg&& msg);
     // SYSCOIN
     bool ForNode(NodeId id, std::function<bool(CNode* pnode)> func);
-    bool ForNode(const CService& addr, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func);
-
-    template<typename Callable>
-    bool ForNode(const CService& addr, Callable&& func)
-    {
-        return ForNode(addr, FullyConnectedOnly, func);
-    }
+    CNode* FindNode(const CService& addr);
     template<typename Condition, typename Callable>
     bool ForEachNodeContinueIf(const Condition& cond, Callable&& func)
     {
@@ -1158,13 +1152,6 @@ public:
     // SYSCOIN
     bool IsMasternodeOrDisconnectRequested(const CService& addr);
     void RelayOtherInv(const CInv &inv, const int minProtoVersion = MIN_PEER_PROTO_VERSION);
-    bool IsConnected(const CService& addr, std::function<bool(const CNode* pnode)> cond)
-    {
-        return ForNode(addr, cond, [](CNode* pnode){
-            return true;
-        });
-    }
-    CNode* FindNode(const CService& addr);
     void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 
     /** Return true if the peer has been connected for long enough to do inactivity checks. */
@@ -1210,7 +1197,6 @@ private:
     CNode* FindNode(const CNetAddr& ip);
     CNode* FindNode(const CSubNet& subNet);
     CNode* FindNode(const std::string& addrName);
-    //CNode* FindNode(const CService& addr);
 
     /**
      * Determine whether we're already connected to a given address, in order to
@@ -1225,7 +1211,6 @@ private:
     void DeleteNode(CNode* pnode);
 
     NodeId GetNewNodeId();
-
     size_t SocketSendData(CNode& node) const EXCLUSIVE_LOCKS_REQUIRED(node.cs_vSend);
     void DumpAddresses();
 

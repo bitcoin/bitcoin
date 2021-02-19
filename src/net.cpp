@@ -2219,16 +2219,14 @@ void CConnman::ThreadOpenMasternodeConnections()
 
         OpenMasternodeConnection(CAddress(connectToDmn->pdmnState->addr, NODE_NETWORK), isProbe);
         // should be in the list now if connection was opened
-        bool connected = ForNode(connectToDmn->pdmnState->addr, AllNodes, [&](CNode* pnode) {
-            if (pnode->fDisconnect) {
-                return false;
+        CNode* node = FindNode(connectToDmn->pdmnState->addr);
+        if(!node) {
+            node = FindNode(connectToDmn->pdmnState->addr.ToStringIPPort());
+            if (!node || node->fDisconnect) {
+                LogPrint(BCLog::NET, "CConnman::%s -- connection failed for masternode  %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString());
+                // reset last outbound success
+                mmetaman.GetMetaInfo(connectToDmn->proTxHash)->SetLastOutboundSuccess(0);
             }
-            return true;
-        });
-        if (!connected) {
-            LogPrint(BCLog::NET, "CConnman::%s -- connection failed for masternode  %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString());
-            // reset last outbound success
-            mmetaman.GetMetaInfo(connectToDmn->proTxHash)->SetLastOutboundSuccess(0);
         }
     }
 }
@@ -2344,20 +2342,19 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (!pszDest) {
         // SYSCOIN
         bool banned_or_discouraged = m_banman && (m_banman->IsDiscouraged(addrConnect) || m_banman->IsBanned(addrConnect));
-        if (IsLocal(addrConnect) || banned_or_discouraged)
+        if (IsLocal(addrConnect) || banned_or_discouraged || FindNode(addrConnect.ToStringIPPort()))
             return;
         // local and not a connection to itself?
         bool fAllowLocal = Params().AllowMultiplePorts() && addrConnect.GetPort() != GetListenPort();
         if (!fAllowLocal && IsLocal(addrConnect))
             return;
         // if multiple ports for same IP are allowed, search for IP:PORT match, otherwise search for IP-only match
-        if ((!Params().AllowMultiplePorts() && AlreadyConnectedToAddress(addrConnect)) ||
+        if ((!Params().AllowMultiplePorts() && FindNode(static_cast<CNetAddr>(addrConnect))) ||
             (Params().AllowMultiplePorts() && FindNode(static_cast<CService>(addrConnect))))
             return;
     }
     else if (FindNode(std::string(pszDest)))
         return;
-
     CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure, conn_type);
 
     if (!pnode)
@@ -3302,19 +3299,6 @@ void CConnman::PushMessage(CNode* pnode, CSerializedNetMsg&& msg)
     }
     if (nBytesSent) RecordBytesSent(nBytesSent);
 }
-// SYSCOIN
-bool CConnman::ForNode(const CService& addr, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func)
-{
-    CNode* found = nullptr;
-    LOCK(cs_vNodes);
-    for (auto&& pnode : vNodes) {
-        if((CService)pnode->addr == addr) {
-            found = pnode;
-            break;
-        }
-    }
-    return found != nullptr && cond(found) && func(found);
-}
 bool CConnman::ForNode(NodeId id, std::function<bool(const CNode* pnode)> cond, std::function<bool(CNode* pnode)> func)
 {
     CNode* found = nullptr;
@@ -3341,9 +3325,13 @@ bool CConnman::ForNode(NodeId id, std::function<bool(CNode* pnode)> func)
 }
 // SYSCOIN
 bool CConnman::IsMasternodeOrDisconnectRequested(const CService& addr) {
-    return ForNode(addr, AllNodes, [](CNode* pnode){
+    CNode* pnode = FindNode(addr);
+    if(!pnode) {
+        pnode = FindNode(addr.ToStringIPPort());
+    }
+    if(pnode)
         return pnode->m_masternode_connection || pnode->fDisconnect;
-    });
+    return false;
 }
 int64_t CConnman::PoissonNextSendInbound(int64_t now, int average_interval_seconds)
 {
