@@ -2219,14 +2219,21 @@ void CConnman::ThreadOpenMasternodeConnections()
 
         OpenMasternodeConnection(CAddress(connectToDmn->pdmnState->addr, NODE_NETWORK), isProbe);
         // should be in the list now if connection was opened
-        CNode* node = FindNode(connectToDmn->pdmnState->addr);
-        if(!node) {
-            node = FindNode(connectToDmn->pdmnState->addr.ToStringIPPort());
-            if (!node || node->fDisconnect) {
-                LogPrint(BCLog::NET, "CConnman::%s -- connection failed for masternode  %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString());
-                // reset last outbound success
-                mmetaman.GetMetaInfo(connectToDmn->proTxHash)->SetLastOutboundSuccess(0);
+        CNode* pnode = FindNode(connectToDmn->pdmnState->addr);
+        if(!pnode) {
+            pnode = FindNode(connectToDmn->pdmnState->addr.ToStringIPPort());
+            if (!pnode) {
+                LogPrint(BCLog::NET, "CConnman::%s -- connection failed for masternode(1) %s, service=%s\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString());
             }
+            else if(pnode->fDisconnect) { 
+                LogPrint(BCLog::NET, "CConnman::%s -- connection failed for masternode(1) %s, service=%s disconnected\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString());
+            }
+            // reset last outbound success
+            mmetaman.GetMetaInfo(connectToDmn->proTxHash)->SetLastOutboundSuccess(0);
+        } else if(pnode->fDisconnect) {
+            LogPrint(BCLog::NET, "CConnman::%s -- connection failed for masternode(0) %s, service=%s disconnected\n", __func__, connectToDmn->proTxHash.ToString(), connectToDmn->pdmnState->addr.ToString());
+            // reset last outbound success
+            mmetaman.GetMetaInfo(connectToDmn->proTxHash)->SetLastOutboundSuccess(0);
         }
     }
 }
