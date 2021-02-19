@@ -44,6 +44,7 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *_platformStyle, QWid
 
     // context menu actions
     QAction *copyURIAction = new QAction(tr("Copy URI"), this);
+    QAction* copyAddressAction = new QAction(tr("Copy address"), this);
     QAction *copyLabelAction = new QAction(tr("Copy label"), this);
     QAction *copyMessageAction = new QAction(tr("Copy message"), this);
     QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
@@ -51,6 +52,7 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *_platformStyle, QWid
     // context menu
     contextMenu = new QMenu(this);
     contextMenu->addAction(copyURIAction);
+    contextMenu->addAction(copyAddressAction);
     contextMenu->addAction(copyLabelAction);
     contextMenu->addAction(copyMessageAction);
     contextMenu->addAction(copyAmountAction);
@@ -58,6 +60,7 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *_platformStyle, QWid
     // context menu signals
     connect(ui->recentRequestsView, &QWidget::customContextMenuRequested, this, &ReceiveCoinsDialog::showMenu);
     connect(copyURIAction, &QAction::triggered, this, &ReceiveCoinsDialog::copyURI);
+    connect(copyAddressAction, &QAction::triggered, this, &ReceiveCoinsDialog::copyAddress);
     connect(copyLabelAction, &QAction::triggered, this, &ReceiveCoinsDialog::copyLabel);
     connect(copyMessageAction, &QAction::triggered, this, &ReceiveCoinsDialog::copyMessage);
     connect(copyAmountAction, &QAction::triggered, this, &ReceiveCoinsDialog::copyAmount);
@@ -285,6 +288,19 @@ void ReceiveCoinsDialog::copyURI()
     const RecentRequestsTableModel * const submodel = model->getRecentRequestsTableModel();
     const QString uri = GUIUtil::formatBitcoinURI(submodel->entry(sel.row()).recipient);
     GUIUtil::setClipboard(uri);
+}
+
+// context menu action: copy address
+void ReceiveCoinsDialog::copyAddress()
+{
+    const QModelIndex sel = selectedRow();
+    if (!sel.isValid()) {
+        return;
+    }
+
+    const RecentRequestsTableModel* const submodel = model->getRecentRequestsTableModel();
+    const QString address = submodel->entry(sel.row()).recipient.address;
+    GUIUtil::setClipboard(address);
 }
 
 // context menu action: copy label
