@@ -86,6 +86,11 @@ unsigned int LwmaCalculateNextWorkRequired(const CBlockIndex* pindexLast, const 
     }
 
     arith_uint256 next_target = t * sum_target;
+    auto powLimit = UintToArith256(params.powLimit);
+    if(next_target > powLimit) {
+        next_target = powLimit;
+    }
+
     return next_target.GetCompact();
 }
 
