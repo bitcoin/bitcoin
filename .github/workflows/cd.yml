@@ -31,7 +31,7 @@ jobs:
       - name: Publish to Registry
         env:
           BUILD_TYPE: ${{ matrix.build }}
-        uses: elgohr/Publish-Docker-Github-Action@508d4ee
+        uses: elgohr/Publish-Docker-Github-Action@master
         with:
           name: veriblock/vbitcoin
           username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
