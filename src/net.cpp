@@ -1123,7 +1123,12 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         return;
     }
 
-    if (nInbound >= nMaxInbound)
+    // SYSCOIN Evict connections until we are below nMaxInbound. In case eviction protection resulted in nodes to not be evicted
+    // before, they might get evicted in batches now (after the protection timeout).
+    // We don't evict verified MN connections and also don't take them into account when checking limits. We can do this
+    // because we know that such connections are naturally limited by the total number of MNs, so this is not usable
+    // for attacks.
+    if (nInbound - nVerifiedInboundMasternodes >= nMaxInbound)
     {
         if (!AttemptToEvictConnection()) {
             // No connection to evict, disconnect the new connection
@@ -1139,11 +1144,6 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
             CloseSocket(hSocket);
             return;
         }
-        /*if(fMasternodeMode && !fGethSynced) {
-            LogPrintf("AcceptConnection -- Geth is not synced yet, skipping inbound connection attempt\n");
-            CloseSocket(hSocket);
-            return;
-        }*/
     }
     NodeId id = GetNewNodeId();
     uint64_t nonce = GetDeterministicRandomizer(RANDOMIZER_ID_LOCALHOSTNONCE).Write(id).Finalize();
