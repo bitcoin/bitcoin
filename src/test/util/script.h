@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TEST_UTIL_SCRIPT_H
-#define BITCOIN_TEST_UTIL_SCRIPT_H
+#ifndef SYSCOIN_TEST_UTIL_SCRIPT_H
+#define SYSCOIN_TEST_UTIL_SCRIPT_H
 
 #include <crypto/sha256.h>
 #include <script/script.h>
@@ -18,4 +18,4 @@ static const CScript P2WSH_OP_TRUE{
            return hash;
        }())};
 
-#endif // BITCOIN_TEST_UTIL_SCRIPT_H
+#endif // SYSCOIN_TEST_UTIL_SCRIPT_H
