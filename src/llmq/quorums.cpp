@@ -205,7 +205,7 @@ size_t CQuorum::GetQuorumRecoveryStartOffset(const CBlockIndex* pIndex) const
     return nMyIndex % qc.validMembers.size();
 }
 
-void CQuorum::StartQuorumDataRecoveryThread(CConnman &connman, const CQuorumCPtr _this, const CBlockIndex* pIndex, uint16_t nDataMaskIn)
+void CQuorum::StartQuorumDataRecoveryThread(CConnman &connman, CQuorumCPtr _this, const CBlockIndex* pIndex, uint16_t nDataMaskIn)
 {
     if (_this->fQuorumDataRecoveryThreadRunning) {
         LogPrint(BCLog::LLMQ, "CQuorum::%s -- Already running\n", __func__);
