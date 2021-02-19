@@ -64,7 +64,7 @@ def wait_for_banscore(node, peer_id, expected_score):
 
 
 def p2p_connection(node, uacomment=None):
-    return node.add_p2p_connection(QuorumDataInterface(), uacomment=uacomment)
+    return node.add_p2p_connection(QuorumDataInterface(), wait_for_verack=False, uacomment=uacomment)
 
 
 def get_mininode_id(node, uacomment=None):
