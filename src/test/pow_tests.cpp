@@ -151,7 +151,9 @@ BOOST_AUTO_TEST_CASE(LwmaCalculateNextWorkRequired_test)
     }
 
     int bits = LwmaCalculateNextWorkRequired(&blocks.back(), chainParams->GetConsensus());
-    BOOST_CHECK_EQUAL(bits, 0x1d010084);
+    // Bogdan: incorrect case, because higher than powLimit
+//    BOOST_CHECK_EQUAL(bits, 0x1d010084);
+    BOOST_CHECK_EQUAL(bits, 0x1d00ffff);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

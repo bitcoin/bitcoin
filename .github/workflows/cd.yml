@@ -56,7 +56,7 @@ jobs:
           echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//./g')" >> $GITHUB_ENV
           echo "TAGS=$(if [ "${{ github.event_name }}" == "push" ] && [ "$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" == "master" ]; then echo "latest,$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')"; elif [ "${{ github.event_name }}" == "pull_request" ]; then echo ""; else echo "$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')"; fi)" >> $GITHUB_ENV
       - name: Publish to Registry
-        uses: elgohr/Publish-Docker-Github-Action@508d4ee
+        uses: elgohr/Publish-Docker-Github-Action@master
         with:
           dockerfile: alpine.Dockerfile
           name: veriblock/vbitcoin
@@ -83,7 +83,7 @@ jobs:
           echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//./g')" >> $GITHUB_ENV
           echo "TAGS=$(if [ "${{ github.event_name }}" == "push" ] && [ "$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" == "master" ]; then echo "latest,$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')"; elif [ "${{ github.event_name }}" == "pull_request" ]; then echo ""; else echo "$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')"; fi)" >> $GITHUB_ENV
       - name: Publish to Registry
-        uses: elgohr/Publish-Docker-Github-Action@508d4ee
+        uses: elgohr/Publish-Docker-Github-Action@master
         with:
           dockerfile: alpine-debug.Dockerfile
           name: veriblock/vbitcoin
