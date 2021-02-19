@@ -44,6 +44,8 @@ store_path() {
 NATIVE_GCC="$(store_path gcc-toolchain)"
 export LIBRARY_PATH="${NATIVE_GCC}/lib:${NATIVE_GCC}/lib64"
 export CPATH="${NATIVE_GCC}/include"
+unset C_INCLUDE_PATH
+unset CPLUS_INCLUDE_PATH
 case "$HOST" in
     *darwin*)
         # When targeting darwin, some native tools built by depends require
@@ -66,7 +68,8 @@ case "$HOST" in
         # Determine output paths to use in CROSS_* environment variables
         CROSS_GLIBC="$(store_path "mingw-w64-x86_64-winpthreads")"
         CROSS_GCC="$(store_path "gcc-cross-${HOST}")"
-        CROSS_GCC_LIBS=( "${CROSS_GCC}/lib/gcc/${HOST}"/* ) # This expands to an array of directories...
+        CROSS_GCC_LIB_STORE="$(store_path "gcc-cross-${HOST}" lib)"
+        CROSS_GCC_LIBS=( "${CROSS_GCC_LIB_STORE}/lib/gcc/${HOST}"/* ) # This expands to an array of directories...
         CROSS_GCC_LIB="${CROSS_GCC_LIBS[0]}" # ...we just want the first one (there should only be one)
 
         # The search path ordering is generally:
@@ -75,7 +78,7 @@ case "$HOST" in
         #    2. kernel-header-related search paths (not applicable to mingw-w64 hosts)
         export CROSS_C_INCLUDE_PATH="${CROSS_GCC_LIB}/include:${CROSS_GCC_LIB}/include-fixed:${CROSS_GLIBC}/include"
         export CROSS_CPLUS_INCLUDE_PATH="${CROSS_GCC}/include/c++:${CROSS_GCC}/include/c++/${HOST}:${CROSS_GCC}/include/c++/backward:${CROSS_C_INCLUDE_PATH}"
-        export CROSS_LIBRARY_PATH="${CROSS_GCC}/lib:${CROSS_GCC}/${HOST}/lib:${CROSS_GCC_LIB}:${CROSS_GLIBC}/lib"
+        export CROSS_LIBRARY_PATH="${CROSS_GCC_LIB_STORE}/lib:${CROSS_GCC}/${HOST}/lib:${CROSS_GCC_LIB}:${CROSS_GLIBC}/lib"
         ;;
     *darwin*)
         # The CROSS toolchain for darwin uses the SDK and ignores environment variables.
@@ -86,12 +89,13 @@ case "$HOST" in
         CROSS_GLIBC_STATIC="$(store_path "glibc-cross-${HOST}" static)"
         CROSS_KERNEL="$(store_path "linux-libre-headers-cross-${HOST}")"
         CROSS_GCC="$(store_path "gcc-cross-${HOST}")"
-        CROSS_GCC_LIBS=( "${CROSS_GCC}/lib/gcc/${HOST}"/* ) # This expands to an array of directories...
+        CROSS_GCC_LIB_STORE="$(store_path "gcc-cross-${HOST}" lib)"
+        CROSS_GCC_LIBS=( "${CROSS_GCC_LIB_STORE}/lib/gcc/${HOST}"/* ) # This expands to an array of directories...
         CROSS_GCC_LIB="${CROSS_GCC_LIBS[0]}" # ...we just want the first one (there should only be one)
 
         export CROSS_C_INCLUDE_PATH="${CROSS_GCC_LIB}/include:${CROSS_GCC_LIB}/include-fixed:${CROSS_GLIBC}/include:${CROSS_KERNEL}/include"
         export CROSS_CPLUS_INCLUDE_PATH="${CROSS_GCC}/include/c++:${CROSS_GCC}/include/c++/${HOST}:${CROSS_GCC}/include/c++/backward:${CROSS_C_INCLUDE_PATH}"
-        export CROSS_LIBRARY_PATH="${CROSS_GCC}/lib:${CROSS_GCC}/${HOST}/lib:${CROSS_GCC_LIB}:${CROSS_GLIBC}/lib:${CROSS_GLIBC_STATIC}/lib"
+        export CROSS_LIBRARY_PATH="${CROSS_GCC_LIB_STORE}/lib:${CROSS_GCC}/${HOST}/lib:${CROSS_GCC_LIB}:${CROSS_GLIBC}/lib:${CROSS_GLIBC_STATIC}/lib"
         ;;
     *)
         exit 1 ;;
