@@ -2164,7 +2164,7 @@ static RPCHelpMan assetallocationbalance() {
     paramsFund.push_back(includeSafe);
     
     UniValue options(UniValue::VOBJ);
-    options.__pushKV("assetGuid", nAsset);
+    options.__pushKV("assetGuid", request.params[0]);
     paramsFund.push_back(options);
     JSONRPCRequest requestSpent(request.context);
     requestSpent.params = paramsFund;
