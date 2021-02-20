@@ -17,6 +17,9 @@
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
 class CConnman;
+
+#include <ctpl.h>
+
 namespace llmq
 {
 
@@ -158,9 +161,6 @@ private:
     // Recovery of public key shares is very slow, so we start a background thread that pre-populates a cache so that
     // the public key shares are ready when needed later
     mutable CBLSWorkerCache blsCache;
-    std::atomic<bool> stopQuorumThreads;
-    std::thread cachePopulatorThread;
-    mutable CThreadInterrupt interruptQuorumDataReceived;
     mutable std::atomic<bool> fQuorumDataRecoveryThreadRunning{false};
 
 public:
@@ -181,12 +181,6 @@ public:
 private:
     void WriteContributions(CEvoDB& evoDb);
     bool ReadContributions(CEvoDB& evoDb);
-    static void StartCachePopulatorThread(std::shared_ptr<CQuorum> _this);
-    static void StartQuorumDataRecoveryThread(CConnman &connman, const CQuorumCPtr _this, const CBlockIndex* pIndex, uint16_t nDataMask);
-    /// Returns the start offset for the masternode with the given proTxHash. This offset is applied when picking data recovery members of a quorum's
-    /// memberlist and is calculated based on a list of all member of all active quorums for the given llmqType in a way that each member
-    /// should receive the same number of request if all active llmqType members requests data from one llmqType quorum.
-    size_t GetQuorumRecoveryStartOffset(const CBlockIndex* pIndex) const;
 };
 
 /**
@@ -206,8 +200,15 @@ private:
     mutable std::map<uint8_t, unordered_lru_cache<uint256, CQuorumPtr, StaticSaltedHasher>> mapQuorumsCache;
     mutable std::map<uint8_t, unordered_lru_cache<uint256, std::vector<CQuorumCPtr>, StaticSaltedHasher>> scanQuorumsCache;
 
+    mutable ctpl::thread_pool workerPool;
+    mutable CThreadInterrupt quorumThreadInterrupt;
+
 public:
     CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager);
+    ~CQuorumManager();
+
+    void Start();
+    void Stop();
 
     void TriggerQuorumDataRecoveryThreads(const CBlockIndex* pIndex) const;
 
@@ -221,7 +222,6 @@ public:
 
     // all these methods will lock cs_main for a short period of time
     CQuorumCPtr GetQuorum(uint8_t llmqType, const uint256& quorumHash) const;
-    CQuorumCPtr GetQuorum(uint8_t llmqType, const CBlockIndex* pindexQuorum) const;
     void ScanQuorums(uint8_t llmqType, size_t nCountRequested, std::vector<CQuorumCPtr>& quorums) const;
 
     // this one is cs_main-free
@@ -233,6 +233,15 @@ private:
 
     CQuorumPtr BuildQuorumFromCommitment(const uint8_t llmqType, const CBlockIndex* pindexQuorum) const EXCLUSIVE_LOCKS_REQUIRED(quorumsCacheCs);
     bool BuildQuorumContributions(const CFinalCommitment& fqc, std::shared_ptr<CQuorum>& quorum) const;
+
+    CQuorumCPtr GetQuorum(uint8_t llmqType, const CBlockIndex* pindex) const;
+    /// Returns the start offset for the masternode with the given proTxHash. This offset is applied when picking data recovery members of a quorum's
+    /// memberlist and is calculated based on a list of all member of all active quorums for the given llmqType in a way that each member
+    /// should receive the same number of request if all active llmqType members requests data from one llmqType quorum.
+    size_t GetQuorumRecoveryStartOffset(const CQuorumCPtr pQuorum, const CBlockIndex* pIndex) const;
+
+    void StartCachePopulatorThread(const CQuorumCPtr pQuorum) const;
+    void StartQuorumDataRecoveryThread(const CQuorumCPtr pQuorum, const CBlockIndex* pIndex, uint16_t nDataMask) const;
 };
 
 extern CQuorumManager* quorumManager;
