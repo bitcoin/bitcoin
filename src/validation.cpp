@@ -465,7 +465,8 @@ namespace {
 class MemPoolAccept
 {
 public:
-    explicit MemPoolAccept(CTxMemPool& mempool, CChainState& active_chainstate) : m_pool(mempool), m_view(&m_dummy), m_viewmempool(&active_chainstate.CoinsTip(), m_pool), m_active_chainstate(active_chainstate),
+    explicit MemPoolAccept(CTxMemPool& mempool, CChainState& active_chainstate)
+        : m_pool(mempool), m_view(&m_dummy), m_viewmempool(&m_dummy, m_pool), m_active_chainstate(active_chainstate),
         m_limit_ancestors(gArgs.GetArg("-limitancestorcount", DEFAULT_ANCESTOR_LIMIT)),
         m_limit_ancestor_size(gArgs.GetArg("-limitancestorsize", DEFAULT_ANCESTOR_SIZE_LIMIT)*1000),
         m_limit_descendants(gArgs.GetArg("-limitdescendantcount", DEFAULT_DESCENDANT_LIMIT)),
@@ -663,7 +664,9 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
 
     assert(std::addressof(::ChainstateActive().CoinsTip()) == std::addressof(m_active_chainstate.CoinsTip()));
     const CCoinsViewCache& coins_cache = m_active_chainstate.CoinsTip();
-    // do all inputs exist?
+    // Check that inputs exist and bring the coins into m_view.
+    // This should be the only section that accesses the ChainState coins cache.
+    m_viewmempool.SetBackend(m_active_chainstate.CoinsTip());
     for (const CTxIn& txin : tx.vin) {
         if (!coins_cache.HaveCoinInCache(txin.prevout)) {
             coins_to_uncache.push_back(txin.prevout);
@@ -691,6 +694,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // we have all inputs cached now, so switch back to dummy (to protect
     // against bugs where we pull more inputs from disk that miss being added
     // to coins_to_uncache)
+    m_viewmempool.SetBackend(m_dummy);
     m_view.SetBackend(m_dummy);
 
     // Only accept BIP68 sequence locked transactions that can be mined in the next
