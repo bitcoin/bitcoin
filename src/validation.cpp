@@ -2386,7 +2386,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
                                  REJECT_INVALID, "conflict-tx-lock");
             }
         }
-    } else {
+    } else if (!fReindex && !fImporting) {
         LogPrintf("ConnectBlock(DASH): spork is off, skipping transaction locking checks\n");
     }
 
