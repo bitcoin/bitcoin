@@ -441,7 +441,7 @@ public:
     bool checkFinalTx(const CTransaction& tx) override
     {
         LOCK(cs_main);
-        return CheckFinalTx(tx);
+        return CheckFinalTx(::ChainActive().Tip(), tx);
     }
     Optional<int> findLocatorFork(const CBlockLocator& locator) override
     {
