@@ -172,9 +172,9 @@ public:
     template <typename Stream>
     inline void Unserialize(Stream& s, bool checkMalleable = true)
     {
-        char buf[SerSize];
-        s.read((char*)buf, SerSize);
-        SetBuf(buf, SerSize);
+        std::vector<uint8_t> vecBytes(SerSize, 0);
+        s.read((char*)vecBytes.data(), SerSize);
+        SetBuf(vecBytes);
 
         if (checkMalleable && !CheckMalleable(vecBytes)) {
             throw std::ios_base::failure("malleable BLS object");
