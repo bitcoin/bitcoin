@@ -168,7 +168,7 @@ void CQuorum::StartCachePopulatorThread(std::shared_ptr<CQuorum> _this)
     LogPrint(BCLog::LLMQ, "CQuorum::StartCachePopulatorThread -- start\n");
     // this thread will exit after some time
     // when then later some other thread tries to get keys, it will be much faster
-    std::weak_ptr<const CQuorum> weak_this(_this);
+    std::weak_ptr<CQuorum> weak_this(_this);
     _this->cachePopulatorThread = std::thread(&TraceThread<std::function<void()>>, "syscoin-q-cachepop", [weak_this] {
         auto objThis = weak_this.lock();
         if (objThis) {
