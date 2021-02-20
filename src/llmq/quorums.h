@@ -182,7 +182,7 @@ private:
     void WriteContributions(CEvoDB& evoDb);
     bool ReadContributions(CEvoDB& evoDb);
     static void StartCachePopulatorThread(std::shared_ptr<CQuorum> _this);
-    static void StartQuorumDataRecoveryThread(CConnman &connman, CQuorumCPtr _this, const CBlockIndex* pIndex, uint16_t nDataMask);
+    static void StartQuorumDataRecoveryThread(CConnman &connman, const CQuorumCPtr _this, const CBlockIndex* pIndex, uint16_t nDataMask);
     /// Returns the start offset for the masternode with the given proTxHash. This offset is applied when picking data recovery members of a quorum's
     /// memberlist and is calculated based on a list of all member of all active quorums for the given llmqType in a way that each member
     /// should receive the same number of request if all active llmqType members requests data from one llmqType quorum.
