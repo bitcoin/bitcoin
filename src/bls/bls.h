@@ -63,6 +63,10 @@ public:
         cachedHash = nullHash.hash;
     }
     virtual ~CBLSWrapper() {}
+    CBLSWrapper(const std::vector<unsigned char>& vecBytes) : CBLSWrapper<ImplType, _SerSize, C>()
+    {
+        SetByteVector(vecBytes);
+    }
 
     CBLSWrapper(const CBLSWrapper& ref) = default;
     CBLSWrapper& operator=(const CBLSWrapper& ref) = default;
@@ -94,18 +98,23 @@ public:
         return fValid;
     }
 
-    void SetBuf(const void* buf, size_t size)
+    void Reset()
     {
-        if (size != SerSize) {
+        *((C*)this) = C();
+    }
+
+    void SetByteVector(const std::vector<uint8_t>& vecBytes)
+    {
+        if (vecBytes.size() != SerSize) {
             Reset();
             return;
         }
 
-        if (std::all_of((const char*)buf, (const char*)buf + SerSize, [](char c) { return c == 0; })) {
+        if (std::all_of(vecBytes.begin(), vecBytes.end(), [](uint8_t c) { return c == 0; })) {
             Reset();
         } else {
             try {
-                impl = ImplType::FromBytes((const uint8_t*)buf);
+                impl = ImplType::FromBytes(vecBytes.data());
                 fValid = true;
             } catch (...) {
                 Reset();
@@ -114,23 +123,12 @@ public:
         UpdateHash();
     }
 
-    void Reset()
-    {
-        *((C*)this) = C();
-    }
-
     std::vector<uint8_t> ToByteVector() const
     {
         if (!fValid) {
             return std::vector<uint8_t>(SerSize, 0);
         }
         return impl.Serialize();
-    }
-
-    template <typename T>
-    void SetBuf(const T& buf)
-    {
-        SetBuf(buf.data(), buf.size());
     }
 
     const uint256& GetHash() const
@@ -154,7 +152,7 @@ public:
             Reset();
             return false;
         }
-        SetBuf(b);
+        SetByteVector(b);
         return IsValid();
     }
 
@@ -174,7 +172,7 @@ public:
     {
         std::vector<uint8_t> vecBytes(SerSize, 0);
         s.read((char*)vecBytes.data(), SerSize);
-        SetBuf(vecBytes);
+        SetByteVector(vecBytes);
 
         if (checkMalleable && !CheckMalleable(vecBytes)) {
             throw std::ios_base::failure("malleable BLS object");
@@ -239,10 +237,9 @@ public:
     using CBLSWrapper::operator=;
     using CBLSWrapper::operator==;
     using CBLSWrapper::operator!=;
+    using CBLSWrapper::CBLSWrapper;
 
     CBLSSecretKey() {}
-    CBLSSecretKey(const CBLSSecretKey&) = default;
-    CBLSSecretKey& operator=(const CBLSSecretKey&) = default;
     void AggregateInsecure(const CBLSSecretKey& o);
     static CBLSSecretKey AggregateInsecure(const std::vector<CBLSSecretKey>& sks);
 
@@ -306,7 +303,7 @@ template<typename BLSObject>
 class CBLSLazyWrapper
 {
 private:
-    mutable RecursiveMutex mutex;
+    mutable std::mutex mutex;
 
     mutable std::vector<uint8_t> vecBytes;
     mutable bool bufValid{false};
@@ -331,7 +328,7 @@ public:
 
     CBLSLazyWrapper& operator=(const CBLSLazyWrapper& r)
     {
-        LOCK(r.mutex);
+        std::unique_lock<std::mutex> l(r.mutex);
         bufValid = r.bufValid;
         if (r.bufValid) {
             vecBytes = r.vecBytes;
@@ -356,7 +353,7 @@ public:
     template<typename Stream>
     inline void Serialize(Stream& s) const
     {
-        LOCK(mutex);
+        std::unique_lock<std::mutex> l(mutex);
         if (!objInitialized && !bufValid) {
             throw std::ios_base::failure("obj and buf not initialized");
         }
@@ -380,7 +377,7 @@ public:
 
     void Set(const BLSObject& _obj)
     {
-        LOCK(mutex);
+        std::unique_lock<std::mutex> l(mutex);
         bufValid = false;
         objInitialized = true;
         obj = _obj;
@@ -388,13 +385,13 @@ public:
     }
     const BLSObject& Get() const
     {
-        LOCK(mutex);
+        std::unique_lock<std::mutex> l(mutex);
         static BLSObject invalidObj;
         if (!bufValid && !objInitialized) {
             return invalidObj;
         }
         if (!objInitialized) {
-            obj.SetBuf(vecBytes.data(), vecBytes.size());
+            obj.SetByteVector(vecBytes);
             if (!obj.CheckMalleable(vecBytes)) {
                 bufValid = false;
                 objInitialized = false;
@@ -424,7 +421,7 @@ public:
 
     uint256 GetHash() const
     {
-        LOCK(mutex);
+        std::unique_lock<std::mutex> l(mutex);
         if (!bufValid) {
             vecBytes = obj.ToByteVector();
             bufValid = true;
