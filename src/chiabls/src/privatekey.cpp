@@ -82,7 +82,10 @@ PrivateKey::PrivateKey(PrivateKey&& k) {
 }
 
 PrivateKey::~PrivateKey() {
-    Util::SecFree(keydata);
+    if(keydata) {
+        Util::SecFree(keydata);
+        keydata = nullptr;
+    }
 }
 
 PublicKey PrivateKey::GetPublicKey() const {
