@@ -840,6 +840,12 @@ static bool CompareLocalHostTimeConnected(const NodeEvictionCandidate &a, const 
     return a.nTimeConnected > b.nTimeConnected;
 }
 
+static bool CompareOnionTimeConnected(const NodeEvictionCandidate& a, const NodeEvictionCandidate& b)
+{
+    if (a.m_is_onion != b.m_is_onion) return b.m_is_onion;
+    return a.nTimeConnected > b.nTimeConnected;
+}
+
 static bool CompareNetGroupKeyed(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b) {
     return a.nKeyedNetGroup < b.nKeyedNetGroup;
 }
@@ -885,16 +891,31 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& vEvict
 {
     // Protect the half of the remaining nodes which have been connected the longest.
     // This replicates the non-eviction implicit behavior, and precludes attacks that start later.
-    // Reserve half of these protected spots for localhost peers, even if
-    // they're not longest-uptime overall. This helps protect tor peers, which
-    // tend to be otherwise disadvantaged under our eviction criteria.
+    // To favorise the diversity of our peer connections, reserve up to (half + 2) of
+    // these protected spots for onion and localhost peers, if any, even if they're not
+    // longest uptime overall. This helps protect tor peers, which tend to be otherwise
+    // disadvantaged under our eviction criteria.
     const size_t initial_size = vEvictionCandidates.size();
     size_t total_protect_size = initial_size / 2;
+    const size_t onion_protect_size = total_protect_size / 2;
 
-    // Pick out up to 1/4 peers that are localhost, sorted by longest uptime.
-    const size_t local_erase_size = total_protect_size / 2;
-    EraseLastKElements(vEvictionCandidates, CompareLocalHostTimeConnected, local_erase_size,
-                       [](const NodeEvictionCandidate& n) { return n.m_is_local; });
+    if (onion_protect_size) {
+        // Pick out up to 1/4 peers connected via our onion service, sorted by longest uptime.
+        EraseLastKElements(vEvictionCandidates, CompareOnionTimeConnected, onion_protect_size,
+                           [](const NodeEvictionCandidate& n) { return n.m_is_onion; });
+    }
+
+    const size_t localhost_min_protect_size{2};
+    if (onion_protect_size >= localhost_min_protect_size) {
+        // Allocate any remaining slots of the 1/4, or minimum 2 additional slots,
+        // to localhost peers, sorted by longest uptime, as manually configured
+        // hidden services not using `-bind=addr[:port]=onion` will not be detected
+        // as inbound onion connections.
+        const size_t remaining_tor_slots{onion_protect_size - (initial_size - vEvictionCandidates.size())};
+        const size_t localhost_protect_size{std::max(remaining_tor_slots, localhost_min_protect_size)};
+        EraseLastKElements(vEvictionCandidates, CompareLocalHostTimeConnected, localhost_protect_size,
+                           [](const NodeEvictionCandidate& n) { return n.m_is_local; });
+    }
 
     // Calculate how many we removed, and update our total number of peers that
     // we want to protect based on uptime accordingly.
