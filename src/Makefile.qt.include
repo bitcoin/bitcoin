@@ -352,7 +352,8 @@ RES_FONTS = \
   qt/res/fonts/Montserrat/Montserrat-SemiBold.otf \
   qt/res/fonts/Montserrat/Montserrat-SemiBoldItalic.otf \
   qt/res/fonts/Montserrat/Montserrat-Thin.otf \
-  qt/res/fonts/Montserrat/Montserrat-ThinItalic.otf
+  qt/res/fonts/Montserrat/Montserrat-ThinItalic.otf \
+  qt/res/fonts/RobotoMono-Bold.ttf
 
 RES_ANIMATION = $(wildcard $(srcdir)/qt/res/animation/spinner-*.png)
 
