@@ -44,6 +44,7 @@
 
 #include <QApplication>
 #include <QDebug>
+#include <QFontDatabase>
 #include <QLibraryInfo>
 #include <QLocale>
 #include <QMessageBox>
@@ -475,6 +476,7 @@ int GuiMain(int argc, char* argv[])
 #endif
 
     BitcoinApplication app;
+    QFontDatabase::addApplicationFont(":/fonts/monospace");
 
     /// 2. Parse command-line options. We do this after qt in order to show an error if there are problems parsing these
     // Command-line options take precedence:
