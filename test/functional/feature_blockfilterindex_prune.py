@@ -5,8 +5,9 @@
 """Test blockfilterindex in conjunction with prune."""
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
-    assert_raises_rpc_error,
+    assert_equal,
     assert_greater_than,
+    assert_raises_rpc_error,
 )
 
 
@@ -16,17 +17,18 @@ class FeatureBlockfilterindexPruneTest(BitcoinTestFramework):
         self.extra_args = [["-fastprune", "-prune=1"], ["-fastprune", "-prune=1", "-blockfilterindex=1"]]
 
     def run_test(self):
-        # test basic pruning compatibility & filter access of pruned blocks
         self.log.info("check if we can access a blockfilter when pruning is enabled but no blocks are actually pruned")
+        self.wait_until(lambda: self.nodes[1].getindexinfo() == {'basic block filter index': {'synced': True, 'best_block_height': 200}})
         assert len(self.nodes[1].getblockfilter(self.nodes[1].getbestblockhash())['filter']) > 0
         # Mine two batches of blocks to avoid hitting NODE_NETWORK_LIMITED_MIN_BLOCKS disconnection
         self.nodes[1].generate(250)
         self.sync_all()
         self.nodes[1].generate(250)
         self.sync_all()
+        self.wait_until(lambda: self.nodes[1].getindexinfo() == {'basic block filter index': {'synced': True, 'best_block_height': 700}})
         self.log.info("prune some blocks")
         pruneheight = self.nodes[1].pruneblockchain(400)
-        assert pruneheight != 0
+        assert_equal(pruneheight, 250)
         self.log.info("check if we can access the tips blockfilter when we have pruned some blocks")
         assert len(self.nodes[1].getblockfilter(self.nodes[1].getbestblockhash())['filter']) > 0
         self.log.info("check if we can access the blockfilter of a pruned block")
