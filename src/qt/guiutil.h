@@ -53,7 +53,7 @@ namespace GUIUtil
     QString dateTimeStr(qint64 nTime);
 
     // Return a monospace font
-    QFont fixedPitchFont();
+    QFont fixedPitchFont(bool use_embedded_font = false);
 
     // Set up widget for address
     void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent);
