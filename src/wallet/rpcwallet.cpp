@@ -161,6 +161,7 @@ static void WalletTxToJSON(interfaces::Chain& chain, const CWalletTx& wtx, UniVa
         entry.pushKV("blocktime", block_time);
     } else {
         entry.pushKV("trusted", wtx.IsTrusted());
+        entry.pushKV("in_mempool", wtx.fInMempool);
     }
     uint256 hash = wtx.GetHash();
     entry.pushKV("txid", hash.GetHex());
@@ -181,7 +182,6 @@ static void WalletTxToJSON(interfaces::Chain& chain, const CWalletTx& wtx, UniVa
             rbfStatus = "yes";
     }
     entry.pushKV("bip125-replaceable", rbfStatus);
-
     for (const std::pair<const std::string, std::string>& item : wtx.mapValue)
         entry.pushKV(item.first, item.second);
 }
@@ -1372,6 +1372,7 @@ static const std::vector<RPCResult> TransactionDescriptionString()
                "transaction conflicted that many blocks ago."},
            {RPCResult::Type::BOOL, "generated", "Only present if transaction only input is a coinbase one."},
            {RPCResult::Type::BOOL, "trusted", "Only present if we consider transaction to be trusted and so safe to spend from."},
+           {RPCResult::Type::BOOL, "in_mempool", "Only present on unconfirmed transactions."},
            {RPCResult::Type::STR_HEX, "blockhash", "The block hash containing the transaction."},
            {RPCResult::Type::NUM, "blockheight", "The block height containing the transaction."},
            {RPCResult::Type::NUM, "blockindex", "The index of the transaction in the block that includes it."},
