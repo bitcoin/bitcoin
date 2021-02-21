@@ -19,7 +19,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.wallet_names = []
 
     def test_config_file_parser(self):
-        # Assume node is stopped
+        self.stop_node(0)
 
         inc_conf_file_path = os.path.join(self.nodes[0].datadir, 'include.conf')
         with open(os.path.join(self.nodes[0].datadir, 'bitcoin.conf'), 'a', encoding='utf-8') as conf:
@@ -89,11 +89,12 @@ class ConfArgsTest(BitcoinTestFramework):
         )
 
     def test_log_buffer(self):
+        self.stop_node(0)
         with self.nodes[0].assert_debug_log(expected_msgs=['Warning: parsed potentially confusing double-negative -connect=0\n']):
             self.start_node(0, extra_args=['-noconnect=0'])
-        self.stop_node(0)
 
     def test_args_log(self):
+        self.stop_node(0)
         self.log.info('Test config args logging')
         with self.nodes[0].assert_debug_log(
                 expected_msgs=[
@@ -120,37 +121,37 @@ class ConfArgsTest(BitcoinTestFramework):
                 '-rpcuser=secret-rpcuser',
                 '-torpassword=secret-torpassword',
             ])
-        self.stop_node(0)
 
     def test_networkactive(self):
         self.log.info('Test -networkactive option')
+        self.stop_node(0)
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: true\n']):
             self.start_node(0)
-        self.stop_node(0)
 
+        self.stop_node(0)
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: true\n']):
             self.start_node(0, extra_args=['-networkactive'])
-        self.stop_node(0)
 
+        self.stop_node(0)
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: true\n']):
             self.start_node(0, extra_args=['-networkactive=1'])
-        self.stop_node(0)
 
+        self.stop_node(0)
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: false\n']):
             self.start_node(0, extra_args=['-networkactive=0'])
-        self.stop_node(0)
 
+        self.stop_node(0)
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: false\n']):
             self.start_node(0, extra_args=['-nonetworkactive'])
-        self.stop_node(0)
 
+        self.stop_node(0)
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: false\n']):
             self.start_node(0, extra_args=['-nonetworkactive=1'])
-        self.stop_node(0)
 
     def test_seed_peers(self):
         self.log.info('Test seed peers')
         default_data_dir = self.nodes[0].datadir
+        self.stop_node(0)
 
         # No peers.dat exists and -dnsseed=1
         # We expect the node will use DNS Seeds, but Regtest mode has 0 DNS seeds
@@ -201,12 +202,9 @@ class ConfArgsTest(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Adding fixed seeds as 60 seconds have passed and addrman is empty"]):
             self.nodes[0].setmocktime(start + 65)
-        self.stop_node(0)
 
 
     def run_test(self):
-        self.stop_node(0)
-
         self.test_log_buffer()
         self.test_args_log()
         self.test_seed_peers()
