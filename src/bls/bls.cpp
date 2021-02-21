@@ -18,14 +18,14 @@ CBLSId::CBLSId(const uint256& nHash) : CBLSWrapper<CBLSIdImplicit, BLS_CURVE_ID_
 {
     impl = nHash;
     fValid = true;
-    UpdateHash();
+    cachedHash.SetNull();
 }
 
 void CBLSSecretKey::AggregateInsecure(const CBLSSecretKey& o)
 {
     assert(IsValid() && o.IsValid());
     impl = bls::PrivateKey::AggregateInsecure({impl, o.impl});
-    UpdateHash();
+    cachedHash.SetNull();
 }
 
 CBLSSecretKey CBLSSecretKey::AggregateInsecure(const std::vector<CBLSSecretKey>& sks)
@@ -43,7 +43,7 @@ CBLSSecretKey CBLSSecretKey::AggregateInsecure(const std::vector<CBLSSecretKey>&
     CBLSSecretKey ret;
     ret.impl = bls::PrivateKey::AggregateInsecure(v);
     ret.fValid = true;
-    ret.UpdateHash();
+    ret.cachedHash.SetNull();
     return ret;
 }
 
@@ -60,14 +60,14 @@ void CBLSSecretKey::MakeNewKey()
         }
     }
     fValid = true;
-    UpdateHash();
+    cachedHash.SetNull();
 }
 #endif
 
 bool CBLSSecretKey::SecretKeyShare(const std::vector<CBLSSecretKey>& msk, const CBLSId& _id)
 {
     fValid = false;
-    UpdateHash();
+    cachedHash.SetNull();
 
     if (!_id.IsValid()) {
         return false;
@@ -89,7 +89,7 @@ bool CBLSSecretKey::SecretKeyShare(const std::vector<CBLSSecretKey>& msk, const 
     }
 
     fValid = true;
-    UpdateHash();
+    cachedHash.SetNull();
     return true;
 }
 
@@ -102,7 +102,7 @@ CBLSPublicKey CBLSSecretKey::GetPublicKey() const
     CBLSPublicKey pubKey;
     pubKey.impl = impl.GetPublicKey();
     pubKey.fValid = true;
-    pubKey.UpdateHash();
+    pubKey.cachedHash.SetNull();
     return pubKey;
 }
 
@@ -116,7 +116,7 @@ CBLSSignature CBLSSecretKey::Sign(const uint256& hash) const
     sigRet.impl = impl.SignInsecurePrehashed((const uint8_t*)hash.begin());
 
     sigRet.fValid = true;
-    sigRet.UpdateHash();
+    sigRet.cachedHash.SetNull();
 
     return sigRet;
 }
@@ -125,7 +125,7 @@ void CBLSPublicKey::AggregateInsecure(const CBLSPublicKey& o)
 {
     assert(IsValid() && o.IsValid());
     impl = bls::PublicKey::AggregateInsecure({impl, o.impl});
-    UpdateHash();
+    cachedHash.SetNull();
 }
 
 CBLSPublicKey CBLSPublicKey::AggregateInsecure(const std::vector<CBLSPublicKey>& pks)
@@ -143,14 +143,14 @@ CBLSPublicKey CBLSPublicKey::AggregateInsecure(const std::vector<CBLSPublicKey>&
     CBLSPublicKey ret;
     ret.impl = bls::PublicKey::AggregateInsecure(v);
     ret.fValid = true;
-    ret.UpdateHash();
+    ret.cachedHash.SetNull();
     return ret;
 }
 
 bool CBLSPublicKey::PublicKeyShare(const std::vector<CBLSPublicKey>& mpk, const CBLSId& _id)
 {
     fValid = false;
-    UpdateHash();
+    cachedHash.SetNull();
 
     if (!_id.IsValid()) {
         return false;
@@ -172,21 +172,21 @@ bool CBLSPublicKey::PublicKeyShare(const std::vector<CBLSPublicKey>& mpk, const 
     }
 
     fValid = true;
-    UpdateHash();
+    cachedHash.SetNull();
     return true;
 }
 
 bool CBLSPublicKey::DHKeyExchange(const CBLSSecretKey& sk, const CBLSPublicKey& pk)
 {
     fValid = false;
-    UpdateHash();
+    cachedHash.SetNull();
 
     if (!sk.IsValid() || !pk.IsValid()) {
         return false;
     }
     impl = bls::BLS::DHKeyExchange(sk.impl, pk.impl);
     fValid = true;
-    UpdateHash();
+    cachedHash.SetNull();
     return true;
 }
 
@@ -194,7 +194,7 @@ void CBLSSignature::AggregateInsecure(const CBLSSignature& o)
 {
     assert(IsValid() && o.IsValid());
     impl = bls::InsecureSignature::Aggregate({impl, o.impl});
-    UpdateHash();
+    cachedHash.SetNull();
 }
 
 CBLSSignature CBLSSignature::AggregateInsecure(const std::vector<CBLSSignature>& sigs)
@@ -212,7 +212,7 @@ CBLSSignature CBLSSignature::AggregateInsecure(const std::vector<CBLSSignature>&
     CBLSSignature ret;
     ret.impl = bls::InsecureSignature::Aggregate(v);
     ret.fValid = true;
-    ret.UpdateHash();
+    ret.cachedHash.SetNull();
     return ret;
 }
 
@@ -235,7 +235,7 @@ CBLSSignature CBLSSignature::AggregateSecure(const std::vector<CBLSSignature>& s
     CBLSSignature ret;
     ret.impl = bls::Signature::AggregateSigs(v).GetInsecureSig();
     ret.fValid = true;
-    ret.UpdateHash();
+    ret.cachedHash.SetNull();
     return ret;
 }
 
@@ -243,7 +243,7 @@ void CBLSSignature::SubInsecure(const CBLSSignature& o)
 {
     assert(IsValid() && o.IsValid());
     impl = impl.DivideBy({o.impl});
-    UpdateHash();
+    cachedHash.SetNull();
 }
 
 bool CBLSSignature::VerifyInsecure(const CBLSPublicKey& pubKey, const uint256& hash) const
@@ -307,7 +307,7 @@ bool CBLSSignature::VerifySecureAggregated(const std::vector<CBLSPublicKey>& pks
 bool CBLSSignature::Recover(const std::vector<CBLSSignature>& sigs, const std::vector<CBLSId>& ids)
 {
     fValid = false;
-    UpdateHash();
+    cachedHash.SetNull();
 
     if (sigs.empty() || ids.empty() || sigs.size() != ids.size()) {
         return false;
@@ -333,7 +333,7 @@ bool CBLSSignature::Recover(const std::vector<CBLSSignature>& sigs, const std::v
     }
 
     fValid = true;
-    UpdateHash();
+    cachedHash.SetNull();
     return true;
 }
 
