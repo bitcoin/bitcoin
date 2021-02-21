@@ -62,8 +62,6 @@ ALLOWED_LIBRARIES = {
 'ld-linux-x86-64.so.2', # 64-bit dynamic linker
 'ld-linux.so.2', # 32-bit dynamic linker
 # dash-qt only
-'libX11-xcb.so.1', # part of X11
-'libX11.so.6', # part of X11
 'libxcb.so.1', # part of X11
 'libfontconfig.so.1', # font support
 'libfreetype.so.6', # font parsing
