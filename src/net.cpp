@@ -879,6 +879,26 @@ static void EraseLastKElements(std::vector<T> &elements, Comparator comparator, 
     elements.erase(elements.end() - eraseSize, elements.end());
 }
 
+void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& vEvictionCandidates)
+{
+    // Protect the half of the remaining nodes which have been connected the longest.
+    // This replicates the non-eviction implicit behavior, and precludes attacks that start later.
+    // Reserve half of these protected spots for localhost peers, even if
+    // they're not longest-uptime overall. This helps protect tor peers, which
+    // tend to be otherwise disadvantaged under our eviction criteria.
+    size_t initial_size = vEvictionCandidates.size();
+    size_t total_protect_size = initial_size / 2;
+
+    // Pick out up to 1/4 peers that are localhost, sorted by longest uptime.
+    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), CompareLocalHostTimeConnected);
+    size_t local_erase_size = total_protect_size / 2;
+    vEvictionCandidates.erase(std::remove_if(vEvictionCandidates.end() - local_erase_size, vEvictionCandidates.end(), [](NodeEvictionCandidate const &n) { return n.m_is_local; }), vEvictionCandidates.end());
+    // Calculate how many we removed, and update our total number of peers that
+    // we want to protect based on uptime accordingly.
+    total_protect_size -= initial_size - vEvictionCandidates.size();
+    EraseLastKElements(vEvictionCandidates, ReverseCompareNodeTimeConnected, total_protect_size);
+}
+
 [[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates)
 {
     // Protect connections with certain characteristics
@@ -901,22 +921,9 @@ static void EraseLastKElements(std::vector<T> &elements, Comparator comparator, 
     // An attacker cannot manipulate this metric without performing useful work.
     EraseLastKElements(vEvictionCandidates, CompareNodeBlockTime, 4);
 
-    // Protect the half of the remaining nodes which have been connected the longest.
-    // This replicates the non-eviction implicit behavior, and precludes attacks that start later.
-    // Reserve half of these protected spots for localhost peers, even if
-    // they're not longest-uptime overall. This helps protect tor peers, which
-    // tend to be otherwise disadvantaged under our eviction criteria.
-    size_t initial_size = vEvictionCandidates.size();
-    size_t total_protect_size = initial_size / 2;
-
-    // Pick out up to 1/4 peers that are localhost, sorted by longest uptime.
-    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), CompareLocalHostTimeConnected);
-    size_t local_erase_size = total_protect_size / 2;
-    vEvictionCandidates.erase(std::remove_if(vEvictionCandidates.end() - local_erase_size, vEvictionCandidates.end(), [](NodeEvictionCandidate const &n) { return n.m_is_local; }), vEvictionCandidates.end());
-    // Calculate how many we removed, and update our total number of peers that
-    // we want to protect based on uptime accordingly.
-    total_protect_size -= initial_size - vEvictionCandidates.size();
-    EraseLastKElements(vEvictionCandidates, ReverseCompareNodeTimeConnected, total_protect_size);
+    // Protect some of the remaining eviction candidates by ratios of desirable
+    // or disadvantaged characteristics.
+    ProtectEvictionCandidatesByRatio(vEvictionCandidates);
 
     if (vEvictionCandidates.empty()) return std::nullopt;
 

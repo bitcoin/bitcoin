@@ -1283,6 +1283,32 @@ struct NodeEvictionCandidate
     bool m_is_local;
 };
 
+/**
+ * Select an inbound peer to evict after filtering out (protecting) peers having
+ * distinct, difficult-to-forge characteristics. The protection logic picks out
+ * fixed numbers of desirable peers per various criteria, followed by ratios of
+ * desirable or disadvantaged peers. If any eviction candidates remain, the
+ * selection logic chooses a peer to evict.
+ */
 [[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates);
+
+/** Protect desirable or disadvantaged inbound peers from eviction by ratio.
+ *
+ * This function protects half of the peers which have been connected the
+ * longest, to replicate the non-eviction implicit behavior and preclude attacks
+ * that start later.
+ *
+ * Half of these protected spots (1/4 of the total) are reserved for localhost
+ * peers, if any, sorted by longest uptime, even if they're not longest uptime
+ * overall.
+ *
+ * This helps protect onion peers, which tend to be otherwise disadvantaged
+ * under our eviction criteria for their higher min ping times relative to IPv4
+ * and IPv6 peers, and favorise the diversity of peer connections.
+ *
+ * This function was extracted from SelectNodeToEvict() to be able to test the
+ * ratio-based protection logic deterministically.
+ */
+void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& vEvictionCandidates);
 
 #endif // BITCOIN_NET_H
