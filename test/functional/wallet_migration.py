@@ -82,6 +82,8 @@ class WalletMigrationTest(BitcoinTestFramework):
 
     def assert_list_txs_equal(self, received_list_txs, expected_list_txs):
         for d in received_list_txs:
+            if 'in_mempool' in d:
+                del d['in_mempool']
             if "parent_descs" in d:
                 del d["parent_descs"]
         for d in expected_list_txs:
