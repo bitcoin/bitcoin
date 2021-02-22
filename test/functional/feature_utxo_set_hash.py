@@ -21,18 +21,13 @@ class UTXOSetHashTest(BitcoinTestFramework):
         self.num_nodes = 1
         self.setup_clean_chain = True
 
-    def test_deterministic_hash_results(self):
-        self.log.info("Test deterministic UTXO set hash results")
-
-        # These depend on the setup_clean_chain option, the chain loaded from the cache
-        assert_equal(self.nodes[0].gettxoutsetinfo()['hash_serialized_2'], "b32ec1dda5a53cd025b95387aad344a801825fe46a60ff952ce26528f01d3be8")
-        assert_equal(self.nodes[0].gettxoutsetinfo("muhash")['muhash'], "dd5ad2a105c2d29495f577245c357409002329b9f4d6182c0af3dc2f462555c8")
-
     def test_muhash_implementation(self):
         self.log.info("Test MuHash implementation consistency")
 
         node = self.nodes[0]
         wallet = MiniWallet(node)
+        mocktime = node.getblockheader(node.getblockhash(0))['time'] + 1
+        node.setmocktime(mocktime)
 
         # Generate 100 blocks and remove the first since we plan to spend its
         # coinbase
@@ -73,8 +68,11 @@ class UTXOSetHashTest(BitcoinTestFramework):
 
         assert_equal(finalized[::-1].hex(), node_muhash)
 
+        self.log.info("Test deterministic UTXO set hash results")
+        assert_equal(node.gettxoutsetinfo()['hash_serialized_2'], "5b1b44097406226c0eb8e1362cd17a1f346522cf9390a8175a57a5262cb1963f")
+        assert_equal(node.gettxoutsetinfo("muhash")['muhash'], "4b8803075d7151d06fad3e88b68ba726886794873fbfa841d12aefb2cc2b881b")
+
     def run_test(self):
-        self.test_deterministic_hash_results()
         self.test_muhash_implementation()
 
 
