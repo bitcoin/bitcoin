@@ -153,7 +153,30 @@ void PeerTableModel::refresh()
         new_peers_data.append(stats);
     }
 
-    Q_EMIT layoutAboutToBeChanged();
-    m_peers_data.swap(new_peers_data);
-    Q_EMIT layoutChanged();
+    // Handle peer addition or removal as suggested in Qt Docs. See:
+    // - https://doc.qt.io/qt-5/model-view-programming.html#inserting-and-removing-rows
+    // - https://doc.qt.io/qt-5/model-view-programming.html#resizable-models
+    // We take advantage of the fact that the std::vector returned
+    // by interfaces::Node::getNodesStats is sorted by nodeid.
+    for (int i = 0; i < m_peers_data.size();) {
+        if (i < new_peers_data.size() && m_peers_data.at(i).nodeStats.nodeid == new_peers_data.at(i).nodeStats.nodeid) {
+            ++i;
+            continue;
+        }
+        // A peer has been removed from the table.
+        beginRemoveRows(QModelIndex(), i, i);
+        m_peers_data.erase(m_peers_data.begin() + i);
+        endRemoveRows();
+    }
+
+    if (m_peers_data.size() < new_peers_data.size()) {
+        // Some peers have been added to the end of the table.
+        beginInsertRows(QModelIndex(), m_peers_data.size(), new_peers_data.size() - 1);
+        m_peers_data.swap(new_peers_data);
+        endInsertRows();
+    } else {
+        m_peers_data.swap(new_peers_data);
+    }
+
+    Q_EMIT changed();
 }

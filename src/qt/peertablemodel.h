@@ -73,6 +73,9 @@ public:
 public Q_SLOTS:
     void refresh();
 
+Q_SIGNALS:
+    void changed();
+
 private:
     //! Internal peer data structure.
     QList<CNodeCombinedStats> m_peers_data{};
