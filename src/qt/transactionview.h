@@ -94,7 +94,6 @@ private Q_SLOTS:
     void showDetails();
     void showAddressQRCode();
     void copyAddress();
-    void editLabel();
     void copyLabel();
     void copyAmount();
     void copyTxID();
