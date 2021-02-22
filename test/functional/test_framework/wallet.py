@@ -49,6 +49,9 @@ class MiniWallet:
             self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value']})
         return blocks
 
+    def get_address(self):
+        return self._address
+
     def get_utxo(self, *, txid=''):
         """
         Returns a utxo and marks it as spent (pops it from the internal list)
