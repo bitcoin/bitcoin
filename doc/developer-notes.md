@@ -785,6 +785,11 @@ Threads and synchronization
   get compile-time warnings about potential race conditions in code. Combine annotations in function declarations with
   run-time asserts in function definitions:
 
+  - In functions that are declared separately from where they are defined, the
+    thread safety annotations should be added exclusively to the function
+    declaration. Annotations on the definition could lead to false positives
+    (lack of compile failure) at call sites between the two.
+
 ```C++
 // txmempool.h
 class CTxMemPool
