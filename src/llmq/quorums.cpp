@@ -243,14 +243,16 @@ void CQuorumManager::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitial
         EnsureQuorumConnections(p.first, pindexNew);
     }
 
-    // Cleanup expired data requests
-    LOCK(cs_data_requests);
-    auto it = mapQuorumDataRequests.begin();
-    while (it != mapQuorumDataRequests.end()) {
-        if (it->second.IsExpired()) {
-            it = mapQuorumDataRequests.erase(it);
-        } else {
-            ++it;
+    {
+        // Cleanup expired data requests
+        LOCK(cs_data_requests);
+        auto it = mapQuorumDataRequests.begin();
+        while (it != mapQuorumDataRequests.end()) {
+            if (it->second.IsExpired()) {
+                it = mapQuorumDataRequests.erase(it);
+            } else {
+                ++it;
+            }
         }
     }
 
