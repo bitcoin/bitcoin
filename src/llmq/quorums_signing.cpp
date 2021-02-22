@@ -9,7 +9,6 @@
 #include <masternode/activemasternode.h>
 #include <bls/bls_batchverifier.h>
 #include <cxxtimer.hpp>
-#include <init.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
 #include <scheduler.h>

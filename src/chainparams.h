@@ -138,7 +138,7 @@ protected:
  * @returns a CChainParams* of the chosen chain.
  * @throws a std::runtime_error if the chain is not supported.
  */
-std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain);
+std::unique_ptr<CChainParams> CreateChainParams(const std::string& chain, bool fHelpOnly = false);
 
 /**
  * Return the currently selected parameters. This won't change after app
