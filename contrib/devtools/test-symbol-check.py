@@ -23,29 +23,26 @@ class TestSymbolChecks(unittest.TestCase):
         executable = 'test1'
         cc = 'gcc'
 
-        # there's no way to do this test for RISC-V at the moment; bionic's libc is 2.27
-        # and we allow all symbols from 2.27.
-        if 'riscv' in get_machine(cc):
-            self.skipTest("test not available for RISC-V")
-
-        # memfd_create was introduced in GLIBC 2.27, so is newer than the upper limit of
-        # all but RISC-V but still available on bionic
+        # renameat2 was introduced in GLIBC 2.28, so is newer than the upper limit
+        # of glibc for all platforms
         with open(source, 'w', encoding="utf8") as f:
             f.write('''
                 #define _GNU_SOURCE
-                #include <sys/mman.h>
+                #include <stdio.h>
+                #include <linux/fs.h>
 
-                int memfd_create(const char *name, unsigned int flags);
+                int renameat2(int olddirfd, const char *oldpath,
+                    int newdirfd, const char *newpath, unsigned int flags);
 
                 int main()
                 {
-                    memfd_create("test", 0);
+                    renameat2(0, "test", 0, "test_", RENAME_EXCHANGE);
                     return 0;
                 }
         ''')
 
         self.assertEqual(call_symbol_check(cc, source, executable, []),
-                (1, executable + ': symbol memfd_create from unsupported version GLIBC_2.27\n' +
+                (1, executable + ': symbol renameat2 from unsupported version GLIBC_2.28\n' +
                     executable + ': failed IMPORTED_SYMBOLS'))
 
         # -lutil is part of the libc6 package so a safe bet that it's installed
