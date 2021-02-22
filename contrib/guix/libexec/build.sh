@@ -26,7 +26,7 @@ cat << EOF
 Required environment variables as seen inside the container:
     HOST: ${HOST:?not set}
     SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH:?not set}
-    MAX_JOBS: ${MAX_JOBS:?not set}
+    JOBS: ${JOBS:?not set}
     DISTSRC: ${DISTSRC:?not set}
     OUTDIR: ${OUTDIR:?not set}
 EOF
@@ -173,7 +173,7 @@ esac
 ####################
 
 # Build the depends tree, overriding variables that assume multilib gcc
-make -C depends --jobs="$MAX_JOBS" HOST="$HOST" \
+make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    ${V:+V=1} \
                                    ${SOURCES_PATH+SOURCES_PATH="$SOURCES_PATH"} \
                                    ${BASE_CACHE+BASE_CACHE="$BASE_CACHE"} \
@@ -267,7 +267,7 @@ mkdir -p "$DISTSRC"
     sed -i.old 's/-lstdc++ //g' config.status libtool src/univalue/config.status src/univalue/libtool
 
     # Build Bitcoin Core
-    make --jobs="$MAX_JOBS" ${V:+V=1}
+    make --jobs="$JOBS" ${V:+V=1}
 
     # Perform basic ELF security checks on a series of executables.
     make -C src --jobs=1 check-security ${V:+V=1}
@@ -344,7 +344,7 @@ mkdir -p "$DISTSRC"
                 {
                     find "${DISTNAME}/bin" -type f -executable -print0
                     find "${DISTNAME}/lib" -type f -print0
-                } | xargs -0 -n1 -P"$MAX_JOBS" -I{} "${DISTSRC}/contrib/devtools/split-debug.sh" {} {} {}.dbg
+                } | xargs -0 -n1 -P"$JOBS" -I{} "${DISTSRC}/contrib/devtools/split-debug.sh" {} {} {}.dbg
                 ;;
         esac
 
