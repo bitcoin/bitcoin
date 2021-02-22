@@ -34,6 +34,7 @@
     <ClCompile Include="..\..\src\qt\overviewpage.cpp" />
     <ClCompile Include="..\..\src\qt\paymentserver.cpp" />
     <ClCompile Include="..\..\src\qt\peertablemodel.cpp" />
+    <ClCompile Include="..\..\src\qt\peertablesortproxy.cpp" />
     <ClCompile Include="..\..\src\qt\platformstyle.cpp" />
     <ClCompile Include="..\..\src\qt\psbtoperationsdialog.cpp" />
     <ClCompile Include="..\..\src\qt\qrimagewidget.cpp" />
@@ -87,6 +88,7 @@
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_overviewpage.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_paymentserver.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_peertablemodel.cpp" />
+    <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_peertablesortproxy.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_platformstyle.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_psbtoperationsdialog.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_qrimagewidget.cpp" />
