@@ -134,7 +134,7 @@ done
 
 # Determine the maximum number of jobs to run simultaneously (overridable by
 # environment)
-MAX_JOBS="${MAX_JOBS:-$(nproc)}"
+JOBS="${JOBS:-$(nproc)}"
 
 # Usage: host_to_commonname HOST
 #
@@ -152,7 +152,7 @@ host_to_commonname() {
 # Download the depends sources now as we won't have internet access in the build
 # container
 for host in $HOSTS; do
-  make -C "${PWD}/depends" -j"$MAX_JOBS" download-"$(host_to_commonname "$host")" ${V:+V=1} ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"}
+    make -C "${PWD}/depends" -j"$JOBS" download-"$(host_to_commonname "$host")" ${V:+V=1} ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"}
 done
 
 # Determine the reference time used for determinism (overridable by environment)
@@ -164,7 +164,7 @@ time-machine() {
     # shellcheck disable=SC2086
     guix time-machine --url=https://github.com/dongcarl/guix.git \
                       --commit=490e39ff303f4f6873a04bfb8253755bdae1b29c \
-                      --max-jobs="$MAX_JOBS" \
+                      --cores="$JOBS" \
                       --keep-failed \
                       ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
                       ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_TIMEMACHINE_FLAGS} \
@@ -218,7 +218,7 @@ for host in $HOSTS; do
 cat << EOF
 INFO: Building commit ${GIT_COMMIT:?not set} for platform triple ${HOST:?not set}:
       ...using reference timestamp: ${SOURCE_DATE_EPOCH:?not set}
-      ...running at most ${MAX_JOBS:?not set} jobs
+      ...running at most ${JOBS:?not set} jobs
       ...from worktree directory: '${PWD}'
           ...bind-mounted in container to: '/bitcoin'
       ...in build directory: '$(distsrc_for_host "$HOST")'
@@ -304,12 +304,12 @@ EOF
                                  ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
                                  ${BASE_CACHE:+--share="$BASE_CACHE"} \
                                  ${SDK_PATH:+--share="$SDK_PATH"} \
-                                 --max-jobs="$MAX_JOBS" \
+                                 --cores="$JOBS" \
                                  --keep-failed \
                                  ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
                                  ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS} \
                                  -- env HOST="$host" \
-                                        MAX_JOBS="$MAX_JOBS" \
+                                        JOBS="$JOBS" \
                                         SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:?unable to determine value}" \
                                         ${V:+V=1} \
                                         ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"} \
