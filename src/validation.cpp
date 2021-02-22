@@ -211,6 +211,7 @@ static FlatFileSeq UndoFileSeq();
 bool CheckFinalTx(const CBlockIndex* active_chain_tip, const CTransaction &tx, int flags)
 {
     AssertLockHeld(cs_main);
+    assert(active_chain_tip); // TODO: Make active_chain_tip a reference
     assert(std::addressof(*::ChainActive().Tip()) == std::addressof(*active_chain_tip));
 
     // By convention a negative value for flags indicates that the
@@ -221,12 +222,12 @@ bool CheckFinalTx(const CBlockIndex* active_chain_tip, const CTransaction &tx, i
     // scheduled, so no flags are set.
     flags = std::max(flags, 0);
 
-    // CheckFinalTx() uses ::ChainActive().Height()+1 to evaluate
+    // CheckFinalTx() uses active_chain_tip.Height()+1 to evaluate
     // nLockTime because when IsFinalTx() is called within
     // CBlock::AcceptBlock(), the height of the block *being*
     // evaluated is what is used. Thus if we want to know if a
     // transaction can be part of the *next* block, we need to call
-    // IsFinalTx() with one more than ::ChainActive().Height().
+    // IsFinalTx() with one more than active_chain_tip.Height().
     const int nBlockHeight = active_chain_tip->nHeight + 1;
 
     // BIP113 requires that time-locked transactions have nLockTime set to
