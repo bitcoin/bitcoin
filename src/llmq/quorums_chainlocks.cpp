@@ -135,29 +135,42 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
         return;
     }
 
+    CBlockIndex* pindex;
     {
-        LOCK2(cs_main, cs);
+        LOCK(cs_main);
+        pindex = LookupBlockIndex(clsig.blockHash);
+    }
+
+    {
+        LOCK(cs);
         bestChainLockHash = hash;
         bestChainLock = clsig;
 
-        g_connman->RelayInv(clsigInv, LLMQS_PROTO_VERSION);
+        if (pindex != nullptr) {
 
-        const CBlockIndex* pindex = LookupBlockIndex(clsig.blockHash);
-        if (!pindex) {
-            // we don't know the block/header for this CLSIG yet, so bail out for now
-            // when the block or the header later comes in, we will enforce the correct chain
-            return;
+            if (pindex->nHeight != clsig.nHeight) {
+                // Should not happen, same as the conflict check from above.
+                LogPrintf("CChainLocksHandler::%s -- height of CLSIG (%s) does not match the specified block's height (%d)\n",
+                        __func__, clsig.ToString(), pindex->nHeight);
+                // Note: not relaying clsig here
+                return;
+            }
+
+            bestChainLockWithKnownBlock = bestChainLock;
+            bestChainLockBlockIndex = pindex;
         }
+        // else if (pindex == nullptr)
+        // Note: make sure to still relay clsig further.
+    }
 
-        if (pindex->nHeight != clsig.nHeight) {
-            // Should not happen, same as the conflict check from above.
-            LogPrintf("CChainLocksHandler::%s -- height of CLSIG (%s) does not match the specified block's height (%d)\n",
-                    __func__, clsig.ToString(), pindex->nHeight);
-            return;
-        }
+    // Note: do not hold cs while calling RelayInv
+    AssertLockNotHeld(cs);
+    g_connman->RelayInv(clsigInv, LLMQS_PROTO_VERSION);
 
-        bestChainLockWithKnownBlock = bestChainLock;
-        bestChainLockBlockIndex = pindex;
+    if (pindex == nullptr) {
+        // we don't know the block/header for this CLSIG yet, so bail out for now
+        // when the block or the header later comes in, we will enforce the correct chain
+        return;
     }
 
     scheduler->scheduleFromNow([&]() {
