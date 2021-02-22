@@ -35,6 +35,7 @@ struct {
  * inputs, plus the amount the selection exceeds the spending target:
  *
  * waste = selectionTotal - target + inputs × (currentFeeRate - longTermFeeRate)
+ * 
  *
  * The algorithm uses two additional optimizations. A lookahead keeps track of the total value of
  * the unexplored UTXOs. A subtree is not explored if the lookahead indicates that the target range
@@ -158,7 +159,7 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_v
         return false;
     }
 
-    // Set output set
+    // Set the input set 
     value_ret = 0;
     for (size_t i = 0; i < best_selection.size(); ++i) {
         if (best_selection.at(i)) {
@@ -299,7 +300,7 @@ bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& group
  OutputGroup
 
  ******************************************************************************/
-
+// adds coin to the output group
 void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size_t ancestors, size_t descendants, bool positive_only) {
     // Compute the effective value first
     const CAmount coin_fee = output.m_input_bytes < 0 ? 0 : m_effective_feerate.GetFee(output.m_input_bytes);
@@ -331,7 +332,7 @@ void OutputGroup::Insert(const CInputCoin& output, int depth, bool from_me, size
     // coin itself; thus, this value is counted as the max, not the sum
     m_descendants = std::max(m_descendants, descendants);
 }
-
+// checks if eligible for spending using the coinelibibilityfilter
 bool OutputGroup::EligibleForSpending(const CoinEligibilityFilter& eligibility_filter) const
 {
     return m_depth >= (m_from_me ? eligibility_filter.conf_mine : eligibility_filter.conf_theirs)
