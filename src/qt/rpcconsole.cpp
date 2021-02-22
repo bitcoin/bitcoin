@@ -1097,7 +1097,7 @@ void RPCConsole::updateDetailWidget()
 {
     const QList<QModelIndex> selected_peers = GUIUtil::getEntryData(ui->peerWidget, PeerTableModel::NetNodeId);
     if (!clientModel || !clientModel->getPeerTableModel() || selected_peers.size() != 1) {
-        ui->detailWidget->hide();
+        ui->peersTabRightPanel->hide();
         ui->peerHeading->setText(tr("Select a peer to view detailed information."));
         return;
     }
@@ -1151,7 +1151,7 @@ void RPCConsole::updateDetailWidget()
         ui->peerPingWait->setText(GUIUtil::formatPingTime(stats->nodeStateStats.m_ping_wait_usec));
     }
 
-    ui->detailWidget->show();
+    ui->peersTabRightPanel->show();
 }
 
 void RPCConsole::resizeEvent(QResizeEvent *event)
