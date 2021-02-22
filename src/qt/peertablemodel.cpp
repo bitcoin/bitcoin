@@ -20,13 +20,10 @@ class PeerTablePriv
 public:
     /** Local cache of peer information */
     QList<CNodeCombinedStats> cachedNodeStats;
-    /** Index of rows by node ID */
-    std::map<NodeId, int> mapNodeRows;
 
     /** Pull a full list of peers from vNodes into our cache */
     void refreshPeers(interfaces::Node& node)
     {
-        {
             cachedNodeStats.clear();
 
             interfaces::Node::NodesStats nodes_stats;
@@ -40,13 +37,6 @@ public:
                 stats.nodeStateStats = std::get<2>(node_stats);
                 cachedNodeStats.append(stats);
             }
-        }
-
-        // build index map
-        mapNodeRows.clear();
-        int row = 0;
-        for (const CNodeCombinedStats& stats : cachedNodeStats)
-            mapNodeRows.insert(std::pair<NodeId, int>(stats.nodeStats.nodeid, row++));
     }
 
     int size() const
@@ -197,13 +187,4 @@ void PeerTableModel::refresh()
     Q_EMIT layoutAboutToBeChanged();
     priv->refreshPeers(m_node);
     Q_EMIT layoutChanged();
-}
-
-int PeerTableModel::getRowByNodeId(NodeId nodeid)
-{
-    std::map<NodeId, int>::iterator it = priv->mapNodeRows.find(nodeid);
-    if (it == priv->mapNodeRows.end())
-        return -1;
-
-    return it->second;
 }
