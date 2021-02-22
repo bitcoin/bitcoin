@@ -11,38 +11,8 @@
 
 #include <utility>
 
-#include <QDebug>
 #include <QList>
 #include <QTimer>
-
-bool NodeLessThan::operator()(const CNodeCombinedStats &left, const CNodeCombinedStats &right) const
-{
-    const CNodeStats *pLeft = &(left.nodeStats);
-    const CNodeStats *pRight = &(right.nodeStats);
-
-    if (order == Qt::DescendingOrder)
-        std::swap(pLeft, pRight);
-
-    switch (static_cast<PeerTableModel::ColumnIndex>(column)) {
-    case PeerTableModel::NetNodeId:
-        return pLeft->nodeid < pRight->nodeid;
-    case PeerTableModel::Address:
-        return pLeft->addrName.compare(pRight->addrName) < 0;
-    case PeerTableModel::ConnectionType:
-        return pLeft->m_conn_type < pRight->m_conn_type;
-    case PeerTableModel::Network:
-        return pLeft->m_network < pRight->m_network;
-    case PeerTableModel::Ping:
-        return pLeft->m_min_ping_time < pRight->m_min_ping_time;
-    case PeerTableModel::Sent:
-        return pLeft->nSendBytes < pRight->nSendBytes;
-    case PeerTableModel::Received:
-        return pLeft->nRecvBytes < pRight->nRecvBytes;
-    case PeerTableModel::Subversion:
-        return pLeft->cleanSubVer.compare(pRight->cleanSubVer) < 0;
-    } // no default case, so the compiler can warn about missing cases
-    assert(false);
-}
 
 // private implementation
 class PeerTablePriv
@@ -50,10 +20,6 @@ class PeerTablePriv
 public:
     /** Local cache of peer information */
     QList<CNodeCombinedStats> cachedNodeStats;
-    /** Column to sort nodes by (default to unsorted) */
-    int sortColumn{-1};
-    /** Order (ascending or descending) to sort nodes by */
-    Qt::SortOrder sortOrder;
     /** Index of rows by node ID */
     std::map<NodeId, int> mapNodeRows;
 
@@ -75,10 +41,6 @@ public:
                 cachedNodeStats.append(stats);
             }
         }
-
-        if (sortColumn >= 0)
-            // sort cacheNodeStats (use stable sort to prevent rows jumping around unnecessarily)
-            std::stable_sort(cachedNodeStats.begin(), cachedNodeStats.end(), NodeLessThan(sortColumn, sortOrder));
 
         // build index map
         mapNodeRows.clear();
@@ -244,11 +206,4 @@ int PeerTableModel::getRowByNodeId(NodeId nodeid)
         return -1;
 
     return it->second;
-}
-
-void PeerTableModel::sort(int column, Qt::SortOrder order)
-{
-    priv->sortColumn = column;
-    priv->sortOrder = order;
-    refresh();
 }
