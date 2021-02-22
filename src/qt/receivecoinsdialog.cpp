@@ -19,6 +19,7 @@
 #include <QCursor>
 #include <QMessageBox>
 #include <QScrollBar>
+#include <QSettings>
 #include <QTextDocument>
 
 ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *_platformStyle, QWidget *parent) :
@@ -62,6 +63,22 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *_platformStyle, QWid
     connect(copyAmountAction, &QAction::triggered, this, &ReceiveCoinsDialog::copyAmount);
 
     connect(ui->clearButton, &QPushButton::clicked, this, &ReceiveCoinsDialog::clear);
+
+    QTableView* tableView = ui->recentRequestsView;
+    tableView->verticalHeader()->hide();
+    tableView->setAlternatingRowColors(true);
+    tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
+    tableView->setSelectionMode(QAbstractItemView::ContiguousSelection);
+
+    QSettings settings;
+    if (!tableView->horizontalHeader()->restoreState(settings.value("RecentRequestsViewHeaderState").toByteArray())) {
+        tableView->setColumnWidth(RecentRequestsTableModel::Date, DATE_COLUMN_WIDTH);
+        tableView->setColumnWidth(RecentRequestsTableModel::Label, LABEL_COLUMN_WIDTH);
+        tableView->setColumnWidth(RecentRequestsTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
+        tableView->horizontalHeader()->setMinimumSectionSize(MINIMUM_COLUMN_WIDTH);
+        tableView->horizontalHeader()->setStretchLastSection(true);
+    }
+    tableView->horizontalHeader()->setSortIndicator(RecentRequestsTableModel::Date, Qt::DescendingOrder);
 }
 
 void ReceiveCoinsDialog::setModel(WalletModel *_model)
@@ -75,18 +92,7 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
         updateDisplayUnit();
 
         QTableView* tableView = ui->recentRequestsView;
-
-        tableView->verticalHeader()->hide();
         tableView->setModel(_model->getRecentRequestsTableModel());
-        tableView->setAlternatingRowColors(true);
-        tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-        tableView->setSelectionMode(QAbstractItemView::ContiguousSelection);
-        tableView->setColumnWidth(RecentRequestsTableModel::Date, DATE_COLUMN_WIDTH);
-        tableView->setColumnWidth(RecentRequestsTableModel::Label, LABEL_COLUMN_WIDTH);
-        tableView->setColumnWidth(RecentRequestsTableModel::Amount, AMOUNT_MINIMUM_COLUMN_WIDTH);
-        tableView->horizontalHeader()->setMinimumSectionSize(MINIMUM_COLUMN_WIDTH);
-        tableView->horizontalHeader()->setStretchLastSection(true);
-
         connect(tableView->selectionModel(),
             &QItemSelectionModel::selectionChanged, this,
             &ReceiveCoinsDialog::recentRequestsView_selectionChanged);
@@ -109,6 +115,8 @@ void ReceiveCoinsDialog::setModel(WalletModel *_model)
 
 ReceiveCoinsDialog::~ReceiveCoinsDialog()
 {
+    QSettings settings;
+    settings.setValue("RecentRequestsViewHeaderState", ui->recentRequestsView->horizontalHeader()->saveState());
     delete ui;
 }
 
