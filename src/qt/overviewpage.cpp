@@ -257,6 +257,9 @@ void OverviewPage::setClientModel(ClientModel *model)
         // Show warning, for example if this is a prerelease version
         connect(model, &ClientModel::alertsChanged, this, &OverviewPage::updateAlerts);
         updateAlerts(model->getStatusBarWarnings());
+
+        connect(model->getOptionsModel(), &OptionsModel::useEmbeddedMonospacedFontChanged, this, &OverviewPage::setMonospacedFont);
+        setMonospacedFont(model->getOptionsModel()->getUseEmbeddedMonospacedFont());
     }
 }
 
@@ -320,4 +323,18 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 {
     ui->labelWalletStatus->setVisible(fShow);
     ui->labelTransactionsStatus->setVisible(fShow);
+}
+
+void OverviewPage::setMonospacedFont(bool use_embedded_font)
+{
+    QFont f = GUIUtil::fixedPitchFont(use_embedded_font);
+    f.setWeight(QFont::Bold);
+    ui->labelBalance->setFont(f);
+    ui->labelUnconfirmed->setFont(f);
+    ui->labelImmature->setFont(f);
+    ui->labelTotal->setFont(f);
+    ui->labelWatchAvailable->setFont(f);
+    ui->labelWatchPending->setFont(f);
+    ui->labelWatchImmature->setFont(f);
+    ui->labelWatchTotal->setFont(f);
 }
