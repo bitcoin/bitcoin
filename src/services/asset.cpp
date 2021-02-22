@@ -44,12 +44,14 @@ uint32_t GenerateSyscoinGuid(const COutPoint& outPoint) {
     return txidArith.GetLow32();
 }
 bool GetAssetPrecision(const uint32_t &nBaseAsset, uint8_t& nPrecision) {
-    auto itP = mapAssetPrecision.try_emplace(nBaseAsset, 0);
+    auto itP = mapAssetPrecision.try_emplace(nBaseAsset, 8);
     // if added, meaning cache miss then fetch right asset and and fill cache otherwise return cache entry
     if (itP.second) {
         CAsset txPos;
-        if (!GetAsset(nBaseAsset, txPos))
+        if (!GetAsset(nBaseAsset, txPos)) {
+            mapAssetPrecision.erase(nBaseAsset);
             return false;
+        }
         itP.first->second = txPos.nPrecision;
     }
     nPrecision = itP.first->second;
