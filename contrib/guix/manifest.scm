@@ -233,7 +233,10 @@ chain for " target " development."))
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
                  (make-nsis-with-sde-support nsis-x86_64)))
           ((string-contains target "riscv64-linux-")
-           (list (make-bitcoin-cross-toolchain "riscv64-linux-gnu"
+           (list (make-bitcoin-cross-toolchain target
+                                               #:base-gcc-for-libc gcc-7)))
+          ((string-contains target "powerpc64le-linux-")
+           (list (make-bitcoin-cross-toolchain target
                                                #:base-gcc-for-libc gcc-7)))
           ((string-contains target "-linux-")
            (list (make-bitcoin-cross-toolchain target)))
