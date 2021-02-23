@@ -109,7 +109,7 @@ Note: Code review is a burdensome but important part of the development process,
 
 If your pull request contains fixup commits (commits that change the same line of code repeatedly) or too fine-grained
 commits, you may be asked to [squash](https://git-scm.com/docs/git-rebase#_interactive_mode) your commits
-before it will be merged. The basic squashing workflow is shown below.
+before it will be reviewed. The basic squashing workflow is shown below.
 
     git checkout your_branch_name
     git rebase -i HEAD~n
