@@ -1,3 +1,4 @@
+import os
 import distutils.spawn
 
 from pathlib import Path
@@ -50,7 +51,12 @@ class VBitcoindNode(Node):
         rpc_password = 'testpassword'
         self.rpc = JsonRpcApi(rpc_url, user=rpc_user, password=rpc_password)
 
-        exe = distutils.spawn.find_executable("vbitcoind")
+        vbitcoind_path = os.environ.get('VBITCOIND_PATH')
+        if vbitcoind_path:
+            exe = Path(Path.cwd(), vbitcoind_path)
+        else:
+            exe = distutils.spawn.find_executable("vbitcoind")
+
         if not exe:
             raise Exception("VBitcoinNode: vbitcoind is not found in PATH")
 
