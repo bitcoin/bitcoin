@@ -32,7 +32,7 @@ static int g_shutdown_pipe[2] = {-1, -1};
 bool InitShutdownState()
 {
 #ifndef WIN32
-#if HAVE_O_CLOEXEC
+#if HAVE_O_CLOEXEC && HAVE_DECL_PIPE2
     // If we can, make sure that the file descriptors are closed on exec()
     // to prevent interference.
     if (pipe2(g_shutdown_pipe, O_CLOEXEC) != 0) {
