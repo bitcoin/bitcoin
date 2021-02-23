@@ -136,9 +136,24 @@ done
 # environment)
 MAX_JOBS="${MAX_JOBS:-$(nproc)}"
 
+# Usage: host_to_commonname HOST
+#
+#   HOST: The current platform triple we're building for
+#
+host_to_commonname() {
+    case "$1" in
+        *darwin*) echo osx ;;
+        *mingw*)  echo win ;;
+        *linux*)  echo linux ;;
+        *)        exit 1 ;;
+    esac
+}
+
 # Download the depends sources now as we won't have internet access in the build
 # container
-make -C "${PWD}/depends" -j"$MAX_JOBS" download ${V:+V=1} ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"}
+for host in $HOSTS; do
+  make -C "${PWD}/depends" -j"$MAX_JOBS" download-"$(host_to_commonname "$host")" ${V:+V=1} ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"}
+done
 
 # Determine the reference time used for determinism (overridable by environment)
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
