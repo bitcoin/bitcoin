@@ -60,6 +60,9 @@ enum WalletFlags : uint64_t {
 
     //! Indicate that this wallet supports DescriptorScriptPubKeyMan
     WALLET_FLAG_DESCRIPTORS = (1ULL << 34),
+
+    //! Indicates that the wallet needs an external signer
+    WALLET_FLAG_EXTERNAL_SIGNER = (1ULL << 35),
 };
 
 //! Get the path of the wallet directory.
