@@ -399,7 +399,10 @@ def get_auth_cookie(datadir, chain):
                     assert password is None  # Ensure that there is only one rpcpassword line
                     password = line.split("=")[1].strip("\n")
     try:
-        with open(os.path.join(datadir, chain, ".cookie"), 'r', encoding="ascii") as f:
+        subdir = chain
+        if subdir == "main":
+            subdir = ""
+        with open(os.path.join(datadir, subdir, ".cookie"), 'r', encoding="ascii") as f:
             userpass = f.read()
             split_userpass = userpass.split(':')
             user = split_userpass[0]
@@ -413,7 +416,10 @@ def get_auth_cookie(datadir, chain):
 
 # If a cookie file exists in the given datadir, delete it.
 def delete_cookie_file(datadir, chain):
-    if os.path.isfile(os.path.join(datadir, chain, ".cookie")):
+    subdir = chain
+    if chain == "main":
+        subdir = ""
+    if os.path.isfile(os.path.join(datadir, subdir, ".cookie")):
         logger.debug("Deleting leftover cookie file")
         os.remove(os.path.join(datadir, chain, ".cookie"))
 
