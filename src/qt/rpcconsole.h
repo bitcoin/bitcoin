@@ -136,6 +136,11 @@ Q_SIGNALS:
     void cmdRequest(const QString &command, const WalletModel* wallet_model);
 
 private:
+    struct TranslatedStrings {
+        const QString yes{tr("Yes")}, no{tr("No")}, to{tr("To")}, from{tr("From")},
+            ban_for{tr("Ban for")}, na{tr("N/A")}, unknown{tr("Unknown")};
+    } const ts;
+
     void startExecutor();
     void setTrafficGraphRange(int mins);
 
