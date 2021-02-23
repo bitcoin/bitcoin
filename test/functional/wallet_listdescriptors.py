@@ -50,6 +50,22 @@ class ListDescriptorsTest(BitcoinTestFramework):
             assert item['range'] == [0, 0]
             assert item['timestamp'] is not None
 
+        self.log.info('Test descriptors with hardened derivations are listed in importable form.')
+        xprv = 'tprv8ZgxMBicQKsPeuVhWwi6wuMQGfPKi9Li5GtX35jVNknACgqe3CY4g5xgkfDDJcmtF7o1QnxWDRYw4H5P26PXq7sbcUkEqeR4fg3Kxp2tigg'
+        xpub_acc = 'tpubDCMVLhErorrAGfApiJSJzEKwqeaf2z3NrkVMxgYQjZLzMjXMBeRw2muGNYbvaekAE8rUFLftyEar4LdrG2wXyyTJQZ26zptmeTEjPTaATts'
+        hardened_path = '/84\'/1\'/0\''
+        wallet = node.get_wallet_rpc('w2')
+        wallet.importdescriptors([{
+            'desc': descsum_create('wpkh(' + xprv + hardened_path + '/0/*)'),
+            'timestamp': 1296688602,
+        }])
+        expected = {'desc': descsum_create('wpkh([80002067' + hardened_path + ']' + xpub_acc + '/0/*)'),
+                    'timestamp': 1296688602,
+                    'active': False,
+                    'range': [0, 0],
+                    'next': 0}
+        assert_equal([expected], wallet.listdescriptors())
+
         self.log.info('Test non-active non-range combo descriptor')
         node.createwallet(wallet_name='w4', blank=True, descriptors=True)
         wallet = node.get_wallet_rpc('w4')
