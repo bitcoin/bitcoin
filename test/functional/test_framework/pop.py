@@ -61,7 +61,7 @@ def create_endorsed_chain(node, apm, size: int, addr: str) -> None:
     node.waitforblockheight(initial_height + size)
 
 
-def endorse_block(node, apm, height: int, addr: str, vtbs: Optional[int] = None) -> str:
+def endorse_block(node, apm, height: int, addr: str) -> str:
     from pypoptools.pypopminer import PublicationData
 
     # get pubkey for that address
@@ -72,7 +72,6 @@ def endorse_block(node, apm, height: int, addr: str, vtbs: Optional[int] = None)
 
     popdata = node.getpopdatabyheight(height)
     authctx = popdata['authenticated_context']['serialized']
-    last_btc = popdata['last_known_bitcoin_blocks'][-1]
     last_vbk = popdata['last_known_veriblock_blocks'][-1]
     header = popdata['block_header']
 
@@ -82,16 +81,16 @@ def endorse_block(node, apm, height: int, addr: str, vtbs: Optional[int] = None)
     pub.identifier = NETWORK_ID
     pub.contextInfo = authctx
 
-    if vtbs:
-        apm.endorseVbkBlock(last_vbk, last_btc, vtbs)
-
     payloads = apm.endorseAltBlock(pub, last_vbk)
-    vbkblocks, vtbs, atv = payloads.prepare()
-    [node.submitpopvbk(b) for b in vbkblocks]
-    [node.submitpopvtb(b) for b in vtbs]
-    node.submitpopatv(payloads.atv.toVbkEncodingHex())
 
-    return payloads.atv.getId()
+    for vbk_block in payloads.context:
+        node.submitpopvbk(vbk_block.toVbkEncodingHex())
+    for vtb in payloads.vtbs:
+        node.submitpopvtb(vtb.toVbkEncodingHex())
+    for atv in payloads.atvs:
+        node.submitpopatv(atv.toVbkEncodingHex())
+
+    return payloads.atvs[0].getId()
 
 
 def mine_vbk_blocks(node, apm, amount: int):

@@ -58,7 +58,7 @@ class PopE2E(BitcoinTestFramework):
         vtbs_amount = 20
         self.log.info("generate vtbs on node0, amount {}".format(vtbs_amount))
         for i in range(vtbs_amount):
-            self.apm.endorseVbkBlock(self.apm.vbkTip, self.apm.btcTip.getHash(), 1)
+            self.apm.endorseVbkBlock(self.apm.vbkTip, self.apm.btcTip.getHash())
 
         self.nodes[0].generate(nblocks=10)
         lastblock = self.nodes[0].getblockcount()
@@ -77,7 +77,7 @@ class PopE2E(BitcoinTestFramework):
 
         [self.nodes[0].submitpopvbk(b.toVbkEncodingHex()) for b in vbk_blocks]
         [self.nodes[0].submitpopvtb(b.toVbkEncodingHex()) for b in pop_data.vtbs]
-        self.nodes[0].submitpopatv(pop_data.atv.toVbkEncodingHex())
+        [self.nodes[0].submitpopatv(b.toVbkEncodingHex()) for b in pop_data.atvs]
 
         assert len(self.nodes[0].getpeerinfo()) == 1
         assert self.nodes[0].getpeerinfo()[0]['banscore'] == 0
@@ -102,7 +102,7 @@ class PopE2E(BitcoinTestFramework):
 
         [self.nodes[0].submitpopvbk(b.toVbkEncodingHex()) for b in vbk_blocks]
         [self.nodes[0].submitpopvtb(b.toVbkEncodingHex()) for b in pop_data.vtbs]
-        self.nodes[0].submitpopatv(pop_data.atv.toVbkEncodingHex())
+        [self.nodes[0].submitpopatv(b.toVbkEncodingHex()) for b in pop_data.atvs]
 
         assert len(self.nodes[0].getpeerinfo()) == 1
         assert self.nodes[0].getpeerinfo()[0]['banscore'] == 0
