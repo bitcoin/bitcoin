@@ -333,19 +333,24 @@ jobs:
         run: echo Using veriblock-pop-cpp version ${VERIBLOCK_POP_CPP_VERSION}
       - name: install dependencies
         run: |
-          brew install automake berkeley-db4 boost miniupnpc pkg-config protobuf librsvg ccache qrencode zeromq qt
+          brew install automake berkeley-db4 boost boost-python3 miniupnpc pkg-config protobuf librsvg ccache qrencode zeromq qt
       - name: install veriblock-pop-cpp
         env:
           BUILD_TYPE: Release
         run: |
           (
+          pip3 install wheel
+          sudo su;
           cd /tmp;
           wget https://github.com/VeriBlock/alt-integration-cpp/archive/${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
           tar -xf ${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
           cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
+          python3 setup.py install
+          python3 setup.py test
+          rm -rf build
           mkdir build;
           cd build;
-          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF;
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF -DWITH_PYPOPTOOLS=ON;
           make -j2;
           sudo make install
           )
