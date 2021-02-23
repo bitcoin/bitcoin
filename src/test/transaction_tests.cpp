@@ -152,14 +152,17 @@ unsigned int FillFlags(unsigned int flags)
     return flags;
 }
 
-// Return valid flags that are all except one flag for each flag
-std::vector<unsigned int> ExcludeIndividualFlags(unsigned int flags)
+// Exclude each possible script verify flag from flags. Returns a set of these flag combinations
+// that are valid and without duplicates. For example: if flags=1111 and the 4 possible flags are
+// 0001, 0010, 0100, and 1000, this should return the set {0111, 1011, 1101, 1110}.
+// Assumes that mapFlagNames contains all script verify flags.
+std::set<unsigned int> ExcludeIndividualFlags(unsigned int flags)
 {
-    std::vector<unsigned int> flags_combos;
-    for (unsigned int i = 0; i < mapFlagNames.size(); ++i) {
-        const unsigned int flags_excluding_i = TrimFlags(flags & ~(1U << i));
-        if (flags != flags_excluding_i && std::find(flags_combos.begin(), flags_combos.end(), flags_excluding_i) != flags_combos.end()) {
-            flags_combos.push_back(flags_excluding_i);
+    std::set<unsigned int> flags_combos;
+    for (const auto& pair : mapFlagNames) {
+        const unsigned int flags_excluding_one = TrimFlags(flags & ~(pair.second));
+        if (flags != flags_excluding_one) {
+            flags_combos.insert(flags_excluding_one);
         }
     }
     return flags_combos;
