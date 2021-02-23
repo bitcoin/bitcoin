@@ -23,6 +23,7 @@
 #include <wallet/fees.h>
 #include <wallet/ismine.h>
 #include <wallet/load.h>
+#include <wallet/rpcsigner.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 
@@ -518,6 +519,15 @@ public:
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
+
+#ifdef ENABLE_EXTERNAL_SIGNER
+        for (const CRPCCommand& command : GetSignerRPCCommands()) {
+            m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
+                return command.actor({request, m_context}, result, last_handler);
+            }, command.argNames, command.unique_id);
+            m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
+        }
+#endif
     }
     bool verify() override { return VerifyWallets(*m_context.chain); }
     bool load() override { return LoadWallets(*m_context.chain); }

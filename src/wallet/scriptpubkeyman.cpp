@@ -13,6 +13,7 @@
 #include <util/system.h>
 #include <util/time.h>
 #include <util/translation.h>
+#include <wallet/external_signer.h>
 #include <wallet/scriptpubkeyman.h>
 
 //! Value for the first BIP 32 hardened derivation. Can be used as a bit mask and as a value. See BIP 32 for more details.
