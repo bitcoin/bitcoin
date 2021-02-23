@@ -8,9 +8,9 @@
 
 #include <support/allocators/secure.h>
 
-#ifdef HAVE_BOOST_PROCESS
+#ifdef ENABLE_EXTERNAL_SIGNER
 #include <boost/process.hpp>
-#endif // HAVE_BOOST_PROCESS
+#endif // ENABLE_EXTERNAL_SIGNER
 
 #include <chainparamsbase.h>
 #include <ctpl_stl.h>
@@ -1416,7 +1416,7 @@ void RenameThreadPool(ctpl::thread_pool& tp, const char* baseName)
     }
 }
 
-#ifdef HAVE_BOOST_PROCESS
+#ifdef ENABLE_EXTERNAL_SIGNER
 UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in)
 {
     namespace bp = boost::process;
@@ -1451,7 +1451,7 @@ UniValue RunCommandParseJSON(const std::string& str_command, const std::string& 
 
     return result_json;
 }
-#endif // HAVE_BOOST_PROCESS
+#endif // ENABLE_EXTERNAL_SIGNER
 
 void SetupEnvironment()
 {

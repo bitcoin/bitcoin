@@ -904,8 +904,10 @@ RPCHelpMan send()
     // Make a blank psbt
     PartiallySignedTransaction psbtx(rawTx);
 
-    // Fill transaction with our data and sign
-    bool complete = true;
+    // First fill transaction with our data without signing,
+    // so external signers are not asked sign more than once.
+    bool complete;
+    (void)pwallet->FillPSBT(psbtx, complete, SIGHASH_ALL, false, true);
     const TransactionError err = pwallet->FillPSBT(psbtx, complete, SIGHASH_ALL, true, false);
     if (err != TransactionError::OK) {
         throw JSONRPCTransactionError(err);
