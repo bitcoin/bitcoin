@@ -2389,7 +2389,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
             LogPrintf("Loaded %i addresses from peers.dat  %dms\n", addrman.size(), GetTimeMillis() - nStart);
         else {
             addrman.Clear(); // Addrman can be in an inconsistent state after failure, reset it
-            LogPrintf("Invalid or missing peers.dat; recreating\n");
+            LogPrintf("Recreating peers.dat\n");
             DumpAddresses();
         }
     }

@@ -28,7 +28,7 @@ BanMan::BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t 
         LogPrint(BCLog::NET, "Loaded %d banned node ips/subnets from banlist.dat  %dms\n",
             m_banned.size(), GetTimeMillis() - n_start);
     } else {
-        LogPrintf("Invalid or missing banlist.dat; recreating\n");
+        LogPrintf("Recreating banlist.dat\n");
         SetBannedSetDirty(true); // force write
         DumpBanlist();
     }
