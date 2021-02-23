@@ -3444,6 +3444,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                              "are replaceable).\n"},
                     {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
     "         \"" + FeeModes("\"\n\"") + "\""},
+                    {"add_inputs", RPCArg::Type::STR, /* default */ "as_needed", "For a transaction with existing inputs, automatically include more if they are not enough."},
                 },
                 "options"},
         },
@@ -3494,6 +3495,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                 {"fee_rate", UniValueType()}, // will be checked by AmountFromValue() in SetFeeEstimateMode()
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
+                {"add_inputs", UniValueType(UniValue::VSTR)},
             },
             true, true);
 
@@ -3506,6 +3508,11 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
         if (options.exists("replaceable")) {
             coin_control.m_signal_bip125_rbf = options["replaceable"].get_bool();
         }
+
+        if (options.exists("add_inputs")) {
+            coin_control.m_add_inputs = options["add_inputs"].get_str() == "as_needed";
+        }
+
         SetFeeEstimateMode(*pwallet, coin_control, conf_target, options["estimate_mode"], options["fee_rate"], /* override_min_fee */ false);
     }
 

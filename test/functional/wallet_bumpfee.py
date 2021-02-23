@@ -67,12 +67,12 @@ class BumpFeeTest(BitcoinTestFramework):
         self.log.info("Mining blocks...")
         peer_node.generate(110)
         self.sync_all()
-        for _ in range(25):
+        for _ in range(26):
             peer_node.sendtoaddress(rbf_node_address, 0.001)
         self.sync_all()
         peer_node.generate(1)
         self.sync_all()
-        assert_equal(rbf_node.getbalance(), Decimal("0.025"))
+        assert_equal(rbf_node.getbalance(), Decimal("0.026"))
 
         self.log.info("Running tests")
         dest_address = peer_node.getnewaddress()
@@ -93,6 +93,7 @@ class BumpFeeTest(BitcoinTestFramework):
         test_change_script_match(self, rbf_node, dest_address)
         test_settxfee(self, rbf_node, dest_address)
         test_maxtxfee_fails(self, rbf_node, dest_address)
+        test_add_inputs(self, rbf_node, dest_address)
         # These tests wipe out a number of utxos that are expected in other tests
         test_small_output_with_feerate_succeeds(self, rbf_node, dest_address)
         test_no_more_inputs_fails(self, rbf_node, dest_address)
@@ -587,6 +588,14 @@ def test_no_more_inputs_fails(self, rbf_node, dest_address):
     # spend all funds, no change output
     rbfid = rbf_node.sendtoaddress(rbf_node.getnewaddress(), rbf_node.getbalance(), "", "", True)
     assert_raises_rpc_error(-4, "Unable to create transaction. Insufficient funds", rbf_node.bumpfee, rbfid)
+    self.clear_mempool()
+
+
+def test_add_inputs(self, rbf_node, dest_address):
+    self.log.info('Test that the add_inputs option behaves properly')
+    rbfid = spend_one_input(rbf_node, dest_address, change_size=0)
+    assert_raises_rpc_error(-4, "Unable to create transaction. Insufficient funds", rbf_node.bumpfee, rbfid, {"add_inputs":"false"})
+    rbf_node.bumpfee(rbfid)
     self.clear_mempool()
 
 
