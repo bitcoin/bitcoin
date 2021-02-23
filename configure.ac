@@ -925,6 +925,8 @@ AC_CHECK_DECLS([strnlen])
 dnl Check for daemon(3), unrelated to --with-daemon (although used by it)
 AC_CHECK_DECLS([daemon])
 
+AC_CHECK_DECLS([pipe2])
+
 AC_CHECK_DECLS([le16toh, le32toh, le64toh, htole16, htole32, htole64, be16toh, be32toh, be64toh, htobe16, htobe32, htobe64],,,
 		[#if HAVE_ENDIAN_H
                  #include <endian.h>
@@ -1149,6 +1151,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <fcntl.h>]],
  [ AC_MSG_RESULT(yes); HAVE_O_CLOEXEC=1 ],
  [ AC_MSG_RESULT(no); HAVE_O_CLOEXEC=0 ]
 )
+AC_DEFINE_UNQUOTED([HAVE_O_CLOEXEC], [$HAVE_O_CLOEXEC], [Define to 1 if O_CLOEXEC flag is available.])
 
 dnl crc32c platform checks
 AC_MSG_CHECKING(for __builtin_prefetch)
