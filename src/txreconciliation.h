@@ -25,6 +25,12 @@ static constexpr uint16_t Q_PRECISION{(2 << 14) - 1};
  * Less frequent reconciliations would introduce high transaction relay latency.
  */
 static constexpr std::chrono::microseconds RECON_REQUEST_INTERVAL{16s};
+/**
+ * Interval between responding to peers' reconciliation requests.
+ * We don't respond to reconciliation requests right away because that would enable monitoring
+ * when we receive transactions (privacy leak).
+ */
+static constexpr std::chrono::microseconds RECON_RESPONSE_INTERVAL{2s};
 
 /**
  * Represents phase of the current reconciliation round with a peer.
@@ -91,6 +97,13 @@ class ReconciliationState {
     double m_local_q;
 
     /**
+     * The use of q coefficients is described above (see local_q comment).
+     * The value transmitted from the peer with a reconciliation requests is stored here until
+     * we respond to that request with a sketch.
+     */
+    double m_remote_q;
+
+    /**
      * Store all transactions which we would relay to the peer (policy checks passed, etc.)
      * in this set instead of announcing them right away. When reconciliation time comes, we will
      * compute an efficient representation of this set ("sketch") and use it to efficient reconcile
@@ -98,7 +111,21 @@ class ReconciliationState {
      */
     std::set<uint256> m_local_set;
 
+    /**
+     * A reconciliation request comes from a peer with a reconciliation set size from their side,
+     * which is supposed to help us to estimate set difference size. The value is stored here until
+     * we respond to that request with a sketch.
+     */
+    uint16_t m_remote_set_size;
+
+    /**
+     * When a reconciliation request is received, instead of responding to it right away,
+     * we schedule a response for later, so that a spy can’t monitor our reconciliation sets.
+     */
+    std::chrono::microseconds m_next_recon_respond{0};
+
     /** Keep track of reconciliations with the peer. */
+    ReconciliationPhase m_incoming_recon{RECON_NONE};
     ReconciliationPhase m_outgoing_recon{RECON_NONE};
 
 public:
@@ -110,6 +137,11 @@ public:
     bool IsChosenForFlooding() const
     {
         return m_flood_to;
+    }
+
+    bool IsRequestor() const
+    {
+        return m_requestor;
     }
 
     bool IsResponder() const
@@ -127,6 +159,11 @@ public:
         return m_local_q * Q_PRECISION;
     }
 
+    ReconciliationPhase GetIncomingPhase() const
+    {
+        return m_incoming_recon;
+    }
+
     ReconciliationPhase GetOutgoingPhase() const
     {
         return m_outgoing_recon;
@@ -139,10 +176,26 @@ public:
         }
     }
 
+    void UpdateIncomingPhase(ReconciliationPhase phase)
+    {
+        assert(m_requestor);
+        m_incoming_recon = phase;
+    }
+
     void UpdateOutgoingPhase(ReconciliationPhase phase)
     {
         assert(m_responder);
         m_outgoing_recon = phase;
+    }
+
+    void PrepareIncoming(uint16_t remote_set_size, double remote_q, std::chrono::microseconds next_respond)
+    {
+        assert(m_requestor);
+        assert(m_incoming_recon == RECON_NONE);
+        assert(m_remote_q >= 0 && m_remote_q <= 2);
+        m_remote_q = remote_q;
+        m_remote_set_size = remote_set_size;
+        m_next_recon_respond = next_respond;
     }
 };
 
@@ -184,6 +237,20 @@ class TxReconciliationTracker {
         m_next_recon_request = now + RECON_REQUEST_INTERVAL / m_queue.size();
     }
 
+    /**
+     * Used to schedule the next initial response for any pending reconciliation request.
+     * Respond to all requests at the same time to prevent transaction possession leak.
+     */
+    std::chrono::microseconds m_next_recon_respond{0};
+    std::chrono::microseconds NextReconRespond()
+    {
+        auto current_time = GetTime<std::chrono::microseconds>();
+        if (m_next_recon_respond < current_time) {
+            m_next_recon_respond = current_time + RECON_RESPONSE_INTERVAL;
+        }
+        return m_next_recon_respond;
+    }
+
     public:
 
     TxReconciliationTracker() {};
@@ -207,6 +274,12 @@ class TxReconciliationTracker {
      * know what we need.
      */
     Optional<std::pair<uint16_t, uint16_t>> MaybeRequestReconciliation(const NodeId peer_id);
+
+    /**
+     * Record an (expected) reconciliation request with parameters to respond when time comes. All
+     * initial reconciliation responses will be done at the same time to prevent privacy leaks.
+     */
+    void HandleReconciliationRequest(const NodeId peer_id, uint16_t peer_recon_set_size, uint16_t peer_q);
 
     Optional<ReconciliationState> GetPeerState(const NodeId peer_id) const
     {

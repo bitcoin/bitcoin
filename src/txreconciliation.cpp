@@ -110,3 +110,18 @@ Optional<std::pair<uint16_t, uint16_t>> TxReconciliationTracker::MaybeRequestRec
     }
     return nullopt;
 }
+
+void TxReconciliationTracker::HandleReconciliationRequest(const NodeId peer_id, uint16_t peer_recon_set_size, uint16_t peer_q)
+{
+    double peer_q_converted = double(peer_q * Q_PRECISION);
+    if (peer_q_converted < 0 || peer_q_converted > 2) return;
+
+    LOCK(m_states_mutex);
+    auto recon_state = m_states.find(peer_id);
+    if (recon_state == m_states.end()) return;
+    if (recon_state->second.GetIncomingPhase() != RECON_NONE) return;
+    if (!recon_state->second.IsRequestor()) return;
+
+    recon_state->second.PrepareIncoming(peer_recon_set_size, peer_q_converted, NextReconRespond());
+    recon_state->second.UpdateIncomingPhase(RECON_INIT_REQUESTED);
+}
