@@ -414,7 +414,7 @@ public:
         }
         if (hash.IsNull()) {
             CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-            ss.write(buf, sizeof(buf));
+            ss << vecBytes;
             hash = ss.GetHash();
         }
         return hash;
