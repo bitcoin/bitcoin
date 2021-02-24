@@ -89,11 +89,17 @@ FUZZ_TARGET_INIT(txorphan, initialize_orphanage)
                     orphanage.AddChildrenToWorkSet(*tx, peer_id);
                 },
                 [&] {
-                    bool have_tx = orphanage.HaveTx(GenTxid::Txid(tx->GetHash())) || orphanage.HaveTx(GenTxid::Wtxid(tx->GetHash()));
                     {
                         LOCK(g_cs_orphans);
-                        bool get_tx = orphanage.GetTx(tx->GetHash()).first != nullptr;
-                        Assert(have_tx == get_tx);
+                        NodeId originator;
+                        bool more = true;
+                        CTransactionRef ref = orphanage.GetTxToReconsider(peer_id, originator, more);
+                        if (!ref) {
+                            Assert(!more);
+                        } else {
+                            bool have_tx = orphanage.HaveTx(GenTxid::Txid(ref->GetHash())) || orphanage.HaveTx(GenTxid::Wtxid(ref->GetHash()));
+                            Assert(have_tx);
+                        }
                     }
                 },
                 [&] {
