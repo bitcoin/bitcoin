@@ -89,7 +89,10 @@ void TxOrphanage::EraseForPeer(NodeId peer)
 {
     AssertLockHeld(g_cs_orphans);
 
+    m_peer_work_set.erase(peer);
+
     int nErased = 0;
+
     std::map<uint256, OrphanTx>::iterator iter = m_orphans.begin();
     while (iter != m_orphans.end())
     {
@@ -99,7 +102,7 @@ void TxOrphanage::EraseForPeer(NodeId peer)
             nErased += EraseTx(maybeErase->second.tx->GetHash());
         }
     }
-    if (nErased > 0) LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx from peer=%d\n", nErased, peer);
+    if (nErased > 0) LogPrint(BCLog::MEMPOOL, "Erased %d orphan tx for peer=%d\n", nErased, peer);
 }
 
 unsigned int TxOrphanage::LimitOrphans(unsigned int max_orphans)
@@ -138,9 +141,13 @@ unsigned int TxOrphanage::LimitOrphans(unsigned int max_orphans)
     return nEvicted;
 }
 
-void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx, std::set<uint256>& orphan_work_set) const
+void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx, NodeId peer)
 {
     AssertLockHeld(g_cs_orphans);
+
+    // Get this peer's work set, emplacing an empty set it didn't exist
+    std::set<uint256>& orphan_work_set = m_peer_work_set.try_emplace(peer).first->second;
+
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
         const auto it_by_prev = m_outpoint_to_orphan_it.find(COutPoint(tx.GetHash(), i));
         if (it_by_prev != m_outpoint_to_orphan_it.end()) {
