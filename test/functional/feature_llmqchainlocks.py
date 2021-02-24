@@ -176,7 +176,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Re-enable network on first node and wait for chainlock")
         self.reconnect_isolated_node(self.nodes[0], 1)
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[0].getbestblockhash(), timeout=30)
-        
+
         self.log.info("Send fake future clsigs and see if this breaks ChainLocks")
         for i in range(len(self.nodes)):
             if i != 0:
