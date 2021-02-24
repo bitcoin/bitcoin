@@ -192,8 +192,7 @@ public:
 
     inline std::string ToString() const
     {
-        std::vector<uint8_t> buf = ToByteVector();
-        return HexStr(buf);
+        return HexStr(ToByteVector());
     }
 };
 
@@ -222,13 +221,10 @@ public:
     using CBLSWrapper::operator=;
     using CBLSWrapper::operator==;
     using CBLSWrapper::operator!=;
+    using CBLSWrapper::CBLSWrapper;
 
     CBLSId() {}
-    void SetInt(int x);
-    void SetHash(const uint256& hash);
-
-    static CBLSId FromInt(int64_t i);
-    static CBLSId FromHash(const uint256& hash);
+    CBLSId(const uint256& nHash);
 };
 
 class CBLSSecretKey : public CBLSWrapper<bls::PrivateKey, BLS_CURVE_SECKEY_SIZE, CBLSSecretKey>
@@ -240,6 +236,7 @@ public:
     using CBLSWrapper::CBLSWrapper;
 
     CBLSSecretKey() {}
+
     void AggregateInsecure(const CBLSSecretKey& o);
     static CBLSSecretKey AggregateInsecure(const std::vector<CBLSSecretKey>& sks);
 
@@ -261,8 +258,10 @@ public:
     using CBLSWrapper::operator=;
     using CBLSWrapper::operator==;
     using CBLSWrapper::operator!=;
+    using CBLSWrapper::CBLSWrapper;
 
     CBLSPublicKey() {}
+
     void AggregateInsecure(const CBLSPublicKey& o);
     static CBLSPublicKey AggregateInsecure(const std::vector<CBLSPublicKey>& pks);
 
@@ -303,7 +302,7 @@ template<typename BLSObject>
 class CBLSLazyWrapper
 {
 private:
-    mutable std::mutex mutex;
+    mutable RecursiveMutex mutex;
 
     mutable std::vector<uint8_t> vecBytes;
     mutable bool bufValid{false};
@@ -328,7 +327,7 @@ public:
 
     CBLSLazyWrapper& operator=(const CBLSLazyWrapper& r)
     {
-        std::unique_lock<std::mutex> l(r.mutex);
+        LOCK(r.mutex);
         bufValid = r.bufValid;
         if (r.bufValid) {
             vecBytes = r.vecBytes;
@@ -353,7 +352,7 @@ public:
     template<typename Stream>
     inline void Serialize(Stream& s) const
     {
-        std::unique_lock<std::mutex> l(mutex);
+        LOCK(mutex);
         if (!objInitialized && !bufValid) {
             throw std::ios_base::failure("obj and buf not initialized");
         }
@@ -368,7 +367,7 @@ public:
     template<typename Stream>
     inline void Unserialize(Stream& s)
     {
-        std::unique_lock<std::mutex> l(mutex);
+        LOCK(mutex);
         s.read((char*)vecBytes.data(), BLSObject::SerSize);
         bufValid = true;
         objInitialized = false;
@@ -377,7 +376,7 @@ public:
 
     void Set(const BLSObject& _obj)
     {
-        std::unique_lock<std::mutex> l(mutex);
+        LOCK(mutex);
         bufValid = false;
         objInitialized = true;
         obj = _obj;
@@ -385,7 +384,7 @@ public:
     }
     const BLSObject& Get() const
     {
-        std::unique_lock<std::mutex> l(mutex);
+        LOCK(mutex);
         static BLSObject invalidObj;
         if (!bufValid && !objInitialized) {
             return invalidObj;
@@ -421,7 +420,7 @@ public:
 
     uint256 GetHash() const
     {
-        std::unique_lock<std::mutex> l(mutex);
+        LOCK(mutex);
         if (!bufValid) {
             vecBytes = obj.ToByteVector();
             bufValid = true;
