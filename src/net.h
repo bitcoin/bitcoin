@@ -477,6 +477,21 @@ public:
         assert(false);
     }
 
+    bool MightSupportTransactionRelay() const {
+        switch (m_conn_type) {
+            case ConnectionType::OUTBOUND_FULL_RELAY:
+            case ConnectionType::INBOUND:
+            case ConnectionType::MANUAL:
+                return true;
+            case ConnectionType::BLOCK_RELAY:
+            case ConnectionType::ADDR_FETCH:
+            case ConnectionType::FEELER:
+                return false;
+        } // no default case, so the compiler can warn about missing cases
+
+        assert(false);
+    }
+
     bool IsFullOutboundConn() const {
         return m_conn_type == ConnectionType::OUTBOUND_FULL_RELAY;
     }

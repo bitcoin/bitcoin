@@ -229,6 +229,7 @@ BITCOIN_CORE_H = \
   timedata.h \
   torcontrol.h \
   txdb.h \
+  txreconciliation.h \
   txrequest.h \
   txmempool.h \
   undo.h \
@@ -352,6 +353,7 @@ libbitcoin_server_a_SOURCES = \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
+  txreconciliation.cpp \
   txrequest.cpp \
   txmempool.cpp \
   validation.cpp \
