@@ -25,17 +25,19 @@ jobs:
       - name: Create PR
         if: success()
         id: cpr
-        uses: peter-evans/create-pull-request@v2
+        uses: peter-evans/create-pull-request@v3
         with:
+          base: develop
           token: ${{ secrets.REPO_TOKEN }}
           commit-message: Update veriblock-pop-cpp
-          committer: GitHub <noreply@github.com>
-          author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
           title: "Update veriblock-pop-cpp to ${{ github.event.client_payload.sha }}"
           reviewers: Warchant,overcookedpanda
           draft: false
           branch: veriblock-pop-cpp
           request-to-parent: false
+          labels: |
+            dependencies
+            automated
       - name: Check outputs
         run: |
           echo "Pull Request Number - ${{ env.PULL_REQUEST_NUMBER }}"
