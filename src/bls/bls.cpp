@@ -4,6 +4,7 @@
 
 #include <bls/bls.h>
 
+#include <hash.h>
 #include <random.h>
 #include <tinyformat.h>
 
@@ -14,11 +15,32 @@
 #include <assert.h>
 #include <string.h>
 
-CBLSId::CBLSId(const uint256& nHash) : CBLSWrapper<CBLSIdImplicit, BLS_CURVE_ID_SIZE, CBLSId>()
+void CBLSId::SetInt(int x)
 {
-    impl = nHash;
+    impl.SetHex(strprintf("%x", x));
     fValid = true;
     cachedHash.SetNull();
+}
+
+void CBLSId::SetHash(const uint256& hash)
+{
+    impl = hash;
+    fValid = true;
+    UpdateHash();
+}
+
+CBLSId CBLSId::FromInt(int64_t i)
+{
+    CBLSId id;
+    id.SetInt(i);
+    return id;
+}
+
+CBLSId CBLSId::FromHash(const uint256& hash)
+{
+    CBLSId id;
+    id.SetHash(hash);
+    return id;
 }
 
 void CBLSSecretKey::AggregateInsecure(const CBLSSecretKey& o)

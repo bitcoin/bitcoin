@@ -82,7 +82,7 @@ CDKGPrematureCommitment::CDKGPrematureCommitment(const Consensus::LLMQParams& pa
 CDKGMember::CDKGMember(CDeterministicMNCPtr _dmn, size_t _idx) :
     dmn(_dmn),
     idx(_idx),
-    id(_dmn->proTxHash)
+    id(CBLSId::FromHash(_dmn->proTxHash))
 {
 
 }
