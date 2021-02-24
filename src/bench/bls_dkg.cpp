@@ -145,12 +145,12 @@ void CleanupBLSDkgTests()
     } \
     BENCHMARK(BLSDKG_BuildQuorumVerificationVectors_##name##_##quorumSize)
 
-/*BENCH_BuildQuorumVerificationVectors(simple, 10, false)
+BENCH_BuildQuorumVerificationVectors(simple, 10, false)
 BENCH_BuildQuorumVerificationVectors(simple, 100, false)
 BENCH_BuildQuorumVerificationVectors(simple, 400, false)
 BENCH_BuildQuorumVerificationVectors(parallel, 10, true)
 BENCH_BuildQuorumVerificationVectors(parallel, 100, true)
-BENCH_BuildQuorumVerificationVectors(parallel, 400, true)*/
+BENCH_BuildQuorumVerificationVectors(parallel, 400, true)
 
 ///////////////////////////////
 
@@ -164,7 +164,7 @@ BENCH_BuildQuorumVerificationVectors(parallel, 400, true)*/
     } \
     BENCHMARK(BLSDKG_VerifyContributionShares_##name##_##quorumSize)
 
-/*BENCH_VerifyContributionShares(simple, 10, 5, false, false)
+BENCH_VerifyContributionShares(simple, 10, 5, false, false)
 BENCH_VerifyContributionShares(simple, 100, 5, false, false)
 BENCH_VerifyContributionShares(simple, 400, 5, false, false)
 
@@ -178,4 +178,4 @@ BENCH_VerifyContributionShares(parallel, 400, 5, true, false)
 
 BENCH_VerifyContributionShares(parallel_aggregated, 10, 5, true, true)
 BENCH_VerifyContributionShares(parallel_aggregated, 100, 5, true, true)
-BENCH_VerifyContributionShares(parallel_aggregated, 400, 5, true, true)*/
+BENCH_VerifyContributionShares(parallel_aggregated, 400, 5, true, true)
