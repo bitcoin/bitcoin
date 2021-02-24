@@ -53,6 +53,12 @@ SHA256_SUMS = {
     "b9024dde373ea7dad707363e07ec7e265383204127539ae0c234bff3a61da0d1": "bitcoin-0.20.1-osx64.tar.gz",
     "fa71cb52ee5e0459cbf5248cdec72df27995840c796f58b304607a1ed4c165af": "bitcoin-0.20.1-riscv64-linux-gnu.tar.gz",
     "376194f06596ecfa40331167c39bc70c355f960280bd2a645fdbf18f66527397": "bitcoin-0.20.1-x86_64-linux-gnu.tar.gz",
+
+    "43416854330914992bbba2d0e9adf2a6fff4130be9af8ae2ef1186e743d9a3fe": "bitcoin-0.21.0-aarch64-linux-gnu.tar.gz",
+    "f028af308eda45a3c4c90f9332f96b075bf21e3495c945ebce48597151808176": "bitcoin-0.21.0-arm-linux-gnueabihf.tar.gz",
+    "695fb624fa6423f5da4f443b60763dd1d77488bfe5ef63760904a7b54e91298d": "bitcoin-0.21.0-osx64.tar.gz",
+    "f8b2adfeae021a672effbc7bd40d5c48d6b94e53b2dd660f787340bf1a52e4e9": "bitcoin-0.21.0-riscv64-linux-gnu.tar.gz",
+    "da7766775e3f9c98d7a9145429f2be8297c2672fe5b118fd3dc2411fb48e0032": "bitcoin-0.21.0-x86_64-linux-gnu.tar.gz",
 }
 
 
