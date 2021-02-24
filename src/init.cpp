@@ -1517,7 +1517,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         if(!IsHex(strMasterNodeBLSPrivKey))
             return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
         auto binKey = ParseHex(strMasterNodeBLSPrivKey);
-        CBLSSecretKey keyOperator(binKey);
+        keyOperator.SetBuf(binKey);
         if (!keyOperator.IsValid()) {
             return InitError(_("Invalid masternodeblsprivkey. Please see documentation."));
         }

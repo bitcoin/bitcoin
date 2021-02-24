@@ -22,12 +22,16 @@ BOOST_AUTO_TEST_CASE(simplifiedmns_merkleroots)
         std::string ip = strprintf("%d.%d.%d.%d", 0, 0, 0, i);
         Lookup(ip.c_str(), smle.service, i, false);
 
-        std::vector<unsigned char> vecBytes{static_cast<unsigned char>(i)};
-        vecBytes.resize(CBLSSecretKey::SerSize);
+        uint8_t skBuf[CBLSSecretKey::SerSize];
+        memset(skBuf, 0, sizeof(skBuf));
+        skBuf[0] = (uint8_t)i;
+        CBLSSecretKey sk;
+        sk.SetBuf(skBuf, sizeof(skBuf));
 
-        smle.pubKeyOperator.Set(CBLSSecretKey(vecBytes).GetPublicKey());
+        smle.pubKeyOperator.Set(sk.GetPublicKey());
         smle.keyIDVoting.SetHex(strprintf("%040x", i));
         smle.isValid = true;
+
 
         entries.emplace_back(smle);
     }

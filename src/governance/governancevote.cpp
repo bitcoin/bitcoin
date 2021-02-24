@@ -197,7 +197,10 @@ bool CGovernanceVote::Sign(const CBLSSecretKey& key)
 
 bool CGovernanceVote::CheckSignature(const CBLSPublicKey& pubKey) const
 {
-    if (!CBLSSignature(vchSig).VerifyInsecure(pubKey, GetSignatureHash())) {
+    uint256 hash = GetSignatureHash();
+    CBLSSignature sig;
+    sig.SetBuf(vchSig);
+    if (!sig.VerifyInsecure(pubKey, hash)) {
         LogPrintf("CGovernanceVote::CheckSignature -- VerifyInsecure() failed\n");
         return false;
     }
