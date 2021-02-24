@@ -31,7 +31,8 @@ jobs:
           token: ${{ secrets.REPO_TOKEN }}
           commit-message: Update veriblock-pop-cpp
           title: "Update veriblock-pop-cpp to ${{ github.event.client_payload.sha }}"
-          reviewers: Warchant,overcookedpanda
+          reviewers: Warchant,${{ github.event.client_payload.actor }}
+          assignees: ${{ github.event.client_payload.actor }}
           draft: false
           branch: veriblock-pop-cpp
           request-to-parent: false
