@@ -63,7 +63,7 @@ static std::map<std::string, unsigned int> mapFlagNames = {
 
 unsigned int ParseScriptFlags(std::string strFlags)
 {
-    if (strFlags.empty() | strFlags == "NONE") return 0;
+    if (strFlags.empty() || strFlags == "NONE") return 0;
     unsigned int flags = 0;
     std::vector<std::string> words;
     boost::algorithm::split(words, strFlags, boost::algorithm::is_any_of(","));
