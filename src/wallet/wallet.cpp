@@ -3394,7 +3394,6 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances() const
     std::map<CTxDestination, CAmount> balances;
 
     {
-        LOCK(cs_wallet);
         std::set<uint256> trusted_parents;
         for (const auto& walletEntry : mapWallet)
         {
@@ -3429,7 +3428,6 @@ std::map<CTxDestination, CAmount> CWallet::GetAddressBalances() const
 
 std::set< std::set<CTxDestination> > CWallet::GetAddressGroupings() const
 {
-    AssertLockHeld(cs_wallet);
     std::set< std::set<CTxDestination> > groupings;
     std::set<CTxDestination> grouping;
 
