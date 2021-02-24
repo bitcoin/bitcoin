@@ -119,6 +119,12 @@ jobs:
         if: always()
         timeout-minutes: 60
         run: python3 test/functional/test_runner.py
+      - name: run pop integration tests
+        if: always()
+        timeout-minutes: 60
+        env:
+          VBITCOIND_PATH: './src/vbitcoind'
+        run: python3 test/integration/test_runner.py
 
   x86_64-w64-mingw32:
     runs-on: ubuntu-latest
@@ -327,19 +333,24 @@ jobs:
         run: echo Using veriblock-pop-cpp version ${VERIBLOCK_POP_CPP_VERSION}
       - name: install dependencies
         run: |
-          brew install automake berkeley-db4 boost miniupnpc pkg-config protobuf librsvg ccache qrencode zeromq qt
+          brew install automake berkeley-db4 boost boost-python3 miniupnpc pkg-config protobuf librsvg ccache qrencode zeromq qt
       - name: install veriblock-pop-cpp
         env:
           BUILD_TYPE: Release
         run: |
           (
+          pip3 install wheel
+          sudo su;
           cd /tmp;
           wget https://github.com/VeriBlock/alt-integration-cpp/archive/${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
           tar -xf ${VERIBLOCK_POP_CPP_VERSION}.tar.gz;
           cd alt-integration-cpp-${VERIBLOCK_POP_CPP_VERSION};
+          python3 setup.py install
+          python3 setup.py test
+          rm -rf build
           mkdir build;
           cd build;
-          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF;
+          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DTESTING=OFF -DWITH_PYPOPTOOLS=ON;
           make -j2;
           sudo make install
           )
@@ -357,6 +368,12 @@ jobs:
         if: always()
         timeout-minutes: 60
         run: python3 test/functional/test_runner.py
+      - name: run pop integration tests
+        if: always()
+        timeout-minutes: 60
+        env:
+          VBITCOIND_PATH: './src/vbitcoind'
+        run: python3 test/integration/test_runner.py
 
   linux-asan:
     runs-on: ubuntu-latest
@@ -454,3 +471,9 @@ jobs:
         if: always()
         timeout-minutes: 180
         run: python3 test/functional/test_runner.py
+      - name: run pop integration tests
+        if: always()
+        timeout-minutes: 60
+        env:
+          VBITCOIND_PATH: './src/vbitcoind'
+        run: python3 test/integration/test_runner.py
