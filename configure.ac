@@ -1936,9 +1936,9 @@ if test "x$enable_wallet" != "xno"; then
     echo "    with sqlite   = $use_sqlite"
     echo "    with bdb      = $use_bdb"
 fi
-echo "    with gui / qt = $syscoin_enable_qt"
+echo "  with gui / qt   = $syscoin_enable_qt"
 if test x$syscoin_enable_qt != xno; then
-    echo "  with qr         = $use_qr"
+    echo "    with qr       = $use_qr"
 fi
 echo "  with zmq        = $use_zmq"
 if test x$enable_fuzz == xno; then
