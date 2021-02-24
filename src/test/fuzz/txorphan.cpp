@@ -36,7 +36,6 @@ FUZZ_TARGET_INIT(txorphan, initialize_orphanage)
     SetMockTime(ConsumeTime(fuzzed_data_provider));
 
     TxOrphanage orphanage;
-    std::set<uint256> orphan_work_set;
     std::vector<COutPoint> outpoints;
     // initial outpoints used to construct transactions later
     for (uint8_t i = 0; i < 4; i++) {
@@ -87,7 +86,7 @@ FUZZ_TARGET_INIT(txorphan, initialize_orphanage)
                 fuzzed_data_provider,
                 [&] {
                     LOCK(g_cs_orphans);
-                    orphanage.AddChildrenToWorkSet(*tx, orphan_work_set);
+                    orphanage.AddChildrenToWorkSet(*tx, peer_id);
                 },
                 [&] {
                     bool have_tx = orphanage.HaveTx(GenTxid::Txid(tx->GetHash())) || orphanage.HaveTx(GenTxid::Wtxid(tx->GetHash()));

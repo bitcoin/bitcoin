@@ -43,9 +43,11 @@ public:
     /** Limit the orphanage to the given maximum */
     void LimitOrphans(unsigned int max_orphans) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
 
-    /** Add any orphans that list a particular tx as a parent into a peer's work set
-     * (ie orphans that may have found their final missing parent, and so should be reconsidered for the mempool) */
-    void AddChildrenToWorkSet(const CTransaction& tx, std::set<uint256>& orphan_work_set) const EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+    /** Which peer provided a parent tx of orphans that need to be reconsidered */
+    std::map<NodeId, std::set<uint256>> m_peer_work_set GUARDED_BY(g_cs_orphans);
+
+    /** Add any orphans that list a particular tx as a parent into a peer's work set */
+    void AddChildrenToWorkSet(const CTransaction& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
 
     /** Return how many entries exist in the orphange */
     size_t Size() LOCKS_EXCLUDED(::g_cs_orphans)
