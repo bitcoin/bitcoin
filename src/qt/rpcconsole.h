@@ -168,6 +168,11 @@ private:
     /** Update UI with latest network info from model. */
     void updateNetworkState();
 
+    /** Helper for the output of a time duration field. Inputs are UNIX epoch times. */
+    QString TimeDurationField(uint64_t time_now, uint64_t time_at_event) const {
+        return time_at_event ? GUIUtil::formatDurationStr(time_now - time_at_event) : tr("Never");
+    }
+
 private Q_SLOTS:
     void updateAlerts(const QString& warnings);
 };
