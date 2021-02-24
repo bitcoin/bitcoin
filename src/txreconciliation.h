@@ -13,6 +13,26 @@
 
 /** Default coefficient used to estimate set difference for tx reconciliation. */
 static constexpr double DEFAULT_RECON_Q = 0.02;
+/** Used to convert a floating point reconciliation coefficient q to an int for transmission.
+  * Specified by BIP-330.
+  */
+static constexpr uint16_t Q_PRECISION{(2 << 14) - 1};
+/**
+ * Interval between sending reconciliation request to the same peer.
+ * This value allows to reconcile ~100 transactions (7 tx/s * 16s) during normal system operation
+ * at capacity. More frequent reconciliations would cause significant constant bandwidth overhead
+ * due to reconciliation metadata (sketch sizes etc.), which would nullify the efficiency.
+ * Less frequent reconciliations would introduce high transaction relay latency.
+ */
+static constexpr std::chrono::microseconds RECON_REQUEST_INTERVAL{16s};
+
+/**
+ * Represents phase of the current reconciliation round with a peer.
+ */
+enum ReconciliationPhase {
+    RECON_NONE,
+    RECON_INIT_REQUESTED,
+};
 
 /**
  * This struct is used to keep track of the reconciliations with a given peer,
@@ -78,6 +98,9 @@ class ReconciliationState {
      */
     std::set<uint256> m_local_set;
 
+    /** Keep track of reconciliations with the peer. */
+    ReconciliationPhase m_outgoing_recon{RECON_NONE};
+
 public:
 
     ReconciliationState(bool requestor, bool responder, bool flood_to, uint64_t k0, uint64_t k1) :
@@ -99,11 +122,27 @@ public:
         return m_local_set.size();
     }
 
+    uint16_t GetLocalQ() const
+    {
+        return m_local_q * Q_PRECISION;
+    }
+
+    ReconciliationPhase GetOutgoingPhase() const
+    {
+        return m_outgoing_recon;
+    }
+
     void AddToReconSet(const std::vector<uint256>& txs_to_reconcile)
     {
         for (const auto& wtxid: txs_to_reconcile) {
             m_local_set.insert(wtxid);
         }
+    }
+
+    void UpdateOutgoingPhase(ReconciliationPhase phase)
+    {
+        assert(m_responder);
+        m_outgoing_recon = phase;
     }
 };
 
@@ -135,6 +174,16 @@ class TxReconciliationTracker {
     Mutex m_queue_mutex;
     std::deque<NodeId> m_queue GUARDED_BY(m_queue_mutex);
 
+    /**
+     * Reconciliations are requested periodically:
+     * every RECON_REQUEST_INTERVAL seconds we pick a peer from the queue.
+     */
+    std::chrono::microseconds m_next_recon_request{0};
+    void UpdateNextReconRequest(std::chrono::microseconds now) EXCLUSIVE_LOCKS_REQUIRED(m_queue_mutex)
+    {
+        m_next_recon_request = now + RECON_REQUEST_INTERVAL / m_queue.size();
+    }
+
     public:
 
     TxReconciliationTracker() {};
@@ -151,6 +200,13 @@ class TxReconciliationTracker {
     bool EnableReconciliationSupport(const NodeId peer_id, bool inbound,
         bool recon_requestor, bool recon_responder, uint32_t recon_version, uint64_t remote_salt,
         size_t outbound_flooders);
+
+    /**
+     * If a it's time to request a reconciliation from the peer, this function will return the
+     * details of our local state, which should be communicated to the peer so that they better
+     * know what we need.
+     */
+    Optional<std::pair<uint16_t, uint16_t>> MaybeRequestReconciliation(const NodeId peer_id);
 
     Optional<ReconciliationState> GetPeerState(const NodeId peer_id) const
     {

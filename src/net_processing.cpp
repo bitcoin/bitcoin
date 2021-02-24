@@ -4944,6 +4944,17 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         if (!vInv.empty())
             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
 
+        //
+        // Message: reconciliation request
+        //
+        {
+            auto reconciliation_request_data = m_reconciliation.MaybeRequestReconciliation(pto->GetId());
+            if (reconciliation_request_data) {
+                m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::REQRECON,
+                    (*reconciliation_request_data).first, (*reconciliation_request_data).second));
+            }
+        }
+
         // Detect whether we're stalling
         current_time = GetTime<std::chrono::microseconds>();
         if (state.nStallingSince && state.nStallingSince < count_microseconds(current_time) - 1000000 * BLOCK_STALLING_TIMEOUT) {

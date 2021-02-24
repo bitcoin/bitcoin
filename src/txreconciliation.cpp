@@ -86,3 +86,27 @@ bool TxReconciliationTracker::EnableReconciliationSupport(const NodeId peer_id, 
                         flood_to, full_salt.GetUint64(0), full_salt.GetUint64(1)));
     return true;
 }
+
+Optional<std::pair<uint16_t, uint16_t>> TxReconciliationTracker::MaybeRequestReconciliation(const NodeId peer_id)
+{
+    LOCK(m_states_mutex);
+    auto recon_state = m_states.find(peer_id);
+    if (recon_state == m_states.end()) return nullopt;
+    if (recon_state->second.GetOutgoingPhase() != RECON_NONE) return nullopt;
+
+    LOCK(m_queue_mutex);
+    if (m_queue.size() > 0) {
+        // Request transaction reconciliation periodically to efficiently exchange transactions.
+        // To make reconciliation predictable and efficient, we reconcile with peers in order based on the queue,
+        // and with a delay between requests.
+        auto current_time = GetTime<std::chrono::seconds>();
+        if (m_next_recon_request < current_time && m_queue.back() == peer_id) {
+            recon_state->second.UpdateOutgoingPhase(RECON_INIT_REQUESTED);
+            m_queue.pop_back();
+            m_queue.push_front(peer_id);
+            UpdateNextReconRequest(current_time);
+            return std::make_pair(recon_state->second.GetLocalSetSize(), recon_state->second.GetLocalQ());
+        }
+    }
+    return nullopt;
+}
