@@ -64,7 +64,7 @@ bool CheckCbTx(const CCbTx &cbTx, const CBlockIndex* pindexPrev, TxValidationSta
     return true;
 }
 // This can only be done after the block has been fully processed, as otherwise we won't have the finished MN list
-bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state)
+bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, CCoinsViewCache& view)
 {
     if (block.vtx[0]->nVersion != SYSCOIN_TX_VERSION_MN_COINBASE && block.vtx[0]->nVersion != SYSCOIN_TX_VERSION_MN_QUORUM_COMMITMENT) {
         return true;
@@ -86,7 +86,7 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, BlockV
 
     if (pindex) {
         uint256 calculatedMerkleRoot;
-        if (!CalcCbTxMerkleRootMNList(block, pindex->pprev, calculatedMerkleRoot, state)) {
+        if (!CalcCbTxMerkleRootMNList(block, pindex->pprev, calculatedMerkleRoot, state, view)) {
             // pass the state returned by the function above
             return false;
         }
@@ -115,7 +115,7 @@ bool CheckCbTxMerkleRoots(const CBlock& block, const CBlockIndex* pindex, BlockV
     return true;
 }
 
-bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, BlockValidationState& state, const llmq::CFinalCommitmentTxPayload *qcIn)
+bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev, uint256& merkleRootRet, BlockValidationState& state,  CCoinsViewCache& view, const llmq::CFinalCommitmentTxPayload *qcIn)
 {
     if(!deterministicMNManager)
         return false;
@@ -129,7 +129,7 @@ bool CalcCbTxMerkleRootMNList(const CBlock& block, const CBlockIndex* pindexPrev
 
     try {
         CDeterministicMNList tmpMNList;
-        if (!deterministicMNManager->BuildNewListFromBlock(block, pindexPrev, state, tmpMNList, false, qcIn)) {
+        if (!deterministicMNManager->BuildNewListFromBlock(block, pindexPrev, state, view, tmpMNList, false, qcIn)) {
             // pass the state returned by the function above
             return false;
         }

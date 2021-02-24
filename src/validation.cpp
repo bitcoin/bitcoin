@@ -926,7 +926,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // check special TXs after all the other checks. If we'd do this before the other checks, we might end up
     // DoS scoring a node for non-critical errors, e.g. duplicate keys because a TX is received that was already
     // mined
-    if (!CheckSpecialTx(tx, ::ChainActive().Tip(), state, true))
+    if (!CheckSpecialTx(tx, ::ChainActive().Tip(), state, m_active_chainstate.CoinsTip(), true))
         return false;
 
     if (m_pool.existsProviderTxConflict(tx)) {
@@ -2332,6 +2332,12 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // SYSCOIN
     const bool ibd = ::ChainstateActive().IsInitialBlockDownload();
     const uint256& blockHash = block.GetHash();
+    // MUST process special txes before updating UTXO to ensure consistency between mempool and block processing
+    if (!ProcessSpecialTxsInBlock(block, pindex, state, view, fJustCheck, fScriptChecks)) {
+        LogPrintf("ERROR: ConnectBlock(): ProcessSpecialTxsInBlock for block %s failed with %s\n",
+                     pindex->GetBlockHash().ToString(), state.ToString());
+        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-process-mn");
+    }
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
         const CTransaction &tx = *(block.vtx[i]);
@@ -2443,12 +2449,6 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
         if(!fSigNet || pindex->nHeight > 100) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
         }
-    }
-
-    if (!ProcessSpecialTxsInBlock(block, pindex, state, fJustCheck, fScriptChecks)) {
-        LogPrintf("ERROR: ConnectBlock(): ProcessSpecialTxsInBlock for block %s failed with %s\n",
-                     pindex->GetBlockHash().ToString(), state.ToString());
-        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-process-mn");
     }
 
 
@@ -4935,6 +4935,12 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
     // SYSCOIN
     const uint256& blockHash = pindex->GetBlockHash();
     const bool ibd = ::ChainstateActive().IsInitialBlockDownload();
+    // MUST process special txes before updating UTXO to ensure consistency between mempool and block processing
+    BlockValidationState state;
+    if (!ProcessSpecialTxsInBlock(block, pindex, state, inputs, false /*fJustCheck*/, false /*fScriptChecks*/)) {
+        return error("%s: ProcessSpecialTxsInBlock for block %s failed with %s", __func__,
+            pindex->GetBlockHash().ToString(), state.ToString());
+    }
     for (const CTransactionRef& tx : block.vtx) {
         if (!tx->IsCoinBase()) {
             for (const CTxIn &txin : tx->vin) {
@@ -4960,12 +4966,6 @@ bool CChainState::RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& i
         }
         // Pass check = true as every addition may be an overwrite.
         AddCoins(inputs, *tx, pindex->nHeight, true);
-    }
-    // SYSCOIN
-    BlockValidationState state;
-    if (!ProcessSpecialTxsInBlock(block, pindex, state, false /*fJustCheck*/, false /*fScriptChecks*/)) {
-        return error("%s: ProcessSpecialTxsInBlock for block %s failed with %s", __func__,
-            pindex->GetBlockHash().ToString(), state.ToString());
     }
     return true;
 }

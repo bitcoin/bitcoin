@@ -524,7 +524,7 @@ CDeterministicMNManager::CDeterministicMNManager(CEvoDB& _evoDb) :
 {
 }
 
-bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& _state, bool fJustCheck)
+bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& _state, CCoinsViewCache& view, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
     const auto& consensusParams = Params().GetConsensus();
@@ -541,7 +541,7 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
     try {
         LOCK(cs);
 
-        if (!BuildNewListFromBlock(block, pindex->pprev, _state, newList, true)) {
+        if (!BuildNewListFromBlock(block, pindex->pprev, _state, view, newList, true)) {
             // pass the state returned by the function above
             return false;
         }
@@ -625,7 +625,7 @@ void CDeterministicMNManager::UpdatedBlockTip(const CBlockIndex* pindex)
     tipIndex = pindex;
 }
 
-bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& _state, CDeterministicMNList& mnListRet, bool debugLogs, const llmq::CFinalCommitmentTxPayload *qcIn)
+bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, BlockValidationState& _state, CCoinsViewCache& view, CDeterministicMNList& mnListRet, bool debugLogs, const llmq::CFinalCommitmentTxPayload *qcIn)
 {
     AssertLockHeld(cs_main);
     AssertLockHeld(cs);
@@ -716,7 +716,7 @@ bool CDeterministicMNManager::BuildNewListFromBlock(const CBlock& block, const C
                 }
 
                 Coin coin;
-                if (!proTx.collateralOutpoint.hash.IsNull() && (!GetUTXOCoin(dmn->collateralOutpoint, coin) || coin.out.nValue != nMNCollateralRequired)) {
+                if (!proTx.collateralOutpoint.hash.IsNull() && (!view.GetCoin(dmn->collateralOutpoint, coin) || coin.IsSpent() || coin.out.nValue != nMNCollateralRequired)) {
                     // should actually never get to this point as CheckProRegTx should have handled this case.
                     // We do this additional check nevertheless to be 100% sure
                     return _state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-protx-collateral");

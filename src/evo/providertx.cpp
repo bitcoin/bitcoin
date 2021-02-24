@@ -10,6 +10,7 @@
 #include <chainparams.h>
 #include <clientversion.h>
 #include <core_io.h>
+#include <coins.h>
 #include <hash.h>
 #include <messagesigner.h>
 #include <script/standard.h>
@@ -79,7 +80,7 @@ static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, TxValida
     return true;
 }
 
-bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
+bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, CCoinsViewCache& view, bool fJustCheck)
 {
     AssertLockHeld(cs_main);
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_REGISTER) {
@@ -132,7 +133,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
 
     if (!ptx.collateralOutpoint.hash.IsNull()) {
         Coin coin;
-        if (!GetUTXOCoin(ptx.collateralOutpoint, coin) || coin.out.nValue != nMNCollateralRequired) {
+        if (!view.GetCoin(ptx.collateralOutpoint, coin) || coin.IsSpent() || coin.out.nValue != nMNCollateralRequired) {
             return FormatSyscoinErrorMessage(state, "bad-protx-collateral", fJustCheck);
         }
 
@@ -271,7 +272,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxV
     return true;
 }
 
-bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
+bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, CCoinsViewCache& view, bool fJustCheck)
 {
     if (tx.nVersion != SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR) {
         return FormatSyscoinErrorMessage(state, "bad-protx-type", fJustCheck);
@@ -314,7 +315,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVa
         }
 
         Coin coin;
-        if (!GetUTXOCoin(dmn->collateralOutpoint, coin)) {
+        if (!view.GetCoin(dmn->collateralOutpoint, coin) || coin.IsSpent()) {
             // this should never happen (there would be no dmn otherwise)
             return FormatSyscoinErrorMessage(state, "bad-protx-collateral", fJustCheck);
         }

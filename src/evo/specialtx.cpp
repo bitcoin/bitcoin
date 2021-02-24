@@ -15,18 +15,18 @@
 
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_blockprocessor.h>
-
-bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, bool fJustCheck)
+class CCoinsViewCache;
+bool CheckSpecialTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxValidationState& state, CCoinsViewCache& view, bool fJustCheck)
 {
 
     try {
         switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_MN_REGISTER:
-            return CheckProRegTx(tx, pindexPrev, state, fJustCheck);
+            return CheckProRegTx(tx, pindexPrev, state, view, fJustCheck);
         case SYSCOIN_TX_VERSION_MN_UPDATE_SERVICE:
             return CheckProUpServTx(tx, pindexPrev, state, fJustCheck);
         case SYSCOIN_TX_VERSION_MN_UPDATE_REGISTRAR:
-            return CheckProUpRegTx(tx, pindexPrev, state, fJustCheck);
+            return CheckProUpRegTx(tx, pindexPrev, state, view, fJustCheck);
         case SYSCOIN_TX_VERSION_MN_UPDATE_REVOKE:
             return CheckProUpRevTx(tx, pindexPrev, state, fJustCheck);
         case SYSCOIN_TX_VERSION_MN_COINBASE:
@@ -61,7 +61,7 @@ bool IsSpecialTx(const CTransaction& tx)
     return false;
 }
 
-bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, bool fJustCheck, bool fCheckCbTxMerleRoots)
+bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, CCoinsViewCache& view, bool fJustCheck, bool fCheckCbTxMerleRoots)
 {
     static int64_t nTimeLoop = 0;
     static int64_t nTimeQuorum = 0;
@@ -74,7 +74,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, Bl
         for (size_t i = 0; i < block.vtx.size(); i++) {
             const CTransaction& tx = *block.vtx[i];
             TxValidationState txstate;
-            if (!CheckSpecialTx(tx, pindex->pprev, txstate, false)) {
+            if (!CheckSpecialTx(tx, pindex->pprev, txstate, view, false)) {
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, txstate.GetRejectReason());
             }
         }
@@ -90,7 +90,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, Bl
         int64_t nTime3 = GetTimeMicros(); nTimeQuorum += nTime3 - nTime2;
         LogPrint(BCLog::BENCHMARK, "        - quorumBlockProcessor: %.2fms [%.2fs]\n", 0.001 * (nTime3 - nTime2), nTimeQuorum * 0.000001);
 
-        if (!deterministicMNManager || !deterministicMNManager->ProcessBlock(block, pindex, state, fJustCheck)) {
+        if (!deterministicMNManager || !deterministicMNManager->ProcessBlock(block, pindex, state, view, fJustCheck)) {
             // pass the state returned by the function above
             return false;
         }
@@ -98,7 +98,7 @@ bool ProcessSpecialTxsInBlock(const CBlock& block, const CBlockIndex* pindex, Bl
         int64_t nTime4 = GetTimeMicros(); nTimeDMN += nTime4 - nTime3;
         LogPrint(BCLog::BENCHMARK, "        - deterministicMNManager: %.2fms [%.2fs]\n", 0.001 * (nTime4 - nTime3), nTimeDMN * 0.000001);
 
-        if (fCheckCbTxMerleRoots && !CheckCbTxMerkleRoots(block, pindex, state)) {
+        if (fCheckCbTxMerleRoots && !CheckCbTxMerkleRoots(block, pindex, state, view)) {
             // pass the state returned by the function above
             return false;
         }

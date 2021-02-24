@@ -283,7 +283,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
             BOOST_ASSERT(false);
         }
         BlockValidationState state;
-        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), cbTx.merkleRootMNList, state)) {
+        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), cbTx.merkleRootMNList, state, ::ChainstateActive().CoinsTip())) {
             BOOST_ASSERT(false);
         }
         if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), cbTx.merkleRootQuorums, state)) {
@@ -297,7 +297,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
             BOOST_ASSERT(false);
         }
         BlockValidationState state;
-        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), qc.cbTx.merkleRootMNList, state)) {
+        if (!CalcCbTxMerkleRootMNList(block, ::ChainActive().Tip(), qc.cbTx.merkleRootMNList, state, ::ChainstateActive().CoinsTip())) {
             BOOST_ASSERT(false);
         }
         if (!CalcCbTxMerkleRootQuorums(block, ::ChainActive().Tip(), qc.cbTx.merkleRootQuorums, state)) {
