@@ -26,7 +26,7 @@ void CBLSId::SetHash(const uint256& hash)
 {
     impl = hash;
     fValid = true;
-    UpdateHash();
+    cachedHash.SetNull();
 }
 
 CBLSId CBLSId::FromInt(int64_t i)

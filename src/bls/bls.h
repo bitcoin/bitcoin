@@ -357,7 +357,7 @@ public:
     template<typename Stream>
     inline void Unserialize(Stream& s)
     {
-        std::unique_lock<std::mutex> l(mutex);
+        LOCK(mutex);
         s.read((char*)vecBytes.data(), BLSObject::SerSize);
         bufValid = true;
         objInitialized = false;
