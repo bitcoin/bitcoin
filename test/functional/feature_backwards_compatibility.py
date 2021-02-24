@@ -34,11 +34,12 @@ from test_framework.util import (
 class BackwardsCompatibilityTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 7
+        self.num_nodes = 8
         # Add new version after each release:
         self.extra_args = [
             ["-addresstype=bech32"], # Pre-release: use to mine blocks
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # Pre-release: use to receive coins, swap wallets, etc
+            ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.21.0
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.20.1
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.19.1
             ["-nowallet", "-walletrbf=1", "-addresstype=bech32"], # v0.18.1
@@ -55,6 +56,7 @@ class BackwardsCompatibilityTest(BitcoinTestFramework):
         self.add_nodes(self.num_nodes, extra_args=self.extra_args, versions=[
             None,
             None,
+            210000,
             200100,
             190100,
             180100,
