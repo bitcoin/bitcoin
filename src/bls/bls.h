@@ -122,14 +122,9 @@ public:
     const uint256& GetHash() const
     {
         if (cachedHash.IsNull()) {
-            UpdateHash();
+            cachedHash = ::SerializeHash(*this);
         }
         return cachedHash;
-    }
-
-    void UpdateHash() const
-    {
-        cachedHash = ::SerializeHash(*this);
     }
 
     bool SetHexStr(const std::string& str)
@@ -418,16 +413,11 @@ public:
             hash.SetNull();
         }
         if (hash.IsNull()) {
-            UpdateHash();
+            CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+            ss.write(buf, sizeof(buf));
+            hash = ss.GetHash();
         }
         return hash;
-    }
-private:
-    void UpdateHash() const
-    {
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss.write((const char*)vecBytes.data(), vecBytes.size());
-        hash = ss.GetHash();
     }
 };
 typedef CBLSLazyWrapper<CBLSSignature> CBLSLazySignature;
