@@ -118,6 +118,13 @@ public:
      */
     Minisketch ComputeSketch(uint32_t& capacity);
 
+    /**
+     * When during reconciliation we find a set difference successfully (by combining sketches),
+     * we want to find which transactions are missing on our and on their side.
+     * For those missing on our side, we may only find short IDs.
+     */
+    std::pair<std::vector<uint32_t>, std::vector<Wtxid>> GetRelevantIDsFromShortIDs(const std::vector<uint64_t>& diff) const;
+
 private:
     /** These values are used to salt short IDs, which is necessary for transaction reconciliations. */
     uint64_t m_k0, m_k1;
