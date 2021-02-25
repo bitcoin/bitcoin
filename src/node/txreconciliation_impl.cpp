@@ -62,6 +62,20 @@ Minisketch TxReconciliationState::ComputeSketch(uint32_t& capacity)
     return sketch;
 }
 
+void TxReconciliationState::GetRelevantIDsFromShortIDs(const std::vector<uint64_t>& diff,
+                                                       // returning values
+                                                       std::vector<uint32_t>& local_missing, std::vector<Wtxid>& remote_missing) const
+{
+    for (const auto& diff_short_id : diff) {
+        const auto local_tx = m_short_id_mapping.find(diff_short_id);
+        if (local_tx != m_short_id_mapping.end()) {
+            remote_missing.push_back(local_tx->second);
+        } else {
+            local_missing.push_back(diff_short_id);
+        }
+    }
+}
+
 /** Actual implementation for TxReconciliationTracker's data structure. */
 class TxReconciliationTrackerImpl {
 private:
