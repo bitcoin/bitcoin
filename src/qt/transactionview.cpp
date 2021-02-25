@@ -172,6 +172,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     QAction *copyTxIDAction = new QAction(tr("Copy transaction ID"), this);
     QAction *copyTxHexAction = new QAction(tr("Copy raw transaction"), this);
     QAction *copyTxPlainText = new QAction(tr("Copy full transaction details"), this);
+    QAction *editLabelAction = new QAction(tr("Edit address label"), this);
     QAction *showDetailsAction = new QAction(tr("Show transaction details"), this);
 
     contextMenu = new QMenu(this);
@@ -186,6 +187,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     contextMenu->addSeparator();
     contextMenu->addAction(bumpFeeAction);
     contextMenu->addAction(abandonAction);
+    contextMenu->addAction(editLabelAction);
 
     connect(dateWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &TransactionView::chooseDate);
     connect(typeWidget, static_cast<void (QComboBox::*)(int)>(&QComboBox::activated), this, &TransactionView::chooseType);
@@ -206,6 +208,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     connect(copyTxIDAction, &QAction::triggered, this, &TransactionView::copyTxID);
     connect(copyTxHexAction, &QAction::triggered, this, &TransactionView::copyTxHex);
     connect(copyTxPlainText, &QAction::triggered, this, &TransactionView::copyTxPlainText);
+    connect(editLabelAction, &QAction::triggered, this, &TransactionView::editLabel);
     connect(showDetailsAction, &QAction::triggered, this, &TransactionView::showDetails);
     // Double-clicking on a transaction on the transaction history page shows details
     connect(this, &TransactionView::doubleClicked, this, &TransactionView::showDetails);
@@ -472,6 +475,52 @@ void TransactionView::copyTxHex()
 void TransactionView::copyTxPlainText()
 {
     GUIUtil::copyEntryData(transactionView, 0, TransactionTableModel::TxPlainTextRole);
+}
+
+void TransactionView::editLabel()
+{
+    if(!transactionView->selectionModel() ||!model)
+        return;
+    QModelIndexList selection = transactionView->selectionModel()->selectedRows();
+    if(!selection.isEmpty())
+    {
+        AddressTableModel *addressBook = model->getAddressTableModel();
+        if(!addressBook)
+            return;
+        QString address = selection.at(0).data(TransactionTableModel::AddressRole).toString();
+        if(address.isEmpty())
+        {
+            // If this transaction has no associated address, exit
+            return;
+        }
+        // Is address in address book? Address book can miss address when a transaction is
+        // sent from outside the UI.
+        int idx = addressBook->lookupAddress(address);
+        if(idx != -1)
+        {
+            // Edit sending / receiving address
+            QModelIndex modelIdx = addressBook->index(idx, 0, QModelIndex());
+            // Determine type of address, launch appropriate editor dialog type
+            QString type = modelIdx.data(AddressTableModel::TypeRole).toString();
+
+            EditAddressDialog dlg(
+                type == AddressTableModel::Receive
+                ? EditAddressDialog::EditReceivingAddress
+                : EditAddressDialog::EditSendingAddress, this);
+            dlg.setModel(addressBook);
+            dlg.loadRow(idx);
+            dlg.exec();
+        }
+        else
+        {
+            // Add sending address
+            EditAddressDialog dlg(EditAddressDialog::NewSendingAddress,
+                this);
+            dlg.setModel(addressBook);
+            dlg.setAddress(address);
+            dlg.exec();
+        }
+    }
 }
 
 void TransactionView::showDetails()
