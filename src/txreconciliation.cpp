@@ -128,6 +128,22 @@ struct ReconciliationSet {
         }
     }
 
+    /**
+     * After a reconciliation round passed, transactions missing by our peer are known by short ID.
+     * Look up their full wtxid locally to announce them to the peer.
+     */
+    std::vector<uint256> GetWTXIDsFromShortIDs(const std::vector<uint32_t>& remote_missing_short_ids) const
+    {
+        std::vector<uint256> remote_missing;
+        for (const auto& missing_short_id: remote_missing_short_ids) {
+            const auto local_tx = m_short_id_mapping.find(missing_short_id);
+            if (local_tx != m_short_id_mapping.end()) {
+                remote_missing.push_back(local_tx->second);
+            }
+        }
+        return remote_missing;
+    }
+
     /** This should be called at the end of every reconciliation to avoid unbounded state growth. */
     void Clear() {
         m_wtxids.clear();
