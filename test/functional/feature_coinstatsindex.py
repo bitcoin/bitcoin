@@ -224,5 +224,18 @@ class CoinStatsIndexTest(BitcoinTestFramework):
             })
             self.block_sanity_check(res7['block_info'])
 
+        self.log.info("Test that the index is robust across restarts")
+
+        res8 = index_node.gettxoutsetinfo('muhash')
+        self.restart_node(1, extra_args=self.extra_args[1])
+        res9 = index_node.gettxoutsetinfo('muhash')
+        assert_equal(res8, res9)
+
+        index_node.generate(1)
+        self.wait_until(lambda: not try_rpc(-32603, "Unable to read UTXO set", index_node.gettxoutsetinfo, 'muhash'))
+        res10 = index_node.gettxoutsetinfo('muhash')
+        assert(res8['txouts'] < res10['txouts'])
+
+
 if __name__ == '__main__':
     CoinStatsIndexTest().main()
