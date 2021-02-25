@@ -8,6 +8,8 @@
 #include <net.h>
 #include <util/hasher.h>
 
+#include <node/minisketchwrapper.h>
+
 namespace node {
 /**
  * A floating point coefficient q for estimating reconciliation set difference, and
@@ -15,6 +17,9 @@ namespace node {
  */
 constexpr double Q = 0.25;
 constexpr uint16_t Q_PRECISION{(2 << 14) - 1};
+
+/** The size of the field, used to compute sketches to reconcile transactions (see BIP-330). */
+constexpr unsigned int RECON_FIELD_SIZE = 32;
 
 /** Static salt component used to compute short txids for sketch construction, see BIP-330. */
 const std::string RECON_STATIC_SALT = "Tx Relay Salting";
@@ -100,6 +105,17 @@ public:
      * If a collision is found, sets collision to the wtxid of the conflicting transaction.
     */
     bool HasCollision(const Wtxid& wtxid, Wtxid& collision, uint32_t &short_id);
+
+    /**
+     * Estimate a capacity of a sketch we will send or use locally (to find set difference) based on the local set size.
+     */
+    uint32_t EstimateSketchCapacity(size_t local_set_size) const;
+
+    /**
+     * Reconciliation involves computing a space-efficient representation of transaction identifiers (a sketch).
+     * A sketch has a capacity meaning it allows reconciling at most a certain number of elements (see BIP-330).
+     */
+    Minisketch ComputeSketch(uint32_t& capacity);
 
 private:
     /** These values are used to salt short IDs, which is necessary for transaction reconciliations. */
