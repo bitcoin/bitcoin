@@ -152,3 +152,27 @@ Optional<std::vector<uint8_t>> TxReconciliationTracker::MaybeRespondToReconcilia
     if (sketch) response_skdata = sketch.Serialize();
     return response_skdata;
 }
+
+std::vector<uint256> TxReconciliationTracker::FinalizeIncomingReconciliation(const NodeId peer_id,
+    bool recon_result, const std::vector<uint32_t>& ask_shortids)
+{
+    std::vector<uint256> remote_missing;
+    LOCK(m_states_mutex);
+    auto recon_state = m_states.find(peer_id);
+    if (recon_state == m_states.end()) return remote_missing;
+
+    assert(recon_state->second.IsRequestor());
+    const auto incoming_phase = recon_state->second.GetIncomingPhase();
+    const bool phase_init_responded = incoming_phase == RECON_INIT_RESPONDED;
+
+    if (!phase_init_responded) return remote_missing;
+
+    if (recon_result) {
+        remote_missing = recon_state->second.GetWTXIDsFromShortIDs(ask_shortids);
+    } else {
+        remote_missing = recon_state->second.GetLocalSet();
+    }
+    recon_state->second.FinalizeIncomingReconciliation();
+    recon_state->second.UpdateIncomingPhase(RECON_NONE);
+    return remote_missing;
+}

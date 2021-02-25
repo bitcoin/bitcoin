@@ -167,6 +167,11 @@ class ReconciliationState {
         return short_txid;
     }
 
+    void ClearState()
+    {
+        m_local_short_id_mapping.clear();
+    }
+
 public:
 
     ReconciliationState(bool requestor, bool responder, bool flood_to, uint64_t k0, uint64_t k1) :
@@ -186,6 +191,11 @@ public:
     bool IsResponder() const
     {
         return m_responder;
+    }
+
+    std::vector<uint256> GetLocalSet() const
+    {
+        return std::vector<uint256>(m_local_set.begin(), m_local_set.end());
     }
 
     uint16_t GetLocalSetSize() const
@@ -298,6 +308,26 @@ public:
         }
         return remote_missing;
     }
+
+    /**
+     * TODO document
+     */
+    void FinalizeIncomingReconciliation()
+    {
+        assert(m_requestor);
+        ClearState();
+    }
+
+    /**
+     * TODO document
+     */
+    void FinalizeOutgoingReconciliation(bool clear_local_set, double updated_q)
+    {
+        assert(m_responder);
+        m_local_q = updated_q;
+        if (clear_local_set) m_local_set.clear();
+        ClearState();
+    }
 };
 
 /**
@@ -386,6 +416,12 @@ class TxReconciliationTracker {
      * TODO document
      */
     Optional<std::vector<uint8_t>> MaybeRespondToReconciliationRequest(const NodeId peer_id);
+
+    /**
+     * TODO document
+     */
+    std::vector<uint256> FinalizeIncomingReconciliation(const NodeId peer_id,
+        bool recon_result, const std::vector<uint32_t>& ask_shortids);
 
     Optional<ReconciliationState> GetPeerState(const NodeId peer_id) const
     {
