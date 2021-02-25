@@ -123,6 +123,16 @@ class TxReconciliationTracker {
      */
     void HandleExtensionRequest(NodeId peer_id);
 
+    /**
+     * Step 4. Once we received a signal of reconciliation finalization with a given result from the
+     * initiating peer, announce the following transactions:
+     * - in case of a failure, all transactions we had for that peer
+     * - in case of a success, transactions the peer asked for by short id (ask_shortids)
+     * Return false if the peer seems to violate the protocol.
+     */
+    bool FinalizeInitByThem(NodeId peer_id, bool recon_result,
+        const std::vector<uint32_t>& remote_missing_short_ids, std::vector<uint256>& remote_missing);
+
     // Helpers
 
     /**
