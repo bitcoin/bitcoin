@@ -98,6 +98,25 @@ struct ReconciliationSet {
         return m_wtxids.size();
     }
 
+    /**
+     * When during reconciliation we find a set difference successfully (by combining sketches),
+     * we want to find which transactions are missing on our and on their side.
+     * For those missing on our side, we may only find short IDs.
+     */
+    void GetRelevantIDsFromShortIDs(const std::vector<uint64_t>& diff,
+        // returning values
+        std::vector<uint32_t>& local_missing, std::vector<uint256>& remote_missing) const
+    {
+        for (const auto& diff_short_id: diff) {
+            const auto local_tx = m_short_id_mapping.find(diff_short_id);
+            if (local_tx != m_short_id_mapping.end()) {
+                remote_missing.push_back(local_tx->second);
+            } else {
+                local_missing.push_back(diff_short_id);
+            }
+        }
+    }
+
     /** This should be called at the end of every reconciliation to avoid unbounded state growth. */
     void Clear() {
         m_wtxids.clear();
