@@ -874,4 +874,225 @@ BOOST_AUTO_TEST_CASE(HandleExtensionRequestTest)
     BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/false, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
     BOOST_REQUIRE_EQUAL(tracker.HandleExtensionRequest(peer_id0).value(), ReconciliationError::WRONG_ROLE);
 }
+
+// Test that a peer can only ask for short ids it learned from the sketch we sent
+BOOST_AUTO_TEST_CASE(HandleReconcilDiffBoundsShortIDsTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+    const uint64_t local_salt{2}, remote_salt{1};
+    const TxReconciliationState state{StateForSalts(local_salt, remote_salt)};
+
+    // Get the peer to the phase where it may finalize a round
+    tracker.PreRegisterPeerWithSalt(peer_id0, local_salt);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, remote_salt).has_value());
+    const auto added_txs{AddTxsToReconSet(tracker, peer_id0, 10)};
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, /*peer_recon_set_size=*/10, Q).has_value());
+    std::vector<uint8_t> skdata{};
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata));
+
+    // The sketch we just sent bounds what the peer can possibly have decoded
+    const size_t sketched_capacity{skdata.size() / BYTES_PER_SKETCH_CAPACITY};
+    BOOST_REQUIRE(sketched_capacity > 1);
+
+    // Asking for more short ids than that sketch could have yielded is a protocol violation
+    const std::vector<uint32_t> too_many(sketched_capacity + 1, state.ComputeShortID(added_txs[0]));
+    BOOST_CHECK_EQUAL(std::get<ReconciliationError>(tracker.HandleReconcilDiff(peer_id0, /*recon_result=*/true, too_many)),
+                      ReconciliationError::PROTOCOL_VIOLATION);
+
+    // Within the bound, a repeated short id is only announced once
+    const std::vector<uint32_t> repeated(sketched_capacity, state.ComputeShortID(added_txs[0]));
+    const auto result{std::get<std::vector<Wtxid>>(tracker.HandleReconcilDiff(peer_id0, /*recon_result=*/true, repeated))};
+    BOOST_CHECK_EQUAL(result.size(), 1U);
+    BOOST_CHECK_EQUAL(result[0], added_txs[0]);
+
+    // A peer that reported an empty set is sent no sketch at all, so it cannot have decoded any
+    // short id. Asking for one is a protocol violation.
+    NodeId peer_id1 = 1;
+    tracker.PreRegisterPeerWithSalt(peer_id1, local_salt);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id1, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, remote_salt).has_value());
+    const auto peer1_txs{AddTxsToReconSet(tracker, peer_id1, 10)};
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id1, /*peer_recon_set_size=*/0, Q).has_value());
+    std::vector<uint8_t> empty_skdata{};
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id1, empty_skdata));
+    // Nothing was sketched, so nothing could be decoded
+    BOOST_REQUIRE(empty_skdata.empty());
+    const std::vector<uint32_t> asked{state.ComputeShortID(peer1_txs[0])};
+    BOOST_CHECK_EQUAL(std::get<ReconciliationError>(tracker.HandleReconcilDiff(peer_id1, /*recon_result=*/true, asked)),
+                      ReconciliationError::PROTOCOL_VIOLATION);
+
+    // After an extension we sent a sketch of twice the original capacity, so the peer may ask for
+    // twice as many short ids
+    NodeId peer_id2 = 2;
+    tracker.PreRegisterPeerWithSalt(peer_id2, local_salt);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id2, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, remote_salt).has_value());
+    const auto peer2_txs{AddTxsToReconSet(tracker, peer_id2, 10)};
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id2, /*peer_recon_set_size=*/10, Q).has_value());
+    std::vector<uint8_t> base_skdata{};
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id2, base_skdata));
+    const size_t base_capacity{base_skdata.size() / BYTES_PER_SKETCH_CAPACITY};
+    BOOST_REQUIRE(base_capacity > 0);
+    BOOST_REQUIRE(!tracker.HandleExtensionRequest(peer_id2).has_value());
+    std::vector<uint8_t> ext_skdata{};
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id2, ext_skdata));
+
+    // Beyond the doubled capacity is still a protocol violation
+    const std::vector<uint32_t> beyond_doubled(2 * base_capacity + 1, state.ComputeShortID(peer2_txs[0]));
+    BOOST_CHECK_EQUAL(std::get<ReconciliationError>(tracker.HandleReconcilDiff(peer_id2, /*recon_result=*/true, beyond_doubled)),
+                      ReconciliationError::PROTOCOL_VIOLATION);
+
+    // But more than the original capacity is now allowed
+    const std::vector<uint32_t> over_base(base_capacity + 1, state.ComputeShortID(peer2_txs[0]));
+    BOOST_CHECK(std::holds_alternative<std::vector<Wtxid>>(tracker.HandleReconcilDiff(peer_id2, /*recon_result=*/true, over_base)));
+}
+
+BOOST_AUTO_TEST_CASE(HandleReconcilDiffEmptySketchTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+    const uint64_t local_salt{2}, remote_salt{1};
+
+    // A peer reporting an empty set is sent no sketch at all
+    tracker.PreRegisterPeerWithSalt(peer_id0, local_salt);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, remote_salt).has_value());
+    const auto added_txs{AddTxsToReconSet(tracker, peer_id0, 10)};
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, /*peer_recon_set_size=*/0, Q).has_value());
+    std::vector<uint8_t> skdata{};
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata));
+    BOOST_REQUIRE(skdata.empty());
+
+    // It cannot have decoded anything, so claiming success is a protocol violation
+    const std::vector<uint32_t> none{};
+    BOOST_CHECK_EQUAL(std::get<ReconciliationError>(tracker.HandleReconcilDiff(peer_id0, /*recon_result=*/true, none)),
+                      ReconciliationError::PROTOCOL_VIOLATION);
+
+    // Terminating with a failure is the expected behaviour, and announces everything we held
+    const auto announced{std::get<std::vector<Wtxid>>(tracker.HandleReconcilDiff(peer_id0, /*recon_result=*/false, none))};
+    BOOST_CHECK_EQUAL(announced.size(), added_txs.size());
+}
+
+BOOST_AUTO_TEST_CASE(HandleReconcilDiffBasicFlowTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+
+    std::vector<uint8_t> skdata(BYTES_PER_SKETCH_CAPACITY, 0);
+    std::vector<uint32_t> missing_short_ids{};
+
+    // We cannot respond to partially registered peers
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.HandleReconcilDiff(peer_id0, /*recon_result=*/false, missing_short_ids)), ReconciliationError::NOT_FOUND);
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.HandleReconcilDiff(peer_id0, /*recon_result=*/false, missing_short_ids)), ReconciliationError::NOT_FOUND);
+
+    // Only handle diff if we have: received a recon request and already replied with a sketch
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.HandleReconcilDiff(peer_id0, /*recon_result=*/false, missing_short_ids)), ReconciliationError::WRONG_PHASE);
+    // Handle a diff from the inital request
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, /*peer_recon_set_size*/10, Q).has_value());
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata));
+    BOOST_REQUIRE(std::holds_alternative<std::vector<Wtxid>>(tracker.HandleReconcilDiff(peer_id0, /*recon_result=*/false, missing_short_ids)));
+
+    // Same applies to extensions, we only handle a diff after an extension if we are in the proper phase
+    // (we made the previous diff fail so we don't need to re-register)
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, /*peer_recon_set_size*/10, Q).has_value());
+    std::vector<Wtxid> added_txs = AddTxsToReconSet(tracker, peer_id0, 10);
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata));
+    // Handle a diff from extension. This requires data to be in both sets during the initial request
+    BOOST_REQUIRE(!tracker.HandleExtensionRequest(peer_id0).has_value());
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata));
+    BOOST_REQUIRE(std::holds_alternative<std::vector<Wtxid>>(tracker.HandleReconcilDiff(peer_id0, /*recon_result=*/true, missing_short_ids)));
+
+    // Only handle diffs if they are the initiator (peer is inbound)
+    BOOST_REQUIRE(tracker.ForgetPeer(peer_id0));
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/false, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.HandleReconcilDiff(peer_id0, /*recon_result=*/false, missing_short_ids)), ReconciliationError::WRONG_ROLE);
+
+    // Don't handle a recon diff of a forgotten peer
+    BOOST_REQUIRE(tracker.ForgetPeer(peer_id0));
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.HandleReconcilDiff(peer_id0, /*recon_result=*/false, missing_short_ids)), ReconciliationError::NOT_FOUND);
+}
+
+BOOST_AUTO_TEST_CASE(HandleReconcilDiffTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+    FastRandomContext frc{/*fDeterministic=*/true};
+
+    // We need to fix the salts so we can compute the same short IDs as the node will, in order to test the results
+    uint64_t local_salt = 1;
+    uint64_t remote_salt = 2;
+    const TxReconciliationState state{StateForSalts(local_salt, remote_salt)};
+
+    std::vector<uint8_t> skdata(BYTES_PER_SKETCH_CAPACITY, 0);
+    std::vector<uint32_t> missing_short_ids{};
+
+    tracker.PreRegisterPeerWithSalt(peer_id0, local_salt);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, remote_salt).has_value());
+
+    // Neither our node nor the peer have anything for each other. In this case HandleReconcilDiff will return nothing
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, /*peer_recon_set_size*/0, Q).has_value());
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata));
+    auto result = std::get<std::vector<Wtxid>>(tracker.HandleReconcilDiff(peer_id0, /*recon_result=*/false, missing_short_ids));
+    BOOST_REQUIRE(result.empty());
+
+    // After a successful handling, the phase is reset to NONE, so we won't be allowed to handle twice
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.HandleReconcilDiff(peer_id0, /*recon_result=*/false, missing_short_ids)), ReconciliationError::WRONG_PHASE);
+
+    // If the peer doesn't have anything but we do, we will reply with everything (shortcut)
+    int tx_count = frc.randrange(90) + 10;
+    std::vector<Wtxid> added_txs = AddTxsToReconSet(tracker, peer_id0, tx_count);
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, /*peer_recon_set_size*/0, Q).has_value());
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata));
+    result = std::get<std::vector<Wtxid>>(tracker.HandleReconcilDiff(peer_id0, /*recon_result=*/false, missing_short_ids));
+    BOOST_REQUIRE_EQUAL(result.size(), tx_count);
+
+    // If reconciliation succeeds and the peer requests some transactions by short ID, we will reply with their corresponding wtxids
+    added_txs = AddTxsToReconSet(tracker, peer_id0, tx_count);
+
+    std::vector<Wtxid> peer_missing_wtxid{};
+    std::vector<uint32_t> peer_missing_short_ids{};
+    for (size_t i=0; i < added_txs.size(); i++) {
+        if (i % 2 == 0) {
+            auto short_id = state.ComputeShortID(added_txs[i]);
+            // Make sure there are no collisions
+            if (auto it = std::find(peer_missing_short_ids.begin(), peer_missing_short_ids.end(), short_id); it == peer_missing_short_ids.end()) {
+                peer_missing_short_ids.push_back(short_id);
+                peer_missing_wtxid.push_back(added_txs[i]);
+            }
+        }
+    }
+
+    // Here, recon_result must be true, otherwise we will reply with all known wtxids, as in the previous test.
+    // The peer must also report a non-zero set size, otherwise we would send no sketch at all and it
+    // could not have learned any short id to ask for (same reasoning as the extension case below).
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, /*peer_recon_set_size*/1, Q).has_value());
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata));
+    result = std::get<std::vector<Wtxid>>(tracker.HandleReconcilDiff(peer_id0, /*recon_result=*/true, peer_missing_short_ids));
+    BOOST_REQUIRE(std::is_permutation(result.begin(), result.end(), peer_missing_wtxid.begin(), peer_missing_wtxid.end()));
+
+    // We may also need to handle a reconciliation difference in an extension phase.
+    // For this to work, we need both recon_result being true and the peer needs to have reported a non-zero set size,
+    // otherwise, we would have never created (and snapshotted) an original sketch, and the extension would be rejected
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, /*peer_recon_set_size*/10, Q).has_value());
+
+    // Add a couple of transactions to missing so we have something to compare to
+    added_txs = AddTxsToReconSet(tracker, peer_id0, tx_count);
+    peer_missing_wtxid.clear();
+    peer_missing_short_ids.clear();
+    for (size_t i=0; i<5; i++) { // We know tx_count is at least 10, so half should do
+        auto short_id = state.ComputeShortID(added_txs[i]);
+        // Make sure there are no collisions
+        if (auto it = std::find(peer_missing_short_ids.begin(), peer_missing_short_ids.end(), short_id); it == peer_missing_short_ids.end()) {
+            peer_missing_short_ids.push_back(short_id);
+            peer_missing_wtxid.push_back(added_txs[i]);
+        }
+    }
+
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata));
+    BOOST_REQUIRE(!tracker.HandleExtensionRequest(peer_id0).has_value());
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata));
+    result = std::get<std::vector<Wtxid>>(tracker.HandleReconcilDiff(peer_id0, /*recon_result=*/true, peer_missing_short_ids));
+    BOOST_REQUIRE(std::is_permutation(result.begin(), result.end(), peer_missing_wtxid.begin(), peer_missing_wtxid.end()));
+}
 BOOST_AUTO_TEST_SUITE_END()

@@ -140,6 +140,20 @@ std::pair<std::vector<uint32_t>, std::vector<Wtxid>> TxReconciliationState::GetR
     return std::make_pair(local_missing, remote_missing);
 }
 
+std::vector<Wtxid> TxReconciliationState::GetWtxidsFromShortIDs(const std::vector<uint32_t>& remote_missing_short_ids) const
+{
+    std::vector<Wtxid> remote_missing;
+    // A short id repeated by the peer refers to the same transaction, so only look each one up once.
+    std::set<uint32_t> unique_short_ids{remote_missing_short_ids.begin(), remote_missing_short_ids.end()};
+    for (const auto& missing_short_id : unique_short_ids) {
+        const auto local_tx = m_short_id_mapping_snapshot.find(missing_short_id);
+        if (local_tx != m_short_id_mapping_snapshot.end()) {
+            remote_missing.push_back(local_tx->second);
+        }
+    }
+    return remote_missing;
+}
+
 /** Actual implementation for TxReconciliationTracker's data structure. */
 class TxReconciliationTrackerImpl {
 private:
@@ -656,6 +670,67 @@ public:
         LogDebug(BCLog::TXRECONCILIATION, "Received reconciliation extension request from peer=%d.\n", peer_id);
         return std::nullopt;
     }
+
+    std::variant<std::vector<Wtxid>, ReconciliationError> HandleReconcilDiff(NodeId peer_id, bool recon_result, const std::vector<uint32_t>& remote_missing_short_ids)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+
+        auto peer_state = GetRegisteredPeerState(peer_id);
+        if (!peer_state) return ReconciliationError::NOT_FOUND;
+        if (peer_state->m_we_initiate) return ReconciliationError::WRONG_ROLE;
+
+        // Check that reconciliation is in the right phase.
+        if (peer_state->m_phase != ReconciliationPhase::INIT_RESPONDED &&
+            peer_state->m_phase != ReconciliationPhase::EXT_RESPONDED) return ReconciliationError::WRONG_PHASE;
+
+        if (recon_result && peer_state->m_capacity_snapshot == 0) {
+            // In this case, the peer is supposed to terminate the reconciliation with a failure.
+            LogDebug(BCLog::TXRECONCILIATION, "Peer=%d violated the protocol by claiming a successful reconciliation after we sent an empty sketch.\n", peer_id);
+            return ReconciliationError::PROTOCOL_VIOLATION;
+        }
+
+        // A peer can only ask for short ids it learned by decoding the sketch we sent it, and a
+        // successful decode yields at most as many elements as that sketch had capacity for. We
+        // can bound the number of short ids requested by the peer based on the capacity we used
+        // for the sketch we sent it.
+        const size_t sketched_capacity{peer_state->m_phase == ReconciliationPhase::EXT_RESPONDED ?
+                                           2 * size_t{peer_state->m_capacity_snapshot} :
+                                           size_t{peer_state->m_capacity_snapshot}};
+        if (remote_missing_short_ids.size() > sketched_capacity) {
+            LogDebug(BCLog::TXRECONCILIATION, "Peer=%d violated the protocol by requesting %i short ids, more than the %i our sketch could have yielded.\n",
+                peer_id, remote_missing_short_ids.size(), sketched_capacity);
+            return ReconciliationError::PROTOCOL_VIOLATION;
+        }
+
+        // Note that now matter at which phase this happened, transactions must have been stored in
+        // the snapshot, so we should operate over the snapshot here.
+
+        std::vector<Wtxid> remote_missing;
+        // Identify missing transactions based on the reconciliation result sent by the peer.
+        if (recon_result) {
+            remote_missing = peer_state->GetWtxidsFromShortIDs(remote_missing_short_ids);
+        } else {
+            // Usually, reconciliation fails only after extension, but it also may fail at the initial
+            // phase if one of the sides have no transactions locally. In either case, the transactions
+            // we have for the peer are stored in the snapshot.
+            remote_missing = peer_state->GetAllTransactions(/*from_snapshot=*/true);
+        }
+
+        // Filter out transactions received from the peer while reconciling.
+        std::erase_if(remote_missing, [peer_state](const auto& x) {
+            return peer_state->m_announced_while_reconciling.contains(x);
+        });
+
+        // Update local reconciliation state for the peer.
+        peer_state->Clear();
+
+        LogDebug(BCLog::TXRECONCILIATION, "Finalizing reconciliation init by peer=%d with result=%i, announcing %i txs (requested by shortID).\n",
+            peer_id, recon_result, remote_missing.size());
+
+        return remote_missing;
+    }
 };
 
 TxReconciliationTracker::TxReconciliationTracker(uint32_t recon_version) : m_impl{std::make_unique<TxReconciliationTrackerImpl>(recon_version)} {}
@@ -726,5 +801,10 @@ std::variant<HandleSketchResult, ReconciliationError> TxReconciliationTracker::H
 std::optional<ReconciliationError> TxReconciliationTracker::HandleExtensionRequest(NodeId peer_id)
 {
     return m_impl->HandleExtensionRequest(peer_id);
+}
+
+std::variant<std::vector<Wtxid>, ReconciliationError> TxReconciliationTracker::HandleReconcilDiff(NodeId peer_id, bool recon_result, const std::vector<uint32_t>& remote_missing_short_ids)
+{
+    return m_impl->HandleReconcilDiff(peer_id, recon_result, remote_missing_short_ids);
 }
 } // namespace node
