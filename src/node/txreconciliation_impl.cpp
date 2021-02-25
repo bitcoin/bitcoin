@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <logging.h>
+#include <node/minisketchwrapper.h>
 #include <node/txreconciliation.h>
 #include <node/txreconciliation_impl.h>
 
@@ -32,6 +33,34 @@ bool TxReconciliationState::HasCollision(const Wtxid& wtxid, Wtxid& collision, u
     }
 
     return false;
+}
+
+uint32_t TxReconciliationState::EstimateSketchCapacity(size_t local_set_size) const
+{
+    const auto set_size_diff = static_cast<uint16_t>(std::abs(int(local_set_size) - int(m_remote_set_size)));
+    const uint16_t min_size = std::min(uint16_t(local_set_size), m_remote_set_size);
+    // Round up to match the bias the sender applied to q (check BIP-330) and to err on the side of a larger sketch
+    // (an under-estimate forces an extension round-trip).
+    const auto weighted_min_size = static_cast<uint32_t>(std::ceil(m_remote_q * min_size));
+    const uint32_t estimated_diff = 1 + weighted_min_size + set_size_diff;
+    return minisketch_compute_capacity(RECON_FIELD_SIZE, estimated_diff, RECON_FALSE_POSITIVE_COEF);
+}
+
+Minisketch TxReconciliationState::ComputeSketch(uint32_t& capacity)
+{
+    // Avoid serializing/sending an empty sketch.
+    Assume(capacity > 0);
+
+    capacity = std::min(capacity, MAX_SKETCH_CAPACITY);
+    Minisketch sketch = node::MakeMinisketch32(capacity);
+
+    for (const auto& wtxid : m_local_set) {
+        uint32_t short_txid = ComputeShortID(wtxid);
+        sketch.Add(short_txid);
+        m_short_id_mapping.emplace(short_txid, wtxid);
+    }
+
+    return sketch;
 }
 
 /** Actual implementation for TxReconciliationTracker's data structure. */
