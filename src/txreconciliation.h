@@ -490,6 +490,13 @@ class TxReconciliationTracker {
     Optional<std::tuple<bool, bool, std::vector<uint32_t>, std::vector<uint256>>> HandleSketch(
         const NodeId peer_id, int common_version, std::vector<uint8_t>& skdata);
 
+    /**
+     * Peer requesting extension after initial reconciliation failed on their side.
+     * No privacy leak can happen here because sketch extension is constructed over the snapshot.
+     */
+    void HandleIncomingExtensionRequest(const NodeId peer_id);
+
+
     Optional<ReconciliationState> GetPeerState(const NodeId peer_id) const
     {
         // This does not compile if this function is marked const. Not sure how to fix this.

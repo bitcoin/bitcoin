@@ -275,3 +275,12 @@ Optional<std::tuple<bool, bool, std::vector<uint32_t>, std::vector<uint256>>> Tx
         return std::make_tuple(false, false, std::vector<uint32_t>(), std::vector<uint256>());
     }
 }
+
+void TxReconciliationTracker::HandleIncomingExtensionRequest(const NodeId peer_id)
+{
+    LOCK(m_states_mutex);
+    auto recon_state = m_states.find(peer_id);
+    if (recon_state == m_states.end()) return;
+    if (recon_state->second.GetIncomingPhase() != RECON_INIT_RESPONDED) return;
+    recon_state->second.UpdateIncomingPhase(RECON_EXT_REQUESTED);
+}
