@@ -58,6 +58,7 @@ enum ReconciliationPhase {
     RECON_NONE,
     RECON_INIT_REQUESTED,
     RECON_INIT_RESPONDED,
+    RECON_EXT_REQUESTED,
 };
 
 /**
@@ -132,6 +133,22 @@ class ReconciliationState {
     std::set<uint256> m_local_set;
 
     /**
+     * A reconciliation round may involve an extension, which is an extra exchange of messages.
+     * Since it may happen after a delay (at least network latency), new transactions may come
+     * during that time. To avoid mixing old and new transactions, those which are subject for
+     * extension of a current reconciliation round are moved to a reconciliation set snapshot
+     * after an initial (non-extended) sketch is sent.
+     * New transactions are kept in the regular reconciliation set.
+     */
+    std::set<uint256> m_local_set_snapshot;
+
+    /**
+     * A reconciliation round may involve an extension, in which case we should remember
+     * a capacity of the sketch sent out initially, so that a sketch extension is of the same size.
+     */
+    uint16_t m_capacity_snapshot{0};
+
+    /**
      * Reconciliation sketches are computed over short transaction IDs.
      * This is a cache of these IDs enabling faster lookups of full wtxids,
      * useful when peer will ask for missing transactions by short IDs
@@ -145,6 +162,13 @@ class ReconciliationState {
      * we respond to that request with a sketch.
      */
     uint16_t m_remote_set_size;
+
+    /**
+     * In a reconciliation round initiated by us, if we asked for an extension, we want to store
+     * the sketch computed/transmitted in the initial step, so that we can use it when
+     * sketch extension arrives.
+     */
+    std::vector<uint8_t> m_remote_sketch_snapshot;
 
     /**
      * When a reconciliation request is received, instead of responding to it right away,
@@ -170,6 +194,8 @@ class ReconciliationState {
     void ClearState()
     {
         m_local_short_id_mapping.clear();
+        // This is currently belt-and-suspenders, as the code should work even without these calls.
+        m_remote_sketch_snapshot.clear();
     }
 
 public:
@@ -348,6 +374,18 @@ public:
         }
         return std::make_pair(local_missing, remote_missing);
     }
+
+    /**
+     * TODO document
+     */
+    void PrepareForExtensionResponse(uint16_t sketch_capacity, const std::vector<uint8_t>& remote_sketch)
+    {
+        assert(m_responder);
+        m_capacity_snapshot = sketch_capacity;
+        m_remote_sketch_snapshot = remote_sketch;
+        m_local_set_snapshot = m_local_set;
+        m_local_set.clear();
+    }
 };
 
 /**
@@ -449,7 +487,7 @@ class TxReconciliationTracker {
      * different connections (requires attacker to occupy multiple outgoing connections).
      * Returns a response we should send to the peer, and the transactions we should announce.
      */
-    Optional<std::tuple<bool, std::vector<uint32_t>, std::vector<uint256>>> HandleSketch(
+    Optional<std::tuple<bool, bool, std::vector<uint32_t>, std::vector<uint256>>> HandleSketch(
         const NodeId peer_id, int common_version, std::vector<uint8_t>& skdata);
 
     Optional<ReconciliationState> GetPeerState(const NodeId peer_id) const

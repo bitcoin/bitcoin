@@ -214,7 +214,7 @@ std::vector<uint256> TxReconciliationTracker::FinalizeIncomingReconciliation(con
     return remote_missing;
 }
 
-Optional<std::tuple<bool, std::vector<uint32_t>, std::vector<uint256>>> TxReconciliationTracker::HandleSketch(
+Optional<std::tuple<bool, bool, std::vector<uint32_t>, std::vector<uint256>>> TxReconciliationTracker::HandleSketch(
     const NodeId peer_id, int common_version, std::vector<uint8_t>& skdata)
 {
     if (skdata.size() / BYTES_PER_SKETCH_CAPACITY > MAX_SKETCH_CAPACITY) {
@@ -248,7 +248,7 @@ Optional<std::tuple<bool, std::vector<uint32_t>, std::vector<uint256>>> TxReconc
         std::vector<uint256> remote_missing = recon_state->second.GetLocalSet();
         recon_state->second.FinalizeOutgoingReconciliation(true, DEFAULT_RECON_Q);
         recon_state->second.UpdateOutgoingPhase(RECON_NONE);
-        return std::make_tuple(false, std::vector<uint32_t>(), remote_missing);
+        return std::make_tuple(true, false, std::vector<uint32_t>(), remote_missing);
     }
 
     assert(remote_sketch);
@@ -265,10 +265,13 @@ Optional<std::tuple<bool, std::vector<uint32_t>, std::vector<uint256>>> TxReconc
         size_t local_set_size = recon_state->second.GetLocalSetSize();
         recon_state->second.FinalizeOutgoingReconciliation(true, RecomputeQ(local_set_size, local_missing.size(), remote_missing.size()));
         recon_state->second.UpdateOutgoingPhase(RECON_NONE);
-        return std::make_tuple(true, local_missing, remote_missing);
+        return std::make_tuple(true, true, local_missing, remote_missing);
     } else {
-        // Reconciliation over the current working sketch failed.
-        // TODO handle failure.
-        return nullopt;
+        // Initial reconciliation failed.
+        // Store the received sketch and the local sketch, request extension.
+        LogPrint(BCLog::NET, "Outgoing reconciliation initially failed, requesting extension sketch\n");
+        recon_state->second.UpdateOutgoingPhase(RECON_EXT_REQUESTED);
+        recon_state->second.PrepareForExtensionResponse(remote_sketch_capacity, skdata);
+        return std::make_tuple(false, false, std::vector<uint32_t>(), std::vector<uint256>());
     }
 }
