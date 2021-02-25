@@ -186,6 +186,7 @@ Optional<std::vector<uint8_t>> TxReconciliationTracker::MaybeRespondToReconcilia
     uint16_t sketch_capacity = recon_state->second.EstimateSketchCapacity();
     Minisketch sketch = recon_state->second.ComputeSketch(sketch_capacity);
     recon_state->second.UpdateIncomingPhase(RECON_INIT_RESPONDED);
+    recon_state->second.PrepareForExtensionRequest(sketch_capacity);
     if (sketch) response_skdata = sketch.Serialize();
     return response_skdata;
 }
