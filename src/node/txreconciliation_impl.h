@@ -14,6 +14,21 @@ class TxReconciliationTrackerImpl;
 static constexpr uint32_t TXRECONCILIATION_VERSION{1};
 
 /**
+ * Limit sketch capacity to avoid DoS. This applies only to the original sketches,
+ * and implies that extended sketches could be at most twice the size.
+ */
+constexpr uint32_t MAX_SKETCH_CAPACITY = 2 << 12;
+
+/**
+ * It is possible that if sketch encodes more elements than the capacity, or
+ * if it is constructed of random bytes, sketch decoding may "succeed",
+ * but the result will be nonsense (false-positive decoding).
+ * Given this coef, a false positive probability will be of 1 in 2**coef.
+ */
+constexpr unsigned int RECON_FALSE_POSITIVE_COEF = 16;
+static_assert(RECON_FALSE_POSITIVE_COEF <= 256, "Reducing reconciliation false positives beyond 1 in 2**256 is not supported");
+
+/**
  * Maximum number of wtxids stored in a peer local set, bounded to protect the memory use of
  * reconciliation sets and short ids mappings, and CPU used for sketch computation.
  */
