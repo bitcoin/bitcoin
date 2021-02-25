@@ -7,6 +7,7 @@
 
 #include <crypto/siphash.h>
 #include <hash.h>
+#include <minisketch.h>
 #include <primitives/transaction_identifier.h>
 #include <uint256.h>
 #include <util/hasher.h>
@@ -28,6 +29,9 @@ namespace node {
  */
 inline constexpr double Q = 0.25;
 inline constexpr uint16_t Q_PRECISION{(2 << 14) - 1};
+
+/** The size of the field, used to compute sketches to reconcile transactions (see BIP-330). */
+inline constexpr unsigned int RECON_FIELD_SIZE = 32;
 
 /** Static salt component used to compute short txids for sketch construction, see BIP-330. */
 inline const std::string RECON_STATIC_SALT = "Tx Relay Salting";
@@ -113,6 +117,17 @@ public:
      * If a collision is found, sets collision to the wtxid of the conflicting transaction.
     */
     bool HasCollision(const Wtxid& wtxid, Wtxid& collision, uint32_t &short_id);
+
+    /**
+     * Estimate a capacity of a sketch we will send or use locally (to find set difference) based on the local set size.
+     */
+    uint32_t EstimateSketchCapacity(size_t local_set_size) const;
+
+    /**
+     * Reconciliation involves computing a space-efficient representation of transaction identifiers (a sketch).
+     * A sketch has a capacity meaning it allows reconciling at most a certain number of elements (see BIP-330).
+     */
+    Minisketch ComputeSketch(uint32_t& capacity);
 
 private:
     /** Hasher used to compute salted short IDs, which are necessary for transaction reconciliations. */
