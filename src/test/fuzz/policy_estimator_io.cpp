@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,7 +12,7 @@
 
 void initialize_policy_estimator_io()
 {
-    static const auto testing_setup = MakeFuzzingContext<>();
+    static const auto testing_setup = MakeNoLogFileContext<>();
 }
 
 FUZZ_TARGET_INIT(policy_estimator_io, initialize_policy_estimator_io)

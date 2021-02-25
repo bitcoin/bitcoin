@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,7 +13,7 @@
 
 void initialize_data_stream_addr_man()
 {
-    static const auto testing_setup = MakeFuzzingContext<>();
+    static const auto testing_setup = MakeNoLogFileContext<>();
 }
 
 FUZZ_TARGET_INIT(data_stream_addr_man, initialize_data_stream_addr_man)

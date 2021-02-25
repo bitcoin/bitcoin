@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020-2021 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -22,7 +22,7 @@
 
 void initialize_net()
 {
-    static const auto testing_setup = MakeFuzzingContext<>(CBaseChainParams::MAIN);
+    static const auto testing_setup = MakeNoLogFileContext<>(CBaseChainParams::MAIN);
 }
 
 FUZZ_TARGET_INIT(net, initialize_net)
