@@ -63,6 +63,26 @@ Minisketch TxReconciliationState::ComputeSketch(uint32_t& capacity)
     return sketch;
 }
 
+std::pair<std::vector<uint32_t>, std::vector<Wtxid>> TxReconciliationState::GetRelevantIDsFromShortIDs(const std::vector<uint64_t>& diff) const
+{
+    std::vector<Wtxid> remote_missing{};
+    std::vector<uint32_t> local_missing{};
+    // diff elements are 64-bit since Minisketch::Decode works with 64-bit elements, no matter what the field element size is.
+    // In our case, elements are always 32-bit long, so we can safely cast them down.
+    for (const auto& diff_short_id : diff) {
+        // Make sure we are within the 32-bit range.
+        Assume(diff_short_id <= std::numeric_limits<uint32_t>::max());
+        const auto local_tx = m_short_id_mapping.find(diff_short_id);
+        if (local_tx != m_short_id_mapping.end()) {
+            remote_missing.push_back(local_tx->second);
+        } else {
+            local_missing.push_back(diff_short_id);
+        }
+    }
+
+    return std::make_pair(local_missing, remote_missing);
+}
+
 /** Actual implementation for TxReconciliationTracker's data structure. */
 class TxReconciliationTrackerImpl {
 private:
