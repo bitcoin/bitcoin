@@ -32,6 +32,15 @@ class MiniWallet:
         self._address = ADDRESS_BCRT1_P2WSH_OP_TRUE
         self._scriptPubKey = hex_str_to_bytes(self._test_node.validateaddress(self._address)['scriptPubKey'])
 
+    def scan_blocks(self, *, start=1, num):
+        """Scan the blocks for self._address outputs and add them to self._utxos"""
+        for i in range(start, start + num):
+            block = self._test_node.getblock(blockhash=self._test_node.getblockhash(i), verbosity=2)
+            for tx in block['tx']:
+                for out in tx['vout']:
+                    if out['scriptPubKey']['hex'] == self._scriptPubKey.hex():
+                        self._utxos.append({'txid': tx['txid'], 'vout': out['n'], 'value': out['value']})
+
     def generate(self, num_blocks):
         """Generate blocks with coinbase outputs to the internal address, and append the outputs to the internal list"""
         blocks = self._test_node.generatetoaddress(num_blocks, self._address)
