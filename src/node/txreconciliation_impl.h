@@ -221,6 +221,17 @@ public:
                       std::vector<uint32_t>& txs_to_request, std::vector<Wtxid>& txs_to_announce, std::optional<bool>& result);
 
     /**
+     * Step 4. Once we received a signal of reconciliation finalization with a given result from the
+     * initiating peer, announce the following transactions:
+     * - in case of a failure, all transactions we had for that peer
+     * - in case of a success, transactions the peer asked for by short id (ask_shortids)
+     * Return false if the peer seems to violate the protocol.
+     */
+    bool FinalizeInitByThem(NodeId peer_id, bool recon_result, const std::vector<uint32_t>& remote_missing_short_ids,
+                            // returning values
+                            std::vector<Wtxid>& remote_missing);
+
+    /**
      * Step 5. Peer requesting extension after reconciliation they initiated failed on their side:
      * the sketch we sent to them was not sufficient to find the difference.
      * No privacy leak can happen here because sketch extension is constructed over the snapshot.

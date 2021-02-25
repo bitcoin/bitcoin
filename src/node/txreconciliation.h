@@ -204,6 +204,12 @@ public:
                                     // returning values
                                     std::vector<uint32_t>& local_missing, std::vector<Wtxid>& remote_missing) const;
 
+    /**
+     * After a reconciliation round passed, transactions missing by our peer are known by short ID.
+     * Look up their full wtxid locally to announce them to the peer.
+     */
+    std::vector<Wtxid> GetWtxidsFromShortIDs(const std::vector<uint32_t>& remote_missing_short_ids) const;
+
 private:
     /** These values are used to salt short IDs, which is necessary for transaction reconciliations. */
     uint64_t m_k0, m_k1;
