@@ -5,12 +5,31 @@
 #ifndef BITCOIN_TXRECONCILIATION_H
 #define BITCOIN_TXRECONCILIATION_H
 
+#include <minisketch/include/minisketch.h>
 #include <net.h>
 #include <sync.h>
 
 #include <tuple>
 #include <unordered_map>
 
+/** The size of the field, used to compute sketches to reconcile transactions (see BIP-330). */
+static constexpr unsigned int RECON_FIELD_SIZE = 32;
+/**
+ * Allows to infer capacity of a reconciliation sketch based on it's char[] representation,
+ * which is necessary to deserealize a received sketch.
+ */
+static constexpr unsigned int BYTES_PER_SKETCH_CAPACITY = RECON_FIELD_SIZE / 8;
+/** Limit sketch capacity to avoid DoS. */
+static constexpr uint16_t MAX_SKETCH_CAPACITY = 2 << 12;
+/**
+* It is possible that if sketch encodes more elements than the capacity, or
+* if it is constructed of random bytes, sketch decoding may "succeed",
+* but the result will be nonsense (false-positive decoding).
+* Given this coef, a false positive probability will be of 1 in 2**coef.
+*/
+static constexpr unsigned int RECON_FALSE_POSITIVE_COEF = 16;
+static_assert(RECON_FALSE_POSITIVE_COEF <= 256,
+    "Reducing reconciliation false positives beyond 1 in 2**256 is not supported");
 /** Default coefficient used to estimate set difference for tx reconciliation. */
 static constexpr double DEFAULT_RECON_Q = 0.02;
 /** Used to convert a floating point reconciliation coefficient q to an int for transmission.
@@ -112,6 +131,14 @@ class ReconciliationState {
     std::set<uint256> m_local_set;
 
     /**
+     * Reconciliation sketches are computed over short transaction IDs.
+     * This is a cache of these IDs enabling faster lookups of full wtxids,
+     * useful when peer will ask for missing transactions by short IDs
+     * at the end of a reconciliation round.
+     */
+    std::map<uint32_t, uint256> m_local_short_id_mapping;
+
+    /**
      * A reconciliation request comes from a peer with a reconciliation set size from their side,
      * which is supposed to help us to estimate set difference size. The value is stored here until
      * we respond to that request with a sketch.
@@ -207,6 +234,47 @@ public:
         m_remote_q = remote_q;
         m_remote_set_size = remote_set_size;
         m_next_recon_respond = next_respond;
+    }
+
+    /**
+     * Estimate a capacity of a sketch we will send or use locally (to find set difference)
+     * based on the local set size.
+     */
+    uint16_t EstimateSketchCapacity() const
+    {
+        const uint16_t set_size_diff = std::abs(uint16_t(m_local_set.size()) - m_remote_set_size);
+        const uint16_t min_size = std::min(uint16_t(m_local_set.size()), m_remote_set_size);
+        const uint16_t weighted_min_size = m_remote_q * min_size;
+        const uint16_t estimated_diff = 1 + weighted_min_size + set_size_diff;
+        return minisketch_compute_capacity(RECON_FIELD_SIZE, estimated_diff, RECON_FALSE_POSITIVE_COEF);
+    }
+
+    /**
+     * Reconciliation involves computing a space-efficient representation of transaction identifiers
+     * (a sketch). A sketch has a capacity meaning it allows reconciling at most a certain number
+     * of elements (see BIP-330).
+     */
+    Minisketch ComputeSketch(uint16_t capacity)
+    {
+        Minisketch sketch;
+        // Avoid serializing/sending an empty sketch.
+        if (m_local_set.size() == 0 || capacity == 0) return sketch;
+
+        std::vector<uint32_t> short_ids;
+        for (const auto& wtxid: m_local_set) {
+            uint32_t short_txid = ComputeShortID(wtxid);
+            short_ids.push_back(short_txid);
+            m_local_short_id_mapping.emplace(short_txid, wtxid);
+        }
+
+        capacity = std::min(capacity, MAX_SKETCH_CAPACITY);
+        sketch = Minisketch(RECON_FIELD_SIZE, 0, capacity);
+        if (sketch) {
+            for (const uint32_t short_id: short_ids) {
+                sketch.Add(short_id);
+            }
+        }
+        return sketch;
     }
 };
 

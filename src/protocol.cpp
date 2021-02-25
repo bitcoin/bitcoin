@@ -45,7 +45,7 @@ const char *GETCFCHECKPT="getcfcheckpt";
 const char *CFCHECKPT="cfcheckpt";
 const char *WTXIDRELAY="wtxidrelay";
 const char *SENDRECON="sendrecon";
- const char *REQRECON="reqrecon";
+const char *REQRECON="reqrecon";
 } // namespace NetMsgType
 
 /** All known message types. Keep this in the same order as the list of
