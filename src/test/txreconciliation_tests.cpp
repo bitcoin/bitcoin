@@ -168,8 +168,7 @@ BOOST_AUTO_TEST_CASE(AddToSetCollisionTest)
 // Also tests AddToPeerQueue
 BOOST_AUTO_TEST_CASE(IsPeerNextToReconcileWith)
 {
-    CSipHasher hasher(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL);
-    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION, hasher);
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
     NodeId peer_id0 = 0;
 
     BOOST_CHECK(!tracker.IsPeerNextToReconcileWith(peer_id0, std::chrono::seconds{1}));
@@ -226,8 +225,7 @@ BOOST_AUTO_TEST_CASE(IsPeerNextToReconcileWith)
 
 BOOST_AUTO_TEST_CASE(InitiateReconciliationRequest)
 {
-    CSipHasher hasher(0x0706050403020100ULL, 0x0F0E0D0C0B0A0908ULL);
-    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION, hasher);
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
     NodeId peer_id0 = 0;
     FastRandomContext frc{/*fDeterministic=*/true};
 
