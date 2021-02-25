@@ -72,6 +72,11 @@ class TxReconciliationState
 {
 public:
     /**
+     * These values are used to salt short IDs, which is necessary for transaction reconciliations.
+     */
+    uint64_t m_k0, m_k1;
+
+    /**
      * TODO: This field is public to ignore -Wunused-private-field. Make private once used in
      * the following commits.
      *
@@ -81,14 +86,6 @@ public:
      *
      */
     bool m_we_initiate;
-
-    /**
-     * TODO: These fields are public to ignore -Wunused-private-field. Make private once used in
-     * the following commits.
-     *
-     * These values are used to salt short IDs, which is necessary for transaction reconciliations.
-     */
-    uint64_t m_k0, m_k1;
 
     /**
      * Store all wtxids which we would announce to the peer (policy checks passed, etc.)
@@ -101,7 +98,18 @@ public:
     /** Keep track of the reconciliation phase with the peer. */
     Phase m_phase{Phase::NONE};
 
-    TxReconciliationState(bool we_initiate, uint64_t k0, uint64_t k1) : m_we_initiate(we_initiate), m_k0(k0), m_k1(k1) {}
+    TxReconciliationState(bool we_initiate, uint64_t k0, uint64_t k1) : m_k0(k0), m_k1(k1), m_we_initiate(we_initiate) {}
+
+    /**
+     * Reconciliation sketches are computed over short transaction IDs.
+     * Short IDs are salted with a link-specific constant value.
+     */
+    uint32_t ComputeShortID(const uint256 wtxid) const
+    {
+        const uint64_t s = SipHashUint256(m_k0, m_k1, wtxid);
+        const uint32_t short_txid = 1 + (s & 0xFFFFFFFF);
+        return short_txid;
+    }
 
     /**
      * The following fields are specific to only reconciliations initiated by the peer.
