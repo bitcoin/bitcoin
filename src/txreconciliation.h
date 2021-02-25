@@ -57,6 +57,7 @@ static constexpr std::chrono::microseconds RECON_RESPONSE_INTERVAL{2s};
 enum ReconciliationPhase {
     RECON_NONE,
     RECON_INIT_REQUESTED,
+    RECON_INIT_RESPONDED,
 };
 
 /**
@@ -205,6 +206,11 @@ public:
     ReconciliationPhase GetOutgoingPhase() const
     {
         return m_outgoing_recon;
+    }
+
+    std::chrono::microseconds GetNextRespond() const
+    {
+        return m_next_recon_respond;
     }
 
     void AddToReconSet(const std::vector<uint256>& txs_to_reconcile)
@@ -359,6 +365,11 @@ class TxReconciliationTracker {
      * initial reconciliation responses will be done at the same time to prevent privacy leaks.
      */
     void HandleReconciliationRequest(const NodeId peer_id, uint16_t peer_recon_set_size, uint16_t peer_q);
+
+    /**
+     * TODO document
+     */
+    Optional<std::vector<uint8_t>> MaybeRespondToReconciliationRequest(const NodeId peer_id);
 
     Optional<ReconciliationState> GetPeerState(const NodeId peer_id) const
     {

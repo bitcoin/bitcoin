@@ -125,3 +125,30 @@ void TxReconciliationTracker::HandleReconciliationRequest(const NodeId peer_id, 
     recon_state->second.PrepareIncoming(peer_recon_set_size, peer_q_converted, NextReconRespond());
     recon_state->second.UpdateIncomingPhase(RECON_INIT_REQUESTED);
 }
+
+Optional<std::vector<uint8_t>> TxReconciliationTracker::MaybeRespondToReconciliationRequest(const NodeId peer_id)
+{
+    LOCK(m_states_mutex);
+    auto recon_state = m_states.find(peer_id);
+    if (recon_state == m_states.end()) return nullopt;
+    if (!recon_state->second.IsRequestor()) return nullopt;
+    // Respond to a requested reconciliation to enable efficient transaction exchange.
+    // For initial requests, respond only periodically to a) limit CPU usage for sketch computation,
+    // and, b) limit transaction possession privacy leak.
+    // It's safe to respond to extension request without a delay because they are already limited by initial requests.
+
+    auto current_time = GetTime<std::chrono::microseconds>();
+
+    auto incoming_phase = recon_state->second.GetIncomingPhase();
+    bool timely_initial_request = incoming_phase == RECON_INIT_REQUESTED && current_time > recon_state->second.GetNextRespond();
+    if (!timely_initial_request) {
+        return nullopt;
+    }
+
+    std::vector<unsigned char> response_skdata;
+    uint16_t sketch_capacity = recon_state->second.EstimateSketchCapacity();
+    Minisketch sketch = recon_state->second.ComputeSketch(sketch_capacity);
+    recon_state->second.UpdateIncomingPhase(RECON_INIT_RESPONDED);
+    if (sketch) response_skdata = sketch.Serialize();
+    return response_skdata;
+}

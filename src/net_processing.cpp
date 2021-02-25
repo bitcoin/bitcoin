@@ -4962,6 +4962,16 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             }
         }
 
+        //
+        // Message: reconciliation response
+        //
+        {
+            auto response_skdata = m_reconciliation.MaybeRespondToReconciliationRequest(pto->GetId());
+            if (response_skdata) {
+                m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::SKETCH, *response_skdata));
+            }
+        }
+
         // Detect whether we're stalling
         current_time = GetTime<std::chrono::microseconds>();
         if (state.nStallingSince && state.nStallingSince < count_microseconds(current_time) - 1000000 * BLOCK_STALLING_TIMEOUT) {
