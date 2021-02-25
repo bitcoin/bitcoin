@@ -13,9 +13,10 @@ from test_framework.messages import (
     tx_from_hex,
 )
 
+
 class TxnMallTest(BitcoinTestFramework):
     def set_test_params(self):
-        self.num_nodes = 4
+        self.num_nodes = 3
         self.supports_cli = False
 
     def skip_test_if_missing_module(self):
@@ -33,9 +34,8 @@ class TxnMallTest(BitcoinTestFramework):
     def run_test(self):
         # All nodes should start with 12,500 DASH:
         starting_balance = 12500
-        for i in range(4):
+        for i in range(3):
             assert_equal(self.nodes[i].getbalance(), starting_balance)
-            self.nodes[i].getnewaddress()  # bug workaround, coins generated assigned to first getnewaddress!
 
         self.nodes[0].settxfee(.001)
 
@@ -128,6 +128,7 @@ class TxnMallTest(BitcoinTestFramework):
         if (self.options.mine_block):
             expected -= 500
         assert_equal(self.nodes[0].getbalance(), expected)
+
 
 if __name__ == '__main__':
     TxnMallTest().main()
