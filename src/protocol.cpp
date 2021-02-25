@@ -48,7 +48,7 @@ const char* CFCHECKPT = "cfcheckpt";
 const char* WTXIDRELAY = "wtxidrelay";
 const char* SENDTXRCNCL = "sendtxrcncl";
 const char* REQTXRCNCL = "reqtxrcncl";
-const char *SKETCH="sketch";
+const char* SKETCH="sketch";
 } // namespace NetMsgType
 
 /** All known message types. Keep this in the same order as the list of

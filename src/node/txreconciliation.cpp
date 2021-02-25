@@ -122,7 +122,6 @@ public:
      */
     std::map<uint32_t, uint256> m_short_id_mapping;
 
-
     /** Keep track of the reconciliation phase with the peer. */
     Phase m_phase{Phase::NONE};
 
@@ -173,6 +172,25 @@ public:
         }
 
         return sketch;
+    }
+
+    /**
+     * When during reconciliation we find a set difference successfully (by combining sketches),
+     * we want to find which transactions are missing on our and on their side.
+     * For those missing on our side, we may only find short IDs.
+     */
+    void GetRelevantIDsFromShortIDs(const std::vector<uint64_t>& diff,
+        // returning values
+        std::vector<uint32_t>& local_missing, std::vector<uint256>& remote_missing) const
+    {
+        for (const auto& diff_short_id: diff) {
+            const auto local_tx = m_short_id_mapping.find(diff_short_id);
+            if (local_tx != m_short_id_mapping.end()) {
+                remote_missing.push_back(local_tx->second);
+            } else {
+                local_missing.push_back(diff_short_id);
+            }
+        }
     }
 
     /**
@@ -417,7 +435,8 @@ public:
         recon_state.m_phase = Phase::INIT_REQUESTED;
 
         LogPrint(BCLog::NET, "Reconciliation initiated by peer=%d with the following params: " /* Continued */
-            "remote_q=%d, remote_set_size=%i.\n", peer_id, peer_q_converted, peer_recon_set_size);
+                             "remote_q=%d, remote_set_size=%i.\n",
+                 peer_id, peer_q_converted, peer_recon_set_size);
     }
 
     bool RespondToReconciliationRequest(NodeId peer_id, std::vector<uint8_t>& skdata) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
@@ -433,7 +452,7 @@ public:
         // For initial requests we have an extra check to avoid short intervals between responses
         // to the same peer (see comments in the check function for justification).
         bool respond_to_initial_request = incoming_phase == Phase::INIT_REQUESTED &&
-            recon_state.ConsiderInitResponseAndTrack();
+                                          recon_state.ConsiderInitResponseAndTrack();
         if (!respond_to_initial_request) {
             return false;
         }
