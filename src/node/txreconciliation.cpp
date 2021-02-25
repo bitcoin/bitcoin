@@ -197,6 +197,25 @@ public:
         return sketch;
     }
 
+    /**
+     * When during reconciliation we find a set difference successfully (by combining sketches),
+     * we want to find which transactions are missing on our and on their side.
+     * For those missing on our side, we may only find short IDs.
+     */
+    void GetRelevantIDsFromShortIDs(const std::vector<uint64_t>& diff,
+        // returning values
+        std::vector<uint32_t>& local_missing, std::vector<uint256>& remote_missing) const
+    {
+        for (const auto& diff_short_id: diff) {
+            const auto local_tx = m_short_id_mapping.find(diff_short_id);
+            if (local_tx != m_short_id_mapping.end()) {
+                remote_missing.push_back(local_tx->second);
+            } else {
+                local_missing.push_back(diff_short_id);
+            }
+        }
+    }
+
 private:
     /**
      * These values are used to salt short IDs, which is necessary for transaction reconciliations.
@@ -507,7 +526,7 @@ public:
         // For initial requests we have an extra check to avoid short intervals between responses
         // to the same peer (see comments in the check function for justification).
         bool respond_to_initial_request = incoming_phase == Phase::INIT_REQUESTED &&
-            recon_state.ConsiderInitResponseAndTrack();
+                                          recon_state.ConsiderInitResponseAndTrack();
         if (!respond_to_initial_request) {
             return false;
         }
@@ -530,8 +549,9 @@ public:
 
         recon_state.m_phase = Phase::INIT_RESPONDED;
 
-        LogPrint(BCLog::NET, "Responding with a sketch to reconciliation initiated by peer=%d: " /* Continued */
-            "sending sketch of capacity=%i.\n", peer_id, sketch_capacity);
+        LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Responding with a sketch to reconciliation initiated by peer=%d: " /* Continued */
+                                                                    "sending sketch of capacity=%i.\n",
+            peer_id, sketch_capacity);
 
         return true;
     }
