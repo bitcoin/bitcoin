@@ -223,6 +223,15 @@ public:
     std::variant<HandleSketchResult, ReconciliationError> HandleSketch(NodeId peer_id, const std::vector<uint8_t>& skdata);
 
     /**
+     * Step 4. Once we received a signal of reconciliation finalization with a given result from the
+     * initiating peer, announce the following transactions:
+     * - in case of a failure, all transactions we had for that peer
+     * - in case of a success, transactions the peer asked for by short id (ask_shortids)
+     * Return an error if the peer seems to violate the protocol.
+     */
+    std::variant<std::vector<Wtxid>, ReconciliationError> HandleReconcilDiff(NodeId peer_id, bool recon_result, const std::vector<uint32_t>& remote_missing_short_ids);
+
+    /**
      * Step 5. Peer requesting extension after reconciliation they initiated failed on their side:
      * the sketch we sent to them was not sufficient to find the difference.
      * No privacy leak can happen here because sketch extension is constructed over the snapshot.
