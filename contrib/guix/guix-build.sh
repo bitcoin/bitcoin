@@ -196,10 +196,11 @@ and untracked files and directories will be wiped, allowing you to start anew.
 EOF
 }
 
-# Create SOURCES_PATH and BASE_CACHE if they are non-empty so that we can map
-# them into the container
+# Create SOURCES_PATH, BASE_CACHE, and SDK_PATH if they are non-empty so that we
+# can map them into the container
 [ -z "$SOURCES_PATH" ] || mkdir -p "$SOURCES_PATH"
 [ -z "$BASE_CACHE" ]   || mkdir -p "$BASE_CACHE"
+[ -z "$SDK_PATH" ]     || mkdir -p "$SDK_PATH"
 
 # Deterministically build Bitcoin Core
 # shellcheck disable=SC2153
@@ -302,6 +303,7 @@ EOF
                                  --expose="$(git rev-parse --git-common-dir)" \
                                  ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
                                  ${BASE_CACHE:+--share="$BASE_CACHE"} \
+                                 ${SDK_PATH:+--share="$SDK_PATH"} \
                                  --max-jobs="$MAX_JOBS" \
                                  --keep-failed \
                                  ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
@@ -312,6 +314,7 @@ EOF
                                         ${V:+V=1} \
                                         ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"} \
                                         ${BASE_CACHE:+BASE_CACHE="$BASE_CACHE"} \
+                                        ${SDK_PATH:+SDK_PATH="$SDK_PATH"} \
                                         DISTSRC="$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")" \
                                         OUTDIR=/outdir \
                                       bash -c "cd /bitcoin && bash contrib/guix/libexec/build.sh"
