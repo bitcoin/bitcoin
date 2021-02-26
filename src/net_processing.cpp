@@ -5381,7 +5381,7 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
     // Only respond to reconciliation messages if this is a reconciliation connection.
     // Disconnect otherwise.
     if (!m_txreconciliation && (msg_type == NetMsgType::REQTXRCNCL || msg_type == NetMsgType::SKETCH ||
-        msg_type == NetMsgType::REQSKETCHEXT)) {
+        msg_type == NetMsgType::REQSKETCHEXT || msg_type == NetMsgType::RECONCILDIFF)) {
         LogDebug(BCLog::NET, "%s received, but we don't have reconciliation enabled, %s", msg_type, pfrom.DisconnectMsg());
         pfrom.fDisconnect = true;
         return;
@@ -5451,6 +5451,40 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 default: break; // No other error is returned by HandleExtensionRequest
             }
             pfrom.fDisconnect = true;
+        }
+        return;
+    }
+
+    // Among transactions requested by short ID here, we should send only those transactions
+    // sketched (stored in local set snapshot), because otherwise we would leak privacy (mempool content).
+    if (msg_type == NetMsgType::RECONCILDIFF) {
+        bool recon_result;
+        std::vector<uint32_t> ask_shortids;
+        vRecv >> recon_result >> ask_shortids;
+
+        auto result = m_txreconciliation->HandleReconcilDiff(pfrom.GetId(), recon_result, ask_shortids);
+        if (auto remote_missing = std::get_if<std::vector<Wtxid>>(&result)) {
+            AnnounceReconciliationTxs(*remote_missing, pfrom);
+        } else {
+            // Disconnect peers that send reconciliation finalization violating the protocol.
+            switch (std::get<node::ReconciliationError>(result)) {
+                case node::ReconciliationError::NOT_FOUND:
+                    LogInfo("Peer is finalizing reconciliation but never registered, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::WRONG_PHASE:
+                    LogInfo("Peer is finalizing reconciliation out of order, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::WRONG_ROLE:
+                    LogInfo("Peer is finalizing reconciliation but we are the initiator, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::PROTOCOL_VIOLATION:
+                    // The specific violation is logged where it is detected.
+                    LogInfo("Peer violated the reconciliation protocol while finalizing, %s\n", pfrom.DisconnectMsg());
+                    break;
+                default: break; // No other error is returned by HandleReconcilDiff
+            }
+            pfrom.fDisconnect = true;
+            return;
         }
         return;
     }
