@@ -75,7 +75,6 @@ bool bGethTestnet = false;
 bool fDisableGovernance = false;
 bool fRegTest = false;
 bool fSigNet = false;
-bool fTestNet = false;
 bool fAssetIndex = false;
 uint32_t fGethSyncHeight = 0;
 uint32_t fGethCurrentHeight = 0;

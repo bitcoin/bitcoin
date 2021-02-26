@@ -20,6 +20,7 @@
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
+bool fTestNet = false;
 std::string COutPoint::ToString() const
 {
     return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10), n);
@@ -628,7 +629,7 @@ bool CAssetAllocation::UnserializeFromTx(const CTransaction &tx) {
         return false;
     }
     const int& bytesLeft = UnserializeFromData(vchData);
-	if(bytesLeft == -1 || (bytesLeft > 80 && (IsAssetAllocationTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM && tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN )))
+	if(bytesLeft == -1 || (!fTestNet && bytesLeft > 80 && (IsAssetAllocationTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM && tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN )))
 	{	
 		SetNull();
 		return false;
@@ -645,7 +646,7 @@ bool CAssetAllocation::UnserializeFromTx(const CMutableTransaction &mtx) {
         return false;
     }
     const int& bytesLeft = UnserializeFromData(vchData);
-	if(bytesLeft == -1 || (bytesLeft > 80 && (IsAssetAllocationTx(mtx.nVersion) && mtx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM && mtx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN )))
+	if(bytesLeft == -1 || (!fTestNet && bytesLeft > 80 && (IsAssetAllocationTx(mtx.nVersion) && mtx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM && mtx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN )))
 	{	
 		SetNull();
 		return false;
