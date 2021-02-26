@@ -118,6 +118,13 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
   depends tree. Setting this to the same directory across multiple builds of the
   depends tree can eliminate unnecessary building of packages.
 
+* _**SDK_PATH**_
+
+  Set the path where _extracted_ SDKs can be found. This is passed through to
+  the depends tree. Note that this is should be set to the _parent_ directory of
+  the actual SDK (e.g. SDK_PATH=$HOME/Downloads/macOS-SDKs instead of
+  $HOME/Downloads/macOS-SDKs/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers).
+
 * _**MAX_JOBS**_
 
   Override the maximum number of jobs to run simultaneously, you might want to
