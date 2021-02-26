@@ -94,8 +94,6 @@ fs::path GetDefaultDataDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
 // Return true if -datadir option points to a valid directory or is not specified.
 bool CheckDataDirOption();
-/** Tests only */
-void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
@@ -281,9 +279,9 @@ public:
     const fs::path& GetDataDirPath(bool net_specific = true) const;
 
     /**
-     * For testing
+     * Clear cached directory paths
      */
-    void ClearDatadirPathCache();
+    void ClearPathCache();
 
     /**
      * Return a vector of strings of the given argument
