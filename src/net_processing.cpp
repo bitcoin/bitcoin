@@ -330,6 +330,15 @@ private:
     void AddTxAnnouncement(const CNode& node, const GenTxid& gtxid, std::chrono::microseconds current_time)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
+    /**
+     * Return the number of outbound peers we
+     * relay transactions to by flooding.
+     * Used to determine whether we should flood to a new peer
+     * which supports reconciliation, in case we haven't reached
+     * the outbound flooding bandwidth-conserving limit.
+     */
+    size_t GetFloodingOutboundsCount(const CNode& skip_node) const;
+
     /** Send a version message to a peer */
     void PushNodeVersion(CNode& pnode, int64_t nTime);
 
@@ -959,6 +968,28 @@ void PeerManagerImpl::AddTxAnnouncement(const CNode& node, const GenTxid& gtxid,
         m_txrequest.CountInFlight(nodeid) >= MAX_PEER_TX_REQUEST_IN_FLIGHT;
     if (overloaded) delay += OVERLOADED_PEER_TX_DELAY;
     m_txrequest.ReceivedInv(nodeid, gtxid, preferred, current_time + delay);
+}
+
+size_t PeerManagerImpl::GetFloodingOutboundsCount(const CNode& skip_node) const
+{
+    size_t result = 0;
+    m_connman.ForEachNode([this, &result, &skip_node](const CNode* pnode) {
+        if (!pnode->m_tx_relay) return;
+        if (pnode->GetId() == skip_node.GetId()) return;
+        if (!pnode->IsFullOutboundConn() && !pnode->IsManualConn()) return;
+
+        const auto recon_state = m_reconciliation.GetPeerState(pnode->GetId());
+
+        if (recon_state) {
+            // Nodes supporting reconciliation still may be meant for flooding.
+            if ((*recon_state).IsChosenForFlooding()) ++result;
+        } else {
+            // Nodes not supporting reconciliation are definitely meant for flooding,
+            // unless they don't support tx relay, which is already checked above.
+            ++result;
+        }
+    });
+    return result;
 }
 
 // This function is used for testing the stale tip eviction logic, see
