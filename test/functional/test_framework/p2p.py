@@ -89,6 +89,8 @@ P2P_SERVICES = NODE_NETWORK | NODE_WITNESS
 P2P_SUBVERSION = "/python-p2p-tester:0.0.3/"
 # Value for relay that this test framework sends in its `version` message
 P2P_VERSION_RELAY = 1
+# Delay after receiving a tx inv before requesting transactions from non-preferred peers, in seconds
+NONPREF_PEER_TX_DELAY = 2
 
 MESSAGEMAP = {
     b"addr": msg_addr,
