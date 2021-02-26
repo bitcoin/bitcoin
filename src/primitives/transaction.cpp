@@ -532,7 +532,8 @@ bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vch
         if (!scriptPubKey.GetOp(pc, opcode, vchData))
 		    return false;
     }
-	return true;
+    // shoudln't be another opcode after this
+	return !scriptPubKey.GetOp(pc, opcode);
 }
 
 CAssetAllocation::CAssetAllocation(const CTransaction &tx) {
