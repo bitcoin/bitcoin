@@ -774,7 +774,7 @@ public:
     inline bool IsNull() const { return voutAssets.empty();}
     bool UnserializeFromTx(const CTransaction &tx);
     bool UnserializeFromTx(const CMutableTransaction &mtx);
-	bool UnserializeFromData(const std::vector<unsigned char> &vchData);
+	int UnserializeFromData(const std::vector<unsigned char> &vchData);
 	void SerializeData(std::vector<unsigned char>& vchData);
 };
 
@@ -943,7 +943,7 @@ public:
     inline bool IsNull() const { return nPrecision == 9; }
     bool UnserializeFromTx(const CTransaction &tx);
     bool UnserializeFromTx(const CMutableTransaction &mtx);
-    bool UnserializeFromData(const std::vector<unsigned char> &vchData);
+    int UnserializeFromData(const std::vector<unsigned char> &vchData);
     void SerializeData(std::vector<unsigned char>& vchData);
 };
 class CMintSyscoin: public CAssetAllocation {
@@ -975,7 +975,7 @@ public:
 
     inline void SetNull() { voutAssets.clear(); posTx = 0; vchTxRoot.clear(); vchReceiptRoot.clear(); vchTxParentNodes.clear(); vchTxPath.clear(); posReceipt = 0; vchReceiptParentNodes.clear(); nBridgeTransferID = 0; nBlockNumber = 0;  }
     inline bool IsNull() const { return (voutAssets.empty() && posTx == 0 && posReceipt == 0); }
-    bool UnserializeFromData(const std::vector<unsigned char> &vchData);
+    int UnserializeFromData(const std::vector<unsigned char> &vchData);
     bool UnserializeFromTx(const CTransaction &tx);
     bool UnserializeFromTx(const CMutableTransaction &mtx);
     void SerializeData(std::vector<unsigned char>& vchData);
@@ -997,7 +997,7 @@ public:
 
     inline void SetNull() { voutAssets.clear(); vchEthAddress.clear();  }
     inline bool IsNull() const { return (vchEthAddress.empty() && voutAssets.empty()); }
-    bool UnserializeFromData(const std::vector<unsigned char> &vchData);
+    int UnserializeFromData(const std::vector<unsigned char> &vchData);
     bool UnserializeFromTx(const CTransaction &tx);
     bool UnserializeFromTx(const CMutableTransaction &mtx);
     void SerializeData(std::vector<unsigned char>& vchData);

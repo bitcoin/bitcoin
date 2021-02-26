@@ -20,7 +20,6 @@
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic pop
 #endif
-
 std::string COutPoint::ToString() const
 {
     return strprintf("COutPoint(%s, %u)", hash.ToString().substr(0,10), n);
@@ -533,16 +532,6 @@ bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vch
         if (!scriptPubKey.GetOp(pc, opcode, vchData))
 		    return false;
     }
-    const unsigned int & nSize = scriptPubKey.size();
-    // allow up to 80 bytes of data after our stack on standard asset transactions
-    unsigned int nDifferenceAllowed = 83;
-    // if data is more than 1 byte we used 2 bytes to store the varint (good enough for 64kb which is within limit of opreturn data on sys tx's)
-    if(nSize >= 0xff){
-        nDifferenceAllowed++;
-    }
-    if(nSize > (vchData.size() + nDifferenceAllowed)){
-        return false;
-    }
 	return true;
 }
 
@@ -578,15 +567,15 @@ CAsset::CAsset(const CMutableTransaction &mtx) {
     SetNull();
     UnserializeFromTx(mtx);
 }
-bool CAsset::UnserializeFromData(const std::vector<unsigned char> &vchData) {
+int CAsset::UnserializeFromData(const std::vector<unsigned char> &vchData) {
     try {
 		CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
 		UnserializeTx(dsAsset);
+        return dsAsset.size();
     } catch (std::exception &e) {
 		SetNull();
-        return false;
     }
-	return true;
+	return -1;
 }
 
 bool CAsset::UnserializeFromTx(const CTransaction &tx) {
@@ -597,7 +586,7 @@ bool CAsset::UnserializeFromTx(const CTransaction &tx) {
 		SetNull();
 		return false;
 	}
-	if(!UnserializeFromData(vchData))
+	if(UnserializeFromData(vchData) != 0)
 	{	
 		SetNull();
 		return false;
@@ -612,22 +601,22 @@ bool CAsset::UnserializeFromTx(const CMutableTransaction &mtx) {
 		SetNull();
 		return false;
 	}
-	if(!UnserializeFromData(vchData))
+	if(UnserializeFromData(vchData) != 0)
 	{	
 		SetNull();
 		return false;
 	}
     return true;
 }
-bool CAssetAllocation::UnserializeFromData(const std::vector<unsigned char> &vchData) {
+int CAssetAllocation::UnserializeFromData(const std::vector<unsigned char> &vchData) {
     try {
         CDataStream dsAsset(vchData, SER_NETWORK, PROTOCOL_VERSION);
         Unserialize(dsAsset);
+        return dsAsset.size();
     } catch (std::exception &e) {
 		SetNull();
-        return false;
     }
-	return true;
+	return -1;
 }
 bool CAssetAllocation::UnserializeFromTx(const CTransaction &tx) {
 	std::vector<unsigned char> vchData;
@@ -637,11 +626,12 @@ bool CAssetAllocation::UnserializeFromTx(const CTransaction &tx) {
         SetNull();
         return false;
     }
-    if(!UnserializeFromData(vchData))
-    {	
-        SetNull();
-        return false;
-    }
+    const int& bytesLeft = UnserializeFromData(vchData);
+	if(bytesLeft == -1 || (bytesLeft > 256 && (IsAssetAllocationTx(tx.nVersion) && tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM && tx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN )))
+	{	
+		SetNull();
+		return false;
+	}
     
     return true;
 }
@@ -653,22 +643,24 @@ bool CAssetAllocation::UnserializeFromTx(const CMutableTransaction &mtx) {
         SetNull();
         return false;
     }
-    if(!UnserializeFromData(vchData))
-    {	
-        SetNull();
-        return false;
-    }
+    const int& bytesLeft = UnserializeFromData(vchData);
+	if(bytesLeft == -1 || (bytesLeft > 256 && (IsAssetAllocationTx(mtx.nVersion) && mtx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM && mtx.nVersion != SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN )))
+	{	
+		SetNull();
+		return false;
+	}
     return true;
 }
-bool CMintSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
+int CMintSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
     try {
         CDataStream dsMS(vchData, SER_NETWORK, PROTOCOL_VERSION);
         Unserialize(dsMS);
+        return dsMS.size();
     } catch (std::exception &e) {
         SetNull();
-        return false;
     }
-    return true;
+    
+    return -1;
 }
 
 bool CMintSyscoin::UnserializeFromTx(const CTransaction &tx) {
@@ -679,11 +671,11 @@ bool CMintSyscoin::UnserializeFromTx(const CTransaction &tx) {
         SetNull();
         return false;
     }
-    if(!UnserializeFromData(vchData))
-    {   
-        SetNull();
-        return false;
-    }  
+	if(UnserializeFromData(vchData) != 0)
+	{	
+		SetNull();
+		return false;
+	}
     return true;
 }
 bool CMintSyscoin::UnserializeFromTx(const CMutableTransaction &mtx) {
@@ -694,23 +686,23 @@ bool CMintSyscoin::UnserializeFromTx(const CMutableTransaction &mtx) {
         SetNull();
         return false;
     }
-    if(!UnserializeFromData(vchData))
-    {   
-        SetNull();
-        return false;
-    }  
+	if(UnserializeFromData(vchData) != 0)
+	{	
+		SetNull();
+		return false;
+	} 
     return true;
 }
 
-bool CBurnSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
+int CBurnSyscoin::UnserializeFromData(const std::vector<unsigned char> &vchData) {
     try {
         CDataStream dsMS(vchData, SER_NETWORK, PROTOCOL_VERSION);
         Unserialize(dsMS);
+        return dsMS.size();
     } catch (std::exception &e) {
         SetNull();
-        return false;
     }
-    return true;
+    return -1;
 }
 
 bool CBurnSyscoin::UnserializeFromTx(const CTransaction &tx) {
@@ -721,11 +713,11 @@ bool CBurnSyscoin::UnserializeFromTx(const CTransaction &tx) {
         SetNull();
         return false;
     }
-    if(!UnserializeFromData(vchData))
-    {   
-        SetNull();
-        return false;
-    }
+	if(UnserializeFromData(vchData) != 0)
+	{	
+		SetNull();
+		return false;
+	} 
     return true;
 }
 bool CBurnSyscoin::UnserializeFromTx(const CMutableTransaction &mtx) {
@@ -736,11 +728,11 @@ bool CBurnSyscoin::UnserializeFromTx(const CMutableTransaction &mtx) {
         SetNull();
         return false;
     }
-    if(!UnserializeFromData(vchData))
-    {   
-        SetNull();
-        return false;
-    }
+	if(UnserializeFromData(vchData) != 0)
+	{	
+		SetNull();
+		return false;
+	} 
     return true;
 }
 void CAssetAllocation::SerializeData( std::vector<unsigned char> &vchData) {
