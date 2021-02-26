@@ -2738,6 +2738,8 @@ static RPCHelpMan createwallet()
         RPCExamples{
             HelpExampleCli("createwallet", "\"testwallet\"")
             + HelpExampleRpc("createwallet", "\"testwallet\"")
+            + HelpExampleCliNamed("createwallet", {{"wallet_name", "descriptors"}, {"avoid_reuse", true}, {"descriptors", true}, {"load_on_startup", true}})
+            + HelpExampleRpcNamed("createwallet", {{"wallet_name", "descriptors"}, {"avoid_reuse", true}, {"descriptors", true}, {"load_on_startup", true}})
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
