@@ -258,19 +258,29 @@ public:
         return m_responder;
     }
 
-    std::vector<uint256> GetLocalSet() const
+    std::vector<uint256> GetLocalSet(bool snapshot) const
     {
-        return std::vector<uint256>(m_local_set.begin(), m_local_set.end());
+        if (snapshot) {
+            return std::vector<uint256>(m_local_set_snapshot.begin(), m_local_set_snapshot.end());
+        } else {
+            return std::vector<uint256>(m_local_set.begin(), m_local_set.end());
+        }
     }
 
-    uint16_t GetLocalSetSize() const
+    uint16_t GetLocalSetSize(bool snapshot) const
     {
+        if (snapshot) return m_local_set_snapshot.size();
         return m_local_set.size();
     }
 
     uint16_t GetLocalQ() const
     {
         return m_local_q * Q_PRECISION;
+    }
+
+    std::vector<uint8_t> GetRemoteSketchSnapshot() const
+    {
+        return m_remote_sketch_snapshot;
     }
 
     uint16_t GetCapacitySnapshot() const

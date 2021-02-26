@@ -4950,7 +4950,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                     // Populating local reconciliation set.
                     if (recon_state && txs_to_reconcile.size() != 0) {
                         std::vector<uint256> txs_to_flood;
-                        int32_t recon_set_overflow = recon_state->GetLocalSetSize() + txs_to_reconcile.size() - MAX_PEER_TX_ANNOUNCEMENTS;
+                        int32_t recon_set_overflow = recon_state->GetLocalSetSize(false) + txs_to_reconcile.size() - MAX_PEER_TX_ANNOUNCEMENTS;
                         if (recon_set_overflow > 0) {
                             LogPrint(BCLog::NET, "Reconciliation set for the peer=%d is at capacity, not adding %i new transactions. \n", pto->GetId(), recon_set_overflow);
                             // Since we reconcile frequently, it either means:

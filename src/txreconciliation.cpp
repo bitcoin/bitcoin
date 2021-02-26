@@ -47,8 +47,15 @@ static double RecomputeQ(uint8_t local_set_size, uint8_t actual_local_missing, u
 }
 
 static Optional<std::pair<Minisketch, uint16_t>> ParseRemoteSketch(const ReconciliationState& recon_state,
-    const std::vector<uint8_t>& skdata)
+    std::vector<uint8_t> skdata)
 {
+    std::vector<uint8_t> remote_sketch_snapshot = recon_state.GetRemoteSketchSnapshot();
+
+    if (remote_sketch_snapshot.size() > 0) {
+        // A sketch extension is missing the lower elements (to be a valid extended sketch),
+        // which we stored on our side at initial reconciliation step.
+        skdata.insert(skdata.begin(), remote_sketch_snapshot.begin(), remote_sketch_snapshot.end());
+    }
     uint16_t remote_sketch_capacity = uint16_t(skdata.size() / BYTES_PER_SKETCH_CAPACITY);
     if (remote_sketch_capacity != 0) {
         Minisketch remote_sketch = Minisketch(RECON_FIELD_SIZE, 0, remote_sketch_capacity).Deserialize(skdata);
@@ -142,7 +149,7 @@ Optional<std::pair<uint16_t, uint16_t>> TxReconciliationTracker::MaybeRequestRec
             m_queue.pop_back();
             m_queue.push_front(peer_id);
             UpdateNextReconRequest(current_time);
-            return std::make_pair(recon_state->second.GetLocalSetSize(), recon_state->second.GetLocalQ());
+            return std::make_pair(recon_state->second.GetLocalSetSize(false), recon_state->second.GetLocalQ());
         }
     }
     return nullopt;
@@ -218,13 +225,14 @@ std::vector<uint256> TxReconciliationTracker::FinalizeIncomingReconciliation(con
     assert(recon_state->second.IsRequestor());
     const auto incoming_phase = recon_state->second.GetIncomingPhase();
     const bool phase_init_responded = incoming_phase == RECON_INIT_RESPONDED;
+    const bool phase_ext_responded = incoming_phase == RECON_EXT_RESPONDED;
 
-    if (!phase_init_responded) return remote_missing;
+    if (!phase_init_responded && !phase_ext_responded) return remote_missing;
 
     if (recon_result) {
         remote_missing = recon_state->second.GetWTXIDsFromShortIDs(ask_shortids);
     } else {
-        remote_missing = recon_state->second.GetLocalSet();
+        remote_missing = recon_state->second.GetLocalSet(phase_ext_responded);
     }
     recon_state->second.FinalizeIncomingReconciliation();
     recon_state->second.UpdateIncomingPhase(RECON_NONE);
@@ -246,8 +254,9 @@ Optional<std::tuple<bool, bool, std::vector<uint32_t>, std::vector<uint256>>> Tx
 
     const auto outgoing_phase = recon_state->second.GetOutgoingPhase();
     const bool phase_init_requested = outgoing_phase == RECON_INIT_REQUESTED;
+    const bool phase_ext_requested = outgoing_phase == RECON_EXT_REQUESTED;
 
-    if (!phase_init_requested) return nullopt;
+    if (!phase_init_requested && !phase_ext_requested) return nullopt;
 
     Minisketch remote_sketch;
     uint16_t remote_sketch_capacity = 0;
@@ -257,13 +266,23 @@ Optional<std::tuple<bool, bool, std::vector<uint32_t>, std::vector<uint256>>> Tx
         remote_sketch_capacity = (*parsed_remote_sketch).second;
     }
 
-    Minisketch local_sketch = recon_state->second.GetLocalBaseSketch(remote_sketch_capacity);
+    Minisketch local_sketch;
+
+    if (phase_init_requested) {
+        local_sketch = recon_state->second.GetLocalBaseSketch(remote_sketch_capacity);
+    } else {
+        local_sketch = recon_state->second.GetLocalExtendedSketch();
+    }
 
     if (remote_sketch_capacity == 0 || !remote_sketch || !local_sketch) {
         LogPrint(BCLog::NET, "Outgoing reconciliation failed due to %s \n",
             remote_sketch_capacity == 0 ? "empty sketch" : "minisketch API failure");
-        std::vector<uint256> remote_missing = recon_state->second.GetLocalSet();
-        recon_state->second.FinalizeOutgoingReconciliation(true, DEFAULT_RECON_Q);
+        std::vector<uint256> remote_missing = recon_state->second.GetLocalSet(phase_ext_requested);
+        if (phase_init_requested) {
+            recon_state->second.FinalizeOutgoingReconciliation(true, DEFAULT_RECON_Q);
+        } else {
+            recon_state->second.FinalizeOutgoingReconciliation(false, DEFAULT_RECON_Q);
+        }
         recon_state->second.UpdateOutgoingPhase(RECON_NONE);
         return std::make_tuple(true, false, std::vector<uint32_t>(), remote_missing);
     }
@@ -279,17 +298,31 @@ Optional<std::tuple<bool, bool, std::vector<uint32_t>, std::vector<uint256>>> Tx
         std::vector<uint32_t> local_missing = missing_txs.first;
         std::vector<uint256> remote_missing = missing_txs.second;
 
-        size_t local_set_size = recon_state->second.GetLocalSetSize();
+        size_t local_set_size = recon_state->second.GetLocalSetSize(phase_ext_requested);
         recon_state->second.FinalizeOutgoingReconciliation(true, RecomputeQ(local_set_size, local_missing.size(), remote_missing.size()));
         recon_state->second.UpdateOutgoingPhase(RECON_NONE);
         return std::make_tuple(true, true, local_missing, remote_missing);
     } else {
-        // Initial reconciliation failed.
-        // Store the received sketch and the local sketch, request extension.
-        LogPrint(BCLog::NET, "Outgoing reconciliation initially failed, requesting extension sketch\n");
-        recon_state->second.UpdateOutgoingPhase(RECON_EXT_REQUESTED);
-        recon_state->second.PrepareForExtensionResponse(remote_sketch_capacity, skdata);
-        return std::make_tuple(false, false, std::vector<uint32_t>(), std::vector<uint256>());
+        // Reconciliation over the current working sketch failed.
+        if (recon_state->second.GetOutgoingPhase() == RECON_INIT_REQUESTED) {
+            // Initial reconciliation failed.
+            // Store the received sketch and the local sketch, request extension.
+            LogPrint(BCLog::NET, "Outgoing reconciliation initially failed, requesting extension sketch\n");
+            recon_state->second.UpdateOutgoingPhase(RECON_EXT_REQUESTED);
+            recon_state->second.PrepareForExtensionResponse(remote_sketch_capacity, skdata);
+            return std::make_tuple(false, false, std::vector<uint32_t>(), std::vector<uint256>());
+        } else {
+            // Reconciliation over extended sketch failed.
+            // Announce all local transactions from the reconciliation set.
+            // All remote transactions will be announced by peer due to the reconciliation
+            // failure flag.
+
+            LogPrint(BCLog::NET, "Outgoing reconciliation failed after extension\n");
+            std::vector<uint256> remote_missing = recon_state->second.GetLocalSet(true);
+            recon_state->second.FinalizeOutgoingReconciliation(false, DEFAULT_RECON_Q);
+            recon_state->second.UpdateOutgoingPhase(RECON_NONE);
+            return std::make_tuple(true, false, std::vector<uint32_t>(), remote_missing);
+        }
     }
 }
 
