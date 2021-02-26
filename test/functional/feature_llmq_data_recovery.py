@@ -167,7 +167,7 @@ class LLMQ_Data_Recovery(DashTestFramework):
         self.test_mns(llmq_test, quorum_hash_recover, valid_mns=member_mns_recover_test, recover=True)
         self.test_mns(llmq_test_v17, quorum_hash_recover, valid_mns=member_mns_recover_v17, recover=True)
         # Mining a block should result in a chainlock now because the quorum should be healed
-        self.wait_for_chainlocked_block(node, node.getbestblockhash())
+        self.wait_for_chainlocked_block(node, node.generate(1)[0])
         self.log.info("Test -llmq-qvvec-sync command line parameter")
         # Run with one type separated and then both possible (for regtest) together, both calls generate new quorums
         # and are restarting the nodes with the other parameters
