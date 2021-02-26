@@ -394,21 +394,21 @@ mkdir -p "$DISTSRC"
                     || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST//x86_64-apple-darwin18/osx64}.tar.gz" && exit 1 )
                 ;;
         esac
-    )
-)
+    )  # $DISTSRC/installed
 
-case "$HOST" in
-    *mingw*)
-        cp -rf --target-directory=. contrib/windeploy
-        (
-            cd ./windeploy
-            mkdir unsigned
-            cp --target-directory=unsigned/ "${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
-            find . -print0 \
-                | sort --zero-terminated \
-                | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
-                | gzip -9n > "${OUTDIR}/${DISTNAME}-win-unsigned.tar.gz" \
-                || ( rm -f "${OUTDIR}/${DISTNAME}-win-unsigned.tar.gz" && exit 1 )
-        )
-        ;;
-esac
+    case "$HOST" in
+        *mingw*)
+            cp -rf --target-directory=. contrib/windeploy
+            (
+                cd ./windeploy
+                mkdir -p unsigned
+                cp --target-directory=unsigned/ "${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
+                find . -print0 \
+                    | sort --zero-terminated \
+                    | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
+                    | gzip -9n > "${OUTDIR}/${DISTNAME}-win-unsigned.tar.gz" \
+                    || ( rm -f "${OUTDIR}/${DISTNAME}-win-unsigned.tar.gz" && exit 1 )
+            )
+            ;;
+    esac
+)  # $DISTSRC
