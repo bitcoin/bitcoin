@@ -965,7 +965,7 @@ public:
         recon_state.m_announced_during_extension.clear();
         recon_state.m_phase = Phase::NONE;
 
-        LogPrint(BCLog::NET, "Finalizing reconciliation init by peer=%d with result=%i, announcing %i txs (requested by shortID).\n",
+        LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Finalizing reconciliation init by peer=%d with result=%i, announcing %i txs (requested by shortID).\n",
             peer_id, recon_result, remote_missing.size());
 
         return true;
