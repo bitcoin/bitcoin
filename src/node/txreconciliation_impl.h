@@ -227,7 +227,7 @@ public:
      * - in case of a success, transactions the peer asked for by short id (ask_shortids)
      * Return false if the peer seems to violate the protocol.
      */
-    bool FinalizeInitByThem(NodeId peer_id, bool recon_result, const std::vector<uint32_t>& remote_missing_short_ids,
+    bool HandleReconcilDiff(NodeId peer_id, bool recon_result, const std::vector<uint32_t>& remote_missing_short_ids,
                             // returning values
                             std::vector<Wtxid>& remote_missing);
 

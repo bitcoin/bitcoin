@@ -719,7 +719,7 @@ public:
         LogDebug(BCLog::TXRECONCILIATION, "Received reconciliation extension request from peer=%d.\n", peer_id);
     }
 
-    bool FinalizeInitByThem(NodeId peer_id, bool recon_result, const std::vector<uint32_t>& remote_missing_short_ids,
+    bool HandleReconcilDiff(NodeId peer_id, bool recon_result, const std::vector<uint32_t>& remote_missing_short_ids,
                             // returning values
                             std::vector<Wtxid>& remote_missing) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
@@ -894,11 +894,11 @@ void TxReconciliationTracker::HandleExtensionRequest(NodeId peer_id)
     m_impl->HandleExtensionRequest(peer_id);
 }
 
-bool TxReconciliationTracker::FinalizeInitByThem(NodeId peer_id, bool recon_result, const std::vector<uint32_t>& remote_missing_short_ids,
+bool TxReconciliationTracker::HandleReconcilDiff(NodeId peer_id, bool recon_result, const std::vector<uint32_t>& remote_missing_short_ids,
                                                  // returning values
                                                  std::vector<Wtxid>& remote_missing)
 {
-    return m_impl->FinalizeInitByThem(peer_id, recon_result, remote_missing_short_ids, remote_missing);
+    return m_impl->HandleReconcilDiff(peer_id, recon_result, remote_missing_short_ids, remote_missing);
 }
 
 bool TxReconciliationTracker::IsInboundFanoutTarget(NodeId peer_id)
