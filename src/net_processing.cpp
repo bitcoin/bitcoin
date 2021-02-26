@@ -4063,6 +4063,28 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         return;
     }
 
+    // Received from an inbound peer planning to reconcile transactions with us, or
+    // from an outgoing peer demonstrating readiness to do reconciliations.
+    // If received from outgoing, add the peer to the reconciliation queue.
+    // Feature negotiation of tx reconciliation should happen between VERSION and
+    // VERACK, to avoid relay problems from switching after a connection is up.
+    if (msg_type == NetMsgType::SENDRECON) {
+        if (!pfrom.m_tx_relay) return;
+        LOCK(cs_main);
+        if (!State(pfrom.GetId())->m_wtxid_relay) return; // SENDRECON is allowed only after WTXIDRELAY.
+
+        bool recon_requestor, recon_responder;
+        uint32_t recon_version;
+        uint64_t remote_salt;
+        vRecv >> recon_requestor >> recon_responder >> recon_version >> remote_salt;
+
+        size_t outbound_flooders = GetFloodingOutboundsCount(pfrom);
+        m_reconciliation.EnableReconciliationSupport(pfrom.GetId(), pfrom.IsInboundConn(),
+            recon_requestor, recon_responder, recon_version, remote_salt, outbound_flooders);
+
+        return;
+    }
+
     // Ignore unknown commands for extensibility
     LogPrint(BCLog::NET, "Unknown command \"%s\" from peer=%d\n", SanitizeString(msg_type), pfrom.GetId());
     return;
