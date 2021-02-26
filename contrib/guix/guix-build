@@ -178,12 +178,6 @@ host_to_commonname() {
     esac
 }
 
-# Download the depends sources now as we won't have internet access in the build
-# container
-for host in $HOSTS; do
-    make -C "${PWD}/depends" -j"$JOBS" download-"$(host_to_commonname "$host")" ${V:+V=1} ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"}
-done
-
 # Determine the reference time used for determinism (overridable by environment)
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
 
@@ -201,9 +195,69 @@ time-machine() {
                       -- "$@"
 }
 
+
+# Precious directories are those which should not be cleaned between successive
+# guix builds
+depends_precious_dir_names='SOURCES_PATH BASE_CACHE SDK_PATH'
+precious_dir_names="${depends_precious_dir_names} OUTDIR_BASE"
+
+# Usage: contains IFS-SEPARATED-LIST ITEM
+contains() {
+    for i in ${1}; do
+        if [ "$i" = "${2}" ]; then
+            return 0  # Found!
+        fi
+    done
+    return 1
+}
+
+# If the user explicitly specified a precious directory, create it so we
+# can map it into the container
+for precious_dir_name in $precious_dir_names; do
+    precious_dir_path="${!precious_dir_name}"
+    if [ -n "$precious_dir_path" ]; then
+        if [ ! -e "$precious_dir_path" ]; then
+            mkdir -p "$precious_dir_path"
+        elif [ -L "$precious_dir_path" ]; then
+            echo "ERR: ${precious_dir_name} cannot be a symbolic link"
+            exit 1
+        elif [ ! -d "$precious_dir_path" ]; then
+            echo "ERR: ${precious_dir_name} must be a directory"
+            exit 1
+        fi
+    fi
+done
+
+mkdir -p "$VAR_BASE"
+
+# Record the _effective_ values of precious directories such that guix-clean can
+# avoid clobbering them if appropriate.
+#
+# shellcheck disable=SC2046,SC2086
+{
+    # Get depends precious dir definitions from depends
+    make -C "${PWD}/depends" \
+         --no-print-directory \
+         -- $(printf "print-%s\n" $depends_precious_dir_names)
+
+    # Get remaining precious dir definitions from the environment
+    for precious_dir_name in $precious_dir_names; do
+        precious_dir_path="${!precious_dir_name}"
+        if ! contains "$depends_precious_dir_names" "$precious_dir_name"; then
+            echo "${precious_dir_name}=${precious_dir_path}"
+        fi
+    done
+} > "${VAR_BASE}/precious_dirs"
+
 # Make sure an output directory exists for our builds
 OUTDIR_BASE="${OUTDIR_BASE:-${VERSION_BASE}/output}"
 mkdir -p "$OUTDIR_BASE"
+
+# Download the depends sources now as we won't have internet access in the build
+# container
+for host in $HOSTS; do
+    make -C "${PWD}/depends" -j"$JOBS" download-"$(host_to_commonname "$host")" ${V:+V=1} ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"}
+done
 
 # Usage: outdir_for_host HOST
 #
@@ -234,12 +288,6 @@ excluding the SDK directory. Practically speaking, this means that all ignored
 and untracked files and directories will be wiped, allowing you to start anew.
 EOF
 }
-
-# Create SOURCES_PATH, BASE_CACHE, and SDK_PATH if they are non-empty so that we
-# can map them into the container
-[ -z "$SOURCES_PATH" ] || mkdir -p "$SOURCES_PATH"
-[ -z "$BASE_CACHE" ]   || mkdir -p "$BASE_CACHE"
-[ -z "$SDK_PATH" ]     || mkdir -p "$SDK_PATH"
 
 # Deterministically build Bitcoin Core
 # shellcheck disable=SC2153
