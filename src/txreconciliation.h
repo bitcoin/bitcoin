@@ -59,6 +59,7 @@ enum ReconciliationPhase {
     RECON_INIT_REQUESTED,
     RECON_INIT_RESPONDED,
     RECON_EXT_REQUESTED,
+    RECON_EXT_RESPONDED
 };
 
 /**
@@ -200,6 +201,42 @@ class ReconciliationState {
         m_capacity_snapshot = 0;
     }
 
+    /**
+     * Reconciliation involves computing a space-efficient representation of transaction identifiers
+     * (a sketch). A sketch has a capacity meaning it allows reconciling at most a certain number
+     * of elements (see BIP-330). Considering whether we are going to send a sketch to a peer or use
+     * locally, we estimate the set difference.
+     */
+    Minisketch ComputeSketch(uint16_t capacity, bool use_snapshot=false)
+    {
+        Minisketch sketch;
+        std::set<uint256> working_set;
+        if (use_snapshot) {
+            working_set = m_local_set_snapshot;
+        } else {
+            working_set = m_local_set;
+            m_capacity_snapshot = capacity;
+        }
+        // Avoid serializing/sending an empty sketch.
+        if (working_set.size() == 0 || capacity == 0) return sketch;
+
+        std::vector<uint32_t> short_ids;
+        for (const auto& wtxid: working_set) {
+            uint32_t short_txid = ComputeShortID(wtxid);
+            short_ids.push_back(short_txid);
+            m_local_short_id_mapping.emplace(short_txid, wtxid);
+        }
+
+        capacity = std::min(capacity, MAX_SKETCH_CAPACITY);
+        sketch = Minisketch(RECON_FIELD_SIZE, 0, capacity);
+        if (sketch) {
+            for (const uint32_t short_id: short_ids) {
+                sketch.Add(short_id);
+            }
+        }
+        return sketch;
+    }
+
 public:
 
     ReconciliationState(bool requestor, bool responder, bool flood_to, uint64_t k0, uint64_t k1) :
@@ -234,6 +271,11 @@ public:
     uint16_t GetLocalQ() const
     {
         return m_local_q * Q_PRECISION;
+    }
+
+    uint16_t GetCapacitySnapshot() const
+    {
+        return m_capacity_snapshot;
     }
 
     ReconciliationPhase GetIncomingPhase() const
@@ -293,32 +335,18 @@ public:
         return minisketch_compute_capacity(RECON_FIELD_SIZE, estimated_diff, RECON_FALSE_POSITIVE_COEF);
     }
 
-    /**
-     * Reconciliation involves computing a space-efficient representation of transaction identifiers
-     * (a sketch). A sketch has a capacity meaning it allows reconciling at most a certain number
-     * of elements (see BIP-330).
-     */
-    Minisketch ComputeSketch(uint16_t capacity)
+    Minisketch GetLocalBaseSketch(uint16_t capacity)
     {
-        Minisketch sketch;
-        // Avoid serializing/sending an empty sketch.
-        if (m_local_set.size() == 0 || capacity == 0) return sketch;
+        return ComputeSketch(capacity, false);
+    }
 
-        std::vector<uint32_t> short_ids;
-        for (const auto& wtxid: m_local_set) {
-            uint32_t short_txid = ComputeShortID(wtxid);
-            short_ids.push_back(short_txid);
-            m_local_short_id_mapping.emplace(short_txid, wtxid);
-        }
-
-        capacity = std::min(capacity, MAX_SKETCH_CAPACITY);
-        sketch = Minisketch(RECON_FIELD_SIZE, 0, capacity);
-        if (sketch) {
-            for (const uint32_t short_id: short_ids) {
-                sketch.Add(short_id);
-            }
-        }
-        return sketch;
+    Minisketch GetLocalExtendedSketch()
+    {
+        // For now, compute a sketch of twice the capacity were computed originally.
+        // TODO: optimize by computing the extension *on top* of the existent sketch
+        // instead of computing the lower order elements again.
+        const uint16_t extended_capacity = m_capacity_snapshot * 2;
+        return ComputeSketch(extended_capacity, true);
     }
 
     /**
