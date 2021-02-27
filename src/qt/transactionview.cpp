@@ -160,7 +160,6 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
         transactionView->horizontalHeader()->setMinimumSectionSize(MINIMUM_COLUMN_WIDTH);
         transactionView->horizontalHeader()->setStretchLastSection(true);
     }
-    transactionView->horizontalHeader()->setSortIndicator(TransactionTableModel::Date, Qt::DescendingOrder);
 
     // Actions
     abandonAction = new QAction(tr("Abandon transaction"), this);
@@ -236,6 +235,7 @@ void TransactionView::setModel(WalletModel *_model)
         transactionProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
         transactionProxyModel->setSortRole(Qt::EditRole);
         transactionView->setModel(transactionProxyModel);
+        transactionView->sortByColumn(TransactionTableModel::Date, Qt::DescendingOrder);
 
         if (_model->getOptionsModel())
         {
