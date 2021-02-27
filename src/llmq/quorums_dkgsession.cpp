@@ -1025,11 +1025,11 @@ void CDKGSession::SendCommitment(CDKGPendingMessages& pendingMessages)
     if (lieType == 3) {
         std::vector<uint8_t> buf = qc.sig.ToByteVector();
         buf[5]++;
-        qc.sig.SetBuf(buf);
+        qc.sig.SetByteVector(buf);
     } else if (lieType == 4) {
         std::vector<uint8_t> buf = qc.quorumSig.ToByteVector();
         buf[5]++;
-        qc.quorumSig.SetBuf(buf);
+        qc.quorumSig.SetByteVector(buf);
     }
 
     t3.stop();
