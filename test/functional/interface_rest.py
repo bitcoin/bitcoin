@@ -312,6 +312,16 @@ class RESTTest (BitcoinTestFramework):
                             if 'coinbase' not in tx['vin'][0]}
         assert_equal(non_coinbase_txs, set(txs))
 
+        # Verify that the non-coinbase tx has "prevout" field set
+        for tx_obj in json_obj["tx"]:
+            for vin in tx_obj["vin"]:
+                if "coinbase" not in vin:
+                    assert "prevout" in vin
+                    prevout = vin["prevout"]
+                    assert_equal(prevout["generated"], False)
+                else:
+                    assert "prevout" not in vin
+
         # Check the same but without tx details
         json_obj = self.test_rest_request("/block/notxdetails/{}".format(newblockhash[0]))
         for tx in txs:
