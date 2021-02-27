@@ -25,7 +25,8 @@ class CTxUndo;
  */
 enum class TxVerbosity {
     SHOW_TXID,                //!< Only TXID for each block's transaction
-    SHOW_DETAILS             //!< Include TXID, inputs, outputs, and other common block's transaction information
+    SHOW_DETAILS,             //!< Include TXID, inputs, outputs, and other common block's transaction information
+    SHOW_DETAILS_AND_PREVOUT  //!< The same as previous option with information about prevouts if available
 };
 
 // core_read.cpp
@@ -54,6 +55,6 @@ std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 std::string SighashToStr(unsigned char sighash_type);
 void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool include_hex, bool include_address = true);
 void ScriptToUniv(const CScript& script, UniValue& out);
-void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex = true, int serialize_flags = 0, const CTxUndo* txundo = nullptr);
+void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex = true, int serialize_flags = 0, const CTxUndo* txundo = nullptr, TxVerbosity verbosity = TxVerbosity::SHOW_DETAILS);
 
 #endif // BITCOIN_CORE_IO_H
