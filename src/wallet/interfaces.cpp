@@ -125,7 +125,13 @@ public:
         return m_wallet->ChangeWalletPassphrase(old_wallet_passphrase, new_wallet_passphrase);
     }
     void abortRescan() override { m_wallet->AbortRescan(); }
-    bool backupWallet(const std::string& filename) override { return m_wallet->BackupWallet(filename); }
+    bool backupWallet(const std::string& filename, const WalletBackupFormat format, bilingual_str& error) override {
+        switch (format) {
+            case WalletBackupFormat::Raw:
+                return m_wallet->BackupWallet(filename);
+        }
+        return false;
+    }
     std::string getWalletName() override { return m_wallet->GetName(); }
     bool getNewDestination(const OutputType type, const std::string label, CTxDestination& dest) override
     {
