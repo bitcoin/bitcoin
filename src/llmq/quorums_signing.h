@@ -17,7 +17,7 @@
 
 namespace llmq
 {
-// Keep recovered signatures for a week. This is a "-recsigsmaxage" option default.
+// Keep recovered signatures for a week. This is a "-maxrecsigsage" option default.
 static const int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7;
 
 
