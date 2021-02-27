@@ -134,13 +134,18 @@ protected:
     virtual void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) {}
     /**
      * Notifies listeners of a block being connected.
-     * Provides a vector of transactions evicted from the mempool as a result.
+     *
+     * The mempool is not guaranteed to be in a consistent state when this
+     * notification is fired. Listeners should use UpdatedBlockTip for that.
      *
      * Called on a background thread.
      */
     virtual void BlockConnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex *pindex) {}
     /**
      * Notifies listeners of a block being disconnected
+     *
+     * The mempool is not guaranteed to be in a consistent state when this
+     * notification is fired. Listeners should use UpdatedBlockTip for that.
      *
      * Called on a background thread.
      */
