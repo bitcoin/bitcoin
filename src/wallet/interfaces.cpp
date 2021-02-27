@@ -16,8 +16,10 @@
 #include <uint256.h>
 #include <util/check.h>
 #include <util/system.h>
+#include <util/translation.h>
 #include <util/ui_change_type.h>
 #include <wallet/context.h>
+#include <wallet/dump.h>
 #include <wallet/feebumper.h>
 #include <wallet/fees.h>
 #include <wallet/ismine.h>
@@ -127,6 +129,8 @@ public:
     void abortRescan() override { m_wallet->AbortRescan(); }
     bool backupWallet(const std::string& filename, const WalletBackupFormat format, bilingual_str& error) override {
         switch (format) {
+            case WalletBackupFormat::DbDump:
+                return DumpWallet(*m_wallet, error, filename);
             case WalletBackupFormat::Raw:
                 return m_wallet->BackupWallet(filename);
         }
