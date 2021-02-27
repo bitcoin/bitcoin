@@ -49,8 +49,7 @@ bool CBLSIESEncryptedBlob::Encrypt(size_t idx, const CBLSPublicKey& peerPubKey, 
         return false;
     }
 
-    std::vector<unsigned char> symKey;
-    pk.GetBuf(symKey);
+    std::vector<unsigned char> symKey = pk.ToByteVector();
     symKey.resize(32);
 
     uint256 iv = GetIV(idx);
@@ -64,8 +63,7 @@ bool CBLSIESEncryptedBlob::Decrypt(size_t idx, const CBLSSecretKey& secretKey, C
         return false;
     }
 
-    std::vector<unsigned char> symKey;
-    pk.GetBuf(symKey);
+    std::vector<unsigned char> symKey = pk.ToByteVector();
     symKey.resize(32);
 
     uint256 iv = GetIV(idx);
@@ -119,8 +117,7 @@ bool CBLSIESMultiRecipientBlobs::Encrypt(size_t idx, const CBLSPublicKey& recipi
         return false;
     }
 
-    std::vector<unsigned char> symKey;
-    pk.GetBuf(symKey);
+    std::vector<uint8_t> symKey = pk.ToByteVector();
     symKey.resize(32);
 
     return EncryptBlob(blob.data(), blob.size(), blobs[idx], symKey.data(), ivVector[idx].begin());
@@ -137,8 +134,7 @@ bool CBLSIESMultiRecipientBlobs::Decrypt(size_t idx, const CBLSSecretKey& sk, Bl
         return false;
     }
 
-    std::vector<unsigned char> symKey;
-    pk.GetBuf(symKey);
+    std::vector<uint8_t> symKey = pk.ToByteVector();
     symKey.resize(32);
 
     uint256 iv = ivSeed;
