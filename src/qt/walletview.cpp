@@ -218,7 +218,9 @@ void WalletView::backupWallet()
     if (filename.isEmpty())
         return;
 
-    if (!walletModel->wallet().backupWallet(filename.toLocal8Bit().data())) {
+    constexpr WalletBackupFormat filetype = WalletBackupFormat::Raw;
+    bilingual_str error;
+    if (!walletModel->wallet().backupWallet(filename.toLocal8Bit().data(), filetype, error)) {
         Q_EMIT message(tr("Backup Failed"), tr("There was an error trying to save the wallet data to %1.").arg(filename),
             CClientUIInterface::MSG_ERROR);
         }
