@@ -62,6 +62,31 @@ class ZMQSubscriber:
         return (hash, label, mempool_sequence)
 
 
+class ZMQTestSetupBlock:
+    """Helper class for setting up a ZMQ test via the "sync up" procedure.
+    Generates a block on the specified node on instantiation and provides a
+    method to check whether a ZMQ notification matches, i.e. the event was
+    caused by this generated block.  Assumes that a notification either contains
+    the generated block's hash, it's (coinbase) transaction id, the raw block or
+    raw transaction data.
+    """
+
+    def __init__(self, node):
+        self.block_hash = node.generate(1)[0]
+        coinbase = node.getblock(self.block_hash, 2)['tx'][0]
+        self.tx_hash = coinbase['txid']
+        self.raw_tx = coinbase['hex']
+        self.raw_block = node.getblock(self.block_hash, 0)
+
+    def caused_notification(self, notification):
+        return (
+            self.block_hash in notification
+            or self.tx_hash in notification
+            or self.raw_block in notification
+            or self.raw_tx in notification
+        )
+
+
 class ZMQTest (BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
@@ -105,17 +130,18 @@ class ZMQTest (BitcoinTestFramework):
         # Ensure that all zmq publisher notification interfaces are ready by
         # running the following "sync up" procedure:
         #   1. Generate a block on the node
-        #   2. Try to receive a notification on all subscribers
-        #   3. If all subscribers get a message within the timeout (1 second),
+        #   2. Try to receive the corresponding notification on all subscribers
+        #   3. If all subscribers get the message within the timeout (1 second),
         #      we are done, otherwise repeat starting from step 1
         for sub in subscribers:
             sub.socket.set(zmq.RCVTIMEO, 1000)
         while True:
-            self.nodes[0].generate(1)
+            test_block = ZMQTestSetupBlock(self.nodes[0])
             recv_failed = False
             for sub in subscribers:
                 try:
-                    sub.receive()
+                    while not test_block.caused_notification(sub.receive().hex()):
+                        self.log.debug("Ignoring sync-up notification for previously generated block.")
                 except zmq.error.Again:
                     self.log.debug("Didn't receive sync-up notification, trying again.")
                     recv_failed = True
@@ -340,7 +366,7 @@ class ZMQTest (BitcoinTestFramework):
             block_count = self.nodes[0].getblockcount()
             best_hash = self.nodes[0].getbestblockhash()
             self.nodes[0].invalidateblock(best_hash)
-            sleep(2) # Bit of room to make sure transaction things happened
+            sleep(2)  # Bit of room to make sure transaction things happened
 
             # Make sure getrawmempool mempool_sequence results aren't "queued" but immediately reflective
             # of the time they were gathered.
@@ -389,8 +415,8 @@ class ZMQTest (BitcoinTestFramework):
             assert_equal(label, "A")
             # More transactions to be simply mined
             for i in range(len(more_tx)):
-                    assert_equal((more_tx[i], "A", mempool_seq), seq.receive_sequence())
-                    mempool_seq += 1
+                assert_equal((more_tx[i], "A", mempool_seq), seq.receive_sequence())
+                mempool_seq += 1
             # Bumped by rbf
             assert_equal((orig_txid, "R", mempool_seq), seq.receive_sequence())
             mempool_seq += 1
@@ -405,7 +431,7 @@ class ZMQTest (BitcoinTestFramework):
             assert_equal((orig_txid_2, "A", mempool_seq), seq.receive_sequence())
             mempool_seq += 1
             self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)
-            self.sync_all() # want to make sure we didn't break "consensus" for other tests
+            self.sync_all()  # want to make sure we didn't break "consensus" for other tests
 
     def test_mempool_sync(self):
         """
