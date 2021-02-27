@@ -434,17 +434,55 @@ class BlockchainTest(BitcoinTestFramework):
         miniwallet.send_self_transfer(fee_rate=fee_per_kb, from_node=node)
         blockhash = self.generate(node, 1)[0]
 
-        self.log.info("Test getblock with verbosity 1 doesn't include fee")
-        block = node.getblock(blockhash, 1)
-        assert 'fee' not in block['tx'][1]
+        def assert_fee_not_in_block(verbosity):
+            block = node.getblock(blockhash, verbosity)
+            assert 'fee' not in block['tx'][1]
 
-        self.log.info('Test getblock with verbosity 2 includes expected fee')
-        block = node.getblock(blockhash, 2)
-        tx = block['tx'][1]
-        assert 'fee' in tx
-        assert_equal(tx['fee'], tx['vsize'] * fee_per_byte)
+        def assert_fee_in_block(verbosity):
+            block = node.getblock(blockhash, verbosity)
+            tx = block['tx'][1]
+            assert 'fee' in tx
+            assert_equal(tx['fee'], tx['vsize'] * fee_per_byte)
 
-        self.log.info("Test getblock with verbosity 2 still works with pruned Undo data")
+        def assert_vin_contains_prevout(verbosity):
+            block = node.getblock(blockhash, verbosity)
+            tx = block["tx"][1]
+            total_vin = Decimal("0.00000000")
+            total_vout = Decimal("0.00000000")
+            for vin in tx["vin"]:
+                assert "prevout" in vin
+                assert_equal(set(vin["prevout"].keys()), set(("value", "height", "generated", "scriptPubKey")))
+                assert_equal(vin["prevout"]["generated"], True)
+                total_vin += vin["prevout"]["value"]
+            for vout in tx["vout"]:
+                total_vout += vout["value"]
+            assert_equal(total_vin, total_vout + tx["fee"])
+
+        def assert_vin_does_not_contain_prevout(verbosity):
+            block = node.getblock(blockhash, verbosity)
+            tx = block["tx"][1]
+            if isinstance(tx, str):
+                # In verbosity level 1, only the transaction hashes are written
+                pass
+            else:
+                for vin in tx["vin"]:
+                    assert "prevout" not in vin
+
+        self.log.info("Test that getblock with verbosity 1 doesn't include fee")
+        assert_fee_not_in_block(1)
+
+        self.log.info('Test that getblock with verbosity 2 and 3 includes expected fee')
+        assert_fee_in_block(2)
+        assert_fee_in_block(3)
+
+        self.log.info("Test that getblock with verbosity 1 and 2 does not include prevout")
+        assert_vin_does_not_contain_prevout(1)
+        assert_vin_does_not_contain_prevout(2)
+
+        self.log.info("Test that getblock with verbosity 3 includes prevout")
+        assert_vin_contains_prevout(3)
+
+        self.log.info("Test that getblock with verbosity 2 and 3 still works with pruned Undo data")
         datadir = get_datadir_path(self.options.tmpdir, 0)
 
         self.log.info("Test getblock with invalid verbosity type returns proper error message")
@@ -458,8 +496,10 @@ class BlockchainTest(BitcoinTestFramework):
         # Move instead of deleting so we can restore chain state afterwards
         move_block_file('rev00000.dat', 'rev_wrong')
 
-        block = node.getblock(blockhash, 2)
-        assert 'fee' not in block['tx'][1]
+        assert_fee_not_in_block(2)
+        assert_fee_not_in_block(3)
+        assert_vin_does_not_contain_prevout(2)
+        assert_vin_does_not_contain_prevout(3)
 
         # Restore chain state
         move_block_file('rev_wrong', 'rev00000.dat')
