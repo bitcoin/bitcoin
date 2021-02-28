@@ -118,16 +118,23 @@ class LLMQ_Data_Recovery(DashTestFramework):
         node = self.nodes[0]
         node.spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         node.spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
+        node.spork("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
         self.wait_for_sporks_same()
+
+        self.log.info("Mining 4 quorums")
+        for i in range(4):
+            self.mine_quorum()
+        node.spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
+        self.wait_for_sporks_same()
+        self.log.info("Mine single block, wait for chainlock")
+        node.generate(1)
+        self.wait_for_chainlocked_block_all_nodes(node.getbestblockhash())
 
         self.log.info("Test automated DGK data recovery")
         # This two nodes will remain the only ones with valid DKG data
         last_resort_test = None
         last_resort_v17 = None
-        self.mine_quorum()
-        self.mine_quorum()
-        self.mine_quorum()
-        self.mine_quorum()
+
         while True:
             # Mine the quorums used for the recovery test
             quorum_hash_recover = self.mine_quorum()
