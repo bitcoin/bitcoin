@@ -163,5 +163,3 @@ FUZZ_TARGET_MSG(qsigrec);
 FUZZ_TARGET_MSG(qsigshare);
 FUZZ_TARGET_MSG(clsig); 
 FUZZ_TARGET_MSG(mnauth);
-FUZZ_TARGET_MSG(qgetdata);
-FUZZ_TARGET_MSG(qdata);
