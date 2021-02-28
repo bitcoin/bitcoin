@@ -488,6 +488,26 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
     // Use CTransaction for the constant parts of the
     // transaction to avoid rehashing.
     const CTransaction txConst(mtx);
+
+    PrecomputedTransactionData txdata;
+    std::vector<CTxOut> spent_outputs;
+    spent_outputs.resize(mtx.vin.size());
+    bool have_all_spent_outputs = true;
+    for (unsigned int i = 0; i < mtx.vin.size(); i++) {
+        CTxIn& txin = mtx.vin[i];
+        auto coin = coins.find(txin.prevout);
+        if (coin == coins.end() || coin->second.IsSpent()) {
+            have_all_spent_outputs = false;
+        } else {
+            spent_outputs[i] = CTxOut(coin->second.out.nValue, coin->second.out.scriptPubKey);
+        }
+    }
+    if (have_all_spent_outputs) {
+        txdata.Init(txConst, std::move(spent_outputs), true);
+    } else {
+        txdata.Init(txConst, {}, true);
+    }
+
     // Sign what we can:
     for (unsigned int i = 0; i < mtx.vin.size(); i++) {
         CTxIn& txin = mtx.vin[i];
@@ -502,7 +522,7 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
         SignatureData sigdata = DataFromTransaction(mtx, i, coin->second.out);
         // Only sign SIGHASH_SINGLE if there's a corresponding output:
         if (!fHashSingle || (i < mtx.vout.size())) {
-            ProduceSignature(*keystore, MutableTransactionSignatureCreator(&mtx, i, amount, nHashType), prevPubKey, sigdata);
+            ProduceSignature(*keystore, MutableTransactionSignatureCreator(&mtx, i, amount, &txdata, nHashType), prevPubKey, sigdata);
         }
 
         UpdateInput(txin, sigdata);
@@ -514,7 +534,7 @@ bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* keystore, 
         }
 
         ScriptError serror = SCRIPT_ERR_OK;
-        if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount, MissingDataBehavior::FAIL), &serror)) {
+        if (!VerifyScript(txin.scriptSig, prevPubKey, &txin.scriptWitness, STANDARD_SCRIPT_VERIFY_FLAGS, TransactionSignatureChecker(&txConst, i, amount, txdata, MissingDataBehavior::FAIL), &serror)) {
             if (serror == SCRIPT_ERR_INVALID_STACK_OPERATION) {
                 // Unable to sign input and verification failed (possible attempt to partially sign).
                 input_errors[i] = "Unable to sign input, invalid stack size (possibly missing key)";
