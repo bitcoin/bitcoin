@@ -4172,42 +4172,41 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, std::chrono::microseconds curre
 
     // We sent an `addr` message to this peer recently. Nothing more to do.
     if (current_time <= node.m_next_addr_send) return;
+
+    node.m_next_addr_send = PoissonNextSend(current_time, AVG_ADDRESS_BROADCAST_INTERVAL);
+    std::vector<CAddress> vAddr;
+    vAddr.reserve(node.vAddrToSend.size());
+
+    const char* msg_type;
+    int make_flags;
+    if (node.m_wants_addrv2) {
+        msg_type = NetMsgType::ADDRV2;
+        make_flags = ADDRV2_FORMAT;
+    } else {
+        msg_type = NetMsgType::ADDR;
+        make_flags = 0;
+    }
+
+    for (const CAddress& addr : node.vAddrToSend)
     {
-        node.m_next_addr_send = PoissonNextSend(current_time, AVG_ADDRESS_BROADCAST_INTERVAL);
-        std::vector<CAddress> vAddr;
-        vAddr.reserve(node.vAddrToSend.size());
-
-        const char* msg_type;
-        int make_flags;
-        if (node.m_wants_addrv2) {
-            msg_type = NetMsgType::ADDRV2;
-            make_flags = ADDRV2_FORMAT;
-        } else {
-            msg_type = NetMsgType::ADDR;
-            make_flags = 0;
-        }
-
-        for (const CAddress& addr : node.vAddrToSend)
+        if (!node.m_addr_known->contains(addr.GetKey()))
         {
-            if (!node.m_addr_known->contains(addr.GetKey()))
+            node.m_addr_known->insert(addr.GetKey());
+            vAddr.push_back(addr);
+            // receiver rejects addr messages larger than MAX_ADDR_TO_SEND
+            if (vAddr.size() >= MAX_ADDR_TO_SEND)
             {
-                node.m_addr_known->insert(addr.GetKey());
-                vAddr.push_back(addr);
-                // receiver rejects addr messages larger than MAX_ADDR_TO_SEND
-                if (vAddr.size() >= MAX_ADDR_TO_SEND)
-                {
-                    m_connman.PushMessage(&node, msgMaker.Make(make_flags, msg_type, vAddr));
-                    vAddr.clear();
-                }
+                m_connman.PushMessage(&node, msgMaker.Make(make_flags, msg_type, vAddr));
+                vAddr.clear();
             }
         }
-        node.vAddrToSend.clear();
-        if (!vAddr.empty())
-            m_connman.PushMessage(&node, msgMaker.Make(make_flags, msg_type, vAddr));
-        // we only send the big addr message once
-        if (node.vAddrToSend.capacity() > 40)
-            node.vAddrToSend.shrink_to_fit();
     }
+    node.vAddrToSend.clear();
+    if (!vAddr.empty())
+        m_connman.PushMessage(&node, msgMaker.Make(make_flags, msg_type, vAddr));
+    // we only send the big addr message once
+    if (node.vAddrToSend.capacity() > 40)
+        node.vAddrToSend.shrink_to_fit();
 }
 
 namespace {
