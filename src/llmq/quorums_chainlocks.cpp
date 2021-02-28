@@ -206,52 +206,40 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
     llmq::quorumManager->ScanQuorums(llmqType, pindexScan, signingActiveQuorumCount, quorums_scanned);
 
     uint256 requestId;
-    std::set<CQuorumCPtr> quorums_tried;
     RequestIdStep requestIdStep{clsig.nHeight};
-    const bool quorumsNotEmpty = !quorums_scanned.empty();
-    while (quorumsNotEmpty) {
+    bool bSigned = false;
+    for(const auto& quorum: quorums_scanned) {
         requestId = ::SerializeHash(requestIdStep);
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG (%s) requestId=%s, peer=%d\n",
             __func__, clsig.ToString(), requestId.ToString(), from);
-        std::vector<std::pair<uint256, size_t>> scores;
-        scores.reserve(quorums_scanned.size());
-        for (size_t i = 0; i < quorums_scanned.size(); i++) {
-            CHashWriter h(SER_NETWORK, 0);
-            h << llmqType;
-            h << quorums_scanned[i]->qc.quorumHash;
-            h << requestId;
-            scores.emplace_back(h.GetHash(), i);
-        }
-        std::sort(scores.begin(), scores.end());
-        CQuorumCPtr quorum = quorums_scanned[scores.front().second];
         if (quorum == nullptr) {
             return;
         }
-        if (quorums_tried.insert(quorum).second) {
-            const uint256 &signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, requestId, clsig.blockHash);
-            if (clsig.sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash)) {
-                LOCK(cs);
-                // found valid
-                auto it = bestChainLockCandidates.find(clsig.nHeight);
-                if (it == bestChainLockCandidates.end()) {
-                    bestChainLockCandidates[clsig.nHeight].emplace(quorum, std::make_shared<const CChainLockSig>(clsig));
-                } else {
-                    it->second.emplace(quorum, std::make_shared<const CChainLockSig>(clsig));
-                }
-                break;
+       
+        const uint256 &signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, requestId, clsig.blockHash);
+        if (clsig.sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash)) {
+            LOCK(cs);
+            // found valid
+            auto it = bestChainLockCandidates.find(clsig.nHeight);
+            if (it == bestChainLockCandidates.end()) {
+                bestChainLockCandidates[clsig.nHeight].emplace(quorum, std::make_shared<const CChainLockSig>(clsig));
+            } else {
+                it->second.emplace(quorum, std::make_shared<const CChainLockSig>(clsig));
             }
-        }
-        if (quorums_tried.size() >= quorums_scanned.size()) {
-            // tried every possible quorum
-            LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
-            if (from != -1) {
-                LOCK(cs_main);
-                peerman.Misbehaving(from, 10, "invalid CLSIG");
-            }
-            return;
+            bSigned = true;
+            break;
         }
         // Try other quorums
         ++requestIdStep.nStep;
+    }
+    if(!bSigned) {
+        // tried every possible quorum
+        LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
+        if (from != -1) {
+            LOCK(cs_main);
+            peerman.Misbehaving(from, 10, "invalid CLSIG");
+        }
+        return;
     }
     {
         LOCK(cs);
@@ -437,31 +425,17 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
     llmq::quorumManager->ScanQuorums(llmqType, pindex, signingActiveQuorumCount, quorums_scanned);
 
     uint256 requestId;
-    std::set<CQuorumCPtr> quorums_tried;
     RequestIdStep requestIdStep{pindex->nHeight};
-
-    while (quorums_tried.size() < quorums_scanned.size()) {
+    for(const auto& quorum: quorums_scanned) {
         requestId = ::SerializeHash(requestIdStep);
-        std::vector<std::pair<uint256, size_t>> scores;
-        scores.reserve(quorums_scanned.size());
-        for (size_t i = 0; i < quorums_scanned.size(); i++) {
-            CHashWriter h(SER_NETWORK, 0);
-            h << llmqType;
-            h << quorums_scanned[i]->qc.quorumHash;
-            h << requestId;
-            scores.emplace_back(h.GetHash(), i);
-        }
-        std::sort(scores.begin(), scores.end());
-        CQuorumCPtr quorum = quorums_scanned[scores.front().second];
         if (quorum == nullptr) {
             return;
         }
-        if (quorums_tried.insert(quorum).second) {
-            if (quorumSigningManager->AsyncSignIfMember(llmqType, requestId, pindex->GetBlockHash(), quorum->qc.quorumHash)) {
-                LOCK(cs);
-                lastSignedRequestIds.insert(requestId);
-                lastSignedMsgHash = pindex->GetBlockHash();
-            }
+
+        if (quorumSigningManager->AsyncSignIfMember(llmqType, requestId, pindex->GetBlockHash(), quorum->qc.quorumHash)) {
+            LOCK(cs);
+            lastSignedRequestIds.insert(requestId);
+            lastSignedMsgHash = pindex->GetBlockHash();
         }
         ++requestIdStep.nStep;
     }
