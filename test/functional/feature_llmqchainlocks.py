@@ -57,13 +57,14 @@ class LLMQChainLocksTest(DashTestFramework):
         self.nodes[0].generate(10)
         self.sync_blocks(self.nodes, timeout=60*5)
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
-        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
+        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
         self.wait_for_sporks_same()
 
         self.log.info("Mining 4 quorums")
         for i in range(4):
             self.mine_quorum()
-
+        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
+        self.wait_for_sporks_same()
         self.log.info("Mine single block, wait for chainlock")
         self.nodes[0].generate(1)
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
@@ -184,26 +185,26 @@ class LLMQChainLocksTest(DashTestFramework):
         SIGN_HEIGHT_OFFSET = 20
         p2p_node = self.nodes[0].add_p2p_connection(TestP2PConn())
         p2p_node.wait_for_verack()
-        self.log.info("Should accept fake clsig but won't sign the same height twice (normally)")
+        self.log.info("Should accept fake clsig but other quorums should sign the actual block on the same height and override the malicious one")
         fake_clsig1, fake_block_hash1 = self.create_fake_clsig(1)
         p2p_node.send_clsig(fake_clsig1)
         for node in self.nodes:
-            self.wait_for_best_chainlock(node, fake_block_hash1, timeout=15)
+            self.wait_for_most_recent_chainlock(node, fake_block_hash1, timeout=15)
         tip = self.nodes[0].generate(1)[-1]
-        for node in self.nodes:
-            self.wait_for_chainlocked_block(node, tip, expected=False, timeout=15)
+        self.wait_for_chainlocked_block_all_nodes(tip, timeout=5)
         self.log.info("Shouldn't accept fake clsig for 'tip + SIGN_HEIGHT_OFFSET + 1' block height")
         fake_clsig2, fake_block_hash2 = self.create_fake_clsig(SIGN_HEIGHT_OFFSET + 1)
         p2p_node.send_clsig(fake_clsig2)
         time.sleep(5)
-        # Note: fake_block_hash1 is a blockhash for the fake_clsig1 we accepted initially, not for the new fake_clsig2
-        assert(self.nodes[0].getbestchainlock()["blockhash"] == fake_block_hash1)
+        for node in self.nodes:
+            assert(self.nodes[0].getchainlocks()["recent_chainlock"]["blockhash"] == tip)
+        assert(self.nodes[0].getchainlocks()["active_chainlock"]["blockhash"] == tip)
         self.log.info("Should accept fake clsig for 'tip + SIGN_HEIGHT_OFFSET' but new clsigs should still be formed")
         fake_clsig3, fake_block_hash3 = self.create_fake_clsig(SIGN_HEIGHT_OFFSET)
         p2p_node.send_clsig(fake_clsig3)
         self.bump_mocktime(7, nodes=self.nodes)
         for node in self.nodes:
-            self.wait_for_best_chainlock(node, fake_block_hash3, timeout=15)
+            self.wait_for_most_recent_chainlock(node, fake_block_hash3, timeout=15)
         tip = self.nodes[0].generate(1)[-1]
         self.bump_mocktime(7, nodes=self.nodes)
         self.wait_for_chainlocked_block_all_nodes(tip, timeout=15)
@@ -214,7 +215,7 @@ class LLMQChainLocksTest(DashTestFramework):
         height = self.nodes[0].getblockcount() + height_offset
         fake_block = create_block(0xff, create_coinbase(height))
         # create a fake clsig for that block
-        request_id_buf = ser_string(b"clsig") + struct.pack("<I", height)
+        request_id_buf = ser_string(b"clsig") + struct.pack("<I", height) + struct.pack("<I", 0)
         request_id = hash256(request_id_buf)[::-1].hex()
         for mn in self.mninfo:
             mn.node.quorum_sign(100, request_id, fake_block.hash)

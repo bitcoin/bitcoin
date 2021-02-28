@@ -3267,24 +3267,21 @@ bool CChainState::PreciousBlock(BlockValidationState& state, const CChainParams&
 bool PreciousBlock(BlockValidationState& state, const CChainParams& params, CBlockIndex *pindex) {
     return ::ChainstateActive().PreciousBlock(state, params, pindex);
 }
-void CChainState::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex, const llmq::CChainLockSig& bestChainLockWithKnownBlock, const bool isEnforced)
+void CChainState::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex)
 {
-    LOCK(m_cs_chainstate);
+    AssertLockNotHeld(cs_main);
+    if (!bestChainLockBlockIndex) {
+        // we don't have the header/block, so we can't do anything right now
+        return;
+    }
     BlockValidationState state;
     const CChainParams& params = Params();
     const CBlockIndex* currentBestChainLockBlockIndex;
     {
         LOCK(cs_main);
         const CBlockIndex* pindex = bestChainLockBlockIndex;
-        if (!isEnforced) {
-            return;
-        }
         pindex = currentBestChainLockBlockIndex = bestChainLockBlockIndex;
 
-        if (!currentBestChainLockBlockIndex) {
-            // we don't have the header/block, so we can't do anything right now
-            return;
-        }
         // Go backwards through the chain referenced by clsig until we find a block that is part of the main chain.
         // For each of these blocks, check if there are children that are NOT part of the chain referenced by clsig
         // and mark all of them as conflicting.
@@ -3295,8 +3292,8 @@ void CChainState::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockInde
                 if (jt->second == pindex) {
                     continue;
                 }
-                LogPrintf("CChainLocksHandler::%s -- CLSIG (%s) marked block %s as conflicting\n",
-                            __func__, bestChainLockWithKnownBlock.ToString(), jt->second->GetBlockHash().ToString());
+                LogPrintf("CChainLocksHandler::%s -- CLSIG marked block %s as conflicting\n",
+                            __func__, jt->second->GetBlockHash().ToString());
                 if(!MarkConflictingBlock(state, params, jt->second)){
                     LogPrintf("CChainLocksHandler::%s -- MarkConflictingBlock failed: %s\n", __func__, state.ToString());
                     // This should not have happened and we are in a state were it's not safe to continue anymore
@@ -3597,8 +3594,8 @@ void ResetBlockFailureFlags(CBlockIndex *pindex) {
     return ::ChainstateActive().ResetBlockFailureFlags(pindex);
 }
 // SYSCOIN
-void EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex, const llmq::CChainLockSig& bestChainLockWithKnownBlock, const bool isEnforced) {
-    ::ChainstateActive().EnforceBestChainLock(bestChainLockBlockIndex, bestChainLockWithKnownBlock, isEnforced);
+void EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex) {
+    ::ChainstateActive().EnforceBestChainLock(bestChainLockBlockIndex);
 }
 CBlockIndex* BlockManager::AddToBlockIndex(const CBlockHeader& block, enum BlockStatus nStatus)
 {

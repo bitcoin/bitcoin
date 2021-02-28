@@ -144,7 +144,9 @@ class LLMQSigningTest(DashTestFramework):
         self.mine_quorum()
         assert_sigs_nochange(True, False, True, 3)
 
-        # Mine 2 more quorums, so that the one used for the the recovered sig should become inactive, nothing should change
+        # Mine 4 more quorums, so that the one used for the the recovered sig should become inactive, nothing should change
+        self.mine_quorum()
+        self.mine_quorum()
         self.mine_quorum()
         self.mine_quorum()
         assert_sigs_nochange(True, False, True, 3)

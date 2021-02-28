@@ -4812,10 +4812,9 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
     // MaybeSendPing may have marked peer for disconnection
     if (pto->fDisconnect) return true;
-
+    // SYSCOIN
     {
         LOCK(cs_main);
-
         CNodeState &state = *State(pto->GetId());
 
         // Address refresh broadcast
@@ -5121,9 +5120,9 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         }
                     }
                     // SYSCOIN Send an inv for the best ChainLock we have
-                    const auto& clsig = llmq::chainLocksHandler->GetBestChainLock();
-                    if (!clsig.IsNull()) {
-                        uint256 chainlockHash = ::SerializeHash(clsig);
+                    const auto& clsigs = llmq::chainLocksHandler->GetBestChainLocks();
+                    for (const auto& clsig_pair : clsigs) {
+                        uint256 chainlockHash = ::SerializeHash(*clsig_pair.second);                        
                         CInv inv(MSG_CLSIG, chainlockHash);
                         vInv.push_back(inv);
                         pto->m_tx_relay->filterInventoryKnown.insert(inv.hash);

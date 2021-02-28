@@ -107,9 +107,9 @@ static Consensus::LLMQParams llmq_test = {
         .dkgMiningWindowEnd = 18,
         .dkgBadVotesThreshold = 2,
 
-        .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
+        .signingActiveQuorumCount = 4, // just a few ones to allow easier testing
 
-        .keepOldConnections = 3,
+        .keepOldConnections = 5,
         .recoveryMembers = 3,
 };
 
@@ -153,25 +153,6 @@ static Consensus::LLMQParams llmq50_60 = {
         .recoveryMembers = 25,
 };
 
-
-static Consensus::LLMQParams llmq400_60 = {
-        .type = Consensus::LLMQ_400_60,
-        .name = "llmq_400_60",
-        .size = 400,
-        .minSize = 300,
-        .threshold = 240,
-
-        .dkgInterval = 60 * 12, // one DKG every 12 hour
-        .dkgPhaseBlocks = 10,
-        .dkgMiningWindowStart = 50, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 70,
-        .dkgBadVotesThreshold = 300,
-
-        .signingActiveQuorumCount = 4, // two days worth of LLMQs
-
-        .keepOldConnections = 5,
-        .recoveryMembers = 100,
-};
 void CChainParams::UpdateLLMQV17Params(int size, int threshold) {
     consensus.llmqs.emplace(Consensus::LLMQ_TEST_V17, llmq_test_v17);
     auto& params = consensus.llmqs.at(Consensus::LLMQ_TEST_V17);
@@ -291,8 +272,7 @@ public:
         nMinSporkKeys = 1;   
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
-        consensus.llmqTypeChainLocks = Consensus::LLMQ_400_60;
+        consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
         nLLMQConnectionRetryTimeout = 60;
         fAllowMultiplePorts = false;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
@@ -438,7 +418,6 @@ public:
         nMinSporkKeys = 2;   
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
-        consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
         nLLMQConnectionRetryTimeout = 60;
         fAllowMultiplePorts = false;

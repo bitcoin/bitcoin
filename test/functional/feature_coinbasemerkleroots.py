@@ -111,25 +111,37 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         # Verify that the second quorum appears in MNLISTDIFF
         expectedDeleted = []
         expectedNew = [QuorumId(100, int(second_quorum, 16))]
-        quorums_before_third = self.test_getmnlistdiff_quorums(baseBlockHash, self.nodes[0].getbestblockhash(), quorumList, expectedDeleted, expectedNew)
-        block_before_third = self.nodes[0].getbestblockhash()
+        quorumList = self.test_getmnlistdiff_quorums(baseBlockHash, self.nodes[0].getbestblockhash(), quorumList, expectedDeleted, expectedNew)
+        baseBlockHash = self.nodes[0].getbestblockhash()
 
         third_quorum = self.mine_quorum()
-
-        # Verify that the first quorum is deleted and the third quorum is added in MNLISTDIFF (the first got inactive)
-        expectedDeleted = [QuorumId(100, int(first_quorum, 16))]
-        expectedNew = [QuorumId(100, int(third_quorum, 16))]
-        self.test_getmnlistdiff_quorums(block_before_third, self.nodes[0].getbestblockhash(), quorums_before_third, expectedDeleted, expectedNew)
-
-        # Verify that the diff between genesis and best block is the current active set (second and third quorum)
         expectedDeleted = []
-        expectedNew = [QuorumId(100, int(second_quorum, 16)), QuorumId(100, int(third_quorum, 16))]
+        expectedNew = [QuorumId(100, int(third_quorum, 16))]
+        quorumList = self.test_getmnlistdiff_quorums(baseBlockHash, self.nodes[0].getbestblockhash(), quorumList, expectedDeleted, expectedNew)
+        baseBlockHash = self.nodes[0].getbestblockhash()
+
+        fourth_quorum = self.mine_quorum()
+        expectedDeleted = []
+        expectedNew = [QuorumId(100, int(fourth_quorum, 16))]
+
+        quorums_before_fifth = self.test_getmnlistdiff_quorums(baseBlockHash, self.nodes[0].getbestblockhash(), quorumList, expectedDeleted, expectedNew)
+        block_before_fifth = self.nodes[0].getbestblockhash()
+
+        fifth_quorum = self.mine_quorum()
+        # Verify that the first quorum is deleted and the fifth quorum is added in MNLISTDIFF (the first got inactive)
+        expectedDeleted = [QuorumId(100, int(first_quorum, 16))]
+        expectedNew = [QuorumId(100, int(fifth_quorum, 16))]
+        self.test_getmnlistdiff_quorums(block_before_fifth, self.nodes[0].getbestblockhash(), quorums_before_fifth, expectedDeleted, expectedNew)
+
+        # Verify that the diff between genesis and best block is the current active set (second and fifth quorum)
+        expectedDeleted = []
+        expectedNew = [QuorumId(100, int(second_quorum, 16)), QuorumId(100, int(third_quorum, 16)), QuorumId(100, int(fourth_quorum, 16)), QuorumId(100, int(fifth_quorum, 16))]
         self.test_getmnlistdiff_quorums(null_hash, self.nodes[0].getbestblockhash(), {}, expectedDeleted, expectedNew)
 
-        # Now verify that diffs are correct around the block that mined the third quorum.
+        # Now verify that diffs are correct around the block that mined the fifth quorum.
         # This tests the logic in CalcCbTxMerkleRootQuorums, which has to manually add the commitment from the current
         # block
-        mined_in_block = self.nodes[0].quorum_info(100, third_quorum)["minedBlock"]
+        mined_in_block = self.nodes[0].quorum_info(100, fifth_quorum)["minedBlock"]
         prev_block = self.nodes[0].getblock(mined_in_block)["previousblockhash"]
         prev_block2 = self.nodes[0].getblock(prev_block)["previousblockhash"]
         next_block = self.nodes[0].getblock(mined_in_block)["nextblockhash"]
@@ -137,27 +149,27 @@ class LLMQCoinbaseCommitmentsTest(DashTestFramework):
         # The 2 block before the quorum was mined should both give an empty diff
         expectedDeleted = []
         expectedNew = []
-        self.test_getmnlistdiff_quorums(block_before_third, prev_block2, quorums_before_third, expectedDeleted, expectedNew)
-        self.test_getmnlistdiff_quorums(block_before_third, prev_block, quorums_before_third, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(block_before_fifth, prev_block2, quorums_before_fifth, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(block_before_fifth, prev_block, quorums_before_fifth, expectedDeleted, expectedNew)
         # The block in which the quorum was mined and the 2 after that should all give the same diff
         expectedDeleted = [QuorumId(100, int(first_quorum, 16))]
-        expectedNew = [QuorumId(100, int(third_quorum, 16))]
-        quorums_with_third = self.test_getmnlistdiff_quorums(block_before_third, mined_in_block, quorums_before_third, expectedDeleted, expectedNew)
-        self.test_getmnlistdiff_quorums(block_before_third, next_block, quorums_before_third, expectedDeleted, expectedNew)
-        self.test_getmnlistdiff_quorums(block_before_third, next_block2, quorums_before_third, expectedDeleted, expectedNew)
+        expectedNew = [QuorumId(100, int(fifth_quorum, 16))]
+        quorums_with_fifth = self.test_getmnlistdiff_quorums(block_before_fifth, mined_in_block, quorums_before_fifth, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(block_before_fifth, next_block, quorums_before_fifth, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(block_before_fifth, next_block2, quorums_before_fifth, expectedDeleted, expectedNew)
         # A diff between the two block that happened after the quorum was mined should give an empty diff
         expectedDeleted = []
         expectedNew = []
-        self.test_getmnlistdiff_quorums(mined_in_block, next_block, quorums_with_third, expectedDeleted, expectedNew)
-        self.test_getmnlistdiff_quorums(mined_in_block, next_block2, quorums_with_third, expectedDeleted, expectedNew)
-        self.test_getmnlistdiff_quorums(next_block, next_block2, quorums_with_third, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(mined_in_block, next_block, quorums_with_fifth, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(mined_in_block, next_block2, quorums_with_fifth, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(next_block, next_block2, quorums_with_fifth, expectedDeleted, expectedNew)
 
         # Using the same block for baseBlockHash and blockHash should give empty diffs
-        self.test_getmnlistdiff_quorums(prev_block, prev_block, quorums_before_third, expectedDeleted, expectedNew)
-        self.test_getmnlistdiff_quorums(prev_block2, prev_block2, quorums_before_third, expectedDeleted, expectedNew)
-        self.test_getmnlistdiff_quorums(mined_in_block, mined_in_block, quorums_with_third, expectedDeleted, expectedNew)
-        self.test_getmnlistdiff_quorums(next_block, next_block, quorums_with_third, expectedDeleted, expectedNew)
-        self.test_getmnlistdiff_quorums(next_block2, next_block2, quorums_with_third, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(prev_block, prev_block, quorums_before_fifth, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(prev_block2, prev_block2, quorums_before_fifth, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(mined_in_block, mined_in_block, quorums_with_fifth, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(next_block, next_block, quorums_with_fifth, expectedDeleted, expectedNew)
+        self.test_getmnlistdiff_quorums(next_block2, next_block2, quorums_with_fifth, expectedDeleted, expectedNew)
 
 
     def test_getmnlistdiff(self, baseBlockHash, blockHash, baseMNList, expectedDeleted, expectedUpdated):

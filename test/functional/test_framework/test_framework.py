@@ -1184,11 +1184,11 @@ class DashTestFramework(SyscoinTestFramework):
         for node in self.nodes:
             self.wait_for_chainlocked_block(node, block_hash, timeout=timeout)
 
-    def wait_for_best_chainlock(self, node, block_hash, timeout=15):
+    def wait_for_most_recent_chainlock(self, node, block_hash, timeout=15):
         def check_cl():
             try:
                 self.bump_mocktime(1)
-                return node.getbestchainlock()["blockhash"] == block_hash
+                return node.getchainlocks()["recent_chainlock"]["blockhash"] == block_hash
             except:
                 return False
         wait_until_helper(check_cl, timeout=timeout, sleep=0.5)
@@ -1197,7 +1197,7 @@ class DashTestFramework(SyscoinTestFramework):
         def check_sporks_same():
             self.bump_mocktime(1)
             sporks = self.nodes[0].spork('show')
-            return all(node.spork('show') == sporks for node in self.nodes[1:])
+            return all(node.spork('show') == sporks for node in self.nodes)
         wait_until_helper(check_sporks_same, timeout=timeout, sleep=0.5)
 
     def wait_for_quorum_connections(self, expected_connections, nodes, timeout = 60, wait_proc=None, done_proc=None):

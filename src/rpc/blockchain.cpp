@@ -271,10 +271,14 @@ static RPCHelpMan getbestblockhash()
 }
 
 
-static RPCHelpMan getbestchainlock()
+static RPCHelpMan getchainlocks()
 {
-    return RPCHelpMan{"getbestchainlock",
-            "\nReturns information about the best chainlock. Throws an error if there is no known chainlock yet.\n",
+    return RPCHelpMan{"getchainlocks",
+            "\nReturns information about the active and the most recent chainlocks.\n"
+            "The active chainlock is the one that has enough signatures and the block\n"
+            "it tries to lock is known by our node. The recent chainlock might not have\n"
+            "enough signatures or its block might not be known by our node yet.\n"
+            "Throws an error if there is no known chainlock yet.\n",
             {
             },
             RPCResult{
@@ -286,23 +290,46 @@ static RPCHelpMan getbestchainlock()
                     {RPCResult::Type::BOOL, "known_block", "True if the block is known by our node"},
                 }},
             RPCExamples{
-                HelpExampleCli("getbestchainlock", "")
-        + HelpExampleRpc("getbestchainlock", "")
+                HelpExampleCli("getchainlocks", "")
+        + HelpExampleRpc("getchainlocks", "")
             },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    UniValue result(UniValue::VOBJ);
     ChainstateManager& chainman = EnsureChainman(request.context);
-    llmq::CChainLockSig clsig = llmq::chainLocksHandler->GetBestChainLock();
+    UniValue result(UniValue::VOBJ);
+    UniValue recentChainlock(UniValue::VOBJ);
+    UniValue bestChainlock(UniValue::VOBJ);
+
+    llmq::CChainLockSig clsig = llmq::chainLocksHandler->GetMostRecentChainLock();
     if (clsig.IsNull()) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to find any chainlock");
     }
-    result.pushKV("blockhash", clsig.blockHash.GetHex());
-    result.pushKV("height", clsig.nHeight);
-    result.pushKV("signature", clsig.sig.ToString());
+    recentChainlock.pushKV("blockhash", clsig.blockHash.GetHex());
+    recentChainlock.pushKV("height", clsig.nHeight);
+    recentChainlock.pushKV("signature", clsig.sig.ToString());
 
     LOCK(cs_main);
-    result.pushKV("known_block", chainman.BlockIndex().count(clsig.blockHash) > 0);
+    recentChainlock.pushKV("known_block", chainman.BlockIndex().count(clsig.blockHash) > 0);
+    result.pushKV("recent_chainlock", recentChainlock);
+
+
+    const auto& clsigs = llmq::chainLocksHandler->GetBestChainLocks();
+    if (clsigs.empty()) {
+        result.pushKV("active_chainlock", bestChainlock);
+        return result;
+    }
+
+    UniValue lockedBlockSigs(UniValue::VARR);
+    bestChainlock.pushKV("blockhash", clsigs.begin()->second->blockHash.GetHex());
+    bestChainlock.pushKV("height", clsigs.begin()->second->nHeight);
+    for (const auto& clsig_pair : clsigs) {
+        UniValue sig(UniValue::VOBJ);
+        sig.pushKV("quorumHash", clsig_pair.first->qc.quorumHash.GetHex());
+        sig.pushKV("signature", clsig_pair.second->sig.ToString());
+        lockedBlockSigs.push_back(sig);
+    }
+    bestChainlock.pushKV("signatures", lockedBlockSigs);
+    result.pushKV("active_chainlock", bestChainlock);
     return result;
 },
     };
@@ -2643,7 +2670,7 @@ static const CRPCCommand commands[] =
     { "blockchain",         &scantxoutset,                       },
     { "blockchain",         &getblockfilter,                     },
     // SYSCOIN
-    { "blockchain",         &getbestchainlock,                   },
+    { "blockchain",         &getchainlocks,                      },
 
     /* Not shown in help */
     { "hidden",              &invalidateblock,                   },

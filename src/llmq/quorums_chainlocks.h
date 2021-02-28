@@ -36,6 +36,15 @@ public:
     std::string ToString() const;
 };
 
+typedef std::shared_ptr<const CChainLockSig> CChainLockSigCPtr;
+
+struct ReverseHeightComparator
+{
+    bool operator()(const int h1, const int h2) const {
+        return h1 > h2;
+    }
+};
+
 class CChainLocksHandler : public CRecoveredSigsListener
 {
     static const int64_t CLEANUP_INTERVAL = 1000 * 30;
@@ -47,13 +56,14 @@ private:
     bool isEnabled{false};
     bool isEnforced{false};
 
-    uint256 bestChainLockHash;
-    CChainLockSig bestChainLock;
+    CChainLockSig mostRecentChainLockCandidate;
+    // Keep best chainlock candidates, sorted by height (highest heght first).
+    std::map<int, std::map<CQuorumCPtr, CChainLockSigCPtr>, ReverseHeightComparator> bestChainLockCandidates;
 
-    CChainLockSig bestChainLockWithKnownBlock;
     const CBlockIndex* bestChainLockBlockIndex{nullptr};
-    int32_t lastSignedHeight{-1};
-    uint256 lastSignedRequestId;
+
+    int32_t lastTrySignHeight{-1};
+    std::set<uint256> lastSignedRequestIds;
     uint256 lastSignedMsgHash;
 
     std::map<uint256, int64_t> seenChainLocks;
@@ -71,7 +81,8 @@ public:
 
     bool AlreadyHave(const uint256& hash);
     bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret);
-    CChainLockSig GetBestChainLock();
+    CChainLockSig GetMostRecentChainLock();
+    const std::map<CQuorumCPtr, CChainLockSigCPtr> GetBestChainLocks();
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
     void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash);
@@ -90,6 +101,7 @@ private:
     bool InternalHasChainLock(int nHeight, const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
+    void TryUpdateBestChainLockIndex(const CBlockIndex* pindex, size_t threshold) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void Cleanup();
 };
 
