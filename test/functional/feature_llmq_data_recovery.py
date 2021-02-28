@@ -124,6 +124,10 @@ class LLMQ_Data_Recovery(DashTestFramework):
         # This two nodes will remain the only ones with valid DKG data
         last_resort_test = None
         last_resort_v17 = None
+        self.mine_quorum()
+        self.mine_quorum()
+        self.mine_quorum()
+        self.mine_quorum()
         while True:
             # Mine the quorums used for the recovery test
             quorum_hash_recover = self.mine_quorum()

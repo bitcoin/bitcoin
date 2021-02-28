@@ -228,7 +228,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
             return;
         }
         if (quorums_tried.insert(quorum).second) {
-            uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, requestId, clsig.blockHash);
+            const uint256 &signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, requestId, clsig.blockHash);
             if (clsig.sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash)) {
                 LOCK(cs);
                 // found valid
