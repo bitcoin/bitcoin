@@ -217,7 +217,6 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
     bool solved = SignStep(provider, creator, fromPubKey, result, whichType, SigVersion::BASE, sigdata);
     bool P2SH = false;
     CScript subscript;
-    sigdata.scriptWitness.stack.clear();
 
     if (solved && whichType == TxoutType::SCRIPTHASH)
     {
@@ -254,6 +253,7 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
         sigdata.witness = true;
     }
 
+    if (!sigdata.witness) sigdata.scriptWitness.stack.clear();
     if (P2SH) {
         result.push_back(std::vector<unsigned char>(subscript.begin(), subscript.end()));
     }
