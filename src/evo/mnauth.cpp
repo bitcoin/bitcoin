@@ -181,7 +181,15 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
             pnode->verifiedProRegTxHash = mnauth.proRegTxHash;
             pnode->verifiedPubKeyHash = dmn->pdmnState->pubKeyOperator.GetHash();
         }
-
+        if (!pnode->m_masternode_iqr_connection && connman.IsMasternodeQuorumRelayMember(pnode->verifiedProRegTxHash)) {
+            // Tell our peer that we're interested in plain LLMQ recovered signatures.
+            // Otherwise the peer would only announce/send messages resulting from QRECSIG,
+            // e.g. InstantSend locks or ChainLocks. SPV and regular full nodes should not send
+            // this message as they are usually only interested in the higher level messages.
+            const CNetMsgMaker msgMaker(pnode->GetCommonVersion());
+            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::QSENDRECSIGS));
+            pnode->m_masternode_iqr_connection = true;
+        }
         LogPrint(BCLog::NET, "CMNAuth::%s -- Valid MNAUTH for %s, peer=%d\n", __func__, mnauth.proRegTxHash.ToString(), pnode->GetId());
     }
 }

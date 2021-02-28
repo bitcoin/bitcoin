@@ -147,11 +147,10 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
     {
         CNetMsgMaker msgMaker(pnode->GetCommonVersion());
 
-        // Don't try to sync any data from outbound "masternode" connections -
-        // they are temporary and should be considered unreliable for a sync process.
+        // Don't try to sync any data from outbound non-relay "masternode" connections.
         // Inbound connection this early is most likely a "masternode" connection
         // initiated from another node, so skip it too.
-        if(pnode->m_masternode_connection || (fMasternodeMode && pnode->IsInboundConn())) continue;
+        if (!pnode->CanRelay() || (fMasternodeMode && pnode->IsInboundConn())) continue;
 
         // QUICK MODE (REGTEST ONLY!)
         if(fRegTest)

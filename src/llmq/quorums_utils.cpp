@@ -193,13 +193,16 @@ void CLLMQUtils::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pi
     }
 
     std::set<uint256> connections;
+    std::set<uint256> relayMembers;
     if (isMember) {
         connections = CLLMQUtils::GetQuorumConnections(llmqType, pindexQuorum, myProTxHash, true);
+        relayMembers = CLLMQUtils::GetQuorumRelayMembers(llmqType, pindexQuorum, myProTxHash, true);
     } else {
         auto cindexes = CLLMQUtils::CalcDeterministicWatchConnections(llmqType, pindexQuorum, members.size(), 1);
         for (auto idx : cindexes) {
             connections.emplace(members[idx]->proTxHash);
         }
+        relayMembers = connections;
     }
     if (!connections.empty()) {
         if (!connman.HasMasternodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash()) && LogAcceptCategory(BCLog::LLMQ)) {
@@ -218,6 +221,9 @@ void CLLMQUtils::EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pi
             LogPrint(BCLog::NET, "%s\n", debugMsg.c_str());
         }
         connman.SetMasternodeQuorumNodes(llmqType, pindexQuorum->GetBlockHash(), connections);
+    }
+    if (!relayMembers.empty()) {
+        connman.SetMasternodeQuorumRelayMembers(llmqType, pindexQuorum->GetBlockHash(), relayMembers);
     }
 }
 

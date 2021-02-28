@@ -1003,11 +1003,10 @@ int CGovernanceManager::RequestGovernanceObjectVotes(const std::vector<CNode*>& 
         }
         bool fAsked = false;
         for (CNode* pnode : vNodesCopy) {
-            // Only use regular peers, don't try to ask from outbound "masternode" connections -
-            // they stay connected for a short period of time and it's possible that we won't get everything we should.
-            // Only use outbound connections - inbound connection could be a "masternode" connection
+            /// Don't try to sync any data from outbound non-relay "masternode" connections.
+            // Inbound connection this early is most likely a "masternode" connection
             // initiated from another node, so skip it too.
-            if (pnode->m_masternode_connection || (fMasternodeMode && pnode->IsInboundConn())) continue;
+            if (!pnode->CanRelay() || (fMasternodeMode && pnode->IsInboundConn())) continue;
             // stop early to prevent setAskFor overflow
             size_t nProjectedSize;
             {
@@ -1208,7 +1207,7 @@ void CGovernanceManager::RequestOrphanObjects(CConnman& connman)
     LogPrint(BCLog::GOBJECT, "CGovernanceObject::RequestOrphanObjects -- number objects = %d\n", vecHashesFiltered.size());
     for (const uint256& nHash : vecHashesFiltered) {
         for (CNode* pnode : vNodesCopy) {
-            if (pnode->m_masternode_connection) {
+            if (!pnode->CanRelay()) {
                 continue;
             }
             RequestGovernanceObject(pnode, nHash, connman);

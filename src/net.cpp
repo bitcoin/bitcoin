@@ -45,7 +45,7 @@
 #include <masternode/masternodesync.h>
 #include <evo/deterministicmns.h>
 #include <rpc/server.h>
-
+#include <netmessagemaker.h>
 /** Maximum number of block-relay-only anchor connections */
 static constexpr size_t MAX_BLOCK_RELAY_ONLY_ANCHORS = 2;
 static_assert (MAX_BLOCK_RELAY_ONLY_ANCHORS <= static_cast<size_t>(MAX_BLOCK_RELAY_ONLY_CONNECTIONS), "MAX_BLOCK_RELAY_ONLY_ANCHORS must not exceed MAX_BLOCK_RELAY_ONLY_CONNECTIONS.");
@@ -2965,6 +2965,30 @@ void CConnman::SetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumH
     }
 }
 
+void CConnman::SetMasternodeQuorumRelayMembers(uint8_t llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes)
+{
+    {
+        LOCK(cs_vPendingMasternodes);
+        auto it = masternodeQuorumRelayMembers.emplace(std::make_pair(llmqType, quorumHash), proTxHashes);
+        if (!it.second) {
+            it.first->second = proTxHashes;
+        }
+    }
+
+    // Update existing connections
+    ForEachNode([&](CNode* pnode) {
+        if (!pnode->verifiedProRegTxHash.IsNull() && !pnode->m_masternode_iqr_connection && IsMasternodeQuorumRelayMember(pnode->verifiedProRegTxHash)) {
+            // Tell our peer that we're interested in plain LLMQ recovered signatures.
+            // Otherwise the peer would only announce/send messages resulting from QRECSIG,
+            // e.g. InstantSend locks or ChainLocks. SPV and regular full nodes should not send
+            // this message as they are usually only interested in the higher level messages.
+            const CNetMsgMaker msgMaker(pnode->GetCommonVersion());
+            PushMessage(pnode, msgMaker.Make(NetMsgType::QSENDRECSIGS));
+            pnode->m_masternode_iqr_connection = true;
+        }
+    });
+}
+
 bool CConnman::HasMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash)
 {
     LOCK(cs_vPendingMasternodes);
@@ -3008,6 +3032,7 @@ void CConnman::RemoveMasternodeQuorumNodes(uint8_t llmqType, const uint256& quor
 {
     LOCK(cs_vPendingMasternodes);
     masternodeQuorumNodes.erase(std::make_pair(llmqType, quorumHash));
+    masternodeQuorumRelayMembers.erase(std::make_pair(llmqType, quorumHash));
 }
 
 bool CConnman::IsMasternodeQuorumNode(const CNode* pnode)
@@ -3036,6 +3061,20 @@ bool CConnman::IsMasternodeQuorumNode(const CNode* pnode)
             if (p.second.count(assumedProTxHash)) {
                 return true;
             }
+        }
+    }
+    return false;
+}
+
+bool CConnman::IsMasternodeQuorumRelayMember(const uint256& protxHash)
+{
+    if (protxHash.IsNull()) {
+        return false;
+    }
+    LOCK(cs_vPendingMasternodes);
+    for (const auto& p : masternodeQuorumRelayMembers) {
+        if (p.second.count(protxHash)) {
+            return true;
         }
     }
     return false;
@@ -3123,7 +3162,7 @@ bool CConnman::DisconnectNode(NodeId id)
 void CConnman::RelayOtherInv(const CInv &inv, const int minProtoVersion) {
     LOCK(cs_vNodes);
     for (const auto& pnode : vNodes)
-        if(pnode->nVersion >= minProtoVersion)
+        if(pnode->nVersion >= minProtoVersion && pnode->CanRelay())
             pnode->PushOtherInventory(inv);
 }
 

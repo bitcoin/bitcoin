@@ -458,6 +458,8 @@ public:
     bool m_masternode_connection;
     // If 'true' this node will be disconnected after MNAUTH
     bool m_masternode_probe_connection;
+    // If 'true', we identified it as an intra-quorum relay connection
+    bool m_masternode_iqr_connection{false};
     // Address of this peer
     const CAddress addr;
     // Bind address of our side of the connection
@@ -767,7 +769,8 @@ public:
     std::string GetAddrName() const;
     //! Sets the addrName only if it was not previously set
     void MaybeSetAddrName(const std::string& addrNameIn);
-
+    // SYSCOIN
+    bool CanRelay() const { return !m_masternode_connection || m_masternode_iqr_connection; }
     std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
 
     /** A ping-pong round trip has completed successfully. Update latest and minimum ping times. */
@@ -1080,6 +1083,7 @@ public:
     bool RemoveAddedNode(const std::string& node);
     // SYSCOIN
     bool AddPendingMasternode(const uint256& proTxHash);
+    void SetMasternodeQuorumRelayMembers(uint8_t llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
     void SetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
     bool HasMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash);
     void GetMasternodeQuorums(uint8_t llmqType, std::set<uint256> &result);
@@ -1087,6 +1091,7 @@ public:
     void GetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash, std::set<NodeId> &result) const;
     void RemoveMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumHash);
     bool IsMasternodeQuorumNode(const CNode* pnode);
+    bool IsMasternodeQuorumRelayMember(const uint256& protxHash);
     void AddPendingProbeConnections(const std::set<uint256>& proTxHashes);
     size_t GetMaxOutboundNodeCount();
     std::vector<AddedNodeInfo> GetAddedNodeInfo();
@@ -1259,6 +1264,7 @@ private:
     // SYSCOIN
     std::vector<uint256> vPendingMasternodes GUARDED_BY(cs_vPendingMasternodes);
     std::map<std::pair<uint8_t, uint256>, std::set<uint256>> masternodeQuorumNodes GUARDED_BY(cs_vPendingMasternodes);
+    std::map<std::pair<uint8_t, uint256>, std::set<uint256>> masternodeQuorumRelayMembers GUARDED_BY(cs_vPendingMasternodes);
     std::set<uint256> masternodePendingProbes;
     mutable RecursiveMutex cs_vPendingMasternodes;
     std::vector<CNode*> vNodes GUARDED_BY(cs_vNodes);

@@ -740,12 +740,13 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
         pendingReconstructedRecoveredSigs.erase(hash);
     }
 
-    
-    connman.ForEachNode([&](CNode* pnode) {
-        if (pnode->fSendRecSigs) {
-            pnode->PushOtherInventory(inv);
-        }
-    });
+    if (fMasternodeMode) {
+        connman.ForEachNode([&](CNode* pnode) {
+            if (pnode->fSendRecSigs) {
+                pnode->PushOtherInventory(inv);
+            }
+        });
+    }
 
     for (auto& l : listeners) {
         l->HandleNewRecoveredSig(*recoveredSig);
