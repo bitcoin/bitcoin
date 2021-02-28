@@ -464,9 +464,7 @@ int GuiMain(int argc, char* argv[])
 
     // Generate high-dpi pixmaps
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
-#if QT_VERSION >= 0x050600
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-#endif
 
 #if (QT_VERSION <= QT_VERSION_CHECK(5, 9, 8)) && defined(Q_OS_MACOS)
     const auto os_name = QSysInfo::prettyProductName();
