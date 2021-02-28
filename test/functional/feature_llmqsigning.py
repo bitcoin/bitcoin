@@ -5,7 +5,7 @@
 
 import time
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import force_finish_mnsync, assert_raises_rpc_error, assert_equal, hex_str_to_bytes
+from test_framework.util import force_finish_mnsync, assert_raises_rpc_error, assert_equal, hex_str_to_bytes, wait_until_helper
 from test_framework.p2p import (
   P2PInterface,
 )
@@ -201,7 +201,7 @@ class LLMQSigningTest(DashTestFramework):
             force_finish_mnsync(mn.node)
             # Make sure intra-quorum connections were also restored
             self.bump_mocktime(1)  # need this to bypass quorum connection retry timeout
-            self.wait_until(lambda: mn.node.getconnectioncount() == 5, timeout=10, sleep=2)
+            wait_until_helper(lambda: mn.node.getconnectioncount() == 5, timeout=10, sleep=2)
             mn.node.ping()
             self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
             self.nodes[0].generate(1)

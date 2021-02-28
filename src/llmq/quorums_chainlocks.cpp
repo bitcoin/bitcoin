@@ -163,7 +163,7 @@ void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
     }
 }
 
-void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CChainLockSig& clsig, const uint256&hash, const uint256& id )
+void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CChainLockSig& clsig, const uint256&hash, const uint256& idIn )
 {
     bool enforced = false;
     if (from != -1) {
@@ -226,28 +226,32 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
     RequestIdStep requestIdStep{clsig.nHeight};
     bool fValid{false};
     for(const auto& quorum: quorums_scanned) {
-        requestId = ::SerializeHash(requestIdStep);
-        LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG (%s) requestId=%s, peer=%d\n",
-            __func__, clsig.ToString(), requestId.ToString(), from);
         if (quorum == nullptr) {
             return;
         }
+        requestId = ::SerializeHash(requestIdStep);
         // if id is passed in just ensure it matches without having to check sig on every quorum
-        if((!id.IsNull() && requestId == id) || id.IsNull()) {
-            const uint256 &signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, requestId, clsig.blockHash);
-            if (clsig.sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash)) {
-                LOCK(cs);
-                // found valid
-                auto it = bestChainLockCandidates.find(clsig.nHeight);
-                if (it == bestChainLockCandidates.end()) {
-                    bestChainLockCandidates[clsig.nHeight].emplace(quorum, std::make_shared<const CChainLockSig>(clsig));
-                } else {
-                    it->second.emplace(quorum, std::make_shared<const CChainLockSig>(clsig));
-                }
-                fValid = true;
-                break;
-            }
+        if ((!idIn.IsNull() && idIn != requestId)) {
+            ++requestIdStep.nStep;
+            continue;
         }
+        LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG (%s) requestId=%s, peer=%d\n",
+            __func__, clsig.ToString(), requestId.ToString(), from);
+        
+        const uint256 &signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, requestId, clsig.blockHash);
+        if (clsig.sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash)) {
+            LOCK(cs);
+            // found valid
+            auto it = bestChainLockCandidates.find(clsig.nHeight);
+            if (it == bestChainLockCandidates.end()) {
+                bestChainLockCandidates[clsig.nHeight].emplace(quorum, std::make_shared<const CChainLockSig>(clsig));
+            } else {
+                it->second.emplace(quorum, std::make_shared<const CChainLockSig>(clsig));
+            }
+            fValid = true;
+            break;
+        }
+        
         // Try other quorums
         ++requestIdStep.nStep;
     }
