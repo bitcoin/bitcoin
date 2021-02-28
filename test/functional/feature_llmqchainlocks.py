@@ -191,7 +191,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.bump_mocktime(7, nodes=self.nodes)
         time.sleep(5)
         for node in self.nodes:
-            self.wait_for_most_recent_chainlock(node, self.nodes[0].getbestblockhash(), timeout=15)
+            self.wait_for_most_recent_chainlock(node, fake_block_hash1, timeout=15)
         tip = self.nodes[0].generate(1)[-1]
         self.wait_for_chainlocked_block_all_nodes(tip, timeout=5)
         self.log.info("Shouldn't accept fake clsig for 'tip + SIGN_HEIGHT_OFFSET + 1' block height")
@@ -208,7 +208,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.bump_mocktime(7, nodes=self.nodes)
         time.sleep(5)
         for node in self.nodes:
-            self.wait_for_most_recent_chainlock(node, tip, timeout=15)
+            self.wait_for_most_recent_chainlock(node, fake_block_hash3, timeout=15)
         tip = self.nodes[0].generate(1)[-1]
         self.bump_mocktime(7, nodes=self.nodes)
         self.wait_for_chainlocked_block_all_nodes(tip, timeout=15)
@@ -221,8 +221,9 @@ class LLMQChainLocksTest(DashTestFramework):
         # create a fake clsig for that block
         request_id_buf = ser_string(b"clsig") + struct.pack("<I", height) + struct.pack("<I", 0)
         request_id = hash256(request_id_buf)[::-1].hex()
+        quorum_hash = self.nodes[0].quorum_list(1)["llmq_test"][0]
         for mn in self.mninfo:
-            mn.node.quorum_sign(100, request_id, fake_block.hash)
+            mn.node.quorum_sign(100, request_id, fake_block.hash, quorum_hash)
         rec_sig = self.get_recovered_sig(request_id, fake_block.hash)
         fake_clsig = msg_clsig(height, fake_block.sha256, hex_str_to_bytes(rec_sig['sig']))
         return (fake_clsig, fake_block.hash)

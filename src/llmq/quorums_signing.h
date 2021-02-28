@@ -120,10 +120,6 @@ class CSigningManager
 {
     friend class CSigSharesManager;
 
-    // when selecting a quorum for signing and verification, we use CQuorumManager::SelectQuorum with this offset as
-    // starting height for scanning. This is because otherwise the resulting signatures would not be verifiable by nodes
-    // which are not 100% at the chain tip.
-    static const int SIGN_HEIGHT_OFFSET = 20;
 
 private:
     mutable RecursiveMutex cs;
@@ -143,6 +139,10 @@ private:
     std::vector<CRecoveredSigsListener*> recoveredSigsListeners;
 
 public:
+    // when selecting a quorum for signing and verification, we use CQuorumManager::SelectQuorum with this offset as
+    // starting height for scanning. This is because otherwise the resulting signatures would not be verifiable by nodes
+    // which are not 100% at the chain tip.
+    static const int SIGN_HEIGHT_OFFSET = 20;
     CSigningManager(CDBWrapper& llmqDb, bool fMemory, CConnman& _connman, PeerManager& _peerman);
 
     bool AlreadyHave(const uint256& hash);

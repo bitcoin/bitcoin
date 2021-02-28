@@ -195,6 +195,11 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
     CBlockIndex* pindexScan{nullptr};
     {
         LOCK(cs_main);
+        if (clsig.nHeight > ::ChainActive().Height() + CSigningManager::SIGN_HEIGHT_OFFSET) {
+            // too far into the future
+            LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- future CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
+            return;
+        }
         pindexSig = pindexScan = g_chainman.m_blockman.LookupBlockIndex(clsig.blockHash);
         if (pindexScan == nullptr) {
             // we don't know the block/header for this CLSIG yet, try scanning quorums at chain tip
@@ -219,7 +224,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
 
     uint256 requestId;
     RequestIdStep requestIdStep{clsig.nHeight};
-    bool bSigVerified = false;
+    bool fValid{false};
     for(const auto& quorum: quorums_scanned) {
         requestId = ::SerializeHash(requestIdStep);
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG (%s) requestId=%s, peer=%d\n",
@@ -239,14 +244,14 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
                 } else {
                     it->second.emplace(quorum, std::make_shared<const CChainLockSig>(clsig));
                 }
-                bSigVerified = true;
+                fValid = true;
                 break;
             }
         }
         // Try other quorums
         ++requestIdStep.nStep;
     }
-    if(!bSigVerified) {
+    if(!fValid) {
         // tried every possible quorum
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
         if (from != -1) {
