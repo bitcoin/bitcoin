@@ -29,8 +29,8 @@ class MiniWallet:
     def __init__(self, test_node):
         self._test_node = test_node
         self._utxos = []
-        self._address = ADDRESS_BCRT1_P2WSH_OP_TRUE
-        self._scriptPubKey = hex_str_to_bytes(self._test_node.validateaddress(self._address)['scriptPubKey'])
+        self.address = ADDRESS_BCRT1_P2WSH_OP_TRUE
+        self._scriptPubKey = hex_str_to_bytes(self._test_node.validateaddress(self.address)['scriptPubKey'])
 
     def scan_blocks(self, *, start=1, num):
         """Scan the blocks for self._address outputs and add them to self._utxos"""
@@ -43,7 +43,7 @@ class MiniWallet:
 
     def generate(self, num_blocks):
         """Generate blocks with coinbase outputs to the internal address, and append the outputs to the internal list"""
-        blocks = self._test_node.generatetoaddress(num_blocks, self._address)
+        blocks = self._test_node.generatetoaddress(num_blocks, self.address)
         for b in blocks:
             cb_tx = self._test_node.getblock(blockhash=b, verbosity=2)['tx'][0]
             self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value']})
