@@ -947,6 +947,7 @@ static RPCHelpMan getblock()
     }
 
     CBlock block;
+    std::vector<uint8_t> raw_block;
     const CBlockIndex* pblockindex;
     const CBlockIndex* tip;
     {
@@ -958,14 +959,30 @@ static RPCHelpMan getblock()
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
 
-        block = GetBlockChecked(pblockindex);
+        if (IsBlockPruned(pblockindex)) {
+            throw JSONRPCError(RPC_MISC_ERROR, "Block not available (pruned data)");
+        }
+
+        if (verbosity <= 0 && !RPCSerializationFlags()) {
+            // This one case doesn't need to parse the block at all
+            if (!ReadRawBlockFromDisk(raw_block, pblockindex, Params().MessageStart())) {
+                throw JSONRPCError(RPC_MISC_ERROR, "Block not found on disk");
+            }
+        } else {
+            block = GetBlockChecked(pblockindex);
+        }
     }
 
     if (verbosity <= 0)
     {
-        CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
-        ssBlock << block;
-        std::string strHex = HexStr(ssBlock);
+        std::string strHex;
+        if (raw_block.empty()) {
+            CDataStream ssBlock(SER_NETWORK, PROTOCOL_VERSION | RPCSerializationFlags());
+            ssBlock << block;
+            strHex = HexStr(ssBlock);
+        } else {
+            strHex = HexStr(raw_block);
+        }
         return strHex;
     }
 
