@@ -142,7 +142,7 @@ void CChainLocksHandler::TryUpdateBestChainLockIndex(const CBlockIndex* pindex, 
                 ++it;
             }
         }
-        LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- Droped old CLSIGs below the locked height (%d), bestChainLockCandidates size: %d\n",
+        LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- Dropped old CLSIGs below the locked height (%d), bestChainLockCandidates size: %d\n",
                 __func__, pindex->nHeight, bestChainLockCandidates.size());
     }
 }

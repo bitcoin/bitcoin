@@ -533,7 +533,7 @@ bool GetSyscoinData(const CScript &scriptPubKey, std::vector<unsigned char> &vch
         if (!scriptPubKey.GetOp(pc, opcode, vchData))
 		    return false;
     }
-    // shoudln't be another opcode after this
+    // shouldn't be another opcode after this
 	return !scriptPubKey.GetOp(pc, opcode);
 }
 
