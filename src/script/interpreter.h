@@ -168,7 +168,7 @@ struct PrecomputedTransactionData
     PrecomputedTransactionData() = default;
 
     template <class T>
-    void Init(const T& tx, std::vector<CTxOut>&& spent_outputs);
+    void Init(const T& tx, std::vector<CTxOut>&& spent_outputs, bool force = false);
 
     template <class T>
     explicit PrecomputedTransactionData(const T& tx);
