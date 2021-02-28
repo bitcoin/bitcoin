@@ -188,6 +188,8 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Should accept fake clsig but other quorums should sign the actual block on the same height and override the malicious one")
         fake_clsig1, fake_block_hash1 = self.create_fake_clsig(1)
         p2p_node.send_clsig(fake_clsig1)
+        self.bump_mocktime(7, nodes=self.nodes)
+        time.sleep(5)
         for node in self.nodes:
             self.wait_for_most_recent_chainlock(node, self.nodes[0].getbestblockhash(), timeout=15)
         tip = self.nodes[0].generate(1)[-1]
@@ -195,6 +197,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Shouldn't accept fake clsig for 'tip + SIGN_HEIGHT_OFFSET + 1' block height")
         fake_clsig2, fake_block_hash2 = self.create_fake_clsig(SIGN_HEIGHT_OFFSET + 1)
         p2p_node.send_clsig(fake_clsig2)
+        self.bump_mocktime(7, nodes=self.nodes)
         time.sleep(5)
         for node in self.nodes:
             assert(self.nodes[0].getchainlocks()["recent_chainlock"]["blockhash"] == tip)
@@ -203,6 +206,7 @@ class LLMQChainLocksTest(DashTestFramework):
         fake_clsig3, fake_block_hash3 = self.create_fake_clsig(SIGN_HEIGHT_OFFSET)
         p2p_node.send_clsig(fake_clsig3)
         self.bump_mocktime(7, nodes=self.nodes)
+        time.sleep(5)
         for node in self.nodes:
             self.wait_for_most_recent_chainlock(node, tip, timeout=15)
         tip = self.nodes[0].generate(1)[-1]
