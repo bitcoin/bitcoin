@@ -210,14 +210,26 @@ CScript GetScriptForRawPubKey(const CPubKey& pubkey);
 /** Generate a multisig script. */
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
 
+struct ShortestVectorFirstComparator
+{
+    bool operator()(const std::vector<unsigned char>& a, const std::vector<unsigned char>& b) const
+    {
+        if (a.size() < b.size()) return true;
+        if (a.size() > b.size()) return false;
+        return a < b;
+    }
+};
+
 struct TaprootSpendData
 {
     /** The BIP341 internal key. */
     XOnlyPubKey internal_key;
     /** The Merkle root of the script tree (0 if no scripts). */
     uint256 merkle_root;
-    /** Map from (script, leaf_version) to (sets of) control blocks. */
-    std::map<std::pair<CScript, int>, std::set<std::vector<unsigned char>>> scripts;
+    /** Map from (script, leaf_version) to (sets of) control blocks.
+     *  The control blocks are sorted by size, so that the signing logic can
+     *  easily prefer the cheapest one. */
+    std::map<std::pair<CScript, int>, std::set<std::vector<unsigned char>, ShortestVectorFirstComparator>> scripts;
     /** Merge other TaprootSpendData (for the same scriptPubKey) into this. */
     void Merge(TaprootSpendData other);
 };
