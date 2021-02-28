@@ -85,7 +85,7 @@ public:
     const std::map<CQuorumCPtr, CChainLockSigCPtr> GetBestChainLocks();
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
-    void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash);
+    void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash, const uint256& id=uint256());
     void AcceptedBlockHeader(const CBlockIndex* pindexNew);
     void UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload);
     void CheckActiveState();

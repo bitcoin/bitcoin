@@ -163,7 +163,7 @@ void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
     }
 }
 
-void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CChainLockSig& clsig, const uint256&hash )
+void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CChainLockSig& clsig, const uint256&hash, const uint256& id )
 {
     bool enforced = false;
     if (from != -1) {
@@ -182,9 +182,12 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
             bReturn = true;
         }
     }
-    if(bReturn) {
+    // don't hold lock while relaying which locks nodes/mempool
+    if (from != -1) {
         LOCK(cs_main);
         peerman.ForgetTxHash(from, hash);
+    }
+    if(bReturn) {
         return;
     }
 
@@ -197,6 +200,15 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
             // we don't know the block/header for this CLSIG yet, try scanning quorums at chain tip
             pindexScan = ::ChainActive().Tip();
         }
+        if (pindexSig != nullptr && pindexSig->nHeight != clsig.nHeight) {
+            // Should not happen
+            LogPrintf("CChainLocksHandler::%s -- height of CLSIG (%s) does not match the expected block's height (%d)\n",
+                    __func__, clsig.ToString(), pindexSig->nHeight);
+            if (from != -1) {
+                peerman.Misbehaving(from, 10, "invalid CLSIG");
+            }
+            return;
+        }
     }
     const auto& consensus = Params().GetConsensus();
     const auto& llmqType = consensus.llmqTypeChainLocks;
@@ -207,7 +219,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
 
     uint256 requestId;
     RequestIdStep requestIdStep{clsig.nHeight};
-    bool bSigned = false;
+    bool bSigVerified = false;
     for(const auto& quorum: quorums_scanned) {
         requestId = ::SerializeHash(requestIdStep);
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG (%s) requestId=%s, peer=%d\n",
@@ -215,24 +227,26 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
         if (quorum == nullptr) {
             return;
         }
-       
-        const uint256 &signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, requestId, clsig.blockHash);
-        if (clsig.sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash)) {
-            LOCK(cs);
-            // found valid
-            auto it = bestChainLockCandidates.find(clsig.nHeight);
-            if (it == bestChainLockCandidates.end()) {
-                bestChainLockCandidates[clsig.nHeight].emplace(quorum, std::make_shared<const CChainLockSig>(clsig));
-            } else {
-                it->second.emplace(quorum, std::make_shared<const CChainLockSig>(clsig));
+        // if id is passed in just ensure it matches without having to check sig on every quorum
+        if((!id.IsNull() && requestId == id) || id.IsNull()) {
+            const uint256 &signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, requestId, clsig.blockHash);
+            if (clsig.sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash)) {
+                LOCK(cs);
+                // found valid
+                auto it = bestChainLockCandidates.find(clsig.nHeight);
+                if (it == bestChainLockCandidates.end()) {
+                    bestChainLockCandidates[clsig.nHeight].emplace(quorum, std::make_shared<const CChainLockSig>(clsig));
+                } else {
+                    it->second.emplace(quorum, std::make_shared<const CChainLockSig>(clsig));
+                }
+                bSigVerified = true;
+                break;
             }
-            bSigned = true;
-            break;
         }
         // Try other quorums
         ++requestIdStep.nStep;
     }
-    if(!bSigned) {
+    if(!bSigVerified) {
         // tried every possible quorum
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
         if (from != -1) {
@@ -246,24 +260,10 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
         mostRecentChainLockCandidate = clsig;
 
         if (pindexSig != nullptr) {
-
-            if (pindexSig->nHeight != clsig.nHeight) {
-                // Should not happen, same as the conflict check from above.
-                LogPrintf("CChainLocksHandler::%s -- height of CLSIG (%s) does not match the expected block's height (%d)\n",
-                        __func__, clsig.ToString(), pindexSig->nHeight);
-                // Note: not relaying clsig here
-                return;
-            }
-
             TryUpdateBestChainLockIndex(pindexSig, (signingActiveQuorumCount / 2 + 1));
         }
         // else if (pindexSig == nullptr)
         // Note: make sure to still relay clsig further.
-    }
-    // don't hold lock while relaying which locks nodes/mempool
-    {
-        LOCK(cs_main);
-        peerman.ForgetTxHash(from, hash);
     }
     // Note: do not hold cs while calling RelayInv
     AssertLockNotHeld(cs);
@@ -474,7 +474,7 @@ void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recove
         clsig.sig = recoveredSig.sig.Get();
         lastSignedRequestIds.erase(recoveredSig.id);
     }
-    ProcessNewChainLock(-1, clsig, ::SerializeHash(clsig));
+    ProcessNewChainLock(-1, clsig, ::SerializeHash(clsig), recoveredSig.id);
 }
 
 bool CChainLocksHandler::HasChainLock(int nHeight, const uint256& blockHash)
