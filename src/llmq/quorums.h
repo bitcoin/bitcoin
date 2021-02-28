@@ -161,7 +161,6 @@ private:
     // Recovery of public key shares is very slow, so we start a background thread that pre-populates a cache so that
     // the public key shares are ready when needed later
     mutable CBLSWorkerCache blsCache;
-    mutable std::atomic<bool> fQuorumDataRecoveryThreadRunning{false};
 
 public:
     CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker);
@@ -210,7 +209,6 @@ public:
     void Start();
     void Stop();
 
-    void TriggerQuorumDataRecoveryThreads(const CBlockIndex* pIndex) const;
 
     void UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitialDownload);
 
@@ -235,13 +233,7 @@ private:
     bool BuildQuorumContributions(const CFinalCommitment& fqc, std::shared_ptr<CQuorum>& quorum) const;
 
     CQuorumCPtr GetQuorum(uint8_t llmqType, const CBlockIndex* pindex) const;
-    /// Returns the start offset for the masternode with the given proTxHash. This offset is applied when picking data recovery members of a quorum's
-    /// memberlist and is calculated based on a list of all member of all active quorums for the given llmqType in a way that each member
-    /// should receive the same number of request if all active llmqType members requests data from one llmqType quorum.
-    size_t GetQuorumRecoveryStartOffset(const CQuorumCPtr pQuorum, const CBlockIndex* pIndex) const;
-
     void StartCachePopulatorThread(const CQuorumCPtr pQuorum) const;
-    void StartQuorumDataRecoveryThread(const CQuorumCPtr pQuorum, const CBlockIndex* pIndex, uint16_t nDataMask) const;
 };
 
 extern CQuorumManager* quorumManager;

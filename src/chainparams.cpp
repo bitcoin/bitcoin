@@ -114,26 +114,6 @@ static Consensus::LLMQParams llmq_test = {
 };
 
 
-// this one is for testing only
-static Consensus::LLMQParams llmq_test_v17 = {
-        .type = Consensus::LLMQ_TEST_V17,
-        .name = "llmq_test_v17",
-        .size = 3,
-        .minSize = 2,
-        .threshold = 2,
-
-        .dkgInterval = 24, // one DKG per hour
-        .dkgPhaseBlocks = 2,
-        .dkgMiningWindowStart = 10, // dkgPhaseBlocks * 5 = after finalization
-        .dkgMiningWindowEnd = 18,
-        .dkgBadVotesThreshold = 2,
-
-        .signingActiveQuorumCount = 2, // just a few ones to allow easier testing
-
-        .keepOldConnections = 3,
-        .recoveryMembers = 3,
-};
-
 static Consensus::LLMQParams llmq50_60 = {
         .type = Consensus::LLMQ_50_60,
         .name = "llmq_50_60",
@@ -153,14 +133,6 @@ static Consensus::LLMQParams llmq50_60 = {
         .recoveryMembers = 25,
 };
 
-void CChainParams::UpdateLLMQV17Params(int size, int threshold) {
-    consensus.llmqs.emplace(Consensus::LLMQ_TEST_V17, llmq_test_v17);
-    auto& params = consensus.llmqs.at(Consensus::LLMQ_TEST_V17);
-    params.size = size;
-    params.minSize = threshold;
-    params.threshold = threshold;
-    params.dkgBadVotesThreshold = threshold;
-}
 /**
  * Main network
  */
@@ -823,11 +795,6 @@ void UpdateLLMQTestParams(int size, int threshold)
 {
     auto* params = const_cast<CChainParams*> (globalChainParams.get ());
     params->UpdateLLMQTestParams(size, threshold);
-}
-void UpdateLLMQV17Params(int size, int threshold)
-{
-    auto* params = const_cast<CChainParams*> (globalChainParams.get ());
-    params->UpdateLLMQV17Params(size, threshold);
 }
 std::ostream& operator<<(std::ostream& o, const AssumeutxoData& aud)
 {

@@ -527,14 +527,11 @@ void SetupServerArgs(NodeContext& node)
     argsman.AddArg("-mnconf=<file>", strprintf("Specify masternode configuration file (default: %s)", "masternode.conf"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mnconflock=<n>", strprintf("Lock masternodes from masternode configuration file (default: %u)", 1), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-maxrecsigsage=<n>", strprintf("Number of seconds to keep LLMQ recovery sigs (default: %u)", DEFAULT_MAX_RECOVERED_SIGS_AGE), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-llmq-data-recovery=<n>", strprintf("Enable automated quorum data recovery (default: %d)", llmq::DEFAULT_ENABLE_QUORUM_DATA_RECOVERY), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-llmq-qvvec-sync=<quorum name>", "Defines from which LLMQ type the masternode should sync quorum verification vectors. Can be used multiple times with different LLMQ types.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-masternodeblsprivkey=<n>", "Set the masternode private key", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-minsporkkeys=<n>", "Overrides minimum spork signers to change spork value. Only useful for regtest. Using this on mainnet or testnet will ban you.", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-assetindex=<n>", strprintf("Wallet is Asset aware, won't spend assets when sending only Syscoin (0-1, default: 0)"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);		
     argsman.AddArg("-dip3params=<n:m>", "DIP3 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);	
     argsman.AddArg("-llmqtestparams=<n:m>", "LLMQ params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
-    argsman.AddArg("-llmqv17params=<n:m>", "LLMQ v17 params used for testing only", ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-mncollateral=<n>", strprintf("Masternode Collateral required, used for testing only (default: %u)", DEFAULT_MN_COLLATERAL_REQUIRED), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-sporkkey=<key>", strprintf("Private key for use with sporks"), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
     argsman.AddArg("-watchquorums=<n>", strprintf("Watch and validate quorum communication (default: %u)", llmq::DEFAULT_WATCH_QUORUMS), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
@@ -1382,17 +1379,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
             }
             UpdateLLMQTestParams(size, threshold);
         }
-        if (args.IsArgSet("-llmqv17params")) {
-            std::string s = args.GetArg("-llmqv17params", "");
-            std::vector<std::string> v;
-            boost::split(v, s, boost::is_any_of(":"));
-            int size, threshold;
-            if (v.size() != 2 || !ParseInt32(v[0], &size) || !ParseInt32(v[1], &threshold)) {
-                return InitError(Untranslated("Invalid -llmqv17params specified"));
-            }
-            UpdateLLMQV17Params(size, threshold);
-        }
-    } else if (args.IsArgSet("-llmqtestparams") || args.IsArgSet("-llmqv17params")) {
+    } else if (args.IsArgSet("-llmqtestparams")) {
         return InitError(Untranslated("LLMQ test params can only be overridden on regtest."));
     }
     // Option to startup with mocktime set (used for regression testing):
@@ -1400,16 +1387,6 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     if (args.GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS))
         nLocalServices = ServiceFlags(nLocalServices | NODE_BLOOM);
-    // SYSCOIN
-    try {
-        const bool fRecoveryEnabled{llmq::CLLMQUtils::QuorumDataRecoveryEnabled()};
-        const bool fQuorumVvecRequestsEnabled{llmq::CLLMQUtils::GetEnabledQuorumVvecSyncTypes().size() > 0};
-        if (!fRecoveryEnabled && fQuorumVvecRequestsEnabled) {
-            InitWarning(Untranslated("-llmq-qvvec-sync set but recovery is disabled due to -llmq-data-recovery=0"));
-        }
-    } catch (const std::invalid_argument& e) {
-        return InitError(Untranslated(e.what()));
-    }
     if (args.GetArg("-rpcserialversion", DEFAULT_RPC_SERIALIZE_VERSION) < 0)
         return InitError(Untranslated("rpcserialversion must be non-negative."));
 

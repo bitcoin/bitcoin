@@ -16,7 +16,6 @@ mutex:CConnman::SocketHandler
 mutex:UpdateTip
 mutex:PeerManagerImpl::UpdatedBlockTip
 mutex:g_best_block_mutex
-mutex:CQuorumManager::StartQuorumDataRecoveryThread
 
 # race (TODO fix)
 race:CConnman::WakeMessageHandler
