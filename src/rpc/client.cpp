@@ -128,6 +128,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "gettxout", 2, "include_mempool" },
     { "gettxoutproof", 0, "txids" },
     { "gettxoutsetinfo", 1, "hash_or_height" },
+    { "gettxoutsetinfo", 2, "use_index"},
     { "lockunspent", 0, "unlock" },
     { "lockunspent", 1, "transactions" },
     { "send", 0, "outputs" },

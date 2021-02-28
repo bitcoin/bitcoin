@@ -50,6 +50,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
 
     def run_test(self):
         self._test_coin_stats_index()
+        self._test_use_index_option()
 
     def block_sanity_check(self, block_info):
         block_subsidy = 50
@@ -235,6 +236,16 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         self.wait_until(lambda: not try_rpc(-32603, "Unable to read UTXO set", index_node.gettxoutsetinfo, 'muhash'))
         res10 = index_node.gettxoutsetinfo('muhash')
         assert(res8['txouts'] < res10['txouts'])
+
+    def _test_use_index_option(self):
+        self.log.info("Test use_index option for nodes running the index")
+
+        self.connect_nodes(0, 1)
+        self.nodes[0].waitforblockheight(110)
+        res = self.nodes[0].gettxoutsetinfo('muhash')
+        option_res = self.nodes[1].gettxoutsetinfo(hash_type='muhash', hash_or_height=None, use_index=False)
+        del res['disk_size'], option_res['disk_size']
+        assert_equal(res, option_res)
 
 
 if __name__ == '__main__':
