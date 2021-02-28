@@ -30,13 +30,17 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
             force_finish_mnsync(self.nodes[i])
         self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
         self.wait_for_sporks_same()
 
-        self.mine_quorum()
-        self.mine_quorum()
-
-        # Make sure that all nodes are chainlocked at the same height before starting actual tests
-        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash(), timeout=30)
+        self.log.info("Mining 4 quorums")
+        for i in range(4):
+            self.mine_quorum()
+        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
+        self.wait_for_sporks_same()
+        self.log.info("Mine single block, wait for chainlock")
+        self.nodes[0].generate(1)
+        self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash())
 
         self.bump_mocktime(1)
         block = self.nodes[0].generate(1)[0]
