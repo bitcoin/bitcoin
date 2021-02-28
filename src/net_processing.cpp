@@ -4143,11 +4143,16 @@ void PeerManagerImpl::MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::mic
 
 void PeerManagerImpl::MaybeSendAddr(CNode& node, std::chrono::microseconds current_time)
 {
-    LOCK(node.m_addr_send_times_mutex);
+    // Nothing to do for non-address-relay peers
+    if (!node.RelayAddrsWithConn()) return;
+
+    assert(node.m_addr_known);
+
     const CNetMsgMaker msgMaker(node.GetCommonVersion());
 
-    if (fListen && node.RelayAddrsWithConn() &&
-        !m_chainman.ActiveChainstate().IsInitialBlockDownload() &&
+    LOCK(node.m_addr_send_times_mutex);
+    // Periodically advertise our local address to the peer.
+    if (fListen && !m_chainman.ActiveChainstate().IsInitialBlockDownload() &&
         node.m_next_local_addr_send < current_time) {
         // If we've sent before, clear the bloom filter for the peer, so that our
         // self-announcement will actually go out.
@@ -4165,14 +4170,12 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, std::chrono::microseconds curre
         node.m_next_local_addr_send = PoissonNextSend(current_time, AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL);
     }
 
-    //
-    // Message: addr
-    //
-    if (node.RelayAddrsWithConn() && node.m_next_addr_send < current_time) {
+    // We sent an `addr` message to this peer recently. Nothing more to do.
+    if (current_time <= node.m_next_addr_send) return;
+    {
         node.m_next_addr_send = PoissonNextSend(current_time, AVG_ADDRESS_BROADCAST_INTERVAL);
         std::vector<CAddress> vAddr;
         vAddr.reserve(node.vAddrToSend.size());
-        assert(node.m_addr_known);
 
         const char* msg_type;
         int make_flags;
