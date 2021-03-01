@@ -5,9 +5,8 @@
 
 #include "vbk/p2p_sync.hpp"
 #include "validation.h"
-#include <veriblock/entities/atv.hpp>
-#include <veriblock/entities/vbkblock.hpp>
-#include <veriblock/entities/vtb.hpp>
+#include <veriblock/pop.hpp>
+
 
 namespace VeriBlock {
 namespace p2p {

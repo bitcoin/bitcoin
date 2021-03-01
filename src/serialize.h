@@ -25,11 +25,7 @@
 
 #include <vbk/adaptors/univalue_json.hpp>
 
-#include <veriblock/entities/popdata.hpp>
-#include <veriblock/entities/btcblock.hpp>
-#include <veriblock/entities/altblock.hpp>
-#include <veriblock/blockchain/block_index.hpp>
-#include <veriblock/serde.hpp>
+#include <veriblock/pop.hpp>
 
 static const unsigned int MAX_SIZE = 0x02000000;
 

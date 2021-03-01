@@ -11,7 +11,8 @@
 
 #include <vbk/pop_service.hpp>
 #include <vbk/test/util/e2e_fixture.hpp>
-#include <veriblock/mock_miner.hpp>
+#include <veriblock/pop.hpp>
+
 
 using altintegration::BtcBlock;
 using altintegration::MockMiner;

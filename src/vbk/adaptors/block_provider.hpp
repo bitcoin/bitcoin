@@ -10,8 +10,7 @@
 
 #include <utility>
 
-#include "veriblock/storage/block_batch.hpp"
-#include "veriblock/storage/block_iterator.hpp"
+#include <veriblock/pop.hpp>
 
 namespace VeriBlock {
 

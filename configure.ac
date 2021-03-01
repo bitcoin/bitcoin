@@ -1276,7 +1276,7 @@ if test x$use_pkgconfig = xyes; then
   )
 else
   # alt-integration
-  AC_CHECK_HEADER([veriblock/pop_context.hpp],,AC_MSG_ERROR(veriblock-pop-cpp headers missing))
+  AC_CHECK_HEADER([veriblock/pop.hpp],,AC_MSG_ERROR(veriblock-pop-cpp headers missing))
   AC_CHECK_LIB([veriblock-pop-cpp],[main],[VERIBLOCK_POP_CPP_LIBS=" -lveriblock-pop-cpp"],AC_MSG_ERROR(veriblock-pop-cpp missing))
 
   AC_ARG_VAR(VERIBLOCK_POP_CPP_LIBS, "linker flags for VERIBLOCK_POP_CPP")

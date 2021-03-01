@@ -12,7 +12,7 @@
 #include <streams.h>
 #include <version.h>
 
-#include <veriblock/entities/popdata.hpp>
+#include <veriblock/pop.hpp>
 
 #include <algorithm>
 #include <amount.h>

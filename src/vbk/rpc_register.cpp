@@ -19,7 +19,8 @@
 #include "rpc_register.hpp"
 #include <vbk/merkle.hpp>
 #include <vbk/pop_service.hpp>
-#include <veriblock/mempool_result.hpp>
+#include <veriblock/pop.hpp>
+
 
 namespace VeriBlock {
 
