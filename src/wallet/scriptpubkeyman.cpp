@@ -2269,9 +2269,6 @@ const std::vector<CScript> DescriptorScriptPubKeyMan::GetScriptPubKeys() const
 bool DescriptorScriptPubKeyMan::GetDescriptorString(std::string& out) const
 {
     LOCK(cs_desc_man);
-    if (m_storage.IsLocked()) {
-        return false;
-    }
 
     FlatSigningProvider provider;
     provider.keys = GetKeys();
