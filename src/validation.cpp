@@ -4245,7 +4245,8 @@ CVerifyDB::~CVerifyDB()
 
 bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CChainState& active_chainstate, CCoinsView *coinsview, int nCheckLevel, int nCheckDepth)
 {
-    LOCK(cs_main);
+    AssertLockHeld(cs_main);
+
     assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
     if (active_chainstate.m_chain.Tip() == nullptr || active_chainstate.m_chain.Tip()->pprev == nullptr)
         return true;
