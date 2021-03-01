@@ -8,7 +8,7 @@
 
 #include <dbwrapper.h>
 #include <vbk/pop_common.hpp>
-#include <veriblock/storage/payloads_provider.hpp>
+#include <veriblock/pop.hpp>
 
 namespace VeriBlock {
 

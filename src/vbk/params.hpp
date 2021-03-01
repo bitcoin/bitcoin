@@ -7,8 +7,8 @@
 #define INTEGRATION_REFERENCE_BTC_VBTC_PARAMS_HPP
 
 #include <primitives/block.h>
-#include <veriblock/blockchain/alt_chain_params.hpp>
-#include <veriblock/config.hpp>
+#include <veriblock/pop.hpp>
+
 
 class ArgsManager;
 

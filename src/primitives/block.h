@@ -11,7 +11,7 @@
 #include <uint256.h>
 #include <vbk/vbk.hpp>
 
-#include "veriblock/entities/popdata.hpp"
+#include <veriblock/pop.hpp>
 
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work

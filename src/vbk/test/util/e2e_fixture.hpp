@@ -16,9 +16,8 @@
 #include <vbk/bootstraps.h>
 #include <vbk/log.hpp>
 #include <vbk/util.hpp>
-#include <veriblock/alt-util.hpp>
-#include <veriblock/mempool.hpp>
-#include <veriblock/mock_miner.hpp>
+#include <veriblock/pop.hpp>
+
 #include <consensus/merkle.h>
 
 using altintegration::ATV;

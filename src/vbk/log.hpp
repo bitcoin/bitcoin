@@ -7,7 +7,7 @@
 #define INTEGRATION_REFERENCE_BTC_LOG_HPP
 
 #include <logging.h>
-#include <veriblock/logger.hpp>
+#include <veriblock/pop.hpp>
 
 namespace VeriBlock {
 

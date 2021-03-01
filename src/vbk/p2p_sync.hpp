@@ -13,7 +13,7 @@
 #include <node/context.h>
 #include <rpc/blockchain.h>
 #include <vbk/pop_common.hpp>
-#include <veriblock/mempool.hpp>
+#include <veriblock/pop.hpp>
 
 namespace VeriBlock {
 

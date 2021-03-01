@@ -10,7 +10,8 @@
 #include <shutdown.h>
 #include <validation.h>
 #include <vbk/adaptors/payloads_provider.hpp>
-#include <veriblock/storage/util.hpp>
+#include <veriblock/pop.hpp>
+
 
 #ifdef WIN32
 #include <boost/thread/interruption.hpp>
@@ -21,7 +22,8 @@
 #include <vbk/adaptors/block_provider.hpp>
 #include <vbk/p2p_sync.hpp>
 #include <vbk/pop_common.hpp>
-#include <veriblock/crypto/progpow.hpp>
+#include <veriblock/pop.hpp>
+
 
 namespace VeriBlock {
 

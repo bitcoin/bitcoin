@@ -7,7 +7,7 @@
 #define INTEGRATION_REFERENCE_BTC_JSON_HPP
 
 #include <univalue.h>
-#include <veriblock/json.hpp>
+#include <veriblock/pop.hpp>
 
 /// contains partial specialization of ToJSON, which allows to write
 /// UniValue v = ToJSON<UniValue>(vbk entity);

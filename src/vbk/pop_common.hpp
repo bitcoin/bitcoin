@@ -7,7 +7,8 @@
 #define BITCOIN_SRC_VBK_POP_COMMON_HPP
 
 #include <uint256.h>
-#include <veriblock/pop_context.hpp>
+#include <veriblock/pop.hpp>
+
 
 class CBlockIndex;
 

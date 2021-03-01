@@ -21,7 +21,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
-#include <veriblock/blockchain/alt_chain_params.hpp>
+#include <veriblock/pop.hpp>
 
 #define VBK_1  0xc0
 #define VBK_VERSION (VBK_1 + 0x1)

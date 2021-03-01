@@ -15,7 +15,7 @@
 #include <primitives/block.h>
 
 #include <vbk/util.hpp>
-#include <veriblock/validation_state.hpp>
+#include <veriblock/pop.hpp>
 
 /** A "reason" why a transaction was invalid, suitable for determining whether the
   * provider of the transaction should be banned/ignored/disconnected/etc.

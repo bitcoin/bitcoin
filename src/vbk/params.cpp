@@ -12,7 +12,7 @@
 #include <util/system.h>
 #include <vbk/bootstraps.h>
 #include <vbk/pop_common.hpp>
-#include <veriblock/bootstraps.hpp>
+#include <veriblock/pop.hpp>
 
 
 namespace VeriBlock {
