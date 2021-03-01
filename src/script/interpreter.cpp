@@ -1834,7 +1834,7 @@ static bool ExecuteWitnessScript(const Span<const valtype>& stack_span, const CS
 static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, const std::vector<unsigned char>& program, const CScript& script, uint256& tapleaf_hash)
 {
     const int path_len = (control.size() - TAPROOT_CONTROL_BASE_SIZE) / TAPROOT_CONTROL_NODE_SIZE;
-    //! The inner pubkey (x-only, so no Y coordinate parity).
+    //! The internal pubkey (x-only, so no Y coordinate parity).
     const XOnlyPubKey p{uint256(std::vector<unsigned char>(control.begin() + 1, control.begin() + TAPROOT_CONTROL_BASE_SIZE))};
     //! The output pubkey (taken from the scriptPubKey).
     const XOnlyPubKey q{uint256(program)};
@@ -1852,9 +1852,9 @@ static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, c
         }
         k = ss_branch.GetSHA256();
     }
-    // Compute the tweak from the Merkle root and the inner pubkey.
+    // Compute the tweak from the Merkle root and the internal pubkey.
     k = (CHashWriter(HASHER_TAPTWEAK) << MakeSpan(p) << k).GetSHA256();
-    // Verify that the output pubkey matches the tweaked inner pubkey, after correcting for parity.
+    // Verify that the output pubkey matches the tweaked internal pubkey, after correcting for parity.
     return q.CheckPayToContract(p, k, control[0] & 1);
 }
 
