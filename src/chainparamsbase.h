@@ -26,13 +26,13 @@ public:
     ///@}
 
     const std::string& DataDir() const { return strDataDir; }
-    int RPCPort() const { return nRPCPort; }
+    uint16_t RPCPort() const { return nRPCPort; }
 
     CBaseChainParams() = delete;
     CBaseChainParams(const std::string& data_dir, int rpc_port) : nRPCPort(rpc_port), strDataDir(data_dir) {}
 
 private:
-    int nRPCPort;
+    uint16_t nRPCPort;
     std::string strDataDir;
 };
 

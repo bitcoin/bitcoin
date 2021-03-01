@@ -5,6 +5,7 @@
 #include <blockfilter.h>
 #include <clientversion.h>
 #include <logging.h>
+#include <netaddress.h>
 #include <netbase.h>
 #include <rpc/client.h>
 #include <rpc/request.h>
@@ -75,7 +76,7 @@ FUZZ_TARGET(string)
     }
     (void)SanitizeString(random_string_1);
     (void)SanitizeString(random_string_1, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, 3));
-    int port_out;
+    uint16_t port_out;
     std::string host_out;
     SplitHostPort(random_string_1, port_out, host_out);
     (void)TimingResistantEqual(random_string_1, random_string_2);
