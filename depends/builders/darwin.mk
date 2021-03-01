@@ -1,5 +1,5 @@
-tools=/Library/Developer/CommandLineTools/usr/bin
-sdk=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+tools=$(shell xcode-select --print-path)/usr/bin
+sdk=$(shell xcode-select --print-path)/SDKs/MacOSX.sdk
 
 build_darwin_CC:=$(tools)/clang --sysroot $(sdk)
 build_darwin_CXX:=$(tools)/clang++ --sysroot $(sdk)
