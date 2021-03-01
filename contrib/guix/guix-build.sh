@@ -9,7 +9,7 @@ set -e -o pipefail
 ################
 # Check 1: Make sure that we can invoke required tools
 ################
-for cmd in git make guix cat mkdir; do
+for cmd in git make guix cat mkdir curl; do
     if ! command -v "$cmd" > /dev/null 2>&1; then
         echo "ERR: This script requires that '$cmd' is installed and available in your \$PATH"
         exit 1
