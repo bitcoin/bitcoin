@@ -18,15 +18,13 @@ Checks simple PoSe system based on LLMQ commitments
 class LLMQSimplePoSeTest(DashTestFramework):
     def set_test_params(self):
         self.bind_to_localhost_only = False
-        self.set_dash_test_params(6, 5, [["-whitelist=noban@127.0.0.1"]] * 6, fast_dip3_enforcement=True)
+        self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
         self.set_dash_llmq_test_params(5, 3)
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        for i in range(len(self.nodes)):
-            force_finish_mnsync(self.nodes[i])
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
         self.wait_for_sporks_same()
@@ -47,15 +45,11 @@ class LLMQSimplePoSeTest(DashTestFramework):
 
         # Make sure no banning happens with spork21 enabled
         self.test_no_banning()
-        for i in range(len(self.nodes)):
-            force_finish_mnsync(self.nodes[i])
         # Lets restart masternodes with closed ports and verify that they get banned even though they are connected to other MNs (via outbound connections)
         self.test_banning(self.close_mn_port, 3)
 
         self.repair_masternodes(True)
         self.reset_probe_timeouts()
-        for i in range(len(self.nodes)):
-            force_finish_mnsync(self.nodes[i])
         self.test_banning(self.force_old_mn_proto, 3)
 
         # With PoSe off there should be no punishing for non-reachable and outdated nodes
@@ -90,10 +84,6 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.stop_node(mn.node.index)
         self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime), "-pushversion=70015"])
         self.connect_nodes(mn.node.index, 0)
-        # Make sure the to-be-banned node is still connected well via outbound connections
-        for mn2 in self.mninfo:
-            if mn2 is not mn:
-                self.connect_nodes(mn.node.index, mn2.node.index)
         self.reset_probe_timeouts()
         return False
 
@@ -115,7 +105,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
                 expected_contributors -= 1
 
             t = time.time()
-            while (not self.check_banned(mn)) and (time.time() - t) < 240:
+            while (not self.check_banned(mn)) and (time.time() - t) < 120:
                 # Make sure we do fresh probes
                 self.bump_mocktime(50 * 30)
                 time.sleep(2)
@@ -164,8 +154,6 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Sleep a couple of seconds to let mn sync tick to happen
         time.sleep(2)
         self.sync_all()
-        for i in range(len(self.nodes)):
-            force_finish_mnsync(self.nodes[i])
 
     def check_punished(self, mn):
         info = self.nodes[0].protx_info(mn.proTxHash)
