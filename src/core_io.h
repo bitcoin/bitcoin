@@ -20,6 +20,14 @@ class uint256;
 class UniValue;
 class CTxUndo;
 
+/**
+ * Verbose level for block's transaction
+ */
+enum class TxVerbosity {
+    SHOW_TXID,                //!< Only TXID for each block's transaction
+    SHOW_DETAILS             //!< Include TXID, inputs, outputs, and other common block's transaction information
+};
+
 // core_read.cpp
 CScript ParseScript(const std::string& s);
 std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode = false);
