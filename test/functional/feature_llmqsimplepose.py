@@ -78,6 +78,10 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.stop_node(mn.node.index)
         self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime), "-listen=0"])
         self.connect_nodes(mn.node.index, 0)
+        # Make sure the to-be-banned node is still connected well via outbound connections
+        for mn2 in self.mninfo:
+            if mn2 is not mn:
+                self.connect_nodes(mn.node.index, mn2.node.index)
         self.reset_probe_timeouts()
         return False
 
