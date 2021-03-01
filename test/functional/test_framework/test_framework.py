@@ -1295,7 +1295,7 @@ class DashTestFramework(SyscoinTestFramework):
             return all_ok
         wait_until_helper(check_dkg_session, timeout=timeout, sleep=sleep)
 
-    def wait_for_quorum_commitment(self, quorum_hash, nodes, timeout = 15, wait_proc=None, done_proc=None):
+    def wait_for_quorum_commitment(self, quorum_hash, nodes, timeout = 60, wait_proc=None, done_proc=None):
         def check_dkg_comitments():
             all_ok = True
             if wait_proc is not None:

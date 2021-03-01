@@ -36,7 +36,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
         # Now lets isolate MNs one by one and verify that punishment/banning happens
         self.test_banning(self.isolate_mn, 1)
 
-        self.repair_masternodes(False)
+        self.repair_masternodes(True)
 
         self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
         self.nodes[0].spork("SPORK_23_QUORUM_POSE", 0)
