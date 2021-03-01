@@ -20,6 +20,11 @@ class uint256;
 class UniValue;
 class CTxUndo;
 
+enum class TxVerbosity {
+    SHOW_TXID,
+    SHOW_DETAILS
+};
+
 // core_read.cpp
 CScript ParseScript(const std::string& s);
 std::string ScriptToAsmStr(const CScript& script, const bool fAttemptSighashDecode = false);
