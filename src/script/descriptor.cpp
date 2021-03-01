@@ -302,11 +302,14 @@ class BIP32PubkeyProvider final : public PubkeyProvider
     }
 
     // Derives the last xprv
-    bool GetDerivedExtKey(const SigningProvider& arg, CExtKey& xprv) const
+    bool GetDerivedExtKey(const SigningProvider& arg, CExtKey& xprv, CExtKey& last_hardened) const
     {
         if (!GetExtKey(arg, xprv)) return false;
         for (auto entry : m_path) {
             xprv.Derive(xprv, entry);
+            if (entry >> 31) {
+                last_hardened = xprv;
+            }
         }
         return true;
     }
@@ -340,6 +343,7 @@ public:
         // Derive keys or fetch them from cache
         CExtPubKey final_extkey = m_root_extkey;
         CExtPubKey parent_extkey = m_root_extkey;
+        CExtPubKey last_hardened_extkey;
         bool der = true;
         if (read_cache) {
             if (!read_cache->GetCachedDerivedExtPubKey(m_expr_index, pos, final_extkey)) {
@@ -351,11 +355,15 @@ public:
             }
         } else if (IsHardened()) {
             CExtKey xprv;
-            if (!GetDerivedExtKey(arg, xprv)) return false;
+            CExtKey lh_xprv;
+            if (!GetDerivedExtKey(arg, xprv, lh_xprv)) return false;
             parent_extkey = xprv.Neuter();
             if (m_derive == DeriveType::UNHARDENED) der = xprv.Derive(xprv, pos);
             if (m_derive == DeriveType::HARDENED) der = xprv.Derive(xprv, pos | 0x80000000UL);
             final_extkey = xprv.Neuter();
+            if (lh_xprv.key.IsValid()) {
+                last_hardened_extkey = lh_xprv.Neuter();
+            }
         } else {
             for (auto entry : m_path) {
                 der = parent_extkey.Derive(parent_extkey, entry);
@@ -374,6 +382,10 @@ public:
             // Only cache parent if there is any unhardened derivation
             if (m_derive != DeriveType::HARDENED) {
                 write_cache->CacheParentExtPubKey(m_expr_index, parent_extkey);
+                // Cache last hardened xpub if we have it
+                if (last_hardened_extkey.pubkey.IsValid()) {
+                    write_cache->CacheLastHardenedExtPubKey(m_expr_index, last_hardened_extkey);
+                }
             } else if (final_info_out.path.size() > 0) {
                 write_cache->CacheDerivedExtPubKey(m_expr_index, pos, final_extkey);
             }
@@ -454,7 +466,8 @@ public:
     bool GetPrivKey(int pos, const SigningProvider& arg, CKey& key) const override
     {
         CExtKey extkey;
-        if (!GetDerivedExtKey(arg, extkey)) return false;
+        CExtKey dummy;
+        if (!GetDerivedExtKey(arg, extkey, dummy)) return false;
         if (m_derive == DeriveType::UNHARDENED) extkey.Derive(extkey, pos);
         if (m_derive == DeriveType::HARDENED) extkey.Derive(extkey, pos | 0x80000000UL);
         key = extkey.key;
@@ -1400,6 +1413,11 @@ void DescriptorCache::CacheDerivedExtPubKey(uint32_t key_exp_pos, uint32_t der_i
     xpubs[der_index] = xpub;
 }
 
+void DescriptorCache::CacheLastHardenedExtPubKey(uint32_t key_exp_pos, const CExtPubKey& xpub)
+{
+    m_last_hardened_xpubs[key_exp_pos] = xpub;
+}
+
 bool DescriptorCache::GetCachedParentExtPubKey(uint32_t key_exp_pos, CExtPubKey& xpub) const
 {
     const auto& it = m_parent_xpubs.find(key_exp_pos);
@@ -1415,6 +1433,14 @@ bool DescriptorCache::GetCachedDerivedExtPubKey(uint32_t key_exp_pos, uint32_t d
     const auto& der_it = key_exp_it->second.find(der_index);
     if (der_it == key_exp_it->second.end()) return false;
     xpub = der_it->second;
+    return true;
+}
+
+bool DescriptorCache::GetCachedLastHardenedExtPubKey(uint32_t key_exp_pos, CExtPubKey& xpub) const
+{
+    const auto& it = m_last_hardened_xpubs.find(key_exp_pos);
+    if (it == m_last_hardened_xpubs.end()) return false;
+    xpub = it->second;
     return true;
 }
 
@@ -1445,6 +1471,17 @@ DescriptorCache DescriptorCache::MergeAndDiff(const DescriptorCache& other)
             diff.CacheDerivedExtPubKey(derived_xpub_map_pair.first, derived_xpub_pair.first, derived_xpub_pair.second);
         }
     }
+    for (const auto& lh_xpub_pair : other.GetCachedLastHardenedExtPubKeys()) {
+        CExtPubKey xpub;
+        if (GetCachedLastHardenedExtPubKey(lh_xpub_pair.first, xpub)) {
+            if (xpub != lh_xpub_pair.second) {
+                throw std::runtime_error(std::string(__func__) + ": New cached last hardened xpub does not match already cached last hardened xpub");
+            }
+            continue;
+        }
+        CacheLastHardenedExtPubKey(lh_xpub_pair.first, lh_xpub_pair.second);
+        diff.CacheLastHardenedExtPubKey(lh_xpub_pair.first, lh_xpub_pair.second);
+    }
     return diff;
 }
 
@@ -1456,4 +1493,9 @@ const ExtPubKeyMap DescriptorCache::GetCachedParentExtPubKeys() const
 const std::unordered_map<uint32_t, ExtPubKeyMap> DescriptorCache::GetCachedDerivedExtPubKeys() const
 {
     return m_derived_xpubs;
+}
+
+const ExtPubKeyMap DescriptorCache::GetCachedLastHardenedExtPubKeys() const
+{
+    return m_last_hardened_xpubs;
 }
