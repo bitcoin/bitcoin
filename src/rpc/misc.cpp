@@ -305,11 +305,11 @@ static RPCHelpMan verifymessage()
 
     switch (MessageVerify(strAddress, strSign, strMessage)) {
     case MessageVerificationResult::ERR_INVALID_ADDRESS:
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     case MessageVerificationResult::ERR_ADDRESS_NO_KEY:
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to key");
     case MessageVerificationResult::ERR_MALFORMED_SIGNATURE:
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
+        throw JSONRPCError(RPC_TYPE_ERROR, "Malformed base64 encoding");
     case MessageVerificationResult::ERR_PUBKEY_NOT_RECOVERED:
     case MessageVerificationResult::ERR_NOT_SIGNED:
         return false;

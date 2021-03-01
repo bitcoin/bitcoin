@@ -630,7 +630,7 @@ static RPCHelpMan signmessage()
 
     CTxDestination dest = DecodeDestination(strAddress);
     if (!IsValidDestination(dest)) {
-        throw JSONRPCError(RPC_TYPE_ERROR, "Invalid address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
     }
 
     const PKHash* pkhash = std::get_if<PKHash>(&dest);
