@@ -181,7 +181,7 @@ public:
     virtual bool ToPrivateString(const SigningProvider& arg, std::string& out) const = 0;
 
     /** Get the descriptor string form with the xpub at the last hardened derivation */
-    virtual bool ToNormalizedString(const SigningProvider& arg, std::string& out) const = 0;
+    virtual bool ToNormalizedString(const SigningProvider& arg, std::string& out, const DescriptorCache* cache = nullptr) const = 0;
 
     /** Derive a private key, if private data is available in arg. */
     virtual bool GetPrivKey(int pos, const SigningProvider& arg, CKey& key) const = 0;
@@ -216,10 +216,10 @@ public:
         ret = "[" + OriginString() + "]" + std::move(sub);
         return true;
     }
-    bool ToNormalizedString(const SigningProvider& arg, std::string& ret) const override
+    bool ToNormalizedString(const SigningProvider& arg, std::string& ret, const DescriptorCache* cache) const override
     {
         std::string sub;
-        if (!m_provider->ToNormalizedString(arg, sub)) return false;
+        if (!m_provider->ToNormalizedString(arg, sub, cache)) return false;
         // If m_provider is a BIP32PubkeyProvider, we may get a string formatted like a OriginPubkeyProvider
         // In that case, we need to strip out the leading square bracket and fingerprint from the substring,
         // and append that to our own origin string.
@@ -263,7 +263,7 @@ public:
         ret = EncodeSecret(key);
         return true;
     }
-    bool ToNormalizedString(const SigningProvider& arg, std::string& ret) const override
+    bool ToNormalizedString(const SigningProvider& arg, std::string& ret, const DescriptorCache* cache) const override
     {
         ret = ToString();
         return true;
@@ -412,7 +412,7 @@ public:
         }
         return true;
     }
-    bool ToNormalizedString(const SigningProvider& arg, std::string& out) const override
+    bool ToNormalizedString(const SigningProvider& arg, std::string& out, const DescriptorCache* cache) const override
     {
         // For hardened derivation type, just return the typical string, nothing to normalize
         if (m_derive == DeriveType::HARDENED) {
@@ -431,29 +431,39 @@ public:
             out = ToString();
             return true;
         }
-        // Derive the xpub at the last hardened step
-        CExtKey xprv;
-        if (!GetExtKey(arg, xprv)) return false;
+        // Get the path to the last hardened stup
         KeyOriginInfo origin;
         int k = 0;
         for (; k <= i; ++k) {
-            // Derive
-            xprv.Derive(xprv, m_path.at(k));
             // Add to the path
             origin.path.push_back(m_path.at(k));
-            // First derivation element, get the fingerprint for origin
-            if (k == 0) {
-                std::copy(xprv.vchFingerprint, xprv.vchFingerprint + 4, origin.fingerprint);
-            }
         }
         // Build the remaining path
         KeyPath end_path;
         for (; k < (int)m_path.size(); ++k) {
             end_path.push_back(m_path.at(k));
         }
+        // Get the fingerprint
+        CKeyID id = m_root_extkey.pubkey.GetID();
+        std::copy(id.begin(), id.begin() + 4, origin.fingerprint);
+
+        CExtPubKey xpub;
+        CExtKey lh_xprv;
+        // If we have the cache, just get the parent xpub
+        if (cache != nullptr) {
+            cache->GetCachedLastHardenedExtPubKey(m_expr_index, xpub);
+        }
+        if (!xpub.pubkey.IsValid()) {
+            // Cache miss, or nor cache, or need privkey
+            CExtKey xprv;
+            if (!GetDerivedExtKey(arg, xprv, lh_xprv)) return false;
+            xpub = lh_xprv.Neuter();
+        }
+        assert(xpub.pubkey.IsValid());
+
         // Build the string
         std::string origin_str = HexStr(origin.fingerprint) + FormatHDKeypath(origin.path);
-        out = "[" + origin_str + "]" + EncodeExtPubKey(xprv.Neuter()) + FormatHDKeypath(end_path);
+        out = "[" + origin_str + "]" + EncodeExtPubKey(xpub) + FormatHDKeypath(end_path);
         if (IsRange()) {
             out += "/*";
             assert(m_derive == DeriveType::UNHARDENED);
@@ -533,19 +543,19 @@ public:
         return false;
     }
 
-    virtual bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, const StringType type) const
+    virtual bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, const StringType type, const DescriptorCache* cache = nullptr) const
     {
         size_t pos = 0;
         for (const auto& scriptarg : m_subdescriptor_args) {
             if (pos++) ret += ",";
             std::string tmp;
-            if (!scriptarg->ToStringHelper(arg, tmp, type)) return false;
+            if (!scriptarg->ToStringHelper(arg, tmp, type, cache)) return false;
             ret += std::move(tmp);
         }
         return true;
     }
 
-    bool ToStringHelper(const SigningProvider* arg, std::string& out, const StringType type) const
+    bool ToStringHelper(const SigningProvider* arg, std::string& out, const StringType type, const DescriptorCache* cache = nullptr) const
     {
         std::string extra = ToStringExtra();
         size_t pos = extra.size() > 0 ? 1 : 0;
@@ -555,7 +565,7 @@ public:
             std::string tmp;
             switch (type) {
                 case StringType::NORMALIZED:
-                    if (!pubkey->ToNormalizedString(*arg, tmp)) return false;
+                    if (!pubkey->ToNormalizedString(*arg, tmp, cache)) return false;
                     break;
                 case StringType::PRIVATE:
                     if (!pubkey->ToPrivateString(*arg, tmp)) return false;
@@ -567,7 +577,7 @@ public:
             ret += std::move(tmp);
         }
         std::string subscript;
-        if (!ToStringSubScriptHelper(arg, subscript, type)) return false;
+        if (!ToStringSubScriptHelper(arg, subscript, type, cache)) return false;
         if (pos && subscript.size()) ret += ',';
         out = std::move(ret) + std::move(subscript) + ")";
         return true;
@@ -587,9 +597,9 @@ public:
         return ret;
     }
 
-    bool ToNormalizedString(const SigningProvider& arg, std::string& out) const override final
+    bool ToNormalizedString(const SigningProvider& arg, std::string& out, const DescriptorCache* cache) const override final
     {
-        bool ret = ToStringHelper(&arg, out, StringType::NORMALIZED);
+        bool ret = ToStringHelper(&arg, out, StringType::NORMALIZED, cache);
         out = AddChecksum(out);
         return ret;
     }
@@ -843,7 +853,7 @@ protected:
         out.tr_spenddata[output].Merge(builder.GetSpendData());
         return Vector(GetScriptForDestination(output));
     }
-    bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, const StringType type) const override
+    bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, const StringType type, const DescriptorCache* cache = nullptr) const override
     {
         if (m_depths.empty()) return true;
         std::vector<bool> path;
@@ -854,7 +864,7 @@ protected:
                 path.push_back(false);
             }
             std::string tmp;
-            if (!m_subdescriptor_args[pos]->ToStringHelper(arg, tmp, type)) return false;
+            if (!m_subdescriptor_args[pos]->ToStringHelper(arg, tmp, type, cache)) return false;
             ret += std::move(tmp);
             while (!path.empty() && path.back()) {
                 if (path.size() > 1) ret += '}';

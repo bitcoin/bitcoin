@@ -2276,7 +2276,7 @@ bool DescriptorScriptPubKeyMan::GetDescriptorString(std::string& out) const
     FlatSigningProvider provider;
     provider.keys = GetKeys();
 
-    return m_wallet_descriptor.descriptor->ToNormalizedString(provider, out);
+    return m_wallet_descriptor.descriptor->ToNormalizedString(provider, out, &m_wallet_descriptor.cache);
 }
 
 void DescriptorScriptPubKeyMan::UpgradeDescriptorCache()
