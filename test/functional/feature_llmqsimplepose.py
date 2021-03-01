@@ -28,7 +28,6 @@ class LLMQSimplePoSeTest(DashTestFramework):
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
-        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
         self.wait_for_sporks_same()
 
         # check if mining quorums with all nodes being online succeeds without punishment/banning
@@ -113,10 +112,7 @@ class LLMQSimplePoSeTest(DashTestFramework):
             t = time.time()
             while (not self.check_banned(mn)) and (time.time() - t) < 240:
                 # Make sure we do fresh probes
-                self.bump_mocktime(50 * 30)
-                time.sleep(2)
-                self.nodes[0].generate(1)
-                self.bump_mocktime(50 * 30 + 1)
+                self.bump_mocktime(50 * 60 + 1)
                 time.sleep(2)
                 self.nodes[0].generate(1)
                 self.mine_quorum(expected_connections=expected_connections, expected_members=expected_contributors, expected_contributions=expected_contributors, expected_complaints=expected_contributors-1, expected_commitments=expected_contributors, mninfos_online=mninfos_online, mninfos_valid=mninfos_valid)
