@@ -82,7 +82,7 @@ FUZZ_TARGET(string)
 #ifndef WIN32
     (void)ShellEscape(random_string_1);
 #endif // WIN32
-    int port_out;
+    uint16_t port_out;
     std::string host_out;
     SplitHostPort(random_string_1, port_out, host_out);
     (void)TimingResistantEqual(random_string_1, random_string_2);

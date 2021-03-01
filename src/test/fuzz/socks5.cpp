@@ -38,7 +38,7 @@ FUZZ_TARGET_INIT(socks5, initialize_socks5)
     // This Socks5(...) fuzzing harness would have caught CVE-2017-18350 within
     // a few seconds of fuzzing.
     (void)Socks5(fuzzed_data_provider.ConsumeRandomLengthString(512),
-                 fuzzed_data_provider.ConsumeIntegral<int>(),
+                 fuzzed_data_provider.ConsumeIntegral<uint16_t>(),
                  fuzzed_data_provider.ConsumeBool() ? &proxy_credentials : nullptr,
                  fuzzed_sock);
 }

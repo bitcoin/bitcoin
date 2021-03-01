@@ -113,7 +113,7 @@ void CConnman::AddAddrFetch(const std::string& strDest)
 
 uint16_t GetListenPort()
 {
-    return (uint16_t)(gArgs.GetArg("-port", Params().GetDefaultPort()));
+    return static_cast<uint16_t>(gArgs.GetArg("-port", Params().GetDefaultPort()));
 }
 
 // find 'best' local address for a particular peer
@@ -394,7 +394,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
         pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime)/3600.0);
 
     // Resolve
-    const int default_port = Params().GetDefaultPort();
+    const uint16_t default_port{Params().GetDefaultPort()};
     if (pszDest) {
         std::vector<CService> resolved;
         if (Lookup(pszDest, resolved,  default_port, fNameLookup && !HaveNameProxy(), 256) && !resolved.empty()) {
@@ -462,7 +462,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             return nullptr;
         }
         std::string host;
-        int port = default_port;
+        uint16_t port{default_port};
         SplitHostPort(std::string(pszDest), port, host);
         bool proxyConnectionFailed;
         connected = ConnectThroughProxy(proxy, host, port, *sock, nConnectTimeout,
