@@ -18,7 +18,7 @@ Checks simple PoSe system based on LLMQ commitments
 class LLMQSimplePoSeTest(DashTestFramework):
     def set_test_params(self):
         self.bind_to_localhost_only = False
-        self.set_dash_test_params(6, 5, [["-whitelist=noban@127.0.0.1"]] * 6, fast_dip3_enforcement=True)
+        self.set_dash_test_params(6, 5, fast_dip3_enforcement=True)
         self.set_dash_llmq_test_params(5, 3)
 
     def skip_test_if_missing_module(self):
@@ -79,10 +79,6 @@ class LLMQSimplePoSeTest(DashTestFramework):
         self.stop_node(mn.node.index)
         self.start_masternode(mn, extra_args=["-mocktime=" + str(self.mocktime), "-listen=0"])
         self.connect_nodes(mn.node.index, 0)
-        # Make sure the to-be-banned node is still connected well via outbound connections
-        for mn2 in self.mninfo:
-            if mn2 is not mn:
-                self.connect_nodes(mn.node.index, mn2.node.index)
         self.reset_probe_timeouts()
         return False
 
