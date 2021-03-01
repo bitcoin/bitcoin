@@ -2413,7 +2413,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     }, DUMP_BANS_INTERVAL);
     // SYSCOIN
     if(!fRegTest && !fSigNet && (fMasternodeMode || gArgs.IsArgSet("-gethsyncmode"))) {
-        node.scheduler->scheduleEvery([&] { DoGethMaintenance(); }, std::chrono::seconds{15});
+        //node.scheduler->scheduleEvery([&] { DoGethMaintenance(); }, std::chrono::seconds{15});
     } 
 #if HAVE_SYSTEM
     StartupNotify(args);

@@ -182,9 +182,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         if (!masternodeSync.IsSynced()) {	
             throw std::runtime_error("Masternode information has not synced, please wait until it finishes before mining!");	
         }
-        if(fGethSyncStatus != "synced"){
-            throw std::runtime_error("Please wait until Geth is synced to the tip before mining! Use getblockchaininfo to detect Geth sync status.");
-        }
     }
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
     BlockValidationState state;
