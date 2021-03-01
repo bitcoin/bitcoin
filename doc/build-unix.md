@@ -77,18 +77,20 @@ Now, you can either build from self-compiled [depends](/depends/README.md) or in
 
     sudo apt-get libevent-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev
 
-BerkeleyDB is required for the wallet.
+Berkeley DB is required for the wallet.
 
 Ubuntu and Debian have their own `libdb-dev` and `libdb++-dev` packages, but these will install
-BerkeleyDB 5.1 or later. This will break binary wallet compatibility with the distributed executables, which
+Berkeley DB 5.1 or later. This will break binary wallet compatibility with the distributed executables, which
 are based on BerkeleyDB 4.8. If you do not care about wallet compatibility,
 pass `--with-incompatible-bdb` to configure.
 
-Otherwise, you can build from self-compiled `depends` (see above).
+Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
 
 SQLite is required for the wallet:
 
     sudo apt install libsqlite3-dev
+
+To build Dash Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
 Optional port mapping libraries (see: `--with-miniupnpc`, `--enable-upnp-default`, and `--with-natpmp`, `--enable-natpmp-default`):
 
@@ -126,7 +128,28 @@ built by default.
 
 Build requirements:
 
-    sudo dnf install gcc-c++ libtool make autoconf automake libevent-devel boost-devel libdb4-devel libdb4-cxx-devel python3
+    sudo dnf install gcc-c++ libtool make autoconf automake python3
+
+Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
+
+    sudo dnf install libevent-devel boost-devel
+
+Berkeley DB is required for the wallet:
+
+    sudo dnf install libdb4-devel libdb4-cxx-devel
+
+Newer Fedora releases, since Fedora 33, have only `libdb-devel` and `libdb-cxx-devel` packages, but these will install
+Berkeley DB 5.3 or later. This will break binary wallet compatibility with the distributed executables, which
+are based on Berkeley DB 4.8. If you do not care about wallet compatibility,
+pass `--with-incompatible-bdb` to configure.
+
+Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
+
+SQLite is required for the wallet:
+
+    sudo dnf install sqlite-devel
+
+To build Dash Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
 
 Optional port mapping libraries (see: `--with-miniupnpc`, `--enable-upnp-default`, and `--with-natpmp`, `--enable-natpmp-default`):
 
@@ -154,9 +177,8 @@ libqrencode (optional) can be installed with:
 
     sudo dnf install qrencode-devel
 
-SQLite can be installed with:
-
-    sudo dnf install sqlite-devel
+Once these are installed, they will be found by configure and a dash-qt executable will be
+built by default.
 
 Notes
 -----
@@ -198,7 +220,9 @@ like so:
 
 from the root of the repository.
 
-**Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](/doc/build-unix.md#disable-wallet-mode)).
+Otherwise, you can build Dash Core from self-compiled [depends](/depends/README.md).
+
+**Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](#disable-wallet-mode)).
 
 Boost
 -----
