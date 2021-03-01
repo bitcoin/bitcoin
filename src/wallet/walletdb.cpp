@@ -884,6 +884,14 @@ DBErrors WalletBatch::LoadWallet(CWallet* pwallet)
         result = DBErrors::CORRUPT;
     }
 
+    // Upgrade all of the descriptor caches to cache the last hardened xpub
+    // This operation is not atomic, but if it fails, only new entries are added so it is backwards compatible
+    try {
+        pwallet->UpgradeDescriptorCache();
+    } catch (...) {
+        result = DBErrors::CORRUPT;
+    }
+
     // Set the inactive chain
     if (wss.m_hd_chains.size() > 0) {
         LegacyScriptPubKeyMan* legacy_spkm = pwallet->GetLegacyScriptPubKeyMan();

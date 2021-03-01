@@ -631,6 +631,8 @@ public:
     const std::vector<CScript> GetScriptPubKeys() const;
 
     bool GetDescriptorString(std::string& out, bool priv) const;
+
+    void UpgradeDescriptorCache();
 };
 
 #endif // BITCOIN_WALLET_SCRIPTPUBKEYMAN_H
