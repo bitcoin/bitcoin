@@ -1,23 +1,25 @@
-build_darwin_CC:=$(shell xcrun -f clang) --sysroot $(shell xcrun --show-sdk-path)
-build_darwin_CXX:=$(shell xcrun -f clang++) --sysroot $(shell xcrun --show-sdk-path)
-build_darwin_AR:=$(shell xcrun -f ar)
-build_darwin_RANLIB:=$(shell xcrun -f ranlib)
-build_darwin_STRIP:=$(shell xcrun -f strip)
-build_darwin_OTOOL:=$(shell xcrun -f otool)
-build_darwin_NM:=$(shell xcrun -f nm)
-build_darwin_INSTALL_NAME_TOOL:=$(shell xcrun -f install_name_tool)
+sdk=$(shell xcrun --show-sdk-path)
+
+build_darwin_CC:=clang --sysroot $(sdk)
+build_darwin_CXX:=clang++ --sysroot $(sdk)
+build_darwin_AR:=ar
+build_darwin_RANLIB:=ranlib
+build_darwin_STRIP:=strip
+build_darwin_OTOOL:=otool
+build_darwin_NM:=nm
+build_darwin_INSTALL_NAME_TOOL:=install_name_tool
 build_darwin_SHA256SUM=shasum -a 256
 build_darwin_DOWNLOAD=curl --location --fail --connect-timeout $(DOWNLOAD_CONNECT_TIMEOUT) --retry $(DOWNLOAD_RETRIES) -o
 
 #darwin host on darwin builder. overrides darwin host preferences.
-darwin_CC=$(shell xcrun -f clang) -mmacosx-version-min=$(OSX_MIN_VERSION) --sysroot $(shell xcrun --show-sdk-path)
-darwin_CXX:=$(shell xcrun -f clang++) -mmacosx-version-min=$(OSX_MIN_VERSION) -stdlib=libc++ --sysroot $(shell xcrun --show-sdk-path)
-darwin_AR:=$(shell xcrun -f ar)
-darwin_RANLIB:=$(shell xcrun -f ranlib)
-darwin_STRIP:=$(shell xcrun -f strip)
-darwin_LIBTOOL:=$(shell xcrun -f libtool)
-darwin_OTOOL:=$(shell xcrun -f otool)
-darwin_NM:=$(shell xcrun -f nm)
-darwin_INSTALL_NAME_TOOL:=$(shell xcrun -f install_name_tool)
+darwin_CC=clang -mmacosx-version-min=$(OSX_MIN_VERSION) --sysroot $(sdk)
+darwin_CXX:=clang++ -mmacosx-version-min=$(OSX_MIN_VERSION) -stdlib=libc++ --sysroot $(sdk)
+darwin_AR:=ar
+darwin_RANLIB:=ranlib
+darwin_STRIP:=strip
+darwin_LIBTOOL:=libtool
+darwin_OTOOL:=otool
+darwin_NM:=nm
+darwin_INSTALL_NAME_TOOL:=install_name_tool
 darwin_native_binutils=
 darwin_native_toolchain=
