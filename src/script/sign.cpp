@@ -26,6 +26,9 @@ bool MutableTransactionSignatureCreator::CreateSig(const SigningProvider& provid
     if (sigversion == SigVersion::WITNESS_V0 && !key.IsCompressed())
         return false;
 
+    // Signing for witness scripts needs the amount.
+    if (sigversion == SigVersion::WITNESS_V0 && amount < 0) return false;
+
     uint256 hash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion);
     if (!key.Sign(hash, vchSig))
         return false;
