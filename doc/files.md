@@ -64,6 +64,7 @@ Subdirectory       | File(s)               | Description
 `./`               | `ip_asn.map`          | IP addresses to Autonomous System Numbers (ASNs) mapping used for bucketing of the peers; path can be specified with the `-asmap` option
 `./`               | `mempool.dat`         | Dump of the mempool's transactions
 `./`               | `onion_v3_private_key` | Cached Tor onion service private key for `-listenonion` option
+`./`               | `i2p_private_key`     | Private key that corresponds to our I2P address. When `-i2psam=` is specified the contents of this file is used to identify ourselves for making outgoing connections to I2P peers and possibly accepting incoming ones. Automatically generated if it does not exist.
 `./`               | `peers.dat`           | Peer IP address database (custom format)
 `./`               | `settings.json`       | Read-write settings set through GUI or RPC interfaces, augmenting manual settings from [bitcoin.conf](bitcoin-conf.md). File is created automatically if read-write settings storage is not disabled with `-nosettings` option. Path can be specified with `-settings` option
 `./`               | `.cookie`             | Session RPC authentication cookie; if used, created at start and deleted on shutdown; can be specified by `-rpccookiefile` option
