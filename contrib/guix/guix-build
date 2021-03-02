@@ -103,6 +103,14 @@ ERR: Build directories for this commit already exist for the following platform
 
      Aborting...
 
+Hint: To blow everything away, you may want to use:
+
+  $ ./contrib/guix/guix-clean
+
+Specifically, this will remove all files without an entry in the index,
+excluding the SDK directory, the depends download cache, the depends built
+packages cache, the garbage collector roots for Guix environments, and the
+output directory.
 EOF
 for host in $hosts_distsrc_exists; do
     echo "     ${host} '$(distsrc_for_host "$host")'"
@@ -277,15 +285,16 @@ outdir_for_host() {
 int_trap() {
 cat << EOF
 ** INT received while building ${1}, you may want to clean up the relevant
-   output, deploy, and distsrc-* directories before rebuilding
+   work directories (e.g. distsrc-*) before rebuilding
 
 Hint: To blow everything away, you may want to use:
 
-  $ git clean -xdff --exclude='/depends/SDKs/*'
+  $ ./contrib/guix/guix-clean
 
 Specifically, this will remove all files without an entry in the index,
-excluding the SDK directory. Practically speaking, this means that all ignored
-and untracked files and directories will be wiped, allowing you to start anew.
+excluding the SDK directory, the depends download cache, the depends built
+packages cache, the garbage collector roots for Guix environments, and the
+output directory.
 EOF
 }
 
