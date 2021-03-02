@@ -115,8 +115,8 @@ void SplitHostPort(std::string in, uint16_t& portOut, std::string& hostOut)
     bool fBracketed = fHaveColon && (in[0]=='[' && in[colon-1]==']'); // if there is a colon, and in[0]=='[', colon is not 0, so in[colon-1] is safe
     bool fMultiColon = fHaveColon && (in.find_last_of(':',colon-1) != in.npos);
     if (fHaveColon && (colon==0 || fBracketed || !fMultiColon)) {
-        int32_t n;
-        if (ParseInt32(in.substr(colon + 1), &n) && n > 0 && n < 0x10000) {
+        uint16_t n;
+        if (ParseUInt16(in.substr(colon + 1), &n)) {
             in = in.substr(0, colon);
             portOut = n;
         }
@@ -331,6 +331,18 @@ bool ParseUInt8(const std::string& str, uint8_t *out)
     }
     if (out != nullptr) {
         *out = static_cast<uint8_t>(u32);
+    }
+    return true;
+}
+
+bool ParseUInt16(const std::string& str, uint16_t* out)
+{
+    uint32_t u32;
+    if (!ParseUInt32(str, &u32) || u32 > std::numeric_limits<uint16_t>::max()) {
+        return false;
+    }
+    if (out != nullptr) {
+        *out = static_cast<uint16_t>(u32);
     }
     return true;
 }
