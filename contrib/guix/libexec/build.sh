@@ -3,7 +3,7 @@ export LC_ALL=C
 set -e -o pipefail
 export TZ=UTC
 
-# Althought Guix _does_ set umask when building its own packages (in our case,
+# Although Guix _does_ set umask when building its own packages (in our case,
 # this is all packages in manifest.scm), it does not set it for `guix
 # environment`. It does make sense for at least `guix environment --container`
 # to set umask, so if that change gets merged upstream and we bump the
