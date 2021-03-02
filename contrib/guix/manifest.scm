@@ -125,9 +125,9 @@ chain for " target " development."))
 
 (define* (make-bitcoin-cross-toolchain target
                                   #:key
-                                  (base-gcc-for-libc gcc-5)
-                                  (base-kernel-headers linux-libre-headers-4.19)
-                                  (base-libc glibc-2.27)
+                                  (base-gcc-for-libc gcc-7)
+                                  (base-kernel-headers linux-libre-headers-5.4)
+                                  (base-libc glibc)  ; glibc 2.31
                                   (base-gcc (make-gcc-rpath-link gcc-9)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
@@ -232,12 +232,6 @@ chain for " target " development."))
            (list zip
                  (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
                  (make-nsis-with-sde-support nsis-x86_64)))
-          ((string-contains target "riscv64-linux-")
-           (list (make-bitcoin-cross-toolchain target
-                                               #:base-gcc-for-libc gcc-7)))
-          ((string-contains target "powerpc64le-linux-")
-           (list (make-bitcoin-cross-toolchain target
-                                               #:base-gcc-for-libc gcc-7)))
           ((string-contains target "-linux-")
            (list (make-bitcoin-cross-toolchain target)))
           ((string-contains target "darwin")
