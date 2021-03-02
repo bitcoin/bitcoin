@@ -5,6 +5,7 @@
 
 #include <netbase.h>
 
+#include <compat.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <util/sock.h>
@@ -14,6 +15,7 @@
 #include <util/time.h>
 
 #include <atomic>
+#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <limits>
@@ -27,10 +29,6 @@
 
 #ifdef USE_POLL
 #include <poll.h>
-#endif
-
-#if !defined(MSG_NOSIGNAL)
-#define MSG_NOSIGNAL 0
 #endif
 
 // Settings
@@ -52,6 +50,9 @@ enum Network ParseNetwork(const std::string& net_in) {
     if (net == "tor") {
         LogPrintf("Warning: net name 'tor' is deprecated and will be removed in the future. You should use 'onion' instead.\n");
         return NET_ONION;
+    }
+    if (net == "i2p") {
+        return NET_I2P;
     }
     return NET_UNROUTABLE;
 }
@@ -77,7 +78,7 @@ std::vector<std::string> GetNetworkNames(bool append_unroutable)
     std::vector<std::string> names;
     for (int n = 0; n < NET_MAX; ++n) {
         const enum Network network{static_cast<Network>(n)};
-        if (network == NET_UNROUTABLE || network == NET_I2P || network == NET_CJDNS || network == NET_INTERNAL) continue;
+        if (network == NET_UNROUTABLE || network == NET_CJDNS || network == NET_INTERNAL) continue;
         names.emplace_back(GetNetworkName(network));
     }
     if (append_unroutable) {
@@ -360,9 +361,6 @@ static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, c
 {
     int64_t curTime = GetTimeMillis();
     int64_t endTime = curTime + timeout;
-    // Maximum time to wait for I/O readiness. It will take up until this time
-    // (in millis) to break off in case of an interruption.
-    const int64_t maxWait = 1000;
     while (len > 0 && curTime < endTime) {
         ssize_t ret = sock.Recv(data, len, 0); // Optimistically try the recv first
         if (ret > 0) {
@@ -373,10 +371,11 @@ static IntrRecvError InterruptibleRecv(uint8_t* data, size_t len, int timeout, c
         } else { // Other error or blocking
             int nErr = WSAGetLastError();
             if (nErr == WSAEINPROGRESS || nErr == WSAEWOULDBLOCK || nErr == WSAEINVAL) {
-                // Only wait at most maxWait milliseconds at a time, unless
+                // Only wait at most MAX_WAIT_FOR_IO at a time, unless
                 // we're approaching the end of the specified total timeout
-                int timeout_ms = std::min(endTime - curTime, maxWait);
-                if (!sock.Wait(std::chrono::milliseconds{timeout_ms}, Sock::RECV)) {
+                const auto remaining = std::chrono::milliseconds{endTime - curTime};
+                const auto timeout = std::min(remaining, std::chrono::milliseconds{MAX_WAIT_FOR_IO});
+                if (!sock.Wait(timeout, Sock::RECV)) {
                     return IntrRecvError::NetworkError;
                 }
             } else {

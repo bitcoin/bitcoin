@@ -67,6 +67,7 @@ namespace BCLog {
         SPORK       = (1 << 28),
         SYS         = (1 << 29),
         CHAINLOCKS  = (1 << 30),
+        I2P         = (1ULL << 31),
         ALL         = ~(uint32_t)0,
     };
 

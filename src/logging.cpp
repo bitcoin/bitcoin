@@ -166,6 +166,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::MNSYNC, "mnsync"},
     {BCLog::SPORK, "spork"},
     {BCLog::SYS, "syscoin"},
+    {BCLog::I2P, "i2p"},
     {BCLog::ALL, "1"},
     {BCLog::ALL, "all"},
 };
