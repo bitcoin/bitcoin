@@ -1379,52 +1379,52 @@ if test "x$use_natpmp" != xno; then
 fi
 
 if test x$build_bitcoin_wallet$build_bitcoin_cli$build_bitcoin_tx$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench = xnonononononono; then
-    use_boost=no
+  use_boost=no
 else
-    use_boost=yes
+  use_boost=yes
 fi
 
 if test x$use_boost = xyes; then
 
-dnl Check for Boost headers
-AX_BOOST_BASE([1.58.0],[],[AC_MSG_ERROR([Boost is not available!])])
-if test x$want_boost = xno; then
+  dnl Check for Boost headers
+  AX_BOOST_BASE([1.58.0],[],[AC_MSG_ERROR([Boost is not available!])])
+  if test x$want_boost = xno; then
     AC_MSG_ERROR([[only libbitcoinconsensus can be built without boost]])
-fi
-AX_BOOST_SYSTEM
-AX_BOOST_FILESYSTEM
+  fi
+  AX_BOOST_SYSTEM
+  AX_BOOST_FILESYSTEM
 
-dnl Opt-in to Boost Process if external signer support is requested
-if test "x$use_external_signer" != xno; then
-AC_MSG_CHECKING(for Boost Process)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <boost/process.hpp>]],
- [[ boost::process::child* child = new boost::process::child; delete child; ]])],
- [ AC_MSG_RESULT(yes)
- AC_DEFINE([ENABLE_EXTERNAL_SIGNER],,[define if external signer support is enabled])
- ],
- [ AC_MSG_ERROR([Boost::Process is required for external signer support, but not available!])]
-)
-fi
+  dnl Opt-in to Boost Process if external signer support is requested
+  if test "x$use_external_signer" != xno; then
+    AC_MSG_CHECKING(for Boost Process)
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <boost/process.hpp>]],
+     [[ boost::process::child* child = new boost::process::child; delete child; ]])],
+     [ AC_MSG_RESULT(yes)
+     AC_DEFINE([ENABLE_EXTERNAL_SIGNER],,[define if external signer support is enabled])
+     ],
+     [ AC_MSG_ERROR([Boost::Process is required for external signer support, but not available!])]
+    )
+  fi
 
-AM_CONDITIONAL([ENABLE_EXTERNAL_SIGNER], [test "x$use_external_signer" = "xyes"])
+  AM_CONDITIONAL([ENABLE_EXTERNAL_SIGNER], [test "x$use_external_signer" = "xyes"])
 
-if test x$suppress_external_warnings != xno; then
+  if test x$suppress_external_warnings != xno; then
     BOOST_CPPFLAGS=SUPPRESS_WARNINGS($BOOST_CPPFLAGS)
-fi
+  fi
 
-dnl Boost 1.56 through 1.62 allow using std::atomic instead of its own atomic
-dnl counter implementations. In 1.63 and later the std::atomic approach is default.
-m4_pattern_allow(DBOOST_AC_USE_STD_ATOMIC) dnl otherwise it's treated like a macro
-BOOST_CPPFLAGS="-DBOOST_SP_USE_STD_ATOMIC -DBOOST_AC_USE_STD_ATOMIC $BOOST_CPPFLAGS"
+  dnl Boost 1.56 through 1.62 allow using std::atomic instead of its own atomic
+  dnl counter implementations. In 1.63 and later the std::atomic approach is default.
+  m4_pattern_allow(DBOOST_AC_USE_STD_ATOMIC) dnl otherwise it's treated like a macro
+  BOOST_CPPFLAGS="-DBOOST_SP_USE_STD_ATOMIC -DBOOST_AC_USE_STD_ATOMIC $BOOST_CPPFLAGS"
 
-BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB"
+  BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB"
 fi
 
 dnl Check for reduced exports
 if test x$use_reduce_exports = xyes; then
-    AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],[CXXFLAGS="$CXXFLAGS -fvisibility=hidden"],
-    [AC_MSG_ERROR([Cannot set hidden symbol visibility. Use --disable-reduce-exports.])],[[$CXXFLAG_WERROR]])
-    AX_CHECK_LINK_FLAG([[-Wl,--exclude-libs,ALL]],[RELDFLAGS="-Wl,--exclude-libs,ALL"],,[[$LDFLAG_WERROR]])
+  AX_CHECK_COMPILE_FLAG([-fvisibility=hidden],[CXXFLAGS="$CXXFLAGS -fvisibility=hidden"],
+  [AC_MSG_ERROR([Cannot set hidden symbol visibility. Use --disable-reduce-exports.])],[[$CXXFLAG_WERROR]])
+  AX_CHECK_LINK_FLAG([[-Wl,--exclude-libs,ALL]],[RELDFLAGS="-Wl,--exclude-libs,ALL"],,[[$LDFLAG_WERROR]])
 fi
 
 if test x$use_tests = xyes; then
@@ -1435,25 +1435,25 @@ if test x$use_tests = xyes; then
 
   if test x$use_boost = xyes; then
 
-  AX_BOOST_UNIT_TEST_FRAMEWORK
+    AX_BOOST_UNIT_TEST_FRAMEWORK
 
-  dnl Determine if -DBOOST_TEST_DYN_LINK is needed
-  AC_MSG_CHECKING([for dynamic linked boost test])
-  TEMP_LIBS="$LIBS"
-  LIBS="$LIBS $BOOST_LDFLAGS $BOOST_UNIT_TEST_FRAMEWORK_LIB"
-  TEMP_CPPFLAGS="$CPPFLAGS"
-  CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
-  AC_LINK_IFELSE([AC_LANG_SOURCE([
-       #define BOOST_TEST_DYN_LINK
-       #define BOOST_TEST_MAIN
-        #include <boost/test/unit_test.hpp>
+    dnl Determine if -DBOOST_TEST_DYN_LINK is needed
+    AC_MSG_CHECKING([for dynamic linked boost test])
+    TEMP_LIBS="$LIBS"
+    LIBS="$LIBS $BOOST_LDFLAGS $BOOST_UNIT_TEST_FRAMEWORK_LIB"
+    TEMP_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $BOOST_CPPFLAGS"
+    AC_LINK_IFELSE([AC_LANG_SOURCE([
+         #define BOOST_TEST_DYN_LINK
+         #define BOOST_TEST_MAIN
+          #include <boost/test/unit_test.hpp>
 
-       ])],
-    [AC_MSG_RESULT(yes)]
-    [TESTDEFS="$TESTDEFS -DBOOST_TEST_DYN_LINK"],
-    [AC_MSG_RESULT(no)])
-  LIBS="$TEMP_LIBS"
-  CPPFLAGS="$TEMP_CPPFLAGS"
+         ])],
+      [AC_MSG_RESULT(yes)]
+      [TESTDEFS="$TESTDEFS -DBOOST_TEST_DYN_LINK"],
+      [AC_MSG_RESULT(no)])
+    LIBS="$TEMP_LIBS"
+    CPPFLAGS="$TEMP_CPPFLAGS"
 
   fi
 fi
