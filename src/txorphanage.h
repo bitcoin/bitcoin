@@ -24,7 +24,7 @@ extern RecursiveMutex g_cs_orphans;
 class TxOrphanage {
 public:
     /** Add a new orphan transaction */
-    bool AddTx(const CTransactionRef& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+    bool AddTx(const CTransactionRef& tx, NodeId peer) LOCKS_EXCLUDED(::g_cs_orphans);
 
     /** Check if we already have an orphan transaction (by txid or wtxid) */
     bool HaveTx(const GenTxid& gtxid) const LOCKS_EXCLUDED(::g_cs_orphans);
@@ -36,22 +36,22 @@ public:
      *  peer, and whether there are more orphans for this peer to work on
      *  after this tx.
      */
-    bool GetTxToReconsider(NodeId peer, CTransactionRef& ref, NodeId& originator, bool& more) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+    bool GetTxToReconsider(NodeId peer, CTransactionRef& ref, NodeId& originator, bool& more) LOCKS_EXCLUDED(::g_cs_orphans);
 
     /** Erase an orphan by txid */
-    int EraseTx(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+    int EraseTx(const uint256& txid) LOCKS_EXCLUDED(::g_cs_orphans) { LOCK(g_cs_orphans); return _EraseTx(txid); }
 
     /** Erase all orphans announced by a peer (eg, after that peer disconnects) */
-    void EraseForPeer(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+    void EraseForPeer(NodeId peer) LOCKS_EXCLUDED(::g_cs_orphans);
 
     /** Erase all orphans included in or invalidated by a new block */
     void EraseForBlock(const CBlock& block) LOCKS_EXCLUDED(::g_cs_orphans);
 
     /** Limit the orphanage to the given maximum */
-    unsigned int LimitOrphans(unsigned int max_orphans) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+    unsigned int LimitOrphans(unsigned int max_orphans) LOCKS_EXCLUDED(::g_cs_orphans);
 
     /** Add any orphans that list a particular tx as a parent into a peer's work set */
-    void AddChildrenToWorkSet(const CTransaction& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+    void AddChildrenToWorkSet(const CTransaction& tx, NodeId peer) LOCKS_EXCLUDED(::g_cs_orphans);
 
     /** Return how many entries exist in the orphange */
     size_t Size() LOCKS_EXCLUDED(::g_cs_orphans)
@@ -61,6 +61,9 @@ public:
     }
 
 protected:
+    /** Erase an orphan by txid (internal, lock must already be held) */
+    int _EraseTx(const uint256& txid) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+
     struct OrphanTx {
         CTransactionRef tx;
         NodeId fromPeer;
