@@ -15,11 +15,9 @@ static constexpr int64_t ORPHAN_TX_EXPIRE_TIME = 20 * 60;
 /** Minimum time between orphan transactions expire time checks in seconds */
 static constexpr int64_t ORPHAN_TX_EXPIRE_INTERVAL = 5 * 60;
 
-RecursiveMutex g_cs_orphans;
-
 bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
 {
-    LOCK(g_cs_orphans);
+    LOCK(m_mutex);
 
     const uint256& hash = tx->GetHash();
     if (m_orphans.count(hash))
@@ -55,7 +53,7 @@ bool TxOrphanage::AddTx(const CTransactionRef& tx, NodeId peer)
 
 int TxOrphanage::_EraseTx(const uint256& txid)
 {
-    AssertLockHeld(g_cs_orphans);
+    AssertLockHeld(m_mutex);
 
     std::map<uint256, OrphanTx>::iterator it = m_orphans.find(txid);
     if (it == m_orphans.end())
@@ -88,7 +86,7 @@ int TxOrphanage::_EraseTx(const uint256& txid)
 
 void TxOrphanage::EraseForPeer(NodeId peer)
 {
-    LOCK(g_cs_orphans);
+    LOCK(m_mutex);
 
     m_peer_work_set.erase(peer);
 
@@ -108,7 +106,7 @@ void TxOrphanage::EraseForPeer(NodeId peer)
 
 unsigned int TxOrphanage::LimitOrphans(unsigned int max_orphans)
 {
-    LOCK(g_cs_orphans);
+    LOCK(m_mutex);
 
     unsigned int nEvicted = 0;
     static int64_t nNextSweep;
@@ -144,7 +142,7 @@ unsigned int TxOrphanage::LimitOrphans(unsigned int max_orphans)
 
 void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx, NodeId peer)
 {
-    LOCK(g_cs_orphans);
+    LOCK(m_mutex);
 
     // Get this peer's work set, emplacing an empty set it didn't exist
     std::set<uint256>& orphan_work_set = m_peer_work_set.try_emplace(peer).first->second;
@@ -161,7 +159,7 @@ void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx, NodeId peer)
 
 bool TxOrphanage::HaveTx(const GenTxid& gtxid) const
 {
-    LOCK(g_cs_orphans);
+    LOCK(m_mutex);
 
     if (gtxid.IsWtxid()) {
         return m_wtxid_to_orphan_it.count(gtxid.GetHash());
@@ -172,7 +170,7 @@ bool TxOrphanage::HaveTx(const GenTxid& gtxid) const
 
 bool TxOrphanage::GetTxToReconsider(NodeId peer, CTransactionRef& ref, NodeId& originator, bool& more)
 {
-    LOCK(g_cs_orphans);
+    LOCK(m_mutex);
 
     auto work_set_it = m_peer_work_set.find(peer);
     if (work_set_it != m_peer_work_set.end()) {
@@ -196,7 +194,7 @@ bool TxOrphanage::GetTxToReconsider(NodeId peer, CTransactionRef& ref, NodeId& o
 
 void TxOrphanage::EraseForBlock(const CBlock& block)
 {
-    LOCK(g_cs_orphans);
+    LOCK(m_mutex);
 
     std::vector<uint256> vOrphanErase;
 
