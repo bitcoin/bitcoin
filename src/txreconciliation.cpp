@@ -6,6 +6,12 @@
 
 /** Static component of the salt used to compute short txids for transaction reconciliation. */
 static const std::string RECON_STATIC_SALT = "Tx Relay Salting";
+/**
+ * When considering whether we should flood to an outbound connection supporting reconciliation,
+ * see how many outbound connections are already used for flooding. Flood only if the limit is not reached.
+ * It helps to save bandwidth and reduce the privacy leak.
+ */
+static constexpr uint32_t MAX_OUTBOUND_FLOOD_TO = 8;
 
 static uint256 ComputeSalt(uint64_t local_salt, uint64_t remote_salt)
 {
@@ -63,7 +69,7 @@ bool TxReconciliationTracker::EnableReconciliationSupport(const NodeId peer_id, 
         if (recon_requestor) return false;
         if (!recon_responder) return false;
         // TODO: Flood only through a limited number of outbound connections.
-        flood_to = true;
+        flood_to = outbound_flooders < MAX_OUTBOUND_FLOOD_TO;
     }
 
     // Reconcile with all outbound peers supporting reconciliation (even if we flood to them),
