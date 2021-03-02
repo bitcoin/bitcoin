@@ -166,7 +166,7 @@ bool processPopData(CNode* node, CDataStream& vRecv, altintegration::MemPool& po
 
 int processPopData(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman* connman)
 {
-    auto& pop_mempool = *VeriBlock::GetPop().mempool;
+    auto& pop_mempool = VeriBlock::GetPop().getMemPool();
 
     // process Pop Data
     if (strCommand == altintegration::ATV::name()) {

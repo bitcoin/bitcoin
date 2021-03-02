@@ -1393,8 +1393,8 @@ void CChainState::InvalidBlockFound(CBlockIndex* pindex, const BlockValidationSt
         pindex->nStatus |= BLOCK_FAILED_VALID;
 
         VeriBlock::GetPop()
-            .altTree
-            ->invalidateSubtree(pindex->GetBlockHash().asVector(), altintegration::BLOCK_FAILED_BLOCK);
+            .getAltBlockTree()
+            .invalidateSubtree(pindex->GetBlockHash().asVector(), altintegration::BLOCK_FAILED_BLOCK);
 
         m_blockman.m_failed_blocks.insert(pindex);
         setDirtyBlockIndex.insert(pindex);
@@ -2402,8 +2402,8 @@ void static UpdateTip(const CBlockIndex* pindexNew, const CChainParams& chainPar
     }
 
     auto& pop = VeriBlock::GetPop();
-    auto* vbktip = pop.altTree->vbk().getBestChain().tip();
-    auto* btctip = pop.altTree->btc().getBestChain().tip();
+    auto* vbktip = pop.getVbkBlockTree().getBestChain().tip();
+    auto* btctip = pop.getBtcBlockTree().getBestChain().tip();
     LogPrintf("%s: new best=ALT:%d:%s %s %s version=0x%08x log2_work=%.8g tx=%lu date='%s' progress=%f cache=%.1fMiB(%utxo)%s\n", __func__,
         pindexNew->nHeight,
         pindexNew->GetBlockHash().GetHex(),
@@ -3165,7 +3165,7 @@ void CChainState::ResetBlockFailureFlags(CBlockIndex* pindex)
 
     int nHeight = pindex->nHeight;
     auto blockHash = pindex->GetBlockHash().asVector();
-    VeriBlock::GetPop().altTree->revalidateSubtree(blockHash, altintegration::BLOCK_FAILED_BLOCK, false);
+    VeriBlock::GetPop().getAltBlockTree().revalidateSubtree(blockHash, altintegration::BLOCK_FAILED_BLOCK, false);
 
     // Remove the invalidity flag from this block and all its descendants.
     BlockMap::iterator it = m_blockman.m_block_index.begin();
@@ -3548,7 +3548,7 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "time-too-old", "block's timestamp is too early");
 
     // Check timestamp
-    if (block.GetBlockTime() > nAdjustedTime + VeriBlock::GetPop().config->alt->maxAltchainFutureBlockTime())
+    if (block.GetBlockTime() > nAdjustedTime + VeriBlock::GetPop().getConfig().getAltParams().maxAltchainFutureBlockTime())
         return state.Invalid(BlockValidationResult::BLOCK_TIME_FUTURE, "time-too-new", "block timestamp too far in the future");
 
     // Reject outdated version blocks when 95% (75% on testnet) of the network has upgraded:
@@ -3937,7 +3937,7 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
 
     // VeriBlock: Block that have been passed to TestBlockValidity may not exist in alt tree, because technically it was not created ("mined").
     // in this case, add it and then remove
-    auto& tree = *VeriBlock::GetPop().altTree;
+    auto& tree = VeriBlock::GetPop().getAltBlockTree();
     auto _hash = block_hash.asVector();
     bool shouldRemove = false;
     if (!tree.getBlockIndex(_hash)) {
@@ -4240,7 +4240,7 @@ bool BlockManager::LoadBlockIndex(
         }
 
         // ALT tree tip should be set - this is our last best tip
-        auto* tip = VeriBlock::GetPop().altTree->getBestChain().tip();
+        auto* tip = VeriBlock::GetPop().getAltBlockTree().getBestChain().tip();
         assert(tip && "we could not load tip of alt block");
         uint256 hash(tip->getHash());
 

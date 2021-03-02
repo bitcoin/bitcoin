@@ -44,7 +44,7 @@ struct PayloadsProvider : public altintegration::PayloadsStorage {
     template <typename pop_t>
     bool getPayloads(char dbPrefix, const typename pop_t::id_t& id, pop_t& out, altintegration::ValidationState& state)
     {
-        auto& mempool = *GetPop().mempool;
+        auto& mempool = GetPop().getMemPool();
         const auto* memval = mempool.template get<pop_t>(id);
         if (memval != nullptr) {
             out = *memval;

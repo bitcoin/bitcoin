@@ -31,7 +31,6 @@ void InitPopContext(CDBWrapper& db);
 CBlockIndex* compareTipToBlock(CBlockIndex* candidate);
 bool acceptBlock(const CBlockIndex& indexNew, BlockValidationState& state);
 bool checkPopDataSize(const altintegration::PopData& popData, altintegration::ValidationState& state);
-bool popdataStatelessValidation(const altintegration::PopData& popData, altintegration::ValidationState& state);
 bool addAllBlockPayloads(const CBlock& block, BlockValidationState& state);
 bool setState(const uint256& block, altintegration::ValidationState& state);
 
@@ -44,7 +43,7 @@ std::vector<BlockBytes> getLastKnownBTCBlocks(size_t blocks);
 
 //! returns true if all tips are stored in database, false otherwise
 bool hasPopData(CBlockTreeDB& db);
-altintegration::PopData getPopData();
+altintegration::PopData getPopData(const CBlockIndex& prev);
 void saveTrees(CDBBatch* batch);
 bool loadTrees(CDBWrapper& db);
 

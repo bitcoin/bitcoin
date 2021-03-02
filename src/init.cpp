@@ -1855,13 +1855,13 @@ bool AppInitMain(NodeContext& node)
         altintegration::ValidationState state;
         LOCK(cs_main);
         bool ret = VeriBlock::setState(tip->GetBlockHash(), state);
-        auto* alttip = pop.altTree->getBestChain().tip();
+        auto* alttip = pop.getAltBlockTree().getBestChain().tip();
         assert(ret && "bad state");
         assert(tip->nHeight == alttip->getHeight());
 
-        LogPrintf("ALT tree best height = %d\n", pop.altTree->getBestChain().tip()->getHeight());
-        LogPrintf("VBK tree best height = %d\n", pop.altTree->vbk().getBestChain().tip()->getHeight());
-        LogPrintf("BTC tree best height = %d\n", pop.altTree->btc().getBestChain().tip()->getHeight());
+        LogPrintf("ALT tree best height = %d\n", pop.getAltBlockTree().getBestChain().tip()->getHeight());
+        LogPrintf("VBK tree best height = %d\n", pop.getVbkBlockTree().getBestChain().tip()->getHeight());
+        LogPrintf("BTC tree best height = %d\n", pop.getBtcBlockTree().getBestChain().tip()->getHeight());
     }
 
     return true;
