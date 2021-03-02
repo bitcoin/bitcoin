@@ -1406,8 +1406,6 @@ if test x$use_boost = xyes; then
     )
   fi
 
-  AM_CONDITIONAL([ENABLE_EXTERNAL_SIGNER], [test "x$use_external_signer" = "xyes"])
-
   if test x$suppress_external_warnings != xno; then
     BOOST_CPPFLAGS=SUPPRESS_WARNINGS($BOOST_CPPFLAGS)
   fi
@@ -1419,6 +1417,8 @@ if test x$use_boost = xyes; then
 
   BOOST_LIBS="$BOOST_LDFLAGS $BOOST_SYSTEM_LIB $BOOST_FILESYSTEM_LIB"
 fi
+
+AM_CONDITIONAL([ENABLE_EXTERNAL_SIGNER], [test "x$use_external_signer" = "xyes"])
 
 dnl Check for reduced exports
 if test x$use_reduce_exports = xyes; then
