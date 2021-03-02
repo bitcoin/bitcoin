@@ -58,17 +58,10 @@ unset C_INCLUDE_PATH
 unset CPLUS_INCLUDE_PATH
 case "$HOST" in
     *darwin*)
-        # When targeting darwin, some native tools built by depends require
-        # native packages not incorporated in depends
-        #
-        # libcap       required by native_cdrkit/wodim
-        # zlib, bzip2  required by native_cdrkit/genisoimage
-        for native_pkg in libcap zlib bzip2; do
-            native_pkg_store_path=$(store_path "$native_pkg")
-            export LIBRARY_PATH="${native_pkg_store_path}/lib:${LIBRARY_PATH}"
-            export CPATH="${native_pkg_store_path}/include:${CPATH}"
-        done
-        ;;
+        # When targeting darwin, zlib is required by native_libdmg-hfsplus.
+        zlib_store_path=$(store_path "zlib")
+        export LIBRARY_PATH="${zlib_store_path}/lib:${LIBRARY_PATH}"
+        export CPATH="${zlib_store_path}/include:${CPATH}"
 esac
 
 # Set environment variables to point the CROSS toolchain to the right
