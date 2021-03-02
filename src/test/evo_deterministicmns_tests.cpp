@@ -229,7 +229,7 @@ static bool CheckTransactionSignature(const CTxMemPool& mempool, const CMutableT
         BOOST_REQUIRE(txFrom);
 
         CAmount amount = txFrom->vout[txin.prevout.n].nValue;
-        if (!VerifyScript(txin.scriptSig, txFrom->vout[txin.prevout.n].scriptPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&tx, i, amount))) {
+        if (!VerifyScript(txin.scriptSig, txFrom->vout[txin.prevout.n].scriptPubKey, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&tx, i, amount, MissingDataBehavior::ASSERT_FAIL))) {
             return false;
         }
     }

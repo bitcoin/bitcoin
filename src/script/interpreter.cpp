@@ -1516,10 +1516,22 @@ PrecomputedTransactionData::PrecomputedTransactionData(const T& txTo)
 }
 
 // explicit instantiation
-template PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo);
-template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTransaction& txTo);
 template void PrecomputedTransactionData::Init(const CTransaction& txTo, std::vector<CTxOut>&& spent_outputs);
 template void PrecomputedTransactionData::Init(const CMutableTransaction& txTo, std::vector<CTxOut>&& spent_outputs);
+template PrecomputedTransactionData::PrecomputedTransactionData(const CTransaction& txTo);
+template PrecomputedTransactionData::PrecomputedTransactionData(const CMutableTransaction& txTo);
+
+static bool HandleMissingData(MissingDataBehavior mdb)
+{
+    switch (mdb) {
+    case MissingDataBehavior::ASSERT_FAIL:
+        assert(!"Missing data");
+        break;
+    case MissingDataBehavior::FAIL:
+        return false;
+    }
+    assert(!"Unknown MissingDataBehavior value");
+}
 
 template <class T>
 uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn, int nHashType, const CAmount& amount, SigVersion sigversion, const PrecomputedTransactionData* cache)
