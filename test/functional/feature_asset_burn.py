@@ -48,6 +48,7 @@ class AssetBurnTest(SyscoinTestFramework):
         self.sync_blocks()
         balancebefore = self.nodes[1].getbalance()
         txid = self.nodes[1].syscoinburntoassetallocation(self.asset, 50)['txid']
+        self.sync_mempools()
         fee = self.nodes[1].gettransaction(txid)['fee']
         assert_equal(self.nodes[1].getbalance(), (balancebefore + fee) - 50)
         self.sync_mempools()

@@ -216,6 +216,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[0].assetupdate(self.asset, '', '', 127, '', {}, {})
         time.sleep(0.25)
         self.nodes[0].assetallocationburn(self.asset, 0.88889, '')
+        time.sleep(0.25)
         # subtract balance with 0.001 threshold to account for update fee
         assert(self.nodes[0].getbalance(minconf=0) - (balanceBefore+Decimal(1.88889)) < Decimal(0.001))
         # listunspent for node0 should be have just 1 (asset ownership) in mempool
@@ -240,6 +241,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         self.nodes[3].assetallocationburn(self.asset, 0.0001, '')
         time.sleep(0.25)
         self.nodes[2].assetallocationburn(self.asset, 0.00001, '')
+        time.sleep(0.25)
         # ensure burning sysx gives new sys balance
         # account for rounding errors in Decimal
         assert(self.nodes[1].getbalance(minconf=0) - (balanceBefore+Decimal(0.1)) < Decimal(0.001))
@@ -254,6 +256,7 @@ class AssetZDAGTest(SyscoinTestFramework):
         # check listunspent is empty in mempool, all should be burned
         self.nodes[0].assetupdate(self.asset, '', '', 127, '', {}, {})
         self.nodes[0].generate(1)
+        time.sleep(0.25)
         assert(self.nodes[1].getbalance() - (balanceBefore+Decimal(0.1)) < Decimal(0.001))
         assert(self.nodes[2].getbalance() - (balanceBefore+Decimal(0.01101)) < Decimal(0.001))
         assert(self.nodes[3].getbalance() - (balanceBefore+Decimal(0.0001)) < Decimal(0.0001))
