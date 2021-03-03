@@ -7,6 +7,7 @@
 
 #include <fs.h>
 #include <interfaces/chain.h>
+#include <node/ui_interface.h>
 #include <scheduler.h>
 #include <util/string.h>
 #include <util/system.h>
@@ -15,6 +16,10 @@
 #include <wallet/walletdb.h>
 
 #include <univalue.h>
+
+#include <set>
+
+std::set<fs::path> g_ignore_wallets;
 
 bool VerifyWallets(interfaces::Chain& chain)
 {
@@ -78,8 +83,12 @@ bool VerifyWallets(interfaces::Chain& chain)
             if (status == DatabaseStatus::FAILED_NOT_FOUND) {
                 chain.initWarning(Untranslated(strprintf("Skipping -wallet path that doesn't exist. %s", error_string.original)));
             } else {
-                chain.initError(error_string);
-                return false;
+                if (chain.initQuestion(error_string + Untranslated("\n\n") + _("Continue without wallet?"), error_string, _("Error"), CClientUIInterface::MSG_ERROR | CClientUIInterface::MODAL | CClientUIInterface::BTN_OK | CClientUIInterface::BTN_ABORT)) {
+                    g_ignore_wallets.insert(path);
+                    RemoveWalletSetting(chain, wallet_file);
+                } else {
+                    return false;
+                }
             }
         }
     }
@@ -92,7 +101,8 @@ bool LoadWallets(interfaces::Chain& chain)
     try {
         std::set<fs::path> wallet_paths;
         for (const std::string& name : gArgs.GetArgs("-wallet")) {
-            if (!wallet_paths.insert(name).second) {
+            const fs::path path = fs::absolute(name, GetWalletDir());
+            if (g_ignore_wallets.count(path) || !wallet_paths.insert(path).second) {
                 continue;
             }
             DatabaseOptions options;
@@ -114,6 +124,7 @@ bool LoadWallets(interfaces::Chain& chain)
             }
             AddWallet(pwallet);
         }
+        g_ignore_wallets.clear();
         return true;
     } catch (const std::runtime_error& e) {
         chain.initError(Untranslated(e.what()));
