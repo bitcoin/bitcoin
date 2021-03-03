@@ -51,6 +51,7 @@ class CoinStatsIndexTest(BitcoinTestFramework):
     def run_test(self):
         self._test_coin_stats_index()
         self._test_use_index_option()
+        self._test_reorg_index()
 
     def block_sanity_check(self, block_info):
         block_subsidy = 50
@@ -246,6 +247,56 @@ class CoinStatsIndexTest(BitcoinTestFramework):
         option_res = self.nodes[1].gettxoutsetinfo(hash_type='muhash', hash_or_height=None, use_index=False)
         del res['disk_size'], option_res['disk_size']
         assert_equal(res, option_res)
+
+    def _test_reorg_index(self):
+        self.log.info("Test that index can handle reorgs")
+
+        # Generate two block, let the index catch up, then invalidate the blocks
+        index_node = self.nodes[1]
+        reorg_blocks = index_node.generatetoaddress(2, index_node.getnewaddress())
+        reorg_block = reorg_blocks[1]
+        self.wait_until(lambda: not try_rpc(-32603, "Unable to read UTXO set", index_node.gettxoutsetinfo, 'muhash'))
+        res_invalid = index_node.gettxoutsetinfo('muhash')
+        index_node.invalidateblock(reorg_blocks[0])
+        assert_equal(index_node.gettxoutsetinfo('muhash')['height'], 110)
+
+        # Add two new blocks
+        block = index_node.generate(2)[1]
+        self.wait_until(lambda: not try_rpc(-32603, "Unable to read UTXO set", index_node.gettxoutsetinfo, 'muhash'))
+        res = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=None, use_index=False)
+
+        # Test that the result of the reorged block is not returned for its old block height
+        res2 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=112)
+        assert_equal(res["bestblock"], block)
+        assert_equal(res["muhash"], res2["muhash"])
+        assert(res["muhash"] != res_invalid["muhash"])
+
+        # Test that requesting reorged out block by hash is still returning correct results
+        res_invalid2 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=reorg_block)
+        assert_equal(res_invalid2["muhash"], res_invalid["muhash"])
+        assert(res["muhash"] != res_invalid2["muhash"])
+
+        # Add another block, so we don't depend on reconsiderblock remembering which
+        # blocks were touched by invalidateblock
+        index_node.generate(1)
+
+        # Ensure that removing and re-adding blocks yields consistent results
+        block = index_node.getblockhash(99)
+        index_node.invalidateblock(block)
+        self.wait_until(lambda: not try_rpc(-32603, "Unable to read UTXO set", index_node.gettxoutsetinfo, 'muhash'))
+        index_node.reconsiderblock(block)
+        self.wait_until(lambda: not try_rpc(-32603, "Unable to read UTXO set", index_node.gettxoutsetinfo, 'muhash'))
+        res3 = index_node.gettxoutsetinfo(hash_type='muhash', hash_or_height=112)
+        assert_equal(res2, res3)
+
+        self.log.info("Test that a node aware of stale blocks syncs them as well")
+        node = self.nodes[0]
+        # Ensure the node is aware of a stale block prior to restart
+        node.getblock(reorg_block)
+
+        self.restart_node(0, ["-coinstatsindex"])
+        self.wait_until(lambda: not try_rpc(-32603, "Unable to read UTXO set", node.gettxoutsetinfo, 'muhash'))
+        assert_raises_rpc_error(-32603, "Unable to read UTXO set", node.gettxoutsetinfo, 'muhash', reorg_block)
 
 
 if __name__ == '__main__':
