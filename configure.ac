@@ -1669,6 +1669,9 @@ else
     fi
     AC_MSG_RESULT($use_natpmp_default)
     AC_DEFINE_UNQUOTED([USE_NATPMP], [$natpmp_setting], [NAT-PMP support not compiled if undefined, otherwise value (0 or 1) determines default state])
+    if test x$TARGET_OS = xwindows; then
+      NATPMP_CPPFLAGS="-DSTATICLIB -DNATPMP_STATICLIB"
+    fi
   else
     AC_MSG_RESULT([no])
   fi
@@ -1826,6 +1829,7 @@ AC_SUBST(SQLITE_LIBS)
 AC_SUBST(TESTDEFS)
 AC_SUBST(MINIUPNPC_CPPFLAGS)
 AC_SUBST(MINIUPNPC_LIBS)
+AC_SUBST(NATPMP_CPPFLAGS)
 AC_SUBST(NATPMP_LIBS)
 AC_SUBST(EVENT_LIBS)
 AC_SUBST(EVENT_PTHREADS_LIBS)
