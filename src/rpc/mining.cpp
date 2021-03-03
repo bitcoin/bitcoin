@@ -867,10 +867,17 @@ static RPCHelpMan getblocktemplate()
             }
         }
     }
+
+    int taproot_height = consensusParams.DeploymentHeight(Consensus::DEPLOYMENT_TAPROOT);
+    int64_t height = pindexPrev->nHeight+1;
+    int vbrequired = 0;
+    if (height < taproot_height && taproot_height <= height + 4*consensusParams.nMinerConfirmationWindow) {
+        vbrequired = (VERSIONBITS_TOP_BITS | (1 << 2));
+    }
     result.pushKV("version", pblock->nVersion);
     result.pushKV("rules", aRules);
     result.pushKV("vbavailable", vbavailable);
-    result.pushKV("vbrequired", int(0));
+    result.pushKV("vbrequired", vbrequired);
 
     if (nMaxVersionPreVB >= 2) {
         // If VB is supported by the client, nMaxVersionPreVB is -1, so we won't get here
