@@ -10,11 +10,9 @@ src/syscoin-node
 src/syscoin-tx
 src/syscoin-util
 src/syscoin-wallet
-src/test/fuzz/*
-!src/test/fuzz/*.*
+src/test/fuzz/fuzz
 src/test/test_syscoin
 src/qt/test/test_syscoin-qt
-src/bench/bench_syscoin
 
 # autoreconf
 Makefile.in
