@@ -1180,6 +1180,16 @@ BOOST_AUTO_TEST_CASE(util_FormatMoney)
     BOOST_CHECK_EQUAL(FormatMoney(COIN/1000000), "0.000001");
     BOOST_CHECK_EQUAL(FormatMoney(COIN/10000000), "0.0000001");
     BOOST_CHECK_EQUAL(FormatMoney(COIN/100000000), "0.00000001");
+
+    BOOST_CHECK_EQUAL(FormatMoney(std::numeric_limits<CAmount>::max()), "92233720368.54775807");
+    BOOST_CHECK_EQUAL(FormatMoney(std::numeric_limits<CAmount>::max() - 1), "92233720368.54775806");
+    BOOST_CHECK_EQUAL(FormatMoney(std::numeric_limits<CAmount>::max() - 2), "92233720368.54775805");
+    BOOST_CHECK_EQUAL(FormatMoney(std::numeric_limits<CAmount>::max() - 3), "92233720368.54775804");
+    // ...
+    BOOST_CHECK_EQUAL(FormatMoney(std::numeric_limits<CAmount>::min() + 3), "-92233720368.54775805");
+    BOOST_CHECK_EQUAL(FormatMoney(std::numeric_limits<CAmount>::min() + 2), "-92233720368.54775806");
+    BOOST_CHECK_EQUAL(FormatMoney(std::numeric_limits<CAmount>::min() + 1), "-92233720368.54775807");
+    BOOST_CHECK_EQUAL(FormatMoney(std::numeric_limits<CAmount>::min()), "-92233720368.54775808");
 }
 
 BOOST_AUTO_TEST_CASE(util_ParseMoney)

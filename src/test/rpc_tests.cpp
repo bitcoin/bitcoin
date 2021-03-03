@@ -174,6 +174,16 @@ BOOST_AUTO_TEST_CASE(rpc_format_monetary_values)
     BOOST_CHECK_EQUAL(ValueFromAmount(COIN/1000000).write(), "0.00000100");
     BOOST_CHECK_EQUAL(ValueFromAmount(COIN/10000000).write(), "0.00000010");
     BOOST_CHECK_EQUAL(ValueFromAmount(COIN/100000000).write(), "0.00000001");
+
+    BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::max()).write(), "92233720368.54775807");
+    BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::max() - 1).write(), "92233720368.54775806");
+    BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::max() - 2).write(), "92233720368.54775805");
+    BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::max() - 3).write(), "92233720368.54775804");
+    // ...
+    BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::min() + 3).write(), "-92233720368.54775805");
+    BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::min() + 2).write(), "-92233720368.54775806");
+    BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::min() + 1).write(), "-92233720368.54775807");
+    BOOST_CHECK_EQUAL(ValueFromAmount(std::numeric_limits<CAmount>::min()).write(), "-92233720368.54775808");
 }
 
 static UniValue ValueFromString(const std::string &str)
