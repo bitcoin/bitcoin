@@ -21,7 +21,6 @@ packages:
 - "bsdmainutils"
 - "cmake"
 - "imagemagick"
-- "libcap-dev"
 - "libz-dev"
 - "libbz2-dev"
 - "python3"
