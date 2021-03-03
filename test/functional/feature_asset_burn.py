@@ -96,6 +96,7 @@ class AssetBurnTest(SyscoinTestFramework):
         self.nodes[1].assetallocationburn(self.asset, 0.5, "")
         time.sleep(0.25)
         self.nodes[1].assetallocationburn(self.asset, 0.05, "")
+        time.sleep(0.25)
         postbalance = float(self.nodes[1].getbalance())
         # ensure SYS balance goes up on burn to syscoin, use 0.94 because of fees
         assert(prebalance + 0.94 <= postbalance)
