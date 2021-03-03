@@ -36,7 +36,7 @@ pip3 install ds_store mac_alias
 ```
 
 The wallet support requires one or both of the dependencies ([*SQLite*](#sqlite) and [*Berkeley DB*](#berkeley-db)) in the sections below.
-To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode).
+To build Syscoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode).
 
 #### SQLite
 
