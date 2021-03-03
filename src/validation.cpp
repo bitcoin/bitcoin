@@ -590,6 +590,7 @@ public:
         const CChainParams& m_chainparams;
         const int64_t m_accept_time;
         const bool m_bypass_limits;
+        const bool m_bypass_timelocks;
         /*
          * Return any outpoints which were not previously present in the coins
          * cache, but were added as a result of validating the tx for mempool
@@ -730,7 +731,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // block; we don't want our mempool filled up with transactions that can't
     // be mined yet.
     assert(std::addressof(::ChainActive()) == std::addressof(m_active_chainstate.m_chain));
-    if (!CheckFinalTx(m_active_chainstate.m_chain.Tip(), tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
+    if (!args.m_bypass_timelocks && !CheckFinalTx(m_active_chainstate.m_chain.Tip(), tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-final");
 
     // is it already in the memory pool?
@@ -820,7 +821,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // Pass in m_view which has all of the relevant inputs cached. Note that, since m_view's
     // backend was removed, it no longer pulls coins from the mempool.
     assert(std::addressof(::ChainstateActive()) == std::addressof(m_active_chainstate));
-    if (!CheckSequenceLocks(m_active_chainstate, m_view, tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp))
+    if (!args.m_bypass_timelocks && !CheckSequenceLocks(m_active_chainstate, m_view, tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp))
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
 
     assert(std::addressof(g_chainman.m_blockman) == std::addressof(m_active_chainstate.m_blockman));
@@ -1123,6 +1124,9 @@ bool MemPoolAccept::ConsensusScriptChecks(const ATMPArgs& args, Workspace& ws, P
 
 bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
 {
+    // Never submit a transaction without running all checks.
+    assert(!args.m_bypass_timelocks);
+
     const CTransaction& tx = *ws.m_ptx;
     const uint256& hash = ws.m_hash;
     TxValidationState& state = ws.m_state;
@@ -1275,7 +1279,8 @@ static MempoolAcceptResult AcceptToMemoryPoolWithTime(const CChainParams& chainp
                                                       EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     std::vector<COutPoint> coins_to_uncache;
-    MemPoolAccept::ATMPArgs args { chainparams, nAcceptTime, bypass_limits, coins_to_uncache, test_accept };
+    MemPoolAccept::ATMPArgs args { chainparams, nAcceptTime, bypass_limits,
+                                   /* bypass_timelocks*/ false, coins_to_uncache, test_accept };
 
     assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
     const MempoolAcceptResult result = MemPoolAccept(pool, active_chainstate).AcceptSingleTransaction(tx, args);
@@ -1305,14 +1310,16 @@ MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPoo
 }
 
 std::vector<MempoolAcceptResult> ProcessNewPackage(CChainState& active_chainstate, CTxMemPool& pool,
-                                                   std::vector<CTransactionRef>& txns, bool test_accept)
+                                                   std::vector<CTransactionRef>& txns, bool test_accept,
+                                                   bool bypass_timelocks)
 {
     AssertLockHeld(cs_main);
     assert(test_accept); // Only allow package accept dry-runs (testmempoolaccept RPC).
+    if (bypass_timelocks) assert(test_accept); // Only allow bypass_timelocks in dry-runs.
 
     std::vector<COutPoint> coins_to_uncache;
     const CChainParams& chainparams = Params();
-    MemPoolAccept::ATMPArgs args { chainparams, GetTime(), false, coins_to_uncache, test_accept };
+    MemPoolAccept::ATMPArgs args { chainparams, GetTime(), false, bypass_timelocks, coins_to_uncache, test_accept };
     assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
     const std::vector<MempoolAcceptResult> results = MemPoolAccept(pool, active_chainstate).AcceptMultipleTransactions(txns, args);
     Assume(txns.size() == results.size());

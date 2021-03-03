@@ -224,8 +224,8 @@ struct MempoolAcceptResult {
 
 /**
  * (Try to) add a transaction to the memory pool.
- * @param[in]  bypass_limits   When true, don't enforce mempool fee limits.
- * @param[in]  test_accept     When true, run validation checks but don't submit to mempool.
+ * @param[in]  bypass_limits    When true, don't enforce mempool fee limits.
+ * @param[in]  test_accept      When true, run validation checks but don't submit to mempool.
  */
 MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPool& pool, const CTransactionRef& tx,
                                        bool bypass_limits, bool test_accept=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
@@ -236,12 +236,14 @@ MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPoo
 *                                   parent-child dependencies. The transactions must not conflict, i.e.
 *                                   must not spend the same inputs, even if it would be a valid BIP125
 *                                   replace-by-fee. Parents must appear before children.
+* @param[in]    bypass_timelocks    When true (test_accept must also be true), don't enforce timelock
+*                                   rules BIP65 and BIP112.
 * @returns a vector of MempoolAcceptResults for each tx in the same order as
 * the input txns. If one transaction fails, some results may be unfinished.
 */
 std::vector<MempoolAcceptResult> ProcessNewPackage(CChainState& active_chainstate, CTxMemPool& pool,
-                                                   std::vector<CTransactionRef>& txns, bool test_accept)
-                                                   EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+                                                   std::vector<CTransactionRef>& txns, bool test_accept,
+                                                   bool bypass_timelocks=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
