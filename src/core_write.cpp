@@ -185,7 +185,7 @@ bool DecodeSyscoinRawtransaction(const CTransaction& rawTx, const uint256 &hashB
     return found;
 }
 // SYSCOIN
-UniValue ValueFromAmount(const CAmount& amount, const uint32_t &nBaseAsset)
+UniValue ValueFromAmount(const CAmount amount, const uint32_t &nBaseAsset)
 {
     uint8_t nPrecision = 8;
     if(nBaseAsset > 0) {
@@ -193,21 +193,23 @@ UniValue ValueFromAmount(const CAmount& amount, const uint32_t &nBaseAsset)
             nPrecision = 0;
         }
     }
-    bool sign = amount < 0;
-    int64_t n_abs = (sign ? -amount : amount);
-    int64_t quotient = n_abs;
+    int64_t quotient = amount;
     int64_t divByAmount = 1;
     int64_t remainder = 0;
     std::string strPrecision = "0";
     if (nPrecision > 0) {
         divByAmount = pow(10.0, nPrecision);
-        quotient = n_abs / divByAmount;
-        remainder = n_abs % divByAmount;
+        quotient = amount / divByAmount;
+        remainder = amount % divByAmount;
         strPrecision = itostr(nPrecision);
+    }
+    if (amount < 0) {
+        quotient = -quotient;
+        remainder = -remainder;
     }
 
     return UniValue(UniValue::VNUM,
-        strprintf("%s%d.%0" + strPrecision + "d", sign ? "-" : "", quotient, remainder));
+        strprintf("%s%d.%0" + strPrecision + "d", amount < 0 ? "-" : "", quotient, remainder));
 }
 std::string FormatScript(const CScript& script)
 {
