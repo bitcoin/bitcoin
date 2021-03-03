@@ -73,6 +73,8 @@ ELF_ALLOWED_LIBRARIES = {
 'ld-linux-riscv64-lp64d.so.1', # 64-bit RISC-V dynamic linker
 # bitcoin-qt only
 'libxcb.so.1', # part of X11
+'libxkbcommon.so.0', # keyboard keymapping
+'libxkbcommon-x11.so.0', # keyboard keymapping
 'libfontconfig.so.1', # font support
 'libfreetype.so.6', # font parsing
 'libdl.so.2' # programming interface to dynamic linker
