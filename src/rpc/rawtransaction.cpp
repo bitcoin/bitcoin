@@ -889,6 +889,7 @@ static RPCHelpMan testmempoolaccept()
                         },
                         },
                     {"maxfeerate", RPCArg::Type::AMOUNT, /* default */ FormatMoney(DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK()), "Reject transactions whose fee rate is higher than the specified value, expressed in " + CURRENCY_UNIT + "/kB\n"},
+                    {"bypass_timelocks", RPCArg::Type::BOOL, /* default */ "false", "Don't enforce BIP68 sequence locks and timelocks. Don't use unless you know what you're doing!\n"}
                 },
                 RPCResult{
                     RPCResult::Type::ARR, "", "The result of the mempool acceptance test for each raw transaction in the input array.\n"
@@ -937,6 +938,7 @@ static RPCHelpMan testmempoolaccept()
     const CFeeRate max_raw_tx_fee_rate = request.params[1].isNull() ?
                                              DEFAULT_MAX_RAW_TX_FEE_RATE :
                                              CFeeRate(AmountFromValue(request.params[1]));
+    const bool bypass_timelocks = request.params[2].isNull() ? false : request.params[2].get_bool();
 
     CTxMemPool& mempool = EnsureMemPool(request.context);
     std::vector<CTransactionRef> txns;
@@ -950,7 +952,8 @@ static RPCHelpMan testmempoolaccept()
     }
 
     std::vector<MempoolAcceptResult> validation_results =
-        WITH_LOCK(cs_main, return ProcessNewPackage(::ChainstateActive(), mempool, txns, /* test_accept */ true));
+        WITH_LOCK(cs_main, return ProcessNewPackage(::ChainstateActive(), mempool, txns, /* test_accept */ true,
+                  /* bypass_timelocks */ bypass_timelocks));
 
     UniValue rpc_result(UniValue::VARR);
 
