@@ -42,7 +42,7 @@ class TxnMallTest(BitcoinTestFramework):
         for i in range(3):
             assert_equal(self.nodes[i].getbalance(), starting_balance)
 
-        self.nodes[0].settxfee(.001)
+        self.nodes[0].setfeerate(100)
 
         node0_address1 = self.nodes[0].getnewaddress(address_type=output_type)
         node0_txid1 = self.nodes[0].sendtoaddress(node0_address1, 1219)

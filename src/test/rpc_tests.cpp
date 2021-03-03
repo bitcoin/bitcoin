@@ -216,6 +216,29 @@ BOOST_AUTO_TEST_CASE(rpc_parse_monetary_values)
     BOOST_CHECK_THROW(AmountFromValue(ValueFromString("93e+9")), UniValue); //overflow error
 }
 
+BOOST_AUTO_TEST_CASE(rpc_parse_fee_rate_values)
+{
+    // Test ValueFromFeeRate() and CFeeRate()
+    // ...using default CFeeRate constructor
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(AmountFromValue(0.00001234))).get_real(), 1.234);
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(AmountFromValue(0.1234))).get_real(), 12340.000);
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(AmountFromValue(1234))).get_real(), 123400000.000);
+    // ...using CFeeRate constructor with bytes 1000
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate(AmountFromValue(0.00001234), 1000)).get_real(), 1.234);
+    // ...using CFeeRate constructor with FeeEstimateMode::SAT_VB
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate::FromSatB(AmountFromValue(0.001))).get_real(), 0.001);
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate::FromSatB(AmountFromValue(0.999))).get_real(), 0.999);
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate::FromSatB(AmountFromValue(1))).get_real(), 1);
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate::FromSatB(AmountFromValue(1.02))).get_real(), 1.02);
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate::FromSatB(AmountFromValue(1.234))).get_real(), 1.234);
+    // ...using CFeeRate constructor with FeeEstimateMode::BTC_KVB
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate::FromBtcKb(AmountFromValue(0.00000001))).get_real(), 0.001);
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate::FromBtcKb(AmountFromValue(0.0000099))).get_real(), 0.99);
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate::FromBtcKb(AmountFromValue(0.00001))).get_real(), 1);
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate::FromBtcKb(AmountFromValue(0.00001234))).get_real(), 1.234);
+    BOOST_CHECK_EQUAL(ValueFromFeeRate(CFeeRate::FromBtcKb(AmountFromValue(0.1234))).get_real(), 12340);
+}
+
 BOOST_AUTO_TEST_CASE(json_parse_errors)
 {
     // Valid

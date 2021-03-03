@@ -50,7 +50,7 @@ class GetblockstatsTest(BitcoinTestFramework):
 
         self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=True)
         self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=False)
-        self.nodes[0].settxfee(amount=0.003)
+        self.nodes[0].setfeerate(amount=300)
         self.nodes[0].sendtoaddress(address=address, amount=1, subtractfeefromamount=True)
         self.sync_all()
         self.nodes[0].generate(1)
@@ -107,7 +107,7 @@ class GetblockstatsTest(BitcoinTestFramework):
         assert_equal(stats[self.max_stat_pos]['height'], self.start_height + self.max_stat_pos)
 
         for i in range(self.max_stat_pos+1):
-            self.log.info('Checking block %d\n' % (i))
+            self.log.info(f"Checking block {i}")
             assert_equal(stats[i], self.expected_stats[i])
 
             # Check selecting block by hash too

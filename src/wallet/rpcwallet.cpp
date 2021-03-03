@@ -216,7 +216,7 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
         if (!estimate_mode.isNull() && estimate_mode.get_str() != "unset") {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and fee_rate");
         }
-        cc.m_feerate = CFeeRate(AmountFromValue(fee_rate), COIN);
+        cc.m_feerate = CFeeRate::FromSatB(AmountFromValue(fee_rate));
         if (override_min_fee) cc.fOverrideFeeRate = true;
         // Default RBF to true for explicit fee_rate, if unset.
         if (cc.m_signal_bip125_rbf == nullopt) cc.m_signal_bip125_rbf = true;
@@ -2316,10 +2316,12 @@ static RPCHelpMan listlockunspent()
 static RPCHelpMan settxfee()
 {
     return RPCHelpMan{"settxfee",
-                "\nSet the transaction fee per kB for this wallet. Overrides the global -paytxfee command line parameter.\n"
-                "Can be deactivated by passing 0 as the fee. In that case automatic fee selection will be used by default.\n",
+                "\n(Deprecated in favor of the setfeerate RPC in " + CURRENCY_ATOM + "/vB, which it is recommended to use instead.)\n"
+                "Set the transaction fee rate in " + CURRENCY_UNIT + "/kvB for this wallet.\n"
+                "Overrides the global -paytxfee configuration option. Like -paytxfee, it is not persisted after bitcoind shutdown/restart.\n"
+                "Can be deactivated by passing 0 as the fee rate, in which case automatic fee selection will be used by default.\n",
                 {
-                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The transaction fee in " + CURRENCY_UNIT + "/kvB"},
+                    {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The transaction fee rate in " + CURRENCY_UNIT + "/kvB to set (0 to unset)"},
                 },
                 RPCResult{
                     RPCResult::Type::BOOL, "", "Returns true if successful"
@@ -2337,8 +2339,8 @@ static RPCHelpMan settxfee()
     LOCK(pwallet->cs_wallet);
 
     CAmount nAmount = AmountFromValue(request.params[0]);
-    CFeeRate tx_fee_rate(nAmount, 1000);
-    CFeeRate max_tx_fee_rate(pwallet->m_default_max_tx_fee, 1000);
+    CFeeRate tx_fee_rate{CFeeRate::FromBtcKb(nAmount)};
+    CFeeRate max_tx_fee_rate{CFeeRate::FromBtcKb(pwallet->m_default_max_tx_fee)};
     if (tx_fee_rate == CFeeRate(0)) {
         // automatic selection
     } else if (tx_fee_rate < pwallet->chain().relayMinFee()) {
@@ -2352,6 +2354,81 @@ static RPCHelpMan settxfee()
     pwallet->m_pay_tx_fee = tx_fee_rate;
     return true;
 },
+    };
+}
+
+static RPCHelpMan setfeerate()
+{
+    return RPCHelpMan{
+        "setfeerate",
+        "\nSet the transaction fee rate in " + CURRENCY_ATOM + "/vB for this wallet.\n"
+        "Overrides the global -paytxfee configuration option. Like -paytxfee, it is not persisted after bitcoind shutdown/restart.\n"
+        "Can be deactivated by passing 0 as the fee rate, in which case automatic fee selection will be used by default.\n",
+        {
+            {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The transaction fee rate in " + CURRENCY_ATOM + "/vB to set (0 to unset)"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR, "wallet_name", "Name of the wallet the fee rate setting applies to"},
+                {RPCResult::Type::NUM, "fee_rate", "Fee rate in " + CURRENCY_ATOM + "/vB for the wallet after this operation"},
+                {RPCResult::Type::STR, "result", /* optional */ true, "Description of result, if successful"},
+                {RPCResult::Type::STR, "error", /* optional */ true, "Description of error, if any"},
+            },
+        },
+        RPCExamples{
+            ""
+            "\nSet a fee rate of 1 " + CURRENCY_ATOM + "/vB\n"
+            + HelpExampleCli("setfeerate", "1") +
+            "\nSet a fee rate of 3.141 " + CURRENCY_ATOM + "/vB\n"
+            + HelpExampleCli("setfeerate", "3.141") +
+            "\nSet a fee rate of 7.75 " + CURRENCY_ATOM + "/vB with named arguments\n"
+            + HelpExampleCli("-named setfeerate", "amount=\"7.75\"") +
+            "\nSet a fee rate of 25 " + CURRENCY_ATOM + "/vB with the RPC\n"
+            + HelpExampleRpc("setfeerate", "25")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            std::shared_ptr<CWallet> const rpc_wallet{GetWalletForJSONRPCRequest(request)};
+            if (!rpc_wallet) return NullUniValue;
+            CWallet& wallet = *rpc_wallet;
+
+            LOCK(wallet.cs_wallet);
+
+            const CFeeRate amount{CFeeRate::FromSatB(AmountFromValue(request.params[0]))};
+            const CFeeRate relay_min_feerate{wallet.chain().relayMinFee().GetFeePerK()};
+            const CFeeRate wallet_min_feerate{wallet.m_min_fee.GetFeePerK()};
+            const CFeeRate wallet_max_feerate{CFeeRate::FromBtcKb(wallet.m_default_max_tx_fee)};
+            const CFeeRate zero{CFeeRate{0}};
+            const std::string amount_str{amount.ToString(FeeEstimateMode::SAT_VB)};
+            const std::string current_setting{strprintf("The current setting of %s for this wallet remains unchanged.", wallet.m_pay_tx_fee == zero ? "0 (unset)" : wallet.m_pay_tx_fee.ToString(FeeEstimateMode::SAT_VB))};
+            std::string result, error;
+
+            if (amount == zero) {
+                if (request.params[0].get_real() != 0) throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount");
+                wallet.m_pay_tx_fee = amount;
+                result = "Fee rate for transactions with this wallet successfully unset. By default, automatic fee selection will be used.";
+            } else if (amount < relay_min_feerate) {
+                error = strprintf("The requested fee rate of %s cannot be less than the minimum relay fee rate of %s. %s", amount_str, relay_min_feerate.ToString(FeeEstimateMode::SAT_VB), current_setting);
+            } else if (amount < wallet_min_feerate) {
+                error = strprintf("The requested fee rate of %s cannot be less than the wallet min fee rate of %s. %s", amount_str, wallet_min_feerate.ToString(FeeEstimateMode::SAT_VB), current_setting);
+            } else if (amount > wallet_max_feerate) {
+                error = strprintf("The requested fee rate of %s cannot be greater than the wallet max fee rate of %s. %s", amount_str, wallet_max_feerate.ToString(FeeEstimateMode::SAT_VB), current_setting);
+            } else {
+                wallet.m_pay_tx_fee = amount;
+                result = "Fee rate for transactions with this wallet successfully set to " + amount_str;
+            }
+            CHECK_NONFATAL(result.empty() != error.empty());
+
+            UniValue obj{UniValue::VOBJ};
+            obj.pushKV("wallet_name", wallet.GetName());
+            obj.pushKV("fee_rate", ValueFromFeeRate(wallet.m_pay_tx_fee));
+            if (error.empty()) {
+                obj.pushKV("result", result);
+            } else {
+                obj.pushKV("error", error);
+            }
+            return obj;
+        },
     };
 }
 
@@ -3171,7 +3248,7 @@ void FundTransaction(CWallet* const pwallet, CMutableTransaction& tx, CAmount& f
             if (options.exists("estimate_mode")) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Cannot specify both estimate_mode and feeRate");
             }
-            coinControl.m_feerate = CFeeRate(AmountFromValue(options["feeRate"]));
+            coinControl.m_feerate = CFeeRate::FromBtcKb(AmountFromValue(options["feeRate"]));
             coinControl.fOverrideFeeRate = true;
         }
 
@@ -4549,15 +4626,15 @@ static RPCHelpMan upgradewallet()
             result = strprintf("Wallet upgraded successfully from version %i to version %i.", previous_version, current_version);
         }
     }
+    CHECK_NONFATAL(result.empty() != error.empty());
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("wallet_name", pwallet->GetName());
     obj.pushKV("previous_version", previous_version);
     obj.pushKV("current_version", current_version);
-    if (!result.empty()) {
+    if (error.empty()) {
         obj.pushKV("result", result);
     } else {
-        CHECK_NONFATAL(!error.empty());
         obj.pushKV("error", error.original);
     }
     return obj;
@@ -4632,9 +4709,9 @@ static const CRPCCommand commands[] =
     { "wallet",             &send,                           },
     { "wallet",             &sendmany,                       },
     { "wallet",             &sendtoaddress,                  },
+    { "wallet",             &setfeerate,                     },
     { "wallet",             &sethdseed,                      },
     { "wallet",             &setlabel,                       },
-    { "wallet",             &settxfee,                       },
     { "wallet",             &setwalletflag,                  },
     { "wallet",             &signmessage,                    },
     { "wallet",             &signrawtransactionwithwallet,   },
@@ -4645,6 +4722,7 @@ static const CRPCCommand commands[] =
     { "wallet",             &walletpassphrase,               },
     { "wallet",             &walletpassphrasechange,         },
     { "wallet",             &walletprocesspsbt,              },
+    { "hidden",             &settxfee,                       },
 };
 // clang-format on
     return MakeSpan(commands);

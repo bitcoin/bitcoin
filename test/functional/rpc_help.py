@@ -53,6 +53,7 @@ class HelpRpcTest(BitcoinTestFramework):
         self.dump_help()
         if self.is_wallet_compiled():
             self.wallet_help()
+            self.test_hidden_wallet_rpcs()
 
     def test_client_conversion_table(self):
         file_conversion_table = os.path.join(self.config["environment"]["SRCDIR"], 'src', 'rpc', 'client.cpp')
@@ -86,6 +87,7 @@ class HelpRpcTest(BitcoinTestFramework):
                 assert argname == 'dummy', ('WARNING: conversion mismatch for argument named %s (%s)' % (argname, list(zip(all_methods_by_argname[argname], converts_by_argname[argname]))))
 
     def test_categories(self):
+        self.log.info("Test RPC help categories")
         node = self.nodes[0]
 
         # wrong argument count
@@ -114,6 +116,7 @@ class HelpRpcTest(BitcoinTestFramework):
         assert_equal(titles, sorted(components))
 
     def dump_help(self):
+        self.log.info("Test dump RPC help")
         dump_dir = os.path.join(self.options.tmpdir, 'rpc_help_dump')
         os.mkdir(dump_dir)
         calls = [line.split(' ', 1)[0] for line in self.nodes[0].help().splitlines() if line and not line.startswith('==')]
@@ -123,9 +126,16 @@ class HelpRpcTest(BitcoinTestFramework):
                 f.write(self.nodes[0].help(call))
 
     def wallet_help(self):
+        self.log.info("Test wallet RPC help")
         assert 'getnewaddress ( "label" "address_type" )' in self.nodes[0].help('getnewaddress')
         self.restart_node(0, extra_args=['-nowallet=1'])
         assert 'getnewaddress ( "label" "address_type" )' in self.nodes[0].help('getnewaddress')
+        assert "setfeerate amount" in self.nodes[0].help("setfeerate")
+
+    def test_hidden_wallet_rpcs(self):
+        self.log.info("Test hidden wallet RPCs")
+        assert "settxfee" not in self.nodes[0].help()  # settxfee help is hidden from general help...
+        assert "settxfee amount" in self.nodes[0].help("settxfee")  # ...but can be called directly
 
 
 if __name__ == '__main__':

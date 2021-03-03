@@ -17,7 +17,7 @@ from decimal import Decimal
 import io
 
 from test_framework.blocktools import add_witness_commitment, create_block, create_coinbase, send_to_witness
-from test_framework.messages import BIP125_SEQUENCE_NUMBER, CTransaction
+from test_framework.messages import BIP125_SEQUENCE_NUMBER, COIN, CTransaction
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -46,6 +46,7 @@ class BumpFeeTest(BitcoinTestFramework):
             "-mintxfee=0.00002",
             "-addresstype=bech32",
         ] for i in range(self.num_nodes)]
+        self.wallet_names = [self.default_wallet_name, "RBF wallet"]
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -91,6 +92,7 @@ class BumpFeeTest(BitcoinTestFramework):
         test_bumpfee_metadata(self, rbf_node, dest_address)
         test_locked_wallet_fails(self, rbf_node, dest_address)
         test_change_script_match(self, rbf_node, dest_address)
+        test_setfeerate(self, rbf_node, dest_address)
         test_settxfee(self, rbf_node, dest_address)
         test_maxtxfee_fails(self, rbf_node, dest_address)
         # These tests wipe out a number of utxos that are expected in other tests
@@ -312,6 +314,42 @@ def test_dust_to_fee(self, rbf_node, dest_address):
     assert_equal(len(fulltx["vout"]), 2)
     assert_equal(len(full_bumped_tx["vout"]), 1)  # change output is eliminated
     assert_equal(full_bumped_tx["vout"][0]['value'], Decimal("0.00050000"))
+    self.clear_mempool()
+
+
+def test_setfeerate(self, rbf_node, dest_address):
+    self.log.info("Test setfeerate")
+
+    def test_response(*, wallet="RBF wallet", requested=0, expected=0, error=None, msg):
+        assert_equal(rbf_node.setfeerate(requested), {"wallet_name": wallet, "fee_rate": expected, ("error" if error else "result"): msg})
+
+    # Test setfeerate with too high/low values returns expected errors
+    new = Decimal("10000.001")
+    test_response(requested=new, error=True, msg=f"The requested fee rate of {new} sat/vB cannot be greater than the wallet max fee rate of 10000.000 sat/vB. The current setting of 0 (unset) for this wallet remains unchanged.")
+    new = Decimal("0.999")
+    test_response(requested=new, error=True, msg=f"The requested fee rate of {new} sat/vB cannot be less than the minimum relay fee rate of 1.000 sat/vB. The current setting of 0 (unset) for this wallet remains unchanged.")
+    fee_rate = Decimal("2.001")
+    test_response(requested=fee_rate, expected=fee_rate, msg=f"Fee rate for transactions with this wallet successfully set to {fee_rate} sat/vB")
+    new = Decimal("1.999")
+    test_response(requested=new, expected=fee_rate, error=True, msg=f"The requested fee rate of {new} sat/vB cannot be less than the wallet min fee rate of 2.000 sat/vB. The current setting of {fee_rate} sat/vB for this wallet remains unchanged.")
+
+    # Test setfeerate with valid values returns expected results
+    rbfid = spend_one_input(rbf_node, dest_address)
+    fee_rate = 25
+    test_response(requested=fee_rate, expected=fee_rate, msg="Fee rate for transactions with this wallet successfully set to 25.000 sat/vB")
+    bumped_tx = rbf_node.bumpfee(rbfid)
+    actual_feerate = bumped_tx["fee"] * COIN / rbf_node.getrawtransaction(bumped_tx["txid"], True)["vsize"]
+    assert_greater_than(Decimal("0.01"), abs(fee_rate - actual_feerate))
+    test_response(msg="Fee rate for transactions with this wallet successfully unset. By default, automatic fee selection will be used.")
+
+    # Test setfeerate with a different -maxtxfee
+    self.restart_node(1, ["-maxtxfee=0.000025"] + self.extra_args[1])
+    new = "2.501"
+    test_response(requested=new, error=True, msg=f"The requested fee rate of {new} sat/vB cannot be greater than the wallet max fee rate of 2.500 sat/vB. The current setting of 0 (unset) for this wallet remains unchanged.")
+
+    self.restart_node(1, self.extra_args[1])
+    rbf_node.walletpassphrase(WALLET_PASSPHRASE, WALLET_PASSPHRASE_TIMEOUT)
+    self.connect_nodes(1, 0)
     self.clear_mempool()
 
 

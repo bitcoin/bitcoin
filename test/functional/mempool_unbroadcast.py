@@ -5,6 +5,7 @@
 """Test that the mempool ensures transaction delivery by periodically sending
 to peers until a GETDATA is received."""
 
+from decimal import Decimal
 import time
 
 from test_framework.p2p import P2PTxInvStore
@@ -47,7 +48,8 @@ class MempoolUnbroadcastTest(BitcoinTestFramework):
         inputs = [{"txid": us0["txid"], "vout": us0["vout"]}]
         outputs = {addr: 0.0001}
         tx = node.createrawtransaction(inputs, outputs)
-        node.settxfee(min_relay_fee)
+        btc_kvb_to_sat_vb = Decimal(1e8 / 1e3)
+        node.setfeerate(min_relay_fee * btc_kvb_to_sat_vb)
         txF = node.fundrawtransaction(tx)
         txFS = node.signrawtransactionwithwallet(txF["hex"])
         rpc_tx_hsh = node.sendrawtransaction(txFS["hex"])
