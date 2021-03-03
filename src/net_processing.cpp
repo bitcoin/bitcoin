@@ -317,8 +317,10 @@ private:
     void PushNodeVersion(CNode& pnode, int64_t nTime);
 
     /** Send a ping message every PING_INTERVAL or if requested via RPC. May
-     *  mark the peer to be disconnected if a ping has timed out. */
-    void MaybeSendPing(CNode& node_to, Peer& peer);
+     *  mark the peer to be disconnected if a ping has timed out.
+     *  We use mockable time for ping timeouts, so setmocktime may cause pings
+     *  to time out. */
+    void MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::microseconds now);
 
     const CChainParams& m_chainparams;
     CConnman& m_connman;
@@ -4096,12 +4098,8 @@ void PeerManagerImpl::CheckForStaleTipAndEvictPeers()
     }
 }
 
-void PeerManagerImpl::MaybeSendPing(CNode& node_to, Peer& peer)
+void PeerManagerImpl::MaybeSendPing(CNode& node_to, Peer& peer, std::chrono::microseconds now)
 {
-    // Use mockable time for ping timeouts.
-    // This means that setmocktime may cause pings to time out.
-    auto now = GetTime<std::chrono::microseconds>();
-
     if (m_connman.RunInactivityChecks(node_to) && peer.m_ping_nonce_sent &&
         now > peer.m_ping_start.load() + std::chrono::seconds{TIMEOUT_INTERVAL}) {
         LogPrint(BCLog::NET, "ping timeout: %fs peer=%d\n", 0.000001 * count_microseconds(now - peer.m_ping_start.load()), peer.m_id);
@@ -4178,7 +4176,9 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
     // If we get here, the outgoing message serialization version is set and can't change.
     const CNetMsgMaker msgMaker(pto->GetCommonVersion());
 
-    MaybeSendPing(*pto, *peer);
+    const auto current_time = GetTime<std::chrono::microseconds>();
+
+    MaybeSendPing(*pto, *peer, current_time);
 
     // MaybeSendPing may have marked peer for disconnection
     if (pto->fDisconnect) return true;
@@ -4189,7 +4189,6 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         CNodeState &state = *State(pto->GetId());
 
         // Address refresh broadcast
-        auto current_time = GetTime<std::chrono::microseconds>();
 
         if (fListen && pto->RelayAddrsWithConn() &&
             !m_chainman.ActiveChainstate().IsInitialBlockDownload() &&
@@ -4485,7 +4484,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                             vInv.clear();
                         }
                     }
-                    pto->m_tx_relay->m_last_mempool_req = GetTime<std::chrono::seconds>();
+                    pto->m_tx_relay->m_last_mempool_req = std::chrono::duration_cast<std::chrono::seconds>(current_time);
                 }
 
                 // Determine transactions to relay
@@ -4573,7 +4572,6 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
 
         // Detect whether we're stalling
-        current_time = GetTime<std::chrono::microseconds>();
         if (state.m_stalling_since.count() && state.m_stalling_since < current_time - BLOCK_STALLING_TIMEOUT) {
             // Stalling only triggers when the block download window cannot move. During normal steady state,
             // the download window should be much larger than the to-be-downloaded set of blocks, so disconnection
