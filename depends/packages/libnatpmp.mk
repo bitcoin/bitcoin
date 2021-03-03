@@ -6,6 +6,7 @@ $(package)_sha256_hash=e1aa9c4c4219bc06943d6b2130f664daee213fb262fcb94dd355815b8
 
 define $(package)_set_vars
   $(package)_build_opts=CC="$($(package)_cc)"
+  $(package)_build_env+=CFLAGS="$($(package)_cflags) $($(package)_cppflags)" AR="$($(package)_ar)"
 endef
 
 define $(package)_build_cmds
