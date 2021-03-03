@@ -124,6 +124,17 @@ std::string HelpExampleRpc(const std::string& methodname, const std::string& arg
         "\"method\": \"" + methodname + "\", \"params\": [" + args + "]}' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
 }
 
+std::string HelpExampleRpcNamed(const std::string& methodname, const RPCArgList& args)
+{
+    UniValue params(UniValue::VOBJ);
+    for (const auto& param: args) {
+        params.pushKV(param.first, param.second);
+    }
+
+    return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\": \"curltest\", "
+           "\"method\": \"" + methodname + "\", \"params\": " + params.write() + "}' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
+}
+
 // Converts a hex string to a public key if possible
 CPubKey HexToPubKey(const std::string& hex_in)
 {
