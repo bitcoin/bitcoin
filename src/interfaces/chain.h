@@ -226,6 +226,9 @@ public:
     //! Send init error.
     virtual void initError(const bilingual_str& message) = 0;
 
+    //! Ask init question.
+    virtual bool initQuestion(const bilingual_str& message, const bilingual_str& non_interactive_message, const bilingual_str& caption, unsigned int style) = 0;
+
     //! Send progress indicator.
     virtual void showProgress(const std::string& title, int progress, bool resume_possible) = 0;
 
