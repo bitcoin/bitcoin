@@ -234,6 +234,10 @@ public:
      *  fail. */
     bool IsFullyValid() const;
 
+    /** Test whether this is the 0 key (the result of default construction). This implies
+     *  !IsFullyValid(). */
+    bool IsNull() const { return m_keydata.IsNull(); }
+
     /** Construct an x-only pubkey from exactly 32 bytes. */
     explicit XOnlyPubKey(Span<const unsigned char> bytes);
 

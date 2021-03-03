@@ -377,6 +377,16 @@ bool IsValidDestination(const CTxDestination& dest) {
 /*static*/ TaprootBuilder::NodeInfo TaprootBuilder::Combine(NodeInfo&& a, NodeInfo&& b)
 {
     NodeInfo ret;
+    /* Iterate over all tracked leaves in a, add b's hash to their Merkle branch, and move them to ret. */
+    for (auto& leaf : a.leaves) {
+        leaf.merkle_branch.push_back(b.hash);
+        ret.leaves.emplace_back(std::move(leaf));
+    }
+    /* Iterate over all tracked leaves in b, add a's hash to their Merkle branch, and move them to ret. */
+    for (auto& leaf : b.leaves) {
+        leaf.merkle_branch.push_back(a.hash);
+        ret.leaves.emplace_back(std::move(leaf));
+    }
     /* Lexicographically sort a and b's hash, and compute parent hash. */
     if (a.hash < b.hash) {
         ret.hash = (CHashWriter(HASHER_TAPBRANCH) << a.hash << b.hash).GetSHA256();
@@ -384,6 +394,21 @@ bool IsValidDestination(const CTxDestination& dest) {
         ret.hash = (CHashWriter(HASHER_TAPBRANCH) << b.hash << a.hash).GetSHA256();
     }
     return ret;
+}
+
+void TaprootSpendData::Merge(TaprootSpendData other)
+{
+    // TODO: figure out how to better deal with conflicting information
+    // being merged.
+    if (internal_key.IsNull() && !other.internal_key.IsNull()) {
+        internal_key = other.internal_key;
+    }
+    if (merkle_root.IsNull() && !other.merkle_root.IsNull()) {
+        merkle_root = other.merkle_root;
+    }
+    for (auto& [key, control_blocks] : other.scripts) {
+        scripts[key].merge(std::move(control_blocks));
+    }
 }
 
 void TaprootBuilder::Insert(TaprootBuilder::NodeInfo&& node, int depth)
@@ -435,13 +460,14 @@ void TaprootBuilder::Insert(TaprootBuilder::NodeInfo&& node, int depth)
     return branch.size() == 0 || (branch.size() == 1 && branch[0]);
 }
 
-TaprootBuilder& TaprootBuilder::Add(int depth, const CScript& script, int leaf_version)
+TaprootBuilder& TaprootBuilder::Add(int depth, const CScript& script, int leaf_version, bool track)
 {
     assert((leaf_version & ~TAPROOT_LEAF_MASK) == 0);
     if (!IsValid()) return *this;
-    /* Construct NodeInfo object with leaf hash. */
+    /* Construct NodeInfo object with leaf hash and (if track is true) also leaf information. */
     NodeInfo node;
     node.hash = (CHashWriter{HASHER_TAPLEAF} << uint8_t(leaf_version) << script).GetSHA256();
+    if (track) node.leaves.emplace_back(LeafInfo{script, leaf_version, {}});
     /* Insert into the branch. */
     Insert(std::move(node), depth);
     return *this;
@@ -464,8 +490,33 @@ TaprootBuilder& TaprootBuilder::Finalize(const XOnlyPubKey& internal_key)
     m_internal_key = internal_key;
     auto ret = m_internal_key.CreateTapTweak(m_branch.size() == 0 ? nullptr : &m_branch[0]->hash);
     assert(ret.has_value());
-    std::tie(m_output_key, std::ignore) = *ret;
+    std::tie(m_output_key, m_parity) = *ret;
     return *this;
 }
 
 WitnessV1Taproot TaprootBuilder::GetOutput() { return WitnessV1Taproot{m_output_key}; }
+
+TaprootSpendData TaprootBuilder::GetSpendData() const
+{
+    TaprootSpendData spd;
+    spd.merkle_root = m_branch.size() == 0 ? uint256() : m_branch[0]->hash;
+    spd.internal_key = m_internal_key;
+    if (m_branch.size()) {
+        // If any script paths exist, they have been combined into the root m_branch[0]
+        // by now. Compute the control block for each of its tracked leaves, and put them in
+        // spd.scripts.
+        for (const auto& leaf : m_branch[0]->leaves) {
+            std::vector<unsigned char> control_block;
+            control_block.resize(TAPROOT_CONTROL_BASE_SIZE + TAPROOT_CONTROL_NODE_SIZE * leaf.merkle_branch.size());
+            control_block[0] = leaf.leaf_version | (m_parity ? 1 : 0);
+            std::copy(m_internal_key.begin(), m_internal_key.end(), control_block.begin() + 1);
+            if (leaf.merkle_branch.size()) {
+                std::copy(leaf.merkle_branch[0].begin(),
+                          leaf.merkle_branch[0].begin() + TAPROOT_CONTROL_NODE_SIZE * leaf.merkle_branch.size(),
+                          control_block.begin() + TAPROOT_CONTROL_BASE_SIZE);
+            }
+            spd.scripts[{leaf.script, leaf.leaf_version}].insert(std::move(control_block));
+        }
+    }
+    return spd;
+}

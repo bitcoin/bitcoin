@@ -843,7 +843,9 @@ protected:
         XOnlyPubKey xpk(keys[0]);
         if (!xpk.IsFullyValid()) return {};
         builder.Finalize(xpk);
-        return Vector(GetScriptForDestination(builder.GetOutput()));
+        WitnessV1Taproot output = builder.GetOutput();
+        out.tr_spenddata[output].Merge(builder.GetSpendData());
+        return Vector(GetScriptForDestination(output));
     }
     bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, bool priv, bool normalized) const override
     {

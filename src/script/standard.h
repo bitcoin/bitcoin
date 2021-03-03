@@ -11,6 +11,7 @@
 #include <uint256.h>
 #include <util/hash_type.h>
 
+#include <map>
 #include <string>
 #include <variant>
 
@@ -209,15 +210,38 @@ CScript GetScriptForRawPubKey(const CPubKey& pubkey);
 /** Generate a multisig script. */
 CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys);
 
+struct TaprootSpendData
+{
+    /** The BIP341 internal key. */
+    XOnlyPubKey internal_key;
+    /** The Merkle root of the script tree (0 if no scripts). */
+    uint256 merkle_root;
+    /** Map from (script, leaf_version) to (sets of) control blocks. */
+    std::map<std::pair<CScript, int>, std::set<std::vector<unsigned char>>> scripts;
+    /** Merge other TaprootSpendData (for the same scriptPubKey) into this. */
+    void Merge(TaprootSpendData other);
+};
+
 /** Utility class to construct Taproot outputs from internal key and script tree. */
 class TaprootBuilder
 {
 private:
+    /** Information about a tracked leaf in the Merkle tree. */
+    struct LeafInfo
+    {
+        CScript script;                      //!< The script.
+        int leaf_version;                    //!< The leaf version for that script.
+        std::vector<uint256> merkle_branch;  //!< The hashing partners above this leaf.
+    };
+
     /** Information associated with a node in the Merkle tree. */
     struct NodeInfo
     {
         /** Merkle hash of this node. */
         uint256 hash;
+        /** Tracked leaves underneath this node (either from the node itself, or its children).
+         *  The merkle_branch field for each is the partners to get to *this* node. */
+        std::vector<LeafInfo> leaves;
     };
     /** Whether the builder is in a valid state so far. */
     bool m_valid = true;
@@ -260,7 +284,8 @@ private:
     std::vector<std::optional<NodeInfo>> m_branch;
 
     XOnlyPubKey m_internal_key;  //!< The internal key, set when finalizing.
-    XOnlyPubKey m_output_key; //!< The output key, computed when finalizing. */
+    XOnlyPubKey m_output_key;    //!< The output key, computed when finalizing.
+    bool m_parity;               //!< The tweak parity, computed when finalizing.
 
     /** Combine information about a parent Merkle tree node from its child nodes. */
     static NodeInfo Combine(NodeInfo&& a, NodeInfo&& b);
@@ -269,8 +294,9 @@ private:
 
 public:
     /** Add a new script at a certain depth in the tree. Add() operations must be called
-     *  in depth-first traversal order of binary tree. */
-    TaprootBuilder& Add(int depth, const CScript& script, int leaf_version);
+     *  in depth-first traversal order of binary tree. If track is true, it will be included in
+     *  the GetSpendData() output. */
+    TaprootBuilder& Add(int depth, const CScript& script, int leaf_version, bool track = true);
     /** Like Add(), but for a Merkle node with a given hash to the tree. */
     TaprootBuilder& AddOmitted(int depth, const uint256& hash);
     /** Finalize the construction. Can only be called when IsComplete() is true.
@@ -285,6 +311,8 @@ public:
     WitnessV1Taproot GetOutput();
     /** Check if a list of depths is legal (will lead to IsComplete()). */
     static bool ValidDepths(const std::vector<int>& depths);
+    /** Compute spending data (after Finalize()). */
+    TaprootSpendData GetSpendData() const;
 };
 
 #endif // BITCOIN_SCRIPT_STANDARD_H
