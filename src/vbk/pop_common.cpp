@@ -24,8 +24,6 @@ void StopPop()
     if (app) {
         app->shutdown();
     }
-
-    app = nullptr;
 }
 
 void SetPopConfig(const altintegration::Config& newConfig)
