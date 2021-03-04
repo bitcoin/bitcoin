@@ -153,7 +153,7 @@ public:
      */
     virtual bool IsConnected(std::string& errmsg) const;
 
-private:
+protected:
     /**
      * Contained socket. `INVALID_SOCKET` designates the object is empty.
      */

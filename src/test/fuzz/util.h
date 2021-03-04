@@ -558,33 +558,27 @@ class FuzzedSock : public Sock
 public:
     explicit FuzzedSock(FuzzedDataProvider& fuzzed_data_provider) : m_fuzzed_data_provider{fuzzed_data_provider}
     {
+          m_socket = fuzzed_data_provider.ConsumeIntegral<SOCKET>();
     }
 
     ~FuzzedSock() override
     {
+        // Sock::~Sock() will be called after FuzzedSock::~FuzzedSock() and it will call
+        // Sock::Reset() (not FuzzedSock::Reset()!) which will call CloseSocket(m_socket).
+        // Avoid closing an arbitrary file descriptor (m_socket is just a random number which
+        // may concide with a real opened file descriptor).
+        Reset();
     }
 
     FuzzedSock& operator=(Sock&& other) override
     {
-        assert(false && "Not implemented yet.");
+        assert(false && "Move of Sock into FuzzedSock not allowed.");
         return *this;
-    }
-
-    SOCKET Get() const override
-    {
-        assert(false && "Not implemented yet.");
-        return INVALID_SOCKET;
-    }
-
-    SOCKET Release() override
-    {
-        assert(false && "Not implemented yet.");
-        return INVALID_SOCKET;
     }
 
     void Reset() override
     {
-        assert(false && "Not implemented yet.");
+        m_socket = INVALID_SOCKET;
     }
 
     ssize_t Send(const void* data, size_t len, int flags) const override
@@ -666,6 +660,14 @@ public:
     bool Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const override
     {
         return m_fuzzed_data_provider.ConsumeBool();
+    }
+
+    bool IsConnected(std::string& errmsg) const override {
+        if (m_fuzzed_data_provider.ConsumeBool()) {
+            return true;
+        }
+        errmsg = "disconnected at random by the fuzzer";
+        return false;
     }
 };
 
