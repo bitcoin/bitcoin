@@ -104,7 +104,9 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
             },
             [&] {
                 // Limit now to int32_t to avoid signed integer overflow
-                (void)connman.PoissonNextSendInbound(fuzzed_data_provider.ConsumeIntegral<int32_t>(), fuzzed_data_provider.ConsumeIntegral<int>());
+                (void)connman.PoissonNextSendInbound(
+                        std::chrono::microseconds{fuzzed_data_provider.ConsumeIntegral<int32_t>()},
+                        std::chrono::seconds{fuzzed_data_provider.ConsumeIntegral<int>()});
             },
             [&] {
                 CSerializedNetMsg serialized_net_msg;

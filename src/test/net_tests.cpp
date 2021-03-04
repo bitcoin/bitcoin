@@ -803,21 +803,6 @@ BOOST_AUTO_TEST_CASE(LocalAddress_BasicLifecycle)
     BOOST_CHECK_EQUAL(IsLocal(addr), false);
 }
 
-BOOST_AUTO_TEST_CASE(PoissonNextSend)
-{
-    g_mock_deterministic_tests = true;
-
-    int64_t now = 5000;
-    int average_interval_seconds = 600;
-
-    auto poisson = ::PoissonNextSend(now, average_interval_seconds);
-    std::chrono::microseconds poisson_chrono = ::PoissonNextSend(std::chrono::microseconds{now}, std::chrono::seconds{average_interval_seconds});
-
-    BOOST_CHECK_EQUAL(poisson, poisson_chrono.count());
-
-    g_mock_deterministic_tests = false;
-}
-
 std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(const int n_candidates, FastRandomContext& random_context)
 {
     std::vector<NodeEvictionCandidate> candidates;
@@ -825,7 +810,7 @@ std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(const int n_c
         candidates.push_back({
             /* id */ id,
             /* nTimeConnected */ static_cast<int64_t>(random_context.randrange(100)),
-            /* m_min_ping_time */ static_cast<int64_t>(random_context.randrange(100)),
+            /* m_min_ping_time */ std::chrono::microseconds{random_context.randrange(100)},
             /* nLastBlockTime */ static_cast<int64_t>(random_context.randrange(100)),
             /* nLastTXTime */ static_cast<int64_t>(random_context.randrange(100)),
             /* fRelevantServices */ random_context.randbool(),
@@ -885,7 +870,7 @@ BOOST_AUTO_TEST_CASE(node_eviction_test)
             // from eviction.
             BOOST_CHECK(!IsEvicted(
                 number_of_nodes, [](NodeEvictionCandidate& candidate) {
-                    candidate.m_min_ping_time = candidate.id;
+                    candidate.m_min_ping_time = std::chrono::microseconds{candidate.id};
                 },
                 {0, 1, 2, 3, 4, 5, 6, 7}, random_context));
 
@@ -931,10 +916,10 @@ BOOST_AUTO_TEST_CASE(node_eviction_test)
             // Combination of all tests above.
             BOOST_CHECK(!IsEvicted(
                 number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                    candidate.nKeyedNetGroup = number_of_nodes - candidate.id; // 4 protected
-                    candidate.m_min_ping_time = candidate.id;                 // 8 protected
-                    candidate.nLastTXTime = number_of_nodes - candidate.id;    // 4 protected
-                    candidate.nLastBlockTime = number_of_nodes - candidate.id; // 4 protected
+                    candidate.nKeyedNetGroup = number_of_nodes - candidate.id;           // 4 protected
+                    candidate.m_min_ping_time = std::chrono::microseconds{candidate.id}; // 8 protected
+                    candidate.nLastTXTime = number_of_nodes - candidate.id;              // 4 protected
+                    candidate.nLastBlockTime = number_of_nodes - candidate.id;           // 4 protected
                 },
                 {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}, random_context));
 

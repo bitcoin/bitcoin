@@ -21,17 +21,17 @@ FUZZ_TARGET(node_eviction)
     std::vector<NodeEvictionCandidate> eviction_candidates;
     while (fuzzed_data_provider.ConsumeBool()) {
         eviction_candidates.push_back({
-            fuzzed_data_provider.ConsumeIntegral<NodeId>(),
-            fuzzed_data_provider.ConsumeIntegral<int64_t>(),
-            fuzzed_data_provider.ConsumeIntegral<int64_t>(),
-            fuzzed_data_provider.ConsumeIntegral<int64_t>(),
-            fuzzed_data_provider.ConsumeIntegral<int64_t>(),
-            fuzzed_data_provider.ConsumeBool(),
-            fuzzed_data_provider.ConsumeBool(),
-            fuzzed_data_provider.ConsumeBool(),
-            fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
-            fuzzed_data_provider.ConsumeBool(),
-            fuzzed_data_provider.ConsumeBool(),
+            /* id */ fuzzed_data_provider.ConsumeIntegral<NodeId>(),
+            /* nTimeConnected */ fuzzed_data_provider.ConsumeIntegral<int64_t>(),
+            /* m_min_ping_time */ std::chrono::microseconds{fuzzed_data_provider.ConsumeIntegral<int64_t>()},
+            /* nLastBlockTime */ fuzzed_data_provider.ConsumeIntegral<int64_t>(),
+            /* nLastTXTime */ fuzzed_data_provider.ConsumeIntegral<int64_t>(),
+            /* fRelevantServices */ fuzzed_data_provider.ConsumeBool(),
+            /* fRelayTxes */ fuzzed_data_provider.ConsumeBool(),
+            /* fBloomFilter */ fuzzed_data_provider.ConsumeBool(),
+            /* nKeyedNetGroup */ fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
+            /* prefer_evict */ fuzzed_data_provider.ConsumeBool(),
+            /* m_is_local */ fuzzed_data_provider.ConsumeBool(),
         });
     }
     // Make a copy since eviction_candidates may be in some valid but otherwise
