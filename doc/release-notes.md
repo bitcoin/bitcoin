@@ -61,6 +61,14 @@ Notable changes
 P2P and network changes
 -----------------------
 
+- This release changes the behavior around processing of unrequested transactions.
+  Previously, a transaction message was always submitted for processing, even if a
+  getdata for this identifier have not been previously issued. Henceforth, such
+  unrequested transaction will be rejected without any processing to mitigate about
+  DoS risks. Bitcoin clients on the network relying on unannounced transaction broadcast
+  should adapt their tx-relay to the compliant tx-request sequence. Peers might be
+  authorized to bypass this check with the PF_RELAY permission. (#20277)
+
 Updated RPCs
 ------------
 - `getpeerinfo` no longer returns the following fields: `addnode`, `banscore`,

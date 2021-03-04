@@ -9,12 +9,15 @@ Test transaction download behavior
 from test_framework.messages import (
     CInv,
     CTransaction,
+    CTxIn,
+    CTxOut,
     FromHex,
     MSG_TX,
     MSG_TYPE_MASK,
     MSG_WTX,
     msg_inv,
     msg_notfound,
+    msg_tx,
 )
 from test_framework.p2p import (
     P2PInterface,
@@ -255,6 +258,35 @@ class TxDownloadTest(BitcoinTestFramework):
         self.log.info('Check that spurious notfound is ignored')
         self.nodes[0].p2ps[0].send_message(msg_notfound(vec=[CInv(MSG_TX, 1)]))
 
+    def test_unrequested_tx(self):
+        self.log.info("Check that nodes don't process unrequested txn")
+        self.restart_node(0)
+
+        unrequested_tx = CTransaction()
+        unrequested_tx.vin.append(CTxIn())
+
+        unrequested_tx.vout.append(CTxOut())
+        unrequested_tx.calc_sha256()
+
+        peer = self.nodes[0].add_p2p_connection(P2PInterface())
+        peer.send_message(msg_tx(unrequested_tx))
+        with self.nodes[0].assert_debug_log(expected_msgs=['unrequested transaction from peer=0']):
+            peer.sync_with_ping()
+            assert_equal(len(self.nodes[0].getrawmempool()), 0)
+        peer.peer_disconnect()
+        peer.wait_for_disconnect()
+
+        self.log.info("Check that nodes process unrequested txn with relay permission ")
+        self.restart_node(0, extra_args=['-whitelist=relay@127.0.0.1'])
+
+        peer = self.nodes[0].add_p2p_connection(P2PInterface())
+        peer.send_message(msg_tx(unrequested_tx))
+        with self.nodes[0].assert_debug_log(expected_msgs=['from peer=0 was not accepted: scriptpubkey']):
+            peer.sync_with_ping()
+            assert_equal(len(self.nodes[0].getrawmempool()), 0)
+        peer.peer_disconnect()
+        peer.wait_for_disconnect()
+
     def run_test(self):
         # Run tests without mocktime that only need one peer-connection first, to avoid restarting the nodes
         self.test_expiry_fallback()
@@ -266,6 +298,7 @@ class TxDownloadTest(BitcoinTestFramework):
         self.test_txid_inv_delay(True)
         self.test_large_inv_batch()
         self.test_spurious_notfound()
+        self.test_unrequested_tx()
 
         # Run each test against new bitcoind instances, as setting mocktimes has long-term effects on when
         # the next trickle relay event happens.

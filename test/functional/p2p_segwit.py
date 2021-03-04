@@ -92,6 +92,7 @@ VB_TOP_BITS = 0x20000000
 MAX_SIGOP_COST = 80000
 
 SEGWIT_HEIGHT = 120
+GETDATA_TX_INTERVAL = 60  # seconds
 
 class UTXO():
     """Used to keep track of anyone-can-spend outputs that we can use in the tests."""
@@ -124,10 +125,15 @@ def get_virtual_size(witness_block):
 def test_transaction_acceptance(node, p2p, tx, with_witness, accepted, reason=None):
     """Send a transaction to the node and check that it's accepted to the mempool
 
+    - Announce the transaction over the p2p interface
     - Submit the transaction over the p2p interface
     - use the getrawmempool rpc to check for acceptance."""
+    with p2p_lock:
+        p2p.last_message.pop("getdata", None)
     reason = [reason] if reason else []
     with node.assert_debug_log(expected_msgs=reason):
+        p2p.send_and_ping(msg_inv(inv=[CInv(MSG_TX, tx.sha256)]))
+        p2p.wait_for_getdata([tx.sha256], 5)
         p2p.send_and_ping(msg_tx(tx) if with_witness else msg_no_witness_tx(tx))
         assert_equal(tx.hash in node.getrawmempool(), accepted)
 
@@ -340,6 +346,8 @@ class SegWitTest(BitcoinTestFramework):
         # This is a sanity check of our testing framework.
         assert_equal(msg_no_witness_tx(tx).serialize(), msg_tx(tx).serialize())
 
+        self.test_node.send_message(msg_inv(inv=[CInv(MSG_TX, tx.sha256)]))
+        self.test_node.wait_for_getdata([tx.sha256], 5)
         self.test_node.send_and_ping(msg_tx(tx))  # make sure the block was processed
         assert tx.hash in self.nodes[0].getrawmempool()
         # Save this transaction for later
@@ -605,6 +613,17 @@ class SegWitTest(BitcoinTestFramework):
         # Since we haven't delivered the tx yet, inv'ing the same tx from
         # a witness transaction ought not result in a getdata.
         self.test_node.announce_tx_and_wait_for_getdata(tx, timeout=2, success=False)
+
+        node_0_mocktime = int(time.time())
+        node_0_mocktime += GETDATA_TX_INTERVAL + 10
+        self.nodes[0].setmocktime(node_0_mocktime)
+        self.old_node.sync_with_ping()
+
+        node_0_mocktime += GETDATA_TX_INTERVAL + 10
+        self.nodes[0].setmocktime(node_0_mocktime)
+        self.test_node.sync_with_ping()
+
+        self.nodes[0].setmocktime(0)
 
         # Delivering this transaction with witness should fail (no matter who
         # its from)
@@ -1311,6 +1330,13 @@ class SegWitTest(BitcoinTestFramework):
         # Verify that unnecessary witnesses are rejected.
         self.test_node.announce_tx_and_wait_for_getdata(tx)
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
+
+        node_0_mocktime = int(time.time())
+        node_0_mocktime += GETDATA_TX_INTERVAL + 10
+        self.nodes[0].setmocktime(node_0_mocktime)
+        self.test_node.sync_with_ping()
+        self.nodes[0].setmocktime(0)
+
         test_transaction_acceptance(self.nodes[0], self.test_node, tx, with_witness=True, accepted=False)
 
         # Verify that removing the witness succeeds.
@@ -1342,9 +1368,24 @@ class SegWitTest(BitcoinTestFramework):
         # Node will be blinded to the transaction via wtxid, however.
         self.std_node.announce_tx_and_wait_for_getdata(tx3)
         self.std_wtx_node.announce_tx_and_wait_for_getdata(tx3, use_wtxid=True)
+
+        node_1_mocktime = int(time.time())
+        node_1_mocktime += GETDATA_TX_INTERVAL + 10
+        self.nodes[1].setmocktime(node_1_mocktime)
+        self.std_node.sync_with_ping()
+        self.nodes[1].setmocktime(0)
+        self.std_node.sync_with_ping()
+
         test_transaction_acceptance(self.nodes[1], self.std_node, tx3, True, False, 'tx-size')
         self.std_node.announce_tx_and_wait_for_getdata(tx3)
         self.std_wtx_node.announce_tx_and_wait_for_getdata(tx3, use_wtxid=True, success=False)
+
+        node_0_mocktime = int(time.time())
+        node_0_mocktime += GETDATA_TX_INTERVAL + 10
+        self.nodes[0].setmocktime(node_0_mocktime)
+        self.test_node.sync_with_ping()
+        self.nodes[0].setmocktime(0)
+        self.test_node.sync_with_ping()
 
         # Remove witness stuffing, instead add extra witness push on stack
         tx3.vout[0] = CTxOut(tx2.vout[0].nValue - 1000, CScript([OP_TRUE, OP_DROP] * 15 + [OP_TRUE]))
@@ -1430,6 +1471,8 @@ class SegWitTest(BitcoinTestFramework):
         self.sync_blocks()
         assert len(self.nodes[0].getrawmempool()) == 0
 
+        self.disconnect_nodes(0, 1)
+
         # Finally, verify that version 0 -> version 2 transactions
         # are standard
         script_pubkey = CScript([CScriptOp(OP_2), witness_hash])
@@ -1459,13 +1502,28 @@ class SegWitTest(BitcoinTestFramework):
         # First we test this transaction against fRequireStandard=true node
         # making sure the txid is added to the reject filter
         self.std_node.announce_tx_and_wait_for_getdata(tx3)
+
+        mocktime = int(time.time())
+        mocktime += GETDATA_TX_INTERVAL + 10
+        self.nodes[1].setmocktime(mocktime)
+        self.std_node.sync_with_ping()
+        self.nodes[1].setmocktime(0)
+
         test_transaction_acceptance(self.nodes[1], self.std_node, tx3, with_witness=True, accepted=False, reason="bad-txns-nonstandard-inputs")
         # Now the node will no longer ask for getdata of this transaction when advertised by same txid
         self.std_node.announce_tx_and_wait_for_getdata(tx3, timeout=5, success=False)
 
+        mocktime = int(time.time())
+        mocktime += GETDATA_TX_INTERVAL + 10
+        self.nodes[0].setmocktime(mocktime)
+        self.test_node.sync_with_ping()
+        self.nodes[0].setmocktime(0)
+
         # Spending a higher version witness output is not allowed by policy,
         # even with fRequireStandard=false.
         test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=False, reason="reserved for soft-fork upgrades")
+
+        self.connect_nodes(0, 1)
 
         # Building a block with the transaction must be valid, however.
         block = self.build_next_block()
@@ -1884,6 +1942,8 @@ class SegWitTest(BitcoinTestFramework):
         self.nodes[0].generate(1)
         self.sync_blocks()
 
+        self.disconnect_nodes(0, 1)
+
         # Creating transactions for tests
         p2wsh_txs = []
         p2sh_txs = []
@@ -1943,6 +2003,8 @@ class SegWitTest(BitcoinTestFramework):
         p2sh_txs[3].wit.vtxinwit[0].scriptWitness.stack = [pad, pad, pad, scripts[3]]
         test_transaction_acceptance(self.nodes[1], self.std_node, p2sh_txs[3], True, False, 'bad-witness-nonstandard')
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_txs[3], True, True)
+
+        self.connect_nodes(0, 1)
 
         self.nodes[0].generate(1)  # Mine and clean up the mempool of non-standard node
         # Valid but non-standard transactions in a block should be accepted by standard node
@@ -2169,7 +2231,8 @@ class SegWitTest(BitcoinTestFramework):
         # Send tx2 through; it's an orphan so won't be accepted
         with p2p_lock:
             self.wtx_node.last_message.pop("getdata", None)
-        test_transaction_acceptance(self.nodes[0], self.wtx_node, tx2, with_witness=True, accepted=False)
+        self.wtx_node.send_and_ping(msg_tx(tx2))
+        assert_equal(tx2.hash in self.nodes[0].getrawmempool(), False)
 
         # Expect a request for parent (tx) by txid despite use of WTX peer
         self.wtx_node.wait_for_getdata([tx.sha256], 60)
@@ -2178,7 +2241,8 @@ class SegWitTest(BitcoinTestFramework):
         assert_equal(lgd, [CInv(MSG_WITNESS_TX, tx.sha256)])
 
         # Send tx through
-        test_transaction_acceptance(self.nodes[0], self.wtx_node, tx, with_witness=False, accepted=True)
+        self.wtx_node.send_and_ping(msg_no_witness_tx(tx))
+        assert_equal(tx.hash in self.nodes[0].getrawmempool(), True)
 
         # Check tx2 is there now
         assert_equal(tx2.hash in self.nodes[0].getrawmempool(), True)
