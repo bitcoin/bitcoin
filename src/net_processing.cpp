@@ -142,7 +142,8 @@ static constexpr auto INBOUND_INVENTORY_BROADCAST_INTERVAL = 5s;
 /** Average delay between trickled inventory transmissions for outbound peers.
  *  Use a smaller delay as there is less privacy concern for them.
  *  Blocks and peers with noban permission bypass this. */
-static constexpr auto OUTBOUND_INVENTORY_BROADCAST_INTERVAL = 2s;
+// SYSCOIN
+static const unsigned int OUTBOUND_INVENTORY_BROADCAST_INTERVAL = 2;
 /** Maximum rate of inventory items to send per second.
  *  Limits the impact of low-fee transaction floods. */
  // SYSCOIN We have 10 times smaller block times in Syscoin, so we need to push 10 times more invs per 1MB. */
