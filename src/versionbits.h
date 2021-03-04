@@ -80,11 +80,11 @@ struct VersionBitsCache
     void Clear();
 };
 
-/** Get the BIP9 state for a given deployment at the current tip. */
+/** Get the BIP9 state for a given deployment for the block after pindexPrev. */
 ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
-/** Get the numerical statistics for the BIP9 state for a given deployment at the current tip. */
+/** Get the numerical statistics for a given deployment for the signalling period that includes the block after pindexPrev. */
 BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos);
-/** Get the block height at which the BIP9 deployment switched into the state for the block building on the current tip. */
+/** Get the block height at which the BIP9 deployment switched into the state for the block after pindexPrev. */
 int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
 uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
