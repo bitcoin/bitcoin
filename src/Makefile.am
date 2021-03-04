@@ -225,8 +225,9 @@ BITCOIN_CORE_H = \
   timedata.h \
   torcontrol.h \
   txdb.h \
-  txrequest.h \
   txmempool.h \
+  txorphanage.h \
+  txrequest.h \
   undo.h \
   util/asmap.h \
   util/bip32.h \
@@ -350,8 +351,9 @@ libbitcoin_server_a_SOURCES = \
   timedata.cpp \
   torcontrol.cpp \
   txdb.cpp \
-  txrequest.cpp \
   txmempool.cpp \
+  txorphanage.cpp \
+  txrequest.cpp \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
