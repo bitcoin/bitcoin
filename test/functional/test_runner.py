@@ -201,6 +201,7 @@ BASE_SCRIPTS = [
     'feature_backwards_compatibility.py --legacy-wallet',
     'feature_backwards_compatibility.py --descriptors',
     'wallet_txn_clone.py --mineblock',
+    'example_y2038.py',
     'feature_notifications.py',
     'rpc_getblockfilter.py',
     'rpc_invalidateblock.py',
