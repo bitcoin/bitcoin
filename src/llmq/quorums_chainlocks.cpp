@@ -292,7 +292,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CCha
         }
         if(enforced) {
             AssertLockNotHeld(cs);
-            EnforceBestChainLock(pindex);
+            ::ChainstateActive().EnforceBestChainLock(pindex);
         }
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- processed new CLSIG (%s), peer=%d\n",
               __func__, clsig.ToString(), from);
@@ -333,7 +333,7 @@ void CChainLocksHandler::AcceptedBlockHeader(const CBlockIndex* pindexNew)
         }
         if(enforced) {
             AssertLockNotHeld(cs);
-            EnforceBestChainLock(pindex);
+            ::ChainstateActive().EnforceBestChainLock(pindex);
         }
     }
 }
@@ -353,7 +353,7 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
     
     if(enforced) {
         AssertLockNotHeld(cs);
-        EnforceBestChainLock(pindex);
+        ::ChainstateActive().EnforceBestChainLock(pindex);
     }
     TrySignChainTip(pindexNew);
 }
