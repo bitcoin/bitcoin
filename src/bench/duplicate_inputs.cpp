@@ -15,13 +15,7 @@
 
 static void DuplicateInputs(benchmark::Bench& bench)
 {
-    TestingSetup test_setup{
-        CBaseChainParams::REGTEST,
-        /* extra_args */ {
-            "-nodebuglogfile",
-            "-nodebug",
-        },
-    };
+    const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
 
     const CScript SCRIPT_PUB{CScript(OP_TRUE)};
 
@@ -31,8 +25,8 @@ static void DuplicateInputs(benchmark::Bench& bench)
     CMutableTransaction coinbaseTx{};
     CMutableTransaction naughtyTx{};
 
-    assert(std::addressof(::ChainActive()) == std::addressof(test_setup.m_node.chainman->ActiveChain()));
-    CBlockIndex* pindexPrev = test_setup.m_node.chainman->ActiveChain().Tip();
+    assert(std::addressof(::ChainActive()) == std::addressof(testing_setup->m_node.chainman->ActiveChain()));
+    CBlockIndex* pindexPrev = testing_setup->m_node.chainman->ActiveChain().Tip();
     assert(pindexPrev != nullptr);
     block.nBits = GetNextWorkRequired(pindexPrev, &block, chainparams.GetConsensus());
     block.nNonce = 0;

@@ -19,7 +19,7 @@
 namespace {
 
 struct TestBlockAndIndex {
-    TestingSetup test_setup{};
+    const std::unique_ptr<const TestingSetup> testing_setup{MakeNoLogFileContext<const TestingSetup>(CBaseChainParams::MAIN)};
     CBlock block{};
     uint256 blockHash{};
     CBlockIndex blockindex{};
@@ -43,7 +43,7 @@ struct TestBlockAndIndex {
 static void BlockToJsonVerbose(benchmark::Bench& bench)
 {
     TestBlockAndIndex data;
-    const LLMQContext& llmq_ctx = *data.test_setup.m_node.llmq_ctx;
+    const LLMQContext& llmq_ctx = *data.testing_setup->m_node.llmq_ctx;
     bench.run([&] {
         auto univalue = blockToJSON(data.block, &data.blockindex, &data.blockindex, *llmq_ctx.clhandler, *llmq_ctx.isman, /*verbose*/ true);
         ankerl::nanobench::doNotOptimizeAway(univalue);
@@ -55,7 +55,7 @@ BENCHMARK(BlockToJsonVerbose);
 static void BlockToJsonVerboseWrite(benchmark::Bench& bench)
 {
     TestBlockAndIndex data;
-    const LLMQContext& llmq_ctx = *data.test_setup.m_node.llmq_ctx;
+    const LLMQContext& llmq_ctx = *data.testing_setup->m_node.llmq_ctx;
     auto univalue = blockToJSON(data.block, &data.blockindex, &data.blockindex, *llmq_ctx.clhandler, *llmq_ctx.isman, /*verbose*/ true);
     bench.run([&] {
         auto str = univalue.write();
