@@ -120,7 +120,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   CXXFLAGS="$PIC_FLAGS $CXXFLAGS"
   _BITCOIN_QT_IS_STATIC
   if test "x$bitcoin_cv_static_qt" = xyes; then
-    _BITCOIN_QT_FIND_STATIC_PLUGINS
+    _BITCOIN_QT_CHECK_STATIC_LIBS
     AC_DEFINE(QT_STATICPLUGIN, 1, [Define this symbol if qt plugins are static])
     if test "x$TARGET_OS" != xandroid; then
       _BITCOIN_QT_CHECK_STATIC_PLUGIN([QMinimalIntegrationPlugin], [-lqminimal])
@@ -301,10 +301,14 @@ AC_DEFUN([_BITCOIN_QT_CHECK_STATIC_PLUGIN], [
   LIBS="$CHECK_STATIC_PLUGINS_TEMP_LIBS"
 ])
 
-dnl Internal. Find paths necessary for linking qt static plugins
-dnl Inputs: qt_plugin_path. optional.
+dnl Internal. Check Qt static libs with PKG_CHECK_MODULES.
+dnl
+dnl _BITCOIN_QT_CHECK_STATIC_LIBS
+dnl -----------------------------
+dnl
+dnl Inputs: no inputs.
 dnl Outputs: QT_LIBS is appended
-AC_DEFUN([_BITCOIN_QT_FIND_STATIC_PLUGINS],[
+AC_DEFUN([_BITCOIN_QT_CHECK_STATIC_LIBS], [
     if test "x$qt_plugin_path" != x; then
       QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms"
       if test -d "$qt_plugin_path/accessible"; then
