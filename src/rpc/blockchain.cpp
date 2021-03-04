@@ -2281,7 +2281,7 @@ static RPCHelpMan scantxoutset()
         result.pushKV("unspents", unspents);
         result.pushKV("total_amount", ValueFromAmount(total_in));
     } else {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid command");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid action argument");
     }
     return result;
 },
