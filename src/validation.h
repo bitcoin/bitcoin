@@ -183,7 +183,7 @@ uint64_t CalculateCurrentUsage();
 void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune);
 
 /** Prune block files up to a given height */
-void PruneBlockFilesManual(int nManualPruneHeight);
+void PruneBlockFilesManual(CChainState& active_chainstate, int nManualPruneHeight);
 
 /**
 * Validation result for a single transaction mempool acceptance.
@@ -225,15 +225,6 @@ struct MempoolAcceptResult {
  */
 MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPool& pool, const CTransactionRef& tx,
                                        bool bypass_limits, bool test_accept=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
-/** Get the BIP9 state for a given deployment at the current tip. */
-ThresholdState VersionBitsTipState(const Consensus::Params& params, Consensus::DeploymentPos pos);
-
-/** Get the numerical statistics for the BIP9 state for a given deployment at the current tip. */
-BIP9Stats VersionBitsTipStatistics(const Consensus::Params& params, Consensus::DeploymentPos pos);
-
-/** Get the block height at which the BIP9 deployment switched into the state for the block building on the current tip. */
-int VersionBitsTipStateSinceHeight(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
@@ -349,7 +340,7 @@ class CVerifyDB {
 public:
     CVerifyDB();
     ~CVerifyDB();
-    bool VerifyDB(const CChainParams& chainparams, CCoinsView *coinsview, int nCheckLevel, int nCheckDepth);
+    bool VerifyDB(const CChainParams& chainparams, CChainState& active_chainstate, CCoinsView *coinsview, int nCheckLevel, int nCheckDepth) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
 enum DisconnectResult
@@ -721,8 +712,14 @@ public:
     bool DisconnectTip(BlockValidationState& state, const CChainParams& chainparams, DisconnectedBlockTransactions* disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs_main, m_mempool.cs);
 
     // Manual block validity manipulation:
+    /** Mark a block as precious and reorganize.
+     *
+     * May not be called in a validationinterface callback.
+     */
     bool PreciousBlock(BlockValidationState& state, const CChainParams& params, CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
+    /** Mark a block as invalid. */
     bool InvalidateBlock(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
+    /** Remove invalidity status from a block and its descendants. */
     void ResetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     /** Replay blocks that aren't fully applied to the database. */
@@ -776,21 +773,13 @@ private:
     //! Mark a block as not having block data
     void EraseBlockData(CBlockIndex* index) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+    void CheckForkWarningConditions() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void InvalidChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    bool LoadBlockIndexDB(const CChainParams& chainparams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
     friend ChainstateManager;
 };
-
-/** Mark a block as precious and reorganize.
- *
- * May not be called in a
- * validationinterface callback.
- */
-bool PreciousBlock(BlockValidationState& state, const CChainParams& params, CBlockIndex *pindex) LOCKS_EXCLUDED(cs_main);
-
-/** Mark a block as invalid. */
-bool InvalidateBlock(BlockValidationState& state, const CChainParams& chainparams, CBlockIndex* pindex) LOCKS_EXCLUDED(cs_main);
-
-/** Remove invalidity status from a block and its descendants. */
-void ResetBlockFailureFlags(CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /**
  * Provides an interface for creating and interacting with one or two
