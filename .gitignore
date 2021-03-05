@@ -157,3 +157,4 @@ configure.lineno
 *.pb.*
 vbitcoin*
 !test/integration/vbitcoind_node.py
+configure~
