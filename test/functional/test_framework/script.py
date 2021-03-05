@@ -826,11 +826,11 @@ def taproot_tree_helper(scripts):
 
 # A TaprootInfo object has the following fields:
 # - scriptPubKey: the scriptPubKey (witness v1 CScript)
-# - inner_pubkey: the inner pubkey (32 bytes)
-# - negflag: whether the pubkey in the scriptPubKey was negated from inner_pubkey+tweak*G (bool).
+# - internal_pubkey: the internal pubkey (32 bytes)
+# - negflag: whether the pubkey in the scriptPubKey was negated from internal_pubkey+tweak*G (bool).
 # - tweak: the tweak (32 bytes)
 # - leaves: a dict of name -> TaprootLeafInfo objects for all known leaves
-TaprootInfo = namedtuple("TaprootInfo", "scriptPubKey,inner_pubkey,negflag,tweak,leaves")
+TaprootInfo = namedtuple("TaprootInfo", "scriptPubKey,internal_pubkey,negflag,tweak,leaves")
 
 # A TaprootLeafInfo object has the following fields:
 # - script: the leaf script (CScript or bytes)
