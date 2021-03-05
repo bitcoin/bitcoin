@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build: ["Release", "Debug"]
+        build: ["Debug"]
     steps:
       - uses: actions/checkout@v1
       - name: Get snapshot hash, version & branch
@@ -70,29 +70,4 @@ jobs:
           echo "$(IFS=',' read -ra TAGS <<< "$(if [ "${{ github.event_name }}" == "push" ] && [ "${BRANCH}" == "master" ]; then echo "latest,${BRANCH}"; elif [ "${{ github.event_name }}" == "pull_request" ]; then echo ""; else echo "${BRANCH}"; fi)"; for i in "${TAGS[@]}"; do echo $i; done)"
           echo "${{ env.BRANCH }}-${{ env.GIT_HASH }}"
           echo "${{ github.sha }}"
-          echo "----"
-
-  alpine-debug:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Get snapshot hash, version & branch
-        id: snapshot
-        run: |
-          echo "GIT_HASH=$(git rev-parse --short=7 "$GITHUB_SHA")" >> $GITHUB_ENV
-          echo "BRANCH=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//./g')" >> $GITHUB_ENV
-          echo "TAGS=$(if [ "${{ github.event_name }}" == "push" ] && [ "$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')" == "master" ]; then echo "latest,$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')"; elif [ "${{ github.event_name }}" == "pull_request" ]; then echo ""; else echo "$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')"; fi)" >> $GITHUB_ENV
-      - name: Publish to Registry
-        uses: elgohr/Publish-Docker-Github-Action@master
-        with:
-          dockerfile: alpine-debug.Dockerfile
-          name: veriblock/vbitcoin
-          username: ${{ secrets.PUBLIC_DOCKERHUB_USERNAME }}
-          password: ${{ secrets.PUBLIC_DOCKERHUB_PASSWORD }}
-          tags: "${{ env.BRANCH }}-${{ env.GIT_HASH }}-debug"
-      - name: Show Tags
-        run: |
-          echo "Successfully pushed the following tags:"
-          echo "----"
-          echo "${{ env.BRANCH }}-${{ env.GIT_HASH }}-debug"
           echo "----"
