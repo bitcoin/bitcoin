@@ -448,7 +448,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             if (!sock) {
                 return nullptr;
             }
-            connected = ConnectSocketDirectly(addrConnect, sock->Get(), nConnectTimeout,
+            connected = ConnectSocketDirectly(addrConnect, *sock, nConnectTimeout,
                                               conn_type == ConnectionType::MANUAL);
         }
         if (!proxyConnectionFailed) {

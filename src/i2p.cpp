@@ -279,7 +279,7 @@ Sock Session::Hello() const
         throw std::runtime_error("Cannot create socket");
     }
 
-    if (!ConnectSocketDirectly(m_control_host, sock->Get(), nConnectTimeout, true)) {
+    if (!ConnectSocketDirectly(m_control_host, *sock, nConnectTimeout, true)) {
         throw std::runtime_error(strprintf("Cannot connect to %s", m_control_host.ToString()));
     }
 
