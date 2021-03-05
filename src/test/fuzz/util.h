@@ -555,6 +555,13 @@ class FuzzedSock : public Sock
 {
     FuzzedDataProvider& m_fuzzed_data_provider;
 
+    /**
+     * Data to return when `MSG_PEEK` is used as a `Recv()` flag.
+     * If `MSG_PEEK` is used, then our `Recv()` returns some random data as usual, but on the next
+     * `Recv()` call we must return the same data, thus we remember it here.
+     */
+    mutable std::optional<uint8_t> m_peek_data;
+
 public:
     explicit FuzzedSock(FuzzedDataProvider& fuzzed_data_provider) : m_fuzzed_data_provider{fuzzed_data_provider}
     {
@@ -635,8 +642,26 @@ public:
             }
             return r;
         }
-        const std::vector<uint8_t> random_bytes = m_fuzzed_data_provider.ConsumeBytes<uint8_t>(
-            m_fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, len));
+        std::vector<uint8_t> random_bytes;
+        bool pad_to_len_bytes{m_fuzzed_data_provider.ConsumeBool()};
+        if (m_peek_data.has_value()) {
+            // `MSG_PEEK` was used in the preceding `Recv()` call, return `m_peek_data`.
+            random_bytes.assign({m_peek_data.value()});
+            if ((flags & MSG_PEEK) == 0) {
+                m_peek_data.reset();
+            }
+            pad_to_len_bytes = false;
+        } else if ((flags & MSG_PEEK) != 0) {
+            // New call with `MSG_PEEK`.
+            random_bytes = m_fuzzed_data_provider.ConsumeBytes<uint8_t>(1);
+            if (!random_bytes.empty()) {
+                m_peek_data = random_bytes[0];
+                pad_to_len_bytes = false;
+            }
+        } else {
+            random_bytes = m_fuzzed_data_provider.ConsumeBytes<uint8_t>(
+                m_fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, len));
+        }
         if (random_bytes.empty()) {
             const ssize_t r = m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
             if (r == -1) {
@@ -645,7 +670,7 @@ public:
             return r;
         }
         std::memcpy(buf, random_bytes.data(), random_bytes.size());
-        if (m_fuzzed_data_provider.ConsumeBool()) {
+        if (pad_to_len_bytes) {
             if (len > random_bytes.size()) {
                 std::memset((char*)buf + random_bytes.size(), 0, len - random_bytes.size());
             }
