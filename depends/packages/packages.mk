@@ -1,7 +1,5 @@
 packages:=boost libevent
 
-qt_packages = zlib
-
 qrencode_packages = qrencode
 
 qt_linux_packages:=qt expat libxcb xcb_proto libXau xproto freetype fontconfig libxkbcommon
