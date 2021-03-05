@@ -13,7 +13,7 @@ namespace VeriBlock {
 uint256 TopLevelMerkleRoot(const CBlockIndex* prevIndex, const CBlock& block, bool* mutated)
 {
     using altintegration::CalculateTopLevelMerkleRoot;
-    auto& altParams = *VeriBlock::GetPop().config->alt;
+    auto& altParams = VeriBlock::GetPop().getConfig().getAltParams();
 
     // first, build regular merkle root from transactions
     auto txRoot = BlockMerkleRoot(block, mutated);
@@ -55,7 +55,7 @@ bool VerifyTopLevelMerkleRoot(const CBlock& block, const CBlockIndex* pprevIndex
 
 bool isKeystone(const CBlockIndex& block)
 {
-    auto keystoneInterval = VeriBlock::GetPop().config->alt->getKeystoneInterval();
+    auto keystoneInterval = VeriBlock::GetPop().getConfig().getAltParams().getKeystoneInterval();
     return (block.nHeight % keystoneInterval) == 0;
 }
 

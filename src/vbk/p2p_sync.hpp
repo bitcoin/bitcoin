@@ -80,7 +80,7 @@ void offerPopData(CNode* node, CConnman* connman, const CNetMsgMaker& msgMaker) 
 {
     AssertLockHeld(cs_main);
     auto& pop_state_map = getPopDataNodeState(node->GetId()).getMap<PopDataType>();
-    auto& pop_mempool = *VeriBlock::GetPop().mempool;
+    auto& pop_mempool = VeriBlock::GetPop().getMemPool();
     std::vector<std::vector<uint8_t>> hashes;
 
     auto addhashes = [&](const std::unordered_map<typename PopDataType::id_t, std::shared_ptr<PopDataType>>& map) {

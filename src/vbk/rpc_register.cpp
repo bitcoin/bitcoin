@@ -84,7 +84,7 @@ UniValue getpopdata(const CBlockIndex* index)
         block.popData.getMerkleRoot(),
         // we build authctx based on previous block
         VeriBlock::GetAltBlockIndex(index->pprev),
-        VeriBlock::GetPop().config->getAltParams());
+        VeriBlock::GetPop().getConfig().getAltParams());
     result.pushKV("authenticated_context", altintegration::ToJSON<UniValue>(authctx));
 
     auto lastVBKBlocks = VeriBlock::getLastKnownVBKBlocks(16);
@@ -200,14 +200,14 @@ static void logSubmitResult(const std::string idhex, const altintegration::MemPo
 using VbkTree = altintegration::VbkBlockTree;
 using BtcTree = altintegration::VbkBlockTree::BtcTree;
 
-static VbkTree& vbk()
+static const VbkTree& vbk()
 {
-    return VeriBlock::GetPop().altTree->vbk();
+    return VeriBlock::GetPop().getVbkBlockTree();
 }
 
-static BtcTree& btc()
+static const BtcTree& btc()
 {
-    return VeriBlock::GetPop().altTree->btc();
+    return VeriBlock::GetPop().getBtcBlockTree();
 }
 
 // submitpop
@@ -246,7 +246,7 @@ UniValue submitpopIt(const JSONRPCRequest& request)
     }
 
     LOCK(cs_main);
-    auto& mp = *VeriBlock::GetPop().mempool;
+    auto& mp = VeriBlock::GetPop().getMemPool();
     auto idhex = data.getId().toHex();
     auto result = mp.submit<Pop>(data, state);
     logSubmitResult<Pop>(idhex, result, state);
@@ -291,7 +291,7 @@ void check_getblock(const JSONRPCRequest& request, const std::string& chain)
 }
 
 template <typename Tree>
-typename Tree::index_t* GetBlockIndex(Tree& tree, std::string hex)
+const typename Tree::index_t* GetBlockIndex(const Tree& tree, std::string hex)
 {
     auto data = ParseHex(hex);
     using hash_t = typename Tree::hash_t;
@@ -300,7 +300,7 @@ typename Tree::index_t* GetBlockIndex(Tree& tree, std::string hex)
 }
 
 template <>
-typename altintegration::VbkBlockTree::index_t* GetBlockIndex(altintegration::VbkBlockTree& tree, std::string hex)
+const typename altintegration::VbkBlockTree::index_t* GetBlockIndex(const altintegration::VbkBlockTree& tree, std::string hex)
 {
     auto data = ParseHex(hex);
     using block_t = altintegration::VbkBlock;
@@ -464,7 +464,7 @@ UniValue getrawpopmempool(const JSONRPCRequest& request)
     }
         .Check(request);
 
-    auto& mp = *VeriBlock::GetPop().mempool;
+    auto& mp = VeriBlock::GetPop().getMemPool();
     return altintegration::ToJSON<UniValue>(mp);
 }
 
@@ -500,7 +500,7 @@ bool GetPayload(
 
     auto& pop = VeriBlock::GetPop();
 
-    auto& mp = *pop.mempool;
+    auto& mp = pop.getMemPool();
     auto* pl = mp.get<T>(pid);
     if (pl) {
         out = *pl;
@@ -508,7 +508,7 @@ bool GetPayload(
     }
 
     // search in the alttree storage
-    const auto& containing = pop.altTree->getPayloadsIndex().getContainingAltBlocks(pid.asVector());
+    const auto& containing = pop.getAltBlockTree().getPayloadsIndex().getContainingAltBlocks(pid.asVector());
     if (containing.size() == 0) return false;
 
     // fill containing blocks
@@ -684,7 +684,7 @@ UniValue getpopparams(const JSONRPCRequest& req)
         .Check(req);
     // clang-format on
 
-    auto& config = *VeriBlock::GetPop().config;
+    auto& config = VeriBlock::GetPop().getConfig();
     auto ret = altintegration::ToJSON<UniValue>(*config.alt);
 
     auto* vbkfirst = vbk().getBestChain().first();

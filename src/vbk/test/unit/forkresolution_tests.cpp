@@ -176,7 +176,7 @@ BOOST_FIXTURE_TEST_CASE(crossing_keystone_case_4_test, E2eFixture)
 
 BOOST_FIXTURE_TEST_CASE(crossing_keystone_with_pop_invalid_1_test, E2eFixture)
 {
-    auto& config = *VeriBlock::GetPop().config;
+    auto& config = VeriBlock::GetPop().getConfig();
     for (int i = 0; i < config.alt->getEndorsementSettlementInterval() + 2; ++i) {
         CreateAndProcessBlock({}, cbKey);
     }
