@@ -104,9 +104,7 @@ RUN apt-get update && apt-get install $APT_ARGS \
     g++-arm-linux-gnueabihf \
     g++-mingw-w64-x86-64 \
     jq \
-    libcap-dev \
     libz-dev \
-    libbz2-dev \
     libncurses5 \
     nsis \
     python3-zmq \
