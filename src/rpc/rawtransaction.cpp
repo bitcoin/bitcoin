@@ -863,7 +863,7 @@ static RPCHelpMan sendrawtransaction()
     std::string err_string;
     AssertLockNotHeld(cs_main);
     NodeContext& node = EnsureNodeContext(request.context);
-    const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee, /*relay*/ true, /*wait_callback*/ true);
+    const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee, /*relay*/ true, /*bypass_policy*/ false, /*wait_callback*/ true);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
     }
@@ -947,7 +947,8 @@ static RPCHelpMan testmempoolaccept()
     result_0.pushKV("wtxid", tx->GetWitnessHash().GetHex());
 
     const MempoolAcceptResult accept_result = WITH_LOCK(cs_main, return AcceptToMemoryPool(::ChainstateActive(), mempool, std::move(tx),
-                                                  false /* bypass_limits */, /* test_accept */ true));
+                                                  false /* bypass_limits */, false /* bypass_policy*/,
+                                                  true /* test_accept */));
 
     // Only return the fee and vsize if the transaction would pass ATMP.
     // These can be used to calculate the feerate.

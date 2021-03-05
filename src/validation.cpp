@@ -484,6 +484,7 @@ public:
         const CChainParams& m_chainparams;
         const int64_t m_accept_time;
         const bool m_bypass_limits;
+        const bool m_bypass_policy;
         /*
          * Return any outpoints which were not previously present in the coins
          * cache, but were added as a result of validating the tx for mempool
@@ -1068,7 +1069,9 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
     // checks pass, to mitigate CPU exhaustion denial-of-service attacks.
     PrecomputedTransactionData txdata;
 
-    if (!PolicyScriptChecks(args, ws, txdata)) return MempoolAcceptResult(ws.m_state);
+    if (!args.m_bypass_policy) {
+        if (!PolicyScriptChecks(args, ws, txdata)) return MempoolAcceptResult(ws.m_state);
+    }
 
     if (!ConsensusScriptChecks(args, ws, txdata)) return MempoolAcceptResult(ws.m_state);
 
@@ -1090,11 +1093,11 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
 static MempoolAcceptResult AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPool& pool,
                                                       CChainState& active_chainstate,
                                                       const CTransactionRef &tx, int64_t nAcceptTime,
-                                                      bool bypass_limits, bool test_accept)
+                                                      bool bypass_limits, bool bypass_policy, bool test_accept)
                                                       EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     std::vector<COutPoint> coins_to_uncache;
-    MemPoolAccept::ATMPArgs args { chainparams, nAcceptTime, bypass_limits, coins_to_uncache, test_accept };
+    MemPoolAccept::ATMPArgs args { chainparams, nAcceptTime, bypass_limits, bypass_policy, coins_to_uncache, test_accept };
 
     assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
     const MempoolAcceptResult result = MemPoolAccept(pool, active_chainstate).AcceptSingleTransaction(tx, args);
@@ -1114,10 +1117,10 @@ static MempoolAcceptResult AcceptToMemoryPoolWithTime(const CChainParams& chainp
 }
 
 MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPool& pool, const CTransactionRef& tx,
-                                       bool bypass_limits, bool test_accept)
+                                       bool bypass_limits, bool bypass_policy, bool test_accept)
 {
     assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
-    return AcceptToMemoryPoolWithTime(Params(), pool, active_chainstate, tx, GetTime(), bypass_limits, test_accept);
+    return AcceptToMemoryPoolWithTime(Params(), pool, active_chainstate, tx, GetTime(), bypass_limits, bypass_policy, test_accept);
 }
 
 CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock)
@@ -5051,7 +5054,8 @@ bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate)
             if (nTime > nNow - nExpiryTimeout) {
                 LOCK(cs_main);
                 assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
-                if (AcceptToMemoryPoolWithTime(chainparams, pool, active_chainstate, tx, nTime, false /* bypass_limits */,
+                if (AcceptToMemoryPoolWithTime(chainparams, pool, active_chainstate, tx, nTime,
+                                               false /* bypass_limits */, false /*bypass_policy*/,
                                                false /* test_accept */).m_result_type == MempoolAcceptResult::ResultType::VALID) {
                     ++count;
                 } else {

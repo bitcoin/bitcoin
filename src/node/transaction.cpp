@@ -26,7 +26,7 @@ static TransactionError HandleATMPError(const TxValidationState& state, std::str
     }
 }
 
-TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback)
+TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool bypass_policy, bool wait_callback)
 {
     // BroadcastTransaction can be called by either sendrawtransaction RPC or wallet RPCs.
     // node.connman is assigned both before chain clients and before RPC server is accepting calls,
@@ -54,7 +54,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
             // First, call ATMP with test_accept and check the fee. If ATMP
             // fails here, return error immediately.
             const MempoolAcceptResult result = AcceptToMemoryPool(::ChainstateActive(), *node.mempool, tx, false /* bypass_limits */,
-                                                                  true /* test_accept */);
+                                                                  bypass_policy, true /* test_accept */);
             if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
                 return HandleATMPError(result.m_state, err_string);
             } else if (result.m_base_fees.value() > max_tx_fee) {
@@ -63,7 +63,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         }
         // Try to submit the transaction to the mempool.
         const MempoolAcceptResult result = AcceptToMemoryPool(::ChainstateActive(), *node.mempool, tx, false /* bypass_limits */,
-                                                              false /* test_accept */);
+                                                              bypass_policy, false /* test_accept */);
         if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
             return HandleATMPError(result.m_state, err_string);
         }

@@ -15,6 +15,7 @@
 #include <net.h>
 #include <node/context.h>
 #include <policy/fees.h>
+#include <policy/policy.h>
 #include <pow.h>
 #include <rpc/blockchain.h>
 #include <rpc/mining.h>
@@ -473,6 +474,55 @@ static RPCHelpMan prioritisetransaction()
     };
 }
 
+static RPCHelpMan minetxlocally()
+{
+    return RPCHelpMan{"minetxlocally",
+                "\nInclude a raw transaction in the next block without relaying it.\n",
+                {
+                    {"hexstring", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hex string of the raw transaction"},
+                    {"fee_delta", RPCArg::Type::NUM, RPCArg::Optional::NO, "The fee value (in satoshis) to add (or subtract, if negative).\n"
+"                  Note, that this value is not a fee rate. It is a value to modify absolute fee of the TX.\n"
+"                  The fee is not actually paid, only the algorithm for selecting transactions into a block\n"
+"                  considers the transaction as it would have paid a higher (or lower) fee."},
+                },
+                RPCResult{
+                    RPCResult::Type::STR_HEX, "", "The transaction hash in hex"
+                },
+                RPCExamples{""},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    RPCTypeCheck(request.params, {
+        UniValue::VSTR,
+        UniValue::VNUM,
+    });
+
+    CAmount delta = request.params[1].get_int64();
+
+    CMutableTransaction mtx;
+    if (!DecodeHexTx(mtx, request.params[0].get_str())) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "TX decode failed. Make sure the tx has at least one input.");
+    }
+    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+
+    const CFeeRate max_raw_tx_fee_rate = DEFAULT_MAX_RAW_TX_FEE_RATE;
+
+    int64_t virtual_size = GetVirtualTransactionSize(*tx);
+    CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
+
+    std::string err_string;
+    AssertLockNotHeld(cs_main);
+    NodeContext& node = EnsureNodeContext(request.context);
+    const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee, /*relay*/ false, /*bypass_policy*/ true, /*wait_callback*/ true);
+    if (TransactionError::OK != err) {
+        throw JSONRPCTransactionError(err, err_string);
+    }
+
+    EnsureMemPool(request.context).PrioritiseTransaction(tx->GetHash(), delta);
+
+    return tx->GetHash().GetHex();
+},
+    };
+}
 
 // NOTE: Assumes a conclusive result; if result is inconclusive, it must be handled by caller
 static UniValue BIP22ValidationResult(const BlockValidationState& state)
@@ -1238,6 +1288,7 @@ static const CRPCCommand commands[] =
     { "mining",              &getmininginfo,           },
     { "mining",              &prioritisetransaction,   },
     { "mining",              &getblocktemplate,        },
+    { "mining",              &minetxlocally,           },
     { "mining",              &submitblock,             },
     { "mining",              &submitheader,            },
 
