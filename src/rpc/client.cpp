@@ -66,6 +66,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "listtransactions", 3, "include_watchonly" },
     { "walletpassphrase", 1, "timeout" },
     { "getblocktemplate", 0, "template_request" },
+    { "minetxlocally", 1, "fee_delta" },
     { "listsinceblock", 1, "target_confirmations" },
     { "listsinceblock", 2, "include_watchonly" },
     { "listsinceblock", 3, "include_removed" },
