@@ -43,7 +43,6 @@ class AssetNotaryTest(SyscoinTestFramework):
         self.notary_address = self.nodes[0].getnewaddress()
         notary = {'endpoint': 'https://jsonplaceholder.typicode.com/posts/', 'instant_transfers': True, 'hd_required': True}
         self.asset = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 10000, 127, self.notary_address, notary, {})['asset_guid']
-        self.sync_mempools()
         self.nodes[0].generate(1)
         self.sync_blocks()
         assetInfo = self.nodes[0].assetinfo(self.asset)
