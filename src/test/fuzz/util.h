@@ -685,6 +685,47 @@ public:
         return random_bytes.size();
     }
 
+    int Connect(const sockaddr*, socklen_t) const override
+    {
+        // Have a permanent error at connect_errnos[0] because when the fuzzed data is exhausted
+        // SetFuzzedErrNo() will always return the first element and we want to avoid Connect()
+        // returning -1 and setting errno to EAGAIN repeatedly.
+        constexpr std::array connect_errnos{
+            ECONNREFUSED,
+            EAGAIN,
+            ECONNRESET,
+            EHOSTUNREACH,
+            EINPROGRESS,
+            EINTR,
+            ENETUNREACH,
+            ETIMEDOUT,
+        };
+        if (m_fuzzed_data_provider.ConsumeBool()) {
+            SetFuzzedErrNo(m_fuzzed_data_provider, connect_errnos);
+            return -1;
+        }
+        return 0;
+    }
+
+    int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const override
+    {
+        constexpr std::array getsockopt_errnos{
+            ENOMEM,
+            ENOBUFS,
+        };
+        if (m_fuzzed_data_provider.ConsumeBool()) {
+            SetFuzzedErrNo(m_fuzzed_data_provider, getsockopt_errnos);
+            return -1;
+        }
+        if (opt_val == nullptr) {
+            return 0;
+        }
+        std::memcpy(opt_val,
+                    ConsumeFixedLengthByteVector(m_fuzzed_data_provider, *opt_len).data(),
+                    *opt_len);
+        return 0;
+    }
+
     bool Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const override
     {
         return m_fuzzed_data_provider.ConsumeBool();
