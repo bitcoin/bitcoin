@@ -744,9 +744,7 @@ RPCHelpMan dumpwallet()
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     wallet.BlockUntilSyncedToCurrentChain();
-    // SYSCOIN
-    LOCK2(wallet.cs_wallet, cs_main);
-    LOCK(spk_man.cs_KeyStore);
+    LOCK2(wallet.cs_wallet, spk_man.cs_KeyStore);
 
     EnsureWalletIsUnlocked(&wallet);
 
