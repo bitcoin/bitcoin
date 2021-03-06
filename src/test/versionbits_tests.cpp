@@ -26,35 +26,54 @@ static const std::string StateName(ThresholdState state)
     return "";
 }
 
-static const Consensus::Params paramsDummy = Consensus::Params();
-
 class TestConditionChecker : public AbstractThresholdConditionChecker
 {
 private:
     mutable ThresholdConditionCache cache;
 
-public:
-    int64_t BeginTime(const Consensus::Params& params) const override { return TestTime(10000); }
-    int64_t EndTime(const Consensus::Params& params) const override { return TestTime(20000); }
-    int Period(const Consensus::Params& params) const override { return 1000; }
-    int Threshold(const Consensus::Params& params) const override { return 900; }
-    bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override { return (pindex->nVersion & 0x100); }
+protected:
+    Consensus::BIP9Deployment m_dep_storage;
 
-    ThresholdState GetStateFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateFor(pindexPrev, paramsDummy, cache); }
-    int GetStateSinceHeightFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateSinceHeightFor(pindexPrev, paramsDummy, cache); }
+public:
+    TestConditionChecker() : AbstractThresholdConditionChecker(m_dep_storage, 1000, 900)
+    {
+        m_dep_storage.bit = 8;
+        m_dep_storage.nStartTime = TestTime(10000);
+        m_dep_storage.nTimeout = TestTime(20000);
+    }
+
+    TestConditionChecker& operator=(const TestConditionChecker& other)
+    {
+        cache = other.cache;
+        m_dep_storage = other.m_dep_storage;
+        return *this;
+    }
+
+    bool Condition(const CBlockIndex* pindex) const override { return (pindex->nVersion & 0x100); }
+
+    ThresholdState GetStateFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateFor(pindexPrev, cache); }
+    int GetStateSinceHeightFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateSinceHeightFor(pindexPrev, cache); }
+
+    int Period() const { return m_period; }
 };
 
 class TestAlwaysActiveConditionChecker : public TestConditionChecker
 {
 public:
-    int64_t BeginTime(const Consensus::Params& params) const override { return Consensus::BIP9Deployment::ALWAYS_ACTIVE; }
+    TestAlwaysActiveConditionChecker() : TestConditionChecker()
+    {
+        m_dep_storage.nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
+    }
 };
 
 class TestNeverActiveConditionChecker : public TestConditionChecker
 {
 public:
-    int64_t BeginTime(const Consensus::Params& params) const override { return 0; }
-    int64_t EndTime(const Consensus::Params& params) const override { return 1230768000; }
+    TestNeverActiveConditionChecker() : TestConditionChecker()
+    {
+        m_dep_storage.nStartTime = 0;
+        m_dep_storage.nTimeout = 1230768000;
+    }
 };
 
 #define CHECKERS 6
@@ -110,14 +129,15 @@ public:
     }
 
     VersionBitsTester& TestStateSinceHeight(int height) {
+        const CBlockIndex* pindex = vpblock.empty() ? nullptr : vpblock.back();
         for (int i = 0; i < CHECKERS; i++) {
             if (InsecureRandBits(i) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateSinceHeightFor(vpblock.empty() ? nullptr : vpblock.back()) == height, strprintf("Test %i for StateSinceHeight", num));
-                BOOST_CHECK_MESSAGE(checker_always[i].GetStateSinceHeightFor(vpblock.empty() ? nullptr : vpblock.back()) == 0, strprintf("Test %i for StateSinceHeight (always active)", num));
+                BOOST_CHECK_MESSAGE(checker[i].GetStateSinceHeightFor(pindex) == height, strprintf("Test %i for StateSinceHeight", num));
+                BOOST_CHECK_MESSAGE(checker_always[i].GetStateSinceHeightFor(pindex) == 0, strprintf("Test %i for StateSinceHeight (always active)", num));
 
                 // never active may go from DEFINED -> FAILED at the first period
-                const auto never_height = checker_never[i].GetStateSinceHeightFor(vpblock.empty() ? nullptr : vpblock.back());
-                BOOST_CHECK_MESSAGE(never_height == 0 || never_height == checker_never[i].Period(paramsDummy), strprintf("Test %i for StateSinceHeight (never active)", num));
+                const auto never_height = checker_never[i].GetStateSinceHeightFor(pindex);
+                BOOST_CHECK_MESSAGE(never_height == 0 || never_height == checker_never[i].Period(), strprintf("Test %i for StateSinceHeight (never active)", num));
             }
         }
         num++;
@@ -125,9 +145,9 @@ public:
     }
 
     VersionBitsTester& TestState(ThresholdState exp) {
+        const CBlockIndex* pindex = vpblock.empty() ? nullptr : vpblock.back();
         for (int i = 0; i < CHECKERS; i++) {
             if (InsecureRandBits(i) == 0) {
-                const CBlockIndex* pindex = vpblock.empty() ? nullptr : vpblock.back();
                 ThresholdState got = checker[i].GetStateFor(pindex);
                 ThresholdState got_always = checker_always[i].GetStateFor(pindex);
                 ThresholdState got_never = checker_never[i].GetStateFor(pindex);

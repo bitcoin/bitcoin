@@ -1832,22 +1832,27 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
 class WarningBitsConditionChecker : public AbstractThresholdConditionChecker
 {
 private:
-    int bit;
+    Consensus::BIP9Deployment m_dep_storage;
+    const int m_min_height;
+    const Consensus::Params& m_params;
 
 public:
-    explicit WarningBitsConditionChecker(int bitIn) : bit(bitIn) {}
-
-    int64_t BeginTime(const Consensus::Params& params) const override { return 0; }
-    int64_t EndTime(const Consensus::Params& params) const override { return std::numeric_limits<int64_t>::max(); }
-    int Period(const Consensus::Params& params) const override { return params.nMinerConfirmationWindow; }
-    int Threshold(const Consensus::Params& params) const override { return params.nRuleChangeActivationThreshold; }
-
-    bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override
+    explicit WarningBitsConditionChecker(const Consensus::Params& params, int bitIn) :
+        AbstractThresholdConditionChecker(m_dep_storage, params.nMinerConfirmationWindow, params.nRuleChangeActivationThreshold),
+        m_min_height{params.MinBIP9WarningHeight},
+        m_params{params}
     {
-        return pindex->nHeight >= params.MinBIP9WarningHeight &&
+        m_dep_storage.bit = bitIn;
+        m_dep_storage.nStartTime = 0;
+        m_dep_storage.nTimeout = std::numeric_limits<int64_t>::max();
+    }
+
+    bool Condition(const CBlockIndex* pindex) const override
+    {
+        return pindex->nHeight >= m_min_height &&
                ((pindex->nVersion & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) &&
-               ((pindex->nVersion >> bit) & 1) != 0 &&
-               ((ComputeBlockVersion(pindex->pprev, params) >> bit) & 1) == 0;
+               ((pindex->nVersion >> m_dep_storage.bit) & 1) != 0 &&
+               ((ComputeBlockVersion(pindex->pprev, m_params) >> m_dep_storage.bit) & 1) == 0;
     }
 };
 
@@ -2453,8 +2458,8 @@ static void UpdateTip(CTxMemPool& mempool, const CBlockIndex* pindexNew, const C
     if (!active_chainstate.IsInitialBlockDownload()) {
         const CBlockIndex* pindex = pindexNew;
         for (int bit = 0; bit < VERSIONBITS_NUM_BITS; bit++) {
-            WarningBitsConditionChecker checker(bit);
-            ThresholdState state = checker.GetStateFor(pindex, chainParams.GetConsensus(), warningcache[bit]);
+            WarningBitsConditionChecker checker(chainParams.GetConsensus(), bit);
+            ThresholdState state = checker.GetStateFor(pindex, warningcache[bit]);
             if (state == ThresholdState::ACTIVE || state == ThresholdState::LOCKED_IN) {
                 const bilingual_str warning = strprintf(_("Warning: unknown new rules activated (versionbit %i)"), bit);
                 if (state == ThresholdState::ACTIVE) {
