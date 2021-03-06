@@ -750,7 +750,7 @@ static RPCHelpMan getmempoolinfo()
     return RPCHelpMan{"getmempoolinfo",
         "Returns details on the active state of the TX memory pool.\n",
         {
-            {"fee_histogram", RPCArg::Type::ARR, RPCArg::Optional::OMITTED, "Fee statistics grouped by fee rate ranges",
+            {"fee_histogram|with_fee_histogram", {RPCArg::Type::ARR, RPCArg::Type::BOOL}, RPCArg::Optional::OMITTED, "Fee statistics grouped by fee rate ranges",
                 {
                     {"fee_rate", RPCArg::Type::NUM, RPCArg::Optional::NO, "Fee rate (in " + CURRENCY_ATOM + "/vB) to group the fees by"},
                 },
@@ -795,7 +795,11 @@ static RPCHelpMan getmempoolinfo()
     MempoolHistogramFeeRates histogram_floors;
     std::optional<MempoolHistogramFeeRates> histogram_floors_opt = std::nullopt;
 
-    if (!request.params[0].isNull()) {
+    if (request.params[0].isBool()) {
+        if (request.params[0].isTrue()) {
+            histogram_floors_opt = MempoolInfoToJSON_const_histogram_floors;
+        }
+    } else if (!request.params[0].isNull()) {
         const UniValue histogram_floors_univalue = request.params[0].get_array();
 
         if (histogram_floors_univalue.empty()) {
