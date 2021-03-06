@@ -112,19 +112,20 @@ void SplitHostPort(std::string in, uint16_t& portOut, std::string& hostOut)
     size_t colon = in.find_last_of(':');
     // if a : is found, and it either follows a [...], or no other : is in the string, treat it as port separator
     bool fHaveColon = colon != in.npos;
-    bool fBracketed = fHaveColon && (in[0]=='[' && in[colon-1]==']'); // if there is a colon, and in[0]=='[', colon is not 0, so in[colon-1] is safe
-    bool fMultiColon = fHaveColon && (in.find_last_of(':',colon-1) != in.npos);
-    if (fHaveColon && (colon==0 || fBracketed || !fMultiColon)) {
+    bool fBracketed = fHaveColon && (in[0] == '[' && in[colon - 1] == ']'); // if there is a colon, and in[0]=='[', colon is not 0, so in[colon-1] is safe
+    bool fMultiColon = fHaveColon && (in.find_last_of(':', colon - 1) != in.npos);
+    if (fHaveColon && (colon == 0 || fBracketed || !fMultiColon)) {
         uint16_t n;
         if (ParseUInt16(in.substr(colon + 1), &n)) {
             in = in.substr(0, colon);
             portOut = n;
         }
     }
-    if (in.size()>0 && in[0] == '[' && in[in.size()-1] == ']')
-        hostOut = in.substr(1, in.size()-2);
-    else
+    if (in.size() > 0 && in[0] == '[' && in[in.size() - 1] == ']') {
+        hostOut = in.substr(1, in.size() - 2);
+    } else {
         hostOut = in;
+    }
 }
 
 std::string EncodeBase64(Span<const unsigned char> input)
