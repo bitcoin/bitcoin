@@ -56,6 +56,11 @@ def assert_greater_than(thing1, thing2):
         raise AssertionError("%s <= %s" % (str(thing1), str(thing2)))
 
 
+def assert_no_key(key, dictionary):
+    if key in dictionary:
+        raise AssertionError(f"Key '{key}' not expected to be found in {dictionary}")
+
+
 def assert_greater_than_or_equal(thing1, thing2):
     if thing1 < thing2:
         raise AssertionError("%s < %s" % (str(thing1), str(thing2)))
