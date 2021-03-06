@@ -1715,7 +1715,7 @@ static RPCHelpMan getmempoolinfo()
     return RPCHelpMan{"getmempoolinfo",
                 "\nReturns details on the active state of the TX memory pool.\n",
                 {
-                    {"fee_histogram", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "Fee statistics grouped by fee rate ranges",
+                    {"fee_histogram|with_fee_histogram", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "Fee statistics grouped by fee rate ranges",
                         {
                             {"fee_rate", RPCArg::Type::NUM, RPCArg::Optional::NO, "Fee rate (in " + CURRENCY_ATOM + "/vB) to group the fees by"},
                         },
@@ -1759,7 +1759,9 @@ static RPCHelpMan getmempoolinfo()
     MempoolHistogramFeeRates feelimits;
     std::optional<MempoolHistogramFeeRates> feelimits_opt = std::nullopt;
 
-    if (!request.params[0].isNull()) {
+    if (request.params[0].isTrue()) {
+        feelimits_opt = MempoolInfoToJSON_const_limits;
+    } else if (!(request.params[0].isNull() || request.params[0].isFalse())) {
         const UniValue feelimits_univalue = request.params[0].get_array();
 
         if (feelimits_univalue.size() == 0 || feelimits_univalue.size() > 30) {
