@@ -11,6 +11,7 @@
 #include <sync.h>
 
 #include <any>
+#include <optional>
 #include <stdint.h>
 #include <vector>
 
@@ -41,8 +42,10 @@ void RPCNotifyBlockChange(const CBlockIndex*);
 /** Block description to JSON */
 UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, bool txDetails = false) LOCKS_EXCLUDED(cs_main);
 
+typedef std::vector<CAmount> MempoolHistogramFeeRates;
+
 /** Mempool information to JSON */
-UniValue MempoolInfoToJSON(const CTxMemPool& pool);
+UniValue MempoolInfoToJSON(const CTxMemPool& pool, const std::optional<MempoolHistogramFeeRates> feeLimits);
 
 /** Mempool to JSON */
 UniValue MempoolToJSON(const CTxMemPool& pool, bool verbose = false, bool include_mempool_sequence = false);

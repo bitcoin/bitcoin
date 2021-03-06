@@ -24,6 +24,7 @@
 #include <version.h>
 
 #include <any>
+#include <optional>
 
 #include <boost/algorithm/string.hpp>
 
@@ -373,7 +374,7 @@ static bool rest_mempool_info(const std::any& context, HTTPRequest* req, const s
 
     switch (rf) {
     case RetFormat::JSON: {
-        UniValue mempoolInfoObject = MempoolInfoToJSON(*mempool);
+        UniValue mempoolInfoObject = MempoolInfoToJSON(*mempool, std::nullopt);
 
         std::string strJSON = mempoolInfoObject.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
