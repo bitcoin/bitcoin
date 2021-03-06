@@ -45,6 +45,12 @@ public:
     int GetStateSinceHeightFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateSinceHeightFor(pindexPrev, paramsDummy, cache); }
 };
 
+class TestDelayedActivationConditionChecker : public TestConditionChecker
+{
+public:
+    int MinActivationHeight(const Consensus::Params& params) const override { return 250; }
+};
+
 class TestAlwaysActiveConditionChecker : public TestConditionChecker
 {
 public:
@@ -69,6 +75,8 @@ class VersionBitsTester
     // The first one performs all checks, the second only 50%, the third only 25%, etc...
     // This is to test whether lack of cached information leads to the same results.
     TestConditionChecker checker[CHECKERS];
+    // Another 6 that assume delayed activation
+    TestDelayedActivationConditionChecker checker_delayed[CHECKERS];
     // Another 6 that assume always active activation
     TestAlwaysActiveConditionChecker checker_always[CHECKERS];
     // Another 6 that assume never active activation
@@ -78,14 +86,16 @@ class VersionBitsTester
     int num;
 
 public:
-    VersionBitsTester() : num(0) {}
+    VersionBitsTester() : num(1000) {}
 
     VersionBitsTester& Reset() {
+        num = num - (num % 1000) + 1000;
         for (unsigned int i = 0; i < vpblock.size(); i++) {
             delete vpblock[i];
         }
         for (unsigned int  i = 0; i < CHECKERS; i++) {
             checker[i] = TestConditionChecker();
+            checker_delayed[i] = TestDelayedActivationConditionChecker();
             checker_always[i] = TestAlwaysActiveConditionChecker();
             checker_never[i] = TestNeverActiveConditionChecker();
         }
@@ -110,11 +120,19 @@ public:
         return *this;
     }
 
-    VersionBitsTester& TestStateSinceHeight(int height) {
+    VersionBitsTester& TestStateSinceHeight(int height)
+    {
+        return TestStateSinceHeight(height, height);
+    }
+
+    VersionBitsTester& TestStateSinceHeight(int height, int height_delayed)
+    {
+        const CBlockIndex* pindex = vpblock.empty() ? nullptr : vpblock.back();
         for (int i = 0; i < CHECKERS; i++) {
             if (InsecureRandBits(i) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateSinceHeightFor(vpblock.empty() ? nullptr : vpblock.back()) == height, strprintf("Test %i for StateSinceHeight", num));
-                BOOST_CHECK_MESSAGE(checker_always[i].GetStateSinceHeightFor(vpblock.empty() ? nullptr : vpblock.back()) == 0, strprintf("Test %i for StateSinceHeight (always active)", num));
+                BOOST_CHECK_MESSAGE(checker[i].GetStateSinceHeightFor(pindex) == height, strprintf("Test %i for StateSinceHeight", num));
+                BOOST_CHECK_MESSAGE(checker_delayed[i].GetStateSinceHeightFor(pindex) == height_delayed, strprintf("Test %i for StateSinceHeight (delayed)", num));
+                BOOST_CHECK_MESSAGE(checker_always[i].GetStateSinceHeightFor(pindex) == 0, strprintf("Test %i for StateSinceHeight (always active)", num));
 
                 // never active may go from DEFINED -> FAILED at the first period
                 const auto never_height = checker_never[i].GetStateSinceHeightFor(vpblock.empty() ? nullptr : vpblock.back());
@@ -125,17 +143,30 @@ public:
         return *this;
     }
 
-    VersionBitsTester& TestState(ThresholdState exp) {
+    VersionBitsTester& TestState(ThresholdState exp)
+    {
+        return TestState(exp, exp);
+    }
+
+    VersionBitsTester& TestState(ThresholdState exp, ThresholdState exp_delayed)
+    {
+        if (exp != exp_delayed) {
+            // only expected differences are that delayed stays in locked_in longer
+            BOOST_CHECK_EQUAL(exp, ThresholdState::ACTIVE);
+            BOOST_CHECK_EQUAL(exp_delayed, ThresholdState::LOCKED_IN);
+        }
         for (int i = 0; i < CHECKERS; i++) {
             if (InsecureRandBits(i) == 0) {
                 const CBlockIndex* pindex = vpblock.empty() ? nullptr : vpblock.back();
                 ThresholdState got = checker[i].GetStateFor(pindex);
+                ThresholdState got_delayed = checker_delayed[i].GetStateFor(pindex);
                 ThresholdState got_always = checker_always[i].GetStateFor(pindex);
                 ThresholdState got_never = checker_never[i].GetStateFor(pindex);
                 // nHeight of the next block. If vpblock is empty, the next (ie first)
                 // block should be the genesis block with nHeight == 0.
                 int height = pindex == nullptr ? 0 : pindex->nHeight + 1;
                 BOOST_CHECK_MESSAGE(got == exp, strprintf("Test %i for %s height %d (got %s)", num, StateName(exp), height, StateName(got)));
+                BOOST_CHECK_MESSAGE(got_delayed == exp_delayed, strprintf("Test %i for %s height %d (got %s; delayed case)", num, StateName(exp_delayed), height, StateName(got_delayed)));
                 BOOST_CHECK_MESSAGE(got_always == ThresholdState::ACTIVE, strprintf("Test %i for ACTIVE height %d (got %s; always active case)", num, height, StateName(got_always)));
                 BOOST_CHECK_MESSAGE(got_never == ThresholdState::DEFINED|| got_never == ThresholdState::FAILED, strprintf("Test %i for DEFINED/FAILED height %d (got %s; never active case)", num, height, StateName(got_never)));
             }
@@ -149,6 +180,9 @@ public:
     VersionBitsTester& TestLockedIn() { return TestState(ThresholdState::LOCKED_IN); }
     VersionBitsTester& TestActive() { return TestState(ThresholdState::ACTIVE); }
     VersionBitsTester& TestFailed() { return TestState(ThresholdState::FAILED); }
+
+    // non-delayed should be active; delayed should still be locked in
+    VersionBitsTester& TestActiveDelayed() { return TestState(ThresholdState::ACTIVE, ThresholdState::LOCKED_IN); }
 
     CBlockIndex * Tip() { return vpblock.size() ? vpblock.back() : nullptr; }
 };
@@ -178,9 +212,10 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
                            .Mine(109, TestTime(10020), 0x100).TestStarted().TestStateSinceHeight(100) // 9 new blocks
                            .Mine(110, TestTime(29999), 0x200).TestLockedIn().TestStateSinceHeight(110) // 1 old block (so 9 out of the past 10)
                            .Mine(119, TestTime(30001), 0).TestLockedIn().TestStateSinceHeight(110)
-                           .Mine(120, TestTime(30002), 0).TestActive().TestStateSinceHeight(120)
-                           .Mine(200, TestTime(30003), 0).TestActive().TestStateSinceHeight(120)
-                           .Mine(300, TestTime(40000), 0).TestActive().TestStateSinceHeight(120)
+                           .Mine(120, TestTime(30002), 0).TestActiveDelayed().TestStateSinceHeight(120, 110) // Delayed will not become active until height 250
+                           .Mine(200, TestTime(30003), 0).TestActiveDelayed().TestStateSinceHeight(120, 110)
+                           .Mine(250, TestTime(30004), 0).TestActive().TestStateSinceHeight(120, 250)
+                           .Mine(300, TestTime(40000), 0).TestActive().TestStateSinceHeight(120, 250)
 
         // DEFINED multiple periods -> STARTED multiple periods -> FAILED
                            .Reset().TestDefined().TestStateSinceHeight(0)
