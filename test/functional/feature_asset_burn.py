@@ -116,6 +116,7 @@ class AssetBurnTest(SyscoinTestFramework):
         self.nodes[1].assetallocationsend(self.asset, self.nodes[1].getnewaddress(), 0.01)
         time.sleep(0.25)
         self.nodes[1].assetallocationburn(self.asset, 0.05, "0x931d387731bbbc988b312206c74f77d004d6b84b")
+        time.sleep(0.25)
         out =  self.nodes[1].listunspent(minconf=0, query_options={'assetGuid': self.asset})
         assert_equal(len(out), 0)
         self.nodes[0].generate(1)
