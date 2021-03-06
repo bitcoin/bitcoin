@@ -20,14 +20,14 @@ from test_framework.script import CScript
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
-COINBASE_MATURITY = 427
+COINBASE_MATURITY = 100
 NULLDUMMY_ERROR = "non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argument must be zero)"
 
 def trueDummy(tx):
     scriptSig = CScript(tx.vin[0].scriptSig)
     newscript = []
     for i in scriptSig:
-        if (len(newscript) == 0):
+        if len(newscript) == 0:
             assert len(i) == 0
             newscript.append(b'\x51')
         else:
@@ -38,7 +38,7 @@ def trueDummy(tx):
 class NULLDUMMYTest(BitcoinTestFramework):
 
     def set_test_params(self):
-        # Need two nodes only so GBT doesn't complain that it's not connected
+        # Need two nodes so GBT (getblocktemplate) doesn't complain that it's not connected.
         self.num_nodes = 2
         self.setup_clean_chain = True
         # This script tests NULLDUMMY activation, which is part of the 'segwit' deployment, so we go through
