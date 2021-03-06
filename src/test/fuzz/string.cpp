@@ -5,6 +5,7 @@
 #include <blockfilter.h>
 #include <clientversion.h>
 #include <logging.h>
+#include <netaddress.h>
 #include <netbase.h>
 #include <outputtype.h>
 #include <rpc/client.h>
