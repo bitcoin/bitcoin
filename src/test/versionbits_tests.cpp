@@ -255,6 +255,7 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
     int64_t bit = params.vDeployments[dep].bit;
     int64_t nStartTime = params.vDeployments[dep].nStartTime;
     int64_t nTimeout = params.vDeployments[dep].nTimeout;
+    int min_activation_height = params.vDeployments[dep].min_activation_height;
 
     // should not be any signalling for first block
     BOOST_CHECK_EQUAL(ComputeBlockVersion(nullptr, params), VERSIONBITS_TOP_BITS);
@@ -267,6 +268,7 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
     BOOST_REQUIRE(nTimeout <= std::numeric_limits<uint32_t>::max() || nTimeout == Consensus::BIP9Deployment::NO_TIMEOUT);
     BOOST_REQUIRE(0 <= bit && bit < 32);
     BOOST_REQUIRE(((1 << bit) & VERSIONBITS_TOP_MASK) == 0);
+    BOOST_REQUIRE(min_activation_height == 0);
 
     // In the first chain, test that the bit is set by CBV until it has failed.
     // In the second chain, test the bit is set by CBV while STARTED and
