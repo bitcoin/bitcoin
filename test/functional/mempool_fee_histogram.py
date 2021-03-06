@@ -136,6 +136,7 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
             'fee_rate_groups': dict( (
                 (str(n), {
                     'from': n,
+                    'to': n,
                     'count': 0,
                     'fees': 0,
                     'size': 0,
@@ -144,6 +145,7 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
             'total_fees': tx1_info['fee'] + tx2_info['fee'] + tx3_info['fee'],
         }
         expected_frg = expected_histogram['fee_rate_groups']
+        expected_frg['15']['to'] = None
         tx1p2p3_feerate = get_actual_fee_rate(expected_histogram['total_fees'], tx1_info['vsize'] + tx2_info['vsize'] + tx3_info['vsize'])
         def inc_expected(feerate, txinfo):
             this_frg = expected_frg[feerate]
@@ -163,10 +165,18 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
         for collapse_n in (9, 11, 13, 15):
             for field in ('count', 'size', 'fees'):
                 expected_frg[str(collapse_n - 1)][field] += expected_frg[str(collapse_n)][field]
+            expected_frg[str(collapse_n - 1)]['to'] += 1
             del expected_frg[str(collapse_n)]
+        expected_frg['14']['to'] += 1  # 16 is also skipped
 
         for new_n in (17, 20, 25) + tuple(range(30, 90, 10)) + (100, 120, 140, 170, 200, 250) + tuple(range(300, 900, 100)) + (1000, 1200, 1400, 1700, 2000, 2500) + tuple(range(3000, 9000, 1000)) + (10000,):
-            assert(info['fee_histogram']['fee_rate_groups'][str(new_n)] == {
+            frinfo = info['fee_histogram']['fee_rate_groups'][str(new_n)]
+            if new_n == 10000:
+                assert frinfo['to'] is None
+            else:
+                assert frinfo['to'] > frinfo['from']
+            del frinfo['to']
+            assert_equal(frinfo, {
                 'from': new_n,
                 'count': 0,
                 'fees': 0,
@@ -191,6 +201,8 @@ class MempoolFeeHistogramTest(BitcoinTestFramework):
                 assert_equal(bin['count'], 0)
             assert_greater_than_or_equal(bin['fees'], 0)
             assert_greater_than_or_equal(bin['size'], 0)
+            if bin['to'] is not None:
+                assert_greater_than_or_equal(bin['to'], bin['from'])
             total_fees += bin['fees']
 
             if bin['count'] == 0:

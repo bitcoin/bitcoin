@@ -732,6 +732,12 @@ UniValue MempoolInfoToJSON(const CTxMemPool& pool, const std::optional<MempoolHi
             info_sub.pushKV("fees", fees.at(i));
             info_sub.pushKV("from", floors.at(i));
 
+            if (i == floors.size() - 1) {
+                info_sub.pushKV("to", NullUniValue);
+            } else {
+                info_sub.pushKV("to", floors[i + 1] - 1);
+            }
+
             total_fees += fees.at(i);
             groups.pushKV(ToString(floors.at(i)), info_sub);
         }
@@ -780,6 +786,7 @@ static RPCHelpMan getmempoolinfo()
                                 {RPCResult::Type::NUM, "count", "Number of transactions in the fee rate group"},
                                 {RPCResult::Type::NUM, "fees", "Cumulative fees of all transactions in the fee rate group (in " + CURRENCY_ATOM + ")"},
                                 {RPCResult::Type::NUM, "from", "Group contains transactions with fee rates equal or greater than this value (in " + CURRENCY_ATOM + "/vB)"},
+                                {RPCResult::Type::ANY, "to", "Group contains transactions with fee rates equal or less than this value (in " + CURRENCY_ATOM + "/vB)"},
                             }}}},
                         {RPCResult::Type::NUM, "total_fees", "Total available fees in mempool (in " + CURRENCY_ATOM + ")"},
                     }},
