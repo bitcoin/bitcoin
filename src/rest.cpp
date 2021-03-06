@@ -31,6 +31,7 @@
 
 #include <any>
 #include <string>
+#include <optional>
 
 #include <univalue.h>
 
@@ -654,7 +655,7 @@ static bool rest_mempool(const std::any& context, HTTPRequest* req, const std::s
         if (param == "contents") {
             str_json = MempoolToJSON(*mempool, true).write() + "\n";
         } else {
-            str_json = MempoolInfoToJSON(*mempool).write() + "\n";
+            str_json = MempoolInfoToJSON(*mempool, std::nullopt).write() + "\n";
         }
 
         req->WriteHeader("Content-Type", "application/json");
