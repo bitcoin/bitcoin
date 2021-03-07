@@ -659,7 +659,7 @@ static RPCHelpMan getblocktemplate()
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     if (!Params().IsTestChain()) {
-        if (node.connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0) {
+        if (node.connman->GetNodeCount(ConnectionDirection::Both) == 0) {
             throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, PACKAGE_NAME " is not connected!");
         }
 

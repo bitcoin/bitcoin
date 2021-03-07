@@ -17,6 +17,7 @@
 #include <i2p.h>
 #include <net_permissions.h>
 #include <netaddress.h>
+#include <netbase.h>
 #include <optional.h>
 #include <policy/feerate.h>
 #include <protocol.h>
@@ -801,13 +802,6 @@ class CConnman
 {
 public:
 
-    enum NumConnections {
-        CONNECTIONS_NONE = 0,
-        CONNECTIONS_IN = (1U << 0),
-        CONNECTIONS_OUT = (1U << 1),
-        CONNECTIONS_ALL = (CONNECTIONS_IN | CONNECTIONS_OUT),
-    };
-
     struct Options
     {
         ServiceFlags nLocalServices = NODE_NONE;
@@ -976,7 +970,7 @@ public:
      */
     bool AddConnection(const std::string& address, ConnectionType conn_type);
 
-    size_t GetNodeCount(NumConnections num);
+    size_t GetNodeCount(ConnectionDirection);
     void GetNodeStats(std::vector<CNodeStats>& vstats);
     bool DisconnectNode(const std::string& node);
     bool DisconnectNode(const CSubNet& subnet);
