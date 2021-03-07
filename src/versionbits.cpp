@@ -94,23 +94,27 @@ ThresholdState ThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexP
     return state;
 }
 
-VBitsStats ThresholdConditionChecker::GetStateStatisticsFor(const CBlockIndex* pindex) const
+VBitsStats ThresholdConditionChecker::GetStateStatisticsFor(const CBlockIndex* pindexPrev) const
 {
     VBitsStats stats = {};
 
     stats.period = m_period;
     stats.threshold = m_dep.threshold;
 
-    if (pindex == nullptr)
+    if (pindexPrev == nullptr || (pindexPrev->nHeight + 1) < stats.period) {
+        // genesis block or first retarget period is DEFINED, and will
+        // not give a valid pindexEndOfPrevPeriod
         return stats;
+    }
 
-    // Find beginning of period
-    const CBlockIndex* pindexEndOfPrevPeriod = pindex->GetAncestor(pindex->nHeight - ((pindex->nHeight + 1) % stats.period));
-    stats.elapsed = pindex->nHeight - pindexEndOfPrevPeriod->nHeight;
+    // Find end of previous period -- may be pindexPrev itself
+    const CBlockIndex* pindexEndOfPrevPeriod = pindexPrev->GetAncestor(pindexPrev->nHeight - ((pindexPrev->nHeight + 1) % stats.period));
+
+    stats.elapsed = pindexPrev->nHeight - pindexEndOfPrevPeriod->nHeight;
 
     // Count from current block to beginning of period
     int count = 0;
-    const CBlockIndex* currentIndex = pindex;
+    const CBlockIndex* currentIndex = pindexPrev;
     while (pindexEndOfPrevPeriod->nHeight != currentIndex->nHeight){
         if (Condition(currentIndex))
             count++;
@@ -118,7 +122,7 @@ VBitsStats ThresholdConditionChecker::GetStateStatisticsFor(const CBlockIndex* p
     }
 
     stats.count = count;
-    stats.possible = (stats.period - stats.threshold ) >= (stats.elapsed - count);
+    stats.possible = (stats.period - stats.threshold) >= (stats.elapsed - count);
 
     return stats;
 }
