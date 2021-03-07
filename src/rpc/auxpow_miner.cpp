@@ -24,7 +24,7 @@ namespace
 void auxMiningCheck(CConnman &connman)
 {
 
-  if (connman.GetNodeCount (CConnman::CONNECTIONS_ALL) == 0
+  if (connman.GetNodeCount (ConnectionDirection::Both) == 0
         && !Params ().MineBlocksOnDemand ())
     throw JSONRPCError (RPC_CLIENT_NOT_CONNECTED,
                         "Syscoin is not connected!");

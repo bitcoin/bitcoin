@@ -3147,6 +3147,8 @@ void CConnman::AddPendingProbeConnections(const std::set<uint256> &proTxHashes)
     LOCK(cs_vPendingMasternodes);
     masternodePendingProbes.insert(proTxHashes.begin(), proTxHashes.end());
 }
+
+size_t CConnman::GetNodeCount(ConnectionDirection flags)
 {
     LOCK(cs_vNodes);
     if (flags == ConnectionDirection::Both) // Shortcut if we want total
