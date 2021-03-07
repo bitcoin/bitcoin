@@ -23,7 +23,7 @@ $(package)_config_opts += --disable-xv --disable-xvmc
 endef
 
 define $(package)_preprocess_cmds
-  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub build-aux &&\
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub build-aux && \
   sed "s/pthread-stubs//" -i configure
 endef
 
@@ -40,5 +40,5 @@ define $(package)_stage_cmds
 endef
 
 define $(package)_postprocess_cmds
-  rm -rf share/man share/doc lib/*.la
+  rm -rf share lib/*.la
 endef
