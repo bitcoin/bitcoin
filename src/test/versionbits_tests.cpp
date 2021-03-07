@@ -26,16 +26,16 @@ static const std::string StateName(ThresholdState state)
     return "";
 }
 
-class TestConditionChecker : public AbstractThresholdConditionChecker
+class TestConditionChecker : public ThresholdConditionChecker
 {
 private:
     mutable ThresholdConditionCache cache;
 
 protected:
-    Consensus::BIP9Deployment m_dep_storage;
+    Consensus::VBitsDeployment m_dep_storage;
 
 public:
-    TestConditionChecker() : AbstractThresholdConditionChecker(m_dep_storage, 1000)
+    TestConditionChecker() : ThresholdConditionChecker(m_dep_storage, 1000)
     {
         m_dep_storage.bit = 8;
         m_dep_storage.nStartTime = TestTime(10000);
@@ -52,8 +52,8 @@ public:
 
     bool Condition(const CBlockIndex* pindex) const override { return (pindex->nVersion & 0x100); }
 
-    ThresholdState GetStateFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateFor(pindexPrev, cache); }
-    int GetStateSinceHeightFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateSinceHeightFor(pindexPrev, cache); }
+    ThresholdState GetStateFor(const CBlockIndex* pindexPrev) const { return ThresholdConditionChecker::GetStateFor(pindexPrev, cache); }
+    int GetStateSinceHeightFor(const CBlockIndex* pindexPrev) const { return ThresholdConditionChecker::GetStateSinceHeightFor(pindexPrev, cache); }
 
     int Period() const { return m_period; }
 };
@@ -63,7 +63,7 @@ class TestAlwaysActiveConditionChecker : public TestConditionChecker
 public:
     TestAlwaysActiveConditionChecker() : TestConditionChecker()
     {
-        m_dep_storage.nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
+        m_dep_storage.nStartTime = Consensus::VBitsDeployment::ALWAYS_ACTIVE;
     }
 };
 
