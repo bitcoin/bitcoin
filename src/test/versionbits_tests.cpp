@@ -264,7 +264,7 @@ void sanity_check_params(const Consensus::Params& params)
         // activated soft fork could be later changed to be earlier to avoid
         // overlap.)
         for (int j=i+1; j<(int) Consensus::MAX_VERSION_BITS_DEPLOYMENTS; j++) {
-            if (VersionBitsMask(params, static_cast<Consensus::DeploymentPos>(j)) == bitmask) {
+            if (static_cast<uint32_t>(VersionBitsMask(params, static_cast<Consensus::DeploymentPos>(j))) == bitmask) {
                 BOOST_CHECK(params.vDeployments[j].nStartTime > params.vDeployments[i].nTimeout ||
                         params.vDeployments[i].nStartTime > params.vDeployments[j].nTimeout);
             }

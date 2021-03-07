@@ -192,7 +192,7 @@ int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::
     return VersionBitsConditionChecker(params, pos).GetStateSinceHeightFor(pindexPrev, cache.caches[pos]);
 }
 
-uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos)
+int32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos)
 {
     return VersionBitsConditionChecker(params, pos).Mask();
 }
