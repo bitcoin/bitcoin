@@ -163,7 +163,7 @@ CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision)
             SetNull();
             return;
         }
-        int64_t iPct = (int64_t)(auxFeeArr[1].get_real()*100000.0);
+        double iPct = std::round(auxFeeArr[1].get_real()*100000.0);
         if (iPct < 0 || iPct > 65535) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "percentage must be between 0.00 and 65.535");
         }
