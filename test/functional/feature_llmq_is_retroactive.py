@@ -27,6 +27,8 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.activate_dip8()
 
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
+        # Turn mempool IS signing off
+        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 1)
         self.wait_for_sporks_same()
 
         self.mine_quorum()
@@ -34,6 +36,26 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
 
         # Make sure that all nodes are chainlocked at the same height before starting actual tests
         self.wait_for_chainlocked_block_all_nodes(self.nodes[0].getbestblockhash(), timeout=30)
+
+        self.log.info("trying normal IS lock w/ signing spork off. Shouldn't be islocked before block is created.")
+        txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
+        # 3 nodes should be enough to create an IS lock even if nodes 4 and 5 (which have no tx itself)
+        # are the only "neighbours" in intra-quorum connections for one of them.
+        self.wait_for_instantlock(txid, self.nodes[0], False, 5)
+        # Have to disable ChainLocks to avoid signing a block with a "safe" tx too early
+        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 4000000000)
+        self.wait_for_sporks_same()
+        # We have to wait in order to include tx in block
+        self.bump_mocktime(10 * 60 + 1)
+        block = self.nodes[0].generate(1)[0]
+        self.wait_for_instantlock(txid, self.nodes[0])
+        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)
+        self.wait_for_sporks_same()
+        self.wait_for_chainlocked_block_all_nodes(block)
+
+        self.log.info("Enable mempool IS signing")
+        self.nodes[0].spork("SPORK_2_INSTANTSEND_ENABLED", 0)
+        self.wait_for_sporks_same()
 
         self.log.info("trying normal IS lock")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)

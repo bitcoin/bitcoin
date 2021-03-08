@@ -124,7 +124,7 @@ public:
     void InterruptWorkerThread();
 
 public:
-    bool ProcessTx(const CTransaction& tx, bool allowReSigning, const Consensus::Params& params);
+    bool ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params);
     bool CheckCanLock(const CTransaction& tx, bool printDebug, const Consensus::Params& params) const;
     bool CheckCanLock(const COutPoint& outpoint, bool printDebug, const uint256& txHash, CAmount* retValue, const Consensus::Params& params) const;
     bool IsLocked(const uint256& txHash) const;
@@ -135,6 +135,7 @@ public:
     void HandleNewInputLockRecoveredSig(const CRecoveredSig& recoveredSig, const uint256& txid);
     void HandleNewInstantSendLockRecoveredSig(const CRecoveredSig& recoveredSig);
 
+    bool TrySignInputLocks(const CTransaction& tx, bool allowResigning, Consensus::LLMQType llmqType);
     void TrySignInstantSendLock(const CTransaction& tx);
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
@@ -177,6 +178,12 @@ public:
 extern CInstantSendManager* quorumInstantSendManager;
 
 bool IsInstantSendEnabled();
+/**
+ * If true, MN should sign all transactions, if false, MN should not sign
+ * transactions in mempool, but should sign txes included in a block. This
+ * allows ChainLocks to continue even while this spork is disabled.
+ */
+bool IsInstantSendMempoolSigningEnabled();
 bool RejectConflictingBlocks();
 
 } // namespace llmq
