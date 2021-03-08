@@ -31,9 +31,6 @@ class Y2038EpochTest(BitcoinTestFramework):
             # Generates a blocks
             self.nodes[0].generate(nblocks=1)
 
-            self.log.info(epoch)
-            self.log.info(time.time())
-
             self.sync_all()
 
             assert_equal(self.nodes[0].getblockcount(), self.nodes[1].getblockcount())
