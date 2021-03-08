@@ -543,6 +543,12 @@ public:
     {
     }
 
+    FuzzedSock& operator=(Sock&& other) override
+    {
+        assert(false && "Not implemented yet.");
+        return *this;
+    }
+
     SOCKET Get() const override
     {
         assert(false && "Not implemented yet.");
