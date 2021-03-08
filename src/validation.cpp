@@ -3274,7 +3274,6 @@ bool CChainState::PreciousBlock(BlockValidationState& state, const CChainParams&
 }
 void CChainState::EnforceBestChainLock(const CBlockIndex* bestChainLockBlockIndex)
 {
-    AssertLockNotHeld(cs_main);
     if (!bestChainLockBlockIndex) {
         // we don't have the header/block, so we can't do anything right now
         return;
