@@ -54,6 +54,13 @@ int main(int argc, char* argv[])
 
     NodeContext node_context;
     std::unique_ptr<interfaces::Node> node = interfaces::MakeNode(&node_context);
+    gArgs.ForceSetArg("-listen", "0");
+    gArgs.ForceSetArg("-listenonion", "0");
+    gArgs.ForceSetArg("-discover", "0");
+    gArgs.ForceSetArg("-dnsseed", "0");
+    gArgs.ForceSetArg("-fixedseeds", "0");
+    gArgs.ForceSetArg("-upnp", "0");
+    gArgs.ForceSetArg("-natpmp", "0");
 
     bool fInvalid = false;
 
