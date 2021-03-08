@@ -87,9 +87,10 @@ public:
 
         // Deployment of Taproot (BIPs 340-342)
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].startheight = Consensus::BIP9Deployment::NEVER_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].timeoutheight = Consensus::BIP9Deployment::NEVER_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1916; // 95% of 2016
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].startheight = 681408;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].timeoutheight = 695520;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1815; // 90% of 2016
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].m_min_activation_height = 709632;
 
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000001533efd8d716a517fe2c5008");
         consensus.defaultAssumeValid = uint256S("0x0000000000000000000b9d2ec5a352ecba0592946514a92f14319dc2b367fc72"); // 654683
