@@ -11,6 +11,7 @@ ThresholdState ThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexP
     int nThreshold = m_dep.threshold;
     int64_t height_start = m_dep.startheight;
     int64_t height_timeout = m_dep.timeoutheight;
+    int64_t height_active_min = m_dep.m_min_activation_height;
 
     // Check if this deployment is never active.
     if (height_start == Consensus::VBitsDeployment::NEVER_ACTIVE && height_timeout == Consensus::VBitsDeployment::NEVER_ACTIVE) {
@@ -86,8 +87,10 @@ ThresholdState ThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexP
                 break;
             }
             case ThresholdState::LOCKED_IN: {
-                // Always progresses into ACTIVE.
-                stateNext = ThresholdState::ACTIVE;
+                // Only progress into ACTIVE if minimum activation height has been reached
+                if (height >= height_active_min) {
+                    stateNext = ThresholdState::ACTIVE;
+                }
                 break;
             }
             case ThresholdState::FAILED:

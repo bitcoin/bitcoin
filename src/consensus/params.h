@@ -31,6 +31,10 @@ struct VBitsDeployment {
     int timeoutheight;
     /** Threshold for activation */
     int threshold;
+    /**
+     * If lock in occurs, delay activation until at least this block height. Activations only occur on retargets.
+     */
+    int64_t m_min_activation_height{0};
 
     /** Constant for timeoutheight very far in the future. */
     static constexpr int NO_TIMEOUT = std::numeric_limits<int>::max();
