@@ -6,8 +6,6 @@
 
 https://en.wikipedia.org/wiki/Year_2038_problem
 """
-
-
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -17,7 +15,6 @@ EPOCH_2038_BEFORE = 2147440306 # (GMT): Monday, January 18, 2038 3:11:46 PM
 EPOCH_2038_AFTER = 2147613106 # (GMT): Wednesday, January 20, 2038 3:11:46 PM
 EPOCH_2106 = 4293404400000
 
-import time
 
 class Y2038EpochTest(BitcoinTestFramework):
 
@@ -31,8 +28,11 @@ class Y2038EpochTest(BitcoinTestFramework):
             self.nodes[0].setmocktime(epoch)
             self.nodes[1].setmocktime(epoch)
 
-            # Generates some blocks
+            # Generates a blocks
             self.nodes[0].generate(nblocks=1)
+
+            self.log.info(epoch)
+            self.log.info(time.time())
 
             self.sync_all()
 
