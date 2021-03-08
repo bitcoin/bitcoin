@@ -917,7 +917,7 @@ class RawTransactionsTest(SyscoinTestFramework):
         outputs = {}
         rawtx = recipient.createrawtransaction([], {wallet.getnewaddress(): 147.99899260})
 
-        # Make 1500 0.1 BTC outputs
+        # Make 1500 0.1 SYS outputs
         # The amount that we target for funding is in the BnB range when these outputs are used.
         # However if these outputs are selected, the transaction will end up being too large, so it shouldn't use BnB and instead fallback to Knapsack
         # but that behavior is not implemented yet. For now we just check that we get an error.
