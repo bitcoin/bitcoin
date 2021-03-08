@@ -622,10 +622,13 @@ public:
 
     ssize_t Recv(void* buf, size_t len, int flags) const override
     {
+        // Have a permanent error at recv_errnos[0] because when the fuzzed data is exhausted
+        // SetFuzzedErrNo() will always return the first element and we want to avoid Recv()
+        // returning -1 and setting errno to EAGAIN repeatedly.
         constexpr std::array recv_errnos{
+            ECONNREFUSED,
             EAGAIN,
             EBADF,
-            ECONNREFUSED,
             EFAULT,
             EINTR,
             EINVAL,
