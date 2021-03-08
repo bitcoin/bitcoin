@@ -38,6 +38,7 @@ public:
     int TimeoutHeight(const Consensus::Params& params) const override { return 200; }
     int Period(const Consensus::Params& params) const override { return 10; }
     int Threshold(const Consensus::Params& params) const override { return 9; }
+    int MinActivationHeight(const Consensus::Params& params) const override { return 0; }
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override { return (pindex->nVersion & 0x100); }
 
     ThresholdState GetStateFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateFor(pindexPrev, paramsDummy, cache); }

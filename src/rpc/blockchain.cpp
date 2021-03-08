@@ -1244,6 +1244,7 @@ static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &nam
     }
     bip9.pushKV("startheight", consensusParams.vDeployments[id].startheight);
     bip9.pushKV("timeoutheight", consensusParams.vDeployments[id].timeoutheight);
+    bip9.pushKV("minimum_activation_height", consensusParams.vDeployments[id].m_min_activation_height);
     int64_t since_height = VersionBitsStateSinceHeight(::ChainActive().Tip(), consensusParams, id, versionbitscache);
     bip9.pushKV("since", since_height);
     if (ThresholdState::STARTED == thresholdState)
@@ -1302,6 +1303,7 @@ RPCHelpMan getblockchaininfo()
                                     {RPCResult::Type::NUM, "bit", "the bit (0-28) in the block version field used to signal this softfork (only for \"started\" status)"},
                                     {RPCResult::Type::NUM, "startheight", "the minimum height of a block at which the bit gains its meaning"},
                                     {RPCResult::Type::NUM, "timeoutheight", "the height of a block at which the deployment is considered failed if not yet locked in"},
+                                    {RPCResult::Type::NUM, "minimum_activation_height", "the minimum block height at which activation is allowed to occur"},
                                     {RPCResult::Type::NUM, "since", "height of the first block to which the status applies"},
                                     {RPCResult::Type::OBJ, "statistics", "numeric statistics about BIP8 signalling for a softfork (only for \"started\" status)",
                                     {

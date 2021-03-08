@@ -27,12 +27,13 @@ private:
 public:
     const int m_begin;
     const int m_end;
+    const int m_min_activation;
     const int m_period;
     const int m_threshold;
     const int m_bit;
 
-    TestConditionChecker(int begin, int end, int period, int threshold, int bit)
-        : m_begin{begin}, m_end{end}, m_period{period}, m_threshold{threshold}, m_bit{bit}
+    TestConditionChecker(int begin, int end, int min_act, int period, int threshold, int bit)
+        : m_begin{begin}, m_end{end}, m_min_activation(min_act), m_period{period}, m_threshold{threshold}, m_bit{bit}
     {
         assert(m_period > 0);
         assert(0 <= m_threshold && m_threshold <= m_period);
@@ -42,6 +43,7 @@ public:
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override { return Condition(pindex->nVersion); }
     int StartHeight(const Consensus::Params& params) const override { return m_begin; }
     int TimeoutHeight(const Consensus::Params& params) const override { return m_end; }
+    int MinActivationHeight(const Consensus::Params& params) const override { return m_min_activation; }
     int Period(const Consensus::Params& params) const override { return m_period; }
     int Threshold(const Consensus::Params& params) const override { return m_threshold; }
 
@@ -129,10 +131,12 @@ FUZZ_TARGET_INIT(versionbits, initialize)
     bool never_active_test = false;
     int startheight;
     int timeoutheight;
+    int min_activation = 0;
     if (fuzzed_data_provider.ConsumeBool()) {
         // pick the timestamp to switch based on a block
         startheight = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, period * (max_periods - 2));
         timeoutheight = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, period * (max_periods - 2));
+        min_activation = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, period * (max_periods - 1));
     } else {
         if (fuzzed_data_provider.ConsumeBool()) {
             startheight = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
@@ -145,7 +149,7 @@ FUZZ_TARGET_INIT(versionbits, initialize)
         }
     }
 
-    TestConditionChecker checker(startheight, timeoutheight, period, threshold, bit);
+    TestConditionChecker checker(startheight, timeoutheight, min_activation, period, threshold, bit);
 
     // Early exit if the versions don't signal sensibly for the deployment
     if (!checker.Condition(ver_signal)) return;
@@ -285,10 +289,15 @@ FUZZ_TARGET_INIT(versionbits, initialize)
         }
         break;
     case ThresholdState::LOCKED_IN:
-        assert(exp_state == ThresholdState::STARTED);
-        assert(blocks_sig >= threshold);
+        if (exp_state == ThresholdState::LOCKED_IN) {
+            assert(height < checker.m_min_activation);
+        } else {
+            assert(exp_state == ThresholdState::STARTED);
+            assert(blocks_sig >= threshold);
+        }
         break;
     case ThresholdState::ACTIVE:
+        assert(always_active_test || height >= checker.m_min_activation);
         assert(exp_state == ThresholdState::ACTIVE || exp_state == ThresholdState::LOCKED_IN);
         break;
     case ThresholdState::FAILED:
