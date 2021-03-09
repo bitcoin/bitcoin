@@ -488,8 +488,6 @@ namespace {
  * and we're no longer holding the node's locks.
  */
 struct CNodeState {
-    //! The peer's address
-    const CService address;
     //! The best known block we know this peer has announced.
     const CBlockIndex* pindexBestKnownBlock{nullptr};
     //! The hash of the last unknown block this peer has announced.
@@ -582,8 +580,8 @@ struct CNodeState {
     //! Whether this peer relays txs via wtxid
     bool m_wtxid_relay{false};
 
-    CNodeState(CAddress addrIn, bool is_inbound)
-        : address(addrIn), m_is_inbound(is_inbound)
+    CNodeState(bool is_inbound)
+        : m_is_inbound(is_inbound)
     {
         m_recently_announced_invs.reset();
     }
@@ -920,12 +918,10 @@ void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds)
 
 void PeerManagerImpl::InitializeNode(CNode *pnode)
 {
-    CAddress addr = pnode->addr;
-    std::string addrName = pnode->GetAddrName();
     NodeId nodeid = pnode->GetId();
     {
         LOCK(cs_main);
-        mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(addr, pnode->IsInboundConn()));
+        mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(pnode->IsInboundConn()));
         assert(m_txrequest.Count(nodeid) == 0);
     }
     {
