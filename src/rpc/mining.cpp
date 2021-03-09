@@ -733,7 +733,6 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     }
 
     //VeriBlock Data
-    pblock->popData = VeriBlock::getPopData(*pindexPrev);
     const auto popDataRoot = pblock->popData.getMerkleRoot();
     result.pushKV("pop_data_root", HexStr(popDataRoot.begin(), popDataRoot.end()));
     result.pushKV("pop_data", altintegration::ToJSON<UniValue>(pblock->popData, /*verbose=*/true));
