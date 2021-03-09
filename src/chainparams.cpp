@@ -469,9 +469,15 @@ public:
      */
     void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t start_height, int64_t timeout_height, int64_t min_activation_height)
     {
-        consensus.m_deployments.at(d).startheight = start_height;
-        consensus.m_deployments.at(d).timeoutheight = timeout_height;
-        consensus.m_deployments.at(d).m_min_activation_height = min_activation_height;
+        const auto original_dep = consensus.m_deployments.at(d);
+        consensus.m_deployments.erase(d);
+        consensus.m_deployments.emplace(d, Consensus::VBitsDeployment(
+            original_dep.bit, // bit
+            start_height, // startheight
+            timeout_height, // timeoutheight
+            original_dep.threshold, // threshold
+            min_activation_height // min_activation_height
+        ));
     }
     void UpdateActivationParametersFromArgs(const ArgsManager& args);
 };

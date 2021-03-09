@@ -30,20 +30,21 @@ class TestConditionChecker : public ThresholdConditionChecker
 {
 private:
     mutable ThresholdConditionCache cache;
+    static constexpr int BIT = 8;
+    static constexpr int THRESHOLD = 9;
+    static constexpr int DEFAULT_START = 100;
+    static constexpr int DEFAULT_TIMEOUT = 200;
 
 protected:
     Consensus::VBitsDeployment m_dep_storage;
 
 public:
-    TestConditionChecker() : ThresholdConditionChecker(m_dep_storage, 10), m_dep_storage(8, 100, 200, 9)
+    TestConditionChecker() : ThresholdConditionChecker(m_dep_storage, 10), m_dep_storage(BIT, DEFAULT_START, DEFAULT_TIMEOUT, THRESHOLD)
     {}
-
-    TestConditionChecker& operator=(const TestConditionChecker& other)
-    {
-        cache = other.cache;
-        m_dep_storage = other.m_dep_storage;
-        return *this;
-    }
+    TestConditionChecker(int min_activation_height) : ThresholdConditionChecker(m_dep_storage, 10), m_dep_storage(BIT, DEFAULT_START, DEFAULT_TIMEOUT, THRESHOLD, min_activation_height)
+    {}
+    TestConditionChecker(int start_height, int timeout_height) : ThresholdConditionChecker(m_dep_storage, 10), m_dep_storage(BIT, start_height, timeout_height, THRESHOLD)
+    {}
 
     bool Condition(const CBlockIndex* pindex) const override { return (pindex->nVersion & 0x100); }
 
@@ -51,34 +52,29 @@ public:
     int GetStateSinceHeightFor(const CBlockIndex* pindexPrev) const { return ThresholdConditionChecker::GetStateSinceHeightFor(pindexPrev, cache); }
 
     int Period() const { return m_period; }
+
+    void Clear() { cache.clear(); }
 };
 
 class TestDelayedActivationConditionChecker : public TestConditionChecker
 {
 public:
-    TestDelayedActivationConditionChecker() : TestConditionChecker()
-    {
-        m_dep_storage.m_min_activation_height = 250;
-    }
+    TestDelayedActivationConditionChecker() : TestConditionChecker(250)
+    {}
 };
 
 class TestAlwaysActiveConditionChecker : public TestConditionChecker
 {
 public:
-    TestAlwaysActiveConditionChecker() : TestConditionChecker()
-    {
-        m_dep_storage.startheight = Consensus::VBitsDeployment::ALWAYS_ACTIVE;
-    }
+    TestAlwaysActiveConditionChecker() : TestConditionChecker(Consensus::VBitsDeployment::ALWAYS_ACTIVE, Consensus::VBitsDeployment::NO_TIMEOUT)
+    {}
 };
 
 class TestNeverActiveConditionChecker : public TestConditionChecker
 {
 public:
-    TestNeverActiveConditionChecker() : TestConditionChecker()
-    {
-        m_dep_storage.startheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
-        m_dep_storage.timeoutheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
-    }
+    TestNeverActiveConditionChecker() : TestConditionChecker(Consensus::VBitsDeployment::NEVER_ACTIVE, Consensus::VBitsDeployment::NEVER_ACTIVE)
+    {}
 };
 
 #define CHECKERS 6
@@ -111,10 +107,10 @@ public:
             delete vpblock[i];
         }
         for (unsigned int  i = 0; i < CHECKERS; i++) {
-            checker[i] = TestConditionChecker();
-            checker_delayed[i] = TestDelayedActivationConditionChecker();
-            checker_always[i] = TestAlwaysActiveConditionChecker();
-            checker_never[i] = TestNeverActiveConditionChecker();
+            checker[i].Clear();
+            checker_delayed[i].Clear();
+            checker_always[i].Clear();
+            checker_never[i].Clear();
         }
         vpblock.clear();
         return *this;

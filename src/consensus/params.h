@@ -42,17 +42,17 @@ struct VBitsDeployment {
         {}
 
     /** Bit position to select the particular bit in nVersion. */
-    int bit;
+    const int bit;
     /** Start block height for version bits miner confirmation. Must be a retarget block, can be in the past. */
-    int startheight;
+    const int startheight;
     /** Timeout/expiry block height for the deployment attempt. Must be a retarget block. */
-    int timeoutheight;
+    const int timeoutheight;
     /** Threshold for activation */
-    int threshold;
+    const int threshold;
     /**
      * If lock in occurs, delay activation until at least this block height. Activations only occur on retargets.
      */
-    int64_t m_min_activation_height{0};
+    const int64_t m_min_activation_height{0};
 
     /** Constant for timeoutheight very far in the future. */
     static constexpr int NO_TIMEOUT = std::numeric_limits<int>::max();
