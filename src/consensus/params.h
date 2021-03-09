@@ -35,7 +35,7 @@ struct BIP9Deployment {
 
     /** Special value for nStartTime indicating that the deployment is always active.
      *  This is useful for testing, as it means tests don't need to deal with the activation
-     *  process (which takes at least 3 BIP9 intervals). Only tests that specifically test the
+     *  process (which takes at least 3 intervals). Only tests that specifically test the
      *  behaviour during activation cannot use this. */
     static constexpr int64_t ALWAYS_ACTIVE = -1;
 };
@@ -61,7 +61,7 @@ struct Params {
      * Note that segwit v0 script rules are enforced on all blocks except the
      * BIP 16 exception blocks. */
     int SegwitHeight;
-    /** Don't warn about unknown BIP 9 activations below this height.
+    /** Don't warn about unknown versionbits activations below this height.
      * This prevents us from warning about the CSV and segwit activations. */
     int MinBIP9WarningHeight;
     /**

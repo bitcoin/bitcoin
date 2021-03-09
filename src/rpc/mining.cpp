@@ -538,7 +538,7 @@ static RPCHelpMan getblocktemplate()
                             {
                                 {RPCResult::Type::STR, "", "name of a rule the client must understand to some extent; see BIP 9 for format"},
                             }},
-                        {RPCResult::Type::OBJ_DYN, "vbavailable", "set of pending, supported versionbit (BIP 9) softfork deployments",
+                        {RPCResult::Type::OBJ_DYN, "vbavailable", "set of pending, supported versionbit softfork deployments",
                             {
                                 {RPCResult::Type::NUM, "rulename", "identifies the bit number as indicating acceptance and readiness for the named softfork rule"},
                             }},
