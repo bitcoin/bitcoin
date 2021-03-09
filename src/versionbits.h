@@ -77,7 +77,7 @@ public:
  *  keyed by the bit position used to signal support. */
 struct VersionBitsCache
 {
-    ThresholdConditionCache caches[Consensus::MAX_VERSION_BITS_DEPLOYMENTS];
+    std::map<Consensus::DeploymentPos, ThresholdConditionCache> caches;
 
     void Clear();
 };

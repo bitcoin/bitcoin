@@ -5,14 +5,21 @@
 #include <versionbitsinfo.h>
 
 #include <consensus/params.h>
+#include <map>
 
-const struct VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS] = {
+const std::map<Consensus::DeploymentPos, VBDeploymentInfo> VersionBitsDeploymentInfo = {
     {
-        /*.name =*/ "testdummy",
-        /*.gbt_force =*/ true,
+        Consensus::DeploymentPos::DEPLOYMENT_TESTDUMMY,
+        {
+            /*.name =*/ "testdummy",
+            /*.gbt_force =*/ true,
+        }
     },
     {
-        /*.name =*/ "taproot",
-        /*.gbt_force =*/ true,
+        Consensus::DeploymentPos::DEPLOYMENT_TAPROOT,
+        {
+            /*.name =*/ "taproot",
+            /*.gbt_force =*/ true,
+        }
     },
 };

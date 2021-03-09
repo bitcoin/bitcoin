@@ -494,7 +494,7 @@ static UniValue BIP22ValidationResult(const BlockValidationState& state)
 }
 
 static std::string gbt_vb_name(const Consensus::DeploymentPos pos) {
-    const struct VBDeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
+    const struct VBDeploymentInfo& vbinfo = VersionBitsDeploymentInfo.at(pos);
     std::string s = vbinfo.name;
     if (!vbinfo.gbt_force) {
         s.insert(s.begin(), '!');
@@ -827,8 +827,8 @@ static RPCHelpMan getblocktemplate()
     }
 
     UniValue vbavailable(UniValue::VOBJ);
-    for (int j = 0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
-        Consensus::DeploymentPos pos = Consensus::DeploymentPos(j);
+    for (const auto& dep_pair : consensusParams.m_deployments) {
+        const Consensus::DeploymentPos pos = dep_pair.first;
         ThresholdState state = VersionBitsState(pindexPrev, consensusParams, pos, versionbitscache);
         switch (state) {
             case ThresholdState::DEFINED:
@@ -841,8 +841,8 @@ static RPCHelpMan getblocktemplate()
                 // FALL THROUGH to get vbavailable set...
             case ThresholdState::STARTED:
             {
-                const struct VBDeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
-                vbavailable.pushKV(gbt_vb_name(pos), consensusParams.vDeployments[pos].bit);
+                const struct VBDeploymentInfo& vbinfo = VersionBitsDeploymentInfo.at(pos);
+                vbavailable.pushKV(gbt_vb_name(pos), consensusParams.m_deployments.at(pos).bit);
                 if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
                     if (!vbinfo.gbt_force) {
                         // If the client doesn't support this, don't indicate it in the [default] version
@@ -854,7 +854,7 @@ static RPCHelpMan getblocktemplate()
             case ThresholdState::ACTIVE:
             {
                 // Add to rules only
-                const struct VBDeploymentInfo& vbinfo = VersionBitsDeploymentInfo[pos];
+                const struct VBDeploymentInfo& vbinfo = VersionBitsDeploymentInfo.at(pos);
                 aRules.push_back(gbt_vb_name(pos));
                 if (setClientRules.find(vbinfo.name) == setClientRules.end()) {
                     // Not supported by the client; make sure it's safe to proceed

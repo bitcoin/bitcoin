@@ -1224,10 +1224,11 @@ static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name,
 
 static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
+    const auto& dep = consensusParams.m_deployments.at(id);
     // For BIP9 deployments.
     // Deployments (e.g. testdummy) which are marked as "never active" are hidden.
     // This is used when merging logic to implement a proposed softfork without a specified deployment schedule.
-    if (consensusParams.vDeployments[id].timeoutheight == Consensus::VBitsDeployment::NEVER_ACTIVE) return;
+    if (dep.timeoutheight == Consensus::VBitsDeployment::NEVER_ACTIVE) return;
 
     UniValue bip9(UniValue::VOBJ);
     const ThresholdState thresholdState = VersionBitsState(::ChainActive().Tip(), consensusParams, id, versionbitscache);
@@ -1240,10 +1241,10 @@ static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &nam
     }
     if (ThresholdState::STARTED == thresholdState)
     {
-        bip9.pushKV("bit", consensusParams.vDeployments[id].bit);
+        bip9.pushKV("bit", dep.bit);
     }
-    bip9.pushKV("startheight", consensusParams.vDeployments[id].startheight);
-    bip9.pushKV("timeoutheight", consensusParams.vDeployments[id].timeoutheight);
+    bip9.pushKV("startheight", dep.startheight);
+    bip9.pushKV("timeoutheight", dep.timeoutheight);
     int64_t since_height = VersionBitsStateSinceHeight(::ChainActive().Tip(), consensusParams, id, versionbitscache);
     bip9.pushKV("since", since_height);
     if (ThresholdState::STARTED == thresholdState)

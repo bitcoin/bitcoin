@@ -187,7 +187,7 @@ namespace {
  */
 class VersionBitsConditionChecker : public ThresholdConditionChecker {
 public:
-    explicit VersionBitsConditionChecker(const Consensus::Params& params, Consensus::DeploymentPos id) : ThresholdConditionChecker(params.vDeployments[id], params.nMinerConfirmationWindow) { }
+    explicit VersionBitsConditionChecker(const Consensus::Params& params, Consensus::DeploymentPos id) : ThresholdConditionChecker(params.m_deployments.at(id), params.nMinerConfirmationWindow) { }
 };
 } // namespace
 
@@ -213,7 +213,5 @@ int32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPo
 
 void VersionBitsCache::Clear()
 {
-    for (unsigned int d = 0; d < Consensus::MAX_VERSION_BITS_DEPLOYMENTS; d++) {
-        caches[d].clear();
-    }
+    caches.clear();
 }

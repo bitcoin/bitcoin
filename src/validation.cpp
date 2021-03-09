@@ -1816,10 +1816,11 @@ int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Para
     LOCK(cs_main);
     int32_t nVersion = VERSIONBITS_TOP_BITS;
 
-    for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
-        ThresholdState state = VersionBitsState(pindexPrev, params, static_cast<Consensus::DeploymentPos>(i), versionbitscache);
+    for (const auto& dep_pair : params.m_deployments) {
+        const auto& dep_pos = dep_pair.first;
+        ThresholdState state = VersionBitsState(pindexPrev, params, dep_pos, versionbitscache);
         if (state == ThresholdState::LOCKED_IN || state == ThresholdState::STARTED) {
-            nVersion |= VersionBitsMask(params, static_cast<Consensus::DeploymentPos>(i));
+            nVersion |= VersionBitsMask(params, dep_pos);
         }
     }
 

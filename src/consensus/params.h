@@ -8,6 +8,7 @@
 
 #include <uint256.h>
 #include <limits>
+#include <map>
 
 namespace Consensus {
 
@@ -16,7 +17,6 @@ enum DeploymentPos
     DEPLOYMENT_TESTDUMMY,
     DEPLOYMENT_TAPROOT, // Deployment of Schnorr/Taproot (BIPs 340-342)
     // NOTE: Also add new deployments to VersionBitsDeploymentInfo in versionbits.cpp
-    MAX_VERSION_BITS_DEPLOYMENTS
 };
 
 /**
@@ -78,7 +78,7 @@ struct Params {
      */
     uint32_t m_vbits_min_threshold;
     uint32_t nMinerConfirmationWindow;
-    VBitsDeployment vDeployments[MAX_VERSION_BITS_DEPLOYMENTS];
+    std::map<DeploymentPos, VBitsDeployment> m_deployments;
     /** Proof of work parameters */
     uint256 powLimit;
     bool fPowAllowMinDifficultyBlocks;

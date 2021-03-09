@@ -5,6 +5,9 @@
 #ifndef BITCOIN_VERSIONBITSINFO_H
 #define BITCOIN_VERSIONBITSINFO_H
 
+#include <consensus/params.h>
+#include <map>
+
 struct VBDeploymentInfo {
     /** Deployment name */
     const char *name;
@@ -12,6 +15,6 @@ struct VBDeploymentInfo {
     bool gbt_force;
 };
 
-extern const struct VBDeploymentInfo VersionBitsDeploymentInfo[];
+extern const std::map<Consensus::DeploymentPos, VBDeploymentInfo> VersionBitsDeploymentInfo;
 
 #endif // BITCOIN_VERSIONBITSINFO_H

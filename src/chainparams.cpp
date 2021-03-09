@@ -80,16 +80,16 @@ public:
         consensus.fPowNoRetargeting = false;
         consensus.m_vbits_min_threshold = 1512; // 75%
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].startheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].timeoutheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1916; // 95% of 2016
+        consensus.m_deployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TESTDUMMY].startheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TESTDUMMY].timeoutheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1916; // 95% of 2016
 
         // Deployment of Taproot (BIPs 340-342)
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].startheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].timeoutheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1916; // 95% of 2016
+        consensus.m_deployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TAPROOT].startheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TAPROOT].timeoutheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1916; // 95% of 2016
 
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000001533efd8d716a517fe2c5008");
         consensus.defaultAssumeValid = uint256S("0x0000000000000000000b9d2ec5a352ecba0592946514a92f14319dc2b367fc72"); // 654683
@@ -199,16 +199,16 @@ public:
         consensus.fPowNoRetargeting = false;
         consensus.m_vbits_min_threshold = 1512; // 75%
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].startheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].timeoutheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1512; // 75% of 2016
+        consensus.m_deployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TESTDUMMY].startheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TESTDUMMY].timeoutheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1512; // 75% of 2016
 
         // Deployment of Taproot (BIPs 340-342)
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].startheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].timeoutheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1512; // 75% of 2016
+        consensus.m_deployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TAPROOT].startheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TAPROOT].timeoutheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1512; // 75% of 2016
 
         consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000001db6ec4ac88cf2272c6");
         consensus.defaultAssumeValid = uint256S("0x000000000000006433d1efec504c53ca332b64963c425395515b01977bd7b3b0"); // 1864000
@@ -336,16 +336,16 @@ public:
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.MinBIP9WarningHeight = 0;
         consensus.powLimit = uint256S("00000377ae000000000000000000000000000000000000000000000000000000");
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].startheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].timeoutheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1916; // 95% of 2016
+        consensus.m_deployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TESTDUMMY].startheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TESTDUMMY].timeoutheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 1916; // 95% of 2016
 
         // Activation of Taproot (BIPs 340-342)
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].startheight = Consensus::VBitsDeployment::ALWAYS_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].timeoutheight = Consensus::VBitsDeployment::NO_TIMEOUT;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1916; // 95% of 2016
+        consensus.m_deployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TAPROOT].startheight = Consensus::VBitsDeployment::ALWAYS_ACTIVE;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TAPROOT].timeoutheight = Consensus::VBitsDeployment::NO_TIMEOUT;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1916; // 95% of 2016
 
         // message start is defined as the first 4 bytes of the sha256d of the block script
         CHashWriter h(SER_DISK, 0);
@@ -403,14 +403,15 @@ public:
         consensus.fPowNoRetargeting = true;
         consensus.m_vbits_min_threshold = 108; // 75%
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].startheight = 144;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].timeoutheight = Consensus::VBitsDeployment::NO_TIMEOUT;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 108; // 75% of 144
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].startheight = Consensus::VBitsDeployment::ALWAYS_ACTIVE;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].timeoutheight = Consensus::VBitsDeployment::NO_TIMEOUT;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 108; // 75% of 144
+        consensus.m_deployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TESTDUMMY].startheight = 144;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TESTDUMMY].timeoutheight = Consensus::VBitsDeployment::NO_TIMEOUT;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TESTDUMMY].threshold = 108; // 75% of 144
+        consensus.m_deployments[Consensus::DEPLOYMENT_TESTDUMMY].m_min_activation_height = 0; // No minimum activation height
+        consensus.m_deployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TAPROOT].startheight = Consensus::VBitsDeployment::ALWAYS_ACTIVE;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TAPROOT].timeoutheight = Consensus::VBitsDeployment::NO_TIMEOUT;
+        consensus.m_deployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 108; // 75% of 144
 
         consensus.nMinimumChainWork = uint256{};
         consensus.defaultAssumeValid = uint256{};
@@ -476,9 +477,9 @@ public:
      */
     void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t start_height, int64_t timeout_height, int64_t min_activation_height)
     {
-        consensus.vDeployments[d].startheight = start_height;
-        consensus.vDeployments[d].timeoutheight = timeout_height;
-        consensus.vDeployments[d].m_min_activation_height = min_activation_height;
+        consensus.m_deployments[d].startheight = start_height;
+        consensus.m_deployments[d].timeoutheight = timeout_height;
+        consensus.m_deployments[d].m_min_activation_height = min_activation_height;
     }
     void UpdateActivationParametersFromArgs(const ArgsManager& args);
 };
@@ -515,9 +516,11 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
             throw std::runtime_error(strprintf("Invalid min_activation_height (%s)", vDeploymentParams[3]));
         }
         bool found = false;
-        for (int j=0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
-            if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].name) {
-                UpdateVersionBitsParameters(Consensus::DeploymentPos(j), start_height, timeout_height, min_activation_height);
+        for (const auto& dep_pair : consensus.m_deployments) {
+            const auto& dep_pos = dep_pair.first;
+
+            if (vDeploymentParams[0] == VersionBitsDeploymentInfo.at(dep_pos).name) {
+                UpdateVersionBitsParameters(dep_pos, start_height, timeout_height, min_activation_height);
                 found = true;
                 LogPrintf("Setting version bits activation parameters for %s to startheight=%ld, timeoutheight=%ld, min_activation_height=%ld\n", vDeploymentParams[0], start_height, timeout_height, min_activation_height);
                 break;

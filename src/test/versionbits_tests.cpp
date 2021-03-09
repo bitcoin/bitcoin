@@ -255,16 +255,18 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
 void sanity_check_params(const Consensus::Params& params)
 {
     // Sanity checks of version bit deployments
-    for (int i=0; i<(int) Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
+    for (const auto& dep_pair : params.m_deployments) {
+        const auto& dep_pos = dep_pair.first;
+        const auto& dep = dep_pair.second;
 
         // Verify the threshold is sane and isn't lower than the threshold
         // used for warning for unknown activations
-        int threshold = params.vDeployments[i].threshold;
+        int threshold = dep.threshold;
         BOOST_CHECK(threshold > 0);
         BOOST_CHECK((uint32_t)threshold >= params.m_vbits_min_threshold);
         BOOST_CHECK((uint32_t)threshold <= params.nMinerConfirmationWindow);
 
-        uint32_t bitmask = VersionBitsMask(params, static_cast<Consensus::DeploymentPos>(i));
+        uint32_t bitmask = VersionBitsMask(params, dep_pos);
         // Make sure that no deployment tries to set an invalid bit.
         BOOST_CHECK_EQUAL(bitmask & ~(uint32_t)VERSIONBITS_TOP_MASK, bitmask);
 
@@ -275,10 +277,12 @@ void sanity_check_params(const Consensus::Params& params)
         // end time of that soft fork.  (Alternatively, the end time of that
         // activated soft fork could be later changed to be earlier to avoid
         // overlap.)
-        for (int j=i+1; j<(int) Consensus::MAX_VERSION_BITS_DEPLOYMENTS; j++) {
-            if (static_cast<uint32_t>(VersionBitsMask(params, static_cast<Consensus::DeploymentPos>(j))) == bitmask) {
-                BOOST_CHECK(params.vDeployments[j].startheight > params.vDeployments[i].timeoutheight ||
-                        params.vDeployments[i].startheight > params.vDeployments[j].timeoutheight);
+        for (const auto& other_dep_pair : params.m_deployments) {
+            const auto& other_dep_pos = other_dep_pair.first;
+            const auto& other_dep = other_dep_pair.second;
+            if (other_dep_pos != dep_pos &&  static_cast<uint32_t>(VersionBitsMask(params, other_dep_pos)) == bitmask) {
+                BOOST_CHECK(other_dep.startheight > dep.timeoutheight ||
+                        dep.startheight > other_dep.timeoutheight);
             }
         }
     }
@@ -302,9 +306,9 @@ BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
     const Consensus::Params &mainnetParams = chainParams->GetConsensus();
 
     // Use the TESTDUMMY deployment for testing purposes.
-    int64_t bit = mainnetParams.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit;
-    int64_t startheight = mainnetParams.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].startheight;
-    int64_t timeoutheight = mainnetParams.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].timeoutheight;
+    int64_t bit = mainnetParams.m_deployments.at(Consensus::DEPLOYMENT_TESTDUMMY).bit;
+    int64_t startheight = mainnetParams.m_deployments.at(Consensus::DEPLOYMENT_TESTDUMMY).startheight;
+    int64_t timeoutheight = mainnetParams.m_deployments.at(Consensus::DEPLOYMENT_TESTDUMMY).timeoutheight;
     const int64_t nTime = TestTime(startheight);
 
     assert(startheight < timeoutheight);
