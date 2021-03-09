@@ -702,17 +702,17 @@ namespace {
  */
 struct CNodeState {
     //! The best known block we know this peer has announced.
-    const CBlockIndex *pindexBestKnownBlock;
+    const CBlockIndex* pindexBestKnownBlock{nullptr};
     //! The hash of the last unknown block this peer has announced.
-    uint256 hashLastUnknownBlock;
+    uint256 hashLastUnknownBlock{};
     //! The last full block we both have.
-    const CBlockIndex *pindexLastCommonBlock;
+    const CBlockIndex* pindexLastCommonBlock{nullptr};
     //! The best header we have sent our peer.
-    const CBlockIndex *pindexBestHeaderSent;
+    const CBlockIndex* pindexBestHeaderSent{nullptr};
     //! Length of current-streak of unconnecting headers announcements
-    int nUnconnectingHeaders;
+    int nUnconnectingHeaders{0};
     //! Whether we've started headers synchronization with this peer.
-    bool fSyncStarted;
+    bool fSyncStarted{false};
     //! When to potentially disconnect peer for stalling headers download
     std::chrono::microseconds m_headers_sync_timeout{0us};
     //! Since when we're stalling block download progress (in microseconds), or 0.
@@ -720,23 +720,23 @@ struct CNodeState {
     std::list<QueuedBlock> vBlocksInFlight;
     //! When the first entry in vBlocksInFlight started downloading. Don't care when vBlocksInFlight is empty.
     std::chrono::microseconds m_downloading_since{0us};
-    int nBlocksInFlight;
-    int nBlocksInFlightValidHeaders;
+    int nBlocksInFlight{0};
+    int nBlocksInFlightValidHeaders{0};
     //! Whether we consider this a preferred download peer.
-    bool fPreferredDownload;
+    bool fPreferredDownload{false};
     //! Whether this peer wants invs or headers (when possible) for block announcements.
-    bool fPreferHeaders;
+    bool fPreferHeaders{false};
     //! Whether this peer wants invs or compressed headers (when possible) for block announcements.
-    bool fPreferHeadersCompressed;
+    bool fPreferHeadersCompressed{false};
     //! Whether this peer wants invs or cmpctblocks (when possible) for block announcements.
-    bool fPreferHeaderAndIDs;
+    bool fPreferHeaderAndIDs{false};
     //! Whether this peer will send us cmpctblocks if we request them
-    bool fProvidesHeaderAndIDs;
+    bool fProvidesHeaderAndIDs{false};
     /**
      * If we've announced last version to this peer: whether the peer sends last version in cmpctblocks/blocktxns,
      * otherwise: whether this peer sends non-last version in cmpctblocks/blocktxns.
      */
-    bool fSupportsDesiredCmpctVersion;
+    bool fSupportsDesiredCmpctVersion{false};
 
     /** State used to enforce CHAIN_SYNC_TIMEOUT and EXTRA_PEER_CHECK_INTERVAL logic.
       *
@@ -773,10 +773,10 @@ struct CNodeState {
         bool m_protect{false};
     };
 
-    ChainSyncTimeoutState m_chain_sync;
+    ChainSyncTimeoutState m_chain_sync{0, nullptr, false, false};
 
     //! Time of last new block announcement
-    int64_t m_last_block_announcement;
+    int64_t m_last_block_announcement{0};
 
     /*
      * State associated with objects download.
@@ -842,7 +842,7 @@ struct CNodeState {
     ObjectDownloadState m_object_download;
 
     //! Whether this peer is an inbound connection
-    bool m_is_inbound;
+    const bool m_is_inbound;
 
     //! A rolling bloom filter of all announced tx CInvs to this peer.
     CRollingBloomFilter m_recently_announced_invs = CRollingBloomFilter{INVENTORY_MAX_RECENT_RELAY, 0.000001};
@@ -850,22 +850,6 @@ struct CNodeState {
     CNodeState(bool is_inbound) :
         m_is_inbound(is_inbound)
     {
-        pindexBestKnownBlock = nullptr;
-        hashLastUnknownBlock.SetNull();
-        pindexLastCommonBlock = nullptr;
-        pindexBestHeaderSent = nullptr;
-        nUnconnectingHeaders = 0;
-        fSyncStarted = false;
-        nBlocksInFlight = 0;
-        nBlocksInFlightValidHeaders = 0;
-        fPreferredDownload = false;
-        fPreferHeaders = false;
-        fPreferHeadersCompressed = false;
-        fPreferHeaderAndIDs = false;
-        fProvidesHeaderAndIDs = false;
-        fSupportsDesiredCmpctVersion = false;
-        m_chain_sync = { 0, nullptr, false, false };
-        m_last_block_announcement = 0;
         m_recently_announced_invs.reset();
     }
 };
