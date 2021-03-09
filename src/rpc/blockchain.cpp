@@ -1223,46 +1223,46 @@ static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name,
     softforks.pushKV(name, rv);
 }
 
-static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void VBitsSoftForkDescPushBack(UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    // For BIP9 deployments.
+    // For versionbits deployments.
     // Deployments (e.g. testdummy) with timeout value before Jan 1, 2009 are hidden.
     // A timeout value of 0 guarantees a softfork will never be activated.
     // This is used when merging logic to implement a proposed softfork without a specified deployment schedule.
     if (consensusParams.vDeployments[id].nTimeout <= 1230768000) return;
 
-    UniValue bip9(UniValue::VOBJ);
+    UniValue deployment_details(UniValue::VOBJ);
     const ThresholdState thresholdState = VersionBitsState(::ChainActive().Tip(), consensusParams, id, versionbitscache);
     switch (thresholdState) {
-    case ThresholdState::DEFINED: bip9.pushKV("status", "defined"); break;
-    case ThresholdState::STARTED: bip9.pushKV("status", "started"); break;
-    case ThresholdState::LOCKED_IN: bip9.pushKV("status", "locked_in"); break;
-    case ThresholdState::ACTIVE: bip9.pushKV("status", "active"); break;
-    case ThresholdState::FAILED: bip9.pushKV("status", "failed"); break;
+    case ThresholdState::DEFINED: deployment_details.pushKV("status", "defined"); break;
+    case ThresholdState::STARTED: deployment_details.pushKV("status", "started"); break;
+    case ThresholdState::LOCKED_IN: deployment_details.pushKV("status", "locked_in"); break;
+    case ThresholdState::ACTIVE: deployment_details.pushKV("status", "active"); break;
+    case ThresholdState::FAILED: deployment_details.pushKV("status", "failed"); break;
     }
     if (ThresholdState::STARTED == thresholdState)
     {
-        bip9.pushKV("bit", consensusParams.vDeployments[id].bit);
+        deployment_details.pushKV("bit", consensusParams.vDeployments[id].bit);
     }
-    bip9.pushKV("start_time", consensusParams.vDeployments[id].nStartTime);
-    bip9.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
+    deployment_details.pushKV("start_time", consensusParams.vDeployments[id].nStartTime);
+    deployment_details.pushKV("timeout", consensusParams.vDeployments[id].nTimeout);
     int64_t since_height = VersionBitsStateSinceHeight(::ChainActive().Tip(), consensusParams, id, versionbitscache);
-    bip9.pushKV("since", since_height);
+    deployment_details.pushKV("since", since_height);
     if (ThresholdState::STARTED == thresholdState)
     {
         UniValue statsUV(UniValue::VOBJ);
-        BIP9Stats statsStruct = VersionBitsStatistics(::ChainActive().Tip(), consensusParams, id);
+        VBitsStats statsStruct = VersionBitsStatistics(::ChainActive().Tip(), consensusParams, id);
         statsUV.pushKV("period", statsStruct.period);
         statsUV.pushKV("threshold", statsStruct.threshold);
         statsUV.pushKV("elapsed", statsStruct.elapsed);
         statsUV.pushKV("count", statsStruct.count);
         statsUV.pushKV("possible", statsStruct.possible);
-        bip9.pushKV("statistics", statsUV);
+        deployment_details.pushKV("statistics", statsUV);
     }
 
     UniValue rv(UniValue::VOBJ);
     rv.pushKV("type", "bip9");
-    rv.pushKV("bip9", bip9);
+    rv.pushKV("bip9", deployment_details);
     if (ThresholdState::ACTIVE == thresholdState) {
         rv.pushKV("height", since_height);
     }
@@ -1305,9 +1305,9 @@ RPCHelpMan getblockchaininfo()
                                     {RPCResult::Type::NUM_TIME, "start_time", "the minimum median time past of a block at which the bit gains its meaning"},
                                     {RPCResult::Type::NUM_TIME, "timeout", "the median time past of a block at which the deployment is considered failed if not yet locked in"},
                                     {RPCResult::Type::NUM, "since", "height of the first block to which the status applies"},
-                                    {RPCResult::Type::OBJ, "statistics", "numeric statistics about BIP9 signalling for a softfork (only for \"started\" status)",
+                                    {RPCResult::Type::OBJ, "statistics", "numeric statistics about versionbits signalling for a softfork (only for \"started\" status)",
                                     {
-                                        {RPCResult::Type::NUM, "period", "the length in blocks of the BIP9 signalling period"},
+                                        {RPCResult::Type::NUM, "period", "the length in blocks of the versionbits signalling period"},
                                         {RPCResult::Type::NUM, "threshold", "the number of blocks with the version bit set required to activate the feature"},
                                         {RPCResult::Type::NUM, "elapsed", "the number of blocks elapsed since the beginning of the current period"},
                                         {RPCResult::Type::NUM, "count", "the number of blocks with the version bit set in the current period"},
@@ -1365,8 +1365,8 @@ RPCHelpMan getblockchaininfo()
     BuriedForkDescPushBack(softforks, "bip65", consensusParams.BIP65Height);
     BuriedForkDescPushBack(softforks, "csv", consensusParams.CSVHeight);
     BuriedForkDescPushBack(softforks, "segwit", consensusParams.SegwitHeight);
-    BIP9SoftForkDescPushBack(softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
-    BIP9SoftForkDescPushBack(softforks, "taproot", consensusParams, Consensus::DEPLOYMENT_TAPROOT);
+    VBitsSoftForkDescPushBack(softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
+    VBitsSoftForkDescPushBack(softforks, "taproot", consensusParams, Consensus::DEPLOYMENT_TAPROOT);
     obj.pushKV("softforks",             softforks);
 
     obj.pushKV("warnings", GetWarnings(false).original);
