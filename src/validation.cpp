@@ -1840,14 +1840,10 @@ private:
 public:
     explicit WarningBitsConditionChecker(const Consensus::Params& params, int bitIn) :
         ThresholdConditionChecker(m_dep_storage, params.nMinerConfirmationWindow),
+        m_dep_storage(bitIn, 0, Consensus::VBitsDeployment::NO_TIMEOUT, params.m_vbits_min_threshold),
         m_min_height{params.MinBIP9WarningHeight},
         m_params{params}
-    {
-        m_dep_storage.bit = bitIn;
-        m_dep_storage.startheight = 0;
-        m_dep_storage.timeoutheight = Consensus::VBitsDeployment::NO_TIMEOUT;
-        m_dep_storage.threshold = params.m_vbits_min_threshold;
-    }
+    {}
 
     bool Condition(const CBlockIndex* pindex) const override
     {

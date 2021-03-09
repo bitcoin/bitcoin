@@ -35,13 +35,8 @@ protected:
     Consensus::VBitsDeployment m_dep_storage;
 
 public:
-    TestConditionChecker() : ThresholdConditionChecker(m_dep_storage, 10)
-    {
-        m_dep_storage.bit = 8;
-        m_dep_storage.startheight = 100;
-        m_dep_storage.timeoutheight = 200;
-        m_dep_storage.threshold = 9;
-    }
+    TestConditionChecker() : ThresholdConditionChecker(m_dep_storage, 10), m_dep_storage(8, 100, 200, 9)
+    {}
 
     TestConditionChecker& operator=(const TestConditionChecker& other)
     {
