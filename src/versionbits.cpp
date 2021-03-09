@@ -8,7 +8,7 @@
 ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexPrev, ThresholdConditionCache& cache) const
 {
     int nPeriod = m_period;
-    int nThreshold = m_threshold;
+    int nThreshold = m_dep.threshold;
     int64_t nTimeStart = m_dep.nStartTime;
     int64_t nTimeTimeout = m_dep.nTimeout;
 
@@ -99,7 +99,7 @@ BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockI
     BIP9Stats stats = {};
 
     stats.period = m_period;
-    stats.threshold = m_threshold;
+    stats.threshold = m_dep.threshold;
 
     if (pindex == nullptr)
         return stats;
@@ -169,7 +169,7 @@ namespace {
  */
 class VersionBitsConditionChecker : public AbstractThresholdConditionChecker {
 public:
-    explicit VersionBitsConditionChecker(const Consensus::Params& params, Consensus::DeploymentPos id) : AbstractThresholdConditionChecker(params.vDeployments[id], params.nMinerConfirmationWindow, params.nRuleChangeActivationThreshold) { }
+    explicit VersionBitsConditionChecker(const Consensus::Params& params, Consensus::DeploymentPos id) : AbstractThresholdConditionChecker(params.vDeployments[id], params.nMinerConfirmationWindow) { }
 };
 } // namespace
 

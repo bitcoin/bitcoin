@@ -56,10 +56,9 @@ class AbstractThresholdConditionChecker {
 protected:
     const Consensus::BIP9Deployment& m_dep;
     const int m_period;
-    const int m_threshold;
 
 public:
-    AbstractThresholdConditionChecker(const Consensus::BIP9Deployment& dep, int period, int threshold) : m_dep{dep}, m_period{period}, m_threshold{threshold} { }
+    AbstractThresholdConditionChecker(const Consensus::BIP9Deployment& dep, int period) : m_dep{dep}, m_period{period} { }
 
     /** Returns whether a block signals or not */
     virtual bool Condition(const CBlockIndex* pindex) const;

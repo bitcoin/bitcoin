@@ -1838,13 +1838,14 @@ private:
 
 public:
     explicit WarningBitsConditionChecker(const Consensus::Params& params, int bitIn) :
-        AbstractThresholdConditionChecker(m_dep_storage, params.nMinerConfirmationWindow, params.nRuleChangeActivationThreshold),
+        AbstractThresholdConditionChecker(m_dep_storage, params.nMinerConfirmationWindow),
         m_min_height{params.MinBIP9WarningHeight},
         m_params{params}
     {
         m_dep_storage.bit = bitIn;
         m_dep_storage.nStartTime = 0;
         m_dep_storage.nTimeout = std::numeric_limits<int64_t>::max();
+        m_dep_storage.threshold = params.nRuleChangeActivationThreshold;
     }
 
     bool Condition(const CBlockIndex* pindex) const override

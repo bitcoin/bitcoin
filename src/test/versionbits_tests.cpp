@@ -35,11 +35,12 @@ protected:
     Consensus::BIP9Deployment m_dep_storage;
 
 public:
-    TestConditionChecker() : AbstractThresholdConditionChecker(m_dep_storage, 1000, 900)
+    TestConditionChecker() : AbstractThresholdConditionChecker(m_dep_storage, 1000)
     {
         m_dep_storage.bit = 8;
         m_dep_storage.nStartTime = TestTime(10000);
         m_dep_storage.nTimeout = TestTime(20000);
+        m_dep_storage.threshold = 900;
     }
 
     TestConditionChecker& operator=(const TestConditionChecker& other)
@@ -237,12 +238,21 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
                            .Mine(6000, TestTime(20000), 0).TestFailed().TestStateSinceHeight(6000)
                            .Mine(7000, TestTime(20000), 0x100).TestFailed().TestStateSinceHeight(6000);
     }
+}
 
+void sanity_check_params(const Consensus::Params& params)
+{
     // Sanity checks of version bit deployments
-    const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
-    const Consensus::Params &mainnetParams = chainParams->GetConsensus();
     for (int i=0; i<(int) Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
-        uint32_t bitmask = VersionBitsMask(mainnetParams, static_cast<Consensus::DeploymentPos>(i));
+
+        // Verify the threshold is sane and isn't lower than the threshold
+        // used for warning for unknown activations
+        int threshold = params.vDeployments[i].threshold;
+        BOOST_CHECK(threshold > 0);
+        BOOST_CHECK((uint32_t)threshold >= params.nRuleChangeActivationThreshold);
+        BOOST_CHECK((uint32_t)threshold <= params.nMinerConfirmationWindow);
+
+        uint32_t bitmask = VersionBitsMask(params, static_cast<Consensus::DeploymentPos>(i));
         // Make sure that no deployment tries to set an invalid bit.
         BOOST_CHECK_EQUAL(bitmask & ~(uint32_t)VERSIONBITS_TOP_MASK, bitmask);
 
@@ -254,11 +264,20 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
         // activated soft fork could be later changed to be earlier to avoid
         // overlap.)
         for (int j=i+1; j<(int) Consensus::MAX_VERSION_BITS_DEPLOYMENTS; j++) {
-            if (VersionBitsMask(mainnetParams, static_cast<Consensus::DeploymentPos>(j)) == bitmask) {
-                BOOST_CHECK(mainnetParams.vDeployments[j].nStartTime > mainnetParams.vDeployments[i].nTimeout ||
-                        mainnetParams.vDeployments[i].nStartTime > mainnetParams.vDeployments[j].nTimeout);
+            if (VersionBitsMask(params, static_cast<Consensus::DeploymentPos>(j)) == bitmask) {
+                BOOST_CHECK(params.vDeployments[j].nStartTime > params.vDeployments[i].nTimeout ||
+                        params.vDeployments[i].nStartTime > params.vDeployments[j].nTimeout);
             }
         }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(versionbits_params)
+{
+    for (const auto& chain : {CBaseChainParams::MAIN, CBaseChainParams::TESTNET, CBaseChainParams::SIGNET, CBaseChainParams::REGTEST}) {
+        const auto chainParams = CreateChainParams(*m_node.args, chain);
+        const Consensus::Params &params = chainParams->GetConsensus();
+        sanity_check_params(params);
     }
 }
 
