@@ -474,15 +474,16 @@ public:
     /**
      * Allows modifying the Version Bits regtest parameters.
      */
-    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int startheight, int timeoutheight)
+    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int startheight, int timeoutheight, int min_activation_height)
     {
         consensus.vDeployments[d].startheight = startheight;
         consensus.vDeployments[d].timeoutheight = timeoutheight;
+        consensus.vDeployments[d].m_min_activation_height = min_activation_height;
     }
     void UpdateActivationParametersFromArgs(const ArgsManager& args);
 };
 
-bool CheckVBitsHeights(std::string& error, const Consensus::Params& consensus, int startheight, int timeoutheight)
+bool CheckVBitsHeights(std::string& error, const Consensus::Params& consensus, int startheight, int timeoutheight, int min_activation_height)
 {
     // Special always or never active cases
     if ((startheight == Consensus::BIP9Deployment::NEVER_ACTIVE && timeoutheight == Consensus::BIP9Deployment::NEVER_ACTIVE)
@@ -512,6 +513,14 @@ bool CheckVBitsHeights(std::string& error, const Consensus::Params& consensus, i
         error = strprintf("Invalid timeoutheight (%d), must be a multiple of %d", timeoutheight, consensus.nMinerConfirmationWindow);
         return false;
     }
+    if (min_activation_height < 0) {
+        error = strprintf("Invalid minimum activation height (%d), cannot be negative", min_activation_height);
+        return false;
+    }
+    if (min_activation_height % consensus.nMinerConfirmationWindow != 0) {
+        error = strprintf("Invalid minimum activation height (%d), must be a multiple of %d", min_activation_height, consensus.nMinerConfirmationWindow);
+        return false;
+    }
     if (timeoutheight < startheight + (2 * (int)consensus.nMinerConfirmationWindow)) {
         error = strprintf("Invalid timeoutheight (%d), must be at least two periods greater than the startheight (%d)", timeoutheight, startheight);
         return false;
@@ -537,26 +546,29 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
     for (const std::string& strDeployment : args.GetArgs("-vbparams")) {
         std::vector<std::string> vDeploymentParams;
         boost::split(vDeploymentParams, strDeployment, boost::is_any_of(":"));
-        if (vDeploymentParams.size() != 3) {
-            throw std::runtime_error("Version bits parameters malformed, expecting deployment:@startheight:@timeoutheight");
+        if (vDeploymentParams.size() < 3 || vDeploymentParams.size() > 4) {
+            throw std::runtime_error("Version bits parameters malformed, expecting deployment:@startheight:@timeoutheight[:@min_activation_height]");
         }
-        int32_t startheight = 0, timeoutheight = 0;
+        int32_t startheight = 0, timeoutheight = 0, min_activation_height = 0;
         if (vDeploymentParams[1].empty() || vDeploymentParams[1].front() != '@' || !ParseInt32(vDeploymentParams[1].substr(1), &startheight)) {
             throw std::runtime_error(strprintf("Invalid startheight (%s)", vDeploymentParams[1]));
         }
         if (vDeploymentParams[2].empty() || vDeploymentParams[2].front() != '@' || !ParseInt32(vDeploymentParams[2].substr(1), &timeoutheight)) {
             throw std::runtime_error(strprintf("Invalid timeoutheight (%s)", vDeploymentParams[2]));
         }
+        if (vDeploymentParams.size() == 4 && (vDeploymentParams[3].front() != '@' || !ParseInt32(vDeploymentParams[3].substr(1), &min_activation_height))) {
+            throw std::runtime_error(strprintf("Invalid min_activation_height (%s)", vDeploymentParams[3]));
+        }
         std::string error;
-        if (!CheckVBitsHeights(error, consensus, startheight, timeoutheight)) {
+        if (!CheckVBitsHeights(error, consensus, startheight, timeoutheight, min_activation_height)) {
             throw std::runtime_error(error);
         }
         bool found = false;
         for (int j=0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
             if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].name) {
-                UpdateVersionBitsParameters(Consensus::DeploymentPos(j), startheight, timeoutheight);
+                UpdateVersionBitsParameters(Consensus::DeploymentPos(j), startheight, timeoutheight, min_activation_height);
                 found = true;
-                LogPrintf("Setting version bits activation parameters for %s to startheight=%ld, timeoutheight=%ld\n", vDeploymentParams[0], startheight, timeoutheight);
+                LogPrintf("Setting version bits activation parameters for %s to startheight=%ld, timeoutheight=%ld, min_activation_height=%ld\n", vDeploymentParams[0], startheight, timeoutheight, min_activation_height);
                 break;
             }
         }

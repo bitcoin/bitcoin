@@ -247,7 +247,7 @@ void sanity_check_params(const Consensus::Params& params)
         BOOST_CHECK_EQUAL(bitmask & ~(uint32_t)VERSIONBITS_TOP_MASK, bitmask);
 
         std::string error;
-        BOOST_CHECK_MESSAGE(CheckVBitsHeights(error, params, params.vDeployments[i].startheight, params.vDeployments[i].timeoutheight), error);
+        BOOST_CHECK_MESSAGE(CheckVBitsHeights(error, params, params.vDeployments[i].startheight, params.vDeployments[i].timeoutheight, params.vDeployments[i].m_min_activation_height), error);
 
         // Verify that the deployment windows of different deployment using the
         // same bit are disjoint.

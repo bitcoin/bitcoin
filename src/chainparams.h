@@ -160,6 +160,6 @@ const CChainParams &Params();
 void SelectParams(const std::string& chain);
 
 /** Check that the given heights make sense */
-bool CheckVBitsHeights(std::string& error, const Consensus::Params& consensus, int startheight, int timeoutheight);
+bool CheckVBitsHeights(std::string& error, const Consensus::Params& consensus, int startheight, int timeoutheight, int min_activation_height);
 
 #endif // BITCOIN_CHAINPARAMS_H
