@@ -130,6 +130,7 @@ BASE_SCRIPTS = [
     'p2p_feefilter.py',
     'feature_reindex.py',
     'feature_abortnode.py',
+    'feature_bip8.py',
     # vv Tests less than 30s vv
     'wallet_keypool_topup.py --legacy-wallet',
     'wallet_keypool_topup.py --descriptors',
