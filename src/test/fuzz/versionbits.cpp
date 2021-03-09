@@ -49,7 +49,7 @@ public:
 
     ThresholdState GetStateFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateFor(pindexPrev, dummy_params, m_cache); }
     int GetStateSinceHeightFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateSinceHeightFor(pindexPrev, dummy_params, m_cache); }
-    BIP9Stats GetStateStatisticsFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateStatisticsFor(pindexPrev, dummy_params); }
+    VBitsStats GetStateStatisticsFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateStatisticsFor(pindexPrev, dummy_params); }
 
     bool Condition(int64_t version) const
     {
@@ -136,12 +136,12 @@ FUZZ_TARGET_INIT(versionbits, initialize)
         min_activation = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, period * (max_periods - 1));
     } else {
         if (fuzzed_data_provider.ConsumeBool()) {
-            startheight = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
-            timeoutheight = Consensus::BIP9Deployment::NO_TIMEOUT;
+            startheight = Consensus::VBitsDeployment::ALWAYS_ACTIVE;
+            timeoutheight = Consensus::VBitsDeployment::NO_TIMEOUT;
             always_active_test = true;
         } else {
-            startheight = Consensus::BIP9Deployment::NEVER_ACTIVE;
-            timeoutheight = Consensus::BIP9Deployment::NEVER_ACTIVE;
+            startheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
+            timeoutheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
             never_active_test = true;
         }
     }
@@ -196,7 +196,7 @@ FUZZ_TARGET_INIT(versionbits, initialize)
     CBlockIndex* prev = blocks.tip();
     const int exp_since = checker.GetStateSinceHeightFor(prev);
     const ThresholdState exp_state = checker.GetStateFor(prev);
-    BIP9Stats last_stats = checker.GetStateStatisticsFor(prev);
+    VBitsStats last_stats = checker.GetStateStatisticsFor(prev);
 
     int prev_next_height = (prev == nullptr ? 0 : prev->nHeight + 1);
     assert(exp_since <= prev_next_height);
@@ -221,7 +221,7 @@ FUZZ_TARGET_INIT(versionbits, initialize)
         if (state != ThresholdState::STARTED) continue;
 
         // check that after mining this block stats change as expected
-        const BIP9Stats stats = checker.GetStateStatisticsFor(current_block);
+        const VBitsStats stats = checker.GetStateStatisticsFor(current_block);
         assert(stats.period == period);
         assert(stats.threshold == threshold);
         assert(stats.elapsed == b);
@@ -246,7 +246,7 @@ FUZZ_TARGET_INIT(versionbits, initialize)
 
     // GetStateStatistics is safe on a period boundary
     // and has progressed to a new period
-    const BIP9Stats stats = checker.GetStateStatisticsFor(current_block);
+    const VBitsStats stats = checker.GetStateStatisticsFor(current_block);
     assert(stats.period == period);
     assert(stats.threshold == threshold);
     assert(stats.elapsed == 0);

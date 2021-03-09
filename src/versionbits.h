@@ -35,9 +35,9 @@ enum class ThresholdState {
 // will either be nullptr or a block with (height + 1) % Period() == 0.
 typedef std::map<const CBlockIndex*, ThresholdState> ThresholdConditionCache;
 
-/** Display status of an in-progress BIP9 softfork */
-struct BIP9Stats {
-    /** Length of blocks of the BIP9 signalling period */
+/** Display status of an in-progress versionbits softfork */
+struct VBitsStats {
+    /** Length of blocks of the versionbits signalling period */
     int period;
     /** Number of blocks with the version bit set required to activate the softfork */
     int threshold;
@@ -50,7 +50,7 @@ struct BIP9Stats {
 };
 
 /**
- * Abstract class that implements BIP9-style threshold logic, and caches results.
+ * Abstract class that implements versionbits-style threshold logic, and caches results.
  */
 class AbstractThresholdConditionChecker {
 protected:
@@ -62,8 +62,8 @@ protected:
     virtual int MinActivationHeight(const Consensus::Params& params) const =0;
 
 public:
-    /** Returns the numerical statistics of an in-progress BIP9 softfork in the current period */
-    BIP9Stats GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params) const;
+    /** Returns the numerical statistics of an in-progress versionbits softfork in the current period */
+    VBitsStats GetStateStatisticsFor(const CBlockIndex* pindex, const Consensus::Params& params) const;
     /** Returns the state for pindex A based on parent pindexPrev B. Applies any state transition if conditions are present.
      *  Caches state from first block of period. */
     ThresholdState GetStateFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
@@ -80,11 +80,11 @@ struct VersionBitsCache
     void Clear();
 };
 
-/** Get the BIP9 state for a given deployment at the current tip. */
+/** Get the versionbits state for a given deployment at the current tip. */
 ThresholdState VersionBitsState(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
-/** Get the numerical statistics for the BIP9 state for a given deployment at the current tip. */
-BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos);
-/** Get the block height at which the BIP9 deployment switched into the state for the block building on the current tip. */
+/** Get the numerical statistics for the versionbits state for a given deployment at the current tip. */
+VBitsStats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos);
+/** Get the block height at which the versionbits deployment switched into the state for the block building on the current tip. */
 int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
 uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos);
 

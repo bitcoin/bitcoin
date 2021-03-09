@@ -54,14 +54,14 @@ public:
 class TestAlwaysActiveConditionChecker : public TestConditionChecker
 {
 public:
-    int StartHeight(const Consensus::Params& params) const override { return Consensus::BIP9Deployment::ALWAYS_ACTIVE; }
+    int StartHeight(const Consensus::Params& params) const override { return Consensus::VBitsDeployment::ALWAYS_ACTIVE; }
 };
 
 class TestNeverActiveConditionChecker : public TestConditionChecker
 {
 public:
-    int StartHeight(const Consensus::Params& params) const override { return Consensus::BIP9Deployment::NEVER_ACTIVE; }
-    int TimeoutHeight(const Consensus::Params& params) const override { return Consensus::BIP9Deployment::NEVER_ACTIVE; }
+    int StartHeight(const Consensus::Params& params) const override { return Consensus::VBitsDeployment::NEVER_ACTIVE; }
+    int TimeoutHeight(const Consensus::Params& params) const override { return Consensus::VBitsDeployment::NEVER_ACTIVE; }
 };
 
 #define CHECKERS 6
@@ -248,12 +248,12 @@ void sanity_check_params(const Consensus::Params& params)
 
         int startheight = params.vDeployments[i].startheight;
         int timeoutheight = params.vDeployments[i].timeoutheight;
-        if (startheight == Consensus::BIP9Deployment::NEVER_ACTIVE) {
-            BOOST_CHECK_EQUAL(timeoutheight, Consensus::BIP9Deployment::NEVER_ACTIVE);
-        } else if (timeoutheight == Consensus::BIP9Deployment::NEVER_ACTIVE) {
-            BOOST_CHECK_EQUAL(startheight, Consensus::BIP9Deployment::NEVER_ACTIVE);
-        } else if (startheight == Consensus::BIP9Deployment::ALWAYS_ACTIVE) {
-            BOOST_CHECK_EQUAL(timeoutheight, Consensus::BIP9Deployment::NO_TIMEOUT);
+        if (startheight == Consensus::VBitsDeployment::NEVER_ACTIVE) {
+            BOOST_CHECK_EQUAL(timeoutheight, Consensus::VBitsDeployment::NEVER_ACTIVE);
+        } else if (timeoutheight == Consensus::VBitsDeployment::NEVER_ACTIVE) {
+            BOOST_CHECK_EQUAL(startheight, Consensus::VBitsDeployment::NEVER_ACTIVE);
+        } else if (startheight == Consensus::VBitsDeployment::ALWAYS_ACTIVE) {
+            BOOST_CHECK_EQUAL(timeoutheight, Consensus::VBitsDeployment::NO_TIMEOUT);
         } else {
             BOOST_CHECK(startheight > 0);
             BOOST_CHECK(timeoutheight > 0);

@@ -1222,45 +1222,45 @@ static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name,
     softforks.pushKV(name, rv);
 }
 
-static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void VBitsSoftForkDescPushBack(UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
-    // For BIP9 deployments.
+    // For versionbits deployments.
     // Deployments (e.g. testdummy) which are marked as "never active" are hidden.
     // This is used when merging logic to implement a proposed softfork without a specified deployment schedule.
-    if (consensusParams.vDeployments[id].timeoutheight == Consensus::BIP9Deployment::NEVER_ACTIVE) return;
+    if (consensusParams.vDeployments[id].timeoutheight == Consensus::VBitsDeployment::NEVER_ACTIVE) return;
 
-    UniValue bip9(UniValue::VOBJ);
+    UniValue deployment_details(UniValue::VOBJ);
     const ThresholdState thresholdState = VersionBitsState(::ChainActive().Tip(), consensusParams, id, versionbitscache);
     switch (thresholdState) {
-    case ThresholdState::DEFINED: bip9.pushKV("status", "defined"); break;
-    case ThresholdState::STARTED: bip9.pushKV("status", "started"); break;
-    case ThresholdState::LOCKED_IN: bip9.pushKV("status", "locked_in"); break;
-    case ThresholdState::ACTIVE: bip9.pushKV("status", "active"); break;
-    case ThresholdState::FAILED: bip9.pushKV("status", "failed"); break;
+    case ThresholdState::DEFINED: deployment_details.pushKV("status", "defined"); break;
+    case ThresholdState::STARTED: deployment_details.pushKV("status", "started"); break;
+    case ThresholdState::LOCKED_IN: deployment_details.pushKV("status", "locked_in"); break;
+    case ThresholdState::ACTIVE: deployment_details.pushKV("status", "active"); break;
+    case ThresholdState::FAILED: deployment_details.pushKV("status", "failed"); break;
     }
     if (ThresholdState::STARTED == thresholdState)
     {
-        bip9.pushKV("bit", consensusParams.vDeployments[id].bit);
+        deployment_details.pushKV("bit", consensusParams.vDeployments[id].bit);
     }
-    bip9.pushKV("startheight", consensusParams.vDeployments[id].startheight);
-    bip9.pushKV("timeoutheight", consensusParams.vDeployments[id].timeoutheight);
+    deployment_details.pushKV("startheight", consensusParams.vDeployments[id].startheight);
+    deployment_details.pushKV("timeoutheight", consensusParams.vDeployments[id].timeoutheight);
     int64_t since_height = VersionBitsStateSinceHeight(::ChainActive().Tip(), consensusParams, id, versionbitscache);
-    bip9.pushKV("since", since_height);
+    deployment_details.pushKV("since", since_height);
     if (ThresholdState::STARTED == thresholdState)
     {
         UniValue statsUV(UniValue::VOBJ);
-        BIP9Stats statsStruct = VersionBitsStatistics(::ChainActive().Tip(), consensusParams, id);
+        VBitsStats statsStruct = VersionBitsStatistics(::ChainActive().Tip(), consensusParams, id);
         statsUV.pushKV("period", statsStruct.period);
         statsUV.pushKV("threshold", statsStruct.threshold);
         statsUV.pushKV("elapsed", statsStruct.elapsed);
         statsUV.pushKV("count", statsStruct.count);
         statsUV.pushKV("possible", statsStruct.possible);
-        bip9.pushKV("statistics", statsUV);
+        deployment_details.pushKV("statistics", statsUV);
     }
 
     UniValue rv(UniValue::VOBJ);
     rv.pushKV("type", "bip8");
-    rv.pushKV("bip8", bip9);
+    rv.pushKV("bip8", deployment_details);
     if (ThresholdState::ACTIVE == thresholdState) {
         rv.pushKV("height", since_height);
     }
@@ -1363,8 +1363,8 @@ RPCHelpMan getblockchaininfo()
     BuriedForkDescPushBack(softforks, "bip65", consensusParams.BIP65Height);
     BuriedForkDescPushBack(softforks, "csv", consensusParams.CSVHeight);
     BuriedForkDescPushBack(softforks, "segwit", consensusParams.SegwitHeight);
-    BIP9SoftForkDescPushBack(softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
-    BIP9SoftForkDescPushBack(softforks, "taproot", consensusParams, Consensus::DEPLOYMENT_TAPROOT);
+    VBitsSoftForkDescPushBack(softforks, "testdummy", consensusParams, Consensus::DEPLOYMENT_TESTDUMMY);
+    VBitsSoftForkDescPushBack(softforks, "taproot", consensusParams, Consensus::DEPLOYMENT_TAPROOT);
     obj.pushKV("softforks",             softforks);
 
     obj.pushKV("warnings", GetWarnings(false).original);
