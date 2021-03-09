@@ -239,7 +239,7 @@ void sanity_check_params(const Consensus::Params& params)
         // used for warning for unknown activations
         int threshold = params.vDeployments[i].threshold;
         BOOST_CHECK(threshold > 0);
-        BOOST_CHECK((uint32_t)threshold >= params.nRuleChangeActivationThreshold);
+        BOOST_CHECK((uint32_t)threshold >= params.m_vbits_min_threshold);
         BOOST_CHECK((uint32_t)threshold <= params.nMinerConfirmationWindow);
 
         uint32_t bitmask = VersionBitsMask(params, static_cast<Consensus::DeploymentPos>(i));
