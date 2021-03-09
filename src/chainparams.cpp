@@ -393,6 +393,7 @@ public:
             144, // startheight
             Consensus::VBitsDeployment::NO_TIMEOUT, // timeoutheight
             108, // threshold
+            consensus.nMinerConfirmationWindow, // period
             0 // min_activation_height
         ));
 
@@ -402,6 +403,7 @@ public:
             Consensus::VBitsDeployment::ALWAYS_ACTIVE, // startheight
             Consensus::VBitsDeployment::NO_TIMEOUT, // timeoutheight
             108, // threshold
+            consensus.nMinerConfirmationWindow, // period
             0 // min_activation_height
         ));
 
@@ -476,6 +478,7 @@ public:
             start_height, // startheight
             timeout_height, // timeoutheight
             original_dep.threshold, // threshold
+            original_dep.m_period, // period
             min_activation_height // min_activation_height
         ));
     }

@@ -32,6 +32,7 @@ private:
     mutable ThresholdConditionCache cache;
     static constexpr int BIT = 8;
     static constexpr int THRESHOLD = 9;
+    static constexpr int PERIOD = 10;
     static constexpr int DEFAULT_START = 100;
     static constexpr int DEFAULT_TIMEOUT = 200;
 
@@ -39,11 +40,11 @@ protected:
     Consensus::VBitsDeployment m_dep_storage;
 
 public:
-    TestConditionChecker() : ThresholdConditionChecker(m_dep_storage, 10), m_dep_storage(BIT, DEFAULT_START, DEFAULT_TIMEOUT, THRESHOLD)
+    TestConditionChecker() : ThresholdConditionChecker(m_dep_storage), m_dep_storage(BIT, DEFAULT_START, DEFAULT_TIMEOUT, THRESHOLD, PERIOD)
     {}
-    TestConditionChecker(int min_activation_height) : ThresholdConditionChecker(m_dep_storage, 10), m_dep_storage(BIT, DEFAULT_START, DEFAULT_TIMEOUT, THRESHOLD, min_activation_height)
+    TestConditionChecker(int min_activation_height) : ThresholdConditionChecker(m_dep_storage), m_dep_storage(BIT, DEFAULT_START, DEFAULT_TIMEOUT, THRESHOLD, PERIOD, min_activation_height)
     {}
-    TestConditionChecker(int start_height, int timeout_height) : ThresholdConditionChecker(m_dep_storage, 10), m_dep_storage(BIT, start_height, timeout_height, THRESHOLD)
+    TestConditionChecker(int start_height, int timeout_height) : ThresholdConditionChecker(m_dep_storage), m_dep_storage(BIT, start_height, timeout_height, THRESHOLD, PERIOD)
     {}
 
     bool Condition(const CBlockIndex* pindex) const override { return (pindex->nVersion & 0x100); }
@@ -51,7 +52,7 @@ public:
     ThresholdState GetStateFor(const CBlockIndex* pindexPrev) const { return ThresholdConditionChecker::GetStateFor(pindexPrev, cache); }
     int GetStateSinceHeightFor(const CBlockIndex* pindexPrev) const { return ThresholdConditionChecker::GetStateSinceHeightFor(pindexPrev, cache); }
 
-    int Period() const { return m_period; }
+    int Period() const { return m_dep_storage.m_period; }
 
     void Clear() { cache.clear(); }
 };
@@ -253,9 +254,13 @@ void sanity_check_params(const Consensus::Params& params)
         // Verify the threshold is sane and isn't lower than the threshold
         // used for warning for unknown activations
         int threshold = dep.threshold;
+        int period = dep.m_period;
         BOOST_CHECK(threshold > 0);
         BOOST_CHECK((uint32_t)threshold >= params.m_vbits_min_threshold);
-        BOOST_CHECK((uint32_t)threshold <= params.nMinerConfirmationWindow);
+        BOOST_CHECK(threshold <= period);
+
+        // Verify that the period is the same as the retarget window
+        BOOST_CHECK((uint32_t)period == params.nMinerConfirmationWindow);
 
         uint32_t bitmask = VersionBitsMask(params, dep_pos);
         // Make sure that no deployment tries to set an invalid bit.

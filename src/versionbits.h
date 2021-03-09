@@ -55,10 +55,9 @@ struct VBitsStats {
 class ThresholdConditionChecker {
 protected:
     const Consensus::VBitsDeployment& m_dep;
-    const int m_period;
 
 public:
-    ThresholdConditionChecker(const Consensus::VBitsDeployment& dep, int period) : m_dep{dep}, m_period{period} { }
+    ThresholdConditionChecker(const Consensus::VBitsDeployment& dep) : m_dep{dep} { }
 
     /** Returns whether a block signals or not */
     virtual bool Condition(const CBlockIndex* pindex) const;

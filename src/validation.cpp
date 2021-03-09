@@ -1839,8 +1839,8 @@ private:
 
 public:
     explicit WarningBitsConditionChecker(const Consensus::Params& params, int bitIn) :
-        ThresholdConditionChecker(m_dep_storage, params.nMinerConfirmationWindow),
-        m_dep_storage(bitIn, 0, Consensus::VBitsDeployment::NO_TIMEOUT, params.m_vbits_min_threshold),
+        ThresholdConditionChecker(m_dep_storage),
+        m_dep_storage(bitIn, 0, Consensus::VBitsDeployment::NO_TIMEOUT, params.m_vbits_min_threshold, params.nMinerConfirmationWindow),
         m_min_height{params.MinBIP9WarningHeight},
         m_params{params}
     {}

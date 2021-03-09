@@ -25,20 +25,20 @@ enum DeploymentPos
 struct VBitsDeployment {
 
     /** Construct a VBitsDeployment with all paramters */
-    VBitsDeployment(int bit, int startheight, int timeoutheight, int threshold, int64_t min_activation_height)
-        : bit(bit), startheight(startheight), timeoutheight(timeoutheight), threshold(threshold), m_min_activation_height(min_activation_height)
+    VBitsDeployment(int bit, int startheight, int timeoutheight, int threshold, int period, int64_t min_activation_height)
+        : bit(bit), startheight(startheight), timeoutheight(timeoutheight), threshold(threshold), m_period(period), m_min_activation_height(min_activation_height)
         {}
 
     /** Construct a standard VBitsDeployment (i.e. without a minimum activation height) */
-    VBitsDeployment(int bit, int startheight, int timeoutheight, int threshold)
-        : bit(bit), startheight(startheight), timeoutheight(timeoutheight), threshold(threshold), m_min_activation_height(0)
+    VBitsDeployment(int bit, int startheight, int timeoutheight, int threshold, int period)
+        : bit(bit), startheight(startheight), timeoutheight(timeoutheight), threshold(threshold), m_period(period), m_min_activation_height(0)
         {}
 
     /** Construct a VBitsDeployment that is either always active or never active. Used for tests
      * For always active, use "active=true". For never active, use "active=false"
      */
     VBitsDeployment(int bit, bool active)
-        : bit(bit), startheight(active ? ALWAYS_ACTIVE : NEVER_ACTIVE), timeoutheight(active ? NO_TIMEOUT : NEVER_ACTIVE), threshold(1916), m_min_activation_height(0)
+        : bit(bit), startheight(active ? ALWAYS_ACTIVE : NEVER_ACTIVE), timeoutheight(active ? NO_TIMEOUT : NEVER_ACTIVE), threshold(1916), m_period(2016), m_min_activation_height(0)
         {}
 
     /** Bit position to select the particular bit in nVersion. */
@@ -49,6 +49,8 @@ struct VBitsDeployment {
     const int timeoutheight;
     /** Threshold for activation */
     const int threshold;
+    /** The number of blocks in a single period for measuring the number of signaling blocks. Must be the same number of blocks in a retarget period */
+    const int m_period;
     /**
      * If lock in occurs, delay activation until at least this block height. Activations only occur on retargets.
      */

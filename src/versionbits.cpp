@@ -7,7 +7,7 @@
 
 ThresholdState ThresholdConditionChecker::GetStateFor(const CBlockIndex* pindexPrev, ThresholdConditionCache& cache) const
 {
-    int nPeriod = m_period;
+    int nPeriod = m_dep.m_period;
     int nThreshold = m_dep.threshold;
     int64_t height_start = m_dep.startheight;
     int64_t height_timeout = m_dep.timeoutheight;
@@ -109,7 +109,7 @@ VBitsStats ThresholdConditionChecker::GetStateStatisticsFor(const CBlockIndex* p
 {
     VBitsStats stats = {};
 
-    stats.period = m_period;
+    stats.period = m_dep.m_period;
     stats.threshold = m_dep.threshold;
 
     // We track state by previous-block, so the height we should be comparing is +1
@@ -155,7 +155,7 @@ int ThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex* pindexP
         return 0;
     }
 
-    const int nPeriod = m_period;
+    const int nPeriod = m_dep.m_period;
 
     // A block's state is always the same as that of the first of its period, so it is computed based on a pindexPrev whose height equals a multiple of nPeriod - 1.
     // To ease understanding of the following height calculation, it helps to remember that
@@ -187,7 +187,7 @@ namespace {
  */
 class VersionBitsConditionChecker : public ThresholdConditionChecker {
 public:
-    explicit VersionBitsConditionChecker(const Consensus::Params& params, Consensus::DeploymentPos id) : ThresholdConditionChecker(params.m_deployments.at(id), params.nMinerConfirmationWindow) { }
+    explicit VersionBitsConditionChecker(const Consensus::Params& params, Consensus::DeploymentPos id) : ThresholdConditionChecker(params.m_deployments.at(id)) { }
 };
 } // namespace
 
