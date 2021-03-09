@@ -111,9 +111,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   dnl For Qt5, we can check a header to find out whether Qt is build
   dnl statically. When Qt is built statically, some plugins must be linked into
   dnl the final binary as well.
-  dnl With Qt5, languages moved into core and the WindowsIntegration plugin was
-  dnl added.
-  dnl _BITCOIN_QT_CHECK_STATIC_PLUGINS does a quick link-check and appends the
+  dnl _BITCOIN_QT_CHECK_STATIC_PLUGIN does a quick link-check and appends the
   dnl results to QT_LIBS.
   BITCOIN_QT_CHECK([
   TEMP_CPPFLAGS=$CPPFLAGS
@@ -122,20 +120,31 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   CXXFLAGS="$PIC_FLAGS $CXXFLAGS"
   _BITCOIN_QT_IS_STATIC
   if test "x$bitcoin_cv_static_qt" = xyes; then
-    _BITCOIN_QT_FIND_STATIC_PLUGINS
+    _BITCOIN_QT_CHECK_STATIC_LIBS
+
+    if test "x$qt_plugin_path" != x; then
+      QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms"
+      if test -d "$qt_plugin_path/accessible"; then
+        QT_LIBS="$QT_LIBS -L$qt_plugin_path/accessible"
+      fi
+      if test -d "$qt_plugin_path/platforms/android"; then
+        QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms/android -lqtfreetype -lEGL"
+      fi
+    fi
+
     AC_DEFINE(QT_STATICPLUGIN, 1, [Define this symbol if qt plugins are static])
     if test "x$TARGET_OS" != xandroid; then
-      _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QMinimalIntegrationPlugin)],[-lqminimal])
+      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QMinimalIntegrationPlugin], [-lqminimal])
       AC_DEFINE(QT_QPA_PLATFORM_MINIMAL, 1, [Define this symbol if the minimal qt platform exists])
     fi
     if test "x$TARGET_OS" = xwindows; then
-      _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)],[-lqwindows])
+      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QWindowsIntegrationPlugin], [-lqwindows])
       AC_DEFINE(QT_QPA_PLATFORM_WINDOWS, 1, [Define this symbol if the qt platform is windows])
     elif test "x$TARGET_OS" = xlinux; then
-      _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QXcbIntegrationPlugin)],[-lqxcb -lxcb-static])
+      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QXcbIntegrationPlugin], [-lqxcb -lxcb-static])
       AC_DEFINE(QT_QPA_PLATFORM_XCB, 1, [Define this symbol if the qt platform is xcb])
     elif test "x$TARGET_OS" = xdarwin; then
-      _BITCOIN_QT_CHECK_STATIC_PLUGINS([Q_IMPORT_PLUGIN(QCocoaIntegrationPlugin)],[-lqcocoa])
+      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QCocoaIntegrationPlugin], [-lqcocoa])
       AC_DEFINE(QT_QPA_PLATFORM_COCOA, 1, [Define this symbol if the qt platform is cocoa])
     elif test "x$TARGET_OS" = xandroid; then
       QT_LIBS="-Wl,--export-dynamic,--undefined=JNI_OnLoad -lqtforandroid -ljnigraphics -landroid -lqtfreetype -lQt5EglSupport $QT_LIBS"
@@ -284,51 +293,46 @@ AC_DEFUN([_BITCOIN_QT_IS_STATIC],[
     ])
 ])
 
-dnl Internal. Check if the link-requirements for static plugins are met.
+dnl Internal. Check if the link-requirements for a static plugin are met.
+dnl
+dnl _BITCOIN_QT_CHECK_STATIC_PLUGIN(PLUGIN, LIBRARIES)
+dnl --------------------------------------------------
+dnl
 dnl Requires: INCLUDES and LIBS must be populated as necessary.
-dnl Inputs: $1: A series of Q_IMPORT_PLUGIN().
+dnl Inputs: $1: A static plugin name.
 dnl Inputs: $2: The libraries that resolve $1.
 dnl Output: QT_LIBS is prepended or configure exits.
-AC_DEFUN([_BITCOIN_QT_CHECK_STATIC_PLUGINS],[
-  AC_MSG_CHECKING(for static Qt plugins: $2)
+AC_DEFUN([_BITCOIN_QT_CHECK_STATIC_PLUGIN], [
+  AC_MSG_CHECKING([for $1 ($2)])
   CHECK_STATIC_PLUGINS_TEMP_LIBS="$LIBS"
   LIBS="$2${qt_lib_suffix} $QT_LIBS $LIBS"
-  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
-    #define QT_STATICPLUGIN
-    #include <QtPlugin>
-    $1]],
-    [[return 0;]])],
-    [AC_MSG_RESULT(yes); QT_LIBS="$2${qt_lib_suffix} $QT_LIBS"],
-    [AC_MSG_RESULT(no); BITCOIN_QT_FAIL(Could not resolve: $2)])
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <QtPlugin> Q_IMPORT_PLUGIN($1)]])],
+    [AC_MSG_RESULT([yes]); QT_LIBS="$2${qt_lib_suffix} $QT_LIBS"],
+    [AC_MSG_RESULT([no]); BITCOIN_QT_FAIL([$1 not found.])])
   LIBS="$CHECK_STATIC_PLUGINS_TEMP_LIBS"
 ])
 
-dnl Internal. Find paths necessary for linking qt static plugins
-dnl Inputs: qt_plugin_path. optional.
-dnl Outputs: QT_LIBS is appended
-AC_DEFUN([_BITCOIN_QT_FIND_STATIC_PLUGINS],[
-    if test "x$qt_plugin_path" != x; then
-      QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms"
-      if test -d "$qt_plugin_path/accessible"; then
-        QT_LIBS="$QT_LIBS -L$qt_plugin_path/accessible"
-      fi
-      if test -d "$qt_plugin_path/platforms/android"; then
-        QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms/android -lqtfreetype -lEGL"
-      fi
-      PKG_CHECK_MODULES([QTFONTDATABASE], [Qt5FontDatabaseSupport${qt_lib_suffix}], [QT_LIBS="-lQt5FontDatabaseSupport${qt_lib_suffix} $QT_LIBS"])
-      PKG_CHECK_MODULES([QTEVENTDISPATCHER], [Qt5EventDispatcherSupport${qt_lib_suffix}], [QT_LIBS="-lQt5EventDispatcherSupport${qt_lib_suffix} $QT_LIBS"])
-      PKG_CHECK_MODULES([QTTHEME], [Qt5ThemeSupport${qt_lib_suffix}], [QT_LIBS="-lQt5ThemeSupport${qt_lib_suffix} $QT_LIBS"])
-      PKG_CHECK_MODULES([QTDEVICEDISCOVERY], [Qt5DeviceDiscoverySupport${qt_lib_suffix}], [QT_LIBS="-lQt5DeviceDiscoverySupport${qt_lib_suffix} $QT_LIBS"])
-      PKG_CHECK_MODULES([QTACCESSIBILITY], [Qt5AccessibilitySupport${qt_lib_suffix}], [QT_LIBS="-lQt5AccessibilitySupport${qt_lib_suffix} $QT_LIBS"])
-      PKG_CHECK_MODULES([QTFB], [Qt5FbSupport${qt_lib_suffix}], [QT_LIBS="-lQt5FbSupport${qt_lib_suffix} $QT_LIBS"])
-      if test "x$TARGET_OS" = xlinux; then
-        PKG_CHECK_MODULES([QTXCBQPA], [Qt5XcbQpa], [QT_LIBS="$QTXCBQPA_LIBS $QT_LIBS"])
-      elif test "x$TARGET_OS" = xdarwin; then
-        PKG_CHECK_MODULES([QTCLIPBOARD], [Qt5ClipboardSupport${qt_lib_suffix}], [QT_LIBS="-lQt5ClipboardSupport${qt_lib_suffix} $QT_LIBS"])
-        PKG_CHECK_MODULES([QTGRAPHICS], [Qt5GraphicsSupport${qt_lib_suffix}], [QT_LIBS="-lQt5GraphicsSupport${qt_lib_suffix} $QT_LIBS"])
-        PKG_CHECK_MODULES([QTCGL], [Qt5CglSupport${qt_lib_suffix}], [QT_LIBS="-lQt5CglSupport${qt_lib_suffix} $QT_LIBS"])
-      fi
-    fi
+dnl Internal. Check Qt static libs with PKG_CHECK_MODULES.
+dnl
+dnl _BITCOIN_QT_CHECK_STATIC_LIBS
+dnl -----------------------------
+dnl
+dnl Inputs: no inputs.
+dnl Outputs: QT_LIBS is prepended.
+AC_DEFUN([_BITCOIN_QT_CHECK_STATIC_LIBS], [
+  PKG_CHECK_MODULES([QTFONTDATABASE], [Qt5FontDatabaseSupport${qt_lib_suffix}], [QT_LIBS="-lQt5FontDatabaseSupport${qt_lib_suffix} $QT_LIBS"])
+  PKG_CHECK_MODULES([QTEVENTDISPATCHER], [Qt5EventDispatcherSupport${qt_lib_suffix}], [QT_LIBS="-lQt5EventDispatcherSupport${qt_lib_suffix} $QT_LIBS"])
+  PKG_CHECK_MODULES([QTTHEME], [Qt5ThemeSupport${qt_lib_suffix}], [QT_LIBS="-lQt5ThemeSupport${qt_lib_suffix} $QT_LIBS"])
+  PKG_CHECK_MODULES([QTDEVICEDISCOVERY], [Qt5DeviceDiscoverySupport${qt_lib_suffix}], [QT_LIBS="-lQt5DeviceDiscoverySupport${qt_lib_suffix} $QT_LIBS"])
+  PKG_CHECK_MODULES([QTACCESSIBILITY], [Qt5AccessibilitySupport${qt_lib_suffix}], [QT_LIBS="-lQt5AccessibilitySupport${qt_lib_suffix} $QT_LIBS"])
+  PKG_CHECK_MODULES([QTFB], [Qt5FbSupport${qt_lib_suffix}], [QT_LIBS="-lQt5FbSupport${qt_lib_suffix} $QT_LIBS"])
+  if test "x$TARGET_OS" = xlinux; then
+    PKG_CHECK_MODULES([QTXCBQPA], [Qt5XcbQpa], [QT_LIBS="$QTXCBQPA_LIBS $QT_LIBS"])
+  elif test "x$TARGET_OS" = xdarwin; then
+    PKG_CHECK_MODULES([QTCLIPBOARD], [Qt5ClipboardSupport${qt_lib_suffix}], [QT_LIBS="-lQt5ClipboardSupport${qt_lib_suffix} $QT_LIBS"])
+    PKG_CHECK_MODULES([QTGRAPHICS], [Qt5GraphicsSupport${qt_lib_suffix}], [QT_LIBS="-lQt5GraphicsSupport${qt_lib_suffix} $QT_LIBS"])
+    PKG_CHECK_MODULES([QTCGL], [Qt5CglSupport${qt_lib_suffix}], [QT_LIBS="-lQt5CglSupport${qt_lib_suffix} $QT_LIBS"])
+  fi
 ])
 
 dnl Internal. Find Qt libraries using pkg-config.
