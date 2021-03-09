@@ -1840,7 +1840,7 @@ public:
     int StartHeight(const Consensus::Params& params) const override { return 0; }
     int TimeoutHeight(const Consensus::Params& params) const override { return std::numeric_limits<int>::max(); }
     int Period(const Consensus::Params& params) const override { return params.nMinerConfirmationWindow; }
-    int Threshold(const Consensus::Params& params) const override { return params.nRuleChangeActivationThreshold; }
+    int Threshold(const Consensus::Params& params) const override { return params.m_vbits_min_threshold; }
     int MinActivationHeight(const Consensus::Params& params) const override { return 0; }
 
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override
