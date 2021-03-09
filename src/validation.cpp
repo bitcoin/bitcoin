@@ -1845,7 +1845,7 @@ public:
         m_dep_storage.bit = bitIn;
         m_dep_storage.startheight = 0;
         m_dep_storage.timeoutheight = Consensus::VBitsDeployment::NO_TIMEOUT;
-        m_dep_storage.threshold = params.nRuleChangeActivationThreshold;
+        m_dep_storage.threshold = params.m_vbits_min_threshold;
     }
 
     bool Condition(const CBlockIndex* pindex) const override
