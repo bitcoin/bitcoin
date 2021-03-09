@@ -17,7 +17,7 @@ static const int32_t VERSIONBITS_TOP_MASK = 0xE0000000UL;
 /** Total bits available for versionbits */
 static const int32_t VERSIONBITS_NUM_BITS = 29;
 
-/** BIP 9 defines a finite-state-machine to deploy a softfork in multiple stages.
+/** Versionbits defines a finite-state-machine to deploy a softfork in multiple stages.
  *  State transitions happen during retarget period if conditions are met
  *  In case of reorg, transitions can go backward. Without transition, state is
  *  inherited between periods. All blocks of a period share the same state.
@@ -71,7 +71,7 @@ public:
     int GetStateSinceHeightFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const;
 };
 
-/** BIP 9 allows multiple softforks to be deployed in parallel. We cache per-period state for every one of them
+/** Versionbits allows multiple softforks to be deployed in parallel. We cache per-period state for every one of them
  *  keyed by the bit position used to signal support. */
 struct VersionBitsCache
 {
