@@ -108,33 +108,32 @@ Full configure that was tested on macOS Catalina with `brew` installed `llvm`:
 
 Read the [libFuzzer documentation](https://llvm.org/docs/LibFuzzer.html) for more information. This [libFuzzer tutorial](https://github.com/google/fuzzing/blob/master/tutorial/libFuzzerTutorial.md) might also be of interest.
 
-# Fuzzing Bitcoin Core using american fuzzy lop (`afl-fuzz`)
+# Fuzzing Bitcoin Core using afl++
 
 ## Quickstart guide
 
-To quickly get started fuzzing Bitcoin Core using [`afl-fuzz`](https://github.com/google/afl):
+To quickly get started fuzzing Bitcoin Core using [afl++](https://github.com/AFLplusplus/AFLplusplus):
 
 ```sh
 $ git clone https://github.com/bitcoin/bitcoin
 $ cd bitcoin/
-$ git clone https://github.com/google/afl
-$ make -C afl/
-$ make -C afl/llvm_mode/
+$ git clone https://github.com/AFLplusplus/AFLplusplus
+$ make -C AFLplusplus/ source-only
 $ ./autogen.sh
-# It is possible to compile with afl-gcc and afl-g++ instead of afl-clang. However, running afl-fuzz
-# may require more memory via the -m flag.
-$ CC=$(pwd)/afl/afl-clang-fast CXX=$(pwd)/afl/afl-clang-fast++ ./configure --enable-fuzz
+# If afl-clang-lto is not available, see
+# https://github.com/AFLplusplus/AFLplusplus#a-selecting-the-best-afl-compiler-for-instrumenting-the-target
+$ CC=$(pwd)/AFLplusplus/afl-clang-lto CXX=$(pwd)/AFLplusplus/afl-clang-lto++ ./configure --enable-fuzz
 $ make
 # For macOS you may need to ignore x86 compilation checks when running "make". If so,
 # try compiling using: AFL_NO_X86=1 make
 $ mkdir -p inputs/ outputs/
 $ echo A > inputs/thin-air-input
-$ FUZZ=bech32 afl/afl-fuzz -i inputs/ -o outputs/ -- src/test/fuzz/fuzz
+$ FUZZ=bech32 AFLplusplus/afl-fuzz -i inputs/ -o outputs/ -- src/test/fuzz/fuzz
 # You may have to change a few kernel parameters to test optimally - afl-fuzz
 # will print an error and suggestion if so.
 ```
 
-Read the [`afl-fuzz` documentation](https://github.com/google/afl) for more information.
+Read the [afl++ documentation](https://github.com/AFLplusplus/AFLplusplus) for more information.
 
 # Fuzzing Bitcoin Core using Honggfuzz
 
