@@ -99,7 +99,7 @@ public:
     explicit CDKGComplaint(const Consensus::LLMQParams& params);
 
     SERIALIZE_METHODS(CDKGComplaint, obj) {
-            READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash, DYNBITSET(obj.badMembers), DYNBITSET(obj.complainForMembers), obj.sig);
+        READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash, DYNBITSET(obj.badMembers), DYNBITSET(obj.complainForMembers), obj.sig);
     }
 
     uint256 GetSignHash() const

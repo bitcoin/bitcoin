@@ -26,10 +26,14 @@ public:
     int32_t nHeight{-1};
     uint256 blockHash;
     CBLSSignature sig;
+    std::vector<bool> signers;
 
 public:
     SERIALIZE_METHODS(CChainLockSig, obj) {
         READWRITE(obj.nHeight, obj.blockHash, obj.sig);
+        if (!(s.GetType() & SER_GETHASH)) {
+            READWRITE(DYNBITSET(obj.signers));
+        }
     }
 
     bool IsNull() const;
@@ -56,13 +60,15 @@ private:
     bool isEnabled{false};
     bool isEnforced{false};
 
-    CChainLockSig mostRecentChainLockCandidate;
-    // Keep best chainlock candidates, sorted by height (highest heght first).
-    std::map<int, std::map<CQuorumCPtr, CChainLockSigCPtr>, ReverseHeightComparator> bestChainLockCandidates;
+    CChainLockSig mostRecentChainLockShare;
+    CChainLockSig bestChainLockWithKnownBlock;
+    // Keep best chainlock shares and candidates, sorted by height (highest heght first).
+    std::map<int, std::map<CQuorumCPtr, CChainLockSigCPtr>, ReverseHeightComparator> bestChainLockShares;
+    std::map<int, CChainLockSigCPtr, ReverseHeightComparator> bestChainLockCandidates;
 
     const CBlockIndex* bestChainLockBlockIndex{nullptr};
 
-    int32_t lastTrySignHeight{-1};
+    int32_t lastSignedHeight{-1};
     std::set<uint256> lastSignedRequestIds;
     uint256 lastSignedMsgHash;
 
@@ -81,11 +87,12 @@ public:
 
     bool AlreadyHave(const uint256& hash);
     bool GetChainLockByHash(const uint256& hash, CChainLockSig& ret);
-    CChainLockSig GetMostRecentChainLock();
-    const std::map<CQuorumCPtr, CChainLockSigCPtr> GetBestChainLocks();
+    const CChainLockSig GetMostRecentChainLock();
+    const CChainLockSig GetBestChainLock();
+    const std::map<CQuorumCPtr, CChainLockSigCPtr> GetBestChainLockShares();
 
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv);
-    void ProcessNewChainLock(NodeId from, const CChainLockSig& clsig, const uint256& hash, const uint256& id=uint256());
+    void ProcessNewChainLock(NodeId from, CChainLockSig& clsig, const uint256& hash, const uint256& idIn = uint256());
     void AcceptedBlockHeader(const CBlockIndex* pindexNew);
     void UpdatedBlockTip(const CBlockIndex* pindexNew, bool fInitialDownload);
     void CheckActiveState();
@@ -101,7 +108,9 @@ private:
     bool InternalHasChainLock(int nHeight, const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(cs);
     bool InternalHasConflictingChainLock(int nHeight, const uint256& blockHash) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    void TryUpdateBestChainLockIndex(const CBlockIndex* pindex, size_t threshold) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool TryUpdateBestChainLock(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    bool VerifyChainLockShare(const CChainLockSig& clsig, const CBlockIndex* pindexScan, const uint256& idIn, std::pair<int, CQuorumCPtr>& ret) LOCKS_EXCLUDED(cs);
+    bool VerifyAggregatedChainLock(const CChainLockSig& clsig, const CBlockIndex* pindexScan) LOCKS_EXCLUDED(cs);
     void Cleanup();
 };
 

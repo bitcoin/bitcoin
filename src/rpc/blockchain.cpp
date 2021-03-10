@@ -298,7 +298,8 @@ static RPCHelpMan getchainlocks()
     ChainstateManager& chainman = EnsureChainman(request.context);
     UniValue result(UniValue::VOBJ);
     UniValue recentChainlock(UniValue::VOBJ);
-    UniValue bestChainlock(UniValue::VOBJ);
+    UniValue activeChainlock(UniValue::VOBJ);
+    UniValue activeChainlockShares(UniValue::VARR);
 
     llmq::CChainLockSig clsig = llmq::chainLocksHandler->GetMostRecentChainLock();
     if (clsig.IsNull()) {
@@ -308,28 +309,41 @@ static RPCHelpMan getchainlocks()
     recentChainlock.pushKV("height", clsig.nHeight);
     recentChainlock.pushKV("signature", clsig.sig.ToString());
 
-    LOCK(cs_main);
-    recentChainlock.pushKV("known_block", chainman.BlockIndex().count(clsig.blockHash) > 0);
+    {
+        LOCK(cs_main);
+        recentChainlock.pushKV("known_block", chainman.BlockIndex().count(clsig.blockHash) > 0);
+    }
     result.pushKV("recent_chainlock", recentChainlock);
 
+    clsig = llmq::chainLocksHandler->GetBestChainLock();
 
-    const auto& clsigs = llmq::chainLocksHandler->GetBestChainLocks();
-    if (clsigs.empty()) {
-        result.pushKV("active_chainlock", bestChainlock);
+    if (clsig.IsNull()) {
+        activeChainlock.pushKV("shares", activeChainlockShares);
+        result.pushKV("active_chainlock", activeChainlock);
         return result;
     }
 
-    UniValue lockedBlockSigs(UniValue::VARR);
-    bestChainlock.pushKV("blockhash", clsigs.begin()->second->blockHash.GetHex());
-    bestChainlock.pushKV("height", clsigs.begin()->second->nHeight);
-    for (const auto& clsig_pair : clsigs) {
-        UniValue sig(UniValue::VOBJ);
-        sig.pushKV("quorumHash", clsig_pair.first->qc.quorumHash.GetHex());
-        sig.pushKV("signature", clsig_pair.second->sig.ToString());
-        lockedBlockSigs.push_back(sig);
+    activeChainlock.pushKV("blockhash", clsig.blockHash.GetHex());
+    activeChainlock.pushKV("height", clsig.nHeight);
+    activeChainlock.pushKV("signers", llmq::CLLMQUtils::ToHexStr(clsig.signers));
+    activeChainlock.pushKV("signature", clsig.sig.ToString());
+
+    const auto& clsigsShares = llmq::chainLocksHandler->GetBestChainLockShares();
+    if (clsigsShares.empty()) {
+        activeChainlock.pushKV("shares", activeChainlockShares);
+        result.pushKV("active_chainlock", activeChainlock);
+        return result;
     }
-    bestChainlock.pushKV("signatures", lockedBlockSigs);
-    result.pushKV("active_chainlock", bestChainlock);
+
+    for (const auto& pair : clsigsShares) {
+        UniValue sig(UniValue::VOBJ);
+        sig.pushKV("quorumHash", pair.first->qc.quorumHash.GetHex());
+        sig.pushKV("signers", llmq::CLLMQUtils::ToHexStr(pair.second->signers));
+        sig.pushKV("signature", pair.second->sig.ToString());
+        activeChainlockShares.push_back(sig);
+    }
+    activeChainlock.pushKV("shares", activeChainlockShares);
+    result.pushKV("active_chainlock", activeChainlock);
     return result;
 },
     };

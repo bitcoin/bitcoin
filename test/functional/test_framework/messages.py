@@ -2009,11 +2009,13 @@ class msg_clsig():
         self.blockHash = deser_uint256(f)
         self.sig = f.read(96)
 
+
     def serialize(self):
         r = b""
         r += struct.pack('<i', self.height)
         r += ser_uint256(self.blockHash)
         r += self.sig
+        r += struct.pack("<I", 0)
         return r
 
     def __repr__(self):
