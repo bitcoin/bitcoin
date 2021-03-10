@@ -329,6 +329,8 @@ A review can be a conceptual review, where the reviewer leaves a comment
    request",
  * `Approach (N)ACK`, meaning `Concept ACK`, but "I do (not) agree with the
    approach of this change".
+ * `NACK commit_id`, meaning `Concept ACK`, but "I do not agree with the
+   specific commit of this change".
 
 A `NACK` needs to include a rationale why the change is not worthwhile.
 NACKs without accompanying reasoning may be disregarded.
