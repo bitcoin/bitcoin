@@ -701,8 +701,6 @@ namespace {
  * and we're no longer holding the node's locks.
  */
 struct CNodeState {
-    //! The peer's address
-    const CService address;
     //! The best known block we know this peer has announced.
     const CBlockIndex *pindexBestKnownBlock;
     //! The hash of the last unknown block this peer has announced.
@@ -849,8 +847,8 @@ struct CNodeState {
     //! A rolling bloom filter of all announced tx CInvs to this peer.
     CRollingBloomFilter m_recently_announced_invs = CRollingBloomFilter{INVENTORY_MAX_RECENT_RELAY, 0.000001};
 
-    CNodeState(CAddress addrIn, bool is_inbound) :
-        address(addrIn), m_is_inbound(is_inbound)
+    CNodeState(bool is_inbound) :
+        m_is_inbound(is_inbound)
     {
         pindexBestKnownBlock = nullptr;
         hashLastUnknownBlock.SetNull();
@@ -1352,11 +1350,10 @@ void UpdateLastBlockAnnounceTime(NodeId node, int64_t time_in_seconds)
 }
 
 void PeerManagerImpl::InitializeNode(CNode *pnode) {
-    CAddress addr = pnode->addr;
     NodeId nodeid = pnode->GetId();
     {
         LOCK(cs_main);
-        mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(addr, pnode->IsInboundConn()));
+        mapNodeState.emplace_hint(mapNodeState.end(), std::piecewise_construct, std::forward_as_tuple(nodeid), std::forward_as_tuple(pnode->IsInboundConn()));
     }
     {
         PeerRef peer = std::make_shared<Peer>(nodeid);
