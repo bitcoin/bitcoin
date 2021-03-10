@@ -75,6 +75,13 @@ public:
 
   CAuxPow () = default;
 
+  CAuxPow (CAuxPow&&) = default;
+  CAuxPow& operator= (CAuxPow&&) = default;
+
+  CAuxPow (const CAuxPow&) = delete;
+  void operator= (const CAuxPow&) = delete;
+
+
   SERIALIZE_METHODS(CAuxPow, obj)
   {
     /* The coinbase Merkle tx' hashBlock field is never actually verified

@@ -123,8 +123,8 @@ CAuxPow::check (const uint256& hashAuxBlock, int nChainId,
 }
 
 int
-CAuxPow::getExpectedIndex (const uint32_t nNonce, const int nChainId,
-                           const unsigned h)
+CAuxPow::getExpectedIndex (const uint32_t &nNonce, const int &nChainId,
+                           const unsigned &h)
 {
   // Choose a pseudo-random slot in the chain merkle tree
   // but have it be fixed for a size/nonce/chain combination.
