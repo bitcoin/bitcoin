@@ -33,7 +33,7 @@ SYSCOIN_INCLUDES += $(LIBCURL_CFLAGS)
 
 
 if EMBEDDED_CHIABLS
-LIBCHIA = chiabls/build/libbls.a
+LIBCHIA = chiabls/build/libchiabls.a
 LIBCHIABLS =$(LIBCURL_LIBS) $(LIBCHIA) -lgmp
 $(LIBCHIA):
 	cd $(srcdir)/chiabls/build && $(MAKE) $(AM_MAKEFLAGS)

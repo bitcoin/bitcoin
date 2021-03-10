@@ -13,16 +13,13 @@
 #undef ERROR // chia BLS uses relic, which defines ERROR, which in turn causes win32/win64 builds to print many warnings
 #include <chiabls/src/bls.hpp>
 #include <chiabls/src/privatekey.hpp>
-#include <chiabls/src/elements.hpp>
-#include <chiabls/src/schemes.hpp>
-#include <chiabls/src/threshold.hpp>
+#include <chiabls/src/publickey.hpp>
+#include <chiabls/src/signature.hpp>
 #undef DOUBLE
 
 #include <array>
 #include <sync.h>
 #include <unistd.h>
-
-static const bool fLegacyDefault{false};
 
 // reversed BLS12-381
 #define BLS_CURVE_ID_SIZE 32
@@ -40,8 +37,6 @@ class CBLSWrapper
     friend class CBLSPublicKey;
     friend class CBLSSignature;
 
-    bool fLegacy;
-
 protected:
     ImplType impl;
     bool fValid{false};
@@ -52,10 +47,10 @@ protected:
 public:
     static const size_t SerSize = _SerSize;
 
-    CBLSWrapper(const bool fLegacyIn = fLegacyDefault) : fLegacy(fLegacyIn)
+    CBLSWrapper()
     {
     }
-    CBLSWrapper(const std::vector<unsigned char>& vecBytes, const bool fLegacyIn = fLegacyDefault) : CBLSWrapper<ImplType, _SerSize, C>(fLegacyIn)
+    CBLSWrapper(const std::vector<unsigned char>& vecBytes) : CBLSWrapper<ImplType, _SerSize, C>()
     {
         SetByteVector(vecBytes);
     }
@@ -68,14 +63,12 @@ public:
         std::swap(impl, ref.impl);
         std::swap(fValid, ref.fValid);
         std::swap(cachedHash, ref.cachedHash);
-        std::swap(fLegacy, ref.fLegacy);
     }
     CBLSWrapper& operator=(CBLSWrapper&& ref)
     {
         std::swap(impl, ref.impl);
         std::swap(fValid, ref.fValid);
         std::swap(cachedHash, ref.cachedHash);
-        std::swap(fLegacy, ref.fLegacy);
         return *this;
     }
 
@@ -95,7 +88,7 @@ public:
 
     void Reset()
     {
-        *((C*)this) = C(fLegacy);
+        *((C*)this) = C();
     }
 
     void SetByteVector(const std::vector<uint8_t>& vecBytes)
@@ -109,7 +102,7 @@ public:
             Reset();
         } else {
             try {
-                impl = ImplType::FromBytes(bls::Bytes(vecBytes), fLegacy);
+                impl = ImplType::FromBytes(vecBytes.data());
                 fValid = true;
             } catch (...) {
                 Reset();
@@ -123,7 +116,7 @@ public:
         if (!fValid) {
             return std::vector<uint8_t>(SerSize, 0);
         }
-        return impl.Serialize(fLegacy);
+        return impl.Serialize();
     }
 
     const uint256& GetHash() const
@@ -196,13 +189,13 @@ struct CBLSIdImplicit : public uint256
     {
         memcpy(begin(), id.begin(), sizeof(uint256));
     }
-    static CBLSIdImplicit FromBytes(const uint8_t* buffer, const bool fLegacy = false)
+    static CBLSIdImplicit FromBytes(const uint8_t* buffer)
     {
         CBLSIdImplicit instance;
         memcpy(instance.begin(), buffer, sizeof(CBLSIdImplicit));
         return instance;
     }
-    std::vector<uint8_t> Serialize(const bool fLegacy = false) const
+    std::vector<uint8_t> Serialize() const
     {
         return {begin(), end()};
     }
@@ -245,7 +238,7 @@ public:
     CBLSSignature Sign(const uint256& hash) const;
 };
 
-class CBLSPublicKey : public CBLSWrapper<bls::G1Element, BLS_CURVE_PUBKEY_SIZE, CBLSPublicKey>
+class CBLSPublicKey : public CBLSWrapper<bls::PublicKey, BLS_CURVE_PUBKEY_SIZE, CBLSPublicKey>
 {
     friend class CBLSSecretKey;
     friend class CBLSSignature;
@@ -257,14 +250,14 @@ public:
 
     CBLSPublicKey() {}
     void AggregateInsecure(const CBLSPublicKey& o);
-    static CBLSPublicKey AggregateInsecure(const std::vector<CBLSPublicKey>& pks, bool fLegacy = fLegacyDefault);
+    static CBLSPublicKey AggregateInsecure(const std::vector<CBLSPublicKey>& pks);
 
     bool PublicKeyShare(const std::vector<CBLSPublicKey>& mpk, const CBLSId& id);
     bool DHKeyExchange(const CBLSSecretKey& sk, const CBLSPublicKey& pk);
 
 };
 
-class CBLSSignature : public CBLSWrapper<bls::G2Element, BLS_CURVE_SIG_SIZE, CBLSSignature>
+class CBLSSignature : public CBLSWrapper<bls::InsecureSignature, BLS_CURVE_SIG_SIZE, CBLSSignature>
 {
     friend class CBLSSecretKey;
 
@@ -278,8 +271,8 @@ public:
     CBLSSignature& operator=(const CBLSSignature&) = default;
 
     void AggregateInsecure(const CBLSSignature& o);
-    static CBLSSignature AggregateInsecure(const std::vector<CBLSSignature>& sigs, bool fLegacy = fLegacyDefault);
-    static CBLSSignature AggregateSecure(const std::vector<CBLSSignature>& sigs, const std::vector<CBLSPublicKey>& pks, const uint256& hash, bool fLegacy = fLegacyDefault);
+    static CBLSSignature AggregateInsecure(const std::vector<CBLSSignature>& sigs);
+    static CBLSSignature AggregateSecure(const std::vector<CBLSSignature>& sigs, const std::vector<CBLSPublicKey>& pks, const uint256& hash);
 
     void SubInsecure(const CBLSSignature& o);
 
