@@ -231,7 +231,7 @@ class LLMQChainLocksTest(DashTestFramework):
         for mn in self.mninfo:
             mn.node.quorum_sign(100, request_id, fake_block.hash, quorum_hash)
         rec_sig = self.get_recovered_sig(request_id, fake_block.hash)
-        fake_clsig = msg_clsig(height, fake_block.sha256, hex_str_to_bytes(rec_sig['sig']))
+        fake_clsig = msg_clsig(height, fake_block.sha256, hex_str_to_bytes(rec_sig['sig']), [1,0,0,0])
         return (fake_clsig, fake_block.hash)
 
     def create_chained_txs(self, node, amount):

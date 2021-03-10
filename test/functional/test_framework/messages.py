@@ -1999,15 +1999,17 @@ class msg_qsendrecsigs():
 class msg_clsig():
     msgtype = b"clsig"
 
-    def __init__(self, height=0, blockHash=0, sig=b'\\x0' * 96):
+    def __init__(self, height=0, blockHash=0, sig=b'\\x0' * 96, signers=[]):
         self.height = height
         self.blockHash = blockHash
         self.sig = sig
+        self.signers = signers
 
     def deserialize(self, f):
         self.height = struct.unpack('<i', f.read(4))[0]
         self.blockHash = deser_uint256(f)
         self.sig = f.read(96)
+        self.signers = deser_dyn_bitset(f, False)
 
 
     def serialize(self):
@@ -2015,7 +2017,7 @@ class msg_clsig():
         r += struct.pack('<i', self.height)
         r += ser_uint256(self.blockHash)
         r += self.sig
-        r += struct.pack("<I", 0)
+        r += ser_dyn_bitset(self.signers, False)
         return r
 
     def __repr__(self):
