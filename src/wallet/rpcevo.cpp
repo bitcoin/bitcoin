@@ -59,15 +59,14 @@ static CBLSSecretKey ParseBLSSecretKey(const std::string& hexKey, const std::str
 }
 
 template<typename SpecialTxPayload>
-static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest)
+static void FundSpecialTx(CWallet& pwallet, CMutableTransaction& tx, const SpecialTxPayload& payload, const CTxDestination& fundDest)
 {
-    CHECK_NONFATAL(pwallet != nullptr);
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
-    pwallet->BlockUntilSyncedToCurrentChain();
+    pwallet.BlockUntilSyncedToCurrentChain();
     {
-        LOCK(pwallet->cs_wallet);
+        LOCK(pwallet.cs_wallet);
 
         CTxDestination nodest = CNoDestination();
         if (fundDest == nodest) {
@@ -85,7 +84,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
         coinControl.destChange = fundDest;
 
         std::vector<COutput> vecOutputs;
-        pwallet->AvailableCoins(vecOutputs);
+        pwallet.AvailableCoins(vecOutputs);
 
         for (const auto& out : vecOutputs) {
             CTxDestination txDest;
@@ -103,7 +102,7 @@ static void FundSpecialTx(CWallet* pwallet, CMutableTransaction& tx, const Speci
         bilingual_str error;
         CTransactionRef wtx;
         FeeCalculation fee_calc_out;
-        bool fCreated = pwallet->CreateTransaction(vecSend, wtx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out);
+        bool fCreated = pwallet.CreateTransaction(vecSend, wtx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out);
         if (!fCreated)
             throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
 
@@ -220,14 +219,13 @@ static RPCHelpMan protx_register()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
     
 
     size_t paramIdx = 0;
@@ -300,7 +298,7 @@ static RPCHelpMan protx_register()
     if (!request.params[paramIdx + 7].isNull()) {
         fSubmit = request.params[paramIdx + 7].get_bool();
     }
-    FundSpecialTx(pwallet, tx, ptx, fundDest);
+    FundSpecialTx(*pwallet, tx, ptx, fundDest);
     UpdateSpecialTxInputsHash(tx, ptx);
 
 
@@ -376,14 +374,13 @@ static RPCHelpMan protx_register_fund()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
     
 
     size_t paramIdx = 0;
@@ -447,7 +444,7 @@ static RPCHelpMan protx_register_fund()
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Syscoin address: ") + request.params[paramIdx + 6].get_str());
     }
 
-    FundSpecialTx(pwallet, tx, ptx, fundDest);
+    FundSpecialTx(*pwallet, tx, ptx, fundDest);
     UpdateSpecialTxInputsHash(tx, ptx);
 
     bool fSubmit{true};
@@ -507,9 +504,8 @@ static RPCHelpMan protx_register_prepare()
             },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -582,7 +578,7 @@ static RPCHelpMan protx_register_prepare()
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Syscoin address: ") + request.params[paramIdx + 6].get_str());
         }
     }
-    FundSpecialTx(pwallet, tx, ptx, fundDest);
+    FundSpecialTx(*pwallet, tx, ptx, fundDest);
     UpdateSpecialTxInputsHash(tx, ptx);
 
     // referencing external collateral
@@ -692,11 +688,10 @@ static RPCHelpMan protx_update_service()
             },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
 
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
@@ -757,7 +752,7 @@ static RPCHelpMan protx_update_service()
         }
     }
 
-    FundSpecialTx(pwallet, tx, ptx, feeSource);
+    FundSpecialTx(*pwallet, tx, ptx, feeSource);
 
     SignSpecialTxPayloadByHash(tx, ptx, keyOperator);
     SetTxPayload(tx, ptx);
@@ -798,14 +793,13 @@ static RPCHelpMan protx_update_registrar()
             },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
 
     CProUpRegTx ptx;
     ptx.nVersion = CProUpRegTx::CURRENT_VERSION;
@@ -862,7 +856,7 @@ static RPCHelpMan protx_update_registrar()
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Syscoin address: ") + request.params[5].get_str());
     }
 
-    FundSpecialTx(pwallet, tx, ptx, feeSourceDest);
+    FundSpecialTx(*pwallet, tx, ptx, feeSourceDest);
     SignSpecialTxPayloadByHash(tx, ptx, keyOwner);
     SetTxPayload(tx, ptx);
 
@@ -899,11 +893,10 @@ static RPCHelpMan protx_revoke()
             },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
 
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -941,17 +934,17 @@ static RPCHelpMan protx_revoke()
         CTxDestination feeSourceDest = DecodeDestination(request.params[3].get_str());
         if (!IsValidDestination(feeSourceDest))
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Syscoin address: ") + request.params[3].get_str());
-        FundSpecialTx(pwallet, tx, ptx, feeSourceDest);
+        FundSpecialTx(*pwallet, tx, ptx, feeSourceDest);
     } else if (dmn->pdmnState->scriptOperatorPayout != CScript()) {
         // Using funds from previousely specified operator payout address
         CTxDestination txDest;
         ExtractDestination(dmn->pdmnState->scriptOperatorPayout, txDest);
-        FundSpecialTx(pwallet, tx, ptx, txDest);
+        FundSpecialTx(*pwallet, tx, ptx, txDest);
     } else if (dmn->pdmnState->scriptPayout != CScript()) {
         // Using funds from previousely specified masternode payout address
         CTxDestination txDest;
         ExtractDestination(dmn->pdmnState->scriptPayout, txDest);
-        FundSpecialTx(pwallet, tx, ptx, txDest);
+        FundSpecialTx(*pwallet, tx, ptx, txDest);
     } else {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "No payout or fee source addresses found, can't revoke");
     }

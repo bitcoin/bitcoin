@@ -28,7 +28,7 @@
 #include <rpc/rawtransaction_util.h>
 extern std::string EncodeDestination(const CTxDestination& dest);
 extern CTxDestination DecodeDestination(const std::string& str);
-UniValue SendMoney(CWallet* const pwallet, const CCoinControl &coin_control, std::vector<CRecipient> &recipients, mapValue_t map_value, bool verbose);
+UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vector<CRecipient> &recipients, mapValue_t map_value, bool verbose);
 uint64_t nCustomAssetGuid = 0;
 void CreateFeeRecipient(CScript& scriptPubKey, CRecipient& recipient) {
     CRecipient recp = { scriptPubKey, 0, false };
@@ -207,15 +207,14 @@ static RPCHelpMan signhash()
                 },
             }.Check(request);
 
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    const CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
 
-    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*wallet);
+    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
 
     LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
 
     std::string strAddress = request.params[0].get_str();
     uint256 hash = ParseHashV(request.params[1], "hash");
@@ -270,15 +269,14 @@ static RPCHelpMan signmessagebech32()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    const CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
 
-    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*wallet);
+    LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
 
     LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
 
     std::string strAddress = request.params[0].get_str();
     std::string strMessage = request.params[1].get_str();
@@ -330,16 +328,15 @@ static RPCHelpMan syscoinburntoassetallocation()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const UniValue &params = request.params;
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
     LOCK(pwallet->cs_wallet);
 
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
     uint64_t nAsset;
     if(!ParseUInt64(params[0].get_str(), &nAsset))
         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");        	
@@ -461,17 +458,15 @@ RPCHelpMan assetnew()
     if(nCustomAssetGuid > 0)
         nCustomAssetGuid = 0;
     const UniValue &params = request.params;
-    
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();  
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
     LOCK(pwallet->cs_wallet);
 
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
     CAmount nGas;
     std::string strSymbol = params[1].get_str();
     std::string strPubData = params[2].get_str();
@@ -727,8 +722,8 @@ static RPCHelpMan assetnewtest()
 },
     };
 }
-UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn, const uint64_t &nAsset, CWallet* const pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet->cs_wallet) {
-    AssertLockHeld(pwallet->cs_wallet);
+UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn, const uint64_t &nAsset, CWallet& pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet.cs_wallet) {
+    AssertLockHeld(pwallet.cs_wallet);
     CCoinControl coin_control;
     CAmount nMinimumAmountAsset = 0;
     CAmount nMaximumAmountAsset = 0;
@@ -736,7 +731,7 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nMaximumAmountAsset);
     coin_control.m_min_depth = 1;
     std::vector<COutput> vecOutputs;
-    pwallet->AvailableCoins(vecOutputs, true, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, 0, false, *coin_control.assetInfo, nVersionIn);
+    pwallet.AvailableCoins(vecOutputs, true, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, 0, false, *coin_control.assetInfo, nVersionIn);
     int nNumOutputsFound = 0;
     int nFoundOutput = -1;
     for(unsigned int i = 0; i < vecOutputs.size(); i++) {
@@ -752,7 +747,7 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
         throw JSONRPCError(RPC_WALLET_ERROR, "No inputs found for this asset");
     }
     
-    if (!pwallet->CanGetAddresses()) {
+    if (!pwallet.CanGetAddresses()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
     }
     const CInputCoin &inputCoin = vecOutputs[nFoundOutput].GetInputCoin();
@@ -762,16 +757,16 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     if(recpIn) {
         vecSend.push_back(*recpIn);
     }
-    if(!recpIn || nGas > (MIN_CHANGE + pwallet->m_default_max_tx_fee)) {
+    if(!recpIn || nGas > (MIN_CHANGE + pwallet.m_default_max_tx_fee)) {
         CTxDestination dest;
         std::string errorStr;
-        if (!pwallet->GetNewChangeDestination(pwallet->m_default_address_type, dest, errorStr)) {
+        if (!pwallet.GetNewChangeDestination(pwallet.m_default_address_type, dest, errorStr)) {
             throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr);
         }
         recp = { GetScriptForDestination(dest), nGas, false};  
     }
     // if enough for change + max fee, we try to take fee from this output
-    if(nGas > (MIN_CHANGE + pwallet->m_default_max_tx_fee)) {
+    if(nGas > (MIN_CHANGE + pwallet.m_default_max_tx_fee)) {
         recp.fSubtractFeeFromAmount = true;
         CAmount nTotalOther = 0;
         // deduct other sys amounts from this output which will pay the outputs and fees
@@ -779,7 +774,7 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
             nTotalOther += recipient.nAmount;
         }
         // if adding other outputs would make this output not have enough to pay the fee, don't sub fee from amount
-        if(nTotalOther >= (nGas - (MIN_CHANGE + pwallet->m_default_max_tx_fee)))
+        if(nTotalOther >= (nGas - (MIN_CHANGE + pwallet.m_default_max_tx_fee)))
             recp.fSubtractFeeFromAmount = false;
         else
             recp.nAmount -= nTotalOther;
@@ -792,12 +787,12 @@ UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn
     CAmount nFeeRequired = 0;
     bilingual_str error;
     int nChangePosRet = -1;
-    coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
+    coin_control.m_signal_bip125_rbf = pwallet.m_signal_rbf;
     coin_control.Select(inputCoin.outpoint);
     coin_control.fAllowOtherInputs = recp.nAmount <= 0 || !recp.fSubtractFeeFromAmount; // select asset + sys utxo's
     CTransactionRef tx;
     FeeCalculation fee_calc_out;
-    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, true /* sign*/, nVersionIn)) {
+    if (!pwallet.CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, true /* sign*/, nVersionIn)) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
     }
     std::string err_string;
@@ -857,15 +852,14 @@ static RPCHelpMan assetupdate()
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
     }
     const UniValue &params = request.params;
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
     LOCK(pwallet->cs_wallet);    
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
     uint64_t nAsset;
     if(!ParseUInt64(params[0].get_str(), &nAsset))
         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
@@ -965,7 +959,7 @@ static RPCHelpMan assetupdate()
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
     std::vector<CRecipient> vecSend;
-    return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_UPDATE, (uint64_t)nBaseAsset, pwallet, vecSend, opreturnRecipient);
+    return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_UPDATE, (uint64_t)nBaseAsset, *pwallet, vecSend, opreturnRecipient);
 },
     };
 } 
@@ -993,15 +987,14 @@ static RPCHelpMan assettransfer()
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
     }
     const UniValue &params = request.params;
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
     LOCK(pwallet->cs_wallet);    
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
     uint64_t nAsset;
     if(!ParseUInt64(params[0].get_str(), &nAsset))
         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
@@ -1027,7 +1020,7 @@ static RPCHelpMan assettransfer()
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
     std::vector<CRecipient> vecSend;
-    return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_UPDATE, (uint64_t)nBaseAsset, pwallet, vecSend, opreturnRecipient, &recp);
+    return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_UPDATE, (uint64_t)nBaseAsset, *pwallet, vecSend, opreturnRecipient, &recp);
 },
     };
 }
@@ -1069,15 +1062,14 @@ static RPCHelpMan assetsendmany()
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
     }    
     const UniValue &params = request.params;
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
     LOCK(pwallet->cs_wallet);
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
     // gather & validate inputs
     uint64_t nAsset;
     if(!ParseUInt64(params[0].get_str(), &nAsset))
@@ -1156,7 +1148,7 @@ static RPCHelpMan assetsendmany()
     scriptData << OP_RETURN << data;
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
-    UniValue ret = CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_SEND, nBaseAsset, pwallet, vecSend, opreturnRecipient);
+    UniValue ret = CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_SEND, nBaseAsset, *pwallet, vecSend, opreturnRecipient);
     ret.__pushKV("assets_issued_count", (int)mapAssets.size());
     UniValue assetsArr(UniValue::VARR);
     for(auto itAsset: mapAssets) {
@@ -1267,15 +1259,14 @@ static RPCHelpMan assetallocationsendmany()
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
     }
 	const UniValue &params = request.params;
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
     LOCK(pwallet->cs_wallet);
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
     CCoinControl coin_control;
 	// gather & validate inputs
 	UniValue valueTo = params[0];
@@ -1391,7 +1382,7 @@ static RPCHelpMan assetallocationsendmany()
         }
     }
     coin_control.m_signal_bip125_rbf = m_signal_bip125_rbf;
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
 
 	std::vector<unsigned char> data;
 	theAssetAllocation.SerializeData(data);   
@@ -1510,15 +1501,14 @@ static RPCHelpMan assetallocationburn()
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
     }    
 	const UniValue &params = request.params;
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
     LOCK(pwallet->cs_wallet);
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
     uint64_t nAsset;
     if(!ParseUInt64(params[0].get_str(), &nAsset))
         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");   	
@@ -1678,15 +1668,14 @@ static RPCHelpMan assetallocationmint()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const UniValue &params = request.params;
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
     pwallet->BlockUntilSyncedToCurrentChain();
 
     LOCK(pwallet->cs_wallet);
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
     uint64_t nAsset;
     if(!ParseUInt64(params[0].get_str(), &nAsset))
         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");   
@@ -1855,9 +1844,8 @@ static RPCHelpMan assetallocationsend()
     if(!fAssetIndex) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Must specify -assetindex to be able to spend assets");
     }
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
     const UniValue &params = request.params;  
     bool m_signal_bip125_rbf = pwallet->m_signal_rbf;
     if (!params[4].isNull()) {
@@ -1914,9 +1902,8 @@ static RPCHelpMan convertaddresswallet()
     },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
 
     UniValue ret(UniValue::VOBJ);	
     CTxDestination dest = DecodeDestination(request.params[0].get_str());	
@@ -2212,9 +2199,8 @@ static RPCHelpMan sendfrom() {
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {	
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
 
     // Make sure the results are valid at least up to the most recent block
     // the user could have gotten from another RPC command prior to now
@@ -2271,12 +2257,12 @@ static RPCHelpMan sendfrom() {
         throw JSONRPCError(RPC_TYPE_ERROR, "Could not find inputs to select");
     coin_control.fAllowOtherInputs = false;
     coin_control.destChange = from;
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
     mapValue_t mapValue;
     const CRecipient & recipient = {GetScriptForDestination(dest), nAmount, false};
 	std::vector<CRecipient> vecSend;
 	vecSend.push_back(recipient);
-    return SendMoney(pwallet, coin_control, vecSend, mapValue, false); 
+    return SendMoney(*pwallet, coin_control, vecSend, mapValue, false); 
 },
     };
 }

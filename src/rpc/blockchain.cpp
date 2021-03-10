@@ -138,7 +138,7 @@ UniValue AuxpowToJSON(const CAuxPow& auxpow)
 {
     UniValue result(UniValue::VOBJ);
 
-     {
+    {
         UniValue tx(UniValue::VOBJ);
         tx.pushKV("hex", EncodeHexTx(*auxpow.coinbaseTx));
         TxToJSON(*auxpow.coinbaseTx, auxpow.parentBlock.GetHash(), tx);
@@ -161,12 +161,12 @@ UniValue AuxpowToJSON(const CAuxPow& auxpow)
         result.pushKV("chainmerklebranch", branch);
     }
 
-     CDataStream ssParent(SER_NETWORK, PROTOCOL_VERSION);
+    CDataStream ssParent(SER_NETWORK, PROTOCOL_VERSION);
     ssParent << auxpow.parentBlock;
     const std::string strHex = HexStr(ssParent);
     result.pushKV("parentblock", strHex);
 
-     return result;
+    return result;
 }
 UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex)
 {

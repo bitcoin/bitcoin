@@ -90,10 +90,9 @@ static RPCHelpMan gobject_list_prepared()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {   
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
-    EnsureWalletIsUnlocked(pwallet);
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
+    EnsureWalletIsUnlocked(*pwallet);
 
     int nCount = request.params.size() > 0 ? request.params[0].get_int() : 10;
     if (nCount < 0) {
@@ -140,14 +139,13 @@ static RPCHelpMan gobject_prepare()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
 
     // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
@@ -248,9 +246,8 @@ static RPCHelpMan gobject_vote_many()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
 
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
@@ -273,7 +270,7 @@ static RPCHelpMan gobject_vote_many()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
     }
 
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
 
     std::map<uint256, CKey> votingKeys;
     // Make sure the results are valid at least up to the most recent block
@@ -286,7 +283,7 @@ static RPCHelpMan gobject_vote_many()
         LegacyScriptPubKeyMan& spk_man = EnsureLegacyScriptPubKeyMan(*pwallet);
         LOCK2(pwallet->cs_wallet, spk_man.cs_KeyStore);
 
-        EnsureWalletIsUnlocked(pwallet);
+        EnsureWalletIsUnlocked(*pwallet);
 
         CKey key;
         if (spk_man.GetKey(dmn->pdmnState->keyIDVoting, key)) {
@@ -316,9 +313,8 @@ static RPCHelpMan gobject_vote_alias()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {   
-    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-    if (!wallet) return NullUniValue;
-    CWallet* const pwallet = wallet.get();
+    std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!pwallet) return NullUniValue;
 
     NodeContext& node = EnsureNodeContext(request.context);
     if(!node.connman)
@@ -341,7 +337,7 @@ static RPCHelpMan gobject_vote_alias()
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
     }
 
-    EnsureWalletIsUnlocked(pwallet);
+    EnsureWalletIsUnlocked(*pwallet);
 
     uint256 proTxHash = ParseHashV(request.params[3], "protxHash");
     CDeterministicMNList mnList;
