@@ -404,8 +404,10 @@ class BIP68_112_113Test(BitcoinTestFramework):
         self.log.info("Test version 1 txs")
 
         # -1 OP_CSV tx and (empty stack) OP_CSV tx should fail
+        assert not self.nodes[0].testmempoolaccept(rawtxs=[ToHex(bip112tx_special_v1)], bypass_timelocks=True)[0]["allowed"]
         self.send_blocks([self.create_test_block([bip112tx_special_v1])], success=False,
                          reject_reason='non-mandatory-script-verify-flag (Negative locktime)')
+        assert not self.nodes[0].testmempoolaccept(rawtxs=[ToHex(bip112tx_emptystack_v1)], bypass_timelocks=True)[0]["allowed"]
         self.send_blocks([self.create_test_block([bip112tx_emptystack_v1])], success=False,
                          reject_reason='non-mandatory-script-verify-flag (Operation not valid with the current stack size)')
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in argument to OP_CSV, version 1 txs should still pass
@@ -421,12 +423,14 @@ class BIP68_112_113Test(BitcoinTestFramework):
         fail_txs += [tx['tx'] for tx in bip112txs_vary_OP_CSV_v1 if not tx['sdf']]
         fail_txs += [tx['tx'] for tx in bip112txs_vary_OP_CSV_9_v1 if not tx['sdf']]
         for tx in fail_txs:
+            assert not self.nodes[0].testmempoolaccept(rawtxs=[ToHex(tx)], bypass_timelocks=True)[0]["allowed"]
             self.send_blocks([self.create_test_block([tx])], success=False,
                              reject_reason='non-mandatory-script-verify-flag (Locktime requirement not satisfied)')
 
         self.log.info("Test version 2 txs")
 
         # -1 OP_CSV tx and (empty stack) OP_CSV tx should fail
+        assert not self.nodes[0].testmempoolaccept(rawtxs=[ToHex(bip112tx_special_v2)], bypass_timelocks=True)[0]["allowed"]
         self.send_blocks([self.create_test_block([bip112tx_special_v2])], success=False,
                          reject_reason='non-mandatory-script-verify-flag (Negative locktime)')
         self.send_blocks([self.create_test_block([bip112tx_emptystack_v2])], success=False,
@@ -445,12 +449,14 @@ class BIP68_112_113Test(BitcoinTestFramework):
         fail_txs = all_rlt_txs(bip112txs_vary_nSequence_9_v2)
         fail_txs += [tx['tx'] for tx in bip112txs_vary_OP_CSV_9_v2 if not tx['sdf']]
         for tx in fail_txs:
+            assert not self.nodes[0].testmempoolaccept(rawtxs=[ToHex(tx)], bypass_timelocks=True)[0]["allowed"]
             self.send_blocks([self.create_test_block([tx])], success=False,
                              reject_reason='non-mandatory-script-verify-flag (Locktime requirement not satisfied)')
 
         # If SEQUENCE_LOCKTIME_DISABLE_FLAG is set in nSequence, tx should fail
         fail_txs = [tx['tx'] for tx in bip112txs_vary_nSequence_v2 if tx['sdf']]
         for tx in fail_txs:
+            assert not self.nodes[0].testmempoolaccept(rawtxs=[ToHex(tx)], bypass_timelocks=True)[0]["allowed"]
             self.send_blocks([self.create_test_block([tx])], success=False,
                              reject_reason='non-mandatory-script-verify-flag (Locktime requirement not satisfied)')
 
@@ -458,6 +464,7 @@ class BIP68_112_113Test(BitcoinTestFramework):
         fail_txs = [tx['tx'] for tx in bip112txs_vary_nSequence_v2 if not tx['sdf'] and tx['stf']]
         fail_txs += [tx['tx'] for tx in bip112txs_vary_OP_CSV_v2 if not tx['sdf'] and tx['stf']]
         for tx in fail_txs:
+            assert not self.nodes[0].testmempoolaccept(rawtxs=[ToHex(tx)], bypass_timelocks=True)[0]["allowed"]
             self.send_blocks([self.create_test_block([tx])], success=False,
                              reject_reason='non-mandatory-script-verify-flag (Locktime requirement not satisfied)')
 

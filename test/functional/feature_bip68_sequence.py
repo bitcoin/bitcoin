@@ -247,6 +247,10 @@ class BIP68Test(BitcoinTestFramework):
             if (orig_tx.hash in node.getrawmempool()):
                 # sendrawtransaction should fail if the tx is in the mempool
                 assert_raises_rpc_error(-26, NOT_FINAL_ERROR, node.sendrawtransaction, ToHex(tx))
+
+                # Should pass with bypass_timelocks=True but not otherwise
+                assert not node.testmempoolaccept([ToHex(tx)])[0]["allowed"]
+                assert node.testmempoolaccept(rawtxs=[ToHex(tx)], bypass_timelocks=True)[0]["allowed"]
             else:
                 # sendrawtransaction should succeed if the tx is not in the mempool
                 node.sendrawtransaction(ToHex(tx))
@@ -301,6 +305,9 @@ class BIP68Test(BitcoinTestFramework):
         tx5.vout[0].nValue += int(utxos[0]["amount"]*COIN)
         raw_tx5 = self.nodes[0].signrawtransactionwithwallet(ToHex(tx5))["hex"]
 
+        # Should pass with bypass_timelocks=True but not otherwise
+        assert not self.nodes[0].testmempoolaccept(rawtxs=[raw_tx5])[0]["allowed"]
+        assert self.nodes[0].testmempoolaccept(rawtxs=[raw_tx5], bypass_timelocks=True)[0]["allowed"]
         assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, raw_tx5)
 
         # Test mempool-BIP68 consistency after reorg
