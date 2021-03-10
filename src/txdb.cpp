@@ -10,7 +10,6 @@
 #include <random.h>
 #include <shutdown.h>
 #include <uint256.h>
-#include <util/memory.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <util/vector.h>
@@ -41,7 +40,7 @@ struct CoinEntry {
 }
 
 CCoinsViewDB::CCoinsViewDB(fs::path ldb_path, size_t nCacheSize, bool fMemory, bool fWipe) :
-    m_db(MakeUnique<CDBWrapper>(ldb_path, nCacheSize, fMemory, fWipe, true)),
+    m_db(std::make_unique<CDBWrapper>(ldb_path, nCacheSize, fMemory, fWipe, true)),
     m_ldb_path(ldb_path),
     m_is_memory(fMemory) { }
 
@@ -53,7 +52,7 @@ void CCoinsViewDB::ResizeCache(size_t new_cache_size)
         // Have to do a reset first to get the original `m_db` state to release its
         // filesystem lock.
         m_db.reset();
-        m_db = MakeUnique<CDBWrapper>(
+        m_db = std::make_unique<CDBWrapper>(
             m_ldb_path, new_cache_size, m_is_memory, /*fWipe*/ false, /*obfuscate*/ true);
     }
 }

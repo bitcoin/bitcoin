@@ -5,7 +5,6 @@
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <streams.h>
-#include <util/memory.h>
 #include <version.h>
 
 #include <test/fuzz/fuzz.h>

@@ -17,7 +17,6 @@
 #include <script/standard.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
-#include <util/memory.h>
 #include <util/strencodings.h>
 
 #include <cassert>
