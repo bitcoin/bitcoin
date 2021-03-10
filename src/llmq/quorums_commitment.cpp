@@ -26,7 +26,7 @@ CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const ui
     LogInstance().LogPrintStr(strprintf("CFinalCommitment::%s -- %s", __func__, tinyformat::format(__VA_ARGS__)), __func__, "", 0); \
 } while(0)
 
-bool CFinalCommitment::Verify(const std::vector<CDeterministicMNCPtr>& members, bool checkSigs) const
+bool CFinalCommitment::Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) const
 {
     if (nVersion == 0 || nVersion > CURRENT_VERSION) {
         return false;
@@ -66,6 +66,8 @@ bool CFinalCommitment::Verify(const std::vector<CDeterministicMNCPtr>& members, 
         LogPrintfFinalCommitment("invalid vvecSig\n");
         return false;
     }
+    std::vector<CDeterministicMNCPtr> members;
+    CLLMQUtils::GetAllQuorumMembers(llmqType, pQuorumIndex, members);
 
     for (size_t i = members.size(); i < (size_t)params.size; i++) {
         if (validMembers[i]) {
@@ -159,7 +161,6 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
         if (!Params().GetConsensus().llmqs.count(commitment.llmqType)) {
             return FormatSyscoinErrorMessage(state, "bad-qc-type", fJustCheck);
         }
-        const auto& params = Params().GetConsensus().llmqs.at(commitment.llmqType);
 
         if (commitment.IsNull()) {
             if (!commitment.VerifyNull()) {
@@ -167,9 +168,7 @@ bool CheckLLMQCommitment(const CTransaction& tx, const CBlockIndex* pindexPrev, 
             }
             return true;
         }
-        std::vector<CDeterministicMNCPtr> members;
-        CLLMQUtils::GetAllQuorumMembers(params.type, pindexQuorum, members);
-        if (!commitment.Verify(members, false)) {
+        if (!commitment.Verify(pindexQuorum, false)) {
             return FormatSyscoinErrorMessage(state, "bad-qc-invalid", fJustCheck);
         }
     }

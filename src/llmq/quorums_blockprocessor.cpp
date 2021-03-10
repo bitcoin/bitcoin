@@ -67,7 +67,6 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         auto type = qc.llmqType;
         const auto& params = Params().GetConsensus().llmqs.at(type);
         // Verify that quorumHash is part of the active chain and that it's the first block in the DKG interval
-        std::vector<CDeterministicMNCPtr> members;
         const CBlockIndex* pquorumIndex;
         {
             LOCK(cs_main);
@@ -114,10 +113,8 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             LOCK(cs_main);
             peerman.ForgetTxHash(pfrom->GetId(), hash);
         }
-        CLLMQUtils::GetAllQuorumMembers(type, pquorumIndex, members);
-        
 
-        if (!qc.Verify(members, true)) {
+       if (!qc.Verify(pquorumIndex, true)) {
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- commitment for quorum %s:%d is not valid, peer=%d\n", __func__,
                     qc.quorumHash.ToString(), qc.llmqType, pfrom->GetId());
             {
@@ -238,10 +235,7 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     if(!quorumIndex) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-block-index");
     }
-    std::vector<CDeterministicMNCPtr> members;
-    CLLMQUtils::GetAllQuorumMembers(params.type, quorumIndex, members);
-
-    if (!qc.Verify(members, true)) {
+    if (!qc.Verify(quorumIndex, true)) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-qc-invalid");
     }
 
