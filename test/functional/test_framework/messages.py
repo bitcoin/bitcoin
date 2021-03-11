@@ -1999,10 +1999,12 @@ class msg_qsendrecsigs():
 class msg_clsig():
     msgtype = b"clsig"
 
-    def __init__(self, height=0, blockHash=0, sig=b'\\x0' * 96, signers=[]):
+    def __init__(self, height=0, blockHash=0, sig=b'\\x0' * 96, signers=None):
         self.height = height
         self.blockHash = blockHash
         self.sig = sig
+        if signers is None:
+            signers = []
         self.signers = signers
 
     def deserialize(self, f):
