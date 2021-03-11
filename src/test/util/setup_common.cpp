@@ -268,7 +268,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
 {
     const CChainParams& chainparams = Params();
     CTxMemPool empty_pool;
-    CBlock block = BlockAssembler(empty_pool, chainparams).CreateNewBlock(scriptPubKey)->block;
+    CBlock block = BlockAssembler(empty_pool, chainparams).CreateNewBlock(::ChainstateActive(), scriptPubKey)->block;
 
     Assert(block.vtx.size() == 1);
     for (const CMutableTransaction& tx : txns) {
@@ -307,7 +307,7 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
     }
     // SYSCOIN
     std::vector<unsigned char> vchCoinbaseCommitmentExtra(ds.begin(), ds.end());
-    RegenerateCommitments(block, vchCoinbaseCommitmentExtra);
+    RegenerateCommitments(block, WITH_LOCK(::cs_main, return std::ref(g_chainman.m_blockman)), vchCoinbaseCommitmentExtra);
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 

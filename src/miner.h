@@ -162,7 +162,7 @@ public:
     explicit BlockAssembler(const CTxMemPool& mempool, const CChainParams& params, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
-    std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);
+    std::unique_ptr<CBlockTemplate> CreateNewBlock(CChainState& chainstate, const CScript& scriptPubKeyIn);
 
     static Optional<int64_t> m_last_block_num_txs;
     static Optional<int64_t> m_last_block_weight;
@@ -209,6 +209,6 @@ bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainParams);
 
 // SYSCOIN
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
-void RegenerateCommitments(CBlock& block, const std::vector<unsigned char> &vchExtraData);
+void RegenerateCommitments(CBlock& block, BlockManager& blockman, const std::vector<unsigned char> &vchExtraData);
 
 #endif // SYSCOIN_MINER_H
