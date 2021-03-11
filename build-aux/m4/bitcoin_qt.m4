@@ -123,7 +123,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
     _BITCOIN_QT_CHECK_STATIC_LIBS
 
     if test "x$qt_plugin_path" != x; then
-      QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms"
+      QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms -L$qt_plugin_path/styles"
       if test -d "$qt_plugin_path/accessible"; then
         QT_LIBS="$QT_LIBS -L$qt_plugin_path/accessible"
       fi
@@ -138,13 +138,23 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
       AC_DEFINE(QT_QPA_PLATFORM_MINIMAL, 1, [Define this symbol if the minimal qt platform exists])
     fi
     if test "x$TARGET_OS" = xwindows; then
+      dnl Linking against wtsapi32 is required. See #17749 and
+      dnl https://bugreports.qt.io/browse/QTBUG-27097.
+      AX_CHECK_LINK_FLAG([-lwtsapi32], [QT_LIBS="$QT_LIBS -lwtsapi32"], [AC_MSG_ERROR([could not link against -lwtsapi32])])
       _BITCOIN_QT_CHECK_STATIC_PLUGIN([QWindowsIntegrationPlugin], [-lqwindows])
       AC_DEFINE(QT_QPA_PLATFORM_WINDOWS, 1, [Define this symbol if the qt platform is windows])
     elif test "x$TARGET_OS" = xlinux; then
+      dnl workaround for https://bugreports.qt.io/browse/QTBUG-74874
+      AX_CHECK_LINK_FLAG([-lxcb-shm], [QT_LIBS="-lxcb-shm $QT_LIBS"], [AC_MSG_ERROR([could not link against -lxcb-shm])])
       _BITCOIN_QT_CHECK_STATIC_PLUGIN([QXcbIntegrationPlugin], [-lqxcb -lxcb-static])
       AC_DEFINE(QT_QPA_PLATFORM_XCB, 1, [Define this symbol if the qt platform is xcb])
     elif test "x$TARGET_OS" = xdarwin; then
+      AX_CHECK_LINK_FLAG([[-framework Carbon]],[QT_LIBS="$QT_LIBS -framework Carbon"],[AC_MSG_ERROR(could not link against Carbon framework)])
+      AX_CHECK_LINK_FLAG([[-framework IOSurface]],[QT_LIBS="$QT_LIBS -framework IOSurface"],[AC_MSG_ERROR(could not link against IOSurface framework)])
+      AX_CHECK_LINK_FLAG([[-framework Metal]],[QT_LIBS="$QT_LIBS -framework Metal"],[AC_MSG_ERROR(could not link against Metal framework)])
+      AX_CHECK_LINK_FLAG([[-framework QuartzCore]],[QT_LIBS="$QT_LIBS -framework QuartzCore"],[AC_MSG_ERROR(could not link against QuartzCore framework)])
       _BITCOIN_QT_CHECK_STATIC_PLUGIN([QCocoaIntegrationPlugin], [-lqcocoa])
+      _BITCOIN_QT_CHECK_STATIC_PLUGIN([QMacStylePlugin], [-lqmacstyle])
       AC_DEFINE(QT_QPA_PLATFORM_COCOA, 1, [Define this symbol if the qt platform is cocoa])
     elif test "x$TARGET_OS" = xandroid; then
       QT_LIBS="-Wl,--export-dynamic,--undefined=JNI_OnLoad -lqtforandroid -ljnigraphics -landroid -lqtfreetype -lQt5EglSupport $QT_LIBS"
@@ -334,7 +344,8 @@ AC_DEFUN([_BITCOIN_QT_CHECK_STATIC_LIBS], [
   elif test "x$TARGET_OS" = xdarwin; then
     PKG_CHECK_MODULES([QTCLIPBOARD], [Qt5ClipboardSupport${qt_lib_suffix}], [QT_LIBS="-lQt5ClipboardSupport${qt_lib_suffix} $QT_LIBS"])
     PKG_CHECK_MODULES([QTGRAPHICS], [Qt5GraphicsSupport${qt_lib_suffix}], [QT_LIBS="-lQt5GraphicsSupport${qt_lib_suffix} $QT_LIBS"])
-    PKG_CHECK_MODULES([QTCGL], [Qt5CglSupport${qt_lib_suffix}], [QT_LIBS="-lQt5CglSupport${qt_lib_suffix} $QT_LIBS"])
+  elif test "x$TARGET_OS" = xwindows; then
+    PKG_CHECK_MODULES([QTWINDOWSUIAUTOMATION], [Qt5WindowsUIAutomationSupport${qt_lib_suffix}], [QT_LIBS="-lQt5WindowsUIAutomationSupport${qt_lib_suffix} $QT_LIBS"])
   fi
 ])
 

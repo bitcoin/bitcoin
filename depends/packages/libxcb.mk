@@ -15,9 +15,9 @@ $(package)_config_opts += --disable-composite --disable-damage --disable-dpms
 $(package)_config_opts += --disable-dri2 --disable-dri3 --disable-glx
 $(package)_config_opts += --disable-present --disable-randr --disable-record
 $(package)_config_opts += --disable-render --disable-resource --disable-screensaver
-$(package)_config_opts += --disable-shape --disable-shm --disable-sync
+$(package)_config_opts += --disable-shape --disable-sync
 $(package)_config_opts += --disable-xevie --disable-xfixes --disable-xfree86-dri
-$(package)_config_opts += --disable-xinerama --disable-xinput --disable-xkb
+$(package)_config_opts += --disable-xinerama --disable-xinput
 $(package)_config_opts += --disable-xprint --disable-selinux --disable-xtest
 $(package)_config_opts += --disable-xv --disable-xvmc
 endef
