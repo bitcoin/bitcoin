@@ -7,9 +7,9 @@
 
 #include <chainparamsseeds.h>
 #include <consensus/merkle.h>
+#include <deploymentinfo.h>
 #include <hash.h> // for signet block challenge hash
 #include <util/system.h>
-#include <versionbitsinfo.h>
 
 #include <assert.h>
 
