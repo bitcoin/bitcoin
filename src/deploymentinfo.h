@@ -5,6 +5,10 @@
 #ifndef BITCOIN_DEPLOYMENTINFO_H
 #define BITCOIN_DEPLOYMENTINFO_H
 
+#include <consensus/params.h>
+
+#include <string>
+
 struct VBDeploymentInfo {
     /** Deployment name */
     const char *name;
@@ -12,6 +16,14 @@ struct VBDeploymentInfo {
     bool gbt_force;
 };
 
-extern const struct VBDeploymentInfo VersionBitsDeploymentInfo[];
+extern const VBDeploymentInfo VersionBitsDeploymentInfo[Consensus::MAX_VERSION_BITS_DEPLOYMENTS];
+
+std::string DeploymentName(Consensus::BuriedDeployment dep);
+
+inline std::string DeploymentName(Consensus::DeploymentPos pos)
+{
+    assert(Consensus::ValidDeployment(pos));
+    return VersionBitsDeploymentInfo[pos].name;
+}
 
 #endif // BITCOIN_DEPLOYMENTINFO_H
