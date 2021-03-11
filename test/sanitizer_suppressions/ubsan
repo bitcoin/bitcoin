@@ -13,6 +13,7 @@
 unsigned-integer-overflow:*/include/c++/
 unsigned-integer-overflow:addrman.cpp
 unsigned-integer-overflow:arith_uint256.h
+unsigned-integer-overflow:auxpow.cpp
 unsigned-integer-overflow:basic_string.h
 unsigned-integer-overflow:bench/bench.h
 unsigned-integer-overflow:concurrentqueue.h
