@@ -32,9 +32,6 @@ static RPCHelpMan enumeratesigners()
         },
         RPCExamples{""},
         [](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
-            std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
-            if (!wallet) return NullUniValue;
-
             const std::string command = gArgs.GetArg("-signer", "");
             if (command == "") throw JSONRPCError(RPC_WALLET_ERROR, "Error: restart bitcoind with -signer=<cmd>");
             std::string chain = gArgs.GetChainName();
