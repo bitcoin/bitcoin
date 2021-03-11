@@ -355,6 +355,7 @@ BITCOIN_CORE_H = \
   util/time.h \
   util/thread.h \
   util/threadnames.h \
+  util/tokenpipe.h \
   util/trace.h \
   util/translation.h \
   util/ui_change_type.h \
@@ -792,6 +793,7 @@ libbitcoin_util_a_SOURCES = \
   util/string.cpp \
   util/thread.cpp \
   util/threadnames.cpp \
+  util/tokenpipe.cpp \
   $(BITCOIN_CORE_H)
 
 if USE_LIBEVENT
