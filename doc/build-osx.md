@@ -28,7 +28,12 @@ brew install librsvg
 Building
 --------
 
-Follow the instructions in [build-generic](build-generic.md)
+It's possible that your `PATH` environment variable contains some problematic strings, run
+```bash
+export PATH=$(echo "$PATH" | sed -e '/\\/!s/ /\\ /g') # fix whitespaces
+```
+
+Next, follow the instructions in [build-generic](build-generic.md)
 
 Running
 -------
