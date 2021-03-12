@@ -123,7 +123,12 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
     _BITCOIN_QT_CHECK_STATIC_LIBS
 
     if test "x$qt_plugin_path" != x; then
-      QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms -L$qt_plugin_path/styles"
+      if test -d "$qt_plugin_path/platforms"; then
+        QT_LIBS="$QT_LIBS -L$qt_plugin_path/platforms"
+      fi
+      if test -d "$qt_plugin_path/styles"; then
+        QT_LIBS="$QT_LIBS -L$qt_plugin_path/styles"
+      fi
       if test -d "$qt_plugin_path/accessible"; then
         QT_LIBS="$QT_LIBS -L$qt_plugin_path/accessible"
       fi
