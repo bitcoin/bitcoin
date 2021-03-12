@@ -557,7 +557,7 @@ struct CNodeState {
       *   - its connection type is IsBlockOnlyConn() == false
       *   - it gave us a valid connecting header
       *   - we haven't reached MAX_OUTBOUND_PEERS_TO_PROTECT_FROM_DISCONNECT yet
-      *   - it has a better chain than we have
+      *   - its chain tip has at least as much work as ours
       *
       * CHAIN_SYNC_TIMEOUT: if a peer's best known block has less work than our tip,
       * set a timeout CHAIN_SYNC_TIMEOUT seconds in the future:
