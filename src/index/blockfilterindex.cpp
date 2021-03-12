@@ -102,8 +102,8 @@ BlockFilterIndex::BlockFilterIndex(BlockFilterType filter_type,
     fs::create_directories(path);
 
     m_name = filter_name + " block filter index";
-    m_db = MakeUnique<BaseIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe);
-    m_filter_fileseq = MakeUnique<FlatFileSeq>(std::move(path), "fltr", FLTR_FILE_CHUNK_SIZE);
+    m_db = std::make_unique<BaseIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe);
+    m_filter_fileseq = std::make_unique<FlatFileSeq>(std::move(path), "fltr", FLTR_FILE_CHUNK_SIZE);
 }
 
 bool BlockFilterIndex::Init()

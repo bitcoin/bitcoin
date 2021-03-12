@@ -11,7 +11,6 @@
 #include <optional.h>
 #include <streams.h>
 #include <support/allocators/secure.h>
-#include <util/memory.h>
 
 #include <atomic>
 #include <memory>
@@ -193,7 +192,7 @@ public:
     void ReloadDbEnv() override {}
     std::string Filename() override { return "dummy"; }
     std::string Format() override { return "dummy"; }
-    std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override { return MakeUnique<DummyBatch>(); }
+    std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override { return std::make_unique<DummyBatch>(); }
 };
 
 enum class DatabaseFormat {

@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(util_datadir)
 BOOST_AUTO_TEST_CASE(util_check)
 {
     // Check that Assert can forward
-    const std::unique_ptr<int> p_two = Assert(MakeUnique<int>(2));
+    const std::unique_ptr<int> p_two = Assert(std::make_unique<int>(2));
     // Check that Assert works on lvalues and rvalues
     const int two = *Assert(p_two);
     Assert(two == 2);

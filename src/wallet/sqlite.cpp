@@ -8,7 +8,6 @@
 #include <crypto/common.h>
 #include <logging.h>
 #include <sync.h>
-#include <util/memory.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -330,7 +329,7 @@ void SQLiteDatabase::Close()
 std::unique_ptr<DatabaseBatch> SQLiteDatabase::MakeBatch(bool flush_on_close)
 {
     // We ignore flush_on_close because we don't do manual flushing for SQLite
-    return MakeUnique<SQLiteBatch>(*this);
+    return std::make_unique<SQLiteBatch>(*this);
 }
 
 SQLiteBatch::SQLiteBatch(SQLiteDatabase& database)
@@ -571,7 +570,7 @@ std::unique_ptr<SQLiteDatabase> MakeSQLiteDatabase(const fs::path& path, const D
 {
     try {
         fs::path data_file = SQLiteDataFile(path);
-        auto db = MakeUnique<SQLiteDatabase>(data_file.parent_path(), data_file);
+        auto db = std::make_unique<SQLiteDatabase>(data_file.parent_path(), data_file);
         if (options.verify && !db->Verify(error)) {
             status = DatabaseStatus::FAILED_VERIFY;
             return nullptr;

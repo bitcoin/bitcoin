@@ -5,7 +5,6 @@
 #ifndef SYSCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 #define SYSCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 
-#include <util/memory.h>
 
 #include <memory>
 #include <string>
@@ -29,7 +28,7 @@ public:
     template <typename T>
     static std::unique_ptr<CZMQAbstractNotifier> Create()
     {
-        return MakeUnique<T>();
+        return std::make_unique<T>();
     }
 
     std::string GetType() const { return type; }

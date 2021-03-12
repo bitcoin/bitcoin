@@ -10,7 +10,6 @@
 #include <pubkey.h>
 #include <script/script.h>
 #include <streams.h>
-#include <util/memory.h>
 #include <version.h>
 
 #include <cstdint>
