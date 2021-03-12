@@ -1682,9 +1682,7 @@ int ApplyTxInUndo(Coin&& undo, CCoinsViewCache& view, const COutPoint& out)
 DisconnectResult CChainState::DisconnectBlock(const CBlock& block, const CBlockIndex* pindex, CCoinsViewCache& view)
 {
     bool fDIP0003Active = pindex->nHeight >= Params().GetConsensus().DIP0003Height;
-    bool fHasBestBlock = evoDb->VerifyBestBlock(pindex->GetBlockHash());
-
-    if (fDIP0003Active && !fHasBestBlock) {
+    if (fDIP0003Active && !evoDb->VerifyBestBlock(pindex->GetBlockHash())) {
         // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
         AbortNode("Found EvoDB inconsistency, you must reindex to continue");
         return DISCONNECT_FAILED;
@@ -2089,9 +2087,7 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
 
     if (pindex->pprev) {
         bool fDIP0003Active = pindex->nHeight >= chainparams.GetConsensus().DIP0003Height;
-        bool fHasBestBlock = evoDb->VerifyBestBlock(pindex->pprev->GetBlockHash());
-
-        if (fDIP0003Active && !fHasBestBlock) {
+        if (fDIP0003Active && !evoDb->VerifyBestBlock(pindex->pprev->GetBlockHash())) {
             // Nodes that upgraded after DIP3 activation will have to reindex to ensure evodb consistency
             return AbortNode(state, "Found EvoDB inconsistency, you must reindex to continue");
         }
