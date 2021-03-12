@@ -77,7 +77,7 @@ $(1)_cleaned=$$($(1)_extract_dir)/.stamp_cleaned
 $(1)_built=$$($(1)_build_dir)/.stamp_built
 $(1)_configured=$$($(1)_build_dir)/.stamp_configured
 $(1)_staged=$$($(1)_staging_dir)/.stamp_staged
-$(1)_postprocessed=$$($(1)_staging_prefix_dir)/.stamp_postprocessed
+$(1)_postprocessed=$$($(1)_staging_dir)/.stamp_postprocessed
 $(1)_download_path_fixed=$(subst :,\:,$$($(1)_download_path))
 
 
