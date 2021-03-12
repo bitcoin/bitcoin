@@ -256,8 +256,6 @@ define $(package)_config_cmds
   ./configure $($(package)_config_opts) && \
   cd .. && \
   $(MAKE) -C qtbase sub-src-clean && \
-  qtbase/bin/qmake -o qttranslations/Makefile qttranslations/qttranslations.pro && \
-  qtbase/bin/qmake -o qttranslations/translations/Makefile qttranslations/translations/translations.pro && \
   qtbase/bin/qmake -o qttools/src/linguist/lrelease/Makefile qttools/src/linguist/lrelease/lrelease.pro && \
   qtbase/bin/qmake -o qttools/src/linguist/lupdate/Makefile qttools/src/linguist/lupdate/lupdate.pro && \
   qtbase/bin/qmake -o qttools/src/linguist/lconvert/Makefile qttools/src/linguist/lconvert/lconvert.pro
@@ -267,15 +265,20 @@ define $(package)_build_cmds
   $(MAKE) -C qtbase/src $(addprefix sub-,$($(package)_qt_libs)) && \
   $(MAKE) -C qttools/src/linguist/lrelease && \
   $(MAKE) -C qttools/src/linguist/lupdate && \
-  $(MAKE) -C qttools/src/linguist/lconvert && \
-  $(MAKE) -C qttranslations
+  $(MAKE) -C qttools/src/linguist/lconvert
 endef
 
+# Qt translations module depends on lrelease binary being installed,
+# therefore all translations processing is put here.
 define $(package)_stage_cmds
   $(MAKE) -C qtbase/src INSTALL_ROOT=$($(package)_staging_dir) $(addsuffix -install_subtargets,$(addprefix sub-,$($(package)_qt_libs))) && \
   $(MAKE) -C qttools/src/linguist/lrelease INSTALL_ROOT=$($(package)_staging_dir) install_target && \
   $(MAKE) -C qttools/src/linguist/lupdate INSTALL_ROOT=$($(package)_staging_dir) install_target && \
   $(MAKE) -C qttools/src/linguist/lconvert INSTALL_ROOT=$($(package)_staging_dir) install_target && \
+  $(MAKE) -C qttools/src/linguist/lrelease INSTALL_ROOT=/ install_target && \
+  qtbase/bin/qmake -o qttranslations/Makefile qttranslations/qttranslations.pro && \
+  qtbase/bin/qmake -o qttranslations/translations/Makefile qttranslations/translations/translations.pro && \
+  $(MAKE) -C qttranslations && \
   $(MAKE) -C qttranslations INSTALL_ROOT=$($(package)_staging_dir) install_subtargets
 endef
 
