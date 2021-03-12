@@ -49,18 +49,6 @@ public:
 
     CBLSWrapper()
     {
-        struct NullHash {
-            uint256 hash;
-            NullHash() {
-                char buf[_SerSize];
-                memset(buf, 0, _SerSize);
-                CHashWriter ss(SER_GETHASH, 0);
-                ss.write(buf, _SerSize);
-                hash = ss.GetHash();
-            }
-        };
-        static NullHash nullHash;
-        cachedHash = nullHash.hash;
     }
     CBLSWrapper(const std::vector<unsigned char>& vecBytes) : CBLSWrapper<ImplType, _SerSize, C>()
     {
@@ -119,7 +107,7 @@ public:
                 Reset();
             }
         }
-        UpdateHash();
+        cachedHash.SetNull();
     }
 
     std::vector<uint8_t> ToByteVector() const
@@ -132,12 +120,10 @@ public:
 
     const uint256& GetHash() const
     {
+        if (cachedHash.IsNull()) {
+            cachedHash = ::SerializeHash(*this);
+        }
         return cachedHash;
-    }
-
-    void UpdateHash() const
-    {
-        cachedHash = ::SerializeHash(*this);
     }
 
     bool SetHexStr(const std::string& str)
@@ -359,7 +345,7 @@ public:
         if (!bufValid) {
             vecBytes = obj.ToByteVector();
             bufValid = true;
-            hash = uint256();
+            hash.SetNull();
         }
         s.write((const char*)vecBytes.data(), vecBytes.size());
     }
@@ -371,7 +357,7 @@ public:
         s.read((char*)vecBytes.data(), BLSObject::SerSize);
         bufValid = true;
         objInitialized = false;
-        hash = uint256();
+        hash.SetNull();
     }
 
     void Set(const BLSObject& _obj)
@@ -380,7 +366,7 @@ public:
         bufValid = false;
         objInitialized = true;
         obj = _obj;
-        hash = uint256();
+        hash.SetNull();
     }
     const BLSObject& Get() const
     {
@@ -424,19 +410,14 @@ public:
         if (!bufValid) {
             vecBytes = obj.ToByteVector();
             bufValid = true;
-            hash = uint256();
+            hash.SetNull();
         }
         if (hash.IsNull()) {
-            UpdateHash();
+            CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+            ss.write((const char*)vecBytes.data(), vecBytes.size());
+            hash = ss.GetHash();
         }
         return hash;
-    }
-private:
-    void UpdateHash() const
-    {
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-        ss.write((const char*)vecBytes.data(), vecBytes.size());
-        hash = ss.GetHash();
     }
 };
 typedef CBLSLazyWrapper<CBLSSignature> CBLSLazySignature;

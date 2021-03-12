@@ -147,12 +147,12 @@ void CleanupBLSDkgTests()
     } \
     BENCHMARK(BLSDKG_BuildQuorumVerificationVectors_##name##_##quorumSize, num_iters_for_one_second)
 
-BENCH_BuildQuorumVerificationVectors(simple, 10, false, 2500)
-BENCH_BuildQuorumVerificationVectors(simple, 100, false, 25)
-BENCH_BuildQuorumVerificationVectors(simple, 400, false, 1)
-BENCH_BuildQuorumVerificationVectors(parallel, 10, true, 3000)
-BENCH_BuildQuorumVerificationVectors(parallel, 100, true, 50)
-BENCH_BuildQuorumVerificationVectors(parallel, 400, true, 3)
+BENCH_BuildQuorumVerificationVectors(simple, 10, false, 11000)
+BENCH_BuildQuorumVerificationVectors(simple, 100, false, 110)
+BENCH_BuildQuorumVerificationVectors(simple, 400, false, 6)
+BENCH_BuildQuorumVerificationVectors(parallel, 10, true, 12000)
+BENCH_BuildQuorumVerificationVectors(parallel, 100, true, 170)
+BENCH_BuildQuorumVerificationVectors(parallel, 400, true, 8)
 
 ///////////////////////////////
 
