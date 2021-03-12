@@ -2,6 +2,8 @@ packages:=boost libevent chia_bls gmp zlib libcurl gnutls nettle
 
 qrencode_packages = qrencode
 
+qt_packages = zlib
+
 qt_linux_packages:=qt expat libxcb xcb_proto libXau xproto freetype fontconfig libxkbcommon
 qt_android_packages=qt
 
