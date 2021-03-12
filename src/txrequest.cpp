@@ -9,7 +9,6 @@
 #include <primitives/transaction.h>
 #include <random.h>
 #include <uint256.h>
-#include <util/memory.h>
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
@@ -711,7 +710,7 @@ public:
 };
 
 TxRequestTracker::TxRequestTracker(bool deterministic) :
-    m_impl{MakeUnique<TxRequestTracker::Impl>(deterministic)} {}
+    m_impl{std::make_unique<TxRequestTracker::Impl>(deterministic)} {}
 
 TxRequestTracker::~TxRequestTracker() = default;
 

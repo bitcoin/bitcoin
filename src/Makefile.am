@@ -240,7 +240,6 @@ BITCOIN_CORE_H = \
   util/golombrice.h \
   util/hasher.h \
   util/macros.h \
-  util/memory.h \
   util/message.h \
   util/moneystr.h \
   util/rbf.h \
