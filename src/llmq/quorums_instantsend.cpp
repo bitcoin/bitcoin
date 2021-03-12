@@ -407,23 +407,15 @@ void CInstantSendManager::InterruptWorkerThread()
     workInterrupt();
 }
 
-bool CInstantSendManager::ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params)
+void CInstantSendManager::ProcessTx(const CTransaction& tx, bool fRetroactive, const Consensus::Params& params)
 {
-    if (!IsInstantSendEnabled()) {
-        return true;
+    if (!fMasternodeMode || !IsInstantSendEnabled() || !masternodeSync.IsBlockchainSynced()) {
+        return;
     }
 
     auto llmqType = params.llmqTypeInstantSend;
     if (llmqType == Consensus::LLMQ_NONE) {
-        return true;
-    }
-    if (!fMasternodeMode) {
-        return true;
-    }
-
-    // Ignore any InstantSend messages until blockchain is synced
-    if (!masternodeSync.IsBlockchainSynced()) {
-        return true;
+        return;
     }
 
     // In case the islock was received before the TX, filtered announcement might have missed this islock because
@@ -441,30 +433,28 @@ bool CInstantSendManager::ProcessTx(const CTransaction& tx, bool fRetroactive, c
     if (!CheckCanLock(tx, true, params)) {
         LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: CheckCanLock returned false\n", __func__,
                   tx.GetHash().ToString());
-        return false;
+        return;
     }
 
     auto conflictingLock = GetConflictingLock(tx);
-    if (conflictingLock) {
+    if (conflictingLock != nullptr) {
         auto conflictingLockHash = ::SerializeHash(*conflictingLock);
         LogPrintf("CInstantSendManager::%s -- txid=%s: conflicts with islock %s, txid=%s\n", __func__,
                   tx.GetHash().ToString(), conflictingLockHash.ToString(), conflictingLock->txid.ToString());
-        return false;
+        return;
     }
 
     // Only sign for inlocks or islocks if mempool IS signing is enabled.
     // However, if we are processing a tx because it was included in a block we should
     // sign even if mempool IS signing is disabled. This allows a ChainLock to happen on this
     // block after we retroactively locked all transactions.
-    if (!IsInstantSendMempoolSigningEnabled() && !fRetroactive) return true;
+    if (!IsInstantSendMempoolSigningEnabled() && !fRetroactive) return;
 
-    if (!TrySignInputLocks(tx, fRetroactive, llmqType)) return false;
+    if (!TrySignInputLocks(tx, fRetroactive, llmqType)) return;
 
     // We might have received all input locks before we got the corresponding TX. In this case, we have to sign the
     // islock now instead of waiting for the input locks.
     TrySignInstantSendLock(tx);
-
-    return true;
 }
 
 bool CInstantSendManager::TrySignInputLocks(const CTransaction& tx, bool fRetroactive, Consensus::LLMQType llmqType)
