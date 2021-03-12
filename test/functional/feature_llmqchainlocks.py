@@ -7,7 +7,7 @@ import time
 import struct
 from test_framework.test_framework import DashTestFramework
 from test_framework.messages import CInv, hash256, msg_clsig, msg_inv, ser_string, uint256_from_str
-from test_framework.util import hex_str_to_bytes
+from test_framework.util import hex_str_to_bytes, wait_until_helper
 from test_framework.p2p import (
   P2PInterface,
 )
@@ -116,12 +116,23 @@ class LLMQChainLocksTest(DashTestFramework):
                 break
         assert(found)
 
+        def wait_for_headers():
+            if self.nodes[1].getconnectioncount() == node1_num_peers_before:
+                return False
+            if self.nodes[1].getpeerinfo()[-1]["synced_headers"] < self.nodes[0].getblockcount():
+                return False
+            return True
+
         self.log.info("Keep node connected and let it try to reorg the chain")
         good_tip = self.nodes[0].getbestblockhash()
         self.log.info("Restart it so that it forgets all the chainlock messages from the past")
         self.stop_node(0)
         self.start_node(0)
+        node1_num_peers_before = self.nodes[1].getconnectioncount()
         self.connect_nodes(0, 1)
+        # We need to wait for nodes to exchange headers first because
+        # node1 won't recognize node0 as a good peer to send new blocks to otherwise.
+        wait_until_helper(wait_for_headers, sleep=1, timeout=5)
         assert(self.nodes[0].getbestblockhash() == good_tip)
         self.nodes[0].invalidateblock(good_tip)
         self.log.info("Now try to reorg the chain")
