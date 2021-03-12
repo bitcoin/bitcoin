@@ -484,6 +484,7 @@ protected:
     //! The sub-descriptor argument (nullptr for everything but SH and WSH).
     //! In doc/descriptors.m this is referred to as SCRIPT expressions sh(SCRIPT)
     //! and wsh(SCRIPT), and distinct from KEY expressions and ADDR expressions.
+    //! Subdescriptors can only ever generate a single script.
     const std::unique_ptr<DescriptorImpl> m_subdescriptor_arg;
 
     //! Return a serialization of anything except pubkey and script arguments, to be prepended to those.
@@ -491,8 +492,7 @@ protected:
 
     /** A helper function to construct the scripts for this descriptor.
      *
-     *  This function is invoked once for every CScript produced by evaluating
-     *  m_subdescriptor_arg, or just once in case m_subdescriptor_arg is nullptr.
+     *  This function is invoked once by ExpandHelper.
 
      *  @param pubkeys The evaluations of the m_pubkey_args field.
      *  @param script The evaluation of m_subdescriptor_arg (or nullptr when m_subdescriptor_arg is nullptr).
@@ -586,6 +586,7 @@ public:
         if (m_subdescriptor_arg) {
             FlatSigningProvider subprovider;
             if (!m_subdescriptor_arg->ExpandHelper(pos, arg, read_cache, subscripts, subprovider, write_cache)) return false;
+            assert(subscripts.size() == 1);
             out = Merge(out, subprovider);
         }
 
@@ -596,13 +597,8 @@ public:
             out.origins.emplace(entry.first.GetID(), std::make_pair<CPubKey, KeyOriginInfo>(CPubKey(entry.first), std::move(entry.second)));
         }
         if (m_subdescriptor_arg) {
-            for (const auto& subscript : subscripts) {
-                out.scripts.emplace(CScriptID(subscript), subscript);
-                std::vector<CScript> addscripts = MakeScripts(pubkeys, &subscript, out);
-                for (auto& addscript : addscripts) {
-                    output_scripts.push_back(std::move(addscript));
-                }
-            }
+            out.scripts.emplace(CScriptID(subscripts[0]), subscripts[0]);
+            output_scripts = MakeScripts(pubkeys, &subscripts[0], out);
         } else {
             output_scripts = MakeScripts(pubkeys, nullptr, out);
         }
