@@ -598,11 +598,7 @@ struct CNodeState {
     //! Whether this peer relays txs via wtxid
     bool m_wtxid_relay{false};
 
-    CNodeState(bool is_inbound)
-        : m_is_inbound(is_inbound)
-    {
-        m_recently_announced_invs.reset();
-    }
+    CNodeState(bool is_inbound) : m_is_inbound(is_inbound) {}
 };
 
 /** Map maintaining per-node state. */
