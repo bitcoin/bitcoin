@@ -128,7 +128,6 @@ public:
     /** Allow nodes with the same address and multiple ports */
     bool AllowMultiplePorts() const { return fAllowMultiplePorts; }
     void UpdateDIP3Parameters(int nActivationHeight, int nEnforcementHeight);
-    virtual ~CChainParams() {}
 protected:
     CChainParams() {}
 
