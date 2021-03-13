@@ -60,16 +60,17 @@ start_pre() {
 	"${SYSCOIND_PIDDIR}"
 
 	checkpath -f \
-	-o ${SYSCOIND_USER}:${SYSCOIND_GROUP} \
+	-o "${SYSCOIND_USER}:${SYSCOIND_GROUP}" \
 	-m 0660 \
-	${SYSCOIND_CONFIGFILE}
+	"${SYSCOIND_CONFIGFILE}"
 
 	checkconfig || return 1
 }
 
 checkconfig()
 {
-	if ! grep -qs '^rpcpassword=' "${SYSCOIND_CONFIGFILE}" ; then
+	if grep -qs '^rpcuser=' "${SYSCOIND_CONFIGFILE}" && \
+		! grep -qs '^rpcpassword=' "${SYSCOIND_CONFIGFILE}" ; then
 		eerror ""
 		eerror "ERROR: You must set a secure rpcpassword to run syscoind."
 		eerror "The setting must appear in ${SYSCOIND_CONFIGFILE}"
