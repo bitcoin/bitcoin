@@ -60,16 +60,17 @@ start_pre() {
 	"${BITCOIND_PIDDIR}"
 
 	checkpath -f \
-	-o ${BITCOIND_USER}:${BITCOIND_GROUP} \
+	-o "${BITCOIND_USER}:${BITCOIND_GROUP}" \
 	-m 0660 \
-	${BITCOIND_CONFIGFILE}
+	"${BITCOIND_CONFIGFILE}"
 
 	checkconfig || return 1
 }
 
 checkconfig()
 {
-	if ! grep -qs '^rpcpassword=' "${BITCOIND_CONFIGFILE}" ; then
+	if grep -qs '^rpcuser=' "${BITCOIND_CONFIGFILE}" && \
+		! grep -qs '^rpcpassword=' "${BITCOIND_CONFIGFILE}" ; then
 		eerror ""
 		eerror "ERROR: You must set a secure rpcpassword to run dashd."
 		eerror "The setting must appear in ${BITCOIND_CONFIGFILE}"
