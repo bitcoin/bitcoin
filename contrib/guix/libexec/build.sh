@@ -402,7 +402,7 @@ case "$HOST" in
         cp -rf --target-directory=. contrib/windeploy
         (
             cd ./windeploy
-            mkdir unsigned
+            mkdir -p unsigned
             cp --target-directory=unsigned/ "${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
             find . -print0 \
                 | sort --zero-terminated \
