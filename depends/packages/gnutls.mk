@@ -1,9 +1,9 @@
 package=gnutls
-$(package)_version=3.5.8
+$(package)_version=3.7.0
 $(package)_dependencies=nettle zlib
-$(package)_download_path=https://www.gnupg.org/ftp/gcrypt/gnutls/v3.5/
+$(package)_download_path=https://www.gnupg.org/ftp/gcrypt/gnutls/v3.7/
 $(package)_file_name=$(package)-$($(package)_version).tar.xz
-$(package)_sha256_hash=0e97f243ae72b70307d684b84c7fe679385aa7a7a0e37e5be810193dcc17d4ff
+$(package)_sha256_hash=49e2a22691d252c9f24a9829b293a8f359095bc5a818351f05f1c0a5188a1df8
 
 # default settings
 $(package)_config_opts=--disable-shared --enable-static --with-included-libtasn1 --with-included-unistring --enable-local-libopts --disable-non-suiteb-curves --disable-doc --disable-tools --without-p11-kit --disable-tests
