@@ -865,10 +865,6 @@ syscoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
 syscoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 syscoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
-if GLIBC_BACK_COMPAT
-  syscoin_tx_SOURCES += compat/glibc_compat.cpp
-endif
-
 if TARGET_WINDOWS
 syscoin_tx_SOURCES += syscoin-tx-res.rc
 endif
