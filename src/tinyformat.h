@@ -797,27 +797,27 @@ inline const char* streamStateFromFormat(std::ostream& out, bool& positionalMode
             break;
         case 'X':
             out.setf(std::ios::uppercase);
-            // Falls through
+            [[fallthrough]];
         case 'x': case 'p':
             out.setf(std::ios::hex, std::ios::basefield);
             intConversion = true;
             break;
         case 'E':
             out.setf(std::ios::uppercase);
-            // Falls through
+            [[fallthrough]];
         case 'e':
             out.setf(std::ios::scientific, std::ios::floatfield);
             out.setf(std::ios::dec, std::ios::basefield);
             break;
         case 'F':
             out.setf(std::ios::uppercase);
-            // Falls through
+            [[fallthrough]];
         case 'f':
             out.setf(std::ios::fixed, std::ios::floatfield);
             break;
         case 'A':
             out.setf(std::ios::uppercase);
-            // Falls through
+            [[fallthrough]];
         case 'a':
 #           ifdef _MSC_VER
             // Workaround https://developercommunity.visualstudio.com/content/problem/520472/hexfloat-stream-output-does-not-ignore-precision-a.html
@@ -829,7 +829,7 @@ inline const char* streamStateFromFormat(std::ostream& out, bool& positionalMode
             break;
         case 'G':
             out.setf(std::ios::uppercase);
-            // Falls through
+            [[fallthrough]];
         case 'g':
             out.setf(std::ios::dec, std::ios::basefield);
             // As in boost::format, let stream decide float format.
