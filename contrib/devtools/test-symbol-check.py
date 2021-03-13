@@ -5,12 +5,15 @@
 '''
 Test script for symbol-check.py
 '''
+import os
 import subprocess
 import unittest
 
 def call_symbol_check(cc, source, executable, options):
     subprocess.run([cc,source,'-o',executable] + options, check=True)
     p = subprocess.run(['./contrib/devtools/symbol-check.py',executable], stdout=subprocess.PIPE, universal_newlines=True)
+    os.remove(source)
+    os.remove(executable)
     return (p.returncode, p.stdout.rstrip())
 
 def get_machine(cc):
