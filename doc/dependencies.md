@@ -26,7 +26,7 @@ These are the dependencies currently used by Bitcoin Core. You can find instruct
 | XCB |  |  |  |  | [Yes](https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk) (Linux only) |
 | xkbcommon |  |  |  |  | [Yes](https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk) (Linux only) |
 | ZeroMQ | [4.3.1](https://github.com/zeromq/libzmq/releases) | 4.0.0 | No |  |  |
-| zlib | [1.2.11](https://zlib.net/) |  |  |  | No |
+| zlib |  |  |  |  | [Yes](https://github.com/bitcoin/bitcoin/blob/master/depends/packages/qt.mk) |
 
 Controlling dependencies
 ------------------------
@@ -43,3 +43,4 @@ Some dependencies are not needed in all configurations. The following are some f
 
 #### Other
 * librsvg is only needed if you need to run `make deploy` on (cross-compilation to) macOS.
+* Not-Qt-bundled zlib is required to build the [DMG tool](../contrib/macdeploy/README.md#deterministic-macos-dmg-notes) from the libdmg-hfsplus project.
