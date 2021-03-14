@@ -683,13 +683,13 @@ QString formatDurationStr(int secs)
     int seconds = secs % 60;
 
     if (days)
-        strList.append(QString(QObject::tr("%1 d")).arg(days));
+        strList.append(QObject::tr("%1 d").arg(days));
     if (hours)
-        strList.append(QString(QObject::tr("%1 h")).arg(hours));
+        strList.append(QObject::tr("%1 h").arg(hours));
     if (mins)
-        strList.append(QString(QObject::tr("%1 m")).arg(mins));
+        strList.append(QObject::tr("%1 m").arg(mins));
     if (seconds || (!days && !hours && !mins))
-        strList.append(QString(QObject::tr("%1 s")).arg(seconds));
+        strList.append(QObject::tr("%1 s").arg(seconds));
 
     return strList.join(" ");
 }
@@ -712,12 +712,12 @@ QString formatPingTime(std::chrono::microseconds ping_time)
 {
     return (ping_time == std::chrono::microseconds::max() || ping_time == 0us) ?
         QObject::tr("N/A") :
-        QString(QObject::tr("%1 ms")).arg(QString::number((int)(count_microseconds(ping_time) / 1000), 10));
+        QObject::tr("%1 ms").arg(QString::number((int)(count_microseconds(ping_time) / 1000), 10));
 }
 
 QString formatTimeOffset(int64_t nTimeOffset)
 {
-  return QString(QObject::tr("%1 s")).arg(QString::number((int)nTimeOffset, 10));
+  return QObject::tr("%1 s").arg(QString::number((int)nTimeOffset, 10));
 }
 
 QString formatNiceTimeOffset(qint64 secs)
@@ -760,13 +760,13 @@ QString formatNiceTimeOffset(qint64 secs)
 QString formatBytes(uint64_t bytes)
 {
     if(bytes < 1024)
-        return QString(QObject::tr("%1 B")).arg(bytes);
+        return QObject::tr("%1 B").arg(bytes);
     if(bytes < 1024 * 1024)
-        return QString(QObject::tr("%1 KB")).arg(bytes / 1024);
+        return QObject::tr("%1 KB").arg(bytes / 1024);
     if(bytes < 1024 * 1024 * 1024)
-        return QString(QObject::tr("%1 MB")).arg(bytes / 1024 / 1024);
+        return QObject::tr("%1 MB").arg(bytes / 1024 / 1024);
 
-    return QString(QObject::tr("%1 GB")).arg(bytes / 1024 / 1024 / 1024);
+    return QObject::tr("%1 GB").arg(bytes / 1024 / 1024 / 1024);
 }
 
 qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal minPointSize, qreal font_size) {
