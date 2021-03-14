@@ -1152,6 +1152,8 @@ int RaiseFileDescriptorLimit(int nMinFD) {
             setrlimit(RLIMIT_NOFILE, &limitFD);
             getrlimit(RLIMIT_NOFILE, &limitFD);
         }
+        if (limitFD.rlim_cur > INT_MAX)
+            limitFD.rlim_cur = INT_MAX;
         return limitFD.rlim_cur;
     }
     return nMinFD; // getrlimit failed, assume it's fine
