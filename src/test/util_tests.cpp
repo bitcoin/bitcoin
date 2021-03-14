@@ -1490,6 +1490,42 @@ BOOST_AUTO_TEST_CASE(test_ParseInt64)
     BOOST_CHECK(!ParseInt64("32482348723847471234", nullptr));
 }
 
+BOOST_AUTO_TEST_CASE(test_ParseUInt8)
+{
+    uint8_t n;
+    // Valid values
+    BOOST_CHECK(ParseUInt8("255", nullptr));
+    BOOST_CHECK(ParseUInt8("0", &n) && n == 0);
+    BOOST_CHECK(ParseUInt8("255", &n) && n == 255);
+    BOOST_CHECK(ParseUInt8("0255", &n) && n == 255); // no octal
+    BOOST_CHECK(ParseUInt8("255", &n) && n == static_cast<uint8_t>(255));
+    BOOST_CHECK(ParseUInt8("+255", &n) && n == 255);
+    BOOST_CHECK(ParseUInt8("00000000000000000012", &n) && n == 12);
+    BOOST_CHECK(ParseUInt8("00000000000000000000", &n) && n == 0);
+    // Invalid values
+    BOOST_CHECK(!ParseUInt8("-00000000000000000000", &n));
+    BOOST_CHECK(!ParseUInt8("", &n));
+    BOOST_CHECK(!ParseUInt8(" 1", &n)); // no padding inside
+    BOOST_CHECK(!ParseUInt8(" -1", &n));
+    BOOST_CHECK(!ParseUInt8("++1", &n));
+    BOOST_CHECK(!ParseUInt8("+-1", &n));
+    BOOST_CHECK(!ParseUInt8("-+1", &n));
+    BOOST_CHECK(!ParseUInt8("--1", &n));
+    BOOST_CHECK(!ParseUInt8("-1", &n));
+    BOOST_CHECK(!ParseUInt8("1 ", &n));
+    BOOST_CHECK(!ParseUInt8("1a", &n));
+    BOOST_CHECK(!ParseUInt8("aap", &n));
+    BOOST_CHECK(!ParseUInt8("0x1", &n)); // no hex
+    BOOST_CHECK(!ParseUInt8("0x1", &n)); // no hex
+    BOOST_CHECK(!ParseUInt8("1"s "\0" "1"s, &n)); // no embedded NULs
+    // Overflow and underflow
+    BOOST_CHECK(!ParseUInt8("-255", &n));
+    BOOST_CHECK(!ParseUInt8("256", &n));
+    BOOST_CHECK(!ParseUInt8("-123", &n));
+    BOOST_CHECK(!ParseUInt8("-123", nullptr));
+    BOOST_CHECK(!ParseUInt8("256", nullptr));
+}
+
 BOOST_AUTO_TEST_CASE(test_ParseUInt32)
 {
     uint32_t n;
