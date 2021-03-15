@@ -18,7 +18,6 @@
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
-#include <optional>
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
@@ -35,6 +34,7 @@
 #include <deque>
 #include <map>
 #include <memory>
+#include <optional>
 #include <thread>
 #include <vector>
 

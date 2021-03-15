@@ -9,6 +9,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <optional>
 #include <unistd.h>
 
 TokenPipeEnd TokenPipe::TakeReadEnd()

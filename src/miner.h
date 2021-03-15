@@ -6,12 +6,12 @@
 #ifndef BITCOIN_MINER_H
 #define BITCOIN_MINER_H
 
-#include <optional>
 #include <primitives/block.h>
 #include <txmempool.h>
 #include <validation.h>
 
 #include <memory>
+#include <optional>
 #include <stdint.h>
 
 #include <boost/multi_index_container.hpp>
@@ -160,8 +160,8 @@ public:
     /** Construct a new block template with coinbase to scriptPubKeyIn */
     std::unique_ptr<CBlockTemplate> CreateNewBlock(CChainState& chainstate, const CScript& scriptPubKeyIn);
 
-    static std::optional<int64_t> m_last_block_num_txs;
-    static std::optional<int64_t> m_last_block_weight;
+    inline static std::optional<int64_t> m_last_block_num_txs{};
+    inline static std::optional<int64_t> m_last_block_weight{};
 
 private:
     // utility functions

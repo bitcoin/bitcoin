@@ -5,12 +5,12 @@
 #ifndef BITCOIN_SCRIPT_DESCRIPTOR_H
 #define BITCOIN_SCRIPT_DESCRIPTOR_H
 
-#include <optional>
 #include <outputtype.h>
 #include <script/script.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
 
+#include <optional>
 #include <vector>
 
 using ExtPubKeyMap = std::unordered_map<uint32_t, CExtPubKey>;

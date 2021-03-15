@@ -34,6 +34,7 @@
 #include <validation.h>
 
 #include <memory>
+#include <optional>
 #include <typeinfo>
 
 /** How long to cache transactions in mapRelay for normal relay */

@@ -15,7 +15,6 @@
 #include <net.h>
 #include <netbase.h>
 #include <node/utxo_snapshot.h>
-#include <optional>
 #include <primitives/block.h>
 #include <protocol.h>
 #include <psbt.h>
@@ -26,6 +25,7 @@
 #include <version.h>
 
 #include <exception>
+#include <optional>
 #include <stdexcept>
 #include <stdint.h>
 #include <unistd.h>

@@ -5,12 +5,12 @@
 #ifndef BITCOIN_INTERFACES_CHAIN_H
 #define BITCOIN_INTERFACES_CHAIN_H
 
-#include <optional>               // For Optional and nullopt
 #include <primitives/transaction.h> // For CTransactionRef
 #include <util/settings.h>          // For util::SettingsValue
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <stddef.h>
 #include <stdint.h>
 #include <string>

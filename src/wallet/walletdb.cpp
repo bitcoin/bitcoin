@@ -23,6 +23,7 @@
 #include <wallet/wallet.h>
 
 #include <atomic>
+#include <optional>
 #include <string>
 
 namespace DBKeys {

@@ -9,7 +9,6 @@
 
 #include <chainparamsbase.h>
 #include <clientversion.h>
-#include <optional>
 #include <rpc/client.h>
 #include <rpc/mining.h>
 #include <rpc/protocol.h>
@@ -24,6 +23,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <stdio.h>
 #include <string>
 #include <tuple>

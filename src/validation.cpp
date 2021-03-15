@@ -23,7 +23,6 @@
 #include <logging/timer.h>
 #include <node/coinstats.h>
 #include <node/ui_interface.h>
-#include <optional>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <pow.h>
@@ -50,6 +49,7 @@
 #include <validationinterface.h>
 #include <warnings.h>
 
+#include <optional>
 #include <string>
 
 #include <boost/algorithm/string/replace.hpp>

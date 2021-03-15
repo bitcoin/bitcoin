@@ -5,7 +5,6 @@
 #include <test/fuzz/fuzz.h>
 
 #include <node/psbt.h>
-#include <optional>
 #include <psbt.h>
 #include <pubkey.h>
 #include <script/script.h>
@@ -13,6 +12,7 @@
 #include <version.h>
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 

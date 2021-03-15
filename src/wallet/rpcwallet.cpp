@@ -8,7 +8,6 @@
 #include <interfaces/chain.h>
 #include <key_io.h>
 #include <node/context.h>
-#include <optional>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -38,6 +37,7 @@
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 
+#include <optional>
 #include <stdint.h>
 
 #include <univalue.h>
@@ -219,7 +219,7 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
         cc.m_feerate = CFeeRate(AmountFromValue(fee_rate), COIN);
         if (override_min_fee) cc.fOverrideFeeRate = true;
         // Default RBF to true for explicit fee_rate, if unset.
-        if (cc.m_signal_bip125_rbf == std::nullopt) cc.m_signal_bip125_rbf = true;
+        if (!cc.m_signal_bip125_rbf) cc.m_signal_bip125_rbf = true;
         return;
     }
     if (!estimate_mode.isNull() && !FeeModeFromString(estimate_mode.get_str(), cc.m_fee_mode)) {

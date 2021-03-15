@@ -7,6 +7,8 @@
 
 #include <psbt.h>
 
+#include <optional>
+
 /**
  * Holds an analysis of one input from a PSBT
  */
@@ -28,9 +30,9 @@ struct PSBTAnalysis {
     std::optional<size_t> estimated_vsize;      //!< Estimated weight of the transaction
     std::optional<CFeeRate> estimated_feerate;  //!< Estimated feerate (fee / weight) of the transaction
     std::optional<CAmount> fee;                 //!< Amount of fee being paid by the transaction
-    std::vector<PSBTInputAnalysis> inputs; //!< More information about the individual inputs of the transaction
-    PSBTRole next;                         //!< Which of the BIP 174 roles needs to handle the transaction next
-    std::string error;                     //!< Error message
+    std::vector<PSBTInputAnalysis> inputs;      //!< More information about the individual inputs of the transaction
+    PSBTRole next;                              //!< Which of the BIP 174 roles needs to handle the transaction next
+    std::string error;                          //!< Error message
 
     void SetInvalid(std::string err_msg)
     {

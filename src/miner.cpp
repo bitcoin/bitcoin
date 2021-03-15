@@ -96,9 +96,6 @@ void BlockAssembler::resetBlock()
     nFees = 0;
 }
 
-std::optional<int64_t> BlockAssembler::m_last_block_num_txs{std::nullopt};
-std::optional<int64_t> BlockAssembler::m_last_block_weight{std::nullopt};
-
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(CChainState& chainstate, const CScript& scriptPubKeyIn)
 {
     int64_t nTimeStart = GetTimeMicros();

@@ -13,7 +13,6 @@
 #include <interfaces/wallet.h>
 #include <key.h>
 #include <key_io.h>
-#include <optional>
 #include <outputtype.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
@@ -40,6 +39,7 @@
 
 #include <algorithm>
 #include <assert.h>
+#include <optional>
 
 #include <boost/algorithm/string/replace.hpp>
 
@@ -87,7 +87,7 @@ static void UpdateWalletSetting(interfaces::Chain& chain,
                                 std::optional<bool> load_on_startup,
                                 std::vector<bilingual_str>& warnings)
 {
-    if (load_on_startup == std::nullopt) return;
+    if (!load_on_startup) return;
     if (load_on_startup.value() && !AddWalletSetting(chain, wallet_name)) {
         warnings.emplace_back(Untranslated("Wallet load on startup setting could not be updated, so wallet may not be loaded next node startup."));
     } else if (!load_on_startup.value() && !RemoveWalletSetting(chain, wallet_name)) {

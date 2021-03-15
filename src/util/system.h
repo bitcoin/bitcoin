@@ -19,7 +19,6 @@
 #include <compat/assumptions.h>
 #include <fs.h>
 #include <logging.h>
-#include <optional>
 #include <sync.h>
 #include <tinyformat.h>
 #include <util/settings.h>
@@ -28,6 +27,7 @@
 
 #include <exception>
 #include <map>
+#include <optional>
 #include <set>
 #include <stdint.h>
 #include <string>

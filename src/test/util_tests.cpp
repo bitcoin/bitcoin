@@ -7,7 +7,6 @@
 #include <clientversion.h>
 #include <hash.h> // For Hash()
 #include <key.h>  // For CKey
-#include <optional>
 #include <sync.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
@@ -23,6 +22,7 @@
 #include <util/vector.h>
 
 #include <array>
+#include <optional>
 #include <stdint.h>
 #include <string.h>
 #include <thread>

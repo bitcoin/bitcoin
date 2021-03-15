@@ -8,6 +8,7 @@
 
 #include <atomic>
 #include <map>
+#include <optional>
 #include <set>
 #include <string>
 #include <utility>
@@ -16,7 +17,6 @@
 #include <amount.h>
 #include <coins.h>
 #include <indirectmap.h>
-#include <optional>
 #include <policy/feerate.h>
 #include <primitives/transaction.h>
 #include <random.h>

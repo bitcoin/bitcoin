@@ -18,7 +18,6 @@
 #include <net_permissions.h>
 #include <netbase.h>
 #include <node/ui_interface.h>
-#include <optional>
 #include <protocol.h>
 #include <random.h>
 #include <scheduler.h>
@@ -39,6 +38,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <functional>
+#include <optional>
 #include <unordered_map>
 
 #include <math.h>
@@ -752,7 +752,7 @@ std::optional<CNetMessage> V1TransportDeserializer::GetMessage(const std::chrono
         LogPrint(BCLog::NET, "HEADER ERROR - COMMAND (%s, %u bytes), peer=%d\n",
                  hdr.GetCommand(), msg->m_message_size, m_node_id);
         out_err_raw_size = msg->m_raw_message_size;
-        msg = std::nullopt;
+        msg.reset();
     }
 
     // Always reset the network deserializer (prepare for the next message)
