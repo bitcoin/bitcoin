@@ -64,6 +64,11 @@ struct ProxyCredentials
     std::string password;
 };
 
+/**
+ * Wrapper for getaddrinfo(3). Do not use directly: call Lookup/LookupHost/LookupNumeric/LookupSubNet.
+ */
+std::vector<CNetAddr> WrappedGetAddrInfo(const std::string& name, bool allow_lookup);
+
 enum Network ParseNetwork(const std::string& net);
 std::string GetNetworkName(enum Network net);
 /** Return a vector of publicly routable Network names; optionally append NET_UNROUTABLE. */
@@ -74,12 +79,16 @@ bool IsProxy(const CNetAddr &addr);
 bool SetNameProxy(const proxyType &addrProxy);
 bool HaveNameProxy();
 bool GetNameProxy(proxyType &nameProxyOut);
-bool LookupHost(const std::string& name, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup);
-bool LookupHost(const std::string& name, CNetAddr& addr, bool fAllowLookup);
-bool Lookup(const std::string& name, CService& addr, int portDefault, bool fAllowLookup);
-bool Lookup(const std::string& name, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions);
-CService LookupNumeric(const std::string& name, int portDefault = 0);
-bool LookupSubNet(const std::string& strSubnet, CSubNet& subnet);
+
+using DNSLookupFn = std::function<std::vector<CNetAddr>(const std::string&, bool)>;
+extern DNSLookupFn g_dns_lookup;
+
+bool LookupHost(const std::string& name, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup, DNSLookupFn dns_lookup_function = g_dns_lookup);
+bool LookupHost(const std::string& name, CNetAddr& addr, bool fAllowLookup, DNSLookupFn dns_lookup_function = g_dns_lookup);
+bool Lookup(const std::string& name, CService& addr, int portDefault, bool fAllowLookup, DNSLookupFn dns_lookup_function = g_dns_lookup);
+bool Lookup(const std::string& name, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions, DNSLookupFn dns_lookup_function = g_dns_lookup);
+CService LookupNumeric(const std::string& name, int portDefault = 0, DNSLookupFn dns_lookup_function = g_dns_lookup);
+bool LookupSubNet(const std::string& strSubnet, CSubNet& subnet, DNSLookupFn dns_lookup_function = g_dns_lookup);
 
 /**
  * Create a TCP socket in the given address family.
