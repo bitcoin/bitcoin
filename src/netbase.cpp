@@ -178,7 +178,7 @@ static bool LookupIntern(const std::string& name, std::vector<CNetAddr>& vIP, un
  * @returns Whether or not the specified host string successfully resolved to
  *          any resulting network addresses.
  *
- * @see Lookup(const char *, std::vector<CService>&, int, bool, unsigned int)
+ * @see Lookup(const std::string&, std::vector<CService>&, int, bool, unsigned int, DNSLookupFn)
  *      for additional parameter descriptions.
  */
 bool LookupHost(const std::string& name, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup, DNSLookupFn dns_lookup_function)
@@ -199,8 +199,8 @@ bool LookupHost(const std::string& name, std::vector<CNetAddr>& vIP, unsigned in
  /**
  * Resolve a host string to its first corresponding network address.
  *
- * @see LookupHost(const std::string&, std::vector<CNetAddr>&, unsigned int, bool) for
- *      additional parameter descriptions.
+ * @see LookupHost(const std::string&, std::vector<CNetAddr>&, unsigned int, bool, DNSLookupFn)
+ *      for additional parameter descriptions.
  */
 bool LookupHost(const std::string& name, CNetAddr& addr, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
@@ -257,7 +257,7 @@ bool Lookup(const std::string& name, std::vector<CService>& vAddr, int portDefau
 /**
  * Resolve a service string to its first corresponding service.
  *
- * @see Lookup(const char *, std::vector<CService>&, int, bool, unsigned int)
+ * @see Lookup(const std::string&, std::vector<CService>&, int, bool, unsigned int, DNSLookupFn)
  *      for additional parameter descriptions.
  */
 bool Lookup(const std::string& name, CService& addr, int portDefault, bool fAllowLookup, DNSLookupFn dns_lookup_function)
@@ -277,11 +277,10 @@ bool Lookup(const std::string& name, CService& addr, int portDefault, bool fAllo
  * Resolve a service string with a numeric IP to its first corresponding
  * service.
  *
- * @returns The resulting CService if the resolution was successful, [::]:0
- *          otherwise.
+ * @returns The resulting CService if the resolution was successful, [::]:0 otherwise.
  *
- * @see Lookup(const char *, CService&, int, bool) for additional parameter
- *      descriptions.
+ * @see Lookup(const std::string&, std::vector<CService>&, int, bool, unsigned int, DNSLookupFn)
+ *      for additional parameter descriptions.
  */
 CService LookupNumeric(const std::string& name, int portDefault, DNSLookupFn dns_lookup_function)
 {
