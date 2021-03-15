@@ -575,16 +575,16 @@ struct CNodeState {
       */
     struct ChainSyncTimeoutState {
         //! A timeout used for checking whether our peer has sufficiently synced
-        int64_t m_timeout;
+        int64_t m_timeout{0};
         //! A header with the work we require on our peer's chain
-        const CBlockIndex * m_work_header;
+        const CBlockIndex* m_work_header{nullptr};
         //! After timeout is reached, set to true after sending getheaders
-        bool m_sent_getheaders;
+        bool m_sent_getheaders{false};
         //! Whether this peer is protected from disconnection due to a bad/slow chain
-        bool m_protect;
+        bool m_protect{false};
     };
 
-    ChainSyncTimeoutState m_chain_sync{0, nullptr, false, false};
+    ChainSyncTimeoutState m_chain_sync;
 
     //! Time of last new block announcement
     int64_t m_last_block_announcement{0};
@@ -598,11 +598,7 @@ struct CNodeState {
     //! Whether this peer relays txs via wtxid
     bool m_wtxid_relay{false};
 
-    CNodeState(bool is_inbound)
-        : m_is_inbound(is_inbound)
-    {
-        m_recently_announced_invs.reset();
-    }
+    CNodeState(bool is_inbound) : m_is_inbound(is_inbound) {}
 };
 
 /** Map maintaining per-node state. */
