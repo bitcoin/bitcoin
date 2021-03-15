@@ -5,7 +5,7 @@
 #ifndef BITCOIN_WALLET_COINCONTROL_H
 #define BITCOIN_WALLET_COINCONTROL_H
 
-#include <optional.h>
+#include <optional>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -25,7 +25,7 @@ public:
     //! Custom change destination, if not set an address is generated
     CTxDestination destChange;
     //! Override the default change type if set, ignored if destChange is set
-    Optional<OutputType> m_change_type;
+    std::optional<OutputType> m_change_type;
     //! If false, only selected inputs are used
     bool m_add_inputs;
     //! If false, allows unselected inputs, but requires all selected inputs be used
@@ -35,11 +35,11 @@ public:
     //! Override automatic min/max checks on fee, m_feerate must be set if true
     bool fOverrideFeeRate;
     //! Override the wallet's m_pay_tx_fee if set
-    Optional<CFeeRate> m_feerate;
+    std::optional<CFeeRate> m_feerate;
     //! Override the default confirmation target if set
-    Optional<unsigned int> m_confirm_target;
+    std::optional<unsigned int> m_confirm_target;
     //! Override the wallet's m_signal_rbf if set
-    Optional<bool> m_signal_bip125_rbf;
+    std::optional<bool> m_signal_bip125_rbf;
     //! Avoid partial use of funds sent to a given address
     bool m_avoid_partial_spends;
     //! Forbids inclusion of dirty (previously used) addresses

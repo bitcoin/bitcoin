@@ -632,7 +632,7 @@ public:
         }
     }
 
-    Optional<OutputType> GetOutputType() const override { return nullopt; }
+    std::optional<OutputType> GetOutputType() const override { return std::nullopt; }
 };
 
 /** A parsed addr(A) descriptor. */
@@ -646,7 +646,7 @@ public:
     AddressDescriptor(CTxDestination destination) : DescriptorImpl({}, {}, "addr"), m_destination(std::move(destination)) {}
     bool IsSolvable() const final { return false; }
 
-    Optional<OutputType> GetOutputType() const override
+    std::optional<OutputType> GetOutputType() const override
     {
         switch (m_destination.index()) {
             case 1 /* PKHash */:
@@ -655,7 +655,7 @@ public:
             case 4 /* WitnessV0KeyHash */:
             case 5 /* WitnessUnknown */: return OutputType::BECH32;
             case 0 /* CNoDestination */:
-            default: return nullopt;
+            default: return std::nullopt;
         }
     }
     bool IsSingleType() const final { return true; }
@@ -672,7 +672,7 @@ public:
     RawDescriptor(CScript script) : DescriptorImpl({}, {}, "raw"), m_script(std::move(script)) {}
     bool IsSolvable() const final { return false; }
 
-    Optional<OutputType> GetOutputType() const override
+    std::optional<OutputType> GetOutputType() const override
     {
         CTxDestination dest;
         ExtractDestination(m_script, dest);
@@ -683,7 +683,7 @@ public:
             case 4 /* WitnessV0KeyHash */:
             case 5 /* WitnessUnknown */: return OutputType::BECH32;
             case 0 /* CNoDestination */:
-            default: return nullopt;
+            default: return std::nullopt;
         }
     }
     bool IsSingleType() const final { return true; }
@@ -711,7 +711,7 @@ protected:
     }
 public:
     PKHDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), {}, "pkh") {}
-    Optional<OutputType> GetOutputType() const override { return OutputType::LEGACY; }
+    std::optional<OutputType> GetOutputType() const override { return OutputType::LEGACY; }
     bool IsSingleType() const final { return true; }
 };
 
@@ -727,7 +727,7 @@ protected:
     }
 public:
     WPKHDescriptor(std::unique_ptr<PubkeyProvider> prov) : DescriptorImpl(Vector(std::move(prov)), {}, "wpkh") {}
-    Optional<OutputType> GetOutputType() const override { return OutputType::BECH32; }
+    std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32; }
     bool IsSingleType() const final { return true; }
 };
 
@@ -783,7 +783,7 @@ protected:
 public:
     SHDescriptor(std::unique_ptr<DescriptorImpl> desc) : DescriptorImpl({}, std::move(desc), "sh") {}
 
-    Optional<OutputType> GetOutputType() const override
+    std::optional<OutputType> GetOutputType() const override
     {
         assert(m_subdescriptor_arg);
         if (m_subdescriptor_arg->GetOutputType() == OutputType::BECH32) return OutputType::P2SH_SEGWIT;
@@ -799,7 +799,7 @@ protected:
     std::vector<CScript> MakeScripts(const std::vector<CPubKey>&, const CScript* script, FlatSigningProvider&) const override { return Vector(GetScriptForDestination(WitnessV0ScriptHash(*script))); }
 public:
     WSHDescriptor(std::unique_ptr<DescriptorImpl> desc) : DescriptorImpl({}, std::move(desc), "wsh") {}
-    Optional<OutputType> GetOutputType() const override { return OutputType::BECH32; }
+    std::optional<OutputType> GetOutputType() const override { return OutputType::BECH32; }
     bool IsSingleType() const final { return true; }
 };
 

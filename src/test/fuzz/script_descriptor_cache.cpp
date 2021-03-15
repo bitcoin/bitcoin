@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <optional.h>
+#include <optional>
 #include <pubkey.h>
 #include <script/descriptor.h>
 #include <test/fuzz/FuzzedDataProvider.h>

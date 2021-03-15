@@ -7,7 +7,7 @@
 #include <net.h>
 #include <net_permissions.h>
 #include <netaddress.h>
-#include <optional.h>
+#include <optional>
 #include <protocol.h>
 #include <random.h>
 #include <test/fuzz/FuzzedDataProvider.h>

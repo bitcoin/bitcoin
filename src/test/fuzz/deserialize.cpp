@@ -15,7 +15,7 @@
 #include <net.h>
 #include <netbase.h>
 #include <node/utxo_snapshot.h>
-#include <optional.h>
+#include <optional>
 #include <primitives/block.h>
 #include <protocol.h>
 #include <psbt.h>
@@ -69,7 +69,7 @@ T Deserialize(CDataStream ds)
 }
 
 template <typename T>
-void DeserializeFromFuzzingInput(FuzzBufferType buffer, T& obj, const Optional<int> protocol_version = nullopt)
+void DeserializeFromFuzzingInput(FuzzBufferType buffer, T& obj, const std::optional<int> protocol_version = std::nullopt)
 {
     CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
     if (protocol_version) {

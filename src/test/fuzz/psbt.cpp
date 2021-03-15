@@ -5,7 +5,7 @@
 #include <test/fuzz/fuzz.h>
 
 #include <node/psbt.h>
-#include <optional.h>
+#include <optional>
 #include <psbt.h>
 #include <pubkey.h>
 #include <script/script.h>
@@ -39,7 +39,7 @@ FUZZ_TARGET_INIT(psbt, initialize_psbt)
 
     (void)psbt.IsNull();
 
-    Optional<CMutableTransaction> tx = psbt.tx;
+    std::optional<CMutableTransaction> tx = psbt.tx;
     if (tx) {
         const CMutableTransaction& mtx = *tx;
         const PartiallySignedTransaction psbt_from_tx{mtx};

@@ -8,7 +8,7 @@
 
 #include <clientversion.h>
 #include <fs.h>
-#include <optional.h>
+#include <optional>
 #include <streams.h>
 #include <support/allocators/secure.h>
 
@@ -203,7 +203,7 @@ enum class DatabaseFormat {
 struct DatabaseOptions {
     bool require_existing = false;
     bool require_create = false;
-    Optional<DatabaseFormat> require_format;
+    std::optional<DatabaseFormat> require_format;
     uint64_t create_flags = 0;
     SecureString create_passphrase;
     bool verify = true;

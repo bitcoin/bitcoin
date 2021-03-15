@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <net.h>
 #include <netbase.h>
-#include <optional.h>
+#include <optional>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
@@ -827,7 +827,7 @@ std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(const int n_c
 bool IsEvicted(std::vector<NodeEvictionCandidate> candidates, const std::vector<NodeId>& node_ids, FastRandomContext& random_context)
 {
     Shuffle(candidates.begin(), candidates.end(), random_context);
-    const Optional<NodeId> evicted_node_id = SelectNodeToEvict(std::move(candidates));
+    const std::optional<NodeId> evicted_node_id = SelectNodeToEvict(std::move(candidates));
     if (!evicted_node_id) {
         return false;
     }
