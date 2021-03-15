@@ -36,7 +36,6 @@ UniValue RPCTestingSetup::CallRPC(std::string args)
     JSONRPCRequest request(context);
     request.strMethod = strMethod;
     request.params = RPCConvertValues(strMethod, vArgs);
-    request.fHelp = false;
     if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
     try {
         UniValue result = tableRPC.execute(request);
