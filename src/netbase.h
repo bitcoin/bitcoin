@@ -202,7 +202,7 @@ extern std::function<std::unique_ptr<Sock>(const CService&)> CreateSock;
  *
  * @returns Whether or not a connection was successfully made.
  */
-bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocketRet, int nTimeout, bool manual_connection);
+bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocket, int nTimeout, bool manual_connection);
 
 /**
  * Connect to a specified destination service through a SOCKS5 proxy by first
