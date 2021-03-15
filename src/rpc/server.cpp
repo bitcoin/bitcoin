@@ -97,7 +97,7 @@ std::string CRPCTable::help(const std::string& strCommand, const JSONRPCRequest&
     sort(vCommands.begin(), vCommands.end());
 
     JSONRPCRequest jreq = helpreq;
-    jreq.fHelp = true;
+    jreq.mode = JSONRPCRequest::GET_HELP;
     jreq.params = UniValue();
 
     for (const std::pair<std::string, const CRPCCommand*>& command : vCommands)
@@ -186,7 +186,7 @@ static RPCHelpMan help()
     }
     if (strCommand == "dump_all_command_conversions") {
         // Used for testing only, undocumented
-        return tableRPC.dumpArgMap();
+        return tableRPC.dumpArgMap(jsonRequest);
     }
 
     return tableRPC.help(strCommand, jsonRequest);
@@ -504,6 +504,16 @@ static inline JSONRPCRequest transformNamedArguments(const JSONRPCRequest& in, c
     return out;
 }
 
+static bool ExecuteCommands(const std::vector<const CRPCCommand*>& commands, const JSONRPCRequest& request, UniValue& result, const std::multimap<std::string, std::vector<UniValue>>& mapPlatformRestrictions)
+{
+    for (const auto& command : commands) {
+        if (ExecuteCommand(*command, request, result, &command == &commands.back(), mapPlatformRestrictions)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 UniValue CRPCTable::execute(const JSONRPCRequest &request) const
 {
     // Return immediately if in warmup
@@ -528,11 +538,9 @@ UniValue CRPCTable::execute(const JSONRPCRequest &request) const
     }
     if (it != mapCommands.end()) {
         UniValue result;
-        for (const auto& command : it->second) {
-            const JSONRPCRequest new_request{subcommand.empty() ? request : request.squashed() };
-            if (ExecuteCommand(*command, new_request, result, &command == &it->second.back(), mapPlatformRestrictions)) {
-                return result;
-            }
+        const JSONRPCRequest new_request{subcommand.empty() ? request : request.squashed() };
+        if (ExecuteCommands(it->second, new_request, result, mapPlatformRestrictions)) {
+            return result;
         }
     }
     throw JSONRPCError(RPC_METHOD_NOT_FOUND, "Method not found");
@@ -626,15 +634,20 @@ std::vector<std::string> CRPCTable::listCommands() const
     return commandList;
 }
 
-UniValue CRPCTable::dumpArgMap() const
+UniValue CRPCTable::dumpArgMap(const JSONRPCRequest& args_request) const
 {
+    JSONRPCRequest request(args_request);
+    request.mode = JSONRPCRequest::GET_ARGS;
+
     UniValue ret{UniValue::VARR};
     for (const auto& cmd : mapCommands) {
         // TODO: implement mapping argument to type for composite commands
         if (cmd.first.find(' ') != std::string::npos) continue;
-        for (const auto& c : cmd.second) {
-            const auto help = RpcMethodFnType(c->unique_id)();
-            help.AppendArgMap(ret);
+        UniValue result;
+        if (ExecuteCommands(cmd.second, request, result, mapPlatformRestrictions)) {
+            for (const auto& values : result.getValues()) {
+                ret.push_back(values);
+            }
         }
     }
     return ret;
