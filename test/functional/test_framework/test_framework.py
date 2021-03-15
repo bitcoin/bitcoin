@@ -813,10 +813,13 @@ class DashTestFramework(BitcoinTestFramework):
         request_id = hash256(request_id_buf)[::-1].hex()
         message_hash = tx.hash
 
+        quorum_member = None
         for mn in self.mninfo:
-            mn.node.quorum('sign', 100, request_id, message_hash)
+            res = mn.node.quorum('sign', 100, request_id, message_hash)
+            if (res and quorum_member is None):
+                quorum_member = mn
 
-        rec_sig = self.get_recovered_sig(request_id, message_hash)
+        rec_sig = self.get_recovered_sig(request_id, message_hash, node=quorum_member.node)
         islock = msg_islock(inputs, tx.sha256, hex_str_to_bytes(rec_sig['sig']))
         return islock
 
@@ -1065,17 +1068,16 @@ class DashTestFramework(BitcoinTestFramework):
         return new_quorum
 
     def get_recovered_sig(self, rec_sig_id, rec_sig_msg_hash, llmq_type=100, node=None):
-        node = self.nodes[0] if node is None else node
-        rec_sig = None
+        # Note: recsigs aren't relayed to regular nodes by default,
+        # make sure to pick a mn as a node to query for recsigs.
+        node = self.mninfo[0].node if node is None else node
         time_start = time.time()
         while time.time() - time_start < 10:
             try:
-                rec_sig = node.quorum('getrecsig', llmq_type, rec_sig_id, rec_sig_msg_hash)
-                break
+                return node.quorum('getrecsig', llmq_type, rec_sig_id, rec_sig_msg_hash)
             except JSONRPCException:
                 time.sleep(0.1)
-        assert(rec_sig is not None)
-        return rec_sig
+        assert False
 
     def get_quorum_masternodes(self, q):
         qi = self.nodes[0].quorum('info', 100, q)

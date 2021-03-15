@@ -724,12 +724,14 @@ void CSigningManager::ProcessRecoveredSig(const std::shared_ptr<const CRecovered
         pendingReconstructedRecoveredSigs.erase(recoveredSig->GetHash());
     }
 
-    CInv inv(MSG_QUORUM_RECOVERED_SIG, recoveredSig->GetHash());
-    g_connman->ForEachNode([&](CNode* pnode) {
-        if (pnode->nVersion >= LLMQS_PROTO_VERSION && pnode->fSendRecSigs) {
-            pnode->PushInventory(inv);
-        }
-    });
+    if (fMasternodeMode) {
+        CInv inv(MSG_QUORUM_RECOVERED_SIG, recoveredSig->GetHash());
+        g_connman->ForEachNode([&](CNode* pnode) {
+            if (pnode->nVersion >= LLMQS_PROTO_VERSION && pnode->fSendRecSigs) {
+                pnode->PushInventory(inv);
+            }
+        });
+    }
 
     for (auto& l : listeners) {
         l->HandleNewRecoveredSig(*recoveredSig);

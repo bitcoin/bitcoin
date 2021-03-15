@@ -32,17 +32,20 @@ class LLMQSigningTest(DashTestFramework):
 
         self.mine_quorum()
 
+        if self.options.spork21:
+            assert self.mninfo[0].node.getconnectioncount() == self.llmq_size
+
         id = "0000000000000000000000000000000000000000000000000000000000000001"
         msgHash = "0000000000000000000000000000000000000000000000000000000000000002"
         msgHashConflict = "0000000000000000000000000000000000000000000000000000000000000003"
 
         def check_sigs(hasrecsigs, isconflicting1, isconflicting2):
-            for node in self.nodes:
-                if node.quorum("hasrecsig", 100, id, msgHash) != hasrecsigs:
+            for mn in self.mninfo:
+                if mn.node.quorum("hasrecsig", 100, id, msgHash) != hasrecsigs:
                     return False
-                if node.quorum("isconflicting", 100, id, msgHash) != isconflicting1:
+                if mn.node.quorum("isconflicting", 100, id, msgHash) != isconflicting1:
                     return False
-                if node.quorum("isconflicting", 100, id, msgHashConflict) != isconflicting2:
+                if mn.node.quorum("isconflicting", 100, id, msgHashConflict) != isconflicting2:
                     return False
             return True
 
@@ -85,6 +88,8 @@ class LLMQSigningTest(DashTestFramework):
             sig_share.id = int(sig_share_rpc_1["id"], 16)
             sig_share.msgHash = int(sig_share_rpc_1["msgHash"], 16)
             sig_share.sigShare = hex_str_to_bytes(sig_share_rpc_1["signature"])
+            for mn in self.mninfo:
+                assert mn.node.getconnectioncount() == self.llmq_size
             # Get the current recovery member of the quorum
             q = self.nodes[0].quorum('selectquorum', 100, id)
             mn = self.get_mninfo(q['recoveryMembers'][0])
@@ -100,8 +105,12 @@ class LLMQSigningTest(DashTestFramework):
 
         wait_for_sigs(True, False, True, 15)
 
+        if self.options.spork21:
+            mn.node.disconnect_p2ps()
+            network_thread_join()
+
         # Test `quorum verify` rpc
-        node = self.nodes[0]
+        node = self.mninfo[0].node
         recsig = node.quorum("getrecsig", 100, id, msgHash)
         # Find quorum automatically
         height = node.getblockcount()
@@ -156,7 +165,10 @@ class LLMQSigningTest(DashTestFramework):
             # Need to re-connect so that it later gets the recovered sig
             mn.node.setnetworkactive(True)
             connect_nodes(mn.node, 0)
-            # Make sure node0 has received qsendrecsigs from the previously isolated node
+            force_finish_mnsync(mn.node)
+            # Make sure intra-quorum connections were also restored
+            self.bump_mocktime(1)  # need this to bypass quorum connection retry timeout
+            wait_until(lambda: mn.node.getconnectioncount() == self.llmq_size, timeout=10, sleep=2)
             mn.node.ping()
             wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
             # Let 2 seconds pass so that the next node is used for recovery, which should succeed

@@ -417,12 +417,14 @@ public:
 
     bool AddPendingMasternode(const uint256& proTxHash);
     void SetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
+    void SetMasternodeQuorumRelayMembers(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes);
     bool HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
     std::set<uint256> GetMasternodeQuorums(Consensus::LLMQType llmqType);
     // also returns QWATCH nodes
     std::set<NodeId> GetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash) const;
     void RemoveMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash);
     bool IsMasternodeQuorumNode(const CNode* pnode);
+    bool IsMasternodeQuorumRelayMember(const uint256& protxHash);
     void AddPendingProbeConnections(const std::set<uint256>& proTxHashes);
 
     size_t GetNodeCount(NumConnections num);
@@ -584,6 +586,7 @@ private:
     CCriticalSection cs_vAddedNodes;
     std::vector<uint256> vPendingMasternodes;
     std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> masternodeQuorumNodes; // protected by cs_vPendingMasternodes
+    std::map<std::pair<Consensus::LLMQType, uint256>, std::set<uint256>> masternodeQuorumRelayMembers; // protected by cs_vPendingMasternodes
     std::set<uint256> masternodePendingProbes;
     mutable CCriticalSection cs_vPendingMasternodes;
     std::vector<CNode*> vNodes;
@@ -893,6 +896,8 @@ public:
     bool m_masternode_connection;
     // If 'true' this node will be disconnected after MNAUTH
     bool m_masternode_probe_connection;
+    // If 'true', we identified it as an intra-quorum relay connection
+    bool m_masternode_iqr_connection{false};
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
     std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter);

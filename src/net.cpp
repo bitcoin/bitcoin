@@ -1341,11 +1341,11 @@ void CConnman::DisconnectNodes()
                 }
 
                 if (fLogIPs) {
-                    LogPrintf("ThreadSocketHandler -- removing node: peer=%d addr=%s nRefCount=%d fInbound=%d m_masternode_connection=%d\n",
-                          pnode->GetId(), pnode->addr.ToString(), pnode->GetRefCount(), pnode->fInbound, pnode->m_masternode_connection);
+                    LogPrintf("ThreadSocketHandler -- removing node: peer=%d addr=%s nRefCount=%d fInbound=%d m_masternode_connection=%d m_masternode_iqr_connection=%d\n",
+                          pnode->GetId(), pnode->addr.ToString(), pnode->GetRefCount(), pnode->fInbound, pnode->m_masternode_connection, pnode->m_masternode_iqr_connection);
                 } else {
-                    LogPrintf("ThreadSocketHandler -- removing node: peer=%d nRefCount=%d fInbound=%d m_masternode_connection=%d\n",
-                          pnode->GetId(), pnode->GetRefCount(), pnode->fInbound, pnode->m_masternode_connection);
+                    LogPrintf("ThreadSocketHandler -- removing node: peer=%d nRefCount=%d fInbound=%d m_masternode_connection=%d m_masternode_iqr_connection=%d\n",
+                          pnode->GetId(), pnode->GetRefCount(), pnode->fInbound, pnode->m_masternode_connection, pnode->m_masternode_iqr_connection);
                 }
 
                 // remove from vNodes
@@ -3501,6 +3501,30 @@ void CConnman::SetMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint
     }
 }
 
+void CConnman::SetMasternodeQuorumRelayMembers(Consensus::LLMQType llmqType, const uint256& quorumHash, const std::set<uint256>& proTxHashes)
+{
+    {
+        LOCK(cs_vPendingMasternodes);
+        auto it = masternodeQuorumRelayMembers.emplace(std::make_pair(llmqType, quorumHash), proTxHashes);
+        if (!it.second) {
+            it.first->second = proTxHashes;
+        }
+    }
+
+    // Update existing connections
+    ForEachNode([&](CNode* pnode) {
+        if (!pnode->verifiedProRegTxHash.IsNull() && !pnode->m_masternode_iqr_connection && IsMasternodeQuorumRelayMember(pnode->verifiedProRegTxHash)) {
+            // Tell our peer that we're interested in plain LLMQ recovered signatures.
+            // Otherwise the peer would only announce/send messages resulting from QRECSIG,
+            // e.g. InstantSend locks or ChainLocks. SPV and regular full nodes should not send
+            // this message as they are usually only interested in the higher level messages.
+            const CNetMsgMaker msgMaker(pnode->GetSendVersion());
+            PushMessage(pnode, msgMaker.Make(NetMsgType::QSENDRECSIGS, true));
+            pnode->m_masternode_iqr_connection = true;
+        }
+    });
+}
+
 bool CConnman::HasMasternodeQuorumNodes(Consensus::LLMQType llmqType, const uint256& quorumHash)
 {
     LOCK(cs_vPendingMasternodes);
@@ -3546,6 +3570,7 @@ void CConnman::RemoveMasternodeQuorumNodes(Consensus::LLMQType llmqType, const u
 {
     LOCK(cs_vPendingMasternodes);
     masternodeQuorumNodes.erase(std::make_pair(llmqType, quorumHash));
+    masternodeQuorumRelayMembers.erase(std::make_pair(llmqType, quorumHash));
 }
 
 bool CConnman::IsMasternodeQuorumNode(const CNode* pnode)
@@ -3573,6 +3598,20 @@ bool CConnman::IsMasternodeQuorumNode(const CNode* pnode)
             if (p.second.count(assumedProTxHash)) {
                 return true;
             }
+        }
+    }
+    return false;
+}
+
+bool CConnman::IsMasternodeQuorumRelayMember(const uint256& protxHash)
+{
+    if (protxHash.IsNull()) {
+        return false;
+    }
+    LOCK(cs_vPendingMasternodes);
+    for (const auto& p : masternodeQuorumRelayMembers) {
+        if (p.second.count(protxHash)) {
+            return true;
         }
     }
     return false;
