@@ -187,26 +187,6 @@ static RPCHelpMan signhash()
             },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-        RPCHelpMan{"signhash",
-                "\nSign a hash with the private key of an address" +
-        HELP_REQUIRING_PASSPHRASE,
-                {
-                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to use for the private key."},
-                    {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hash to create a signature of."},
-                },
-                RPCResult{
-                    RPCResult::Type::STR, "signature", "The signature of the message encoded in base 64"
-                },
-                RPCExamples{
-            "\nUnlock the wallet for 30 seconds\n"
-            + HelpExampleCli("walletpassphrase", "\"mypassphrase\" 30") +
-            "\nCreate the signature\n"
-            + HelpExampleCli("signhash", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\" \"hash\"") +
-            "\nAs a JSON-RPC call\n"
-            + HelpExampleRpc("signhash", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XX\", \"hash\"")
-                },
-            }.Check(request);
-
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
 
