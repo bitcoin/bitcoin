@@ -759,14 +759,14 @@ QString formatNiceTimeOffset(qint64 secs)
 
 QString formatBytes(uint64_t bytes)
 {
-    if(bytes < 1024)
+    if (bytes < 1'000)
         return QObject::tr("%1 B").arg(bytes);
-    if(bytes < 1024 * 1024)
-        return QObject::tr("%1 KB").arg(bytes / 1024);
-    if(bytes < 1024 * 1024 * 1024)
-        return QObject::tr("%1 MB").arg(bytes / 1024 / 1024);
+    if (bytes < 1'000'000)
+        return QObject::tr("%1 kB").arg(bytes / 1'000);
+    if (bytes < 1'000'000'000)
+        return QObject::tr("%1 MB").arg(bytes / 1'000'000);
 
-    return QObject::tr("%1 GB").arg(bytes / 1024 / 1024 / 1024);
+    return QObject::tr("%1 GB").arg(bytes / 1'000'000'000);
 }
 
 qreal calculateIdealFontSize(int width, const QString& text, QFont font, qreal minPointSize, qreal font_size) {
