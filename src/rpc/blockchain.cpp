@@ -2136,7 +2136,6 @@ public:
 static RPCHelpMan scantxoutset()
 {
     return RPCHelpMan{"scantxoutset",
-        "\nEXPERIMENTAL warning: this call may be removed or changed in future releases.\n"
         "\nScans the unspent transaction output set for entries that match certain output descriptors.\n"
         "Examples of output descriptors are:\n"
         "    addr(<address>)                      Outputs whose scriptPubKey corresponds to the specified address (does not include P2PK)\n"
