@@ -826,7 +826,7 @@ struct CNodeState {
         bool m_protect{false};
     };
 
-    ChainSyncTimeoutState m_chain_sync{0, nullptr, false, false};
+    ChainSyncTimeoutState m_chain_sync;
 
     //! Time of last new block announcement
     int64_t m_last_block_announcement{0};
@@ -900,11 +900,7 @@ struct CNodeState {
     //! A rolling bloom filter of all announced tx CInvs to this peer.
     CRollingBloomFilter m_recently_announced_invs = CRollingBloomFilter{INVENTORY_MAX_RECENT_RELAY, 0.000001};
 
-    CNodeState(bool is_inbound) :
-        m_is_inbound(is_inbound)
-    {
-        m_recently_announced_invs.reset();
-    }
+    CNodeState(bool is_inbound) : m_is_inbound(is_inbound) {}
 };
 
 // Keeps track of the time (in microseconds) when transactions were requested last time
