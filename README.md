@@ -1,6 +1,8 @@
 Bitcoin Core integration/staging tree
 =====================================
 
+[![Build Status](https://api.cirrus-ci.com/github/bitcoin/bitcoin.svg?branch=master)](https://cirrus-ci.com/github/bitcoin/bitcoin)
+
 https://bitcoincore.org
 
 For an immediately usable, binary version of the Bitcoin Core software, see
