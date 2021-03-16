@@ -41,6 +41,14 @@ struct Connection {
 namespace sam {
 
 /**
+ * The maximum size of an incoming message from the I2P SAM proxy (in bytes).
+ * Used to avoid a runaway proxy from sending us an "unlimited" amount of data without a terminator.
+ * The longest known message is ~1400 bytes, so this is high enough not to be triggered during
+ * normal operation, yet low enough to avoid a malicious proxy from filling our memory.
+ */
+static constexpr size_t MAX_MSG_SIZE{65536};
+
+/**
  * I2P SAM session.
  */
 class Session

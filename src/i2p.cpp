@@ -153,7 +153,7 @@ bool Session::Accept(Connection& conn)
             }
 
             const std::string& peer_dest =
-                conn.sock.RecvUntilTerminator('\n', MAX_WAIT_FOR_IO, *m_interrupt);
+                conn.sock.RecvUntilTerminator('\n', MAX_WAIT_FOR_IO, *m_interrupt, MAX_MSG_SIZE);
 
             conn.peer = CService(DestB64ToAddr(peer_dest), Params().GetDefaultPort());
 
@@ -252,7 +252,7 @@ Session::Reply Session::SendRequestAndGetReply(const Sock& sock,
     // signaled.
     static constexpr auto recv_timeout = 3min;
 
-    reply.full = sock.RecvUntilTerminator('\n', recv_timeout, *m_interrupt);
+    reply.full = sock.RecvUntilTerminator('\n', recv_timeout, *m_interrupt, MAX_MSG_SIZE);
 
     for (const auto& kv : spanparsing::Split(reply.full, ' ')) {
         const auto& pos = std::find(kv.begin(), kv.end(), '=');
