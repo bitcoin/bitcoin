@@ -96,6 +96,11 @@ void BlockAssembler::resetBlock()
     nFees = 0;
 }
 
+std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
+{
+    return CreateNewBlock(::ChainstateActive(), scriptPubKeyIn);
+}
+
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(CChainState& chainstate, const CScript& scriptPubKeyIn)
 {
     int64_t nTimeStart = GetTimeMicros();
