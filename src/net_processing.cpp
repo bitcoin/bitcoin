@@ -139,12 +139,31 @@ static constexpr auto AVG_ADDRESS_BROADCAST_INTERVAL{30s};
 /** Delay between rotating the peers we relay a particular address to */
 static constexpr auto ROTATE_ADDR_RELAY_DEST_INTERVAL{24h};
 /** Average delay between trickled inventory transmissions for inbound peers.
- *  Blocks and peers with NetPermissionFlags::NoBan permission bypass this. */
+ *  Blocks and peers with NetPermissionFlags::NoBan permission bypass this.
+ *  For reconciliation peers the delay is chosen according the following
+ *  considerations:
+ *  1. Reconciliation. When the transaction is reconciled, this delay is applied to adding to
+ *     reconciliation sets, not actual reconciliation (less frequent). That should happen rather
+ *     fast, so that sets are in sync and reconciliation is efficient. At the same time, not too
+ *     fast to avoid privacy leaks (e.g., infer connections via set probing).
+ *  2. Low-fanout. In rare cases when the reconciling peer is chosen for low-fanout
+ *     flooding, it will apply to the actual broadcast. Then, regular trickle considerations apply,
+ *     but since this is a rare occasion, the following risks are much lower:
+ *     2a) announcing both ways simultaneously (inefficiency);
+ *     2b) inference based on the announced transactions (privacy leak).
+ *     That's why it's ok to make this delay low as well, and lower delay is generally good to
+ *     facilitate good transaction relay speed when slow reconciliations prevail. */
 static constexpr auto INBOUND_INVENTORY_BROADCAST_INTERVAL{5s};
+static constexpr auto INBOUND_INVENTORY_BROADCAST_INTERVAL_TXRCNCL{2s};
 /** Average delay between trickled inventory transmissions for outbound peers.
  *  Use a smaller delay as there is less privacy concern for them.
- *  Blocks and peers with NetPermissionFlags::NoBan permission bypass this. */
+ *  Blocks and peers with NetPermissionFlags::NoBan permission bypass this.
+ *  For reconciliation peers the delay is different (see above). */
 static constexpr auto OUTBOUND_INVENTORY_BROADCAST_INTERVAL{2s};
+static constexpr auto OUTBOUND_INVENTORY_BROADCAST_INTERVAL_TXRCNCL{1s};
+static_assert(OUTBOUND_INVENTORY_BROADCAST_INTERVAL >= OUTBOUND_INVENTORY_BROADCAST_INTERVAL_TXRCNCL);
+static_assert(OUTBOUND_INVENTORY_BROADCAST_INTERVAL < INBOUND_INVENTORY_BROADCAST_INTERVAL);
+static_assert(OUTBOUND_INVENTORY_BROADCAST_INTERVAL_TXRCNCL < INBOUND_INVENTORY_BROADCAST_INTERVAL_TXRCNCL);
 /** Maximum rate of inventory items to send per second.
  *  Limits the impact of low-fee transaction floods. */
 static constexpr unsigned int INVENTORY_BROADCAST_PER_SECOND = 7;
@@ -5768,9 +5787,26 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 if (tx_relay->m_next_inv_send_time < current_time) {
                     fSendTrickle = true;
                     if (pto->IsInboundConn()) {
-                        tx_relay->m_next_inv_send_time = NextInvToInbounds(current_time, INBOUND_INVENTORY_BROADCAST_INTERVAL);
+                        if (reconciles_txs) {
+                            // Don't share intervals across inbound reconciling peers like we do for
+                            // inbound flooding peers, because sending sketches out is batched
+                            // already. And even it will be low-fanout, it won't give much info
+                            // because it's low probability and is not controlled by the attacker.
+                            tx_relay->m_next_inv_send_time = GetExponentialRand(current_time,
+                                                                                INBOUND_INVENTORY_BROADCAST_INTERVAL_TXRCNCL);
+                        } else {
+                            tx_relay->m_next_inv_send_time = NextInvToInbounds(current_time,
+                                                                               INBOUND_INVENTORY_BROADCAST_INTERVAL);
+                        }
                     } else {
-                        tx_relay->m_next_inv_send_time = GetExponentialRand(current_time, OUTBOUND_INVENTORY_BROADCAST_INTERVAL);
+                        // Use smaller delay for outbound peers, as there is less privacy concern for them.
+                        if (reconciles_txs) {
+                            tx_relay->m_next_inv_send_time = GetExponentialRand(current_time,
+                                                                                OUTBOUND_INVENTORY_BROADCAST_INTERVAL_TXRCNCL);
+                        } else {
+                            tx_relay->m_next_inv_send_time = GetExponentialRand(current_time,
+                                                                                OUTBOUND_INVENTORY_BROADCAST_INTERVAL);
+                        }
                     }
                 }
 
