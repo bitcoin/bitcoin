@@ -432,7 +432,7 @@ void SendCoinsDialog::on_sendButton_clicked()
             fileNameSuggestion.append(".psbt");
             QString filename = GUIUtil::getSaveFileName(this,
                 tr("Save Transaction Data"), fileNameSuggestion,
-                tr("Partially Signed Transaction (Binary) (*.psbt)"), &selectedFilter);
+                tr("Partially Signed Transaction (Binary)", "Name of binary PSBT file format") + QLatin1String(" (*.psbt)"), &selectedFilter);
             if (filename.isEmpty()) {
                 return;
             }
