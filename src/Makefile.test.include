@@ -298,7 +298,8 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/tx_in.cpp \
  test/fuzz/tx_out.cpp \
  test/fuzz/txrequest.cpp \
- test/fuzz/validation_load_mempool.cpp
+ test/fuzz/validation_load_mempool.cpp \
+ test/fuzz/versionbits.cpp
 endif # ENABLE_FUZZ_BINARY
 
 nodist_test_test_bitcoin_SOURCES = $(GENERATED_TEST_FILES)
