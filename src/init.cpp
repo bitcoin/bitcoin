@@ -585,6 +585,7 @@ void SetupServerArgs(NodeContext& node)
     argsman.AddArg("-daemonwait", strprintf("Wait for initialization to be finished before exiting. This implies -daemon (default: %d)", DEFAULT_DAEMONWAIT), ArgsManager::ALLOW_BOOL, OptionsCategory::OPTIONS);
 #else
     hidden_args.emplace_back("-daemon");
+    hidden_args.emplace_back("-daemonwait");
 #endif
 
     // Add the hidden options
