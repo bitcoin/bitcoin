@@ -98,11 +98,6 @@ void BlockAssembler::resetBlock()
 
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
 {
-    return CreateNewBlock(::ChainstateActive(), scriptPubKeyIn);
-}
-
-std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(CChainState& chainstate, const CScript& scriptPubKeyIn)
-{
     int64_t nTimeStart = GetTimeMicros();
 
     resetBlock();
@@ -119,8 +114,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(CChainState& chai
     pblocktemplate->vTxSigOpsCost.push_back(-1); // updated at end
 
     LOCK2(cs_main, m_mempool.cs);
-    assert(std::addressof(*::ChainActive().Tip()) == std::addressof(*chainstate.m_chain.Tip()));
-    CBlockIndex* pindexPrev = chainstate.m_chain.Tip();
+    CBlockIndex* pindexPrev = ::ChainActive().Tip();
     assert(pindexPrev != nullptr);
     nHeight = pindexPrev->nHeight + 1;
 
@@ -179,8 +173,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(CChainState& chai
     pblocktemplate->vTxSigOpsCost[0] = WITNESS_SCALE_FACTOR * GetLegacySigOpCount(*pblock->vtx[0]);
 
     BlockValidationState state;
-    assert(std::addressof(::ChainstateActive()) == std::addressof(chainstate));
-    if (!TestBlockValidity(state, chainparams, chainstate, *pblock, pindexPrev, false, false)) {
+    if (!TestBlockValidity(state, chainparams, ::ChainstateActive(), *pblock, pindexPrev, false, false)) {
         throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, state.ToString()));
     }
     int64_t nTime2 = GetTimeMicros();
