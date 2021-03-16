@@ -36,10 +36,11 @@ def setup():
         subprocess.check_call(['git', 'clone', 'https://github.com/syscoin/syscoin.git'])
     os.chdir('gitian-builder')
     make_image_prog = ['bin/make-base-vm', '--suite', 'focal', '--arch', 'amd64']
+    # SYSCOIN bump disksize to 27gb
     if args.docker:
         make_image_prog += ['--docker']
     elif not args.kvm:
-        make_image_prog += ['--lxc', '--disksize', '13000']
+        make_image_prog += ['--lxc', '--disksize', '27000']
     subprocess.check_call(make_image_prog)
     os.chdir(workdir)
     if args.is_focal and not args.kvm and not args.docker:
