@@ -52,7 +52,6 @@
 #include <QThread>
 #include <QTimer>
 #include <QTranslator>
-#include <QtGlobal>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -466,13 +465,6 @@ int GuiMain(int argc, char* argv[])
     // Generate high-dpi pixmaps
     QApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-
-#if (QT_VERSION <= QT_VERSION_CHECK(5, 9, 8)) && defined(Q_OS_MACOS)
-    const auto os_name = QSysInfo::prettyProductName();
-    if (os_name.startsWith("macOS 11") || os_name.startsWith("macOS 10.16")) {
-        QApplication::setStyle("fusion");
-    }
-#endif
 
     BitcoinApplication app;
     QFontDatabase::addApplicationFont(":/fonts/monospace");
