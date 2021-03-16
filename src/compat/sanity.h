@@ -5,7 +5,6 @@
 #ifndef SYSCOIN_COMPAT_SANITY_H
 #define SYSCOIN_COMPAT_SANITY_H
 
-bool glibc_sanity_test();
 bool glibcxx_sanity_test();
 
 #endif // SYSCOIN_COMPAT_SANITY_H
