@@ -33,8 +33,8 @@ class QuorumDataRecoveryTest(DashTestFramework):
                                               '-llmq-data-recovery=%d' % qdata_recovery_enabled]
         if reindex:
             args.append('-reindex')
-        for llmq_type in qvvec_sync:
-            args.append('-llmq-qvvec-sync=%s' % llmq_type_strings[llmq_type])
+        for llmq_sync in qvvec_sync:
+            args.append('-llmq-qvvec-sync=%s:%d' % (llmq_type_strings[llmq_sync[0]], llmq_sync[1]))
         self.restart_node(mn.nodeIdx, args)
         force_finish_mnsync(mn.node)
         connect_nodes(mn.node, 0)
@@ -46,12 +46,12 @@ class QuorumDataRecoveryTest(DashTestFramework):
                 self.restart_mn(mn, reindex, qvvec_sync, qdata_recovery_enabled)
         self.wait_for_sporks_same()
 
-    def test_mns(self, quorum_type_in, quorum_hash_in, valid_mns=[], all_mns=[], expect_secret=True,
+    def test_mns(self, quorum_type_in, quorum_hash_in, valid_mns=[], all_mns=[], test_secret=True, expect_secret=True,
                  recover=False, timeout=120):
         for mn in all_mns:
             if mn not in valid_mns:
-                assert not self.test_mn_quorum_data(mn, quorum_type_in, quorum_hash_in, False)
-        self.wait_for_quorum_data(valid_mns, quorum_type_in, quorum_hash_in, expect_secret, recover, timeout)
+                assert not self.test_mn_quorum_data(mn, quorum_type_in, quorum_hash_in, test_secret, False)
+        self.wait_for_quorum_data(valid_mns, quorum_type_in, quorum_hash_in, test_secret, expect_secret, recover, timeout)
 
     def get_mn(self, protx_hash):
         for mn in self.mninfo:
@@ -73,34 +73,50 @@ class QuorumDataRecoveryTest(DashTestFramework):
             quorum_members_subset.remove(mn)
         return quorum_members_subset
 
-    def test_llmq_qvvec_sync(self, llmq_types):
-        self.log.info("Test with %d -llmq-qvvec-sync option(s)" % len(llmq_types))
-        for llmq_type in llmq_types:
-            self.log.info("Validate -llmq-qvvec-sync=%s" % llmq_type_strings[llmq_type])
+    def test_llmq_qvvec_sync(self, llmq_sync_entries):
+        self.log.info("Test with %d -llmq-qvvec-sync option(s)" % len(llmq_sync_entries))
+        for llmq_sync in llmq_sync_entries:
+            llmq_type = llmq_sync[0]
+            llmq_sync_mode = llmq_sync[1]
+            self.log.info("Validate -llmq-qvvec-sync=%s:%d" % (llmq_type_strings[llmq_type], llmq_sync_mode))
             # First restart with recovery thread triggering disabled
             self.restart_mns(qdata_recovery_enabled=False)
-            # Create quorum_1 and a quorum_2 so that we have subsets (members_only_in_1, members_only_in_2) where each
-            # only contains nodes that are members of quorum_1 but not quorum_2 and vice versa
-            quorum_hash_1 = None
-            quorum_hash_2 = None
-            members_only_in_1 = []
-            members_only_in_2 = []
-            while len(members_only_in_1) == 0 or len(members_only_in_2) == 0:
-                quorum_hash_1 = self.mine_quorum()
-                quorum_hash_2 = self.mine_quorum()
-                member_mns_1 = self.get_member_mns(llmq_type, quorum_hash_1)
-                member_mns_2 = self.get_member_mns(llmq_type, quorum_hash_2)
-                members_only_in_1 = self.get_subset_only_in_left(member_mns_1, member_mns_2)
-                members_only_in_2 = self.get_subset_only_in_left(member_mns_2, member_mns_1)
-            # So far the nodes of quorum_1 shouldn't have the quorum verification vector of quorum_2 and vice versa
-            self.test_mns(llmq_type, quorum_hash_2, valid_mns=[], all_mns=members_only_in_1, expect_secret=False)
-            self.test_mns(llmq_type, quorum_hash_1, valid_mns=[], all_mns=members_only_in_2, expect_secret=False)
-            # Now restart with recovery enabled
-            self.restart_mns(qvvec_sync=llmq_types)
-            # Members which are only in quorum 2 should request the qvvec from quorum 1 from the members of quorum 1
-            self.test_mns(llmq_type, quorum_hash_1, valid_mns=members_only_in_2, expect_secret=False, recover=True)
-            # Members which are only in quorum 1 should request the qvvec from quorum 2 from the members of quorum 2
-            self.test_mns(llmq_type, quorum_hash_2, valid_mns=members_only_in_1, expect_secret=False, recover=True)
+            # If mode=0 i.e. "Sync always" all nodes should request the qvvec from new quorums
+            if llmq_sync_mode == 0:
+                quorum_hash = self.mine_quorum()
+                member_mns = self.get_member_mns(llmq_type, quorum_hash)
+                # So far the only the quorum members of the quorum should have the quorum verification vector
+                self.test_mns(llmq_type, quorum_hash, valid_mns=member_mns, all_mns=self.mninfo,
+                              test_secret=False, recover=False)
+                # Now restart with recovery enabled
+                self.restart_mns(qvvec_sync=llmq_sync_entries)
+                # All other nodes should now request the qvvec from the quorum
+                self.test_mns(llmq_type, quorum_hash, valid_mns=self.mninfo, test_secret=False, recover=True)
+            # If mode=1 i.e. "Sync only if type member" not all nodes should request the qvvec from quorum 1 and 2
+            elif llmq_sync_mode == 1:
+                # Create quorum_1 and a quorum_2 so that we have subsets (members_only_in_1, members_only_in_2) where
+                # each only contains nodes that are members of quorum_1 but not quorum_2 and vice versa
+                quorum_hash_1 = None
+                quorum_hash_2 = None
+                members_only_in_1 = []
+                members_only_in_2 = []
+                while len(members_only_in_1) == 0 or len(members_only_in_2) == 0:
+                    quorum_hash_1 = self.mine_quorum()
+                    quorum_hash_2 = self.mine_quorum()
+                    member_mns_1 = self.get_member_mns(llmq_type, quorum_hash_1)
+                    member_mns_2 = self.get_member_mns(llmq_type, quorum_hash_2)
+                    members_only_in_1 = self.get_subset_only_in_left(member_mns_1, member_mns_2)
+                    members_only_in_2 = self.get_subset_only_in_left(member_mns_2, member_mns_1)
+                # So far the nodes of quorum_1 shouldn't have the quorum verification vector of quorum_2 and vice versa
+                self.test_mns(llmq_type, quorum_hash_2, valid_mns=[], all_mns=members_only_in_1, expect_secret=False)
+                self.test_mns(llmq_type, quorum_hash_1, valid_mns=[], all_mns=members_only_in_2, expect_secret=False)
+                # Now restart with recovery enabled
+                self.restart_mns(qvvec_sync=llmq_sync_entries)
+                # Members which are only in quorum 2 should request the qvvec from quorum 1 from the members of quorum 1
+                self.test_mns(llmq_type, quorum_hash_1, valid_mns=members_only_in_2, expect_secret=False, recover=True)
+                # Members which are only in quorum 1 should request the qvvec from quorum 2 from the members of quorum 2
+                self.test_mns(llmq_type, quorum_hash_2, valid_mns=members_only_in_1, expect_secret=False, recover=True)
+
 
     def run_test(self):
 
@@ -161,21 +177,43 @@ class QuorumDataRecoveryTest(DashTestFramework):
         logger.info("Test -llmq-qvvec-sync command line parameter")
         # Run with one type separated and then both possible (for regtest) together, both calls generate new quorums
         # and are restarting the nodes with the other parameters
-        self.test_llmq_qvvec_sync([llmq_test])
-        self.test_llmq_qvvec_sync([llmq_test, llmq_test_v17])
+        self.test_llmq_qvvec_sync([(llmq_test, 0)])
+        self.test_llmq_qvvec_sync([(llmq_test_v17, 1)])
+        self.test_llmq_qvvec_sync([(llmq_test, 0), (llmq_test_v17, 1)])
         logger.info("Test invalid command line parameter values")
         node.stop_node()
         node.wait_until_stopped()
-        node.assert_start_raises_init_error(["-llmq-qvvec-sync=0"],
-                                            "Error: Invalid llmqType in -llmq-qvvec-sync: 0")
-        node.assert_start_raises_init_error(["-llmq-qvvec-sync=llmq-test"],
-                                            "Error: Invalid llmqType in -llmq-qvvec-sync: llmq-test")
+        # Test -llmq-qvvec-sync entry format
         node.assert_start_raises_init_error(["-llmq-qvvec-sync="],
-                                            "Error: Invalid llmqType in -llmq-qvvec-sync:")
-        node.assert_start_raises_init_error(["-llmq-qvvec-sync=100", "-llmq-qvvec-sync=0"],
-                                            "Error: Invalid llmqType in -llmq-qvvec-sync: 100")
-        node.assert_start_raises_init_error(["-llmq-qvvec-sync=llmq_test", "-llmq-qvvec-sync=llmq_test"],
-                                            "Error: Duplicated llmqType in -llmq-qvvec-sync: llmq_test")
+                                            "Error: Invalid format in -llmq-qvvec-sync:")
+        node.assert_start_raises_init_error(["-llmq-qvvec-sync=0"],
+                                            "Error: Invalid format in -llmq-qvvec-sync: 0")
+        node.assert_start_raises_init_error(["-llmq-qvvec-sync=0:"],
+                                            "Error: Invalid format in -llmq-qvvec-sync: 0:")
+        node.assert_start_raises_init_error(["-llmq-qvvec-sync=:0"],
+                                            "Error: Invalid format in -llmq-qvvec-sync: :0")
+        node.assert_start_raises_init_error(["-llmq-qvvec-sync=0:0:0"],
+                                            "Error: Invalid format in -llmq-qvvec-sync: 0:0:0")
+        node.assert_start_raises_init_error(["-llmq-qvvec-sync=0::"],
+                                            "Error: Invalid format in -llmq-qvvec-sync: 0::")
+        node.assert_start_raises_init_error(["-llmq-qvvec-sync=::0"],
+                                            "Error: Invalid format in -llmq-qvvec-sync: ::0")
+        node.assert_start_raises_init_error(["-llmq-qvvec-sync=:0:"],
+                                            "Error: Invalid format in -llmq-qvvec-sync: :0:")
+        # Test llmqType
+        node.assert_start_raises_init_error(["-llmq-qvvec-sync=0:0"],
+                                            "Error: Invalid llmqType in -llmq-qvvec-sync: 0:0")
+        node.assert_start_raises_init_error(["-llmq-qvvec-sync=llmq-test:0"],
+                                            "Error: Invalid llmqType in -llmq-qvvec-sync: llmq-test:0")
+        node.assert_start_raises_init_error(["-llmq-qvvec-sync=100:0", "-llmq-qvvec-sync=0"],
+                                            "Error: Invalid llmqType in -llmq-qvvec-sync: 100:0")
+        node.assert_start_raises_init_error(["-llmq-qvvec-sync=llmq_test:0", "-llmq-qvvec-sync=llmq_test:0"],
+                                            "Error: Duplicated llmqType in -llmq-qvvec-sync: llmq_test:0")
+        # Test mode
+        node.assert_start_raises_init_error(["-llmq-qvvec-sync=llmq_test:-1"],
+                                            "Error: Invalid mode in -llmq-qvvec-sync: llmq_test:-1")
+        node.assert_start_raises_init_error(["-llmq-qvvec-sync=llmq_test:2"],
+                                            "Error: Invalid mode in -llmq-qvvec-sync: llmq_test:2")
 
 
 if __name__ == '__main__':

@@ -640,7 +640,7 @@ std::string HelpMessage(HelpMessageMode mode)
 
     strUsage += HelpMessageGroup(_("Masternode options:"));
     strUsage += HelpMessageOpt("-llmq-data-recovery=<n>", strprintf(_("Enable automated quorum data recovery (default: %u)"), llmq::DEFAULT_ENABLE_QUORUM_DATA_RECOVERY));
-    strUsage += HelpMessageOpt("-llmq-qvvec-sync=<quorum name>", _("Defines from which LLMQ type the masternode should sync quorum verification vectors. Can be used multiple times with different LLMQ types."));
+    strUsage += HelpMessageOpt("-llmq-qvvec-sync=<quorum_name:mode>", strprintf(_("Defines from which LLMQ type the masternode should sync quorum verification vectors. Can be used multiple times with different LLMQ types. (mode: %d (sync always from all quorums of the type defined by \"quorum_name\"), %d (sync from all quorums of the type defined by \"quorum_name\") if member of any of the quorums"), (int32_t)llmq::QvvecSyncMode::Always, (int32_t)llmq::QvvecSyncMode::OnlyIfTypeMember));
     strUsage += HelpMessageOpt("-masternodeblsprivkey=<hex>", _("Set the masternode BLS private key and enable the client to act as a masternode"));
     strUsage += HelpMessageOpt("-platform-user=<user>", _("Set the username for the \"platform user\", a restricted user intended to be used by Dash Platform, to the specified username."));
 
@@ -1618,7 +1618,7 @@ bool AppInitParameterInteraction()
 
     try {
         const bool fRecoveryEnabled{llmq::CLLMQUtils::QuorumDataRecoveryEnabled()};
-        const bool fQuorumVvecRequestsEnabled{llmq::CLLMQUtils::GetEnabledQuorumVvecSyncTypes().size() > 0};
+        const bool fQuorumVvecRequestsEnabled{llmq::CLLMQUtils::GetEnabledQuorumVvecSyncEntries().size() > 0};
         if (!fRecoveryEnabled && fQuorumVvecRequestsEnabled) {
             InitWarning("-llmq-qvvec-sync set but recovery is disabled due to -llmq-data-recovery=0");
         }

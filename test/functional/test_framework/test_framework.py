@@ -1092,9 +1092,9 @@ class DashTestFramework(BitcoinTestFramework):
                 return mn
         return None
 
-    def test_mn_quorum_data(self, test_mn, quorum_type_in, quorum_hash_in, expect_secret=True):
+    def test_mn_quorum_data(self, test_mn, quorum_type_in, quorum_hash_in, test_secret=True, expect_secret=True):
         quorum_info = test_mn.node.quorum("info", quorum_type_in, quorum_hash_in, True)
-        if expect_secret != ("secretKeyShare" in quorum_info):
+        if test_secret and expect_secret != ("secretKeyShare" in quorum_info):
             return False
         if "members" not in quorum_info or len(quorum_info["members"]) == 0:
             return False
@@ -1105,7 +1105,8 @@ class DashTestFramework(BitcoinTestFramework):
             pubkey_count += "pubKeyShare" in quorum_member
         return pubkey_count == valid_count
 
-    def wait_for_quorum_data(self, mns, quorum_type_in, quorum_hash_in, expect_secret=True, recover=False, timeout=60):
+    def wait_for_quorum_data(self, mns, quorum_type_in, quorum_hash_in, test_secret=True, expect_secret=True,
+                             recover=False, timeout=60):
         def test_mns():
             valid = 0
             if recover:
@@ -1116,7 +1117,7 @@ class DashTestFramework(BitcoinTestFramework):
                     self.bump_mocktime(self.quorum_data_thread_request_timeout_seconds + 1)
 
             for test_mn in mns:
-                valid += self.test_mn_quorum_data(test_mn, quorum_type_in, quorum_hash_in, expect_secret)
+                valid += self.test_mn_quorum_data(test_mn, quorum_type_in, quorum_hash_in, test_secret, expect_secret)
             self.log.debug("wait_for_quorum_data: %d/%d - quorum_type=%d quorum_hash=%s" %
                            (valid, len(mns), quorum_type_in, quorum_hash_in))
             return valid == len(mns)

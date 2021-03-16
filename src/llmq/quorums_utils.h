@@ -24,6 +24,12 @@ extern VersionBitsCache llmq_versionbitscache;
 
 static const bool DEFAULT_ENABLE_QUORUM_DATA_RECOVERY = true;
 
+enum class QvvecSyncMode {
+    Invalid = -1,
+    Always = 0,
+    OnlyIfTypeMember = 1,
+};
+
 class CLLMQUtils
 {
 public:
@@ -57,8 +63,8 @@ public:
     /// Returns the state of `-llmq-data-recovery`
     static bool QuorumDataRecoveryEnabled();
 
-    /// Returns the values given by `-llmq-qvvec-sync`
-    static std::set<Consensus::LLMQType> GetEnabledQuorumVvecSyncTypes();
+    /// Returns the parsed entries given by `-llmq-qvvec-sync`
+    static std::map<Consensus::LLMQType, QvvecSyncMode> GetEnabledQuorumVvecSyncEntries();
 
     template<typename NodesContainer, typename Continue, typename Callback>
     static void IterateNodesRandom(NodesContainer& nodeStates, Continue&& cont, Callback&& callback, FastRandomContext& rnd)
