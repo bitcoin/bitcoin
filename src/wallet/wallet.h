@@ -683,8 +683,13 @@ struct CoinSelectionParams
     size_t change_output_size = 0;
     /** Size of the input to spend a change output in virtual bytes. */
     size_t change_spend_size = 0;
-    /** The targeted feerate of the transaction being built. */
-    CFeeRate effective_fee = CFeeRate(0);
+    /** The fee to spend these UTXOs at the long term feerate. */
+    CFeeRate m_effective_feerate;
+    /** The feerate estimate used to estimate an upper bound on what should be sufficient to spend
+     * the change output sometime in the future. */
+    CFeeRate m_long_term_feerate;
+    /** If the cost to spend a change output at the discard feerate exceeds its value, drop it to fees. */
+    CFeeRate m_discard_feerate;
     size_t tx_noinputs_size = 0;
     /** Indicate that we are subtracting the fee from outputs */
     bool m_subtract_fee_outputs = false;
@@ -693,11 +698,14 @@ struct CoinSelectionParams
      * reuse. Dust outputs are not eligible to be added to output groups and thus not considered. */
     bool m_avoid_partial_spends = false;
 
-    CoinSelectionParams(bool use_bnb, size_t change_output_size, size_t change_spend_size, CFeeRate effective_fee, size_t tx_noinputs_size, bool avoid_partial) :
+    CoinSelectionParams(bool use_bnb, size_t change_output_size, size_t change_spend_size, CFeeRate effective_feerate,
+                        CFeeRate long_term_feerate, CFeeRate discard_feerate, size_t tx_noinputs_size, bool avoid_partial) :
         use_bnb(use_bnb),
         change_output_size(change_output_size),
         change_spend_size(change_spend_size),
-        effective_fee(effective_fee),
+        m_effective_feerate(effective_feerate),
+        m_long_term_feerate(long_term_feerate),
+        m_discard_feerate(discard_feerate),
         tx_noinputs_size(tx_noinputs_size),
         m_avoid_partial_spends(avoid_partial)
     {}
