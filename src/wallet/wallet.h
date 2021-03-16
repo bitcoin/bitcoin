@@ -606,7 +606,7 @@ struct CoinSelectionParams
     bool use_bnb = true;
     size_t change_output_size = 0;
     size_t change_spend_size = 0;
-    CFeeRate effective_fee = CFeeRate(0);
+    CFeeRate m_effective_feerate;
     CFeeRate m_long_term_feerate;
     CFeeRate m_discard_feerate;
     size_t tx_noinputs_size = 0;
@@ -614,12 +614,12 @@ struct CoinSelectionParams
     bool m_subtract_fee_outputs = false;
     bool m_avoid_partial_spends = false;
 
-    CoinSelectionParams(bool use_bnb, size_t change_output_size, size_t change_spend_size, CFeeRate effective_fee,
+    CoinSelectionParams(bool use_bnb, size_t change_output_size, size_t change_spend_size, CFeeRate effective_feerate,
                         CFeeRate long_term_feerate, CFeeRate discard_feerate, size_t tx_noinputs_size, bool avoid_partial) :
         use_bnb(use_bnb),
         change_output_size(change_output_size),
         change_spend_size(change_spend_size),
-        effective_fee(effective_fee),
+        m_effective_feerate(effective_feerate),
         m_long_term_feerate(long_term_feerate),
         m_discard_feerate(discard_feerate),
         tx_noinputs_size(tx_noinputs_size),
