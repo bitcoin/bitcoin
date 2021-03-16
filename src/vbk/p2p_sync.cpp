@@ -129,13 +129,21 @@ bool processOfferPopData(CNode* node, CConnman* connman, CDataStream& vRecv, alt
 }
 
 template <typename pop_t>
-bool processPopData(CNode* node, CDataStream& vRecv, altintegration::MemPool& pop_mempool) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool processPopData(CNode* node, CDataStream& vRecv, altintegration::MemPool& pop_mempool)
 {
-    AssertLockHeld(cs_main);
     LogPrint(BCLog::NET, "received pop data: %s, bytes size: %d\n", pop_t::name(), vRecv.size());
     pop_t data;
     vRecv >> data;
 
+    altintegration::ValidationState state;
+    if (!VeriBlock::GetPop().check(data, state)) {
+        LogPrint(BCLog::NET, "peer %d sent statelessly invalid pop data: %s\n", node->GetId(), state.toString());
+        LOCK(cs_main);
+        Misbehaving(node->GetId(), 20, strprintf("statelessly invalid pop data getdata, reason: %s", state.toString()));
+        return false;
+    }
+
+    LOCK(cs_main);
     auto& pop_state_map = getPopDataNodeState(node->GetId()).getMap<pop_t>();
     PopP2PState& pop_state = pop_state_map[data.getId()];
 
@@ -153,7 +161,6 @@ bool processPopData(CNode* node, CDataStream& vRecv, altintegration::MemPool& po
         return false;
     }
 
-    altintegration::ValidationState state;
     auto result = pop_mempool.submit(data, state);
     if (!result && result.status == altintegration::MemPool::FAILED_STATELESS) {
         LogPrint(BCLog::NET, "peer %d sent statelessly invalid pop data: %s\n", node->GetId(), state.toString());
@@ -170,17 +177,14 @@ int processPopData(CNode* pfrom, const std::string& strCommand, CDataStream& vRe
 
     // process Pop Data
     if (strCommand == altintegration::ATV::name()) {
-        LOCK(cs_main);
         return processPopData<altintegration::ATV>(pfrom, vRecv, pop_mempool);
     }
 
     if (strCommand == altintegration::VTB::name()) {
-        LOCK(cs_main);
         return processPopData<altintegration::VTB>(pfrom, vRecv, pop_mempool);
     }
 
     if (strCommand == altintegration::VbkBlock::name()) {
-        LOCK(cs_main);
         return processPopData<altintegration::VbkBlock>(pfrom, vRecv, pop_mempool);
     }
     //----------------------
