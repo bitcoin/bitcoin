@@ -106,6 +106,8 @@ void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strComm
 
 void CChainLocksHandler::ProcessNewChainLock(const NodeId from, const llmq::CChainLockSig& clsig, const uint256& hash)
 {
+    CheckActiveState();
+
     CInv clsigInv(MSG_CLSIG, hash);
 
     if (from != -1) {
