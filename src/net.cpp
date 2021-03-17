@@ -18,7 +18,6 @@
 #include <net_permissions.h>
 #include <netbase.h>
 #include <node/ui_interface.h>
-#include <optional.h>
 #include <protocol.h>
 #include <random.h>
 #include <scheduler.h>
@@ -39,6 +38,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <functional>
+#include <optional>
 #include <unordered_map>
 
 #include <math.h>
@@ -193,7 +193,7 @@ bool IsPeerAddrLocalGood(CNode *pnode)
            IsReachable(addrLocal.GetNetwork());
 }
 
-Optional<CAddress> GetLocalAddrForPeer(CNode *pnode)
+std::optional<CAddress> GetLocalAddrForPeer(CNode *pnode)
 {
     CAddress addrLocal = GetLocalAddress(&pnode->addr, pnode->GetLocalServices());
     if (gArgs.GetBoolArg("-addrmantest", false)) {
@@ -215,7 +215,7 @@ Optional<CAddress> GetLocalAddrForPeer(CNode *pnode)
         return addrLocal;
     }
     // Address is unroutable. Don't advertise.
-    return nullopt;
+    return std::nullopt;
 }
 
 // learn a new local address
@@ -632,7 +632,7 @@ bool CNode::ReceiveMsgBytes(Span<const uint8_t> msg_bytes, bool& complete)
         if (m_deserializer->Complete()) {
             // decompose a transport agnostic CNetMessage from the deserializer
             uint32_t out_err_raw_size{0};
-            Optional<CNetMessage> result{m_deserializer->GetMessage(time, out_err_raw_size)};
+            std::optional<CNetMessage> result{m_deserializer->GetMessage(time, out_err_raw_size)};
             if (!result) {
                 // Message deserialization failed.  Drop the message but don't disconnect the peer.
                 // store the size of the corrupt message
@@ -723,10 +723,10 @@ const uint256& V1TransportDeserializer::GetMessageHash() const
     return data_hash;
 }
 
-Optional<CNetMessage> V1TransportDeserializer::GetMessage(const std::chrono::microseconds time, uint32_t& out_err_raw_size)
+std::optional<CNetMessage> V1TransportDeserializer::GetMessage(const std::chrono::microseconds time, uint32_t& out_err_raw_size)
 {
     // decompose a single CNetMessage from the TransportDeserializer
-    Optional<CNetMessage> msg(std::move(vRecv));
+    std::optional<CNetMessage> msg(std::move(vRecv));
 
     // store command string, time, and sizes
     msg->m_command = hdr.GetCommand();
@@ -747,12 +747,12 @@ Optional<CNetMessage> V1TransportDeserializer::GetMessage(const std::chrono::mic
                  HexStr(hdr.pchChecksum),
                  m_node_id);
         out_err_raw_size = msg->m_raw_message_size;
-        msg = nullopt;
+        msg = std::nullopt;
     } else if (!hdr.IsCommandValid()) {
         LogPrint(BCLog::NET, "HEADER ERROR - COMMAND (%s, %u bytes), peer=%d\n",
                  hdr.GetCommand(), msg->m_message_size, m_node_id);
         out_err_raw_size = msg->m_raw_message_size;
-        msg = nullopt;
+        msg.reset();
     }
 
     // Always reset the network deserializer (prepare for the next message)
@@ -879,7 +879,7 @@ static void EraseLastKElements(std::vector<T> &elements, Comparator comparator, 
     elements.erase(elements.end() - eraseSize, elements.end());
 }
 
-[[nodiscard]] Optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates)
+[[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates)
 {
     // Protect connections with certain characteristics
 
@@ -918,7 +918,7 @@ static void EraseLastKElements(std::vector<T> &elements, Comparator comparator, 
     total_protect_size -= initial_size - vEvictionCandidates.size();
     EraseLastKElements(vEvictionCandidates, ReverseCompareNodeTimeConnected, total_protect_size);
 
-    if (vEvictionCandidates.empty()) return nullopt;
+    if (vEvictionCandidates.empty()) return std::nullopt;
 
     // If any remaining peers are preferred for eviction consider only them.
     // This happens after the other preferences since if a peer is really the best by other criteria (esp relaying blocks)
@@ -989,7 +989,7 @@ bool CConnman::AttemptToEvictConnection()
             vEvictionCandidates.push_back(candidate);
         }
     }
-    const Optional<NodeId> node_id_to_evict = SelectNodeToEvict(std::move(vEvictionCandidates));
+    const std::optional<NodeId> node_id_to_evict = SelectNodeToEvict(std::move(vEvictionCandidates));
     if (!node_id_to_evict) {
         return false;
     }

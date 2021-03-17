@@ -17,7 +17,6 @@
 #include <crypto/common.h> // for ReadLE64
 #include <fs.h>
 #include <node/utxo_snapshot.h>
-#include <optional.h>
 #include <policy/feerate.h>
 #include <protocol.h> // For CMessageHeader::MessageStartChars
 #include <script/script_error.h>
@@ -32,6 +31,7 @@
 #include <atomic>
 #include <map>
 #include <memory>
+#include <optional>
 #include <set>
 #include <stdint.h>
 #include <string>
@@ -205,8 +205,7 @@ struct MempoolAcceptResult {
 
     /** Constructor for failure case */
     explicit MempoolAcceptResult(TxValidationState state)
-        : m_result_type(ResultType::INVALID),
-        m_state(state), m_replaced_transactions(nullopt), m_base_fees(nullopt) {
+        : m_result_type(ResultType::INVALID), m_state(state) {
             Assume(!state.IsValid()); // Can be invalid or error
         }
 
@@ -924,7 +923,7 @@ public:
 
     bool IsSnapshotActive() const;
 
-    Optional<uint256> SnapshotBlockhash() const;
+    std::optional<uint256> SnapshotBlockhash() const;
 
     //! Is there a snapshot in use and has it been fully validated?
     bool IsSnapshotValidated() const { return m_snapshot_validated; }

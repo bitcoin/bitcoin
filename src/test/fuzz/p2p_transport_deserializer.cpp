@@ -10,6 +10,7 @@
 #include <cassert>
 #include <cstdint>
 #include <limits>
+#include <optional>
 #include <vector>
 
 void initialize_p2p_transport_deserializer()
@@ -30,7 +31,7 @@ FUZZ_TARGET_INIT(p2p_transport_deserializer, initialize_p2p_transport_deserializ
         if (deserializer.Complete()) {
             const std::chrono::microseconds m_time{std::numeric_limits<int64_t>::max()};
             uint32_t out_err_raw_size{0};
-            Optional<CNetMessage> result{deserializer.GetMessage(m_time, out_err_raw_size)};
+            std::optional<CNetMessage> result{deserializer.GetMessage(m_time, out_err_raw_size)};
             if (result) {
                 assert(result->m_command.size() <= CMessageHeader::COMMAND_SIZE);
                 assert(result->m_raw_message_size <= buffer.size());

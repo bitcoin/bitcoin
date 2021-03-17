@@ -228,7 +228,7 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
                       "downloading and rescanning the relevant blocks (see -reindex and -rescan "
                       "options).\"}},{\"success\":true}]",
                               0, oldTip->GetBlockTimeMax(), TIMESTAMP_WINDOW));
-        RemoveWallet(wallet, nullopt);
+        RemoveWallet(wallet, std::nullopt);
     }
 }
 
@@ -271,7 +271,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         request.params.push_back(backup_file);
 
         ::dumpwallet().HandleRequest(request);
-        RemoveWallet(wallet, nullopt);
+        RemoveWallet(wallet, std::nullopt);
     }
 
     // Call importwallet RPC and verify all blocks with timestamps >= BLOCK_TIME
@@ -288,7 +288,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         AddWallet(wallet);
         wallet->SetLastBlockProcessed(::ChainActive().Height(), ::ChainActive().Tip()->GetBlockHash());
         ::importwallet().HandleRequest(request);
-        RemoveWallet(wallet, nullopt);
+        RemoveWallet(wallet, std::nullopt);
 
         BOOST_CHECK_EQUAL(wallet->mapWallet.size(), 3U);
         BOOST_CHECK_EQUAL(m_coinbase_txns.size(), 103U);

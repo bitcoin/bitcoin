@@ -1788,7 +1788,7 @@ RPCHelpMan listdescriptors()
         const bool active = active_spk_mans.count(desc_spk_man) != 0;
         spk.pushKV("active", active);
         const auto& type = wallet_descriptor.descriptor->GetOutputType();
-        if (active && type != nullopt) {
+        if (active && type) {
             spk.pushKV("internal", wallet->GetScriptPubKeyMan(*type, true) == desc_spk_man);
         }
         if (wallet_descriptor.descriptor->IsRange()) {
