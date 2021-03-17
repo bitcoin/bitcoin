@@ -24,6 +24,8 @@ fi
 # Check that required environment variables are set
 cat << EOF
 Required environment variables as seen inside the container:
+    DIST_ARCHIVE_BASE: ${DIST_ARCHIVE_BASE:?not set}
+    DISTNAME: ${DISTNAME:?not set}
     HOST: ${HOST:?not set}
     SOURCE_DATE_EPOCH: ${SOURCE_DATE_EPOCH:?not set}
     JOBS: ${JOBS:?not set}
@@ -198,11 +200,7 @@ make -C depends --jobs="$JOBS" HOST="$HOST" \
 # Source Tarball Building #
 ###########################
 
-# Define DISTNAME variable.
-# shellcheck source=contrib/gitian-descriptors/assign_DISTNAME
-source contrib/gitian-descriptors/assign_DISTNAME
-
-GIT_ARCHIVE="${OUTDIR}/src/${DISTNAME}.tar.gz"
+GIT_ARCHIVE="${DIST_ARCHIVE_BASE}/${DISTNAME}.tar.gz"
 
 # Create the source tarball if not already there
 if [ ! -e "$GIT_ARCHIVE" ]; then
@@ -275,6 +273,7 @@ mkdir -p "$DISTSRC"
     # version symbols for Linux distro back-compatibility.
     make -C src --jobs=1 check-symbols  ${V:+V=1}
 
+    mkdir -p ${OUTDIR}
     # Make the os-specific installers
     case "$HOST" in
         *mingw*)

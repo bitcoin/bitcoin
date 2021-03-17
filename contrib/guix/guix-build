@@ -2,22 +2,26 @@
 export LC_ALL=C
 set -e -o pipefail
 
+# Source the common prelude, which:
+#   1. Checks if we're at the top directory of the Bitcoin Core repository
+#   2. Defines a few common functions and variables
+#
+# shellcheck source=libexec/prelude.bash
+source "$(dirname "${BASH_SOURCE[0]}")/libexec/prelude.bash"
+
+
 ###################
-## Sanity Checks ##
+## SANITY CHECKS ##
 ###################
 
 ################
-# Check 1: Make sure that we can invoke required tools
+# Required non-builtin commands should be invokable
 ################
-for cmd in git make guix cat mkdir curl; do
-    if ! command -v "$cmd" > /dev/null 2>&1; then
-        echo "ERR: This script requires that '$cmd' is installed and available in your \$PATH"
-        exit 1
-    fi
-done
+
+check_tools cat mkdir make git guix
 
 ################
-# Check 2: Make sure GUIX_BUILD_OPTIONS is empty
+# GUIX_BUILD_OPTIONS should be empty
 ################
 #
 # GUIX_BUILD_OPTIONS is an environment variable recognized by guix commands that
@@ -45,8 +49,9 @@ exit 1
 fi
 
 ################
-# Check 3: Make sure that we're not in a dirty worktree
+# The git worktree should not be dirty
 ################
+
 if ! git diff-index --quiet HEAD -- && [ -z "$FORCE_DIRTY_WORKTREE" ]; then
 cat << EOF
 ERR: The current git worktree is dirty, which may lead to broken builds.
@@ -60,12 +65,12 @@ Hint: To make your git worktree clean, You may want to:
          using a dirty worktree
 EOF
 exit 1
-else
-    GIT_COMMIT=$(git rev-parse --short=12 HEAD)
 fi
 
+mkdir -p "$VERSION_BASE"
+
 ################
-# Check 4: Make sure that build directories do not exist
+# Build directories should not exist
 ################
 
 # Default to building for all supported HOSTs (overridable by environment)
@@ -73,14 +78,12 @@ export HOSTS="${HOSTS:-x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu ri
                        x86_64-w64-mingw32
                        x86_64-apple-darwin18}"
 
-DISTSRC_BASE="${DISTSRC_BASE:-${PWD}}"
-
 # Usage: distsrc_for_host HOST
 #
 #   HOST: The current platform triple we're building for
 #
 distsrc_for_host() {
-    echo "${DISTSRC_BASE}/distsrc-${GIT_COMMIT}-${1}"
+    echo "${DISTSRC_BASE}/distsrc-${VERSION}-${1}"
 }
 
 # Accumulate a list of build directories that already exist...
@@ -106,12 +109,11 @@ for host in $hosts_distsrc_exists; do
 done
 exit 1
 else
-
     mkdir -p "$DISTSRC_BASE"
 fi
 
 ################
-# Check 5: When building for darwin, make sure that the macOS SDK exists
+# When building for darwin, the macOS SDK should exists
 ################
 
 for host in $HOSTS; do
@@ -129,7 +131,7 @@ for host in $HOSTS; do
 done
 
 #########
-# Setup #
+# SETUP #
 #########
 
 # Determine the maximum number of jobs to run simultaneously (overridable by
@@ -172,11 +174,20 @@ time-machine() {
 }
 
 # Make sure an output directory exists for our builds
-OUTDIR="${OUTDIR:-${PWD}/output}"
-[ -e "$OUTDIR" ] || mkdir -p "$OUTDIR"
+OUTDIR_BASE="${OUTDIR_BASE:-${VERSION_BASE}/output}"
+mkdir -p "$OUTDIR_BASE"
+
+# Usage: outdir_for_host HOST
+#
+#   HOST: The current platform triple we're building for
+#
+outdir_for_host() {
+    echo "${OUTDIR_BASE}/${1}"
+}
+
 
 #########
-# Build #
+# BUILD #
 #########
 
 # Function to be called when building for host ${1} and the user interrupts the
@@ -216,15 +227,15 @@ for host in $HOSTS; do
 
         # shellcheck disable=SC2030
 cat << EOF
-INFO: Building commit ${GIT_COMMIT:?not set} for platform triple ${HOST:?not set}:
+INFO: Building ${VERSION:?not set} for platform triple ${HOST:?not set}:
       ...using reference timestamp: ${SOURCE_DATE_EPOCH:?not set}
       ...running at most ${JOBS:?not set} jobs
       ...from worktree directory: '${PWD}'
           ...bind-mounted in container to: '/bitcoin'
       ...in build directory: '$(distsrc_for_host "$HOST")'
           ...bind-mounted in container to: '$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")'
-      ...outputting in: '${OUTDIR:?not set}'
-          ...bind-mounted in container to: '/outdir'
+      ...outdirting in: '$(outdir_for_host "$HOST")'
+          ...bind-mounted in container to: '$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST")'
 EOF
 
         # Run the build script 'contrib/guix/libexec/build.sh' in the build
@@ -299,7 +310,7 @@ EOF
                                  --no-cwd \
                                  --share="$PWD"=/bitcoin \
                                  --share="$DISTSRC_BASE"=/distsrc-base \
-                                 --share="$OUTDIR"=/outdir \
+                                 --share="$OUTDIR_BASE"=/outdir-base \
                                  --expose="$(git rev-parse --git-common-dir)" \
                                  ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
                                  ${BASE_CACHE:+--share="$BASE_CACHE"} \
@@ -309,6 +320,7 @@ EOF
                                  ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
                                  ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS} \
                                  -- env HOST="$host" \
+                                        DISTNAME="$DISTNAME" \
                                         JOBS="$JOBS" \
                                         SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:?unable to determine value}" \
                                         ${V:+V=1} \
@@ -316,7 +328,8 @@ EOF
                                         ${BASE_CACHE:+BASE_CACHE="$BASE_CACHE"} \
                                         ${SDK_PATH:+SDK_PATH="$SDK_PATH"} \
                                         DISTSRC="$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")" \
-                                        OUTDIR=/outdir \
+                                        OUTDIR="$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST")" \
+                                        DIST_ARCHIVE_BASE=/outdir-base/dist-archive \
                                       bash -c "cd /bitcoin && bash contrib/guix/libexec/build.sh"
     )
 
