@@ -130,6 +130,33 @@ for host in $HOSTS; do
     esac
 done
 
+################
+# Check that we can connect to the guix-daemon
+################
+
+cat << EOF
+Checking that we can connect to the guix-daemon...
+
+Hint: If this hangs, you may want to try turning your guix-daemon off and on
+      again.
+
+EOF
+if ! guix gc --list-failures > /dev/null; then
+cat << EOF
+
+ERR: Failed to connect to the guix-daemon, please ensure that one is running and
+     reachable.
+EOF
+exit 1
+fi
+
+# Developer note: we could use `guix repl` for this check and run:
+#
+#     (import (guix store)) (close-connection (open-connection))
+#
+# However, the internal API is likely to change more than the CLI invocation
+
+
 #########
 # SETUP #
 #########
