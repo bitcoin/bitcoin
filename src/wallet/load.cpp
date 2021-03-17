@@ -154,7 +154,7 @@ void UnloadWallets()
         auto wallet = wallets.back();
         wallets.pop_back();
         std::vector<bilingual_str> warnings;
-        RemoveWallet(wallet, nullopt, warnings);
+        RemoveWallet(wallet, std::nullopt, warnings);
         UnloadWallet(std::move(wallet));
     }
 }

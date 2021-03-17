@@ -24,7 +24,6 @@
 #include <logging/timer.h>
 #include <node/coinstats.h>
 #include <node/ui_interface.h>
-#include <optional.h>
 #include <policy/policy.h>
 #include <policy/settings.h>
 #include <pow.h>
@@ -51,6 +50,7 @@
 #include <validationinterface.h>
 #include <warnings.h>
 
+#include <optional>
 #include <string>
 
 #include <boost/algorithm/string/replace.hpp>
@@ -5805,7 +5805,7 @@ double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pin
     return std::min<double>(pindex->nChainTx / fTxTotal, 1.0);
 }
 
-Optional<uint256> ChainstateManager::SnapshotBlockhash() const {
+std::optional<uint256> ChainstateManager::SnapshotBlockhash() const {
     LOCK(::cs_main);
     if (m_active_chainstate != nullptr &&
             !m_active_chainstate->m_from_snapshot_blockhash.IsNull()) {

@@ -50,6 +50,7 @@
 #endif
 
 #include <memory>
+#include <optional>
 #include <utility>
 // SYSCOIN
 #include <evo/deterministicmns.h>
@@ -464,7 +465,7 @@ class ChainImpl : public Chain
 {
 public:
     explicit ChainImpl(NodeContext& node) : m_node(node) {}
-    Optional<int> getHeight() override
+    std::optional<int> getHeight() override
     {
         LOCK(::cs_main);
         const CChain& active = Assert(m_node.chainman)->ActiveChain();
@@ -472,7 +473,7 @@ public:
         if (height >= 0) {
             return height;
         }
-        return nullopt;
+        return std::nullopt;
     }
     uint256 getBlockHash(int height) override
     {
@@ -501,7 +502,7 @@ public:
         assert(std::addressof(::ChainActive()) == std::addressof(m_node.chainman->ActiveChain()));
         return CheckFinalTx(m_node.chainman->ActiveChain().Tip(), tx);
     }
-    Optional<int> findLocatorFork(const CBlockLocator& locator) override
+    std::optional<int> findLocatorFork(const CBlockLocator& locator) override
     {
         LOCK(cs_main);
         const CChain& active = Assert(m_node.chainman)->ActiveChain();
@@ -509,7 +510,7 @@ public:
         if (CBlockIndex* fork = m_node.chainman->m_blockman.FindForkInGlobalIndex(active, locator)) {
             return fork->nHeight;
         }
-        return nullopt;
+        return std::nullopt;
     }
     bool findBlock(const uint256& hash, const FoundBlock& block) override
     {
@@ -567,7 +568,7 @@ public:
         assert(std::addressof(g_chainman) == std::addressof(*m_node.chainman));
         return GuessVerificationProgress(Params().TxData(), m_node.chainman->m_blockman.LookupBlockIndex(block_hash));
     }
-    bool hasBlocks(const uint256& block_hash, int min_height, Optional<int> max_height) override
+    bool hasBlocks(const uint256& block_hash, int min_height, std::optional<int> max_height) override
     {
         // hasBlocks returns true if all ancestors of block_hash in specified
         // range have block data (are not pruned), false if any ancestors in

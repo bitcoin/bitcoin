@@ -7,7 +7,6 @@
 #include <clientversion.h>
 #include <hash.h> // For Hash()
 #include <key.h>  // For CKey
-#include <optional.h>
 #include <sync.h>
 #include <test/util/logging.h>
 #include <test/util/setup_common.h>
@@ -23,6 +22,7 @@
 #include <util/vector.h>
 
 #include <array>
+#include <optional>
 #include <stdint.h>
 #include <string.h>
 #include <thread>
@@ -228,9 +228,9 @@ public:
         bool default_int = false;
         bool default_bool = false;
         const char* string_value = nullptr;
-        Optional<int64_t> int_value;
-        Optional<bool> bool_value;
-        Optional<std::vector<std::string>> list_value;
+        std::optional<int64_t> int_value;
+        std::optional<bool> bool_value;
+        std::optional<std::vector<std::string>> list_value;
         const char* error = nullptr;
 
         explicit Expect(util::SettingsValue s) : setting(std::move(s)) {}

@@ -244,7 +244,6 @@ SYSCOIN_CORE_H = \
   node/ui_interface.h \
   node/utxo_snapshot.h \
   noui.h \
-  optional.h \
   outputtype.h \
   policy/feerate.h \
   policy/fees.h \

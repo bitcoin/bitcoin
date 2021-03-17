@@ -9,7 +9,6 @@
 
 #include <chainparamsbase.h>
 #include <clientversion.h>
-#include <optional.h>
 #include <rpc/client.h>
 #include <rpc/mining.h>
 #include <rpc/protocol.h>
@@ -24,6 +23,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <stdio.h>
 #include <string>
 #include <tuple>
@@ -611,7 +611,7 @@ public:
     }
 };
 
-static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const Optional<std::string>& rpcwallet = {})
+static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const std::optional<std::string>& rpcwallet = {})
 {
     std::string host;
     // In preference order, we choose the following for the port:
@@ -733,7 +733,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
  * @returns the RPC response as a UniValue object.
  * @throws a CConnectionFailed std::runtime_error if connection failed or RPC server still in warmup.
  */
-static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const Optional<std::string>& rpcwallet = {})
+static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const std::optional<std::string>& rpcwallet = {})
 {
     UniValue response(UniValue::VOBJ);
     // Execute and handle connection failures with -rpcwait.
@@ -817,7 +817,7 @@ static void GetWalletBalances(UniValue& result)
  */
 static UniValue GetNewAddress()
 {
-    Optional<std::string> wallet_name{};
+    std::optional<std::string> wallet_name{};
     if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
     DefaultRequestHandler rh;
     return ConnectAndCallRPC(&rh, "getnewaddress", /* args=*/{}, wallet_name);
@@ -922,7 +922,7 @@ static int CommandLineRPC(int argc, char *argv[])
         }
         if (nRet == 0) {
             // Perform RPC call
-            Optional<std::string> wallet_name{};
+            std::optional<std::string> wallet_name{};
             if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
             const UniValue reply = ConnectAndCallRPC(rh.get(), method, args, wallet_name);
 

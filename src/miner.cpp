@@ -102,10 +102,6 @@ void BlockAssembler::resetBlock()
     nBlockTx = 0;
     nFees = 0;
 }
-
-Optional<int64_t> BlockAssembler::m_last_block_num_txs{nullopt};
-Optional<int64_t> BlockAssembler::m_last_block_weight{nullopt};
-
 // SYSCOIN
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(CChainState& chainstate, const CScript& scriptPubKeyIn)
 {    

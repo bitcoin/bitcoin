@@ -50,6 +50,8 @@
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
 #include <llmq/quorums_chainlocks.h>
+#include <optional>
+#include <typeinfo>
 
 /** How long to cache transactions in mapRelay for normal relay */
 static constexpr auto RELAY_TX_CACHE_TIME = 15min;
@@ -4610,7 +4612,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             if (pto->m_next_local_addr_send != 0us) {
                 pto->m_addr_known->reset();
             }
-            if (Optional<CAddress> local_addr = GetLocalAddrForPeer(pto)) {
+            if (std::optional<CAddress> local_addr = GetLocalAddrForPeer(pto)) {
                 FastRandomContext insecure_rand;
                 pto->PushAddress(*local_addr, insecure_rand);
             }

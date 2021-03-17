@@ -23,6 +23,7 @@
 #include <wallet/wallet.h>
 
 #include <atomic>
+#include <optional>
 #include <string>
 // SYSCOIN
 #include <governance/governanceobject.h>
@@ -1039,7 +1040,7 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
         return nullptr;
     }
 
-    Optional<DatabaseFormat> format;
+    std::optional<DatabaseFormat> format;
     if (exists) {
         if (IsBDBFile(BDBDataFile(path))) {
             format = DatabaseFormat::BERKELEY;

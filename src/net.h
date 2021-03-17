@@ -18,7 +18,6 @@
 #include <net_permissions.h>
 #include <netaddress.h>
 #include <netbase.h>
-#include <optional.h>
 #include <policy/feerate.h>
 #include <protocol.h>
 #include <random.h>
@@ -35,6 +34,7 @@
 #include <deque>
 #include <map>
 #include <memory>
+#include <optional>
 #include <thread>
 #include <vector>
 
@@ -221,7 +221,7 @@ enum
 
 bool IsPeerAddrLocalGood(CNode *pnode);
 /** Returns a local address that we should advertise to this peer */
-Optional<CAddress> GetLocalAddrForPeer(CNode *pnode);
+std::optional<CAddress> GetLocalAddrForPeer(CNode *pnode);
 
 /**
  * Mark a network as reachable or unreachable (no automatic connects to it)
@@ -337,7 +337,7 @@ public:
     /** read and deserialize data, advances msg_bytes data pointer */
     virtual int Read(Span<const uint8_t>& msg_bytes) = 0;
     // decomposes a message from the context
-    virtual Optional<CNetMessage> GetMessage(std::chrono::microseconds time, uint32_t& out_err) = 0;
+    virtual std::optional<CNetMessage> GetMessage(std::chrono::microseconds time, uint32_t& out_err) = 0;
     virtual ~TransportDeserializer() {}
 };
 
@@ -401,7 +401,7 @@ public:
         }
         return ret;
     }
-    Optional<CNetMessage> GetMessage(std::chrono::microseconds time, uint32_t& out_err_raw_size) override;
+    std::optional<CNetMessage> GetMessage(std::chrono::microseconds time, uint32_t& out_err_raw_size) override;
 };
 
 /** The TransportSerializer prepares messages for the network transport
@@ -1435,6 +1435,6 @@ struct NodeEvictionCandidate
     bool m_is_local;
 };
 
-[[nodiscard]] Optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates);
+[[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates);
 
 #endif // SYSCOIN_NET_H
