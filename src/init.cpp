@@ -1584,7 +1584,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         };
         bilingual_str strLoadError;
 
-        uiInterface.InitMessage(_("Loading block index...").translated);
+        uiInterface.InitMessage(_("Loading block index…").translated);
 
         do {
             const int64_t load_block_index_start_time = GetTimeMillis();
@@ -1707,7 +1707,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
                     // Note that RewindBlockIndex MUST run even if we're about to -reindex-chainstate.
                     // It both disconnects blocks based on the chainstate, and drops block data in
                     // BlockIndex() based on lack of available witness data.
-                    uiInterface.InitMessage(_("Rewinding blocks...").translated);
+                    uiInterface.InitMessage(_("Rewinding blocks…").translated);
                     if (!chainstate->RewindBlockIndex(chainparams)) {
                         strLoadError = _(
                             "Unable to rewind the database to a pre-fork state. "
@@ -1729,7 +1729,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
 
                 for (CChainState* chainstate : chainman.GetAll()) {
                     if (!is_coinsview_empty(chainstate)) {
-                        uiInterface.InitMessage(_("Verifying blocks...").translated);
+                        uiInterface.InitMessage(_("Verifying blocks…").translated);
                         if (fHavePruned && args.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS) > MIN_BLOCKS_TO_KEEP) {
                             LogPrintf("Prune: pruned datadir may not have more than %d blocks; only checking available blocks\n",
                                 MIN_BLOCKS_TO_KEEP);
@@ -1827,7 +1827,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         if (!fReindex) {
             LOCK(cs_main);
             for (CChainState* chainstate : chainman.GetAll()) {
-                uiInterface.InitMessage(_("Pruning blockstore...").translated);
+                uiInterface.InitMessage(_("Pruning blockstore…").translated);
                 chainstate->PruneAndFlush();
             }
         }

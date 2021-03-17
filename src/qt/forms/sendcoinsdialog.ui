@@ -107,7 +107,7 @@
              <string notr="true"/>
             </property>
             <property name="text">
-             <string>Inputs...</string>
+             <string>Inputs…</string>
             </property>
             <property name="autoDefault">
              <bool>false</bool>
@@ -738,7 +738,7 @@
               <item>
                <widget class="QPushButton" name="buttonChooseFee">
                 <property name="text">
-                 <string>Choose...</string>
+                 <string>Choose…</string>
                 </property>
                </widget>
               </item>
@@ -991,7 +991,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
                  <item>
                   <widget class="QLabel" name="labelSmartFee2">
                    <property name="text">
-                    <string>(Smart fee not initialized yet. This usually takes a few blocks...)</string>
+                    <string>(Smart fee not initialized yet. This usually takes a few blocks…)</string>
                    </property>
                   </widget>
                  </item>

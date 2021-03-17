@@ -4235,7 +4235,7 @@ bool CChainState::LoadChainTip(const CChainParams& chainparams)
 
 CVerifyDB::CVerifyDB()
 {
-    uiInterface.ShowProgress(_("Verifying blocks...").translated, 0, false);
+    uiInterface.ShowProgress(_("Verifying blocks…").translated, 0, false);
 }
 
 CVerifyDB::~CVerifyDB()
@@ -4270,7 +4270,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CChainState& active_ch
             LogPrintf("[%d%%]...", percentageDone); /* Continued */
             reportDone = percentageDone/10;
         }
-        uiInterface.ShowProgress(_("Verifying blocks...").translated, percentageDone, false);
+        uiInterface.ShowProgress(_("Verifying blocks…").translated, percentageDone, false);
         if (pindex->nHeight <= active_chainstate.m_chain.Height()-nCheckDepth)
             break;
         if (fPruneMode && !(pindex->nStatus & BLOCK_HAVE_DATA)) {
@@ -4326,7 +4326,7 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CChainState& active_ch
                 LogPrintf("[%d%%]...", percentageDone); /* Continued */
                 reportDone = percentageDone/10;
             }
-            uiInterface.ShowProgress(_("Verifying blocks...").translated, percentageDone, false);
+            uiInterface.ShowProgress(_("Verifying blocks…").translated, percentageDone, false);
             pindex = active_chainstate.m_chain.Next(pindex);
             CBlock block;
             if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
@@ -4375,7 +4375,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     if (hashHeads.empty()) return true; // We're already in a consistent state.
     if (hashHeads.size() != 2) return error("ReplayBlocks(): unknown inconsistent state");
 
-    uiInterface.ShowProgress(_("Replaying blocks...").translated, 0, false);
+    uiInterface.ShowProgress(_("Replaying blocks…").translated, 0, false);
     LogPrintf("Replaying blocks\n");
 
     const CBlockIndex* pindexOld = nullptr;  // Old tip during the interrupted flush.
