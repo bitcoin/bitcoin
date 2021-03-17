@@ -61,3 +61,6 @@ OUTDIR_BASE="${OUTDIR_BASE:-${VERSION_BASE}/output}"
 
 var_base_basename="var"
 VAR_BASE="${VAR_BASE:-${VERSION_BASE}/${var_base_basename}}"
+
+profiles_base_basename="profiles"
+PROFILES_BASE="${PROFILES_BASE:-${VAR_BASE}/${profiles_base_basename}}"
