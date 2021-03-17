@@ -323,9 +323,6 @@ mkdir -p "$DISTSRC"
                 osx_volname \
                 contrib/macdeploy/detached-sig-{apply,create}.sh \
                 "${BASEPREFIX}/${HOST}"/native/bin/dmg
-            for util in codesign_allocate pagestuff; do
-                cp --no-target-directory {"${BASEPREFIX}/${HOST}/native/bin/${HOST}-","unsigned-app-${HOST}/"}"$util"
-            done
             mv --target-directory="unsigned-app-${HOST}" dist
             (
                 cd "unsigned-app-${HOST}"
