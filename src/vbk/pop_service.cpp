@@ -182,10 +182,10 @@ void addPopPayoutsIntoCoinbaseTx(CMutableTransaction& coinbaseTx, const CBlockIn
     }
 }
 
-bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& nFees, const CBlockIndex& pindexPrev, const CChainParams& params, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& nFees, const CBlockIndex& pindex, const CChainParams& params, BlockValidationState& state) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     AssertLockHeld(cs_main);
-    PoPRewards expectedRewards = getPopRewards(pindexPrev, params);
+    PoPRewards expectedRewards = getPopRewards(*pindex.pprev, params);
     CAmount nTotalPopReward = 0;
 
     if (tx.vout.size() < expectedRewards.size()) {
@@ -234,7 +234,7 @@ bool checkCoinbaseTxWithPopRewards(const CTransaction& tx, const CAmount& nFees,
     }
 
     CAmount PoWBlockReward =
-        GetBlockSubsidy(pindexPrev.nHeight, params);
+        GetBlockSubsidy(pindex.nHeight, params);
 
     if (tx.GetValueOut() > nTotalPopReward + PoWBlockReward + nFees) {
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
