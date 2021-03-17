@@ -15,10 +15,10 @@ namespace
 
 typedef std::vector<uint8_t> data;
 
-/** The Bech32 character set for encoding. */
+/** The Bech32 and Bech32m character set for encoding. */
 const char* CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
-/** The Bech32 character set for decoding. */
+/** The Bech32 and Bech32m character set for decoding. */
 const int8_t CHARSET_REV[128] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -150,8 +150,8 @@ data CreateChecksum(Encoding encoding, const std::string& hrp, const data& value
 
 /** Encode a Bech32 or Bech32m string. */
 std::string Encode(Encoding encoding, const std::string& hrp, const data& values) {
-    // First ensure that the HRP is all lowercase. BIP-173 requires an encoder
-    // to return a lowercase Bech32 string, but if given an uppercase HRP, the
+    // First ensure that the HRP is all lowercase. BIP-173 and BIP350 require an encoder
+    // to return a lowercase Bech32/Bech32m string, but if given an uppercase HRP, the
     // result will always be invalid.
     for (const char& c : hrp) assert(c < 'A' || c > 'Z');
     data checksum = CreateChecksum(encoding, hrp, values);
