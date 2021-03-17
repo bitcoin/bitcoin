@@ -24,6 +24,7 @@ BLOCKS_VALUE_OF_ZERO = 'error: the first argument (number of blocks to generate,
 TOO_MANY_ARGS = 'error: too many arguments (maximum 2 for nblocks and maxtries)'
 WALLET_NOT_LOADED = 'Requested wallet does not exist or is not loaded'
 WALLET_NOT_SPECIFIED = 'Wallet file not specified'
+METHOD_NOT_FOUND = 'Method not found'
 
 class TestBitcoinCli(BitcoinTestFramework):
     def set_test_params(self):
@@ -233,6 +234,15 @@ class TestBitcoinCli(BitcoinTestFramework):
         else:
             self.log.info("*** Wallet not compiled; cli getwalletinfo and -getinfo wallet tests skipped")
             self.nodes[0].generate(25)  # maintain block parity with the wallet_compiled conditional branch
+
+        self.log.info("Test nested command")
+        blocks = self.nodes[0].cli().send_cli('getblockchaininfo()[blocks]')
+        height = self.nodes[0].cli().send_cli('getblock(getblock(getblockchaininfo()[bestblockhash])[previousblockhash])[height]')
+        assert_equal(blocks-1, height)
+        assert_raises_rpc_error(-32601, METHOD_NOT_FOUND, self.nodes[0].cli('getblock(unknownmethod())').echo)
+        assert_equal(self.nodes[0].cli().send_cli('getblock(getbestblockhash())[hash]'), self.nodes[0].cli().send_cli('getbestblockhash'))
+        assert_raises_rpc_error(-32601, METHOD_NOT_FOUND, self.nodes[0].cli('unknown').echo)
+        assert_raises_rpc_error(-32601, METHOD_NOT_FOUND, self.nodes[0].cli('unknown()').echo)
 
         self.log.info("Test -version with node stopped")
         self.stop_node(0)
