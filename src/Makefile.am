@@ -134,6 +134,10 @@ BITCOIN_CORE_H = \
   checkpoints.h \
   checkqueue.h \
   clientversion.h \
+  coinjoin/coinjoin.h \
+  coinjoin/coinjoin-client.h \
+  coinjoin/coinjoin-server.h \
+  coinjoin/coinjoin-util.h \
   coins.h \
   compat.h \
   compat/byteswap.h \
@@ -154,10 +158,6 @@ BITCOIN_CORE_H = \
   evo/providertx.h \
   evo/simplifiedmns.h \
   evo/specialtx.h \
-  privatesend/privatesend.h \
-  privatesend/privatesend-client.h \
-  privatesend/privatesend-server.h \
-  privatesend/privatesend-util.h \
   dsnotificationinterface.h \
   governance/governance.h \
   governance/governance-classes.h \
@@ -299,6 +299,8 @@ libdash_server_a_SOURCES = \
   blockfilter.cpp \
   chain.cpp \
   checkpoints.cpp \
+  coinjoin/coinjoin.cpp \
+  coinjoin/coinjoin-server.cpp \
   consensus/tx_verify.cpp \
   dsnotificationinterface.cpp \
   evo/cbtx.cpp \
@@ -347,8 +349,6 @@ libdash_server_a_SOURCES = \
   policy/fees.cpp \
   policy/policy.cpp \
   pow.cpp \
-  privatesend/privatesend.cpp \
-  privatesend/privatesend-server.cpp \
   rest.cpp \
   rpc/blockchain.cpp \
   rpc/masternode.cpp \
@@ -360,7 +360,7 @@ libdash_server_a_SOURCES = \
   rpc/rpcevo.cpp \
   rpc/rpcquorums.cpp \
   rpc/server.cpp \
-  rpc/privatesend.cpp \
+  rpc/coinjoin.cpp \
   rpc/util.cpp \
   script/sigcache.cpp \
   spork.cpp \
@@ -391,10 +391,10 @@ endif
 libdash_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libdash_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libdash_wallet_a_SOURCES = \
+  coinjoin/coinjoin-client.cpp \
+  coinjoin/coinjoin-util.cpp \
   interfaces/wallet.cpp \
   keepass.cpp \
-  privatesend/privatesend-client.cpp \
-  privatesend/privatesend-util.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/fees.cpp \

@@ -83,11 +83,11 @@ TransactionView::TransactionView(QWidget* parent) :
                                         TransactionFilterProxy::TYPE(TransactionRecord::RecvFromOther));
     typeWidget->addItem(tr("Sent to"), TransactionFilterProxy::TYPE(TransactionRecord::SendToAddress) |
                                   TransactionFilterProxy::TYPE(TransactionRecord::SendToOther));
-    typeWidget->addItem("PrivateSend", TransactionFilterProxy::TYPE(TransactionRecord::PrivateSend));
-    typeWidget->addItem(tr("PrivateSend Make Collateral Inputs"), TransactionFilterProxy::TYPE(TransactionRecord::PrivateSendMakeCollaterals));
-    typeWidget->addItem(tr("PrivateSend Create Denominations"), TransactionFilterProxy::TYPE(TransactionRecord::PrivateSendCreateDenominations));
-    typeWidget->addItem(tr("PrivateSend Denominate"), TransactionFilterProxy::TYPE(TransactionRecord::PrivateSendDenominate));
-    typeWidget->addItem(tr("PrivateSend Collateral Payment"), TransactionFilterProxy::TYPE(TransactionRecord::PrivateSendCollateralPayment));
+    typeWidget->addItem("CoinJoin", TransactionFilterProxy::TYPE(TransactionRecord::CoinJoin));
+    typeWidget->addItem(tr("CoinJoin Make Collateral Inputs"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinMakeCollaterals));
+    typeWidget->addItem(tr("CoinJoin Create Denominations"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinCreateDenominations));
+    typeWidget->addItem(tr("CoinJoin Denominate"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinDenominate));
+    typeWidget->addItem(tr("CoinJoin Collateral Payment"), TransactionFilterProxy::TYPE(TransactionRecord::CoinJoinCollateralPayment));
     typeWidget->addItem(tr("To yourself"), TransactionFilterProxy::TYPE(TransactionRecord::SendToSelf));
     typeWidget->addItem(tr("Mined"), TransactionFilterProxy::TYPE(TransactionRecord::Generated));
     typeWidget->addItem(tr("Other"), TransactionFilterProxy::TYPE(TransactionRecord::Other));
@@ -249,7 +249,7 @@ void TransactionView::setModel(WalletModel *_model)
                 }
             }
 
-            connect(_model->getOptionsModel(), SIGNAL(privateSendEnabledChanged()), this, SLOT(updatePrivateSendVisibility()));
+            connect(_model->getOptionsModel(), SIGNAL(coinJoinEnabledChanged()), this, SLOT(updateCoinJoinVisibility()));
         }
 
         // show/hide column Watch-only
@@ -262,7 +262,7 @@ void TransactionView::setModel(WalletModel *_model)
         chooseType(settings.value("transactionType").toInt());
         chooseDate(settings.value("transactionDate").toInt());
 
-        updatePrivateSendVisibility();
+        updateCoinJoinVisibility();
     }
 }
 
@@ -730,15 +730,15 @@ void TransactionView::updateWatchOnlyColumn(bool fHaveWatchOnly)
     transactionView->setColumnHidden(TransactionTableModel::Watchonly, !fHaveWatchOnly);
 }
 
-void TransactionView::updatePrivateSendVisibility()
+void TransactionView::updateCoinJoinVisibility()
 {
     if (model == nullptr) {
         return;
     }
-    bool fEnabled = model->node().privateSendOptions().isEnabled();
-    // If PrivateSend gets enabled use "All" else "Most common"
+    bool fEnabled = model->node().coinJoinOptions().isEnabled();
+    // If CoinJoin gets enabled use "All" else "Most common"
     typeWidget->setCurrentIndex(fEnabled ? 0 : 1);
-    // Hide all PrivateSend related filters
+    // Hide all CoinJoin related filters
     QListView* typeList = qobject_cast<QListView*>(typeWidget->view());
     std::vector<int> vecRows{4, 5, 6, 7, 8};
     for (auto nRow : vecRows) {

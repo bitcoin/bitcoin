@@ -91,12 +91,12 @@ public:
         RecvWithAddress,
         RecvFromOther,
         SendToSelf,
-        RecvWithPrivateSend,
-        PrivateSendDenominate,
-        PrivateSendCollateralPayment,
-        PrivateSendMakeCollaterals,
-        PrivateSendCreateDenominations,
-        PrivateSend
+        RecvWithCoinJoin,
+        CoinJoinDenominate,
+        CoinJoinCollateralPayment,
+        CoinJoinMakeCollaterals,
+        CoinJoinCreateDenominations,
+        CoinJoin
     };
 
     /** Number of confirmation recommended for accepting a transaction */

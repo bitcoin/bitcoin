@@ -621,7 +621,7 @@ QPushButton - Special case, tabbar replacement buttons
 /* Options dialog buttons */
 #btnMain,
 #btnWallet,
-#btnPrivateSend,
+#btnCoinJoin,
 #btnNetwork,
 #btnDisplay,
 #btnAppearance,
@@ -644,7 +644,7 @@ QPushButton - Special case, tabbar replacement buttons
 /* Options dialog buttons */
 #btnMain:hover:checked,
 #btnWallet:hover:checked,
-#btnPrivateSend:hover:checked,
+#btnCoinJoin:hover:checked,
 #btnNetwork:hover:checked,
 #btnDisplay:hover:checked,
 #btnAppearance:hover:checked,
@@ -667,7 +667,7 @@ QPushButton - Special case, tabbar replacement buttons
 /* Options dialog buttons */
 #btnMain:hover:!checked,
 #btnWallet:hover:!checked,
-#btnPrivateSend:hover:!checked,
+#btnCoinJoin:hover:!checked,
 #btnNetwork:hover:!checked,
 #btnDisplay:hover:!checked,
 #btnAppearance:hover:!checked,
@@ -690,7 +690,7 @@ QPushButton - Special case, tabbar replacement buttons
 /* Options dialog buttons */
 #btnMain:checked,
 #btnWallet:checked,
-#btnPrivateSend:checked,
+#btnCoinJoin:checked,
 #btnNetwork:checked,
 #btnDisplay:checked,
 #btnAppearance:checked,
@@ -712,7 +712,7 @@ QPushButton - Special case, tabbar replacement buttons
 /* Options dialog buttons */
 #btnMain:hover:pressed,
 #btnWallet:hover:pressed,
-#btnPrivateSend:hover:pressed,
+#btnCoinJoin:hover:pressed,
 #btnNetwork:hover:pressed,
 #btnDisplay:hover:pressed,
 #btnAppearance:hover:pressed,
@@ -1421,97 +1421,97 @@ QWidget .QFrame#frame .QLabel#labelWatchTotal { /* Watch-only Total Balance */
 }
 
 /******************************************************
-OverviewPage PrivateSend
+OverviewPage CoinJoin
 ******************************************************/
 
-QWidget .QFrame#framePrivateSend { /* PrivateSend Widget */
+QWidget .QFrame#frameCoinJoin { /* CoinJoin Widget */
     background-color: #00000000;
     max-width: 451px;
     max-height: 350px;
 }
 
-QWidget .QFrame#framePrivateSend  > .QLabel {
+QWidget .QFrame#frameCoinJoin  > .QLabel {
     min-width: 100px;
     min-height: 26px;
 }
 
-QWidget .QFrame#framePrivateSend .QLabel#labelPrivateSendHeader { /* PrivateSend Header */
+QWidget .QFrame#frameCoinJoin .QLabel#labelCoinJoinHeader { /* CoinJoin Header */
     qproperty-alignment: 'AlignVCenter | AlignLeft';
     margin-right: 5px;
 }
 
-QWidget .QFrame#framePrivateSend .QLabel#labelPrivateSendSyncStatus { /* PrivateSend Sync Status */
+QWidget .QFrame#frameCoinJoin .QLabel#labelCoinJoinSyncStatus { /* CoinJoin Sync Status */
     qproperty-alignment: 'AlignVCenter | AlignLeft';
     color: #a84832;
 }
 
-QWidget .QFrame#framePrivateSend  .QLabel#labelPrivateSendEnabledText { /* PrivateSend Enabled Status Label */
+QWidget .QFrame#frameCoinJoin  .QLabel#labelCoinJoinEnabledText { /* CoinJoin Enabled Status Label */
     qproperty-alignment: 'AlignVCenter | AlignRight';
     margin-right: 10px;
 }
 
-QWidget .QFrame#framePrivateSend  .QLabel#labelPrivateSendEnabled { /* PrivateSend Enabled Status */
+QWidget .QFrame#frameCoinJoin  .QLabel#labelCoinJoinEnabled { /* CoinJoin Enabled Status */
 
 }
 
-QWidget .QFrame#framePrivateSend  .QLabel#labelCompletitionText { /* PrivateSend Completion Label */
+QWidget .QFrame#frameCoinJoin  .QLabel#labelCompletitionText { /* CoinJoin Completion Label */
     qproperty-alignment: 'AlignVCenter | AlignRight';
     margin-right: 10px;
 }
 
-QWidget .QFrame#framePrivateSend  QProgressBar#privateSendProgress { /* PrivateSend Completion */
+QWidget .QFrame#frameCoinJoin  QProgressBar#coinJoinProgress { /* CoinJoin Completion */
     min-height: 13px;
     max-height: 13px;
     border-radius: 5px;
     margin-top: 7px;
 }
 
-QWidget .QFrame#framePrivateSend  QProgressBar#privateSendProgress:chunk {
+QWidget .QFrame#frameCoinJoin  QProgressBar#coinJoinProgress:chunk {
     border-radius: 5px;
 }
 
-QWidget .QFrame#framePrivateSend  .QLabel#labelAnonymizedText { /* PrivateSend Balance Label */
+QWidget .QFrame#frameCoinJoin  .QLabel#labelAnonymizedText { /* CoinJoin Balance Label */
     qproperty-alignment: 'AlignVCenter | AlignRight';
     min-width: 160px;
     margin-right: 5px;
     padding-right: 5px;
 }
 
-QWidget .QFrame#framePrivateSend  .QLabel#labelAnonymized { /* PrivateSend Balance */
+QWidget .QFrame#frameCoinJoin  .QLabel#labelAnonymized { /* CoinJoin Balance */
     margin-bottom: -2px;
 }
 
-QWidget .QFrame#framePrivateSend  .QLabel#labelAmountAndRoundsText { /* PrivateSend Amount and Rounds Label */
+QWidget .QFrame#frameCoinJoin  .QLabel#labelAmountAndRoundsText { /* CoinJoin Amount and Rounds Label */
     qproperty-alignment: 'AlignVCenter | AlignRight';
     min-width: 160px;
     margin-right: 5px;
     padding-right: 5px;
 }
 
-QWidget .QFrame#framePrivateSend  .QLabel#labelAmountRounds { /* PrivateSend Amount and Rounds */
+QWidget .QFrame#frameCoinJoin  .QLabel#labelAmountRounds { /* CoinJoin Amount and Rounds */
 
 }
 
-QWidget .QFrame#framePrivateSend  .QLabel#labelSubmittedDenomText { /* PrivateSend Submitted Denom Label */
+QWidget .QFrame#frameCoinJoin  .QLabel#labelSubmittedDenomText { /* CoinJoin Submitted Denom Label */
     qproperty-alignment: 'AlignVCenter | AlignRight';
     min-width: 160px;
     margin-right: 5px;
     padding-right: 5px;
 }
 
-QWidget .QFrame#framePrivateSend  .QLabel#labelSubmittedDenom { /* PrivateSend Submitted Denom */
+QWidget .QFrame#frameCoinJoin  .QLabel#labelSubmittedDenom { /* CoinJoin Submitted Denom */
 
 }
 
-QWidget .QFrame#framePrivateSend .QWidget#layoutWidgetLastMessageAndButtons {
+QWidget .QFrame#frameCoinJoin .QWidget#layoutWidgetLastMessageAndButtons {
     max-width: 451px;
 }
 
-QWidget .QFrame#framePrivateSend .QPushButton#togglePrivateSend { /* Start PrivateSend Mixing */
+QWidget .QFrame#frameCoinJoin .QPushButton#toggleCoinJoin { /* Start CoinJoin Mixing */
     margin-top: 5px;
 }
 
-QWidget .QFrame#framePrivateSend .QPushButton#togglePrivateSend:hover {
+QWidget .QFrame#frameCoinJoin .QPushButton#toggleCoinJoin:hover {
 
 }
 

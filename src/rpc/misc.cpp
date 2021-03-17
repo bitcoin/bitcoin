@@ -1127,7 +1127,7 @@ static UniValue getinfo_deprecated(const JSONRPCRequest& request)
         "\nThis call was removed in version 0.16.0. Use the appropriate fields from:\n"
         "- getblockchaininfo: blocks, difficulty, chain\n"
         "- getnetworkinfo: version, protocolversion, timeoffset, connections, proxy, relayfee, warnings\n"
-        "- getwalletinfo: balance, privatesend_balance, keypoololdest, keypoolsize, paytxfee, unlocked_until, walletversion\n"
+        "- getwalletinfo: balance, coinjoin_balance, keypoololdest, keypoolsize, paytxfee, unlocked_until, walletversion\n"
         "\ndash-cli has the option -getinfo to collect and format these in the old format."
     );
 }

@@ -137,7 +137,7 @@ const CLogCategoryDesc LogCategories[] =
     {BCLog::LLMQ_SIGS, "llmq-sigs"},
     {BCLog::MNPAYMENTS, "mnpayments"},
     {BCLog::MNSYNC, "mnsync"},
-    {BCLog::PRIVATESEND, "privatesend"},
+    {BCLog::COINJOIN, "coinjoin"},
     {BCLog::SPORK, "spork"},
     {BCLog::NETCONN, "netconn"},
     //End Dash
@@ -160,7 +160,7 @@ bool GetLogCategory(uint64_t *f, const std::string *str)
                  | BCLog::LLMQ_SIGS
                  | BCLog::MNPAYMENTS
                  | BCLog::MNSYNC
-                 | BCLog::PRIVATESEND
+                 | BCLog::COINJOIN
                  | BCLog::SPORK;
             return true;
         }

@@ -62,7 +62,7 @@ private Q_SLOTS:
     /* query the networks, for which the default proxy is used */
     void updateDefaultProxyNets();
 
-    void updatePrivateSendVisibility();
+    void updateCoinJoinVisibility();
 
     void updateWidth();
 
@@ -77,7 +77,7 @@ private:
     QButtonGroup* pageButtons;
     QString previousTheme;
     AppearanceWidget* appearance;
-    bool fPrivateSendEnabledPrev{false};
+    bool fCoinJoinEnabledPrev{false};
 
     void showEvent(QShowEvent* event) override;
 };

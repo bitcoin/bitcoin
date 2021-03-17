@@ -352,7 +352,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QFrame" name="framePrivateSend">
+        <widget class="QFrame" name="frameCoinJoin">
          <property name="layoutDirection">
           <enum>Qt::LeftToRight</enum>
          </property>
@@ -366,14 +366,14 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_5">
             <item>
-             <widget class="QLabel" name="labelPrivateSendHeader">
+             <widget class="QLabel" name="labelCoinJoinHeader">
               <property name="text">
-               <string>PrivateSend</string>
+               <string>CoinJoin</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QLabel" name="labelPrivateSendSyncStatus">
+             <widget class="QLabel" name="labelCoinJoinSyncStatus">
               <property name="toolTip">
                <string>The displayed information may be out of date. Your wallet automatically synchronizes with the Dash network after a connection is established, but this process has not completed yet.</string>
               </property>
@@ -401,7 +401,7 @@
            </layout>
           </item>
           <item>
-           <layout class="QFormLayout" name="privateSendFormLayout">
+           <layout class="QFormLayout" name="coinJoinFormLayout">
             <property name="fieldGrowthPolicy">
              <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
             </property>
@@ -412,14 +412,14 @@
              <number>12</number>
             </property>
             <item row="0" column="0">
-             <widget class="QLabel" name="labelPrivateSendEnabledText">
+             <widget class="QLabel" name="labelCoinJoinEnabledText">
               <property name="text">
                <string>Status:</string>
               </property>
              </widget>
             </item>
             <item row="0" column="1">
-             <widget class="QLabel" name="labelPrivateSendEnabled">
+             <widget class="QLabel" name="labelCoinJoinEnabled">
               <property name="text">
                <string>Enabled/Disabled</string>
               </property>
@@ -433,7 +433,7 @@
              </widget>
             </item>
             <item row="1" column="1">
-             <widget class="QProgressBar" name="privateSendProgress">
+             <widget class="QProgressBar" name="coinJoinProgress">
               <property name="maximumSize">
                <size>
                 <width>154</width>
@@ -448,7 +448,7 @@
             <item row="2" column="0">
              <widget class="QLabel" name="labelAnonymizedText">
               <property name="text">
-               <string>PrivateSend Balance:</string>
+               <string>CoinJoin Balance:</string>
               </property>
              </widget>
             </item>
@@ -516,7 +516,7 @@
                </spacer>
               </item>
               <item>
-               <widget class="QPushButton" name="togglePrivateSend">
+               <widget class="QPushButton" name="toggleCoinJoin">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
                   <horstretch>0</horstretch>

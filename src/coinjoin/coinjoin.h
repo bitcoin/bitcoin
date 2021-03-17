@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_PRIVATESEND_PRIVATESEND_H
-#define BITCOIN_PRIVATESEND_PRIVATESEND_H
+#ifndef BITCOIN_COINJOIN_COINJOIN_H
+#define BITCOIN_COINJOIN_COINJOIN_H
 
 #include <bls/bls.h>
 #include <chain.h>
@@ -15,19 +15,19 @@
 #include <timedata.h>
 #include <tinyformat.h>
 
-class CPrivateSend;
+class CCoinJoin;
 class CConnman;
 
 // timeouts
-static const int PRIVATESEND_AUTO_TIMEOUT_MIN = 5;
-static const int PRIVATESEND_AUTO_TIMEOUT_MAX = 15;
-static const int PRIVATESEND_QUEUE_TIMEOUT = 30;
-static const int PRIVATESEND_SIGNING_TIMEOUT = 15;
+static const int COINJOIN_AUTO_TIMEOUT_MIN = 5;
+static const int COINJOIN_AUTO_TIMEOUT_MAX = 15;
+static const int COINJOIN_QUEUE_TIMEOUT = 30;
+static const int COINJOIN_SIGNING_TIMEOUT = 15;
 
 //! minimum peer version accepted by mixing pool
-static const int MIN_PRIVATESEND_PEER_PROTO_VERSION = 70213;
+static const int MIN_COINJOIN_PEER_PROTO_VERSION = 70213;
 
-static const size_t PRIVATESEND_ENTRY_MAX_SIZE = 9;
+static const size_t COINJOIN_ENTRY_MAX_SIZE = 9;
 
 // pool responses
 enum PoolMessage : int32_t {
@@ -78,7 +78,7 @@ enum PoolStatusUpdate : int32_t {
 };
 template<> struct is_serializable_enum<PoolStatusUpdate> : std::true_type {};
 
-class CPrivateSendStatusUpdate
+class CCoinJoinStatusUpdate
 {
 public:
     int nSessionID;
@@ -87,14 +87,14 @@ public:
     PoolStatusUpdate nStatusUpdate;
     PoolMessage nMessageID;
 
-    CPrivateSendStatusUpdate() :
+    CCoinJoinStatusUpdate() :
         nSessionID(0),
         nState(POOL_STATE_IDLE),
         nEntriesCount(0),
         nStatusUpdate(STATUS_ACCEPTED),
         nMessageID(MSG_NOERR) {};
 
-    CPrivateSendStatusUpdate(int nSessionID, PoolState nState, int nEntriesCount, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID) :
+    CCoinJoinStatusUpdate(int nSessionID, PoolState nState, int nEntriesCount, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID) :
         nSessionID(nSessionID),
         nState(nState),
         nEntriesCount(nEntriesCount),
@@ -143,17 +143,17 @@ public:
     }
 };
 
-class CPrivateSendAccept
+class CCoinJoinAccept
 {
 public:
     int nDenom;
     CMutableTransaction txCollateral;
 
-    CPrivateSendAccept() :
+    CCoinJoinAccept() :
         nDenom(0),
         txCollateral(CMutableTransaction()){};
 
-    CPrivateSendAccept(int nDenom, const CMutableTransaction& txCollateral) :
+    CCoinJoinAccept(int nDenom, const CMutableTransaction& txCollateral) :
         nDenom(nDenom),
         txCollateral(txCollateral){};
 
@@ -166,14 +166,14 @@ public:
         READWRITE(txCollateral);
     }
 
-    friend bool operator==(const CPrivateSendAccept& a, const CPrivateSendAccept& b)
+    friend bool operator==(const CCoinJoinAccept& a, const CCoinJoinAccept& b)
     {
         return a.nDenom == b.nDenom && a.txCollateral == b.txCollateral;
     }
 };
 
 // A client's transaction in the mixing pool
-class CPrivateSendEntry
+class CCoinJoinEntry
 {
 public:
     std::vector<CTxDSIn> vecTxDSIn;
@@ -182,7 +182,7 @@ public:
     // memory only
     CService addr;
 
-    CPrivateSendEntry() :
+    CCoinJoinEntry() :
         vecTxDSIn(std::vector<CTxDSIn>()),
         vecTxOut(std::vector<CTxOut>()),
         txCollateral(MakeTransactionRef()),
@@ -190,7 +190,7 @@ public:
     {
     }
 
-    CPrivateSendEntry(const std::vector<CTxDSIn>& vecTxDSIn, const std::vector<CTxOut>& vecTxOut, const CTransaction& txCollateral) :
+    CCoinJoinEntry(const std::vector<CTxDSIn>& vecTxDSIn, const std::vector<CTxOut>& vecTxOut, const CTransaction& txCollateral) :
             vecTxDSIn(vecTxDSIn),
             vecTxOut(vecTxOut),
             txCollateral(MakeTransactionRef(txCollateral)),
@@ -215,7 +215,7 @@ public:
 /**
  * A currently in progress mixing merge and denomination information
  */
-class CPrivateSendQueue
+class CCoinJoinQueue
 {
 public:
     int nDenom;
@@ -226,7 +226,7 @@ public:
     // memory only
     bool fTried;
 
-    CPrivateSendQueue() :
+    CCoinJoinQueue() :
         nDenom(0),
         masternodeOutpoint(COutPoint()),
         nTime(0),
@@ -236,7 +236,7 @@ public:
     {
     }
 
-    CPrivateSendQueue(int nDenom, COutPoint outpoint, int64_t nTime, bool fReady) :
+    CCoinJoinQueue(int nDenom, COutPoint outpoint, int64_t nTime, bool fReady) :
         nDenom(nDenom),
         masternodeOutpoint(outpoint),
         nTime(nTime),
@@ -283,7 +283,7 @@ public:
             nDenom, nTime, fReady ? "true" : "false", fTried ? "true" : "false", masternodeOutpoint.ToStringShort());
     }
 
-    friend bool operator==(const CPrivateSendQueue& a, const CPrivateSendQueue& b)
+    friend bool operator==(const CCoinJoinQueue& a, const CCoinJoinQueue& b)
     {
         return a.nDenom == b.nDenom && a.masternodeOutpoint == b.masternodeOutpoint && a.nTime == b.nTime && a.fReady == b.fReady;
     }
@@ -291,7 +291,7 @@ public:
 
 /** Helper class to store mixing transaction (tx) information.
  */
-class CPrivateSendBroadcastTx
+class CCoinJoinBroadcastTx
 {
 private:
     // memory only
@@ -304,7 +304,7 @@ public:
     std::vector<unsigned char> vchSig;
     int64_t sigTime;
 
-    CPrivateSendBroadcastTx() :
+    CCoinJoinBroadcastTx() :
         nConfirmedHeight(-1),
         tx(MakeTransactionRef()),
         masternodeOutpoint(),
@@ -313,7 +313,7 @@ public:
     {
     }
 
-    CPrivateSendBroadcastTx(const CTransactionRef& _tx, COutPoint _outpoint, int64_t _sigTime) :
+    CCoinJoinBroadcastTx(const CTransactionRef& _tx, COutPoint _outpoint, int64_t _sigTime) :
         nConfirmedHeight(-1),
         tx(_tx),
         masternodeOutpoint(_outpoint),
@@ -335,17 +335,17 @@ public:
         READWRITE(sigTime);
     }
 
-    friend bool operator==(const CPrivateSendBroadcastTx& a, const CPrivateSendBroadcastTx& b)
+    friend bool operator==(const CCoinJoinBroadcastTx& a, const CCoinJoinBroadcastTx& b)
     {
         return *a.tx == *b.tx;
     }
-    friend bool operator!=(const CPrivateSendBroadcastTx& a, const CPrivateSendBroadcastTx& b)
+    friend bool operator!=(const CCoinJoinBroadcastTx& a, const CCoinJoinBroadcastTx& b)
     {
         return !(a == b);
     }
     explicit operator bool() const
     {
-        return *this != CPrivateSendBroadcastTx();
+        return *this != CCoinJoinBroadcastTx();
     }
 
     uint256 GetSignatureHash() const;
@@ -359,12 +359,12 @@ public:
 };
 
 // base class
-class CPrivateSendBaseSession
+class CCoinJoinBaseSession
 {
 protected:
-    mutable CCriticalSection cs_privatesend;
+    mutable CCriticalSection cs_coinjoin;
 
-    std::vector<CPrivateSendEntry> vecEntries; // Masternode/clients entries
+    std::vector<CCoinJoinEntry> vecEntries; // Masternode/clients entries
 
     PoolState nState;                // should be one of the POOL_STATE_XXX values
     int64_t nTimeLastSuccessfulStep; // the time when last successful mixing step was performed
@@ -380,7 +380,7 @@ protected:
 public:
     int nSessionDenom; // Users must submit a denom matching this
 
-    CPrivateSendBaseSession() :
+    CCoinJoinBaseSession() :
         vecEntries(),
         nState(POOL_STATE_IDLE),
         nTimeLastSuccessfulStep(0),
@@ -397,38 +397,38 @@ public:
 };
 
 // base class
-class CPrivateSendBaseManager
+class CCoinJoinBaseManager
 {
 protected:
     mutable CCriticalSection cs_vecqueue;
 
     // The current mixing sessions in progress on the network
-    std::vector<CPrivateSendQueue> vecPrivateSendQueue;
+    std::vector<CCoinJoinQueue> vecCoinJoinQueue;
 
     void SetNull();
     void CheckQueue();
 
 public:
-    CPrivateSendBaseManager() :
-        vecPrivateSendQueue() {}
+    CCoinJoinBaseManager() :
+        vecCoinJoinQueue() {}
 
-    int GetQueueSize() const { return vecPrivateSendQueue.size(); }
-    bool GetQueueItemAndTry(CPrivateSendQueue& dsqRet);
+    int GetQueueSize() const { return vecCoinJoinQueue.size(); }
+    bool GetQueueItemAndTry(CCoinJoinQueue& dsqRet);
 };
 
 // helper class
-class CPrivateSend
+class CCoinJoin
 {
 private:
     // make constructor, destructor and copying not available
-    CPrivateSend() = default;
-    ~CPrivateSend() = default;
-    CPrivateSend(CPrivateSend const&) = delete;
-    CPrivateSend& operator=(CPrivateSend const&) = delete;
+    CCoinJoin() = default;
+    ~CCoinJoin() = default;
+    CCoinJoin(CCoinJoin const&) = delete;
+    CCoinJoin& operator=(CCoinJoin const&) = delete;
 
     // static members
     static std::vector<CAmount> vecStandardDenominations;
-    static std::map<uint256, CPrivateSendBroadcastTx> mapDSTX;
+    static std::map<uint256, CCoinJoinBroadcastTx> mapDSTX;
 
     static CCriticalSection cs_mapdstx;
 
@@ -452,7 +452,7 @@ public:
     static int GetMinPoolParticipants() { return Params().PoolMinParticipants(); }
     static int GetMaxPoolParticipants() { return Params().PoolMaxParticipants(); }
 
-    static CAmount GetMaxPoolAmount() { return vecStandardDenominations.empty() ? 0 : PRIVATESEND_ENTRY_MAX_SIZE * vecStandardDenominations.front(); }
+    static CAmount GetMaxPoolAmount() { return vecStandardDenominations.empty() ? 0 : COINJOIN_ENTRY_MAX_SIZE * vecStandardDenominations.front(); }
 
     /// If the collateral is valid given by a client
     static bool IsCollateralValid(const CTransaction& txCollateral);
@@ -461,8 +461,8 @@ public:
 
     static bool IsCollateralAmount(CAmount nInputAmount);
 
-    static void AddDSTX(const CPrivateSendBroadcastTx& dstx);
-    static CPrivateSendBroadcastTx GetDSTX(const uint256& hash);
+    static void AddDSTX(const CCoinJoinBroadcastTx& dstx);
+    static CCoinJoinBroadcastTx GetDSTX(const uint256& hash);
 
     static void UpdatedBlockTip(const CBlockIndex* pindex);
     static void NotifyChainLock(const CBlockIndex* pindex);
@@ -474,4 +474,4 @@ public:
 
 };
 
-#endif // BITCOIN_PRIVATESEND_PRIVATESEND_H
+#endif // BITCOIN_COINJOIN_COINJOIN_H

@@ -52,7 +52,7 @@ public:
     interfaces::Node& node() const { return m_node; }
     interfaces::Masternode::Sync& masternodeSync() const { return m_node.masternodeSync(); }
 #ifdef ENABLE_WALLET
-    interfaces::PrivateSend::Options& privateSendOptions() const { return m_node.privateSendOptions(); }
+    interfaces::CoinJoin::Options& coinJoinOptions() const { return m_node.coinJoinOptions(); }
 #endif
     OptionsModel *getOptionsModel();
     PeerTableModel *getPeerTableModel();

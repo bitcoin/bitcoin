@@ -35,7 +35,7 @@
 #include <config/dash-config.h>
 #endif
 #ifdef ENABLE_WALLET
-#include <privatesend/privatesend-client.h>
+#include <coinjoin/coinjoin-client.h>
 #include <wallet/fees.h>
 #include <wallet/wallet.h>
 #define CHECK_WALLET(x) x
@@ -89,64 +89,64 @@ public:
 };
 
 #ifdef ENABLE_WALLET
-class PrivateSendOptionsImpl : public PrivateSend::Options
+class CoinJoinOptionsImpl : public CoinJoin::Options
 {
 public:
     int getRounds() override
     {
-        return CPrivateSendClientOptions::GetRounds();
+        return CCoinJoinClientOptions::GetRounds();
     }
     int getAmount() override
     {
-        return CPrivateSendClientOptions::GetAmount();
+        return CCoinJoinClientOptions::GetAmount();
     }
     void setEnabled(bool fEnabled) override
     {
-        return CPrivateSendClientOptions::SetEnabled(fEnabled);
+        return CCoinJoinClientOptions::SetEnabled(fEnabled);
     }
     void setMultiSessionEnabled(bool fEnabled) override
     {
-        CPrivateSendClientOptions::SetMultiSessionEnabled(fEnabled);
+        CCoinJoinClientOptions::SetMultiSessionEnabled(fEnabled);
     }
     void setRounds(int nRounds) override
     {
-        CPrivateSendClientOptions::SetRounds(nRounds);
+        CCoinJoinClientOptions::SetRounds(nRounds);
     }
     void setAmount(CAmount amount) override
     {
-        CPrivateSendClientOptions::SetAmount(amount);
+        CCoinJoinClientOptions::SetAmount(amount);
     }
     bool isEnabled() override
     {
-        return CPrivateSendClientOptions::IsEnabled();
+        return CCoinJoinClientOptions::IsEnabled();
     }
     bool isMultiSessionEnabled() override
     {
-        return CPrivateSendClientOptions::IsMultiSessionEnabled();
+        return CCoinJoinClientOptions::IsMultiSessionEnabled();
     }
     bool isCollateralAmount(CAmount nAmount) override
     {
-        return CPrivateSend::IsCollateralAmount(nAmount);
+        return CCoinJoin::IsCollateralAmount(nAmount);
     }
     CAmount getMinCollateralAmount() override
     {
-        return CPrivateSend::GetCollateralAmount();
+        return CCoinJoin::GetCollateralAmount();
     }
     CAmount getMaxCollateralAmount() override
     {
-        return CPrivateSend::GetMaxCollateralAmount();
+        return CCoinJoin::GetMaxCollateralAmount();
     }
     CAmount getSmallestDenomination() override
     {
-        return CPrivateSend::GetSmallestDenomination();
+        return CCoinJoin::GetSmallestDenomination();
     }
     bool isDenominated(CAmount nAmount) override
     {
-        return CPrivateSend::IsDenominatedAmount(nAmount);
+        return CCoinJoin::IsDenominatedAmount(nAmount);
     }
     std::vector<CAmount> getStandardDenominations() override
     {
-        return CPrivateSend::GetStandardDenominations();
+        return CCoinJoin::GetStandardDenominations();
     }
 };
 #endif
@@ -157,7 +157,7 @@ class NodeImpl : public Node
     LLMQImpl m_llmq;
     MasternodeSyncImpl m_masternodeSync;
 #ifdef ENABLE_WALLET
-    PrivateSendOptionsImpl m_privatesend;
+    CoinJoinOptionsImpl m_coinjoin;
 #endif
 
     void parseParameters(int argc, const char* const argv[]) override
@@ -368,7 +368,7 @@ class NodeImpl : public Node
     LLMQ& llmq() override { return m_llmq; }
     Masternode::Sync& masternodeSync() override { return m_masternodeSync; }
 #ifdef ENABLE_WALLET
-    PrivateSend::Options& privateSendOptions() override { return m_privatesend; }
+    CoinJoin::Options& coinJoinOptions() override { return m_coinjoin; }
 #endif
 
     std::unique_ptr<Handler> handleInitMessage(InitMessageFn fn) override

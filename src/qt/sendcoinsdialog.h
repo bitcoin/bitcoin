@@ -34,7 +34,7 @@ class SendCoinsDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit SendCoinsDialog(bool fPrivateSend = false, QWidget* parent = 0);
+    explicit SendCoinsDialog(bool fCoinJoin = false, QWidget* parent = 0);
     ~SendCoinsDialog();
 
     void setClientModel(ClientModel *clientModel);

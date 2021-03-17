@@ -385,8 +385,8 @@ public:
     const std::string strTooSmallToPayFee = "The transaction amount is too small to pay the fee";
     const std::string strTooSmallAfterFee = "The transaction amount is too small to send after the fee has been deducted";
     const std::string strTooSmall = "Transaction amount too small";
-    const std::string strUnableToLocatePrivateSend1 = "Unable to locate enough PrivateSend non-denominated funds for this transaction.";
-    const std::string strUnableToLocatePrivateSend2 = "Unable to locate enough PrivateSend denominated funds for this transaction. PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.";
+    const std::string strUnableToLocateCoinJoin1 = "Unable to locate enough CoinJoin non-denominated funds for this transaction.";
+    const std::string strUnableToLocateCoinJoin2 = "Unable to locate enough CoinJoin denominated funds for this transaction. CoinJoin uses exact denominated amounts to send funds, you might simply need to mix some more coins.";
     const std::string strTransactionTooLarge = "Transaction too large";
     const std::string strTransactionTooLargeForFeePolicy = "Transaction too large for fee policy";
     const std::string strChangeIndexOutOfRange = "Change index out of range";
@@ -753,9 +753,9 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
             BOOST_CHECK(CreateTransaction({{1000, false}}, strInsufficientFunds, false));
             BOOST_CHECK(CreateTransaction({{1000, true}}, strInsufficientFunds, false));
             coinControl.nCoinType = CoinType::ONLY_NONDENOMINATED;
-            BOOST_CHECK(CreateTransaction({{1000, true}}, strUnableToLocatePrivateSend1, false));
+            BOOST_CHECK(CreateTransaction({{1000, true}}, strUnableToLocateCoinJoin1, false));
             coinControl.nCoinType = CoinType::ONLY_FULLY_MIXED;
-            BOOST_CHECK(CreateTransaction({{1000, true}}, strUnableToLocatePrivateSend2, false));
+            BOOST_CHECK(CreateTransaction({{1000, true}}, strUnableToLocateCoinJoin2, false));
 
             LOCK(wallet->cs_wallet);
             wallet->UnlockAllCoins();

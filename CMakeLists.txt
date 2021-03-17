@@ -45,6 +45,8 @@ file(GLOB SOURCE_FILES
         src/bench/*.h
         src/bls/*.cpp
         src/bls/*.h
+        src/coinjoin/*.cpp
+        src/coinjoin/*.h
         src/compat/*.cpp
         src/compat/*.h
         src/consensus/*.cpp
@@ -65,8 +67,6 @@ file(GLOB SOURCE_FILES
         src/policy/*.h
         src/primitives/*.cpp
         src/primitives/*.h
-        src/privatesend/*.cpp
-        src/privatesend/*.h
         src/qt/*.cpp
         src/qt/*.h
         src/qt/test/*.cpp

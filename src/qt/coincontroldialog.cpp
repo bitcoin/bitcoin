@@ -36,7 +36,7 @@ bool CoinControlDialog::fSubtractFeeFromAmount = false;
 
 bool CCoinControlWidgetItem::operator<(const QTreeWidgetItem &other) const {
     int column = treeWidget()->sortColumn();
-    if (column == CoinControlDialog::COLUMN_AMOUNT || column == CoinControlDialog::COLUMN_DATE || column == CoinControlDialog::COLUMN_CONFIRMATIONS || column == CoinControlDialog::COLUMN_PRIVATESEND_ROUNDS)
+    if (column == CoinControlDialog::COLUMN_AMOUNT || column == CoinControlDialog::COLUMN_DATE || column == CoinControlDialog::COLUMN_CONFIRMATIONS || column == CoinControlDialog::COLUMN_COINJOIN_ROUNDS)
         return data(column, Qt::UserRole).toLongLong() < other.data(column, Qt::UserRole).toLongLong();
     return QTreeWidgetItem::operator<(other);
 }
@@ -137,7 +137,7 @@ CoinControlDialog::CoinControlDialog(CCoinControl& coin_control, WalletModel* _m
     ui->treeWidget->setColumnWidth(COLUMN_CHECKBOX, 94);
     ui->treeWidget->setColumnWidth(COLUMN_AMOUNT, 100);
     ui->treeWidget->setColumnWidth(COLUMN_LABEL, 170);
-    ui->treeWidget->setColumnWidth(COLUMN_PRIVATESEND_ROUNDS, 110);
+    ui->treeWidget->setColumnWidth(COLUMN_COINJOIN_ROUNDS, 110);
     ui->treeWidget->setColumnWidth(COLUMN_DATE, 120);
     ui->treeWidget->setColumnWidth(COLUMN_CONFIRMATIONS, 110);
 
@@ -211,8 +211,8 @@ void CoinControlDialog::buttonToggleLockClicked()
         for (int i = 0; i < ui->treeWidget->topLevelItemCount(); i++){
             item = ui->treeWidget->topLevelItem(i);
             COutPoint outpt(uint256S(item->data(COLUMN_ADDRESS, TxHashRole).toString().toStdString()), item->data(COLUMN_ADDRESS, VOutRole).toUInt());
-            // Don't toggle the lock state of partially mixed coins if they are not hidden in PrivateSend mode
-            if (m_coin_control.IsUsingPrivateSend() && !fHideAdditional && !model->isFullyMixed(outpt)) {
+            // Don't toggle the lock state of partially mixed coins if they are not hidden in CoinJoin mode
+            if (m_coin_control.IsUsingCoinJoin() && !fHideAdditional && !model->isFullyMixed(outpt)) {
                 continue;
             }
             if (model->wallet().isLockedCoin(outpt)) {
@@ -542,8 +542,8 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
         {
             nChange = nAmount - nPayAmount;
 
-            // PrivateSend Fee = overpay
-            if(m_coin_control.IsUsingPrivateSend() && nChange > 0)
+            // CoinJoin Fee = overpay
+            if(m_coin_control.IsUsingCoinJoin() && nChange > 0)
             {
                 nPayFee = std::max(nChange, nPayFee);
                 nChange = 0;
@@ -652,13 +652,13 @@ void CoinControlDialog::updateView()
     if (!model || !model->getOptionsModel() || !model->getAddressTableModel())
         return;
 
-    bool fNormalMode = !m_coin_control.IsUsingPrivateSend();
-    ui->treeWidget->setColumnHidden(COLUMN_PRIVATESEND_ROUNDS, fNormalMode);
+    bool fNormalMode = !m_coin_control.IsUsingCoinJoin();
+    ui->treeWidget->setColumnHidden(COLUMN_COINJOIN_ROUNDS, fNormalMode);
     ui->treeWidget->setColumnHidden(COLUMN_LABEL, !fNormalMode);
     ui->radioTreeMode->setVisible(fNormalMode);
     ui->radioListMode->setVisible(fNormalMode);
 
-    if (!model->node().privateSendOptions().isEnabled()) {
+    if (!model->node().coinJoinOptions().isEnabled()) {
         fHideAdditional = false;
         ui->hideButton->setVisible(false);
     }
@@ -668,11 +668,11 @@ void CoinControlDialog::updateView()
         if (fHideAdditional) {
             strHideButton = tr("Show all coins");
         } else {
-            strHideButton = tr("Hide PrivateSend coins");
+            strHideButton = tr("Hide CoinJoin coins");
         }
     } else {
         if (fHideAdditional) {
-            strHideButton = tr("Show all PrivateSend coins");
+            strHideButton = tr("Show all CoinJoin coins");
         } else {
             strHideButton = tr("Show spendable coins only");
         }
@@ -721,16 +721,16 @@ void CoinControlDialog::updateView()
             const interfaces::WalletTxOut& out = std::get<1>(outpair);
             bool fFullyMixed{false};
             CAmount nAmount = out.txout.nValue;
-            bool fPrivateSendAmount = model->node().privateSendOptions().isDenominated(nAmount) || model->node().privateSendOptions().isCollateralAmount(nAmount);
+            bool fCoinJoinAmount = model->node().coinJoinOptions().isDenominated(nAmount) || model->node().coinJoinOptions().isCollateralAmount(nAmount);
 
-            if (m_coin_control.IsUsingPrivateSend()) {
+            if (m_coin_control.IsUsingCoinJoin()) {
                 fFullyMixed = model->isFullyMixed(output);
-                if ((fHideAdditional && !fFullyMixed) || (!fHideAdditional && !fPrivateSendAmount)) {
+                if ((fHideAdditional && !fFullyMixed) || (!fHideAdditional && !fCoinJoinAmount)) {
                     m_coin_control.UnSelect(output);
                     continue;
                 }
             } else {
-                if (fHideAdditional && fPrivateSendAmount) {
+                if (fHideAdditional && fCoinJoinAmount) {
                     m_coin_control.UnSelect(output);
                     continue;
                 }
@@ -785,14 +785,14 @@ void CoinControlDialog::updateView()
             itemOutput->setToolTip(COLUMN_DATE, GUIUtil::dateTimeStr(out.time));
             itemOutput->setData(COLUMN_DATE, Qt::UserRole, QVariant((qlonglong)out.time));
 
-            // PrivateSend rounds
-            int nRounds = model->getRealOutpointPrivateSendRounds(output);
-            if (nRounds >= 0 || LogAcceptCategory(BCLog::PRIVATESEND)) {
-                itemOutput->setText(COLUMN_PRIVATESEND_ROUNDS, QString::number(nRounds));
+            // CoinJoin rounds
+            int nRounds = model->getRealOutpointCoinJoinRounds(output);
+            if (nRounds >= 0 || LogAcceptCategory(BCLog::COINJOIN)) {
+                itemOutput->setText(COLUMN_COINJOIN_ROUNDS, QString::number(nRounds));
             } else {
-                itemOutput->setText(COLUMN_PRIVATESEND_ROUNDS, tr("n/a"));
+                itemOutput->setText(COLUMN_COINJOIN_ROUNDS, tr("n/a"));
             }
-            itemOutput->setData(COLUMN_PRIVATESEND_ROUNDS, Qt::UserRole, QVariant((qlonglong)nRounds));
+            itemOutput->setData(COLUMN_COINJOIN_ROUNDS, Qt::UserRole, QVariant((qlonglong)nRounds));
 
             // confirmations
             itemOutput->setText(COLUMN_CONFIRMATIONS, QString::number(out.depth_in_main_chain));
@@ -816,7 +816,7 @@ void CoinControlDialog::updateView()
                 itemOutput->setCheckState(COLUMN_CHECKBOX, Qt::Checked);
             }
 
-            if (m_coin_control.IsUsingPrivateSend() && !fHideAdditional && !fFullyMixed) {
+            if (m_coin_control.IsUsingCoinJoin() && !fHideAdditional && !fFullyMixed) {
                 itemOutput->setDisabled(true);
             }
         }

@@ -23,8 +23,8 @@
 #include <wallet/walletdb.h>
 #include <wallet/rpcwallet.h>
 
+#include <coinjoin/coinjoin.h>
 #include <governance/governance-object.h>
-#include <privatesend/privatesend.h>
 
 #include <algorithm>
 #include <atomic>
@@ -823,12 +823,12 @@ private:
      *  This salt is needed to prevent an attacker from learning how many extra times
      *  the input was mixed based only on information in the blockchain.
      */
-    uint256 nPrivateSendSalt;
+    uint256 nCoinJoinSalt;
 
     /**
-     * Fetches PrivateSend salt from database or generates and saves a new one if no salt was found in the db
+     * Fetches CoinJoin salt from database or generates and saves a new one if no salt was found in the db
      */
-    void InitPrivateSendSalt();
+    void InitCoinJoinSalt();
 
 public:
     /*
@@ -935,10 +935,10 @@ public:
     bool HasCollateralInputs(bool fOnlyConfirmed = true) const;
     int  CountInputsWithAmount(CAmount nInputAmount) const;
 
-    // get the PrivateSend chain depth for a given input
-    int GetRealOutpointPrivateSendRounds(const COutPoint& outpoint, int nRounds = 0) const;
+    // get the CoinJoin chain depth for a given input
+    int GetRealOutpointCoinJoinRounds(const COutPoint& outpoint, int nRounds = 0) const;
     // respect current settings
-    int GetCappedOutpointPrivateSendRounds(const COutPoint& outpoint) const;
+    int GetCappedOutpointCoinJoinRounds(const COutPoint& outpoint) const;
 
     bool IsDenominated(const COutPoint& outpoint) const;
     bool IsFullyMixed(const COutPoint& outpoint) const;

@@ -64,7 +64,7 @@ private:
     QWidget *transactionsPage;
     ReceiveCoinsDialog *receiveCoinsPage;
     SendCoinsDialog *sendCoinsPage;
-    SendCoinsDialog* privateSendCoinsPage;
+    SendCoinsDialog* coinJoinCoinsPage;
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
     MasternodeList *masternodeListPage;
@@ -85,8 +85,8 @@ public Q_SLOTS:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
-    /** Switch to PrivateSend coins page */
-    void gotoPrivateSendCoinsPage(QString addr = "");
+    /** Switch to CoinJoin coins page */
+    void gotoCoinJoinCoinsPage(QString addr = "");
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");

@@ -18,11 +18,11 @@
 #include <rpc/register.h>
 #include <script/sigcache.h>
 
+#include <coinjoin/coinjoin.h>
 #include <evo/specialtx.h>
 #include <evo/deterministicmns.h>
 #include <evo/cbtx.h>
 #include <llmq/quorums_init.h>
-#include <privatesend/privatesend.h>
 
 void CConnmanTest::AddNode(CNode& node)
 {
@@ -63,7 +63,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     SetupNetworking();
     InitSignatureCache();
     InitScriptExecutionCache();
-    CPrivateSend::InitStandardDenominations();
+    CCoinJoin::InitStandardDenominations();
     fPrintToDebugLog = false; // don't want to write to debug.log file
     fCheckBlockIndex = true;
     SelectParams(chainName);

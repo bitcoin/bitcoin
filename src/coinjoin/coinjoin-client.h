@@ -2,40 +2,40 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_PRIVATESEND_PRIVATESEND_CLIENT_H
-#define BITCOIN_PRIVATESEND_PRIVATESEND_CLIENT_H
+#ifndef BITCOIN_COINJOIN_COINJOIN_CLIENT_H
+#define BITCOIN_COINJOIN_COINJOIN_CLIENT_H
 
-#include <privatesend/privatesend-util.h>
-#include <privatesend/privatesend.h>
+#include <coinjoin/coinjoin-util.h>
+#include <coinjoin/coinjoin.h>
 #include <evo/deterministicmns.h>
 
-class CPrivateSendClientOptions;
-class CPrivateSendClientManager;
-class CPrivateSendClientQueueManager;
+class CCoinJoinClientOptions;
+class CCoinJoinClientManager;
+class CCoinJoinClientQueueManager;
 
 class CConnman;
 class CNode;
 
 class UniValue;
 
-static const int MIN_PRIVATESEND_SESSIONS = 1;
-static const int MIN_PRIVATESEND_ROUNDS = 2;
-static const int MIN_PRIVATESEND_AMOUNT = 2;
-static const int MIN_PRIVATESEND_DENOMS_GOAL = 10;
-static const int MIN_PRIVATESEND_DENOMS_HARDCAP = 10;
-static const int MAX_PRIVATESEND_SESSIONS = 10;
-static const int MAX_PRIVATESEND_ROUNDS = 16;
-static const int MAX_PRIVATESEND_DENOMS_GOAL = 100000;
-static const int MAX_PRIVATESEND_DENOMS_HARDCAP = 100000;
-static const int MAX_PRIVATESEND_AMOUNT = MAX_MONEY / COIN;
-static const int DEFAULT_PRIVATESEND_SESSIONS = 4;
-static const int DEFAULT_PRIVATESEND_ROUNDS = 4;
-static const int DEFAULT_PRIVATESEND_AMOUNT = 1000;
-static const int DEFAULT_PRIVATESEND_DENOMS_GOAL = 50;
-static const int DEFAULT_PRIVATESEND_DENOMS_HARDCAP = 300;
+static const int MIN_COINJOIN_SESSIONS = 1;
+static const int MIN_COINJOIN_ROUNDS = 2;
+static const int MIN_COINJOIN_AMOUNT = 2;
+static const int MIN_COINJOIN_DENOMS_GOAL = 10;
+static const int MIN_COINJOIN_DENOMS_HARDCAP = 10;
+static const int MAX_COINJOIN_SESSIONS = 10;
+static const int MAX_COINJOIN_ROUNDS = 16;
+static const int MAX_COINJOIN_DENOMS_GOAL = 100000;
+static const int MAX_COINJOIN_DENOMS_HARDCAP = 100000;
+static const int MAX_COINJOIN_AMOUNT = MAX_MONEY / COIN;
+static const int DEFAULT_COINJOIN_SESSIONS = 4;
+static const int DEFAULT_COINJOIN_ROUNDS = 4;
+static const int DEFAULT_COINJOIN_AMOUNT = 1000;
+static const int DEFAULT_COINJOIN_DENOMS_GOAL = 50;
+static const int DEFAULT_COINJOIN_DENOMS_HARDCAP = 300;
 
-static const bool DEFAULT_PRIVATESEND_AUTOSTART = false;
-static const bool DEFAULT_PRIVATESEND_MULTISESSION = false;
+static const bool DEFAULT_COINJOIN_AUTOSTART = false;
+static const bool DEFAULT_COINJOIN_MULTISESSION = false;
 
 // How many new denom outputs to create before we consider the "goal" loop in CreateDenominated
 // a final one and start creating an actual tx. Same limit applies for the "hard cap" part of the algo.
@@ -45,21 +45,21 @@ static const bool DEFAULT_PRIVATESEND_MULTISESSION = false;
 // More than 500 outputs starts to make qt quite laggy.
 // Additionally to need all 500 outputs (assuming a max per denom of 50) you'd need to be trying to
 // create denominations for over 3000 dash!
-static const int PRIVATESEND_DENOM_OUTPUTS_THRESHOLD = 500;
+static const int COINJOIN_DENOM_OUTPUTS_THRESHOLD = 500;
 
 // Warn user if mixing in gui or try to create backup if mixing in daemon mode
 // when we have only this many keys left
-static const int PRIVATESEND_KEYS_THRESHOLD_WARNING = 100;
+static const int COINJOIN_KEYS_THRESHOLD_WARNING = 100;
 // Stop mixing completely, it's too dangerous to continue when we have only this many keys left
-static const int PRIVATESEND_KEYS_THRESHOLD_STOP = 50;
+static const int COINJOIN_KEYS_THRESHOLD_STOP = 50;
 // Pseudorandomly mix up to this many times in addition to base round count
-static const int PRIVATESEND_RANDOM_ROUNDS = 3;
+static const int COINJOIN_RANDOM_ROUNDS = 3;
 
 // The main object for accessing mixing
-extern std::map<const std::string, std::shared_ptr<CPrivateSendClientManager>> privateSendClientManagers;
+extern std::map<const std::string, std::shared_ptr<CCoinJoinClientManager>> coinJoinClientManagers;
 
 // The object to track mixing queues
-extern CPrivateSendClientQueueManager privateSendClientQueueManager;
+extern CCoinJoinClientQueueManager coinJoinClientQueueManager;
 
 class CPendingDsaRequest
 {
@@ -67,18 +67,18 @@ private:
     static const int TIMEOUT = 15;
 
     CService addr;
-    CPrivateSendAccept dsa;
+    CCoinJoinAccept dsa;
     int64_t nTimeCreated;
 
 public:
     CPendingDsaRequest() :
         addr(CService()),
-        dsa(CPrivateSendAccept()),
+        dsa(CCoinJoinAccept()),
         nTimeCreated(0)
     {
     }
 
-    CPendingDsaRequest(const CService& addr_, const CPrivateSendAccept& dsa_) :
+    CPendingDsaRequest(const CService& addr_, const CCoinJoinAccept& dsa_) :
         addr(addr_),
         dsa(dsa_),
         nTimeCreated(GetTime())
@@ -86,7 +86,7 @@ public:
     }
 
     CService GetAddr() { return addr; }
-    CPrivateSendAccept GetDSA() { return dsa; }
+    CCoinJoinAccept GetDSA() { return dsa; }
     bool IsExpired() const { return GetTime() - nTimeCreated > TIMEOUT; }
 
     friend bool operator==(const CPendingDsaRequest& a, const CPendingDsaRequest& b)
@@ -103,7 +103,7 @@ public:
     }
 };
 
-class CPrivateSendClientSession : public CPrivateSendBaseSession
+class CCoinJoinClientSession : public CCoinJoinBaseSession
 {
 private:
     std::vector<COutPoint> vecOutPointLocked;
@@ -140,7 +140,7 @@ private:
     bool SendDenominate(const std::vector<std::pair<CTxDSIn, CTxOut> >& vecPSInOutPairsIn, CConnman& connman);
 
     /// Process Masternode updates about the progress of mixing
-    void ProcessPoolStateUpdate(CPrivateSendStatusUpdate psssup);
+    void ProcessPoolStateUpdate(CCoinJoinStatusUpdate psssup);
     // Set the 'state' value, with some logging and capturing when the state changed
     void SetState(PoolState nStateNew);
 
@@ -149,12 +149,12 @@ private:
     /// As a client, check and sign the final transaction
     bool SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode, CConnman& connman);
 
-    void RelayIn(const CPrivateSendEntry& entry, CConnman& connman);
+    void RelayIn(const CCoinJoinEntry& entry, CConnman& connman);
 
     void SetNull();
 
 public:
-    CPrivateSendClientSession(CWallet& pwallet) :
+    CCoinJoinClientSession(CWallet& pwallet) :
         vecOutPointLocked(),
         strLastMessage(),
         strAutoDenomResult(),
@@ -191,7 +191,7 @@ public:
 
 /** Used to keep track of mixing queues
  */
-class CPrivateSendClientQueueManager : public CPrivateSendBaseManager
+class CCoinJoinClientQueueManager : public CCoinJoinBaseManager
 {
 public:
     void ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman, bool enable_bip61);
@@ -201,18 +201,18 @@ public:
 
 /** Used to keep track of current status of mixing pool
  */
-class CPrivateSendClientManager
+class CCoinJoinClientManager
 {
 private:
-    CPrivateSendClientManager() = delete;
-    CPrivateSendClientManager(CPrivateSendClientManager const&) = delete;
-    CPrivateSendClientManager& operator=(CPrivateSendClientManager const&) = delete;
+    CCoinJoinClientManager() = delete;
+    CCoinJoinClientManager(CCoinJoinClientManager const&) = delete;
+    CCoinJoinClientManager& operator=(CCoinJoinClientManager const&) = delete;
 
     // Keep track of the used Masternodes
     std::vector<COutPoint> vecMasternodesUsed;
 
-    // TODO: or map<denom, CPrivateSendClientSession> ??
-    std::deque<CPrivateSendClientSession> deqSessions;
+    // TODO: or map<denom, CCoinJoinClientSession> ??
+    std::deque<CCoinJoinClientSession> deqSessions;
     mutable CCriticalSection cs_deqsessions;
 
     bool fMixing{false};
@@ -235,7 +235,7 @@ public:
     int nCachedNumBlocks;    // used for the overview screen
     bool fCreateAutoBackups; // builtin support for automatic backups
 
-    CPrivateSendClientManager(CWallet& wallet) :
+    CCoinJoinClientManager(CWallet& wallet) :
         vecMasternodesUsed(),
         deqSessions(),
         nCachedLastSuccessBlock(0),
@@ -264,7 +264,7 @@ public:
     bool DoAutomaticDenominating(CConnman& connman, bool fDryRun = false);
 
     bool TrySubmitDenominate(const CService& mnAddr, CConnman& connman);
-    bool MarkAlreadyJoinedQueueAsTried(CPrivateSendQueue& dsq) const;
+    bool MarkAlreadyJoinedQueueAsTried(CCoinJoinQueue& dsq) const;
 
     void CheckTimeout();
 
@@ -283,58 +283,58 @@ public:
 };
 
 /* Application wide mixing options */
-class CPrivateSendClientOptions
+class CCoinJoinClientOptions
 {
 public:
-    static int GetSessions() { return CPrivateSendClientOptions::Get().nPrivateSendSessions; }
-    static int GetRounds() { return CPrivateSendClientOptions::Get().nPrivateSendRounds; }
-    static int GetRandomRounds() { return CPrivateSendClientOptions::Get().nPrivateSendRandomRounds; }
-    static int GetAmount() { return CPrivateSendClientOptions::Get().nPrivateSendAmount; }
-    static int GetDenomsGoal() { return CPrivateSendClientOptions::Get().nPrivateSendDenomsGoal; }
-    static int GetDenomsHardCap() { return CPrivateSendClientOptions::Get().nPrivateSendDenomsHardCap; }
+    static int GetSessions() { return CCoinJoinClientOptions::Get().nCoinJoinSessions; }
+    static int GetRounds() { return CCoinJoinClientOptions::Get().nCoinJoinRounds; }
+    static int GetRandomRounds() { return CCoinJoinClientOptions::Get().nCoinJoinRandomRounds; }
+    static int GetAmount() { return CCoinJoinClientOptions::Get().nCoinJoinAmount; }
+    static int GetDenomsGoal() { return CCoinJoinClientOptions::Get().nCoinJoinDenomsGoal; }
+    static int GetDenomsHardCap() { return CCoinJoinClientOptions::Get().nCoinJoinDenomsHardCap; }
 
     static void SetEnabled(bool fEnabled);
     static void SetMultiSessionEnabled(bool fEnabled);
     static void SetRounds(int nRounds);
     static void SetAmount(CAmount amount);
 
-    static bool IsEnabled() { return CPrivateSendClientOptions::Get().fEnablePrivateSend; }
-    static bool IsMultiSessionEnabled() { return CPrivateSendClientOptions::Get().fPrivateSendMultiSession; }
+    static bool IsEnabled() { return CCoinJoinClientOptions::Get().fEnableCoinJoin; }
+    static bool IsMultiSessionEnabled() { return CCoinJoinClientOptions::Get().fCoinJoinMultiSession; }
 
     static void GetJsonInfo(UniValue& obj);
 
 private:
-    static CPrivateSendClientOptions* _instance;
+    static CCoinJoinClientOptions* _instance;
     static std::once_flag onceFlag;
 
-    CCriticalSection cs_ps_options;
-    int nPrivateSendSessions;
-    int nPrivateSendRounds;
-    int nPrivateSendRandomRounds;
-    int nPrivateSendAmount;
-    int nPrivateSendDenomsGoal;
-    int nPrivateSendDenomsHardCap;
-    bool fEnablePrivateSend;
-    bool fPrivateSendMultiSession;
+    CCriticalSection cs_cj_options;
+    int nCoinJoinSessions;
+    int nCoinJoinRounds;
+    int nCoinJoinRandomRounds;
+    int nCoinJoinAmount;
+    int nCoinJoinDenomsGoal;
+    int nCoinJoinDenomsHardCap;
+    bool fEnableCoinJoin;
+    bool fCoinJoinMultiSession;
 
-    CPrivateSendClientOptions() :
-        nPrivateSendRounds(DEFAULT_PRIVATESEND_ROUNDS),
-        nPrivateSendRandomRounds(PRIVATESEND_RANDOM_ROUNDS),
-        nPrivateSendAmount(DEFAULT_PRIVATESEND_AMOUNT),
-        nPrivateSendDenomsGoal(DEFAULT_PRIVATESEND_DENOMS_GOAL),
-        nPrivateSendDenomsHardCap(DEFAULT_PRIVATESEND_DENOMS_HARDCAP),
-        fEnablePrivateSend(false),
-        fPrivateSendMultiSession(DEFAULT_PRIVATESEND_MULTISESSION)
+    CCoinJoinClientOptions() :
+        nCoinJoinRounds(DEFAULT_COINJOIN_ROUNDS),
+        nCoinJoinRandomRounds(COINJOIN_RANDOM_ROUNDS),
+        nCoinJoinAmount(DEFAULT_COINJOIN_AMOUNT),
+        nCoinJoinDenomsGoal(DEFAULT_COINJOIN_DENOMS_GOAL),
+        nCoinJoinDenomsHardCap(DEFAULT_COINJOIN_DENOMS_HARDCAP),
+        fEnableCoinJoin(false),
+        fCoinJoinMultiSession(DEFAULT_COINJOIN_MULTISESSION)
     {
     }
 
-    CPrivateSendClientOptions(const CPrivateSendClientOptions& other) = delete;
-    CPrivateSendClientOptions& operator=(const CPrivateSendClientOptions&) = delete;
+    CCoinJoinClientOptions(const CCoinJoinClientOptions& other) = delete;
+    CCoinJoinClientOptions& operator=(const CCoinJoinClientOptions&) = delete;
 
-    static CPrivateSendClientOptions& Get();
+    static CCoinJoinClientOptions& Get();
     static void Init();
 };
 
-void DoPrivateSendMaintenance(CConnman& connman);
+void DoCoinJoinMaintenance(CConnman& connman);
 
-#endif // BITCOIN_PRIVATESEND_PRIVATESEND_CLIENT_H
+#endif // BITCOIN_COINJOIN_COINJOIN_CLIENT_H

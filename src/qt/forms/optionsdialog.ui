@@ -52,9 +52,9 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="btnPrivateSend">
+      <widget class="QPushButton" name="btnCoinJoin">
        <property name="text">
-        <string>PrivateSend</string>
+        <string>CoinJoin</string>
        </property>
        <property name="checkable">
         <bool>true</bool>
@@ -276,12 +276,12 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="privateSendEnabled">
+           <widget class="QCheckBox" name="coinJoinEnabled">
             <property name="toolTip">
-             <string>Show mixing interface on Overview screen and reveal PrivateSend screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</string>
+             <string>Show mixing interface on Overview screen and reveal CoinJoin screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</string>
             </property>
             <property name="text">
-             <string>Enable PrivateSend features</string>
+             <string>Enable CoinJoin features</string>
             </property>
            </widget>
           </item>
@@ -302,62 +302,62 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="pagePrivateSend">
+     <widget class="QWidget" name="pageCoinJoin">
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
-        <widget class="QCheckBox" name="showAdvancedPSUI">
+        <widget class="QCheckBox" name="showAdvancedCJUI">
          <property name="toolTip">
-          <string>Show additional information and buttons for PrivateSend on overview screen.</string>
+          <string>Show additional information and buttons for CoinJoin on overview screen.</string>
          </property>
          <property name="text">
-          <string>Enable advanced PrivateSend interface</string>
+          <string>Enable advanced CoinJoin interface</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="showPrivateSendPopups">
+        <widget class="QCheckBox" name="showCoinJoinPopups">
          <property name="toolTip">
-          <string>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</string>
+          <string>Show system popups for CoinJoin mixing transactions&lt;br/&gt;just like for all other transaction types.</string>
          </property>
          <property name="text">
-          <string>Show popups for PrivateSend transactions</string>
+          <string>Show popups for CoinJoin transactions</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QCheckBox" name="lowKeysWarning">
          <property name="toolTip">
-          <string>Show warning dialog when PrivateSend detects that wallet has very low number of keys left.</string>
+          <string>Show warning dialog when CoinJoin detects that wallet has very low number of keys left.</string>
          </property>
          <property name="text">
-          <string>Warn if PrivateSend is running out of keys</string>
+          <string>Warn if CoinJoin is running out of keys</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QCheckBox" name="privateSendMultiSession">
+        <widget class="QCheckBox" name="coinJoinMultiSession">
          <property name="toolTip">
-          <string>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</string>
+          <string>Whether to use experimental CoinJoin mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</string>
          </property>
          <property name="text">
-          <string>Enable PrivateSend &amp;multi-session</string>
+          <string>Enable CoinJoin &amp;multi-session</string>
          </property>
         </widget>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_4_Wallet">
          <item>
-          <widget class="QLabel" name="lblPrivateSendRoundsText">
+          <widget class="QLabel" name="lblCoinJoinRoundsText">
            <property name="toolTip">
             <string>This setting determines the amount of individual masternodes that an input will be mixed through.&lt;br/&gt;More rounds of mixing gives a higher degree of privacy, but also costs more in fees.</string>
            </property>
            <property name="text">
-            <string>PrivateSend rounds to use</string>
+            <string>CoinJoin rounds to use</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="privateSendRounds">
+          <widget class="QSpinBox" name="coinJoinRounds">
            <property name="minimum">
             <number>2</number>
            </property>
@@ -374,9 +374,9 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <item>
-          <widget class="QLabel" name="lblPrivateSendAmountText">
+          <widget class="QLabel" name="lblCoinJoinAmountText">
            <property name="toolTip">
-            <string>This amount acts as a threshold to turn off PrivateSend once it's reached.</string>
+            <string>This amount acts as a threshold to turn off CoinJoin once it's reached.</string>
            </property>
            <property name="statusTip">
             <string notr="true"/>
@@ -391,12 +391,12 @@
             <string notr="true"/>
            </property>
            <property name="text">
-            <string>Target PrivateSend balance</string>
+            <string>Target CoinJoin balance</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QSpinBox" name="privateSendAmount">
+          <widget class="QSpinBox" name="coinJoinAmount">
            <property name="minimum">
             <number>2</number>
            </property>

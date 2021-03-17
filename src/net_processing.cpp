@@ -38,9 +38,9 @@
 #include <masternode/masternode-sync.h>
 #include <masternode/masternode-meta.h>
 #ifdef ENABLE_WALLET
-#include <privatesend/privatesend-client.h>
+#include <coinjoin/coinjoin-client.h>
 #endif // ENABLE_WALLET
-#include <privatesend/privatesend-server.h>
+#include <coinjoin/coinjoin-server.h>
 
 #include <evo/deterministicmns.h>
 #include <evo/mnauth.h>
@@ -1345,7 +1345,7 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
             bool fIgnoreRecentRejects = llmq::quorumInstantSendManager->IsLocked(inv.hash) || inv.type == MSG_DSTX;
 
             return (!fIgnoreRecentRejects && recentRejects->contains(inv.hash)) ||
-                   (inv.type == MSG_DSTX && static_cast<bool>(CPrivateSend::GetDSTX(inv.hash))) ||
+                   (inv.type == MSG_DSTX && static_cast<bool>(CCoinJoin::GetDSTX(inv.hash))) ||
                    mempool.exists(inv.hash) ||
                    pcoinsTip->HaveCoinInCache(COutPoint(inv.hash, 0)) || // Best effort: only try output 0 and 1
                    pcoinsTip->HaveCoinInCache(COutPoint(inv.hash, 1)) ||
@@ -1599,9 +1599,9 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
             // Send stream from relay memory
             bool push = false;
             if (inv.type == MSG_TX || inv.type == MSG_DSTX) {
-                CPrivateSendBroadcastTx dstx;
+                CCoinJoinBroadcastTx dstx;
                 if (inv.type == MSG_DSTX) {
-                    dstx = CPrivateSend::GetDSTX(inv.hash);
+                    dstx = CCoinJoin::GetDSTX(inv.hash);
                 }
                 auto mi = mapRelay.find(inv.hash);
                 if (mi != mapRelay.end()) {
@@ -2371,10 +2371,10 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         }
 
         if (pfrom->nVersion >= SENDDSQUEUE_PROTO_VERSION) {
-            // Tell our peer that he should send us PrivateSend queue messages
+            // Tell our peer that he should send us CoinJoin queue messages
             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::SENDDSQUEUE, true));
         } else {
-            // older nodes do not support SENDDSQUEUE and expect us to always send PrivateSend queue messages
+            // older nodes do not support SENDDSQUEUE and expect us to always send CoinJoin queue messages
             // TODO we can remove this compatibility code in 0.15.0
             pfrom->fSendDSQueue = true;
         }
@@ -2794,7 +2794,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         }
 
         CTransactionRef ptx;
-        CPrivateSendBroadcastTx dstx;
+        CCoinJoinBroadcastTx dstx;
         int nInvType = MSG_TX;
 
         // Read data and assign inv type
@@ -2822,11 +2822,11 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (nInvType == MSG_DSTX) {
             uint256 hashTx = tx.GetHash();
             if (!dstx.IsValidStructure()) {
-                LogPrint(BCLog::PRIVATESEND, "DSTX -- Invalid DSTX structure: %s\n", hashTx.ToString());
+                LogPrint(BCLog::COINJOIN, "DSTX -- Invalid DSTX structure: %s\n", hashTx.ToString());
                 return false;
             }
-            if(CPrivateSend::GetDSTX(hashTx)) {
-                LogPrint(BCLog::PRIVATESEND, "DSTX -- Already have %s, skipping...\n", hashTx.ToString());
+            if(CCoinJoin::GetDSTX(hashTx)) {
+                LogPrint(BCLog::COINJOIN, "DSTX -- Already have %s, skipping...\n", hashTx.ToString());
                 return true; // not an error
             }
 
@@ -2844,23 +2844,23 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 pindex = pindex->pprev;
             }
             if(!dmn) {
-                LogPrint(BCLog::PRIVATESEND, "DSTX -- Can't find masternode %s to verify %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
+                LogPrint(BCLog::COINJOIN, "DSTX -- Can't find masternode %s to verify %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
                 return false;
             }
 
             if (!mmetaman.GetMetaInfo(dmn->proTxHash)->IsValidForMixingTxes()) {
-                LogPrint(BCLog::PRIVATESEND, "DSTX -- Masternode %s is sending too many transactions %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
+                LogPrint(BCLog::COINJOIN, "DSTX -- Masternode %s is sending too many transactions %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
                 return true;
                 // TODO: Not an error? Could it be that someone is relaying old DSTXes
                 // we have no idea about (e.g we were offline)? How to handle them?
             }
 
             if (!dstx.CheckSignature(dmn->pdmnState->pubKeyOperator.Get())) {
-                LogPrint(BCLog::PRIVATESEND, "DSTX -- CheckSignature() failed for %s\n", hashTx.ToString());
+                LogPrint(BCLog::COINJOIN, "DSTX -- CheckSignature() failed for %s\n", hashTx.ToString());
                 return false;
             }
 
-            LogPrint(BCLog::PRIVATESEND, "DSTX -- Got Masternode transaction %s\n", hashTx.ToString());
+            LogPrint(BCLog::COINJOIN, "DSTX -- Got Masternode transaction %s\n", hashTx.ToString());
             mempool.PrioritiseTransaction(hashTx, 0.1*COIN);
             mmetaman.DisallowMixing(dmn->proTxHash);
         }
@@ -2874,9 +2874,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 false /* bypass_limits */, 0 /* nAbsurdFee */)) {
             // Process custom txes, this changes AlreadyHave to "true"
             if (nInvType == MSG_DSTX) {
-                LogPrint(BCLog::PRIVATESEND, "DSTX -- Masternode transaction accepted, txid=%s, peer=%d\n",
+                LogPrint(BCLog::COINJOIN, "DSTX -- Masternode transaction accepted, txid=%s, peer=%d\n",
                          tx.GetHash().ToString(), pfrom->GetId());
-                CPrivateSend::AddDSTX(dstx);
+                CCoinJoin::AddDSTX(dstx);
             }
 
             mempool.check(pcoinsTip.get());
@@ -3564,12 +3564,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     {
         //probably one the extensions
 #ifdef ENABLE_WALLET
-        privateSendClientQueueManager.ProcessMessage(pfrom, strCommand, vRecv, *connman, enable_bip61);
-        for (auto& pair : privateSendClientManagers) {
+        coinJoinClientQueueManager.ProcessMessage(pfrom, strCommand, vRecv, *connman, enable_bip61);
+        for (auto& pair : coinJoinClientManagers) {
             pair.second->ProcessMessage(pfrom, strCommand, vRecv, *connman, enable_bip61);
         }
 #endif // ENABLE_WALLET
-        privateSendServer.ProcessMessage(pfrom, strCommand, vRecv, *connman, enable_bip61);
+        coinJoinServer.ProcessMessage(pfrom, strCommand, vRecv, *connman, enable_bip61);
         sporkManager.ProcessSpork(pfrom, strCommand, vRecv, *connman);
         masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
         governance.ProcessMessage(pfrom, strCommand, vRecv, *connman, enable_bip61);
@@ -4230,7 +4230,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     pto->setInventoryTxToSend.erase(hash);
                     if (pto->pfilter && !pto->pfilter->IsRelevantAndUpdate(*txinfo.tx)) continue;
 
-                    int nInvType = CPrivateSend::GetDSTX(hash) ? MSG_DSTX : MSG_TX;
+                    int nInvType = CCoinJoin::GetDSTX(hash) ? MSG_DSTX : MSG_TX;
                     queueAndMaybePushInv(CInv(nInvType, hash));
 
                     uint256 islockHash;
@@ -4297,7 +4297,7 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                             vRelayExpiration.push_back(std::make_pair(nNow + 15 * 60 * 1000000, ret.first));
                         }
                     }
-                    int nInvType = CPrivateSend::GetDSTX(hash) ? MSG_DSTX : MSG_TX;
+                    int nInvType = CCoinJoin::GetDSTX(hash) ? MSG_DSTX : MSG_TX;
                     queueAndMaybePushInv(CInv(nInvType, hash));
                 }
             }

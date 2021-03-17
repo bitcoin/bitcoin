@@ -2,8 +2,8 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_PRIVATESEND_PRIVATESEND_UTIL_H
-#define BITCOIN_PRIVATESEND_PRIVATESEND_UTIL_H
+#ifndef BITCOIN_COINJOIN_COINJOIN_UTIL_H
+#define BITCOIN_COINJOIN_COINJOIN_UTIL_H
 
 #include <wallet/wallet.h>
 
@@ -137,4 +137,4 @@ private:
     int GetSizeOfCompactSizeDiff(size_t nAdd) const;
 };
 
-#endif // BITCOIN_PRIVATESEND_PRIVATESEND_UTIL_H
+#endif // BITCOIN_COINJOIN_COINJOIN_UTIL_H

@@ -49,7 +49,7 @@ int getIndexForConfTarget(int target) {
     return confTargets.size() - 1;
 }
 
-SendCoinsDialog::SendCoinsDialog(bool _fPrivateSend, QWidget* parent) :
+SendCoinsDialog::SendCoinsDialog(bool _fCoinJoin, QWidget* parent) :
     QDialog(parent),
     ui(new Ui::SendCoinsDialog),
     clientModel(nullptr),
@@ -98,11 +98,11 @@ SendCoinsDialog::SendCoinsDialog(bool _fPrivateSend, QWidget* parent) :
     QSettings settings;
     //TODO remove Darksend sometime after 0.14.1
     if (settings.contains("bUseDarkSend")) {
-        settings.setValue("bUsePrivateSend", settings.value("bUseDarkSend").toBool());
+        settings.setValue("bUseCoinJoin", settings.value("bUseDarkSend").toBool());
         settings.remove("bUseDarkSend");
     }
-    if (!settings.contains("bUsePrivateSend"))
-        settings.setValue("bUsePrivateSend", false);
+    if (!settings.contains("bUseCoinJoin"))
+        settings.setValue("bUseCoinJoin", false);
 
     //TODO remove InstantX sometime after 0.14.1
     if (settings.contains("bUseInstantX")) {
@@ -156,14 +156,15 @@ SendCoinsDialog::SendCoinsDialog(bool _fPrivateSend, QWidget* parent) :
     ui->checkBoxMinimumFee->setChecked(settings.value("fPayOnlyMinFee").toBool());
     minimizeFeeSection(settings.value("fFeeSectionMinimized").toBool());
 
-    if (_fPrivateSend) {
-        ui->sendButton->setText("PrivateS&end");
-        ui->sendButton->setToolTip(tr("Confirm the PrivateSend action"));
+    if (_fCoinJoin) {
+        ui->sendButton->setText("S&end mixed funds");
+        ui->sendButton->setToolTip(tr("Confirm the CoinJoin send action"));
     } else {
         ui->sendButton->setText(tr("S&end"));
         ui->sendButton->setToolTip(tr("Confirm the send action"));
     }
-    m_coin_control->UsePrivateSend(_fPrivateSend);
+
+    m_coin_control->UseCoinJoin(_fCoinJoin);
 }
 
 void SendCoinsDialog::setClientModel(ClientModel *_clientModel)
@@ -376,8 +377,8 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
     questionString.append("<br />");
 
 
-    if(m_coin_control->IsUsingPrivateSend()) {
-        questionString.append(tr("using") + " <b>" + tr("PrivateSend funds only") + "</b>");
+    if(m_coin_control->IsUsingCoinJoin()) {
+        questionString.append(tr("using") + " <b>" + tr("CoinJoin funds only") + "</b>");
     } else {
         questionString.append(tr("using") + " <b>" + tr("any available funds") + "</b>");
     }
@@ -399,8 +400,8 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
         questionString.append("</span> ");
         questionString.append(tr("are added as transaction fee"));
 
-        if (m_coin_control->IsUsingPrivateSend()) {
-            questionString.append(" " + tr("(PrivateSend transactions have higher fees usually due to no change output being allowed)"));
+        if (m_coin_control->IsUsingCoinJoin()) {
+            questionString.append(" " + tr("(CoinJoin transactions have higher fees usually due to no change output being allowed)"));
         }
     }
 
@@ -412,17 +413,17 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
     CFeeRate feeRate(txFee, currentTransaction.getTransactionSize());
     questionString.append(tr("Fee rate: %1").arg(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(), feeRate.GetFeePerK())) + "/kB");
 
-    if (m_coin_control->IsUsingPrivateSend()) {
+    if (m_coin_control->IsUsingCoinJoin()) {
         // append number of inputs
         questionString.append("<hr />");
         int nInputs = currentTransaction.getWtx()->get().vin.size();
         questionString.append(tr("This transaction will consume %n input(s)", "", nInputs));
 
         // warn about potential privacy issues when spending too many inputs at once
-        if (nInputs >= 10 && m_coin_control->IsUsingPrivateSend()) {
+        if (nInputs >= 10 && m_coin_control->IsUsingCoinJoin()) {
             questionString.append("<br />");
             questionString.append("<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'>");
-            questionString.append(tr("Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended").arg(10));
+            questionString.append(tr("Warning: Using CoinJoin with %1 or more inputs can harm your privacy and is not recommended").arg(10));
             questionString.append("</span> ");
         }
     }
@@ -455,7 +456,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
     }
 
     // now send the prepared transaction
-    WalletModel::SendCoinsReturn sendStatus = model->sendCoins(currentTransaction, m_coin_control->IsUsingPrivateSend());
+    WalletModel::SendCoinsReturn sendStatus = model->sendCoins(currentTransaction, m_coin_control->IsUsingCoinJoin());
     // process sendStatus and on error generate message shown to user
     processSendCoinsReturn(sendStatus);
 
@@ -612,7 +613,7 @@ void SendCoinsDialog::setBalance(const interfaces::WalletBalances& balances)
     if(model && model->getOptionsModel())
     {
         CAmount bal = 0;
-        if (m_coin_control->IsUsingPrivateSend()) {
+        if (m_coin_control->IsUsingCoinJoin()) {
             bal = balances.anonymized_balance;
         } else {
             bal = balances.balance;

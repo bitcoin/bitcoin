@@ -36,7 +36,7 @@ WalletModel::WalletModel(std::unique_ptr<interfaces::Wallet> wallet, interfaces:
     cachedEncryptionStatus(Unencrypted),
     cachedNumBlocks(-1),
     cachedNumISLocks(0),
-    cachedPrivateSendRounds(0)
+    cachedCoinJoinRounds(0)
 {
     fHaveWatchOnly = m_wallet->haveWatchOnly();
     fForceCheckBalanceChanged = false;
@@ -79,13 +79,13 @@ void WalletModel::pollBalanceChanged()
         return;
     }
 
-    if(fForceCheckBalanceChanged || numBlocks != cachedNumBlocks || node().privateSendOptions().getRounds() != cachedPrivateSendRounds)
+    if(fForceCheckBalanceChanged || numBlocks != cachedNumBlocks || node().coinJoinOptions().getRounds() != cachedCoinJoinRounds)
     {
         fForceCheckBalanceChanged = false;
 
         // Balance and number of transactions might have changed
         cachedNumBlocks = numBlocks;
-        cachedPrivateSendRounds = node().privateSendOptions().getRounds();
+        cachedCoinJoinRounds = node().coinJoinOptions().getRounds();
 
         checkBalanceChanged(new_balances);
         if(transactionTableModel)
@@ -130,9 +130,9 @@ int WalletModel::getNumISLocks() const
     return cachedNumISLocks;
 }
 
-int WalletModel::getRealOutpointPrivateSendRounds(const COutPoint& outpoint) const
+int WalletModel::getRealOutpointCoinJoinRounds(const COutPoint& outpoint) const
 {
-    return m_wallet->getRealOutpointPrivateSendRounds(outpoint);
+    return m_wallet->getRealOutpointCoinJoinRounds(outpoint);
 }
 
 bool WalletModel::isFullyMixed(const COutPoint& outpoint) const
@@ -267,7 +267,7 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
     return SendCoinsReturn(OK);
 }
 
-WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &transaction, bool fIsPrivateSend)
+WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &transaction, bool fIsCoinJoin)
 {
     QByteArray transaction_array; /* store serialized transaction */
 
@@ -292,7 +292,7 @@ WalletModel::SendCoinsReturn WalletModel::sendCoins(WalletModelTransaction &tran
         }
 
         mapValue_t mapValue;
-        if (fIsPrivateSend) {
+        if (fIsCoinJoin) {
             mapValue["DS"] = "1";
         }
 

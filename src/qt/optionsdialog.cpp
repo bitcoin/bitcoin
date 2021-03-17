@@ -81,15 +81,15 @@ OptionsDialog::OptionsDialog(QWidget *parent, bool enableWallet) :
 
     pageButtons = new QButtonGroup(this);
     pageButtons->addButton(ui->btnMain, pageButtons->buttons().size());
-    /* Remove Wallet/PrivateSend tabs in case of -disablewallet */
+    /* Remove Wallet/CoinJoin tabs in case of -disablewallet */
     if (!enableWallet) {
         ui->stackedWidgetOptions->removeWidget(ui->pageWallet);
         ui->btnWallet->hide();
-        ui->stackedWidgetOptions->removeWidget(ui->pagePrivateSend);
-        ui->btnPrivateSend->hide();
+        ui->stackedWidgetOptions->removeWidget(ui->pageCoinJoin);
+        ui->btnCoinJoin->hide();
     } else {
         pageButtons->addButton(ui->btnWallet, pageButtons->buttons().size());
-        pageButtons->addButton(ui->btnPrivateSend, pageButtons->buttons().size());
+        pageButtons->addButton(ui->btnCoinJoin, pageButtons->buttons().size());
     }
     pageButtons->addButton(ui->btnNetwork, pageButtons->buttons().size());
     pageButtons->addButton(ui->btnDisplay, pageButtons->buttons().size());
@@ -190,11 +190,11 @@ void OptionsDialog::setModel(OptionsModel *_model)
 
 
 #ifdef ENABLE_WALLET
-        // If -enableprivatesend was passed in on the command line, set the checkbox
+        // If -enablecoinjoin was passed in on the command line, set the checkbox
         // to the value given via commandline and disable it (make it unclickable).
-        if (strLabel.contains("-enableprivatesend")) {
-            ui->privateSendEnabled->setChecked(_model->node().privateSendOptions().isEnabled());
-            ui->privateSendEnabled->setEnabled(false);
+        if (strLabel.contains("-enablecoinjoin")) {
+            ui->coinJoinEnabled->setChecked(_model->node().coinJoinOptions().isEnabled());
+            ui->coinJoinEnabled->setEnabled(false);
         }
 #endif
 
@@ -224,25 +224,25 @@ void OptionsDialog::setModel(OptionsModel *_model)
     connect(ui->lang, SIGNAL(valueChanged()), this, SLOT(showRestartWarning()));
     connect(ui->thirdPartyTxUrls, SIGNAL(textChanged(const QString &)), this, SLOT(showRestartWarning()));
 
-    connect(ui->privateSendEnabled, &QCheckBox::clicked, [=](bool fChecked) {
+    connect(ui->coinJoinEnabled, &QCheckBox::clicked, [=](bool fChecked) {
 #ifdef ENABLE_WALLET
-        model->node().privateSendOptions().setEnabled(fChecked);
+        model->node().coinJoinOptions().setEnabled(fChecked);
 #endif
-        updatePrivateSendVisibility();
+        updateCoinJoinVisibility();
         if (_model != nullptr) {
-            _model->emitPrivateSendEnabledChanged();
+            _model->emitCoinJoinEnabledChanged();
         }
         updateWidth();
     });
 
-    updatePrivateSendVisibility();
+    updateCoinJoinVisibility();
 
-    // Store the current PrivateSend enabled state to recover it if it gets changed but the dialog gets not accepted but declined.
+    // Store the current CoinJoin enabled state to recover it if it gets changed but the dialog gets not accepted but declined.
 #ifdef ENABLE_WALLET
-    fPrivateSendEnabledPrev = model->node().privateSendOptions().isEnabled();
+    fCoinJoinEnabledPrev = model->node().coinJoinOptions().isEnabled();
     connect(this, &OptionsDialog::rejected, [=]() {
-        if (fPrivateSendEnabledPrev != model->node().privateSendOptions().isEnabled()) {
-            ui->privateSendEnabled->click();
+        if (fCoinJoinEnabledPrev != model->node().coinJoinOptions().isEnabled()) {
+            ui->coinJoinEnabled->click();
         }
     });
 #endif
@@ -259,18 +259,18 @@ void OptionsDialog::setMapper()
 #endif
     mapper->addMapping(ui->threadsScriptVerif, OptionsModel::ThreadsScriptVerif);
     mapper->addMapping(ui->databaseCache, OptionsModel::DatabaseCache);
-    mapper->addMapping(ui->privateSendEnabled, OptionsModel::PrivateSendEnabled);
+    mapper->addMapping(ui->coinJoinEnabled, OptionsModel::CoinJoinEnabled);
 
     /* Wallet */
     mapper->addMapping(ui->coinControlFeatures, OptionsModel::CoinControlFeatures);
     mapper->addMapping(ui->showMasternodesTab, OptionsModel::ShowMasternodesTab);
-    mapper->addMapping(ui->showAdvancedPSUI, OptionsModel::ShowAdvancedPSUI);
-    mapper->addMapping(ui->showPrivateSendPopups, OptionsModel::ShowPrivateSendPopups);
+    mapper->addMapping(ui->showAdvancedCJUI, OptionsModel::ShowAdvancedCJUI);
+    mapper->addMapping(ui->showCoinJoinPopups, OptionsModel::ShowCoinJoinPopups);
     mapper->addMapping(ui->lowKeysWarning, OptionsModel::LowKeysWarning);
-    mapper->addMapping(ui->privateSendMultiSession, OptionsModel::PrivateSendMultiSession);
+    mapper->addMapping(ui->coinJoinMultiSession, OptionsModel::CoinJoinMultiSession);
     mapper->addMapping(ui->spendZeroConfChange, OptionsModel::SpendZeroConfChange);
-    mapper->addMapping(ui->privateSendRounds, OptionsModel::PrivateSendRounds);
-    mapper->addMapping(ui->privateSendAmount, OptionsModel::PrivateSendAmount);
+    mapper->addMapping(ui->coinJoinRounds, OptionsModel::CoinJoinRounds);
+    mapper->addMapping(ui->coinJoinAmount, OptionsModel::CoinJoinAmount);
 
     /* Network */
     mapper->addMapping(ui->mapPortUpnp, OptionsModel::MapPortUPnP);
@@ -343,7 +343,7 @@ void OptionsDialog::on_okButton_clicked()
     appearance->accept();
 #ifdef ENABLE_WALLET
     for (auto& wallet : model->node().getWallets()) {
-        wallet->privateSend().resetCachedBlocks();
+        wallet->coinJoin().resetCachedBlocks();
         wallet->markDirty();
     }
 #endif // ENABLE_WALLET
@@ -433,14 +433,14 @@ void OptionsDialog::updateDefaultProxyNets()
     (strProxy == strDefaultProxyGUI.toStdString()) ? ui->proxyReachTor->setChecked(true) : ui->proxyReachTor->setChecked(false);
 }
 
-void OptionsDialog::updatePrivateSendVisibility()
+void OptionsDialog::updateCoinJoinVisibility()
 {
 #ifdef ENABLE_WALLET
-    bool fEnabled = model->node().privateSendOptions().isEnabled();
+    bool fEnabled = model->node().coinJoinOptions().isEnabled();
 #else
     bool fEnabled = false;
 #endif
-    ui->btnPrivateSend->setVisible(fEnabled);
+    ui->btnCoinJoin->setVisible(fEnabled);
     GUIUtil::updateButtonGroupShortcuts(pageButtons);
 }
 

@@ -75,7 +75,7 @@ private:
         COLUMN_AMOUNT,
         COLUMN_LABEL,
         COLUMN_ADDRESS,
-        COLUMN_PRIVATESEND_ROUNDS,
+        COLUMN_COINJOIN_ROUNDS,
         COLUMN_DATE,
         COLUMN_CONFIRMATIONS,
     };

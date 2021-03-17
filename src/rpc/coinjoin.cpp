@@ -4,15 +4,15 @@
 
 #include <validation.h>
 #ifdef ENABLE_WALLET
-#include <privatesend/privatesend-client.h>
+#include <coinjoin/coinjoin-client.h>
 #endif // ENABLE_WALLET
-#include <privatesend/privatesend-server.h>
+#include <coinjoin/coinjoin-server.h>
 #include <rpc/server.h>
 
 #include <univalue.h>
 
 #ifdef ENABLE_WALLET
-UniValue privatesend(const JSONRPCRequest& request)
+UniValue coinjoin(const JSONRPCRequest& request)
 {
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
@@ -20,7 +20,7 @@ UniValue privatesend(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "privatesend \"command\"\n"
+            "coinjoin \"command\"\n"
             "\nArguments:\n"
             "1. \"command\"        (string or set of strings, required) The command to execute\n"
             "\nAvailable commands:\n"
@@ -32,18 +32,18 @@ UniValue privatesend(const JSONRPCRequest& request)
     if (fMasternodeMode)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Client-side mixing is not supported on masternodes");
 
-    if (!CPrivateSendClientOptions::IsEnabled()) {
-        if (!gArgs.GetBoolArg("-enableprivatesend", true)) {
+    if (!CCoinJoinClientOptions::IsEnabled()) {
+        if (!gArgs.GetBoolArg("-enablecoinjoin", true)) {
             // otherwise it's on by default, unless cmd line option says otherwise
-            throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing is disabled via -enableprivatesend=0 command line option, remove it to enable mixing again");
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing is disabled via -enablecoinjoin=0 command line option, remove it to enable mixing again");
         } else {
-            // not enableprivatesend=false case,
+            // not enablecoinjoin=false case,
             // most likely something bad happened and we disabled it while running the wallet
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Mixing is disabled due to some internal error");
         }
     }
 
-    auto it = privateSendClientManagers.find(pwallet->GetName());
+    auto it = coinJoinClientManagers.find(pwallet->GetName());
 
     if (request.params[0].get_str() == "start") {
         {
@@ -70,7 +70,7 @@ UniValue privatesend(const JSONRPCRequest& request)
         return "Mixing was reset";
     }
 
-    return "Unknown command, please see \"help privatesend\"";
+    return "Unknown command, please see \"help coinjoin\"";
 }
 #endif // ENABLE_WALLET
 
@@ -78,23 +78,23 @@ UniValue getpoolinfo(const JSONRPCRequest& request)
 {
     throw std::runtime_error(
             "getpoolinfo\n"
-            "DEPRECATED. Please use getprivatesendinfo instead.\n"
+            "DEPRECATED. Please use getcoinjoininfo instead.\n"
     );
 }
 
-UniValue getprivatesendinfo(const JSONRPCRequest& request)
+UniValue getcoinjoininfo(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 0) {
         throw std::runtime_error(
-                "getprivatesendinfo\n"
-                "Returns an object containing an information about PrivateSend settings and state.\n"
+                "getcoinjoininfo\n"
+                "Returns an object containing an information about CoinJoin settings and state.\n"
                 "\nResult (for regular nodes):\n"
                 "{\n"
                 "  \"enabled\": true|false,             (bool) Whether mixing functionality is enabled\n"
-                "  \"multisession\": true|false,        (bool) Whether PrivateSend Multisession option is enabled\n"
+                "  \"multisession\": true|false,        (bool) Whether CoinJoin Multisession option is enabled\n"
                 "  \"max_sessions\": xxx,               (numeric) How many parallel mixing sessions can there be at once\n"
                 "  \"max_rounds\": xxx,                 (numeric) How many rounds to mix\n"
-                "  \"max_amount\": xxx,                 (numeric) Target PrivateSend balance in " + CURRENCY_UNIT + "\n"
+                "  \"max_amount\": xxx,                 (numeric) Target CoinJoin balance in " + CURRENCY_UNIT + "\n"
                 "  \"denoms_goal\": xxx,                (numeric) How many inputs of each denominated amount to target\n"
                 "  \"denoms_hardcap\": xxx,             (numeric) Maximum limit of how many inputs of each denominated amount to create\n"
                 "  \"queue_size\": xxx,                 (numeric) How many queues there are currently on the network\n"
@@ -122,34 +122,34 @@ UniValue getprivatesendinfo(const JSONRPCRequest& request)
                 "  \"entries_count\": xxx,              (numeric) The number of entries in the mixing session\n"
                 "}\n"
                 "\nExamples:\n"
-                + HelpExampleCli("getprivatesendinfo", "")
-                + HelpExampleRpc("getprivatesendinfo", "")
+                + HelpExampleCli("getcoinjoininfo", "")
+                + HelpExampleRpc("getcoinjoininfo", "")
         );
     }
 
     UniValue obj(UniValue::VOBJ);
 
     if (fMasternodeMode) {
-        privateSendServer.GetJsonInfo(obj);
+        coinJoinServer.GetJsonInfo(obj);
         return obj;
     }
 
 
 #ifdef ENABLE_WALLET
 
-    CPrivateSendClientOptions::GetJsonInfo(obj);
+    CCoinJoinClientOptions::GetJsonInfo(obj);
 
-    obj.pushKV("queue_size", privateSendClientQueueManager.GetQueueSize());
+    obj.pushKV("queue_size", coinJoinClientQueueManager.GetQueueSize());
 
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) {
         return obj;
     }
 
-    privateSendClientManagers.at(pwallet->GetName())->GetJsonInfo(obj);
+    coinJoinClientManagers.at(pwallet->GetName())->GetJsonInfo(obj);
 
     obj.pushKV("keys_left",     pwallet->nKeysLeftSinceAutoBackup);
-    obj.push_back(Pair("warnings",      pwallet->nKeysLeftSinceAutoBackup < PRIVATESEND_KEYS_THRESHOLD_WARNING
+    obj.push_back(Pair("warnings",      pwallet->nKeysLeftSinceAutoBackup < COINJOIN_KEYS_THRESHOLD_WARNING
                                         ? "WARNING: keypool is almost depleted!" : ""));
 #endif // ENABLE_WALLET
 
@@ -160,13 +160,13 @@ static const CRPCCommand commands[] =
     { //  category              name                      actor (function)         argNames
         //  --------------------- ------------------------  ---------------------------------
         { "dash",               "getpoolinfo",            &getpoolinfo,            {} },
-        { "dash",               "getprivatesendinfo",     &getprivatesendinfo,     {} },
+        { "dash",               "getcoinjoininfo",        &getcoinjoininfo,        {} },
 #ifdef ENABLE_WALLET
-        { "dash",               "privatesend",            &privatesend,            {} },
+        { "dash",               "coinjoin",               &coinjoin,               {} },
 #endif // ENABLE_WALLET
 };
 
-void RegisterPrivateSendRPCCommands(CRPCTable &t)
+void RegisterCoinJoinRPCCommands(CRPCTable &t)
 {
     for (unsigned int vcidx = 0; vcidx < ARRAYLEN(commands); vcidx++)
         t.appendCommand(commands[vcidx].name, &commands[vcidx]);

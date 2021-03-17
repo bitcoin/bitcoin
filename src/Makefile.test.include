@@ -110,7 +110,7 @@ BITCOIN_TESTS =\
 
 if ENABLE_WALLET
 BITCOIN_TESTS += \
-  test/privatesend_tests.cpp \
+  wallet/test/coinjoin_tests.cpp \
   wallet/test/wallet_test_fixture.cpp \
   wallet/test/wallet_test_fixture.h \
   wallet/test/accounting_tests.cpp \

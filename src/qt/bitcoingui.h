@@ -108,14 +108,14 @@ private:
     QToolBar *appToolBar;
     QToolButton *overviewButton;
     QToolButton *sendCoinsButton;
-    QToolButton *privateSendCoinsButton;
+    QToolButton *coinJoinCoinsButton;
     QToolButton *receiveCoinsButton;
     QToolButton *historyButton;
     QToolButton *masternodeButton;
     QAction* appToolBarLogoAction;
     QAction *quitAction;
     QAction *sendCoinsMenuAction;
-    QAction *privateSendCoinsMenuAction;
+    QAction *coinJoinCoinsMenuAction;
     QAction *usedSendingAddressesAction;
     QAction *usedReceivingAddressesAction;
     QAction *signMessageAction;
@@ -139,7 +139,7 @@ private:
     QAction *showBackupsAction;
     QAction *openAction;
     QAction *showHelpMessageAction;
-    QAction *showPrivateSendHelpAction;
+    QAction *showCoinJoinHelpAction;
 
     QLabel *m_wallet_selector_label;
     QComboBox *m_wallet_selector;
@@ -275,8 +275,8 @@ private Q_SLOTS:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
-    /** Switch to PrivateSend coins page */
-    void gotoPrivateSendCoinsPage(QString addr = "");
+    /** Switch to CoinJoin coins page */
+    void gotoCoinJoinCoinsPage(QString addr = "");
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
@@ -310,8 +310,8 @@ private Q_SLOTS:
 
     /** Show help message dialog */
     void showHelpMessageClicked();
-    /** Show PrivateSend help message dialog */
-    void showPrivateSendHelpClicked();
+    /** Show CoinJoin help message dialog */
+    void showCoinJoinHelpClicked();
 #ifndef Q_OS_MAC
     /** Handle tray icon clicked */
     void trayIconActivated(QSystemTrayIcon::ActivationReason reason);
@@ -339,7 +339,7 @@ private Q_SLOTS:
 
     void showModalOverlay();
 
-    void updatePrivateSendVisibility();
+    void updateCoinJoinVisibility();
 
     void updateWidth();
 };

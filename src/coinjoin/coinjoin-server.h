@@ -2,21 +2,21 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_PRIVATESEND_PRIVATESEND_SERVER_H
-#define BITCOIN_PRIVATESEND_PRIVATESEND_SERVER_H
+#ifndef BITCOIN_COINJOIN_COINJOIN_SERVER_H
+#define BITCOIN_COINJOIN_COINJOIN_SERVER_H
 
+#include <coinjoin/coinjoin.h>
 #include <net.h>
-#include <privatesend/privatesend.h>
 
-class CPrivateSendServer;
+class CCoinJoinServer;
 class UniValue;
 
 // The main object for accessing mixing
-extern CPrivateSendServer privateSendServer;
+extern CCoinJoinServer coinJoinServer;
 
 /** Used to keep track of current status of mixing pool
  */
-class CPrivateSendServer : public CPrivateSendBaseSession, public CPrivateSendBaseManager
+class CCoinJoinServer : public CCoinJoinBaseSession, public CCoinJoinBaseManager
 {
 private:
     // Mixing uses collateral transactions to trust parties entering the pool
@@ -26,7 +26,7 @@ private:
     bool fUnitTest;
 
     /// Add a clients entry to the pool
-    bool AddEntry(CConnman& connman, const CPrivateSendEntry& entry, PoolMessage& nMessageIDRet);
+    bool AddEntry(CConnman& connman, const CCoinJoinEntry& entry, PoolMessage& nMessageIDRet);
     /// Add signature to a txin
     bool AddScriptSig(const CTxIn& txin);
 
@@ -44,9 +44,9 @@ private:
     void CommitFinalTransaction(CConnman& connman);
 
     /// Is this nDenom and txCollateral acceptable?
-    bool IsAcceptableDSA(const CPrivateSendAccept& dsa, PoolMessage& nMessageIDRet);
-    bool CreateNewSession(const CPrivateSendAccept& dsa, PoolMessage& nMessageIDRet, CConnman& connman);
-    bool AddUserToExistingSession(const CPrivateSendAccept& dsa, PoolMessage& nMessageIDRet);
+    bool IsAcceptableDSA(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet);
+    bool CreateNewSession(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet, CConnman& connman);
+    bool AddUserToExistingSession(const CCoinJoinAccept& dsa, PoolMessage& nMessageIDRet);
     /// Do we have enough users to take entries?
     bool IsSessionReady();
 
@@ -67,7 +67,7 @@ private:
     void SetNull();
 
 public:
-    CPrivateSendServer() :
+    CCoinJoinServer() :
         vecSessionCollaterals(),
         fUnitTest(false) {}
 
@@ -82,4 +82,4 @@ public:
     void GetJsonInfo(UniValue& obj) const;
 };
 
-#endif // BITCOIN_PRIVATESEND_PRIVATESEND_SERVER_H
+#endif // BITCOIN_COINJOIN_COINJOIN_SERVER_H

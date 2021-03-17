@@ -156,11 +156,11 @@ void WalletFrame::gotoSendCoinsPage(QString addr)
         i.value()->gotoSendCoinsPage(addr);
 }
 
-void WalletFrame::gotoPrivateSendCoinsPage(QString addr)
+void WalletFrame::gotoCoinJoinCoinsPage(QString addr)
 {
     QMap<QString, WalletView*>::const_iterator i;
     for (auto i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i) {
-        i.value()->gotoPrivateSendCoinsPage(addr);
+        i.value()->gotoCoinJoinCoinsPage(addr);
     }
 }
 

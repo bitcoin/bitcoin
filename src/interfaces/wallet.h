@@ -40,8 +40,8 @@ struct WalletTxStatus;
 using WalletOrderForm = std::vector<std::pair<std::string, std::string>>;
 using WalletValueMap = std::map<std::string, std::string>;
 
-namespace PrivateSend {
-//! Interface for the wallet constrained src/privatesend part of a dash node (dashd process).
+namespace CoinJoin {
+//! Interface for the wallet constrained src/coinjoin part of a dash node (dashd process).
 class Client
 {
 public:
@@ -191,8 +191,8 @@ public:
         int& num_blocks,
         int64_t& adjusted_time) = 0;
 
-    // Get the number of privatesend rounds an output went through
-    virtual int getRealOutpointPrivateSendRounds(const COutPoint& outpoint) = 0;
+    // Get the number of coinjoin rounds an output went through
+    virtual int getRealOutpointCoinJoinRounds(const COutPoint& outpoint) = 0;
 
     // Check if an outpoint is fully mixed
     virtual bool isFullyMixed(const COutPoint& outpoint) = 0;
@@ -247,7 +247,7 @@ public:
     // Return whether HD enabled.
     virtual bool hdEnabled() = 0;
 
-    virtual PrivateSend::Client& privateSend() = 0;
+    virtual CoinJoin::Client& coinJoin() = 0;
 
     //! Register handler for show progress messages.
     using ShowProgressFn = std::function<void(const std::string& title, int progress)>;

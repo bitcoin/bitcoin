@@ -73,7 +73,7 @@ WalletView::WalletView(QWidget* parent) :
 
     receiveCoinsPage = new ReceiveCoinsDialog();
     sendCoinsPage = new SendCoinsDialog();
-    privateSendCoinsPage = new SendCoinsDialog(true);
+    coinJoinCoinsPage = new SendCoinsDialog(true);
 
     usedSendingAddressesPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
     usedReceivingAddressesPage = new AddressBookPage(AddressBookPage::ForEditing, AddressBookPage::ReceivingTab, this);
@@ -82,7 +82,7 @@ WalletView::WalletView(QWidget* parent) :
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
-    addWidget(privateSendCoinsPage);
+    addWidget(coinJoinCoinsPage);
 
     QSettings settings;
     if (settings.value("fShowMasternodesTab").toBool()) {
@@ -96,7 +96,7 @@ WalletView::WalletView(QWidget* parent) :
 
     // Highlight transaction after send
     connect(sendCoinsPage, SIGNAL(coinsSent(uint256)), transactionView, SLOT(focusTransaction(uint256)));
-    connect(privateSendCoinsPage, SIGNAL(coinsSent(uint256)), transactionView, SLOT(focusTransaction(uint256)));
+    connect(coinJoinCoinsPage, SIGNAL(coinsSent(uint256)), transactionView, SLOT(focusTransaction(uint256)));
 
     // Double-clicking on a transaction on the transaction history page shows details
     connect(transactionView, SIGNAL(doubleClicked(QModelIndex)), transactionView, SLOT(showDetails()));
@@ -109,7 +109,7 @@ WalletView::WalletView(QWidget* parent) :
 
     // Pass through messages from SendCoinsDialog
     connect(sendCoinsPage, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
-    connect(privateSendCoinsPage, SIGNAL(message(QString, QString, unsigned int)), this, SIGNAL(message(QString, QString, unsigned int)));
+    connect(coinJoinCoinsPage, SIGNAL(message(QString, QString, unsigned int)), this, SIGNAL(message(QString, QString, unsigned int)));
 
     // Pass through messages from transactionView
     connect(transactionView, SIGNAL(message(QString,QString,unsigned int)), this, SIGNAL(message(QString,QString,unsigned int)));
@@ -130,7 +130,7 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
 
         // Navigate to transaction history page after send
         connect(sendCoinsPage, SIGNAL(coinsSent(uint256)), gui, SLOT(gotoHistoryPage()));
-        connect(privateSendCoinsPage, SIGNAL(coinsSent(uint256)), gui, SLOT(gotoHistoryPage()));
+        connect(coinJoinCoinsPage, SIGNAL(coinsSent(uint256)), gui, SLOT(gotoHistoryPage()));
 
         // Receive and report messages
         connect(this, SIGNAL(message(QString,QString,unsigned int)), gui, SLOT(message(QString,QString,unsigned int)));
@@ -152,7 +152,7 @@ void WalletView::setClientModel(ClientModel *_clientModel)
 
     overviewPage->setClientModel(_clientModel);
     sendCoinsPage->setClientModel(_clientModel);
-    privateSendCoinsPage->setClientModel(_clientModel);
+    coinJoinCoinsPage->setClientModel(_clientModel);
     QSettings settings;
     if (settings.value("fShowMasternodesTab").toBool()) {
         masternodeListPage->setClientModel(_clientModel);
@@ -172,7 +172,7 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     }
     receiveCoinsPage->setModel(_walletModel);
     sendCoinsPage->setModel(_walletModel);
-    privateSendCoinsPage->setModel(_walletModel);
+    coinJoinCoinsPage->setModel(_walletModel);
     usedReceivingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
     usedSendingAddressesPage->setModel(_walletModel ? _walletModel->getAddressTableModel() : nullptr);
 
@@ -212,12 +212,12 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
 
     QModelIndex index = ttm->index(start, 0, parent);
     QSettings settings;
-    if (!settings.value("fShowPrivateSendPopups").toBool()) {
+    if (!settings.value("fShowCoinJoinPopups").toBool()) {
         QVariant nType = ttm->data(index, TransactionTableModel::TypeRole);
-        if (nType == TransactionRecord::PrivateSendDenominate ||
-            nType == TransactionRecord::PrivateSendCollateralPayment ||
-            nType == TransactionRecord::PrivateSendMakeCollaterals ||
-            nType == TransactionRecord::PrivateSendCreateDenominations) return;
+        if (nType == TransactionRecord::CoinJoinDenominate ||
+            nType == TransactionRecord::CoinJoinCollateralPayment ||
+            nType == TransactionRecord::CoinJoinMakeCollaterals ||
+            nType == TransactionRecord::CoinJoinCreateDenominations) return;
     }
 
     QString date = ttm->index(start, TransactionTableModel::Date, parent).data().toString();
@@ -261,12 +261,12 @@ void WalletView::gotoSendCoinsPage(QString addr)
     }
 }
 
-void WalletView::gotoPrivateSendCoinsPage(QString addr)
+void WalletView::gotoCoinJoinCoinsPage(QString addr)
 {
-    setCurrentWidget(privateSendCoinsPage);
+    setCurrentWidget(coinJoinCoinsPage);
 
     if (!addr.isEmpty())
-        privateSendCoinsPage->setAddress(addr);
+        coinJoinCoinsPage->setAddress(addr);
 }
 
 void WalletView::gotoSignMessageTab(QString addr)

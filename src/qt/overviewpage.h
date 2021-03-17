@@ -37,7 +37,7 @@ public:
     void showOutOfSyncWarning(bool fShow);
 
 public Q_SLOTS:
-    void privateSendStatus(bool fForce = false);
+    void coinJoinStatus(bool fForce = false);
     void setBalance(const interfaces::WalletBalances& balances);
 
 Q_SIGNALS:
@@ -51,20 +51,20 @@ private:
     WalletModel *walletModel;
     interfaces::WalletBalances m_balances;
     int nDisplayUnit;
-    bool fShowAdvancedPSUI;
+    bool fShowAdvancedCJUI;
     int cachedNumISLocks;
 
     TxViewDelegate *txdelegate;
     std::unique_ptr<TransactionFilterProxy> filter;
 
     void SetupTransactionList(int nNumItems);
-    void DisablePrivateSendCompletely();
+    void DisableCoinJoinCompletely();
 
 private Q_SLOTS:
-    void togglePrivateSend();
+    void toggleCoinJoin();
     void updateDisplayUnit();
-    void updatePrivateSendProgress();
-    void updateAdvancedPSUI(bool fShowAdvancedPSUI);
+    void updateCoinJoinProgress();
+    void updateAdvancedCJUI(bool fShowAdvancedCJUI);
     void handleTransactionClicked(const QModelIndex &index);
     void updateAlerts(const QString &warnings);
     void updateWatchOnlyLabels(bool showWatchOnly);
