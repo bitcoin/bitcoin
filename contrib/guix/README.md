@@ -265,6 +265,57 @@ To use dongcarl's substitute server for Bitcoin Core builds after having
 export SUBSTITUTE_URLS='https://guix.carldong.io https://ci.guix.gnu.org'
 ```
 
+## Troubleshooting
+
+### Derivation failed to build
+
+When you see a build failure like below:
+
+```
+building /gnu/store/...-foo-3.6.12.drv...
+/ 'check' phasenote: keeping build directory `/tmp/guix-build-foo-3.6.12.drv-0'
+builder for `/gnu/store/...-foo-3.6.12.drv' failed with exit code 1
+build of /gnu/store/...-foo-3.6.12.drv failed
+View build log at '/var/log/guix/drvs/../...-foo-3.6.12.drv.bz2'.
+cannot build derivation `/gnu/store/...-qux-7.69.1.drv': 1 dependencies couldn't be built
+cannot build derivation `/gnu/store/...-bar-3.16.5.drv': 1 dependencies couldn't be built
+cannot build derivation `/gnu/store/...-baz-2.0.5.drv': 1 dependencies couldn't be built
+guix time-machine: error: build of `/gnu/store/...-baz-2.0.5.drv' failed
+```
+
+It means that `guix` failed to build a package named `foo`, which was a
+dependency of `qux`, `bar`, and `baz`. Importantly, note that the last "failed"
+line is not necessarily the root cause, the first "failed" line is.
+
+Most of the time, the build failure is due to a spurious test failure or the
+package's build system/test suite breaking when running multi-threaded. To
+rebuild _just_ this derivation in a single-threaded fashion:
+
+```sh
+$ guix build --cores=1 /gnu/store/...-foo-3.6.12.drv
+```
+
+If the single-threaded rebuild stil did not succeed, you may need to dig deeper.
+You may view `foo`'s build logs in `less` like so (please replace paths with the
+path you see in the build failure output):
+
+```sh
+$ bzcat /var/log/guix/drvs/../...-foo-3.6.12.drv.bz2 | less
+```
+
+`foo`'s build directory is also preserved and available at
+`/tmp/guix-build-foo-3.6.12.drv-0`. However, if you fail to build `foo` multiple
+times, it may be `/tmp/...drv-1` or `/tmp/...drv-2`. Always consult the build
+failure output for the most accurate, up-to-date information.
+
+#### python(-minimal): [Errno 84] Invalid or incomplete multibyte or wide character
+
+This error occurs when your `$TMPDIR` (default: /tmp) exists on a filesystem
+which rejects characters not present in the UTF-8 character code set. An example
+is ZFS with the utf8only=on option set.
+
+More information: https://bugs.python.org/issue37584
+
 ## FAQ
 
 ### How can I trust the binary installation?
