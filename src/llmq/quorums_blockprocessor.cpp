@@ -103,9 +103,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             }
         }
 
-        auto members = CLLMQUtils::GetAllQuorumMembers(type, pquorumIndex);
-
-        if (!qc.Verify(members, true)) {
+        if (!qc.Verify(pquorumIndex, true)) {
             LOCK(cs_main);
             LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- commitment for quorum %s:%d is not valid, peer=%d\n", __func__,
                       qc.quorumHash.ToString(), qc.llmqType, pfrom->GetId());
@@ -219,9 +217,8 @@ bool CQuorumBlockProcessor::ProcessCommitment(int nHeight, const uint256& blockH
     }
 
     auto quorumIndex = LookupBlockIndex(qc.quorumHash);
-    auto members = CLLMQUtils::GetAllQuorumMembers(params.type, quorumIndex);
 
-    if (!qc.Verify(members, true)) {
+    if (!qc.Verify(quorumIndex, true)) {
         return state.DoS(100, false, REJECT_INVALID, "bad-qc-invalid");
     }
 
