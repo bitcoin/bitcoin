@@ -54,16 +54,34 @@ store_path() {
 # Set environment variables to point the NATIVE toolchain to the right
 # includes/libs
 NATIVE_GCC="$(store_path gcc-toolchain)"
-export LIBRARY_PATH="${NATIVE_GCC}/lib:${NATIVE_GCC}/lib64"
-export CPATH="${NATIVE_GCC}/include"
+
+unset LIBRARY_PATH
+unset CPATH
 unset C_INCLUDE_PATH
 unset CPLUS_INCLUDE_PATH
+unset OBJC_INCLUDE_PATH
+unset OBJCPLUS_INCLUDE_PATH
+
+export LIBRARY_PATH="${NATIVE_GCC}/lib:${NATIVE_GCC}/lib64"
+export C_INCLUDE_PATH="${NATIVE_GCC}/include"
+export CPLUS_INCLUDE_PATH="${NATIVE_GCC}/include/c++:${NATIVE_GCC}/include"
+export OBJC_INCLUDE_PATH="${NATIVE_GCC}/include"
+export OBJCPLUS_INCLUDE_PATH="${NATIVE_GCC}/include/c++:${NATIVE_GCC}/include"
+
+prepend_to_search_env_var() {
+    export "${1}=${2}${!1:+:}${!1}"
+}
+
 case "$HOST" in
     *darwin*)
         # When targeting darwin, zlib is required by native_libdmg-hfsplus.
         zlib_store_path=$(store_path "zlib")
-        export LIBRARY_PATH="${zlib_store_path}/lib:${LIBRARY_PATH}"
-        export CPATH="${zlib_store_path}/include:${CPATH}"
+
+        prepend_to_search_env_var LIBRARY_PATH "${zlib_store_path}/lib"
+        prepend_to_search_env_var C_INCLUDE_PATH "${zlib_store_path}/include"
+        prepend_to_search_env_var CPLUS_INCLUDE_PATH "${zlib_store_path}/include"
+        prepend_to_search_env_var OBJC_INCLUDE_PATH "${zlib_store_path}/include"
+        prepend_to_search_env_var OBJCPLUS_INCLUDE_PATH "${zlib_store_path}/include"
 esac
 
 # Set environment variables to point the CROSS toolchain to the right
