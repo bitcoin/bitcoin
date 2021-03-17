@@ -2,10 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-// Bech32 is a string encoding format used in newer address types.
-// The output consists of a human-readable part (alphanumeric), a
-// separator character (1), and a base32 data section, the last
-// 6 characters of which are a checksum.
+// Bech32 and Bech32m are string encoding formats used in newer
+// address types. The outputs consist of a human-readable part
+// (alphanumeric), a separator character (1), and a base32 data
+// section, the last 6 characters of which are a checksum. The
+// module is namespaced under bech32 for historical reasons.
 //
 // For more information, see BIP 173 and BIP 350.
 
@@ -40,7 +41,7 @@ struct DecodeResult
     DecodeResult(Encoding enc, std::string&& h, std::vector<uint8_t>&& d) : encoding(enc), hrp(std::move(h)), data(std::move(d)) {}
 };
 
-/** Decode a Bech32 string. */
+/** Decode a Bech32 or Bech32m string. */
 DecodeResult Decode(const std::string& str);
 
 } // namespace bech32
