@@ -187,43 +187,61 @@ void PruneBlockFilesManual(CChainState& active_chainstate, int nManualPruneHeigh
 * Validation result for a single transaction mempool acceptance.
 */
 struct MempoolAcceptResult {
-    /** Used to indicate the results of mempool validation,
-    * including the possibility of unfinished validation.
+    /** Used to indicate the results of mempool validation.
+    * It's possible for a result to be unknown in the case of
+    * package validation when an earlier tx fails and validation
+    * is terminated early. See ResultType::UNFINISHED.
     */
     enum class ResultType {
         VALID, //!> Fully validated, valid.
         INVALID, //!> Invalid.
+        UNFINISHED, //!> Not fully validated.
     };
-    ResultType m_result_type;
-    TxValidationState m_state;
+    const CTransaction& m_tx;
+    const ResultType m_result_type;
+    const TxValidationState m_state;
 
     // The following fields are only present when m_result_type = ResultType::VALID
     /** Mempool transactions replaced by the tx per BIP 125 rules. */
-    std::optional<std::list<CTransactionRef>> m_replaced_transactions;
-    /** Raw base fees. */
-    std::optional<CAmount> m_base_fees;
+    const std::optional<std::list<CTransactionRef>> m_replaced_transactions;
+    /** Raw base fees in satoshis. */
+    const std::optional<CAmount> m_base_fees;
 
     /** Constructor for failure case */
-    explicit MempoolAcceptResult(TxValidationState state)
-        : m_result_type(ResultType::INVALID),
+    explicit MempoolAcceptResult(const CTransaction& tx, TxValidationState state, bool finished=true)
+        : m_tx(tx), m_result_type(finished ? ResultType::INVALID : ResultType::UNFINISHED),
         m_state(state), m_replaced_transactions(nullopt), m_base_fees(nullopt) {
-            Assume(!state.IsValid()); // Can be invalid or error
+            if (finished) Assume(!state.IsValid()); // Can be invalid or error
         }
 
     /** Constructor for success case */
-    explicit MempoolAcceptResult(std::list<CTransactionRef>&& replaced_txns, CAmount fees)
-        : m_result_type(ResultType::VALID), m_state(TxValidationState{}),
+    explicit MempoolAcceptResult(const CTransaction& tx, std::list<CTransactionRef>&& replaced_txns, CAmount fees)
+        : m_tx(tx), m_result_type(ResultType::VALID), m_state{},
         m_replaced_transactions(std::move(replaced_txns)), m_base_fees(fees) {}
 };
 
 /**
  * (Try to) add a transaction to the memory pool.
- * @param[in]  bypass_limits   When true, don't enforce mempool fee limits.
- * @param[in]  test_accept     When true, run validation checks but don't submit to mempool.
+ * @param[in]  bypass_limits    When true, don't enforce mempool fee limits.
+ * @param[in]  test_accept      When true, run validation checks but don't submit to mempool.
  */
 MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPool& pool, const CTransactionRef& tx,
                                        bool bypass_limits, bool test_accept=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
+/**
+* Atomically test acceptance of multiple transactions.
+* @param[in]    txns                Group of transactions which may be independent or contain
+*                                   parent-child dependencies. The transactions must not conflict, i.e.
+*                                   must not spend the same inputs, even if it would be a valid BIP125
+*                                   replace-by-fee. Parents must appear before children.
+* @param[in]    bypass_timelocks    When true (test_accept must also be true), don't enforce timelock
+*                                   rules BIP65 and BIP112.
+* @returns a vector of MempoolAcceptResults for each tx in the same order as
+* the input txns. If one transaction fails, some results may be unfinished.
+*/
+std::vector<MempoolAcceptResult> ProcessNewPackage(CChainState& active_chainstate, CTxMemPool& pool,
+                                                   std::vector<CTransactionRef>& txns, bool test_accept,
+                                                   bool bypass_timelocks=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 /** Apply the effects of this transaction on the UTXO set represented by view */
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
@@ -246,6 +264,8 @@ bool TestLockPointValidity(CChain& active_chain, const LockPoints* lp) EXCLUSIVE
 
 /**
  * Check if transaction will be BIP 68 final in the next block to be created.
+ * @param[in]   viewMemPool     A CoinsView that provides access to relevant coins for
+ *                              checking sequence locks. Any CoinsView can be passed in.
  *
  * Simulates calling SequenceLocks() with data from the tip of the current active chain.
  * Optionally stores in LockPoints the resulting height and time calculated and the hash
@@ -256,11 +276,11 @@ bool TestLockPointValidity(CChain& active_chain, const LockPoints* lp) EXCLUSIVE
  * See consensus/consensus.h for flag definitions.
  */
 bool CheckSequenceLocks(CChainState& active_chainstate,
-                        const CTxMemPool& pool,
+                        CCoinsView& viewMemPool,
                         const CTransaction& tx,
                         int flags,
                         LockPoints* lp = nullptr,
-                        bool useExistingLockPoints = false) EXCLUSIVE_LOCKS_REQUIRED(::cs_main, pool.cs);
+                        bool useExistingLockPoints = false) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
 /**
  * Closure representing one script verification

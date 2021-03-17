@@ -231,8 +231,8 @@ public:
     CCoinsViewCache(const CCoinsViewCache &) = delete;
 
     // Standard CCoinsView methods
-    bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
-    bool HaveCoin(const COutPoint &outpoint) const override;
+    virtual bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
+    virtual bool HaveCoin(const COutPoint &outpoint) const override;
     uint256 GetBestBlock() const override;
     void SetBestBlock(const uint256 &hashBlock);
     bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) override;
@@ -257,7 +257,7 @@ public:
      * on! To be safe, best to not hold the returned reference through any other
      * calls to this cache.
      */
-    const Coin& AccessCoin(const COutPoint &output) const;
+    virtual const Coin& AccessCoin(const COutPoint &output) const;
 
     /**
      * Add a coin. Set possible_overwrite to true if an unspent version may
@@ -286,7 +286,7 @@ public:
      * Failure to call this method before destruction will cause the changes to be forgotten.
      * If false is returned, the state of this cache (and its backing view) will be undefined.
      */
-    bool Flush();
+    virtual bool Flush();
 
     /**
      * Removes the UTXO with the given outpoint from the cache, if it is

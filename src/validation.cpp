@@ -262,14 +262,13 @@ bool TestLockPointValidity(CChain& active_chain, const LockPoints* lp)
 }
 
 bool CheckSequenceLocks(CChainState& active_chainstate,
-                        const CTxMemPool& pool,
+                        CCoinsView& viewMemPool,
                         const CTransaction& tx,
                         int flags,
                         LockPoints* lp,
                         bool useExistingLockPoints)
 {
     AssertLockHeld(cs_main);
-    AssertLockHeld(pool.cs);
     assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
 
     CBlockIndex* tip = active_chainstate.m_chain.Tip();
@@ -293,7 +292,6 @@ bool CheckSequenceLocks(CChainState& active_chainstate,
     }
     else {
         // CoinsTip() contains the UTXO set for active_chainstate.m_chain.Tip()
-        CCoinsViewMemPool viewMemPool(&active_chainstate.CoinsTip(), pool);
         std::vector<int> prevheights;
         prevheights.resize(tx.vin.size());
         for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++) {
@@ -465,6 +463,114 @@ static bool CheckInputsFromMempoolAndCache(const CTransaction& tx, TxValidationS
     return CheckInputScripts(tx, state, view, flags, /* cacheSigStore = */ true, /* cacheFullSciptStore = */ true, txdata);
 }
 
+/** An empty coin used as a placeholder for a spent coin.*/
+static const Coin coin_spent;
+/**
+ * A CoinsView that adds a memory cache to another CoinsView and serves as temporary scratch space.
+ * Used by MemPoolAccept class to validate transactions and packages before submitting to mempool.
+ * A backend can be set to provide read access to chainstate and/or mempool coins, but writing to
+ * the backend is disabled. Avoid using a CCoinsViewTemporary in consensus-critical paths such
+ * as writing to the script cache. See CheckInputsFromMempoolAndCache as an example. When not being
+ * used to validate a package (m_temp_added and m_temp_spent are empty), a CCoinsViewTemporary
+ * behaves exactly like a CCoinsViewCache.
+ */
+class CCoinsViewTemporary : public CCoinsViewCache
+{
+protected:
+    /**
+    * Coins made available by transactions being validated. Tracking these allows for package
+    * validation, since we can access transaction outputs without submitting them to mempool.
+    */
+    std::map<COutPoint, Coin> m_temp_added;
+
+    /**
+    * Coins spent by transactions being validated. When there are multiple, we need to track these
+    * in order to distinguish between missing/spent coins and conflicts within a package.
+    */
+    std::set<COutPoint> m_temp_spent;
+
+public:
+
+    CCoinsViewTemporary(CCoinsView* baseIn) : CCoinsViewCache(baseIn) {}
+
+    // Delete the copy constructor to prevent accidentally using it when one intends to create a
+    // CCoinsViewTemporary on top of a base cache.
+    CCoinsViewTemporary(const CCoinsViewTemporary &) = delete;
+
+    bool GetCoin(const COutPoint& outpoint, Coin& coin) const override {
+        coin = AccessCoin(outpoint);
+        return !coin.IsSpent();
+    }
+
+    const Coin& AccessCoin(const COutPoint& outpoint) const override {
+        // Check to see if another tx in the package has already spent this coin (conflict-in-package).
+        // Coins spent by others in the package are only tracked in m_temp_spent.
+        if (m_temp_spent.count(outpoint)) {
+            return coin_spent;
+        }
+
+        // Check to see if the inputs are made available by another tx in the package.
+        // These Coins would not be available in the underlying CoinsView.
+        if (auto it = m_temp_added.find(outpoint); it != m_temp_added.end()) {
+            assert(!it->second.IsSpent());
+            return it->second;
+        }
+        return CCoinsViewCache::AccessCoin(outpoint);
+    }
+
+    bool HaveCoin(const COutPoint& outpoint) const override {
+        Coin coin;
+        return GetCoin(outpoint, coin);
+    }
+
+    /**
+    * Update with coins spent and created by a transaction.
+    * Only used for package validation.
+    */
+    void PackageAddTransaction(const CTransactionRef& tx)
+    {
+        // Track Coins spent by this transaction. They must exist and not already be spent.
+        for (auto input : tx->vin) {
+            Coin spent_coin;
+            Assume(GetCoin(input.prevout, spent_coin) && !spent_coin.IsSpent());
+            m_temp_spent.insert(input.prevout);
+        }
+        // Track Coins added by this transaction.
+        for (unsigned int n = 0; n < tx->vout.size(); ++n) {
+            m_temp_added.emplace(COutPoint(tx->GetHash(), n), Coin(tx->vout[n], MEMPOOL_HEIGHT, false));
+        }
+    }
+
+    /**
+    * Returns whether an outpoint is spent by a transaction in the package being validated.
+    * Only used for package validation.
+    */
+    bool PackageSpends(const COutPoint& outpoint) const {
+        return m_temp_spent.count(outpoint);
+    }
+
+    /**
+    * Clear temporary coins, undoing any changes that were made using AddPackageTransaction.
+    * Note that any coins brought into cacheCoins from the backend are still there, but this
+    * effectively resets the state to only coins that were available before validation began.
+    * Only used for package validation.
+    */
+    void ClearTemporaryCoins() {
+        m_temp_added.clear();
+        m_temp_spent.clear();
+    }
+
+    // A CCoinsViewTemporary is for temporary scratch space only; it should not write to its backend.
+    bool Flush() override {
+        throw std::logic_error("CCoinsViewTemporary flushing is not supported.");
+    }
+
+    bool BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn) override {
+        throw std::logic_error("CCoinsViewTemporary writing is not supported.");
+    }
+
+};
+
 namespace {
 
 class MemPoolAccept
@@ -484,6 +590,7 @@ public:
         const CChainParams& m_chainparams;
         const int64_t m_accept_time;
         const bool m_bypass_limits;
+        const bool m_bypass_timelocks;
         /*
          * Return any outpoints which were not previously present in the coins
          * cache, but were added as a result of validating the tx for mempool
@@ -497,6 +604,12 @@ public:
 
     // Single transaction acceptance
     MempoolAcceptResult AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+    * Multiple transaction acceptance. Transactions must not conflict with each other
+    * and ordered topologically (parents before children) if any dependencies exist.
+    */
+    std::vector<MempoolAcceptResult> AcceptMultipleTransactions(std::vector<CTransactionRef>& txns, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 private:
     // All the intermediate state that gets passed between the various levels
@@ -557,7 +670,7 @@ private:
 
 private:
     CTxMemPool& m_pool;
-    CCoinsViewCache m_view;
+    CCoinsViewTemporary m_view;
     CCoinsViewMemPool m_viewmempool;
     CCoinsView m_dummy;
 
@@ -618,7 +731,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // block; we don't want our mempool filled up with transactions that can't
     // be mined yet.
     assert(std::addressof(::ChainActive()) == std::addressof(m_active_chainstate.m_chain));
-    if (!CheckFinalTx(m_active_chainstate.m_chain.Tip(), tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
+    if (!args.m_bypass_timelocks && !CheckFinalTx(m_active_chainstate.m_chain.Tip(), tx, STANDARD_LOCKTIME_VERIFY_FLAGS))
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-final");
 
     // is it already in the memory pool?
@@ -661,6 +774,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                 setConflicts.insert(ptxConflicting->GetHash());
             }
         }
+        // Check for conflicts with transactions in the same package.
+        if (m_view.PackageSpends(txin.prevout)) {
+            return state.Invalid(TxValidationResult::TX_CONFLICT, "conflict-in-package");
+        }
     }
 
     LockPoints lp;
@@ -701,10 +818,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // Only accept BIP68 sequence locked transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
     // be mined yet.
-    // Must keep pool.cs for this unless we change CheckSequenceLocks to take a
-    // CoinsViewCache instead of create its own
+    // Pass in m_view which has all of the relevant inputs cached. Note that, since m_view's
+    // backend was removed, it no longer pulls coins from the mempool.
     assert(std::addressof(::ChainstateActive()) == std::addressof(m_active_chainstate));
-    if (!CheckSequenceLocks(m_active_chainstate, m_pool, tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp))
+    if (!args.m_bypass_timelocks && !CheckSequenceLocks(m_active_chainstate, m_view, tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp))
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
 
     assert(std::addressof(g_chainman.m_blockman) == std::addressof(m_active_chainstate.m_blockman));
@@ -1007,6 +1124,9 @@ bool MemPoolAccept::ConsensusScriptChecks(const ATMPArgs& args, Workspace& ws, P
 
 bool MemPoolAccept::Finalize(const ATMPArgs& args, Workspace& ws)
 {
+    // Never submit a transaction without running all checks.
+    assert(!args.m_bypass_timelocks);
+
     const CTransaction& tx = *ws.m_ptx;
     const uint256& hash = ws.m_hash;
     TxValidationState& state = ws.m_state;
@@ -1060,7 +1180,7 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
 
     Workspace ws(ptx);
 
-    if (!PreChecks(args, ws)) return MempoolAcceptResult(ws.m_state);
+    if (!PreChecks(args, ws)) return MempoolAcceptResult(*ws.m_ptx, ws.m_state);
 
     // Only compute the precomputed transaction data if we need to verify
     // scripts (ie, other policy checks pass). We perform the inexpensive
@@ -1068,20 +1188,85 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
     // checks pass, to mitigate CPU exhaustion denial-of-service attacks.
     PrecomputedTransactionData txdata;
 
-    if (!PolicyScriptChecks(args, ws, txdata)) return MempoolAcceptResult(ws.m_state);
+    if (!PolicyScriptChecks(args, ws, txdata)) return MempoolAcceptResult(*ws.m_ptx, ws.m_state);
 
-    if (!ConsensusScriptChecks(args, ws, txdata)) return MempoolAcceptResult(ws.m_state);
+    if (!ConsensusScriptChecks(args, ws, txdata)) return MempoolAcceptResult(*ws.m_ptx, ws.m_state);
 
     // Tx was accepted, but not added
     if (args.m_test_accept) {
-        return MempoolAcceptResult(std::move(ws.m_replaced_transactions), ws.m_base_fees);
+        return MempoolAcceptResult(*ws.m_ptx, std::move(ws.m_replaced_transactions), ws.m_base_fees);
     }
 
-    if (!Finalize(args, ws)) return MempoolAcceptResult(ws.m_state);
+    if (!Finalize(args, ws)) return MempoolAcceptResult(*ws.m_ptx, ws.m_state);
 
     GetMainSignals().TransactionAddedToMempool(ptx, m_pool.GetAndIncrementSequence());
 
-    return MempoolAcceptResult(std::move(ws.m_replaced_transactions), ws.m_base_fees);
+    return MempoolAcceptResult(*ws.m_ptx, std::move(ws.m_replaced_transactions), ws.m_base_fees);
+}
+
+std::vector<MempoolAcceptResult> MemPoolAccept::AcceptMultipleTransactions(std::vector<CTransactionRef>& txns, ATMPArgs& args)
+{
+    AssertLockHeld(cs_main);
+    std::vector<Workspace> workspaces{};
+    const int package_size = txns.size();
+    workspaces.reserve(package_size);
+    std::transform(txns.begin(), txns.end(), std::back_inserter(workspaces), [](CTransactionRef& tx) {
+        return Workspace(tx);
+    });
+    std::vector<MempoolAcceptResult> results;
+    results.reserve(package_size);
+
+    LOCK(m_pool.cs);
+    // Do all PreChecks first and fail fast to avoid running expensive script checks when unnecessary.
+    for (Workspace& ws : workspaces) {
+        if (!PreChecks(args, ws)) {
+            // Exit early to avoid doing pointless work. Return results in the same order as input txns.
+            const auto failed_or_unfinished = [&, failed_ptx = ws.m_ptx](Workspace& ws) {
+                                              return ws.m_ptx == failed_ptx
+                                              ? MempoolAcceptResult(*ws.m_ptx, ws.m_state, /* finished */ true)
+                                              : MempoolAcceptResult(*ws.m_ptx, ws.m_state, /* finished */ false);
+            };
+            std::transform(workspaces.begin(), workspaces.end(), std::back_inserter(results), failed_or_unfinished);
+            return results;
+        }
+        m_view.PackageAddTransaction(ws.m_ptx);
+    }
+
+    // Now that we have verified all inputs are available and there are no conflicts in the package,
+    // clear the temporary coins (m_temp_added and m_temp_spent), otherwise script checks will error
+    // on coins that are spent within the package.
+    m_view.ClearTemporaryCoins();
+
+    for (Workspace& ws : workspaces) {
+        PrecomputedTransactionData txdata;
+        if (!PolicyScriptChecks(args, ws, txdata)) {
+            // Exit early to avoid doing pointless work. Return results in the same order as input txns.
+            CTransactionRef failed_ptx = ws.m_ptx;
+            const auto failed_or_unfinished = [&failed_ptx](Workspace& ws) {
+                                              return ws.m_ptx == failed_ptx
+                                              ? MempoolAcceptResult(*ws.m_ptx, ws.m_state, /* finished */ true)
+                                              : MempoolAcceptResult(*ws.m_ptx, ws.m_state, /* finished */ false);
+            };
+            auto it_curr = std::find_if(workspaces.begin(), workspaces.end(),
+                                        [& failed_ptx](Workspace& ws) { return ws.m_ptx == failed_ptx; });
+            // When test_accept=true, transactions that pass PolicyScriptChecks are valid because there are
+            // no further mempool checks (passing PolicyScriptChecks implies passing ConsensusScriptChecks).
+            std::transform(workspaces.begin(), it_curr, std::back_inserter(results), [](Workspace& ws) {
+                           return MempoolAcceptResult(*ws.m_ptx, std::move(ws.m_replaced_transactions), ws.m_base_fees);
+            });
+            std::transform(it_curr, workspaces.end(), std::back_inserter(results), failed_or_unfinished);
+            return results;
+        }
+        // Add the coins back because subsequent transaction(s) in the package may need them for
+        // script checking.
+        m_view.PackageAddTransaction(ws.m_ptx);
+    }
+
+    std::transform(workspaces.begin(), workspaces.end(), std::back_inserter(results), [](Workspace& ws) {
+        // All successful MemPoolAcceptResults
+        return MempoolAcceptResult(*ws.m_ptx, std::move(ws.m_replaced_transactions), ws.m_base_fees);
+    });
+    return results;
 }
 
 } // anon namespace
@@ -1094,10 +1279,14 @@ static MempoolAcceptResult AcceptToMemoryPoolWithTime(const CChainParams& chainp
                                                       EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     std::vector<COutPoint> coins_to_uncache;
-    MemPoolAccept::ATMPArgs args { chainparams, nAcceptTime, bypass_limits, coins_to_uncache, test_accept };
+    MemPoolAccept::ATMPArgs args { chainparams, nAcceptTime, bypass_limits,
+                                   /* bypass_timelocks*/ false, coins_to_uncache, test_accept };
 
     assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
     const MempoolAcceptResult result = MemPoolAccept(pool, active_chainstate).AcceptSingleTransaction(tx, args);
+    assert(result.m_result_type == MempoolAcceptResult::ResultType::VALID ||
+           result.m_result_type == MempoolAcceptResult::ResultType::INVALID);
+
     if (result.m_result_type != MempoolAcceptResult::ResultType::VALID) {
         // Remove coins that were not present in the coins cache before calling ATMPW;
         // this is to prevent memory DoS in case we receive a large number of
@@ -1118,6 +1307,32 @@ MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPoo
 {
     assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
     return AcceptToMemoryPoolWithTime(Params(), pool, active_chainstate, tx, GetTime(), bypass_limits, test_accept);
+}
+
+std::vector<MempoolAcceptResult> ProcessNewPackage(CChainState& active_chainstate, CTxMemPool& pool,
+                                                   std::vector<CTransactionRef>& txns, bool test_accept,
+                                                   bool bypass_timelocks)
+{
+    AssertLockHeld(cs_main);
+    assert(test_accept); // Only allow package accept dry-runs (testmempoolaccept RPC).
+    if (bypass_timelocks) assert(test_accept); // Only allow bypass_timelocks in dry-runs.
+
+    std::vector<COutPoint> coins_to_uncache;
+    const CChainParams& chainparams = Params();
+    MemPoolAccept::ATMPArgs args { chainparams, GetTime(), false, bypass_timelocks, coins_to_uncache, test_accept };
+    assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
+    const std::vector<MempoolAcceptResult> results = MemPoolAccept(pool, active_chainstate).AcceptMultipleTransactions(txns, args);
+    Assume(txns.size() == results.size());
+
+    // Uncache coins pertaining to transactions that were not submitted to the mempool.
+    // Ensure the cache is still within its size limits.
+    for (const COutPoint& hashTx : coins_to_uncache) {
+            active_chainstate.CoinsTip().Uncache(hashTx);
+    }
+    BlockValidationState state_dummy;
+    ::ChainstateActive().FlushStateToDisk(chainparams, state_dummy, FlushStateMode::PERIODIC);
+
+    return results;
 }
 
 CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock)

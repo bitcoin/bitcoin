@@ -125,15 +125,15 @@ class BIP65Test(BitcoinTestFramework):
 
         # First we show that this tx is valid except for CLTV by getting it
         # rejected from the mempool for exactly that reason.
-        assert_equal(
-            [{
-                'txid': spendtx.hash,
-                'wtxid': spendtx.getwtxid(),
-                'allowed': False,
-                'reject-reason': 'non-mandatory-script-verify-flag (Negative locktime)',
-            }],
-            self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0),
-        )
+        expected_testres = [{
+            'txid': spendtx.hash,
+            'wtxid': spendtx.getwtxid(),
+            'allowed': False,
+            'reject-reason': 'non-mandatory-script-verify-flag (Negative locktime)',
+        }]
+        assert_equal(expected_testres, self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0))
+        # It still shouldn't work with bypass_timelocks=True because this is a script error.
+        assert_equal(expected_testres, self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0, bypass_timelocks=True))
 
         # Now we verify that a block with this transaction is also invalid.
         block.vtx.append(spendtx)
