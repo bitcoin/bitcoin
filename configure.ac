@@ -354,6 +354,14 @@ dnl warning about something unrelated, for example about some path issue. If tha
 dnl -Werror cannot be used because all of those warnings would be turned into errors.
 AX_CHECK_COMPILE_FLAG([-Werror],[CXXFLAG_WERROR="-Werror"],[CXXFLAG_WERROR=""])
 
+dnl A wrapper around AX_CHECK_COMPILE_FLAG, useful in most cases.
+dnl
+dnl BITCOIN_TRY_ADD_COMPILE_FLAG(FLAG, COMPILER_FLAGS, [INPUT])
+dnl -----------------------------------------------------------
+dnl
+AC_DEFUN([BITCOIN_TRY_ADD_COMPILE_FLAG],
+         [AX_CHECK_COMPILE_FLAG([$1], [$2="$$2 $1"], [], [$CXXFLAG_WERROR], [$3])])
+
 dnl Check for a flag to turn linker warnings into errors. When flags are passed to linkers via the
 dnl compiler driver using a -Wl,-foo flag, linker warnings may be swallowed rather than bubbling up.
 dnl See note above, the same applies here as well.
@@ -387,7 +395,7 @@ if test "x$enable_debug" = xyes; then
   AX_CHECK_PREPROC_FLAG([-DDEBUG],[[DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DDEBUG"]],,[[$CXXFLAG_WERROR]])
   AX_CHECK_PREPROC_FLAG([-DDEBUG_LOCKORDER],[[DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DDEBUG_LOCKORDER"]],,[[$CXXFLAG_WERROR]])
   AX_CHECK_PREPROC_FLAG([-DABORT_ON_FAILED_ASSUME],[[DEBUG_CPPFLAGS="$DEBUG_CPPFLAGS -DABORT_ON_FAILED_ASSUME"]],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-ftrapv],[DEBUG_CXXFLAGS="$DEBUG_CXXFLAGS -ftrapv"],,[[$CXXFLAG_WERROR]])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-ftrapv], [DEBUG_CXXFLAGS])
 fi
 
 if test x$use_sanitizers != x; then
@@ -422,63 +430,63 @@ if test "x$enable_werror" = "xyes"; then
   if test "x$CXXFLAG_WERROR" = "x"; then
     AC_MSG_ERROR("enable-werror set but -Werror is not usable")
   fi
-  AX_CHECK_COMPILE_FLAG([-Werror=gnu],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=gnu"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=vla],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=vla"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=shadow-field],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=shadow-field"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=switch],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=switch"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=thread-safety],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=thread-safety"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=range-loop-analysis],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=range-loop-analysis"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=unused-variable],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=unused-variable"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=date-time],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=date-time"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=return-type],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=return-type"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=conditional-uninitialized],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=conditional-uninitialized"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=sign-compare],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=sign-compare"],,[[$CXXFLAG_WERROR]])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Werror=gnu], [ERROR_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Werror=vla], [ERROR_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Werror=shadow-field], [ERROR_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Werror=switch], [ERROR_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Werror=thread-safety], [ERROR_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Werror=range-loop-analysis], [ERROR_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Werror=unused-variable], [ERROR_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Werror=date-time], [ERROR_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Werror=return-type], [ERROR_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Werror=conditional-uninitialized], [ERROR_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Werror=sign-compare], [ERROR_CXXFLAGS])
   dnl -Wsuggest-override is broken with GCC before 9.2
   dnl https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78010
-  AX_CHECK_COMPILE_FLAG([-Werror=suggest-override],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=suggest-override"],,[[$CXXFLAG_WERROR]],
-                        [AC_LANG_SOURCE([[struct A { virtual void f(); }; struct B : A { void f() final; };]])])
-  AX_CHECK_COMPILE_FLAG([-Werror=unreachable-code-loop-increment],[ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=unreachable-code-loop-increment"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Werror=mismatched-tags], [ERROR_CXXFLAGS="$ERROR_CXXFLAGS -Werror=mismatched-tags"], [], [$CXXFLAG_WERROR])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Werror=suggest-override], [ERROR_CXXFLAGS],
+                               [AC_LANG_SOURCE([[struct A { virtual void f(); }; struct B : A { void f() final; };]])])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Werror=unreachable-code-loop-increment], [ERROR_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Werror=mismatched-tags], [ERROR_CXXFLAGS])
 fi
 
 if test "x$CXXFLAGS_overridden" = "xno"; then
-  AX_CHECK_COMPILE_FLAG([-Wall],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wall"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wextra],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wextra"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wgnu],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wgnu"],,[[$CXXFLAG_WERROR]])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wall], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wextra], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wgnu], [WARN_CXXFLAGS])
   dnl some compilers will ignore -Wformat-security without -Wformat, so just combine the two here.
-  AX_CHECK_COMPILE_FLAG([-Wformat -Wformat-security],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wformat -Wformat-security"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wvla],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wvla"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wshadow-field],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wshadow-field"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wswitch],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wswitch"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wthread-safety],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wthread-safety"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wrange-loop-analysis],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wrange-loop-analysis"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wredundant-decls],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wredundant-decls"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wunused-variable],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wunused-variable"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wunused-member-function],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wunused-member-function"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wdate-time],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wdate-time"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wconditional-uninitialized],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wconditional-uninitialized"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wsign-compare],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wsign-compare"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wduplicated-branches],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wduplicated-branches"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wduplicated-cond],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wduplicated-cond"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wlogical-op],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wlogical-op"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Woverloaded-virtual],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Woverloaded-virtual"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wsuggest-override],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wsuggest-override"],,[[$CXXFLAG_WERROR]],
-                        [AC_LANG_SOURCE([[struct A { virtual void f(); }; struct B : A { void f() final; };]])])
-  AX_CHECK_COMPILE_FLAG([-Wunreachable-code-loop-increment],[WARN_CXXFLAGS="$WARN_CXXFLAGS -Wunreachable-code-loop-increment"],,[[$CXXFLAG_WERROR]])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wformat -Wformat-security], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wvla], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wshadow-field], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wswitch], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wthread-safety], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wrange-loop-analysis], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wredundant-decls], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wunused-variable], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wunused-member-function], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wdate-time], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wconditional-uninitialized], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wsign-compare], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wduplicated-branches], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wduplicated-cond], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wlogical-op], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Woverloaded-virtual], [WARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wsuggest-override], [WARN_CXXFLAGS],
+                               [AC_LANG_SOURCE([[struct A { virtual void f(); }; struct B : A { void f() final; };]])])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wunreachable-code-loop-increment], [WARN_CXXFLAGS])
 
   dnl Some compilers (gcc) ignore unknown -Wno-* options, but warn about all
   dnl unknown options if any other warning is produced. Test the -Wfoo case, and
   dnl set the -Wno-foo case if it works.
-  AX_CHECK_COMPILE_FLAG([-Wunused-parameter],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-unused-parameter"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wself-assign],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-self-assign"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wunused-local-typedef],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-unused-local-typedef"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wdeprecated-register],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-deprecated-register"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wimplicit-fallthrough],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-implicit-fallthrough"],,[[$CXXFLAG_WERROR]])
-  AX_CHECK_COMPILE_FLAG([-Wdeprecated-copy],[NOWARN_CXXFLAGS="$NOWARN_CXXFLAGS -Wno-deprecated-copy"],,[[$CXXFLAG_WERROR]])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wunused-parameter], [NOWARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wself-assign], [NOWARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wunused-local-typedef], [NOWARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wdeprecated-register], [NOWARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wimplicit-fallthrough], [NOWARN_CXXFLAGS])
+  BITCOIN_TRY_ADD_COMPILE_FLAG([-Wdeprecated-copy], [NOWARN_CXXFLAGS])
 fi
 
 dnl Don't allow extended (non-ASCII) symbols in identifiers. This is easier for code review.
-AX_CHECK_COMPILE_FLAG([-fno-extended-identifiers],[[CXXFLAGS="$CXXFLAGS -fno-extended-identifiers"]],,[[$CXXFLAG_WERROR]])
+BITCOIN_TRY_ADD_COMPILE_FLAG([-fno-extended-identifiers], [CXXFLAGS])
 
 enable_sse42=no
 enable_sse41=no
