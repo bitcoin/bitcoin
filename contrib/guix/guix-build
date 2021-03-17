@@ -195,6 +195,7 @@ time-machine() {
                       --commit=490e39ff303f4f6873a04bfb8253755bdae1b29c \
                       --cores="$JOBS" \
                       --keep-failed \
+                      --fallback \
                       ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
                       ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_TIMEMACHINE_FLAGS} \
                       -- "$@"
@@ -344,6 +345,7 @@ EOF
                                  ${SDK_PATH:+--share="$SDK_PATH"} \
                                  --cores="$JOBS" \
                                  --keep-failed \
+                                 --fallback \
                                  --link-profile \
                                  ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
                                  ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS} \
