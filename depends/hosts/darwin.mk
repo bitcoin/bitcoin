@@ -12,14 +12,13 @@ ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
 # FORCE_USE_SYSTEM_CLANG is empty, so we use our depends-managed, pinned clang
 # from llvm.org
 
-# The native_cctools package is what provides clang when FORCE_USE_SYSTEM_CLANG
-# is empty
+# Clang is a dependency of native_cctools when FORCE_USE_SYSTEM_CLANG is empty
 darwin_native_toolchain=native_cctools
 
 clang_prog=$(build_prefix)/bin/clang
 clangxx_prog=$(clang_prog)++
 
-clang_resource_dir=$(build_prefix)/lib/clang/$(native_cctools_clang_version)
+clang_resource_dir=$(build_prefix)/lib/clang/$(native_clang_version)
 else
 # FORCE_USE_SYSTEM_CLANG is non-empty, so we use the clang from the user's
 # system
