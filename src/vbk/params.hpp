@@ -49,15 +49,7 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
 };
 
 void printConfig(const altintegration::Config& config);
-void selectPopConfig(const ArgsManager& mgr, std::string vbk = "test", std::string btc = "test");
-void selectPopConfig(
-    const std::string& btcnet,
-    const std::string& vbknet,
-    bool popautoconfig = true,
-    int btcstart = 0,
-    const std::string& btcblocks = {},
-    int vbkstart = 0,
-    const std::string& vbkblocks = {});
+void selectPopConfig(const std::string& network = "test");
 
 } // namespace VeriBlock
 
