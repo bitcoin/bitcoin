@@ -44,7 +44,7 @@ BlockAssembler MinerTestingSetup::AssemblerForTest(const CChainParams& params)
 
     options.nBlockMaxWeight = MAX_BLOCK_WEIGHT;
     options.blockMinFeeRate = blockMinFeeRate;
-    return BlockAssembler(*m_node.mempool, params, options);
+    return BlockAssembler(::ChainstateActive(), *m_node.mempool, params, options);
 }
 
 constexpr static struct {

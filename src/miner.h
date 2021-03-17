@@ -146,6 +146,7 @@ private:
     int64_t nLockTimeCutoff;
     const CChainParams& chainparams;
     const CTxMemPool& m_mempool;
+    CChainState& m_chainstate;
 
 public:
     struct Options {
@@ -154,8 +155,8 @@ public:
         CFeeRate blockMinFeeRate;
     };
 
-    explicit BlockAssembler(const CTxMemPool& mempool, const CChainParams& params);
-    explicit BlockAssembler(const CTxMemPool& mempool, const CChainParams& params, const Options& options);
+    explicit BlockAssembler(CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params);
+    explicit BlockAssembler(CChainState& chainstate, const CTxMemPool& mempool, const CChainParams& params, const Options& options);
 
     /** Construct a new block template with coinbase to scriptPubKeyIn */
     std::unique_ptr<CBlockTemplate> CreateNewBlock(const CScript& scriptPubKeyIn);
@@ -201,6 +202,7 @@ private:
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce);
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
 
+// TODO just accept a CBlockIndex*
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
 void RegenerateCommitments(CBlock& block, BlockManager& blockman);
 
