@@ -124,20 +124,20 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
     int ret = sqlite3_prepare_v2(m_db, "PRAGMA application_id", -1, &app_id_stmt, nullptr);
     if (ret != SQLITE_OK) {
         sqlite3_finalize(app_id_stmt);
-        error = strprintf(_("SQLiteDatabase: Failed to prepare the statement to fetch the application id: %s"), sqlite3_errstr(ret));
+        error = strprintf(_("SQLiteDatabase: Failed to prepare the statement to fetch the application ID: %s"), sqlite3_errstr(ret));
         return false;
     }
     ret = sqlite3_step(app_id_stmt);
     if (ret != SQLITE_ROW) {
         sqlite3_finalize(app_id_stmt);
-        error = strprintf(_("SQLiteDatabase: Failed to fetch the application id: %s"), sqlite3_errstr(ret));
+        error = strprintf(_("SQLiteDatabase: Failed to fetch the application ID: %s"), sqlite3_errstr(ret));
         return false;
     }
     uint32_t app_id = static_cast<uint32_t>(sqlite3_column_int(app_id_stmt, 0));
     sqlite3_finalize(app_id_stmt);
     uint32_t net_magic = ReadBE32(Params().MessageStart());
     if (app_id != net_magic) {
-        error = strprintf(_("SQLiteDatabase: Unexpected application id. Expected %u, got %u"), net_magic, app_id);
+        error = strprintf(_("SQLiteDatabase: Unexpected application ID. Expected %u, got %u"), net_magic, app_id);
         return false;
     }
 

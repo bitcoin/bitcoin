@@ -364,9 +364,9 @@ void BitcoinGUI::createActions()
     showHelpMessageAction->setMenuRole(QAction::NoRole);
     showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Bitcoin command-line options").arg(PACKAGE_NAME));
 
-    m_mask_values_action = new QAction(tr("&Mask values"), this);
+    m_mask_values_action = new QAction(tr("&Mask amounts"), this);
     m_mask_values_action->setShortcut(QKeySequence(Qt::CTRL + Qt::SHIFT + Qt::Key_M));
-    m_mask_values_action->setStatusTip(tr("Mask the values in the Overview tab"));
+    m_mask_values_action->setStatusTip(tr("Mask amounts in the Overview tab"));
     m_mask_values_action->setCheckable(true);
 
     connect(quitAction, &QAction::triggered, qApp, QApplication::quit);

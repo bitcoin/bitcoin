@@ -1403,7 +1403,7 @@ static RPCHelpMan finalizepsbt()
 static RPCHelpMan createpsbt()
 {
     return RPCHelpMan{"createpsbt",
-                "\nCreates a transaction in the Partially Signed Transaction format.\n"
+                "\nCreates a transaction in the Partially Signed Bitcoin Transaction format.\n"
                 "Implements the Creator role.\n",
                 {
                     {"inputs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The json objects",

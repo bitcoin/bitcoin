@@ -212,10 +212,10 @@
              <enum>Qt::StrongFocus</enum>
             </property>
             <property name="toolTip">
-             <string>Native segwit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</string>
+             <string>Native SegWit addresses (aka Bech32 or BIP-173) reduce your transaction fees later on and offer better protection against typos, but old wallets don't support them. When unchecked, an address compatible with older wallets will be created instead.</string>
             </property>
             <property name="text">
-             <string>Generate native segwit (Bech32) address</string>
+             <string>Generate native SegWit (Bech32) address</string>
             </property>
            </widget>
           </item>

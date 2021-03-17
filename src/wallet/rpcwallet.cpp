@@ -4336,7 +4336,7 @@ static RPCHelpMan walletprocesspsbt()
 static RPCHelpMan walletcreatefundedpsbt()
 {
     return RPCHelpMan{"walletcreatefundedpsbt",
-                "\nCreates and funds a transaction in the Partially Signed Transaction format.\n"
+                "\nCreates and funds a transaction in the Partially Signed Bitcoin Transaction format.\n"
                 "Implements the Creator and Updater roles.\n",
                 {
                     {"inputs", RPCArg::Type::ARR, RPCArg::Optional::OMITTED_NAMED_ARG, "Leave empty to add inputs automatically. See add_inputs option.",

@@ -83,7 +83,7 @@ void PSBTOperationsDialog::signTransaction()
         showStatus(tr("Signed %1 inputs, but more signatures are still required.").arg(n_signed),
             StatusLevel::INFO);
     } else {
-        showStatus(tr("Signed transaction successfully. Transaction is ready to broadcast."),
+        showStatus(tr("Signed transaction successfully. Transaction is ready to be broadcast."),
             StatusLevel::INFO);
         m_ui->broadcastTransactionButton->setEnabled(true);
     }
@@ -141,7 +141,7 @@ void PSBTOperationsDialog::saveTransaction() {
     filename_suggestion.append(".psbt");
     QString filename = GUIUtil::getSaveFileName(this,
         tr("Save Transaction Data"), filename_suggestion,
-        tr("Partially Signed Transaction (Binary)", "Name of binary PSBT file format") + QLatin1String(" (*.psbt)"), &selected_filter);
+        tr("Partially Signed Bitcoin Transaction (Binary)", "Name of binary PSBT file format") + QLatin1String(" (*.psbt)"), &selected_filter);
     if (filename.isEmpty()) {
         return;
     }
