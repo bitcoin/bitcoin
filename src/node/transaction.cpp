@@ -38,6 +38,7 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
     bool callback_set = false;
 
     { // cs_main scope
+    assert(node.chainman);
     LOCK(cs_main);
     assert(std::addressof(::ChainstateActive()) == std::addressof(node.chainman->ActiveChainstate()));
     // If the transaction is already confirmed in the chain, don't do anything
