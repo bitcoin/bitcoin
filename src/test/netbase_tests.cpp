@@ -588,4 +588,15 @@ BOOST_AUTO_TEST_CASE(caddress_unserialize_v2)
     BOOST_CHECK(fixture_addresses == addresses_unserialized);
 }
 
+BOOST_AUTO_TEST_CASE(cservice_compare)
+{
+    BOOST_CHECK(LookupNumeric("1.1.1.1:555") == LookupNumeric("1.1.1.1:555"));
+    BOOST_CHECK(LookupNumeric("1.1.1.1:555") != LookupNumeric("1.1.1.1:666"));
+    BOOST_CHECK(LookupNumeric("1.1.1.1:555") != LookupNumeric("2.2.2.2:555"));
+
+    const std::string i2p_addr{"ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkdq.b32.i2p"};
+    BOOST_CHECK(LookupNumeric(i2p_addr + ":555") == LookupNumeric(i2p_addr + ":555"));
+    BOOST_CHECK(LookupNumeric(i2p_addr + ":555") == LookupNumeric(i2p_addr + ":666"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -587,4 +587,13 @@ class CService : public CNetAddr
 
 bool SanityCheckASMap(const std::vector<bool>& asmap);
 
+/**
+ * Check if a given network uses ports in addition to addresses to identify peers.
+ * The familiar concept of "a TCP port 8333 in 1.2.3.4:8333" does not apply to some
+ * networks or at least in the way we use them.
+ * @param[in] net The network to check.
+ * @return true if ports are being used on the given network.
+ */
+static inline bool UsesPorts(Network net) { return net != NET_I2P; }
+
 #endif // BITCOIN_NETADDRESS_H

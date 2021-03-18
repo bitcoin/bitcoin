@@ -985,7 +985,13 @@ uint16_t CService::GetPort() const
 
 bool operator==(const CService& a, const CService& b)
 {
-    return static_cast<CNetAddr>(a) == static_cast<CNetAddr>(b) && a.port == b.port;
+    if (static_cast<CNetAddr>(a) != static_cast<CNetAddr>(b)) {
+        return false;
+    }
+    if (UsesPorts(a.GetNetwork())) {
+        return a.port == b.port;
+    }
+    return true;
 }
 
 /**
