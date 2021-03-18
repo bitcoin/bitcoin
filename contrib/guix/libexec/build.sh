@@ -329,7 +329,7 @@ mkdir -p "$DISTSRC"
                 find . -print0 \
                     | sort --zero-terminated \
                     | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
-                    | gzip -9n > "${OUTDIR}/${DISTNAME}-osx-unsigned.tar.gz" \
+                    | pigz -9n > "${OUTDIR}/${DISTNAME}-osx-unsigned.tar.gz" \
                     || ( rm -f "${OUTDIR}/${DISTNAME}-osx-unsigned.tar.gz" && exit 1 )
             )
             make deploy ${V:+V=1} OSX_DMG="${OUTDIR}/${DISTNAME}-osx-unsigned.dmg"
@@ -392,19 +392,19 @@ mkdir -p "$DISTSRC"
                 find "${DISTNAME}" -not -name "*.dbg" -print0 \
                     | sort --zero-terminated \
                     | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
-                    | gzip -9n > "${OUTDIR}/${DISTNAME}-${HOST}.tar.gz" \
+                    | pigz -9n > "${OUTDIR}/${DISTNAME}-${HOST}.tar.gz" \
                     || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST}.tar.gz" && exit 1 )
                 find "${DISTNAME}" -name "*.dbg" -print0 \
                     | sort --zero-terminated \
                     | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
-                    | gzip -9n > "${OUTDIR}/${DISTNAME}-${HOST}-debug.tar.gz" \
+                    | pigz -9n > "${OUTDIR}/${DISTNAME}-${HOST}-debug.tar.gz" \
                     || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST}-debug.tar.gz" && exit 1 )
                 ;;
             *darwin*)
                 find "${DISTNAME}" -print0 \
                     | sort --zero-terminated \
                     | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
-                    | gzip -9n > "${OUTDIR}/${DISTNAME}-${HOST//x86_64-apple-darwin18/osx64}.tar.gz" \
+                    | pigz -9n > "${OUTDIR}/${DISTNAME}-${HOST//x86_64-apple-darwin18/osx64}.tar.gz" \
                     || ( rm -f "${OUTDIR}/${DISTNAME}-${HOST//x86_64-apple-darwin18/osx64}.tar.gz" && exit 1 )
                 ;;
         esac
@@ -420,7 +420,7 @@ mkdir -p "$DISTSRC"
                 find . -print0 \
                     | sort --zero-terminated \
                     | tar --create --no-recursion --mode='u+rw,go+r-w,a+X' --null --files-from=- \
-                    | gzip -9n > "${OUTDIR}/${DISTNAME}-win-unsigned.tar.gz" \
+                    | pigz -9n > "${OUTDIR}/${DISTNAME}-win-unsigned.tar.gz" \
                     || ( rm -f "${OUTDIR}/${DISTNAME}-win-unsigned.tar.gz" && exit 1 )
             )
             ;;

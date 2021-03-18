@@ -214,6 +214,7 @@ chain for " target " development."))
         gzip
         xz
         zlib
+        pigz
         ;; Build tools
         gnu-make
         libtool
