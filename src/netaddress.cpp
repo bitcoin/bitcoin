@@ -988,11 +988,6 @@ bool operator==(const CService& a, const CService& b)
     return static_cast<CNetAddr>(a) == static_cast<CNetAddr>(b) && a.port == b.port;
 }
 
-bool operator<(const CService& a, const CService& b)
-{
-    return static_cast<CNetAddr>(a) < static_cast<CNetAddr>(b) || (static_cast<CNetAddr>(a) == static_cast<CNetAddr>(b) && a.port < b.port);
-}
-
 /**
  * Obtain the IPv4/6 socket address this represents.
  *

@@ -563,7 +563,13 @@ class CService : public CNetAddr
         bool SetSockAddr(const struct sockaddr* paddr);
         friend bool operator==(const CService& a, const CService& b);
         friend bool operator!=(const CService& a, const CService& b) { return !(a == b); }
-        friend bool operator<(const CService& a, const CService& b);
+
+        /**
+         * Avoid silently, unintentionally falling back to comparing CService objects as
+         * CNetAddr objects.
+         */
+        bool operator<(const CService&) = delete;
+
         std::vector<unsigned char> GetKey() const;
         std::string ToString() const;
         std::string ToStringPort() const;
