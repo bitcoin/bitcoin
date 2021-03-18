@@ -5,6 +5,7 @@
 import time
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
+from decimal import Decimal
 
 ZDAG_NOT_FOUND = -1
 ZDAG_STATUS_OK = 0
@@ -47,6 +48,8 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
         time.sleep(0.25)
         self.sync_mempools(self.nodes[0:3],timeout=30)
         time.sleep(0.25)
+        self.sync_mempools(self.nodes,timeout=30)
+        assert_equal(self.nodes[3].assetallocationbalance(self.asset, [], 0)['asset_amount'], Decimal('0.0001'))
         tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress0, 1, 0, False)['txid']
         # dbl spend outputs from tx3 (tx4 and tx5 should be flagged as conflict)
         tx4a = self.nodes[2].assetallocationsend(self.asset, useraddress0, 1, 0, False)['txid']
