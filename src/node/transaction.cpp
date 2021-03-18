@@ -19,9 +19,9 @@
 TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef tx, std::string& err_string, const CAmount& max_tx_fee, bool relay, bool wait_callback, bool bypass_limits)
 {
     // BroadcastTransaction can be called by either sendrawtransaction RPC or wallet RPCs.
-    // g_connman is assigned both before chain clients and before RPC server is accepting calls,
-    // and reset after chain clients and RPC sever are stopped. g_connman should never be null here.
-    assert(node.connman);
+    // node.peerman is assigned both before chain clients and before RPC server is accepting calls,
+    // and reset after chain clients and RPC sever are stopped. node.peerman should never be null here.
+    assert(node.peerman);
     assert(node.mempool);
     std::promise<void> promise;
     uint256 hashTx = tx->GetHash();
@@ -87,7 +87,8 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         // best-effort of initial broadcast
         node.mempool->AddUnbroadcastTx(hashTx);
 
-        RelayTransaction(hashTx, *node.connman);
+        LOCK(cs_main);
+        node.peerman->RelayTransaction(hashTx);
     }
 
     return TransactionError::OK;

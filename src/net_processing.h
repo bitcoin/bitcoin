@@ -52,6 +52,10 @@ public:
     /** Whether this node ignores txs received over p2p. */
     virtual bool IgnoresIncomingTxs() = 0;
 
+    /** Relay transaction to all peers. */
+    virtual void RelayTransaction(const uint256& txid)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main) = 0;
+
     /** Set the best height */
     virtual void SetBestHeight(int height) = 0;
 
@@ -77,7 +81,5 @@ void EraseObjectRequest(NodeId nodeId, const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED
 void RequestObject(NodeId nodeId, const CInv& inv, std::chrono::microseconds current_time, bool fForce=false) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 size_t GetRequestedObjectCount(NodeId nodeId) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
-/** Relay transaction to every node */
-void RelayTransaction(const uint256&, const CConnman& connman);
 
 #endif // BITCOIN_NET_PROCESSING_H
