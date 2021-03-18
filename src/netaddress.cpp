@@ -1054,7 +1054,9 @@ std::string CService::ToStringPort() const
 
 std::string CService::ToStringIPPort() const
 {
-    if (IsIPv4() || IsTor() || IsI2P() || IsInternal()) {
+    if (!UsesPorts(GetNetwork())) {
+        return ToStringIP();
+    } else if (IsIPv4() || IsTor() || IsInternal()) {
         return ToStringIP() + ":" + ToStringPort();
     } else {
         return "[" + ToStringIP() + "]:" + ToStringPort();

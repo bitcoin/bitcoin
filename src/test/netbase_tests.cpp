@@ -131,6 +131,11 @@ BOOST_AUTO_TEST_CASE(netbase_lookupnumeric)
     BOOST_CHECK(TestParse("[fd6b:88c0:8724:1:2:3:4:5]", "[::]:0"));
     // and that a one-off resolves correctly
     BOOST_CHECK(TestParse("[fd6c:88c0:8724:1:2:3:4:5]", "[fd6c:88c0:8724:1:2:3:4:5]:65535"));
+
+    // I2P skips the port.
+    const std::string i2p_addr{"ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkdq.b32.i2p"};
+    BOOST_CHECK(TestParse(i2p_addr, i2p_addr));
+    BOOST_CHECK(TestParse(i2p_addr + ":8333", i2p_addr));
 }
 
 BOOST_AUTO_TEST_CASE(onioncat_test)
