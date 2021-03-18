@@ -144,6 +144,7 @@ BITCOIN_CORE_H = \
   core_memusage.h \
   cuckoocache.h \
   dbwrapper.h \
+  external_signer.h \
   flatfile.h \
   fs.h \
   httprpc.h \
@@ -267,13 +268,11 @@ BITCOIN_CORE_H = \
   wallet/crypter.h \
   wallet/db.h \
   wallet/dump.h \
-  wallet/external_signer.h \
   wallet/external_signer_scriptpubkeyman.h \
   wallet/feebumper.h \
   wallet/fees.h \
   wallet/ismine.h \
   wallet/load.h \
-  wallet/rpcsigner.h \
   wallet/rpcwallet.h \
   wallet/salvage.h \
   wallet/scriptpubkeyman.h \
@@ -387,13 +386,11 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/db.cpp \
   wallet/dump.cpp \
   wallet/external_signer_scriptpubkeyman.cpp \
-  wallet/external_signer.cpp \
   wallet/feebumper.cpp \
   wallet/fees.cpp \
   wallet/interfaces.cpp \
   wallet/load.cpp \
   wallet/rpcdump.cpp \
-  wallet/rpcsigner.cpp \
   wallet/rpcwallet.cpp \
   wallet/scriptpubkeyman.cpp \
   wallet/wallet.cpp \
@@ -520,6 +517,7 @@ libbitcoin_common_a_SOURCES = \
   compressor.cpp \
   core_read.cpp \
   core_write.cpp \
+  external_signer.cpp \
   key.cpp \
   key_io.cpp \
   merkleblock.cpp \
@@ -532,6 +530,7 @@ libbitcoin_common_a_SOURCES = \
   protocol.cpp \
   psbt.cpp \
   rpc/rawtransaction_util.cpp \
+  rpc/external_signer.cpp \
   rpc/util.cpp \
   scheduler.cpp \
   script/descriptor.cpp \
