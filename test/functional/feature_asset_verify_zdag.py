@@ -5,7 +5,6 @@
 import time
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
-from decimal import Decimal
 
 ZDAG_NOT_FOUND = -1
 ZDAG_STATUS_OK = 0
@@ -41,10 +40,13 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
         self.nodes[0].assetsend(self.asset, useraddress0, 1.5)
         self.nodes[0].generate(1)
         tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001, 0, False)['txid']
+        time.sleep(0.25)
         tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001, 0, False)['txid']
+        time.sleep(0.25)
         tx3 = self.nodes[0].assetallocationsend(self.asset, useraddress0, 1, 0, False)['txid']
-        self.sync_mempools(self.nodes,timeout=30)
-        assert_equal(self.nodes[3].assetallocationbalance(self.asset, [], 0)['asset_amount'], Decimal('0.0001'))
+        time.sleep(0.25)
+        self.sync_mempools(self.nodes[0:3],timeout=30)
+        time.sleep(0.25)
         tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress0, 1, 0, False)['txid']
         # dbl spend outputs from tx3 (tx4 and tx5 should be flagged as conflict)
         tx4a = self.nodes[2].assetallocationsend(self.asset, useraddress0, 1, 0, False)['txid']
@@ -85,10 +87,15 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
         self.nodes[0].assetsend(self.asset, useraddress0, 1.5)
         self.nodes[0].generate(1)
         tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001)['txid']
+        time.sleep(0.25)
         tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001)['txid']
+        time.sleep(0.25)
         tx3 = self.nodes[0].assetallocationburn(self.asset, 1, '0x9f90b5093f35aeac5fbaeb591f9c9de8e2844a46')['txid']
+        time.sleep(0.25)
         tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, 0.001)['txid']
+        time.sleep(0.25)
         tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.002)['txid']
+        time.sleep(0.25)
         self.sync_mempools(self.nodes[0:3],timeout=30)
         for i in range(3):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)
@@ -107,10 +114,15 @@ class AssetVerifyZDAGTest(SyscoinTestFramework):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx5)['status'], ZDAG_NOT_FOUND)
 
         tx1 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.00001)['txid']
+        time.sleep(0.25)
         tx2 = self.nodes[0].assetallocationsend(self.asset, useraddress3, 0.0001)['txid']
+        time.sleep(0.25)
         tx3 = self.nodes[0].assetupdate(self.asset, '', '', 127, '', {}, {})['txid']
+        time.sleep(0.25)
         tx4 = self.nodes[0].assetallocationsend(self.asset, useraddress1, 0.001)['txid']
+        time.sleep(0.25)
         tx5 = self.nodes[0].assetallocationsend(self.asset, useraddress2, 0.002)['txid']
+        time.sleep(0.25)
         self.sync_mempools(self.nodes[0:3],timeout=30)
         for i in range(3):
             assert_equal(self.nodes[i].assetallocationverifyzdag(tx1)['status'], ZDAG_STATUS_OK)
