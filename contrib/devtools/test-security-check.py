@@ -5,6 +5,7 @@
 '''
 Test script for security-check.py
 '''
+import os
 import subprocess
 import unittest
 
@@ -18,6 +19,10 @@ def write_testcode(filename):
         return 0;
     }
     ''')
+
+def clean_files(source, executable):
+    os.remove(source)
+    os.remove(executable)
 
 def call_security_check(cc, source, executable, options):
     subprocess.run([cc,source,'-o',executable] + options, check=True)
@@ -44,6 +49,8 @@ class TestSecurityChecks(unittest.TestCase):
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-znoexecstack','-fstack-protector-all','-Wl,-zrelro','-Wl,-z,now','-pie','-fPIE', '-Wl,-z,separate-code']),
                 (0, ''))
 
+        clean_files(source, executable)
+
     def test_PE(self):
         source = 'test1.c'
         executable = 'test1.exe'
@@ -60,6 +67,8 @@ class TestSecurityChecks(unittest.TestCase):
             (1, executable+': failed RELOC_SECTION'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,--nxcompat','-Wl,--dynamicbase','-Wl,--high-entropy-va','-pie','-fPIE']),
             (0, ''))
+
+        clean_files(source, executable)
 
     def test_MACHO(self):
         source = 'test1.c'
@@ -79,6 +88,8 @@ class TestSecurityChecks(unittest.TestCase):
             (1, executable+': failed PIE'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-pie','-Wl,-bind_at_load','-fstack-protector-all']),
             (0, ''))
+
+        clean_files(source, executable)
 
 if __name__ == '__main__':
     unittest.main()
