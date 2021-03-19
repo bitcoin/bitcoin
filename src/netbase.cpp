@@ -194,12 +194,12 @@ bool LookupHost(const std::string& name, CNetAddr& addr, bool fAllowLookup, DNSL
     return true;
 }
 
-bool Lookup(const std::string& name, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions, DNSLookupFn dns_lookup_function)
+bool Lookup(const std::string& name, std::vector<CService>& vAddr, uint16_t portDefault, bool fAllowLookup, unsigned int nMaxSolutions, DNSLookupFn dns_lookup_function)
 {
     if (name.empty() || !ValidAsCString(name)) {
         return false;
     }
-    int port = portDefault;
+    uint16_t port{portDefault};
     std::string hostname;
     SplitHostPort(name, port, hostname);
 
@@ -213,7 +213,7 @@ bool Lookup(const std::string& name, std::vector<CService>& vAddr, int portDefau
     return true;
 }
 
-bool Lookup(const std::string& name, CService& addr, int portDefault, bool fAllowLookup, DNSLookupFn dns_lookup_function)
+bool Lookup(const std::string& name, CService& addr, uint16_t portDefault, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
     if (!ValidAsCString(name)) {
         return false;
@@ -226,7 +226,7 @@ bool Lookup(const std::string& name, CService& addr, int portDefault, bool fAllo
     return true;
 }
 
-CService LookupNumeric(const std::string& name, int portDefault, DNSLookupFn dns_lookup_function)
+CService LookupNumeric(const std::string& name, uint16_t portDefault, DNSLookupFn dns_lookup_function)
 {
     if (!ValidAsCString(name)) {
         return {};
@@ -363,7 +363,7 @@ static std::string Socks5ErrorString(uint8_t err)
     }
 }
 
-bool Socks5(const std::string& strDest, int port, const ProxyCredentials* auth, const Sock& sock)
+bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* auth, const Sock& sock)
 {
     IntrRecvError recvr;
     LogPrint(BCLog::NET, "SOCKS5 connecting %s\n", strDest);
@@ -665,7 +665,7 @@ bool IsProxy(const CNetAddr &addr) {
     return false;
 }
 
-bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, int port, const Sock& sock, int nTimeout, bool& outProxyConnectionFailed)
+bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, uint16_t port, const Sock& sock, int nTimeout, bool& outProxyConnectionFailed)
 {
     // first connect to proxy server
     if (!ConnectSocketDirectly(proxy.proxy, sock.Get(), nTimeout, true)) {
@@ -677,11 +677,11 @@ bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, int
         ProxyCredentials random_auth;
         static std::atomic_int counter(0);
         random_auth.username = random_auth.password = strprintf("%i", counter++);
-        if (!Socks5(strDest, (uint16_t)port, &random_auth, sock)) {
+        if (!Socks5(strDest, port, &random_auth, sock)) {
             return false;
         }
     } else {
-        if (!Socks5(strDest, (uint16_t)port, 0, sock)) {
+        if (!Socks5(strDest, port, 0, sock)) {
             return false;
         }
     }

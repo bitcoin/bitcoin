@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <netaddress.h>
 #include <netbase.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
@@ -38,7 +39,7 @@ FUZZ_TARGET_INIT(socks5, initialize_socks5)
     // This Socks5(...) fuzzing harness would have caught CVE-2017-18350 within
     // a few seconds of fuzzing.
     (void)Socks5(fuzzed_data_provider.ConsumeRandomLengthString(512),
-                 fuzzed_data_provider.ConsumeIntegral<int>(),
+                 fuzzed_data_provider.ConsumeIntegral<uint16_t>(),
                  fuzzed_data_provider.ConsumeBool() ? &proxy_credentials : nullptr,
                  fuzzed_sock);
 }
