@@ -64,9 +64,9 @@ std::string EncodeBase32(Span<const unsigned char> input, bool pad = true);
  * is a multiple of 8.
  */
 std::string EncodeBase32(const std::string& str, bool pad = true);
-
+// SYSCOIN
 std::string itostr(int n);
-void SplitHostPort(std::string in, int& portOut, std::string& hostOut);
+void SplitHostPort(std::string in, uint16_t& portOut, std::string& hostOut);
 int64_t atoi64(const std::string& str);
 int atoi(const std::string& str);
 
@@ -116,6 +116,13 @@ constexpr inline bool IsSpace(char c) noexcept {
  */
 [[nodiscard]] bool ParseUInt8(const std::string& str, uint8_t *out);
 [[nodiscard]] bool ParseUInt8FromHex(const std::string& str, uint8_t *out);
+/**
+ * Convert decimal string to unsigned 16-bit integer with strict parse error feedback.
+ * @returns true if the entire string could be parsed as valid integer,
+ *   false if the entire string could not be parsed or if overflow or underflow occurred.
+ */
+[[nodiscard]] bool ParseUInt16(const std::string& str, uint16_t* out);
+
 /**
  * Convert decimal string to unsigned 32-bit integer with strict parse error feedback.
  * @returns true if the entire string could be parsed as valid integer,

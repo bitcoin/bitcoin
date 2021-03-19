@@ -8,6 +8,7 @@
 #include <clientversion.h>
 #include <cstdint>
 #include <net.h>
+#include <netaddress.h>
 #include <netbase.h>
 #include <serialize.h>
 #include <span.h>
@@ -91,7 +92,7 @@ BOOST_FIXTURE_TEST_SUITE(net_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(cnode_listen_port)
 {
     // test default
-    uint16_t port = GetListenPort();
+    uint16_t port{GetListenPort()};
     BOOST_CHECK(port == Params().GetDefaultPort());
     // test set port
     uint16_t altPort = 12345;

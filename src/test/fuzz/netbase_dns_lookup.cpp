@@ -32,7 +32,16 @@ FUZZ_TARGET(netbase_dns_lookup)
     const std::string name = fuzzed_data_provider.ConsumeRandomLengthString(512);
     const unsigned int max_results = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
     const bool allow_lookup = fuzzed_data_provider.ConsumeBool();
-    const int default_port = fuzzed_data_provider.ConsumeIntegral<int>();
+    const uint16_t default_port = fuzzed_data_provider.ConsumeIntegral<uint16_t>();
+
+    auto fuzzed_dns_lookup_function = [&](const std::string&, bool) {
+        std::vector<CNetAddr> resolved_addresses;
+        while (fuzzed_data_provider.ConsumeBool()) {
+            resolved_addresses.push_back(ConsumeNetAddr(fuzzed_data_provider));
+        }
+        return resolved_addresses;
+    };
+
     {
         std::vector<CNetAddr> resolved_addresses;
         if (LookupHost(name, resolved_addresses, max_results, allow_lookup, fuzzed_dns_lookup_function)) {
