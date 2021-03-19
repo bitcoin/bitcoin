@@ -1335,7 +1335,8 @@ bool SetupNetworking()
 
 int GetNumCores()
 {
-    return std::thread::hardware_concurrency();
+    // hardcoded for testing
+    return 2;
 }
 
 std::string CopyrightHolders(const std::string& strPrefix)
