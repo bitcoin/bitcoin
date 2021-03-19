@@ -27,6 +27,7 @@ static const std::string SAFE_CHARS[] =
 std::string SanitizeString(const std::string& str, int rule)
 {
     std::string strResult;
+    strResult.reserve(str.size());
     for (std::string::size_type i = 0; i < str.size(); i++)
     {
         if (SAFE_CHARS[rule].find(str[i]) != std::string::npos)
@@ -81,10 +82,12 @@ bool IsHexNumber(const std::string& str)
     return (str.size() > starting_location);
 }
 
-std::vector<unsigned char> ParseHex(const char* psz)
+std::vector<unsigned char> ParseHex(const std::string& str)
 {
     // convert hex dump to vector
     std::vector<unsigned char> vch;
+    vch.reserve(str.size() / 2);
+    auto psz = str.cbegin();
     while (true)
     {
         while (IsSpace(*psz))
@@ -100,11 +103,6 @@ std::vector<unsigned char> ParseHex(const char* psz)
         vch.push_back(n);
     }
     return vch;
-}
-
-std::vector<unsigned char> ParseHex(const std::string& str)
-{
-    return ParseHex(str.c_str());
 }
 
 void SplitHostPort(std::string in, int &portOut, std::string &hostOut) {
