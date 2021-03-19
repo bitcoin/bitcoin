@@ -7,7 +7,6 @@
 #include <net.h>
 #include <net_permissions.h>
 #include <netaddress.h>
-#include <optional.h>
 #include <protocol.h>
 #include <random.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -17,6 +16,7 @@
 #include <test/util/setup_common.h>
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 

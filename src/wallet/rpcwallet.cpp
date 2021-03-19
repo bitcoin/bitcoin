@@ -8,7 +8,6 @@
 #include <interfaces/chain.h>
 #include <key_io.h>
 #include <node/context.h>
-#include <optional.h>
 #include <outputtype.h>
 #include <policy/feerate.h>
 #include <policy/fees.h>
@@ -38,6 +37,7 @@
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 
+#include <optional>
 #include <stdint.h>
 
 #include <univalue.h>
@@ -219,7 +219,7 @@ static void SetFeeEstimateMode(const CWallet& wallet, CCoinControl& cc, const Un
         cc.m_feerate = CFeeRate(AmountFromValue(fee_rate), COIN);
         if (override_min_fee) cc.fOverrideFeeRate = true;
         // Default RBF to true for explicit fee_rate, if unset.
-        if (cc.m_signal_bip125_rbf == nullopt) cc.m_signal_bip125_rbf = true;
+        if (!cc.m_signal_bip125_rbf) cc.m_signal_bip125_rbf = true;
         return;
     }
     if (!estimate_mode.isNull() && !FeeModeFromString(estimate_mode.get_str(), cc.m_fee_mode)) {
@@ -1564,8 +1564,8 @@ static RPCHelpMan listsinceblock()
 
     LOCK(wallet.cs_wallet);
 
-    Optional<int> height;    // Height of the specified block or the common ancestor, if the block provided was in a deactivated chain.
-    Optional<int> altheight; // Height of the specified block, even if it's in a deactivated chain.
+    std::optional<int> height;    // Height of the specified block or the common ancestor, if the block provided was in a deactivated chain.
+    std::optional<int> altheight; // Height of the specified block, even if it's in a deactivated chain.
     int target_confirms = 1;
     isminefilter filter = ISMINE_SPENDABLE;
 
@@ -2590,7 +2590,7 @@ static RPCHelpMan loadwallet()
     options.require_existing = true;
     bilingual_str error;
     std::vector<bilingual_str> warnings;
-    Optional<bool> load_on_start = request.params[1].isNull() ? nullopt : Optional<bool>(request.params[1].get_bool());
+    std::optional<bool> load_on_start = request.params[1].isNull() ? std::nullopt : std::optional<bool>(request.params[1].get_bool());
     std::shared_ptr<CWallet> const wallet = LoadWallet(*context.chain, name, load_on_start, options, status, error, warnings);
     if (!wallet) {
         // Map bad format to not found, since bad format is returned when the
@@ -2764,7 +2764,7 @@ static RPCHelpMan createwallet()
     options.create_flags = flags;
     options.create_passphrase = passphrase;
     bilingual_str error;
-    Optional<bool> load_on_start = request.params[6].isNull() ? nullopt : Optional<bool>(request.params[6].get_bool());
+    std::optional<bool> load_on_start = request.params[6].isNull() ? std::nullopt : std::optional<bool>(request.params[6].get_bool());
     std::shared_ptr<CWallet> wallet = CreateWallet(*context.chain, request.params[0].get_str(), load_on_start, options, status, error, warnings);
     if (!wallet) {
         RPCErrorCode code = status == DatabaseStatus::FAILED_ENCRYPT ? RPC_WALLET_ENCRYPTION_FAILED : RPC_WALLET_ERROR;
@@ -2816,7 +2816,7 @@ static RPCHelpMan unloadwallet()
     // Note that any attempt to load the same wallet would fail until the wallet
     // is destroyed (see CheckUniqueFileid).
     std::vector<bilingual_str> warnings;
-    Optional<bool> load_on_start = request.params[1].isNull() ? nullopt : Optional<bool>(request.params[1].get_bool());
+    std::optional<bool> load_on_start = request.params[1].isNull() ? std::nullopt : std::optional<bool>(request.params[1].get_bool());
     if (!RemoveWallet(wallet, load_on_start, warnings)) {
         throw JSONRPCError(RPC_MISC_ERROR, "Requested wallet already unloaded");
     }
@@ -3587,7 +3587,7 @@ static RPCHelpMan rescanblockchain()
     }
 
     int start_height = 0;
-    Optional<int> stop_height;
+    std::optional<int> stop_height;
     uint256 start_block;
     {
         LOCK(pwallet->cs_wallet);
