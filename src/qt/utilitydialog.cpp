@@ -185,12 +185,12 @@ void HelpMessageDialog::on_okButton_accepted()
 
 
 /** "Shutdown" window */
-ShutdownWindow::ShutdownWindow(QWidget *parent, Qt::WindowFlags f):
+ShutdownWindow::ShutdownWindow(interfaces::Node& node, QWidget *parent, Qt::WindowFlags f):
     QWidget(parent, f)
 {
     setObjectName("ShutdownWindow");
 
-    GUIUtil::loadStyleSheet(this);
+    GUIUtil::loadStyleSheet(node, this);
 
     QVBoxLayout *layout = new QVBoxLayout();
     layout->addWidget(new QLabel(
@@ -201,13 +201,13 @@ ShutdownWindow::ShutdownWindow(QWidget *parent, Qt::WindowFlags f):
     GUIUtil::updateFonts();
 }
 
-QWidget *ShutdownWindow::showShutdownWindow(BitcoinGUI *window)
+QWidget *ShutdownWindow::showShutdownWindow(interfaces::Node& node, BitcoinGUI *window)
 {
     if (!window)
         return nullptr;
 
     // Show a simple window indicating shutdown status
-    QWidget *shutdownWindow = new ShutdownWindow();
+    QWidget *shutdownWindow = new ShutdownWindow(node);
     shutdownWindow->setWindowTitle(window->windowTitle());
 
     // Center shutdown window at where main window was

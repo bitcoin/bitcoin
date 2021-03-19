@@ -15,7 +15,6 @@
 
 #include <base58.h>
 #include <chainparams.h>
-#include <init.h> // for ShutdownRequested
 #include <primitives/transaction.h>
 #include <interfaces/node.h>
 #include <key_io.h>
@@ -1083,7 +1082,7 @@ const bool isValidTheme(const QString& strTheme)
     return strTheme == defaultTheme || strTheme == darkThemePrefix || strTheme == traditionalTheme;
 }
 
-void loadStyleSheet(QWidget* widget, bool fForceUpdate)
+void loadStyleSheet(interfaces::Node& node, QWidget* widget, bool fForceUpdate)
 {
     AssertLockNotHeld(cs_css);
     LOCK(cs_css);
@@ -1196,8 +1195,8 @@ void loadStyleSheet(QWidget* widget, bool fForceUpdate)
         ++it;
     }
 
-    if (!ShutdownRequested() && fDebugCustomStyleSheets && !fForceUpdate) {
-        QTimer::singleShot(200, [] { loadStyleSheet(); });
+    if (!node.shutdownRequested() && fDebugCustomStyleSheets && !fForceUpdate) {
+        QTimer::singleShot(200, [&] { loadStyleSheet(node); });
     }
 }
 
@@ -1713,9 +1712,9 @@ bool dashThemeActive()
     return theme != traditionalTheme;
 }
 
-void loadTheme(QWidget* widget, bool fForce)
+void loadTheme(interfaces::Node& node, QWidget* widget, bool fForce)
 {
-    loadStyleSheet(widget, fForce);
+    loadStyleSheet(node, widget, fForce);
     updateFonts();
     updateMacFocusRects();
 }

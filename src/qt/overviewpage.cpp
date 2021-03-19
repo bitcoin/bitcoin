@@ -9,7 +9,6 @@
 #include <qt/bitcoinunits.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
-#include <init.h>
 #include <qt/optionsmodel.h>
 #include <qt/transactionfilterproxy.h>
 #include <qt/transactiontablemodel.h>
@@ -318,7 +317,7 @@ void OverviewPage::showOutOfSyncWarning(bool fShow)
 
 void OverviewPage::updateCoinJoinProgress()
 {
-    if (ShutdownRequested() || !walletModel || !clientModel || !clientModel->masternodeSync().isBlockchainSynced()) return;
+    if (!walletModel || !clientModel || clientModel->node().shutdownRequested() || !clientModel->masternodeSync().isBlockchainSynced()) return;
 
     QString strAmountAndRounds;
     QString strCoinJoinAmount = BitcoinUnits::formatHtmlWithUnit(nDisplayUnit, clientModel->coinJoinOptions().getAmount() * COIN, false, BitcoinUnits::separatorAlways);
@@ -434,7 +433,7 @@ void OverviewPage::coinJoinStatus(bool fForce)
 {
     if (!walletModel || !clientModel) return;
 
-    if (!fForce && (ShutdownRequested() || !clientModel->masternodeSync().isBlockchainSynced())) return;
+    if (!fForce && (clientModel->node().shutdownRequested() || !clientModel->masternodeSync().isBlockchainSynced())) return;
 
     // Disable any PS UI for masternode or when autobackup is disabled or failed for whatever reason
     if (fMasternodeMode || nWalletBackups <= 0) {
