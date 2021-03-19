@@ -209,7 +209,7 @@ bool Lookup(const std::string& name, std::vector<CService>& vAddr, int portDefau
         return false;
     vAddr.resize(vIP.size());
     for (unsigned int i = 0; i < vIP.size(); i++)
-        vAddr[i] = CService(vIP[i], port);
+        vAddr[i] = CService(vIP[i], (uint16_t)port);
     return true;
 }
 
