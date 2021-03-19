@@ -63,7 +63,7 @@ bool AppInit(int argc, char* argv[])
     // If Qt is used, parameters/dash.conf are parsed in qt/dash.cpp's main()
     SetupServerArgs();
 #if HAVE_DECL_DAEMON
-    gArgs.AddArg("-daemon", _("Run in the background as a daemon and accept commands"), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-daemon", "Run in the background as a daemon and accept commands", false, OptionsCategory::OPTIONS);
 #endif
     gArgs.ParseParameters(argc, argv);
 
@@ -75,7 +75,7 @@ bool AppInit(int argc, char* argv[])
     // Process help and version before taking care about datadir
     if (gArgs.IsArgSet("-?") || gArgs.IsArgSet("-h") ||  gArgs.IsArgSet("-help") || gArgs.IsArgSet("-version"))
     {
-        std::string strUsage = strprintf(_("%s Daemon"), _(PACKAGE_NAME)) + " " + _("version") + " " + FormatFullVersion() + "\n";
+        std::string strUsage = strprintf("%s Daemon", PACKAGE_NAME) + " version " + FormatFullVersion() + "\n";
 
         if (gArgs.IsArgSet("-version"))
         {
@@ -83,8 +83,8 @@ bool AppInit(int argc, char* argv[])
         }
         else
         {
-            strUsage += "\n" + _("Usage:") + "\n" +
-                  "  dashd [options]                     " + strprintf(_("Start %s Daemon"), _(PACKAGE_NAME)) + "\n";
+            strUsage += "\nUsage:\n"
+                  "  dashd [options]                     " + strprintf("Start %s Daemon", PACKAGE_NAME) + "\n";
 
             strUsage += "\n" + gArgs.GetHelpMessage();
         }
