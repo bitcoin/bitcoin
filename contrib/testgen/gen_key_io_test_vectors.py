@@ -149,7 +149,7 @@ def gen_valid_bech32_vector(template):
     witprog = bytearray(os.urandom(template[2]))
     encoding = template[4]
     dst_prefix = bytearray(template[5])
-    rv = bech32_encode(hrp, [witver] + convertbits(witprog, 8, 5), encoding)
+    rv = bech32_encode(encoding, hrp, [witver] + convertbits(witprog, 8, 5))
     return rv, dst_prefix + witprog
 
 def gen_valid_vectors():
@@ -210,7 +210,7 @@ def gen_invalid_bech32_vector(template):
     encoding = template[3]
 
     if no_data:
-        rv = bech32_encode(hrp, [], encoding)
+        rv = bech32_encode(encoding, hrp, [])
     else:
         data = [witver] + convertbits(witprog, 8, 5)
         if template[4] and not no_data:
@@ -218,7 +218,7 @@ def gen_invalid_bech32_vector(template):
                 data[-1] |= 1
             else:
                 data.append(0)
-        rv = bech32_encode(hrp, data, encoding)
+        rv = bech32_encode(encoding, hrp, data)
 
     if template[5]:
         i = len(rv) - random.randrange(1, 7)
