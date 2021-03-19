@@ -912,7 +912,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(Consensus::LLMQType llmqType
         pindexStart = chainActive[startBlockHeight];
     }
 
-    auto quorums =  quorumManager->ScanQuorums(llmqType, pindexStart, poolSize);
+    auto quorums = quorumManager->ScanQuorums(llmqType, pindexStart, poolSize);
     if (quorums.empty()) {
         return nullptr;
     }
