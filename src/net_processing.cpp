@@ -1782,7 +1782,7 @@ PeerManagerImpl::PeerManagerImpl(CConnman& connman, AddrMan& addrman,
     // While Erlay support is incomplete, it must be enabled explicitly via -txreconciliation.
     // This argument can go away after Erlay support is complete.
     if (gArgs.GetBoolArg("-txreconciliation", DEFAULT_TXRECONCILIATION_ENABLE)) {
-        m_txreconciliation = std::make_unique<TxReconciliationTracker>();
+        m_txreconciliation = std::make_unique<TxReconciliationTracker>(TXRECONCILIATION_VERSION);
     }
 }
 
@@ -3474,6 +3474,58 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             return;
         }
         peer->m_wants_addrv2 = true;
+        return;
+    }
+
+    // Received from a peer demonstrating readiness to announce transactions via reconciliations.
+    // This feature negotiation must happen between VERSION and VERACK to avoid relay problems
+    // from switching announcement protocols after the connection is up.
+    if (msg_type == NetMsgType::SENDTXRCNCL) {
+        if (!m_txreconciliation) {
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "sendtxrcncl from peer=%d ignored, as our node does not have txreconciliation enabled\n", pfrom.GetId());
+            return;
+        }
+
+        if (pfrom.fSuccessfullyConnected) {
+            // Disconnect peers that send a SENDTXRCNCL message after VERACK.
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "sendtxrcncl received after verack from peer=%d; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
+        if (!peer->GetTxRelay()) {
+            // Disconnect peers that send a SENDTXRCNCL message even though we indicated we don't
+            // support transaction relay.
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "sendtxrcncl received from peer=%d to which we indicated no tx relay; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
+        bool is_peer_initiator, is_peer_responder;
+        uint32_t peer_txreconcl_version;
+        uint64_t remote_salt;
+        vRecv >> is_peer_initiator >> is_peer_responder >> peer_txreconcl_version >> remote_salt;
+
+        if (m_txreconciliation->IsPeerRegistered(pfrom.GetId())) {
+            // A peer is already registered, meaning we already received SENDTXRCNCL from them.
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "txreconciliation protocol violation from peer=%d (sendtxrcncl received from already registered peer); disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
+        const ReconciliationRegisterResult result = m_txreconciliation->RegisterPeer(pfrom.GetId(), pfrom.IsInboundConn(),
+                                                                                is_peer_initiator, is_peer_responder,
+                                                                                peer_txreconcl_version,
+                                                                                remote_salt);
+
+        // If it's a protocol violation, disconnect.
+        // If the peer was not found (but something unexpected happened) or it was registered,
+        // nothing to be done.
+        if (result == ReconciliationRegisterResult::PROTOCOL_VIOLATION) {
+            LogPrintLevel(BCLog::NET, BCLog::Level::Debug, "txreconciliation protocol violation from peer=%d; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
         return;
     }
 

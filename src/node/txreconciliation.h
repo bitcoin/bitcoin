@@ -16,6 +16,12 @@ static constexpr bool DEFAULT_TXRECONCILIATION_ENABLE{false};
 /** Supported transaction reconciliation protocol version */
 static constexpr uint32_t TXRECONCILIATION_VERSION{1};
 
+enum ReconciliationRegisterResult {
+    NOT_FOUND = 0,
+    SUCCESS = 1,
+    PROTOCOL_VIOLATION = 2,
+};
+
 /**
  * Transaction reconciliation is a way for nodes to efficiently announce transactions.
  * This object keeps track of all txreconciliation-related communications with the peers.
@@ -50,7 +56,7 @@ private:
     const std::unique_ptr<Impl> m_impl;
 
 public:
-    explicit TxReconciliationTracker();
+    explicit TxReconciliationTracker(uint32_t recon_version);
     ~TxReconciliationTracker();
 
     /**
@@ -61,6 +67,13 @@ public:
      * This function must be called only once per peer.
      */
     uint64_t PreRegisterPeer(NodeId peer_id);
+
+    /**
+     * Step 0. Once the peer agreed to reconcile txs with us, generate the state required to track
+     * ongoing reconciliations. Must be called only after pre-registering the peer and only once.
+     */
+    ReconciliationRegisterResult RegisterPeer(NodeId peer_id, bool is_peer_inbound, bool is_peer_recon_initiator,
+                                     bool is_peer_recon_responder, uint32_t peer_recon_version, uint64_t remote_salt);
 
     /**
      * Attempts to forget txreconciliation-related state of the peer (if we previously stored any).
