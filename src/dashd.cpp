@@ -61,6 +61,10 @@ bool AppInit(int argc, char* argv[])
     // Parameters
     //
     // If Qt is used, parameters/dash.conf are parsed in qt/dash.cpp's main()
+    SetupServerArgs();
+#if HAVE_DECL_DAEMON
+    gArgs.AddArg("-daemon", _("Run in the background as a daemon and accept commands"), false, OptionsCategory::OPTIONS);
+#endif
     gArgs.ParseParameters(argc, argv);
 
     if (gArgs.IsArgSet("-printcrashinfo")) {
@@ -82,7 +86,7 @@ bool AppInit(int argc, char* argv[])
             strUsage += "\n" + _("Usage:") + "\n" +
                   "  dashd [options]                     " + strprintf(_("Start %s Daemon"), _(PACKAGE_NAME)) + "\n";
 
-            strUsage += "\n" + HelpMessage(HelpMessageMode::BITCOIND);
+            strUsage += "\n" + gArgs.GetHelpMessage();
         }
 
         fprintf(stdout, "%s", strUsage.c_str());

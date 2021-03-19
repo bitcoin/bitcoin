@@ -23,7 +23,7 @@ class WalletInit : public WalletInitInterface {
 public:
 
     //! Return the wallets help message.
-    std::string GetHelpString(bool showDebug) const override;
+    void AddWalletOptions() const override;
 
     //! Wallets parameter interaction
     bool ParameterInteraction() const override;
@@ -60,71 +60,59 @@ public:
 
 const WalletInitInterface& g_wallet_init_interface = WalletInit();
 
-std::string WalletInit::GetHelpString(bool showDebug) const
+void WalletInit::AddWalletOptions() const
 {
-    std::string strUsage = HelpMessageGroup(_("Wallet options:"));
-    strUsage += HelpMessageOpt("-createwalletbackups=<n>", strprintf(_("Number of automatic wallet backups (default: %u)"), nWalletBackups));
-    strUsage += HelpMessageOpt("-disablewallet", _("Do not load the wallet and disable wallet RPC calls"));
-    strUsage += HelpMessageOpt("-keypool=<n>", strprintf(_("Set key pool size to <n> (default: %u)"), DEFAULT_KEYPOOL_SIZE));
-    strUsage += HelpMessageOpt("-rescan=<mode>", _("Rescan the block chain for missing wallet transactions on startup") +
-                                            " " + _("(1 = start from wallet creation time, 2 = start from genesis block)"));
-    strUsage += HelpMessageOpt("-salvagewallet", _("Attempt to recover private keys from a corrupt wallet on startup"));
-    strUsage += HelpMessageOpt("-spendzeroconfchange", strprintf(_("Spend unconfirmed change when sending transactions (default: %u)"), DEFAULT_SPEND_ZEROCONF_CHANGE));
-    strUsage += HelpMessageOpt("-upgradewallet", _("Upgrade wallet to latest format on startup"));
-    strUsage += HelpMessageOpt("-wallet=<path>", _("Specify wallet database path. Can be specified multiple times to load multiple wallets. Path is interpreted relative to <walletdir> if it is not absolute, and will be created if it does not exist (as a directory containing a wallet.dat file and log files). For backwards compatibility this will also accept names of existing data files in <walletdir>.)"));
-    strUsage += HelpMessageOpt("-walletbroadcast", _("Make the wallet broadcast transactions") + " " + strprintf(_("(default: %u)"), DEFAULT_WALLETBROADCAST));
-    strUsage += HelpMessageOpt("-walletdir=<dir>", _("Specify directory to hold wallets (default: <datadir>/wallets if it exists, otherwise <datadir>)"));
-    strUsage += HelpMessageOpt("-walletnotify=<cmd>", _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)"));
-    strUsage += HelpMessageOpt("-zapwallettxes=<mode>", _("Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup") +
-                                                        " " + _("(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)"));
-    strUsage += HelpMessageOpt("-walletbackupsdir=<dir>", _("Specify full path to directory for automatic wallet backups (must exist)"));
+    gArgs.AddArg("-createwalletbackups=<n>", strprintf(_("Number of automatic wallet backups (default: %u)"), nWalletBackups), false, OptionsCategory::WALLET);
+    gArgs.AddArg("-disablewallet", _("Do not load the wallet and disable wallet RPC calls"), false, OptionsCategory::WALLET);
+    gArgs.AddArg("-keypool=<n>", strprintf(_("Set key pool size to <n> (default: %u)"), DEFAULT_KEYPOOL_SIZE), false, OptionsCategory::WALLET);
+    gArgs.AddArg("-rescan=<mode>", _("Rescan the block chain for missing wallet transactions on startup") +
+                                            " " + _("(1 = start from wallet creation time, 2 = start from genesis block)"), false, OptionsCategory::WALLET);
+    gArgs.AddArg("-salvagewallet", _("Attempt to recover private keys from a corrupt wallet on startup"), false, OptionsCategory::WALLET);
+    gArgs.AddArg("-spendzeroconfchange", strprintf(_("Spend unconfirmed change when sending transactions (default: %u)"), DEFAULT_SPEND_ZEROCONF_CHANGE), false, OptionsCategory::WALLET);
+    gArgs.AddArg("-upgradewallet", _("Upgrade wallet to latest format on startup"), false, OptionsCategory::WALLET);
+    gArgs.AddArg("-wallet=<path>", _("Specify wallet database path. Can be specified multiple times to load multiple wallets. Path is interpreted relative to <walletdir> if it is not absolute, and will be created if it does not exist (as a directory containing a wallet.dat file and log files). For backwards compatibility this will also accept names of existing data files in <walletdir>.)"), false, OptionsCategory::WALLET);
+    gArgs.AddArg("-walletbroadcast", _("Make the wallet broadcast transactions") + " " + strprintf(_("(default: %u)"), DEFAULT_WALLETBROADCAST), false, OptionsCategory::WALLET);
+    gArgs.AddArg("-walletdir=<dir>", _("Specify directory to hold wallets (default: <datadir>/wallets if it exists, otherwise <datadir>)"), false, OptionsCategory::WALLET);
+    gArgs.AddArg("-walletnotify=<cmd>", _("Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)"), false, OptionsCategory::WALLET);
+    gArgs.AddArg("-zapwallettxes=<mode>", _("Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup") +
+                                                        " " + _("(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)"), false, OptionsCategory::WALLET);
+    gArgs.AddArg("-walletbackupsdir=<dir>", _("Specify full path to directory for automatic wallet backups (must exist)"), false, OptionsCategory::WALLET);
 
-    strUsage += HelpMessageGroup(_("Wallet fee options:"));
-    strUsage += HelpMessageOpt("-discardfee=<amt>", strprintf(_("The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). "
+    gArgs.AddArg("-discardfee=<amt>", strprintf(_("The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). "
                                                                 "Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target"),
-                                                              CURRENCY_UNIT, FormatMoney(DEFAULT_DISCARD_FEE)));
-    strUsage += HelpMessageOpt("-fallbackfee=<amt>", strprintf(_("A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)"),
-                                                               CURRENCY_UNIT, FormatMoney(DEFAULT_FALLBACK_FEE)));
-    strUsage += HelpMessageOpt("-mintxfee=<amt>", strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)"),
-                                                            CURRENCY_UNIT, FormatMoney(DEFAULT_TRANSACTION_MINFEE)));
-    strUsage += HelpMessageOpt("-paytxfee=<amt>", strprintf(_("Fee (in %s/kB) to add to transactions you send (default: %s)"),
-                                                            CURRENCY_UNIT, FormatMoney(payTxFee.GetFeePerK())));
-    strUsage += HelpMessageOpt("-txconfirmtarget=<n>", strprintf(_("If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)"), DEFAULT_TX_CONFIRM_TARGET));
+                                                              CURRENCY_UNIT, FormatMoney(DEFAULT_DISCARD_FEE)), false, OptionsCategory::WALLET_FEE);
+    gArgs.AddArg("-fallbackfee=<amt>", strprintf(_("A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)"),
+                                                               CURRENCY_UNIT, FormatMoney(DEFAULT_FALLBACK_FEE)), false, OptionsCategory::WALLET_FEE);
+    gArgs.AddArg("-mintxfee=<amt>", strprintf(_("Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)"),
+                                                            CURRENCY_UNIT, FormatMoney(DEFAULT_TRANSACTION_MINFEE)), false, OptionsCategory::WALLET_FEE);
+    gArgs.AddArg("-paytxfee=<amt>", strprintf(_("Fee (in %s/kB) to add to transactions you send (default: %s)"),
+                                                            CURRENCY_UNIT, FormatMoney(payTxFee.GetFeePerK())), false, OptionsCategory::WALLET_FEE);
+    gArgs.AddArg("-txconfirmtarget=<n>", strprintf(_("If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)"), DEFAULT_TX_CONFIRM_TARGET), false, OptionsCategory::WALLET_FEE);
 
-    strUsage += HelpMessageGroup(_("HD wallet options:"));
-    strUsage += HelpMessageOpt("-hdseed=<hex>", _("User defined seed for HD wallet (should be in hex). Only has effect during wallet creation/first start (default: randomly generated)"));
-    strUsage += HelpMessageOpt("-mnemonic=<text>", _("User defined mnemonic for HD wallet (bip39). Only has effect during wallet creation/first start (default: randomly generated)"));
-    strUsage += HelpMessageOpt("-mnemonicpassphrase=<text>", _("User defined mnemonic passphrase for HD wallet (BIP39). Only has effect during wallet creation/first start (default: empty string)"));
-    strUsage += HelpMessageOpt("-usehd", _("Use hierarchical deterministic key generation (HD) after BIP39/BIP44. Only has effect during wallet creation/first start") + " " + strprintf(_("(default: %u)"), DEFAULT_USE_HD_WALLET));
+    gArgs.AddArg("-hdseed=<hex>", _("User defined seed for HD wallet (should be in hex). Only has effect during wallet creation/first start (default: randomly generated)"), false, OptionsCategory::WALLET_HD);
+    gArgs.AddArg("-mnemonic=<text>", _("User defined mnemonic for HD wallet (bip39). Only has effect during wallet creation/first start (default: randomly generated)"), false, OptionsCategory::WALLET_HD);
+    gArgs.AddArg("-mnemonicpassphrase=<text>", _("User defined mnemonic passphrase for HD wallet (BIP39). Only has effect during wallet creation/first start (default: empty string)"), false, OptionsCategory::WALLET_HD);
+    gArgs.AddArg("-usehd", _("Use hierarchical deterministic key generation (HD) after BIP39/BIP44. Only has effect during wallet creation/first start") + " " + strprintf(_("(default: %u)"), DEFAULT_USE_HD_WALLET), false, OptionsCategory::WALLET_HD);
 
-    strUsage += HelpMessageGroup(_("KeePass options:"));
-    strUsage += HelpMessageOpt("-keepass", strprintf(_("Use KeePass 2 integration using KeePassHttp plugin (default: %u)"), 0));
-    strUsage += HelpMessageOpt("-keepassid=<id>", _("KeePassHttp id for the established association"));
-    strUsage += HelpMessageOpt("-keepassname=<name>", _("Name to construct url for KeePass entry that stores the wallet passphrase"));
-    strUsage += HelpMessageOpt("-keepassport=<port>", strprintf(_("Connect to KeePassHttp on port <port> (default: %u)"), DEFAULT_KEEPASS_HTTP_PORT));
-    strUsage += HelpMessageOpt("-keepasskey=<key>", _("KeePassHttp key for AES encrypted communication with KeePass"));
+    gArgs.AddArg("-keepass", strprintf(_("Use KeePass 2 integration using KeePassHttp plugin (default: %u)"), 0), false, OptionsCategory::WALLET_KEEPASS);
+    gArgs.AddArg("-keepassid=<id>", _("KeePassHttp id for the established association"), false, OptionsCategory::WALLET_KEEPASS);
+    gArgs.AddArg("-keepassname=<name>", _("Name to construct url for KeePass entry that stores the wallet passphrase"), false, OptionsCategory::WALLET_KEEPASS);
+    gArgs.AddArg("-keepassport=<port>", strprintf(_("Connect to KeePassHttp on port <port> (default: %u)"), DEFAULT_KEEPASS_HTTP_PORT), false, OptionsCategory::WALLET_KEEPASS);
+    gArgs.AddArg("-keepasskey=<key>", _("KeePassHttp key for AES encrypted communication with KeePass"), false, OptionsCategory::WALLET_KEEPASS);
 
-    strUsage += HelpMessageGroup(_("CoinJoin options:"));
-    strUsage += HelpMessageOpt("-enablecoinjoin", strprintf(_("Enable use of CoinJoin for funds stored in this wallet (0-1, default: %u)"), 0));
-    strUsage += HelpMessageOpt("-coinjoinamount=<n>", strprintf(_("Target CoinJoin balance (%u-%u, default: %u)"), MIN_COINJOIN_AMOUNT, MAX_COINJOIN_AMOUNT, DEFAULT_COINJOIN_AMOUNT));
-    strUsage += HelpMessageOpt("-coinjoinautostart", strprintf(_("Start CoinJoin automatically (0-1, default: %u)"), DEFAULT_COINJOIN_AUTOSTART));
-    strUsage += HelpMessageOpt("-coinjoindenomsgoal=<n>", strprintf(_("Try to create at least N inputs of each denominated amount (%u-%u, default: %u)"), MIN_COINJOIN_DENOMS_GOAL, MAX_COINJOIN_DENOMS_GOAL, DEFAULT_COINJOIN_DENOMS_GOAL));
-    strUsage += HelpMessageOpt("-coinjoindenomshardcap=<n>", strprintf(_("Create up to N inputs of each denominated amount (%u-%u, default: %u)"), MIN_COINJOIN_DENOMS_HARDCAP, MAX_COINJOIN_DENOMS_HARDCAP, DEFAULT_COINJOIN_DENOMS_HARDCAP));
-    strUsage += HelpMessageOpt("-coinjoinmultisession", strprintf(_("Enable multiple CoinJoin mixing sessions per block, experimental (0-1, default: %u)"), DEFAULT_COINJOIN_MULTISESSION));
-    strUsage += HelpMessageOpt("-coinjoinrounds=<n>", strprintf(_("Use N separate masternodes for each denominated input to mix funds (%u-%u, default: %u)"), MIN_COINJOIN_ROUNDS, MAX_COINJOIN_ROUNDS, DEFAULT_COINJOIN_ROUNDS));
-    strUsage += HelpMessageOpt("-coinjoinsessions=<n>", strprintf(_("Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)"), MIN_COINJOIN_SESSIONS, MAX_COINJOIN_SESSIONS, DEFAULT_COINJOIN_SESSIONS));
+    gArgs.AddArg("-enablecoinjoin", strprintf(_("Enable use of CoinJoin for funds stored in this wallet (0-1, default: %u)"), 0), false, OptionsCategory::WALLET_COINJOIN);
+    gArgs.AddArg("-coinjoinamount=<n>", strprintf(_("Target CoinJoin balance (%u-%u, default: %u)"), MIN_COINJOIN_AMOUNT, MAX_COINJOIN_AMOUNT, DEFAULT_COINJOIN_AMOUNT), false, OptionsCategory::WALLET_COINJOIN);
+    gArgs.AddArg("-coinjoinautostart", strprintf(_("Start CoinJoin automatically (0-1, default: %u)"), DEFAULT_COINJOIN_AUTOSTART), false, OptionsCategory::WALLET_COINJOIN);
+    gArgs.AddArg("-coinjoindenomsgoal=<n>", strprintf(_("Try to create at least N inputs of each denominated amount (%u-%u, default: %u)"), MIN_COINJOIN_DENOMS_GOAL, MAX_COINJOIN_DENOMS_GOAL, DEFAULT_COINJOIN_DENOMS_GOAL), false, OptionsCategory::WALLET_COINJOIN);
+    gArgs.AddArg("-coinjoindenomshardcap=<n>", strprintf(_("Create up to N inputs of each denominated amount (%u-%u, default: %u)"), MIN_COINJOIN_DENOMS_HARDCAP, MAX_COINJOIN_DENOMS_HARDCAP, DEFAULT_COINJOIN_DENOMS_HARDCAP), false, OptionsCategory::WALLET_COINJOIN);
+    gArgs.AddArg("-coinjoinmultisession", strprintf(_("Enable multiple CoinJoin mixing sessions per block, experimental (0-1, default: %u)"), DEFAULT_COINJOIN_MULTISESSION), false, OptionsCategory::WALLET_COINJOIN);
+    gArgs.AddArg("-coinjoinrounds=<n>", strprintf(_("Use N separate masternodes for each denominated input to mix funds (%u-%u, default: %u)"), MIN_COINJOIN_ROUNDS, MAX_COINJOIN_ROUNDS, DEFAULT_COINJOIN_ROUNDS), false, OptionsCategory::WALLET_COINJOIN);
+    gArgs.AddArg("-coinjoinsessions=<n>", strprintf(_("Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)"), MIN_COINJOIN_SESSIONS, MAX_COINJOIN_SESSIONS, DEFAULT_COINJOIN_SESSIONS), false, OptionsCategory::WALLET_COINJOIN);
 
-    if (showDebug)
-    {
-        strUsage += HelpMessageGroup(_("Wallet debugging/testing options:"));
-
-        strUsage += HelpMessageOpt("-dblogsize=<n>", strprintf("Flush wallet database activity from memory to disk log every <n> megabytes (default: %u)", DEFAULT_WALLET_DBLOGSIZE));
-        strUsage += HelpMessageOpt("-flushwallet", strprintf("Run a thread to flush wallet periodically (default: %u)", DEFAULT_FLUSHWALLET));
-        strUsage += HelpMessageOpt("-privdb", strprintf("Sets the DB_PRIVATE flag in the wallet db environment (default: %u)", DEFAULT_WALLET_PRIVDB));
-        strUsage += HelpMessageOpt("-walletrejectlongchains", strprintf(_("Wallet will not create transactions that violate mempool chain limits (default: %u)"), DEFAULT_WALLET_REJECT_LONG_CHAINS));
-    }
-
-    return strUsage;
+    gArgs.AddArg("-dblogsize=<n>", strprintf("Flush wallet database activity from memory to disk log every <n> megabytes (default: %u)", DEFAULT_WALLET_DBLOGSIZE), true, OptionsCategory::WALLET_DEBUG_TEST);
+    gArgs.AddArg("-flushwallet", strprintf("Run a thread to flush wallet periodically (default: %u)", DEFAULT_FLUSHWALLET), true, OptionsCategory::WALLET_DEBUG_TEST);
+    gArgs.AddArg("-privdb", strprintf("Sets the DB_PRIVATE flag in the wallet db environment (default: %u)", DEFAULT_WALLET_PRIVDB), true, OptionsCategory::WALLET_DEBUG_TEST);
+    gArgs.AddArg("-walletrejectlongchains", strprintf(_("Wallet will not create transactions that violate mempool chain limits (default: %u)"), DEFAULT_WALLET_REJECT_LONG_CHAINS), true, OptionsCategory::WALLET_DEBUG_TEST);
 }
 
 bool WalletInit::ParameterInteraction() const
