@@ -1503,7 +1503,7 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
         else if (DynamicMemoryUsage() < sizelimit / 2)
             halflife /= 2;
 
-        rollingMinimumFeeRate = rollingMinimumFeeRate / pow(2.0, (time - lastRollingFeeUpdate) / halflife);
+        rollingMinimumFeeRate = rollingMinimumFeeRate / powf(2.0, (time - lastRollingFeeUpdate) / halflife);
         lastRollingFeeUpdate = time;
 
         if (rollingMinimumFeeRate < (double)incrementalRelayFee.GetFeePerK() / 2) {
