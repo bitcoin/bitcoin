@@ -2759,6 +2759,55 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         return;
     }
 
+    // Received from a peer demonstrating readiness to announce transactions via reconciliations.
+    // This feature negotiation should happen:
+    // - between VERSION and VERACK to avoid relay problems from switching annoyncement protocols
+    //   after the connection is up
+    // - after WTXID because we reconcile only with peers supporting wtxid-relay
+    if (msg_type == NetMsgType::SENDRECON) {
+        if (pfrom.fSuccessfullyConnected) {
+            // Disconnect peers that send a SENDRECON message after VERACK.
+            LogPrint(BCLog::NET, "sendrecon received after verack from peer=%d; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
+        if (!pfrom.m_tx_relay) {
+            // If we chose a peer to not send us transactions, disconnect if they want to reconcile.
+            LogPrint(BCLog::NET, "sendrecon received from non-tx-relay peer=%d; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
+        LOCK(cs_main);
+        if (!State(pfrom.GetId())->m_wtxid_relay) {
+            // Disconnect peers that send a SENDRECON message before/without WTXIDRELAY.
+            LogPrint(BCLog::NET, "sendrecon received before wtxidrelay peer=%d; disconnecting\n", pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
+        if (pfrom.GetCommonVersion() < RECONCILIATION_RELAY_VERSION) {
+            LogPrint(BCLog::NET, "sendrecon received along with old common protocol version=%d from peer=%d; disconnecting\n",
+                pfrom.GetCommonVersion(), pfrom.GetId());
+            pfrom.fDisconnect = true;
+            return;
+        }
+
+        bool they_initiator, they_responder;
+        uint32_t recon_version;
+        uint64_t remote_salt;
+        vRecv >> they_initiator >> they_responder >> recon_version >> remote_salt;
+
+        if (!m_reconciliation.EnableReconciliationSupport(pfrom.GetId(), pfrom.IsInboundConn(),
+            they_initiator, they_responder, recon_version, remote_salt)) {
+                LogPrint(BCLog::NET, "reconciliation protocol violation from peer=%d; disconnecting\n", pfrom.GetId());
+                pfrom.fDisconnect = true;
+                return;
+            }
+        return;
+    }
+
     if (!pfrom.fSuccessfullyConnected) {
         LogPrint(BCLog::NET, "Unsupported message \"%s\" prior to verack from peer=%d\n", SanitizeString(msg_type), pfrom.GetId());
         return;
