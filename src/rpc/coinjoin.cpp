@@ -8,6 +8,7 @@
 #endif // ENABLE_WALLET
 #include <coinjoin/coinjoin-server.h>
 #include <rpc/server.h>
+#include <version.h>
 
 #include <univalue.h>
 

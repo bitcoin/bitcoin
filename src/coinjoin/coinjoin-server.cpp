@@ -17,6 +17,7 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validation.h>
+#include <version.h>
 
 #include <llmq/quorums_instantsend.h>
 
