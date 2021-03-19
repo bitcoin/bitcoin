@@ -22,7 +22,7 @@
 #include <QSettings>
 #include <QMessageBox>
 
-#include <cmath>
+#include <math.h>
 
 /* Check free space asynchronously to prevent hanging the UI thread.
 

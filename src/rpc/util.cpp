@@ -17,7 +17,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 // SYSCOIN
-#include <cmath>
+#include <math.h>
 const std::string UNIX_EPOCH_TIME = "UNIX epoch time";
 // SYSCOIN
 const std::string EXAMPLE_ADDRESS[2] = {"sys1q09vm5lfy0j5reeulh4x5752q25uqqvz34hufdl", "sys1qtyf33aa2tl62xhrzhralpytka0krxvt0a4e8ee"};
@@ -99,7 +99,7 @@ UniValue ValueFromAssetAmount(const CAmount& amount,int precision)
     int64_t remainder = 0;
     std::string strPrecision = "0";
     if (precision > 0) {
-        divByAmount = powf(10.0f, precision);
+        divByAmount = pow(10.0, precision);
         quotient = n_abs / divByAmount;
         remainder = n_abs % divByAmount;
         strPrecision = itostr(precision);

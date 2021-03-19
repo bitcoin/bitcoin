@@ -11,7 +11,7 @@
 #include <primitives/transaction.h>
 #include <services/asset.h>
 #include <rpc/util.h>
-#include <cmath>
+#include <math.h>
 static constexpr auto MAX_DIGITS_SYS = 16;
 SyscoinUnits::SyscoinUnits(QObject *parent):
         QAbstractListModel(parent),
@@ -109,7 +109,7 @@ QString SyscoinUnits::format(int unit, const CAmount& nIn, const uint64_t &nAsse
     uint8_t nPrecision = 8;
     if(nAsset > 0 && GetAssetPrecision(GetBaseAssetID(nAsset), nPrecision)) {
         num_decimals = (int)nPrecision;
-        coin = (qint64)powf(10.0f, num_decimals);
+        coin = (qint64)pow(10.0, num_decimals);
     } else {
         // Note: not using straight sprintf here because we do NOT want
         // localized number formatting.

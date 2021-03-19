@@ -11,7 +11,7 @@
 #include <QColor>
 #include <QTimer>
 
-#include <cmath>
+#include <math.h>
 
 #define DESIRED_SAMPLES         800
 

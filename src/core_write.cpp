@@ -22,7 +22,7 @@
 #include <evo/providertx.h>
 #include <evo/specialtx.h>
 #include <llmq/quorums_commitment.h>
-#include <cmath>
+#include <math.h>
 bool AssetAllocationTxToJSON(const CTransaction &tx, const uint256& hashBlock, UniValue &entry) {
     const uint256& txHash = tx.GetHash();
     entry.__pushKV("txtype", stringFromSyscoinTx(tx.nVersion));
@@ -198,7 +198,7 @@ UniValue ValueFromAmount(const CAmount amount, const uint32_t &nBaseAsset)
     int64_t remainder = 0;
     std::string strPrecision = "0";
     if (nPrecision > 0) {
-        divByAmount = powf(10.0f, nPrecision);
+        divByAmount = pow(10.0, nPrecision);
         quotient = amount / divByAmount;
         remainder = amount % divByAmount;
         strPrecision = itostr(nPrecision);

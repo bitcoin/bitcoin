@@ -9,7 +9,7 @@
 #include <logging.h>
 #include <serialize.h>
 
-#include <cmath>
+#include <math.h>
 
 int CAddrInfo::GetTriedBucket(const uint256& nKey, const std::vector<bool> &asmap) const
 {

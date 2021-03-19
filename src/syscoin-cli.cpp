@@ -20,7 +20,7 @@
 #include <util/url.h>
 
 #include <algorithm>
-#include <cmath>
+#include <math.h>
 #include <functional>
 #include <memory>
 #include <optional>
