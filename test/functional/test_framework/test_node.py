@@ -7,6 +7,7 @@
 import contextlib
 import decimal
 import errno
+import multiprocessing
 from enum import Enum
 import http.client
 import json
@@ -102,6 +103,7 @@ class TestNode():
             "-debugexclude=libevent",
             "-debugexclude=leveldb",
             "-uacomment=testnode%d" % i,
+            "-par=%d" % multiprocessing.cpu_count(),
         ]
         if use_valgrind:
             default_suppressions_file = os.path.join(
