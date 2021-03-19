@@ -29,7 +29,7 @@ CBloomFilter::CBloomFilter(const unsigned int nElements, const double nFPRate, c
      * - nElements * log(fp rate) / ln(2)^2
      * We ignore filter parameters which will create a bloom filter larger than the protocol limits
      */
-    vData(std::min((unsigned int)(-1  / LN2SQUARED * nElements * logf(nFPRate)), MAX_BLOOM_FILTER_SIZE * 8) / 8),
+    vData(std::min((unsigned int)(-1  / LN2SQUARED * nElements * log(nFPRate)), MAX_BLOOM_FILTER_SIZE * 8) / 8),
     /**
      * The ideal number of hash functions is filter size * ln(2) / number of elements
      * Again, we ignore filter parameters which will create a bloom filter with more hash functions than the protocol limits
@@ -254,10 +254,10 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
 
 CRollingBloomFilter::CRollingBloomFilter(const unsigned int nElements, const double fpRate)
 {
-    double logFpRate = logf(fpRate);
+    double logFpRate = log(fpRate);
     /* The optimal number of hash functions is log(fpRate) / log(0.5), but
      * restrict it to the range 1-50. */
-    nHashFuncs = std::max(1, std::min((int)round(logFpRate / logf(0.5)), 50));
+    nHashFuncs = std::max(1, std::min((int)round(logFpRate / log(0.5)), 50));
     /* In this rolling bloom filter, we'll store between 2 and 3 generations of nElements / 2 entries. */
     nEntriesPerGeneration = (nElements + 1) / 2;
     uint32_t nMaxElements = nEntriesPerGeneration * 3;
@@ -268,7 +268,7 @@ CRollingBloomFilter::CRollingBloomFilter(const unsigned int nElements, const dou
      * =>          nFilterBits = -nHashFuncs * nMaxElements / log(1.0 - pow(fpRate, 1.0 / nHashFuncs))
      * =>          nFilterBits = -nHashFuncs * nMaxElements / log(1.0 - exp(logFpRate / nHashFuncs))
      */
-    uint32_t nFilterBits = (uint32_t)ceil(-1.0 * nHashFuncs * nMaxElements / logf(1.0 - expf(logFpRate / nHashFuncs)));
+    uint32_t nFilterBits = (uint32_t)ceil(-1.0 * nHashFuncs * nMaxElements / log(1.0 - exp(logFpRate / nHashFuncs)));
     data.clear();
     /* For each data element we need to store 2 bits. If both bits are 0, the
      * bit is treated as unset. If the bits are (01), (10), or (11), the bit is
