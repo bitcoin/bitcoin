@@ -10,6 +10,21 @@ namespace {
 
 /** Current protocol version */
 constexpr uint32_t RECON_VERSION = 1;
+/** Static component of the salt used to compute short txids for inclusion in sketches. */
+const std::string RECON_STATIC_SALT = "Tx Relay Salting";
+
+/**
+ * Salt is specified by BIP-330 is constructed from contributions from both peers. It is later used
+ * to compute transaction short IDs, which are needed to construct a sketch representing a set of
+ * transactions we want to announce to the peer.
+ */
+uint256 ComputeSalt(uint64_t local_salt, uint64_t remote_salt)
+{
+    uint64_t salt1 = local_salt, salt2 = remote_salt;
+    if (salt1 > salt2) std::swap(salt1, salt2);
+    static const auto RECON_SALT_HASHER = TaggedHash(RECON_STATIC_SALT);
+    return (CHashWriter(RECON_SALT_HASHER) << salt1 << salt2).GetSHA256();
+}
 
 } // namespace
 
