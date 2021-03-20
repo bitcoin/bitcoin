@@ -20,6 +20,11 @@ constexpr uint8_t OUTBOUND_FANOUT_DESTINATIONS = 2;
 /** The size of the field, used to compute sketches to reconcile transactions (see BIP-330). */
 constexpr unsigned int RECON_FIELD_SIZE = 32;
 /**
+ * Allows to infer capacity of a reconciliation sketch based on it's char[] representation,
+ * which is necessary to deserealize a received sketch.
+ */
+constexpr unsigned int BYTES_PER_SKETCH_CAPACITY = RECON_FIELD_SIZE / 8;
+/**
  * Limit sketch capacity to avoid DoS. This applies only to the original sketches,
  * and implies that extended sketches could be at most twice the size.
  */
@@ -96,6 +101,10 @@ struct ReconciliationSet {
     /** Get a number of transactions in the set. */
     size_t GetSize() const {
         return m_wtxids.size();
+    }
+
+    std::vector<uint256> GetAllTransactions() const {
+        return std::vector<uint256>(m_wtxids.begin(), m_wtxids.end());
     }
 
     /**
@@ -244,6 +253,16 @@ class ReconciliationState {
 
         return sketch;
     }
+
+    /**
+     * Once we are fully done with the reconciliation we initiated, prepare the state for the
+     * following reconciliations we initiate.
+     */
+    void FinalizeInitByUs(bool clear_local_set)
+    {
+        assert(m_we_initiate);
+        if (clear_local_set) m_local_set.Clear();
+    }
 };
 
 } // namespace
@@ -303,6 +322,75 @@ class TxReconciliationTracker::Impl {
             m_next_recon_respond = current_time + RECON_RESPONSE_INTERVAL;
         }
         return m_next_recon_respond;
+    }
+
+    bool HandleInitialSketch(std::unordered_map<NodeId, ReconciliationState>::iterator& recon_state,
+        const std::vector<uint8_t>& skdata,
+        // returning values
+        std::vector<uint32_t>& txs_to_request, std::vector<uint256>& txs_to_announce, bool& result)
+    {
+        assert(recon_state->second.m_we_initiate);
+        assert(recon_state->second.m_state_init_by_us.m_phase == Phase::INIT_REQUESTED);
+
+        uint32_t remote_sketch_capacity = uint32_t(skdata.size() / BYTES_PER_SKETCH_CAPACITY);
+        // Protocol violation: our peer exceeded the sketch capacity, or sent a malformed sketch.
+        if (remote_sketch_capacity > MAX_SKETCH_CAPACITY) {
+            return false;
+        }
+
+        Minisketch local_sketch, remote_sketch;
+        if (recon_state->second.m_local_set.GetSize() > 0) {
+            local_sketch = recon_state->second.ComputeSketch(remote_sketch_capacity);
+        }
+        if (remote_sketch_capacity != 0) {
+            remote_sketch = Minisketch(RECON_FIELD_SIZE, 0, remote_sketch_capacity).Deserialize(skdata);
+        }
+
+        // Remote sketch is empty in two cases per which reconciliation is pointless:
+        // 1. the peer has no transactions for us
+        // 2. we told the peer we have no transactions for them while initiating reconciliation.
+        // In case (2), local sketch is also empty.
+        if (remote_sketch_capacity == 0 || !remote_sketch || !local_sketch) {
+
+            // Announce all transactions we have.
+            txs_to_announce = recon_state->second.m_local_set.GetAllTransactions();
+
+            // Update local reconciliation state for the peer.
+            recon_state->second.FinalizeInitByUs(true);
+            recon_state->second.m_state_init_by_us.m_phase = Phase::NONE;
+
+            result = false;
+
+            LogPrint(BCLog::NET, "Reconciliation we initiated with peer=%d terminated due to empty sketch. " /* Continued */
+                "Announcing all %i transactions from the local set.\n", recon_state->first, txs_to_announce.size());
+
+            return true;
+        }
+
+        assert(remote_sketch);
+        assert(local_sketch);
+        // Attempt to decode the set difference
+        size_t max_elements = minisketch_compute_max_elements(RECON_FIELD_SIZE, remote_sketch_capacity, RECON_FALSE_POSITIVE_COEF);
+        std::vector<uint64_t> differences(max_elements);
+        if (local_sketch.Merge(remote_sketch).Decode(differences)) {
+            // Initial reconciliation step succeeded.
+
+            // Identify locally/remotely missing transactions.
+            recon_state->second.m_local_set.GetRelevantIDsFromShortIDs(differences, txs_to_request, txs_to_announce);
+
+            // Update local reconciliation state for the peer.
+            recon_state->second.FinalizeInitByUs(true);
+            recon_state->second.m_state_init_by_us.m_phase = Phase::NONE;
+
+            result = true;
+            LogPrint(BCLog::NET, "Reconciliation we initiated with peer=%d has succeeded at initial step, " /* Continued */
+                "request %i txs, announce %i txs.\n", recon_state->first, txs_to_request.size(), txs_to_announce.size());
+        } else {
+            // Initial reconciliation step failed.
+            // TODO handle failure.
+            result = false;
+        }
+        return true;
     }
 
     public:
@@ -499,6 +587,25 @@ class TxReconciliationTracker::Impl {
         return true;
     }
 
+    bool HandleSketch(NodeId peer_id, const std::vector<uint8_t>& skdata,
+        // returning values
+        std::vector<uint32_t>& txs_to_request, std::vector<uint256>& txs_to_announce, bool& result)
+    {
+        LOCK(m_mutex);
+        auto recon_state = m_states.find(peer_id);
+        if (recon_state == m_states.end()) return false;
+        // We only may receive a sketch from reconciliation responder, not initiator.
+        if (!recon_state->second.m_we_initiate) return false;
+
+        Phase cur_phase = recon_state->second.m_state_init_by_us.m_phase;
+        if (cur_phase == Phase::INIT_REQUESTED) {
+            return HandleInitialSketch(recon_state, skdata, txs_to_request, txs_to_announce, result);
+        } else {
+            LogPrint(BCLog::NET, "Received sketch from peer=%d in wrong reconciliation phase=%i.\n", peer_id, cur_phase);
+            return false;
+        }
+    }
+
     void RemovePeer(NodeId peer_id)
     {
         LOCK(m_mutex);
@@ -615,6 +722,12 @@ void TxReconciliationTracker::HandleReconciliationRequest(NodeId peer_id, uint16
 bool TxReconciliationTracker::RespondToReconciliationRequest(NodeId peer_id, std::vector<uint8_t>& skdata)
 {
     return m_impl->RespondToReconciliationRequest(peer_id, skdata);
+}
+
+bool TxReconciliationTracker::HandleSketch(NodeId peer_id, const std::vector<uint8_t>& skdata,
+    std::vector<uint32_t>& txs_to_request, std::vector<uint256>& txs_to_announce, bool& result)
+{
+    return m_impl->HandleSketch(peer_id, skdata, txs_to_request, txs_to_announce, result);
 }
 
 void TxReconciliationTracker::RemovePeer(NodeId peer_id)

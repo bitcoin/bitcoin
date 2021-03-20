@@ -104,6 +104,16 @@ class TxReconciliationTracker {
      */
     bool RespondToReconciliationRequest(NodeId peer_id, std::vector<uint8_t>& skdata);
 
+    /**
+     * Step 3. Process a response to our reconciliation request.
+     * Returns false if the peer seems to violate the protocol.
+     * Populates the vectors so that we know which transactions should be requested and announced,
+     * and whether reconciliation succeeded.
+     */
+    bool HandleSketch(NodeId peer_id, const std::vector<uint8_t>& skdata,
+        // returning values
+        std::vector<uint32_t>& txs_to_request, std::vector<uint256>& txs_to_announce, bool& result);
+
     // Helpers
 
     /**
