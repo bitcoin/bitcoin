@@ -5208,7 +5208,8 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
 
     // Only respond to reconciliation messages if this is a reconciliation connection.
     // Disconnect otherwise.
-    if (!m_txreconciliation && (msg_type == NetMsgType::REQTXRCNCL || msg_type == NetMsgType::SKETCH)) {
+    if (!m_txreconciliation && (msg_type == NetMsgType::REQTXRCNCL || msg_type == NetMsgType::SKETCH ||
+        msg_type == NetMsgType::REQSKETCHEXT)) {
         LogDebug(BCLog::NET, "%s received, but we don't have reconciliation enabled, %s", msg_type, pfrom.DisconnectMsg());
         pfrom.fDisconnect = true;
         return;
@@ -5256,6 +5257,26 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
             LogDebug(BCLog::NET, "sketch from peer=%d violates reconciliation protocol; disconnecting\n", pfrom.GetId());
             pfrom.fDisconnect = true;
             return;
+        }
+        return;
+    }
+
+    if (msg_type == NetMsgType::REQSKETCHEXT) {
+        if (auto error = m_txreconciliation->HandleExtensionRequest(pfrom.GetId())) {
+            switch(error.value()) {
+                case node::ReconciliationError::NOT_FOUND:
+                    LogInfo("Peer is requesting a reconciliation extension but never registered, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::WRONG_PHASE:
+                    LogInfo("Peer is requesting a reconciliation extension out of order, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::WRONG_ROLE:
+                    LogInfo("Peer is requesting a reconciliation extension but we are the initiator, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::PROTOCOL_VIOLATION:
+                default: break; // No other error is returned by HandleExtensionRequest
+            }
+            pfrom.fDisconnect = true;
         }
         return;
     }
