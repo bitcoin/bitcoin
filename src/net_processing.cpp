@@ -4969,6 +4969,27 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         return;
     }
 
+    if (msg_type == NetMsgType::REQTXRCNCL) {
+        uint16_t peer_recon_set_size, peer_q;
+        vRecv >> peer_recon_set_size >> peer_q;
+        if (auto error = m_txreconciliation->HandleReconciliationRequest(pfrom.GetId(), peer_recon_set_size, peer_q); error.has_value()) {
+            switch(error.value()) {
+                case node::ReconciliationError::NOT_FOUND:
+                    LogInfo("Peer is requesting reconciliation but never registerd, %s\n", pfrom.DisconnectMsg(fLogIPs));
+                    break;
+                case node::ReconciliationError::WRONG_PHASE:
+                    LogInfo("Peer is requesting reconciliation out of order, %s\n", pfrom.DisconnectMsg(fLogIPs));
+                    break;
+                case node::ReconciliationError::WRONG_ROLE:
+                    LogInfo("Peer is requesting reconciliation but we are the initiator, %s\n", pfrom.DisconnectMsg(fLogIPs));
+                    break;
+                default: break; // No other error is returned by HandleReconciliationRequest
+            }
+            pfrom.fDisconnect = true;
+        }
+        return;
+    }
+
     // Ignore unknown commands for extensibility
     LogDebug(BCLog::NET, "Unknown command \"%s\" from peer=%d\n", SanitizeString(msg_type), pfrom.GetId());
     return;

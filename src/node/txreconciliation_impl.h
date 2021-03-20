@@ -158,6 +158,12 @@ public:
      */
     std::variant<ReconCoefficients, ReconciliationError> InitiateReconciliationRequest(NodeId peer_id);
 
+    /**
+     * Step 2. Record a reconciliation request with parameters to respond when its time.
+     * If peer violates the protocol, retuns an error so we can disconnect.
+     */
+    std::optional<ReconciliationError> HandleReconciliationRequest(NodeId peer_id, uint16_t peer_recon_set_size, uint16_t peer_q);
+
     /** Whether a given inbound peer is currently flagged for fanout. */
     bool IsInboundFanoutTarget(NodeId peer_id);
 

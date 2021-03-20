@@ -70,6 +70,23 @@ public:
      */
     std::map<uint32_t, Wtxid> m_short_id_mapping;
 
+    /**
+     * The following fields are specific to only reconciliations initiated by the peer.
+     */
+
+    /**
+     * The value transmitted from the peer with a reconciliation requests is stored here until
+     * we respond to that request with a sketch.
+     */
+    double m_remote_q;
+
+    /**
+     * A reconciliation request comes from a peer with a reconciliation set size from their side,
+     * which is supposed to help us to estimate set difference size. The value is stored here until
+     * we respond to that request with a sketch.
+     */
+    uint16_t m_remote_set_size;
+
     TxReconciliationState(bool we_initiate, uint64_t k0, uint64_t k1) : m_we_initiate(we_initiate), m_k0(k0), m_k1(k1) {}
 
     /**
