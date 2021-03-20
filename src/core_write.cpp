@@ -143,7 +143,7 @@ bool AssetTxToJSON(const CTransaction& tx, const uint256 &hashBlock, UniValue &e
 		entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
     
     if(asset.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) 
-		entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
+		entry.__pushKV("notary_address", asset.vchNotaryKeyID.empty()? "": EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
 
     if(asset.nUpdateMask & ASSET_UPDATE_NOTARY_DETAILS) {
         UniValue value(UniValue::VOBJ);

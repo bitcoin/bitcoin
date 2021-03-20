@@ -74,7 +74,7 @@ bool AssetWtxToJSON(const CWalletTx &wtx, const CAssetCoinInfo &assetInfo, const
             entry.__pushKV("contract", "0x" + HexStr(asset.vchContract));
         
         if(asset.nUpdateMask & ASSET_UPDATE_NOTARY_KEY) 
-            entry.__pushKV("notary_address", EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
+            entry.__pushKV("notary_address", asset.vchNotaryKeyID.empty()? "": EncodeDestination(WitnessV0KeyHash(uint160{asset.vchNotaryKeyID})));
 
         if(asset.nUpdateMask & ASSET_UPDATE_AUXFEE) {
             UniValue value(UniValue::VOBJ);
@@ -875,7 +875,7 @@ static RPCHelpMan assetupdate()
     theAsset.ClearAsset();
     UniValue publicData(UniValue::VOBJ);
     publicData.pushKV("desc", EncodeBase64(strPubData));
-    std::vector<unsigned char> vchNotaryKeyID = vchOldNotaryKeyID;
+    std::vector<unsigned char> vchNotaryKeyID;
     if(!params[4].isNull()) {
         std::string strNotary = params[4].get_str();
         if(!strNotary.empty()) {

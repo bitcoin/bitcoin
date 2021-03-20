@@ -38,6 +38,12 @@ class AssetNotaryTest(SyscoinTestFramework):
         assert_raises_rpc_error(-26, 'non-mandatory-script-verify-flag', self.nodes[0].sendrawtransaction, hextx_notarized)
         self.nodes[0].sendrawtransaction(tx_resigned)
         self.nodes[0].generate(1)
+        # clear notary
+        self.nodes[0].assetupdate(self.asset, '','', 127, '', {}, {})
+        self.nodes[0].generate(1)
+        assetInfo = self.nodes[0].assetinfo(self.asset)
+        assert('notary_details' not in assetInfo)
+        assert_equal(assetInfo['notary_address'], '')
 
     def basic_asset(self):
         self.notary_address = self.nodes[0].getnewaddress()
@@ -47,8 +53,12 @@ class AssetNotaryTest(SyscoinTestFramework):
         self.sync_blocks()
         assetInfo = self.nodes[0].assetinfo(self.asset)
         assert_equal(assetInfo['asset_guid'], self.asset)
+        assert_equal(assetInfo['notary_details'], notary)
+        assert_equal(assetInfo['notary_address'], self.notary_address)
         assetInfo = self.nodes[1].assetinfo(self.asset)
         assert_equal(assetInfo['asset_guid'], self.asset)
+        assert_equal(assetInfo['notary_details'], notary)
+        assert_equal(assetInfo['notary_address'], self.notary_address)
 
     def complex_notary(self):
         notary = {'endpoint': 'https://jsonplaceholder.typicode.com/posts/', 'instant_transfers': True, 'hd_required': True}
