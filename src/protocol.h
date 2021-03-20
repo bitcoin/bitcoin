@@ -274,6 +274,12 @@ inline constexpr const char* FEATURE{"feature"};
  * Peer should respond with "sketch" message constructed using these arguments.
  */
 inline constexpr const char* REQTXRCNCL{"reqtxrcncl"};
+/**
+ * Contains a sketch of the local reconciliation set,
+ * used to efficiently reconcile transactions.
+ * Peer should respond with "reconcildiff" or "reqsketchext" message.
+ */
+inline constexpr const char* SKETCH{"sketch"};
 }; // namespace NetMsgType
 
 /** All known message types (see above). Keep this in the same order as the list of messages above. */
@@ -315,6 +321,7 @@ inline const std::array ALL_NET_MESSAGE_TYPES{std::to_array<std::string>({
     NetMsgType::SENDTXRCNCL,
     NetMsgType::FEATURE,
     NetMsgType::REQTXRCNCL,
+    NetMsgType::SKETCH,
 })};
 
 static constexpr size_t MAX_FEATUREID_LENGTH{80};

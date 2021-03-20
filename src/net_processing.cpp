@@ -6254,6 +6254,20 @@ bool PeerManagerImpl::SendMessages(CNode& node)
             MakeAndPushMessage(node, NetMsgType::INV, vInv);
 
         //
+        // Message: reconciliation response
+        //
+        if (m_txreconciliation) {
+            std::vector<uint8_t> skdata;
+            if (m_txreconciliation->ShouldRespondToReconciliationRequest(node.GetId(), skdata)) {
+                // It's perfectly valid to send an empty sketch, because we use this behavior
+                // to trigger early reconciliation termination when it won't help anyway:
+                // - we have no transactions for the peer
+                // - the peer have no transactions for us
+                MakeAndPushMessage(node, NetMsgType::SKETCH, skdata);
+            }
+        }
+
+        //
         // Message: reconciliation request
         //
         {
