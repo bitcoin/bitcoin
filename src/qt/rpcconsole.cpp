@@ -958,6 +958,8 @@ void RPCConsole::on_lineEdit_returnPressed()
 #endif
 
         message(CMD_REQUEST, QString::fromStdString(strFilteredCmd));
+        //: A console message indicating an entered command is currently being executed.
+        message(CMD_REPLY, tr("Executing…"));
         Q_EMIT cmdRequest(cmd, m_last_wallet_model);
 
         cmd = QString::fromStdString(strFilteredCmd);
@@ -1004,7 +1006,12 @@ void RPCConsole::startExecutor()
     executor->moveToThread(&thread);
 
     // Replies from executor object must go to this object
-    connect(executor, &RPCExecutor::reply, this, qOverload<int, const QString&>(&RPCConsole::message));
+    connect(executor, &RPCExecutor::reply, this, [this](int category, const QString& command) {
+        // Remove "Executing…" message.
+        ui->messagesWidget->undo();
+        message(category, command);
+        scrollToEnd();
+    });
 
     // Requests from this object must go to executor
     connect(this, &RPCConsole::cmdRequest, executor, &RPCExecutor::request);
