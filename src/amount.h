@@ -28,7 +28,7 @@ static const CAmount COIN = 100000000;
 static const CAmount MAX_MONEY = 888000000 * COIN;
 // SYSCOIN
 static const CAmount MAX_ASSET = 1000000000000000000LL - 1LL; // 10^18 - 1 max decimal value that will fit in CAmount
-static const CAmount COST_ASSET = 150 * COIN;
+static const CAmount COST_ASSET = COIN;
 inline bool MoneyRange(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_MONEY); }
 inline bool MoneyRangeAsset(const CAmount& nValue) { return (nValue >= 0 && nValue <= MAX_ASSET); }
 struct AssetMapOutput {
