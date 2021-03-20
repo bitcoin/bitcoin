@@ -59,18 +59,17 @@ private:
     mutable RecursiveMutex cs;
     bool isEnabled{false};
     bool isEnforced{false};
+    bool tryLockChainTipScheduled{false};
 
     CChainLockSig mostRecentChainLockShare;
     CChainLockSig bestChainLockWithKnownBlock;
+    const CBlockIndex* bestChainLockBlockIndex{nullptr};
     // Keep best chainlock shares and candidates, sorted by height (highest heght first).
     std::map<int, std::map<CQuorumCPtr, CChainLockSigCPtr>, ReverseHeightComparator> bestChainLockShares;
     std::map<int, CChainLockSigCPtr, ReverseHeightComparator> bestChainLockCandidates;
 
-    const CBlockIndex* bestChainLockBlockIndex{nullptr};
+    std::map<uint256, std::pair<int, uint256> > mapSignedRequestIds;
 
-    int32_t lastSignedHeight{-1};
-    std::set<uint256> lastSignedRequestIds;
-    uint256 lastSignedMsgHash;
 
     std::map<uint256, int64_t> seenChainLocks;
 

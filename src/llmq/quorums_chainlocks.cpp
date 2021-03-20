@@ -17,20 +17,6 @@ namespace llmq
 
 static const std::string CLSIG_REQUESTID_PREFIX = "clsig";
 
-// Used for iterating while signing/verifying CLSIGs by non-default quorums
-struct RequestIdStep
-{
-    int nHeight{-1};
-    int nStep{0};
-
-    RequestIdStep(int _nHeight) : nHeight(_nHeight) {}
-
-    SERIALIZE_METHODS(RequestIdStep, obj)
-    {
-        READWRITE(CLSIG_REQUESTID_PREFIX, obj.nHeight, obj.nStep);
-    }
-};
-
 CChainLocksHandler* chainLocksHandler;
 
 bool CChainLockSig::IsNull() const
@@ -190,19 +176,17 @@ bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const 
     bool fHaveSigner{std::count(clsig.signers.begin(), clsig.signers.end(), true) > 0};
     std::vector<CQuorumCPtr> quorums_scanned;
     llmq::quorumManager->ScanQuorums(llmqType, pindexScan, signingActiveQuorumCount, quorums_scanned);
-    RequestIdStep requestIdStep{clsig.nHeight};
 
-    for (const auto& quorum : quorums_scanned) {
+    for (size_t i = 0; i < quorums_scanned.size(); ++i) {
+        const CQuorumCPtr& quorum = quorums_scanned[i];
         if (quorum == nullptr) {
             return false;
         }
-        uint256 requestId = ::SerializeHash(requestIdStep);
+        uint256 requestId = ::SerializeHash(std::make_tuple(CLSIG_REQUESTID_PREFIX, clsig.nHeight, quorum->qc.quorumHash));
         if ((!idIn.IsNull() && idIn != requestId)) {
-            ++requestIdStep.nStep;
             continue;
         }
-        if (fHaveSigner && !clsig.signers[requestIdStep.nStep]) {
-            ++requestIdStep.nStep;
+        if (fHaveSigner && !clsig.signers[i]) {
             continue;
         }
         uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, requestId, clsig.blockHash);
@@ -210,7 +194,7 @@ bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const 
                 __func__, clsig.ToString(), requestId.ToString(), signHash.ToString());
 
         if (clsig.sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash)) {
-            if (!quorumSigningManager->HasRecoveredSigForId(llmqType, requestId)) {
+            if (idIn.IsNull() && !quorumSigningManager->HasRecoveredSigForId(llmqType, requestId)) {
                 // We can reconstruct the CRecoveredSig from the clsig and pass it to the signing manager, which
                 // avoids unnecessary double-verification of the signature. We can do this here because we just
                 // verified the sig.
@@ -223,13 +207,12 @@ bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const 
                 rs->UpdateHash();
                 quorumSigningManager->PushReconstructedRecoveredSig(rs);
             }
-            ret = std::make_pair(requestIdStep.nStep, quorum);
+            ret = std::make_pair(i, quorum);
             return true;
         }
         if (!idIn.IsNull() || fHaveSigner) {
             return false;
         }
-        ++requestIdStep.nStep;
     }
     return false;
 }
@@ -254,24 +237,21 @@ bool CChainLocksHandler::VerifyAggregatedChainLock(const CChainLockSig& clsig, c
     }
     std::vector<CQuorumCPtr> quorums_scanned;
     llmq::quorumManager->ScanQuorums(llmqType, pindexScan, signingActiveQuorumCount, quorums_scanned);
-    RequestIdStep requestIdStep{clsig.nHeight};
 
-    for (const auto& quorum : quorums_scanned) {
+    for (size_t i = 0; i < quorums_scanned.size(); ++i) {
+        const CQuorumCPtr& quorum = quorums_scanned[i];
         if (quorum == nullptr) {
             return false;
         }
-        if (!clsig.signers[requestIdStep.nStep]) {
-            ++requestIdStep.nStep;
+        if (!clsig.signers[i]) {
             continue;
         }
         quorumPublicKeys.emplace_back(quorum->qc.quorumPublicKey);
-        uint256 requestId = ::SerializeHash(requestIdStep);
+        uint256 requestId = ::SerializeHash(std::make_tuple(CLSIG_REQUESTID_PREFIX, clsig.nHeight, quorum->qc.quorumHash));
         uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, requestId, clsig.blockHash);
         hashes.emplace_back(signHash);
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG (%s) requestId=%s, signHash=%s\n",
                 __func__, clsig.ToString(), requestId.ToString(), signHash.ToString());
-
-        ++requestIdStep.nStep;
     }
     return clsig.sig.VerifyInsecureAggregated(quorumPublicKeys, hashes);
 }
@@ -331,9 +311,15 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             return;
         }
         pindexSig = pindexScan = g_chainman.m_blockman.LookupBlockIndex(clsig.blockHash);
-        if (pindexScan == nullptr) {
-            // we don't know the block/header for this CLSIG yet, try scanning quorums at chain tip
-            pindexScan = ::ChainActive().Tip();
+         if (pindexScan == nullptr) {
+            // we don't know the block/header for this CLSIG yet
+            if (clsig.nHeight <= ::ChainActive().Height()) {
+                // could be a parallel fork at the same height, try scanning quorums at the same height
+                pindexScan = ::ChainActive().Tip()->GetAncestor(clsig.nHeight);
+            } else {
+                // no idea what kind of block it is, try scanning quorums at chain tip
+                pindexScan = ::ChainActive().Tip();
+            }
         }
         if (pindexSig != nullptr && pindexSig->nHeight != clsig.nHeight) {
             // Should not happen
@@ -468,6 +454,10 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
     const CBlockIndex* pindex;
     {       
         LOCK(cs);
+        if (tryLockChainTipScheduled) {
+            return;
+        }
+        tryLockChainTipScheduled = true;
         pindex = bestChainLockBlockIndex;
         enforced = isEnforced;
     }
@@ -477,6 +467,10 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
         ::ChainstateActive().EnforceBestChainLock(pindex);
     }
     TrySignChainTip(pindexNew);
+    {       
+        LOCK(cs);
+        tryLockChainTipScheduled = false;
+    }
 }
 
 void CChainLocksHandler::CheckActiveState()
@@ -494,12 +488,16 @@ void CChainLocksHandler::CheckActiveState()
             // to disable spork19)
             mostRecentChainLockShare = bestChainLockWithKnownBlock = CChainLockSig();
             bestChainLockBlockIndex = nullptr;
+            bestChainLockCandidates.clear();
+            bestChainLockShares.clear();
         }
     }
 }
 
 void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
 {
+    static int lastSignedHeight{-1};
+
     Cleanup();
 
     if (!fMasternodeMode) {
@@ -529,7 +527,7 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
             return;
         }
 
-        if (nHeight == lastSignedHeight) {
+        if (pindex->nHeight == lastSignedHeight) {
             // already signed this one
             return;
         }
@@ -539,7 +537,7 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
             return;
         }
 
-        if (InternalHasConflictingChainLock(nHeight, msgHash)) {
+        if (InternalHasConflictingChainLock(pindex->nHeight, pindex->GetBlockHash())) {
             // don't sign if another conflicting CLSIG is already present. EnforceBestChainLock will later enforce
             // the correct chain.
             return;
@@ -551,27 +549,25 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
     const auto& llmqType = consensus.llmqTypeChainLocks;
     const auto& llmqParams = consensus.llmqs.at(consensus.llmqTypeChainLocks);
     const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
+    mapSignedRequestIds.clear();
+
     std::vector<CQuorumCPtr> quorums_scanned;
     llmq::quorumManager->ScanQuorums(llmqType, pindex, signingActiveQuorumCount, quorums_scanned);
-    RequestIdStep requestIdStep{pindex->nHeight};
-    for (const auto& quorum : quorums_scanned) {
-        uint256 requestId = ::SerializeHash(requestIdStep);
+    for (size_t i = 0; i < quorums_scanned.size(); ++i) {
+        const CQuorumCPtr& quorum = quorums_scanned[i];
         if (quorum == nullptr) {
             return;
         }
-        if (quorumSigningManager->AsyncSignIfMember(llmqType, requestId, pindex->GetBlockHash(), quorum->qc.quorumHash)) {
+        uint256 requestId = ::SerializeHash(std::make_tuple(CLSIG_REQUESTID_PREFIX, pindex->nHeight, quorum->qc.quorumHash));
+        {
             LOCK(cs);
-            lastSignedRequestIds.insert(requestId);
-            lastSignedMsgHash = pindex->GetBlockHash();
+            if (bestChainLockWithKnownBlock.nHeight >= pindex->nHeight) {
+                // might have happened while we didn't hold cs
+                return;
+            }
+            mapSignedRequestIds.emplace(requestId, std::make_pair(pindex->nHeight, pindex->GetBlockHash()));
         }
-        ++requestIdStep.nStep;
-    }
-    {
-        LOCK(cs);
-        if (bestChainLockWithKnownBlock.nHeight >= pindex->nHeight) {
-            // might have happened while we didn't hold cs
-            return;
-        }
+        quorumSigningManager->AsyncSignIfMember(llmqType, requestId, pindex->GetBlockHash(), quorum->qc.quorumHash);
         lastSignedHeight = pindex->nHeight;
     }
 }
@@ -587,19 +583,20 @@ void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recove
             return;
         }
 
-        if (lastSignedRequestIds.count(recoveredSig.id) == 0 || recoveredSig.msgHash != lastSignedMsgHash) {
+        auto it = mapSignedRequestIds.find(recoveredSig.id);
+        if (it == mapSignedRequestIds.end() || recoveredSig.msgHash != it->second.second) {
             // this is not what we signed, so lets not create a CLSIG for it
             return;
         }
-        if (bestChainLockWithKnownBlock.nHeight >= lastSignedHeight) {
+        if (bestChainLockWithKnownBlock.nHeight >= it->second.first) {
             // already got the same or a better CLSIG through the CLSIG message
             return;
         }
 
-        clsig.nHeight = lastSignedHeight;
-        clsig.blockHash = lastSignedMsgHash;
+        clsig.nHeight = it->second.first;
+        clsig.blockHash = it->second.second;
         clsig.sig = recoveredSig.sig.Get();
-        lastSignedRequestIds.erase(recoveredSig.id);
+        mapSignedRequestIds.erase(recoveredSig.id);
     }
     ProcessNewChainLock(-1, clsig, ::SerializeHash(clsig), recoveredSig.id);
 }
