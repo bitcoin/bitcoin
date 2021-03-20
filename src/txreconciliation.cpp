@@ -67,7 +67,8 @@ enum Phase {
     NONE,
     INIT_REQUESTED,
     INIT_RESPONDED,
-    EXT_REQUESTED
+    EXT_REQUESTED,
+    EXT_RESPONDED
 };
 
 /**
@@ -636,25 +637,8 @@ class TxReconciliationTracker::Impl {
             "remote_q=%d, remote_set_size=%i.\n", peer_id, peer_q_converted, peer_recon_set_size);
     }
 
-    bool RespondToReconciliationRequest(NodeId peer_id, std::vector<uint8_t>& skdata)
+    void RespondToInitialRequest(std::unordered_map<NodeId, ReconciliationState>::iterator& recon_state, std::vector<uint8_t>& skdata)
     {
-        LOCK(m_mutex);
-        auto recon_state = m_states.find(peer_id);
-        if (recon_state == m_states.end()) return false;
-        if (recon_state->second.m_we_initiate) return false;
-
-        Phase incoming_phase = recon_state->second.m_state_init_by_them.m_phase;
-
-        // For initial requests, respond only periodically to a) limit CPU usage for sketch computation,
-        // and, b) limit transaction possession privacy leak.
-        auto current_time = GetTime<std::chrono::microseconds>();
-        bool timely_initial_request = incoming_phase == Phase::INIT_REQUESTED &&
-            current_time >= recon_state->second.m_state_init_by_them.m_next_recon_respond;
-        if (!timely_initial_request) {
-            return false;
-        }
-
-        // Compute a sketch over the local reconciliation set.
         uint32_t sketch_capacity = 0;
 
         // We send an empty vector at initial request in the following 2 cases because
@@ -671,13 +655,61 @@ class TxReconciliationTracker::Impl {
             if (sketch) skdata = sketch.Serialize();
         }
 
+        // Update local reconciliation state for the peer.
         recon_state->second.m_state_init_by_them.m_phase = Phase::INIT_RESPONDED;
         recon_state->second.PrepareForExtensionRequest(sketch_capacity);
 
         LogPrint(BCLog::NET, "Responding with a sketch to reconciliation initiated by peer=%d: " /* Continued */
-            "sending sketch of capacity=%i.\n", peer_id, sketch_capacity);
+            "sending sketch of capacity=%i.\n", recon_state->first, sketch_capacity);
+    }
 
-        return true;
+    void RespondToExtensionRequest(std::unordered_map<NodeId, ReconciliationState>::iterator& recon_state, std::vector<uint8_t>& skdata)
+    {
+        assert(recon_state->second.m_capacity_snapshot > 0);
+        // Update local reconciliation state for the peer.
+        recon_state->second.m_state_init_by_them.m_phase = Phase::EXT_RESPONDED;
+
+        // Local extension sketch can be null only if initial sketch or initial capacity was 0,
+        // in which case we would have terminated reconciliation already.
+        uint32_t extended_capacity = recon_state->second.m_capacity_snapshot * 2;
+        Minisketch sketch = recon_state->second.ComputeExtendedSketch(extended_capacity);
+        assert(sketch);
+        skdata = sketch.Serialize();
+
+        // For the sketch extension, send only the higher sketch elements.
+        size_t lower_bytes_to_drop = extended_capacity / 2 * BYTES_PER_SKETCH_CAPACITY;
+        // Extended sketch is twice the size of the initial sketch (which is m_capacity_snapshot).
+        assert(lower_bytes_to_drop <= skdata.size());
+        skdata.erase(skdata.begin(), skdata.begin() + lower_bytes_to_drop);
+
+        LogPrint(BCLog::NET, "Responding with a sketch extension to reconciliation initiated by peer=%d.\n", recon_state->first);
+    }
+
+    bool RespondToReconciliationRequest(NodeId peer_id, std::vector<uint8_t>& skdata)
+    {
+        LOCK(m_mutex);
+        auto recon_state = m_states.find(peer_id);
+        if (recon_state == m_states.end()) return false;
+        if (recon_state->second.m_we_initiate) return false;
+
+        Phase incoming_phase = recon_state->second.m_state_init_by_them.m_phase;
+
+        // For initial requests, respond only periodically to a) limit CPU usage for sketch computation,
+        // and, b) limit transaction possession privacy leak.
+        auto current_time = GetTime<std::chrono::microseconds>();
+        bool timely_initial_request = incoming_phase == Phase::INIT_REQUESTED &&
+            current_time >= recon_state->second.m_state_init_by_them.m_next_recon_respond;
+        bool extension_request = incoming_phase == Phase::EXT_REQUESTED;
+
+        if (timely_initial_request) {
+            RespondToInitialRequest(recon_state, skdata);
+            return true;
+        } else if(extension_request) {
+            RespondToExtensionRequest(recon_state, skdata);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     bool HandleSketch(NodeId peer_id, const std::vector<uint8_t>& skdata,
