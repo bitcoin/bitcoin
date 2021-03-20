@@ -68,7 +68,25 @@ public:
     bool m_we_initiate;
 
     /** Keep track of the reconciliation phase with the peer. */
-    Phase m_phase_init_by_us{Phase::NONE};
+    Phase m_phase{Phase::NONE};
+
+    /**
+     * The following fields are specific to only reconciliations initiated by the peer.
+     */
+
+    /**
+     * The use of q coefficients is described above (see local_q comment).
+     * The value transmitted from the peer with a reconciliation requests is stored here until
+     * we respond to that request with a sketch.
+     */
+    double m_remote_q{Q};
+
+    /**
+     * A reconciliation request comes from a peer with a reconciliation set size from their side,
+     * which is supposed to help us to estimate set difference size. The value is stored here until
+     * we respond to that request with a sketch.
+     */
+    uint16_t m_remote_set_size;
 
     /**
      * Store all wtxids which we would announce to the peer (policy checks passed, etc.)
@@ -347,7 +365,7 @@ public:
             //
             // This doesn't prevent from a malicious peer gaming this by staying in this state
             // all the time somehow.
-            if (recon_state.m_phase_init_by_us == Phase::NONE) UpdateNextReconRequest(now);
+            if (recon_state.m_phase == Phase::NONE) UpdateNextReconRequest(now);
             return true;
         }
 
@@ -363,8 +381,8 @@ public:
         auto& recon_state = std::get<TxReconciliationState>(m_states.find(peer_id)->second);
         if (!recon_state.m_we_initiate) return std::nullopt;
 
-        if (recon_state.m_phase_init_by_us != Phase::NONE) return std::nullopt;
-        recon_state.m_phase_init_by_us = Phase::INIT_REQUESTED;
+        if (recon_state.m_phase != Phase::NONE) return std::nullopt;
+        recon_state.m_phase = Phase::INIT_REQUESTED;
 
         size_t local_set_size = recon_state.m_local_set.size();
 
@@ -377,6 +395,25 @@ public:
         // complexity, but we communicate it here to allow backward compatibility if
         // the value is changed or made dynamic.
         return std::make_pair(local_set_size, Q * Q_PRECISION);
+    }
+
+    void HandleReconciliationRequest(NodeId peer_id, uint16_t peer_recon_set_size, uint16_t peer_q) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+        if (!GetRegisteredPeerState(peer_id)) return;
+        auto& recon_state = std::get<TxReconciliationState>(m_states.find(peer_id)->second);
+        if (recon_state.m_we_initiate) return;
+        if (recon_state.m_phase != Phase::NONE) return;
+
+        double peer_q_converted = peer_q * 1.0 / Q_PRECISION;
+        recon_state.m_remote_q = peer_q_converted;
+        recon_state.m_remote_set_size = peer_recon_set_size;
+        recon_state.m_phase = Phase::INIT_REQUESTED;
+
+        LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Reconciliation initiated by peer=%d with the following params: " /* Continued */
+                                                           "remote_q=%d, remote_set_size=%i.\n",
+                    peer_id, peer_q_converted, peer_recon_set_size);
     }
 
     void ForgetPeer(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
@@ -528,6 +565,11 @@ bool TxReconciliationTracker::IsPeerNextToReconcileWith(NodeId peer_id, std::chr
 std::optional<std::pair<uint16_t, uint16_t>> TxReconciliationTracker::InitiateReconciliationRequest(NodeId peer_id)
 {
     return m_impl->InitiateReconciliationRequest(peer_id);
+}
+
+void TxReconciliationTracker::HandleReconciliationRequest(NodeId peer_id, uint16_t peer_recon_set_size, uint16_t peer_q)
+{
+    m_impl->HandleReconciliationRequest(peer_id, peer_recon_set_size, peer_q);
 }
 
 void TxReconciliationTracker::ForgetPeer(NodeId peer_id)
