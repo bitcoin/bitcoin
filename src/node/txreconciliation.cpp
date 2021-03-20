@@ -76,7 +76,8 @@ enum class Phase {
     NONE,
     INIT_REQUESTED,
     INIT_RESPONDED,
-    EXT_REQUESTED
+    EXT_REQUESTED,
+    EXT_RESPONDED
 };
 
 /**
@@ -644,24 +645,8 @@ private:
                  peer_id, peer_q_converted, peer_recon_set_size);
     }
 
-    bool RespondToReconciliationRequest(NodeId peer_id, std::vector<uint8_t>& skdata) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    void RespondToInitialRequest(TxReconciliationState& recon_state, const NodeId peer_id, std::vector<uint8_t>& skdata)
     {
-        AssertLockNotHeld(m_txreconciliation_mutex);
-        LOCK(m_txreconciliation_mutex);
-        if (!IsPeerRegistered(peer_id)) return false;
-        auto& recon_state = std::get<TxReconciliationState>(m_states.find(peer_id)->second);
-        if (recon_state.m_we_initiate) return false;
-
-        Phase incoming_phase = recon_state.m_phase;
-
-        // For initial requests we have an extra check to avoid short intervals between responses
-        // to the same peer (see comments in the check function for justification).
-        bool respond_to_initial_request = incoming_phase == Phase::INIT_REQUESTED &&
-                                          recon_state.ConsiderInitResponseAndTrack();
-        if (!respond_to_initial_request) {
-            return false;
-        }
-
         // Compute a sketch over the local reconciliation set.
         uint32_t sketch_capacity = 0;
 
@@ -684,8 +669,55 @@ private:
         LogPrint(BCLog::NET, "Responding with a sketch to reconciliation initiated by peer=%d: " /* Continued */
                              "sending sketch of capacity=%i.\n",
                  peer_id, sketch_capacity);
+    }
 
-        return true;
+    void RespondToExtensionRequest(TxReconciliationState& recon_state, NodeId peer_id, std::vector<uint8_t>& skdata)
+    {
+        assert(recon_state.m_capacity_snapshot > 0);
+        // Update local reconciliation state for the peer.
+        recon_state.m_phase = Phase::EXT_RESPONDED;
+
+        // Local extension sketch can be null only if initial sketch or initial capacity was 0,
+        // in which case we would have terminated reconciliation already.
+        uint32_t extended_capacity = recon_state.m_capacity_snapshot * 2;
+        Minisketch sketch = recon_state.ComputeExtendedSketch(extended_capacity);
+        assert(sketch);
+        skdata = sketch.Serialize();
+
+        // For the sketch extension, send only the higher sketch elements.
+        size_t lower_bytes_to_drop = extended_capacity / 2 * BYTES_PER_SKETCH_CAPACITY;
+        // Extended sketch is twice the size of the initial sketch (which is m_capacity_snapshot).
+        assert(lower_bytes_to_drop <= skdata.size());
+        skdata.erase(skdata.begin(), skdata.begin() + lower_bytes_to_drop);
+
+        LogPrint(BCLog::NET, "Responding with a sketch extension to reconciliation initiated by peer=%d.\n", peer_id);
+    }
+
+    bool RespondToReconciliationRequest(NodeId peer_id, std::vector<uint8_t>& skdata) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+        if (!IsPeerRegistered(peer_id)) return false;
+        auto& recon_state = std::get<TxReconciliationState>(m_states.find(peer_id)->second);
+        if (recon_state.m_we_initiate) return false;
+
+        Phase incoming_phase = recon_state.m_phase;
+
+        // For initial requests we have an extra check to avoid short intervals between responses
+        // to the same peer (see comments in the check function for justification).
+        bool respond_to_initial_request = incoming_phase == Phase::INIT_REQUESTED &&
+            recon_state.ConsiderInitResponseAndTrack();
+        bool respond_to_extension_request = incoming_phase == Phase::EXT_REQUESTED;
+
+        if (respond_to_initial_request) {
+            RespondToInitialRequest(recon_state, peer_id, skdata);
+            return true;
+        } else if (respond_to_extension_request) {
+            RespondToExtensionRequest(recon_state, peer_id, skdata);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     bool HandleSketch(NodeId peer_id, const std::vector<uint8_t>& skdata,
