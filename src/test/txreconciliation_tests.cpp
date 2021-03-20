@@ -368,6 +368,64 @@ BOOST_AUTO_TEST_CASE(HandleReconciliationRequestTest)
     BOOST_REQUIRE_EQUAL(tracker.HandleReconciliationRequest(peer_id2, 0, Q).value(), ReconciliationError::WRONG_ROLE);
 }
 
+BOOST_AUTO_TEST_CASE(ShouldRespondToReconciliationRequestTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+    FastRandomContext frc{/*fDeterministic=*/true};
+    std::vector<uint8_t> skdata{};
+
+    // We cannot respond to partially registered peers
+    BOOST_REQUIRE(!tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata, /*send_trickle*/true));
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE(!tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata, /*send_trickle*/true));
+
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, 1).has_value());
+
+    // We only respond to reconciliation requests after receiving one
+    BOOST_REQUIRE(!tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata, /*send_trickle*/true));
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, /*peer_recon_set_size*/10, Q).has_value());
+
+    // For the initial request, we only respond on trickle
+    BOOST_REQUIRE(!tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata, /*send_trickle*/false));
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata, /*send_trickle*/true));
+
+    // The sketch data depends on the transactions we had on the peer's local set
+    BOOST_REQUIRE(skdata.empty());
+
+    // After responding, the reconciliation phase have moved from INIT_REQUESTED to INIT_RESPONDED, so we cannot respond again
+    BOOST_REQUIRE(!tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata, /*send_trickle*/true));
+
+    // Reset the peer
+    tracker.ForgetPeer(peer_id0);
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, 1).has_value());
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, /*peer_recon_set_size*/0, Q).has_value());
+
+    // If the received request had size zero (peer_recon_set_size == 0), we will respond but shortcut, since reconciling is pointless
+    tracker.AddToSet(peer_id0, Wtxid::FromUint256(frc.rand256()));
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata, /*send_trickle*/true));
+    BOOST_REQUIRE(skdata.empty());
+
+    // Reset the peer
+    tracker.ForgetPeer(peer_id0);
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, 1).has_value());
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, /*peer_recon_set_size*/10, Q).has_value());
+
+    // If the peer has data to reconcile, adding some transactions to the peers local set will affect the serialized
+    // sketch data we receive (which we're supposed to send to our peer)
+    tracker.AddToSet(peer_id0, Wtxid::FromUint256(frc.rand256()));
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata, /*send_trickle*/true));
+    BOOST_REQUIRE(!skdata.empty());
+
+    // We only respond to reconciliation requests if they are the initiator (peer is inbound)
+    NodeId peer_id1 = 1;
+    tracker.PreRegisterPeer(peer_id1);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id1, /*is_peer_inbound*/false, TXRECONCILIATION_VERSION, 1).has_value());
+    BOOST_REQUIRE(!tracker.ShouldRespondToReconciliationRequest(peer_id1, skdata, /*send_trickle*/true));
+}
+
 BOOST_AUTO_TEST_CASE(IsInboundFanoutTargetTest)
 {
     TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);

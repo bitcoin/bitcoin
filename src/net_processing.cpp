@@ -5968,6 +5968,23 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             MakeAndPushMessage(*pto, NetMsgType::INV, vInv);
 
         //
+        // Message: reconciliation response
+        //
+        if (m_txreconciliation) {
+            // Transaction reconciliation requests are responded at trickle intervals after making all
+            // relevant transactions available up to this point. This applies only to inbound peers, since
+            // they are the only ones allowed to request reconciliation.
+            std::vector<uint8_t> skdata;
+            if (m_txreconciliation->ShouldRespondToReconciliationRequest(pto->GetId(), skdata, fSendTrickle)) {
+                // It's perfectly valid to send an empty sketch, because we use this behavior
+                // to trigger early reconciliation termination when it won't help anyway:
+                // - we have no transactions for the peer
+                // - the peer have no transactions for us
+                MakeAndPushMessage(*pto, NetMsgType::SKETCH, skdata);
+            }
+        }
+
+        //
         // Message: reconciliation request
         //
         {

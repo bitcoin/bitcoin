@@ -348,6 +348,43 @@ public:
         return std::nullopt;
     }
 
+    bool ShouldRespondToReconciliationRequest(NodeId peer_id, std::vector<uint8_t>& skdata, bool send_trickle) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+
+        auto peer_state = GetRegisteredPeerState(peer_id);
+        if (!peer_state) return false;
+        if (peer_state->m_we_initiate) return false;
+
+        // Return if there is nothing to respond to
+        if (peer_state->m_phase != ReconciliationPhase::INIT_REQUESTED || !send_trickle) {
+            return false;
+        }
+
+        // Compute a sketch over the local reconciliation set.
+        uint32_t sketch_capacity = 0;
+
+        // We send an empty vector at initial request in the following 2 cases because
+        // reconciliation can't help:
+        // - if we have nothing on our side
+        // - if they have nothing on their side
+        // Then, they will terminate reconciliation early and force flooding-style announcement.
+        if (peer_state->m_remote_set_size > 0 && peer_state->m_local_set.size() > 0) {
+            if (sketch_capacity = peer_state->EstimateSketchCapacity(peer_state->m_local_set.size()); sketch_capacity > 0) {
+                Minisketch sketch = peer_state->ComputeSketch(sketch_capacity);
+                skdata = sketch.Serialize();
+            }
+        }
+
+        peer_state->m_phase = ReconciliationPhase::INIT_RESPONDED;
+
+        LogDebug(BCLog::TXRECONCILIATION, "Responding with a sketch to reconciliation initiated by peer=%d: sending sketch of capacity=%i.\n",
+            peer_id, sketch_capacity);
+
+        return true;
+    }
+
     bool IsInboundFanoutTarget(NodeId peer_id) const EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
@@ -453,6 +490,11 @@ std::variant<ReconCoefficients, ReconciliationError> TxReconciliationTracker::In
 std::optional<ReconciliationError> TxReconciliationTracker::HandleReconciliationRequest(NodeId peer_id, uint16_t peer_recon_set_size, uint16_t peer_q)
 {
     return m_impl->HandleReconciliationRequest(peer_id, peer_recon_set_size, peer_q);
+}
+
+bool TxReconciliationTracker::ShouldRespondToReconciliationRequest(NodeId peer_id, std::vector<uint8_t>& skdata, bool send_trickle)
+{
+    return m_impl->ShouldRespondToReconciliationRequest(peer_id, skdata, send_trickle);
 }
 
 bool TxReconciliationTracker::IsInboundFanoutTarget(NodeId peer_id)
