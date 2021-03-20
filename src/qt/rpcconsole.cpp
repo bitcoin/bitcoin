@@ -926,57 +926,57 @@ void RPCConsole::on_lineEdit_returnPressed()
 {
     QString cmd = ui->lineEdit->text();
 
-    if(!cmd.isEmpty())
-    {
-        std::string strFilteredCmd;
-        try {
-            std::string dummy;
-            if (!RPCParseCommandLine(nullptr, dummy, cmd.toStdString(), false, &strFilteredCmd)) {
-                // Failed to parse command, so we cannot even filter it for the history
-                throw std::runtime_error("Invalid command line");
-            }
-        } catch (const std::exception& e) {
-            QMessageBox::critical(this, "Error", QString("Error: ") + QString::fromStdString(e.what()));
-            return;
+    if (cmd.isEmpty()) {
+        return;
+    }
+
+    std::string strFilteredCmd;
+    try {
+        std::string dummy;
+        if (!RPCParseCommandLine(nullptr, dummy, cmd.toStdString(), false, &strFilteredCmd)) {
+            // Failed to parse command, so we cannot even filter it for the history
+            throw std::runtime_error("Invalid command line");
         }
+    } catch (const std::exception& e) {
+        QMessageBox::critical(this, "Error", QString("Error: ") + QString::fromStdString(e.what()));
+        return;
+    }
 
-        ui->lineEdit->clear();
-
-        cmdBeforeBrowsing = QString();
+    ui->lineEdit->clear();
 
 #ifdef ENABLE_WALLET
-        WalletModel* wallet_model = ui->WalletSelector->currentData().value<WalletModel*>();
+    WalletModel* wallet_model = ui->WalletSelector->currentData().value<WalletModel*>();
 
-        if (m_last_wallet_model != wallet_model) {
-            if (wallet_model) {
-                message(CMD_REQUEST, tr("Executing command using \"%1\" wallet").arg(wallet_model->getWalletName()));
-            } else {
-                message(CMD_REQUEST, tr("Executing command without any wallet"));
-            }
-            m_last_wallet_model = wallet_model;
+    if (m_last_wallet_model != wallet_model) {
+        if (wallet_model) {
+            message(CMD_REQUEST, tr("Executing command using \"%1\" wallet").arg(wallet_model->getWalletName()));
+        } else {
+            message(CMD_REQUEST, tr("Executing command without any wallet"));
         }
-#endif
-
-        message(CMD_REQUEST, QString::fromStdString(strFilteredCmd));
-        //: A console message indicating an entered command is currently being executed.
-        message(CMD_REPLY, tr("Executing…"));
-        Q_EMIT cmdRequest(cmd, m_last_wallet_model);
-
-        cmd = QString::fromStdString(strFilteredCmd);
-
-        // Remove command, if already in history
-        history.removeOne(cmd);
-        // Append command to history
-        history.append(cmd);
-        // Enforce maximum history size
-        while(history.size() > CONSOLE_HISTORY)
-            history.removeFirst();
-        // Set pointer to end of history
-        historyPtr = history.size();
-
-        // Scroll console view to end
-        scrollToEnd();
+        m_last_wallet_model = wallet_model;
     }
+#endif // ENABLE_WALLET
+
+    message(CMD_REQUEST, QString::fromStdString(strFilteredCmd));
+    //: A console message indicating an entered command is currently being executed.
+    message(CMD_REPLY, tr("Executing…"));
+    Q_EMIT cmdRequest(cmd, m_last_wallet_model);
+
+    cmd = QString::fromStdString(strFilteredCmd);
+
+    // Remove command, if already in history
+    history.removeOne(cmd);
+    // Append command to history
+    history.append(cmd);
+    // Enforce maximum history size
+    while (history.size() > CONSOLE_HISTORY) {
+        history.removeFirst();
+    }
+    // Set pointer to end of history
+    historyPtr = history.size();
+
+    // Scroll console view to end
+    scrollToEnd();
 }
 
 void RPCConsole::browseHistory(int offset)
