@@ -84,6 +84,12 @@ class TxReconciliationTracker {
      * Check if a peer is registered to reconcile with us.
      */
     bool IsPeerRegistered(NodeId peer_id) const;
+
+    /**
+     * Tells whether a given peer might initiate reconciliations.
+     * If the peer was not previously registered for reconciliations, returns nullopt.
+     */
+    std::optional<bool> IsPeerInitiator(NodeId peer_id) const;
 };
 
 #endif // BITCOIN_TXRECONCILIATION_H

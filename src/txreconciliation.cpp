@@ -181,6 +181,17 @@ class TxReconciliationTracker::Impl {
         LOCK(m_mutex);
         return m_states.find(peer_id) != m_states.end();
     }
+
+    std::optional<bool> IsPeerInitiator(NodeId peer_id) const
+    {
+        LOCK(m_mutex);
+        auto recon_state = m_states.find(peer_id);
+        if (recon_state == m_states.end()) {
+            return std::nullopt;
+        }
+        return !recon_state->second.m_we_initiate;
+    }
+
 };
 
 TxReconciliationTracker::TxReconciliationTracker() :
@@ -208,4 +219,9 @@ void TxReconciliationTracker::RemovePeer(NodeId peer_id)
 bool TxReconciliationTracker::IsPeerRegistered(NodeId peer_id) const
 {
     return m_impl->IsPeerRegistered(peer_id);
+}
+
+std::optional<bool> TxReconciliationTracker::IsPeerInitiator(NodeId peer_id) const
+{
+    return m_impl->IsPeerInitiator(peer_id);
 }
