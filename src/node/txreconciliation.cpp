@@ -40,6 +40,11 @@ constexpr uint16_t Q_PRECISION{(2 << 14) - 1};
  * Less frequent reconciliations would introduce high transaction relay latency.
  */
 constexpr std::chrono::microseconds RECON_REQUEST_INTERVAL{8s};
+/**
+ * We should keep an interval between responding to reconciliation requests from the same peer,
+ * to reduce potential DoS surface.
+ */
+constexpr std::chrono::microseconds RECON_RESPONSE_INTERVAL{1s};
 
 /**
  * Represents phase of the current reconciliation round with a peer.
@@ -115,6 +120,25 @@ public:
      * we respond to that request with a sketch.
      */
     uint16_t m_remote_set_size;
+
+    /**
+     * We track when was the last time we responded to a reconciliation request by the peer,
+     * so that we don't respond to them too often. This helps to reduce DoS surface.
+     */
+    std::chrono::microseconds m_last_init_recon_respond{0};
+    /**
+     * Returns whether at this time it's not too early to respond to a reconciliation request by
+     * the peer, and, if so, bumps the time we last responded to allow further checks.
+     */
+    bool ConsiderInitResponseAndTrack()
+    {
+        auto current_time = GetTime<std::chrono::seconds>();
+        if (m_last_init_recon_respond <= current_time - RECON_RESPONSE_INTERVAL) {
+            m_last_init_recon_respond = current_time;
+            return true;
+        }
+        return false;
+    }
 };
 
 } // namespace
