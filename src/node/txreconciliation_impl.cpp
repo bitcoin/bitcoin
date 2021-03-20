@@ -589,6 +589,24 @@ public:
         }
     }
 
+    void HandleExtensionRequest(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+        if (!GetRegisteredPeerState(peer_id)) return;
+        auto& recon_state = std::get<TxReconciliationState>(m_states.find(peer_id)->second);
+        if (recon_state.m_phase != ReconciliationPhase::INIT_RESPONDED) return;
+        if (recon_state.m_capacity_snapshot == 0) {
+            // In this case, the peer is supposed to terminate the reconciliation and not
+            // request extension.
+            LogDebug(BCLog::TXRECONCILIATION, "Peer=%d violated the protocol by requesting an extension even though we initially provided an empty sketch.\n", peer_id);
+            return;
+        }
+
+        recon_state.m_phase = ReconciliationPhase::EXT_REQUESTED;
+        LogDebug(BCLog::TXRECONCILIATION, "Received reconciliation extension request from peer=%d.\n", peer_id);
+    }
+
     bool IsInboundFanoutTarget(NodeId peer_id) const EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
@@ -716,6 +734,11 @@ bool TxReconciliationTracker::HandleSketch(NodeId peer_id, const std::vector<uin
                                            std::vector<uint32_t>& txs_to_request, std::vector<Wtxid>& txs_to_announce, std::optional<bool>& result)
 {
     return m_impl->HandleSketch(peer_id, skdata, txs_to_request, txs_to_announce, result);
+}
+
+void TxReconciliationTracker::HandleExtensionRequest(NodeId peer_id)
+{
+    m_impl->HandleExtensionRequest(peer_id);
 }
 
 bool TxReconciliationTracker::IsInboundFanoutTarget(NodeId peer_id)
