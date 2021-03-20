@@ -136,6 +136,14 @@ public:
                       std::vector<uint32_t>& txs_to_request, std::vector<uint256>& txs_to_announce, std::optional<bool>& result);
 
     /**
+     * Step 5. Peer requesting extension after reconciliation they initiated failed on their side:
+     * the sketch we sent to them was not sufficient to find the difference.
+     * No privacy leak can happen here because sketch extension is constructed over the snapshot.
+     * If the peer seems to violate the protocol, do nothing.
+     */
+    void HandleExtensionRequest(NodeId peer_id);
+
+    /**
      * Attempts to forget txreconciliation-related state of the peer (if we previously stored any).
      * After this, we won't be able to reconcile transactions with the peer.
      */
