@@ -234,9 +234,10 @@ public:
         return sketch;
     }
 
-    std::vector<uint256> GetAllTransactions() const
+    std::vector<uint256> GetAllTransactions(bool snapshot) const
     {
-        return std::vector<uint256>(m_local_set.begin(), m_local_set.end());
+        return snapshot ? std::vector<uint256>(m_local_set_snapshot.begin(), m_local_set_snapshot.end()) :
+                          std::vector<uint256>(m_local_set.begin(), m_local_set.end());
     }
 
     /**
@@ -267,9 +268,11 @@ public:
         // returning values
         std::vector<uint32_t>& local_missing, std::vector<uint256>& remote_missing) const
     {
+        const auto working_mapping = from_snapshot ? m_snapshot_short_id_mapping : m_short_id_mapping;
+
         for (const auto& diff_short_id: diff) {
-            const auto local_tx = m_short_id_mapping.find(diff_short_id);
-            if (local_tx != m_short_id_mapping.end()) {
+            const auto local_tx = working_mapping.find(diff_short_id);
+            if (local_tx != working_mapping.end()) {
                 remote_missing.push_back(local_tx->second);
             } else {
                 local_missing.push_back(diff_short_id);
@@ -433,7 +436,7 @@ private:
         // In case (2), local sketch is also empty.
         if (remote_sketch_capacity == 0 || !remote_sketch || !local_sketch) {
             // Announce all transactions we have.
-            txs_to_announce = recon_state.GetAllTransactions();
+            txs_to_announce = recon_state.GetAllTransactions(false);
 
             // Update local reconciliation state for the peer.
             recon_state.FinalizeInitByUs(true);
@@ -457,7 +460,7 @@ private:
             // Initial reconciliation step succeeded.
 
             // Identify locally/remotely missing transactions.
-            recon_state.GetRelevantIDsFromShortIDs(differences, txs_to_request, txs_to_announce);
+            recon_state.GetRelevantIDsFromShortIDs(differences, txs_to_request, txs_to_announce, false);
 
             // Update local reconciliation state for the peer.
             recon_state.FinalizeInitByUs(true);
@@ -479,6 +482,71 @@ private:
             LogPrint(BCLog::NET, "Reconciliation we initiated with peer=%d has failed at initial step, " /* Continued */
                 "request sketch extension.\n", peer_id);
         }
+        return true;
+    }
+
+    bool HandleSketchExtension(TxReconciliationState& recon_state, const NodeId peer_id,
+                               const std::vector<uint8_t>& skdata,
+                               // returning values
+                               std::vector<uint32_t>& txs_to_request, std::vector<uint256>& txs_to_announce, std::optional<bool>& result)
+    {
+        assert(recon_state.m_we_initiate);
+        assert(recon_state.m_phase == Phase::EXT_REQUESTED);
+
+        std::vector<uint8_t> working_skdata = std::vector<uint8_t>(skdata);
+        // A sketch extension is missing the lower elements (to be a valid extended sketch),
+        // which we stored on our side at initial reconciliation step.
+        working_skdata.insert(working_skdata.begin(),
+                              recon_state.m_remote_sketch_snapshot.begin(),
+                              recon_state.m_remote_sketch_snapshot.end());
+
+        // We allow the peer to send an extension for any capacity, not just original capacity * 2,
+        // but it should be within the limits. The limits are MAX_SKETCH_CAPACITY * 2, so that
+        // they can extend even the largest (originally) sketch.
+        uint16_t extended_capacity = uint32_t(working_skdata.size() / BYTES_PER_SKETCH_CAPACITY);
+        if (extended_capacity > MAX_SKETCH_CAPACITY * 2) return false;
+
+        Minisketch local_sketch = recon_state.ComputeExtendedSketch(extended_capacity);
+        assert(local_sketch);
+        Minisketch remote_sketch = Minisketch(RECON_FIELD_SIZE, 0, extended_capacity).Deserialize(working_skdata);
+
+        // Attempt to decode the set difference
+        size_t max_elements = minisketch_compute_max_elements(RECON_FIELD_SIZE, extended_capacity, RECON_FALSE_POSITIVE_COEF);
+        std::vector<uint64_t> differences(max_elements);
+        if (local_sketch.Merge(remote_sketch).Decode(differences)) {
+            // Extension step succeeded.
+
+            // Identify locally/remotely missing transactions.
+            recon_state.GetRelevantIDsFromShortIDs(differences, txs_to_request, txs_to_announce, true);
+
+            result = true;
+            LogPrint(BCLog::NET, "Reconciliation we initiated with peer=%d has succeeded at extension step, " /* Continued */
+                                 "request %i txs, announce %i txs.\n",
+                     peer_id, txs_to_request.size(), txs_to_announce.size());
+        } else {
+            // Reconciliation over extended sketch failed.
+
+            // Announce all local transactions from the reconciliation set.
+            // All remote transactions will be announced by peer based on the reconciliation
+            // failure flag.
+            txs_to_announce = recon_state.GetAllTransactions(true);
+
+            result = false;
+            LogPrint(BCLog::NET, "Reconciliation we initiated with peer=%d has failed at extension step, " /* Continued */
+                                 "request all txs, announce %i txs.\n",
+                     peer_id, txs_to_announce.size());
+        }
+
+        // Filter out transactions received from the peer during the extension phase.
+        std::set<uint256> announced_during_extension = recon_state.m_announced_during_extension;
+        txs_to_announce.erase(std::remove_if(txs_to_announce.begin(), txs_to_announce.end(), [announced_during_extension](const auto& x) {
+                                  return std::find(announced_during_extension.begin(), announced_during_extension.end(), x) != announced_during_extension.end();
+                              }),
+                              txs_to_announce.end());
+
+        // Update local reconciliation state for the peer.
+        recon_state.FinalizeInitByUs(false);
+        recon_state.m_phase = Phase::NONE;
         return true;
     }
 
@@ -734,6 +802,8 @@ private:
         Phase cur_phase = recon_state.m_phase;
         if (cur_phase == Phase::INIT_REQUESTED) {
             return HandleInitialSketch(recon_state, peer_id, skdata, txs_to_request, txs_to_announce, result);
+        } else if (cur_phase == Phase::EXT_REQUESTED) {
+            return HandleSketchExtension(recon_state, peer_id, skdata, txs_to_request, txs_to_announce, result);
         } else {
             LogPrint(BCLog::NET, "Received sketch from peer=%d in wrong reconciliation phase=%i.\n", peer_id, static_cast<int>(cur_phase));
             return false;
