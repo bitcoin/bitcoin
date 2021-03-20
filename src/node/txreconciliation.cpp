@@ -36,14 +36,14 @@ constexpr unsigned int RECON_FIELD_SIZE = 32;
 constexpr uint32_t MAX_SKETCH_CAPACITY = 2 << 12;
 
 /**
-* It is possible that if sketch encodes more elements than the capacity, or
-* if it is constructed of random bytes, sketch decoding may "succeed",
-* but the result will be nonsense (false-positive decoding).
-* Given this coef, a false positive probability will be of 1 in 2**coef.
-*/
+ * It is possible that if sketch encodes more elements than the capacity, or
+ * if it is constructed of random bytes, sketch decoding may "succeed",
+ * but the result will be nonsense (false-positive decoding).
+ * Given this coef, a false positive probability will be of 1 in 2**coef.
+ */
 constexpr unsigned int RECON_FALSE_POSITIVE_COEF = 16;
 static_assert(RECON_FALSE_POSITIVE_COEF <= 256,
-    "Reducing reconciliation false positives beyond 1 in 2**256 is not supported");
+              "Reducing reconciliation false positives beyond 1 in 2**256 is not supported");
 /**
  * A floating point coefficient q for estimating reconciliation set difference, and
  * the value used to convert it to integer for transmission purposes, as specified in BIP-330.
@@ -70,6 +70,7 @@ constexpr std::chrono::microseconds RECON_RESPONSE_INTERVAL{1s};
 enum class Phase {
     NONE,
     INIT_REQUESTED,
+    INIT_RESPONDED,
 };
 
 /**
@@ -165,7 +166,7 @@ public:
         capacity = std::min(capacity, MAX_SKETCH_CAPACITY);
         sketch = node::MakeMinisketch32(capacity);
 
-        for (const auto& wtxid: m_local_set) {
+        for (const auto& wtxid : m_local_set) {
             uint32_t short_txid = ComputeShortID(wtxid);
             sketch.Add(short_txid);
             m_short_id_mapping.emplace(short_txid, wtxid);
@@ -419,6 +420,47 @@ public:
             "remote_q=%d, remote_set_size=%i.\n", peer_id, peer_q_converted, peer_recon_set_size);
     }
 
+    bool RespondToReconciliationRequest(NodeId peer_id, std::vector<uint8_t>& skdata) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+        if (!IsPeerRegistered(peer_id)) return false;
+        auto& recon_state = std::get<TxReconciliationState>(m_states.find(peer_id)->second);
+        if (recon_state.m_we_initiate) return false;
+
+        Phase incoming_phase = recon_state.m_phase;
+
+        // For initial requests we have an extra check to avoid short intervals between responses
+        // to the same peer (see comments in the check function for justification).
+        bool respond_to_initial_request = incoming_phase == Phase::INIT_REQUESTED &&
+            recon_state.ConsiderInitResponseAndTrack();
+        if (!respond_to_initial_request) {
+            return false;
+        }
+
+        // Compute a sketch over the local reconciliation set.
+        uint32_t sketch_capacity = 0;
+
+        // We send an empty vector at initial request in the following 2 cases because
+        // reconciliation can't help:
+        // - if we have nothing on our side
+        // - if they have nothing on their side
+        // Then, they will terminate reconciliation early and force flooding-style announcement.
+        if (recon_state.m_remote_set_size > 0 && recon_state.m_local_set.size() > 0) {
+
+            sketch_capacity = recon_state.EstimateSketchCapacity(
+                recon_state.m_local_set.size());
+            Minisketch sketch = recon_state.ComputeSketch(sketch_capacity);
+            if (sketch) skdata = sketch.Serialize();
+        }
+
+        recon_state.m_phase = Phase::INIT_RESPONDED;
+
+        LogPrint(BCLog::NET, "Responding with a sketch to reconciliation initiated by peer=%d: " /* Continued */
+            "sending sketch of capacity=%i.\n", peer_id, sketch_capacity);
+
+        return true;
+    }
 
     void ForgetPeer(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
@@ -582,6 +624,11 @@ std::optional<std::pair<uint16_t, uint16_t>> TxReconciliationTracker::InitiateRe
 void TxReconciliationTracker::HandleReconciliationRequest(NodeId peer_id, uint16_t peer_recon_set_size, uint16_t peer_q)
 {
     m_impl->HandleReconciliationRequest(peer_id, peer_recon_set_size, peer_q);
+}
+
+bool TxReconciliationTracker::RespondToReconciliationRequest(NodeId peer_id, std::vector<uint8_t>& skdata)
+{
+    return m_impl->RespondToReconciliationRequest(peer_id, skdata);
 }
 
 void TxReconciliationTracker::ForgetPeer(NodeId peer_id)

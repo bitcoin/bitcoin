@@ -271,6 +271,12 @@ extern const char* SENDTXRCNCL;
  * Peer should respond with "sketch" message constructed using these arguments.
  */
 extern const char* REQTXRCNCL;
+/**
+ * Contains a sketch of the local reconciliation set,
+ * used to efficiently reconcile transactions.
+ * Peer should respond with "reconcildiff" or "reqsketchext" message.
+ */
+extern const char* SKETCH;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */
