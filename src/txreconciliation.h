@@ -96,6 +96,14 @@ class TxReconciliationTracker {
      */
     void HandleReconciliationRequest(NodeId peer_id, uint16_t peer_recon_set_size, uint16_t peer_q);
 
+    /**
+     * Step 2. Once it's time to respond to reconciliation requests, we construct a sketch from
+     * the local reconciliation set, and send it to the initiator.
+     * If the peer was not previously registered for reconciliations or it's not the time yet,
+     * returns false.
+     */
+    bool RespondToReconciliationRequest(NodeId peer_id, std::vector<uint8_t>& skdata);
+
     // Helpers
 
     /**

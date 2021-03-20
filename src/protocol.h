@@ -276,6 +276,12 @@ extern const char *SENDRECON;
  * Peer should respond with "sketch" message.
  */
 extern const char *REQRECON;
+/**
+ * Contains a sketch of the local reconciliation set,
+ * used to efficiently reconcile transactions.
+ * Peer should respond with "reconcildiff" or "reqsketchext" message.
+ */
+extern const char *SKETCH;
 }; // namespace NetMsgType
 
 /* Get a vector of all valid message types (see above) */

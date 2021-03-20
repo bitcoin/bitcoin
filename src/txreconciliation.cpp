@@ -61,6 +61,7 @@ constexpr std::chrono::microseconds RECON_RESPONSE_INTERVAL{1s};
 enum Phase {
     NONE,
     INIT_REQUESTED,
+    INIT_RESPONDED,
 };
 
 /**
@@ -403,7 +404,7 @@ class TxReconciliationTracker::Impl {
                 if (recon_state->second.m_state_init_by_us.m_phase != Phase::NONE) return std::nullopt;
                 recon_state->second.m_state_init_by_us.m_phase = Phase::INIT_REQUESTED;
 
-                size_t local_set_size = recon_state->second.m_local_set.m_wtxids.size();
+                size_t local_set_size = recon_state->second.m_local_set.GetSize();
 
                 LogPrint(BCLog::NET, "Initiate reconciliation with peer=%d with the following params: " /* Continued */
                     "local_set_size=%i\n", peer_id, local_set_size);
@@ -434,6 +435,49 @@ class TxReconciliationTracker::Impl {
 
         LogPrint(BCLog::NET, "Reconciliation initiated by peer=%d with the following params: " /* Continued */
             "remote_q=%d, remote_set_size=%i.\n", peer_id, peer_q_converted, peer_recon_set_size);
+    }
+
+    bool RespondToReconciliationRequest(NodeId peer_id, std::vector<uint8_t>& skdata)
+    {
+        LOCK(m_mutex);
+        auto recon_state = m_states.find(peer_id);
+        if (recon_state == m_states.end()) return false;
+        if (recon_state->second.m_we_initiate) return false;
+
+        Phase incoming_phase = recon_state->second.m_state_init_by_them.m_phase;
+
+        // For initial requests, respond only periodically to a) limit CPU usage for sketch computation,
+        // and, b) limit transaction possession privacy leak.
+        auto current_time = GetTime<std::chrono::microseconds>();
+        bool timely_initial_request = incoming_phase == Phase::INIT_REQUESTED &&
+            current_time >= recon_state->second.m_state_init_by_them.m_next_recon_respond;
+        if (!timely_initial_request) {
+            return false;
+        }
+
+        // Compute a sketch over the local reconciliation set.
+        uint32_t sketch_capacity = 0;
+
+        // We send an empty vector at initial request in the following 2 cases because
+        // reconciliation can't help:
+        // - if we have nothing on our side
+        // - if they have nothing on their side
+        // Then, they will terminate reconciliation early and force flooding-style announcement.
+        if (recon_state->second.m_state_init_by_them.m_remote_set_size > 0 &&
+                recon_state->second.m_local_set.GetSize() > 0) {
+
+            sketch_capacity = recon_state->second.m_state_init_by_them.EstimateSketchCapacity(
+                recon_state->second.m_local_set.GetSize());
+            Minisketch sketch = recon_state->second.ComputeSketch(sketch_capacity);
+            if (sketch) skdata = sketch.Serialize();
+        }
+
+        recon_state->second.m_state_init_by_them.m_phase = Phase::INIT_RESPONDED;
+
+        LogPrint(BCLog::NET, "Responding with a sketch to reconciliation initiated by peer=%d: " /* Continued */
+            "sending sketch of capacity=%i.\n", peer_id, sketch_capacity);
+
+        return true;
     }
 
     void RemovePeer(NodeId peer_id)
@@ -547,6 +591,11 @@ std::optional<std::pair<uint16_t, uint16_t>> TxReconciliationTracker::MaybeReque
 void TxReconciliationTracker::HandleReconciliationRequest(NodeId peer_id, uint16_t peer_recon_set_size, uint16_t peer_q)
 {
     m_impl->HandleReconciliationRequest(peer_id, peer_recon_set_size, peer_q);
+}
+
+bool TxReconciliationTracker::RespondToReconciliationRequest(NodeId peer_id, std::vector<uint8_t>& skdata)
+{
+    return m_impl->RespondToReconciliationRequest(peer_id, skdata);
 }
 
 void TxReconciliationTracker::RemovePeer(NodeId peer_id)

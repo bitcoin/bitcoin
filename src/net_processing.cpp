@@ -4870,6 +4870,21 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             }
         }
 
+        //
+        // Message: reconciliation response
+        //
+        {
+            std::vector<uint8_t> skdata;
+            bool respond = m_reconciliation.RespondToReconciliationRequest(pto->GetId(), skdata);
+            if (respond) {
+                // It's perfectly valid to send an empty sketch, because we use this behavior
+                // to trigger early reconciliation termination when it won't help anyway:
+                // - we have no transactions for the peer
+                // - the peer have no transactions for us
+                m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::SKETCH, skdata));
+            }
+        }
+
         // Detect whether we're stalling
         if (state.m_stalling_since.count() && state.m_stalling_since < current_time - BLOCK_STALLING_TIMEOUT) {
             // Stalling only triggers when the block download window cannot move. During normal steady state,
