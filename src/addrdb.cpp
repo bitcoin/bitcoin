@@ -15,6 +15,7 @@
 #include <streams.h>
 #include <tinyformat.h>
 #include <util/system.h>
+#include <util/time.h>
 
 namespace {
 
@@ -167,8 +168,10 @@ void DumpAnchors(const fs::path& anchors_db_path, const std::vector<CAddress>& a
 std::vector<CAddress> ReadAnchors(const fs::path& anchors_db_path)
 {
     std::vector<CAddress> anchors;
+    int64_t nStart = GetTimeMillis();
+
     if (DeserializeFileDB(anchors_db_path, anchors)) {
-        LogPrintf("Loaded %i addresses from %s\n", anchors.size(), anchors_db_path.filename());
+        LogPrintf("Loaded %i addresses from %s  %dms\n", anchors.size(), anchors_db_path.filename().string(), GetTimeMillis() - nStart);
     } else {
         anchors.clear();
     }
