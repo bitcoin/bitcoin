@@ -219,7 +219,7 @@ public:
         Minisketch sketch = Minisketch(RECON_FIELD_SIZE, 0, extended_capacity);
 
         // We don't have to recompute short IDs here.
-        for (const auto& shortid_to_wtxid: m_snapshot_short_id_mapping) {
+        for (const auto& shortid_to_wtxid : m_snapshot_short_id_mapping) {
             sketch.Add(shortid_to_wtxid.first);
         }
         return sketch;
@@ -294,6 +294,21 @@ public:
     }
 
     /**
+     * Be ready to respond to extension request, to compute the extended sketch over
+     * the same initial set (without transactions received during the reconciliation).
+     * Allow to store new transactions separately in the original set.
+     */
+    void PrepareForExtensionRequest(uint16_t sketch_capacity)
+    {
+        assert(!m_we_initiate);
+        m_capacity_snapshot = sketch_capacity;
+        m_local_set_snapshot = m_local_set;
+        m_snapshot_short_id_mapping = m_short_id_mapping;
+        m_local_set.clear();
+        m_short_id_mapping.clear();
+    }
+
+    /**
      * To be efficient in transmitting extended sketch, we store a snapshot of the sketch
      * received in the initial reconciliation step, so that only the necessary extension data
      * has to be transmitted.
@@ -307,7 +322,9 @@ public:
         m_capacity_snapshot = sketch_capacity;
         m_remote_sketch_snapshot = remote_sketch;
         m_local_set_snapshot = m_local_set;
+        m_snapshot_short_id_mapping = m_short_id_mapping;
         m_local_set.clear();
+        m_short_id_mapping.clear();
     }
 };
 } // namespace
@@ -630,6 +647,7 @@ private:
         }
 
         recon_state.m_phase = Phase::INIT_RESPONDED;
+        recon_state.PrepareForExtensionRequest(sketch_capacity);
 
         LogPrint(BCLog::NET, "Responding with a sketch to reconciliation initiated by peer=%d: " /* Continued */
                              "sending sketch of capacity=%i.\n",
