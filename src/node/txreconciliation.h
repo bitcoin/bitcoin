@@ -190,16 +190,17 @@ public:
     void PrepareForExtensionResponse(const std::vector<uint8_t>& remote_sketch);
 
     /**
-     * Get all the transactions we have stored for this peer.
+     * Get all the transactions we have stored for this peer, either from the local set
+     * or the snapshot, depending on the provided flag.
      */
-    std::vector<Wtxid> GetAllTransactions() const;
+    std::vector<Wtxid> GetAllTransactions(bool from_snapshot) const;
 
     /**
      * When during reconciliation we find a set difference successfully (by combining sketches),
      * we want to find which transactions are missing on our and on their side.
      * For those missing on our side, we may only find short IDs.
      */
-    void GetRelevantIDsFromShortIDs(const std::vector<uint64_t>& diff,
+    void GetRelevantIDsFromShortIDs(const std::vector<uint64_t>& diff, bool from_snapshot,
                                     // returning values
                                     std::vector<uint32_t>& local_missing, std::vector<Wtxid>& remote_missing) const;
 
