@@ -668,6 +668,18 @@ BOOST_AUTO_TEST_CASE(HandleSketchTest)
 
     // The phase has also reset when succeeding and not short-cutting
     BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.HandleSketch(peer_id0, remote_sketch.Serialize())), ReconciliationError::WRONG_PHASE);
+
+    // If the difference in sketches is over the sketch capacity, reconciliation will fail and the node will prepare for an extension
+    BOOST_REQUIRE(std::holds_alternative<ReconCoefficients>(tracker.InitiateReconciliationRequest(peer_id0))); // Re set the peer's phase
+    added_txs = AddTxsToReconSet(tracker, peer_id0, n_txs_to_add); // Sets are cleared after reconciliation, so add more txs
+    // Adding a single more transaction will trigger an extension
+    remote_sketch.Add(frc.rand32());
+    result = std::get<HandleSketchResult>(tracker.HandleSketch(peer_id0, remote_sketch.Serialize()));
+    BOOST_REQUIRE(!result.m_succeeded.has_value());
+    BOOST_REQUIRE(result.m_txs_to_announce.empty());
+    BOOST_REQUIRE(result.m_txs_to_request.empty());
+    // Trying to initiate again will fail because we are waiting for an extension
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.InitiateReconciliationRequest(peer_id0)), ReconciliationError::WRONG_PHASE);
 }
 
 BOOST_AUTO_TEST_CASE(HandleExtensionRequestTest)

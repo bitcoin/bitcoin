@@ -114,20 +114,23 @@ void TxReconciliationState::PrepareForExtensionResponse(const std::vector<uint8_
     SnapshotLocalSet();
 }
 
-std::vector<Wtxid> TxReconciliationState::GetAllTransactions() const
+std::vector<Wtxid> TxReconciliationState::GetAllTransactions(bool from_snapshot) const
 {
-    return std::vector<Wtxid>(m_local_set.begin(), m_local_set.end());
+    return from_snapshot ? std::vector<Wtxid>(m_local_set_snapshot.begin(), m_local_set_snapshot.end()) :
+                        std::vector<Wtxid>(m_local_set.begin(), m_local_set.end());
 }
 
-std::pair<std::vector<uint32_t>, std::vector<Wtxid>> TxReconciliationState::GetRelevantIDsFromShortIDs(const std::vector<uint64_t>& diff) const
+std::pair<std::vector<uint32_t>, std::vector<Wtxid>> TxReconciliationState::GetRelevantIDsFromShortIDs(const std::vector<uint64_t>& diff, bool from_snapshot) const
 {
+    const auto working_mapping = from_snapshot ? m_short_id_mapping_snapshot : m_short_id_mapping;
+
     std::vector<Wtxid> remote_missing{};
     std::vector<uint32_t> local_missing{};
     // diff elements are 64-bit since Minisketch::Decode works with 64-bit elements, no matter what the field element size is.
     // In our case, elements are always 32-bit long, so we can safely cast them down.
     for (const auto& diff_short_id : diff) {
-        const auto local_tx = m_short_id_mapping.find(diff_short_id);
-        if (local_tx != m_short_id_mapping.end()) {
+        const auto local_tx = working_mapping.find(diff_short_id);
+        if (local_tx != working_mapping.end()) {
             remote_missing.push_back(local_tx->second);
         } else {
             local_missing.push_back(diff_short_id);
@@ -232,7 +235,7 @@ private:
         // In case (2), local sketch is also empty.
         if (!remote_sketch.has_value() || !local_sketch.has_value()) {
             // Announce all transactions we have.
-            txs_to_announce = peer_state.GetAllTransactions();
+            txs_to_announce = peer_state.GetAllTransactions(/*from_snapshot=*/false);
             // Update local reconciliation state for the peer.
             peer_state.Clear();
 
@@ -248,7 +251,7 @@ private:
             if (local_sketch.value().Merge(remote_sketch.value()).Decode(differences)) {
                 // Initial reconciliation step succeeded.
                 // Identify locally/remotely missing transactions.
-                std::tie(txs_to_request, txs_to_announce) = peer_state.GetRelevantIDsFromShortIDs(differences);
+                std::tie(txs_to_request, txs_to_announce) = peer_state.GetRelevantIDsFromShortIDs(differences, /*from_snapshot=*/false);
                 // Update local reconciliation state for the peer.
                 peer_state.Clear();
 
@@ -265,6 +268,70 @@ private:
                 LogDebug(BCLog::TXRECONCILIATION, "Reconciliation we initiated with peer=%d has failed at initial step, request sketch extension.\n", peer_id);
             }
         }
+
+        return HandleSketchResult{txs_to_request, txs_to_announce, result};
+    }
+
+    std::variant<HandleSketchResult, ReconciliationError> HandleSketchExtension(TxReconciliationState& peer_state, const NodeId peer_id, const std::vector<uint8_t>& skdata)
+    {
+        Assume(peer_state.m_we_initiate);
+        Assume(peer_state.m_phase == ReconciliationPhase::EXT_REQUESTED);
+
+        // The serialized extension size needs to be a multiple of the sketch element size, otherwise we received a malformed extension.
+        size_t extended_sketch_size = peer_state.m_remote_sketch_snapshot.size() + skdata.size();
+        if (extended_sketch_size % BYTES_PER_SKETCH_CAPACITY != 0) return ReconciliationError::PROTOCOL_VIOLATION;
+
+        // We allow the peer to send an extension for any capacity, not just original capacity * 2,
+        // but it should be within the limits. The limits are MAX_SKETCH_CAPACITY * 2, so that
+        // they can extend even the largest (originally) sketch.
+        uint32_t extended_capacity = uint32_t(extended_sketch_size / BYTES_PER_SKETCH_CAPACITY);
+        if (extended_capacity > MAX_SKETCH_CAPACITY * 2) return ReconciliationError::PROTOCOL_VIOLATION;
+
+        std::vector<uint8_t> working_skdata = std::vector<uint8_t>(skdata);
+        // A sketch extension is missing the lower elements (to be a valid extended sketch),
+        // which we stored on our end when receiving the initial sketch.
+        // Reconstruct the extended sketch
+        working_skdata.insert(working_skdata.begin(),
+            peer_state.m_remote_sketch_snapshot.begin(),
+            peer_state.m_remote_sketch_snapshot.end());
+
+        Minisketch local_sketch = peer_state.ComputeExtendedSketch(extended_capacity);
+        Assume(local_sketch);
+        Minisketch remote_sketch = node::MakeMinisketch32(extended_capacity).Deserialize(working_skdata);
+
+        // Attempt to decode the set difference
+        size_t max_elements = minisketch_compute_max_elements(RECON_FIELD_SIZE, extended_capacity, RECON_FALSE_POSITIVE_COEF);
+        std::vector<uint64_t> differences(max_elements);
+
+        std::vector<uint32_t> txs_to_request;
+        std::vector<Wtxid> txs_to_announce;
+        std::optional<bool> result;
+        if (local_sketch.Merge(remote_sketch).Decode(differences)) {
+            // Extension step succeeded.
+            result = true;
+
+            // Identify locally/remotely missing transactions.
+            std::tie(txs_to_request, txs_to_announce) = peer_state.GetRelevantIDsFromShortIDs(differences, /*from_snapshot=*/true);
+            LogDebug(BCLog::TXRECONCILIATION, "Reconciliation we initiated with peer=%d has succeeded at extension step, request %i txs, announce %i txs.\n",
+                peer_id, txs_to_request.size(), txs_to_announce.size());
+        } else {
+            // Reconciliation over extended sketch failed.
+            result = false;
+
+            // Announce all local transactions from the reconciliation set.
+            // The peer will be announcing all their local transactions to us too, since we will report a failure in reconciliation.
+            txs_to_announce = peer_state.GetAllTransactions(/*from_snapshot=*/true);
+            LogDebug(BCLog::TXRECONCILIATION, "Reconciliation we initiated with peer=%d has failed at extension step, request all txs, announce %i txs.\n",
+                peer_id, txs_to_announce.size());
+        }
+
+        // Filter out transactions received from the peer while reconciling.
+        txs_to_announce.erase(std::remove_if(txs_to_announce.begin(), txs_to_announce.end(), [peer_state](const auto&x) {
+            return peer_state.m_announced_while_reconciling.contains(x);
+        }), txs_to_announce.end());
+
+        // Update local reconciliation state for the peer.
+        peer_state.Clear();
 
         return HandleSketchResult{txs_to_request, txs_to_announce, result};
     }
@@ -618,6 +685,8 @@ public:
         ReconciliationPhase cur_phase = peer_state->m_phase;
         if (cur_phase == ReconciliationPhase::INIT_REQUESTED) {
             return HandleInitialSketch(*peer_state, peer_id, skdata);
+        } else if (cur_phase == ReconciliationPhase::EXT_REQUESTED) {
+            return HandleSketchExtension(*peer_state, peer_id, skdata);
         } else {
             LogDebug(BCLog::TXRECONCILIATION, "Received sketch from peer=%d in wrong reconciliation phase=%i.\n", peer_id, static_cast<int>(cur_phase));
             return ReconciliationError::WRONG_PHASE;
