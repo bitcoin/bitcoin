@@ -320,6 +320,19 @@ class ReconciliationState {
     }
 
     /**
+     * Be ready to respond to extension request, to compute the extended sketch over
+     * the same initial set (without transactions received during the reconciliation).
+     * Allow to store new transactions separately in the original set.
+     */
+    void PrepareForExtensionRequest(uint16_t sketch_capacity)
+    {
+        assert(!m_we_initiate);
+        m_capacity_snapshot = sketch_capacity;
+        m_local_set_snapshot = m_local_set;
+        m_local_set.Clear();
+    }
+
+    /**
      * To be efficient in transmitting extended sketch, we store a snapshot of the sketch
      * received in the initial reconciliation step, so that only the necessary extension data
      * has to be transmitted.
@@ -659,6 +672,7 @@ class TxReconciliationTracker::Impl {
         }
 
         recon_state->second.m_state_init_by_them.m_phase = Phase::INIT_RESPONDED;
+        recon_state->second.PrepareForExtensionRequest(sketch_capacity);
 
         LogPrint(BCLog::NET, "Responding with a sketch to reconciliation initiated by peer=%d: " /* Continued */
             "sending sketch of capacity=%i.\n", peer_id, sketch_capacity);
