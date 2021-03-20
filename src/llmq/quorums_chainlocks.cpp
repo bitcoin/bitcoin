@@ -542,6 +542,7 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
             // the correct chain.
             return;
         }
+        mapSignedRequestIds.clear();
     }
 
     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- trying to sign %s, height=%d\n", __func__, msgHash.ToString(), nHeight);
@@ -549,7 +550,7 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
     const auto& llmqType = consensus.llmqTypeChainLocks;
     const auto& llmqParams = consensus.llmqs.at(consensus.llmqTypeChainLocks);
     const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
-    mapSignedRequestIds.clear();
+    
 
     std::vector<CQuorumCPtr> quorums_scanned;
     llmq::quorumManager->ScanQuorums(llmqType, pindex, signingActiveQuorumCount, quorums_scanned);
