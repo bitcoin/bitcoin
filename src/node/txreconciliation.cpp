@@ -97,6 +97,13 @@ private:
      */
     std::unordered_map<NodeId, std::variant<uint64_t, TxReconciliationState>> m_states GUARDED_BY(m_txreconciliation_mutex);
 
+    /**
+     * Maintains a queue of reconciliations we should initiate. To achieve higher bandwidth
+     * conservation and avoid overflows, we should reconcile in the same order, because then it’s
+     * easier to estimate set difference size.
+     */
+    std::deque<NodeId> m_queue GUARDED_BY(m_txreconciliation_mutex);
+
 public:
     explicit Impl(uint32_t recon_version) : m_recon_version(recon_version) {}
 
@@ -143,6 +150,7 @@ public:
 
         const uint256 full_salt{ComputeSalt(local_salt, remote_salt)};
         recon_state->second = TxReconciliationState(!is_peer_inbound, full_salt.GetUint64(0), full_salt.GetUint64(1));
+        if (!is_peer_inbound) m_queue.push_back(peer_id);
         return ReconciliationRegisterResult::SUCCESS;
     }
 
@@ -188,6 +196,7 @@ public:
         AssertLockNotHeld(m_txreconciliation_mutex);
         LOCK(m_txreconciliation_mutex);
         if (m_states.erase(peer_id)) {
+            m_queue.erase(std::remove(m_queue.begin(), m_queue.end(), peer_id), m_queue.end());
             LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Forget txreconciliation state of peer=%d\n", peer_id);
         }
     }
