@@ -486,6 +486,62 @@ class TxReconciliationTracker::Impl {
         return true;
     }
 
+    bool HandleSketchExtension(std::unordered_map<NodeId, ReconciliationState>::iterator& recon_state,
+        const std::vector<uint8_t>& skdata,
+        // returning values
+        std::vector<uint32_t>& txs_to_request, std::vector<uint256>& txs_to_announce, std::optional<bool>& result)
+    {
+        assert(recon_state->second.m_we_initiate);
+        assert(recon_state->second.m_state_init_by_us.m_phase == Phase::EXT_REQUESTED);
+
+        std::vector<uint8_t> working_skdata = std::vector<uint8_t>(skdata);
+        // A sketch extension is missing the lower elements (to be a valid extended sketch),
+        // which we stored on our side at initial reconciliation step.
+        working_skdata.insert(working_skdata.begin(),
+            recon_state->second.m_state_init_by_us.m_remote_sketch_snapshot.begin(),
+            recon_state->second.m_state_init_by_us.m_remote_sketch_snapshot.end());
+
+        // We allow the peer to send an extension for any capacity, not just original capacity * 2,
+        // but it should be within the limits. The limits are MAX_SKETCH_CAPACITY * 2, so that
+        // they can extend even the largest (originally) sketch.
+        uint16_t extended_capacity = uint32_t(working_skdata.size() / BYTES_PER_SKETCH_CAPACITY);
+        if (extended_capacity > MAX_SKETCH_CAPACITY * 2) return false;
+
+        Minisketch local_sketch = recon_state->second.ComputeExtendedSketch(extended_capacity);
+        assert(local_sketch);
+        Minisketch remote_sketch = Minisketch(RECON_FIELD_SIZE, 0, extended_capacity).Deserialize(working_skdata);
+
+        // Attempt to decode the set difference
+        size_t max_elements = minisketch_compute_max_elements(RECON_FIELD_SIZE, extended_capacity, RECON_FALSE_POSITIVE_COEF);
+        std::vector<uint64_t> differences(max_elements);
+        if (local_sketch.Merge(remote_sketch).Decode(differences)) {
+            // Extension step succeeded.
+
+            // Identify locally/remotely missing transactions.
+            recon_state->second.m_local_set_snapshot.GetRelevantIDsFromShortIDs(differences, txs_to_request, txs_to_announce);
+
+            result = true;
+            LogPrint(BCLog::NET, "Reconciliation we initiated with peer=%d has succeeded at extension step, " /* Continued */
+                "request %i txs, announce %i txs.\n", recon_state->first, txs_to_request.size(), txs_to_announce.size());
+        } else {
+            // Reconciliation over extended sketch failed.
+
+            // Announce all local transactions from the reconciliation set.
+            // All remote transactions will be announced by peer based on the reconciliation
+            // failure flag.
+            txs_to_announce = recon_state->second.m_local_set_snapshot.GetAllTransactions();
+
+            result = false;
+            LogPrint(BCLog::NET, "Reconciliation we initiated with peer=%d has failed at extension step, " /* Continued */
+                "request all txs, announce %i txs.\n", recon_state->first, txs_to_announce.size());
+        }
+
+        // Update local reconciliation state for the peer.
+        recon_state->second.FinalizeInitByUs(false);
+        recon_state->second.m_state_init_by_us.m_phase = Phase::NONE;
+        return true;
+    }
+
     public:
 
     std::tuple<bool, bool, uint32_t, uint64_t> SuggestReconciling(NodeId peer_id, bool inbound)
@@ -725,6 +781,8 @@ class TxReconciliationTracker::Impl {
         Phase cur_phase = recon_state->second.m_state_init_by_us.m_phase;
         if (cur_phase == Phase::INIT_REQUESTED) {
             return HandleInitialSketch(recon_state, skdata, txs_to_request, txs_to_announce, result);
+        } else if (cur_phase == Phase::EXT_REQUESTED) {
+            return HandleSketchExtension(recon_state, skdata, txs_to_request, txs_to_announce, result);
         } else {
             LogPrint(BCLog::NET, "Received sketch from peer=%d in wrong reconciliation phase=%i.\n", peer_id, cur_phase);
             return false;
