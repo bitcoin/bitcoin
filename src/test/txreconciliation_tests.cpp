@@ -533,6 +533,20 @@ BOOST_AUTO_TEST_CASE(ShouldRespondToReconciliationRequestTest)
     tracker.PreRegisterPeer(peer_id1);
     BOOST_REQUIRE(!tracker.RegisterPeer(peer_id1, /*is_peer_inbound*/false, TXRECONCILIATION_VERSION, 1).has_value());
     BOOST_REQUIRE(!tracker.ShouldRespondToReconciliationRequest(peer_id1, skdata, /*send_trickle*/true));
+
+    // For extension requests, we do not wait for trickle
+    NodeId peer_id2 = 2;
+    tracker.PreRegisterPeer(peer_id2);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id2, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, 1).has_value());
+    // There needs to be data in both sets for the phase to move towards extension, otherwise we'll shortcut
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id2, /*peer_recon_set_size*/10, Q).has_value());
+    tracker.AddToSet(peer_id2, Wtxid::FromUint256(frc.rand256()));
+
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id2, skdata, /*send_trickle*/true));
+    BOOST_REQUIRE(!tracker.HandleExtensionRequest(peer_id2).has_value());
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id2, skdata, /*send_trickle*/false));
+    // Once the phase has advanced, we won't respond again
+    BOOST_REQUIRE(!tracker.ShouldRespondToReconciliationRequest(peer_id2, skdata, /*send_trickle*/false));
 }
 
 BOOST_AUTO_TEST_CASE(HandleSketchBasicFlowTest)

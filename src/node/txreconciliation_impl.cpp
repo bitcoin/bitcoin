@@ -269,6 +269,56 @@ private:
         return HandleSketchResult{txs_to_request, txs_to_announce, result};
     }
 
+    void RespondToInitialRequest(TxReconciliationState& peer_state, const NodeId peer_id, std::vector<uint8_t>& skdata)
+    {
+        Assume(!peer_state.m_we_initiate);
+        Assume(peer_state.m_phase == ReconciliationPhase::INIT_REQUESTED);
+        // Compute a sketch over the local reconciliation set.
+        uint32_t sketch_capacity = 0;
+
+        // We send an empty vector at initial request in the following 2 cases because
+        // reconciliation can't help:
+        // - if we have nothing on our side
+        // - if they have nothing on their side
+        // Then, they will terminate reconciliation early and force flooding-style announcement.
+        if (peer_state.m_remote_set_size > 0 && peer_state.m_local_set.size() > 0) {
+            if (sketch_capacity = peer_state.EstimateSketchCapacity(peer_state.m_local_set.size()); sketch_capacity > 0) {
+                Minisketch sketch = peer_state.ComputeBaseSketch(sketch_capacity);
+                skdata = sketch.Serialize();
+            }
+        }
+
+        peer_state.m_phase = ReconciliationPhase::INIT_RESPONDED;
+        peer_state.PrepareForExtensionRequest(sketch_capacity);
+
+        LogDebug(BCLog::TXRECONCILIATION, "Responding with a sketch to reconciliation initiated by peer=%d: sending sketch of capacity=%i.\n",
+            peer_id, sketch_capacity);
+    }
+
+    void RespondToExtensionRequest(TxReconciliationState& peer_state, NodeId peer_id, std::vector<uint8_t>& skdata)
+    {
+        Assume(!peer_state.m_we_initiate);
+        Assume(peer_state.m_phase == ReconciliationPhase::EXT_REQUESTED);
+        Assume(peer_state.m_capacity_snapshot > 0);
+        // Update local reconciliation state for the peer.
+        peer_state.m_phase = ReconciliationPhase::EXT_RESPONDED;
+
+        // Local extension sketch can be null only if initial sketch or initial capacity was 0,
+        // in which case we would have terminated reconciliation already.
+        uint32_t extended_capacity = peer_state.m_capacity_snapshot * 2;
+        Minisketch sketch = peer_state.ComputeExtendedSketch(extended_capacity);
+        Assume(sketch);
+        skdata = sketch.Serialize();
+
+        // For the sketch extension, send only the higher sketch elements.
+        size_t lower_bytes_to_drop = extended_capacity / 2 * BYTES_PER_SKETCH_CAPACITY;
+        // Extended sketch is twice the size of the initial sketch (which is m_capacity_snapshot).
+        Assume(lower_bytes_to_drop <= skdata.size());
+        skdata.erase(skdata.begin(), skdata.begin() + lower_bytes_to_drop);
+
+        LogDebug(BCLog::TXRECONCILIATION, "Responding with a sketch extension to reconciliation initiated by peer=%d.\n", peer_id);
+    }
+
 public:
     explicit TxReconciliationTrackerImpl(uint32_t recon_version) : m_recon_version(recon_version) {}
 
@@ -543,33 +593,16 @@ public:
         if (!peer_state) return false;
         if (peer_state->m_we_initiate) return false;
 
-        // Return if there is nothing to respond to
-        if (peer_state->m_phase != ReconciliationPhase::INIT_REQUESTED || !send_trickle) {
+        ReconciliationPhase incoming_phase = peer_state->m_phase;
+        if (incoming_phase == ReconciliationPhase::INIT_REQUESTED && send_trickle) {
+            RespondToInitialRequest(*peer_state, peer_id, skdata);
+            return true;
+        } else if (incoming_phase == ReconciliationPhase::EXT_REQUESTED) {
+            RespondToExtensionRequest(*peer_state, peer_id, skdata);
+            return true;
+        } else {
             return false;
         }
-
-        // Compute a sketch over the local reconciliation set.
-        uint32_t sketch_capacity = 0;
-
-        // We send an empty vector at initial request in the following 2 cases because
-        // reconciliation can't help:
-        // - if we have nothing on our side
-        // - if they have nothing on their side
-        // Then, they will terminate reconciliation early and force flooding-style announcement.
-        if (peer_state->m_remote_set_size > 0 && peer_state->m_local_set.size() > 0) {
-            if (sketch_capacity = peer_state->EstimateSketchCapacity(peer_state->m_local_set.size()); sketch_capacity > 0) {
-                Minisketch sketch = peer_state->ComputeBaseSketch(sketch_capacity);
-                skdata = sketch.Serialize();
-            }
-        }
-
-        peer_state->m_phase = ReconciliationPhase::INIT_RESPONDED;
-        peer_state->PrepareForExtensionRequest(sketch_capacity);
-
-        LogDebug(BCLog::TXRECONCILIATION, "Responding with a sketch to reconciliation initiated by peer=%d: sending sketch of capacity=%i.\n",
-            peer_id, sketch_capacity);
-
-        return true;
     }
 
     std::variant<HandleSketchResult, ReconciliationError> HandleSketch(NodeId peer_id, const std::vector<uint8_t>& skdata) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
