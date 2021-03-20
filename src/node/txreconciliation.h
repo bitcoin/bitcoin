@@ -44,6 +44,7 @@ enum class ReconciliationPhase
     INIT_REQUESTED,
     INIT_RESPONDED,
     EXT_REQUESTED,
+    EXT_RESPONDED
 };
 
 /**
