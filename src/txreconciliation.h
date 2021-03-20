@@ -59,6 +59,14 @@ class TxReconciliationTracker {
      * This function must be called only once per peer.
      */
     std::tuple<bool, bool, uint32_t, uint64_t> SuggestReconciling(NodeId peer_id, bool inbound);
+
+    // Helpers
+
+    /**
+     * Removes reconciliation-related state of the peer. After this, we won't be able to reconcile
+     * with the peer unless it's registered again (see Step 0).
+     */
+    void RemovePeer(NodeId peer_id);
 };
 
 #endif // BITCOIN_TXRECONCILIATION_H
