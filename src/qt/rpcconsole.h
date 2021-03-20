@@ -166,6 +166,7 @@ private:
     QCompleter *autoCompleter = nullptr;
     QThread thread;
     WalletModel* m_last_wallet_model{nullptr};
+    bool m_is_executing{false};
 
     /** Update UI with latest network info from model. */
     void updateNetworkState();
