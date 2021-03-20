@@ -5116,6 +5116,36 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         return;
     }
 
+    // Only respond to reconciliation messages if this is a reconciliation connection.
+    // Disconnect otherwise.
+    if (!m_txreconciliation && msg_type == NetMsgType::REQTXRCNCL) {
+        LogDebug(BCLog::NET, "%s received, but we don't have reconciliation enabled, %s", msg_type, pfrom.DisconnectMsg());
+        pfrom.fDisconnect = true;
+        return;
+    }
+
+    if (msg_type == NetMsgType::REQTXRCNCL) {
+        uint16_t peer_recon_set_size, peer_q;
+        vRecv >> peer_recon_set_size >> peer_q;
+        if (auto error = m_txreconciliation->HandleReconciliationRequest(pfrom.GetId(), peer_recon_set_size, peer_q); error.has_value()) {
+            switch(error.value()) {
+                case node::ReconciliationError::NOT_FOUND:
+                    LogInfo("Peer is requesting reconciliation but never registered, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::WRONG_PHASE:
+                    LogInfo("Peer is requesting reconciliation out of order, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::WRONG_ROLE:
+                    LogInfo("Peer is requesting reconciliation but we are the initiator, %s\n", pfrom.DisconnectMsg());
+                    break;
+                case node::ReconciliationError::PROTOCOL_VIOLATION:
+                default: break; // No other error is returned by HandleReconciliationRequest
+            }
+            pfrom.fDisconnect = true;
+        }
+        return;
+    }
+
     // Ignore unknown message types for extensibility
     LogDebug(BCLog::NET, "Unknown message type \"%s\" from peer=%d", SanitizeString(msg_type), pfrom.GetId());
     return;

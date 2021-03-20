@@ -358,4 +358,34 @@ BOOST_AUTO_TEST_CASE(InitiateReconciliationRequestQCeilTest)
     BOOST_REQUIRE_EQUAL(local_q_formatted, 8192);
 }
 
+BOOST_AUTO_TEST_CASE(HandleReconciliationRequestTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+
+    // A reconciliation request cannot be initiated with a non-fully registered peer
+    BOOST_REQUIRE_EQUAL(tracker.HandleReconciliationRequest(peer_id0, 0, Q).value(), ReconciliationError::NOT_FOUND);
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE_EQUAL(tracker.HandleReconciliationRequest(peer_id0, 0, Q).value(), ReconciliationError::NOT_FOUND);
+
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, 0, Q).has_value());
+
+    // If a reconciliation flow is ongoing for a given peer, we won't start another with him.
+    BOOST_REQUIRE_EQUAL(tracker.HandleReconciliationRequest(peer_id0, 0, Q).value(), ReconciliationError::WRONG_PHASE);
+
+    // Other peers can request reconciliation as long as we are not currently reconciling with them.
+    NodeId peer_id1 = 1;
+    tracker.PreRegisterPeer(peer_id1);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id1, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id1, 0, Q).has_value());
+    // Already reconciling with the peer
+    BOOST_REQUIRE_EQUAL(tracker.HandleReconciliationRequest(peer_id1, 0, Q).value(), ReconciliationError::WRONG_PHASE);
+
+    // We only respond to reconciliation requests if they are the initiator (peer is inbound)
+    NodeId peer_id2 = 2;
+    tracker.PreRegisterPeer(peer_id2);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id2, /*is_peer_inbound*/false, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
+    BOOST_REQUIRE_EQUAL(tracker.HandleReconciliationRequest(peer_id2, 0, Q).value(), ReconciliationError::WRONG_ROLE);
+}
 BOOST_AUTO_TEST_SUITE_END()

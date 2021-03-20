@@ -148,6 +148,12 @@ public:
      * - our q-coefficient with the peer, formatted to be transmitted as integer value
      */
     std::variant<ReconCoefficients, ReconciliationError> InitiateReconciliationRequest(NodeId peer_id);
+
+    /**
+     * Step 2. Record a reconciliation request with parameters to respond when its time.
+     * If peer violates the protocol, returns an error so we can disconnect.
+     */
+    std::optional<ReconciliationError> HandleReconciliationRequest(NodeId peer_id, uint16_t peer_recon_set_size, uint16_t peer_q);
 };
 } // namespace node
 #endif // BITCOIN_NODE_TXRECONCILIATION_IMPL_H
