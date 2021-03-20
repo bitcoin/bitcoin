@@ -167,6 +167,13 @@ public:
      */
     bool HandleReconciliationRequest(NodeId peer_id, uint16_t peer_recon_set_size, uint16_t peer_q);
 
+    /**
+     * Step 2. Once it's time to respond to reconciliation requests, we construct a sketch from
+     * the local reconciliation set, and send it to the initiator.
+     * If the peer was not previously registered for reconciliations or the peers didn't request
+     * to reconcile with us, return false.
+     */
+    bool ShouldRespondToReconciliationRequest(NodeId peer_id, std::vector<uint8_t>& skdata);
 
     /**
      * Attempts to forget txreconciliation-related state of the peer (if we previously stored any).
