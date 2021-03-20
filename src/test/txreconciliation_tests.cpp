@@ -520,4 +520,48 @@ BOOST_AUTO_TEST_CASE(InitiateReconciliationRequestQCeilTest)
     BOOST_REQUIRE_EQUAL(local_q_formatted, 8192);
 }
 
+BOOST_AUTO_TEST_CASE(HandleReconciliationRequestTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+
+    // A reconciliation request cannot be initiated with a non-fully registered peer
+    BOOST_REQUIRE_EQUAL(tracker.HandleReconciliationRequest(peer_id0, 0, Q).value(), ReconciliationError::NOT_FOUND);
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE_EQUAL(tracker.HandleReconciliationRequest(peer_id0, 0, Q).value(), ReconciliationError::NOT_FOUND);
+
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, 0, Q).has_value());
+
+    // If a reconciliation flow is ongoing for a given peer, we won't start another with him.
+    BOOST_REQUIRE_EQUAL(tracker.HandleReconciliationRequest(peer_id0, 0, Q).value(), ReconciliationError::WRONG_PHASE);
+
+    // Other peers can request reconciliation as long as we are not currently reconciling with them.
+    NodeId peer_id1 = 1;
+    tracker.PreRegisterPeer(peer_id1);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id1, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id1, 0, Q).has_value());
+    // Already reconciling with the peer
+    BOOST_REQUIRE_EQUAL(tracker.HandleReconciliationRequest(peer_id1, 0, Q).value(), ReconciliationError::WRONG_PHASE);
+
+    // We only respond to reconciliation requests if they are the initiator (peer is inbound)
+    NodeId peer_id2 = 2;
+    tracker.PreRegisterPeer(peer_id2);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id2, /*is_peer_inbound*/false, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
+    BOOST_REQUIRE_EQUAL(tracker.HandleReconciliationRequest(peer_id2, 0, Q).value(), ReconciliationError::WRONG_ROLE);
+
+    // A BIP-330 compliant peer rounds q up when narrowing it to the wire format, so the largest value it can hold its Q_PRECISION.
+    // Check the boundary.
+    NodeId peer_id3 = 3;
+    tracker.PreRegisterPeer(peer_id3);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id3, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id3, /*peer_recon_set_size=*/0, /*peer_q=*/Q_PRECISION).has_value());
+
+    NodeId peer_id4 = 4;
+    tracker.PreRegisterPeer(peer_id4);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id4, /*is_peer_inbound=*/true, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
+    BOOST_REQUIRE_EQUAL(tracker.HandleReconciliationRequest(peer_id4, /*peer_recon_set_size=*/0,
+                                                           /*peer_q=*/static_cast<uint16_t>(Q_PRECISION + 1)).value(),
+                        ReconciliationError::PROTOCOL_VIOLATION);
+}
 BOOST_AUTO_TEST_SUITE_END()
