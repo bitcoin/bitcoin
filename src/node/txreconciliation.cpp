@@ -54,6 +54,15 @@ public:
         Assert(m_states.emplace(peer_id, local_salt).second);
         return local_salt;
     }
+
+    void ForgetPeer(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+        if (m_states.erase(peer_id)) {
+            LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Forget txreconciliation state of peer=%d\n", peer_id);
+        }
+    }
 };
 
 TxReconciliationTracker::TxReconciliationTracker() : m_impl{std::make_unique<TxReconciliationTracker::Impl>()} {}
@@ -63,4 +72,9 @@ TxReconciliationTracker::~TxReconciliationTracker() = default;
 uint64_t TxReconciliationTracker::PreRegisterPeer(NodeId peer_id)
 {
     return m_impl->PreRegisterPeer(peer_id);
+}
+
+void TxReconciliationTracker::ForgetPeer(NodeId peer_id)
+{
+    m_impl->ForgetPeer(peer_id);
 }
