@@ -163,6 +163,12 @@ public:
      */
     std::optional<std::pair<uint16_t, uint16_t>> InitiateReconciliationRequest(NodeId peer_id);
 
+    /**
+     * Step 2. Record an reconciliation request with parameters to respond when its time.
+     * If peer violates the protocol, disconnect.
+     */
+    bool HandleReconciliationRequest(NodeId peer_id, uint16_t peer_recon_set_size, uint16_t peer_q);
+
     /** Whether a given peer is currently flagged for fanout. */
     bool IsInboundFanoutTarget(NodeId peer_id);
 

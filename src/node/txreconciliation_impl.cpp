@@ -300,6 +300,29 @@ public:
         return std::make_pair(local_set_size, Q * Q_PRECISION);
     }
 
+    bool HandleReconciliationRequest(NodeId peer_id, uint16_t peer_recon_set_size, uint16_t peer_q) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+        if (!GetRegisteredPeerState(peer_id)) return false;
+
+        // We only respond to reconciliation requests if the peer is the initiator and we are not
+        // in the middle of another reconciliation cycle with him
+        auto& recon_state = std::get<TxReconciliationState>(m_states.find(peer_id)->second);
+        if (recon_state.m_we_initiate) return false;
+        if (recon_state.m_phase != ReconciliationPhase::NONE) return false;
+
+        double peer_q_converted = peer_q * 1.0 / Q_PRECISION;
+        recon_state.m_remote_q = peer_q_converted;
+        recon_state.m_remote_set_size = peer_recon_set_size;
+        recon_state.m_phase = ReconciliationPhase::INIT_REQUESTED;
+
+        LogDebug(BCLog::TXRECONCILIATION, "Reconciliation initiated by peer=%d with the following params: remote_q=%d, remote_set_size=%i.\n",
+            peer_id, peer_q_converted, peer_recon_set_size);
+
+        return true;
+    }
+
     bool IsInboundFanoutTarget(NodeId peer_id) const EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
@@ -400,6 +423,11 @@ bool TxReconciliationTracker::TryRemovingFromSet(NodeId peer_id, const Wtxid& wt
 std::optional<std::pair<uint16_t, uint16_t>> TxReconciliationTracker::InitiateReconciliationRequest(NodeId peer_id)
 {
     return m_impl->InitiateReconciliationRequest(peer_id);
+}
+
+bool TxReconciliationTracker::HandleReconciliationRequest(NodeId peer_id, uint16_t peer_recon_set_size, uint16_t peer_q)
+{
+    return m_impl->HandleReconciliationRequest(peer_id, peer_recon_set_size, peer_q);
 }
 
 bool TxReconciliationTracker::IsInboundFanoutTarget(NodeId peer_id)

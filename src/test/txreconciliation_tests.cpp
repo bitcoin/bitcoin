@@ -348,4 +348,34 @@ BOOST_AUTO_TEST_CASE(InitiateReconciliationRequestTest)
     BOOST_REQUIRE(!tracker.InitiateReconciliationRequest(peer_id0).has_value());
 }
 
+BOOST_AUTO_TEST_CASE(HandleReconciliationRequestTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+
+    // A reconciliation request cannot be initiated with a non-fully registered peer
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, 0, Q));
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, 0, Q));
+
+    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, 1), ReconciliationRegisterResult::SUCCESS);
+    BOOST_REQUIRE(tracker.HandleReconciliationRequest(peer_id0, 0, Q));
+
+    // If a reconciliation flow is ongoing for a given peer, we won't start another with him.
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, 0, Q));
+
+    // Other peers can request reconciliation as long as we are not currently reconciling with them.
+    NodeId peer_id1 = 1;
+    tracker.PreRegisterPeer(peer_id1);
+    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id1, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, 1), ReconciliationRegisterResult::SUCCESS);
+    BOOST_REQUIRE(tracker.HandleReconciliationRequest(peer_id1, 0, Q));
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id1, 0, Q));
+
+    // We only respond to reconciliation requests if they are the initiator (peer is inbound)
+    NodeId peer_id2 = 2;
+    tracker.PreRegisterPeer(peer_id2);
+    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id2, /*is_peer_inbound*/false, TXRECONCILIATION_VERSION, 1), ReconciliationRegisterResult::SUCCESS);
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id2, 0, Q));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
