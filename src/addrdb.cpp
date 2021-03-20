@@ -19,6 +19,7 @@
 #include <util/settings.h>
 #include <util/system.h>
 #include <util/translation.h>
+#include <util/time.h>
 
 namespace {
 
@@ -213,9 +214,11 @@ void DumpAnchors(const fs::path& anchors_db_path, const std::vector<CAddress>& a
 std::vector<CAddress> ReadAnchors(const fs::path& anchors_db_path)
 {
     std::vector<CAddress> anchors;
+    int64_t nStart = GetTimeMillis();
+
     try {
         DeserializeFileDB(anchors_db_path, anchors, CLIENT_VERSION | ADDRV2_FORMAT);
-        LogPrintf("Loaded %i addresses from %s\n", anchors.size(), fs::quoted(fs::PathToString(anchors_db_path.filename())));
+        LogPrintf("Loaded %i addresses from %s %dms\n", anchors.size(), fs::PathToString(anchors_db_path.filename()), GetTimeMillis() - nStart);
     } catch (const std::exception&) {
         anchors.clear();
     }
