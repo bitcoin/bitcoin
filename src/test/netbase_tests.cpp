@@ -94,8 +94,8 @@ bool static TestSplitHost(const std::string& test, const std::string& host, uint
 
 BOOST_AUTO_TEST_CASE(netbase_splithost)
 {
-    BOOST_CHECK(TestSplitHost("www.syscoin.org", "www.syscoin.org", -1));
-    BOOST_CHECK(TestSplitHost("[www.syscoin.org]", "www.syscoin.org", -1));
+    BOOST_CHECK(TestSplitHost("www.syscoin.org", "www.syscoin.org", 0));
+    BOOST_CHECK(TestSplitHost("[www.syscoin.org]", "www.syscoin.org", 0));
     BOOST_CHECK(TestSplitHost("www.syscoin.org:80", "www.syscoin.org", 80));
     BOOST_CHECK(TestSplitHost("[www.syscoin.org]:80", "www.syscoin.org", 80));
     BOOST_CHECK(TestSplitHost("127.0.0.1", "127.0.0.1", 0));
