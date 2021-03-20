@@ -656,6 +656,56 @@ BOOST_AUTO_TEST_CASE(HandleSketchTest)
     BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.HandleSketch(peer_id0, remote_sketch.Serialize())), ReconciliationError::WRONG_PHASE);
 }
 
+BOOST_AUTO_TEST_CASE(HandleExtensionRequestTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+    std::vector<uint8_t> skdata{};
+
+    // An extension request cannot be initiated with a non-fully registered peer
+    BOOST_REQUIRE_EQUAL(tracker.HandleExtensionRequest(peer_id0).value(), ReconciliationError::NOT_FOUND);
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE_EQUAL(tracker.HandleExtensionRequest(peer_id0).value(), ReconciliationError::NOT_FOUND);
+
+    // If the peer is registered but the reconciliation flow has not reached the extension phase we cannot reply to an extension
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, 1).has_value());
+    BOOST_REQUIRE_EQUAL(tracker.HandleExtensionRequest(peer_id0).value(), ReconciliationError::WRONG_PHASE);
+
+    // Extensions are not allowed if the peer didn't have anything to send us
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, 0, Q).has_value());
+    std::vector<Wtxid> added_txs = AddTxsToReconSet(tracker, peer_id0, 10);
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata, /*send_trickle=*/true));
+    BOOST_REQUIRE_EQUAL(tracker.HandleExtensionRequest(peer_id0).value(), ReconciliationError::PROTOCOL_VIOLATION);
+    tracker.ForgetPeer(peer_id0);
+
+    // Nor if we didn't have anything to send them
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, 1).has_value());
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, 10, Q).has_value());
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata, /*send_trickle=*/true));
+    BOOST_REQUIRE_EQUAL(tracker.HandleExtensionRequest(peer_id0).value(), ReconciliationError::PROTOCOL_VIOLATION);
+    tracker.ForgetPeer(peer_id0);
+
+    // If there is data for both, and we are in the right phase, extension should be allowed
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE(skdata.empty());
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, 1).has_value());
+    BOOST_REQUIRE(!tracker.HandleReconciliationRequest(peer_id0, 10, Q).has_value());
+    added_txs = AddTxsToReconSet(tracker, peer_id0, 10);
+    BOOST_REQUIRE(tracker.ShouldRespondToReconciliationRequest(peer_id0, skdata, /*send_trickle=*/true));
+    BOOST_REQUIRE(!skdata.empty());
+    BOOST_REQUIRE(!tracker.HandleExtensionRequest(peer_id0).has_value());
+
+    // Once the request is dealt with, the phase moves one an a subsequent one won't be allowed
+    BOOST_REQUIRE_EQUAL(tracker.HandleExtensionRequest(peer_id0).value(), ReconciliationError::WRONG_PHASE);
+
+    // We only handle extension requests if they are the initiator
+    tracker.ForgetPeer(peer_id0);
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/false, TXRECONCILIATION_VERSION, 1).has_value());
+    BOOST_REQUIRE_EQUAL(tracker.HandleExtensionRequest(peer_id0).value(), ReconciliationError::WRONG_ROLE);
+}
+
 BOOST_AUTO_TEST_CASE(IsInboundFanoutTargetTest)
 {
     TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);

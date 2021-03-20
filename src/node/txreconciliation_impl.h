@@ -222,6 +222,14 @@ public:
      */
     std::variant<HandleSketchResult, ReconciliationError> HandleSketch(NodeId peer_id, const std::vector<uint8_t>& skdata);
 
+    /**
+     * Step 5. Peer requesting extension after reconciliation they initiated failed on their side:
+     * the sketch we sent to them was not sufficient to find the difference.
+     * No privacy leak can happen here because sketch extension is constructed over the snapshot.
+     * If peer violates the protocol, return an error so we can disconnect.
+     */
+    std::optional<ReconciliationError> HandleExtensionRequest(NodeId peer_id);
+
     /** Whether a given inbound peer is currently flagged for fanout. */
     bool IsInboundFanoutTarget(NodeId peer_id);
 
