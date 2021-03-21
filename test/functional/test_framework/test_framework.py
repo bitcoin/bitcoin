@@ -1168,7 +1168,7 @@ class DashTestFramework(SyscoinTestFramework):
         if wait_until_helper(check_tx, timeout=timeout, sleep=0.5) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
-    def wait_for_chainlocked_block(self, node, block_hash, expected=True, timeout=30):
+    def wait_for_chainlocked_block(self, node, block_hash, expected=True, timeout=60):
         def check_chainlocked_block():
             try:
                 self.bump_mocktime(1)
@@ -1179,12 +1179,12 @@ class DashTestFramework(SyscoinTestFramework):
         if wait_until_helper(check_chainlocked_block, timeout=timeout, do_assert=expected, sleep=0.5) and not expected:
             raise AssertionError("waiting unexpectedly succeeded")
 
-    def wait_for_chainlocked_block_all_nodes(self, block_hash, timeout=30):
+    def wait_for_chainlocked_block_all_nodes(self, block_hash, timeout=60):
         self.sync_blocks(self.nodes)
         for node in self.nodes:
             self.wait_for_chainlocked_block(node, block_hash, timeout=timeout)
 
-    def wait_for_most_recent_chainlock(self, node, block_hash, timeout=15):
+    def wait_for_most_recent_chainlock(self, node, block_hash, timeout=30):
         def check_cl():
             try:
                 self.bump_mocktime(1)
@@ -1263,7 +1263,7 @@ class DashTestFramework(SyscoinTestFramework):
             return True
         wait_until_helper(check_probes, timeout=timeout, sleep=1)
 
-    def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, wait_proc=None, done_proc=None, timeout=30, sleep=0.5):
+    def wait_for_quorum_phase(self, quorum_hash, phase, expected_member_count, check_received_messages, check_received_messages_count, mninfos, wait_proc=None, done_proc=None, timeout=60, sleep=0.5):
         def check_dkg_session():
             all_ok = True
             member_count = 0
