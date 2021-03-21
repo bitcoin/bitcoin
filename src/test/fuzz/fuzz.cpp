@@ -8,6 +8,7 @@
 #include <util/check.h>
 
 #include <cstdint>
+#include <filesystem>
 #include <unistd.h>
 #include <vector>
 
@@ -56,6 +57,23 @@ static bool read_stdin(std::vector<uint8_t>& data)
 }
 #endif
 
+#if defined(PROVIDE_FUZZ_MAIN_FUNCTION)
+static bool read_file(std::filesystem::path p, std::vector<uint8_t>& data)
+{
+    uint8_t buffer[1024];
+    FILE *f = fsbridge::fopen(p.string(), "rb");
+    if (f == nullptr)
+        return false;
+    do {
+        const size_t length = fread(buffer, sizeof(uint8_t), sizeof(buffer), f);
+        Assert(!ferror(f));
+        data.insert(data.end(), buffer, buffer + length);
+    } while (!feof(f));
+    fclose(f);
+    return true;
+}
+#endif
+
 // This function is used by libFuzzer
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
@@ -93,11 +111,33 @@ int main(int argc, char** argv)
         test_one_input(buffer);
     }
 #else
-    std::vector<uint8_t> buffer;
-    if (!read_stdin(buffer)) {
-        return 0;
+    char* seed_path{nullptr};
+    if (argc > 1) {
+        seed_path = *(argv+1);
     }
-    test_one_input(buffer);
+
+    std::vector<uint8_t> buffer;
+    if (seed_path == nullptr) {
+        if (!read_stdin(buffer)) {
+            return 0;
+        }
+        test_one_input(buffer);
+    } else {
+        if(std::filesystem::is_directory(seed_path)) {
+            for (auto& file : std::filesystem::directory_iterator{seed_path}) {
+                if (!read_file(file, buffer)) {
+                    return 0;
+                }
+                test_one_input(buffer);
+                buffer.clear();
+            }
+        } else {
+            if (!read_file(seed_path, buffer)) {
+                return 0;
+            }
+            test_one_input(buffer);
+        }
+    }
 #endif
     return 0;
 }
