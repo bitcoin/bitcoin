@@ -164,6 +164,7 @@ CAuxFeeDetails::CAuxFeeDetails(const UniValue& value, const uint8_t &nPrecision)
             return;
         }
         double iPct = std::round(auxFeeArr[1].get_real()*100000.0);
+
         if (iPct < 0 || iPct > 65535) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "percentage must be between 0.00 and 65.535");
         }
@@ -182,7 +183,7 @@ void CAuxFeeDetails::ToJson(UniValue& value, const uint32_t& nBaseAsset) const {
     for(const auto& auxfee: vecAuxFees) {
         UniValue auxfeeObj(UniValue::VOBJ);
         auxfeeObj.__pushKV("bound", ValueFromAmount(auxfee.nBound, nBaseAsset));
-        auxfeeObj.__pushKV("percentage", auxfee.nPercent / 100000.0);
+        auxfeeObj.__pushKV("percentage", strprintf("%.5f", auxfee.nPercent / 100000.0));
         feeStruct.push_back(auxfeeObj);
     }
     value.__pushKV("auxfee_address", vchAuxFeeKeyID.empty()? "" : EncodeDestination(WitnessV0KeyHash(uint160{vchAuxFeeKeyID})));
