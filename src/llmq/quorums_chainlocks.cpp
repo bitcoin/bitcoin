@@ -280,6 +280,8 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
         LOCK(cs_main);
         peerman.ReceivedResponse(from, hash);
     }
+    CheckActiveState();
+    
     bool bReturn = false;
     {
         LOCK(cs);
