@@ -21,6 +21,9 @@ FUZZ_TARGET(parse_numbers)
     uint8_t u8;
     (void)ParseUInt8(random_string, &u8);
 
+    uint16_t u16;
+    (void)ParseUInt16(random_string, &u16);
+
     int32_t i32;
     (void)ParseInt32(random_string, &i32);
     (void)atoi(random_string);
