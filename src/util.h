@@ -15,6 +15,7 @@
 #include <config/dash-config.h>
 #endif
 
+#include <attributes.h>
 #include <compat.h>
 #include <fs.h>
 #include <logging.h>
