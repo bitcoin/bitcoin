@@ -116,6 +116,8 @@ public:
     const MapAssumeutxo& Assumeutxo() const { return m_assumeutxo_data; }
 
     const ChainTxData& TxData() const { return chainTxData; }
+    /** Update versionbits deployment parameters from arguments. */
+    virtual void UpdateActivationParametersFromArgs(const ArgsManager& args);
 protected:
     CChainParams() {}
 

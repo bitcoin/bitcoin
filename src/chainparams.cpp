@@ -91,6 +91,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].timeoutheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1916; // 95% of 2016
 
+        UpdateActivationParametersFromArgs(gArgs);
+
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000001533efd8d716a517fe2c5008");
         consensus.defaultAssumeValid = uint256S("0x0000000000000000000b9d2ec5a352ecba0592946514a92f14319dc2b367fc72"); // 654683
 
@@ -209,6 +211,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].startheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].timeoutheight = Consensus::VBitsDeployment::NEVER_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1512; // 75% of 2016
+
+        UpdateActivationParametersFromArgs(gArgs);
 
         consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000001db6ec4ac88cf2272c6");
         consensus.defaultAssumeValid = uint256S("0x000000000000006433d1efec504c53ca332b64963c425395515b01977bd7b3b0"); // 1864000
@@ -347,6 +351,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].timeoutheight = Consensus::VBitsDeployment::NO_TIMEOUT;
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].threshold = 1916; // 95% of 2016
 
+        UpdateActivationParametersFromArgs(args);
+
         // message start is defined as the first 4 bytes of the sha256d of the block script
         CHashWriter h(SER_DISK, 0);
         h << consensus.signet_challenge;
@@ -481,7 +487,7 @@ public:
         consensus.vDeployments[d].m_min_activation_height = min_activation_height;
     }
     bool CheckVBitsHeights(std::string& error, int64_t startheight, int64_t timeoutheight, int64_t min_activation_height);
-    void UpdateActivationParametersFromArgs(const ArgsManager& args);
+    void UpdateActivationParametersFromArgs(const ArgsManager& args) override;
 };
 
 bool CRegTestParams::CheckVBitsHeights(std::string& error, int64_t startheight, int64_t timeoutheight, int64_t min_activation_height)
@@ -527,6 +533,8 @@ bool CRegTestParams::CheckVBitsHeights(std::string& error, int64_t startheight, 
 
 void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
 {
+    CChainParams::UpdateActivationParametersFromArgs(args);
+
     if (args.IsArgSet("-segwitheight")) {
         int64_t height = args.GetArg("-segwitheight", consensus.SegwitHeight);
         if (height < -1 || height >= std::numeric_limits<int>::max()) {
@@ -606,4 +614,38 @@ std::ostream& operator<<(std::ostream& o, const AssumeutxoData& aud)
 {
     o << strprintf("AssumeutxoData(%s, %s)", aud.hash_serialized.ToString(), aud.nChainTx);
     return o;
+}
+
+void CChainParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
+{
+    if (!args.IsArgSet("-vblot")) return;
+
+    for (const std::string& deployment : args.GetArgs("-vblot")) {
+        std::vector<std::string> deployment_params;
+        boost::split(deployment_params, deployment, boost::is_any_of(":"));
+        if (deployment_params.size() != 2) {
+            throw std::runtime_error("Version bits lockinontimeout parameter malformed, expecting \"deployment:(true|false)\"");
+        }
+        bool lockinontimeout = false;
+        if (deployment_params[1] == "true") {
+            lockinontimeout = true;
+        } else if (deployment_params[1] == "false") {
+            lockinontimeout = false;
+        } else {
+            throw std::runtime_error("Version bits lockinontimeout parameter malformed, expecting either \"true\" or \"false\".");
+        }
+
+        bool found = false;
+        for (int j=0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
+            if (deployment_params[0] == VersionBitsDeploymentInfo[j].name) {
+                consensus.vDeployments[j].lockinontimeout = lockinontimeout;
+                found = true;
+                LogPrintf("Setting version bits lockinontimeout parameter for %s to %s\n", deployment_params[0], deployment_params[1]);
+                break;
+            }
+        }
+        if (!found) {
+            throw std::runtime_error(strprintf("Invalid deployment (%s)", deployment_params[0]));
+        }
+    }
 }

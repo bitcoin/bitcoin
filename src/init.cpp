@@ -79,7 +79,9 @@
 #include <sys/stat.h>
 #endif
 
+#include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/replace.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/signals2/signal.hpp>
 
 #if ENABLE_ZMQ
@@ -1431,6 +1433,13 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         if (cmt != SanitizeString(cmt, SAFE_CHARS_UA_COMMENT))
             return InitError(strprintf(_("User Agent comment (%s) contains unsafe characters."), cmt));
         uacomments.push_back(cmt);
+    }
+    // Add a uacomment for each vblot setting
+    for (const std::string& deployment : args.GetArgs("-vblot")) {
+        std::vector<std::string> deployment_params;
+        boost::split(deployment_params, deployment, boost::is_any_of(":"));
+        // Already validated by chainparams init, don't need to check again
+        uacomments.push_back(strprintf("%s.lot@%s", deployment_params[0], deployment_params[1]));
     }
     strSubVersion = FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, uacomments);
     if (strSubVersion.size() > MAX_SUBVERSION_LENGTH) {
