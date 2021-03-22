@@ -5186,7 +5186,7 @@ std::optional<uint256> ChainstateManager::SnapshotBlockhash() const {
         // If a snapshot chainstate exists, it will always be our active.
         return m_active_chainstate->m_from_snapshot_blockhash;
     }
-    return {};
+    return std::nullopt;
 }
 
 std::vector<CChainState*> ChainstateManager::GetAll()
