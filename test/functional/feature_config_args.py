@@ -215,11 +215,23 @@ class ConfArgsTest(BitcoinTestFramework):
         ]):
             self.nodes[0].setmocktime(start + 65)
 
+    def test_addnode_and_connect_i2p(self):
+        self.log.info('Test ports are removed from I2P addresses passed to -addnode/-connect')
+
+        i2p_addr = "ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkdq.b32.i2p"
+        i2p_addr_with_port = i2p_addr + ":3333"
+
+        msg = f"trying connection {i2p_addr} lastseen="
+        for option in ["addnode", "connect"]:
+            with self.nodes[0].assert_debug_log(expected_msgs=[msg]):
+                self.restart_node(0, extra_args=[f"-{option}={i2p_addr_with_port}"])
+
     def run_test(self):
         self.test_log_buffer()
         self.test_args_log()
         self.test_seed_peers()
         self.test_networkactive()
+        self.test_addnode_and_connect_i2p()
 
         self.test_config_file_parser()
         self.test_invalid_command_line_options()
