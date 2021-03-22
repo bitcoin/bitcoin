@@ -77,6 +77,9 @@ BOOST_AUTO_TEST_CASE(util_check)
     const int two = *Assert(p_two);
     Assert(two == 2);
     Assert(true);
+    // Check that Assume can be used as unary expression
+    const bool result{Assume(two == 2)};
+    Assert(result);
 }
 
 BOOST_AUTO_TEST_CASE(util_criticalsection)
