@@ -246,4 +246,13 @@ void InterruptSocks5(bool interrupt);
  */
 bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* auth, const Sock& socket);
 
+/**
+ * Remove the trailing `:port` (if any) if the network of the address does not use ports.
+ * @param[in] addr Address in human readable form, possibly followed by `:port`.
+ * @return `addr` if ports are relevant or `addr` without the `:port`.
+ */
+std::string RemovePortIfIrrelevant(const std::string& addr);
+
+std::vector<std::string> RemovePortIfIrrelevant(const std::vector<std::string>& addresses);
+
 #endif // BITCOIN_NETBASE_H

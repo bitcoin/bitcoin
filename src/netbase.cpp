@@ -754,3 +754,28 @@ void InterruptSocks5(bool interrupt)
 {
     interruptSocks5Recv = interrupt;
 }
+
+std::string RemovePortIfIrrelevant(const std::string& addr)
+{
+    uint16_t port{0};
+    std::string addr_without_port;
+
+    SplitHostPort(addr, port, addr_without_port);
+
+    std::vector<CNetAddr> net_addr;
+    if (port > 0 && LookupIntern(addr_without_port, net_addr, 1, false, g_dns_lookup) &&
+        !UsesPorts(net_addr.at(0).GetNetwork())) {
+        return addr_without_port;
+    }
+    return addr;
+}
+
+std::vector<std::string> RemovePortIfIrrelevant(const std::vector<std::string>& addresses)
+{
+    std::vector<std::string> ret;
+    ret.reserve(addresses.size());
+    for (const auto& addr : addresses) {
+        ret.emplace_back(RemovePortIfIrrelevant(addr));
+    }
+    return ret;
+}

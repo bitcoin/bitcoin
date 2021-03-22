@@ -604,4 +604,29 @@ BOOST_AUTO_TEST_CASE(cservice_compare)
     BOOST_CHECK(LookupNumeric(i2p_addr + ":555") == LookupNumeric(i2p_addr + ":666"));
 }
 
+BOOST_AUTO_TEST_CASE(remove_port_if_irrelevant)
+{
+    const std::string i2p_addr{"ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkdq.b32.i2p"};
+    BOOST_CHECK_EQUAL(RemovePortIfIrrelevant(i2p_addr + ":4444"), i2p_addr);
+
+    const std::vector<std::string> addresses{{
+         "1.2.3.4",
+         "1.2.3.4:5678",
+         "[1:2::3:4]:5678",
+         "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion",
+         "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion:1111",
+         "ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkdq.b32.i2p",
+    }};
+
+    for (const auto& addr : addresses) {
+        BOOST_CHECK_EQUAL(RemovePortIfIrrelevant(addr), addr);
+    }
+
+    const auto& addresses_ports_removed = RemovePortIfIrrelevant(addresses);
+    BOOST_REQUIRE_EQUAL(addresses_ports_removed.size(), addresses.size());
+    for (size_t i = 0; i < addresses.size(); ++i) {
+        BOOST_CHECK_EQUAL(addresses_ports_removed[i], addresses[i]);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
