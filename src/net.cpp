@@ -327,9 +327,10 @@ CNode* CConnman::FindNode(const CSubNet& subNet)
 
 CNode* CConnman::FindNode(const std::string& addrName)
 {
+    const std::string& addr = RemovePortIfIrrelevant(addrName);
     LOCK(cs_vNodes);
     for (CNode* pnode : vNodes) {
-        if (pnode->GetAddrName() == addrName) {
+        if (pnode->GetAddrName() == addr) {
             return pnode;
         }
     }
