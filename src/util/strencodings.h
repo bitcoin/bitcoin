@@ -65,6 +65,13 @@ std::string EncodeBase32(Span<const unsigned char> input, bool pad = true);
  */
 std::string EncodeBase32(const std::string& str, bool pad = true);
 
+/**
+ * Parse and split addr:port.
+ * @param[in] in Address to parse, either `addr`, `addr:port`, `[ip:v:6]` or `[ip:v:6]:port`.
+ * @param[out] portOut The port from the `:port` suffix. Or left unmodified if no such suffix.
+ * @param[out] hostOut The address part, before `:port` (if any). `[` and `]` are removed from
+ * IPv6 addresses.
+ */
 void SplitHostPort(std::string in, uint16_t& portOut, std::string& hostOut);
 int64_t atoi64(const std::string& str);
 int atoi(const std::string& str);
