@@ -71,6 +71,7 @@ class NetTest(BitcoinTestFramework):
         self.test_service_flags()
         self.test_getnodeaddresses()
         self.test_addpeeraddress()
+        self.test_dedup_i2p_on_port()
 
     def test_connection_count(self):
         self.log.info("Test getconnectioncount")
@@ -261,6 +262,27 @@ class NetTest(BitcoinTestFramework):
         self.log.debug("Test that adding the same address again when already present fails")
         assert_equal(node.addpeeraddress(address="1.2.3.4", port=8333), {"success": False})
         assert_equal(len(node.getnodeaddresses(count=0)), 1)
+
+    def test_dedup_i2p_on_port(self):
+        node = self.nodes[0]
+        self.log.info("Test that ports are ignored for I2P addresses")
+        assert_equal(node.getaddednodeinfo(), [])
+        i2p_addr = "ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkdq.b32.i2p"
+        i2p_addr_port1 = f"{i2p_addr}:1111"
+        i2p_addr_port2 = f"{i2p_addr}:2222"
+        node.addnode(node=i2p_addr_port1, command='add')
+        # Check that the address has been added without the port.
+        added_nodes = node.getaddednodeinfo(i2p_addr)
+        assert_equal(len(added_nodes), 1)
+        assert_equal(added_nodes[0]['addednode'], i2p_addr)
+        # Check that the address cannot be added again even if the port is different.
+        assert_raises_rpc_error(-23, "Node already added", node.addnode, node=i2p_addr_port2, command='add')
+        node.addnode(node=i2p_addr, command='remove')
+        assert_equal(node.getaddednodeinfo(), [])
+
+        # The I2P address should be printed without the port to the log.
+        with node.assert_debug_log(f"trying connection {i2p_addr} lastseen="):
+            node.addnode(node=i2p_addr_port1, command='onetry')
 
 
 if __name__ == '__main__':

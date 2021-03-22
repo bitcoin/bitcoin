@@ -12,6 +12,7 @@
 #include <net_permissions.h>
 #include <net_processing.h>
 #include <net_types.h> // For banmap_t
+#include <netaddress.h>
 #include <netbase.h>
 #include <node/context.h>
 #include <policy/settings.h>
@@ -304,7 +305,7 @@ static RPCHelpMan addnode()
     NodeContext& node = EnsureAnyNodeContext(request.context);
     CConnman& connman = EnsureConnman(node);
 
-    std::string strNode = request.params[0].get_str();
+    std::string strNode = RemovePortIfIrrelevant(request.params[0].get_str());
 
     if (strCommand == "onetry")
     {
@@ -356,7 +357,7 @@ static RPCHelpMan addconnection()
     }
 
     RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VSTR});
-    const std::string address = request.params[0].get_str();
+    const std::string address = RemovePortIfIrrelevant(request.params[0].get_str());
     const std::string conn_type_in{TrimString(request.params[1].get_str())};
     ConnectionType conn_type{};
     if (conn_type_in == "outbound-full-relay") {
