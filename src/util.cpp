@@ -553,6 +553,71 @@ void ArgsManager::ForceSetArg(const std::string& strArg, const std::string& strV
     m_override_args[strArg] = {strValue};
 }
 
+void ArgsManager::AddArg(const std::string& name, const std::string& help, const bool debug_only, const OptionsCategory& cat)
+{
+    std::pair<OptionsCategory, std::string> key(cat, name);
+    assert(m_available_args.count(key) == 0);
+    m_available_args.emplace(key, std::pair<std::string, bool>(help, debug_only));
+}
+
+std::string ArgsManager::GetHelpMessage()
+{
+    const bool show_debug = gArgs.GetBoolArg("-help-debug", false);
+
+    std::string usage = HelpMessageGroup("Options:");
+
+    OptionsCategory last_cat = OptionsCategory::OPTIONS;
+    for (auto& arg : m_available_args) {
+        if (arg.first.first != last_cat) {
+            last_cat = arg.first.first;
+            if (last_cat == OptionsCategory::CONNECTION)
+                usage += HelpMessageGroup("Connection options:");
+            else if (last_cat == OptionsCategory::INDEXING)
+                usage += HelpMessageGroup("Indexing options:");
+            else if (last_cat == OptionsCategory::MASTERNODE)
+                usage += HelpMessageGroup("Masternode options:");
+            else if (last_cat == OptionsCategory::INSTANTSEND)
+                usage += HelpMessageGroup("InstantSend options:");
+            else if (last_cat == OptionsCategory::STATSD)
+                usage += HelpMessageGroup("Statsd options:");
+            else if (last_cat == OptionsCategory::ZMQ)
+                usage += HelpMessageGroup("ZeroMQ notification options:");
+            else if (last_cat == OptionsCategory::DEBUG_TEST)
+                usage += HelpMessageGroup("Debugging/Testing options:");
+            else if (last_cat == OptionsCategory::NODE_RELAY)
+                usage += HelpMessageGroup("Node relay options:");
+            else if (last_cat == OptionsCategory::BLOCK_CREATION)
+                usage += HelpMessageGroup("Block creation options:");
+            else if (last_cat == OptionsCategory::RPC)
+                usage += HelpMessageGroup("RPC server options:");
+            else if (last_cat == OptionsCategory::WALLET)
+                usage += HelpMessageGroup("Wallet options:");
+            else if (last_cat == OptionsCategory::WALLET)
+                usage += HelpMessageGroup("Wallet fee options:");
+            else if (last_cat == OptionsCategory::WALLET)
+                usage += HelpMessageGroup("HD wallet options:");
+            else if (last_cat == OptionsCategory::WALLET)
+                usage += HelpMessageGroup("KeePass options:");
+            else if (last_cat == OptionsCategory::WALLET)
+                usage += HelpMessageGroup("CoinJoin options:");
+            else if (last_cat == OptionsCategory::WALLET_DEBUG_TEST && show_debug)
+                usage += HelpMessageGroup("Wallet debugging/testing options:");
+            else if (last_cat == OptionsCategory::CHAINPARAMS)
+                usage += HelpMessageGroup("Chain selection options:");
+            else if (last_cat == OptionsCategory::GUI)
+                usage += HelpMessageGroup("UI Options:");
+            else if (last_cat == OptionsCategory::COMMANDS)
+                usage += HelpMessageGroup("Commands:");
+            else if (last_cat == OptionsCategory::REGISTER_COMMANDS)
+                usage += HelpMessageGroup("Register Commands:");
+        }
+        if (show_debug || !arg.second.second) {
+            usage += HelpMessageOpt(arg.first.second, arg.second.first);
+        }
+    }
+    return usage;
+}
+
 void ArgsManager::ForceRemoveArg(const std::string& strArg)
 {
     LOCK(cs_args);
