@@ -3913,7 +3913,6 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     nNextAddrSend = 0;
     fRelayTxes = false;
     fSentAddr = false;
-    pfilter = MakeUnique<CBloomFilter>();
     timeLastMempoolReq = 0;
     nLastBlockTime = 0;
     nLastTXTime = 0;

@@ -3493,7 +3493,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
     if (strCommand == NetMsgType::FILTERCLEAR) {
         LOCK(pfrom->cs_filter);
         if (pfrom->GetLocalServices() & NODE_BLOOM) {
-            pfrom->pfilter.reset(new CBloomFilter());
+            pfrom->pfilter = nullptr;
         }
         pfrom->fRelayTxes = true;
         return true;

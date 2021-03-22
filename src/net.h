@@ -900,7 +900,7 @@ public:
     bool m_masternode_iqr_connection{false};
     CSemaphoreGrant grantOutbound;
     CCriticalSection cs_filter;
-    std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter);
+    std::unique_ptr<CBloomFilter> pfilter PT_GUARDED_BY(cs_filter){nullptr};
     std::atomic<int> nRefCount;
 
     const uint64_t nKeyedNetGroup;
