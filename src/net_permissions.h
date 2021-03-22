@@ -5,6 +5,7 @@
 #include <netaddress.h>
 
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #ifndef BITCOIN_NET_PERMISSIONS_H
@@ -14,7 +15,7 @@ struct bilingual_str;
 
 extern const std::vector<std::string> NET_PERMISSIONS_DOC;
 
-enum NetPermissionFlags {
+enum class NetPermissionFlags : uint32_t {
     PF_NONE = 0,
     // Can query bloomfilter even if -peerbloomfilters is false
     PF_BLOOMFILTER = (1U << 1),
@@ -37,6 +38,11 @@ enum NetPermissionFlags {
     PF_ISIMPLICIT = (1U << 31),
     PF_ALL = PF_BLOOMFILTER | PF_FORCERELAY | PF_RELAY | PF_NOBAN | PF_MEMPOOL | PF_DOWNLOAD | PF_ADDR,
 };
+static inline constexpr NetPermissionFlags operator|(NetPermissionFlags a, NetPermissionFlags b)
+{
+    using t = typename std::underlying_type<NetPermissionFlags>::type;
+    return static_cast<NetPermissionFlags>(static_cast<t>(a) | static_cast<t>(b));
+}
 
 class NetPermissions
 {
@@ -45,11 +51,12 @@ public:
     static std::vector<std::string> ToStrings(NetPermissionFlags flags);
     static inline bool HasFlag(NetPermissionFlags flags, NetPermissionFlags f)
     {
-        return (flags & f) == f;
+        using t = typename std::underlying_type<NetPermissionFlags>::type;
+        return (static_cast<t>(flags) & static_cast<t>(f)) == static_cast<t>(f);
     }
     static inline void AddFlag(NetPermissionFlags& flags, NetPermissionFlags f)
     {
-        flags = static_cast<NetPermissionFlags>(flags | f);
+        flags = flags | f;
     }
     //! ClearFlag is only called with `f` == NetPermissionFlags::PF_ISIMPLICIT.
     //! If that should change in the future, be aware that ClearFlag should not
@@ -59,7 +66,8 @@ public:
     static inline void ClearFlag(NetPermissionFlags& flags, NetPermissionFlags f)
     {
         assert(f == NetPermissionFlags::PF_ISIMPLICIT);
-        flags = static_cast<NetPermissionFlags>(flags & ~f);
+        using t = typename std::underlying_type<NetPermissionFlags>::type;
+        flags = static_cast<NetPermissionFlags>(static_cast<t>(flags) & ~static_cast<t>(f));
     }
 };
 
