@@ -23,12 +23,12 @@ namespace {
 // The parse the following format "perm1,perm2@xxxxxx"
 bool TryParsePermissionFlags(const std::string str, NetPermissionFlags& output, size_t& readen, bilingual_str& error)
 {
-    NetPermissionFlags flags = PF_NONE;
+    NetPermissionFlags flags = NetPermissionFlags::PF_NONE;
     const auto atSeparator = str.find('@');
 
     // if '@' is not found (ie, "xxxxx"), the caller should apply implicit permissions
     if (atSeparator == std::string::npos) {
-        NetPermissions::AddFlag(flags, PF_ISIMPLICIT);
+        NetPermissions::AddFlag(flags, NetPermissionFlags::PF_ISIMPLICIT);
         readen = 0;
     }
     // else (ie, "perm1,perm2@xxxxx"), let's enumerate the permissions by splitting by ',' and calculate the flags
@@ -44,14 +44,14 @@ bool TryParsePermissionFlags(const std::string str, NetPermissionFlags& output, 
             readen += len; // We read "perm1"
             if (commaSeparator != std::string::npos) readen++; // We read ","
 
-            if (permission == "bloomfilter" || permission == "bloom") NetPermissions::AddFlag(flags, PF_BLOOMFILTER);
-            else if (permission == "noban") NetPermissions::AddFlag(flags, PF_NOBAN);
-            else if (permission == "forcerelay") NetPermissions::AddFlag(flags, PF_FORCERELAY);
-            else if (permission == "mempool") NetPermissions::AddFlag(flags, PF_MEMPOOL);
-            else if (permission == "download") NetPermissions::AddFlag(flags, PF_DOWNLOAD);
-            else if (permission == "all") NetPermissions::AddFlag(flags, PF_ALL);
-            else if (permission == "relay") NetPermissions::AddFlag(flags, PF_RELAY);
-            else if (permission == "addr") NetPermissions::AddFlag(flags, PF_ADDR);
+            if (permission == "bloomfilter" || permission == "bloom") NetPermissions::AddFlag(flags, NetPermissionFlags::PF_BLOOMFILTER);
+            else if (permission == "noban") NetPermissions::AddFlag(flags, NetPermissionFlags::PF_NOBAN);
+            else if (permission == "forcerelay") NetPermissions::AddFlag(flags, NetPermissionFlags::PF_FORCERELAY);
+            else if (permission == "mempool") NetPermissions::AddFlag(flags, NetPermissionFlags::PF_MEMPOOL);
+            else if (permission == "download") NetPermissions::AddFlag(flags, NetPermissionFlags::PF_DOWNLOAD);
+            else if (permission == "all") NetPermissions::AddFlag(flags, NetPermissionFlags::PF_ALL);
+            else if (permission == "relay") NetPermissions::AddFlag(flags, NetPermissionFlags::PF_RELAY);
+            else if (permission == "addr") NetPermissions::AddFlag(flags, NetPermissionFlags::PF_ADDR);
             else if (permission.length() == 0); // Allow empty entries
             else {
                 error = strprintf(_("Invalid P2P permission: '%s'"), permission);
@@ -71,13 +71,13 @@ bool TryParsePermissionFlags(const std::string str, NetPermissionFlags& output, 
 std::vector<std::string> NetPermissions::ToStrings(NetPermissionFlags flags)
 {
     std::vector<std::string> strings;
-    if (NetPermissions::HasFlag(flags, PF_BLOOMFILTER)) strings.push_back("bloomfilter");
-    if (NetPermissions::HasFlag(flags, PF_NOBAN)) strings.push_back("noban");
-    if (NetPermissions::HasFlag(flags, PF_FORCERELAY)) strings.push_back("forcerelay");
-    if (NetPermissions::HasFlag(flags, PF_RELAY)) strings.push_back("relay");
-    if (NetPermissions::HasFlag(flags, PF_MEMPOOL)) strings.push_back("mempool");
-    if (NetPermissions::HasFlag(flags, PF_DOWNLOAD)) strings.push_back("download");
-    if (NetPermissions::HasFlag(flags, PF_ADDR)) strings.push_back("addr");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::PF_BLOOMFILTER)) strings.push_back("bloomfilter");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::PF_NOBAN)) strings.push_back("noban");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::PF_FORCERELAY)) strings.push_back("forcerelay");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::PF_RELAY)) strings.push_back("relay");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::PF_MEMPOOL)) strings.push_back("mempool");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::PF_DOWNLOAD)) strings.push_back("download");
+    if (NetPermissions::HasFlag(flags, NetPermissionFlags::PF_ADDR)) strings.push_back("addr");
     return strings;
 }
 
