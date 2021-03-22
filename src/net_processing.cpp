@@ -4689,7 +4689,10 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         //
         // Message: feefilter
         //
-        if (pto->m_tx_relay != nullptr && pto->GetCommonVersion() >= FEEFILTER_VERSION && gArgs.GetBoolArg("-feefilter", DEFAULT_FEEFILTER) &&
+        if (pto->m_tx_relay != nullptr &&
+            !m_ignore_incoming_txs &&
+            pto->GetCommonVersion() >= FEEFILTER_VERSION &&
+            gArgs.GetBoolArg("-feefilter", DEFAULT_FEEFILTER) &&
             !pto->HasPermission(PF_FORCERELAY) // peers with the forcerelay permission should not filter txs to us
         ) {
             CAmount currentFilter = m_mempool.GetMinFee(gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000).GetFeePerK();
