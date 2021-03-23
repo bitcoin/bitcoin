@@ -102,6 +102,12 @@ public:
     uint64_t m_k0, m_k1;
 
     /**
+     * A reconciliation round may involve an extension, in which case we should remember
+     * a capacity of the sketch sent out initially, so that a sketch extension is of the same size.
+     */
+    uint16_t m_capacity_snapshot{0};
+
+    /**
      * TODO: This field is public to ignore -Wunused-private-field. Make private once used in
      * the following commits.
      *
@@ -127,6 +133,19 @@ public:
      * at the end of a reconciliation round.
      */
     std::map<uint32_t, uint256> m_short_id_mapping;
+
+    /**
+     * A reconciliation round may involve an extension, which is an extra exchange of messages.
+     * Since it may happen after a delay (at least network latency), new transactions may come
+     * during that time. To avoid mixing old and new transactions, those which are subject for
+     * extension of a current reconciliation round are moved to a reconciliation set snapshot
+     * after an initial (non-extended) sketch is sent.
+     * New transactions are kept in the regular reconciliation set.
+     */
+    std::set<uint256> m_local_set_snapshot;
+    /** Same as non-snapshot set above */
+    std::map<uint32_t, uint256> m_snapshot_short_id_mapping;
+
 
     /** Keep track of the reconciliation phase with the peer. */
     Phase m_phase{Phase::NONE};
@@ -162,11 +181,14 @@ public:
      * (a sketch). A sketch has a capacity meaning it allows reconciling at most a certain number
      * of elements (see BIP-330).
      */
-    Minisketch ComputeSketch(uint32_t& capacity)
+    Minisketch ComputeBaseSketch(uint32_t& capacity)
     {
         Minisketch sketch;
         // Avoid serializing/sending an empty sketch.
         if (capacity == 0) return sketch;
+
+        // To be used for sketch extension of the exact same size.
+        m_capacity_snapshot = capacity;
 
         capacity = std::min(capacity, MAX_SKETCH_CAPACITY);
         sketch = node::MakeMinisketch32(capacity);
@@ -177,6 +199,29 @@ public:
             m_short_id_mapping.emplace(short_txid, wtxid);
         }
 
+        return sketch;
+    }
+
+    /**
+     * When our peer tells us that our sketch was insufficient to reconcile transactions because
+     * of the low capacity, we compute an extended sketch with the double capacity, and then send
+     * only the part the peer is missing to that peer.
+     */
+    Minisketch ComputeExtendedSketch(uint32_t extended_capacity)
+    {
+        assert(extended_capacity > 0);
+        // This can't happen because we should have terminated reconciliation early.
+        assert(m_local_set_snapshot.size() > 0);
+
+        // For now, compute a sketch of twice the capacity were computed originally.
+        // TODO: optimize by computing the extension *on top* of the existent sketch
+        // instead of computing the lower order elements again.
+        Minisketch sketch = Minisketch(RECON_FIELD_SIZE, 0, extended_capacity);
+
+        // We don't have to recompute short IDs here.
+        for (const auto& shortid_to_wtxid: m_snapshot_short_id_mapping) {
+            sketch.Add(shortid_to_wtxid.first);
+        }
         return sketch;
     }
 
@@ -203,6 +248,13 @@ public:
             }
         }
     }
+
+    /**
+     * In a reconciliation round initiated by us, if we asked for an extension, we want to store
+     * the sketch computed/transmitted in the initial step, so that we can use it when
+     * sketch extension arrives.
+     */
+    std::vector<uint8_t> m_remote_sketch_snapshot;
 
     /**
      * The following fields are specific to only reconciliations initiated by the peer.
@@ -240,8 +292,24 @@ public:
         }
         return false;
     }
-};
 
+    /**
+     * To be efficient in transmitting extended sketch, we store a snapshot of the sketch
+     * received in the initial reconciliation step, so that only the necessary extension data
+     * has to be transmitted.
+     * We also store a snapshot of our local reconciliation set, to better keep track of
+     * transactions arriving during this reconciliation (they will be added to the cleared
+     * original reconciliation set, to be reconciled next time).
+     */
+    void PrepareForExtensionResponse(uint16_t sketch_capacity, const std::vector<uint8_t>& remote_sketch)
+    {
+        assert(m_we_initiate);
+        m_capacity_snapshot = sketch_capacity;
+        m_remote_sketch_snapshot = remote_sketch;
+        m_local_set_snapshot = m_local_set;
+        m_local_set.clear();
+    }
+};
 } // namespace
 
 /** Actual implementation for TxReconciliationTracker's data structure. */
@@ -308,7 +376,7 @@ private:
 
         Minisketch local_sketch, remote_sketch;
         if (recon_state.m_local_set.size() > 0) {
-            local_sketch = recon_state.ComputeSketch(remote_sketch_capacity);
+            local_sketch = recon_state.ComputeBaseSketch(remote_sketch_capacity);
         }
         if (remote_sketch_capacity != 0) {
             remote_sketch = node::MakeMinisketch32(remote_sketch_capacity).Deserialize(skdata);
@@ -358,6 +426,7 @@ private:
             // Initial reconciliation step failed.
 
             // Update local reconciliation state for the peer.
+            recon_state.PrepareForExtensionResponse(remote_sketch_capacity, skdata);
             recon_state.m_phase = Phase::EXT_REQUESTED;
 
             result = std::nullopt;
@@ -556,7 +625,7 @@ private:
 
             sketch_capacity = recon_state.EstimateSketchCapacity(
                 recon_state.m_local_set.size());
-            Minisketch sketch = recon_state.ComputeSketch(sketch_capacity);
+            Minisketch sketch = recon_state.ComputeBaseSketch(sketch_capacity);
             if (sketch) skdata = sketch.Serialize();
         }
 
