@@ -866,11 +866,16 @@ if test x$use_hardening != xno; then
   dnl Use CHECK_LINK_FLAG & --fatal-warnings to ensure we won't use the flag in this case.
   AX_CHECK_LINK_FLAG([-fcf-protection=full],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fcf-protection=full"],, [[$LDFLAG_WERROR]])
 
-  dnl stack-clash-protection does not work properly when building for Windows.
-  dnl We use the test case from https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458
-  dnl to determine if it can be enabled.
-  AX_CHECK_COMPILE_FLAG([-fstack-clash-protection],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-clash-protection"],[],["-O0"],
-    [AC_LANG_SOURCE([[class D {public: unsigned char buf[32768];}; int main() {D d; return 0;}]])])
+  case $host in
+    *mingw*)
+      dnl stack-clash-protection doesn't currently work, and likely should just be skipped for Windows.
+      dnl See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=90458 for more details.
+      ;;
+    *)
+      AX_CHECK_COMPILE_FLAG([-fstack-clash-protection],[HARDENED_CXXFLAGS="$HARDENED_CXXFLAGS -fstack-clash-protection"])
+      ;;
+  esac
+
 
   dnl When enable_debug is yes, all optimizations are disabled.
   dnl However, FORTIFY_SOURCE requires that there is some level of optimization, otherwise it does nothing and just creates a compiler warning.
