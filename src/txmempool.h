@@ -476,7 +476,7 @@ enum class MemPoolRemovalReason {
  */
 class CTxMemPool
 {
-private:
+protected:
     const int m_check_ratio; //!< Value n means that 1 times in n we check.
     std::atomic<unsigned int> nTransactionsUpdated{0}; //!< Used by getblocktemplate to trigger CreateNewBlock() invocation
     CBlockPolicyEstimator* minerPolicyEstimator;
