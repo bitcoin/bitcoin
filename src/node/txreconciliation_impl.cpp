@@ -59,6 +59,9 @@ private:
      */
     std::deque<NodeId> m_queue GUARDED_BY(m_txreconciliation_mutex);
 
+    /** Make reconciliation requests periodically to make reconciliations efficient. */
+    std::chrono::microseconds m_next_recon_request GUARDED_BY(m_txreconciliation_mutex){0};
+
     /** Collection of inbound peers selected for fanout. Should get periodically rotated using RotateInboundFanoutTargets. */
     std::unordered_set<NodeId> m_inbound_fanout_targets GUARDED_BY(m_txreconciliation_mutex);
 
@@ -72,6 +75,20 @@ private:
         if (salt_or_state == m_states.end()) return nullptr;
 
         return std::get_if<TxReconciliationState>(&salt_or_state->second);
+    }
+
+    /**
+     * Schedules the a reconciliation request with the next outbound peer in our reconciliation queue.
+     * The next time depends on the number of peers on our queue, so we can reconcile with all out outbound neighborhood
+     * once every RECON_REQUEST_INTERVAL.
+     */
+    void ScheduleNextReconRequest(std::chrono::microseconds now) EXCLUSIVE_LOCKS_REQUIRED(m_txreconciliation_mutex)
+    {
+        // We have one timer for the entire queue. This is safe because we initiate reconciliations
+        // with outbound connections, which are unlikely to game this timer in a serious way.
+        Assume( m_states.size() > m_inbounds_count);
+        size_t we_initiate_to_count = m_states.size() - m_inbounds_count;
+        m_next_recon_request = now + (RECON_REQUEST_INTERVAL / we_initiate_to_count);
     }
 
 public:
@@ -130,6 +147,11 @@ public:
             }
         }
         if (!is_peer_inbound) {
+            // If this is the first outbound peer registered for reconciliation, don't bother instantly requesting reconciliation.
+            // Set the next request one RECON_REQUEST_INTERVAL in the future so we have time to gather some transactions
+            if (m_queue.empty()) {
+                m_next_recon_request = GetTime<std::chrono::microseconds>() + RECON_REQUEST_INTERVAL;
+            }
             m_queue.push_back(peer_id);
         }
         return std::nullopt;
