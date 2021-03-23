@@ -359,7 +359,7 @@ void BitcoinApplication::createWindow(const NetworkStyle *networkStyle)
 {
     window = new BitcoinGUI(m_node, networkStyle, 0);
 
-    GUIUtil::loadTheme(window);
+    GUIUtil::loadTheme(m_node, window);
 
     pollShutdownTimer = new QTimer(window);
     connect(pollShutdownTimer, SIGNAL(timeout()), window, SLOT(detectShutdown()));
@@ -419,7 +419,7 @@ void BitcoinApplication::requestShutdown()
     // Show a simple window indicating shutdown status
     // Do this first as some of the steps may take some time below,
     // for example the RPC console may still be executing a command.
-    shutdownWindow.reset(ShutdownWindow::showShutdownWindow(window));
+    shutdownWindow.reset(ShutdownWindow::showShutdownWindow(m_node, window));
 
     qDebug() << __func__ << ": Requesting shutdown";
     startThread();
