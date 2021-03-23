@@ -214,6 +214,7 @@ chain for " target " development."))
         gzip
         xz
         zlib
+        (list zlib "static")
         ;; Build tools
         gnu-make
         libtool
@@ -227,7 +228,8 @@ chain for " target " development."))
         ;; Git
         git
         ;; Native gcc 7 toolchain
-        gcc-toolchain-7)
+        gcc-toolchain-7
+        (list gcc-toolchain-7 "static"))
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            ;; Windows
