@@ -78,6 +78,31 @@ public:
     std::map<uint32_t, Wtxid> m_short_id_mapping;
 
     /**
+     * A reconciliation round may involve an extension, which is an extra exchange of messages.
+     * Since it may happen after a delay (at least network latency), new transactions may come
+     * during that time. To avoid mixing old and new transactions, those which are subject for
+     * extension of a current reconciliation round are moved to a reconciliation set snapshot
+     * after an initial (non-extended) sketch is sent.
+     * New transactions are kept in the regular reconciliation set.
+     */
+    std::unordered_set<Wtxid, SaltedWtxidHasher> m_local_set_snapshot;
+
+    /** Same as non-snapshot set above, but for the transactions in the snapshot. */
+    std::map<uint32_t, Wtxid> m_short_id_mapping_snapshot;
+
+    /**
+     * A reconciliation round may involve an extension, in which case we should remember
+     * a capacity of the sketch sent out initially, so that a sketch extension is of the same size.
+     */
+    uint16_t m_capacity_snapshot{0};
+
+    /**
+     * In a reconciliation round initiated by us, if we asked for an extension, we want to store
+     * the sketch computed/transmitted in the initial step, so that we can use it when sketch extension arrives.
+     */
+    std::vector<uint8_t> m_remote_sketch_snapshot;
+
+    /**
      * The following fields are specific to only reconciliations initiated by the peer.
      */
 
@@ -117,7 +142,32 @@ public:
      * Reconciliation involves computing a space-efficient representation of transaction identifiers (a sketch).
      * A sketch has a capacity meaning it allows reconciling at most a certain number of elements (see BIP-330).
      */
-    Minisketch ComputeSketch(uint32_t& capacity);
+    Minisketch ComputeBaseSketch(uint32_t& capacity);
+
+    /**
+     * When our peer tells us that our sketch was insufficient to reconcile transactions because
+     * of the low capacity, we compute an extended sketch with the double capacity, and then send
+     * only missing part to that peer.
+     */
+    Minisketch ComputeExtendedSketch(uint32_t extended_capacity);
+
+    /**
+     * Creates a snapshot of the peer local set (m_local_set and m_short_id_mapping) and clears
+     * it. This is useful for both sides of the reconciliation when preparing for an extension
+     * (request or response) so the current data can be persisted, and any additional data that
+     * enters the sets is not lost after the current reconciliation flow is concluded.
+     */
+    void SnapshotLocalSet();
+
+    /**
+     * To be efficient in transmitting extended sketch, we store a snapshot of the sketch
+     * received in the initial reconciliation step, so that only the necessary extension data
+     * has to be transmitted.
+     * We also store a snapshot of our local reconciliation set, to better keep track of
+     * transactions arriving during this reconciliation (they will be added to the cleared
+     * original reconciliation set, to be reconciled next time).
+     */
+    void PrepareForExtensionResponse(const std::vector<uint8_t>& remote_sketch);
 
     /**
      * Get all the transactions we have stored for this peer.
