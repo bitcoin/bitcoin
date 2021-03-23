@@ -22,9 +22,23 @@
 #include <vector>
 
 namespace node {
+/**
+ * A floating point coefficient q for estimating reconciliation set difference, and
+ * the value used to convert it to integer for transmission purposes, as specified in BIP-330.
+ */
+inline constexpr double Q = 0.25;
+inline constexpr uint16_t Q_PRECISION{(2 << 14) - 1};
+
 /** Static salt component used to compute short txids for sketch construction, see BIP-330. */
 inline const std::string RECON_STATIC_SALT = "Tx Relay Salting";
 inline const HashWriter RECON_SALT_HASHER = TaggedHash(RECON_STATIC_SALT);
+
+/** Represents phase of the current reconciliation round with a peer. */
+enum class ReconciliationPhase
+{
+    NONE,
+    INIT_REQUESTED,
+};
 
 /**
  * Salt (specified by BIP-330) constructed from contributions from both peers. It is used
@@ -47,6 +61,9 @@ public:
      * based on the direction of the p2p connection.
      */
     bool m_we_initiate;
+
+    /** Keep track of the reconciliation phase with the peer. */
+    ReconciliationPhase m_phase{ReconciliationPhase::NONE};
 
     /**
      * Store all wtxids that we would announce to the peer (policy checks passed, etc.)
