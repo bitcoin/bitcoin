@@ -149,7 +149,7 @@ private:
 
     bool HandleInitialSketch(TxReconciliationState& recon_state, const NodeId peer_id, const std::vector<uint8_t>& skdata,
                              // returning values
-                             std::vector<uint32_t>& txs_to_request, std::vector<Wtxid>& txs_to_announce, bool& result)
+                             std::vector<uint32_t>& txs_to_request, std::vector<Wtxid>& txs_to_announce, std::optional<bool>& result)
     {
         Assume(recon_state.m_we_initiate);
         Assume(recon_state.m_phase == ReconciliationPhase::INIT_REQUESTED);
@@ -203,8 +203,11 @@ private:
                     peer_id, txs_to_request.size(), txs_to_announce.size());
             } else {
                 // Initial reconciliation step failed.
-                // TODO handle failure.
-                result = false;
+                // Update local reconciliation state for the peer.
+                recon_state.m_phase = ReconciliationPhase::EXT_REQUESTED;
+
+                result = std::nullopt;
+                LogDebug(BCLog::TXRECONCILIATION, "Reconciliation we initiated with peer=%d has failed at initial step, request sketch extension.\n", peer_id);
             }
         }
 
@@ -512,7 +515,7 @@ public:
 
     bool HandleSketch(NodeId peer_id, const std::vector<uint8_t>& skdata,
                       // returning values
-                      std::vector<uint32_t>& txs_to_request, std::vector<Wtxid>& txs_to_announce, bool& result) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+                      std::vector<uint32_t>& txs_to_request, std::vector<Wtxid>& txs_to_announce, std::optional<bool>& result) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
         LOCK(m_txreconciliation_mutex);
@@ -654,7 +657,7 @@ bool TxReconciliationTracker::ShouldRespondToReconciliationRequest(NodeId peer_i
 
 bool TxReconciliationTracker::HandleSketch(NodeId peer_id, const std::vector<uint8_t>& skdata,
                                            // returning values
-                                           std::vector<uint32_t>& txs_to_request, std::vector<Wtxid>& txs_to_announce, bool& result)
+                                           std::vector<uint32_t>& txs_to_request, std::vector<Wtxid>& txs_to_announce, std::optional<bool>& result)
 {
     return m_impl->HandleSketch(peer_id, skdata, txs_to_request, txs_to_announce, result);
 }

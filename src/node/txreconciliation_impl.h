@@ -213,11 +213,12 @@ public:
      * Step 3. Process a response to our reconciliation request.
      * Returns false if the peer seems to violate the protocol.
      * Populates the vectors so that we know which transactions should be requested and announced,
-     * and whether reconciliation succeeded.
+     * and whether reconciliation succeeded (nullopt if the reconciliation is not over yet and
+     * extension should be requested).
      */
     bool HandleSketch(NodeId peer_id, const std::vector<uint8_t>& skdata,
                       // returning values
-                      std::vector<uint32_t>& txs_to_request, std::vector<Wtxid>& txs_to_announce, bool& result);
+                      std::vector<uint32_t>& txs_to_request, std::vector<Wtxid>& txs_to_announce, std::optional<bool>& result);
 
     /** Whether a given peer is currently flagged for fanout. */
     bool IsInboundFanoutTarget(NodeId peer_id);

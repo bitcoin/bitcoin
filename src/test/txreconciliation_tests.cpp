@@ -453,7 +453,7 @@ BOOST_AUTO_TEST_CASE(HandleSketchBasicFlowTest)
     std::vector<uint8_t> skdata{};
     std::vector<uint32_t> txs_to_request{};
     std::vector<Wtxid> txs_to_announce{};
-    bool recon_result;
+    std::optional<bool> recon_result;
 
     // We cannot respond to partially registered peers
     BOOST_REQUIRE(!tracker.HandleSketch(peer_id0, skdata, txs_to_request, txs_to_announce, recon_result));
@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(HandleSketchTest)
     std::vector<uint8_t> skdata{};
     std::vector<uint32_t> txs_to_request{};
     std::vector<Wtxid> txs_to_announce{};
-    bool recon_result;
+    std::optional<bool> recon_result;
 
     // Lambda to add random wtxids to a peer's reconciliation set
     auto add_txs_to_reconset = [&](NodeId peer_id, std::vector<Wtxid>& added_txs, int n_txs_to_add) {
@@ -518,7 +518,7 @@ BOOST_AUTO_TEST_CASE(HandleSketchTest)
     // This will trigger the peer sending all their pending transactions to us
     skdata.resize(0, BYTES_PER_SKETCH_CAPACITY);
     BOOST_REQUIRE(tracker.HandleSketch(peer_id0, skdata, txs_to_request, txs_to_announce, recon_result));
-    BOOST_REQUIRE_EQUAL(recon_result, false);
+    BOOST_REQUIRE_EQUAL(recon_result, std::optional(false));
     BOOST_REQUIRE(txs_to_announce.empty());
     BOOST_REQUIRE(txs_to_request.empty());
 
@@ -530,7 +530,7 @@ BOOST_AUTO_TEST_CASE(HandleSketchTest)
     add_txs_to_reconset(peer_id0, added_txs, n_txs_to_add);
 
     BOOST_REQUIRE(tracker.HandleSketch(peer_id0, skdata, txs_to_request, txs_to_announce, recon_result));
-    BOOST_REQUIRE_EQUAL(recon_result, false);
+    BOOST_REQUIRE_EQUAL(recon_result, std::optional(false));
     BOOST_REQUIRE(std::is_permutation(txs_to_announce.begin(), txs_to_announce.end(), added_txs.begin(), added_txs.end()));
     BOOST_REQUIRE(txs_to_request.empty());
      // After a successful reconciliation, the sets are emptied
@@ -544,21 +544,21 @@ BOOST_AUTO_TEST_CASE(HandleSketchTest)
 
     // If the peer provided a non-empty sketch, its size need to be valid (multiple of the element size and within bounds)
     BOOST_REQUIRE(tracker.InitiateReconciliationRequest(peer_id0).has_value()); // Re set the peer's phase
-    recon_result = false;
+    recon_result = std::nullopt;
     BOOST_REQUIRE(txs_to_announce.empty());
     BOOST_REQUIRE(txs_to_request.empty());
 
     // Not multiple of the element size
     skdata.push_back(0);
     BOOST_REQUIRE(!tracker.HandleSketch(peer_id0, skdata, txs_to_request, txs_to_announce, recon_result));
-    BOOST_REQUIRE(!recon_result);
+    BOOST_REQUIRE(recon_result == std::nullopt);
     BOOST_REQUIRE(txs_to_announce.empty());
     BOOST_REQUIRE(txs_to_request.empty());
 
     // Over the limit
     skdata.resize((MAX_SKETCH_CAPACITY + 1) * BYTES_PER_SKETCH_CAPACITY, 0);
     BOOST_REQUIRE(!tracker.HandleSketch(peer_id0, skdata, txs_to_request, txs_to_announce, recon_result));
-    BOOST_REQUIRE(!recon_result);
+    BOOST_REQUIRE(recon_result == std::nullopt);
     BOOST_REQUIRE(txs_to_announce.empty());
     BOOST_REQUIRE(txs_to_request.empty());
 
@@ -593,7 +593,7 @@ BOOST_AUTO_TEST_CASE(HandleSketchTest)
     }
 
     BOOST_REQUIRE(tracker.HandleSketch(peer_id0, remote_sketch.Serialize(), txs_to_request, txs_to_announce, recon_result));
-    BOOST_REQUIRE(recon_result == true);
+    BOOST_REQUIRE(recon_result == std::optional(true));
     BOOST_REQUIRE(std::is_permutation(txs_to_request.begin(), txs_to_request.end(), expected_txs_to_request.begin(), expected_txs_to_request.end()));
     BOOST_REQUIRE(std::is_permutation(txs_to_announce.begin(), txs_to_announce.end(), expected_txs_to_announce.begin(), expected_txs_to_announce.end()));
 

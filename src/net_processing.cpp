@@ -5104,13 +5104,21 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
 
         std::vector<uint32_t> txs_to_request;
         std::vector<Wtxid> txs_to_announce;
-        bool recon_result;
+        std::optional<bool> recon_result;
         bool valid_sketch = m_txreconciliation->HandleSketch(pfrom.GetId(), skdata, txs_to_request, txs_to_announce, recon_result);
 
         if (valid_sketch) {
-            MakeAndPushMessage(pfrom, NetMsgType::RECONCILDIFF, recon_result, txs_to_request);
-            m_txreconciliation->TrackRecentlyRequestedTransactions(txs_to_request);
-            AnnounceTxs(txs_to_announce, pfrom);
+            if (recon_result.has_value()) {
+                // Handles both successful and failed reconciliation (but not the case per which
+                // we want to request extension).
+                MakeAndPushMessage(pfrom, NetMsgType::RECONCILDIFF, recon_result.value(), txs_to_request);
+                AnnounceTxs(txs_to_announce, pfrom);
+                m_txreconciliation->TrackRecentlyRequestedTransactions(txs_to_request);
+            } else {
+                // No final result means we should request sketch extension to make another
+                // reconciliation attempt without losing the initial data.
+                MakeAndPushMessage(pfrom, NetMsgType::REQSKETCHEXT);
+            }
         } else {
             // Disconnect peers that send reconciliation sketch violating the protocol.
             LogDebug(BCLog::NET, "sketch from peer=%d violates reconciliation protocol; disconnecting\n", pfrom.GetId());
