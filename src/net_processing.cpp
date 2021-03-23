@@ -5246,6 +5246,10 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
                 // Handles both successful and failed reconciliation (but not the case per which we want to request extension).
                 MakeAndPushMessage(pfrom, NetMsgType::RECONCILDIFF, handle_sketch_result->m_succeeded.value(), handle_sketch_result->m_txs_to_request);
                 AnnounceTxs(handle_sketch_result->m_txs_to_announce, pfrom);
+            } else {
+                // No final result means we should request sketch extension to make another
+                // reconciliation attempt without losing the initial data.
+                MakeAndPushMessage(pfrom, NetMsgType::REQSKETCHEXT);
             }
         } else {
             // Disconnect peers that send reconciliation sketch violating the protocol.
