@@ -231,7 +231,7 @@ bool CDKGSessionManager::GetVerifiedContributions(uint8_t llmqType, const CBlock
                 }
                 llmqDb.Read(std::make_tuple(DB_SKCONTRIB, llmqType, pindexQuorum->GetBlockHash(), proTxHash), skContribution);
 
-                it = contributionsCache.emplace(cacheKey, ContributionsCacheEntry{GetTimeMillis(), vvecPtr, skContribution}).first;
+                it = contributionsCache.try_emplace(cacheKey, ContributionsCacheEntry{GetTimeMillis(), vvecPtr, skContribution}).first;
             }
 
             memberIndexesRet.emplace_back(i);

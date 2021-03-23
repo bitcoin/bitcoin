@@ -1022,7 +1022,7 @@ void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<No
         if (pnode->verifiedProRegTxHash.IsNull()) {
             continue;
         }
-        proTxToNode.emplace(pnode->verifiedProRegTxHash, pnode);
+        proTxToNode.try_emplace(pnode->verifiedProRegTxHash, pnode);
     }
     auto curTime = GetTime<std::chrono::milliseconds>().count();
 

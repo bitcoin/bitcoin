@@ -371,9 +371,9 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
                  LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG VerifyChainLockShare3\n", __func__);
                 auto it = bestChainLockShares.find(clsig.nHeight);
                 if (it == bestChainLockShares.end()) {
-                    bestChainLockShares[clsig.nHeight].emplace(ret.second, std::make_shared<const CChainLockSig>(clsig));
+                    bestChainLockShares[clsig.nHeight].try_emplace(ret.second, std::make_shared<const CChainLockSig>(clsig));
                 } else {
-                    it->second.emplace(ret.second, std::make_shared<const CChainLockSig>(clsig));
+                    it->second.try_emplace(ret.second, std::make_shared<const CChainLockSig>(clsig));
                 }
                  LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG VerifyChainLockShare4\n", __func__);
                 mostRecentChainLockShare = clsig;
@@ -650,7 +650,7 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
                 // might have happened while we didn't hold cs
                 return;
             }
-            mapSignedRequestIds.emplace(requestId, std::make_pair(pindex->nHeight, pindex->GetBlockHash()));
+            mapSignedRequestIds.try_emplace(requestId, std::make_pair(pindex->nHeight, pindex->GetBlockHash()));
         }
         quorumSigningManager->AsyncSignIfMember(llmqType, requestId, pindex->GetBlockHash(), quorum->qc.quorumHash);
         if (!fMemberOfSomeQuorum && attempt < (int)quorums_scanned.size()) {
