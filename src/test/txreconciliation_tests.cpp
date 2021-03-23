@@ -10,6 +10,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <cmath>
+
 using namespace node;
 
 BOOST_FIXTURE_TEST_SUITE(txreconciliation_tests, BasicTestingSetup)
@@ -67,6 +69,87 @@ BOOST_AUTO_TEST_CASE(IsPeerRegisteredTest)
     // Forgotten peers do not count either.
     BOOST_REQUIRE(tracker.ForgetPeer(peer_id0));
     BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
+}
+
+BOOST_AUTO_TEST_CASE(IsPeerNextToReconcileWithTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+
+    // If the peer is not fully registered, the method will return false, doesn't matter the current time
+    BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
+    BOOST_REQUIRE(!tracker.IsPeerNextToReconcileWith(peer_id0, GetTime<std::chrono::microseconds>()));
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE(!tracker.IsPeerNextToReconcileWith(peer_id0, GetTime<std::chrono::microseconds>()));
+
+    // When the first peer is added to the reconciliation tracker, a full RECON_REQUEST_INTERVAL
+    // is given to let transaction pile up, otherwise the node will request an empty reconciliation
+    // right away
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound=*/false, TXRECONCILIATION_VERSION, 1).has_value());
+    auto current_time = GetTime<std::chrono::microseconds>() + RECON_REQUEST_INTERVAL - 1s;
+
+    // Not enough time passed.
+    BOOST_REQUIRE(!tracker.IsPeerNextToReconcileWith(peer_id0, current_time));
+    // Enough time passed.
+    current_time += 1s;
+    BOOST_REQUIRE(tracker.IsPeerNextToReconcileWith(peer_id0, current_time));
+    // Enough time passed for another round, but the previous reconciliation is still pending.
+    // With only one node in the queue, they will still be next.
+    current_time += RECON_REQUEST_INTERVAL;
+    BOOST_REQUIRE(tracker.IsPeerNextToReconcileWith(peer_id0, current_time));
+
+    // Two-peer setup
+    BOOST_REQUIRE(tracker.ForgetPeer(peer_id0));
+    NodeId peer_id1 = 1;
+    NodeId peer_id2 = 2;
+
+    // Partially register, check how they are not flagged as next
+    tracker.PreRegisterPeer(peer_id1);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id1, /*is_peer_inbound=*/false, TXRECONCILIATION_VERSION, 1).has_value());
+    tracker.PreRegisterPeer(peer_id2);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id2, /*is_peer_inbound=*/false, TXRECONCILIATION_VERSION, 1).has_value());
+
+    // Only one peer can be flagged as next at a time (in insertion order)
+    current_time += RECON_REQUEST_INTERVAL;
+    bool peer1_next = tracker.IsPeerNextToReconcileWith(peer_id1, current_time);
+    bool peer2_next = tracker.IsPeerNextToReconcileWith(peer_id2, current_time);
+    BOOST_REQUIRE(peer1_next && !peer2_next);
+
+    // The frequency depends on the number of peers on re-sampling, we have two
+    // so each one is picked every RECON_REQUEST_INTERVAL/2
+    current_time += RECON_REQUEST_INTERVAL/2;
+    peer2_next = tracker.IsPeerNextToReconcileWith(peer_id2, current_time);
+    peer1_next = tracker.IsPeerNextToReconcileWith(peer_id1, current_time);
+    BOOST_REQUIRE(!peer1_next && peer2_next);
+
+    current_time += RECON_REQUEST_INTERVAL/2;
+    peer1_next = tracker.IsPeerNextToReconcileWith(peer_id1, current_time);
+    peer2_next = tracker.IsPeerNextToReconcileWith(peer_id2, current_time);
+    BOOST_REQUIRE(peer1_next && !peer2_next);
+
+    // If the peer has pending reconciliation, it doesn't affect the global timer.
+    // Here it's peer2's turn, but we are currently reconciling with him, so his turn
+    // is immediately passed to the next peer (peer1).
+    BOOST_REQUIRE(std::holds_alternative<ReconCoefficients>(tracker.InitiateReconciliationRequest(peer_id2)));
+    current_time += RECON_REQUEST_INTERVAL/2;
+    bool peer2_skipped = tracker.IsPeerNextToReconcileWith(peer_id2, current_time);
+    peer1_next = tracker.IsPeerNextToReconcileWith(peer_id1, current_time);
+    peer2_next = tracker.IsPeerNextToReconcileWith(peer_id2, current_time);
+    BOOST_REQUIRE(peer2_skipped && peer1_next && !peer2_next);
+
+    // A removed peer cannot be next
+    BOOST_REQUIRE(tracker.ForgetPeer(peer_id2));
+    current_time += RECON_REQUEST_INTERVAL/2;
+    peer1_next = tracker.IsPeerNextToReconcileWith(peer_id1, current_time);
+    // After removing and resampling, the frequency changes given we have less peers now
+    current_time += RECON_REQUEST_INTERVAL;
+    bool peer1_next_next = tracker.IsPeerNextToReconcileWith(peer_id1, current_time);
+    BOOST_REQUIRE(peer1_next && peer1_next_next);
+
+    // It doesn't matter for how long we keep checking
+    bool peer2_next_next = tracker.IsPeerNextToReconcileWith(peer_id2, current_time);
+    bool peer2_next_next_next = tracker.IsPeerNextToReconcileWith(peer_id2, current_time + RECON_REQUEST_INTERVAL);
+    BOOST_REQUIRE(!peer2_next_next && !peer2_next_next_next);
 }
 
 BOOST_AUTO_TEST_CASE(ForgetPeerTest)
@@ -212,6 +295,67 @@ BOOST_AUTO_TEST_CASE(TryRemovingFromSetTest)
     BOOST_REQUIRE(!tracker.AddToSet(peer_id0, wtxid).has_value());
     BOOST_REQUIRE(tracker.ForgetPeer(peer_id0));
     BOOST_REQUIRE(!tracker.TryRemovingFromSet(peer_id0, wtxid));
+}
+
+BOOST_AUTO_TEST_CASE(InitiateReconciliationRequestTest)
+{
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+    FastRandomContext frc{/*fDeterministic=*/true};
+
+    // A reconciliation request cannot be initiated with a non-fully registered peer
+    BOOST_REQUIRE(!tracker.IsPeerRegistered(peer_id0));
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.InitiateReconciliationRequest(peer_id0)), ReconciliationError::NOT_FOUND);
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.InitiateReconciliationRequest(peer_id0)), ReconciliationError::NOT_FOUND);
+
+    // For a registered peer with no pending transactions, we expect the set size to be zero, and the
+    // reconciliation params to match the default
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/false, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
+    auto [local_set_size, local_q_formatted] = std::get<ReconCoefficients>(tracker.InitiateReconciliationRequest(peer_id0));
+    BOOST_REQUIRE_EQUAL(local_set_size, 0);
+    BOOST_REQUIRE_EQUAL(local_q_formatted, static_cast<uint16_t>(std::ceil(Q * Q_PRECISION)));
+
+    // We only initiate reconciliation with outbound peers. For inbounds, we expect them to initiate
+    NodeId peer_id1 = 1;
+    tracker.PreRegisterPeer(peer_id1);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id1, /*is_peer_inbound*/true, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.InitiateReconciliationRequest(peer_id1)), ReconciliationError::WRONG_ROLE);
+
+    // Start fresh
+    BOOST_REQUIRE(tracker.ForgetPeer(peer_id0));
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/false, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
+
+    // After adding some transactions to a registered peer we expect its set to contain that amount of transactions
+    int n_added_txs = 0;
+    int n_target_txs = frc.randrange(42) + 1;
+    while (n_added_txs < n_target_txs) {
+        auto wtxid = Wtxid::FromUint256(frc.rand256());
+        if (!tracker.AddToSet(peer_id0, wtxid).has_value()) ++n_added_txs;
+    }
+    std::tie(local_set_size, local_q_formatted) = std::get<ReconCoefficients>(tracker.InitiateReconciliationRequest(peer_id0));
+    BOOST_REQUIRE_EQUAL(local_set_size, n_added_txs);
+    BOOST_REQUIRE_EQUAL(local_q_formatted, static_cast<uint16_t>(std::ceil(Q * Q_PRECISION)));
+
+    // Once we are reconciling with a peer, a new reconciliation cannot be initiated until the previous is completed
+    BOOST_REQUIRE_EQUAL(std::get<ReconciliationError>(tracker.InitiateReconciliationRequest(peer_id0)), ReconciliationError::WRONG_PHASE);
+}
+
+BOOST_AUTO_TEST_CASE(InitiateReconciliationRequestQCeilTest)
+{
+    // BIP-330 requires the formatted q to be rounded up when narrowed from a
+    // floating-point coefficient to the wire format. Using Q = 0.25 and
+    // Q_PRECISION = 32767, the exact product is 8191.75 so we should expect 8192.
+    static_assert(Q == 0.25);
+    static_assert(Q_PRECISION == 32767);
+
+    TxReconciliationTracker tracker(TXRECONCILIATION_VERSION);
+    NodeId peer_id0 = 0;
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE(!tracker.RegisterPeer(peer_id0, /*is_peer_inbound*/false, TXRECONCILIATION_VERSION, REMOTE_SALT).has_value());
+    auto [local_set_size, local_q_formatted] = std::get<ReconCoefficients>(tracker.InitiateReconciliationRequest(peer_id0));
+    BOOST_REQUIRE_EQUAL(local_q_formatted, 8192);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
