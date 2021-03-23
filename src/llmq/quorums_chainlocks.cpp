@@ -373,29 +373,18 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             // Note: do not hold cs while calling RelayInv
             AssertLockNotHeld(cs);
             if (clsigAggInv.type == MSG_CLSIG) {
-                 LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG MSG_CLSIG\n", __func__);
                 // We just created an aggregated CLSIG, relay it
                 connman.RelayOtherInv(clsigAggInv);
-                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG MSG_CLSIG1\n", __func__);
             } else {
-                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG not MSG_CLSIG \n", __func__);
                 // Relay partial CLSIGs to full nodes only, SPV wallets should wait for the aggregated CLSIG.
                 connman.ForEachNode([&](CNode* pnode) {
-                    if(!pnode) {
-                        LogPrint(BCLog::CHAINLOCKS, "NOT pNODE)\n");
-                    }
                     bool fSPV{false};
                     if(pnode->m_tx_relay != nullptr) {
-                        LogPrint(BCLog::CHAINLOCKS, "ForEachNode\n");
                         LOCK(pnode->m_tx_relay->cs_filter);
-                        LogPrint(BCLog::CHAINLOCKS, "ForEachNode1\n");
                         fSPV = pnode->m_tx_relay->pfilter != nullptr;
                     }
-                    LogPrint(BCLog::CHAINLOCKS, "ForEachNode2\n");
                     if (!fSPV && !pnode->m_masternode_connection) {
-                        LogPrint(BCLog::CHAINLOCKS, "ForEachNode3\n");
                         pnode->PushOtherInventory(clsigInv);
-                        LogPrint(BCLog::CHAINLOCKS, "ForEachNode3a\n");
                     }
                 });
             }
