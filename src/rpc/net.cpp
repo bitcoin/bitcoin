@@ -598,9 +598,6 @@ static RPCHelpMan getnetworkinfo()
                         {RPCResult::Type::NUM, "connections", "the total number of connections"},
                         {RPCResult::Type::NUM, "connections_in", "the number of inbound connections"},
                         {RPCResult::Type::NUM, "connections_out", "the number of outbound connections"},
-                        {RPCResult::Type::NUM, "geth_sync_status", "Sync status of Geth (Ethereum network). Valid values are: synced, syncing or waiting to sync.."},
-                        {RPCResult::Type::NUM, "geth_total_blocks", "The highest height seen on the Ethereum network by Geth"},            
-                        {RPCResult::Type::NUM, "geth_current_block", "The highest height of the block header of Ethereum that is stored in our database"},
                         {RPCResult::Type::BOOL, "networkactive", "whether p2p networking is enabled"},
                         {RPCResult::Type::ARR, "networks", "information per network",
                         {
@@ -654,10 +651,6 @@ static RPCHelpMan getnetworkinfo()
         obj.pushKV("connections_in", (int)node.connman->GetNodeCount(ConnectionDirection::In));
         obj.pushKV("connections_out", (int)node.connman->GetNodeCount(ConnectionDirection::Out));
     }
-    // SYSCOIN
-    obj.pushKV("geth_sync_status",  fGethSyncStatus);
-    obj.pushKV("geth_total_blocks",  fGethSyncHeight);
-    obj.pushKV("geth_current_block",  fGethCurrentHeight);
     obj.pushKV("networks",      GetNetworksInfo());
     obj.pushKV("relayfee",      ValueFromAmount(::minRelayTxFee.GetFeePerK()));
     obj.pushKV("incrementalfee", ValueFromAmount(::incrementalRelayFee.GetFeePerK()));

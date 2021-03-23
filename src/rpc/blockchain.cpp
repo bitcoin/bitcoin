@@ -1497,10 +1497,6 @@ RPCHelpMan getblockchaininfo()
             obj.pushKV("prune_target_size",  nPruneTarget);
         }
     }
-    // SYSCOIN
-    obj.pushKV("geth_sync_status",  fGethSyncStatus);
-    obj.pushKV("geth_total_blocks",  fGethSyncHeight);
-    obj.pushKV("geth_current_block",  fGethCurrentHeight);
     const Consensus::Params& consensusParams = Params().GetConsensus();
     UniValue softforks(UniValue::VOBJ);
     BuriedForkDescPushBack(softforks, "bip34", consensusParams.BIP34Height);

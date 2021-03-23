@@ -80,16 +80,12 @@ class BlockchainTest(SyscoinTestFramework):
 
     def _test_getblockchaininfo(self):
         self.log.info("Test getblockchaininfo")
-        # SYSCOIN
         keys = [
             'bestblockhash',
             'blocks',
             'chain',
             'chainwork',
             'difficulty',
-            'geth_current_block',
-            'geth_sync_status',
-            'geth_total_blocks',
             'headers',
             'initialblockdownload',
             'mediantime',
