@@ -55,6 +55,9 @@ private:
      */
     std::deque<NodeId> m_queue GUARDED_BY(m_txreconciliation_mutex);
 
+    /** Make reconciliation requests periodically to make reconciliations efficient. */
+    std::chrono::microseconds m_next_recon_request GUARDED_BY(m_txreconciliation_mutex){0};
+
     TxReconciliationState* GetRegisteredPeerState(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(m_txreconciliation_mutex)
     {
         AssertLockHeld(m_txreconciliation_mutex);
@@ -62,6 +65,21 @@ private:
         if (salt_or_state == m_states.end()) return nullptr;
 
         return std::get_if<TxReconciliationState>(&salt_or_state->second);
+    }
+
+    /**
+     * Schedules the a reconciliation request with the next outbound peer in our reconciliation queue.
+     * The next time depends on the number of peers on our queue, so we can reconcile with all out outbound neighborhood
+     * once every RECON_REQUEST_INTERVAL.
+     */
+    void ScheduleNextReconRequest(std::chrono::microseconds now) EXCLUSIVE_LOCKS_REQUIRED(m_txreconciliation_mutex)
+    {
+        // We have one timer for the entire queue. This is safe because we initiate reconciliations
+        // with outbound connections, which are unlikely to game this timer in a serious way.
+        // FIXME: This is not great. If two nodes get added back to back, the second peer would have to
+        // wait for 3*RECON_REQUEST_INTERVAL/2 instead of RECON_REQUEST_INTERVAL/2 seconds to reconcile.
+        Assume(!m_queue.empty());
+        m_next_recon_request = now + (RECON_REQUEST_INTERVAL / m_queue.size());
     }
 
 public:
@@ -108,7 +126,12 @@ public:
         peer_state->second.emplace<TxReconciliationState>(!is_peer_inbound, full_salt.GetUint64(0), full_salt.GetUint64(1));
 
         if (!is_peer_inbound) {
+            // If this is the first outbound peer registered for reconciliation, don't bother instantly requesting reconciliation.
+            // Set the next request one RECON_REQUEST_INTERVAL in the future so we have time to gather some transactions
             m_queue.push_back(peer_id);
+            if (m_queue.size() == 1) {
+                ScheduleNextReconRequest(GetTime<std::chrono::microseconds>());
+            }
         }
         return std::nullopt;
     }
