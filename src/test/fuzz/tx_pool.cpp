@@ -96,14 +96,13 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
     constexpr CAmount SUPPLY_TOTAL{COINBASE_MATURITY * 50 * COIN};
 
     CTxMemPool tx_pool_{/* estimator */ nullptr, /* check_ratio */ 1};
-    MockedTxPool& tx_pool = *(MockedTxPool*)&tx_pool_;
+    MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(&tx_pool_);
 
     // Helper to query an amount
     const CCoinsViewMemPool amount_view{WITH_LOCK(::cs_main, return &chainstate.CoinsTip()), tx_pool};
     const auto GetAmount = [&](const COutPoint& outpoint) {
         Coin c;
-        amount_view.GetCoin(outpoint, c);
-        Assert(!c.IsSpent());
+        Assert(amount_view.GetCoin(outpoint, c));
         return c.out.nValue;
     };
 
