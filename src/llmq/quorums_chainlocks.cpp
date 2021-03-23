@@ -195,9 +195,7 @@ bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const 
                 __func__, clsig.ToString(), requestId.ToString(), signHash.ToString());
 
         if (clsig.sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash)) {
-             LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG VerifyInsecured\n", __func__);
             if (idIn.IsNull() && !quorumSigningManager->HasRecoveredSigForId(llmqType, requestId)) {
-                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG HasRecoveredSigForId1\n", __func__);
                 // We can reconstruct the CRecoveredSig from the clsig and pass it to the signing manager, which
                 // avoids unnecessary double-verification of the signature. We can do this here because we just
                 // verified the sig.
@@ -209,18 +207,14 @@ bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const 
                 rs->sig.Set(clsig.sig);
                 rs->UpdateHash();
                 quorumSigningManager->PushReconstructedRecoveredSig(rs);
-                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG HasRecoveredSigForId2\n", __func__);
             }
-            LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG ret\n", __func__);
             ret = std::make_pair(i, quorum);
             return true;
         }
         if (!idIn.IsNull() || fHaveSigner) {
-            LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG ret false\n", __func__);
             return false;
         }
     }
-    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG ret false1\n", __func__);
     return false;
 }
 
@@ -356,31 +350,25 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
                 }
                 return;
             }
-            LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG VerifyChainLockShare\n", __func__);
             CInv clsigAggInv;
             {
                 LOCK(cs);
-                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG VerifyChainLockShare1\n", __func__);
                 clsig.signers[ret.first] = true;
-                 LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG VerifyChainLockShare2\n", __func__);
                 if (std::count(clsig.signers.begin(), clsig.signers.end(), true) > 1) {
                     // this should never happen
                     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- ERROR in VerifyChainLockShare, CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
                     return;
                 }
-                 LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG VerifyChainLockShare3\n", __func__);
                 auto it = bestChainLockShares.find(clsig.nHeight);
                 if (it == bestChainLockShares.end()) {
                     bestChainLockShares[clsig.nHeight].try_emplace(ret.second, std::make_shared<const CChainLockSig>(clsig));
                 } else {
                     it->second.try_emplace(ret.second, std::make_shared<const CChainLockSig>(clsig));
                 }
-                 LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG VerifyChainLockShare4\n", __func__);
                 mostRecentChainLockShare = clsig;
                 if (TryUpdateBestChainLock(pindexSig)) {
                     clsigAggInv = CInv(MSG_CLSIG, ::SerializeHash(bestChainLockWithKnownBlock));
                 }
-                 LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG VerifyChainLockShare5\n", __func__);
             }
             // Note: do not hold cs while calling RelayInv
             AssertLockNotHeld(cs);
@@ -411,9 +399,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
                     }
                 });
             }
-             LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG VerifyChainLockShare6\n", __func__);
         } else {
-             LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG VerifyChainLockShare a\n", __func__);
             // An aggregated CLSIG
             if (!VerifyAggregatedChainLock(clsig, pindexScan)) {
                 LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
@@ -423,18 +409,15 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
                 }
                 return;
             }
-             LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG VerifyChainLockShare b\n", __func__);
             {
                 LOCK(cs);
                 bestChainLockCandidates[clsig.nHeight] = std::make_shared<const CChainLockSig>(clsig);
                 mostRecentChainLockShare = clsig;
                 TryUpdateBestChainLock(pindexSig);
             }
-            LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG VerifyChainLockShare c\n", __func__);
             // Note: do not hold cs while calling RelayInv
             AssertLockNotHeld(cs);
             connman.RelayOtherInv(clsigInv);
-            LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG VerifyChainLockShare d\n", __func__);
         }
     
     if (pindexSig == nullptr) {
@@ -442,9 +425,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
         // when the block or the header later comes in, we will enforce the correct chain
         return;
     }
-    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG bestChainLockBlockIndex == pindexSig\n", __func__);
     if (bestChainLockBlockIndex == pindexSig) {
-        LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG bestChainLockBlockIndex == pindexSig1\n", __func__);
         CheckActiveState();
         const CBlockIndex* pindex;
         {       
@@ -699,9 +680,7 @@ void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recove
         clsig.sig = recoveredSig.sig.Get();
         mapSignedRequestIds.erase(recoveredSig.id);
     }
-    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- HandleNewRecoveredSig try\n", __func__);
     ProcessNewChainLock(-1, clsig, ::SerializeHash(clsig), recoveredSig.id);
-     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- HandleNewRecoveredSig end\n", __func__);
 }
 
 bool CChainLocksHandler::HasChainLock(int nHeight, const uint256& blockHash)
