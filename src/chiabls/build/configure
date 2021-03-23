@@ -304,7 +304,10 @@ while [ $# != 0 ]; do
             CPPFLAGS="${1#*=}";;
         "LDFLAGS="*)
             LDFLAGS="$LDFLAGS ${1#*=}";;
-
+        "BDB_LIBS="*)
+            BDB_LIBS="${1#*=}";;
+        "BDB_CFLAGS="*)
+            BDB_CFLAGS="${1#*=}";;
         "--help")
             print_help;;
         "-h")
