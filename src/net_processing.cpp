@@ -4852,6 +4852,17 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         if (!vInv.empty())
             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
 
+        //
+        // Message: reconciliation request
+        //
+        {
+            auto reconciliation_request_data = m_reconciliation.MaybeRequestReconciliation(pto->GetId());
+            if (reconciliation_request_data) {
+                const auto [local_set_size, local_q_formatted] = (*reconciliation_request_data);
+                m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::REQRECON, local_set_size, local_q_formatted));
+            }
+        }
+
         // Detect whether we're stalling
         if (state.m_stalling_since.count() && state.m_stalling_since < current_time - BLOCK_STALLING_TIMEOUT) {
             // Stalling only triggers when the block download window cannot move. During normal steady state,

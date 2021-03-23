@@ -78,6 +78,16 @@ class TxReconciliationTracker {
      */
     void AddToReconSet(NodeId peer_id, const std::vector<uint256>& txs_to_reconcile);
 
+    /**
+     * Step 2. If a it's time to request a reconciliation from the peer, this function will return
+     * the details of our local state, which should be communicated to the peer so that they better
+     * know what we need:
+     * - size of our reconciliation set for the peer
+     * - our q-coefficient with the peer, formatted to be transmitted as integer value
+     * If the peer was not previously registered for reconciliations, returns nullopt.
+     */
+    std::optional<std::pair<uint16_t, uint16_t>> MaybeRequestReconciliation(NodeId peer_id);
+
     // Helpers
 
     /**
