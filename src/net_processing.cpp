@@ -5535,7 +5535,21 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
     PeerRef peer = GetPeerRef(pto->GetId());
     if (!peer) return false;
+
     const Consensus::Params& consensusParams = m_chainparams.GetConsensus();
+
+    const auto current_time{GetTime<std::chrono::microseconds>()};
+
+    // We must look into the reconciliation queue early. Since the queue applies to all peers,
+    // this peer might block other reconciliation if we don't make this call regularly and
+    // unconditionally.
+    // This queue should be queued no matter what's with the peer (e.g. in future a peer
+    // may signal a post-sync IBD after some lag), because otherwise such peer may block the queue
+    // forever.
+    bool reconcile = false;
+    if (m_txreconciliation && !m_chainman.IsInitialBlockDownload()) {
+        reconcile = m_txreconciliation->IsPeerNextToReconcileWith(pto->GetId(), current_time);
+    }
 
     // We must call MaybeDiscourageAndDisconnect first, to ensure that we'll
     // disconnect misbehaving peers even before the version handshake is complete.
@@ -5547,8 +5561,6 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
     // If we get here, the outgoing message serialization version is set and can't change.
     const CNetMsgMaker msgMaker(pto->GetCommonVersion());
-
-    const auto current_time{GetTime<std::chrono::microseconds>()};
 
     if (pto->IsAddrFetchConn() && current_time - pto->m_connected > 10 * AVG_ADDRESS_BROADCAST_INTERVAL) {
         LogPrint(BCLog::NET, "addrfetch connection timeout; disconnecting peer=%d\n", pto->GetId());
@@ -5952,6 +5964,19 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         }
         if (!vInv.empty())
             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
+
+        //
+        // Message: reconciliation request
+        //
+        {
+            if (reconcile) {
+                const auto reconciliation_request_params = m_txreconciliation->InitiateReconciliationRequest(pto->GetId());
+                if (reconciliation_request_params) {
+                    const auto [local_set_size, local_q_formatted] = *reconciliation_request_params;
+                    m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::REQTXRCNCL, local_set_size, local_q_formatted));
+                }
+            }
+        }
 
         // Detect whether we're stalling
         auto stalling_timeout = m_block_stalling_timeout.load();

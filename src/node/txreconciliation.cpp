@@ -31,6 +31,29 @@ constexpr size_t OUTBOUND_FANOUT_DESTINATIONS = 1;
  */
 constexpr size_t MAX_SET_SIZE = 3000;
 /**
+ * A floating point coefficient q for estimating reconciliation set difference, and
+ * the value used to convert it to integer for transmission purposes, as specified in BIP-330.
+ */
+constexpr double Q = 0.25;
+constexpr uint16_t Q_PRECISION{(2 << 14) - 1};
+/**
+ * Interval between initiating reconciliations with peers.
+ * This value allows to reconcile ~(7 tx/s * 8s) transactions during normal operation.
+ * More frequent reconciliations would cause significant constant bandwidth overhead
+ * due to reconciliation metadata (sketch sizes etc.), which would nullify the efficiency.
+ * Less frequent reconciliations would introduce high transaction relay latency.
+ */
+constexpr std::chrono::microseconds RECON_REQUEST_INTERVAL{8s};
+
+/**
+ * Represents phase of the current reconciliation round with a peer.
+ */
+enum class Phase {
+    NONE,
+    INIT_REQUESTED,
+};
+
+/**
  * Salt (specified by BIP-330) constructed from contributions from both peers. It is used
  * to compute transaction short IDs, which are then used to construct a sketch representing a set
  * of transactions we want to announce to the peer.
@@ -74,6 +97,17 @@ public:
      */
     std::set<uint256> m_local_set;
 
+    /** Keep track of the reconciliation phase with the peer. */
+    Phase m_phase{Phase::NONE};
+
+    /**
+     * For every outbound peer, we keep track of the last reconciliation finalization,
+     * so that we know whether sufficient time passed to start a next one. This timer
+     * is used in combination with m_queue and m_next_recon_request, so that the
+     * peers are queried periodically and in a fixed order.
+     */
+    std::chrono::microseconds m_last_txrcncl{0};
+
     TxReconciliationState(bool we_initiate, uint64_t k0, uint64_t k1) : m_we_initiate(we_initiate), m_k0(k0), m_k1(k1) {}
 };
 
@@ -108,6 +142,11 @@ private:
      * each given peer at a fixed sufficient interval (same across all peers).
      */
     std::deque<NodeId> m_queue GUARDED_BY(m_txreconciliation_mutex);
+
+    /**
+     * Make reconciliation requests periodically to make reconciliations efficient.
+     */
+    std::chrono::microseconds m_next_request_global GUARDED_BY(m_txreconciliation_mutex){0};
 
 public:
     explicit Impl(uint32_t recon_version) : m_recon_version(recon_version) {}
@@ -194,6 +233,63 @@ public:
         auto& recon_state = std::get<TxReconciliationState>(m_states.find(peer_id)->second);
 
         return recon_state.m_local_set.erase(wtxid_to_remove) > 0;
+    }
+
+    bool IsPeerNextToReconcileWith(NodeId peer_id, std::chrono::microseconds now) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+
+        if (!IsPeerRegistered(peer_id)) return false;
+        if (m_queue.empty()) return false;
+
+        const auto& recon_state = std::get<TxReconciliationState>(m_states.find(peer_id)->second);
+
+        if (m_next_request_global <= now && m_queue.front() == peer_id) {
+            Assume(recon_state.m_we_initiate);
+            m_queue.pop_front();
+            m_queue.push_back(peer_id);
+
+            // It is possible that the front-queue peer is not ready for a reconciliation yet:
+            // - either it's own timer has not passed;
+            // - or it's currently in reconciliation.
+            //
+            // In both cases, we should not delay our reconciliations, but these peers should
+            // be moved to the end of the queue to get the next chance.
+            //
+            // Otherwise, we should bump the global timer and allow to proceed for reconciliation.
+            const bool their_delay_is_over = recon_state.m_last_txrcncl + RECON_REQUEST_INTERVAL < now;
+            if (recon_state.m_phase == Phase::NONE && their_delay_is_over) {
+                m_next_request_global = now + std::chrono::seconds(2);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    std::optional<std::pair<uint16_t, uint16_t>> InitiateReconciliationRequest(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+        if (!IsPeerRegistered(peer_id)) return std::nullopt;
+
+        auto& recon_state = std::get<TxReconciliationState>(m_states.find(peer_id)->second);
+        if (!recon_state.m_we_initiate) return std::nullopt;
+
+        if (recon_state.m_phase != Phase::NONE) return std::nullopt;
+        recon_state.m_phase = Phase::INIT_REQUESTED;
+
+        size_t local_set_size = recon_state.m_local_set.size();
+
+        LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Initiate reconciliation with peer=%d with the following params: " /* Continued */
+                                                                    "local_set_size=%i\n",
+                      peer_id, local_set_size);
+
+        // In future, Q could be recomputed after every reconciliation based on the
+        // set differences. For now, it provides good enough results without recompute
+        // complexity, but we communicate it here to allow backward compatibility if
+        // the value is changed or made dynamic.
+        return std::make_pair(local_set_size, Q * Q_PRECISION);
     }
 
     void ForgetPeer(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
@@ -343,6 +439,16 @@ bool TxReconciliationTracker::AddToSet(NodeId peer_id, const uint256& wtxid)
 bool TxReconciliationTracker::TryRemovingFromSet(NodeId peer_id, const uint256& wtxid_to_remove)
 {
     return m_impl->TryRemovingFromSet(peer_id, wtxid_to_remove);
+}
+
+bool TxReconciliationTracker::IsPeerNextToReconcileWith(NodeId peer_id, std::chrono::microseconds now)
+{
+    return m_impl->IsPeerNextToReconcileWith(peer_id, now);
+}
+
+std::optional<std::pair<uint16_t, uint16_t>> TxReconciliationTracker::InitiateReconciliationRequest(NodeId peer_id)
+{
+    return m_impl->InitiateReconciliationRequest(peer_id);
 }
 
 void TxReconciliationTracker::ForgetPeer(NodeId peer_id)

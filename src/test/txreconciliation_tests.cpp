@@ -153,4 +153,93 @@ BOOST_AUTO_TEST_CASE(ShouldFanoutToTest)
 
 }
 
+// Also tests AddToPeerQueue
+BOOST_AUTO_TEST_CASE(IsPeerNextToReconcileWith)
+{
+    TxReconciliationTracker tracker(1);
+    NodeId peer_id0 = 0;
+
+    BOOST_CHECK(!tracker.IsPeerNextToReconcileWith(peer_id0, std::chrono::seconds{1 + 8}));
+
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_CHECK(!tracker.IsPeerNextToReconcileWith(peer_id0, std::chrono::seconds{1 + 8}));
+
+    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, false, 1, 1), ReconciliationRegisterResult::SUCCESS);
+    BOOST_CHECK(tracker.IsPeerNextToReconcileWith(peer_id0, std::chrono::seconds{1 + 8}));
+
+    // Not enough time passed.
+    BOOST_CHECK(!tracker.IsPeerNextToReconcileWith(peer_id0, std::chrono::seconds{1 + 8 + 1}));
+
+    // Enough time passed.
+    BOOST_CHECK(tracker.IsPeerNextToReconcileWith(peer_id0, std::chrono::seconds{1 + 8 + 8}));
+
+    // TODO: test once peers' own reconciliation timers are bumped.
+
+    // Two-peer setup
+    tracker.ForgetPeer(peer_id0);
+    NodeId peer_id1 = 1;
+    NodeId peer_id2 = 2;
+    {
+        tracker.PreRegisterPeer(peer_id1);
+        BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id1, false, 1, 1), ReconciliationRegisterResult::SUCCESS);
+
+        tracker.PreRegisterPeer(peer_id2);
+        BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id2, false, 1, 1), ReconciliationRegisterResult::SUCCESS);
+
+        // Initial call
+        bool peer1_next = tracker.IsPeerNextToReconcileWith(peer_id1, std::chrono::seconds{100});
+        // Not enough time passed to pick the second peer.
+        bool peer2_next = tracker.IsPeerNextToReconcileWith(peer_id2, std::chrono::seconds{100 + 1});
+        BOOST_CHECK(peer1_next && !peer2_next);
+
+        // Enough time passed to pick the second peer.
+        peer2_next = tracker.IsPeerNextToReconcileWith(peer_id2, std::chrono::seconds{100 + 3});
+        // Not enough time passed to pick the first peer.
+        peer1_next = tracker.IsPeerNextToReconcileWith(peer_id1, std::chrono::seconds{100 + 3});
+        BOOST_CHECK(peer2_next && !peer1_next);
+
+        // TODO: test once peers' own reconciliation timers are bumped.
+        // The global timer is ready to pick the first peer, but it's own reconciliation timer
+        // has not passed yet. It should be moved to the end of the queue.
+        // peer1_next = tracker.IsPeerNextToReconcileWith(peer_id1, std::chrono::seconds{100 + 5});
+        // BOOST_CHECK(!peer1_next);
+        // Peer 2 should be at the front of the queue (from the previous call of this function),
+        // and enough time passed at its own reconciliation timer.
+        // peer2_next = tracker.IsPeerNextToReconcileWith(peer_id2, std::chrono::seconds{100 + 3 + 8 + 1});
+        // TODO: also test that once the peer is forgotten, it is also dropped from the queue.
+    }
+}
+
+BOOST_AUTO_TEST_CASE(InitiateReconciliationRequest)
+{
+    TxReconciliationTracker tracker(1);
+    NodeId peer_id0 = 0;
+
+    BOOST_CHECK(tracker.InitiateReconciliationRequest(peer_id0) == std::nullopt);
+
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_CHECK(tracker.InitiateReconciliationRequest(peer_id0) == std::nullopt);
+
+    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, false, 1, 1), ReconciliationRegisterResult::SUCCESS);
+
+    const auto reconciliation_request_params = tracker.InitiateReconciliationRequest(peer_id0);
+    BOOST_CHECK(reconciliation_request_params != std::nullopt);
+    const auto [local_set_size, local_q_formatted] = (*reconciliation_request_params);
+    BOOST_CHECK_EQUAL(local_set_size, 0);
+    BOOST_CHECK_EQUAL(local_q_formatted, uint16_t(32767 * 0.25));
+
+    // Start fresh
+    tracker.ForgetPeer(peer_id0);
+    tracker.PreRegisterPeer(peer_id0);
+    BOOST_REQUIRE_EQUAL(tracker.RegisterPeer(peer_id0, false, 1, 1), ReconciliationRegisterResult::SUCCESS);
+    tracker.AddToSet(peer_id0, GetRandHash());
+    tracker.AddToSet(peer_id0, GetRandHash());
+    tracker.AddToSet(peer_id0, GetRandHash());
+    const auto reconciliation_request_params2 = tracker.InitiateReconciliationRequest(peer_id0);
+    BOOST_CHECK(reconciliation_request_params2 != std::nullopt);
+    const auto [local_set_size2, local_q_formatted2] = (*reconciliation_request_params2);
+    BOOST_CHECK_EQUAL(local_set_size2, 3);
+    BOOST_CHECK_EQUAL(local_q_formatted2, uint16_t(32767 * 0.25));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
