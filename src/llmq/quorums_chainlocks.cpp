@@ -608,7 +608,7 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
                 auto shareBlockIndex = g_chainman.m_blockman.LookupBlockIndex(it2->second->blockHash);
                 if (shareBlockIndex != nullptr && shareBlockIndex->nHeight == pindex->nHeight) {
                     // previous quorum signed an alternative chain tip, sign it too instead
-                    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum (%d, %s) signed an altenative chaintip (%s != %s) at height %d, join it\n",
+                    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum (%d, %s) signed an alternative chaintip (%s != %s) at height %d, join it\n",
                             __func__, nQuorumIndexPrev, quorums_scanned[nQuorumIndexPrev]->qc.quorumHash.ToString(), it2->second->blockHash.ToString(), pindex->GetBlockHash().ToString(), pindex->nHeight);
                     pindex = shareBlockIndex;
                 } else if (attempt <= (int)i) {

@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import time
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import set_node_times,force_finish_mnsync
 
 '''
 feature_llmq_is_retroactive.py
