@@ -122,7 +122,7 @@ struct CSerializedNetMsg
 };
 // SYSCOIN
 struct CAllNodes {
-    bool operator() (const CNode*) const {return true;}
+    bool operator() (const CNode* pNode) const {return pNode != nullptr;}
 };
 static constexpr CAllNodes AllNodes{};
 // Whether the node should be passed out in ForEach* callbacks
