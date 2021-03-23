@@ -5540,6 +5540,14 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
     MaybeSendSendHeaders(*pto, *peer);
 
+    // We must look into the reconciliation queue first. Since the queue applies to all peers,
+    // this peer might block other reconciliation if we don't make this call regularly and
+    // unconditionally.
+    bool reconcile = false;
+    if (m_txreconciliation && !m_chainman.IsInitialBlockDownload()) {
+        reconcile = m_txreconciliation->IsPeerNextToReconcileWith(pto->GetId(), current_time);
+    }
+
     {
         LOCK(cs_main);
 
@@ -5937,6 +5945,21 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         }
         if (!vInv.empty())
             MakeAndPushMessage(*pto, NetMsgType::INV, vInv);
+
+        //
+        // Message: reconciliation request
+        //
+        {
+            if (!m_chainman.IsInitialBlockDownload()) {
+                if (reconcile) {
+                    const auto result = m_txreconciliation->InitiateReconciliationRequest(pto->GetId());
+                    if (auto* reconciliation_request_params = std::get_if<node::ReconCoefficients>(&result)) {
+                        const auto [local_set_size, local_q_formatted] = *reconciliation_request_params;
+                        MakeAndPushMessage(*pto, NetMsgType::REQTXRCNCL, local_set_size, local_q_formatted);
+                    }
+                }
+            }
+        }
 
         // Detect whether we're stalling
         auto stalling_timeout = m_block_stalling_timeout.load();

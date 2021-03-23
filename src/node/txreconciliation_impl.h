@@ -64,6 +64,8 @@ class AddToSetError {
         explicit AddToSetError(ReconciliationError error, Wtxid collision): m_error(error), m_collision(std::optional(collision)) {}
 };
 
+using ReconCoefficients = std::pair<uint16_t, uint16_t>;
+
 /**
  * Transaction reconciliation is a way for nodes to efficiently announce transactions.
  * This class keeps track of all txreconciliation-related communications with the peers.
@@ -121,6 +123,14 @@ public:
     bool IsPeerRegistered(NodeId peer_id) const;
 
     /**
+     * Returns whether it's time to initiate reconciliation (Step 2) with a given peer, based on:
+     * - time passed since the last reconciliation
+     * - reconciliation queue
+     * - whether previous reconciliations for the given peer were finalized
+     */
+    bool IsPeerNextToReconcileWith(NodeId peer_id, std::chrono::microseconds now);
+
+    /**
      * Attempts to forget txreconciliation-related state of the peer (if we previously stored any).
      * After this, we won't be able to reconcile transactions with the peer.
      */
@@ -138,6 +148,15 @@ public:
      * the peer just announced the transaction to us. Returns whether the wtxid was removed.
      */
     bool TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid);
+
+    /**
+     * Step 2. Unless the peer hasn't finished a previous reconciliation round, this function will
+     * return the details of our local state, which should be communicated to the peer so that they
+     * better know what we need:
+     * - size of our reconciliation set for the peer
+     * - our q-coefficient with the peer, formatted to be transmitted as integer value
+     */
+    std::variant<ReconCoefficients, ReconciliationError> InitiateReconciliationRequest(NodeId peer_id);
 
     /** Whether a given inbound peer is currently flagged for fanout. */
     bool IsInboundFanoutTarget(NodeId peer_id);
