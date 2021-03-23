@@ -20,6 +20,15 @@ inline constexpr uint32_t TXRECONCILIATION_VERSION{1};
  */
 inline constexpr size_t MAX_RECONSET_SIZE = 3000;
 
+/**
+ * Interval between initiating reconciliations with peers.
+ * This value allows to reconcile ~(7 tx/s * 30s) transactions when fanout connections fall behind.
+ * Given reconciliation is only used as fallback strategy, reconciling more frequently would cause
+ * significant constant bandwidth overhead, whereas reconciling less frequently may introduce higher
+ * transaction relay latency.
+ */
+inline constexpr std::chrono::microseconds RECON_REQUEST_INTERVAL{30s};
+
 enum class ReconciliationError
 {
     NOT_FOUND,
