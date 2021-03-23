@@ -397,7 +397,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
                         LogPrint(BCLog::CHAINLOCKS, "NOT pNODE)\n");
                     }
                     bool fSPV{false};
-                    {
+                    if(pnode->m_tx_relay != nullptr) {
                         LogPrint(BCLog::CHAINLOCKS, "ForEachNode\n");
                         LOCK(pnode->m_tx_relay->cs_filter);
                         LogPrint(BCLog::CHAINLOCKS, "ForEachNode1\n");
