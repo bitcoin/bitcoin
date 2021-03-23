@@ -809,12 +809,12 @@ static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& str
                 }
             }
             break; // Connection succeeded, no need to retry.
-        } catch (const CConnectionFailed&) {
+        } catch (const CConnectionFailed& e) {
             const int64_t now = GetTime<std::chrono::seconds>().count();
             if (fWait && (timeout <= 0 || now < deadline)) {
                 UninterruptibleSleep(std::chrono::seconds{1});
             } else {
-                throw;
+                throw CConnectionFailed(strprintf("timeout on transient error: %s", e.what()));
             }
         }
     } while (fWait);
