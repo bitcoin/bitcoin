@@ -281,6 +281,10 @@ inline constexpr const char* SKETCH{"sketch"};
  * and requests the missing transactions by short ids.
  */
 inline constexpr const char* RECONCILDIFF{"reconcildiff"};
+/**
+ * Requests a sketch extension for ongoing reconciliation.
+ */
+inline constexpr const char* REQSKETCHEXT{"reqsketchext"};
 }; // namespace NetMsgType
 
 /** All known message types (see above). Keep this in the same order as the list of messages above. */
@@ -323,6 +327,7 @@ inline const std::array ALL_NET_MESSAGE_TYPES{std::to_array<std::string>({
     NetMsgType::REQTXRCNCL,
     NetMsgType::SKETCH,
     NetMsgType::RECONCILDIFF,
+    NetMsgType::REQSKETCHEXT,
 })};
 
 /** nServices flags */

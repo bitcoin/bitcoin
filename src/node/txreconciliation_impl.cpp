@@ -207,8 +207,11 @@ private:
                     peer_id, txs_to_request.size(), txs_to_announce.size());
             } else {
                 // Initial reconciliation step failed.
-                // TODO handle failure.
+                // Update local reconciliation state for the peer.
+                peer_state.m_phase = ReconciliationPhase::EXT_REQUESTED;
+
                 result = std::nullopt;
+                LogDebug(BCLog::TXRECONCILIATION, "Reconciliation we initiated with peer=%d has failed at initial step, request sketch extension.\n", peer_id);
             }
         }
 
