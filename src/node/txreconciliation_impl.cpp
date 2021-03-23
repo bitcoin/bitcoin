@@ -46,10 +46,13 @@ uint32_t TxReconciliationState::EstimateSketchCapacity(size_t local_set_size) co
     return minisketch_compute_capacity(RECON_FIELD_SIZE, estimated_diff, RECON_FALSE_POSITIVE_COEF);
 }
 
-Minisketch TxReconciliationState::ComputeSketch(uint32_t& capacity)
+Minisketch TxReconciliationState::ComputeBaseSketch(uint32_t& capacity)
 {
     // Avoid serializing/sending an empty sketch.
     Assume(capacity > 0);
+
+    // To be used for sketch extension of the exact same size.
+    m_capacity_snapshot = capacity;
 
     capacity = std::min(capacity, MAX_SKETCH_CAPACITY);
     Minisketch sketch = node::MakeMinisketch32(capacity);
@@ -61,6 +64,41 @@ Minisketch TxReconciliationState::ComputeSketch(uint32_t& capacity)
     }
 
     return sketch;
+}
+
+Minisketch TxReconciliationState::ComputeExtendedSketch(uint32_t extended_capacity) const
+{
+    Assume(extended_capacity > 0);
+    // This can't happen because we should have terminated reconciliation early.
+    Assume(m_local_set_snapshot.size() > 0);
+
+    // For now, compute a sketch of twice the capacity were computed originally.
+    // TODO: optimize by computing the extension *on top* of the existent sketch
+    // instead of computing the lower order elements again. This may need upstream
+    // changes to minisketch.
+    Minisketch sketch = node::MakeMinisketch32(extended_capacity);
+
+    // We don't have to recompute short IDs here.
+    for (const auto& [short_id, wtxid] : m_short_id_mapping_snapshot) {
+        sketch.Add(short_id);
+    }
+    return sketch;
+}
+
+void TxReconciliationState::SnapshotLocalSet()
+{
+    Assume(m_local_set_snapshot.empty());
+    m_local_set_snapshot.insert(m_local_set.begin(), m_local_set.end());
+    m_short_id_mapping_snapshot = m_short_id_mapping;
+    m_local_set.clear();
+    m_short_id_mapping.clear();
+}
+
+void TxReconciliationState::PrepareForExtensionResponse(const std::vector<uint8_t>& remote_sketch)
+{
+    Assume(m_we_initiate);
+    m_remote_sketch_snapshot = remote_sketch;
+    SnapshotLocalSet();
 }
 
 std::vector<Wtxid> TxReconciliationState::GetAllTransactions() const
@@ -154,7 +192,7 @@ private:
             remote_sketch = node::MakeMinisketch32(remote_sketch_capacity).Deserialize(skdata);
 
             if (!peer_state.m_local_set.empty()) {
-                local_sketch = peer_state.ComputeSketch(remote_sketch_capacity);
+                local_sketch = peer_state.ComputeBaseSketch(remote_sketch_capacity);
             }
         }
 
@@ -196,6 +234,7 @@ private:
             } else {
                 // Initial reconciliation step failed.
                 // Update local reconciliation state for the peer.
+                peer_state.PrepareForExtensionResponse(skdata);
                 peer_state.m_phase = ReconciliationPhase::EXT_REQUESTED;
 
                 result = std::nullopt;
@@ -448,7 +487,7 @@ public:
         // Then, they will terminate reconciliation early and force flooding-style announcement.
         if (peer_state->m_remote_set_size > 0 && peer_state->m_local_set.size() > 0) {
             if (sketch_capacity = peer_state->EstimateSketchCapacity(peer_state->m_local_set.size()); sketch_capacity > 0) {
-                Minisketch sketch = peer_state->ComputeSketch(sketch_capacity);
+                Minisketch sketch = peer_state->ComputeBaseSketch(sketch_capacity);
                 skdata = sketch.Serialize();
             }
         }
