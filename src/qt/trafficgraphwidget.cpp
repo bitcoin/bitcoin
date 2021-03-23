@@ -98,7 +98,7 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
     float val = pow(10.0f, base);
     float val2 = val;
 
-    const QString units     = tr("KB/s");
+    const QString units = tr("kB/s");
     const float yMarginText = 2.0;
 
     // draw lines
