@@ -1014,10 +1014,16 @@ void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, std::u
     }
 }
 
-void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<NodeId, std::vector<CSigShare>>& sigSharesToSend, const std::unordered_map<uint256, CNode*, StaticSaltedHasher> &proTxToNode)
+void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<NodeId, std::vector<CSigShare>>& sigSharesToSend, const std::vector<CNode*>& vNodes)
 {
     AssertLockHeld(cs);
-
+    std::unordered_map<uint256, CNode*> proTxToNode;
+    for (const auto& pnode : vNodes) {
+        if (pnode->verifiedProRegTxHash.IsNull()) {
+            continue;
+        }
+        proTxToNode.emplace(pnode->verifiedProRegTxHash, pnode);
+    }
     auto curTime = GetTime<std::chrono::milliseconds>().count();
 
     for (auto& p : signedSessions) {
@@ -1132,20 +1138,12 @@ bool CSigSharesManager::SendMessages()
 
     std::vector<CNode*> vNodesCopy;
     connman.CopyNodeVector(vNodesCopy);
-    std::unordered_map<uint256, CNode*, StaticSaltedHasher> proTxToNode;
-    for (const auto& pnode : vNodesCopy) {
-        LOCK(pnode->cs_mnauth);
-        if (pnode->verifiedProRegTxHash.IsNull()) {
-            continue;
-        }
-        proTxToNode.try_emplace(pnode->verifiedProRegTxHash, pnode);
-    }
     {
         LOCK(cs);
         CollectSigSharesToRequest(sigSharesToRequest);
         CollectSigSharesToSend(sigShareBatchesToSend);
         CollectSigSharesToAnnounce(sigSharesToAnnounce);
-        CollectSigSharesToSendConcentrated(sigSharesToSend, proTxToNode);
+        CollectSigSharesToSendConcentrated(sigSharesToSend, vNodesCopy);
 
         for (auto& p : sigSharesToRequest) {
             for (auto& p2 : p.second) {
@@ -1176,7 +1174,7 @@ bool CSigSharesManager::SendMessages()
             for (auto& sigSesAnn : it1->second) {
                 LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::SendMessages -- QSIGSESANN signHash=%s, sessionId=%d, node=%d\n",
                          CLLMQUtils::BuildSignHash(sigSesAnn).ToString(), sigSesAnn.sessionId, pnode->GetId());
-                msgs.emplace_back(std::move(sigSesAnn));
+                msgs.emplace_back(sigSesAnn);
                 if (msgs.size() == MAX_MSGS_CNT_QSIGSESANN) {
                     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::QSIGSESANN, msgs));
                     msgs.clear();
@@ -1343,7 +1341,7 @@ void CSigSharesManager::Cleanup()
             RemoveSigSharesForSession(signHash);
         }
     }
-    std::unordered_set<NodeId> nodeStatesToDelete;
+
     {
         LOCK(cs);
 
@@ -1402,22 +1400,29 @@ void CSigSharesManager::Cleanup()
             }
             RemoveSigSharesForSession(signHash);
         }
-        // Find node states for peers that disappeared from CConnman
-        for (auto& p : nodeStates) {
+    }
+
+    // Find node states for peers that disappeared from CConnman
+    std::unordered_set<NodeId> nodeStatesToDelete;
+    {
+        LOCK(cs);
+        for (const auto& p : nodeStates) {
             nodeStatesToDelete.emplace(p.first);
         }
     }
-
     connman.ForEachNode([&](CNode* pnode) {
         nodeStatesToDelete.erase(pnode->GetId());
     });
 
     // Now delete these node states
     LOCK(cs);
-    for (auto nodeId : nodeStatesToDelete) {
-        auto& nodeState = nodeStates[nodeId];
+    for (const auto& nodeId : nodeStatesToDelete) {
+        auto it = nodeStates.find(nodeId);
+        if (it == nodeStates.end()) {
+            continue;
+        }
         // remove global requested state to force a re-request from another node
-        nodeState.requestedSigShares.ForEach([&](const SigShareKey& k, bool) {
+        it->second.requestedSigShares.ForEach([&](const SigShareKey& k, bool) {
             sigSharesRequested.Erase(k);
         });
         nodeStates.erase(nodeId);

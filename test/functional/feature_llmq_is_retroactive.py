@@ -26,9 +26,14 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
+        # Connect all nodes to node1 so that we always have the whole network connected
+        # Otherwise only masternode connections will be established between nodes, which won't propagate TXs/blocks
+        # Usually node0 is the one that does this, but in this test we isolate it multiple times
         for i in range(len(self.nodes)):
-            force_finish_mnsync(self.nodes[i])
-        self.nodes[0].spork("SPORK_21_QUORUM_ALL_CONNECTED", 0)
+            if i != 1:
+                self.connect_nodes(i, 1)
+        self.nodes[0].generate(10)
+        self.sync_blocks(self.nodes, timeout=60*5)
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
         self.wait_for_sporks_same()
