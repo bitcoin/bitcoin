@@ -113,6 +113,11 @@ private:
      */
     std::deque<NodeId> m_queue GUARDED_BY(m_txreconciliation_mutex);
 
+    /**
+     * Make reconciliation requests periodically to make reconciliations efficient.
+     */
+    std::chrono::microseconds m_next_recon_request GUARDED_BY(m_txreconciliation_mutex){0};
+
     /*
      * Collection of inbound peers selected for fanout. Should get periodically rotated using RotateInboundFanoutTargets.
      */
@@ -130,6 +135,21 @@ private:
         if (salt_or_state == m_states.end()) return nullptr;
 
         return std::get_if<TxReconciliationState>(&salt_or_state->second);
+    }
+
+    void UpdateNextReconRequest(std::chrono::microseconds now) EXCLUSIVE_LOCKS_REQUIRED(m_txreconciliation_mutex)
+    {
+        // We have one timer for the entire queue. This is safe because we initiate reconciliations
+        // with outbound connections, which are unlikely to game this timer in a serious way.
+        size_t we_initiate_to_count = std::count_if(m_states.begin(), m_states.end(),
+                                                    [](std::pair<NodeId, std::variant<uint64_t, TxReconciliationState>> indexed_state) {
+                                                        const auto* cur_state = std::get_if<TxReconciliationState>(&indexed_state.second);
+                                                        if (cur_state) return cur_state->m_we_initiate;
+                                                        return false;
+                                                    });
+
+        Assume(we_initiate_to_count != 0);
+        m_next_recon_request = now + (RECON_REQUEST_INTERVAL / we_initiate_to_count);
     }
 
 public:
