@@ -15,6 +15,14 @@ const std::string RECON_STATIC_SALT = "Tx Relay Salting";
 /** Announce transactions via full wtxid to a limited number of inbound and outbound peers. */
 constexpr uint8_t INBOUND_FANOUT_DESTINATIONS = 2;
 constexpr uint8_t OUTBOUND_FANOUT_DESTINATIONS = 2;
+/**
+ * Interval between initiating reconciliations with peers.
+ * This value allows to reconcile ~(7 tx/s * 1s * 8 peers) transactions during normal operation.
+ * More frequent reconciliations would cause significant constant bandwidth overhead
+ * due to reconciliation metadata (sketch sizes etc.), which would nullify the efficiency.
+ * Less frequent reconciliations would introduce high transaction relay latency.
+ */
+constexpr std::chrono::microseconds RECON_REQUEST_INTERVAL{1s};
 
 /**
  * Salt is specified by BIP-330 is constructed from contributions from both peers. It is later used
@@ -118,6 +126,16 @@ class TxReconciliationTracker::Impl {
      * easier to estimate set difference size.
      */
     std::deque<NodeId> m_queue GUARDED_BY(m_mutex);
+
+    /**
+     * Reconciliations are requested periodically: every RECON_REQUEST_INTERVAL we pick a peer
+     * from the queue.
+     */
+    std::chrono::microseconds m_next_recon_request GUARDED_BY(m_mutex);
+    void UpdateNextReconRequest(std::chrono::microseconds now) EXCLUSIVE_LOCKS_REQUIRED(m_mutex)
+    {
+        m_next_recon_request = now + RECON_REQUEST_INTERVAL;
+    }
 
     public:
 
