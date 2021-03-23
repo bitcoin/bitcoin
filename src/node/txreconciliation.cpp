@@ -21,6 +21,12 @@ const std::string RECON_STATIC_SALT = "Tx Relay Salting";
 const HashWriter RECON_SALT_HASHER = TaggedHash(RECON_STATIC_SALT);
 
 /**
+ * A floating point coefficient q for estimating reconciliation set difference, and
+ * the value used to convert it to integer for transmission purposes, as specified in BIP-330.
+ */
+constexpr double Q = 0.25;
+constexpr uint16_t Q_PRECISION{(2 << 14) - 1};
+/**
  * Interval between initiating reconciliations with peers.
  * This value allows to reconcile ~(7 tx/s * 8s) transactions during normal operation.
  * More frequent reconciliations would cause significant constant bandwidth overhead
@@ -28,6 +34,14 @@ const HashWriter RECON_SALT_HASHER = TaggedHash(RECON_STATIC_SALT);
  * Less frequent reconciliations would introduce high transaction relay latency.
  */
 constexpr std::chrono::microseconds RECON_REQUEST_INTERVAL{8s};
+
+/**
+ * Represents phase of the current reconciliation round with a peer.
+ */
+enum class Phase {
+    NONE,
+    INIT_REQUESTED,
+};
 
 /**
  * Salt (specified by BIP-330) constructed from contributions from both peers. It is used
@@ -52,6 +66,9 @@ public:
      * based on the direction of the p2p connection.
      */
     bool m_we_initiate;
+
+    /** Keep track of the reconciliation phase with the peer. */
+    Phase m_phase_init_by_us{Phase::NONE};
 
     /**
      * Store all wtxids which we would announce to the peer (policy checks passed, etc.)
@@ -310,6 +327,58 @@ public:
         return removed;
     }
 
+    bool IsPeerNextToReconcileWith(NodeId peer_id, std::chrono::microseconds now) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+
+        if (!GetRegisteredPeerState(peer_id)) return false;
+        if (m_queue.empty()) return false;
+
+        const auto& recon_state = std::get<TxReconciliationState>(m_states.find(peer_id)->second);
+
+        if (m_next_recon_request <= now && m_queue.front() == peer_id) {
+            Assume(recon_state.m_we_initiate);
+            m_queue.pop_front();
+            m_queue.push_back(peer_id);
+
+            // If the phase is not NONE, the peer hasn't responded to the previous reconciliation.
+            // A laggy peer should not affect other peers.
+            //
+            // This doesn't prevent from a malicious peer gaming this by staying in this state
+            // all the time somehow.
+            if (recon_state.m_phase_init_by_us == Phase::NONE) UpdateNextReconRequest(now);
+            return true;
+        }
+
+        return false;
+    }
+
+    std::optional<std::pair<uint16_t, uint16_t>> InitiateReconciliationRequest(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
+    {
+        AssertLockNotHeld(m_txreconciliation_mutex);
+        LOCK(m_txreconciliation_mutex);
+        if (!GetRegisteredPeerState(peer_id)) return std::nullopt;
+
+        auto& recon_state = std::get<TxReconciliationState>(m_states.find(peer_id)->second);
+        if (!recon_state.m_we_initiate) return std::nullopt;
+
+        if (recon_state.m_phase_init_by_us != Phase::NONE) return std::nullopt;
+        recon_state.m_phase_init_by_us = Phase::INIT_REQUESTED;
+
+        size_t local_set_size = recon_state.m_local_set.size();
+
+        LogPrintLevel(BCLog::TXRECONCILIATION, BCLog::Level::Debug, "Initiate reconciliation with peer=%d with the following params: " /* Continued */
+                                                                    "local_set_size=%i\n",
+                      peer_id, local_set_size);
+
+        // In future, Q could be recomputed after every reconciliation based on the
+        // set differences. For now, it provides good enough results without recompute
+        // complexity, but we communicate it here to allow backward compatibility if
+        // the value is changed or made dynamic.
+        return std::make_pair(local_set_size, Q * Q_PRECISION);
+    }
+
     void ForgetPeer(NodeId peer_id) EXCLUSIVE_LOCKS_REQUIRED(!m_txreconciliation_mutex)
     {
         AssertLockNotHeld(m_txreconciliation_mutex);
@@ -449,6 +518,16 @@ bool TxReconciliationTracker::IsTransactionInSet(NodeId peer_id, const Wtxid& wt
 bool TxReconciliationTracker::TryRemovingFromSet(NodeId peer_id, const Wtxid& wtxid)
 {
     return m_impl->TryRemovingFromSet(peer_id, wtxid);
+}
+
+bool TxReconciliationTracker::IsPeerNextToReconcileWith(NodeId peer_id, std::chrono::microseconds now)
+{
+    return m_impl->IsPeerNextToReconcileWith(peer_id, now);
+}
+
+std::optional<std::pair<uint16_t, uint16_t>> TxReconciliationTracker::InitiateReconciliationRequest(NodeId peer_id)
+{
+    return m_impl->InitiateReconciliationRequest(peer_id);
 }
 
 void TxReconciliationTracker::ForgetPeer(NodeId peer_id)
