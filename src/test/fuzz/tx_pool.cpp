@@ -16,7 +16,8 @@
 namespace {
 
 const TestingSetup* g_setup;
-std::vector<COutPoint> g_outpoints_coinbase_init;
+std::vector<COutPoint> g_outpoints_coinbase_init_mature;
+std::vector<COutPoint> g_outpoints_coinbase_init_immature;
 
 struct MockedTxPool : public CTxMemPool {
     void RollingFeeUpdate()
@@ -34,7 +35,10 @@ void initialize_tx_pool()
     for (int i = 0; i < 2 * COINBASE_MATURITY; ++i) {
         CTxIn in = MineBlock(g_setup->m_node, P2WSH_OP_TRUE);
         // Remember the txids to avoid expensive disk acess later on
-        g_outpoints_coinbase_init.push_back(in.prevout);
+        auto& outpoints = i < COINBASE_MATURITY ?
+                              g_outpoints_coinbase_init_mature :
+                              g_outpoints_coinbase_init_immature;
+        outpoints.push_back(in.prevout);
     }
     SyncWithValidationInterfaceQueue();
 }
@@ -86,9 +90,8 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
     std::set<COutPoint> outpoints_rbf;
     // All outpoints counting toward the total supply (subset of outpoints_rbf)
     std::set<COutPoint> outpoints_supply;
-    for (const auto& outpoint : g_outpoints_coinbase_init) {
+    for (const auto& outpoint : g_outpoints_coinbase_init_mature) {
         Assert(outpoints_supply.insert(outpoint).second);
-        if (outpoints_supply.size() >= COINBASE_MATURITY) break;
     }
     outpoints_rbf = outpoints_supply;
 
@@ -96,14 +99,13 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
     constexpr CAmount SUPPLY_TOTAL{COINBASE_MATURITY * 50 * COIN};
 
     CTxMemPool tx_pool_{/* estimator */ nullptr, /* check_ratio */ 1};
-    MockedTxPool& tx_pool = *(MockedTxPool*)&tx_pool_;
+    MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(&tx_pool_);
 
     // Helper to query an amount
     const CCoinsViewMemPool amount_view{WITH_LOCK(::cs_main, return &chainstate.CoinsTip()), tx_pool};
     const auto GetAmount = [&](const COutPoint& outpoint) {
         Coin c;
-        amount_view.GetCoin(outpoint, c);
-        Assert(!c.IsSpent());
+        Assert(amount_view.GetCoin(outpoint, c));
         return c.out.nValue;
     };
 
@@ -254,13 +256,12 @@ FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
     const auto& node = g_setup->m_node;
 
     std::vector<uint256> txids;
-    for (const auto& outpoint : g_outpoints_coinbase_init) {
+    for (const auto& outpoint : g_outpoints_coinbase_init_mature) {
         txids.push_back(outpoint.hash);
-        if (txids.size() >= COINBASE_MATURITY) break;
     }
     for (int i{0}; i <= 3; ++i) {
         // Add some immature and non-existent outpoints
-        txids.push_back(g_outpoints_coinbase_init.at(i).hash);
+        txids.push_back(g_outpoints_coinbase_init_immature.at(i).hash);
         txids.push_back(ConsumeUInt256(fuzzed_data_provider));
     }
 
