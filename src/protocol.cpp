@@ -47,6 +47,7 @@ const char* GETCFCHECKPT = "getcfcheckpt";
 const char* CFCHECKPT = "cfcheckpt";
 const char* WTXIDRELAY = "wtxidrelay";
 const char* SENDTXRCNCL = "sendtxrcncl";
+const char* REQTXRCNCL = "reqtxrcncl";
 } // namespace NetMsgType
 
 /** All known message types. Keep this in the same order as the list of
@@ -88,6 +89,7 @@ const static std::vector<std::string> g_all_net_message_types{
     NetMsgType::CFCHECKPT,
     NetMsgType::WTXIDRELAY,
     NetMsgType::SENDTXRCNCL,
+    NetMsgType::REQTXRCNCL,
 };
 
 CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn)
