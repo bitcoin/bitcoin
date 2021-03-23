@@ -11,14 +11,6 @@
 #include <masternode/masternode-sync.h>
 #include <validation.h>
 
-struct CompareScoreMN
-{
-    bool operator()(const std::pair<arith_uint256, const CDeterministicMNCPtr&>& t1,
-                    const std::pair<arith_uint256, const CDeterministicMNCPtr&>& t2) const
-    {
-        return (t1.first != t2.first) ? (t1.first < t2.first) : (t1.second->collateralOutpoint < t2.second->collateralOutpoint);
-    }
-};
 
 void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
 {
