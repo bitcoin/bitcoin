@@ -29,6 +29,15 @@ constexpr size_t OUTBOUND_FANOUT_THRESHOLD = 4;
 /** Interval for inbound peer fanout selection. The subset is rotated on a timer. */
 static constexpr auto INBOUND_FANOUT_ROTATION_INTERVAL{10min};
 
+/**
+ * Interval between initiating reconciliations with peers.
+ * This value allows to reconcile ~(7 tx/s * 8s) transactions during normal operation.
+ * More frequent reconciliations would cause significant constant bandwidth overhead
+ * due to reconciliation metadata (sketch sizes etc.), which would nullify the efficiency.
+ * Less frequent reconciliations would introduce high transaction relay latency.
+ */
+constexpr std::chrono::microseconds RECON_REQUEST_INTERVAL{8s};
+
 enum class ReconciliationError
 {
     NOT_FOUND,
