@@ -27,6 +27,15 @@ constexpr double INBOUND_FANOUT_DESTINATIONS_FRACTION = 0.1;
 constexpr size_t OUTBOUND_FANOUT_DESTINATIONS = 1;
 constexpr size_t MAX_SET_SIZE = 3000;
 /**
+ * Interval between initiating reconciliations with peers.
+ * This value allows to reconcile ~(7 tx/s * 8s) transactions during normal operation.
+ * More frequent reconciliations would cause significant constant bandwidth overhead
+ * due to reconciliation metadata (sketch sizes etc.), which would nullify the efficiency.
+ * Less frequent reconciliations would introduce high transaction relay latency.
+ */
+constexpr std::chrono::microseconds RECON_REQUEST_INTERVAL{8s};
+
+/**
  * Salt (specified by BIP-330) constructed from contributions from both peers. It is used
  * to compute transaction short IDs, which are then used to construct a sketch representing a set
  * of transactions we want to announce to the peer.
@@ -103,6 +112,25 @@ private:
      * easier to estimate set difference size.
      */
     std::deque<NodeId> m_queue GUARDED_BY(m_txreconciliation_mutex);
+
+    /**
+     * Make reconciliation requests periodically to make reconciliations efficient.
+     */
+    std::chrono::microseconds m_next_recon_request GUARDED_BY(m_txreconciliation_mutex){0};
+    void UpdateNextReconRequest(std::chrono::microseconds now) EXCLUSIVE_LOCKS_REQUIRED(m_txreconciliation_mutex)
+    {
+        // We have one timer for the entire queue. This is safe because we initiate reconciliations
+        // with outbound connections, which are unlikely to game this timer in a serious way.
+        size_t we_initiate_to_count = std::count_if(m_states.begin(), m_states.end(),
+                                                    [](std::pair<NodeId, std::variant<uint64_t, TxReconciliationState>> indexed_state) {
+                                                        const auto* cur_state = std::get_if<TxReconciliationState>(&indexed_state.second);
+                                                        if (cur_state) return cur_state->m_we_initiate;
+                                                        return false;
+                                                    });
+
+        Assert(we_initiate_to_count != 0);
+        m_next_recon_request = now + (RECON_REQUEST_INTERVAL / we_initiate_to_count);
+    }
 
 public:
     explicit Impl(uint32_t recon_version) : m_recon_version(recon_version) {}
