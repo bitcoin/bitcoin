@@ -139,6 +139,13 @@ struct ReconciliationSet {
  * Track ongoing reconciliations with a giving peer which were initiated by us.
  */
 struct ReconciliationInitByUs {
+    /**
+     * In a reconciliation round initiated by us, if we asked for an extension, we want to store
+     * the sketch computed/transmitted in the initial step, so that we can use it when
+     * sketch extension arrives.
+     */
+    std::vector<uint8_t> m_remote_sketch_snapshot;
+
     /** Keep track of the reconciliation phase with the peer. */
     Phase m_phase{Phase::NONE};
 };
@@ -212,6 +219,12 @@ class ReconciliationState {
     public:
 
     /**
+     * A reconciliation round may involve an extension, in which case we should remember
+     * a capacity of the sketch sent out initially, so that a sketch extension is of the same size.
+     */
+    uint16_t m_capacity_snapshot{0};
+
+    /**
      * Reconciliation protocol assumes using one role consistently: either a reconciliation
      * initiator (requesting sketches), or responder (sending sketches). This defines our role.
      * */
@@ -225,6 +238,16 @@ class ReconciliationState {
      */
     ReconciliationSet m_local_set;
 
+    /**
+     * A reconciliation round may involve an extension, which is an extra exchange of messages.
+     * Since it may happen after a delay (at least network latency), new transactions may come
+     * during that time. To avoid mixing old and new transactions, those which are subject for
+     * extension of a current reconciliation round are moved to a reconciliation set snapshot
+     * after an initial (non-extended) sketch is sent.
+     * New transactions are kept in the regular reconciliation set.
+     */
+    ReconciliationSet m_local_set_snapshot;
+
     /** Keep track of reconciliations with the peer. */
     ReconciliationInitByUs m_state_init_by_us;
     ReconciliationInitByThem m_state_init_by_them;
@@ -237,13 +260,17 @@ class ReconciliationState {
      * (a sketch). A sketch has a capacity meaning it allows reconciling at most a certain number
      * of elements (see BIP-330).
      */
-    Minisketch ComputeSketch(uint32_t& capacity)
+    Minisketch ComputeBaseSketch(uint32_t& capacity)
     {
         Minisketch sketch;
         // Avoid serializing/sending an empty sketch.
         if (capacity == 0) return sketch;
 
         capacity = std::min(capacity, MAX_SKETCH_CAPACITY);
+
+        // To be used for sketch extension of the exact same size.
+        m_capacity_snapshot = capacity;
+
         sketch = Minisketch(RECON_FIELD_SIZE, 0, capacity);
 
         for (const auto& wtxid: m_local_set.m_wtxids) {
@@ -256,6 +283,29 @@ class ReconciliationState {
     }
 
     /**
+     * When our peer tells us that our sketch was insufficient to reconcile transactions because
+     * of the low capacity, we compute an extended sketch with the double capacity, and then send
+     * only the part the peer is missing to that peer.
+     */
+    Minisketch ComputeExtendedSketch(uint32_t extended_capacity)
+    {
+        assert(extended_capacity > 0);
+        // This can't happen because we should have terminated reconciliation early.
+        assert(m_local_set_snapshot.GetSize() > 0);
+
+        // For now, compute a sketch of twice the capacity were computed originally.
+        // TODO: optimize by computing the extension *on top* of the existent sketch
+        // instead of computing the lower order elements again.
+        Minisketch sketch = Minisketch(RECON_FIELD_SIZE, 0, extended_capacity);
+
+        // We don't have to recompute short IDs here.
+        for (const auto& shortid_to_wtxid: m_local_set_snapshot.m_short_id_mapping) {
+            sketch.Add(shortid_to_wtxid.first);
+        }
+        return sketch;
+    }
+
+    /**
      * Once we are fully done with the reconciliation we initiated, prepare the state for the
      * following reconciliations we initiate.
      */
@@ -263,6 +313,27 @@ class ReconciliationState {
     {
         assert(m_we_initiate);
         if (clear_local_set) m_local_set.Clear();
+        m_local_set_snapshot.Clear();
+        // This is currently belt-and-suspenders, as the code should work even without these calls.
+        m_capacity_snapshot = 0;
+        m_state_init_by_us.m_remote_sketch_snapshot.clear();
+    }
+
+    /**
+     * To be efficient in transmitting extended sketch, we store a snapshot of the sketch
+     * received in the initial reconciliation step, so that only the necessary extension data
+     * has to be transmitted.
+     * We also store a snapshot of our local reconciliation set, to better keep track of
+     * transactions arriving during this reconciliation (they will be added to the cleared
+     * original reconciliation set, to be reconciled next time).
+     */
+    void PrepareForExtensionResponse(uint16_t sketch_capacity, const std::vector<uint8_t>& remote_sketch)
+    {
+        assert(m_we_initiate);
+        m_capacity_snapshot = sketch_capacity;
+        m_state_init_by_us.m_remote_sketch_snapshot = remote_sketch;
+        m_local_set_snapshot = m_local_set;
+        m_local_set.Clear();
     }
 };
 
@@ -341,7 +412,7 @@ class TxReconciliationTracker::Impl {
 
         Minisketch local_sketch, remote_sketch;
         if (recon_state->second.m_local_set.GetSize() > 0) {
-            local_sketch = recon_state->second.ComputeSketch(remote_sketch_capacity);
+            local_sketch = recon_state->second.ComputeBaseSketch(remote_sketch_capacity);
         }
         if (remote_sketch_capacity != 0) {
             remote_sketch = Minisketch(RECON_FIELD_SIZE, 0, remote_sketch_capacity).Deserialize(skdata);
@@ -390,7 +461,8 @@ class TxReconciliationTracker::Impl {
             // Initial reconciliation step failed.
 
             // Update local reconciliation state for the peer.
-            recon_state->second.m_state_init_by_us.m_phase = EXT_REQUESTED;
+            recon_state->second.PrepareForExtensionResponse(remote_sketch_capacity, skdata);
+            recon_state->second.m_state_init_by_us.m_phase = Phase::EXT_REQUESTED;
 
             result = std::nullopt;
 
@@ -582,7 +654,7 @@ class TxReconciliationTracker::Impl {
 
             sketch_capacity = recon_state->second.m_state_init_by_them.EstimateSketchCapacity(
                 recon_state->second.m_local_set.GetSize());
-            Minisketch sketch = recon_state->second.ComputeSketch(sketch_capacity);
+            Minisketch sketch = recon_state->second.ComputeBaseSketch(sketch_capacity);
             if (sketch) skdata = sketch.Serialize();
         }
 
