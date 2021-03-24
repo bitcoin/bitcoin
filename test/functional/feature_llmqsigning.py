@@ -136,17 +136,39 @@ class LLMQSigningTest(DashTestFramework):
         assert(node.quorum_verify(100, id, msgHash, recsig["sig"]))
         assert(node.quorum_verify(100, id, msgHash, recsig["sig"], "", height))
         assert(not node.quorum_verify(100, id, msgHashConflict, recsig["sig"]))
-        assert_raises_rpc_error(-8, "quorum not found", node.quorum_verify, 100, id, msgHash, recsig["sig"], "", height_bad)
+        assert not node.quorum_verify(100, id, msgHash, recsig["sig"], "", height_bad)
         # Use specific quorum
         assert(node.quorum_verify(100, id, msgHash, recsig["sig"], recsig["quorumHash"]))
         assert(not node.quorum_verify(100, id, msgHashConflict, recsig["sig"], recsig["quorumHash"]))
         assert_raises_rpc_error(-8, "quorum not found", node.quorum_verify, 100, id, msgHash, recsig["sig"], hash_bad)
 
-        recsig_time = self.mocktime
 
         # Mine one more quorum, so that we have 2 active ones, nothing should change
         self.mine_quorum()
         assert_sigs_nochange(True, False, True, 3)
+
+        # Create a recovered sig for the oldest quorum i.e. the active quorum which will be moved
+        # out of the active set when a new quorum appears
+        request_id = 2
+        oldest_quorum_hash = node.quorum_list()["llmq_test"][-1]
+        # Search for a request id which selects the last active quorum
+        while True:
+            selected_hash = node.quorum_selectquorum(100, "%064x" % request_id)["quorumHash"]
+            if selected_hash == oldest_quorum_hash:
+                break
+            else:
+                request_id += 1
+        # Produce the recovered signature
+        id = "%064x" % request_id
+        for mn in self.mninfo:
+            mn.node.quorum_sign(100, id, msgHash)
+        # And mine a quorum to move the quorum which signed out of the active set
+        self.mine_quorum()
+        # Verify the recovered sig. This triggers the "signHeight + dkgInterval" verification
+        recsig = node.quorum_getrecsig(100, id, msgHash)
+        assert node.quorum_verify(100, id, msgHash, recsig["sig"], "", node.getblockcount())
+
+        recsig_time = self.mocktime
 
         # Mine 4 more quorums, so that the one used for the the recovered sig should become inactive, nothing should change
         self.mine_quorum()
@@ -185,7 +207,7 @@ class LLMQSigningTest(DashTestFramework):
         wait_for_sigs(True, False, True, 15)
 
         if self.options.spork21:
-            id = "0000000000000000000000000000000000000000000000000000000000000002"
+            id = "%064x" % request_id + 1
 
             # Isolate the node that is responsible for the recovery of a signature and assert that recovery fails
             q = self.nodes[0].quorum_selectquorum(100, id)

@@ -943,9 +943,9 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(uint8_t llmqType, const uint
     return quorums[scores.front().second];
 }
 
-bool CSigningManager::VerifyRecoveredSig(uint8_t llmqType, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig)
+bool CSigningManager::VerifyRecoveredSig(uint8_t llmqType, int signedAtHeight, const uint256& id, const uint256& msgHash, const CBLSSignature& sig, const int signOffset)
 {
-    auto quorum = SelectQuorumForSigning(llmqType, id, signedAtHeight);
+    auto quorum = SelectQuorumForSigning(llmqType, id, signedAtHeight, signOffset);
     if (!quorum) {
         return false;
     }

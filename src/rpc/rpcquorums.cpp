@@ -418,30 +418,24 @@ static RPCHelpMan quorum_verify()
     if (!sig.SetHexStr(request.params[3].get_str())) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
     }
-       llmq::CQuorumCPtr quorum{nullptr};
-        if (request.params[4].isNull() || (request.params[4].get_str().empty() && !request.params[5].isNull())) {
-            int signHeight{-1};
-            if (!request.params[5].isNull()) {
-                signHeight = request.params[5].get_int();
-            }
-            // First check against the current active set
-            quorum = llmq::quorumSigningManager->SelectQuorumForSigning(llmqType, id, signHeight, 0);
-            if (!quorum) {
-                // Then check against the previous active set in case it changed recently
-                int signOffset = Params().GetConsensus().llmqs.at(llmqType).dkgInterval;
-                quorum = llmq::quorumSigningManager->SelectQuorumForSigning(llmqType, id, signHeight, signOffset);
-            }
-        } else {
-            uint256 quorumHash = ParseHashV(request.params[4], "quorumHash");
-            quorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
+    if (request.params[4].isNull() || (request.params[4].get_str().empty() && !request.params[5].isNull())) {
+        int signHeight{-1};
+        if (!request.params[5].isNull()) {
+            signHeight = request.params[5].get_int();
         }
-
+        // First check against the current active set, if it fails check against the last active set
+        int signOffset{Params().GetConsensus().llmqs.at(llmqType).dkgInterval};
+        return llmq::quorumSigningManager->VerifyRecoveredSig(llmqType, signHeight, id, msgHash, sig, 0) ||
+                llmq::quorumSigningManager->VerifyRecoveredSig(llmqType, signHeight, id, msgHash, sig, signOffset);
+    } else {
+        uint256 quorumHash = ParseHashV(request.params[4], "quorumHash");
+        llmq::CQuorumCPtr quorum = llmq::quorumManager->GetQuorum(llmqType, quorumHash);
         if (!quorum) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
         }
-
         uint256 signHash = llmq::CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, id, msgHash);
         return sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash);
+    }
 },
     };
 } 
