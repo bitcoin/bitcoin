@@ -1308,7 +1308,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         LogPrintf("Config file: %s\n", config_file_path.string());
     } else if (args.IsArgSet("-conf")) {
         // Warn if no conf file exists at path provided by user
-        InitWarning(strprintf(_("The specified config file %s does not exist\n"), config_file_path.string()));
+        InitWarning(strprintf(_("The specified config file %s does not exist"), config_file_path.string()));
     } else {
         // Not categorizing as "Warning" because it's the default behavior
         LogPrintf("Config file: %s (not found, skipping)\n", config_file_path.string());
