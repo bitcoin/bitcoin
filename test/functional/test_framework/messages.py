@@ -1332,7 +1332,7 @@ class msg_version:
         self.nStartingHeight = struct.unpack("<i", f.read(4))[0]
 
         # Relay field is optional for version 70001 onwards
-        # But, unconditionally check it to match behaviour in bitcoind
+        # But, unconditionally check it to match behaviour in syscoind
         try:
             self.relay = struct.unpack("<b", f.read(1))[0]
         except struct.error:
