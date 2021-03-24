@@ -65,6 +65,8 @@ namespace node {
 namespace {
 class NodeImpl : public Node
 {
+private:
+    ChainstateManager& chainman() { return *Assert(m_context->chainman); }
 public:
     explicit NodeImpl(NodeContext* context) { setContext(context); }
     void initLogging() override { InitLogging(*Assert(m_context->args)); }
@@ -183,21 +185,28 @@ public:
     int getNumBlocks() override
     {
         LOCK(::cs_main);
-        assert(std::addressof(::ChainActive()) == std::addressof(m_context->chainman->ActiveChain()));
-        return m_context->chainman->ActiveChain().Height();
+        assert(std::addressof(::ChainActive()) == std::addressof(chainman().ActiveChain()));
+        return chainman().ActiveChain().Height();
     }
     uint256 getBestBlockHash() override
     {
-        assert(std::addressof(::ChainActive()) == std::addressof(m_context->chainman->ActiveChain()));
-        const CBlockIndex* tip = WITH_LOCK(::cs_main, return m_context->chainman->ActiveChain().Tip());
+        const CBlockIndex* tip;
+        {
+            // TODO: Temporary scope to check correctness of refactored code.
+            // Should be removed manually after merge of
+            // https://github.com/bitcoin/bitcoin/pull/20158
+            LOCK(cs_main);
+            assert(std::addressof(::ChainActive()) == std::addressof(chainman().ActiveChain()));
+            tip = chainman().ActiveChain().Tip();
+        }
         return tip ? tip->GetBlockHash() : Params().GenesisBlock().GetHash();
     }
     int64_t getLastBlockTime() override
     {
         LOCK(::cs_main);
-        assert(std::addressof(::ChainActive()) == std::addressof(m_context->chainman->ActiveChain()));
-        if (m_context->chainman->ActiveChain().Tip()) {
-            return m_context->chainman->ActiveChain().Tip()->GetBlockTime();
+        assert(std::addressof(::ChainActive()) == std::addressof(chainman().ActiveChain()));
+        if (chainman().ActiveChain().Tip()) {
+            return chainman().ActiveChain().Tip()->GetBlockTime();
         }
         return Params().GenesisBlock().GetBlockTime(); // Genesis block's time of current network
     }
@@ -206,14 +215,22 @@ public:
         const CBlockIndex* tip;
         {
             LOCK(::cs_main);
-            assert(std::addressof(::ChainActive()) == std::addressof(m_context->chainman->ActiveChain()));
-            tip = m_context->chainman->ActiveChain().Tip();
+            assert(std::addressof(::ChainActive()) == std::addressof(chainman().ActiveChain()));
+            tip = chainman().ActiveChain().Tip();
         }
         return GuessVerificationProgress(Params().TxData(), tip);
     }
     bool isInitialBlockDownload() override {
-        assert(std::addressof(::ChainstateActive()) == std::addressof(m_context->chainman->ActiveChainstate()));
-        return m_context->chainman->ActiveChainstate().IsInitialBlockDownload();
+        const CChainState* active_chainstate;
+        {
+            // TODO: Temporary scope to check correctness of refactored code.
+            // Should be removed manually after merge of
+            // https://github.com/bitcoin/bitcoin/pull/20158
+            LOCK(::cs_main);
+            active_chainstate = &m_context->chainman->ActiveChainstate();
+            assert(std::addressof(::ChainstateActive()) == std::addressof(*active_chainstate));
+        }
+        return active_chainstate->IsInitialBlockDownload();
     }
     bool getReindex() override { return ::fReindex; }
     bool getImporting() override { return ::fImporting; }
@@ -239,8 +256,8 @@ public:
     bool getUnspentOutput(const COutPoint& output, Coin& coin) override
     {
         LOCK(::cs_main);
-        assert(std::addressof(::ChainstateActive()) == std::addressof(m_context->chainman->ActiveChainstate()));
-        return m_context->chainman->ActiveChainstate().CoinsTip().GetCoin(output, coin);
+        assert(std::addressof(::ChainstateActive()) == std::addressof(chainman().ActiveChainstate()));
+        return chainman().ActiveChainstate().CoinsTip().GetCoin(output, coin);
     }
     WalletClient& walletClient() override
     {
