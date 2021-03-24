@@ -6,6 +6,14 @@
 
 export LC_ALL=C.UTF-8
 
+if [ -n "$ANDROID_TOOLS_URL" ]; then
+  DOCKER_EXEC make distclean || true
+  DOCKER_EXEC ./autogen.sh
+  DOCKER_EXEC ./configure $SYSCOIN_CONFIG --prefix=$DEPENDS_DIR/aarch64-linux-android || ( (DOCKER_EXEC cat config.log) && false)
+  DOCKER_EXEC "cd src/qt && make $MAKEJOBS && ANDROID_HOME=${ANDROID_HOME} ANDROID_NDK_HOME=${ANDROID_NDK_HOME} make apk"
+  exit 0
+fi
+
 SYSCOIN_CONFIG_ALL="--enable-suppress-external-warnings --disable-dependency-tracking --prefix=$DEPENDS_DIR/$HOST --bindir=$BASE_OUTDIR/bin --libdir=$BASE_OUTDIR/lib"
 if [ -z "$NO_WERROR" ]; then
   SYSCOIN_CONFIG_ALL="${SYSCOIN_CONFIG_ALL} --enable-werror"

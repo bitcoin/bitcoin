@@ -7,3 +7,5 @@ check: FORCE
 	$(MAKE) -C .. test_syscoin_qt_check
 syscoin-qt syscoin-qt.exe: FORCE
 	 $(MAKE) -C .. syscoin_qt
+apk: FORCE
+	$(MAKE) -C .. syscoin_qt_apk
