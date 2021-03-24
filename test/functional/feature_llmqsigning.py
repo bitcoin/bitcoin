@@ -207,7 +207,7 @@ class LLMQSigningTest(DashTestFramework):
         wait_for_sigs(True, False, True, 15)
 
         if self.options.spork21:
-            id = "%064x" % request_id + 1
+            id = "%064x" % (request_id + 1)
 
             # Isolate the node that is responsible for the recovery of a signature and assert that recovery fails
             q = self.nodes[0].quorum_selectquorum(100, id)
