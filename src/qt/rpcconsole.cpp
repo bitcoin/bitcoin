@@ -959,7 +959,7 @@ void RPCConsole::startExecutor()
     executor->moveToThread(&thread);
 
     // Replies from executor object must go to this object
-    connect(executor, &RPCExecutor::reply, this, static_cast<void (RPCConsole::*)(int, const QString&)>(&RPCConsole::message));
+    connect(executor, &RPCExecutor::reply, this, qOverload<int, const QString&>(&RPCConsole::message));
 
     // Requests from this object must go to executor
     connect(this, &RPCConsole::cmdRequest, executor, &RPCExecutor::request);
