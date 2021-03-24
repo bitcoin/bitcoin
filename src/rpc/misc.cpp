@@ -360,13 +360,13 @@ static RPCHelpMan signmessagewithprivkey()
 static RPCHelpMan setmocktime()
 {
     return RPCHelpMan{"setmocktime",
-                "\nSet the local time to given timestamp (-regtest only)\n",
-                {
-                    {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, UNIX_EPOCH_TIME + "\n"
-            "   Pass 0 to go back to using the system time."},
-                },
-                RPCResult{RPCResult::Type::NONE, "", ""},
-                RPCExamples{""},
+        "\nSet the local time to given timestamp (-regtest only)\n",
+        {
+            {"timestamp", RPCArg::Type::NUM, RPCArg::Optional::NO, UNIX_EPOCH_TIME + "\n"
+             "Pass 0 to go back to using the system time."},
+        },
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     if (!Params().IsMockableChain()) {
@@ -381,7 +381,10 @@ static RPCHelpMan setmocktime()
     LOCK(cs_main);
 
     RPCTypeCheck(request.params, {UniValue::VNUM});
-    int64_t time = request.params[0].get_int64();
+    const int64_t time{request.params[0].get_int64()};
+    if (time < 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Mocktime can not be negative: %s.", time));
+    }
     SetMockTime(time);
     if (request.context.Has<NodeContext>()) {
         for (const auto& chain_client : request.context.Get<NodeContext>().chain_clients) {

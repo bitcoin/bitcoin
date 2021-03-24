@@ -15,6 +15,9 @@ class SetBanTests(BitcoinTestFramework):
         self.setup_clean_chain = True
         self.extra_args = [[],[]]
 
+    def is_banned(self, node, addr):
+        return any(e['address'] == addr for e in node.listbanned())
+
     def run_test(self):
         # Node 0 connects to Node 1, check that the noban permission is not granted
         self.connect_nodes(0, 1)
@@ -41,6 +44,19 @@ class SetBanTests(BitcoinTestFramework):
         self.connect_nodes(0, 1)
         peerinfo = self.nodes[1].getpeerinfo()[0]
         assert(not 'noban' in peerinfo['permissions'])
+
+        self.log.info("Test that a non-IP address can be banned/unbanned")
+        node = self.nodes[1]
+        tor_addr = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"
+        ip_addr = "1.2.3.4"
+        assert(not self.is_banned(node, tor_addr))
+        assert(not self.is_banned(node, ip_addr))
+        node.setban(tor_addr, "add")
+        assert(self.is_banned(node, tor_addr))
+        assert(not self.is_banned(node, ip_addr))
+        node.setban(tor_addr, "remove")
+        assert(not self.is_banned(self.nodes[1], tor_addr))
+        assert(not self.is_banned(node, ip_addr))
 
 if __name__ == '__main__':
     SetBanTests().main()
