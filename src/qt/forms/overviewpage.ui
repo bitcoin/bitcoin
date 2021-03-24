@@ -368,7 +368,7 @@
             <item>
              <widget class="QLabel" name="labelCoinJoinHeader">
               <property name="text">
-               <string>CoinJoin</string>
+               <string notr="true">CoinJoin</string>
               </property>
              </widget>
             </item>
@@ -448,7 +448,7 @@
             <item row="2" column="0">
              <widget class="QLabel" name="labelAnonymizedText">
               <property name="text">
-               <string>CoinJoin Balance:</string>
+               <string notr="true">CoinJoin Balance:</string>
               </property>
              </widget>
             </item>

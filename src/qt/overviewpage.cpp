@@ -152,6 +152,8 @@ OverviewPage::OverviewPage(QWidget* parent) :
     ui->labelCoinJoinSyncStatus->setText("(" + tr("out of sync") + ")");
     ui->labelTransactionsStatus->setText("(" + tr("out of sync") + ")");
 
+    ui->labelAnonymizedText->setText(tr("%1 Balance").arg("CoinJoin"));
+
     // hide PS frame (helps to preserve saved size)
     // we'll setup and make it visible in coinJoinStatus() later
     ui->frameCoinJoin->setVisible(false);
@@ -510,7 +512,7 @@ void OverviewPage::coinJoinStatus(bool fForce)
         }
 
         setWidgetsVisible(false);
-        ui->toggleCoinJoin->setText(tr("Start CoinJoin"));
+        ui->toggleCoinJoin->setText(tr("Start %1").arg("CoinJoin"));
 
         QString strEnabled = tr("Disabled");
         // Show how many keys left in advanced PS UI mode only
@@ -605,7 +607,7 @@ void OverviewPage::toggleCoinJoin(){
     QString hasMixed = settings.value("hasMixed").toString();
     if(hasMixed.isEmpty()){
         QMessageBox::information(this, "CoinJoin",
-                tr("If you don't want to see internal CoinJoin fees/transactions select \"Most Common\" as Type on the \"Transactions\" tab."),
+                tr("If you don't want to see internal %1 fees/transactions select \"Most Common\" as Type on the \"Transactions\" tab.").arg("CoinJoin"),
                 QMessageBox::Ok, QMessageBox::Ok);
         settings.setValue("hasMixed", "hasMixed");
     }
@@ -616,7 +618,7 @@ void OverviewPage::toggleCoinJoin(){
         if(m_balances.balance < nMinAmount) {
             QString strMinAmount(BitcoinUnits::formatWithUnit(nDisplayUnit, nMinAmount));
             QMessageBox::warning(this, "CoinJoin",
-                tr("CoinJoin requires at least %1 to use.").arg(strMinAmount),
+                tr("%1 requires at least %2 to use.").arg("CoinJoin").arg(strMinAmount),
                 QMessageBox::Ok, QMessageBox::Ok);
             return;
         }
@@ -630,7 +632,7 @@ void OverviewPage::toggleCoinJoin(){
                 //unlock was cancelled
                 walletModel->coinJoin().resetCachedBlocks();
                 QMessageBox::warning(this, "CoinJoin",
-                    tr("Wallet is locked and user declined to unlock. Disabling CoinJoin."),
+                    tr("Wallet is locked and user declined to unlock. Disabling %1.").arg("CoinJoin"),
                     QMessageBox::Ok, QMessageBox::Ok);
                 LogPrint(BCLog::COINJOIN, "OverviewPage::toggleCoinJoin -- Wallet is locked and user declined to unlock. Disabling CoinJoin.\n");
                 return;
@@ -642,11 +644,11 @@ void OverviewPage::toggleCoinJoin(){
     walletModel->coinJoin().resetCachedBlocks();
 
     if (walletModel->coinJoin().isMixing()) {
-        ui->toggleCoinJoin->setText(tr("Start CoinJoin"));
+        ui->toggleCoinJoin->setText(tr("Start %1").arg("CoinJoin"));
         walletModel->coinJoin().resetPool();
         walletModel->coinJoin().stopMixing();
     } else {
-        ui->toggleCoinJoin->setText(tr("Stop CoinJoin"));
+        ui->toggleCoinJoin->setText(tr("Stop %1").arg("CoinJoin"));
         walletModel->coinJoin().startMixing();
     }
 }

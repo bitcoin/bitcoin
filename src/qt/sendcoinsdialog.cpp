@@ -158,7 +158,7 @@ SendCoinsDialog::SendCoinsDialog(bool _fCoinJoin, QWidget* parent) :
 
     if (_fCoinJoin) {
         ui->sendButton->setText("S&end mixed funds");
-        ui->sendButton->setToolTip(tr("Confirm the CoinJoin send action"));
+        ui->sendButton->setToolTip(tr("Confirm the %1 send action").arg("CoinJoin"));
     } else {
         ui->sendButton->setText(tr("S&end"));
         ui->sendButton->setToolTip(tr("Confirm the send action"));
@@ -378,7 +378,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
 
 
     if(m_coin_control->IsUsingCoinJoin()) {
-        questionString.append(tr("using") + " <b>" + tr("CoinJoin funds only") + "</b>");
+        questionString.append(tr("using") + " <b>" + tr("%1 funds only").arg("CoinJoin") + "</b>");
     } else {
         questionString.append(tr("using") + " <b>" + tr("any available funds") + "</b>");
     }
@@ -401,7 +401,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
         questionString.append(tr("are added as transaction fee"));
 
         if (m_coin_control->IsUsingCoinJoin()) {
-            questionString.append(" " + tr("(CoinJoin transactions have higher fees usually due to no change output being allowed)"));
+            questionString.append(" " + tr("(%1 transactions have higher fees usually due to no change output being allowed)").arg("CoinJoin"));
         }
     }
 
@@ -423,7 +423,7 @@ void SendCoinsDialog::send(QList<SendCoinsRecipient> recipients)
         if (nInputs >= 10 && m_coin_control->IsUsingCoinJoin()) {
             questionString.append("<br />");
             questionString.append("<span style='" + GUIUtil::getThemedStyleQString(GUIUtil::ThemedStyle::TS_ERROR) + "'>");
-            questionString.append(tr("Warning: Using CoinJoin with %1 or more inputs can harm your privacy and is not recommended").arg(10));
+            questionString.append(tr("Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended").arg("CoinJoin").arg(10));
             questionString.append("</span> ");
         }
     }

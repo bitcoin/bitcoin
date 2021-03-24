@@ -214,7 +214,7 @@ void WalletView::processNewTransaction(const QModelIndex& parent, int start, int
     QSettings settings;
     if (!settings.value("fShowCoinJoinPopups").toBool()) {
         QVariant nType = ttm->data(index, TransactionTableModel::TypeRole);
-        if (nType == TransactionRecord::CoinJoinDenominate ||
+        if (nType == TransactionRecord::CoinJoinMixing ||
             nType == TransactionRecord::CoinJoinCollateralPayment ||
             nType == TransactionRecord::CoinJoinMakeCollaterals ||
             nType == TransactionRecord::CoinJoinCreateDenominations) return;

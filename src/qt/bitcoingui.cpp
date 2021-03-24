@@ -375,7 +375,7 @@ void BitcoinGUI::createActions()
     sendCoinsMenuAction->setToolTip(sendCoinsMenuAction->statusTip());
 
     coinJoinCoinsMenuAction = new QAction("&CoinJoin", this);
-    coinJoinCoinsMenuAction->setStatusTip(tr("Send CoinJoin funds to a Dash address"));
+    coinJoinCoinsMenuAction->setStatusTip(tr("Send %1 funds to a Dash address").arg("CoinJoin"));
     coinJoinCoinsMenuAction->setToolTip(coinJoinCoinsMenuAction->statusTip());
 
     receiveCoinsMenuAction = new QAction(tr("&Receive"), this);
@@ -458,9 +458,9 @@ void BitcoinGUI::createActions()
     showHelpMessageAction->setMenuRole(QAction::NoRole);
     showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Dash command-line options").arg(tr(PACKAGE_NAME)));
 
-    showCoinJoinHelpAction = new QAction(tr("&CoinJoin information"), this);
+    showCoinJoinHelpAction = new QAction(tr("%1 &information").arg("CoinJoin"), this);
     showCoinJoinHelpAction->setMenuRole(QAction::NoRole);
-    showCoinJoinHelpAction->setStatusTip(tr("Show the CoinJoin basic information"));
+    showCoinJoinHelpAction->setStatusTip(tr("Show the %1 basic information").arg("CoinJoin"));
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));

@@ -3758,10 +3758,10 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                     std::set<CInputCoin> setCoinsTmp;
                     if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoinsTmp, nValueIn, coin_control, coin_selection_params, bnb_used)) {
                         if (coin_control.nCoinType == CoinType::ONLY_NONDENOMINATED) {
-                            strFailReason = _("Unable to locate enough CoinJoin non-denominated funds for this transaction.");
+                            strFailReason = _("Unable to locate enough non-denominated funds for this transaction.");
                         } else if (coin_control.nCoinType == CoinType::ONLY_FULLY_MIXED) {
-                            strFailReason = _("Unable to locate enough CoinJoin denominated funds for this transaction.");
-                            strFailReason += " " + _("CoinJoin uses exact denominated amounts to send funds, you might simply need to mix some more coins.");
+                            strFailReason = _("Unable to locate enough mixed funds for this transaction.");
+                            strFailReason += " " + strprintf(_("%s uses exact denominated amounts to send funds, you might simply need to mix some more coins."), "CoinJoin");
                         } else if (nValueIn < nValueToSelect) {
                             strFailReason = _("Insufficient funds.");
                         }

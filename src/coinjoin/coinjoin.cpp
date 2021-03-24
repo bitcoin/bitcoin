@@ -499,7 +499,7 @@ std::string CCoinJoin::GetMessageByID(PoolMessage nMessageID)
     case ERR_QUEUE_FULL:
         return _("Masternode queue is full.");
     case ERR_RECENT:
-        return _("Last CoinJoin was too recent.");
+        return _("Last queue was created too recently.");
     case ERR_SESSION:
         return _("Session not complete!");
     case ERR_MISSING_TX:

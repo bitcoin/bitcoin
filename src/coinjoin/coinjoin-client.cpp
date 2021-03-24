@@ -316,7 +316,7 @@ std::string CCoinJoinClientSession::GetStatus(bool fWaitForBlock)
 
     switch (nState) {
     case POOL_STATE_IDLE:
-        return _("CoinJoin is idle.");
+        return strprintf(_("%s is idle."), "CoinJoin");
     case POOL_STATE_QUEUE:
         if (nStatusMessageProgress % 70 <= 30)
             strSuffix = ".";
@@ -338,7 +338,7 @@ std::string CCoinJoinClientSession::GetStatus(bool fWaitForBlock)
             strSuffix = "...";
         return strprintf(_("Found enough users, signing ( waiting %s )"), strSuffix);
     case POOL_STATE_ERROR:
-        return _("CoinJoin request incomplete:") + " " + strLastMessage + " " + _("Will retry...");
+        return strprintf(_("%s request incomplete: %s"), "CoinJoin", strLastMessage) + " " + _("Will retry...");
     default:
         return strprintf(_("Unknown state: id = %u"), nState);
     }
@@ -982,8 +982,8 @@ bool CCoinJoinClientManager::DoAutomaticDenominating(CConnman& connman, bool fDr
         if (!CheckAutomaticBackup()) return false;
 
         if (WaitForAnotherBlock()) {
-            LogPrint(BCLog::COINJOIN, "CCoinJoinClientManager::DoAutomaticDenominating -- Last successful CoinJoin action was too recent\n");
-            strAutoDenomResult = _("Last successful CoinJoin action was too recent.");
+            LogPrint(BCLog::COINJOIN, "CCoinJoinClientManager::DoAutomaticDenominating -- Last successful action was too recent\n");
+            strAutoDenomResult = _("Last successful action was too recent.");
             return false;
         }
 

@@ -668,11 +668,11 @@ void CoinControlDialog::updateView()
         if (fHideAdditional) {
             strHideButton = tr("Show all coins");
         } else {
-            strHideButton = tr("Hide CoinJoin coins");
+            strHideButton = tr("Hide %1 coins").arg("CoinJoin");
         }
     } else {
         if (fHideAdditional) {
-            strHideButton = tr("Show all CoinJoin coins");
+            strHideButton = tr("Show all %1 coins").arg("CoinJoin");
         } else {
             strHideButton = tr("Show spendable coins only");
         }

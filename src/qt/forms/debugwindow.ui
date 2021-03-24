@@ -520,7 +520,7 @@
          <item>
           <widget class="QLabel" name="WalletSelectorLabel">
            <property name="text">
-            <string>Wallet: </string>
+            <string>Wallet:</string>
            </property>
           </widget>
          </item>

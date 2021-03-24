@@ -96,7 +96,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
         }
 
         if(wtx.is_denominate) {
-            parts.append(TransactionRecord(hash, nTime, TransactionRecord::CoinJoinDenominate, "", -nDebit, nCredit));
+            parts.append(TransactionRecord(hash, nTime, TransactionRecord::CoinJoinMixing, "", -nDebit, nCredit));
             parts.last().involvesWatchAddress = false;   // maybe pass to TransactionRecord as constructor argument
         }
         else if (fAllFromMe && fAllToMe)
@@ -112,7 +112,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
 
             if(mapValue["DS"] == "1")
             {
-                sub.type = TransactionRecord::CoinJoin;
+                sub.type = TransactionRecord::CoinJoinSend;
                 CTxDestination address;
                 if (ExtractDestination(wtx.tx->vout[0].scriptPubKey, address))
                 {
@@ -224,7 +224,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(interfaces::Wal
 
                 if(mapValue["DS"] == "1")
                 {
-                    sub.type = TransactionRecord::CoinJoin;
+                    sub.type = TransactionRecord::CoinJoinSend;
                 }
 
                 CAmount nValue = txout.nValue;
