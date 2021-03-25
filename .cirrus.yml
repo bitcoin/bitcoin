@@ -10,6 +10,12 @@ env:
 cirrus_ephemeral_worker_template_env: &CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
   DANGER_RUN_CI_ON_HOST: "1"  # Containers will be discarded after the run, so there is no risk that the ci scripts modify the system
 
+persistent_worker_template_env: &PERSISTENT_WORKER_TEMPLATE_ENV
+  RESTART_CI_DOCKER_BEFORE_RUN: "1"
+
+persistent_worker_template: &PERSISTENT_WORKER_TEMPLATE
+  persistent_worker: {}  # https://cirrus-ci.org/guide/persistent-workers/
+
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
 base_template: &BASE_TEMPLATE
   skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == ""  # No need to run on the read-only mirror, unless it is a PR. https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
