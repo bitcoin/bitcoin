@@ -85,7 +85,7 @@ FUZZ_TARGET_INIT(txorphan, initialize_orphanage)
             CallOneOf(
                 fuzzed_data_provider,
                 [&] {
-                    orphanage.AddChildrenToWorkSet(*tx, peer_id);
+                    orphanage.AddChildrenToWorkSet(*tx);
                 },
                 [&] {
                     {

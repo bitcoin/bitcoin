@@ -145,17 +145,19 @@ void TxOrphanage::LimitOrphans(unsigned int max_orphans)
     if (nEvicted > 0) LogPrint(BCLog::MEMPOOL, "orphanage overflow, removed %u tx\n", nEvicted);
 }
 
-void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx, NodeId peer)
+void TxOrphanage::AddChildrenToWorkSet(const CTransaction& tx)
 {
     LOCK(m_mutex);
 
-    // Get this peer's work set, emplacing an empty set it didn't exist
-    std::set<uint256>& orphan_work_set = m_peer_work_set.try_emplace(peer).first->second;
 
     for (unsigned int i = 0; i < tx.vout.size(); i++) {
         const auto it_by_prev = m_outpoint_to_orphan_it.find(COutPoint(tx.GetHash(), i));
         if (it_by_prev != m_outpoint_to_orphan_it.end()) {
             for (const auto& elem : it_by_prev->second) {
+                // Get this source peer's work set, emplacing an empty set if it didn't exist
+                // (note: if this peer wasn't still connected, we would have removed the orphan tx already)
+                std::set<uint256>& orphan_work_set = m_peer_work_set.try_emplace(elem->second.fromPeer).first->second;
+                // Add this tx to the work set
                 orphan_work_set.insert(elem->first);
             }
         }

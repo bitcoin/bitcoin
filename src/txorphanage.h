@@ -47,8 +47,8 @@ public:
     /** Limit the orphanage to the given maximum */
     void LimitOrphans(unsigned int max_orphans) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
 
-    /** Add any orphans that list a particular tx as a parent into a peer's work set */
-    void AddChildrenToWorkSet(const CTransaction& tx, NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);
+    /** Add any orphans that list a particular tx as a parent into the from peer's work set */
+    void AddChildrenToWorkSet(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(!m_mutex);;
 
     /** Return how many entries exist in the orphange */
     size_t Size() EXCLUSIVE_LOCKS_REQUIRED(!m_mutex)
@@ -72,7 +72,7 @@ protected:
      *  -maxorphantx/DEFAULT_MAX_ORPHAN_TRANSACTIONS */
     std::map<uint256, OrphanTx> m_orphans GUARDED_BY(m_mutex);
 
-    /** Which peer provided a parent tx of orphans that need to be reconsidered */
+    /** Which peer provided the orphans that need to be reconsidered */
     std::map<NodeId, std::set<uint256>> m_peer_work_set GUARDED_BY(m_mutex);
 
     using OrphanMap = decltype(m_orphans);
