@@ -49,7 +49,7 @@ void CallOneOf(FuzzedDataProvider& fuzzed_data_provider, Callables... callables)
 }
 
 template <typename Collection>
-const auto& PickValue(FuzzedDataProvider& fuzzed_data_provider, const Collection& col)
+auto& PickValue(FuzzedDataProvider& fuzzed_data_provider, Collection& col)
 {
     const auto sz = col.size();
     assert(sz >= 1);
