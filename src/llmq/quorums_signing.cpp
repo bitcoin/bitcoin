@@ -700,6 +700,8 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
     }
 
     std::vector<CRecoveredSigsListener*> listeners;
+    bool bAlreadyKnown = false;
+    bool bAlreadyKnownReturn = false;
     {
         LOCK(cs);
         listeners = recoveredSigsListeners;
@@ -708,7 +710,6 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
 
         LogPrint(BCLog::LLMQ, "CSigningManager::%s -- valid recSig. signHash=%s, id=%s, msgHash=%s\n", __func__,
                 signHash.ToString(), recoveredSig->id   .ToString(), recoveredSig->msgHash.ToString());
-
         if (db.HasRecoveredSigForId(llmqType, recoveredSig->id)) {
             CRecoveredSig otherRecoveredSig;
             if (db.GetRecoveredSigById(llmqType, recoveredSig->id, otherRecoveredSig)) {
@@ -719,27 +720,34 @@ void CSigningManager::ProcessRecoveredSig(NodeId nodeId, const std::shared_ptr<c
                     LogPrintf("CSigningManager::%s -- conflicting recoveredSig for signHash=%s, id=%s, msgHash=%s, otherSignHash=%s\n", __func__,
                               signHash.ToString(), recoveredSig->id.ToString(), recoveredSig->msgHash.ToString(), otherSignHash.ToString());
                 } else {
-                    LOCK(cs_main);
-                    // Looks like we're trying to process a recSig that is already known. This might happen if the same
-                    // recSig comes in through regular QRECSIG messages and at the same time through some other message
-                    // which allowed to reconstruct a recSig (e.g. ISLOCK). In this case, just bail out.
-                    peerman.ForgetTxHash(nodeId, hash);
+                    bAlreadyKnown = true;
+                    bAlreadyKnownReturn = true;
                 }
-                return;
+                if(!bAlreadyKnown) {
+                    return;
+                }
             } else {
-                LOCK(cs_main);
                 // This case is very unlikely. It can only happen when cleanup caused this specific recSig to vanish
                 // between the HasRecoveredSigForId and GetRecoveredSigById call. If that happens, treat it as if we
                 // never had that recSig
-                peerman.ForgetTxHash(nodeId, hash);
+                bAlreadyKnown = true;
             }
         }
-
-        db.WriteRecoveredSig(*recoveredSig);
-
-        pendingReconstructedRecoveredSigs.erase(hash);
+        if(!bAlreadyKnownReturn) {
+            db.WriteRecoveredSig(*recoveredSig);
+            pendingReconstructedRecoveredSigs.erase(hash);
+        }
     }
-
+    if(bAlreadyKnown) {
+        LOCK(cs_main);
+        // Looks like we're trying to process a recSig that is already known. This might happen if the same
+        // recSig comes in through regular QRECSIG messages and at the same time through some other message
+        // which allowed to reconstruct a recSig (e.g. ISLOCK). In this case, just bail out.
+        peerman.ForgetTxHash(nodeId, hash);
+        if(bAlreadyKnownReturn) {
+            return;
+        }
+    }
     if (fMasternodeMode) {
         connman.ForEachNode([&](CNode* pnode) {
             if (pnode->fSendRecSigs) {
