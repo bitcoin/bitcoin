@@ -53,6 +53,12 @@ CreateWalletDialog::CreateWalletDialog(QWidget* parent) :
         }
     });
 
+    connect(ui->blank_wallet_checkbox, &QCheckBox::toggled, [this](bool checked) {
+        if (!checked) {
+          ui->disable_privkeys_checkbox->setChecked(false);
+        }
+    });
+
 #ifndef USE_SQLITE
         ui->descriptor_checkbox->setToolTip(tr("Compiled without sqlite support (required for descriptor wallets)"));
         ui->descriptor_checkbox->setEnabled(false);
