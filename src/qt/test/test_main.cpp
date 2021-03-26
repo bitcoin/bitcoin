@@ -11,7 +11,6 @@
 #include <qt/test/apptests.h>
 #include <qt/test/rpcnestedtests.h>
 #include <qt/test/uritests.h>
-#include <qt/test/compattests.h>
 #include <test/util/setup_common.h>
 
 #ifdef ENABLE_WALLET
@@ -90,10 +89,6 @@ int main(int argc, char* argv[])
     }
     RPCNestedTests test3(app.node());
     if (QTest::qExec(&test3) != 0) {
-        fInvalid = true;
-    }
-    CompatTests test4;
-    if (QTest::qExec(&test4) != 0) {
         fInvalid = true;
     }
 #ifdef ENABLE_WALLET
