@@ -74,7 +74,6 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "init -> txdb -> init"
     "init -> validation -> init"
     "init -> validationinterface -> init"
-    "llmq/quorums -> llmq/quorums_init -> llmq/quorums"
     "llmq/quorums -> llmq/quorums_utils -> llmq/quorums"
     "llmq/quorums_blockprocessor -> net_processing -> llmq/quorums_blockprocessor"
     "llmq/quorums_chainlocks -> llmq/quorums_instantsend -> llmq/quorums_chainlocks"
@@ -112,18 +111,9 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "httprpc -> httpserver -> init -> httprpc"
     "httpserver -> init -> httpserver"
     "init -> llmq/quorums_init -> llmq/quorums_signing_shares -> init"
-    "init -> llmq/quorums_signing -> llmq/quorums -> init"
-    "llmq/quorums -> llmq/quorums_init -> llmq/quorums_chainlocks -> llmq/quorums"
-    "llmq/quorums -> llmq/quorums_init -> llmq/quorums_signing -> llmq/quorums"
-    "llmq/quorums -> llmq/quorums_init -> llmq/quorums_signing_shares -> llmq/quorums"
-    "llmq/quorums_blockprocessor -> net_processing -> llmq/quorums_init -> llmq/quorums_blockprocessor"
-    "llmq/quorums_chainlocks -> net_processing -> llmq/quorums_init -> llmq/quorums_chainlocks"
     "llmq/quorums_chainlocks -> net_processing -> validationinterface -> llmq/quorums_chainlocks"
     "llmq/quorums_chainlocks -> llmq/quorums_instantsend -> wallet/wallet -> llmq/quorums_chainlocks"
     "llmq/quorums_dkgsession -> llmq/quorums_dkgsessionmgr -> llmq/quorums_dkgsessionhandler -> llmq/quorums_dkgsession"
-    "llmq/quorums_dkgsessionhandler -> llmq/quorums_init -> llmq/quorums_dkgsessionmgr -> llmq/quorums_dkgsessionhandler"
-    "llmq/quorums_dkgsessionmgr -> net_processing -> llmq/quorums_init -> llmq/quorums_dkgsessionmgr"
-    "llmq/quorums_init -> llmq/quorums_instantsend -> net_processing -> llmq/quorums_init"
     "llmq/quorums_instantsend -> net_processing -> validationinterface -> llmq/quorums_instantsend"
     "logging -> util -> random -> logging"
     "logging -> util -> sync -> logging"
@@ -142,6 +132,11 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "init -> llmq/quorums_init -> llmq/quorums_instantsend -> wallet/wallet -> init"
     "evo/providertx -> evo/specialtx -> llmq/quorums_blockprocessor -> net_processing -> txmempool -> evo/providertx"
     "governance/governance -> init -> llmq/quorums_init -> llmq/quorums_instantsend -> wallet/wallet -> governance/governance"
+
+    "init -> llmq/quorums_init -> llmq/quorums -> init"
+    "llmq/quorums -> validationinterface -> llmq/quorums_chainlocks -> llmq/quorums"
+    "llmq/quorums -> llmq/quorums_dkgsessionmgr -> llmq/quorums_dkgsessionhandler -> llmq/quorums"
+    "init -> llmq/quorums_init -> llmq/quorums_dkgsessionmgr -> llmq/quorums_dkgsessionhandler -> init"
 )
 
 EXIT_CODE=0

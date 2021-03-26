@@ -6,7 +6,6 @@
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_dkgsession.h>
 #include <llmq/quorums_dkgsessionmgr.h>
-#include <llmq/quorums_init.h>
 #include <llmq/quorums_utils.h>
 
 #include <evo/specialtx.h>

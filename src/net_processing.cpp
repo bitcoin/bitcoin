@@ -49,7 +49,6 @@
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_chainlocks.h>
 #include <llmq/quorums_dkgsessionmgr.h>
-#include <llmq/quorums_init.h>
 #include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
