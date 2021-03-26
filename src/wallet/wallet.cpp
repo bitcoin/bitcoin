@@ -33,7 +33,6 @@
 #include <coinjoin/coinjoin-client.h>
 #include <governance/governance.h>
 #include <keepass.h>
-#include <spork.h>
 
 #include <evo/providertx.h>
 
