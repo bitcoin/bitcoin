@@ -4529,9 +4529,8 @@ static RPCHelpMan upgradewallet()
 #ifdef ENABLE_EXTERNAL_SIGNER
 static RPCHelpMan walletdisplayaddress()
 {
-    return RPCHelpMan{
-        "walletdisplayaddress",
-        "Display address on an external signer for verification.\n",
+    return RPCHelpMan{"walletdisplayaddress",
+        "Display address on an external signer for verification.",
         {
             {"address",     RPCArg::Type::STR, RPCArg::Optional::NO, /* default_val */ "", "bitcoin address to display"},
         },
@@ -4542,7 +4541,8 @@ static RPCHelpMan walletdisplayaddress()
             }
         },
         RPCExamples{""},
-        [](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+        {
             std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
             if (!wallet) return NullUniValue;
             CWallet* const pwallet = wallet.get();
