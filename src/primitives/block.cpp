@@ -14,7 +14,7 @@
 uint256 CBlockHeader::GetHash() const
 {
     std::vector<unsigned char> vch(80);
-    CVectorWriter ss(SER_NETWORK, PROTOCOL_VERSION, vch, 0);
+    CVectorWriter ss(SER_GETHASH, PROTOCOL_VERSION, vch, 0);
     ss << *this;
     return HashX11((const char *)vch.data(), (const char *)vch.data() + vch.size());
 }
