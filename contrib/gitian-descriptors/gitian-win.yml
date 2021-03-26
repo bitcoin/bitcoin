@@ -13,7 +13,6 @@ packages:
 - "autoconf"
 - "libtool"
 - "automake"
-- "cmake"
 - "faketime"
 - "bsdmainutils"
 - "mingw-w64"

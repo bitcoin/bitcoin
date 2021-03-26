@@ -35,7 +35,7 @@ Install the required dependencies: Ubuntu & Debian
 
 For macOS cross compilation:
 
-    sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils cmake imagemagick libcap-dev libz-dev libbz2-dev python-setuptools
+    sudo apt-get install curl librsvg2-bin libtiff-tools bsdmainutils imagemagick libcap-dev libz-dev libbz2-dev python-setuptools
 
 For Win32/Win64 cross compilation:
 

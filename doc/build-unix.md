@@ -12,27 +12,27 @@ Run the following commands to install required packages:
 
 ##### Debian/Ubuntu:
 ```bash
-$ sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils cmake
+$ sudo apt-get install curl build-essential libtool autotools-dev automake pkg-config python3 bsdmainutils
 ```
 
 ##### Fedora:
 ```bash
-$ sudo dnf install gcc-c++ libtool make autoconf automake python3 cmake libstdc++-static patch
+$ sudo dnf install gcc-c++ libtool make autoconf automake python3 libstdc++-static patch
 ```
 
 ##### Arch Linux:
 ```bash
-$ pacman -S base-devel python3 cmake
+$ pacman -S base-devel python3
 ```
 
 ##### Alpine Linux:
 ```sh
-$ sudo apk --update --no-cache add autoconf automake cmake curl g++ gcc libexecinfo-dev libexecinfo-static libtool make perl pkgconfig python3 patch linux-headers
+$ sudo apk --update --no-cache add autoconf automake curl g++ gcc libexecinfo-dev libexecinfo-static libtool make perl pkgconfig python3 patch linux-headers
 ```
 
 ##### FreeBSD/OpenBSD:
 ```bash
-pkg_add gmake cmake libtool
+pkg_add gmake libtool
 pkg_add autoconf # (select highest version, e.g. 2.69)
 pkg_add automake # (select highest version, e.g. 1.15)
 pkg_add python # (select highest version, e.g. 3.5)
