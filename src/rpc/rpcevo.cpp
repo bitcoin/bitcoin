@@ -357,9 +357,9 @@ void protx_register_prepare_help()
 {
     throw std::runtime_error(
             "protx register_prepare \"collateralHash\" collateralIndex \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"feeSourceAddress\" )\n"
-            "\nCreates an unsigned ProTx and returns it. The ProTx must be signed externally with the collateral\n"
-            "key and then passed to \"protx register_submit\". The prepared transaction will also contain inputs\n"
-            "and outputs to cover fees.\n"
+            "\nCreates an unsigned ProTx and a message that must be signed externally\n"
+            "with the private key that corresponds to collateralAddress to prove collateral ownership.\n"
+            "The prepared transaction will also contain inputs and outputs to cover fees.\n"
             "\nArguments:\n"
             + GetHelpString(1, "collateralHash")
             + GetHelpString(2, "collateralIndex")
@@ -372,7 +372,7 @@ void protx_register_prepare_help()
             + GetHelpString(9, "feeSourceAddress") +
             "\nResult:\n"
             "{                             (json object)\n"
-            "  \"tx\" :                      (string) The serialized ProTx in hex format.\n"
+            "  \"tx\" :                      (string) The serialized unsigned ProTx in hex format.\n"
             "  \"collateralAddress\" :       (string) The collateral address.\n"
             "  \"signMessage\" :             (string) The string message that needs to be signed with\n"
             "                              the collateral key.\n"
@@ -386,11 +386,12 @@ void protx_register_submit_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
             "protx register_submit \"tx\" \"sig\"\n"
-            "\nSubmits the specified ProTx to the network. This command will also sign the inputs of the transaction\n"
-            "which were previously added by \"protx register_prepare\" to cover transaction fees\n"
+            "\nCombines the unsigned ProTx and a signature of the signMessage, signs all inputs\n"
+            "which were added to cover fees and submits the resulting transaction to the network.\n"
+            "Note: See \"help protx register_prepare\" for more info about creating a ProTx and a message to sign.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
-            "1. \"tx\"                 (string, required) The serialized transaction previously returned by \"protx register_prepare\"\n"
+            "1. \"tx\"                 (string, required) The serialized unsigned ProTx in hex format.\n"
             "2. \"sig\"                (string, required) The signature signed with the collateral key. Must be in base64 format.\n"
             "\nResult:\n"
             "\"txid\"                  (string) The transaction id.\n"
