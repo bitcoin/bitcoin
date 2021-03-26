@@ -695,7 +695,7 @@ void CSigningManager::ProcessRecoveredSig(const std::shared_ptr<const CRecovered
         auto signHash = CLLMQUtils::BuildSignHash(*recoveredSig);
 
         LogPrint(BCLog::LLMQ, "CSigningManager::%s -- valid recSig. signHash=%s, id=%s, msgHash=%s\n", __func__,
-                signHash.ToString(), recoveredSig->id   .ToString(), recoveredSig->msgHash.ToString());
+                signHash.ToString(), recoveredSig->id.ToString(), recoveredSig->msgHash.ToString());
 
         if (db.HasRecoveredSigForId(llmqType, recoveredSig->id)) {
             CRecoveredSig otherRecoveredSig;

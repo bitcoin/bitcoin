@@ -71,12 +71,12 @@ void WalletInit::AddWalletOptions() const
     gArgs.AddArg("-spendzeroconfchange", strprintf("Spend unconfirmed change when sending transactions (default: %u)", DEFAULT_SPEND_ZEROCONF_CHANGE), false, OptionsCategory::WALLET);
     gArgs.AddArg("-upgradewallet", "Upgrade wallet to latest format on startup", false, OptionsCategory::WALLET);
     gArgs.AddArg("-wallet=<path>", "Specify wallet database path. Can be specified multiple times to load multiple wallets. Path is interpreted relative to <walletdir> if it is not absolute, and will be created if it does not exist (as a directory containing a wallet.dat file and log files). For backwards compatibility this will also accept names of existing data files in <walletdir>.)", false, OptionsCategory::WALLET);
+    gArgs.AddArg("-walletbackupsdir=<dir>", "Specify full path to directory for automatic wallet backups (must exist)", false, OptionsCategory::WALLET);
     gArgs.AddArg("-walletbroadcast", strprintf("Make the wallet broadcast transactions (default: %u)", DEFAULT_WALLETBROADCAST), false, OptionsCategory::WALLET);
     gArgs.AddArg("-walletdir=<dir>", "Specify directory to hold wallets (default: <datadir>/wallets if it exists, otherwise <datadir>)", false, OptionsCategory::WALLET);
     gArgs.AddArg("-walletnotify=<cmd>", "Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)", false, OptionsCategory::WALLET);
     gArgs.AddArg("-zapwallettxes=<mode>", "Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup"
                                                         " (1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)", false, OptionsCategory::WALLET);
-    gArgs.AddArg("-walletbackupsdir=<dir>", "Specify full path to directory for automatic wallet backups (must exist)", false, OptionsCategory::WALLET);
 
     gArgs.AddArg("-discardfee=<amt>", strprintf("The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). "
                                                                 "Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target",
@@ -96,9 +96,9 @@ void WalletInit::AddWalletOptions() const
 
     gArgs.AddArg("-keepass", strprintf("Use KeePass 2 integration using KeePassHttp plugin (default: %u)", 0), false, OptionsCategory::WALLET_KEEPASS);
     gArgs.AddArg("-keepassid=<id>", "KeePassHttp id for the established association", false, OptionsCategory::WALLET_KEEPASS);
+    gArgs.AddArg("-keepasskey=<key>", "KeePassHttp key for AES encrypted communication with KeePass", false, OptionsCategory::WALLET_KEEPASS);
     gArgs.AddArg("-keepassname=<name>", "Name to construct url for KeePass entry that stores the wallet passphrase", false, OptionsCategory::WALLET_KEEPASS);
     gArgs.AddArg("-keepassport=<port>", strprintf("Connect to KeePassHttp on port <port> (default: %u)", DEFAULT_KEEPASS_HTTP_PORT), false, OptionsCategory::WALLET_KEEPASS);
-    gArgs.AddArg("-keepasskey=<key>", "KeePassHttp key for AES encrypted communication with KeePass", false, OptionsCategory::WALLET_KEEPASS);
 
     gArgs.AddArg("-enablecoinjoin", strprintf("Enable use of CoinJoin for funds stored in this wallet (0-1, default: %u)", 0), false, OptionsCategory::WALLET_COINJOIN);
     gArgs.AddArg("-coinjoinamount=<n>", strprintf("Target CoinJoin balance (%u-%u, default: %u)", MIN_COINJOIN_AMOUNT, MAX_COINJOIN_AMOUNT, DEFAULT_COINJOIN_AMOUNT), false, OptionsCategory::WALLET_COINJOIN);

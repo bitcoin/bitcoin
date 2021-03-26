@@ -287,7 +287,7 @@ UniValue quorum_memberof(const JSONRPCRequest& request)
 void quorum_sign_help()
 {
     throw std::runtime_error(
-            "quorum sign llmqType \"id\" \"msgHash\" ( \"quorumHash\" )\n"
+            "quorum sign llmqType \"id\" \"msgHash\" ( \"quorumHash\" submit )\n"
             "Threshold-sign a message\n"
             "\nArguments:\n"
             "1. llmqType              (int, required) LLMQ type.\n"
@@ -616,6 +616,7 @@ UniValue quorum_getdata(const JSONRPCRequest& request)
             "  getrecsig         - Get a recovered signature\n"
             "  isconflicting     - Test if a conflict exists\n"
             "  selectquorum      - Return the quorum that would/should sign a request\n"
+            "  getdata           - Request quorum data from other masternodes in the quorum\n"
     );
 }
 

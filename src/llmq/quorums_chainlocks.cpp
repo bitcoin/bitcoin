@@ -316,7 +316,7 @@ void CChainLocksHandler::TrySignChainTip()
             }
             if (HasChainLock(pindexWalk->nHeight, pindexWalk->GetBlockHash())) {
                 // we don't care about islocks for TXs that are ChainLocked already
-                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- chainlock at height %d \n", __func__, pindexWalk->nHeight);
+                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- chainlock at height %d\n", __func__, pindexWalk->nHeight);
                 break;
             }
 

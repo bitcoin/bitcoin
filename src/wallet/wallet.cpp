@@ -221,7 +221,7 @@ void CWallet::DeriveNewChildKey(WalletBatch &batch, const CKeyMetadata& metadata
     }
 
     if (!DecryptHDChain(hdChainTmp))
-        throw std::runtime_error(std::string(__func__) + ": DecryptHDChainSeed failed");
+        throw std::runtime_error(std::string(__func__) + ": DecryptHDChain failed");
     // make sure seed matches this chain
     if (hdChainTmp.GetID() != hdChainTmp.GetSeedHash())
         throw std::runtime_error(std::string(__func__) + ": Wrong HD chain!");
@@ -300,7 +300,7 @@ bool CWallet::GetKey(const CKeyID &address, CKey& keyOut) const
         if (!GetHDChain(hdChainCurrent))
             throw std::runtime_error(std::string(__func__) + ": GetHDChain failed");
         if (!DecryptHDChain(hdChainCurrent))
-            throw std::runtime_error(std::string(__func__) + ": DecryptHDChainSeed failed");
+            throw std::runtime_error(std::string(__func__) + ": DecryptHDChain failed");
         // make sure seed matches this chain
         if (hdChainCurrent.GetID() != hdChainCurrent.GetSeedHash())
             throw std::runtime_error(std::string(__func__) + ": Wrong HD chain!");
@@ -4033,7 +4033,7 @@ bool CWallet::CommitTransaction(CTransactionRef tx, mapValue_t mapValue, std::ve
         wtxNew.fTimeReceivedIsTxTime = true;
         wtxNew.fFromMe = true;
 
-        LogPrintf("CommitTransaction:\n%s\n", wtxNew.tx->ToString());
+        LogPrintf("CommitTransaction:\n%s", wtxNew.tx->ToString()); /* Continued */
         {
             // Take key pair from key pool so it won't be used again
             reservekey.KeepKey();

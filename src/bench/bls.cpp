@@ -96,7 +96,6 @@ static void BLS_Sign_Normal(benchmark::State& state)
 {
     CBLSSecretKey secKey;
     secKey.MakeNewKey();
-    CBLSPublicKey pubKey = secKey.GetPublicKey();
 
     // Benchmark.
     while (state.KeepRunning()) {

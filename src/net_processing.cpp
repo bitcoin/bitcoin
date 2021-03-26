@@ -3732,8 +3732,8 @@ bool PeerLogicValidation::ProcessMessages(CNode* pfrom, std::atomic<bool>& inter
         else
         {
             PrintExceptionContinue(std::current_exception(), "ProcessMessages()");
-            }
-        } catch (...) {
+        }
+    } catch (...) {
         PrintExceptionContinue(std::current_exception(), "ProcessMessages()");
     }
 

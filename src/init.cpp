@@ -841,7 +841,7 @@ void ThreadImport(std::vector<fs::path> vImportFiles)
 
     {
         // Get all UTXOs for each MN collateral in one go so that we can fill coin cache early
-        // and reduce further locking overhead for cs_main in other parts of code inclluding GUI
+        // and reduce further locking overhead for cs_main in other parts of code including GUI
         LogPrintf("Filling coin cache with masternode UTXOs...\n");
         LOCK(cs_main);
         int64_t nStart = GetTimeMillis();
@@ -1461,7 +1461,7 @@ bool AppInitParameterInteraction()
     }
 
     if (gArgs.IsArgSet("-dip3params")) {
-        // Allow overriding budget parameters for testing
+        // Allow overriding dip3 parameters for testing
         if (!chainparams.MineBlocksOnDemand()) {
             return InitError("DIP3 parameters may only be overridden on regtest.");
         }

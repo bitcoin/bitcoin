@@ -246,7 +246,6 @@ uint64_t nPruneTarget = 0;
 int64_t nMaxTipAge = DEFAULT_MAX_TIP_AGE;
 
 std::atomic<bool> fDIP0001ActiveAtTip{false};
-std::atomic<bool> fDIP0003ActiveAtTip{false};
 
 uint256 hashAssumeValid;
 arith_uint256 nMinimumChainWork;
@@ -2532,7 +2531,7 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
         }
         int64_t nMempoolSizeMax = gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
         int64_t cacheSize = pcoinsTip->DynamicMemoryUsage();
-    cacheSize += evoDb->GetMemoryUsage();
+        cacheSize += evoDb->GetMemoryUsage();
         int64_t nTotalSpace = nCoinCacheUsage + std::max<int64_t>(nMempoolSizeMax - nMempoolUsage, 0);
         // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
         bool fCacheLarge = mode == FlushStateMode::PERIODIC && cacheSize > std::max((9 * nTotalSpace) / 10, nTotalSpace - MAX_BLOCK_COINSDB_USAGE * 1024 * 1024);
@@ -2586,9 +2585,9 @@ bool static FlushStateToDisk(const CChainParams& chainparams, CValidationState &
             // Flush the chainstate (which may refer to block index entries).
             if (!pcoinsTip->Flush())
                 return AbortNode(state, "Failed to write to coin database");
-        if (!evoDb->CommitRootTransaction()) {
-            return AbortNode(state, "Failed to commit EvoDB");
-        }
+            if (!evoDb->CommitRootTransaction()) {
+                return AbortNode(state, "Failed to commit EvoDB");
+            }
             nLastFlush = nNow;
         }
     }
