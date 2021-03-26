@@ -576,8 +576,6 @@ std::string ArgsManager::GetHelpMessage()
                 usage += HelpMessageGroup("Indexing options:");
             else if (last_cat == OptionsCategory::MASTERNODE)
                 usage += HelpMessageGroup("Masternode options:");
-            else if (last_cat == OptionsCategory::INSTANTSEND)
-                usage += HelpMessageGroup("InstantSend options:");
             else if (last_cat == OptionsCategory::STATSD)
                 usage += HelpMessageGroup("Statsd options:");
             else if (last_cat == OptionsCategory::ZMQ)

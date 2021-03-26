@@ -64,6 +64,7 @@ void WalletInit::AddWalletOptions() const
 {
     gArgs.AddArg("-createwalletbackups=<n>", strprintf("Number of automatic wallet backups (default: %u)", nWalletBackups), false, OptionsCategory::WALLET);
     gArgs.AddArg("-disablewallet", "Do not load the wallet and disable wallet RPC calls", false, OptionsCategory::WALLET);
+    gArgs.AddArg("-instantsendnotify=<cmd>", "Execute command when a wallet InstantSend transaction is successfully locked (%s in cmd is replaced by TxID)", false, OptionsCategory::WALLET);
     gArgs.AddArg("-keypool=<n>", strprintf("Set key pool size to <n> (default: %u)", DEFAULT_KEYPOOL_SIZE), false, OptionsCategory::WALLET);
     gArgs.AddArg("-rescan=<mode>", "Rescan the block chain for missing wallet transactions on startup"
                                             " (1 = start from wallet creation time, 2 = start from genesis block)", false, OptionsCategory::WALLET);

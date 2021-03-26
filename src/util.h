@@ -146,7 +146,6 @@ enum class OptionsCategory
     CONNECTION,
     INDEXING,
     MASTERNODE,
-    INSTANTSEND,
     STATSD,
     WALLET,
     WALLET_FEE,
