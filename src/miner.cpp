@@ -436,16 +436,18 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
 
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev)
 {
-    unsigned int nExtraNonce{0};
     static uint256 hashPrevBlock;
     if (hashPrevBlock != pblock->hashPrevBlock)
     {
         hashPrevBlock = pblock->hashPrevBlock;
     }
-    ++nExtraNonce;
-    unsigned int nHeight = pindexPrev->nHeight+1; // Height first in coinbase required for block.version=2
+
     CMutableTransaction txCoinbase(*pblock->vtx[0]);
-    txCoinbase.vin[0].scriptSig = (CScript() << nHeight << CScriptNum(nExtraNonce));
+
+    // Coinbase scriptSig contains height first (required for block.version=2)
+    // followed by an extra nonce (1).
+    unsigned int nHeight = pindexPrev->nHeight + 1; 
+    txCoinbase.vin[0].scriptSig = (CScript() << nHeight << CScriptNum(1));
     assert(txCoinbase.vin[0].scriptSig.size() <= 100);
 
     pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
