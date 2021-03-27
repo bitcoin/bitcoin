@@ -72,8 +72,8 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
     for (const CMutableTransaction& tx : txns) {
         block.vtx.push_back(MakeTransactionRef(tx));
     }
-    // IncrementExtraNonce creates a valid coinbase and merkleRoot
-    IncrementExtraNonce(&block, prev);
+    // SetCoinbaseScriptSig creates a valid coinbase and merkleRoot
+    SetCoinbaseScriptSig(&block, prev);
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 

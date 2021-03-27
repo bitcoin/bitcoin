@@ -111,7 +111,7 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
 
     {
         LOCK(cs_main);
-        IncrementExtraNonce(&block, ::ChainActive().Tip());
+        SetCoinbaseScriptSig(&block, ::ChainActive().Tip());
     }
 
     CChainParams chainparams(Params());

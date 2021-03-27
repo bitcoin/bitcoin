@@ -434,7 +434,7 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
     }
 }
 
-void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev)
+void SetCoinbaseScriptSig(CBlock* pblock, const CBlockIndex* pindexPrev)
 {
     CMutableTransaction txCoinbase(*pblock->vtx[0]);
 
