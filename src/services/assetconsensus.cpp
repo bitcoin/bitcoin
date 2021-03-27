@@ -368,13 +368,16 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
     if(nOut < 0) {
         return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-output", bSanityCheck);
     }
-    // fill notary signatures for every asset that requires it
-    for(const auto& vecOut: tx.voutAssets) {
-        // get asset
+    // fill notary signatures for every unique base asset that requires it
+    std::unordered_map<uint64_t, const CAssetOut*> mapBaseAssets;
+    for(const CAssetOut& vecOut: tx.voutAssets) {
+        mapBaseAssets.try_emplace(GetBaseAssetID(vecOut.key), &vecOut);
+    }
+    for(const auto &vecOutPair: mapBaseAssets) {
         std::vector<unsigned char> vchNotaryKeyID;
         // if asset has notary signature requirement set
-        if(GetAssetNotaryKeyID(GetBaseAssetID(vecOut.key), vchNotaryKeyID)) {
-            if (!CHashSigner::VerifyHash(GetNotarySigHash(tx, vecOut), CKeyID(uint160(vchNotaryKeyID)), vecOut.vchNotarySig)) {
+        if(GetAssetNotaryKeyID(vecOutPair.first, vchNotaryKeyID)) {
+            if (!CHashSigner::VerifyHash(GetNotarySigHash(tx, *vecOutPair.second), CKeyID(uint160(vchNotaryKeyID)), vecOutPair.second->vchNotarySig)) {
                 return FormatSyscoinErrorMessage(state, "assetallocation-notary-sig", fJustCheck);
             }
         }
