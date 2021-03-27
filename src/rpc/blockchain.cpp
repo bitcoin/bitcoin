@@ -1214,10 +1214,8 @@ static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name,
 static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // For BIP9 deployments.
-    // Deployments (e.g. testdummy) with timeout value before Jan 1, 2009 are hidden.
-    // A timeout value of 0 guarantees a softfork will never be activated.
-    // This is used when merging logic to implement a proposed softfork without a specified deployment schedule.
-    if (consensusParams.vDeployments[id].nTimeout <= 1230768000) return;
+    // Deployments that are never active are hidden.
+    if (consensusParams.vDeployments[id].nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE) return;
 
     UniValue bip9(UniValue::VOBJ);
     const ThresholdState thresholdState = VersionBitsTipState(consensusParams, id);

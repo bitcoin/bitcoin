@@ -160,13 +160,12 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     } else {
         if (fuzzed_data_provider.ConsumeBool()) {
             start_time = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
-            timeout = Consensus::BIP9Deployment::NO_TIMEOUT;
             always_active_test = true;
         } else {
-            start_time = 1199145601; // January 1, 2008
-            timeout = 1230767999;    // December 31, 2008
+            start_time = Consensus::BIP9Deployment::NEVER_ACTIVE;
             never_active_test = true;
         }
+        timeout = fuzzed_data_provider.ConsumeBool() ? Consensus::BIP9Deployment::NO_TIMEOUT : fuzzed_data_provider.ConsumeIntegral<int64_t>();
     }
     int min_activation = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, period * max_periods);
 
@@ -318,7 +317,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(exp_state == ThresholdState::ACTIVE || exp_state == ThresholdState::LOCKED_IN);
         break;
     case ThresholdState::FAILED:
-        assert(current_block->GetMedianTimePast() >= checker.m_end);
+        assert(never_active_test || current_block->GetMedianTimePast() >= checker.m_end);
         assert(exp_state != ThresholdState::LOCKED_IN && exp_state != ThresholdState::ACTIVE);
         break;
     default:
@@ -330,25 +329,19 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(state == ThresholdState::ACTIVE || state == ThresholdState::FAILED);
     }
 
-    // "always active" has additional restrictions
     if (always_active_test) {
+        // "always active" has additional restrictions
         assert(state == ThresholdState::ACTIVE);
         assert(exp_state == ThresholdState::ACTIVE);
         assert(since == 0);
+    } else if (never_active_test) {
+        // "never active" does too
+        assert(state == ThresholdState::FAILED);
+        assert(exp_state == ThresholdState::FAILED);
+        assert(since == 0);
     } else {
-        // except for always active, the initial state is always DEFINED
+        // for signalled deployments, the initial state is always DEFINED
         assert(since > 0 || state == ThresholdState::DEFINED);
         assert(exp_since > 0 || exp_state == ThresholdState::DEFINED);
-    }
-
-    // "never active" does too
-    if (never_active_test) {
-        assert(state == ThresholdState::FAILED);
-        assert(since == period);
-        if (exp_since == 0) {
-            assert(exp_state == ThresholdState::DEFINED);
-        } else {
-            assert(exp_state == ThresholdState::FAILED);
-        }
     }
 }

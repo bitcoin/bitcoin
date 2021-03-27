@@ -43,6 +43,11 @@ struct BIP9Deployment {
      *  process (which takes at least 3 BIP9 intervals). Only tests that specifically test the
      *  behaviour during activation cannot use this. */
     static constexpr int64_t ALWAYS_ACTIVE = -1;
+
+    /** Special value for nStartTime indicating that the deployment is never active.
+     *  This is useful for integrating the code changes for a new feature
+     *  prior to deploying it on some or all networks. */
+    static constexpr int64_t NEVER_ACTIVE = -2;
 };
 
 /**
