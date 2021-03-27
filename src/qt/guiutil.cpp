@@ -902,4 +902,15 @@ QString MakeHtmlLink(const QString& source, const QString& link)
         QLatin1String("<a href=\"") % link % QLatin1String("\">") % link % QLatin1String("</a>"));
 }
 
+void PrintSlotException(
+    const std::exception* exception,
+    const QObject* sender,
+    const QObject* receiver)
+{
+    std::string description = sender->metaObject()->className();
+    description += "->";
+    description += receiver->metaObject()->className();
+    PrintExceptionContinue(exception, description.c_str());
+}
+
 } // namespace GUIUtil
