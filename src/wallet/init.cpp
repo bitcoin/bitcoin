@@ -16,6 +16,7 @@
 #include <wallet/walletutil.h>
 
 #include <coinjoin/coinjoin-client.h>
+#include <coinjoin/coinjoin-client-options.h>
 
 #include <functional>
 

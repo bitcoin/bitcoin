@@ -15,7 +15,7 @@
 #include <qt/utilitydialog.h>
 #include <qt/walletmodel.h>
 
-#include <coinjoin/coinjoin-client.h>
+#include <coinjoin/coinjoin-client-options.h>
 
 #include <QAbstractItemDelegate>
 #include <QPainter>

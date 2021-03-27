@@ -137,6 +137,7 @@ BITCOIN_CORE_H = \
   clientversion.h \
   coinjoin/coinjoin.h \
   coinjoin/coinjoin-client.h \
+  coinjoin/coinjoin-client-options.h \
   coinjoin/coinjoin-server.h \
   coinjoin/coinjoin-util.h \
   coins.h \
@@ -393,6 +394,7 @@ libdash_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libdash_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libdash_wallet_a_SOURCES = \
   coinjoin/coinjoin-client.cpp \
+  coinjoin/coinjoin-client-options.cpp \
   coinjoin/coinjoin-util.cpp \
   interfaces/wallet.cpp \
   keepass.cpp \
