@@ -108,11 +108,10 @@ static RPCHelpMan getnetworkhashps()
 static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& max_tries, uint256& block_hash)
 {
     block_hash.SetNull();
-    unsigned int extra_nonce{0};
 
     {
         LOCK(cs_main);
-        IncrementExtraNonce(&block, ::ChainActive().Tip(), extra_nonce);
+        IncrementExtraNonce(&block, ::ChainActive().Tip());
     }
 
     CChainParams chainparams(Params());
