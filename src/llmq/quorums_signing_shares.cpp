@@ -1014,16 +1014,9 @@ void CSigSharesManager::CollectSigSharesToSend(std::unordered_map<NodeId, std::u
     }
 }
 
-void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<NodeId, std::vector<CSigShare>>& sigSharesToSend, const std::vector<CNode*>& vNodes)
+void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<NodeId, std::vector<CSigShare>>& sigSharesToSend, const std::unordered_map<uint256, NodeId, StaticSaltedHasher> &proTxToNode)
 {
     AssertLockHeld(cs);
-    std::unordered_map<uint256, CNode*> proTxToNode;
-    for (const auto& pnode : vNodes) {
-        if (pnode->verifiedProRegTxHash.IsNull()) {
-            continue;
-        }
-        proTxToNode.try_emplace(pnode->verifiedProRegTxHash, pnode);
-    }
     auto curTime = GetTime<std::chrono::milliseconds>().count();
 
     for (auto& p : signedSessions) {
@@ -1050,7 +1043,7 @@ void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<No
                 continue;
             }
 
-            auto& m = sigSharesToSend[it->second->GetId()];
+            auto& m = sigSharesToSend[it->second];
             m.emplace_back(p.second.sigShare);
         }
     }
@@ -1138,12 +1131,20 @@ bool CSigSharesManager::SendMessages()
 
     std::vector<CNode*> vNodesCopy;
     connman.CopyNodeVector(vNodesCopy);
+    std::unordered_map<uint256, NodeId, StaticSaltedHasher> proTxToNode;
+    for (const auto& pnode : vNodesCopy) {
+        LOCK(pnode->cs_mnauth);
+        if (pnode->verifiedProRegTxHash.IsNull()) {
+            continue;
+        }
+        proTxToNode.try_emplace(pnode->verifiedProRegTxHash, pnode->GetId());
+    }
     {
         LOCK(cs);
         CollectSigSharesToRequest(sigSharesToRequest);
         CollectSigSharesToSend(sigShareBatchesToSend);
         CollectSigSharesToAnnounce(sigSharesToAnnounce);
-        CollectSigSharesToSendConcentrated(sigSharesToSend, vNodesCopy);
+        CollectSigSharesToSendConcentrated(sigSharesToSend, proTxToNode);
 
         for (auto& p : sigSharesToRequest) {
             for (auto& p2 : p.second) {
