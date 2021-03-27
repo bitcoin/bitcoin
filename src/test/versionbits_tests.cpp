@@ -100,7 +100,7 @@ public:
         while (vpblock.size() < height) {
             CBlockIndex* pindex = new CBlockIndex();
             pindex->nHeight = vpblock.size();
-            pindex->pprev = vpblock.size() > 0 ? vpblock.back() : nullptr;
+            pindex->pprev = Tip();
             pindex->nTime = nTime;
             pindex->nVersion = nVersion;
             pindex->BuildSkip();
@@ -110,13 +110,14 @@ public:
     }
 
     VersionBitsTester& TestStateSinceHeight(int height) {
+        const CBlockIndex* tip = Tip();
         for (int i = 0; i < CHECKERS; i++) {
             if (InsecureRandBits(i) == 0) {
-                BOOST_CHECK_MESSAGE(checker[i].GetStateSinceHeightFor(vpblock.empty() ? nullptr : vpblock.back()) == height, strprintf("Test %i for StateSinceHeight", num));
-                BOOST_CHECK_MESSAGE(checker_always[i].GetStateSinceHeightFor(vpblock.empty() ? nullptr : vpblock.back()) == 0, strprintf("Test %i for StateSinceHeight (always active)", num));
+                BOOST_CHECK_MESSAGE(checker[i].GetStateSinceHeightFor(tip) == height, strprintf("Test %i for StateSinceHeight", num));
+                BOOST_CHECK_MESSAGE(checker_always[i].GetStateSinceHeightFor(tip) == 0, strprintf("Test %i for StateSinceHeight (always active)", num));
 
                 // never active may go from DEFINED -> FAILED at the first period
-                const auto never_height = checker_never[i].GetStateSinceHeightFor(vpblock.empty() ? nullptr : vpblock.back());
+                const auto never_height = checker_never[i].GetStateSinceHeightFor(tip);
                 BOOST_CHECK_MESSAGE(never_height == 0 || never_height == checker_never[i].Period(paramsDummy), strprintf("Test %i for StateSinceHeight (never active)", num));
             }
         }
@@ -125,9 +126,9 @@ public:
     }
 
     VersionBitsTester& TestState(ThresholdState exp) {
+        const CBlockIndex* pindex = Tip();
         for (int i = 0; i < CHECKERS; i++) {
             if (InsecureRandBits(i) == 0) {
-                const CBlockIndex* pindex = vpblock.empty() ? nullptr : vpblock.back();
                 ThresholdState got = checker[i].GetStateFor(pindex);
                 ThresholdState got_always = checker_always[i].GetStateFor(pindex);
                 ThresholdState got_never = checker_never[i].GetStateFor(pindex);
@@ -149,7 +150,7 @@ public:
     VersionBitsTester& TestActive() { return TestState(ThresholdState::ACTIVE); }
     VersionBitsTester& TestFailed() { return TestState(ThresholdState::FAILED); }
 
-    CBlockIndex * Tip() { return vpblock.size() ? vpblock.back() : nullptr; }
+    CBlockIndex* Tip() { return vpblock.empty() ? nullptr : vpblock.back(); }
 };
 
 BOOST_FIXTURE_TEST_SUITE(versionbits_tests, TestingSetup)
@@ -217,7 +218,10 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
                            .Mine(6000, TestTime(20000), 0).TestFailed().TestStateSinceHeight(6000)
                            .Mine(7000, TestTime(20000), 0x100).TestFailed().TestStateSinceHeight(6000);
     }
+}
 
+BOOST_AUTO_TEST_CASE(versionbits_sanity)
+{
     // Sanity checks of version bit deployments
     const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
     const Consensus::Params &mainnetParams = chainParams->GetConsensus();
@@ -271,7 +275,7 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
 
     int64_t nTime = nStartTime;
 
-    CBlockIndex *lastBlock = nullptr;
+    const CBlockIndex *lastBlock = nullptr;
 
     // Before MedianTimePast of the chain has crossed nStartTime, the bit
     // should not be set.
