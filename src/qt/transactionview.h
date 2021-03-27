@@ -99,7 +99,7 @@ private Q_SLOTS:
     void openThirdPartyTxUrl(QString url);
     void updateWatchOnlyColumn(bool fHaveWatchOnly);
     void abandonTx();
-    void bumpFee();
+    void bumpFee(bool checked);
 
 Q_SIGNALS:
     void doubleClicked(const QModelIndex&);
