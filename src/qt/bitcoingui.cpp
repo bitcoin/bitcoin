@@ -654,7 +654,7 @@ void BitcoinGUI::setWalletController(WalletController* wallet_controller)
     m_open_wallet_action->setEnabled(true);
     m_open_wallet_action->setMenu(m_open_wallet_menu);
 
-    connect(wallet_controller, &WalletController::walletAdded, this, &BitcoinGUI::addWallet);
+    GUIUtil::ExceptionSafeConnect(wallet_controller, &WalletController::walletAdded, this, &BitcoinGUI::addWallet);
     connect(wallet_controller, &WalletController::walletRemoved, this, &BitcoinGUI::removeWallet);
 
     for (WalletModel* wallet_model : m_wallet_controller->getOpenWallets()) {
