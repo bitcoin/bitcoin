@@ -436,12 +436,6 @@ void BlockAssembler::addPackageTxs(int &nPackagesSelected, int &nDescendantsUpda
 
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev)
 {
-    static uint256 hashPrevBlock;
-    if (hashPrevBlock != pblock->hashPrevBlock)
-    {
-        hashPrevBlock = pblock->hashPrevBlock;
-    }
-
     CMutableTransaction txCoinbase(*pblock->vtx[0]);
 
     // Coinbase scriptSig contains height first (required for block.version=2)
