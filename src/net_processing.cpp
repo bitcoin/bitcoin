@@ -320,6 +320,11 @@ private:
      *  mark the peer to be disconnected if a ping has timed out. */
     void MaybeSendPing(CNode& node_to, Peer& peer);
 
+    /** Maybe set a local address for announcement to the peer. We won't announce
+     *  any local address if we are in IBD or if the peer is block-relay-only. */
+    void MaybeAnnounceLocalAddress(CNode& pto, const std::chrono::microseconds current_time)
+        EXCLUSIVE_LOCKS_REQUIRED(cs_main, pto.cs_sendProcessing);
+
     const CChainParams& m_chainparams;
     CConnman& m_connman;
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
@@ -4191,24 +4196,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         // Address refresh broadcast
         auto current_time = GetTime<std::chrono::microseconds>();
 
-        if (fListen && pto->RelayAddrsWithConn() &&
-            !m_chainman.ActiveChainstate().IsInitialBlockDownload() &&
-            pto->m_next_local_addr_send < current_time) {
-            // If we've sent before, clear the bloom filter for the peer, so that our
-            // self-announcement will actually go out.
-            // This might be unnecessary if the bloom filter has already rolled
-            // over since our last self-announcement, but there is only a small
-            // bandwidth cost that we can incur by doing this (which happens
-            // once a day on average).
-            if (pto->m_next_local_addr_send != 0us) {
-                pto->m_addr_known->reset();
-            }
-            if (std::optional<CAddress> local_addr = GetLocalAddrForPeer(pto)) {
-                FastRandomContext insecure_rand;
-                pto->PushAddress(*local_addr, insecure_rand);
-            }
-            pto->m_next_local_addr_send = PoissonNextSend(current_time, AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL);
-        }
+        MaybeAnnounceLocalAddress(*pto, current_time);
 
         //
         // Message: addr
@@ -4725,4 +4713,27 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         }
     } // release cs_main
     return true;
+}
+
+void PeerManagerImpl::MaybeAnnounceLocalAddress(CNode& pto, const std::chrono::microseconds current_time)
+{
+    AssertLockHeld(cs_main);
+    if (fListen && pto.RelayAddrsWithConn() &&
+        !m_chainman.ActiveChainstate().IsInitialBlockDownload() &&
+        pto.m_next_local_addr_send < current_time) {
+        // If we've sent before, clear the bloom filter for the peer, so that our
+        // self-announcement will actually go out.
+        // This might be unnecessary if the bloom filter has already rolled
+        // over since our last self-announcement, but there is only a small
+        // bandwidth cost that we can incur by doing this (which happens
+        // once a day on average).
+        if (pto.m_next_local_addr_send != 0us) {
+            pto.m_addr_known->reset();
+        }
+        if (std::optional<CAddress> local_addr = GetLocalAddrForPeer(&pto)) {
+            FastRandomContext insecure_rand;
+            pto.PushAddress(*local_addr, insecure_rand);
+        }
+        pto.m_next_local_addr_send = PoissonNextSend(current_time, AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL);
+    }
 }
