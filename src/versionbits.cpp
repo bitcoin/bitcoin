@@ -18,6 +18,11 @@ ThresholdState AbstractThresholdConditionChecker::GetStateFor(const CBlockIndex*
         return ThresholdState::ACTIVE;
     }
 
+    // Check if this deployment is never active.
+    if (nTimeStart == Consensus::BIP9Deployment::NEVER_ACTIVE) {
+        return ThresholdState::FAILED;
+    }
+
     // A block's state is always the same as that of the first of its period, so it is computed based on a pindexPrev whose height equals a multiple of nPeriod - 1.
     if (pindexPrev != nullptr) {
         pindexPrev = pindexPrev->GetAncestor(pindexPrev->nHeight - ((pindexPrev->nHeight + 1) % nPeriod));
@@ -129,7 +134,7 @@ BIP9Stats AbstractThresholdConditionChecker::GetStateStatisticsFor(const CBlockI
 int AbstractThresholdConditionChecker::GetStateSinceHeightFor(const CBlockIndex* pindexPrev, const Consensus::Params& params, ThresholdConditionCache& cache) const
 {
     int64_t start_time = BeginTime(params);
-    if (start_time == Consensus::BIP9Deployment::ALWAYS_ACTIVE) {
+    if (start_time == Consensus::BIP9Deployment::ALWAYS_ACTIVE || start_time == Consensus::BIP9Deployment::NEVER_ACTIVE) {
         return 0;
     }
 

@@ -59,8 +59,7 @@ public:
 class TestNeverActiveConditionChecker : public TestConditionChecker
 {
 public:
-    int64_t BeginTime(const Consensus::Params& params) const override { return 0; }
-    int64_t EndTime(const Consensus::Params& params) const override { return 1230768000; }
+    int64_t BeginTime(const Consensus::Params& params) const override { return Consensus::BIP9Deployment::NEVER_ACTIVE; }
 };
 
 #define CHECKERS 6
@@ -134,10 +133,7 @@ public:
                 BOOST_CHECK_MESSAGE(checker[i].GetStateSinceHeightFor(tip) == height, strprintf("Test %i for StateSinceHeight", num));
                 BOOST_CHECK_MESSAGE(checker_delayed[i].GetStateSinceHeightFor(tip) == height_delayed, strprintf("Test %i for StateSinceHeight (delayed)", num));
                 BOOST_CHECK_MESSAGE(checker_always[i].GetStateSinceHeightFor(tip) == 0, strprintf("Test %i for StateSinceHeight (always active)", num));
-
-                // never active may go from DEFINED -> FAILED at the first period
-                const auto never_height = checker_never[i].GetStateSinceHeightFor(tip);
-                BOOST_CHECK_MESSAGE(never_height == 0 || never_height == checker_never[i].Period(paramsDummy), strprintf("Test %i for StateSinceHeight (never active)", num));
+                BOOST_CHECK_MESSAGE(checker_never[i].GetStateSinceHeightFor(tip) == 0, strprintf("Test %i for StateSinceHeight (never active)", num));
             }
         }
         num++;
@@ -170,7 +166,7 @@ public:
                 BOOST_CHECK_MESSAGE(got == exp, strprintf("Test %i for %s height %d (got %s)", num, StateName(exp), height, StateName(got)));
                 BOOST_CHECK_MESSAGE(got_delayed == exp_delayed, strprintf("Test %i for %s height %d (got %s; delayed case)", num, StateName(exp_delayed), height, StateName(got_delayed)));
                 BOOST_CHECK_MESSAGE(got_always == ThresholdState::ACTIVE, strprintf("Test %i for ACTIVE height %d (got %s; always active case)", num, height, StateName(got_always)));
-                BOOST_CHECK_MESSAGE(got_never == ThresholdState::DEFINED|| got_never == ThresholdState::FAILED, strprintf("Test %i for DEFINED/FAILED height %d (got %s; never active case)", num, height, StateName(got_never)));
+                BOOST_CHECK_MESSAGE(got_never == ThresholdState::FAILED, strprintf("Test %i for FAILED height %d (got %s; never active case)", num, height, StateName(got_never)));
             }
         }
         num++;
@@ -270,7 +266,7 @@ BOOST_AUTO_TEST_CASE(versionbits_sanity)
         // Check min_activation_height is on a retarget boundary
         BOOST_CHECK_EQUAL(mainnetParams.vDeployments[i].min_activation_height % mainnetParams.nMinerConfirmationWindow, 0);
         // Check min_activation_height is 0 for ALWAYS_ACTIVE and never active deployments
-        if (mainnetParams.vDeployments[i].nStartTime == Consensus::BIP9Deployment::ALWAYS_ACTIVE || mainnetParams.vDeployments[i].nTimeout <= 1230768000) {
+        if (mainnetParams.vDeployments[i].nStartTime == Consensus::BIP9Deployment::ALWAYS_ACTIVE || mainnetParams.vDeployments[i].nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE) {
             BOOST_CHECK_EQUAL(mainnetParams.vDeployments[i].min_activation_height, 0);
         }
 
@@ -304,8 +300,9 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
     // should not be any signalling for first block
     BOOST_CHECK_EQUAL(ComputeBlockVersion(nullptr, params), VERSIONBITS_TOP_BITS);
 
-    // always active deployments shouldn't need to be tested further
+    // always/never active deployments shouldn't need to be tested further
     if (nStartTime == Consensus::BIP9Deployment::ALWAYS_ACTIVE) return;
+    if (nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE) return;
 
     BOOST_REQUIRE(nStartTime < nTimeout);
     BOOST_REQUIRE(nStartTime >= 0);
@@ -445,6 +442,15 @@ BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
         for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++i) {
             check_computeblockversion(chainParams->GetConsensus(), static_cast<Consensus::DeploymentPos>(i));
         }
+    }
+
+    {
+        // Use regtest/testdummy to ensure we always exercise some
+        // deployment that's not always/never active
+        ArgsManager args;
+        args.ForceSetArg("-vbparams", "testdummy:1199145601:1230767999"); // January 1, 2008 - December 31, 2008
+        const auto chainParams = CreateChainParams(args, CBaseChainParams::REGTEST);
+        check_computeblockversion(chainParams->GetConsensus(), Consensus::DEPLOYMENT_TESTDUMMY);
     }
 
     {
