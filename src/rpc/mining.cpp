@@ -105,10 +105,8 @@ static RPCHelpMan getnetworkhashps()
     };
 }
 
-static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& max_tries, uint256& block_hash)
+static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& max_tries)
 {
-    block_hash.SetNull();
-
     const int32_t height = chainman.ActiveHeight() + 1;
     SetCoinbaseScriptSig(&block, height);
 
@@ -130,7 +128,10 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
         throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
     }
 
-    block_hash = block.GetHash();
+    if (block.GetHash().IsNull()) {
+        throw JSONRPCError(RPC_MISC_ERROR, "Failed to make block.");
+    }
+
     return true;
 }
 
@@ -152,15 +153,12 @@ static UniValue generateBlocks(ChainstateManager& chainman, const CTxMemPool& me
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         CBlock *pblock = &pblocktemplate->block;
 
-        uint256 block_hash;
-        if (!GenerateBlock(chainman, *pblock, nMaxTries, block_hash)) {
+        if (!GenerateBlock(chainman, *pblock, nMaxTries)) {
             break;
         }
 
-        if (!block_hash.IsNull()) {
-            ++nHeight;
-            blockHashes.push_back(block_hash.GetHex());
-        }
+        blockHashes.push_back(pblock->GetHash().GetHex());
+        ++nHeight;
     }
     return blockHashes;
 }
@@ -377,15 +375,14 @@ static RPCHelpMan generateblock()
         }
     }
 
-    uint256 block_hash;
     uint64_t max_tries{DEFAULT_MAX_TRIES};
 
-    if (!GenerateBlock(EnsureChainman(request.context), block, max_tries, block_hash) || block_hash.IsNull()) {
+    if (!GenerateBlock(EnsureChainman(request.context), block, max_tries)) {
         throw JSONRPCError(RPC_MISC_ERROR, "Failed to make block.");
     }
 
     UniValue obj(UniValue::VOBJ);
-    obj.pushKV("hash", block_hash.GetHex());
+    obj.pushKV("hash", block.GetHash().GetHex());
     return obj;
 },
     };
