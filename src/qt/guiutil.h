@@ -327,6 +327,11 @@ namespace GUIUtil
         QObject::connect(&source, &QObject::destroyed, object, std::forward<Fn>(function), connection);
     }
 
+    /**
+     * Replaces a plain text link with an HTML tagged one.
+     */
+    QString MakeHtmlLink(const QString& source, const QString& link);
+
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H
