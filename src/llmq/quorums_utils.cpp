@@ -18,12 +18,26 @@ namespace llmq
 
 void CLLMQUtils::GetAllQuorumMembers(uint8_t llmqType, const CBlockIndex* pindexQuorum, std::vector<CDeterministicMNCPtr> &members)
 {
+    static RecursiveMutex cs_members;
+    static std::map<uint8_t, unordered_lru_cache<uint256, std::vector<CDeterministicMNCPtr>, StaticSaltedHasher>> mapQuorumMembers;
+    {
+        LOCK(cs_members);
+        if (mapQuorumMembers.empty()) {
+            InitQuorumsCache(mapQuorumMembers);
+        }
+        if (mapQuorumMembers[llmqType].get(pindexQuorum->GetBlockHash(), members)) {
+            return;
+        }
+    }
+
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
     CDeterministicMNList allMns;
     if(deterministicMNManager)
         deterministicMNManager->GetListForBlock(pindexQuorum, allMns);
     auto modifier = ::SerializeHash(std::make_pair(llmqType, pindexQuorum->GetBlockHash()));
     allMns.CalculateQuorum(params.size, modifier, members);
+    LOCK(cs_members);
+    mapQuorumMembers[llmqType].insert(pindexQuorum->GetBlockHash(), members);
 }
 
 uint256 CLLMQUtils::BuildCommitmentHash(uint8_t llmqType, const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash)
