@@ -73,7 +73,7 @@ CBlock BuildChainTestingSetup::CreateBlock(const CBlockIndex* prev,
         block.vtx.push_back(MakeTransactionRef(tx));
     }
     // SetCoinbaseScriptSig creates a valid coinbase and merkleRoot
-    SetCoinbaseScriptSig(&block, prev);
+    SetCoinbaseScriptSig(&block, prev->nHeight + 1);
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 

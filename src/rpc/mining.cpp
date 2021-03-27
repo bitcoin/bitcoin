@@ -109,10 +109,8 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
 {
     block_hash.SetNull();
 
-    {
-        LOCK(cs_main);
-        SetCoinbaseScriptSig(&block, ::ChainActive().Tip());
-    }
+    const int32_t height = chainman.ActiveHeight() + 1;
+    SetCoinbaseScriptSig(&block, height);
 
     CChainParams chainparams(Params());
 

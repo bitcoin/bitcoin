@@ -198,7 +198,7 @@ private:
 };
 
 /** Resets the coinbase scriptSig to be valid according to BIP 30 and recalculates the merkle root. */
-void SetCoinbaseScriptSig(CBlock* pblock, const CBlockIndex* pindexPrev);
+void SetCoinbaseScriptSig(CBlock* pblock, int32_t height);
 int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParams, const CBlockIndex* pindexPrev);
 
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
