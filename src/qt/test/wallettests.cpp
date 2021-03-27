@@ -73,7 +73,7 @@ uint256 SendCoins(CWallet& wallet, SendCoinsDialog& sendCoinsDialog, const CTxDe
         if (status == CT_NEW) txid = hash;
     }));
     ConfirmSend();
-    bool invoked = QMetaObject::invokeMethod(&sendCoinsDialog, "on_sendButton_clicked");
+    bool invoked = QMetaObject::invokeMethod(&sendCoinsDialog, "sendButtonClicked", Q_ARG(bool, false));
     assert(invoked);
     return txid;
 }
