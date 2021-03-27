@@ -65,7 +65,10 @@ WalletModel::~WalletModel()
 void WalletModel::startPollBalance()
 {
     // This timer will be fired repeatedly to update the balance
-    connect(timer, &QTimer::timeout, this, &WalletModel::pollBalanceChanged);
+    // Since the QTimer::timeout is a private signal, it cannot be used
+    // in the GUIUtil::ExceptionSafeConnect directly.
+    connect(timer, &QTimer::timeout, this, &WalletModel::timerTimeout);
+    GUIUtil::ExceptionSafeConnect(this, &WalletModel::timerTimeout, this, &WalletModel::pollBalanceChanged);
     timer->start(MODEL_UPDATE_DELAY);
 }
 
