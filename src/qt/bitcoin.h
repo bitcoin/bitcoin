@@ -99,6 +99,12 @@ public Q_SLOTS:
     /// Handle runaway exceptions. Shows a message box with the problem and quits the program.
     void handleRunawayException(const QString &message);
 
+    /**
+     * A helper function that shows a message box
+     * with details about a non-fatal exception.
+     */
+    void handleNonFatalException(const QString& message);
+
 Q_SIGNALS:
     void requestedInitialize();
     void requestedShutdown();
