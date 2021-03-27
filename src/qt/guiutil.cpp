@@ -41,6 +41,7 @@
 #include <QFontMetrics>
 #include <QGuiApplication>
 #include <QKeyEvent>
+#include <QLatin1String>
 #include <QLineEdit>
 #include <QList>
 #include <QMenu>
@@ -51,6 +52,7 @@
 #include <QShortcut>
 #include <QSize>
 #include <QString>
+#include <QStringBuilder>
 #include <QTextDocument> // for Qt::mightBeRichText
 #include <QThread>
 #include <QUrlQuery>
@@ -918,6 +920,13 @@ void PopupMenu(QMenu* menu, const QPoint& point, QAction* at_action)
     // The qminimal plugin does not provide window system integration.
     if (QApplication::platformName() == "minimal") return;
     menu->popup(point, at_action);
+}
+
+QString MakeHtmlLink(const QString& source, const QString& link)
+{
+    return QString(source).replace(
+        link,
+        QLatin1String("<a href=\"") % link % QLatin1String("\">") % link % QLatin1String("</a>"));
 }
 
 } // namespace GUIUtil

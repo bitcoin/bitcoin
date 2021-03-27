@@ -303,6 +303,11 @@ namespace GUIUtil
      * Call QMenu::popup() only on supported QT_QPA_PLATFORM.
      */
     void PopupMenu(QMenu* menu, const QPoint& point, QAction* at_action = nullptr);
+
+    /**
+     * Replaces a plain text link with an HTML tagged one.
+     */
+    QString MakeHtmlLink(const QString& source, const QString& link);
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H
