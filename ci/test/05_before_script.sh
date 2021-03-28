@@ -32,6 +32,9 @@ if [ -n "$ANDROID_TOOLS_URL" ]; then
   DOCKER_EXEC unzip -o "$ANDROID_TOOLS_PATH" -d "${ANDROID_HOME}/cmdline-tools"
   DOCKER_EXEC "yes | ${ANDROID_HOME}/cmdline-tools/tools/bin/sdkmanager --install \"build-tools;${ANDROID_BUILD_TOOLS_VERSION}\" \"platform-tools\" \"platforms;android-${ANDROID_API_LEVEL}\" \"ndk;${ANDROID_NDK_VERSION}\""
 
+  # Remove cached Qt
+  DOCKER_EXEC rm -rf "${DEPENDS_DIR}"/built/aarch64-linux-android/qt
+
   MAKE_COMMAND="ANDROID_SDK=${ANDROID_HOME} ANDROID_NDK=${ANDROID_NDK_HOME} make $MAKEJOBS -C depends HOST=aarch64-linux-android ANDROID_API_LEVEL=${ANDROID_API_LEVEL} ANDROID_TOOLCHAIN_BIN=${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/bin/ $DEP_OPTS"
   DOCKER_EXEC "$MAKE_COMMAND" HOST=aarch64-linux-android
 fi
