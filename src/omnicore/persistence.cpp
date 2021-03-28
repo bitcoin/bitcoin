@@ -688,25 +688,67 @@ int LoadMostRelevantInMemoryState()
 
     }
 
+    // Try and get watermark block
     CBlockIndex const *spBlockIndex = GetBlockIndex(spWatermark);
-    if (nullptr == spBlockIndex) {
-        // trigger a full reparse, if the watermark isn't a real block
-        PrintToLog("Failed to load historical state: watermark isn't a real block\n");
-        return -1;
+
+    // Watermark block not found.
+    if (nullptr == spBlockIndex)
+    {
+        PrintToLog("spWatermark not found: %s\n", spWatermark.ToString());
+
+        // Try and load an historical state
+        fs::directory_iterator dIter(pathStateFiles);
+        fs::directory_iterator endIter;
+        std::map<int, const CBlockIndex*> foundBlocks;
+
+        for (; dIter != endIter; ++dIter) {
+            if (false == fs::is_regular_file(dIter->status()) || dIter->path().empty()) {
+                // skip funny business
+                continue;
+            }
+
+            std::string fName = (*--dIter->path().end()).string();
+            std::vector<std::string> vstr;
+            boost::split(vstr, fName, boost::is_any_of("-."), boost::token_compress_on);
+            if (vstr.size() == 3 && boost::equals(vstr[2], "dat")) {
+                uint256 blockHash;
+                blockHash.SetHex(vstr[1]);
+                CBlockIndex *pBlockIndex = GetBlockIndex(blockHash);
+                if (pBlockIndex == nullptr) {
+                    continue;
+                }
+
+                // Add to found blocks
+                foundBlocks.emplace(pBlockIndex->nHeight, pBlockIndex);
+            }
+        }
+
+        // Was unable to find valid previous state, full reparse required.
+        if (foundBlocks.empty()) {
+            PrintToLog("Failed to load historical state: watermark isn't a real block\n");
+            return -1;
+        }
+
+        spBlockIndex = foundBlocks.rbegin()->second;
+        pDbSpInfo->setWatermark(spBlockIndex->GetBlockHash());
+
+        PrintToLog("Watermark not found. New one set from state files: %s\n", spBlockIndex->GetBlockHash().ToString());
     }
 
     std::set<uint256> persistedBlocks;
     {
         LOCK2(cs_main, cs_tally);
+
+        PrintToLog("Rolling back blocks to active chain.\n");
+
         while (nullptr != spBlockIndex && false == ::ChainActive().Contains(spBlockIndex)) {
             int remainingSPs = pDbSpInfo->popBlock(spBlockIndex->GetBlockHash());
             if (remainingSPs < 0) {
                 // trigger a full reparse, if the levelDB cannot roll back
                 PrintToLog("Failed to load historical state: no valid state found after rolling back SP database\n");
                 return -1;
-            } /*else if (remainingSPs == 0) {
-          // potential optimization here?
-        }*/
+            }
+
             spBlockIndex = spBlockIndex->pprev;
             if (spBlockIndex != nullptr) {
                 pDbSpInfo->setWatermark(spBlockIndex->GetBlockHash());
