@@ -19,7 +19,6 @@
 #include <test/util/setup_common.h>
 #include <test/util/validation.h>
 #include <txorphanage.h>
-#include <util/memory.h>
 #include <validationinterface.h>
 #include <version.h>
 
@@ -69,8 +68,8 @@ void fuzz_target(FuzzBufferType buffer, const std::string& LIMIT_TO_MESSAGE_TYPE
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
-    ConnmanTestMsg& connman = *(ConnmanTestMsg*)g_setup->m_node.connman.get();
-    TestChainState& chainstate = *(TestChainState*)&g_setup->m_node.chainman->ActiveChainstate();
+    ConnmanTestMsg& connman = *static_cast<ConnmanTestMsg*>(g_setup->m_node.connman.get());
+    TestChainState& chainstate = *static_cast<TestChainState*>(&g_setup->m_node.chainman->ActiveChainstate());
     SetMockTime(1610000000); // any time to successfully reset ibd
     chainstate.ResetIbd();
 

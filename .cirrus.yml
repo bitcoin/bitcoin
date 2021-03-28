@@ -180,3 +180,11 @@ task:
     CI_USE_APT_INSTALL: "no"
     PACKAGE_MANAGER_INSTALL: "echo"  # Nothing to do
     FILE_ENV: "./ci/test/00_setup_env_mac_host.sh"
+
+task:
+  name: 'ARM64 Android APK [bionic]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:bionic
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_android.sh"

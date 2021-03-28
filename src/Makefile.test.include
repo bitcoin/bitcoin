@@ -252,6 +252,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/net.cpp \
  test/fuzz/net_permissions.cpp \
  test/fuzz/netaddress.cpp \
+ test/fuzz/netbase_dns_lookup.cpp \
  test/fuzz/node_eviction.cpp \
  test/fuzz/p2p_transport_deserializer.cpp \
  test/fuzz/parse_hd_keypath.cpp \
@@ -296,7 +297,10 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/transaction.cpp \
  test/fuzz/tx_in.cpp \
  test/fuzz/tx_out.cpp \
- test/fuzz/txrequest.cpp
+ test/fuzz/tx_pool.cpp \
+ test/fuzz/txrequest.cpp \
+ test/fuzz/validation_load_mempool.cpp \
+ test/fuzz/versionbits.cpp
 endif # ENABLE_FUZZ_BINARY
 
 nodist_test_test_bitcoin_SOURCES = $(GENERATED_TEST_FILES)

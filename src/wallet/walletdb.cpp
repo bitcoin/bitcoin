@@ -23,6 +23,7 @@
 #include <wallet/wallet.h>
 
 #include <atomic>
+#include <optional>
 #include <string>
 
 namespace DBKeys {
@@ -1015,7 +1016,7 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
         return nullptr;
     }
 
-    Optional<DatabaseFormat> format;
+    std::optional<DatabaseFormat> format;
     if (exists) {
         if (IsBDBFile(BDBDataFile(path))) {
             format = DatabaseFormat::BERKELEY;
@@ -1086,15 +1087,15 @@ std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const Databas
 /** Return object for accessing dummy database with no read/write capabilities. */
 std::unique_ptr<WalletDatabase> CreateDummyWalletDatabase()
 {
-    return MakeUnique<DummyDatabase>();
+    return std::make_unique<DummyDatabase>();
 }
 
 /** Return object for accessing temporary in-memory database. */
 std::unique_ptr<WalletDatabase> CreateMockWalletDatabase()
 {
 #ifdef USE_BDB
-    return MakeUnique<BerkeleyDatabase>(std::make_shared<BerkeleyEnvironment>(), "");
+    return std::make_unique<BerkeleyDatabase>(std::make_shared<BerkeleyEnvironment>(), "");
 #elif USE_SQLITE
-    return MakeUnique<SQLiteDatabase>("", "", true);
+    return std::make_unique<SQLiteDatabase>("", "", true);
 #endif
 }

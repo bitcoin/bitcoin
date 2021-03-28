@@ -459,6 +459,21 @@ std::string RPCExamples::ToDescriptionString() const
     return m_examples.empty() ? m_examples : "\nExamples:\n" + m_examples;
 }
 
+UniValue RPCHelpMan::HandleRequest(const JSONRPCRequest& request)
+{
+    if (request.mode == JSONRPCRequest::GET_ARGS) {
+        return GetArgMap();
+    }
+    /*
+     * Check if the given request is valid according to this command or if
+     * the user is asking for help information, and throw help when appropriate.
+     */
+    if (request.mode == JSONRPCRequest::GET_HELP || !IsValidNumArgs(request.params.size())) {
+        throw std::runtime_error(ToString());
+    }
+    return m_fun(*this, request);
+}
+
 bool RPCHelpMan::IsValidNumArgs(size_t num_args) const
 {
     size_t num_required_args = 0;
@@ -532,8 +547,9 @@ std::string RPCHelpMan::ToString() const
     return ret;
 }
 
-void RPCHelpMan::AppendArgMap(UniValue& arr) const
+UniValue RPCHelpMan::GetArgMap() const
 {
+    UniValue arr{UniValue::VARR};
     for (int i{0}; i < int(m_args.size()); ++i) {
         const auto& arg = m_args.at(i);
         std::vector<std::string> arg_names;
@@ -548,6 +564,7 @@ void RPCHelpMan::AppendArgMap(UniValue& arr) const
             arr.push_back(map);
         }
     }
+    return arr;
 }
 
 std::string RPCArg::GetFirstName() const

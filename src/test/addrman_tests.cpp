@@ -100,7 +100,7 @@ static CNetAddr ResolveIP(const std::string& ip)
     return addr;
 }
 
-static CService ResolveService(const std::string& ip, const int port = 0)
+static CService ResolveService(const std::string& ip, uint16_t port = 0)
 {
     CService serv;
     BOOST_CHECK_MESSAGE(Lookup(ip, serv, port, false), strprintf("failed to resolve: %s:%i", ip, port));

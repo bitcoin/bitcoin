@@ -914,7 +914,7 @@ static RPCHelpMan addpeeraddress()
     UniValue obj(UniValue::VOBJ);
 
     std::string addr_string = request.params[0].get_str();
-    uint16_t port = request.params[1].get_int();
+    uint16_t port{static_cast<uint16_t>(request.params[1].get_int())};
 
     CNetAddr net_addr;
     if (!LookupHost(addr_string, net_addr, false)) {

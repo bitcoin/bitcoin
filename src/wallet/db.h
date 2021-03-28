@@ -8,13 +8,12 @@
 
 #include <clientversion.h>
 #include <fs.h>
-#include <optional.h>
 #include <streams.h>
 #include <support/allocators/secure.h>
-#include <util/memory.h>
 
 #include <atomic>
 #include <memory>
+#include <optional>
 #include <string>
 
 struct bilingual_str;
@@ -193,7 +192,7 @@ public:
     void ReloadDbEnv() override {}
     std::string Filename() override { return "dummy"; }
     std::string Format() override { return "dummy"; }
-    std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override { return MakeUnique<DummyBatch>(); }
+    std::unique_ptr<DatabaseBatch> MakeBatch(bool flush_on_close = true) override { return std::make_unique<DummyBatch>(); }
 };
 
 enum class DatabaseFormat {
@@ -204,7 +203,7 @@ enum class DatabaseFormat {
 struct DatabaseOptions {
     bool require_existing = false;
     bool require_create = false;
-    Optional<DatabaseFormat> require_format;
+    std::optional<DatabaseFormat> require_format;
     uint64_t create_flags = 0;
     SecureString create_passphrase;
     bool verify = true;

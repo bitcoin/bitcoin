@@ -42,6 +42,50 @@ bool fNameLookup = DEFAULT_NAME_LOOKUP;
 int g_socks5_recv_timeout = 20 * 1000;
 static std::atomic<bool> interruptSocks5Recv(false);
 
+std::vector<CNetAddr> WrappedGetAddrInfo(const std::string& name, bool allow_lookup)
+{
+    addrinfo ai_hint{};
+    // We want a TCP port, which is a streaming socket type
+    ai_hint.ai_socktype = SOCK_STREAM;
+    ai_hint.ai_protocol = IPPROTO_TCP;
+    // We don't care which address family (IPv4 or IPv6) is returned
+    ai_hint.ai_family = AF_UNSPEC;
+    // If we allow lookups of hostnames, use the AI_ADDRCONFIG flag to only
+    // return addresses whose family we have an address configured for.
+    //
+    // If we don't allow lookups, then use the AI_NUMERICHOST flag for
+    // getaddrinfo to only decode numerical network addresses and suppress
+    // hostname lookups.
+    ai_hint.ai_flags = allow_lookup ? AI_ADDRCONFIG : AI_NUMERICHOST;
+
+    addrinfo* ai_res{nullptr};
+    const int n_err{getaddrinfo(name.c_str(), nullptr, &ai_hint, &ai_res)};
+    if (n_err != 0) {
+        return {};
+    }
+
+    // Traverse the linked list starting with ai_trav.
+    addrinfo* ai_trav{ai_res};
+    std::vector<CNetAddr> resolved_addresses;
+    while (ai_trav != nullptr) {
+        if (ai_trav->ai_family == AF_INET) {
+            assert(ai_trav->ai_addrlen >= sizeof(sockaddr_in));
+            resolved_addresses.emplace_back(reinterpret_cast<sockaddr_in*>(ai_trav->ai_addr)->sin_addr);
+        }
+        if (ai_trav->ai_family == AF_INET6) {
+            assert(ai_trav->ai_addrlen >= sizeof(sockaddr_in6));
+            const sockaddr_in6* s6{reinterpret_cast<sockaddr_in6*>(ai_trav->ai_addr)};
+            resolved_addresses.emplace_back(s6->sin6_addr, s6->sin6_scope_id);
+        }
+        ai_trav = ai_trav->ai_next;
+    }
+    freeaddrinfo(ai_res);
+
+    return resolved_addresses;
+}
+
+DNSLookupFn g_dns_lookup{WrappedGetAddrInfo};
+
 enum Network ParseNetwork(const std::string& net_in) {
     std::string net = ToLower(net_in);
     if (net == "ipv4") return NET_IPV4;
@@ -87,7 +131,7 @@ std::vector<std::string> GetNetworkNames(bool append_unroutable)
     return names;
 }
 
-bool static LookupIntern(const std::string& name, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
+static bool LookupIntern(const std::string& name, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
     vIP.clear();
 
@@ -109,73 +153,20 @@ bool static LookupIntern(const std::string& name, std::vector<CNetAddr>& vIP, un
         }
     }
 
-    struct addrinfo aiHint;
-    memset(&aiHint, 0, sizeof(struct addrinfo));
-
-    // We want a TCP port, which is a streaming socket type
-    aiHint.ai_socktype = SOCK_STREAM;
-    aiHint.ai_protocol = IPPROTO_TCP;
-    // We don't care which address family (IPv4 or IPv6) is returned
-    aiHint.ai_family = AF_UNSPEC;
-    // If we allow lookups of hostnames, use the AI_ADDRCONFIG flag to only
-    // return addresses whose family we have an address configured for.
-    //
-    // If we don't allow lookups, then use the AI_NUMERICHOST flag for
-    // getaddrinfo to only decode numerical network addresses and suppress
-    // hostname lookups.
-    aiHint.ai_flags = fAllowLookup ? AI_ADDRCONFIG : AI_NUMERICHOST;
-    struct addrinfo *aiRes = nullptr;
-    int nErr = getaddrinfo(name.c_str(), nullptr, &aiHint, &aiRes);
-    if (nErr)
-        return false;
-
-    // Traverse the linked list starting with aiTrav, add all non-internal
-    // IPv4,v6 addresses to vIP while respecting nMaxSolutions.
-    struct addrinfo *aiTrav = aiRes;
-    while (aiTrav != nullptr && (nMaxSolutions == 0 || vIP.size() < nMaxSolutions))
-    {
-        CNetAddr resolved;
-        if (aiTrav->ai_family == AF_INET)
-        {
-            assert(aiTrav->ai_addrlen >= sizeof(sockaddr_in));
-            resolved = CNetAddr(((struct sockaddr_in*)(aiTrav->ai_addr))->sin_addr);
-        }
-
-        if (aiTrav->ai_family == AF_INET6)
-        {
-            assert(aiTrav->ai_addrlen >= sizeof(sockaddr_in6));
-            struct sockaddr_in6* s6 = (struct sockaddr_in6*) aiTrav->ai_addr;
-            resolved = CNetAddr(s6->sin6_addr, s6->sin6_scope_id);
+    for (const CNetAddr& resolved : dns_lookup_function(name, fAllowLookup)) {
+        if (nMaxSolutions > 0 && vIP.size() >= nMaxSolutions) {
+            break;
         }
         /* Never allow resolving to an internal address. Consider any such result invalid */
         if (!resolved.IsInternal()) {
             vIP.push_back(resolved);
         }
-
-        aiTrav = aiTrav->ai_next;
     }
-
-    freeaddrinfo(aiRes);
 
     return (vIP.size() > 0);
 }
 
-/**
- * Resolve a host string to its corresponding network addresses.
- *
- * @param name    The string representing a host. Could be a name or a numerical
- *                IP address (IPv6 addresses in their bracketed form are
- *                allowed).
- * @param[out] vIP The resulting network addresses to which the specified host
- *                 string resolved.
- *
- * @returns Whether or not the specified host string successfully resolved to
- *          any resulting network addresses.
- *
- * @see Lookup(const char *, std::vector<CService>&, int, bool, unsigned int)
- *      for additional parameter descriptions.
- */
-bool LookupHost(const std::string& name, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup)
+bool LookupHost(const std::string& name, std::vector<CNetAddr>& vIP, unsigned int nMaxSolutions, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
     if (!ValidAsCString(name)) {
         return false;
@@ -187,59 +178,33 @@ bool LookupHost(const std::string& name, std::vector<CNetAddr>& vIP, unsigned in
         strHost = strHost.substr(1, strHost.size() - 2);
     }
 
-    return LookupIntern(strHost, vIP, nMaxSolutions, fAllowLookup);
+    return LookupIntern(strHost, vIP, nMaxSolutions, fAllowLookup, dns_lookup_function);
 }
 
- /**
- * Resolve a host string to its first corresponding network address.
- *
- * @see LookupHost(const std::string&, std::vector<CNetAddr>&, unsigned int, bool) for
- *      additional parameter descriptions.
- */
-bool LookupHost(const std::string& name, CNetAddr& addr, bool fAllowLookup)
+bool LookupHost(const std::string& name, CNetAddr& addr, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
     if (!ValidAsCString(name)) {
         return false;
     }
     std::vector<CNetAddr> vIP;
-    LookupHost(name, vIP, 1, fAllowLookup);
+    LookupHost(name, vIP, 1, fAllowLookup, dns_lookup_function);
     if(vIP.empty())
         return false;
     addr = vIP.front();
     return true;
 }
 
-/**
- * Resolve a service string to its corresponding service.
- *
- * @param name    The string representing a service. Could be a name or a
- *                numerical IP address (IPv6 addresses should be in their
- *                disambiguated bracketed form), optionally followed by a port
- *                number. (e.g. example.com:8333 or
- *                [2001:db8:85a3:8d3:1319:8a2e:370:7348]:420)
- * @param[out] vAddr The resulting services to which the specified service string
- *                   resolved.
- * @param portDefault The default port for resulting services if not specified
- *                    by the service string.
- * @param fAllowLookup Whether or not hostname lookups are permitted. If yes,
- *                     external queries may be performed.
- * @param nMaxSolutions The maximum number of results we want, specifying 0
- *                      means "as many solutions as we get."
- *
- * @returns Whether or not the service string successfully resolved to any
- *          resulting services.
- */
-bool Lookup(const std::string& name, std::vector<CService>& vAddr, int portDefault, bool fAllowLookup, unsigned int nMaxSolutions)
+bool Lookup(const std::string& name, std::vector<CService>& vAddr, uint16_t portDefault, bool fAllowLookup, unsigned int nMaxSolutions, DNSLookupFn dns_lookup_function)
 {
     if (name.empty() || !ValidAsCString(name)) {
         return false;
     }
-    int port = portDefault;
+    uint16_t port{portDefault};
     std::string hostname;
     SplitHostPort(name, port, hostname);
 
     std::vector<CNetAddr> vIP;
-    bool fRet = LookupIntern(hostname, vIP, nMaxSolutions, fAllowLookup);
+    bool fRet = LookupIntern(hostname, vIP, nMaxSolutions, fAllowLookup, dns_lookup_function);
     if (!fRet)
         return false;
     vAddr.resize(vIP.size());
@@ -248,36 +213,20 @@ bool Lookup(const std::string& name, std::vector<CService>& vAddr, int portDefau
     return true;
 }
 
-/**
- * Resolve a service string to its first corresponding service.
- *
- * @see Lookup(const char *, std::vector<CService>&, int, bool, unsigned int)
- *      for additional parameter descriptions.
- */
-bool Lookup(const std::string& name, CService& addr, int portDefault, bool fAllowLookup)
+bool Lookup(const std::string& name, CService& addr, uint16_t portDefault, bool fAllowLookup, DNSLookupFn dns_lookup_function)
 {
     if (!ValidAsCString(name)) {
         return false;
     }
     std::vector<CService> vService;
-    bool fRet = Lookup(name, vService, portDefault, fAllowLookup, 1);
+    bool fRet = Lookup(name, vService, portDefault, fAllowLookup, 1, dns_lookup_function);
     if (!fRet)
         return false;
     addr = vService[0];
     return true;
 }
 
-/**
- * Resolve a service string with a numeric IP to its first corresponding
- * service.
- *
- * @returns The resulting CService if the resolution was successful, [::]:0
- *          otherwise.
- *
- * @see Lookup(const char *, CService&, int, bool) for additional parameter
- *      descriptions.
- */
-CService LookupNumeric(const std::string& name, int portDefault)
+CService LookupNumeric(const std::string& name, uint16_t portDefault, DNSLookupFn dns_lookup_function)
 {
     if (!ValidAsCString(name)) {
         return {};
@@ -285,7 +234,7 @@ CService LookupNumeric(const std::string& name, int portDefault)
     CService addr;
     // "1.2:345" will fail to resolve the ip, but will still set the port.
     // If the ip fails to resolve, re-init the result.
-    if(!Lookup(name, addr, portDefault, false))
+    if(!Lookup(name, addr, portDefault, false, dns_lookup_function))
         addr = CService();
     return addr;
 }
@@ -414,25 +363,7 @@ static std::string Socks5ErrorString(uint8_t err)
     }
 }
 
-/**
- * Connect to a specified destination service through an already connected
- * SOCKS5 proxy.
- *
- * @param strDest The destination fully-qualified domain name.
- * @param port The destination port.
- * @param auth The credentials with which to authenticate with the specified
- *             SOCKS5 proxy.
- * @param sock The SOCKS5 proxy socket.
- *
- * @returns Whether or not the operation succeeded.
- *
- * @note The specified SOCKS5 proxy socket must already be connected to the
- *       SOCKS5 proxy.
- *
- * @see <a href="https://www.ietf.org/rfc/rfc1928.txt">RFC1928: SOCKS Protocol
- *      Version 5</a>
- */
-bool Socks5(const std::string& strDest, int port, const ProxyCredentials* auth, const Sock& sock)
+bool Socks5(const std::string& strDest, uint16_t port, const ProxyCredentials* auth, const Sock& sock)
 {
     IntrRecvError recvr;
     LogPrint(BCLog::NET, "SOCKS5 connecting %s\n", strDest);
@@ -606,18 +537,6 @@ static void LogConnectFailure(bool manual_connection, const char* fmt, const Arg
     }
 }
 
-/**
- * Try to connect to the specified service on the specified socket.
- *
- * @param addrConnect The service to which to connect.
- * @param hSocket The socket on which to connect.
- * @param nTimeout Wait this many milliseconds for the connection to be
- *                 established.
- * @param manual_connection Whether or not the connection was manually requested
- *                          (e.g. through the addnode RPC)
- *
- * @returns Whether or not a connection was successfully made.
- */
 bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocket, int nTimeout, bool manual_connection)
 {
     // Create a sockaddr from the specified service.
@@ -716,22 +635,6 @@ bool GetProxy(enum Network net, proxyType &proxyInfoOut) {
     return true;
 }
 
-/**
- * Set the name proxy to use for all connections to nodes specified by a
- * hostname. After setting this proxy, connecting to a node specified by a
- * hostname won't result in a local lookup of said hostname, rather, connect to
- * the node by asking the name proxy for a proxy connection to the hostname,
- * effectively delegating the hostname lookup to the specified proxy.
- *
- * This delegation increases privacy for those who set the name proxy as they no
- * longer leak their external hostname queries to their DNS servers.
- *
- * @returns Whether or not the operation succeeded.
- *
- * @note SOCKS5's support for UDP-over-SOCKS5 has been considered, but no SOCK5
- *       server in common use (most notably Tor) actually implements UDP
- *       support, and a DNS resolver is beyond the scope of this project.
- */
 bool SetNameProxy(const proxyType &addrProxy) {
     if (!addrProxy.IsValid())
         return false;
@@ -762,22 +665,7 @@ bool IsProxy(const CNetAddr &addr) {
     return false;
 }
 
-/**
- * Connect to a specified destination service through a SOCKS5 proxy by first
- * connecting to the SOCKS5 proxy.
- *
- * @param proxy The SOCKS5 proxy.
- * @param strDest The destination service to which to connect.
- * @param port The destination port.
- * @param sock The socket on which to connect to the SOCKS5 proxy.
- * @param nTimeout Wait this many milliseconds for the connection to the SOCKS5
- *                 proxy to be established.
- * @param[out] outProxyConnectionFailed Whether or not the connection to the
- *                                      SOCKS5 proxy failed.
- *
- * @returns Whether or not the operation succeeded.
- */
-bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, int port, const Sock& sock, int nTimeout, bool& outProxyConnectionFailed)
+bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, uint16_t port, const Sock& sock, int nTimeout, bool& outProxyConnectionFailed)
 {
     // first connect to proxy server
     if (!ConnectSocketDirectly(proxy.proxy, sock.Get(), nTimeout, true)) {
@@ -789,29 +677,18 @@ bool ConnectThroughProxy(const proxyType& proxy, const std::string& strDest, int
         ProxyCredentials random_auth;
         static std::atomic_int counter(0);
         random_auth.username = random_auth.password = strprintf("%i", counter++);
-        if (!Socks5(strDest, (uint16_t)port, &random_auth, sock)) {
+        if (!Socks5(strDest, port, &random_auth, sock)) {
             return false;
         }
     } else {
-        if (!Socks5(strDest, (uint16_t)port, 0, sock)) {
+        if (!Socks5(strDest, port, 0, sock)) {
             return false;
         }
     }
     return true;
 }
 
-/**
- * Parse and resolve a specified subnet string into the appropriate internal
- * representation.
- *
- * @param strSubnet A string representation of a subnet of the form `network
- *                address [ "/", ( CIDR-style suffix | netmask ) ]`(e.g.
- *                `2001:db8::/32`, `192.0.2.0/255.255.255.0`, or `8.8.8.8`).
- * @param ret The resulting internal representation of a subnet.
- *
- * @returns Whether the operation succeeded or not.
- */
-bool LookupSubNet(const std::string& strSubnet, CSubNet& ret)
+bool LookupSubNet(const std::string& strSubnet, CSubNet& ret, DNSLookupFn dns_lookup_function)
 {
     if (!ValidAsCString(strSubnet)) {
         return false;
@@ -822,7 +699,7 @@ bool LookupSubNet(const std::string& strSubnet, CSubNet& ret)
     std::string strAddress = strSubnet.substr(0, slash);
     // TODO: Use LookupHost(const std::string&, CNetAddr&, bool) instead to just get
     //       one CNetAddr.
-    if (LookupHost(strAddress, vIP, 1, false))
+    if (LookupHost(strAddress, vIP, 1, false, dns_lookup_function))
     {
         CNetAddr network = vIP[0];
         if (slash != strSubnet.npos)
@@ -837,7 +714,7 @@ bool LookupSubNet(const std::string& strSubnet, CSubNet& ret)
             else // If not a valid number, try full netmask syntax
             {
                 // Never allow lookup for netmask
-                if (LookupHost(strNetmask, vIP, 1, false)) {
+                if (LookupHost(strNetmask, vIP, 1, false, dns_lookup_function)) {
                     ret = CSubNet(network, vIP[0]);
                     return ret.IsValid();
                 }

@@ -92,9 +92,9 @@
    don't. */
 #define HAVE_DECL_BSWAP_64 0
 
-/* Define to 1 if you have the declaration of `daemon', and to 0 if you don't.
+/* Define to 1 if you have the declaration of `fork', and to 0 if you don't.
    */
-#define HAVE_DECL_DAEMON 0
+#define HAVE_DECL_FORK 0
 
 /* Define to 1 if you have the declaration of `htobe16', and to 0 if you
    don't. */
@@ -131,6 +131,10 @@
 /* Define to 1 if you have the declaration of `le64toh', and to 0 if you
    don't. */
 #define HAVE_DECL_LE64TOH 0
+
+/* Define to 1 if you have the declaration of `setsid', and to 0 if you don't.
+   */
+#define HAVE_DECL_SETSID 0
 
 /* Define to 1 if you have the declaration of `strerror_r', and to 0 if you
    don't. */
@@ -176,9 +180,6 @@
 
 /* Define to 1 if you have the <miniupnpc/miniupnpc.h> header file. */
 #define HAVE_MINIUPNPC_MINIUPNPC_H 1
-
-/* Define to 1 if you have the <miniupnpc/miniwget.h> header file. */
-#define HAVE_MINIUPNPC_MINIWGET_H 1
 
 /* Define to 1 if you have the <miniupnpc/upnpcommands.h> header file. */
 #define HAVE_MINIUPNPC_UPNPCOMMANDS_H 1

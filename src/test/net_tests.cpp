@@ -8,13 +8,12 @@
 #include <clientversion.h>
 #include <cstdint>
 #include <net.h>
+#include <netaddress.h>
 #include <netbase.h>
-#include <optional.h>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
-#include <util/memory.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/system.h>
@@ -25,6 +24,7 @@
 #include <algorithm>
 #include <ios>
 #include <memory>
+#include <optional>
 #include <string>
 
 using namespace std::literals;
@@ -92,7 +92,7 @@ BOOST_FIXTURE_TEST_SUITE(net_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(cnode_listen_port)
 {
     // test default
-    uint16_t port = GetListenPort();
+    uint16_t port{GetListenPort()};
     BOOST_CHECK(port == Params().GetDefaultPort());
     // test set port
     uint16_t altPort = 12345;
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     CAddress addr = CAddress(CService(ipv4Addr, 7777), NODE_NETWORK);
     std::string pszDest;
 
-    std::unique_ptr<CNode> pnode1 = MakeUnique<CNode>(
+    std::unique_ptr<CNode> pnode1 = std::make_unique<CNode>(
         id++, NODE_NETWORK, hSocket, addr,
         /* nKeyedNetGroupIn = */ 0,
         /* nLocalHostNonceIn = */ 0,
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK(pnode1->m_inbound_onion == false);
     BOOST_CHECK_EQUAL(pnode1->ConnectedThroughNetwork(), Network::NET_IPV4);
 
-    std::unique_ptr<CNode> pnode2 = MakeUnique<CNode>(
+    std::unique_ptr<CNode> pnode2 = std::make_unique<CNode>(
         id++, NODE_NETWORK, hSocket, addr,
         /* nKeyedNetGroupIn = */ 1,
         /* nLocalHostNonceIn = */ 1,
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK(pnode2->m_inbound_onion == false);
     BOOST_CHECK_EQUAL(pnode2->ConnectedThroughNetwork(), Network::NET_IPV4);
 
-    std::unique_ptr<CNode> pnode3 = MakeUnique<CNode>(
+    std::unique_ptr<CNode> pnode3 = std::make_unique<CNode>(
         id++, NODE_NETWORK, hSocket, addr,
         /* nKeyedNetGroupIn = */ 0,
         /* nLocalHostNonceIn = */ 0,
@@ -233,7 +233,7 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK(pnode3->m_inbound_onion == false);
     BOOST_CHECK_EQUAL(pnode3->ConnectedThroughNetwork(), Network::NET_IPV4);
 
-    std::unique_ptr<CNode> pnode4 = MakeUnique<CNode>(
+    std::unique_ptr<CNode> pnode4 = std::make_unique<CNode>(
         id++, NODE_NETWORK, hSocket, addr,
         /* nKeyedNetGroupIn = */ 1,
         /* nLocalHostNonceIn = */ 1,
@@ -711,7 +711,7 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     in_addr ipv4AddrPeer;
     ipv4AddrPeer.s_addr = 0xa0b0c001;
     CAddress addr = CAddress(CService(ipv4AddrPeer, 7777), NODE_NETWORK);
-    std::unique_ptr<CNode> pnode = MakeUnique<CNode>(0, NODE_NETWORK, INVALID_SOCKET, addr, /* nKeyedNetGroupIn */ 0, /* nLocalHostNonceIn */ 0, CAddress{}, /* pszDest */ std::string{}, ConnectionType::OUTBOUND_FULL_RELAY, /* inbound_onion */ false);
+    std::unique_ptr<CNode> pnode = std::make_unique<CNode>(0, NODE_NETWORK, INVALID_SOCKET, addr, /* nKeyedNetGroupIn */ 0, /* nLocalHostNonceIn */ 0, CAddress{}, /* pszDest */ std::string{}, ConnectionType::OUTBOUND_FULL_RELAY, /* inbound_onion */ false);
     pnode->fSuccessfullyConnected.store(true);
 
     // the peer claims to be reaching us via IPv6
@@ -828,7 +828,7 @@ std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(const int n_c
 bool IsEvicted(std::vector<NodeEvictionCandidate> candidates, const std::vector<NodeId>& node_ids, FastRandomContext& random_context)
 {
     Shuffle(candidates.begin(), candidates.end(), random_context);
-    const Optional<NodeId> evicted_node_id = SelectNodeToEvict(std::move(candidates));
+    const std::optional<NodeId> evicted_node_id = SelectNodeToEvict(std::move(candidates));
     if (!evicted_node_id) {
         return false;
     }

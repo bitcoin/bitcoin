@@ -5,12 +5,13 @@
 #include <bench/bench.h>
 #include <interfaces/chain.h>
 #include <node/context.h>
-#include <optional.h>
 #include <test/util/mining.h>
 #include <test/util/setup_common.h>
 #include <test/util/wallet.h>
 #include <validationinterface.h>
 #include <wallet/wallet.h>
+
+#include <optional>
 
 static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const bool add_watchonly, const bool add_mine)
 {
@@ -26,7 +27,7 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
     }
     auto handler = test_setup->m_node.chain->handleNotifications({&wallet, [](CWallet*) {}});
 
-    const Optional<std::string> address_mine{add_mine ? Optional<std::string>{getnewaddress(wallet)} : nullopt};
+    const std::optional<std::string> address_mine{add_mine ? std::optional<std::string>{getnewaddress(wallet)} : std::nullopt};
     if (add_watchonly) importaddress(wallet, ADDRESS_WATCHONLY);
 
     for (int i = 0; i < 100; ++i) {

@@ -22,6 +22,20 @@ if [ -n "$XCODE_VERSION" ] && [ ! -f "$OSX_SDK_PATH" ]; then
   DOCKER_EXEC curl --location --fail "${SDK_URL}/${OSX_SDK_BASENAME}" -o "$OSX_SDK_PATH"
 fi
 
+if [ -n "$ANDROID_TOOLS_URL" ]; then
+  ANDROID_TOOLS_PATH=$DEPENDS_DIR/sdk-sources/android-tools.zip
+  ANDROID_HOME="$DEPENDS_DIR"/SDKs/android
+  ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}
+
+  DOCKER_EXEC curl --location --fail "${ANDROID_TOOLS_URL}" -o "$ANDROID_TOOLS_PATH"
+  DOCKER_EXEC mkdir -p "${ANDROID_HOME}/cmdline-tools"
+  DOCKER_EXEC unzip -o "$ANDROID_TOOLS_PATH" -d "${ANDROID_HOME}/cmdline-tools"
+  DOCKER_EXEC "yes | ${ANDROID_HOME}/cmdline-tools/tools/bin/sdkmanager --install \"build-tools;${ANDROID_BUILD_TOOLS_VERSION}\" \"platform-tools\" \"platforms;android-${ANDROID_API_LEVEL}\" \"ndk;${ANDROID_NDK_VERSION}\""
+
+  MAKE_COMMAND="ANDROID_SDK=${ANDROID_HOME} ANDROID_NDK=${ANDROID_NDK_HOME} make $MAKEJOBS -C depends HOST=aarch64-linux-android ANDROID_API_LEVEL=${ANDROID_API_LEVEL} ANDROID_TOOLCHAIN_BIN=${ANDROID_HOME}/ndk/${ANDROID_NDK_VERSION}/toolchains/llvm/prebuilt/linux-x86_64/bin/ $DEP_OPTS"
+  DOCKER_EXEC "$MAKE_COMMAND" HOST=aarch64-linux-android
+fi
+
 if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
   # Use BDB compiled using install_db4.sh script to work around linking issue when using BDB
   # from depends. See https://github.com/bitcoin/bitcoin/pull/18288#discussion_r433189350 for

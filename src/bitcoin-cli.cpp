@@ -9,7 +9,6 @@
 
 #include <chainparamsbase.h>
 #include <clientversion.h>
-#include <optional.h>
 #include <rpc/client.h>
 #include <rpc/mining.h>
 #include <rpc/protocol.h>
@@ -24,6 +23,7 @@
 #include <cmath>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <stdio.h>
 #include <string>
 #include <tuple>
@@ -611,16 +611,16 @@ public:
     }
 };
 
-static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const Optional<std::string>& rpcwallet = {})
+static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const std::optional<std::string>& rpcwallet = {})
 {
     std::string host;
     // In preference order, we choose the following for the port:
     //     1. -rpcport
     //     2. port in -rpcconnect (ie following : in ipv4 or ]: in ipv6)
     //     3. default port for chain
-    int port = BaseParams().RPCPort();
+    uint16_t port{BaseParams().RPCPort()};
     SplitHostPort(gArgs.GetArg("-rpcconnect", DEFAULT_RPCCONNECT), port, host);
-    port = gArgs.GetArg("-rpcport", port);
+    port = static_cast<uint16_t>(gArgs.GetArg("-rpcport", port));
 
     // Obtain event base
     raii_event_base base = obtain_event_base();
@@ -708,6 +708,8 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
         } else {
             throw std::runtime_error("Authorization failed: Incorrect rpcuser or rpcpassword");
         }
+    } else if (response.status == HTTP_SERVICE_UNAVAILABLE) {
+        throw std::runtime_error(strprintf("Server response: %s", response.body));
     } else if (response.status >= 400 && response.status != HTTP_BAD_REQUEST && response.status != HTTP_NOT_FOUND && response.status != HTTP_INTERNAL_SERVER_ERROR)
         throw std::runtime_error(strprintf("server returned HTTP error %d", response.status));
     else if (response.body.empty())
@@ -733,7 +735,7 @@ static UniValue CallRPC(BaseRequestHandler* rh, const std::string& strMethod, co
  * @returns the RPC response as a UniValue object.
  * @throws a CConnectionFailed std::runtime_error if connection failed or RPC server still in warmup.
  */
-static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const Optional<std::string>& rpcwallet = {})
+static UniValue ConnectAndCallRPC(BaseRequestHandler* rh, const std::string& strMethod, const std::vector<std::string>& args, const std::optional<std::string>& rpcwallet = {})
 {
     UniValue response(UniValue::VOBJ);
     // Execute and handle connection failures with -rpcwait.
@@ -817,7 +819,7 @@ static void GetWalletBalances(UniValue& result)
  */
 static UniValue GetNewAddress()
 {
-    Optional<std::string> wallet_name{};
+    std::optional<std::string> wallet_name{};
     if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
     DefaultRequestHandler rh;
     return ConnectAndCallRPC(&rh, "getnewaddress", /* args=*/{}, wallet_name);
@@ -922,7 +924,7 @@ static int CommandLineRPC(int argc, char *argv[])
         }
         if (nRet == 0) {
             // Perform RPC call
-            Optional<std::string> wallet_name{};
+            std::optional<std::string> wallet_name{};
             if (gArgs.IsArgSet("-rpcwallet")) wallet_name = gArgs.GetArg("-rpcwallet", "");
             const UniValue reply = ConnectAndCallRPC(rh.get(), method, args, wallet_name);
 

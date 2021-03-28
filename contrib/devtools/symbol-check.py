@@ -73,6 +73,8 @@ ELF_ALLOWED_LIBRARIES = {
 'ld-linux-riscv64-lp64d.so.1', # 64-bit RISC-V dynamic linker
 # bitcoin-qt only
 'libxcb.so.1', # part of X11
+'libxkbcommon.so.0', # keyboard keymapping
+'libxkbcommon-x11.so.0', # keyboard keymapping
 'libfontconfig.so.1', # font support
 'libfreetype.so.6', # font parsing
 'libdl.so.2' # programming interface to dynamic linker
@@ -98,10 +100,15 @@ MACHO_ALLOWED_LIBRARIES = {
 'CoreGraphics', # 2D rendering
 'CoreServices', # operating system services
 'CoreText', # interface for laying out text and handling fonts.
+'CoreVideo', # video processing
 'Foundation', # base layer functionality for apps/frameworks
 'ImageIO', # read and write image file formats.
 'IOKit', # user-space access to hardware devices and drivers.
+'IOSurface', # cross process image/drawing buffers
 'libobjc.A.dylib', # Objective-C runtime library
+'Metal', # 3D graphics
+'Security', # access control and authentication
+'QuartzCore', # animation
 }
 
 PE_ALLOWED_LIBRARIES = {
@@ -116,12 +123,15 @@ PE_ALLOWED_LIBRARIES = {
 'dwmapi.dll', # desktop window manager
 'GDI32.dll', # graphics device interface
 'IMM32.dll', # input method editor
+'NETAPI32.dll',
 'ole32.dll', # component object model
 'OLEAUT32.dll', # OLE Automation API
 'SHLWAPI.dll', # light weight shell API
+'USERENV.dll',
 'UxTheme.dll',
 'VERSION.dll', # version checking
 'WINMM.dll', # WinMM audio API
+'WTSAPI32.dll',
 }
 
 class CPPFilt(object):
