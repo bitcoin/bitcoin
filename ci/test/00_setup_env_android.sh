@@ -9,7 +9,7 @@ export LC_ALL=C.UTF-8
 export HOST=aarch64-linux-android
 export PACKAGES="clang llvm unzip openjdk-8-jdk gradle"
 export CONTAINER_NAME=ci_android
-export DOCKER_NAME_TAG="ubuntu:bionic"
+export DOCKER_NAME_TAG="ubuntu:focal"
 
 export RUN_UNIT_TESTS=false
 export RUN_FUNCTIONAL_TESTS=false
