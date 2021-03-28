@@ -183,6 +183,8 @@ task:
 
 task:
   name: 'ARM64 Android APK [focal]'
+  depends_sources_cache:
+    folder: "/tmp/cirrus-ci-build/depends/sources"
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
