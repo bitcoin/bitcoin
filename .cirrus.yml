@@ -168,13 +168,13 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_mac.sh"
 
 task:
-  name: 'macOS 10.15 native [gui] [no depends]'
+  name: 'macOS 11 native [gui] [no depends]'
   macos_brew_addon_script:
     - brew install boost libevent berkeley-db4 qt miniupnpc libnatpmp ccache zeromq qrencode sqlite libtool automake pkg-config gnu-getopt
   << : *GLOBAL_TASK_TEMPLATE
   osx_instance:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
-    image: catalina-xcode-12.1  # https://cirrus-ci.org/guide/macOS
+    image: big-sur-xcode-12.4  # https://cirrus-ci.org/guide/macOS
   env:
     DANGER_RUN_CI_ON_HOST: "true"
     CI_USE_APT_INSTALL: "no"
