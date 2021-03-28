@@ -16,6 +16,9 @@
 #include <sqlite3.h>
 #include <stdint.h>
 
+#include <utility>
+#include <vector>
+
 static constexpr int32_t WALLET_SCHEMA_VERSION = 0;
 
 static Mutex g_sqlite_mutex;
@@ -69,30 +72,21 @@ SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_pa
 
 void SQLiteBatch::SetupSQLStatements()
 {
-    int res;
-    if (!m_read_stmt) {
-        if ((res = sqlite3_prepare_v2(m_database.m_db, "SELECT value FROM main WHERE key = ?", -1, &m_read_stmt, nullptr)) != SQLITE_OK) {
-            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to setup SQL statements: %s\n", sqlite3_errstr(res)));
-        }
-    }
-    if (!m_insert_stmt) {
-        if ((res = sqlite3_prepare_v2(m_database.m_db, "INSERT INTO main VALUES(?, ?)", -1, &m_insert_stmt, nullptr)) != SQLITE_OK) {
-            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to setup SQL statements: %s\n", sqlite3_errstr(res)));
-        }
-    }
-    if (!m_overwrite_stmt) {
-        if ((res = sqlite3_prepare_v2(m_database.m_db, "INSERT or REPLACE into main values(?, ?)", -1, &m_overwrite_stmt, nullptr)) != SQLITE_OK) {
-            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to setup SQL statements: %s\n", sqlite3_errstr(res)));
-        }
-    }
-    if (!m_delete_stmt) {
-        if ((res = sqlite3_prepare_v2(m_database.m_db, "DELETE FROM main WHERE key = ?", -1, &m_delete_stmt, nullptr)) != SQLITE_OK) {
-            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to setup SQL statements: %s\n", sqlite3_errstr(res)));
-        }
-    }
-    if (!m_cursor_stmt) {
-        if ((res = sqlite3_prepare_v2(m_database.m_db, "SELECT key, value FROM main", -1, &m_cursor_stmt, nullptr)) != SQLITE_OK) {
-            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to setup SQL statements : %s\n", sqlite3_errstr(res)));
+    const std::vector<std::pair<sqlite3_stmt**, const char*>> statements{
+        {&m_read_stmt, "SELECT value FROM main WHERE key = ?"},
+        {&m_insert_stmt, "INSERT INTO main VALUES(?, ?)"},
+        {&m_overwrite_stmt, "INSERT or REPLACE into main values(?, ?)"},
+        {&m_delete_stmt, "DELETE FROM main WHERE key = ?"},
+        {&m_cursor_stmt, "SELECT key, value FROM main"},
+    };
+
+    for (const auto& [stmt_prepared, stmt_text] : statements) {
+        if (*stmt_prepared == nullptr) {
+            int res = sqlite3_prepare_v2(m_database.m_db, stmt_text, -1, stmt_prepared, nullptr);
+            if (res != SQLITE_OK) {
+                throw std::runtime_error(strprintf(
+                    "SQLiteDatabase: Failed to setup SQL statements: %s\n", sqlite3_errstr(res)));
+            }
         }
     }
 }
