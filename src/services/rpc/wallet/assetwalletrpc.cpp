@@ -1313,7 +1313,7 @@ static RPCHelpMan assetallocationsendmany()
             itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAmount));
         }
         auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nBaseAsset](const CAssetOut& element){ return GetBaseAssetID(element.key) == nBaseAsset;} );
-        if(itVout->vchNotarySig.empty() && itVout != theAssetAllocation.voutAssets.end()) {
+        if(itVout != theAssetAllocation.voutAssets.end() && itVout->vchNotarySig.empty()) {
             if(!theAsset.vchNotaryKeyID.empty()) {
                 // fund tx expecting 65 byte signature to be filled in
                 itVout->vchNotarySig.resize(65);
