@@ -127,7 +127,6 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
         contextMenu->addAction(deleteAction);
         connect(deleteAction, &QAction::triggered, this, &AddressBookPage::on_deleteAddress_clicked);
     }
-    contextMenu->addSeparator();
 
     // Connect signals for context menu actions
     connect(copyAddressAction, &QAction::triggered, this, &AddressBookPage::on_copyAddress_clicked);
@@ -135,7 +134,6 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
     connect(editAction, &QAction::triggered, this, &AddressBookPage::onEditAction);
 
     connect(ui->tableView, &QWidget::customContextMenuRequested, this, &AddressBookPage::contextualMenu);
-
     connect(ui->closeButton, &QPushButton::clicked, this, &QDialog::accept);
 
     GUIUtil::handleCloseWindowShortcut(this);
