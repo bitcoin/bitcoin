@@ -19,18 +19,6 @@ from test_framework.util import (
 )
 import time
 
-# Keep this with length <= 10. Addresses from larger messages are not relayed.
-ADDRS = []
-num_ipv4_addrs = 10
-
-for i in range(num_ipv4_addrs):
-    addr = CAddress()
-    addr.time = int(time.time()) + i
-    addr.nServices = NODE_NETWORK | NODE_WITNESS
-    addr.ip = "123.123.123.{}".format(i % 256)
-    addr.port = 8333 + i
-    ADDRS.append(addr)
-
 
 class AddrReceiver(P2PInterface):
     num_ipv4_received = 0
@@ -45,33 +33,62 @@ class AddrReceiver(P2PInterface):
 
 
 class AddrTest(BitcoinTestFramework):
+    counter = 0
+    mocktime = int(time.time())
+
     def set_test_params(self):
         self.num_nodes = 1
 
     def run_test(self):
-        self.log.info('Create connection that sends addr messages')
-        addr_source = self.nodes[0].add_p2p_connection(P2PInterface())
-        msg = msg_addr()
+        self.oversized_addr_test()
+        self.relay_tests()
 
-        self.log.info('Send too-large addr message')
-        msg.addrs = ADDRS * 101  # more than 1000 addresses in one message
+    def setup_addr_msg(self, num):
+        addrs = []
+        for i in range(num):
+            addr = CAddress()
+            addr.time = self.mocktime + i
+            addr.nServices = NODE_NETWORK | NODE_WITNESS
+            addr.ip = f"123.123.123.{self.counter % 256}"
+            addr.port = 8333 + i
+            addrs.append(addr)
+            self.counter += 1
+
+        msg = msg_addr()
+        msg.addrs = addrs
+        return msg
+
+    def oversized_addr_test(self):
+        self.log.info('Send an addr message that is too large')
+        addr_source = self.nodes[0].add_p2p_connection(P2PInterface())
+
+        msg = self.setup_addr_msg(1010)
         with self.nodes[0].assert_debug_log(['addr message size = 1010']):
             addr_source.send_and_ping(msg)
 
+        self.nodes[0].disconnect_p2ps()
+
+    def relay_tests(self):
         self.log.info('Check that addr message content is relayed and added to addrman')
+        addr_source = self.nodes[0].add_p2p_connection(P2PInterface())
         num_receivers = 7
         receivers = []
         for _ in range(num_receivers):
             receivers.append(self.nodes[0].add_p2p_connection(AddrReceiver()))
-        msg.addrs = ADDRS
+
+        # Keep this with length <= 10. Addresses from larger messages are not
+        # relayed.
+        num_ipv4_addrs = 10
+        msg = self.setup_addr_msg(num_ipv4_addrs)
         with self.nodes[0].assert_debug_log(
             [
                 'Added {} addresses from 127.0.0.1: 0 tried'.format(num_ipv4_addrs),
-                'received: addr (301 bytes) peer=0',
+                'received: addr (301 bytes) peer=1',
             ]
         ):
             addr_source.send_and_ping(msg)
-            self.nodes[0].setmocktime(int(time.time()) + 30 * 60)
+            self.mocktime += 30 * 60
+            self.nodes[0].setmocktime(self.mocktime)
             for receiver in receivers:
                 receiver.sync_with_ping()
 
@@ -81,6 +98,8 @@ class AddrTest(BitcoinTestFramework):
         # originating node (addr_source).
         ipv4_branching_factor = 2
         assert_equal(total_ipv4_received, num_ipv4_addrs * ipv4_branching_factor)
+
+        self.nodes[0].disconnect_p2ps()
 
 
 if __name__ == '__main__':
