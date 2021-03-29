@@ -67,6 +67,21 @@ Updated RPCs
   `whitelisted`, the `permissions` field indicates if the peer has special
   privileges. The `banscore` field has simply been removed. (#20755)
 
+- The following RPCs:  `gettxout`, `getrawtransaction`, `decoderawtransaction`,
+  `decodescript`, `gettransaction`, and REST endpoints: `/rest/tx`,
+  `/rest/getutxos`, `/rest/block` deprecated the following fields (which are no
+  longer returned in the responses by default): `addresses`, `reqSigs`.
+  The `-deprecatedrpc=addresses` flag must be passed for these fields to be
+  included in the RPC response. This flag/option will be available until v23, at which
+  point the deprecation will be removed entirely. Note that these fields are attributes of
+  the `scriptPubKey` object returned in the RPC response. However, in the response
+  of `decodescript` these fields are top-level attributes, and included again as attributes
+  of the `scriptPubKey` object. (#20286)
+
+- When creating a hex-encoded bitcoin transaction using the `bitcoin-tx` utility
+  with the `-json` option set, the following fields: `addresses`, `reqSigs` are no longer
+  returned in the tx output of the response. (#20286)
+
 Changes to Wallet or GUI related RPCs can be found in the GUI or Wallet section below.
 
 New RPCs
