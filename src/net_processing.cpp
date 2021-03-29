@@ -4189,6 +4189,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         CNodeState &state = *State(pto->GetId());
 
         // Address refresh broadcast
+        {
+        LOCK(pto->m_addr_send_times_mutex);
 
         if (fListen && pto->RelayAddrsWithConn() &&
             !m_chainman.ActiveChainstate().IsInitialBlockDownload() &&
@@ -4249,6 +4251,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             if (pto->vAddrToSend.capacity() > 40)
                 pto->vAddrToSend.shrink_to_fit();
         }
+        } // pto->m_addr_send_times_mutex
 
         // Start block sync
         if (pindexBestHeader == nullptr)
