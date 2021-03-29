@@ -110,6 +110,9 @@ Wallet
   The RPC returns public versions of all imported descriptors, including their timestamp and flags.
   For ranged descriptors, it also returns the range boundaries and the next index to generate addresses from. (#20226)
 
+- The `bumpfee` RPC is not available with wallets that have private keys
+  disabled. `psbtbumpfee` can be used instead. (#20891)
+
 GUI changes
 -----------
 
