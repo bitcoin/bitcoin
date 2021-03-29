@@ -46,9 +46,9 @@ Compatibility
 ==============
 
 Syscoin Core is supported and extensively tested on operating systems
-using the Linux kernel, macOS 10.14+, and Windows 7 and newer.  Bitcoin
+using the Linux kernel, macOS 10.14+, and Windows 7 and newer.  Syscoin
 Core should also work on most other Unix-like systems but is not as
-frequently tested on them.  It is not recommended to use Bitcoin Core on
+frequently tested on them.  It is not recommended to use Syscoin Core on
 unsupported systems.
 
 From Syscoin Core 4.2.0 onwards, macOS versions earlier than 10.14 are no longer supported.
@@ -67,6 +67,21 @@ Updated RPCs
   `whitelisted`, the `permissions` field indicates if the peer has special
   privileges. The `banscore` field has simply been removed. (#20755)
 
+- The following RPCs:  `gettxout`, `getrawtransaction`, `decoderawtransaction`,
+  `decodescript`, `gettransaction`, and REST endpoints: `/rest/tx`,
+  `/rest/getutxos`, `/rest/block` deprecated the following fields (which are no
+  longer returned in the responses by default): `addresses`, `reqSigs`.
+  The `-deprecatedrpc=addresses` flag must be passed for these fields to be
+  included in the RPC response. This flag/option will be available until v23, at which
+  point the deprecation will be removed entirely. Note that these fields are attributes of
+  the `scriptPubKey` object returned in the RPC response. However, in the response
+  of `decodescript` these fields are top-level attributes, and included again as attributes
+  of the `scriptPubKey` object. (#20286)
+
+- When creating a hex-encoded syscoin transaction using the `syscoin-tx` utility
+  with the `-json` option set, the following fields: `addresses`, `reqSigs` are no longer
+  returned in the tx output of the response. (#20286)
+
 Changes to Wallet or GUI related RPCs can be found in the GUI or Wallet section below.
 
 New RPCs
@@ -83,7 +98,7 @@ Updated settings
 
 Changes to Wallet or GUI related settings can be found in the GUI or Wallet section below.
 
-- Passing an invalid `-rpcauth` argument now cause bitcoind to fail to start.  (#20461)
+- Passing an invalid `-rpcauth` argument now cause syscoind to fail to start.  (#20461)
 
 Tools and Utilities
 -------------------
@@ -104,7 +119,7 @@ Low-level changes
 RPC
 ---
 - The RPC server can process a limited number of simultaneous RPC requests.
-  Previously, if this limit was exceeded, `bitcoind` would respond with
+  Previously, if this limit was exceeded, `syscoind` would respond with
   [status code 500 (`HTTP_INTERNAL_SERVER_ERROR`)](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes#5xx_server_errors).
   Now it returns status code 503 (`HTTP_SERVICE_UNAVAILABLE`). (#18335)
 
