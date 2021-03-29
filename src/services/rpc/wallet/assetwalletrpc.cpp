@@ -1340,10 +1340,14 @@ static RPCHelpMan assetallocationsendmany()
     // aux fees if applicable
     for(const auto &it: mapAssets) {
         const uint64_t &nAsset = it.first;
-        CAsset theAsset;
-        // if not base asset it will skip (if nft)
-        if (!GetAsset(nAsset, theAsset))
+        const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
+        // if NFT no aux fee, just skip
+        if(nBaseAsset != nAsset) {
             continue;
+        }
+        CAsset theAsset;
+        if (!GetAsset(nBaseAsset, theAsset))
+            throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         CAmount nAuxFee;
         getAuxFee(theAsset.auxFeeDetails, it.second.second, nAuxFee);
         if(nAuxFee > 0 && !theAsset.auxFeeDetails.vchAuxFeeKeyID.empty()){
