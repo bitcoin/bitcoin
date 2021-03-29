@@ -301,10 +301,7 @@ int compareForks(const CBlockIndex& leftForkTip, const CBlockIndex& rightForkTip
     auto state = altintegration::ValidationState();
 
     if (!pop.getAltBlockTree().setState(left.hash, state)) {
-        if (!pop.getAltBlockTree().setState(right.hash, state)) {
-            assert(false && "both chains are invalid");
-        }
-        return -1;
+        assert(false && "current tip is invalid");
     }
 
     return pop.getAltBlockTree().comparePopScore(left.hash, right.hash);
