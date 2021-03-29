@@ -20,13 +20,30 @@ VersionBitsCache llmq_versionbitscache;
 
 std::vector<CDeterministicMNCPtr> CLLMQUtils::GetAllQuorumMembers(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum)
 {
+    static CCriticalSection cs_members;
+    static std::map<Consensus::LLMQType, unordered_lru_cache<uint256, std::vector<CDeterministicMNCPtr>, StaticSaltedHasher>> mapQuorumMembers;
+
     if (!IsQuorumTypeEnabled(llmqType, pindexQuorum->pprev)) {
         return {};
     }
+    std::vector<CDeterministicMNCPtr> quorumMembers;
+    {
+        LOCK(cs_members);
+        if (mapQuorumMembers.empty()) {
+            InitQuorumsCache(mapQuorumMembers);
+        }
+        if (mapQuorumMembers[llmqType].get(pindexQuorum->GetBlockHash(), quorumMembers)) {
+            return quorumMembers;
+        }
+    }
+
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
     auto allMns = deterministicMNManager->GetListForBlock(pindexQuorum);
     auto modifier = ::SerializeHash(std::make_pair(llmqType, pindexQuorum->GetBlockHash()));
-    return allMns.CalculateQuorum(params.size, modifier);
+    quorumMembers = allMns.CalculateQuorum(params.size, modifier);
+    LOCK(cs_members);
+    mapQuorumMembers[llmqType].insert(pindexQuorum->GetBlockHash(), quorumMembers);
+    return quorumMembers;
 }
 
 uint256 CLLMQUtils::BuildCommitmentHash(Consensus::LLMQType llmqType, const uint256& blockHash, const std::vector<bool>& validMembers, const CBLSPublicKey& pubKey, const uint256& vvecHash)
