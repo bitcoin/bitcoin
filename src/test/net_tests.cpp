@@ -396,6 +396,60 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_CHECK(!addr.SetSpecial("totally bogus"));
 }
 
+BOOST_AUTO_TEST_CASE(cnetaddr_tostring_canonical_ipv6)
+{
+    // Test that CNetAddr::ToString formats IPv6 addresses with zero compression as described in
+    // RFC 5952 ("A Recommendation for IPv6 Address Text Representation").
+    const std::map<std::string, std::string> canonical_representations_ipv6{
+        {"0000:0000:0000:0000:0000:0000:0000:0000", "::"},
+        {"000:0000:000:00:0:00:000:0000", "::"},
+        {"000:000:000:000:000:000:000:000", "::"},
+        {"00:00:00:00:00:00:00:00", "::"},
+        {"0:0:0:0:0:0:0:0", "::"},
+        {"0:0:0:0:0:0:0:1", "::1"},
+        {"2001:0:0:1:0:0:0:1", "2001:0:0:1::1"},
+        {"2001:0db8:0:0:1:0:0:1", "2001:db8::1:0:0:1"},
+        {"2001:0db8:85a3:0000:0000:8a2e:0370:7334", "2001:db8:85a3::8a2e:370:7334"},
+        {"2001:0db8::0001", "2001:db8::1"},
+        {"2001:0db8::0001:0000", "2001:db8::1:0"},
+        {"2001:0db8::1:0:0:1", "2001:db8::1:0:0:1"},
+        {"2001:db8:0000:0:1::1", "2001:db8::1:0:0:1"},
+        {"2001:db8:0000:1:1:1:1:1", "2001:db8:0:1:1:1:1:1"},
+        {"2001:db8:0:0:0:0:2:1", "2001:db8::2:1"},
+        {"2001:db8:0:0:0::1", "2001:db8::1"},
+        {"2001:db8:0:0:1:0:0:1", "2001:db8::1:0:0:1"},
+        {"2001:db8:0:0:1::1", "2001:db8::1:0:0:1"},
+        {"2001:DB8:0:0:1::1", "2001:db8::1:0:0:1"},
+        {"2001:db8:0:0::1", "2001:db8::1"},
+        {"2001:db8:0:0:aaaa::1", "2001:db8::aaaa:0:0:1"},
+        {"2001:db8:0:1:1:1:1:1", "2001:db8:0:1:1:1:1:1"},
+        {"2001:db8:0::1", "2001:db8::1"},
+        {"2001:db8:85a3:0:0:8a2e:370:7334", "2001:db8:85a3::8a2e:370:7334"},
+        {"2001:db8::0:1", "2001:db8::1"},
+        {"2001:db8::0:1:0:0:1", "2001:db8::1:0:0:1"},
+        {"2001:DB8::1", "2001:db8::1"},
+        {"2001:db8::1", "2001:db8::1"},
+        {"2001:db8::1:0:0:1", "2001:db8::1:0:0:1"},
+        {"2001:db8::1:1:1:1:1", "2001:db8:0:1:1:1:1:1"},
+        {"2001:db8::aaaa:0:0:1", "2001:db8::aaaa:0:0:1"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd:0:1", "2001:db8:aaaa:bbbb:cccc:dddd:0:1"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd::1", "2001:db8:aaaa:bbbb:cccc:dddd:0:1"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:0001", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:1"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:001", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:1"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:01", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:1"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:1", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:1"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:aaaa", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:aaaa"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:AAAA", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:aaaa"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:AaAa", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:aaaa"},
+    };
+    for (const auto& [input_address, expected_canonical_representation_output] : canonical_representations_ipv6) {
+        CNetAddr net_addr;
+        BOOST_REQUIRE(LookupHost(input_address, net_addr, false));
+        BOOST_REQUIRE(net_addr.IsIPv6());
+        BOOST_CHECK_EQUAL(net_addr.ToString(), expected_canonical_representation_output);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(cnetaddr_serialize_v1)
 {
     CNetAddr addr;
