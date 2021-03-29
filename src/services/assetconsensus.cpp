@@ -372,8 +372,9 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
     std::unordered_map<uint64_t, std::pair<std::vector<unsigned char>, const CAssetOut*> > mapBaseAssets;
     for(const CAssetOut& vecOut: tx.voutAssets) {
         std::vector<unsigned char> vchNotaryKeyID;
-        if(GetAssetNotaryKeyID(vecOut.key, vchNotaryKeyID) && !vchNotaryKeyID.empty()) {
-            auto it = mapBaseAssets.try_emplace(GetBaseAssetID(vecOut.key), vchNotaryKeyID, &vecOut);
+        const uint32_t nBaseAsset = GetBaseAssetID(vecOut.key);
+        if(GetAssetNotaryKeyID(nBaseAsset, vchNotaryKeyID) && !vchNotaryKeyID.empty()) {
+            auto it = mapBaseAssets.try_emplace(nBaseAsset, vchNotaryKeyID, &vecOut);
             // if inserted
             if(it.second) {
                 // ensure that the first time its inserted the notary signature cannot be empty
