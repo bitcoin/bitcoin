@@ -521,7 +521,7 @@ void CDKGSessionHandler::HandleDKGRound()
         return changed;
     });
 
-    CLLMQUtils::EnsureQuorumConnections(params.type, pindexQuorum, curSession->myProTxHash, gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS));
+    CLLMQUtils::EnsureQuorumConnections(params.type, pindexQuorum, curSession->myProTxHash);
     if (curSession->AreWeMember()) {
         CLLMQUtils::AddQuorumProbeConnections(params.type, pindexQuorum, curSession->myProTxHash);
     }

@@ -274,20 +274,14 @@ void CQuorumManager::EnsureQuorumConnections(Consensus::LLMQType llmqType, const
     auto curDkgBlock = pindexNew->GetAncestor(curDkgHeight)->GetBlockHash();
     connmanQuorumsToDelete.erase(curDkgBlock);
 
-    bool allowWatch = gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS);
     for (auto& quorum : lastQuorums) {
-        if (!quorum->IsMember(myProTxHash) && !allowWatch) {
+        if (CLLMQUtils::EnsureQuorumConnections(llmqType, quorum->pindexQuorum, myProTxHash)) {
             continue;
         }
-
-        CLLMQUtils::EnsureQuorumConnections(llmqType, quorum->pindexQuorum, myProTxHash, allowWatch);
-
-        connmanQuorumsToDelete.erase(quorum->qc.quorumHash);
-    }
-
-    for (auto& qh : connmanQuorumsToDelete) {
-        LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- removing masternodes quorum connections for quorum %s:\n", __func__, qh.ToString());
-        g_connman->RemoveMasternodeQuorumNodes(llmqType, qh);
+        if (connmanQuorumsToDelete.count(quorum->qc.quorumHash) > 0) {
+            LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- removing masternodes quorum connections for quorum %s:\n", __func__, quorum->qc.quorumHash.ToString());
+            g_connman->RemoveMasternodeQuorumNodes(llmqType, quorum->qc.quorumHash);
+        }
     }
 }
 
@@ -629,8 +623,7 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& strCommand,
 
     if (strCommand == NetMsgType::QDATA) {
 
-        bool fIsWatching = gArgs.GetBoolArg("-watchquorums", DEFAULT_WATCH_QUORUMS);
-        if ((!fMasternodeMode && !fIsWatching) || pFrom == nullptr || (pFrom->verifiedProRegTxHash.IsNull() && !pFrom->qwatch)) {
+        if ((!fMasternodeMode && !CLLMQUtils::IsWatchQuorumsEnabled()) || pFrom == nullptr || (pFrom->verifiedProRegTxHash.IsNull() && !pFrom->qwatch)) {
             errorHandler("Not a verified masternode or a qwatch connection");
             return;
         }

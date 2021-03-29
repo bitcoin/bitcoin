@@ -53,7 +53,7 @@ public:
     static std::set<uint256> GetQuorumRelayMembers(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& forMember, bool onlyOutbound);
     static std::set<size_t> CalcDeterministicWatchConnections(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, size_t memberCount, size_t connectionCount);
 
-    static void EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& myProTxHash, bool allowWatch);
+    static bool EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& myProTxHash);
     static void AddQuorumProbeConnections(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum, const uint256& myProTxHash);
 
     static bool IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quorumHash);
@@ -62,6 +62,9 @@ public:
 
     /// Returns the state of `-llmq-data-recovery`
     static bool QuorumDataRecoveryEnabled();
+
+    /// Returns the state of `-watchquorums`
+    static bool IsWatchQuorumsEnabled();
 
     /// Returns the parsed entries given by `-llmq-qvvec-sync`
     static std::map<Consensus::LLMQType, QvvecSyncMode> GetEnabledQuorumVvecSyncEntries();
