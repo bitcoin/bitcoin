@@ -35,8 +35,6 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
     folder: "/tmp/cirrus-ci-build/depends/built"
   depends_sdk_cache:
     folder: "/tmp/cirrus-ci-build/depends/sdk-sources"
-  depends_releases_cache:
-    folder: "/tmp/cirrus-ci-build/releases"
   ci_script:
     - ./ci/test_run_all.sh
 
@@ -103,6 +101,8 @@ task:
   # For faster CI feedback, immediately schedule a task that compiles most modules
   << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
+  depends_releases_cache:
+    folder: "/tmp/cirrus-ci-build/releases"
   container:
     image: ubuntu:bionic
   env:
@@ -182,9 +182,11 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_mac_host.sh"
 
 task:
-  name: 'ARM64 Android APK [bionic]'
+  name: 'ARM64 Android APK [focal]'
+  depends_sources_cache:
+    folder: "/tmp/cirrus-ci-build/depends/sources"
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:bionic
+    image: ubuntu:focal
   env:
     FILE_ENV: "./ci/test/00_setup_env_android.sh"
