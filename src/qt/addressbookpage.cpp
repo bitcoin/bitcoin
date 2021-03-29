@@ -113,9 +113,9 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
     }
 
     // Context menu actions
-    QAction *copyAddressAction = new QAction(tr("&Copy Address"), this);
-    QAction *copyLabelAction = new QAction(tr("Copy &Label"), this);
-    QAction *editAction = new QAction(tr("&Edit"), this);
+    QAction* copyAddressAction = new QAction(tr("Copy Address"), this);
+    QAction* copyLabelAction = new QAction(tr("Copy Label"), this);
+    QAction* editAction = new QAction(tr("Edit"), this);
 
     // Build context menu
     contextMenu = new QMenu(this);
@@ -123,7 +123,7 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
     contextMenu->addAction(copyLabelAction);
     contextMenu->addAction(editAction);
     if (tab == SendingTab) {
-        QAction* deleteAction = new QAction(ui->deleteAddress->text(), this);
+        QAction* deleteAction = new QAction(tr("Delete"), this);
         contextMenu->addAction(deleteAction);
         connect(deleteAction, &QAction::triggered, this, &AddressBookPage::on_deleteAddress_clicked);
     }

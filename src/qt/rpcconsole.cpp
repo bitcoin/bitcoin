@@ -617,11 +617,11 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         ui->peerWidget->horizontalHeader()->setStretchLastSection(true);
 
         // create peer table context menu actions
-        QAction* disconnectAction = new QAction(tr("&Disconnect"), this);
-        QAction* banAction1h = new QAction(ts.ban_for + " " + tr("1 &hour"), this);
-        QAction* banAction24h = new QAction(ts.ban_for + " " + tr("1 &day"), this);
-        QAction* banAction7d = new QAction(ts.ban_for + " " + tr("1 &week"), this);
-        QAction* banAction365d = new QAction(ts.ban_for + " " + tr("1 &year"), this);
+        QAction* disconnectAction = new QAction(tr("Disconnect"), this);
+        QAction* banAction1h = new QAction(ts.ban_for + " " + tr("1 hour"), this);
+        QAction* banAction24h = new QAction(ts.ban_for + " " + tr("1 day"), this);
+        QAction* banAction7d = new QAction(ts.ban_for + " " + tr("1 week"), this);
+        QAction* banAction365d = new QAction(ts.ban_for + " " + tr("1 year"), this);
 
         // create peer table context menu
         peersTableContextMenu = new QMenu(this);
@@ -658,7 +658,7 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         ui->banlistWidget->horizontalHeader()->setStretchLastSection(true);
 
         // create ban table context menu action
-        QAction* unbanAction = new QAction(tr("&Unban"), this);
+        QAction* unbanAction = new QAction(tr("Unban"), this);
 
         // create ban table context menu
         banTableContextMenu = new QMenu(this);
