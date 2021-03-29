@@ -10,7 +10,6 @@
 
 #include <masternode/activemasternode.h>
 #include <chainparams.h>
-#include <init.h>
 #include <net_processing.h>
 #include <spork.h>
 
@@ -189,7 +188,7 @@ void CDKGSessionHandler::WaitForNextPhase(QuorumPhase curPhase,
     LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - starting, curPhase=%d, nextPhase=%d\n", __func__, params.name, curPhase, nextPhase);
 
     while (true) {
-        if (stopRequested || ShutdownRequested()) {
+        if (stopRequested) {
             LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - aborting due to stop/shutdown requested\n", __func__, params.name);
             throw AbortPhaseException();
         }
@@ -228,7 +227,7 @@ void CDKGSessionHandler::WaitForNewQuorum(const uint256& oldQuorumHash)
     LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - starting\n", __func__, params.name);
 
     while (true) {
-        if (stopRequested || ShutdownRequested()) {
+        if (stopRequested) {
             LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - aborting due to stop/shutdown requested\n", __func__, params.name);
             throw AbortPhaseException();
         }
@@ -281,7 +280,7 @@ void CDKGSessionHandler::SleepBeforePhase(QuorumPhase curPhase,
     LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - starting sleep for %d ms, curPhase=%d\n", __func__, params.name, sleepTime, curPhase);
 
     while (GetTimeMillis() < endTime) {
-        if (stopRequested || ShutdownRequested()) {
+        if (stopRequested) {
             LogPrint(BCLog::LLMQ_DKG, "CDKGSessionManager::%s -- %s - aborting due to stop/shutdown requested\n", __func__, params.name);
             throw AbortPhaseException();
         }
@@ -573,7 +572,7 @@ void CDKGSessionHandler::HandleDKGRound()
 
 void CDKGSessionHandler::PhaseHandlerThread()
 {
-    while (!stopRequested && !ShutdownRequested()) {
+    while (!stopRequested) {
         try {
             LogPrint(BCLog::LLMQ_DKG, "CDKGSessionHandler::%s -- %s - starting HandleDKGRound\n", __func__, params.name);
             HandleDKGRound();
