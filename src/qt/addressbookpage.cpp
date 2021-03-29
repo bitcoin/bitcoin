@@ -112,26 +112,15 @@ AddressBookPage::AddressBookPage(const PlatformStyle *platformStyle, Mode _mode,
         break;
     }
 
-    // Context menu actions
-    QAction* copyAddressAction = new QAction(tr("Copy Address"), this);
-    QAction* copyLabelAction = new QAction(tr("Copy Label"), this);
-    QAction* editAction = new QAction(tr("Edit"), this);
-
     // Build context menu
     contextMenu = new QMenu(this);
-    contextMenu->addAction(copyAddressAction);
-    contextMenu->addAction(copyLabelAction);
-    contextMenu->addAction(editAction);
-    if (tab == SendingTab) {
-        QAction* deleteAction = new QAction(tr("Delete"), this);
-        contextMenu->addAction(deleteAction);
-        connect(deleteAction, &QAction::triggered, this, &AddressBookPage::on_deleteAddress_clicked);
-    }
+    contextMenu->addAction(tr("Copy Address"), this, &AddressBookPage::on_copyAddress_clicked);
+    contextMenu->addAction(tr("Copy Label"), this, &AddressBookPage::onCopyLabelAction);
+    contextMenu->addAction(tr("Edit"), this, &AddressBookPage::onEditAction);
 
-    // Connect signals for context menu actions
-    connect(copyAddressAction, &QAction::triggered, this, &AddressBookPage::on_copyAddress_clicked);
-    connect(copyLabelAction, &QAction::triggered, this, &AddressBookPage::onCopyLabelAction);
-    connect(editAction, &QAction::triggered, this, &AddressBookPage::onEditAction);
+    if (tab == SendingTab) {
+        contextMenu->addAction(tr("Delete"), this, &AddressBookPage::on_deleteAddress_clicked);
+    }
 
     connect(ui->tableView, &QWidget::customContextMenuRequested, this, &AddressBookPage::contextualMenu);
     connect(ui->closeButton, &QPushButton::clicked, this, &QDialog::accept);
