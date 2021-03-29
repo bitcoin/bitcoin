@@ -34,7 +34,7 @@ void SetPopConfig(const altintegration::Config& newConfig)
 void SetPop(std::shared_ptr<altintegration::PayloadsStorage> db)
 {
     assert(config && "Config is not initialized. Invoke SetPopConfig.");
-    app = altintegration::PopContext::create(config, std::move(db));
+    app = altintegration::PopContext::create(config, db);
 }
 
 std::string toPrettyString(const altintegration::PopContext& pop)
