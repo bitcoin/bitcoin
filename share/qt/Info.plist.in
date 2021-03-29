@@ -60,9 +60,6 @@
   <key>NSHighResolutionCapable</key>
     <string>True</string>
 
-  <key>NSRequiresAquaSystemAppearance</key>
-    <string>True</string>
-
   <key>LSApplicationCategoryType</key>
     <string>public.app-category.finance</string>
 </dict>
