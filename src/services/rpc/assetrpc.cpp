@@ -97,28 +97,20 @@ bool ScanAssets(CAssetDB& passetdb, const uint32_t count, const uint32_t from, c
 	}
 	return true;
 }
-bool FillNotarySig(std::vector<CAssetOut> & voutAssets, const uint64_t& nAsset, const std::vector<unsigned char> &vchSig) {
-    auto itVout = std::find_if( voutAssets.begin(), voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
-    if(itVout != voutAssets.end()) {
-        itVout->vchNotarySig = vchSig;
-        return true;
-    }
-    return false;
-}
 
-bool UpdateNotarySignature(CMutableTransaction& mtx, const uint64_t& nAsset, const std::vector<unsigned char> &vchSig) {
+bool UpdateNotarySignature(CMutableTransaction& mtx, const uint64_t& nBaseAsset, const std::vector<unsigned char> &vchSig) {
     std::vector<unsigned char> data;
     bool bFilledNotarySig = false;
      // call API endpoint or notary signatures and fill them in for every asset
     if(mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_ETHEREUM || mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_BURN_TO_SYSCOIN) {
         CBurnSyscoin burnSyscoin(mtx);
-        if(FillNotarySig(burnSyscoin.voutAssets, nAsset, vchSig)) {
+        if(FillNotarySig(burnSyscoin.voutAssets, nBaseAsset, vchSig)) {
             bFilledNotarySig = true;
             burnSyscoin.SerializeData(data);
         }
     } else if(mtx.nVersion == SYSCOIN_TX_VERSION_ALLOCATION_SEND || mtx.nVersion == SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION) {
         CAssetAllocation allocation(mtx);
-        if(FillNotarySig(allocation.voutAssets, nAsset, vchSig)) {
+        if(FillNotarySig(allocation.voutAssets, nBaseAsset, vchSig)) {
             bFilledNotarySig = true;
             allocation.SerializeData(data);
         }
@@ -168,7 +160,8 @@ static RPCHelpMan assettransactionnotarize()
              throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Could not decode transaction");
         }
     }
-    UpdateNotarySignature(mtx, nAsset, vchSig);
+    const uint64_t nBaseAsset = GetBaseAssetID(nAsset);
+    UpdateNotarySignature(mtx, nBaseAsset, vchSig);
     UniValue ret(UniValue::VOBJ);	
     ret.pushKV("hex", EncodeHexTx(CTransaction(mtx)));
     return ret;
@@ -208,10 +201,11 @@ static RPCHelpMan getnotarysighash()
     uint256 sigHash;
     // get asset
     CAsset theAsset;
+    const uint64_t nBaseAsset = GetBaseAssetID(nAsset);
     // if asset has notary signature requirement set
-    if(GetAsset(GetBaseAssetID(nAsset), theAsset) && !theAsset.vchNotaryKeyID.empty()) {
+    if(GetAsset(nBaseAsset, theAsset) && !theAsset.vchNotaryKeyID.empty()) {
         CTransaction tx(mtx);
-        auto itVout = std::find_if( tx.voutAssets.begin(), tx.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
+        auto itVout = std::find_if( tx.voutAssets.begin(), tx.voutAssets.end(), [&nBaseAsset](const CAssetOut& element){ return GetBaseAssetID(element.key) == nBaseAsset;} );
         if(itVout != tx.voutAssets.end()) {
             sigHash = GetNotarySigHash(tx, *itVout);
         }

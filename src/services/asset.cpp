@@ -220,3 +220,12 @@ void CNotaryDetails::ToJson(UniValue& value) const {
     value.pushKV("instant_transfers", bEnableInstantTransfers);
     value.pushKV("hd_required", bRequireHD);
 }
+
+bool FillNotarySig(std::vector<CAssetOut> & voutAssets, const uint64_t& nBaseAsset, const std::vector<unsigned char> &vchSig) {
+    auto itVout = std::find_if( voutAssets.begin(), voutAssets.end(), [&nBaseAsset](const CAssetOut& element){ return GetBaseAssetID(element.key) == nBaseAsset;} );
+    if(itVout != voutAssets.end()) {
+        itVout->vchNotarySig = vchSig;
+        return true;
+    }
+    return false;
+}

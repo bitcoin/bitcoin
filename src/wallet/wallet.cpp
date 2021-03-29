@@ -44,7 +44,7 @@
 #include <boost/algorithm/string/replace.hpp>
 // SYSCOIN
 #include <curl/curl.h>
-#include <services/asset.h> // GetAsset
+#include <services/asset.h> // GetAsset, FillNotarySig
 #include <evo/deterministicmns.h>
 #include <rpc/util.h>
 #include <core_io.h>
@@ -2744,7 +2744,8 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
         // get asset
         CAsset theAsset;
         // if asset has notary signature requirement set
-        if(mapSigs.find(vecOut.key) == mapSigs.end() && GetAsset(GetBaseAssetID(vecOut.key), theAsset) && !theAsset.vchNotaryKeyID.empty()) {
+        const uint64_t nBaseAsset = GetBaseAssetID(vecOut.key);
+        if(mapSigs.find(nBaseAsset) == mapSigs.end() && GetAsset(nBaseAsset, theAsset) && !theAsset.vchNotaryKeyID.empty()) {
             if(!theAsset.notaryDetails.strEndPoint.empty()) {
                 bool fInvalid = false;
                 const std::string &strEndPoint = DecodeBase64(theAsset.notaryDetails.strEndPoint, &fInvalid);
@@ -2767,8 +2768,8 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
                                     strError = "Invalid asset guid";
                                     continue;
                                 }
-                                uint64_t nAsset;
-                                if(!ParseUInt64(assetObj.get_str(), &nAsset))
+                                uint64_t nBaseAsset;
+                                if(!ParseUInt64(assetObj.get_str(), &nBaseAsset))
                                     throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
                                 const UniValue &sigObj =  find_value(sigArrObj, "sig");
                                 if(!sigObj.isStr()) {
@@ -2783,7 +2784,7 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
                                 }
                                 // ensure compact sig is 65 bytes exactly for ECDSA
                                 if(vchSig.size() == 65)
-                                    mapSigs.try_emplace(nAsset, vchSig);
+                                    mapSigs.try_emplace(nBaseAsset, vchSig);
                                 else {
                                     strError = strprintf("Invalid signature size %d (required 65)\n", vchSig.size());
                                 }
@@ -2799,10 +2800,11 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
             }
         }
     }
-    for(auto& vecOut: voutAssets) {
-        auto it = mapSigs.find(vecOut.key);
-        if(it != mapSigs.end())
-            vecOut.vchNotarySig = it->second;
+    
+    for(auto& mapSig: mapSigs) {
+        if(!FillNotarySig(voutAssets, mapSig.first, mapSig.second)) {
+            strError = "Could not fill signature";
+        }
     }
     if(curl)
         curl_easy_cleanup(curl);

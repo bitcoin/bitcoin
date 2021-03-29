@@ -369,18 +369,29 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const uint256& txHash, T
         return FormatSyscoinErrorMessage(state, "assetallocation-missing-burn-output", bSanityCheck);
     }
     // fill notary signatures for every unique base asset that requires it
-    std::unordered_map<uint64_t, const CAssetOut*> mapBaseAssets;
+    std::unordered_map<uint64_t, std::pair<std::vector<unsigned char>, const CAssetOut*> > mapBaseAssets;
     for(const CAssetOut& vecOut: tx.voutAssets) {
-        mapBaseAssets.try_emplace(GetBaseAssetID(vecOut.key), &vecOut);
-    }
-    for(const auto &vecOutPair: mapBaseAssets) {
         std::vector<unsigned char> vchNotaryKeyID;
-        // if asset has notary signature requirement set
-        if(GetAssetNotaryKeyID(vecOutPair.first, vchNotaryKeyID)) {
-            if (!CHashSigner::VerifyHash(GetNotarySigHash(tx, *vecOutPair.second), CKeyID(uint160(vchNotaryKeyID)), vecOutPair.second->vchNotarySig)) {
-                return FormatSyscoinErrorMessage(state, "assetallocation-notary-sig", fJustCheck);
+        if(GetAssetNotaryKeyID(vecOut.key, vchNotaryKeyID) && !vchNotaryKeyID.empty()) {
+            auto it = mapBaseAssets.try_emplace(GetBaseAssetID(vecOut.key), vchNotaryKeyID, &vecOut);
+            // if inserted
+            if(it.second) {
+                // ensure that the first time its inserted the notary signature cannot be empty
+                if(it.first->second.second->vchNotarySig.empty()) {
+                     return FormatSyscoinErrorMessage(state, "assetallocation-notary-sig-empty", fJustCheck);
+                }
+            // if it already exists in map ensure notary signature is empty (only need it on the first map entry per base id)
+            } else if(!vecOut.vchNotarySig.empty()) {
+                return FormatSyscoinErrorMessage(state, "assetallocation-notary-sig-unexpected", fJustCheck);
             }
         }
+    }
+    for(const auto &vecOutPair: mapBaseAssets) {
+        // if asset has notary signature requirement set
+        if (!CHashSigner::VerifyHash(GetNotarySigHash(tx, *vecOutPair.second.second), CKeyID(uint160(vecOutPair.second.first)), vecOutPair.second.second->vchNotarySig)) {
+            return FormatSyscoinErrorMessage(state, "assetallocation-notary-sig", fJustCheck);
+        }
+        
     }
     switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_ALLOCATION_SEND:

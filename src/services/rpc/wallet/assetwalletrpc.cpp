@@ -1307,14 +1307,17 @@ static RPCHelpMan assetallocationsendmany()
             auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             if(itVout == theAssetAllocation.voutAssets.end()) {
                 CAssetOut assetOut(nAsset, vecOut);
-                if(!theAsset.vchNotaryKeyID.empty()) {
-                    // fund tx expecting 65 byte signature to be filled in
-                    assetOut.vchNotarySig.resize(65);
-                }
                 theAssetAllocation.voutAssets.emplace_back(assetOut);
                 itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nAsset](const CAssetOut& element){ return element.key == nAsset;} );
             }
             itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAmount));
+        }
+        auto itVout = std::find_if( theAssetAllocation.voutAssets.begin(), theAssetAllocation.voutAssets.end(), [&nBaseAsset](const CAssetOut& element){ return GetBaseAssetID(element.key) == nBaseAsset;} );
+        if(itVout->vchNotarySig.empty() && itVout != theAssetAllocation.voutAssets.end()) {
+            if(!theAsset.vchNotaryKeyID.empty()) {
+                // fund tx expecting 65 byte signature to be filled in
+                itVout->vchNotarySig.resize(65);
+            }
         }
         if(nAmountSys <= 0)
             nAmountSys = GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet));
@@ -1337,10 +1340,10 @@ static RPCHelpMan assetallocationsendmany()
     // aux fees if applicable
     for(const auto &it: mapAssets) {
         const uint64_t &nAsset = it.first;
-        const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
         CAsset theAsset;
-        if (!GetAsset(nBaseAsset, theAsset))
-            throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
+        // if not base asset it will skip (if nft)
+        if (!GetAsset(nAsset, theAsset))
+            continue;
         CAmount nAuxFee;
         getAuxFee(theAsset.auxFeeDetails, it.second.second, nAuxFee);
         if(nAuxFee > 0 && !theAsset.auxFeeDetails.vchAuxFeeKeyID.empty()){

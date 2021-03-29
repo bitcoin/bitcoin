@@ -35,4 +35,5 @@ UniValue AssetPublicDataToJson(const std::string &strPubData);
 uint32_t GetBaseAssetID(const uint64_t &nAsset);
 uint32_t GetNFTID(const uint64_t &nAsset);
 uint64_t CreateAssetID(const uint32_t &NFTID, const uint32_t &nBaseAsset);
+bool FillNotarySig(std::vector<CAssetOut> & voutAssets, const uint64_t& nBaseAsset, const std::vector<unsigned char> &vchSig);
 #endif // SYSCOIN_SERVICES_ASSET_H
