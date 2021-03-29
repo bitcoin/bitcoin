@@ -7,14 +7,14 @@
 from io import BytesIO
 
 from test_framework.messages import CTransaction
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
     assert_equal,
     hex_str_to_bytes
 )
 
 
-class AddressesDeprecationTest(BitcoinTestFramework):
+class AddressesDeprecationTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [[], ["-deprecatedrpc=addresses"]]
