@@ -12,6 +12,7 @@
 #include <threadinterrupt.h>
 #include <util/sock.h>
 
+#include <memory>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -29,7 +30,7 @@ using Binary = std::vector<uint8_t>;
  */
 struct Connection {
     /** Connected socket. */
-    Sock sock;
+    std::unique_ptr<Sock> sock;
 
     /** Our I2P address. */
     CService me;
@@ -166,7 +167,7 @@ private:
      * @return a connected socket
      * @throws std::runtime_error if an error occurs
      */
-    Sock Hello() const EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+    std::unique_ptr<Sock> Hello() const EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
 
     /**
      * Check the control socket for errors and possibly disconnect.
@@ -204,10 +205,11 @@ private:
 
     /**
      * Open a new connection to the SAM proxy and issue "STREAM ACCEPT" request using the existing
-     * session id. Return the idle socket that is waiting for a peer to connect to us.
+     * session id.
+     * @return the idle socket that is waiting for a peer to connect to us
      * @throws std::runtime_error if an error occurs
      */
-    Sock StreamAccept() EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
+    std::unique_ptr<Sock> StreamAccept() EXCLUSIVE_LOCKS_REQUIRED(m_mutex);
 
     /**
      * Destroy the session, closing the internally used sockets.
@@ -248,7 +250,7 @@ private:
      * connections and make outgoing ones.
      * See https://geti2p.net/en/docs/api/samv3
      */
-    Sock m_control_sock GUARDED_BY(m_mutex);
+    std::unique_ptr<Sock> m_control_sock GUARDED_BY(m_mutex);
 
     /**
      * Our .b32.i2p address.
