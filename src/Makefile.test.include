@@ -113,6 +113,7 @@ SYSCOIN_TESTS =\
   test/merkle_tests.cpp \
   test/merkleblock_tests.cpp \
   test/multisig_tests.cpp \
+  test/net_peer_eviction_tests.cpp \
   test/net_tests.cpp \
   test/netbase_tests.cpp \
   test/pmt_tests.cpp \
