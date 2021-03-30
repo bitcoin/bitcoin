@@ -1273,6 +1273,7 @@ static RPCHelpMan assetallocationsendmany()
     std::map<uint64_t, std::pair<CAmount,CAmount> > mapAssets;
     std::vector<CAssetOutValue> vecOut;
     uint8_t bOverideRBF = 0;
+    CAmount nAmountSys = 0;
 	for (unsigned int idx = 0; idx < receivers.size(); idx++) {
         CAmount nTotalSending = 0;
 		const UniValue& receiver = receivers[idx];
@@ -1300,7 +1301,7 @@ static RPCHelpMan assetallocationsendmany()
         CTxOut change_prototype_txout(0, scriptPubKey);
         const CAmount &nAmount = AssetAmountFromValue(find_value(receiverObj, "amount"), theAsset.nPrecision);
         const UniValue &gasObj = find_value(receiverObj, "sys_amount");
-        CAmount nAmountSys = 0;
+        nAmountSys = 0;
         if(!gasObj.isNull())
             nAmountSys = AmountFromValue(gasObj);
         if(nAmount > 0 || nAmountSys <= 0) {
@@ -1358,7 +1359,7 @@ static RPCHelpMan assetallocationsendmany()
             itVout->values.push_back(CAssetOutValue(mtx.vout.size(), nAuxFee));
             const CScript& scriptPubKey = GetScriptForDestination(WitnessV0KeyHash(uint160{theAsset.auxFeeDetails.vchAuxFeeKeyID}));
             CTxOut change_prototype_txout(0, scriptPubKey);
-            CAmount nAmountSys = GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet));
+            nAmountSys = GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet));
             CRecipient recp = {scriptPubKey, nAmountSys, false };
             mtx.vout.push_back(CTxOut(recp.nAmount, recp.scriptPubKey));
             auto it = mapAssets.try_emplace(nAsset, std::make_pair(nAmountSys, nAuxFee));
@@ -1396,6 +1397,21 @@ static RPCHelpMan assetallocationsendmany()
         nChangePosRet = -1;
         nFeeRequired = 0;
         coin_control.assetInfo = CAssetCoinInfo(it.first, it.second.second);
+        // find the largest output and subtract fee from the output, incase change was added in previous loop
+        size_t idxLargest = 0;
+        CAmount nAmountLargest = nAmountSys;
+        setSubtractFeeFromOutputs.clear();
+        for (size_t idx = 0; idx < mtx.vout.size(); idx++) {
+            const CTxOut& txOut = mtx.vout[idx];
+            if(txOut.nValue > nAmountLargest) {
+                nAmountLargest = txOut.nValue;
+                idxLargest = idx;
+            }
+        }
+        // if amount is bigger than dust we can subtract fee from it
+        if(nAmountLargest > nAmountSys) {
+            setSubtractFeeFromOutputs.emplace(idxLargest);
+        }
         if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
             throw JSONRPCError(RPC_WALLET_ERROR, error.original);
         }
