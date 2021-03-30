@@ -25,38 +25,23 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeBool()};
-    CAddress random_address;
+    CAddrMan addrman;
+    CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), addrman, fuzzed_data_provider.ConsumeBool()};
     CNetAddr random_netaddr;
     CNode random_node = ConsumeNode(fuzzed_data_provider);
-    CService random_service;
     CSubNet random_subnet;
     std::string random_string;
     while (fuzzed_data_provider.ConsumeBool()) {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
-                random_address = ConsumeAddress(fuzzed_data_provider);
-            },
-            [&] {
                 random_netaddr = ConsumeNetAddr(fuzzed_data_provider);
-            },
-            [&] {
-                random_service = ConsumeService(fuzzed_data_provider);
             },
             [&] {
                 random_subnet = ConsumeSubNet(fuzzed_data_provider);
             },
             [&] {
                 random_string = fuzzed_data_provider.ConsumeRandomLengthString(64);
-            },
-            [&] {
-                std::vector<CAddress> addresses;
-                while (fuzzed_data_provider.ConsumeBool()) {
-                    addresses.push_back(ConsumeAddress(fuzzed_data_provider));
-                }
-                // Limit nTimePenalty to int32_t to avoid signed integer overflow
-                (void)connman.AddNewAddresses(addresses, ConsumeAddress(fuzzed_data_provider), fuzzed_data_provider.ConsumeIntegral<int32_t>());
             },
             [&] {
                 connman.AddNode(random_string);
@@ -98,9 +83,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
                 (void)connman.GetNodeCount(fuzzed_data_provider.PickValueInArray({ConnectionDirection::None, ConnectionDirection::In, ConnectionDirection::Out, ConnectionDirection::Both}));
             },
             [&] {
-                connman.MarkAddressGood(random_address);
-            },
-            [&] {
                 (void)connman.OutboundTargetReached(fuzzed_data_provider.ConsumeBool());
             },
             [&] {
@@ -126,9 +108,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
             },
             [&] {
                 connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool());
-            },
-            [&] {
-                connman.SetServices(random_service, ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS));
             },
             [&] {
                 connman.SetTryNewOutboundPeer(fuzzed_data_provider.ConsumeBool());

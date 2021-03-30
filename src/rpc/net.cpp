@@ -907,8 +907,8 @@ static RPCHelpMan addpeeraddress()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     NodeContext& node = EnsureNodeContext(request.context);
-    if (!node.connman) {
-        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
+    if (!node.addrman) {
+        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Address manager functionality missing or disabled");
     }
 
     UniValue obj(UniValue::VOBJ);
@@ -925,7 +925,7 @@ static RPCHelpMan addpeeraddress()
     address.nTime = GetAdjustedTime();
     // The source address is set equal to the address. This is equivalent to the peer
     // announcing itself.
-    if (!node.connman->AddNewAddresses({address}, address)) {
+    if (!node.addrman->Add(address, address)) {
         obj.pushKV("success", false);
         return obj;
     }

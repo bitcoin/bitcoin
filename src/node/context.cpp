@@ -4,6 +4,7 @@
 
 #include <node/context.h>
 
+#include <addrman.h>
 #include <banman.h>
 #include <interfaces/chain.h>
 #include <net.h>

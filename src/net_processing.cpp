@@ -225,9 +225,9 @@ using PeerRef = std::shared_ptr<Peer>;
 class PeerManagerImpl final : public PeerManager
 {
 public:
-    PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
-                    CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                    bool ignore_incoming_txs);
+    PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
+                    BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman,
+                    CTxMemPool& pool, bool ignore_incoming_txs);
 
     /** Overridden from CValidationInterface. */
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
@@ -238,7 +238,7 @@ public:
 
     /** Implement NetEventsInterface */
     void InitializeNode(CNode* pnode) override;
-    void FinalizeNode(const CNode& node, bool& fUpdateConnectionTime) override;
+    void FinalizeNode(const CNode& node) override;
     bool ProcessMessages(CNode* pfrom, std::atomic<bool>& interrupt) override;
     bool SendMessages(CNode* pto) override EXCLUSIVE_LOCKS_REQUIRED(pto->cs_sendProcessing);
 
@@ -322,6 +322,7 @@ private:
 
     const CChainParams& m_chainparams;
     CConnman& m_connman;
+    CAddrMan& m_addrman;
     /** Pointer to this node's banman. May be nullptr - check existence before dereferencing. */
     BanMan* const m_banman;
     ChainstateManager& m_chainman;
@@ -968,12 +969,12 @@ void PeerManagerImpl::ReattemptInitialBroadcast(CScheduler& scheduler)
     scheduler.scheduleFromNow([&] { ReattemptInitialBroadcast(scheduler); }, delta);
 }
 
-void PeerManagerImpl::FinalizeNode(const CNode& node, bool& fUpdateConnectionTime)
+void PeerManagerImpl::FinalizeNode(const CNode& node)
 {
     NodeId nodeid = node.GetId();
-    fUpdateConnectionTime = false;
-    LOCK(cs_main);
     int misbehavior{0};
+    {
+    LOCK(cs_main);
     {
         // We remove the PeerRef from g_peer_map here, but we don't always
         // destruct the Peer. Sometimes another thread is still holding a
@@ -989,12 +990,6 @@ void PeerManagerImpl::FinalizeNode(const CNode& node, bool& fUpdateConnectionTim
 
     if (state->fSyncStarted)
         nSyncStarted--;
-
-    if (node.fSuccessfullyConnected && misbehavior == 0 &&
-        !node.IsBlockOnlyConn() && !node.IsInboundConn()) {
-        // Only change visible addrman state for outbound, full-relay peers
-        fUpdateConnectionTime = true;
-    }
 
     for (const QueuedBlock& entry : state->vBlocksInFlight) {
         mapBlocksInFlight.erase(entry.hash);
@@ -1019,6 +1014,14 @@ void PeerManagerImpl::FinalizeNode(const CNode& node, bool& fUpdateConnectionTim
         assert(m_outbound_peers_with_protect_from_disconnect == 0);
         assert(m_wtxid_relay_peers == 0);
         assert(m_txrequest.Size() == 0);
+    }
+    } // cs_main
+    if (node.fSuccessfullyConnected && misbehavior == 0 &&
+        !node.IsBlockOnlyConn() && !node.IsInboundConn()) {
+        // Only change visible addrman state for full outbound peers.  We don't
+        // call Connected() for feeler connections since they don't have
+        // fSuccessfullyConnected set.
+        m_addrman.Connected(node.addr);
     }
     LogPrint(BCLog::NET, "Cleared nodestate for peer=%d\n", nodeid);
 }
@@ -1201,18 +1204,19 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex)
            (GetBlockProofEquivalentTime(*pindexBestHeader, *pindex, *pindexBestHeader, m_chainparams.GetConsensus()) < STALE_RELAY_AGE_LIMIT);
 }
 
-std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
-                                               CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                                               bool ignore_incoming_txs)
+std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
+                                               BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman,
+                                               CTxMemPool& pool, bool ignore_incoming_txs)
 {
-    return std::make_unique<PeerManagerImpl>(chainparams, connman, banman, scheduler, chainman, pool, ignore_incoming_txs);
+    return std::make_unique<PeerManagerImpl>(chainparams, connman, addrman, banman, scheduler, chainman, pool, ignore_incoming_txs);
 }
 
-PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
-                                 CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                                 bool ignore_incoming_txs)
+PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
+                                 BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman,
+                                 CTxMemPool& pool, bool ignore_incoming_txs)
     : m_chainparams(chainparams),
       m_connman(connman),
+      m_addrman(addrman),
       m_banman(banman),
       m_chainman(chainman),
       m_mempool(pool),
@@ -2330,7 +2334,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
         nServices = ServiceFlags(nServiceInt);
         if (!pfrom.IsInboundConn())
         {
-            m_connman.SetServices(pfrom.addr, nServices);
+            m_addrman.SetServices(pfrom.addr, nServices);
         }
         if (pfrom.ExpectServicesFromConn() && !HasAllDesirableServiceFlags(nServices))
         {
@@ -2474,7 +2478,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             //
             // This moves an address from New to Tried table in Addrman,
             // resolves tried-table collisions, etc.
-            m_connman.MarkAddressGood(pfrom.addr);
+            m_addrman.Good(pfrom.addr);
         }
 
         std::string remoteAddr;
@@ -2679,7 +2683,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             if (fReachable)
                 vAddrOk.push_back(addr);
         }
-        m_connman.AddNewAddresses(vAddrOk, pfrom.addr, 2 * 60 * 60);
+        m_addrman.Add(vAddrOk, pfrom.addr, 2 * 60 * 60);
         if (vAddr.size() < 1000)
             pfrom.fGetAddr = false;
         if (pfrom.IsAddrFetchConn()) {
