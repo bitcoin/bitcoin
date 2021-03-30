@@ -9,7 +9,7 @@
 
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_utils.h>
-
+#include <util/time.h>
 namespace llmq
 {
 CDKGDebugManager* quorumDKGDebugManager;
@@ -148,7 +148,7 @@ void CDKGDebugManager::ResetLocalSessionStatus(uint8_t llmqType)
     }
 
     localStatus.sessions.erase(it);
-    localStatus.nTime = GetAdjustedTime();
+    localStatus.nTime = GetTime();
 }
 
 void CDKGDebugManager::InitLocalSessionStatus(uint8_t llmqType, const uint256& quorumHash, uint32_t quorumHeight)
@@ -181,7 +181,7 @@ void CDKGDebugManager::UpdateLocalSessionStatus(uint8_t llmqType, std::function<
     }
 
     if (func(it->second)) {
-        localStatus.nTime = GetAdjustedTime();
+        localStatus.nTime = GetTime();
     }
 }
 
@@ -195,7 +195,7 @@ void CDKGDebugManager::UpdateLocalMemberStatus(uint8_t llmqType, size_t memberId
     }
 
     if (func(it->second.members.at(memberIdx))) {
-        localStatus.nTime = GetAdjustedTime();
+        localStatus.nTime = GetTime();
     }
 }
 

@@ -8,6 +8,7 @@
 #include <evo/evodb.h>
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_commitment.h>
+#include <threadinterrupt.h>
 
 #include <validationinterface.h>
 #include <consensus/params.h>
@@ -16,6 +17,7 @@
 
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
+class CNode;
 class CConnman;
 
 #include <ctpl.h>

@@ -7,7 +7,6 @@
 
 #include <llmq/quorums.h>
 
-#include <net.h>
 #include <chainparams.h>
 #include <saltedhasher.h>
 #include <univalue.h>
@@ -16,6 +15,7 @@
 #include <unordered_map>
 #include <streams.h>
 #include <threadsafety.h>
+typedef int64_t NodeId;
 class PeerManager;
 namespace llmq
 {
