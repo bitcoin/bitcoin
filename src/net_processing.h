@@ -10,6 +10,7 @@
 #include <sync.h>
 #include <validationinterface.h>
 
+class CAddrMan;
 class CChainParams;
 class CTxMemPool;
 class ChainstateManager;
@@ -36,9 +37,9 @@ struct CNodeStateStats {
 class PeerManager : public CValidationInterface, public NetEventsInterface
 {
 public:
-    static std::unique_ptr<PeerManager> make(const CChainParams& chainparams, CConnman& connman, BanMan* banman,
-                                             CScheduler& scheduler, ChainstateManager& chainman, CTxMemPool& pool,
-                                             bool ignore_incoming_txs);
+    static std::unique_ptr<PeerManager> make(const CChainParams& chainparams, CConnman& connman, CAddrMan& addrman,
+                                             BanMan* banman, CScheduler& scheduler, ChainstateManager& chainman,
+                                             CTxMemPool& pool, bool ignore_incoming_txs);
     virtual ~PeerManager() { }
 
     /** Get statistics from node state */
