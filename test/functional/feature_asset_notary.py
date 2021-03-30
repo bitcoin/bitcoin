@@ -144,8 +144,7 @@ class AssetNotaryTest(SyscoinTestFramework):
         assert_equal(len(out), 1)
         assert_equal(out[0]['asset_guid'], nftGuid2_2)
         assert_equal(out[0]['asset_amount'], Decimal('0.5'))
-   
-        
+
         assetInfo = self.nodes[0].assetinfo(self.asset)
         assert('notary_details' not in assetInfo)
         assert_equal(assetInfo['notary_address'], '')
