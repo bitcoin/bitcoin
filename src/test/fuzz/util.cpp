@@ -80,7 +80,7 @@ CScriptWitness ConsumeScriptWitness(FuzzedDataProvider& fuzzed_data_provider, co
 
 CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length, const bool maybe_p2wsh) noexcept
 {
-    const std::vector<uint8_t> b = ConsumeRandomLengthByteVector(fuzzed_data_provider);
+    const std::vector<uint8_t> b = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
     CScript r_script{b.begin(), b.end()};
     if (maybe_p2wsh && fuzzed_data_provider.ConsumeBool()) {
         uint256 script_hash;
