@@ -16,7 +16,7 @@
 #include <node/ui_interface.h>
 #include <noui.h>
 #include <shutdown.h>
-#include <util/ref.h>
+#include <util/check.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/threadnames.h>
@@ -24,6 +24,7 @@
 #include <util/translation.h>
 #include <util/url.h>
 
+#include <any>
 #include <functional>
 #include <optional>
 
@@ -142,7 +143,7 @@ static bool AppInit(int argc, char* argv[])
     // end, which is interpreted as failure to start.
     TokenPipeEnd daemon_ep;
 #endif
-    util::Ref context{node};
+    std::any context{&node};
     try
     {
         if (!CheckDataDirOption()) {

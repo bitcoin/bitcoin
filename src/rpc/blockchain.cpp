@@ -30,7 +30,6 @@
 #include <txdb.h>
 #include <txmempool.h>
 #include <undo.h>
-#include <util/ref.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -56,15 +55,16 @@ static Mutex cs_blockchange;
 static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock GUARDED_BY(cs_blockchange);
 
-NodeContext& EnsureNodeContext(const util::Ref& context)
+NodeContext& EnsureNodeContext(const std::any& context)
 {
-    if (!context.Has<NodeContext>()) {
+    auto node_context = util::AnyPtr<NodeContext>(context);
+    if (!node_context) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Node context not found");
     }
-    return context.Get<NodeContext>();
+    return *node_context;
 }
 
-CTxMemPool& EnsureMemPool(const util::Ref& context)
+CTxMemPool& EnsureMemPool(const std::any& context)
 {
     const NodeContext& node = EnsureNodeContext(context);
     if (!node.mempool) {
@@ -73,7 +73,7 @@ CTxMemPool& EnsureMemPool(const util::Ref& context)
     return *node.mempool;
 }
 
-ChainstateManager& EnsureChainman(const util::Ref& context)
+ChainstateManager& EnsureChainman(const std::any& context)
 {
     const NodeContext& node = EnsureNodeContext(context);
     if (!node.chainman) {
@@ -82,7 +82,7 @@ ChainstateManager& EnsureChainman(const util::Ref& context)
     return *node.chainman;
 }
 
-CBlockPolicyEstimator& EnsureFeeEstimator(const util::Ref& context)
+CBlockPolicyEstimator& EnsureFeeEstimator(const std::any& context)
 {
     NodeContext& node = EnsureNodeContext(context);
     if (!node.fee_estimator) {
