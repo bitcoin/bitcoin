@@ -9,7 +9,7 @@
 #include <evo/deterministicmns.h>
 #include <llmq/quorums_commitment.h>
 
-#include <validationinterface.h>
+#include <chain.h>
 #include <consensus/params.h>
 #include <saltedhasher.h>
 #include <unordered_lru_cache.h>

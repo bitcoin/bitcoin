@@ -42,9 +42,7 @@
 #include <masternode/masternode-payments.h>
 
 #include <evo/specialtx.h>
-#include <evo/providertx.h>
 #include <evo/deterministicmns.h>
-#include <evo/cbtx.h>
 
 #include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_chainlocks.h>

@@ -12,7 +12,6 @@
 
 #include <masternode/activemasternode.h>
 #include <chainparams.h>
-#include <init.h>
 #include <masternode/masternode-sync.h>
 #include <net_processing.h>
 #include <netmessagemaker.h>
