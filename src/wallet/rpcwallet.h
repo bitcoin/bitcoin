@@ -7,6 +7,7 @@
 
 #include <span.h>
 
+#include <any>
 #include <memory>
 #include <string>
 #include <vector>
@@ -35,7 +36,7 @@ Span<const CRPCCommand> GetMasternodeWalletRPCCommands();
 std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request);
 
 void EnsureWalletIsUnlocked(const CWallet&);
-WalletContext& EnsureWalletContext(const util::Ref& context);
+WalletContext& EnsureWalletContext(const std::any& context);
 LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet, bool also_create = false);
 
 RPCHelpMan listunspent();

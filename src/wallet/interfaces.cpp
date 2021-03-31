@@ -15,7 +15,6 @@
 #include <sync.h>
 #include <uint256.h>
 #include <util/check.h>
-#include <util/ref.h>
 #include <util/system.h>
 #include <util/ui_change_type.h>
 #include <wallet/context.h>
@@ -528,7 +527,7 @@ public:
     {
         for (const CRPCCommand& command : GetWalletRPCCommands()) {
             m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
-                return command.actor({request, m_context}, result, last_handler);
+                return command.actor({request, &m_context}, result, last_handler);
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
@@ -539,36 +538,40 @@ public:
                    getauxblock.  Thus we construct a new context that
                    contains both and use that.  */
                 WalletContext extendedCtx = m_context;
-                if (request.context.Has<NodeContext>())
-                    extendedCtx.nodeContext = &request.context.Get<NodeContext>();
-                return command.actor({request, extendedCtx}, result, last_handler);
+                auto context = util::AnyPtr<NodeContext>(request.context);
+                if(context)
+                    extendedCtx.nodeContext = context;
+                return command.actor({request, &extendedCtx}, result, last_handler);
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
         for (const CRPCCommand& command : GetEvoWalletRPCCommands()) {
             m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
                 WalletContext extendedCtx = m_context;
-                if (request.context.Has<NodeContext>())
-                    extendedCtx.nodeContext = &request.context.Get<NodeContext>();
-                return command.actor({request, extendedCtx}, result, last_handler);
+                auto context = util::AnyPtr<NodeContext>(request.context);
+                if(context)
+                    extendedCtx.nodeContext = context;
+                return command.actor({request, &extendedCtx}, result, last_handler);
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
         for (const CRPCCommand& command : GetGovernanceWalletRPCCommands()) {
             m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
                 WalletContext extendedCtx = m_context;
-                if (request.context.Has<NodeContext>())
-                    extendedCtx.nodeContext = &request.context.Get<NodeContext>();
-                return command.actor({request, extendedCtx}, result, last_handler);
+                auto context = util::AnyPtr<NodeContext>(request.context);
+                if(context)
+                    extendedCtx.nodeContext = context;
+                return command.actor({request, &extendedCtx}, result, last_handler);
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
         for (const CRPCCommand& command : GetMasternodeWalletRPCCommands()) {
             m_rpc_commands.emplace_back(command.category, command.name, [this, &command](const JSONRPCRequest& request, UniValue& result, bool last_handler) {
                 WalletContext extendedCtx = m_context;
-                if (request.context.Has<NodeContext>())
-                    extendedCtx.nodeContext = &request.context.Get<NodeContext>();
-                return command.actor({request, extendedCtx}, result, last_handler);
+                auto context = util::AnyPtr<NodeContext>(request.context);
+                if(context)
+                    extendedCtx.nodeContext = context;
+                return command.actor({request, &extendedCtx}, result, last_handler);
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         } 

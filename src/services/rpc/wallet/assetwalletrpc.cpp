@@ -702,7 +702,7 @@ static RPCHelpMan assetnewtest()
 },
     };
 }
-UniValue CreateAssetUpdateTx(const util::Ref& context, const int32_t& nVersionIn, const uint64_t &nAsset, CWallet& pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet.cs_wallet) {
+UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn, const uint64_t &nAsset, CWallet& pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet.cs_wallet) {
     AssertLockHeld(pwallet.cs_wallet);
     CCoinControl coin_control;
     CAmount nMinimumAmountAsset = 0;

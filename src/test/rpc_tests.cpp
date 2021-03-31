@@ -10,8 +10,9 @@
 #include <interfaces/chain.h>
 #include <node/context.h>
 #include <test/util/setup_common.h>
-#include <util/ref.h>
 #include <util/time.h>
+
+#include <any>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/test/unit_test.hpp>
@@ -32,7 +33,7 @@ UniValue RPCTestingSetup::CallRPC(std::string args)
     boost::split(vArgs, args, boost::is_any_of(" \t"));
     std::string strMethod = vArgs[0];
     vArgs.erase(vArgs.begin());
-    util::Ref context{m_node};
+    std::any context{&m_node};
     JSONRPCRequest request(context);
     request.strMethod = strMethod;
     request.params = RPCConvertValues(strMethod, vArgs);

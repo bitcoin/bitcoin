@@ -310,7 +310,6 @@ SYSCOIN_CORE_H = \
   util/moneystr.h \
   util/rbf.h \
   util/readwritefile.h \
-  util/ref.h \
   util/settings.h \
   util/sock.h \
   util/spanparsing.h \

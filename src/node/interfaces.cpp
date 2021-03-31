@@ -38,7 +38,6 @@
 #include <uint256.h>
 #include <univalue.h>
 #include <util/check.h>
-#include <util/ref.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <validation.h>
@@ -49,6 +48,7 @@
 #include <config/syscoin-config.h>
 #endif
 
+#include <any>
 #include <memory>
 #include <optional>
 #include <utility>
@@ -347,13 +347,13 @@ public:
     {
         m_context = context;
         if (context) {
-            m_context_ref.Set(*context);
+            m_context_ref = context;
         } else {
-            m_context_ref.Clear();
+            m_context_ref.reset();
         }
     }
     NodeContext* m_context{nullptr};
-    util::Ref m_context_ref;
+    std::any m_context_ref;
 };
 
 bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<RecursiveMutex>& lock, const CChain& active)
