@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 import time
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import set_node_times
+from test_framework.util import set_node_times, force_finish_mnsync
 '''
 feature_llmq_is_retroactive.py
 
@@ -25,12 +25,9 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        # Connect all nodes to node1 so that we always have the whole network connected
-        # Otherwise only masternode connections will be established between nodes, which won't propagate TXs/blocks
-        # Usually node0 is the one that does this, but in this test we isolate it multiple times
         for i in range(len(self.nodes)):
-            if i != 1:
-                self.connect_nodes(i, 1)
+            force_finish_mnsync(self.nodes[i])
+
         self.nodes[0].generate(10)
         self.sync_blocks(self.nodes, timeout=60*5)
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
