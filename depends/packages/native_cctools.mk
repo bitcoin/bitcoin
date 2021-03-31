@@ -4,7 +4,6 @@ $(package)_download_path=https://github.com/tpoechtrager/cctools-port/archive
 $(package)_file_name=$($(package)_version).tar.gz
 $(package)_sha256_hash=6b73269efdf5c58a070e7357b66ee760501388549d6a12b423723f45888b074b
 $(package)_build_subdir=cctools
-$(package)_patches=ld64_disable_threading.patch
 $(package)_dependencies=native_libtapi
 
 define $(package)_set_vars
@@ -15,10 +14,6 @@ define $(package)_set_vars
   endif
   $(package)_cc=$(clang_prog)
   $(package)_cxx=$(clangxx_prog)
-endef
-
-define $(package)_preprocess_cmds
-  patch -p1 < $($(package)_patch_dir)/ld64_disable_threading.patch
 endef
 
 define $(package)_config_cmds
