@@ -17,7 +17,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <util/ref.h>
 extern RecursiveMutex cs_main;
 namespace auxpow_tests
 {
