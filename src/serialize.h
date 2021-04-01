@@ -628,7 +628,7 @@ void UnserializeOrThrow(const std::vector<uint8_t>& in, T& out) {
 }
 
 template <typename T>
-void UnserializeOrThrow(const std::vector<uint8_t>& in, T& out, typename T::hash_t precalculatedHash) {
+void UnserializeOrThrow(const std::vector<uint8_t>& in, T& out, typename T::block_t::hash_t precalculatedHash) {
     altintegration::ValidationState state;
     altintegration::ReadStream stream(in);
     if(!altintegration::DeserializeFromVbkEncoding(stream, out, state, precalculatedHash)) {
@@ -662,29 +662,29 @@ template<typename Stream> inline void Unserialize(Stream& s, altintegration::VTB
     UnserializeOrThrow(bytes_data, vtb);
 }
 
-template<typename Stream> inline void Serialize(Stream& s, const altintegration::BlockIndex<altintegration::BtcBlock>& b) {
+template<typename Stream> inline void Serialize(Stream& s, const altintegration::StoredBlockIndex<altintegration::BtcBlock>& b) {
     std::vector<uint8_t> bytes_data = b.toVbkEncoding();
     Serialize(s, bytes_data);
 }
-template<typename Stream> inline void Unserialize(Stream& s, altintegration::BlockIndex<altintegration::BtcBlock>& b) {
+template<typename Stream> inline void Unserialize(Stream& s, altintegration::StoredBlockIndex<altintegration::BtcBlock>& b) {
     std::vector<uint8_t> bytes_data;
     Unserialize(s, bytes_data);
     UnserializeOrThrow(bytes_data, b);
 }
-template<typename Stream> inline void Serialize(Stream& s, const altintegration::BlockIndex<altintegration::VbkBlock>& b) {
+template<typename Stream> inline void Serialize(Stream& s, const altintegration::StoredBlockIndex<altintegration::VbkBlock>& b) {
     std::vector<uint8_t> bytes_data = b.toVbkEncoding();
     Serialize(s, bytes_data);
 }
-template<typename Stream> inline void Unserialize(Stream& s, altintegration::BlockIndex<altintegration::VbkBlock>& b) {
+template<typename Stream> inline void Unserialize(Stream& s, altintegration::StoredBlockIndex<altintegration::VbkBlock>& b) {
     std::vector<uint8_t> bytes_data;
     Unserialize(s, bytes_data);
     UnserializeOrThrow(bytes_data, b);
 }
-template<typename Stream> inline void Serialize(Stream& s, const altintegration::BlockIndex<altintegration::AltBlock>& b) {
+template<typename Stream> inline void Serialize(Stream& s, const altintegration::StoredBlockIndex<altintegration::AltBlock>& b) {
     std::vector<uint8_t> bytes_data = b.toVbkEncoding();
     Serialize(s, bytes_data);
 }
-template<typename Stream> inline void Unserialize(Stream& s, altintegration::BlockIndex<altintegration::AltBlock>& b) {
+template<typename Stream> inline void Unserialize(Stream& s, altintegration::StoredBlockIndex<altintegration::AltBlock>& b) {
     std::vector<uint8_t> bytes_data;
     Unserialize(s, bytes_data);
     UnserializeOrThrow(bytes_data, b);
@@ -712,7 +712,7 @@ template<typename Stream> inline void Unserialize(Stream& s, altintegration::Vbk
     UnserializeOrThrow(bytes_data, block);
 }
 template <typename Stream>
-inline void UnserializeWithHash(Stream& s, altintegration::BlockIndex<altintegration::VbkBlock>& block, const altintegration::VbkBlock::hash_t& precalculatedHash = altintegration::VbkBlock::hash_t())
+inline void UnserializeWithHash(Stream& s, altintegration::StoredBlockIndex<altintegration::VbkBlock>& block, const altintegration::VbkBlock::hash_t& precalculatedHash = altintegration::VbkBlock::hash_t())
 {
     std::vector<uint8_t> bytes_data;
     Unserialize(s, bytes_data);
