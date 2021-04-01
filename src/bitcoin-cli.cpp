@@ -42,6 +42,7 @@ static const char DEFAULT_RPCCONNECT[] = "127.0.0.1";
 static const int DEFAULT_HTTP_CLIENT_TIMEOUT=900;
 static const bool DEFAULT_NAMED=false;
 static const int CONTINUE_EXECUTION=-1;
+static constexpr int8_t UNKNOWN_NETWORK{-1};
 
 /** Default number of blocks to generate for RPC generatetoaddress. */
 static const std::string DEFAULT_NBLOCKS = "1";
@@ -228,6 +229,56 @@ public:
     virtual UniValue ProcessReply(const UniValue &batch_in) = 0;
 };
 
+/** Process addrinfo requests */
+class AddrinfoRequestHandler : public BaseRequestHandler
+{
+private:
+    static constexpr uint8_t m_networks_size{5};
+    const std::array<std::string, m_networks_size> m_networks{{"ipv4", "ipv6", "torv2", "torv3", "i2p"}};
+    int8_t NetworkStringToId(const std::string& str) const
+    {
+        for (uint8_t i = 0; i < m_networks_size; ++i) {
+            if (str == m_networks.at(i)) return i;
+        }
+        return UNKNOWN_NETWORK;
+    }
+
+public:
+    UniValue PrepareRequest(const std::string& method, const std::vector<std::string>& args) override
+    {
+        if (!args.empty()) {
+            throw std::runtime_error("-addrinfo takes no arguments");
+        }
+        UniValue params{RPCConvertValues("getnodeaddresses", std::vector<std::string>{{"0"}})};
+        return JSONRPCRequestObj("getnodeaddresses", params, 1);
+    }
+
+    UniValue ProcessReply(const UniValue& reply) override
+    {
+        // Count the number of peers we know by network, including torv2 versus torv3.
+        std::array<uint64_t, m_networks_size> counts{{}};
+        for (const UniValue& node : reply["result"].getValues()) {
+            std::string network_name{node["network"].get_str()};
+            if (network_name == "onion") {
+                network_name = node["address"].get_str().size() > 22 ? "torv3" : "torv2";
+            }
+            const int8_t network_id{NetworkStringToId(network_name)};
+            if (network_id == UNKNOWN_NETWORK) continue;
+            ++counts.at(network_id);
+        }
+        // Prepare result to return to user.
+        UniValue result{UniValue::VOBJ}, addresses{UniValue::VOBJ};
+        uint64_t total{0}; // Total address count
+        for (uint8_t i = 0; i < m_networks_size; ++i) {
+            addresses.pushKV(m_networks.at(i), counts.at(i));
+            total += counts.at(i);
+        }
+        addresses.pushKV("total", total);
+        result.pushKV("addresses_known", addresses);
+        return JSONRPCReplyObj(result, NullUniValue, 1);
+    }
+};
+
 /** Process getinfo requests */
 class GetinfoRequestHandler: public BaseRequestHandler
 {
@@ -299,7 +350,6 @@ public:
 class NetinfoRequestHandler : public BaseRequestHandler
 {
 private:
-    static constexpr int8_t UNKNOWN_NETWORK{-1};
     static constexpr uint8_t m_networks_size{4};
     static constexpr uint8_t MAX_DETAIL_LEVEL{4};
     const std::array<std::string, m_networks_size> m_networks{{"ipv4", "ipv6", "onion", "i2p"}};
