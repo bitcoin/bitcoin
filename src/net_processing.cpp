@@ -482,19 +482,70 @@ private:
     /** Offset into vExtraTxnForCompact to insert the next tx */
     size_t vExtraTxnForCompactIt GUARDED_BY(g_cs_orphans) = 0;
 
+    /** Check whether the last unknown block a peer advertised is not yet known. */
     void ProcessBlockAvailability(NodeId nodeid) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    /** Update tracking information about which blocks a peer is assumed to have. */
     void UpdateBlockAvailability(NodeId nodeid, const uint256& hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool CanDirectFetch() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+     * To prevent fingerprinting attacks, only send blocks/headers outside of
+     * the active chain if they are no more than a month older (both in time,
+     * and in best equivalent proof of work) than the best header chain we know
+     * about and we fully-validated them at some point.
+     */
     bool BlockRequestAllowed(const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     bool AlreadyHaveBlock(const uint256& block_hash) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void ProcessGetBlockData(CNode& pfrom, Peer& peer, const CInv& inv);
+
+    /**
+     * Validation logic for compact filters request handling.
+     *
+     * May disconnect from the peer in the case of a bad request.
+     *
+     * @param[in]   peer            The peer that we received the request from
+     * @param[in]   filter_type     The filter type the request is for. Must be basic filters.
+     * @param[in]   start_height    The start height for the request
+     * @param[in]   stop_hash       The stop_hash for the request
+     * @param[in]   max_height_diff The maximum number of items permitted to request, as specified in BIP 157
+     * @param[out]  stop_index      The CBlockIndex for the stop_hash block, if the request can be serviced.
+     * @param[out]  filter_index    The filter index, if the request can be serviced.
+     * @return                      True if the request can be serviced.
+     */
     bool PrepareBlockFilterRequest(CNode& peer,
                                    BlockFilterType filter_type, uint32_t start_height,
                                    const uint256& stop_hash, uint32_t max_height_diff,
                                    const CBlockIndex*& stop_index,
                                    BlockFilterIndex*& filter_index);
+
+    /**
+     * Handle a cfilters request.
+     *
+     * May disconnect from the peer in the case of a bad request.
+     *
+     * @param[in]   peer            The peer that we received the request from
+     * @param[in]   vRecv           The raw message received
+     */
     void ProcessGetCFilters(CNode& peer, CDataStream& vRecv);
+
+    /**
+     * Handle a cfheaders request.
+     *
+     * May disconnect from the peer in the case of a bad request.
+     *
+     * @param[in]   peer            The peer that we received the request from
+     * @param[in]   vRecv           The raw message received
+     */
     void ProcessGetCFHeaders(CNode& peer, CDataStream& vRecv);
+
+    /**
+     * Handle a getcfcheckpt request.
+     *
+     * May disconnect from the peer in the case of a bad request.
+     *
+     * @param[in]   peer            The peer that we received the request from
+     * @param[in]   vRecv           The raw message received
+     */
     void ProcessGetCFCheckPt(CNode& peer, CDataStream& vRecv);
 };
 } // namespace
@@ -748,7 +799,6 @@ static bool PeerHasHeader(CNodeState *state, const CBlockIndex *pindex) EXCLUSIV
     return false;
 }
 
-/** Check whether the last unknown block a peer advertised is not yet known. */
 void PeerManagerImpl::ProcessBlockAvailability(NodeId nodeid) {
     CNodeState *state = State(nodeid);
     assert(state != nullptr);
@@ -764,7 +814,6 @@ void PeerManagerImpl::ProcessBlockAvailability(NodeId nodeid) {
     }
 }
 
-/** Update tracking information about which blocks a peer is assumed to have. */
 void PeerManagerImpl::UpdateBlockAvailability(NodeId nodeid, const uint256 &hash) {
     CNodeState *state = State(nodeid);
     assert(state != nullptr);
@@ -1191,16 +1240,6 @@ bool PeerManagerImpl::MaybePunishNodeForTx(NodeId nodeid, const TxValidationStat
     return false;
 }
 
-
-//////////////////////////////////////////////////////////////////////////////
-//
-// blockchain -> download logic notification
-//
-
-// To prevent fingerprinting attacks, only send blocks/headers outside of the
-// active chain if they are no more than a month older (both in time, and in
-// best equivalent proof of work) than the best header chain we know about and
-// we fully-validated them at some point.
 bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex)
 {
     AssertLockHeld(cs_main);
@@ -2101,20 +2140,6 @@ void PeerManagerImpl::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
     m_mempool.check(m_chainman.ActiveChainstate());
 }
 
-/**
- * Validation logic for compact filters request handling.
- *
- * May disconnect from the peer in the case of a bad request.
- *
- * @param[in]   peer            The peer that we received the request from
- * @param[in]   filter_type     The filter type the request is for. Must be basic filters.
- * @param[in]   start_height    The start height for the request
- * @param[in]   stop_hash       The stop_hash for the request
- * @param[in]   max_height_diff The maximum number of items permitted to request, as specified in BIP 157
- * @param[out]  stop_index      The CBlockIndex for the stop_hash block, if the request can be serviced.
- * @param[out]  filter_index    The filter index, if the request can be serviced.
- * @return                      True if the request can be serviced.
- */
 bool PeerManagerImpl::PrepareBlockFilterRequest(CNode& peer,
                                                 BlockFilterType filter_type, uint32_t start_height,
                                                 const uint256& stop_hash, uint32_t max_height_diff,
@@ -2168,14 +2193,6 @@ bool PeerManagerImpl::PrepareBlockFilterRequest(CNode& peer,
     return true;
 }
 
-/**
- * Handle a cfilters request.
- *
- * May disconnect from the peer in the case of a bad request.
- *
- * @param[in]   peer            The peer that we received the request from
- * @param[in]   vRecv           The raw message received
- */
 void PeerManagerImpl::ProcessGetCFilters(CNode& peer, CDataStream& vRecv)
 {
     uint8_t filter_type_ser;
@@ -2207,14 +2224,6 @@ void PeerManagerImpl::ProcessGetCFilters(CNode& peer, CDataStream& vRecv)
     }
 }
 
-/**
- * Handle a cfheaders request.
- *
- * May disconnect from the peer in the case of a bad request.
- *
- * @param[in]   peer            The peer that we received the request from
- * @param[in]   vRecv           The raw message received
- */
 void PeerManagerImpl::ProcessGetCFHeaders(CNode& peer, CDataStream& vRecv)
 {
     uint8_t filter_type_ser;
@@ -2259,14 +2268,6 @@ void PeerManagerImpl::ProcessGetCFHeaders(CNode& peer, CDataStream& vRecv)
     m_connman.PushMessage(&peer, std::move(msg));
 }
 
-/**
- * Handle a getcfcheckpt request.
- *
- * May disconnect from the peer in the case of a bad request.
- *
- * @param[in]   peer            The peer that we received the request from
- * @param[in]   vRecv           The raw message received
- */
 void PeerManagerImpl::ProcessGetCFCheckPt(CNode& peer, CDataStream& vRecv)
 {
     uint8_t filter_type_ser;

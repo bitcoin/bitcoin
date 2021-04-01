@@ -169,7 +169,7 @@ namespace {
     std::set<int> setDirtyFileInfo;
 } // anon namespace
 
-CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash)
+CBlockIndex* BlockManager::LookupBlockIndex(const uint256& hash) const
 {
     AssertLockHeld(cs_main);
     assert(std::addressof(g_chainman.BlockIndex()) == std::addressof(m_block_index));
