@@ -248,7 +248,7 @@ TestChain100Setup::TestChain100Setup(int count, bool deterministic)
         // SYSCOIN
         assert(
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
-            "2a2641e6be4218883c9d60260e920ddcb60310f888f40a593150784676eed656");
+            "1236d85b6fdd769d2e5932d12e389eb7638485ba44956fc4f6105ad203909eef");
     }
 }
 

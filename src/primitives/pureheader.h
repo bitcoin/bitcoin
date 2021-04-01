@@ -28,8 +28,8 @@ private:
     static const uint8_t VERSION_START_BIT = 16;
     /** Bits above are reserved for the auxpow chain ID.  */
     static const int32_t VERSION_CHAIN_START = (1 << VERSION_START_BIT);
-    // mask to get Chain ID from version field, chainid is 8 in SYS so 0x000f mask should be OK
-    static const int32_t MASK_AUXPOW_CHAINID_SHIFTED = (0x000f << VERSION_START_BIT);
+    // mask to get Chain ID from version field, chainid is 16 in SYS so 0x001f mask should be OK
+    static const int32_t MASK_AUXPOW_CHAINID_SHIFTED = (0x001f << VERSION_START_BIT);
     // mask to get old Chain ID from version field, legacy one is 4096 (2^12) in SYS so 0x1fff mask is needed
     static const int32_t MASK_OLD_AUXPOW_CHAINID_SHIFTED = (0x1fff << VERSION_START_BIT);
     // shifted Chain ID in version field, 8 is hardcoded we should really remove the magic number, it is SYS chain ID

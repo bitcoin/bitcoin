@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(test_assumeutxo)
 
     const auto out110 = *ExpectedAssumeutxo(110, *params);
     // SYSCOIN
-    BOOST_CHECK_EQUAL(out110.hash_serialized, uint256S("5316c1e1065fa7e70a854eb44478eae73716392867cfba50c810a1a0a0c5a06c"));
+    BOOST_CHECK_EQUAL(out110.hash_serialized, uint256S("e8d568e4ae9cede27f158761fd1966c361e4485d62dd7e837581dd1376ada561"));
     BOOST_CHECK_EQUAL(out110.nChainTx, (unsigned int)110);
 
     const auto out210 = *ExpectedAssumeutxo(210, *params);

@@ -482,7 +482,7 @@ public:
         consensus.vchSYSXERC20Manager = ParseHex("443d9a14fb6ba2A45465bEC3767186f404Ccea25");
         consensus.vchTokenFreezeMethod = ParseHex("9c6dea23fe3b510bb5d170df49dc74e387692eaa3258c691918cd3aa94f5fb74");
         consensus.nBridgeStartBlock = 1000;
-        consensus.nUTXOAssetsBlock = 0; // TODO find testnet cutoff height
+        consensus.nUTXOAssetsBlock = 0;
         consensus.nUTXOAssetsBlockProvisioning = consensus.nUTXOAssetsBlock + 10000;
         consensus.DIP0003Height = 200;
         consensus.DIP0003EnforcementHeight = 400;
@@ -667,7 +667,7 @@ public:
         m_assumeutxo_data = MapAssumeutxo{
             {
                 110,
-                {uint256S("0x5316c1e1065fa7e70a854eb44478eae73716392867cfba50c810a1a0a0c5a06c"), 110},
+                {uint256S("0xe8d568e4ae9cede27f158761fd1966c361e4485d62dd7e837581dd1376ada561"), 110},
             },
             {
                 210,
