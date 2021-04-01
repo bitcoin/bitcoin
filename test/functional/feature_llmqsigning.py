@@ -204,6 +204,7 @@ class LLMQSigningTest(DashTestFramework):
         self.sync_blocks()
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
+        self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
 
         if self.options.spork21:
@@ -228,6 +229,7 @@ class LLMQSigningTest(DashTestFramework):
             self.wait_until(lambda: all('pingwait' not in peer for peer in mn.node.getpeerinfo()))
             self.nodes[0].generate(1)
             self.sync_blocks()
+            self.bump_mocktime(5)
             wait_for_sigs(True, False, True, 15)
 
 if __name__ == '__main__':
