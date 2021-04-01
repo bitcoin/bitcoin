@@ -38,12 +38,11 @@
 #include <utility>
 #include <vector>
 
-typedef CWallet* CWalletRef;
-bool AddWallet(CWallet* wallet);
-bool RemoveWallet(CWallet* wallet);
+bool AddWallet(const std::shared_ptr<CWallet>& wallet);
+bool RemoveWallet(const std::shared_ptr<CWallet>& wallet);
 bool HasWallets();
-std::vector<CWallet*> GetWallets();
-CWallet* GetWallet(const std::string& name);
+std::vector<std::shared_ptr<CWallet>> GetWallets();
+std::shared_ptr<CWallet> GetWallet(const std::string& name);
 
 /**
  * Settings
@@ -1208,7 +1207,7 @@ public:
     static bool Verify(std::string wallet_file, bool salvage_wallet, std::string& error_string, std::string& warning_string);
 
     /* Initializes the wallet, returns a new CWallet instance or a null pointer in case of an error */
-    static CWallet* CreateWalletFromFile(const std::string& name, const fs::path& path);
+    static std::shared_ptr<CWallet> CreateWalletFromFile(const std::string& name, const fs::path& path);
 
     /**
      * Wallet post-init setup

@@ -119,22 +119,22 @@ void TestGUI()
     for (int i = 0; i < 5; ++i) {
         test.CreateAndProcessBlock({}, GetScriptForRawPubKey(test.coinbaseKey.GetPubKey()));
     }
-    CWallet wallet("mock", WalletDatabase::CreateMock());
-    AddWallet(&wallet);
+    std::shared_ptr<CWallet> wallet = std::make_shared<CWallet>("mock", WalletDatabase::CreateMock());
+    AddWallet(wallet);
     bool firstRun;
-    wallet.LoadWallet(firstRun);
+    wallet->LoadWallet(firstRun);
     {
-        LOCK(wallet.cs_wallet);
-        wallet.SetAddressBook(test.coinbaseKey.GetPubKey().GetID(), "", "receive");
-        wallet.AddKeyPubKey(test.coinbaseKey, test.coinbaseKey.GetPubKey());
+        LOCK(wallet->cs_wallet);
+        wallet->SetAddressBook(test.coinbaseKey.GetPubKey().GetID(), "", "receive");
+        wallet->AddKeyPubKey(test.coinbaseKey, test.coinbaseKey.GetPubKey());
     }
     {
         LOCK(cs_main);
-        WalletRescanReserver reserver(&wallet);
+        WalletRescanReserver reserver(wallet.get());
         reserver.reserve();
-        wallet.ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, true);
+        wallet->ScanForWalletTransactions(chainActive.Genesis(), nullptr, reserver, true);
     }
-    wallet.SetBroadcastTransactions(true);
+    wallet->SetBroadcastTransactions(true);
 
     // Create widgets for sending coins and listing transactions.
     SendCoinsDialog sendCoinsDialog;
@@ -149,8 +149,8 @@ void TestGUI()
     // Send two transactions, and verify they are added to transaction list.
     TransactionTableModel* transactionTableModel = walletModel.getTransactionTableModel();
     QCOMPARE(transactionTableModel->rowCount({}), 105);
-    uint256 txid1 = SendCoins(wallet, sendCoinsDialog, CKeyID(), 5 * COIN);
-    uint256 txid2 = SendCoins(wallet, sendCoinsDialog, CKeyID(), 10 * COIN);
+    uint256 txid1 = SendCoins(*wallet.get(), sendCoinsDialog, CKeyID(), 5 * COIN);
+    uint256 txid2 = SendCoins(*wallet.get(), sendCoinsDialog, CKeyID(), 10 * COIN);
     QCOMPARE(transactionTableModel->rowCount({}), 107);
     QVERIFY(FindTx(*transactionTableModel, txid1).isValid());
     QVERIFY(FindTx(*transactionTableModel, txid2).isValid());
@@ -217,7 +217,7 @@ void TestGUI()
     QPushButton* removeRequestButton = receiveCoinsDialog.findChild<QPushButton*>("removeRequestButton");
     removeRequestButton->click();
     QCOMPARE(requestTableModel->rowCount({}), currentRowCount-1);
-    RemoveWallet(&wallet);
+    RemoveWallet(wallet);
 }
 
 }

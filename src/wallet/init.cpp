@@ -400,7 +400,8 @@ bool WalletInit::Open() const
     }
 
     for (const std::string& walletFile : gArgs.GetArgs("-wallet")) {
-        if (!CWallet::CreateWalletFromFile(walletFile, fs::absolute(walletFile, GetWalletDir()))) {
+        std::shared_ptr<CWallet> pwallet = CWallet::CreateWalletFromFile(walletFile, fs::absolute(walletFile, GetWalletDir()));
+        if (!pwallet) {
             return false;
         }
     }
@@ -410,7 +411,7 @@ bool WalletInit::Open() const
 
 void WalletInit::Start(CScheduler& scheduler) const
 {
-    for (CWallet* pwallet : GetWallets()) {
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->postInitProcess();
     }
 
@@ -424,7 +425,7 @@ void WalletInit::Start(CScheduler& scheduler) const
 
 void WalletInit::Flush() const
 {
-    for (CWallet* pwallet : GetWallets()) {
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         if (CCoinJoinClientOptions::IsEnabled()) {
             // Stop CoinJoin, release keys
             auto it = coinJoinClientManagers.find(pwallet->GetName());
@@ -437,23 +438,22 @@ void WalletInit::Flush() const
 
 void WalletInit::Stop() const
 {
-    for (CWallet* pwallet : GetWallets()) {
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         pwallet->Flush(true);
     }
 }
 
 void WalletInit::Close() const
 {
-    for (CWallet* pwallet : GetWallets()) {
+    for (const std::shared_ptr<CWallet>& pwallet : GetWallets()) {
         RemoveWallet(pwallet);
-        delete pwallet;
     }
 }
 
 void WalletInit::AutoLockMasternodeCollaterals() const
 {
     // we can't do this before DIP3 is fully initialized
-    for (CWallet* pwallet : GetWallets()) {
+    for (const auto pwallet : GetWallets()) {
         pwallet->AutoLockMasternodeCollaterals();
     }
 }

@@ -84,9 +84,9 @@ void CKeyHolderStorage::ReturnAll()
     }
 }
 
-CTransactionBuilderOutput::CTransactionBuilderOutput(CTransactionBuilder* pTxBuilderIn, CWallet* pwalletIn, CAmount nAmountIn) :
+CTransactionBuilderOutput::CTransactionBuilderOutput(CTransactionBuilder* pTxBuilderIn, std::shared_ptr<CWallet> pwalletIn, CAmount nAmountIn) :
     pTxBuilder(pTxBuilderIn),
-    key(pwalletIn),
+    key(pwalletIn.get()),
     nAmount(nAmountIn)
 {
     assert(pTxBuilder);
@@ -105,9 +105,9 @@ bool CTransactionBuilderOutput::UpdateAmount(const CAmount nNewAmount)
     return true;
 }
 
-CTransactionBuilder::CTransactionBuilder(CWallet* pwalletIn, const CompactTallyItem& tallyItemIn) :
+CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, const CompactTallyItem& tallyItemIn) :
     pwallet(pwalletIn),
-    dummyReserveKey(pwalletIn),
+    dummyReserveKey(pwalletIn.get()),
     tallyItem(tallyItemIn)
 {
     // Generate a feerate which will be used to consider if the remainder is dust and will go into fees or not
@@ -139,7 +139,7 @@ CTransactionBuilder::CTransactionBuilder(CWallet* pwalletIn, const CompactTallyI
         for (const auto& coin : tallyItem.vecInputCoins) {
             const CScript& scriptPubKey = coin.txout.scriptPubKey;
             SignatureData sigdata;
-            bool res = ProduceSignature(DummySignatureCreator(pwallet), scriptPubKey, sigdata);
+            bool res = ProduceSignature(DummySignatureCreator(pwallet.get()), scriptPubKey, sigdata);
             assert(res);
             UpdateTransaction(dummyTx, nIn, sigdata);
             nIn++;

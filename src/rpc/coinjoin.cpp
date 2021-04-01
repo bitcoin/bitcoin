@@ -16,7 +16,8 @@
 #ifdef ENABLE_WALLET
 UniValue coinjoin(const JSONRPCRequest& request)
 {
-    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
 
@@ -143,7 +144,8 @@ UniValue getcoinjoininfo(const JSONRPCRequest& request)
 
     obj.pushKV("queue_size", coinJoinClientQueueManager.GetQueueSize());
 
-    CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
     if (!pwallet) {
         return obj;
     }

@@ -46,24 +46,24 @@
 #include <boost/algorithm/string/replace.hpp>
 
 static CCriticalSection cs_wallets;
-static std::vector<CWallet*> vpwallets GUARDED_BY(cs_wallets);
+static std::vector<std::shared_ptr<CWallet>> vpwallets GUARDED_BY(cs_wallets);
 
-bool AddWallet(CWallet* wallet)
+bool AddWallet(const std::shared_ptr<CWallet>& wallet)
 {
     LOCK(cs_wallets);
     assert(wallet);
-    std::vector<CWallet*>::const_iterator i = std::find(vpwallets.begin(), vpwallets.end(), wallet);
+    std::vector<std::shared_ptr<CWallet>>::const_iterator i = std::find(vpwallets.begin(), vpwallets.end(), wallet);
     if (i != vpwallets.end()) return false;
     coinJoinClientManagers.emplace(std::make_pair(wallet->GetName(), std::make_shared<CCoinJoinClientManager>(*wallet)));
     vpwallets.push_back(wallet);
     return true;
 }
 
-bool RemoveWallet(CWallet* wallet)
+bool RemoveWallet(const std::shared_ptr<CWallet>& wallet)
 {
     LOCK(cs_wallets);
     assert(wallet);
-    std::vector<CWallet*>::iterator i = std::find(vpwallets.begin(), vpwallets.end(), wallet);
+    std::vector<std::shared_ptr<CWallet>>::iterator i = std::find(vpwallets.begin(), vpwallets.end(), wallet);
     if (i == vpwallets.end()) return false;
     vpwallets.erase(i);
     auto it = coinJoinClientManagers.find(wallet->GetName());
@@ -77,16 +77,16 @@ bool HasWallets()
     return !vpwallets.empty();
 }
 
-std::vector<CWallet*> GetWallets()
+std::vector<std::shared_ptr<CWallet>> GetWallets()
 {
     LOCK(cs_wallets);
     return vpwallets;
 }
 
-CWallet* GetWallet(const std::string& name)
+std::shared_ptr<CWallet> GetWallet(const std::string& name)
 {
     LOCK(cs_wallets);
-    for (CWallet* wallet : vpwallets) {
+    for (const std::shared_ptr<CWallet>& wallet : vpwallets) {
         if (wallet->GetName() == name) return wallet;
     }
     return nullptr;
@@ -4969,7 +4969,7 @@ bool CWallet::Verify(std::string wallet_file, bool salvage_wallet, std::string& 
     return WalletBatch::VerifyDatabaseFile(wallet_path, warning_string, error_string);
 }
 
-CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& path)
+std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const std::string& name, const fs::path& path)
 {
     const std::string& walletFile = name;
 
@@ -4991,10 +4991,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
 
     int64_t nStart = GetTimeMillis();
     bool fFirstRun = true;
-    // Make a temporary wallet unique pointer so memory doesn't get leaked if
-    // wallet creation fails.
-    auto temp_wallet = MakeUnique<CWallet>(name, WalletDatabase::Create(path));
-    CWallet *walletInstance = temp_wallet.get();
+    std::shared_ptr<CWallet> walletInstance = std::make_shared<CWallet>(name, WalletDatabase::Create(path));
     AddWallet(walletInstance);
     auto error = [&](const std::string& strError) {
         RemoveWallet(walletInstance);
@@ -5030,6 +5027,8 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
             return error(strprintf(_("Error loading %s"), walletFile));
         }
     }
+
+    uiInterface.LoadWallet(walletInstance);
 
     if (gArgs.GetBoolArg("-upgradewallet", fFirstRun))
     {
@@ -5169,7 +5168,7 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
 
         nStart = GetTimeMillis();
         {
-            WalletRescanReserver reserver(walletInstance);
+            WalletRescanReserver reserver(walletInstance.get());
             if (!reserver.reserve()) {
                 return error(_("Failed to rescan the wallet during initialization"));
             }
@@ -5205,10 +5204,8 @@ CWallet* CWallet::CreateWalletFromFile(const std::string& name, const fs::path& 
         }
     }
 
-    uiInterface.LoadWallet(walletInstance);
-
     // Register with the validation interface. It's ok to do this after rescan since we're still holding cs_main.
-    RegisterValidationInterface(temp_wallet.release());
+    RegisterValidationInterface(walletInstance.get());
 
     walletInstance->SetBroadcastTransactions(gArgs.GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
 

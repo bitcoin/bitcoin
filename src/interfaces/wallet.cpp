@@ -175,7 +175,7 @@ class WalletImpl : public Wallet
 public:
     CoinJoinImpl m_coinjoin;
 
-    WalletImpl(CWallet& wallet) : m_wallet(wallet), m_coinjoin(wallet) {}
+    WalletImpl(const std::shared_ptr<CWallet>& wallet) : m_shared_wallet(wallet), m_wallet(*wallet.get()), m_coinjoin(*wallet.get()) {}
 
     void markDirty() override
     {
@@ -518,11 +518,12 @@ public:
         return MakeHandler(m_wallet.NotifyWatchonlyChanged.connect(fn));
     }
 
+    std::shared_ptr<CWallet> m_shared_wallet;
     CWallet& m_wallet;
 };
 
 } // namespace
 
-std::unique_ptr<Wallet> MakeWallet(CWallet& wallet) { return MakeUnique<WalletImpl>(wallet); }
+std::unique_ptr<Wallet> MakeWallet(const std::shared_ptr<CWallet>& wallet) { return MakeUnique<WalletImpl>(wallet); }
 
 } // namespace interfaces
