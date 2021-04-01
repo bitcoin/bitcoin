@@ -16,28 +16,28 @@
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
     const std::string random_string(buffer.begin(), buffer.end());
-    const std::pair<std::string, std::vector<uint8_t>> r1 = bech32::Decode(random_string);
-    if (r1.first.empty()) {
-        assert(r1.second.empty());
+    const auto r1 = bech32::Decode(random_string);
+    if (r1.hrp.empty()) {
+        assert(r1.encoding == bech32::Encoding::INVALID);
+        assert(r1.data.empty());
     } else {
-        const std::string& hrp = r1.first;
-        const std::vector<uint8_t>& data = r1.second;
-        const std::string reencoded = bech32::Encode(hrp, data);
+        assert(r1.encoding != bech32::Encoding::INVALID);
+        const std::string reencoded = bech32::Encode(r1.encoding, r1.hrp, r1.data);
         assert(CaseInsensitiveEqual(random_string, reencoded));
     }
 
     std::vector<unsigned char> input;
     ConvertBits<8, 5, true>([&](unsigned char c) { input.push_back(c); }, buffer.begin(), buffer.end());
-    const std::string encoded = bech32::Encode("bc", input);
-    assert(!encoded.empty());
 
-    const std::pair<std::string, std::vector<uint8_t>> r2 = bech32::Decode(encoded);
-    if (r2.first.empty()) {
-        assert(r2.second.empty());
-    } else {
-        const std::string& hrp = r2.first;
-        const std::vector<uint8_t>& data = r2.second;
-        assert(hrp == "bc");
-        assert(data == input);
+    if (input.size() + 3 + 6 <= 90) {
+        // If it's possible to encode input in Bech32(m) without exceeding the 90-character limit:
+        for (auto encoding : {bech32::Encoding::BECH32, bech32::Encoding::BECH32M}) {
+            const std::string encoded = bech32::Encode(encoding, "bc", input);
+            assert(!encoded.empty());
+            const auto r2 = bech32::Decode(encoded);
+            assert(r2.encoding == encoding);
+            assert(r2.hrp == "bc");
+            assert(r2.data == input);
+        }
     }
 }
