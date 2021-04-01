@@ -18,7 +18,7 @@
 class CPureBlockHeader
 {
 public:
-    static const uint32_t CHAINID = 8; // should match params.nAuxpowChainId
+    static const uint32_t CHAINID = 16; // should match params.nAuxpowChainId
     static const uint32_t OLD_CHAINID = 4096; // should match params.nAuxpowOldChainId
 private:
     /* Mask for dummy bit and versionbits top mask.  */
