@@ -165,7 +165,7 @@ public:
         consensus.nPowTargetTimespan = 6 * 60 * 60; // 6h retarget
         consensus.nPowTargetSpacing = 1 * 60; // Syscoin: 1 minute
         // TODO find right chainid
-        consensus.nAuxpowChainId = 8;
+        consensus.nAuxpowChainId = 16;
         consensus.nAuxpowOldChainId = 4096;
         consensus.nAuxpowStartHeight = 1;
         consensus.fPowAllowMinDifficultyBlocks = false;
@@ -487,7 +487,7 @@ public:
         consensus.DIP0003Height = 200;
         consensus.DIP0003EnforcementHeight = 400;
         consensus.nAuxpowStartHeight = 1;
-        consensus.nAuxpowChainId = 8;
+        consensus.nAuxpowChainId = 16;
         consensus.nAuxpowOldChainId = 4096;
         consensus.fStrictChainId = false;
         consensus.signet_challenge.assign(bin.begin(), bin.end());
@@ -605,7 +605,7 @@ public:
         // By default assume that the signatures in ancestors of this block are valid.
         consensus.defaultAssumeValid = uint256{};
         consensus.nAuxpowStartHeight = 0;
-        consensus.nAuxpowChainId = 8;
+        consensus.nAuxpowChainId = 16;
         consensus.nAuxpowOldChainId = 4096;
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 0;
