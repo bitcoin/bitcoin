@@ -18,4 +18,7 @@ static const CScript P2WSH_OP_TRUE{
            return hash;
        }())};
 
+/** Flags that are not forbidden by an assert in script validation */
+bool IsValidFlagCombination(unsigned flags);
+
 #endif // BITCOIN_TEST_UTIL_SCRIPT_H

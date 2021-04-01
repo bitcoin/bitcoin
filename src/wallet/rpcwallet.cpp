@@ -22,7 +22,6 @@
 #include <util/fees.h>
 #include <util/message.h> // For MessageSign()
 #include <util/moneystr.h>
-#include <util/ref.h>
 #include <util/string.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -124,12 +123,13 @@ void EnsureWalletIsUnlocked(const CWallet& wallet)
     }
 }
 
-WalletContext& EnsureWalletContext(const util::Ref& context)
+WalletContext& EnsureWalletContext(const std::any& context)
 {
-    if (!context.Has<WalletContext>()) {
+    auto wallet_context = util::AnyPtr<WalletContext>(context);
+    if (!wallet_context) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Wallet context not found");
     }
-    return context.Get<WalletContext>();
+    return *wallet_context;
 }
 
 // also_create should only be set to true only when the RPC is expected to add things to a blank wallet and make it no longer blank
@@ -1741,7 +1741,7 @@ static RPCHelpMan gettransaction()
 
     if (verbose) {
         UniValue decoded(UniValue::VOBJ);
-        TxToUniv(*wtx.tx, uint256(), decoded, false);
+        TxToUniv(*wtx.tx, uint256(), pwallet->chain().rpcEnableDeprecated("addresses"), decoded, false);
         entry.pushKV("decoded", decoded);
     }
 
@@ -3379,7 +3379,7 @@ RPCHelpMan signrawtransactionwithwallet()
 
 static RPCHelpMan bumpfee_helper(std::string method_name)
 {
-    bool want_psbt = method_name == "psbtbumpfee";
+    const bool want_psbt = method_name == "psbtbumpfee";
     const std::string incremental_fee{CFeeRate(DEFAULT_INCREMENTAL_RELAY_FEE).ToString(FeeEstimateMode::SAT_VB)};
 
     return RPCHelpMan{method_name,
@@ -3413,14 +3413,14 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                              "still be replaceable in practice, for example if it has unconfirmed ancestors which\n"
                              "are replaceable).\n"},
                     {"estimate_mode", RPCArg::Type::STR, /* default */ "unset", std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
-    "         \"" + FeeModes("\"\n\"") + "\""},
+                             "\"" + FeeModes("\"\n\"") + "\""},
                 },
                 "options"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
             {
-                {RPCResult::Type::STR, "psbt", "The base64-encoded unsigned PSBT of the new transaction." + std::string(want_psbt ? "" : " Only returned when wallet private keys are disabled. (DEPRECATED)")},
+                {RPCResult::Type::STR, "psbt", "The base64-encoded unsigned PSBT of the new transaction."},
             },
             want_psbt ? std::vector<RPCResult>{} : std::vector<RPCResult>{{RPCResult::Type::STR_HEX, "txid", "The id of the new transaction. Only returned when wallet private keys are enabled."}}
             ),
@@ -3437,7 +3437,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     "\nBump the fee, get the new transaction\'s" + std::string(want_psbt ? "psbt" : "txid") + "\n" +
             HelpExampleCli(method_name, "<txid>")
         },
-        [want_psbt](const RPCHelpMan& self, const JSONRPCRequest& request) mutable -> UniValue
+        [want_psbt](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;

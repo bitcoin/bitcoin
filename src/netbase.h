@@ -194,7 +194,7 @@ extern std::function<std::unique_ptr<Sock>(const CService&)> CreateSock;
  * Try to connect to the specified service on the specified socket.
  *
  * @param addrConnect The service to which to connect.
- * @param hSocket The socket on which to connect.
+ * @param sock The socket on which to connect.
  * @param nTimeout Wait this many milliseconds for the connection to be
  *                 established.
  * @param manual_connection Whether or not the connection was manually requested
@@ -202,7 +202,7 @@ extern std::function<std::unique_ptr<Sock>(const CService&)> CreateSock;
  *
  * @returns Whether or not a connection was successfully made.
  */
-bool ConnectSocketDirectly(const CService &addrConnect, const SOCKET& hSocket, int nTimeout, bool manual_connection);
+bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nTimeout, bool manual_connection);
 
 /**
  * Connect to a specified destination service through a SOCKS5 proxy by first

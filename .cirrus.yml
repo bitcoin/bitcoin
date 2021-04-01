@@ -35,8 +35,6 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
     folder: "/tmp/cirrus-ci-build/depends/built"
   depends_sdk_cache:
     folder: "/tmp/cirrus-ci-build/depends/sdk-sources"
-  depends_releases_cache:
-    folder: "/tmp/cirrus-ci-build/releases"
   ci_script:
     - ./ci/test_run_all.sh
 
@@ -103,6 +101,8 @@ task:
   # For faster CI feedback, immediately schedule a task that compiles most modules
   << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
+  depends_releases_cache:
+    folder: "/tmp/cirrus-ci-build/releases"
   container:
     image: ubuntu:bionic
   env:
@@ -168,13 +168,13 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_mac.sh"
 
 task:
-  name: 'macOS 10.15 native [gui] [no depends]'
+  name: 'macOS 11 native [gui] [no depends]'
   macos_brew_addon_script:
     - brew install boost libevent berkeley-db4 qt miniupnpc libnatpmp ccache zeromq qrencode sqlite libtool automake pkg-config gnu-getopt
   << : *GLOBAL_TASK_TEMPLATE
   osx_instance:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
-    image: catalina-xcode-12.1  # https://cirrus-ci.org/guide/macOS
+    image: big-sur-xcode-12.4  # https://cirrus-ci.org/guide/macOS
   env:
     DANGER_RUN_CI_ON_HOST: "true"
     CI_USE_APT_INSTALL: "no"
@@ -182,9 +182,11 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_mac_host.sh"
 
 task:
-  name: 'ARM64 Android APK [bionic]'
+  name: 'ARM64 Android APK [focal]'
+  depends_sources_cache:
+    folder: "/tmp/cirrus-ci-build/depends/sources"
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:bionic
+    image: ubuntu:focal
   env:
     FILE_ENV: "./ci/test/00_setup_env_android.sh"

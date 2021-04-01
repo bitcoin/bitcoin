@@ -61,6 +61,7 @@ class FeeFilterTest(BitcoinTestFramework):
     def run_test(self):
         self.test_feefilter_forcerelay()
         self.test_feefilter()
+        self.test_feefilter_blocksonly()
 
     def test_feefilter_forcerelay(self):
         self.log.info('Check that peers without forcerelay permission (default) get a feefilter message')
@@ -118,6 +119,19 @@ class FeeFilterTest(BitcoinTestFramework):
         txids = [miniwallet.send_self_transfer(fee_rate=Decimal('0.00020000'), from_node=node1)['wtxid'] for _ in range(3)]
         conn.wait_for_invs_to_match(txids)
         conn.clear_invs()
+
+    def test_feefilter_blocksonly(self):
+        """Test that we don't send fee filters to block-relay-only peers and when we're in blocksonly mode."""
+        self.log.info("Check that we don't send fee filters to block-relay-only peers.")
+        feefilter_peer = self.nodes[0].add_outbound_p2p_connection(FeefilterConn(), p2p_idx=0, connection_type="block-relay-only")
+        feefilter_peer.sync_with_ping()
+        feefilter_peer.assert_feefilter_received(False)
+
+        self.log.info("Check that we don't send fee filters when in blocksonly mode.")
+        self.restart_node(0, ["-blocksonly"])
+        feefilter_peer = self.nodes[0].add_p2p_connection(FeefilterConn())
+        feefilter_peer.sync_with_ping()
+        feefilter_peer.assert_feefilter_received(False)
 
 
 if __name__ == '__main__':

@@ -253,7 +253,7 @@ class AvoidReuseTest(BitcoinTestFramework):
             if second_addr_type == "p2sh-segwit":
                 new_fundaddr = fund_decoded["segwit"]["p2sh-segwit"]
             elif second_addr_type == "bech32":
-                new_fundaddr = fund_decoded["segwit"]["addresses"][0]
+                new_fundaddr = fund_decoded["segwit"]["address"]
             else:
                 new_fundaddr = fundaddr
                 assert_equal(second_addr_type, "legacy")

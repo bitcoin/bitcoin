@@ -396,6 +396,60 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_CHECK(!addr.SetSpecial("totally bogus"));
 }
 
+BOOST_AUTO_TEST_CASE(cnetaddr_tostring_canonical_ipv6)
+{
+    // Test that CNetAddr::ToString formats IPv6 addresses with zero compression as described in
+    // RFC 5952 ("A Recommendation for IPv6 Address Text Representation").
+    const std::map<std::string, std::string> canonical_representations_ipv6{
+        {"0000:0000:0000:0000:0000:0000:0000:0000", "::"},
+        {"000:0000:000:00:0:00:000:0000", "::"},
+        {"000:000:000:000:000:000:000:000", "::"},
+        {"00:00:00:00:00:00:00:00", "::"},
+        {"0:0:0:0:0:0:0:0", "::"},
+        {"0:0:0:0:0:0:0:1", "::1"},
+        {"2001:0:0:1:0:0:0:1", "2001:0:0:1::1"},
+        {"2001:0db8:0:0:1:0:0:1", "2001:db8::1:0:0:1"},
+        {"2001:0db8:85a3:0000:0000:8a2e:0370:7334", "2001:db8:85a3::8a2e:370:7334"},
+        {"2001:0db8::0001", "2001:db8::1"},
+        {"2001:0db8::0001:0000", "2001:db8::1:0"},
+        {"2001:0db8::1:0:0:1", "2001:db8::1:0:0:1"},
+        {"2001:db8:0000:0:1::1", "2001:db8::1:0:0:1"},
+        {"2001:db8:0000:1:1:1:1:1", "2001:db8:0:1:1:1:1:1"},
+        {"2001:db8:0:0:0:0:2:1", "2001:db8::2:1"},
+        {"2001:db8:0:0:0::1", "2001:db8::1"},
+        {"2001:db8:0:0:1:0:0:1", "2001:db8::1:0:0:1"},
+        {"2001:db8:0:0:1::1", "2001:db8::1:0:0:1"},
+        {"2001:DB8:0:0:1::1", "2001:db8::1:0:0:1"},
+        {"2001:db8:0:0::1", "2001:db8::1"},
+        {"2001:db8:0:0:aaaa::1", "2001:db8::aaaa:0:0:1"},
+        {"2001:db8:0:1:1:1:1:1", "2001:db8:0:1:1:1:1:1"},
+        {"2001:db8:0::1", "2001:db8::1"},
+        {"2001:db8:85a3:0:0:8a2e:370:7334", "2001:db8:85a3::8a2e:370:7334"},
+        {"2001:db8::0:1", "2001:db8::1"},
+        {"2001:db8::0:1:0:0:1", "2001:db8::1:0:0:1"},
+        {"2001:DB8::1", "2001:db8::1"},
+        {"2001:db8::1", "2001:db8::1"},
+        {"2001:db8::1:0:0:1", "2001:db8::1:0:0:1"},
+        {"2001:db8::1:1:1:1:1", "2001:db8:0:1:1:1:1:1"},
+        {"2001:db8::aaaa:0:0:1", "2001:db8::aaaa:0:0:1"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd:0:1", "2001:db8:aaaa:bbbb:cccc:dddd:0:1"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd::1", "2001:db8:aaaa:bbbb:cccc:dddd:0:1"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:0001", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:1"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:001", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:1"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:01", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:1"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:1", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:1"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:aaaa", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:aaaa"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:AAAA", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:aaaa"},
+        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:AaAa", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:aaaa"},
+    };
+    for (const auto& [input_address, expected_canonical_representation_output] : canonical_representations_ipv6) {
+        CNetAddr net_addr;
+        BOOST_REQUIRE(LookupHost(input_address, net_addr, false));
+        BOOST_REQUIRE(net_addr.IsIPv6());
+        BOOST_CHECK_EQUAL(net_addr.ToString(), expected_canonical_representation_output);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(cnetaddr_serialize_v1)
 {
     CNetAddr addr;
@@ -801,149 +855,6 @@ BOOST_AUTO_TEST_CASE(LocalAddress_BasicLifecycle)
 
     RemoveLocal(addr);
     BOOST_CHECK_EQUAL(IsLocal(addr), false);
-}
-
-std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(const int n_candidates, FastRandomContext& random_context)
-{
-    std::vector<NodeEvictionCandidate> candidates;
-    for (int id = 0; id < n_candidates; ++id) {
-        candidates.push_back({
-            /* id */ id,
-            /* nTimeConnected */ static_cast<int64_t>(random_context.randrange(100)),
-            /* m_min_ping_time */ std::chrono::microseconds{random_context.randrange(100)},
-            /* nLastBlockTime */ static_cast<int64_t>(random_context.randrange(100)),
-            /* nLastTXTime */ static_cast<int64_t>(random_context.randrange(100)),
-            /* fRelevantServices */ random_context.randbool(),
-            /* fRelayTxes */ random_context.randbool(),
-            /* fBloomFilter */ random_context.randbool(),
-            /* nKeyedNetGroup */ random_context.randrange(100),
-            /* prefer_evict */ random_context.randbool(),
-            /* m_is_local */ random_context.randbool(),
-        });
-    }
-    return candidates;
-}
-
-// Returns true if any of the node ids in node_ids are selected for eviction.
-bool IsEvicted(std::vector<NodeEvictionCandidate> candidates, const std::vector<NodeId>& node_ids, FastRandomContext& random_context)
-{
-    Shuffle(candidates.begin(), candidates.end(), random_context);
-    const std::optional<NodeId> evicted_node_id = SelectNodeToEvict(std::move(candidates));
-    if (!evicted_node_id) {
-        return false;
-    }
-    return std::find(node_ids.begin(), node_ids.end(), *evicted_node_id) != node_ids.end();
-}
-
-// Create number_of_nodes random nodes, apply setup function candidate_setup_fn,
-// apply eviction logic and then return true if any of the node ids in node_ids
-// are selected for eviction.
-bool IsEvicted(const int number_of_nodes, std::function<void(NodeEvictionCandidate&)> candidate_setup_fn, const std::vector<NodeId>& node_ids, FastRandomContext& random_context)
-{
-    std::vector<NodeEvictionCandidate> candidates = GetRandomNodeEvictionCandidates(number_of_nodes, random_context);
-    for (NodeEvictionCandidate& candidate : candidates) {
-        candidate_setup_fn(candidate);
-    }
-    return IsEvicted(candidates, node_ids, random_context);
-}
-
-namespace {
-constexpr int NODE_EVICTION_TEST_ROUNDS{10};
-constexpr int NODE_EVICTION_TEST_UP_TO_N_NODES{200};
-} // namespace
-
-BOOST_AUTO_TEST_CASE(node_eviction_test)
-{
-    FastRandomContext random_context{true};
-
-    for (int i = 0; i < NODE_EVICTION_TEST_ROUNDS; ++i) {
-        for (int number_of_nodes = 0; number_of_nodes < NODE_EVICTION_TEST_UP_TO_N_NODES; ++number_of_nodes) {
-            // Four nodes with the highest keyed netgroup values should be
-            // protected from eviction.
-            BOOST_CHECK(!IsEvicted(
-                number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                    candidate.nKeyedNetGroup = number_of_nodes - candidate.id;
-                },
-                {0, 1, 2, 3}, random_context));
-
-            // Eight nodes with the lowest minimum ping time should be protected
-            // from eviction.
-            BOOST_CHECK(!IsEvicted(
-                number_of_nodes, [](NodeEvictionCandidate& candidate) {
-                    candidate.m_min_ping_time = std::chrono::microseconds{candidate.id};
-                },
-                {0, 1, 2, 3, 4, 5, 6, 7}, random_context));
-
-            // Four nodes that most recently sent us novel transactions accepted
-            // into our mempool should be protected from eviction.
-            BOOST_CHECK(!IsEvicted(
-                number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                    candidate.nLastTXTime = number_of_nodes - candidate.id;
-                },
-                {0, 1, 2, 3}, random_context));
-
-            // Up to eight non-tx-relay peers that most recently sent us novel
-            // blocks should be protected from eviction.
-            BOOST_CHECK(!IsEvicted(
-                number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                    candidate.nLastBlockTime = number_of_nodes - candidate.id;
-                    if (candidate.id <= 7) {
-                        candidate.fRelayTxes = false;
-                        candidate.fRelevantServices = true;
-                    }
-                },
-                {0, 1, 2, 3, 4, 5, 6, 7}, random_context));
-
-            // Four peers that most recently sent us novel blocks should be
-            // protected from eviction.
-            BOOST_CHECK(!IsEvicted(
-                number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                    candidate.nLastBlockTime = number_of_nodes - candidate.id;
-                },
-                {0, 1, 2, 3}, random_context));
-
-            // Combination of the previous two tests.
-            BOOST_CHECK(!IsEvicted(
-                number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                    candidate.nLastBlockTime = number_of_nodes - candidate.id;
-                    if (candidate.id <= 7) {
-                        candidate.fRelayTxes = false;
-                        candidate.fRelevantServices = true;
-                    }
-                },
-                {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, random_context));
-
-            // Combination of all tests above.
-            BOOST_CHECK(!IsEvicted(
-                number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                    candidate.nKeyedNetGroup = number_of_nodes - candidate.id;           // 4 protected
-                    candidate.m_min_ping_time = std::chrono::microseconds{candidate.id}; // 8 protected
-                    candidate.nLastTXTime = number_of_nodes - candidate.id;              // 4 protected
-                    candidate.nLastBlockTime = number_of_nodes - candidate.id;           // 4 protected
-                },
-                {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}, random_context));
-
-            // An eviction is expected given >= 29 random eviction candidates. The eviction logic protects at most
-            // four peers by net group, eight by lowest ping time, four by last time of novel tx, up to eight non-tx-relay
-            // peers by last novel block time, and four more peers by last novel block time.
-            if (number_of_nodes >= 29) {
-                BOOST_CHECK(SelectNodeToEvict(GetRandomNodeEvictionCandidates(number_of_nodes, random_context)));
-            }
-
-            // No eviction is expected given <= 20 random eviction candidates. The eviction logic protects at least
-            // four peers by net group, eight by lowest ping time, four by last time of novel tx and four peers by last
-            // novel block time.
-            if (number_of_nodes <= 20) {
-                BOOST_CHECK(!SelectNodeToEvict(GetRandomNodeEvictionCandidates(number_of_nodes, random_context)));
-            }
-
-            // Cases left to test:
-            // * "Protect the half of the remaining nodes which have been connected the longest. [...]"
-            // * "Pick out up to 1/4 peers that are localhost, sorted by longest uptime. [...]"
-            // * "If any remaining peers are preferred for eviction consider only them. [...]"
-            // * "Identify the network group with the most connections and youngest member. [...]"
-        }
-    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

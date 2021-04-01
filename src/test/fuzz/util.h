@@ -567,36 +567,37 @@ class FuzzedSock : public Sock
 {
     FuzzedDataProvider& m_fuzzed_data_provider;
 
+    /**
+     * Data to return when `MSG_PEEK` is used as a `Recv()` flag.
+     * If `MSG_PEEK` is used, then our `Recv()` returns some random data as usual, but on the next
+     * `Recv()` call we must return the same data, thus we remember it here.
+     */
+    mutable std::optional<uint8_t> m_peek_data;
+
 public:
     explicit FuzzedSock(FuzzedDataProvider& fuzzed_data_provider) : m_fuzzed_data_provider{fuzzed_data_provider}
     {
+          m_socket = fuzzed_data_provider.ConsumeIntegral<SOCKET>();
     }
 
     ~FuzzedSock() override
     {
+        // Sock::~Sock() will be called after FuzzedSock::~FuzzedSock() and it will call
+        // Sock::Reset() (not FuzzedSock::Reset()!) which will call CloseSocket(m_socket).
+        // Avoid closing an arbitrary file descriptor (m_socket is just a random number which
+        // may concide with a real opened file descriptor).
+        Reset();
     }
 
     FuzzedSock& operator=(Sock&& other) override
     {
-        assert(false && "Not implemented yet.");
+        assert(false && "Move of Sock into FuzzedSock not allowed.");
         return *this;
-    }
-
-    SOCKET Get() const override
-    {
-        assert(false && "Not implemented yet.");
-        return INVALID_SOCKET;
-    }
-
-    SOCKET Release() override
-    {
-        assert(false && "Not implemented yet.");
-        return INVALID_SOCKET;
     }
 
     void Reset() override
     {
-        assert(false && "Not implemented yet.");
+        m_socket = INVALID_SOCKET;
     }
 
     ssize_t Send(const void* data, size_t len, int flags) const override
@@ -633,10 +634,13 @@ public:
 
     ssize_t Recv(void* buf, size_t len, int flags) const override
     {
+        // Have a permanent error at recv_errnos[0] because when the fuzzed data is exhausted
+        // SetFuzzedErrNo() will always return the first element and we want to avoid Recv()
+        // returning -1 and setting errno to EAGAIN repeatedly.
         constexpr std::array recv_errnos{
+            ECONNREFUSED,
             EAGAIN,
             EBADF,
-            ECONNREFUSED,
             EFAULT,
             EINTR,
             EINVAL,
@@ -653,8 +657,26 @@ public:
             }
             return r;
         }
-        const std::vector<uint8_t> random_bytes = m_fuzzed_data_provider.ConsumeBytes<uint8_t>(
-            m_fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, len));
+        std::vector<uint8_t> random_bytes;
+        bool pad_to_len_bytes{m_fuzzed_data_provider.ConsumeBool()};
+        if (m_peek_data.has_value()) {
+            // `MSG_PEEK` was used in the preceding `Recv()` call, return `m_peek_data`.
+            random_bytes.assign({m_peek_data.value()});
+            if ((flags & MSG_PEEK) == 0) {
+                m_peek_data.reset();
+            }
+            pad_to_len_bytes = false;
+        } else if ((flags & MSG_PEEK) != 0) {
+            // New call with `MSG_PEEK`.
+            random_bytes = m_fuzzed_data_provider.ConsumeBytes<uint8_t>(1);
+            if (!random_bytes.empty()) {
+                m_peek_data = random_bytes[0];
+                pad_to_len_bytes = false;
+            }
+        } else {
+            random_bytes = m_fuzzed_data_provider.ConsumeBytes<uint8_t>(
+                m_fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, len));
+        }
         if (random_bytes.empty()) {
             const ssize_t r = m_fuzzed_data_provider.ConsumeBool() ? 0 : -1;
             if (r == -1) {
@@ -663,7 +685,7 @@ public:
             return r;
         }
         std::memcpy(buf, random_bytes.data(), random_bytes.size());
-        if (m_fuzzed_data_provider.ConsumeBool()) {
+        if (pad_to_len_bytes) {
             if (len > random_bytes.size()) {
                 std::memset((char*)buf + random_bytes.size(), 0, len - random_bytes.size());
             }
@@ -675,9 +697,58 @@ public:
         return random_bytes.size();
     }
 
+    int Connect(const sockaddr*, socklen_t) const override
+    {
+        // Have a permanent error at connect_errnos[0] because when the fuzzed data is exhausted
+        // SetFuzzedErrNo() will always return the first element and we want to avoid Connect()
+        // returning -1 and setting errno to EAGAIN repeatedly.
+        constexpr std::array connect_errnos{
+            ECONNREFUSED,
+            EAGAIN,
+            ECONNRESET,
+            EHOSTUNREACH,
+            EINPROGRESS,
+            EINTR,
+            ENETUNREACH,
+            ETIMEDOUT,
+        };
+        if (m_fuzzed_data_provider.ConsumeBool()) {
+            SetFuzzedErrNo(m_fuzzed_data_provider, connect_errnos);
+            return -1;
+        }
+        return 0;
+    }
+
+    int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const override
+    {
+        constexpr std::array getsockopt_errnos{
+            ENOMEM,
+            ENOBUFS,
+        };
+        if (m_fuzzed_data_provider.ConsumeBool()) {
+            SetFuzzedErrNo(m_fuzzed_data_provider, getsockopt_errnos);
+            return -1;
+        }
+        if (opt_val == nullptr) {
+            return 0;
+        }
+        std::memcpy(opt_val,
+                    ConsumeFixedLengthByteVector(m_fuzzed_data_provider, *opt_len).data(),
+                    *opt_len);
+        return 0;
+    }
+
     bool Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const override
     {
         return m_fuzzed_data_provider.ConsumeBool();
+    }
+
+    bool IsConnected(std::string& errmsg) const override {
+        if (m_fuzzed_data_provider.ConsumeBool()) {
+            return true;
+        }
+        errmsg = "disconnected at random by the fuzzer";
+        return false;
     }
 };
 

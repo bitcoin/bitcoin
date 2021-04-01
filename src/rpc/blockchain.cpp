@@ -30,7 +30,6 @@
 #include <txdb.h>
 #include <txmempool.h>
 #include <undo.h>
-#include <util/ref.h>
 #include <util/strencodings.h>
 #include <util/system.h>
 #include <util/translation.h>
@@ -56,15 +55,16 @@ static Mutex cs_blockchange;
 static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock GUARDED_BY(cs_blockchange);
 
-NodeContext& EnsureNodeContext(const util::Ref& context)
+NodeContext& EnsureNodeContext(const std::any& context)
 {
-    if (!context.Has<NodeContext>()) {
+    auto node_context = util::AnyPtr<NodeContext>(context);
+    if (!node_context) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Node context not found");
     }
-    return context.Get<NodeContext>();
+    return *node_context;
 }
 
-CTxMemPool& EnsureMemPool(const util::Ref& context)
+CTxMemPool& EnsureMemPool(const std::any& context)
 {
     const NodeContext& node = EnsureNodeContext(context);
     if (!node.mempool) {
@@ -73,7 +73,7 @@ CTxMemPool& EnsureMemPool(const util::Ref& context)
     return *node.mempool;
 }
 
-ChainstateManager& EnsureChainman(const util::Ref& context)
+ChainstateManager& EnsureChainman(const std::any& context)
 {
     const NodeContext& node = EnsureNodeContext(context);
     if (!node.chainman) {
@@ -82,7 +82,7 @@ ChainstateManager& EnsureChainman(const util::Ref& context)
     return *node.chainman;
 }
 
-CBlockPolicyEstimator& EnsureFeeEstimator(const util::Ref& context)
+CBlockPolicyEstimator& EnsureFeeEstimator(const std::any& context)
 {
     NodeContext& node = EnsureNodeContext(context);
     if (!node.fee_estimator) {
@@ -1113,11 +1113,13 @@ static RPCHelpMan gettxout()
                 {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
                 {RPCResult::Type::STR_AMOUNT, "value", "The transaction value in " + CURRENCY_UNIT},
                 {RPCResult::Type::OBJ, "scriptPubKey", "", {
-                    {RPCResult::Type::STR_HEX, "asm", ""},
+                    {RPCResult::Type::STR, "asm", ""},
                     {RPCResult::Type::STR_HEX, "hex", ""},
-                    {RPCResult::Type::NUM, "reqSigs", "Number of required signatures"},
-                    {RPCResult::Type::STR_HEX, "type", "The type, eg pubkeyhash"},
-                    {RPCResult::Type::ARR, "addresses", "array of bitcoin addresses", {{RPCResult::Type::STR, "address", "bitcoin address"}}},
+                    {RPCResult::Type::NUM, "reqSigs", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Number of required signatures"},
+                    {RPCResult::Type::STR, "type", "The type, eg pubkeyhash"},
+                    {RPCResult::Type::STR, "address", /* optional */ true, "bitcoin address (only if a well-defined address exists)"},
+                    {RPCResult::Type::ARR, "addresses", /* optional */ true, "(DEPRECATED, returned only if config option -deprecatedrpc=addresses is passed) Array of bitcoin addresses",
+                        {{RPCResult::Type::STR, "address", "bitcoin address"}}},
                 }},
                 {RPCResult::Type::BOOL, "coinbase", "Coinbase or not"},
             }},
@@ -1667,9 +1669,9 @@ static RPCHelpMan getchaintxstats()
                         {RPCResult::Type::STR_HEX, "window_final_block_hash", "The hash of the final block in the window"},
                         {RPCResult::Type::NUM, "window_final_block_height", "The height of the final block in the window."},
                         {RPCResult::Type::NUM, "window_block_count", "Size of the window in number of blocks"},
-                        {RPCResult::Type::NUM, "window_tx_count", "The number of transactions in the window. Only returned if \"window_block_count\" is > 0"},
-                        {RPCResult::Type::NUM, "window_interval", "The elapsed time in the window in seconds. Only returned if \"window_block_count\" is > 0"},
-                        {RPCResult::Type::NUM, "txrate", "The average rate of transactions per second in the window. Only returned if \"window_interval\" is > 0"},
+                        {RPCResult::Type::NUM, "window_tx_count", /* optional */ true, "The number of transactions in the window. Only returned if \"window_block_count\" is > 0"},
+                        {RPCResult::Type::NUM, "window_interval", /* optional */ true, "The elapsed time in the window in seconds. Only returned if \"window_block_count\" is > 0"},
+                        {RPCResult::Type::NUM, "txrate", /* optional */ true, "The average rate of transactions per second in the window. Only returned if \"window_interval\" is > 0"},
                     }},
                 RPCExamples{
                     HelpExampleCli("getchaintxstats", "")
@@ -1773,6 +1775,16 @@ void CalculatePercentilesByWeight(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES],
     for (int64_t i = next_percentile_index; i < NUM_GETBLOCKSTATS_PERCENTILES; i++) {
         result[i] = scores.back().first;
     }
+}
+
+void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex)
+{
+    ScriptPubKeyToUniv(scriptPubKey, out, fIncludeHex, IsDeprecatedRPCEnabled("addresses"));
+}
+
+void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex, int serialize_flags, const CTxUndo* txundo)
+{
+    TxToUniv(tx, hashBlock, IsDeprecatedRPCEnabled("addresses"), entry, include_hex, serialize_flags, txundo);
 }
 
 template<typename T>

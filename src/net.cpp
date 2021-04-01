@@ -31,6 +31,10 @@
 #include <fcntl.h>
 #endif
 
+#if HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS
+#include <ifaddrs.h>
+#endif
+
 #ifdef USE_POLL
 #include <poll.h>
 #endif
@@ -432,7 +436,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             i2p::Connection conn;
             if (m_i2p_sam_session->Connect(addrConnect, conn, proxyConnectionFailed)) {
                 connected = true;
-                sock = std::make_unique<Sock>(std::move(conn.sock));
+                sock = std::move(conn.sock);
                 addr_bind = CAddress{conn.me, NODE_NONE};
             }
         } else if (GetProxy(addrConnect.GetNetwork(), proxy)) {
@@ -448,7 +452,7 @@ CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCo
             if (!sock) {
                 return nullptr;
             }
-            connected = ConnectSocketDirectly(addrConnect, sock->Get(), nConnectTimeout,
+            connected = ConnectSocketDirectly(addrConnect, *sock, nConnectTimeout,
                                               conn_type == ConnectionType::MANUAL);
         }
         if (!proxyConnectionFailed) {
@@ -840,6 +844,12 @@ static bool CompareLocalHostTimeConnected(const NodeEvictionCandidate &a, const 
     return a.nTimeConnected > b.nTimeConnected;
 }
 
+static bool CompareOnionTimeConnected(const NodeEvictionCandidate& a, const NodeEvictionCandidate& b)
+{
+    if (a.m_is_onion != b.m_is_onion) return b.m_is_onion;
+    return a.nTimeConnected > b.nTimeConnected;
+}
+
 static bool CompareNetGroupKeyed(const NodeEvictionCandidate &a, const NodeEvictionCandidate &b) {
     return a.nKeyedNetGroup < b.nKeyedNetGroup;
 }
@@ -870,13 +880,51 @@ static bool CompareNodeBlockRelayOnlyTime(const NodeEvictionCandidate &a, const 
     return a.nTimeConnected > b.nTimeConnected;
 }
 
-//! Sort an array by the specified comparator, then erase the last K elements.
-template<typename T, typename Comparator>
-static void EraseLastKElements(std::vector<T> &elements, Comparator comparator, size_t k)
+//! Sort an array by the specified comparator, then erase the last K elements where predicate is true.
+template <typename T, typename Comparator>
+static void EraseLastKElements(
+    std::vector<T>& elements, Comparator comparator, size_t k,
+    std::function<bool(const NodeEvictionCandidate&)> predicate = [](const NodeEvictionCandidate& n) { return true; })
 {
     std::sort(elements.begin(), elements.end(), comparator);
     size_t eraseSize = std::min(k, elements.size());
-    elements.erase(elements.end() - eraseSize, elements.end());
+    elements.erase(std::remove_if(elements.end() - eraseSize, elements.end(), predicate), elements.end());
+}
+
+void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& vEvictionCandidates)
+{
+    // Protect the half of the remaining nodes which have been connected the longest.
+    // This replicates the non-eviction implicit behavior, and precludes attacks that start later.
+    // To favorise the diversity of our peer connections, reserve up to (half + 2) of
+    // these protected spots for onion and localhost peers, if any, even if they're not
+    // longest uptime overall. This helps protect tor peers, which tend to be otherwise
+    // disadvantaged under our eviction criteria.
+    const size_t initial_size = vEvictionCandidates.size();
+    size_t total_protect_size = initial_size / 2;
+    const size_t onion_protect_size = total_protect_size / 2;
+
+    if (onion_protect_size) {
+        // Pick out up to 1/4 peers connected via our onion service, sorted by longest uptime.
+        EraseLastKElements(vEvictionCandidates, CompareOnionTimeConnected, onion_protect_size,
+                           [](const NodeEvictionCandidate& n) { return n.m_is_onion; });
+    }
+
+    const size_t localhost_min_protect_size{2};
+    if (onion_protect_size >= localhost_min_protect_size) {
+        // Allocate any remaining slots of the 1/4, or minimum 2 additional slots,
+        // to localhost peers, sorted by longest uptime, as manually configured
+        // hidden services not using `-bind=addr[:port]=onion` will not be detected
+        // as inbound onion connections.
+        const size_t remaining_tor_slots{onion_protect_size - (initial_size - vEvictionCandidates.size())};
+        const size_t localhost_protect_size{std::max(remaining_tor_slots, localhost_min_protect_size)};
+        EraseLastKElements(vEvictionCandidates, CompareLocalHostTimeConnected, localhost_protect_size,
+                           [](const NodeEvictionCandidate& n) { return n.m_is_local; });
+    }
+
+    // Calculate how many we removed, and update our total number of peers that
+    // we want to protect based on uptime accordingly.
+    total_protect_size -= initial_size - vEvictionCandidates.size();
+    EraseLastKElements(vEvictionCandidates, ReverseCompareNodeTimeConnected, total_protect_size);
 }
 
 [[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates)
@@ -893,30 +941,17 @@ static void EraseLastKElements(std::vector<T> &elements, Comparator comparator, 
     // An attacker cannot manipulate this metric without performing useful work.
     EraseLastKElements(vEvictionCandidates, CompareNodeTXTime, 4);
     // Protect up to 8 non-tx-relay peers that have sent us novel blocks.
-    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), CompareNodeBlockRelayOnlyTime);
-    size_t erase_size = std::min(size_t(8), vEvictionCandidates.size());
-    vEvictionCandidates.erase(std::remove_if(vEvictionCandidates.end() - erase_size, vEvictionCandidates.end(), [](NodeEvictionCandidate const &n) { return !n.fRelayTxes && n.fRelevantServices; }), vEvictionCandidates.end());
+    const size_t erase_size = std::min(size_t(8), vEvictionCandidates.size());
+    EraseLastKElements(vEvictionCandidates, CompareNodeBlockRelayOnlyTime, erase_size,
+                       [](const NodeEvictionCandidate& n) { return !n.fRelayTxes && n.fRelevantServices; });
 
     // Protect 4 nodes that most recently sent us novel blocks.
     // An attacker cannot manipulate this metric without performing useful work.
     EraseLastKElements(vEvictionCandidates, CompareNodeBlockTime, 4);
 
-    // Protect the half of the remaining nodes which have been connected the longest.
-    // This replicates the non-eviction implicit behavior, and precludes attacks that start later.
-    // Reserve half of these protected spots for localhost peers, even if
-    // they're not longest-uptime overall. This helps protect tor peers, which
-    // tend to be otherwise disadvantaged under our eviction criteria.
-    size_t initial_size = vEvictionCandidates.size();
-    size_t total_protect_size = initial_size / 2;
-
-    // Pick out up to 1/4 peers that are localhost, sorted by longest uptime.
-    std::sort(vEvictionCandidates.begin(), vEvictionCandidates.end(), CompareLocalHostTimeConnected);
-    size_t local_erase_size = total_protect_size / 2;
-    vEvictionCandidates.erase(std::remove_if(vEvictionCandidates.end() - local_erase_size, vEvictionCandidates.end(), [](NodeEvictionCandidate const &n) { return n.m_is_local; }), vEvictionCandidates.end());
-    // Calculate how many we removed, and update our total number of peers that
-    // we want to protect based on uptime accordingly.
-    total_protect_size -= initial_size - vEvictionCandidates.size();
-    EraseLastKElements(vEvictionCandidates, ReverseCompareNodeTimeConnected, total_protect_size);
+    // Protect some of the remaining eviction candidates by ratios of desirable
+    // or disadvantaged characteristics.
+    ProtectEvictionCandidatesByRatio(vEvictionCandidates);
 
     if (vEvictionCandidates.empty()) return std::nullopt;
 
@@ -937,7 +972,7 @@ static void EraseLastKElements(std::vector<T> &elements, Comparator comparator, 
     for (const NodeEvictionCandidate &node : vEvictionCandidates) {
         std::vector<NodeEvictionCandidate> &group = mapNetGroupNodes[node.nKeyedNetGroup];
         group.push_back(node);
-        int64_t grouptime = group[0].nTimeConnected;
+        const int64_t grouptime = group[0].nTimeConnected;
 
         if (group.size() > nMostConnections || (group.size() == nMostConnections && grouptime > nMostConnectionsTime)) {
             nMostConnections = group.size();
@@ -985,7 +1020,8 @@ bool CConnman::AttemptToEvictConnection()
                                                node->nLastBlockTime, node->nLastTXTime,
                                                HasAllDesirableServiceFlags(node->nServices),
                                                peer_relay_txes, peer_filter_not_null, node->nKeyedNetGroup,
-                                               node->m_prefer_evict, node->addr.IsLocal()};
+                                               node->m_prefer_evict, node->addr.IsLocal(),
+                                               node->m_inbound_onion};
             vEvictionCandidates.push_back(candidate);
         }
     }
@@ -1219,9 +1255,10 @@ void CConnman::NotifyNumConnectionsChanged()
     }
 }
 
-bool CConnman::RunInactivityChecks(const CNode& node) const
+bool CConnman::ShouldRunInactivityChecks(const CNode& node, std::optional<int64_t> now_in) const
 {
-    return GetSystemTimeInSeconds() > node.nTimeConnected + m_peer_connect_timeout;
+    const int64_t now = now_in ? now_in.value() : GetSystemTimeInSeconds();
+    return node.nTimeConnected + m_peer_connect_timeout < now;
 }
 
 bool CConnman::InactivityCheck(const CNode& node) const
@@ -1229,6 +1266,8 @@ bool CConnman::InactivityCheck(const CNode& node) const
     // Use non-mockable system time (otherwise these timers will pop when we
     // use setmocktime in the tests).
     int64_t now = GetSystemTimeInSeconds();
+
+    if (!ShouldRunInactivityChecks(node, now)) return false;
 
     if (node.nLastRecv == 0 || node.nLastSend == 0) {
         LogPrint(BCLog::NET, "socket no message in first %i seconds, %d %d peer=%d\n", m_peer_connect_timeout, node.nLastRecv != 0, node.nLastSend != 0, node.GetId());
@@ -1526,7 +1565,7 @@ void CConnman::SocketHandler()
             if (bytes_sent) RecordBytesSent(bytes_sent);
         }
 
-        if (RunInactivityChecks(*pnode) && InactivityCheck(*pnode)) pnode->fDisconnect = true;
+        if (InactivityCheck(*pnode)) pnode->fDisconnect = true;
     }
     {
         LOCK(cs_vNodes);
@@ -2221,7 +2260,7 @@ void CConnman::ThreadI2PAcceptIncoming()
             continue;
         }
 
-        CreateNodeFromAcceptedSocket(conn.sock.Release(), NetPermissionFlags::PF_NONE,
+        CreateNodeFromAcceptedSocket(conn.sock->Release(), NetPermissionFlags::PF_NONE,
                                      CAddress{conn.me, NODE_NONE}, CAddress{conn.peer, NODE_NONE});
     }
 }
@@ -2351,8 +2390,8 @@ void CConnman::SetNetworkActive(bool active)
     uiInterface.NotifyNetworkActiveChanged(fNetworkActive);
 }
 
-CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, bool network_active)
-    : nSeed0(nSeed0In), nSeed1(nSeed1In)
+CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In, CAddrMan& addrman_in, bool network_active)
+    : addrman(addrman_in), nSeed0(nSeed0In), nSeed1(nSeed1In)
 {
     SetTryNewOutboundPeer(false);
 
@@ -2621,11 +2660,7 @@ void CConnman::StopNodes()
 void CConnman::DeleteNode(CNode* pnode)
 {
     assert(pnode);
-    bool fUpdateConnectionTime = false;
-    m_msgproc->FinalizeNode(*pnode, fUpdateConnectionTime);
-    if (fUpdateConnectionTime) {
-        addrman.Connected(pnode->addr);
-    }
+    m_msgproc->FinalizeNode(*pnode);
     delete pnode;
 }
 
@@ -2633,21 +2668,6 @@ CConnman::~CConnman()
 {
     Interrupt();
     Stop();
-}
-
-void CConnman::SetServices(const CService &addr, ServiceFlags nServices)
-{
-    addrman.SetServices(addr, nServices);
-}
-
-void CConnman::MarkAddressGood(const CAddress& addr)
-{
-    addrman.Good(addr);
-}
-
-bool CConnman::AddNewAddresses(const std::vector<CAddress>& vAddr, const CAddress& addrFrom, int64_t nTimePenalty)
-{
-    return addrman.Add(vAddr, addrFrom, nTimePenalty);
 }
 
 std::vector<CAddress> CConnman::GetAddresses(size_t max_addresses, size_t max_pct)

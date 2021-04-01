@@ -5,12 +5,10 @@
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <streams.h>
+#include <test/util/script.h>
 #include <version.h>
 
 #include <test/fuzz/fuzz.h>
-
-/** Flags that are not forbidden by an assert */
-static bool IsValidFlagCombination(unsigned flags);
 
 void initialize_script_flags()
 {
@@ -73,11 +71,4 @@ FUZZ_TARGET_INIT(script_flags, initialize_script_flags)
     } catch (const std::ios_base::failure&) {
         return;
     }
-}
-
-static bool IsValidFlagCombination(unsigned flags)
-{
-    if (flags & SCRIPT_VERIFY_CLEANSTACK && ~flags & (SCRIPT_VERIFY_P2SH | SCRIPT_VERIFY_WITNESS)) return false;
-    if (flags & SCRIPT_VERIFY_WITNESS && ~flags & SCRIPT_VERIFY_P2SH) return false;
-    return true;
 }

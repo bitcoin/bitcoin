@@ -67,9 +67,9 @@ BOOST_FIXTURE_TEST_SUITE(denialofservice_tests, TestingSetup)
 BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 {
     const CChainParams& chainparams = Params();
-    auto connman = std::make_unique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = PeerManager::make(chainparams, *connman, nullptr, *m_node.scheduler,
-                                       *m_node.chainman, *m_node.mempool, false);
+    auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
+    auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, nullptr,
+                                       *m_node.scheduler, *m_node.chainman, *m_node.mempool, false);
 
     // Mock an outbound peer
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
@@ -117,8 +117,7 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
     BOOST_CHECK(dummyNode1.fDisconnect == true);
     SetMockTime(0);
 
-    bool dummy;
-    peerLogic->FinalizeNode(dummyNode1, dummy);
+    peerLogic->FinalizeNode(dummyNode1);
 }
 
 static void AddRandomOutboundPeer(std::vector<CNode *> &vNodes, PeerManager &peerLogic, CConnmanTest* connman)
@@ -137,9 +136,9 @@ static void AddRandomOutboundPeer(std::vector<CNode *> &vNodes, PeerManager &pee
 BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
 {
     const CChainParams& chainparams = Params();
-    auto connman = std::make_unique<CConnmanTest>(0x1337, 0x1337);
-    auto peerLogic = PeerManager::make(chainparams, *connman, nullptr, *m_node.scheduler,
-                                       *m_node.chainman, *m_node.mempool, false);
+    auto connman = std::make_unique<CConnmanTest>(0x1337, 0x1337, *m_node.addrman);
+    auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, nullptr,
+                                       *m_node.scheduler, *m_node.chainman, *m_node.mempool, false);
 
     constexpr int max_outbound_full_relay = MAX_OUTBOUND_FULL_RELAY_CONNECTIONS;
     CConnman::Options options;
@@ -199,9 +198,8 @@ BOOST_AUTO_TEST_CASE(stale_tip_peer_management)
     BOOST_CHECK(vNodes[max_outbound_full_relay-1]->fDisconnect == true);
     BOOST_CHECK(vNodes.back()->fDisconnect == false);
 
-    bool dummy;
     for (const CNode *node : vNodes) {
-        peerLogic->FinalizeNode(*node, dummy);
+        peerLogic->FinalizeNode(*node);
     }
 
     connman->ClearNodes();
@@ -211,9 +209,9 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
 {
     const CChainParams& chainparams = Params();
     auto banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    auto connman = std::make_unique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = PeerManager::make(chainparams, *connman, banman.get(), *m_node.scheduler,
-                                       *m_node.chainman, *m_node.mempool, false);
+    auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
+    auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, banman.get(),
+                                       *m_node.scheduler, *m_node.chainman, *m_node.mempool, false);
 
     banman->ClearBanned();
     CAddress addr1(ip(0xa0b0c001), NODE_NONE);
@@ -249,18 +247,17 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
     BOOST_CHECK(banman->IsDiscouraged(addr1));  // Expect both 1 and 2
     BOOST_CHECK(banman->IsDiscouraged(addr2));  // to be discouraged now
 
-    bool dummy;
-    peerLogic->FinalizeNode(dummyNode1, dummy);
-    peerLogic->FinalizeNode(dummyNode2, dummy);
+    peerLogic->FinalizeNode(dummyNode1);
+    peerLogic->FinalizeNode(dummyNode2);
 }
 
 BOOST_AUTO_TEST_CASE(DoS_bantime)
 {
     const CChainParams& chainparams = Params();
     auto banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
-    auto connman = std::make_unique<CConnman>(0x1337, 0x1337);
-    auto peerLogic = PeerManager::make(chainparams, *connman, banman.get(), *m_node.scheduler,
-                                       *m_node.chainman, *m_node.mempool, false);
+    auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman);
+    auto peerLogic = PeerManager::make(chainparams, *connman, *m_node.addrman, banman.get(),
+                                       *m_node.scheduler, *m_node.chainman, *m_node.mempool, false);
 
     banman->ClearBanned();
     int64_t nStartTime = GetTime();
@@ -279,8 +276,7 @@ BOOST_AUTO_TEST_CASE(DoS_bantime)
     }
     BOOST_CHECK(banman->IsDiscouraged(addr));
 
-    bool dummy;
-    peerLogic->FinalizeNode(dummyNode, dummy);
+    peerLogic->FinalizeNode(dummyNode);
 }
 
 class TxOrphanageTest : public TxOrphanage

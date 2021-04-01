@@ -425,6 +425,7 @@ public:
 
     std::atomic<int64_t> nLastSend{0};
     std::atomic<int64_t> nLastRecv{0};
+    //! Unix epoch time at peer connection, in seconds.
     const int64_t nTimeConnected;
     std::atomic<int64_t> nTimeOffset{0};
     // Address of this peer
@@ -548,8 +549,9 @@ public:
     std::vector<CAddress> vAddrToSend;
     std::unique_ptr<CRollingBloomFilter> m_addr_known{nullptr};
     bool fGetAddr{false};
-    std::chrono::microseconds m_next_addr_send GUARDED_BY(cs_sendProcessing){0};
-    std::chrono::microseconds m_next_local_addr_send GUARDED_BY(cs_sendProcessing){0};
+    Mutex m_addr_send_times_mutex;
+    std::chrono::microseconds m_next_addr_send GUARDED_BY(m_addr_send_times_mutex){0};
+    std::chrono::microseconds m_next_local_addr_send GUARDED_BY(m_addr_send_times_mutex){0};
 
     struct TxRelay {
         mutable RecursiveMutex cs_filter;
@@ -770,7 +772,7 @@ public:
     virtual void InitializeNode(CNode* pnode) = 0;
 
     /** Handle removal of a peer (clear state) */
-    virtual void FinalizeNode(const CNode& node, bool& update_connection_time) = 0;
+    virtual void FinalizeNode(const CNode& node) = 0;
 
     /**
     * Process protocol messages received from a given node
@@ -856,7 +858,7 @@ public:
         m_onion_binds = connOptions.onion_binds;
     }
 
-    CConnman(uint64_t seed0, uint64_t seed1, bool network_active = true);
+    CConnman(uint64_t seed0, uint64_t seed1, CAddrMan& addrman, bool network_active = true);
     ~CConnman();
     bool Start(CScheduler& scheduler, const Options& options);
 
@@ -921,9 +923,6 @@ public:
     };
 
     // Addrman functions
-    void SetServices(const CService &addr, ServiceFlags nServices);
-    void MarkAddressGood(const CAddress& addr);
-    bool AddNewAddresses(const std::vector<CAddress>& vAddr, const CAddress& addrFrom, int64_t nTimePenalty = 0);
     std::vector<CAddress> GetAddresses(size_t max_addresses, size_t max_pct);
     /**
      * Cache is used to minimize topology leaks, so it should
@@ -1019,8 +1018,8 @@ public:
 
     void SetAsmap(std::vector<bool> asmap) { addrman.m_asmap = std::move(asmap); }
 
-    /** Return true if the peer has been connected for long enough to do inactivity checks. */
-    bool RunInactivityChecks(const CNode& node) const;
+    /** Return true if we should disconnect the peer for failing an inactivity check. */
+    bool ShouldRunInactivityChecks(const CNode& node, std::optional<int64_t> now=std::nullopt) const;
 
 private:
     struct ListenSocket {
@@ -1130,7 +1129,7 @@ private:
     std::vector<ListenSocket> vhListenSocket;
     std::atomic<bool> fNetworkActive{true};
     bool fAddressesInitialized{false};
-    CAddrMan addrman;
+    CAddrMan& addrman;
     std::deque<std::string> m_addr_fetches GUARDED_BY(m_addr_fetches_mutex);
     RecursiveMutex m_addr_fetches_mutex;
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
@@ -1281,8 +1280,39 @@ struct NodeEvictionCandidate
     uint64_t nKeyedNetGroup;
     bool prefer_evict;
     bool m_is_local;
+    bool m_is_onion;
 };
 
+/**
+ * Select an inbound peer to evict after filtering out (protecting) peers having
+ * distinct, difficult-to-forge characteristics. The protection logic picks out
+ * fixed numbers of desirable peers per various criteria, followed by (mostly)
+ * ratios of desirable or disadvantaged peers. If any eviction candidates
+ * remain, the selection logic chooses a peer to evict.
+ */
 [[nodiscard]] std::optional<NodeId> SelectNodeToEvict(std::vector<NodeEvictionCandidate>&& vEvictionCandidates);
+
+/** Protect desirable or disadvantaged inbound peers from eviction by ratio.
+ *
+ * This function protects half of the peers which have been connected the
+ * longest, to replicate the non-eviction implicit behavior and preclude attacks
+ * that start later.
+ *
+ * Half of these protected spots (1/4 of the total) are reserved for onion peers
+ * connected via our tor control service, if any, sorted by longest uptime, even
+ * if they're not longest uptime overall. Any remaining slots of the 1/4 are
+ * then allocated to protect localhost peers, if any (or up to 2 localhost peers
+ * if no slots remain and 2 or more onion peers were protected), sorted by
+ * longest uptime, as manually configured hidden services not using
+ * `-bind=addr[:port]=onion` will not be detected as inbound onion connections.
+ *
+ * This helps protect onion peers, which tend to be otherwise disadvantaged
+ * under our eviction criteria for their higher min ping times relative to IPv4
+ * and IPv6 peers, and favorise the diversity of peer connections.
+ *
+ * This function was extracted from SelectNodeToEvict() to be able to test the
+ * ratio-based protection logic deterministically.
+ */
+void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& vEvictionCandidates);
 
 #endif // BITCOIN_NET_H
