@@ -56,6 +56,7 @@ class AssetNotaryTest(SyscoinTestFramework):
         self.notary_address1 = self.nodes[0].getnewaddress()
         notary = {'endpoint': 'https://jsonplaceholder.typicode.com/posts/', 'instant_transfers': True, 'hd_required': True}
         self.asset1 = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 10000, 127, self.notary_address1, notary, {})['asset_guid']
+        self.nodes[0].generate(1)
         self.asset2 = self.nodes[0].assetnew('1', 'TST', 'asset description', '0x', 8, 10000, 127)['asset_guid']
         self.nodes[0].generate(1)
         self.sync_blocks()
@@ -70,7 +71,9 @@ class AssetNotaryTest(SyscoinTestFramework):
         nftGuid2_1 = self.CreateAssetID(nftID, self.asset2)
         nftGuid2_2 = self.CreateAssetID(nftID1, self.asset2)
         self.nodes[0].assetsendmany(self.asset, [{'address': self.nodes[0].getnewaddress(),'amount':10.0},{'address': self.nodes[0].getnewaddress(),'amount':0.4,'NFTID':nftID},{'address': self.nodes[0].getnewaddress(),'amount':0.5,'NFTID':nftID1},{'address': self.nodes[0].getnewaddress(),'amount':0.6,'NFTID':nftID2}])
+        self.nodes[0].generate(1)
         self.nodes[0].assetsendmany(self.asset1, [{'address': self.nodes[0].getnewaddress(),'amount':10.0},{'address': self.nodes[0].getnewaddress(),'amount':0.4,'NFTID':nftID},{'address': self.nodes[0].getnewaddress(),'amount':0.5,'NFTID':nftID1}])
+        self.nodes[0].generate(1)
         self.nodes[0].assetsendmany(self.asset2, [{'address': self.nodes[0].getnewaddress(),'amount':10.0},{'address': self.nodes[0].getnewaddress(),'amount':0.4,'NFTID':nftID},{'address': self.nodes[0].getnewaddress(),'amount':0.5,'NFTID':nftID1}])
         self.nodes[0].generate(1)
         self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 1)
@@ -98,6 +101,7 @@ class AssetNotaryTest(SyscoinTestFramework):
         self.nodes[0].generate(1)
         # clear notary
         self.nodes[0].assetupdate(self.asset, '','', 127, '', {}, {})
+        self.nodes[0].generate(1)
         self.nodes[0].assetupdate(self.asset1, '','', 127, '', {}, {})
         self.nodes[0].generate(1)
         self.sync_blocks()
