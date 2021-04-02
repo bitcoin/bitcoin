@@ -28,6 +28,17 @@ namespace {
 
 void EnsurePopEnabled()
 {
+    if (!VeriBlock::isPopEnabled()) {
+        throw JSONRPCError(RPC_MISC_ERROR,
+            strprintf("POP protocol is not enabled. Current=%d, bootstrap height=%d",
+                ChainActive().Height(),
+                VeriBlock::GetPop().getConfig().getAltParams().getBootstrapBlock().getHeight())
+        );
+    }
+}
+
+void EnsurePopActive()
+{
     auto tipheight = ChainActive().Height();
     if (!Params().isPopActive(tipheight)) {
         throw JSONRPCError(RPC_MISC_ERROR,
@@ -118,6 +129,8 @@ UniValue getpopdatabyheight(const JSONRPCRequest& request)
             "\nExamples:\n" +
             HelpExampleCli("getpopdatabyheight", "1000") + HelpExampleRpc("getpopdatabyheight", "1000"));
 
+    EnsurePopEnabled();
+
     auto wallet = GetWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(wallet.get(), request.fHelp)) {
         return NullUniValue;
@@ -146,6 +159,8 @@ UniValue getpopdatabyhash(const JSONRPCRequest& request)
             "}\n"
             "\nExamples:\n" +
             HelpExampleCli("getpopdatabyhash", "xxx") + HelpExampleRpc("getpopdatabyhash", "xxx"));
+
+    EnsurePopEnabled();
 
     auto wallet = GetWalletForJSONRPCRequest(request);
     if (!EnsureWalletIsAvailable(wallet.get(), request.fHelp)) {
@@ -235,6 +250,7 @@ UniValue submitpopIt(const JSONRPCRequest& request)
     check_submitpop(request, Pop::name());
 
     EnsurePopEnabled();
+    EnsurePopActive();
 
     auto payloads_bytes = ParseHexV(request.params[0].get_str(), Pop::name());
 
@@ -325,6 +341,9 @@ template <typename Tree>
 UniValue getblock(const JSONRPCRequest& req, Tree& tree, const std::string& chain)
 {
     check_getblock(req, chain);
+
+    EnsurePopEnabled();
+
     LOCK(cs_main);
 
     std::string strhash = req.params[0].get_str();
@@ -369,6 +388,8 @@ template <typename Tree>
 UniValue getbestblockhash(const JSONRPCRequest& request, Tree& tree, const std::string& chain)
 {
     check_getbestblockhash(request, chain);
+
+    EnsurePopEnabled();
 
     LOCK(cs_main);
     auto* tip = tree.getBestChain().tip();
@@ -417,6 +438,9 @@ template <typename Tree>
 UniValue getblockhash(const JSONRPCRequest& request, Tree& tree, const std::string& chain)
 {
     check_getblockhash(request, chain);
+
+    EnsurePopEnabled();
+
     LOCK(cs_main);
     auto& best = tree.getBestChain();
     if (best.blocksCount() == 0) {
@@ -463,6 +487,8 @@ UniValue getrawpopmempool(const JSONRPCRequest& request)
             HelpExampleRpc(cmdname, "")},
     }
         .Check(request);
+
+    EnsurePopEnabled();
 
     auto& mp = VeriBlock::GetPop().getMemPool();
     return altintegration::ToJSON<UniValue>(mp);
@@ -570,6 +596,8 @@ UniValue getrawpayload(const JSONRPCRequest& request, const std::string& name)
     }
         .Check(request);
     // clang-format on
+
+    EnsurePopEnabled();
 
     using id_t = typename T::id_t;
     id_t pid;

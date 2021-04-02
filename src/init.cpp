@@ -1842,7 +1842,7 @@ bool AppInitMain(NodeContext& node)
         banman->DumpBanlist();
     }, DUMP_BANS_INTERVAL * 1000);
 
-    {
+    if (VeriBlock::isPopEnabled()) {
         auto& pop = VeriBlock::GetPop();
         auto* tip = ChainActive().Tip();
         altintegration::ValidationState state;
