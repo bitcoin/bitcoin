@@ -5,6 +5,7 @@
 #include <llmq/quorums_debug.h>
 
 #include <chainparams.h>
+#include <timedata.h>
 #include <validation.h>
 
 #include <evo/deterministicmns.h>

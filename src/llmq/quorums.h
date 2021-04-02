@@ -13,11 +13,14 @@
 #include <consensus/params.h>
 #include <saltedhasher.h>
 #include <unordered_lru_cache.h>
+#include <threadinterrupt.h>
 
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
 
 #include <ctpl.h>
+
+class CNode;
 
 namespace llmq
 {
