@@ -3878,12 +3878,7 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
             CHash256().Write(witnessroot).Write(ret).Finalize(witnessroot);
             CTxOut out;
             out.nValue = 0;
-            // SYSCOIN
-            size_t minWitnessSize = MINIMUM_WITNESS_COMMITMENT;
-            if(!vchExtraData.empty()) {
-                minWitnessSize += vchExtraData.size();
-            }
-            out.scriptPubKey.resize(minWitnessSize);
+            out.scriptPubKey.resize(MINIMUM_WITNESS_COMMITMENT);
             out.scriptPubKey[0] = OP_RETURN;
             out.scriptPubKey[1] = 0x24;
             out.scriptPubKey[2] = 0xaa;
