@@ -347,31 +347,22 @@ void SQLiteBatch::Close()
     }
 
     // Free all of the prepared statements
-    int ret = sqlite3_finalize(m_read_stmt);
-    if (ret != SQLITE_OK) {
-        LogPrintf("SQLiteBatch: Batch closed but could not finalize read statement: %s\n", sqlite3_errstr(ret));
+    const std::vector<std::pair<sqlite3_stmt**, const char*>> statements{
+        {&m_read_stmt, "read"},
+        {&m_insert_stmt, "insert"},
+        {&m_overwrite_stmt, "overwrite"},
+        {&m_delete_stmt, "delete"},
+        {&m_cursor_stmt, "cursor"},
+    };
+
+    for (const auto& [stmt_prepared, stmt_description] : statements) {
+        int res = sqlite3_finalize(*stmt_prepared);
+        if (res != SQLITE_OK) {
+            LogPrintf("SQLiteBatch: Batch closed but could not finalize %s statement: %s\n",
+                      stmt_description, sqlite3_errstr(res));
+        }
+        *stmt_prepared = nullptr;
     }
-    ret = sqlite3_finalize(m_insert_stmt);
-    if (ret != SQLITE_OK) {
-        LogPrintf("SQLiteBatch: Batch closed but could not finalize insert statement: %s\n", sqlite3_errstr(ret));
-    }
-    ret = sqlite3_finalize(m_overwrite_stmt);
-    if (ret != SQLITE_OK) {
-        LogPrintf("SQLiteBatch: Batch closed but could not finalize overwrite statement: %s\n", sqlite3_errstr(ret));
-    }
-    ret = sqlite3_finalize(m_delete_stmt);
-    if (ret != SQLITE_OK) {
-        LogPrintf("SQLiteBatch: Batch closed but could not finalize delete statement: %s\n", sqlite3_errstr(ret));
-    }
-    ret = sqlite3_finalize(m_cursor_stmt);
-    if (ret != SQLITE_OK) {
-        LogPrintf("SQLiteBatch: Batch closed but could not finalize cursor statement: %s\n", sqlite3_errstr(ret));
-    }
-    m_read_stmt = nullptr;
-    m_insert_stmt = nullptr;
-    m_overwrite_stmt = nullptr;
-    m_delete_stmt = nullptr;
-    m_cursor_stmt = nullptr;
 }
 
 bool SQLiteBatch::ReadKey(CDataStream&& key, CDataStream& value)
