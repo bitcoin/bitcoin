@@ -3453,7 +3453,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     std::shared_ptr<CWallet> const pwallet = GetWalletForJSONRPCRequest(request);
     if (!pwallet) return NullUniValue;
 
-    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !want_psbt) {
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) && !pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER) && !want_psbt) {
         throw JSONRPCError(RPC_WALLET_ERROR, "bumpfee is not available with wallets that have private keys disabled. Use psbtbumpfee instead.");
     }
 
@@ -3530,16 +3530,37 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     // For bumpfee, return the new transaction id.
     // For psbtbumpfee, return the base64-encoded unsigned PSBT of the new transaction.
     if (!want_psbt) {
-        if (!feebumper::SignTransaction(*pwallet, mtx)) {
-            throw JSONRPCError(RPC_WALLET_ERROR, "Can't sign transaction.");
-        }
+        if (pwallet->IsWalletFlagSet(WALLET_FLAG_EXTERNAL_SIGNER)) {
+            // Make a blank psbt
+            PartiallySignedTransaction psbtx(mtx);
 
-        uint256 txid;
-        if (feebumper::CommitTransaction(*pwallet, hash, std::move(mtx), errors, txid) != feebumper::Result::OK) {
-            throw JSONRPCError(RPC_WALLET_ERROR, errors[0].original);
-        }
+            // First fill transaction with our data without signing,
+            // so external signers are not asked to sign more than once.
+            bool complete;
+            pwallet->FillPSBT(psbtx, complete, SIGHASH_ALL, false /* sign */, true /* bip32derivs */);
+            const TransactionError err = pwallet->FillPSBT(psbtx, complete, SIGHASH_ALL, true /* sign */, false  /* bip32derivs */);
+            if (err != TransactionError::OK) {
+                throw JSONRPCTransactionError(err);
+            }
 
-        result.pushKV("txid", txid.GetHex());
+            complete = FinalizeAndExtractPSBT(psbtx, mtx);
+
+            if (!complete) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Transaction incomplete. Try psbtbumpfee instead.");
+            }
+            CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+            result.pushKV("txid", tx->GetHash().GetHex());
+            pwallet->CommitTransaction(tx, {}, {} /* orderForm */);
+        } else {
+            if (!feebumper::SignTransaction(*pwallet, mtx)) {
+                throw JSONRPCError(RPC_WALLET_ERROR, "Can't sign transaction.");
+            }
+            uint256 txid;
+            if (feebumper::CommitTransaction(*pwallet, hash, std::move(mtx), errors, txid) != feebumper::Result::OK) {
+                throw JSONRPCError(RPC_WALLET_ERROR, errors[0].original);
+            }
+            result.pushKV("txid", txid.GetHex());
+        }
     } else {
         PartiallySignedTransaction psbtx(mtx);
         bool complete = false;
