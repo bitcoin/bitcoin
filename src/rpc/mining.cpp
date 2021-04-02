@@ -364,7 +364,7 @@ static RPCHelpMan generateblock()
         LOCK(cs_main);
 
         CTxMemPool empty_mempool;
-        std::unique_ptr<CBlockTemplate> blocktemplate(BlockAssembler(::ChainstateActive(), empty_mempool, chainparams).CreateNewBlock(coinbase_script));
+        blocktemplate = BlockAssembler(::ChainstateActive(), empty_mempool, chainparams).CreateNewBlock(coinbase_script);
         if (!blocktemplate) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't create new block");
         }
