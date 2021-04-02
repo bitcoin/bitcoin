@@ -480,7 +480,7 @@ bool WalletModel::bumpFee(uint256 hash, uint256& new_hash)
         return false;
     }
 
-    const bool create_psbt = m_wallet->privateKeysDisabled();
+    const bool create_psbt = m_wallet->privateKeysDisabled() && !m_wallet->hasExternalSigner();
 
     // allow a user based fee verification
     QString questionString = create_psbt ? tr("Do you want to draft a transaction with fee increase?") : tr("Do you want to increase the fee?");
