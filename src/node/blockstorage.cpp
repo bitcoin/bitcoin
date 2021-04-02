@@ -22,8 +22,9 @@ static bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos, const CMessa
 {
     // Open history file to append
     CAutoFile fileout(OpenBlockFile(pos), SER_DISK, CLIENT_VERSION);
-    if (fileout.IsNull())
+    if (fileout.IsNull()) {
         return error("WriteBlockToDisk: OpenBlockFile failed");
+    }
 
     // Write index header
     unsigned int nSize = GetSerializeSize(block, fileout.GetVersion());
@@ -31,8 +32,9 @@ static bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos, const CMessa
 
     // Write block
     long fileOutPos = ftell(fileout.Get());
-    if (fileOutPos < 0)
+    if (fileOutPos < 0) {
         return error("WriteBlockToDisk: ftell failed");
+    }
     pos.nPos = (unsigned int)fileOutPos;
     fileout << block;
 
@@ -45,20 +47,21 @@ bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::P
 
     // Open history file to read
     CAutoFile filein(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
-    if (filein.IsNull())
+    if (filein.IsNull()) {
         return error("ReadBlockFromDisk: OpenBlockFile failed for %s", pos.ToString());
+    }
 
     // Read block
     try {
         filein >> block;
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
         return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
     }
 
     // Check the header
-    if (!CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
+    if (!CheckProofOfWork(block.GetHash(), block.nBits, consensusParams)) {
         return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
+    }
 
     // Signet only: check block solution
     if (consensusParams.signet_blocks && !CheckSignetBlockSolution(block, consensusParams)) {
@@ -76,11 +79,13 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
         blockPos = pindex->GetBlockPos();
     }
 
-    if (!ReadBlockFromDisk(block, blockPos, consensusParams))
+    if (!ReadBlockFromDisk(block, blockPos, consensusParams)) {
         return false;
-    if (block.GetHash() != pindex->GetBlockHash())
+    }
+    if (block.GetHash() != pindex->GetBlockHash()) {
         return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
                      pindex->ToString(), pindex->GetBlockPos().ToString());
+    }
     return true;
 }
 
@@ -135,8 +140,9 @@ FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_cha
 {
     unsigned int nBlockSize = ::GetSerializeSize(block, CLIENT_VERSION);
     FlatFilePos blockPos;
-    if (dbp != nullptr)
+    if (dbp != nullptr) {
         blockPos = *dbp;
+    }
     if (!FindBlockPos(blockPos, nBlockSize + 8, nHeight, active_chain, block.GetBlockTime(), dbp != nullptr)) {
         error("%s: FindBlockPos failed", __func__);
         return FlatFilePos();
@@ -177,13 +183,15 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
             int nFile = 0;
             while (true) {
                 FlatFilePos pos(nFile, 0);
-                if (!fs::exists(GetBlockPosFilename(pos)))
+                if (!fs::exists(GetBlockPosFilename(pos))) {
                     break; // No block files left to reindex
+                }
                 FILE* file = OpenBlockFile(pos, true);
-                if (!file)
+                if (!file) {
                     break; // This error is logged in OpenBlockFile
+                }
                 LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
-                ::ChainstateActive().LoadExternalBlockFile(chainparams, file, &pos);
+                chainman.ActiveChainstate().LoadExternalBlockFile(chainparams, file, &pos);
                 if (ShutdownRequested()) {
                     LogPrintf("Shutdown requested. Exit %s\n", __func__);
                     return;
@@ -194,7 +202,7 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
             fReindex = false;
             LogPrintf("Reindexing finished\n");
             // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
-            ::ChainstateActive().LoadGenesisBlock(chainparams);
+            chainman.ActiveChainstate().LoadGenesisBlock(chainparams);
         }
 
         // -loadblock=
@@ -202,7 +210,7 @@ void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFile
             FILE* file = fsbridge::fopen(path, "rb");
             if (file) {
                 LogPrintf("Importing blocks file %s...\n", path.string());
-                ::ChainstateActive().LoadExternalBlockFile(chainparams, file);
+                chainman.ActiveChainstate().LoadExternalBlockFile(chainparams, file);
                 if (ShutdownRequested()) {
                     LogPrintf("Shutdown requested. Exit %s\n", __func__);
                     return;
