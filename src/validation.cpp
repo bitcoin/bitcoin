@@ -1636,19 +1636,6 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex)
     return true;
 }
 
-/** Abort with a message */
-static bool AbortNode(const std::string& strMessage, bilingual_str user_message = bilingual_str())
-{
-    SetMiscWarning(Untranslated(strMessage));
-    LogPrintf("*** %s\n", strMessage);
-    if (user_message.empty()) {
-        user_message = _("A fatal internal error occurred, see debug.log for details");
-    }
-    AbortError(user_message);
-    StartShutdown();
-    return false;
-}
-
 static bool AbortNode(BlockValidationState& state, const std::string& strMessage, const bilingual_str& userMessage = bilingual_str())
 {
     AbortNode(strMessage, userMessage);
