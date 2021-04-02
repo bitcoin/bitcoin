@@ -6,8 +6,8 @@
 
 #include <dbwrapper.h>
 #include <index/blockfilterindex.h>
+#include <node/blockstorage.h>
 #include <util/system.h>
-#include <validation.h>
 
 /* The index database stores three items for each block: the disk location of the encoded filter,
  * its dSHA256 hash, and the header. Those belonging to blocks on the active chain are indexed by

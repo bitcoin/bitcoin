@@ -8,6 +8,7 @@
 #include <core_io.h>
 #include <httpserver.h>
 #include <index/txindex.h>
+#include <node/blockstorage.h>
 #include <node/context.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>

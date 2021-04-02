@@ -16,6 +16,7 @@
 #include <merkleblock.h>
 #include <netbase.h>
 #include <netmessagemaker.h>
+#include <node/blockstorage.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <primitives/block.h>
