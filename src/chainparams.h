@@ -156,6 +156,20 @@ public:
 };
 
 /**
+ * Deterministic regression test
+ */
+class CDetRegTestParams : public CChainParams
+{
+public:
+    explicit CDetRegTestParams(const ArgsManager& args);
+    /**
+     * Allows modifying the Version Bits detregtest parameters.
+     */
+    void UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
+    void UpdateActivationParametersFromArgs(const ArgsManager& args);
+};
+
+/**
  * Creates and returns a std::unique_ptr<CChainParams> of the chosen chain.
  * @returns a CChainParams* of the chosen chain.
  * @throws a std::runtime_error if the chain is not supported.
