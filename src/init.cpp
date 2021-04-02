@@ -155,8 +155,6 @@ static fs::path GetPidFile(const ArgsManager& args)
 
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 
-static std::thread g_load_block;
-
 void Interrupt(NodeContext& node)
 {
     InterruptHTTPServer();
@@ -220,7 +218,7 @@ void Shutdown(NodeContext& node)
     // After everything has been shut down, but before things get flushed, stop the
     // CScheduler/checkqueue, scheduler and load block thread.
     if (node.scheduler) node.scheduler->stop();
-    if (g_load_block.joinable()) g_load_block.join();
+    if (node.chainman && node.chainman->m_load_block.joinable()) node.chainman->m_load_block.join();
     StopScriptCheckWorkerThreads();
 
     // After the threads that potentially access these pointers have been stopped,
@@ -1880,7 +1878,7 @@ bool AppInitMain(const std::any& context, NodeContext& node, interfaces::BlockAn
         vImportFiles.push_back(strFile);
     }
 
-    g_load_block = std::thread(&TraceThread<std::function<void()>>, "loadblk", [=, &chainman, &args] {
+    chainman.m_load_block = std::thread(&TraceThread<std::function<void()>>, "loadblk", [=, &chainman, &args] {
         ThreadImport(chainman, vImportFiles, args);
     });
 

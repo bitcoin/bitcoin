@@ -35,6 +35,7 @@
 #include <set>
 #include <stdint.h>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -869,6 +870,7 @@ private:
     friend CChain& ChainActive();
 
 public:
+    std::thread m_load_block;
     //! A single BlockManager instance is shared across each constructed
     //! chainstate to avoid duplicating block metadata.
     BlockManager m_blockman GUARDED_BY(::cs_main);
