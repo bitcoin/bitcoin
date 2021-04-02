@@ -124,11 +124,11 @@ static constexpr auto AVG_LOCAL_ADDRESS_BROADCAST_INTERVAL = 24h;
 /** Average delay between peer address broadcasts */
 static constexpr auto AVG_ADDRESS_BROADCAST_INTERVAL = 30s;
 /** Average delay between trickled inventory transmissions for inbound peers.
- *  Blocks and peers with noban permission bypass this. */
+ *  Blocks and peers with NetPermissionFlags::NoBan permission bypass this. */
 static constexpr auto INBOUND_INVENTORY_BROADCAST_INTERVAL = 5s;
 /** Average delay between trickled inventory transmissions for outbound peers.
  *  Use a smaller delay as there is less privacy concern for them.
- *  Blocks and peers with noban permission bypass this. */
+ *  Blocks and peers with NetPermissionFlags::NoBan permission bypass this. */
 static constexpr auto OUTBOUND_INVENTORY_BROADCAST_INTERVAL = 2s;
 /** Maximum rate of inventory items to send per second.
  *  Limits the impact of low-fee transaction floods. */
@@ -183,7 +183,7 @@ struct Peer {
     Mutex m_misbehavior_mutex;
     /** Accumulated misbehavior score for this peer */
     int m_misbehavior_score GUARDED_BY(m_misbehavior_mutex){0};
-    /** Whether this peer should be disconnected and marked as discouraged (unless it has the noban permission). */
+    /** Whether this peer should be disconnected and marked as discouraged (unless it has NetPermissionFlags::NoBan permission). */
     bool m_should_discourage GUARDED_BY(m_misbehavior_mutex){false};
 
     /** Protects block inventory data members */
@@ -3826,7 +3826,7 @@ bool PeerManagerImpl::MaybeDiscourageAndDisconnect(CNode& pnode, Peer& peer)
     } // peer.m_misbehavior_mutex
 
     if (pnode.HasPermission(NetPermissionFlags::NoBan)) {
-        // We never disconnect or discourage peers for bad behavior if they have the NOBAN permission flag
+        // We never disconnect or discourage peers for bad behavior if they have NetPermissionFlags::NoBan permission
         LogPrintf("Warning: not punishing noban peer %d!\n", peer.m_id);
         return false;
     }
@@ -4620,7 +4620,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
             // Detect whether this is a stalling initial-headers-sync peer
             if (pindexBestHeader->GetBlockTime() <= GetAdjustedTime() - 24 * 60 * 60) {
                 if (current_time > state.m_headers_sync_timeout && nSyncStarted == 1 && (nPreferredDownload - state.fPreferredDownload >= 1)) {
-                    // Disconnect a peer (without the noban permission) if it is our only sync peer,
+                    // Disconnect a peer (without NetPermissionFlags::NoBan permission) if it is our only sync peer,
                     // and we have others we could be using instead.
                     // Note: If all our peers are inbound, then we won't
                     // disconnect our sync peer for stalling; we have bigger
