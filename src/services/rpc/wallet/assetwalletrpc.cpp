@@ -1986,7 +1986,30 @@ static RPCHelpMan listunspentasset()
         {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum confirmations to filter"},	
     },	
     RPCResult{
-        RPCResult::Type::STR, "result", "Result"
+        RPCResult::Type::ARR, "", "",
+        {
+            {RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::STR_HEX, "txid", "the transaction id"},
+                {RPCResult::Type::NUM, "vout", "the vout value"},
+                {RPCResult::Type::STR, "address", "the syscoin address"},
+                {RPCResult::Type::STR, "label", "The associated label, or \"\" for the default label"},
+                {RPCResult::Type::STR, "scriptPubKey", "the script key"},
+                {RPCResult::Type::STR_AMOUNT, "amount", "the transaction output amount in " + CURRENCY_UNIT},
+                {RPCResult::Type::STR, "asset_guid", "the transaction output asset guid if asset output"},
+                {RPCResult::Type::STR_AMOUNT, "asset_amount", "the transaction output asset amount in satoshis if asset output"},
+                {RPCResult::Type::NUM, "confirmations", "The number of confirmations"},
+                {RPCResult::Type::STR_HEX, "redeemScript", "The redeemScript if scriptPubKey is P2SH"},
+                {RPCResult::Type::STR, "witnessScript", "witnessScript if the scriptPubKey is P2WSH or P2SH-P2WSH"},
+                {RPCResult::Type::BOOL, "spendable", "Whether we have the private keys to spend this output"},
+                {RPCResult::Type::BOOL, "solvable", "Whether we know how to spend this output, ignoring the lack of keys"},
+                {RPCResult::Type::BOOL, "reused", "(only present if avoid_reuse is set) Whether this output is reused/dirty (sent to an address that was previously spent from)"},
+                {RPCResult::Type::STR, "desc", "(only when solvable) A descriptor for spending this output"},
+                {RPCResult::Type::BOOL, "safe", "Whether this output is considered safe to spend. Unconfirmed transactions\n"
+                                                "from outside keys and unconfirmed replacement transactions are considered unsafe\n"
+                                                "and are not eligible for spending by fundrawtransaction and sendtoaddress."},
+            }},
+        }
     },		
     RPCExamples{	
         HelpExampleCli("listunspentasset", "2328882 0")	
