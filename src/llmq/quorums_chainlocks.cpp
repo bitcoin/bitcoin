@@ -338,7 +338,14 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
     const auto& llmqType = consensus.llmqTypeChainLocks;
     const auto& llmqParams = consensus.llmqs.at(llmqType);
     const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
-    if (clsig.signers.empty() || std::count(clsig.signers.begin(), clsig.signers.end(), true) <= 1) {
+        size_t signers_count = std::count(clsig.signers.begin(), clsig.signers.end(), true);
+        if (from != -1 && (clsig.signers.empty() || signers_count == 0)) {
+            LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid signers count (%d) for CLSIG (%s), peer=%d\n", __func__, signers_count, clsig.ToString(), from);
+            LOCK(cs_main);
+            peerman.Misbehaving(from, 10, "invalid CLSIG");
+            return;
+        }
+        if (from == -1 || signers_count == 1) {
             // A part of a multi-quorum CLSIG signed by a single quorum
             std::pair<int, CQuorumCPtr> ret;
             clsig.signers.resize(signingActiveQuorumCount, false);

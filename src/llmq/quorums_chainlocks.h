@@ -31,9 +31,13 @@ public:
 public:
     SERIALIZE_METHODS(CChainLockSig, obj) {
         READWRITE(obj.nHeight, obj.blockHash, obj.sig);
-        if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(DYNBITSET(obj.signers));
+        if ((s.GetType() & SER_GETHASH) && !ser_action.ForRead()) {
+            size_t signers_count = std::count(obj.signers.begin(), obj.signers.end(), true);
+            if (obj.signers.empty() || signers_count == 0) {
+                return;
+            }
         }
+        READWRITE(DYNBITSET(obj.signers));
     }
 
     bool IsNull() const;
