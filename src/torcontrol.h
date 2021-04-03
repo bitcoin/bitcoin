@@ -25,7 +25,7 @@
 class CService;
 
 extern const std::string DEFAULT_TOR_CONTROL;
-static const bool DEFAULT_LISTEN_ONION = true;
+static const bool DEFAULT_LISTEN_ONION = false;
 
 void StartTorControl(CService onion_service_target);
 void InterruptTorControl();
