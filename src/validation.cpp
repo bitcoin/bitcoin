@@ -3968,11 +3968,11 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
         // if valid Chain ID (> 0) then it should always be nAuxpowChainId after nUTXOAssetsBlock block
         const int32_t& nChainID = block.GetChainId();
         const auto& baseVer = block.GetBaseVersion();
-        if((baseVer < 2 && nHeight >= consensusParams.BIP34Height) ||
+        if(!fTestNet && ((baseVer < 2 && nHeight >= consensusParams.BIP34Height) ||
         (baseVer < 3 && nHeight >= consensusParams.BIP66Height) ||
         (baseVer < 4 && nHeight >= consensusParams.BIP65Height) ||
         !CPureBlockHeader::IsValidBaseVersion(baseVer) ||
-        (nChainID > 0 && nChainID != consensusParams.nAuxpowChainId))
+        (nChainID > 0 && nChainID != consensusParams.nAuxpowChainId)))
                 return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, strprintf("bad-version(0x%08x)", baseVer),
                                     strprintf("rejected nVersion=0x%08x block", block.nVersion));
     } else {
