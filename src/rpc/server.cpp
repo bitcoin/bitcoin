@@ -134,14 +134,15 @@ static RPCHelpMan help()
 {
 
     return RPCHelpMan{"help",
-            "\nList all commands, or get help for a specified command.\n",
-            {
-                {"command", RPCArg::Type::STR, /* default */ "all commands", "The command to get help on"}
-            },
-            RPCResult{
-                RPCResult::Type::STR, "", "The help text"
-            },
-            RPCExamples{""},
+                "\nList all commands, or get help for a specified command.\n",
+                {
+                    {"command", RPCArg::Type::STR, /* default */ "all commands", "The command to get help on"},
+                },
+                {
+                    RPCResult{RPCResult::Type::STR, "", "The help text"},
+                    RPCResult{RPCResult::Type::ANY, "", ""},
+                },
+                RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& jsonRequest) -> UniValue
 {
     std::string strCommand;
