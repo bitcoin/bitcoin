@@ -835,7 +835,7 @@ static RPCHelpMan setnetworkactive()
 static RPCHelpMan getnodeaddresses()
 {
     return RPCHelpMan{"getnodeaddresses",
-                "\nReturn known addresses which can potentially be used to find new nodes in the network\n",
+                "\nReturn known addresses, which can potentially be used to find new nodes in the network.\n",
                 {
                     {"count", RPCArg::Type::NUM, /* default */ "1", "The maximum number of addresses to return. Specify 0 to return all known addresses."},
                 },
@@ -844,10 +844,10 @@ static RPCHelpMan getnodeaddresses()
                     {
                         {RPCResult::Type::OBJ, "", "",
                         {
-                            {RPCResult::Type::NUM_TIME, "time", "The " + UNIX_EPOCH_TIME + " of when the node was last seen"},
-                            {RPCResult::Type::NUM, "services", "The services offered"},
+                            {RPCResult::Type::NUM_TIME, "time", "The " + UNIX_EPOCH_TIME + " when the node was last seen"},
+                            {RPCResult::Type::NUM, "services", "The services offered by the node"},
                             {RPCResult::Type::STR, "address", "The address of the node"},
-                            {RPCResult::Type::NUM, "port", "The port of the node"},
+                            {RPCResult::Type::NUM, "port", "The port number of the node"},
                             {RPCResult::Type::STR, "network", "The network (" + Join(GetNetworkNames(), ", ") + ") the node connected through"},
                         }},
                     }
