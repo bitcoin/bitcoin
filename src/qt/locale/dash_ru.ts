@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Введите адрес или метку для поиска</translation>
+    </message>
+    <message>
         <source>Right-click to edit address or label</source>
         <translation>Для того, чтобы изменить адрес или метку, кликните по изменяемому объекту правой кнопкой мыши</translation>
     </message>
@@ -392,8 +396,8 @@
         <translation>&amp;О %1</translation>
     </message>
     <message>
-        <source>PrivateSend coins to a Dash address</source>
-        <translation>Отправить монеты на Dash адрес с помощью PrivateSend</translation>
+        <source>Send %1 funds to a Dash address</source>
+        <translation>Отправить %1 средства на Dash адрес</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -552,20 +556,26 @@
         <translation>Клиент %1</translation>
     </message>
     <message>
+        <source>Wallet: %1
+</source>
+        <translation>Кошелек: %1
+</translation>
+    </message>
+    <message>
         <source>Wallet is &lt;b&gt;unencrypted&lt;/b&gt;</source>
         <translation>Кошелек &lt;b&gt;не зашифрован&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>&amp;PrivateSend information</source>
-        <translation>Информация о &amp;PrivateSend</translation>
-    </message>
-    <message>
-        <source>Show the PrivateSend basic information</source>
-        <translation>Показать краткую информацию о PrivateSend</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;Файл</translation>
+    </message>
+    <message>
+        <source>%1 &amp;information</source>
+        <translation>&amp;Информация о %1</translation>
+    </message>
+    <message>
+        <source>Show the %1 basic information</source>
+        <translation>Показать краткую информацию о %1</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
@@ -901,12 +911,12 @@
         <translation>Показать все монеты</translation>
     </message>
     <message>
-        <source>Hide PrivateSend coins</source>
-        <translation>Скрыть PrivateSend монеты</translation>
+        <source>Hide %1 coins</source>
+        <translation>Скрыть монеты %1</translation>
     </message>
     <message>
-        <source>Show all PrivateSend coins</source>
-        <translation>Показать все PrivateSend монеты</translation>
+        <source>Show all %1 coins</source>
+        <translation>Показать все монеты %1</translation>
     </message>
     <message>
         <source>Show spendable coins only</source>
@@ -950,10 +960,6 @@
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
         <translation>Адрес, связанный с этой записью списка адресов. Он может быть изменён только для адресов отправки.</translation>
-    </message>
-    <message>
-        <source>New receiving address</source>
-        <translation>Новый адрес для получения</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -1026,64 +1032,12 @@
         <translation>Параметры командной строки</translation>
     </message>
     <message>
-        <source>Usage:</source>
-        <translation>Использование:</translation>
+        <source>%1 information</source>
+        <translation>Информация о %1</translation>
     </message>
     <message>
-        <source>command-line options</source>
-        <translation>параметры командной строки</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Настройки интерфейса:</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: %u)</source>
-        <translation>Выбрать каталог данных при запуске (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Set the font family. Possible values: %1. (default: %2)</source>
-        <translation>Установить шрифт. Возможные значения: %1. (по умолчанию: %2)</translation>
-    </message>
-    <message>
-        <source>Set a scale factor which gets applied to the base font size. Possible range %1 (smallest fonts) to %2 (largest fonts). (default: %3)</source>
-        <translation>Установить масштаб, применяемый к базовому размеру шрифта. Допустимы значения от %1 (самый маленький шрифт) до %2 (самый большой шрифт). (по умолчанию: %3)</translation>
-    </message>
-    <message>
-        <source>Set the font weight for bold texts. Possible range %1 to %2 (default: %3)</source>
-        <translation>Установить толщину жирного шрифта. Допустимы значения от %1 до %2 (по умолчанию: %3)</translation>
-    </message>
-    <message>
-        <source>Set the font weight for normal texts. Possible range %1 to %2 (default: %3)</source>
-        <translation>Установить толщину нормального шрифта. Допустимы значения от %1 до %2 (по умолчанию: %3)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Выберите язык, например "de_DE" (по умолчанию: как в системе)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Запускать свёрнутым</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Указать корневые SSL-сертификаты для запроса платежа (по умолчанию: -system-)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: %u)</source>
-        <translation>Показывать заставку при запуске (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Reset all settings changed in the GUI</source>
-        <translation>Сбросить все настройки, измененные через графический интерфейс</translation>
-    </message>
-    <message>
-        <source>PrivateSend information</source>
-        <translation>Информация о PrivateSend</translation>
-    </message>
-    <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a style="%1" href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;Основы PrivateSend&lt;/h3&gt;PrivateSend позволяет Вам получить настоящую финансовую конфиденциальность за счет скрытия источников Ваших средств. Все Dash в  Вашем кошельке состоят из различных "входов", Вы можете думать о них как об отдельных монетах.&lt;br&gt;PrivateSend использует инновационный процесс для перемешивания Ваших входов со входами еще двоих или более человек, но при этом Ваши монеты никогда не покидают Ваш кошелек. Вы сохраняете контроль над Вашими деньгами на протяжении всего времени.&lt;hr&gt; &lt;b&gt;PrivateSend работает так:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend начинается с разбиения Ваших входов транзакций на стандартные номиналы. Такими номиналами являются 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH и 10 DASH -- что-то вроде купюр, которыми вы пользуетесь каждый день.&lt;/li&gt; &lt;li&gt;Ваш кошелек затем отправляет запросы к особым образом настроенным сетевым узлам, называемым "мастернодами". Эти мастерноды знают только то, что Вы хотите перемешать определенные номиналы. Никакой идентифицирующей информации мастернодам не отправляется, так что они не знают "кто" Вы конкретно.&lt;/li&gt; &lt;li&gt;Сессия перемешивания начинается тогда, когда еще двое или более человек отправляют схожее сообщение, подтверждающее, что они хотят перемешать точно такой же номинал. Мастернода перемешивает входы и просит кошельки всех пользователей осуществить платежи по ним. Ваш кошелек осуществляет выплату самому себе, но на другой адрес (тоже из вашего кошелька).&lt;/li&gt; &lt;li&gt;Для скрытия Ваших средств кошелек должен повторить этот процесс несколько раз с каждым номиналом. Каждый раз, когда такой процесс завершается, называется "раундом". С каждым раундом PrivateSend становится экспоненциально сложнее определить откуда поступили средства.&lt;/li&gt; &lt;li&gt;Процесс перемешивания выполняется в фоне, без участия пользователя. Когда Вы захотите провести транзакцию, средства уже будут перемешаны. Дополнительно ждать не требуется.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;ВАЖНО:&lt;/b&gt; Ваш кошелек содержит 1000 адресов. Каждое перемешивание использует до 9 из этих адресов. Это означает, что 1000 адресов хватит примерно на 100 перемешиваний. Когда 900 адресов будут уже использованы, Ваш кошелек должен создать новые адреса. Однако, он может сделать это, только если у Вас включены автоматические резервные копии.&lt;br&gt;Соответственно, пользователям с отключенным резервным копированием PrivateSend не доступен. &lt;hr&gt;Дополнительная информация доступна в  &lt;a style="%1" href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;документации PrivateSend&lt;/a&gt;.</translation>
+        <source>&lt;h3&gt;%1 Basics&lt;/h3&gt; %1 gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; %1 uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The %1 process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;%1 begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of %1 makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have %1 disabled. &lt;hr&gt;For more information, see the &lt;a style="%2" href="%3"&gt;%1 documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;Основы %1&lt;/h3&gt;%1 позволяет Вам получить настоящую финансовую конфиденциальность за счет скрытия источников Ваших средств. Все Dash в  Вашем кошельке состоят из различных "входов", Вы можете думать о них как об отдельных монетах.&lt;br&gt;%1 использует инновационный процесс для перемешивания Ваших входов со входами еще двоих или более человек, но при этом Ваши монеты никогда не покидают Ваш кошелек. Вы сохраняете контроль над Вашими деньгами на протяжении всего времени.&lt;hr&gt; &lt;b&gt;%1 работает так:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;%1 начинается с разбиения Ваших входов транзакций на стандартные номиналы. Такими номиналами являются 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH и 10 DASH -- что-то вроде купюр, которыми вы пользуетесь каждый день.&lt;/li&gt; &lt;li&gt;Ваш кошелек затем отправляет запросы к особым образом настроенным сетевым узлам, называемым "мастернодами". Эти мастерноды знают только то, что Вы хотите перемешать определенные номиналы. Никакой идентифицирующей информации мастернодам не отправляется, так что они не знают "кто" Вы конкретно.&lt;/li&gt; &lt;li&gt;Сессия перемешивания начинается тогда, когда еще двое или более человек отправляют схожее сообщение, подтверждающее, что они хотят перемешать точно такой же номинал. Мастернода перемешивает входы и просит кошельки всех пользователей осуществить платежи по ним. Ваш кошелек осуществляет выплату самому себе, но на другой адрес (тоже из вашего кошелька).&lt;/li&gt; &lt;li&gt;Для скрытия Ваших средств кошелек должен повторить этот процесс несколько раз с каждым номиналом. Каждый раз, когда такой процесс завершается, называется "раундом". С каждым раундом %1 становится экспоненциально сложнее определить откуда поступили средства.&lt;/li&gt; &lt;li&gt;Процесс перемешивания выполняется в фоне, без участия пользователя. Когда Вы захотите провести транзакцию, средства уже будут перемешаны. Дополнительно ждать не требуется.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;ВАЖНО:&lt;/b&gt; Ваш кошелек содержит 1000 адресов. Каждое перемешивание использует до 9 из этих адресов. Это означает, что 1000 адресов хватит примерно на 100 перемешиваний. Когда 900 адресов будут уже использованы, Ваш кошелек должен создать новые адреса. Однако, он может сделать это, только если у Вас включены автоматические резервные копии.&lt;br&gt;Соответственно, пользователям с отключенным резервным копированием %1 не доступен. &lt;hr&gt;Дополнительная информация доступна в &lt;a style="%2" href="%3"&gt; документации %1&lt;/a&gt;.</translation>
     </message>
 </context>
 <context>
@@ -1397,44 +1351,56 @@
         <translation>Показывать вкладку с мастернодами</translation>
     </message>
     <message>
-        <source>Show additional information and buttons for PrivateSend on overview screen.</source>
-        <translation>Показывать дополнительную информацию и кнопки для PrivateSend на обзорной вкладке.</translation>
-    </message>
-    <message>
-        <source>Enable advanced PrivateSend interface</source>
-        <translation>Включить расширенный интерфейс PrivateSend</translation>
-    </message>
-    <message>
-        <source>Show warning dialog when PrivateSend detects that wallet has very low number of keys left.</source>
-        <translation>Показывать предупреждение, когда PrivateSend обнаружит, что в кошельке осталось слишком мало ключей.</translation>
-    </message>
-    <message>
-        <source>Warn if PrivateSend is running out of keys</source>
-        <translation>Предупредить, если кончаются ключи для PrivateSend</translation>
-    </message>
-    <message>
-        <source>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
-        <translation>Использовать или нет экспериментальный режим PrivateSend с множественным перемешивание за один блок.&lt;br/&gt;Примечание: Используйте с осторожностью.&lt;br/&gt;Убедитесь, что у вас всегда есть (автоматический) бэкап в безопасном месте!</translation>
-    </message>
-    <message>
-        <source>Enable PrivateSend &amp;multi-session</source>
-        <translation>Включить &amp;мульти-сессионный PrivateSend</translation>
-    </message>
-    <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
         <translation>При отключении траты неподтверждённой сдачи, сдача от транзакции&lt;br/&gt;не может быть использована до тех пор, пока у этой транзакции не будет хотя бы одно подтверждение.&lt;br/&gt;Это также влияет на то, как рассчитывается Ваш баланс.</translation>
     </message>
     <message>
-        <source>PrivateSend rounds to use</source>
-        <translation>Количество раундов PrivateSend</translation>
+        <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
+        <translation>Показать интерфейс перемешивания на основном экране и добавить дополнительный экран, на котором можно потратить только полностью перемешанные монеты.&lt;br/&gt;В данном диалоге также появятся дополнительные настройки. Перед тем как начать перемешивание, убедитесь, что там выставлены желаемые значения.</translation>
     </message>
     <message>
-        <source>This amount acts as a threshold to turn off PrivateSend once it's reached.</source>
-        <translation>Это пороговое значение, при достижении которого PrivateSend отключается.</translation>
+        <source>Show additional information and buttons on overview screen.</source>
+        <translation>Показывать дополнительную информацию и кнопки на основном экране.</translation>
     </message>
     <message>
-        <source>Target PrivateSend balance</source>
-        <translation>Целевой баланс PrivateSend</translation>
+        <source>Enable advanced interface</source>
+        <translation>Включить расширенный интерфейс</translation>
+    </message>
+    <message>
+        <source>Show system popups for mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
+        <translation>Показывать всплывающие уведомления для транзакций перемешивания,&lt;br/&gt;также как для всех остальных типов транзакций.</translation>
+    </message>
+    <message>
+        <source>Show popups for mixing transactions</source>
+        <translation>Показывать всплывающие уведомления для транзакций перемешивания</translation>
+    </message>
+    <message>
+        <source>Show warning dialog when the wallet has very low number of keys left.</source>
+        <translation>Показывать предупреждение, когда в кошельке осталось слишком мало ключей.</translation>
+    </message>
+    <message>
+        <source>Warn if the wallet is running out of keys</source>
+        <translation>Предупредить, если в кошельке кончаются ключи</translation>
+    </message>
+    <message>
+        <source>Whether to use experimental mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
+        <translation>Использовать или нет экспериментальный режим с множественным перемешиванием за один блок.&lt;br/&gt;Примечание: Используйте с осторожностью.&lt;br/&gt;Убедитесь, что у вас всегда есть (автоматический) бэкап в безопасном месте!</translation>
+    </message>
+    <message>
+        <source>Enable &amp;multi-session</source>
+        <translation>Включить &amp;мульти-сессионное перемешивания</translation>
+    </message>
+    <message>
+        <source>Mixing rounds</source>
+        <translation>Раунды перемешивания</translation>
+    </message>
+    <message>
+        <source>This amount acts as a threshold to turn off mixing once it's reached.</source>
+        <translation>Это пороговое значение, при достижении которого перемештвание отключается.</translation>
+    </message>
+    <message>
+        <source>Target balance</source>
+        <translation>Целевой баланс</translation>
     </message>
     <message>
         <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1499,14 +1465,6 @@
     <message>
         <source>Enable coin &amp;control features</source>
         <translation>Включить функции &amp;контроля монет</translation>
-    </message>
-    <message>
-        <source>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
-        <translation>Показывать всплывающие уведомления для транзакций перемешивания PrivateSend&lt;br/&gt;также как для всех остальных типов транзакций.</translation>
-    </message>
-    <message>
-        <source>Show popups for PrivateSend transactions</source>
-        <translation>Показывать всплывающие уведомления для транзакций PrivateSend</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
@@ -1623,6 +1581,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>О&amp;тмена</translation>
     </message>
     <message>
+        <source>Enable %1 features</source>
+        <translation>Включить функции %1</translation>
+    </message>
+    <message>
         <source>default</source>
         <translation>по умолчанию</translation>
     </message>
@@ -1718,10 +1680,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Для расхода:</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>PrivateSend</translation>
-    </message>
-    <message>
         <source>Status:</source>
         <translation>Статус:</translation>
     </message>
@@ -1758,10 +1716,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Начать/остановить автоматическое перемешивание</translation>
     </message>
     <message>
-        <source>PrivateSend Balance:</source>
-        <translation>Баланс PrivateSend:</translation>
-    </message>
-    <message>
         <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>Номиналы, предоставленные Вами мастерноде.&lt;br&gt;Для перемешивания другие пользователи должны предоставить точно такой же набор номиналов.</translation>
     </message>
@@ -1774,16 +1728,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Автоматические бэкапы отключены, перемешивание недоступно!</translation>
     </message>
     <message>
-        <source>Start Mixing</source>
-        <translation>Начать перемешивание</translation>
-    </message>
-    <message>
-        <source>Stop Mixing</source>
-        <translation>Остановить перемешивание</translation>
-    </message>
-    <message>
         <source>No inputs detected</source>
         <translation>Монеты не найдены</translation>
+    </message>
+    <message>
+        <source>%1 Balance</source>
+        <translation>Баланс %1</translation>
     </message>
     <message numerus="yes">
         <source>%n Rounds</source>
@@ -1820,6 +1770,26 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>keys left: %1</source>
         <translation>осталось ключей: %1</translation>
+    </message>
+    <message>
+        <source>Start %1</source>
+        <translation>Запуск %1</translation>
+    </message>
+    <message>
+        <source>If you don't want to see internal %1 fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
+        <translation>Если Вы не хотите видеть внутренние %1 транзакции/комиссии, выберите Тип "Наиболее общие" на закладке "Транзакции".</translation>
+    </message>
+    <message>
+        <source>%1 requires at least %2 to use.</source>
+        <translation>Для работы %1 требуется минимум %2.</translation>
+    </message>
+    <message>
+        <source>Wallet is locked and user declined to unlock. Disabling %1.</source>
+        <translation>Бумажник заблокирован и пользователь отказался его разблокировать. %1 будет выключен.</translation>
+    </message>
+    <message>
+        <source>Stop %1</source>
+        <translation>Остановить %1</translation>
     </message>
     <message>
         <source>Disabled</source>
@@ -1861,18 +1831,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>ВНИМАНИЕ! Ну удалось обновить пул ключей, пожалуйста, разблокируйте кошелек.</translation>
     </message>
-    <message>
-        <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
-        <translation>Если Вы не хотите видеть внутренние транзакции/комиссии от работы PrivateSend, выберите Тип "Наиболее общие" на закладке "Транзакции".</translation>
-    </message>
-    <message>
-        <source>PrivateSend requires at least %1 to use.</source>
-        <translation>Для работы PrivateSend требуется минимум %1.</translation>
-    </message>
-    <message>
-        <source>Wallet is locked and user declined to unlock. Disabling PrivateSend.</source>
-        <translation>Бумажник заблокирован и пользователь отказался его разблокировать. PrivateSend будет выключен.</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>
@@ -1887,6 +1845,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>URI handling</source>
         <translation>Обработка URI</translation>
+    </message>
+    <message>
+        <source>'dash://' is not a valid URI. Use 'dash:' instead.</source>
+        <translation>'dash://' не является валидным URI. Используйте 'dash:'.</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -1994,6 +1956,46 @@ https://www.transifex.com/projects/p/dash/</translation>
 </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>Выбрать каталог данных при запуске (по умолчанию: %u)</translation>
+    </message>
+    <message>
+        <source>Set the font family. Possible values: %1. (default: %2)</source>
+        <translation>Установить шрифт. Возможные значения: %1. (по умолчанию: %2)</translation>
+    </message>
+    <message>
+        <source>Set a scale factor which gets applied to the base font size. Possible range %1 (smallest fonts) to %2 (largest fonts). (default: %3)</source>
+        <translation>Установить масштаб, применяемый к базовому размеру шрифта. Допустимы значения от %1 (самый маленький шрифт) до %2 (самый большой шрифт). (по умолчанию: %3)</translation>
+    </message>
+    <message>
+        <source>Set the font weight for bold texts. Possible range %1 to %2 (default: %3)</source>
+        <translation>Установить толщину жирного шрифта. Допустимы значения от %1 до %2 (по умолчанию: %3)</translation>
+    </message>
+    <message>
+        <source>Set the font weight for normal texts. Possible range %1 to %2 (default: %3)</source>
+        <translation>Установить толщину нормального шрифта. Допустимы значения от %1 до %2 (по умолчанию: %3)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Выберите язык, например "de_DE" (по умолчанию: как в системе)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Запускать свёрнутым</translation>
+    </message>
+    <message>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>Сбросить все настройки, измененные через графический интерфейс</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Указать корневые SSL-сертификаты для запроса платежа (по умолчанию: -system-)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>Показывать заставку при запуске (по умолчанию: %u)</translation>
+    </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1 еще не завершил работу...</translation>
@@ -2298,6 +2300,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Пиры</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation>Кошелек:</translation>
+    </message>
+    <message>
         <source>Banned peers</source>
         <translation>Заблокированные пиры</translation>
     </message>
@@ -2330,6 +2336,22 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Синхронизированные блоки</translation>
     </message>
     <message>
+        <source>Rescan blockchain files 1</source>
+        <translation>Пересканировать цепочку блоков 1</translation>
+    </message>
+    <message>
+        <source>Rescan blockchain files 2</source>
+        <translation>Пересканировать цепочку блоков 2</translation>
+    </message>
+    <message>
+        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>-rescan=1: Перепроверить цепочку блоков на предмет отсутствующих в кошельке транзакций, начиная со времени создания кошелька.</translation>
+    </message>
+    <message>
+        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
+        <translation>-rescan=2: Перепроверить цепочку блоков на предмет отсутствующих в кошельке транзакций, начиная с самого первого блока.</translation>
+    </message>
+    <message>
         <source>Wallet Path</source>
         <translation>Путь к кошельку</translation>
     </message>
@@ -2354,6 +2376,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Блокировки InstantSend</translation>
     </message>
     <message>
+        <source>(none)</source>
+        <translation>(нет)</translation>
+    </message>
+    <message>
         <source>Decrease font size</source>
         <translation>Уменьшить шрифт</translation>
     </message>
@@ -2364,6 +2390,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Reset</source>
         <translation>&amp;Сбросить</translation>
+    </message>
+    <message>
+        <source>Node Type</source>
+        <translation>Тип узла</translation>
+    </message>
+    <message>
+        <source>PoSe Score</source>
+        <translation>PoSe штраф</translation>
     </message>
     <message>
         <source>Services</source>
@@ -2414,10 +2448,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Спасение кошелька</translation>
     </message>
     <message>
-        <source>Rescan blockchain files</source>
-        <translation>Пересканировать цепочку блоков</translation>
-    </message>
-    <message>
         <source>Recover transactions 1</source>
         <translation>Восстановление транзакций 1</translation>
     </message>
@@ -2436,10 +2466,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
         <translation>-salvagewallet: Попытаться восстановить закрытые ключи из повреждённого wallet.dat.</translation>
-    </message>
-    <message>
-        <source>-rescan: Rescan the block chain for missing wallet transactions.</source>
-        <translation>-rescan: Перепроверить цепочку блоков на предмет отсутствующих в кошельке транзакций.</translation>
     </message>
     <message>
         <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
@@ -2530,6 +2556,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Всего: %1 (Активных: %2)</translation>
     </message>
     <message>
+        <source>Executing command without any wallet</source>
+        <translation>Выполнение команд без какого либо кошелька</translation>
+    </message>
+    <message>
+        <source>Executing command using "%1" wallet</source>
+        <translation>Выполнение команд, используя "%1" кошелек</translation>
+    </message>
+    <message>
         <source>(node id: %1)</source>
         <translation>(id узла: %1)</translation>
     </message>
@@ -2556,6 +2590,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>No</source>
         <translation>Нет</translation>
+    </message>
+    <message>
+        <source>Regular</source>
+        <translation>Обычный</translation>
+    </message>
+    <message>
+        <source>Masternode</source>
+        <translation>Мастернода</translation>
+    </message>
+    <message>
+        <source>Verified Masternode</source>
+        <translation>Проверенная мастернода</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -2698,6 +2744,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Message</source>
         <translation>Сообщение</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Кошелек</translation>
     </message>
     <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
@@ -2914,8 +2964,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%1 (блоков: %2)</translation>
     </message>
     <message>
+        <source>from wallet %1</source>
+        <translation>из кошелька %1</translation>
+    </message>
+    <message>
         <source>using</source>
-        <translation>, используя</translation>
+        <translation>используя</translation>
     </message>
     <message>
         <source>%1 to %2</source>
@@ -2938,20 +2992,24 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&lt;b&gt;(показано записей: %1 из %2)&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>Confirm the PrivateSend action</source>
-        <translation>Подтвердить отправку с помощью PrivateSend</translation>
+        <source>S&amp;end mixed funds</source>
+        <translation>&amp;Отправить перемешанные средства</translation>
     </message>
     <message>
-        <source>PrivateSend funds only</source>
-        <translation>только средства PrivateSend</translation>
+        <source>Confirm the %1 send action</source>
+        <translation>Подтвердить отправку с помощью %1</translation>
+    </message>
+    <message>
+        <source>%1 funds only</source>
+        <translation>только средства %1</translation>
     </message>
     <message>
         <source>any available funds</source>
         <translation>любые доступные средства</translation>
     </message>
     <message>
-        <source>(PrivateSend transactions have higher fees usually due to no change output being allowed)</source>
-        <translation>(комиссии у транзакций PrivateSend как правило выше поскольку у них отсутствует сдача)</translation>
+        <source>(%1 transactions have higher fees usually due to no change output being allowed)</source>
+        <translation>(комиссии у транзакций %1 как правило выше, поскольку у них отсутствует сдача)</translation>
     </message>
     <message>
         <source>Transaction size: %1</source>
@@ -2966,8 +3024,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation><numerusform>Эта транзакция израсходует %n вход</numerusform><numerusform>Эта транзакция израсходует %n входов</numerusform><numerusform>Эта транзакция израсходует %n входов</numerusform><numerusform>Эта транзакция израсходует %n входов</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended</source>
-        <translation>Внимание: Использование транзакции PrivateSend с %1 и более входами может повредить вашей приватности и потому не рекомендуется</translation>
+        <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
+        <translation>Внимание: Использование транзакции %1 с %2 и более входами может повредить вашей приватности и потому не рекомендуется</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3308,7 +3366,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>КБ/сек</translation>
     </message>
     <message>
-        <source>Totals</source>
+        <source>Total</source>
         <translation>Всего</translation>
     </message>
     <message>
@@ -3569,8 +3627,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Получено от</translation>
     </message>
     <message>
-        <source>Received via PrivateSend</source>
-        <translation>Получено через PrivateSend</translation>
+        <source>Received via %1</source>
+        <translation>Получено через %1</translation>
     </message>
     <message>
         <source>Sent to</source>
@@ -3585,20 +3643,24 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Добыто</translation>
     </message>
     <message>
-        <source>PrivateSend Denominate</source>
-        <translation>Перемешивание PrivateSend</translation>
+        <source>%1 Mixing</source>
+        <translation>%1 Перемешивание</translation>
     </message>
     <message>
-        <source>PrivateSend Collateral Payment</source>
-        <translation>Обеспечительный платеж PrivateSend</translation>
+        <source>%1 Collateral Payment</source>
+        <translation>%1 Обеспечительный платеж</translation>
     </message>
     <message>
-        <source>PrivateSend Make Collateral Inputs</source>
-        <translation>Создание обеспечительных монет для PrivateSend</translation>
+        <source>%1 Make Collateral Inputs</source>
+        <translation>%1 Создание обеспечительных монет</translation>
     </message>
     <message>
-        <source>PrivateSend Create Denominations</source>
-        <translation>Создание номиналов для PrivateSend</translation>
+        <source>%1 Create Denominations</source>
+        <translation>%1 Создание номиналов</translation>
+    </message>
+    <message>
+        <source>%1 Send</source>
+        <translation>%1 Отправка</translation>
     </message>
     <message>
         <source>watch-only</source>
@@ -3680,20 +3742,24 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Отправлено на</translation>
     </message>
     <message>
-        <source>PrivateSend Make Collateral Inputs</source>
-        <translation>Создание обеспечительных монет для PrivateSend</translation>
+        <source>%1 Send</source>
+        <translation>%1 Отправка</translation>
     </message>
     <message>
-        <source>PrivateSend Create Denominations</source>
-        <translation>Создание номиналов для PrivateSend</translation>
+        <source>%1 Make Collateral Inputs</source>
+        <translation>%1 Создание обеспечительных монет</translation>
     </message>
     <message>
-        <source>PrivateSend Denominate</source>
-        <translation>Перемешивание PrivateSend</translation>
+        <source>%1 Create Denominations</source>
+        <translation>%1 Создание номиналов</translation>
     </message>
     <message>
-        <source>PrivateSend Collateral Payment</source>
-        <translation>Обеспечительный платеж PrivateSend</translation>
+        <source>%1 Mixing</source>
+        <translation>%1 Перемешивание</translation>
+    </message>
+    <message>
+        <source>%1 Collateral Payment</source>
+        <translation>%1 Обеспечительный платеж</translation>
     </message>
     <message>
         <source>To yourself</source>
@@ -3879,36 +3945,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Данные кошелька были успешно сохранены в %1.</translation>
     </message>
+    <message>
+        <source>Cancel</source>
+        <translation>Отменить</translation>
+    </message>
 </context>
 <context>
     <name>dash-core</name>
     <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>Привязаться к указанному адресу и всегда прослушивать только его. Используйте [хост]:порт для IPv6</translation>
-    </message>
-    <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Ошибка: не удалось начать прослушивание входящих подключений (прослушивание вернуло ошибку %s)</translation>
-    </message>
-    <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>Выполнить команду, когда приходит соответствующее сообщение о тревоге или наблюдается очень длинная альтернативная цепочка блоков (%s в команде заменяется на сообщение)</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>Выполнить команду, когда меняется транзакция в кошельке (%s в команде заменяется на TxID)</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>Выполнить команду при появлении нового блока (%s в команде заменяется на хэш блока)</translation>
-    </message>
-    <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Имя для создания ссылки на запись KeePass, хранящую пароль к кошельку</translation>
-    </message>
-    <message>
-        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>Задать число потоков проверки скрипта (от %u до %d, 0=авто, &lt;0 = оставить столько ядер свободными, по умолчанию: %d)</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -3923,20 +3969,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Внимание: обнаружено несогласие с подключенными участниками! Вам или другим участникам, возможно, следует обновиться.</translation>
     </message>
     <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Принимать командную строку и команды JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>Разрешить поиск в DNS для -addnode, -seednode и -connect</translation>
-    </message>
-    <message>
         <source>Already have that input.</source>
         <translation>Уже есть этот вход.</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>Параметры создания блоков:</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet</source>
@@ -3947,20 +3981,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Обеспечительная транзакция некорректна.</translation>
     </message>
     <message>
-        <source>Connection options:</source>
-        <translation>Параметры подключения:</translation>
-    </message>
-    <message>
         <source>Corrupted block database detected</source>
         <translation>База данных блоков повреждена</translation>
-    </message>
-    <message>
-        <source>Debugging/Testing options:</source>
-        <translation>Параметры отладки/тестирования:</translation>
-    </message>
-    <message>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation>Не загружать кошелёк и запретить обращения к нему через RPC</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -4007,80 +4029,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Не удалось начать прослушивание на порту. Используйте -listen=0, если вас это устраивает.</translation>
     </message>
     <message>
-        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
-        <translation>(1 = сохранить мета-данные, например, о владельце аккаунта и информацию о запросе платежа, 2 = удалить мета-данные)</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>установлено очень большое значение -maxtxfee! Комиссия такого размера может быть уплачена при проведении отдельной транзакции.</translation>
-    </message>
-    <message>
-        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
-        <translation>Комиссия (в %s/kB), которая будет использована при недостаточности данных для расчета предполагаемой комиссии (по умолчанию: %s)</translation>
-    </message>
-    <message>
-        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
-        <translation>Принимать пересылаемые транзакции, полученные от узлов в белом списке, даже когда пересылка транзакций отключена (по умолчанию: %d)</translation>
-    </message>
-    <message>
-        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info). This option can be specified multiple times to add multiple nodes.</source>
-        <translation>Добавить узел для подключения и пытаться поддерживать соединение открытым (для получения дополнительной информации смотрите помощь для RPC команды `addnode`). Эту опцию можно указывать несколько раз, чтобы добавить много узлов.</translation>
-    </message>
-    <message>
-        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
-        <translation>Разрешить соединения JSON-RPC с указанного источника . &lt;ip&gt; может быть отдельным IP (например, 1.2.3.4), подсетью/маской (например, 1.2.3.4/255.255.255.0) или подсетью/CIDR (e.g. 1.2.3.4/24). Эту опцию можно указывать несколько раз</translation>
-    </message>
-    <message>
-        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
-        <translation>Привязаться к указанному адресу и внести пиров, использующих его, в белый список. Используйте [хост]:порт для IPv6</translation>
-    </message>
-    <message>
-        <source>Bind to given address to listen for JSON-RPC connections. Do not expose the RPC server to untrusted networks such as the public internet! This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
-        <translation>Привязаться к указанному адресу для прослушивания JSON-RPC соединений. Не делайте RPC доступным в небезопасных сетях, таких как интернет! Эта опция игнорируется, если опция -rpcallowip не указана. Порт можно не указывать, но если указать то он перекроет опцию -rpcport. Используйте [хост]:порт для IPv6. Эту опцию можно указывать несколько раз (по умолчанию: 127.0.0.1 и ::1, т.е. localhost, а если указан -rpcallowip, то 0.0.0.0 и ::, т.е. все интерфейсы)</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
         <translation>Одновременное указание конкретных соединений и использование addrman для поиска исходящих соединений не допускается.</translation>
     </message>
     <message>
-        <source>Connect only to the specified node; -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode). This option can be specified multiple times to connect to multiple nodes.</source>
-        <translation>Присоединиться только к указанному узлу; -connect=0 отключает автоматические соединения (правила для такого узла аналогичны правилам для узла, подключенного с помощью -addnode). Эту опцию можно указывать несколько раз, чтобы присоединиться к нескольким узлам.</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect. This option can be specified multiple times to connect to multiple nodes.</source>
-        <translation>Подключиться к участнику, чтобы получить список адресов других участников, и отключиться. Эту опцию можно указывать несколько раз, чтобы присоединиться к нескольким узлам.</translation>
-    </message>
-    <message>
-        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation>Создавать новые файлы с разрешениями по умолчанию вместо umask 077 (актуально только с отключенной функциональностью кошелька)</translation>
-    </message>
-    <message>
-        <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
-        <translation>Удалить все трансакции из кошелька и при рестарте с помощью -rescan восстановить только те, которые есть в цепочке блоков</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transactions of attempted InstantSend double spend in &lt;address&gt;</source>
-        <translation>Включить публикацию кода транзакции при попытке двойной траты другой транзакции, заблокированной через InstantSend, на &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish transaction hashes of attempted InstantSend double spend in &lt;address&gt;</source>
-        <translation>Включить публикацию хэша транзакции при попытке двойной траты другой транзакции, заблокированной через InstantSend, на &lt;address&gt;</translation>
-    </message>
-    <message>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
         <translation>Найдены неподтверждённые номиналы, процесс продолжится после их подтверждения.</translation>
-    </message>
-    <message>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
-        <translation>Насколько тщательна проверка контрольных блоков -checkblocks (0-4, по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
-        <translation>Если paytxfee не задано, то включить достаточно комиссии, чтобы подтверждение транзакций происходило в среднем за n блоков (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
-        <translation>Если этот блок есть в цепочке, то предположить, что он и все предшествующие блоки валидны, и пропустить проверку их скриптов (0 - проверять все, по умолчанию: %s, testnet: %s)</translation>
     </message>
     <message>
         <source>Invalid -socketevents ('%s') specified. Only these modes are supported: %s</source>
@@ -4091,112 +4049,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Некорректная сумма для -maxtxfee=&lt;amount&gt;: '%s' (должна быть минимум как комиссия minrelay - %s, чтобы предотвратить застревание транзакций)</translation>
     </message>
     <message>
-        <source>Location of the auth cookie. Relative paths will be prefixed by a net-specific datadir location. (default: data dir)</source>
-        <translation>Местонахождение файла cookie для аутентификации. Относительные пути будут развернуты относительно местонахождения папки с данными для конкретной сети. (по умолчанию: папка с данными)</translation>
-    </message>
-    <message>
-        <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
-        <translation>Хранить полный индекс транзакций, используется rpc-вызовом getrawtransaction (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Make outgoing connections only through network &lt;net&gt; (ipv4, ipv6 or onion). Incoming connections are not affected by this option. This option can be specified multiple times to allow multiple networks.</source>
-        <translation>Открывать исходящие соединения только через сеть &lt;net&gt; (ipv4, ipv6 or onion). Эта опция не влияет на ходящие соединения. Опцию можно указывать несколько раз, чтобы разрешить несколько сетей.</translation>
-    </message>
-    <message>
-        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
-        <translation>Максимальный размер данных в транзакциях передачи данных, который мы ретранслируем и добываем (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
-        <translation>Количество секунд, в течение которых запрещать переподключаться неправильно ведущим себя участникам (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
-        <translation>Вывод отладочной информации (по умолчанию: %u, указание &lt;category&gt; необязательно)</translation>
-    </message>
-    <message>
-        <source>Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
-        <translation>Установить новый минимум количества подписантов спорков. Полезно только для regtest и devnet. Использование этого параметра на mainnet или testnet приведет к блокировке.</translation>
-    </message>
-    <message>
-        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
-        <translation>При отправке PrivateSend использует только деноминированные средства, возможно, Вам просто нужно перемешать немного больше монет.</translation>
-    </message>
-    <message>
-        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex, -rescan and -disablegovernance=false. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;=%u = automatically prune block files to stay under the specified target size in MiB)</source>
-        <translation>Уменьшить требования к размеру хранилища путем урезания (удаления) старых блоков. Это позволяет использовать RPC-команду pruneblockchain для удаления определенных блоков, а также включает автоматическое удаление старых блоков, если указан целевой размер в MiB. Этот режим несовместим с -txindex, -rescan и -disablegovernance=false. Внимание: отмена этой настройки потребует повторного скачивания всей цепочки блоков. (по умолчанию: 0 = отключить удаление блоков, 1 = разрешить ручное удаление через RPC, &gt;=%u = целевой размер в MiB, который будут займут файлы блоков)</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console (default: 1 when no -daemon. To disable logging to file, set debuglogfile=0)</source>
-        <translation>Выводить информацию трассировки/отладки в консоль (по умолчанию: 1, когда не указана опция -daemon. Для отключения вывода логов в файл используйте debuglogfile=0)</translation>
-    </message>
-    <message>
-        <source>Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)</source>
-        <translation>Указать конфигурационный файл. Относительные пути будут развернуты, исходя из местонахождения папки с данными. (по умолчанию: %s)</translation>
-    </message>
-    <message>
-        <source>Specify directory to hold wallets (default: &lt;datadir&gt;/wallets if it exists, otherwise &lt;datadir&gt;)</source>
-        <translation>Указать папку для хранения кошельков (по умолчанию: &lt;datadir&gt;/wallets если существует, иначе &lt;datadir&gt;)</translation>
-    </message>
-    <message>
-        <source>Specify location of debug log file. Relative paths will be prefixed by a net-specific datadir location. (0 to disable; default: %s)</source>
-        <translation>Указать местонахождение файла отладки. Относительные пути будут развернуты относительно местонахождения папки с данными для конкретной сети. (0 для отключения; по умолчанию: %s)</translation>
-    </message>
-    <message>
-        <source>Specify pid file. Relative paths will be prefixed by a net-specific datadir location. (default: %s)</source>
-        <translation>Указать pid файл. Относительные пути будут развернуты относительно местонахождения папки с данными для конкретной сети. (по умолчанию: %s)</translation>
-    </message>
-    <message>
-        <source>Specify wallet database path. Can be specified multiple times to load multiple wallets. Path is interpreted relative to &lt;walletdir&gt; if it is not absolute, and will be created if it does not exist (as a directory containing a wallet.dat file and log files). For backwards compatibility this will also accept names of existing data files in &lt;walletdir&gt;.)</source>
-        <translation>Указать путь к базе данных кошелька. Опция может быть использована несколько раз для загрузки нескольких кошельков. Путь развертывается относительно &lt;walletdir&gt;, если он не абсолютный, а в случае отсутствия базы данных по данному пути, будет создана новая (папка с wallet.dat и файлами логов). С целью сохранения обратной совместимости также принимаются имена существующих names файлов в &lt;walletdir&gt;.)</translation>
-    </message>
-    <message>
         <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
         <translation>Индексирование транзакций нельзя отключить в режиме проверки данных управления. Либо запустите кошелек с опцией -disablegovernance, либо включите индексирование транзакций.</translation>
     </message>
     <message>
-        <source>Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)</source>
-        <translation>Использовать N отдельных мастернод для параллельного перемешивания средств (%u-%u, по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
-        <translation>Использовать отдельный SOCKS5 прокси для подключения к участникам через скрытые сервисы Tor (по умолчанию: %s)</translation>
-    </message>
-    <message>
-        <source>User defined mnemonic for HD wallet (bip39). Only has effect during wallet creation/first start (default: randomly generated)</source>
-        <translation>Заданная пользователем мнемоника HD кошелька (bip39). Работает только при первом создании/старте кошелька (по умолчанию: генерируется случайным образом)</translation>
-    </message>
-    <message>
-        <source>User defined seed for HD wallet (should be in hex). Only has effect during wallet creation/first start (default: randomly generated)</source>
-        <translation>Заданная пользователем seed последовательность HD кошелька (в hex формате). Работает только при первом создании/старте кошелька (по умолчанию: генерируется случайным образом)</translation>
-    </message>
-    <message>
-        <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
-        <translation>Пиры, внесенные в белый список, не будут подвергаться DoS блокировкам и их транзакции будут ретранслироваться, даже если они уже есть в пуле памяти, что полезно, например, для работы в качестве шлюза</translation>
-    </message>
-    <message>
-        <source>Accept public REST requests (default: %u)</source>
-        <translation>Принимать публичные REST-запросы (по  умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Always query for peer addresses via DNS lookup (default: %u)</source>
-        <translation>Всегда запрашивать адреса участников через DNS (по умолчанию: %u)</translation>
-    </message>
-    <message>
         <source>Can't mix: no compatible inputs found!</source>
         <translation>Перемешивание невозможно: подходящие монеты не найдены!</translation>
-    </message>
-    <message>
-        <source>Chain selection options:</source>
-        <translation>Параметры выбора цепи:</translation>
-    </message>
-    <message>
-        <source>Connect through SOCKS5 proxy</source>
-        <translation>Соединяться через SOCKS5 прокси</translation>
-    </message>
-    <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>Соединяться c KeePassHttp по порту &lt;port&gt; (по умолчанию: %u)</translation>
     </message>
     <message>
         <source>Entry exceeds maximum size.</source>
@@ -4223,16 +4081,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Найдено достаточное количество участников, подписываем ...</translation>
     </message>
     <message>
-        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
-        <translation>Сколько блоков проверять на старте (по умолчанию: %u, 0 = все)</translation>
-    </message>
-    <message>
         <source>Importing...</source>
         <translation>Импорт ...</translation>
-    </message>
-    <message>
-        <source>Include IP addresses in debug output (default: %u)</source>
-        <translation>Писать IP-адреса в отладочный вывод (по умолчанию: %u)</translation>
     </message>
     <message>
         <source>Incompatible mode.</source>
@@ -4275,14 +4125,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Не осталось ключей, пожалуйста, выполните команду keypoolrefill</translation>
     </message>
     <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>Слушать JSON-RPC соединения на порту &lt;port&gt; (по умолчанию: %u или testnet: %u)</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>Принимать входящие подключения на порт &lt;port&gt; (по умолчанию: %u или testnet: %u)</translation>
-    </message>
-    <message>
         <source>Loading banlist...</source>
         <translation>Загрузка списка заблокированных...</translation>
     </message>
@@ -4299,20 +4141,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Установлена блокировка.</translation>
     </message>
     <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>Максимальный размер буфера приёма на одно соединение, &lt;n&gt;*1000 байт (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>Максимальный размер буфера отправки на соединение, &lt;n&gt;*1000 байт (по умолчанию: %u)</translation>
-    </message>
-    <message>
         <source>Mixing in progress...</source>
         <translation>Выполняется перемешивание...</translation>
-    </message>
-    <message>
-        <source>Mnemonic passphrase is too long, must be at most 256 characters</source>
-        <translation>Парольная фраза мнемоники слишком длинная, она не должна превышать 256 символов</translation>
     </message>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
@@ -4335,56 +4165,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Отсутствует в списке мастернод.</translation>
     </message>
     <message>
-        <source>Prepend debug output with timestamp (default: %u)</source>
-        <translation>Дописывать в начало отладочного вывода отметки времени (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Rebuild chain state and block index from the blk*.dat files on disk</source>
-        <translation>Перестроить состояние цепочки и индекс блоков из текущих файлов blk*.dat, хранящихся на диске</translation>
-    </message>
-    <message>
-        <source>Rebuild chain state from the currently indexed blocks</source>
-        <translation>Перестроить состояние цепочки из уже проиндексированных блоков</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to debug.log file (default: %u)</source>
-        <translation>Выводить информацию трассировки/отладки в файл debug.log (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
-        <translation>Установить размер пула ключей в &lt;n&gt; (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Set the number of threads to service RPC calls (default: %d)</source>
-        <translation>Задать число потоков выполнения запросов RPC (по умолчанию: %d)</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation>Указать тайм-аут соединения в миллисекундах (минимально: 1, по умолчанию: %d)</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: %u)</source>
-        <translation>Тратить неподтвержденную сдачу при отправке транзакций (по умолчанию: %u)</translation>
-    </message>
-    <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Отправлено на мастерноду, ожидаем в очереди %s</translation>
     </message>
     <message>
         <source>Synchronization finished</source>
         <translation>Синхронизация завершена</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
-        <translation>Порог для отключения некорректно ведущих себя пиров (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Tor control port password (default: empty)</source>
-        <translation>Пароль контрольного порта Tor (по умолчанию: пустой)</translation>
-    </message>
-    <message>
-        <source>Tor control port to use if onion listening enabled (default: %s)</source>
-        <translation>Используемый контрольный порт Tor при включенном прослушивании сети onion (по умолчанию: %s)</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
@@ -4407,22 +4193,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Обнаружен неподдерживаемый параметр -tor, используйте -onion вместо него.</translation>
     </message>
     <message>
-        <source>Upgrade wallet to latest format on startup</source>
-        <translation>Обновить бумажник до последнего формата на старте</translation>
-    </message>
-    <message>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>Использовать интеграцию с KeePass 2 через плагин KeePassHttp (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: %u)</source>
-        <translation>Использовать UPnP для проброса порта (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Use the test chain</source>
-        <translation>Использовать тестовую цепь</translation>
-    </message>
-    <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>Комментарий User Agent  (%s) содержит небезопасные символы.</translation>
     </message>
@@ -4439,6 +4209,18 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Не получилось выбрать случайную Мастерноду.</translation>
     </message>
     <message>
+        <source>%s can't be lower than %s</source>
+        <translation>%s не может быть меньше чем %s</translation>
+    </message>
+    <message>
+        <source>%s is idle.</source>
+        <translation>%s в режиме ожидания.</translation>
+    </message>
+    <message>
+        <source>%s request incomplete: %s</source>
+        <translation>Запрос %s не завершен: %s</translation>
+    </message>
+    <message>
         <source>Can't mix while sync in progress.</source>
         <translation>Перемешивание до завершения синхронизации невозможно.</translation>
     </message>
@@ -4451,14 +4233,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Обнаружен некорректный скрипт.</translation>
     </message>
     <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>Идентификатор KeePassHttp для установленной ассоциации</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>Ключ KeePassHttp для зашифрованной коммуникации с KeePass</translation>
-    </message>
-    <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>%s файл содержит в себе все закрытые ключи для этого кошелька. Никому его не показывайте!</translation>
     </message>
@@ -4467,64 +4241,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Опция -masternode устарела и будет проигнорирована, достаточно указать -masternodeblsprivkey, чтобы запустить этот узел в качестве мастерноды .</translation>
     </message>
     <message>
-        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
-        <translation>Определить свой IP (по умолчанию: 1 при прослушивании и если не используется -externalip или -proxy)</translation>
-    </message>
-    <message>
-        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
-        <translation>Не хранить транзакции в пуле памяти дольше чем &lt;n&gt; часов (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)</source>
-        <translation>Включить множественное перемешивание PrivateSend за один блок (0-1, по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet InstantSend transaction is successfully locked (%s in cmd is replaced by TxID)</source>
-        <translation>Выполнить команду, когда транзакция InstantSend успешно заблокирована (%s в команде заменяется на TxID)</translation>
-    </message>
-    <message>
-        <source>Extra transactions to keep in memory for compact block reconstructions (default: %u)</source>
-        <translation>Количество дополнительных транзакций, которые нужно держать в памяти для реконструкции компактных блоков (по умолчанию: %u)</translation>
-    </message>
-    <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>Не удалось создать резервную копию, т.к. файл уже существует! Такое могло случится, если вы перезапустили кошелек менее чем через 60 секунд после предыдущего запуска. Вы можете продолжить, если это допустимо.</translation>
     </message>
     <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
-        <translation>Комиссии (в %s/kB) меньше этого значения считаются нулевой для ретранслирования, майнинга и создания транзакции (по умолчанию: %s)</translation>
-    </message>
-    <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Комиссии (в %s/kB) меньше этого значения считаются нулевой при создании транзакции (по умолчанию: %s)</translation>
-    </message>
-    <message>
-        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
-        <translation>Если &lt;category&gt; не указана или &lt;category&gt; = 1, выводит всю отладочную информацию.</translation>
-    </message>
-    <message>
-        <source>Maintain a full address index, used to query for the balance, txids and unspent outputs for addresses (default: %u)</source>
-        <translation>Хранить полный индекс для адресов, используется для запроса баланса, транзакций и непотраченных выходов для конкретного адреса (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain a full spent index, used to query the spending txid and input index for an outpoint (default: %u)</source>
-        <translation>Хранить полный индекс трат, используется для запроса id транзакции и индекса входа для конкретного выхода (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain a timestamp index for block hashes, used to query blocks hashes by a range of timestamps (default: %u)</source>
-        <translation>Хранить индекс меток времени для хэшей блока, используется для запроса хэшей блоков по диапазону меток времени (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (temporary service connections excluded) (default: %u)</source>
-        <translation>Поддерживать не более &lt;n&gt; подключений к узлам (без учета временных сервисных соединений) (по умолчанию: %u)</translation>
-    </message>
-    <message>
         <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
         <translation>Не забудьте зашифровать кошелек и удалить все незашифрованные резервные копии после того как убедитесь, что кошелек работает!</translation>
-    </message>
-    <message>
-        <source>Maximum total size of all orphan transactions in megabytes (default: %u)</source>
-        <translation>Максимальный суммарный размер всех транзакций с неизвестными входами, в мегабайтах (по умолчанию: %u)</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -4535,28 +4257,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Удаление блоков: последняя синхронизация кошелька выходит за рамки удаленных данных. Вам нужно запустить клиента с ключом -reindex (в случае узла с удаленными блоками это означает повторное скачивание всей цепи блоков)</translation>
     </message>
     <message>
-        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)</source>
-        <translation>Запрашивать адреса участников с помощью DNS, если адресов мало (по умолчанию: 1, если не указан -connect)</translation>
-    </message>
-    <message>
-        <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
-        <translation>Использовать случайные учётные данные для каждого прокси-подключения. Эта функция позволяет изолировать потоки Tor (по умолчанию: %u)</translation>
-    </message>
-    <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>Повторное сканирование невозможно в режиме удаления блоков. Вам надо будет использовать -reindex, что приведет к повторной загрузке всей цепи блоков.</translation>
-    </message>
-    <message>
-        <source>Set the masternode BLS private key and enable the client to act as a masternode</source>
-        <translation>Установить закрытый BLS ключ включить режим мастерноды для данного узла </translation>
-    </message>
-    <message>
-        <source>Specify full path to directory for automatic wallet backups (must exist)</source>
-        <translation>Укажите полный путь к папке для автоматических резервных копий кошелька (должна уже быть создана)</translation>
-    </message>
-    <message>
-        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
-        <translation>Поддерживать фильтрацию блоков и транзакций с помощью фильтров Блума (по умолчанию: %u)</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
@@ -4571,32 +4273,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Длина строки сетевой версии (%i) превышает максимально допустимую (%i). Уменьшите количество или размер строк uacomment.</translation>
     </message>
     <message>
-        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
-        <translation>Пытаться ограничить исходящий трафик в пределах установленного лимита (в МБ за 24ч), 0 = не ограничивать (по умолчанию: %d)</translation>
-    </message>
-    <message>
-        <source>Try to create at least N inputs of each denominated amount (%u-%u, default: %u)</source>
-        <translation>Пытаться создать как минимум N входов для каждого номинала (%u-%u, по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Unable to locate enough PrivateSend denominated funds for this transaction.</source>
-        <translation>Не удалось обнаружить достаточных для выполнения этой транзакции номиналов PrivateSend.</translation>
-    </message>
-    <message>
         <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
         <translation>Обнаружен неподдерживаемый аргумент -socks. Выбор версии SOCKS больше невозможен, поддерживаются только прокси версии SOCKS5.</translation>
     </message>
     <message>
         <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
         <translation>Неподдерживаемый аргумент -whitelistalwaysrelay проигнорирован, используйте -whitelistrelay и/или -whitelistforcerelay.</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
-        <translation>Использовать UPnP для проброса порта (по умолчанию: 1, если используется прослушивание и нет -proxy)</translation>
-    </message>
-    <message>
-        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcauth. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
-        <translation>Имя пользователя и хэш пароля для JSON-RPC соединений. Поле &lt;userpw&gt; использует формат: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Каноничный пример скрипта на питоне находится в share/rpcauth. После этого клиент соединяется как обычно, используя rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; пару. Эта опция может быть указана несколько раз</translation>
     </message>
     <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
@@ -4619,10 +4301,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Вам необходимо пересоздать базы данных, запустив клиент с ключом -reindex, чтобы вернуться в полный режим. Это приведет к повторному скачиванию всей цепи блоков.</translation>
     </message>
     <message>
-        <source>(default: %u)</source>
-        <translation>(по умолчанию: %u)</translation>
-    </message>
-    <message>
         <source>-litemode is deprecated.</source>
         <translation>Опция -litemode устарела.</translation>
     </message>
@@ -4631,60 +4309,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>-maxmempool должно быть минимум %d MB</translation>
     </message>
     <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;category&gt; может быть:</translation>
-    </message>
-    <message>
-        <source>Append comment to the user agent string</source>
-        <translation>Добавить комментарий к строке User Agent</translation>
-    </message>
-    <message>
         <source>Automatic backups disabled</source>
         <translation>Автоматические бэкапы отключены</translation>
     </message>
     <message>
-        <source>Automatically create Tor hidden service (default: %d)</source>
-        <translation>Автоматически создавать скрытый сервис Tor (по умолчанию: %d)</translation>
-    </message>
-    <message>
-        <source>Disable governance validation (0-1, default: %u)</source>
-        <translation>Отключить проверку данных управления (0-1, по умолчанию: %u)</translation>
-    </message>
-    <message>
         <source>ERROR! Failed to create automatic backup</source>
         <translation>ОШИБКА! Не удалось создать автоматический бэкап</translation>
-    </message>
-    <message>
-        <source>Enable publish hash block in &lt;address&gt;</source>
-        <translation>Включить публикацию хэша блока на &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash of governance objects (like proposals) in &lt;address&gt;</source>
-        <translation>Включить публикацию хэша объектов управления (таких как бюджетные предложения) на &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash of governance votes in &lt;address&gt;</source>
-        <translation>Включить публикацию хэша голосов за объекты управления на &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash transaction (locked via InstantSend) in &lt;address&gt;</source>
-        <translation>Включить публикацию хэша транзакции (заблокированной через InstantSend) на &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash transaction in &lt;address&gt;</source>
-        <translation>Включить публикацию хэша транзакции на &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish raw block in &lt;address&gt;</source>
-        <translation>Включить публикацию кода блока на &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transaction (locked via InstantSend) in &lt;address&gt;</source>
-        <translation>Включить публикацию кода транзакции (заблокированной через InstantSend) на &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transaction in &lt;address&gt;</source>
-        <translation>Включить публикацию кода транзакции на &lt;address&gt;</translation>
     </message>
     <message>
         <source>Error upgrading evo database</source>
@@ -4739,18 +4369,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ошибка сканирования кошелька во время инициализации</translation>
     </message>
     <message>
-        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
-        <translation>Комиссия (в %s/kB), добавляемая к отправляемым Вами транзакциям (по умолчанию: %s)</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file on startup</source>
-        <translation>Импортировать блоки из внешнего файла blk000??.dat на старте</translation>
-    </message>
-    <message>
-        <source>InstantSend options:</source>
-        <translation>Параметры InstantSend:</translation>
-    </message>
-    <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>Неверная сумма в параметре -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
@@ -4765,18 +4383,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Its replacement -disablegovernance has been forced instead.</source>
         <translation>Взамен активирована опция -disablegovernance.</translation>
-    </message>
-    <message>
-        <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
-        <translation>Держать размер пула памяти транзакций ниже &lt;n&gt; мегабайт (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Last PrivateSend was too recent.</source>
-        <translation>Последнее действие PrivateSend было слишком недавно.</translation>
-    </message>
-    <message>
-        <source>Last successful PrivateSend action was too recent.</source>
-        <translation>Последнее успешное действие PrivateSend было слишком недавно.</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4799,24 +4405,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Загрузка кошелька...</translation>
     </message>
     <message>
-        <source>Make the wallet broadcast transactions</source>
-        <translation>Рассылать транзакции из бумажника</translation>
-    </message>
-    <message>
-        <source>Masternode options:</source>
-        <translation>Параметры мастерноды:</translation>
-    </message>
-    <message>
         <source>Masternode queue is full.</source>
         <translation>Очередь на мастерноде переполнена.</translation>
     </message>
     <message>
         <source>Masternode:</source>
         <translation>Мастернода:</translation>
-    </message>
-    <message>
-        <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
-        <translation>Минимальное количество байт на операцию в транзакциях, которые мы ретранслируем и добываем (по умолчанию: %u)</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>
@@ -4831,44 +4425,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Отсутствуют совпадающие для перемешивания номиналы.</translation>
     </message>
     <message>
-        <source>Node relay options:</source>
-        <translation>Параметры ретрансляции узла:</translation>
-    </message>
-    <message>
         <source>Not compatible with existing transactions.</source>
         <translation>Не совместимо с существующими транзакциями.</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
         <translation>Недостаточно файловых дескрипторов.</translation>
-    </message>
-    <message>
-        <source>Number of automatic wallet backups (default: %u)</source>
-        <translation>Количество автоматических резервных копий кошелька (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Options:</source>
-        <translation>Параметры:</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>Пароль для подключений JSON-RPC</translation>
-    </message>
-    <message>
-        <source>Print version and exit</source>
-        <translation>Вывести версию и выйти</translation>
-    </message>
-    <message>
-        <source>PrivateSend is idle.</source>
-        <translation>PrivateSend в режиме ожидания.</translation>
-    </message>
-    <message>
-        <source>PrivateSend options:</source>
-        <translation>Опции PrivateSend:</translation>
-    </message>
-    <message>
-        <source>PrivateSend request incomplete:</source>
-        <translation>Запрос PrivateSend не завершен:</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -4887,18 +4449,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Урезание хранилища блоков...</translation>
     </message>
     <message>
-        <source>Rescan the block chain for missing wallet transactions on startup</source>
-        <translation>Перепроверить цепочку блоков на предмет отсутствующих в бумажнике транзакций на старте</translation>
-    </message>
-    <message>
-        <source>Send reject messages per BIP61 (default: %u)</source>
-        <translation>Отправлять сообщения отказа как описано в BIP61 (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Socket events mode, which must be one of: %s (default: %s)</source>
-        <translation>Режим обработки сокетов, должен быть один из: %s (по умолчанию: %s)</translation>
-    </message>
-    <message>
         <source>Specified -walletdir "%s" does not exist</source>
         <translation>Указанный -walletdir "%s" не существует</translation>
     </message>
@@ -4911,16 +4461,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Указанный -walletdir "%s" не является директорией</translation>
     </message>
     <message>
-        <source>Sync mempool from other nodes on start (default: %u)</source>
-        <translation>Синхронизировать пул памяти с других узлов на старте (по умолчанию: %u)</translation>
-    </message>
-    <message>
         <source>Synchronizing blockchain...</source>
         <translation>Синхронизация блокчейна...</translation>
-    </message>
-    <message>
-        <source>Target PrivateSend balance (%u-%u, default: %u)</source>
-        <translation>Целевой баланс PrivateSend (%u-%u, по умолчанию: %u)</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -4971,16 +4513,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Обновление базы UTXO</translation>
     </message>
     <message>
-        <source>Use devnet chain with provided name</source>
-        <translation>Использовать цепочку devnet с указанным именем</translation>
-    </message>
-    <message>
         <source>Wallet %s resides outside wallet directory %s</source>
         <translation>Кошелёк %s располагается вне каталога с кошельками %s</translation>
-    </message>
-    <message>
-        <source>Wallet debugging/testing options:</source>
-        <translation>Параметры отладки/тестирования кошелька:</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
@@ -4993,10 +4527,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Wasn't able to create wallet backup folder %s!</source>
         <translation>Не удалось создать папку для резервной копии кошелька %s!</translation>
-    </message>
-    <message>
-        <source>Whether to operate in a blocks only mode (default: %u)</source>
-        <translation>Работать в режиме обработки только блоков (по умолчанию: %u)</translation>
     </message>
     <message>
         <source>You can not start a masternode with wallet enabled.</source>
@@ -5015,20 +4545,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Вам необходимо пересобрать базы данных с помощью -reindex, чтобы изменить -txindex</translation>
     </message>
     <message>
-        <source>ZeroMQ notification options:</source>
-        <translation>Параметры оповещения ZeroMQ:</translation>
-    </message>
-    <message>
         <source>no mixing available.</source>
         <translation>перемешивание недоступно.</translation>
     </message>
     <message>
         <source>see debug.log for details.</source>
         <translation>смотрите debug.log для получения подробной информации.</translation>
-    </message>
-    <message>
-        <source>RPC server options:</source>
-        <translation>Параметры сервера RPC:</translation>
     </message>
     <message>
         <source>Dash Core</source>
@@ -5039,16 +4561,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Разработчики %s</translation>
     </message>
     <message>
+        <source>%s uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation>%s использует только номиналы, возможно, Вам просто нужно перемешать немного больше монет.</translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>Не удалось установить блокировку на каталог данных %s. Возможно, %s уже запущен.</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation>Распространяется под лицензией на программное обеспечение MIT, смотрите прилагаемый файл %s или %s.</translation>
-    </message>
-    <message>
-        <source>Enable use of PrivateSend for funds stored in this wallet (0-1, default: %u)</source>
-        <translation>Разрешить перемешивание PrivateSend для средств, хранящихся в этом кошельке (0-1, по умолчанию: %u)</translation>
     </message>
     <message>
         <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
@@ -5059,28 +4581,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ошибка чтения %s! Все ключи прочитаны верно, но данные транзакций или записи адресной книги могут отсутствовать или быть неправильными.</translation>
     </message>
     <message>
-        <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
-        <translation>Исключить отладочную информацию для указаной категории. Может быть использовано вместе с -debug=1, чтобы выводить все отладочную информацию, кроме информаци, относящейся к одной или нескольким указанным категориям.</translation>
-    </message>
-    <message>
-        <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
-        <translation>Пересылать транзакции от узлов в белом списке, даже если они нарушают локальные правила пересылки (по умолчанию: %d)</translation>
-    </message>
-    <message>
         <source>Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?</source>
         <translation>Неверный или отсутствующий начальный блок devnet. Неправильный каталог данных для devnet?</translation>
-    </message>
-    <message>
-        <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
-        <translation>Максимально допустимое отклонение медианного времени узлов. Локальное время может отклоняться узлами на эту величину как вперед, так и назад. (по умолчанию: %u секунд)</translation>
-    </message>
-    <message>
-        <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>Максимальная сумма комиссии (в %s), допустимая в одной транзакции. Установка слишком низкого значения может привести к невозможности отправить большие транзакции (по умолчанию: %s)</translation>
-    </message>
-    <message>
-        <source>Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
-        <translation>Задать spork-адрес. Полезно только для regtest или devnet. Использование этого в главной либо тестовой сети приведет к бану Вашего узла.</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
@@ -5089,14 +4591,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation>Пожалуйста, поддержите нас, если считаете %s полезным. Посетите %s для дополнительной информации.</translation>
-    </message>
-    <message>
-        <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
-        <translation>Установить минимальную комиссию (в %s/kB) для добавления транзакций в блок (по умолчанию: %s)</translation>
-    </message>
-    <message>
-        <source>The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target</source>
-        <translation>Уровень комиссии (в %s/kB), отвечающий за возможность списания сдачи в пользу комиссии (default: %s). Внимание: выход, который при данном уровне комиссии будет считаться "пылью", будет отброшен. Вне зависимости от данной настройки все выходы с уровнем комиссии ниже уровня "пыли" также отбрасываются, а максимальное значение сверх этого ограничено комиссией, рассчитанной для самого долгого подтверждения</translation>
     </message>
     <message>
         <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
@@ -5111,40 +4605,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Этот продукт включает ПО, разработанное проектом OpenSSL Project для использования в OpenSSL Toolkit %s, криптографическое ПО, написанное Eric Young и ПО для работы с UPnP, написанное Thomas Bernard.</translation>
     </message>
     <message>
-        <source>Unable to locate enough PrivateSend non-denominated funds for this transaction.</source>
-        <translation>Не удалось обнаружить достаточных для выполнения этой транзакции неденоминированных средств.</translation>
-    </message>
-    <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
         <translation>Невозможно повторить блоки. Необходимо перестроить базы даных с помощью -reindex-chainstate.</translation>
     </message>
     <message>
-        <source>Use N separate masternodes for each denominated input to mix funds (%u-%u, default: %u)</source>
-        <translation>Использовать N отдельных мастернод для перемешивания средств (%u-%u, по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Use hierarchical deterministic key generation (HD) after BIP39/BIP44. Only has effect during wallet creation/first start</source>
-        <translation>Использовать генерацию иерархических детерминированных ключей (HD) по схеме BIP39/BIP44. Работает только при первом создании/старте кошелька</translation>
-    </message>
-    <message>
-        <source>User defined mnemonic passphrase for HD wallet (BIP39). Only has effect during wallet creation/first start (default: empty string)</source>
-        <translation>Заданная пользователем парольная фраза мнемоники HD кошелька (BIP39). Работает только при первом создании/старте кошелька (по умолчанию: пустая строка)</translation>
-    </message>
-    <message>
-        <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
-        <translation>Кошелек не будет создавать транзакции превышающие ограничения пула памяти по длине цепочки (default: %u)</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Внимание: кошелек повреждён, данные спасены! Оригинальный %s сохранён как %s в %s. Если Ваш баланс или транзакции некорректны, Вы должны восстановить файл из резервной копии.</translation>
-    </message>
-    <message>
-        <source>Whether to save the mempool on shutdown and load on restart (default: %u)</source>
-        <translation>Сохранять ли пул памяти при остановке и загружать ли его при последующем старте узла (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.</source>
-        <translation>Внести пиров, соединяющихся с IP адреса (например, 1.2.3.4) или с адресов, подходящих по маске в CIDR нотации (например, 1.2.3.0/24), в белый список. Опция может быть указана несколько раз.</translation>
     </message>
     <message>
         <source>%d of last 100 blocks have unexpected version</source>
@@ -5175,20 +4641,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Необходимо указать -rpcport, если указаны -devnet и -server</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Принимать подключения извне (по умолчанию: 1, если не используется -proxy или -connect)</translation>
-    </message>
-    <message>
-        <source>Allow RFC1918 addresses to be relayed and connected to (default: %u)</source>
-        <translation>Позволять передачу и соединение к RFC1918 адресам (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
-        <translation>Попытаться восстановить закрытые ключи из повреждённого кошелька на старте</translation>
-    </message>
-    <message>
         <source>Cannot resolve -%s address: '%s'</source>
         <translation>Не удаётся разрешить адрес в параметре -%s: '%s'</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation>Не удалось осуществить запись в каталог данных '%s'; проверьте доступ.</translation>
     </message>
     <message>
         <source>Change index out of range</source>
@@ -5197,10 +4655,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Copyright (C)</source>
         <translation>Copyright (C)</translation>
-    </message>
-    <message>
-        <source>Create up to N inputs of each denominated amount (%u-%u, default: %u)</source>
-        <translation>Создавать до N входов для каждого номинала (%u-%u, по умолчанию: %u)</translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -5227,12 +4681,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ошибка обновления базы данных состояний цепочки</translation>
     </message>
     <message>
+        <source>Error: failed to add socket to kqueuefd (kevent returned error %s)</source>
+        <translation>Ошибка: не удалось добавить сокет в kqueuefd (kevent вернул ошибку %s)</translation>
+    </message>
+    <message>
         <source>Failed to find mixing queue to join</source>
         <translation>Не удалось найти очередь перемешивания</translation>
     </message>
     <message>
         <source>Failed to start a new mixing queue</source>
         <translation>Не удалось создать очередь перемешивания</translation>
+    </message>
+    <message>
+        <source>Incorrect -rescan mode, falling back to default value</source>
+        <translation>Некорректное значение -rescan, будет использовано значение по умолчанию</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
@@ -5263,20 +4725,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Загрузка P2P адресов...</translation>
     </message>
     <message>
-        <source>Print this help message and exit</source>
-        <translation>Вывести эту справку и выйти</translation>
-    </message>
-    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Настройка -maxconnections снижена с %d до %d из-за ограничений системы.</translation>
-    </message>
-    <message>
-        <source>Relay and mine data carrier transactions (default: %u)</source>
-        <translation>Ретрансляция и создание транзакций передачи данных (по умолчанию: %u)</translation>
-    </message>
-    <message>
-        <source>Relay non-P2SH multisig (default: %u)</source>
-        <translation>Ретрансляция не-P2SH multisig (по умолчанию: %u)</translation>
     </message>
     <message>
         <source>Replaying blocks...</source>
@@ -5287,10 +4737,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Сканирование...</translation>
     </message>
     <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Запускаться в фоне как демон и принимать команды</translation>
-    </message>
-    <message>
         <source>Session not complete!</source>
         <translation>Сессия не закончена!</translation>
     </message>
@@ -5299,36 +4745,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Сессия прекращена по тайм-ауту.</translation>
     </message>
     <message>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation>Установить размер кэша БД в мегабайтах(от %d до %d, по умолчанию: %d)</translation>
-    </message>
-    <message>
-        <source>Set maximum block size in bytes (default: %d)</source>
-        <translation>Установить максимальный размер блока в байтах (по умолчанию: %d)</translation>
-    </message>
-    <message>
-        <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation>Показать все отладочные параметры (использование: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>Сжимать файл debug.log при запуске клиента (по умолчанию: 1, если нет -debug)</translation>
-    </message>
-    <message>
         <source>Signing transaction failed</source>
         <translation>Подписание транзакции завершилось неудачно</translation>
     </message>
     <message>
-        <source>Specify data directory</source>
-        <translation>Задать каталог данных</translation>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>Указанный каталог блоков "%s" не существует</translation>
     </message>
     <message>
-        <source>Specify your own public address</source>
-        <translation>Укажите Ваш собственный публичный адрес</translation>
+        <source>Last queue was created too recently.</source>
+        <translation>Последняя очередь была создана слишком недавно.</translation>
     </message>
     <message>
-        <source>Start PrivateSend automatically (0-1, default: %u)</source>
-        <translation>Запускать PrivateSend автоматически (0-1, по умолчанию: %u)</translation>
+        <source>Last successful action was too recent.</source>
+        <translation>Последнее успешное действие было слишком недавно.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>
@@ -5375,6 +4805,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Невозможно привязаться к %s на этом компьютере (привязка вернула ошибку %s)</translation>
     </message>
     <message>
+        <source>Unable to locate enough mixed funds for this transaction.</source>
+        <translation>Не удалось обнаружить достаточных для выполнения этой транзакции перемешанных средств.</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough non-denominated funds for this transaction.</source>
+        <translation>Не удалось обнаружить достаточных для выполнения этой транзакции неденоминированных средств.</translation>
+    </message>
+    <message>
         <source>Unable to sign spork message, wrong key?</source>
         <translation>Не удалось подписать spork-сообщение. Неправильный ключ?</translation>
     </message>
@@ -5391,10 +4829,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Неподдерживаемая категория отладочной информации %s=%s.</translation>
     </message>
     <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>Имя для подключений JSON-RPC</translation>
-    </message>
-    <message>
         <source>Verifying blocks...</source>
         <translation>Проверка блоков...</translation>
     </message>
@@ -5407,12 +4841,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Кошелёк заблокирован.</translation>
     </message>
     <message>
-        <source>Wallet options:</source>
-        <translation>Параметры кошелька:</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>Внимание</translation>
+    </message>
+    <message>
+        <source>Warning: %s is deprecated, please use %s instead</source>
+        <translation>Внимание: %s устарело, используйте %s взамен</translation>
+    </message>
+    <message>
+        <source>Warning: can't use %s and %s together, will prefer %s</source>
+        <translation>Внимание: одновременное использование %s и %s невозможно, будет использовано только %s</translation>
+    </message>
+    <message>
+        <source>Warning: incorrect parameter %s, path must exist! Using default path.</source>
+        <translation>Внимание: некорректный параметр %s, путь должен существовать! Будет использован путь по умолчанию.</translation>
     </message>
     <message>
         <source>You are starting with governance validation disabled.</source>

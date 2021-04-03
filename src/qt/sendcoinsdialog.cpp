@@ -157,7 +157,7 @@ SendCoinsDialog::SendCoinsDialog(bool _fCoinJoin, QWidget* parent) :
     minimizeFeeSection(settings.value("fFeeSectionMinimized").toBool());
 
     if (_fCoinJoin) {
-        ui->sendButton->setText("S&end mixed funds");
+        ui->sendButton->setText(tr("S&end mixed funds"));
         ui->sendButton->setToolTip(tr("Confirm the %1 send action").arg("CoinJoin"));
     } else {
         ui->sendButton->setText(tr("S&end"));

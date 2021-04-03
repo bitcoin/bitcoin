@@ -2,6 +2,10 @@
 <context>
     <name>AddressBookPage</name>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Aranacak adres ya da etiket giriniz</translation>
+    </message>
+    <message>
         <source>Right-click to edit address or label</source>
         <translation>Adres veya etiketi düzenlemek için sağ tıklayın.</translation>
     </message>
@@ -392,8 +396,8 @@
         <translation>%1 &amp;Hakkında</translation>
     </message>
     <message>
-        <source>PrivateSend coins to a Dash address</source>
-        <translation>Koinleri Dash adresine ÖzelGönder</translation>
+        <source>Send %1 funds to a Dash address</source>
+        <translation>%1 Koinleri Dash adresine</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -552,20 +556,26 @@
         <translation>%1 istemci</translation>
     </message>
     <message>
+        <source>Wallet: %1
+</source>
+        <translation>Cüzdan: %1
+</translation>
+    </message>
+    <message>
         <source>Wallet is &lt;b&gt;unencrypted&lt;/b&gt;</source>
         <translation>Cüzdan &lt;b&gt;şifrelenmemiş&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>&amp;PrivateSend information</source>
-        <translation>&amp;Özel Gönder bilgisi</translation>
-    </message>
-    <message>
-        <source>Show the PrivateSend basic information</source>
-        <translation>Özel Gönder temel bilgilerini göster</translation>
-    </message>
-    <message>
         <source>&amp;File</source>
         <translation>&amp;Dosya</translation>
+    </message>
+    <message>
+        <source>%1 &amp;information</source>
+        <translation>%1 &amp;Bilgi</translation>
+    </message>
+    <message>
+        <source>Show the %1 basic information</source>
+        <translation>%1 temel bilgilerini göster</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
@@ -901,12 +911,12 @@
         <translation>Tüm koinleri göster</translation>
     </message>
     <message>
-        <source>Hide PrivateSend coins</source>
-        <translation>ÖzelGönder koinleri gizle</translation>
+        <source>Hide %1 coins</source>
+        <translation>%1 koinleri gizle</translation>
     </message>
     <message>
-        <source>Show all PrivateSend coins</source>
-        <translation>ÖzelGönder koinleri göster</translation>
+        <source>Show all %1 coins</source>
+        <translation>%1 koinleri göster</translation>
     </message>
     <message>
         <source>Show spendable coins only</source>
@@ -950,10 +960,6 @@
     <message>
         <source>The address associated with this address list entry. This can only be modified for sending addresses.</source>
         <translation>Bu adres listesi girdisi ile ilişkili adres. Sadece gönderme adresleri için değiştirilebilir.</translation>
-    </message>
-    <message>
-        <source>New receiving address</source>
-        <translation>Yeni alıcı adresi</translation>
     </message>
     <message>
         <source>New sending address</source>
@@ -1026,64 +1032,12 @@
         <translation>komut satırı seçenekleri</translation>
     </message>
     <message>
-        <source>Usage:</source>
-        <translation>Kullanım:</translation>
+        <source>%1 information</source>
+        <translation>%1 Bilgi</translation>
     </message>
     <message>
-        <source>command-line options</source>
-        <translation>komut satırı seçenekleri</translation>
-    </message>
-    <message>
-        <source>UI Options:</source>
-        <translation>Arayüz Seçenekleri:</translation>
-    </message>
-    <message>
-        <source>Choose data directory on startup (default: %u)</source>
-        <translation>Başlangıçta veri klasörü seç (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Set the font family. Possible values: %1. (default: %2)</source>
-        <translation>Yazı tipi ailesini belirleyin. Olası değerler: %1. (varsayılan: %2)</translation>
-    </message>
-    <message>
-        <source>Set a scale factor which gets applied to the base font size. Possible range %1 (smallest fonts) to %2 (largest fonts). (default: %3)</source>
-        <translation>Temel yazı tipi boyutuna uygulanacak ölçek faktörünü belirleyin. Olası aralık %1 (en küçük yazı tipleri) ile %2 (en büyük yazı tipleri).(varsayılan: %3)</translation>
-    </message>
-    <message>
-        <source>Set the font weight for bold texts. Possible range %1 to %2 (default: %3)</source>
-        <translation>Kalın metinler için yazı tipi genişliği belirleyin. Olası aralık %1 ile %2 (varsayılan: %3)</translation>
-    </message>
-    <message>
-        <source>Set the font weight for normal texts. Possible range %1 to %2 (default: %3)</source>
-        <translation>Normal metinler için yazı tipi genişliği belirleyin. Olası aralık %1 ile %2 (varsayılan: %3)</translation>
-    </message>
-    <message>
-        <source>Set language, for example "de_DE" (default: system locale)</source>
-        <translation>Lisan belirt, mesela "de_De" (varsayılan: sistem dili)</translation>
-    </message>
-    <message>
-        <source>Start minimized</source>
-        <translation>Küçültülmüş olarak başlat</translation>
-    </message>
-    <message>
-        <source>Set SSL root certificates for payment request (default: -system-)</source>
-        <translation>Ödeme talebi için SSL kök sertifikalarını belirle (varsayılan: -system-)</translation>
-    </message>
-    <message>
-        <source>Show splash screen on startup (default: %u)</source>
-        <translation>Başlatıldığında başlangıç ekranını göster (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Reset all settings changed in the GUI</source>
-        <translation>Grafik arayüzde yapılan tüm seçenek değişikliklerini sıfırla</translation>
-    </message>
-    <message>
-        <source>PrivateSend information</source>
-        <translation>Özel Gönder bilgisi</translation>
-    </message>
-    <message>
-        <source>&lt;h3&gt;PrivateSend Basics&lt;/h3&gt; PrivateSend gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; PrivateSend uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The PrivateSend process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;PrivateSend begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of PrivateSend makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have PrivateSend disabled. &lt;hr&gt;For more information, see the &lt;a style="%1" href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;PrivateSend documentation&lt;/a&gt;.</source>
-        <translation>&lt;h3&gt;ÖzelGönder Temel Bilgiler&lt;/h3&gt; ÖzelGönder size paranızın gerçek kaynağını gizleyerek tam bir gizlilik imkanı sağlar. Cüzdanınızdaki Dash farklı "girdiler"den oluşur, bunu ayrı gizli paralar olarak düşünebilirsiniz.&lt;br&gt; ÖzelGönder sizin girdilerinizi başka iki kişinin girdileri ile karıştırmak için yenilikçi bir işlem kullanır ve bu sırada paranın cüzdanınızdan çıkmasına gerek kalmaz. Her an paranızın kontrolü sizdedir.&lt;hr&gt; &lt;b&gt;ÖzelGönder işlemi şöyle işler:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;ÖzelGönder işlem girdilerinizi standart birimlere bölerek başlar. Bu birimler 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH ve 10 DASH'dir -- her gün kullandığınız kağıt para gibi düşünebilirsiniz.&lt;/li&gt; &lt;li&gt;Sonra cüzdanınız ağdaki özel ayarlanmış yazılım düğümlerine talepler gönderir, bunşara "ana düğümler" denir. Bu ana düğümlere sizin belli bir miktar birimi karıştırmak istediğiniz bilgisi gider. Ana düğümlere kimliğinizi açık edecek bir bilgi gönderilmez, bu yüzden "kim" olduğunuzu bilmezler.&lt;/li&gt; &lt;li&gt;Aynı birimleri karıştırmak istediğini belirten iki başka kişi daha benzer mesajlar gönderince, karıştırma işlemi başlar. Ana düğüm giridleri karıştırır ve üç kullanıcının da cüzdanına şimdi dönüştürülmüş olan girdiyi kendilerne ödemelerini emreder. Cüzdanınız bu birimleri doğrudan kendisine öder ama farklı bir adres kullanır (buna değişim adresi denir).&lt;/li&gt; &lt;li&gt;Paranızı tamamen gizlemek için cüzdanınız bu işlemi her birim için birkaç defa tekrar etmelidir. Her işlem tamamlandığına buna bir "tur" denir. Her bir ÖzelGönder turu paranızın kaynağının bulunmasını üstel olarak zorlaştırır.&lt;/li&gt; &lt;li&gt;Bu karışım işlemi arkaplanda sizin tarafınızdan bir müdahale olmadan gerçekleşir. Bir işlem yapmak istediğinizde bakiyeniz zaten karışmış olacaktır. Ek bir beklemeye gerek kalmaz.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;ÖNEMLİ:&lt;/b&gt; Cüzdanınızda bu "değişim adreslerinden" sadece 1000 tane vardır. Her bir karışım işleminde bu adreslerden 9 taneye kadar kullanılır. Bu da 1000 adresin yaklaşık 100 karışım işlemine yeteceği anlamına gelir. 900 tanesi kullanıldığı zaman, cüzdanınızın daha fazla adres oluşturması gerekir. Yalnız bunu ancak otomatik yedekleme etkinse yapabilir.&lt;br&gt; Sonuç olarak yedeklemeyi kapatan kullanıcılar aynı zamanda ÖzelGönderi de kapatmış olurlar. &lt;hr&gt;Daha fazla bilgi için lütfen &lt;a style="%1" href="https://docs.dash.org/en/stable/wallets/dashcore/privatesend-instantsend.html"&gt;ÖzelGönder dökümantasyonuna&lt;/a&gt; göz atın.         </translation>
+        <source>&lt;h3&gt;%1 Basics&lt;/h3&gt; %1 gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; %1 uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The %1 process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;%1 begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of %1 makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have %1 disabled. &lt;hr&gt;For more information, see the &lt;a style="%2" href="%3"&gt;%1 documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;%1 Temel Bilgiler&lt;/h3&gt; %1 size paranızın gerçek kaynağını gizleyerek tam bir gizlilik imkanı sağlar. Cüzdanınızdaki Dash farklı "girdiler"den oluşur, bunu ayrı gizli paralar olarak düşünebilirsiniz.&lt;br&gt; %1 sizin girdilerinizi başka iki kişinin girdileri ile karıştırmak için yenilikçi bir işlem kullanır ve bu sırada paranın cüzdanınızdan çıkmasına gerek kalmaz. Her an paranızın kontrolü sizdedir.&lt;hr&gt; &lt;b&gt;%1 işlemi şöyle işler:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;%1 işlem girdilerinizi standart birimlere bölerek başlar. Bu birimler 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH ve 10 DASH'dir -- her gün kullandığınız kağıt para gibi düşünebilirsiniz.&lt;/li&gt; &lt;li&gt;Sonra cüzdanınız ağdaki özel ayarlanmış yazılım düğümlerine talepler gönderir, bunşara "ana düğümler" denir. Bu ana düğümlere sizin belli bir miktar birimi karıştırmak istediğiniz bilgisi gider. Ana düğümlere kimliğinizi açık edecek bir bilgi gönderilmez, bu yüzden "kim" olduğunuzu bilmezler.&lt;/li&gt; &lt;li&gt;Aynı birimleri karıştırmak istediğini belirten iki başka kişi daha benzer mesajlar gönderince, karıştırma işlemi başlar. Ana düğüm giridleri karıştırır ve üç kullanıcının da cüzdanına şimdi dönüştürülmüş olan girdiyi kendilerne ödemelerini emreder. Cüzdanınız bu birimleri doğrudan kendisine öder ama farklı bir adres kullanır (buna değişim adresi denir).&lt;/li&gt; &lt;li&gt;Paranızı tamamen gizlemek için cüzdanınız bu işlemi her birim için birkaç defa tekrar etmelidir. Her işlem tamamlandığına buna bir "tur" denir. Her bir %1 turu paranızın kaynağının bulunmasını üstel olarak zorlaştırır.&lt;/li&gt; &lt;li&gt;Bu karışım işlemi arkaplanda sizin tarafınızdan bir müdahale olmadan gerçekleşir. Bir işlem yapmak istediğinizde bakiyeniz zaten karışmış olacaktır. Ek bir beklemeye gerek kalmaz.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;ÖNEMLİ:&lt;/b&gt; Cüzdanınızda bu "değişim adreslerinden" sadece 1000 tane vardır. Her bir karışım işleminde bu adreslerden 9 taneye kadar kullanılır. Bu da 1000 adresin yaklaşık 100 karışım işlemine yeteceği anlamına gelir. 900 tanesi kullanıldığı zaman, cüzdanınızın daha fazla adres oluşturması gerekir. Yalnız bunu ancak otomatik yedekleme etkinse yapabilir.&lt;br&gt; Sonuç olarak yedeklemeyi kapatan kullanıcılar aynı zamanda %1 de kapatmış olurlar. &lt;hr&gt;Daha fazla bilgi için lütfen &lt;a style="%2" href="%3"&gt;%1 dökümantasyonuna&lt;/a&gt; göz atın.         </translation>
     </message>
 </context>
 <context>
@@ -1397,44 +1351,56 @@
         <translation>Ana Düğümler Sekmesini Göster</translation>
     </message>
     <message>
-        <source>Show additional information and buttons for PrivateSend on overview screen.</source>
-        <translation>Genel bakış ekranında Özel Gönder için ek bilgi ve düğmeler göster.</translation>
-    </message>
-    <message>
-        <source>Enable advanced PrivateSend interface</source>
-        <translation>Gelişmiş Özel Gönder arayüzünü etkinleştir</translation>
-    </message>
-    <message>
-        <source>Show warning dialog when PrivateSend detects that wallet has very low number of keys left.</source>
-        <translation>Özel Gönder çok az sayıda anahtar kaldığını tespit ettiğinde bir uyarı göster.</translation>
-    </message>
-    <message>
-        <source>Warn if PrivateSend is running out of keys</source>
-        <translation>Özel Gönderin anahtarı bitiyorsa uyar</translation>
-    </message>
-    <message>
-        <source>Whether to use experimental PrivateSend mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
-        <translation>Blok başına birden fazla karışım yapmak için deneysel Özel Gönder modunu kullanıp kullanmayacağınızı belirler.&lt;br/&gt;Not: Bu özelliği dikkatli kullanmalısınız.&lt;br/&gt;Cüzdanınızın son (oto)yedeğinin güvenli bir yerde olduğundan her zaman emin olun!</translation>
-    </message>
-    <message>
-        <source>Enable PrivateSend &amp;multi-session</source>
-        <translation>Özel Gönder &amp;çoklu oturumu etkinleştir</translation>
-    </message>
-    <message>
         <source>If you disable the spending of unconfirmed change, the change from a transaction&lt;br/&gt;cannot be used until that transaction has at least one confirmation.&lt;br/&gt;This also affects how your balance is computed.</source>
         <translation>Teyit edilmemiş para üstünü harcamayı devre dışı bırakırsanız&lt;br/&gt;bir işlemin para üstü bu işlem için en az bir teyit olana dek harcanamaz.&lt;br/&gt;Bu, aynı zamanda bakiyenizin nasıl hesaplandığını da etkiler.</translation>
     </message>
     <message>
-        <source>PrivateSend rounds to use</source>
-        <translation>Kullanılacak Özel Gönder turları</translation>
+        <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
+        <translation>Genel bakış kranında karıştırma arayüzünü göster ve karıştırılan bakiyenin harcanmasına olanak sunan ek bir ekran göster. &lt;br/&gt;Bu iletişim kutusunda daha geniş ayarlar içeren yeni bir sekme de görülecektir, lütfen paranızı karıştırmadan önce bunları kontrol ettiğinizden emin olun.</translation>
     </message>
     <message>
-        <source>This amount acts as a threshold to turn off PrivateSend once it's reached.</source>
-        <translation>Bu tutar ulaşıldığında Özel Gönderi kapatacak bir eşik olarak çalışır.</translation>
+        <source>Show additional information and buttons on overview screen.</source>
+        <translation>Genel bakış ekranında ek bilgileri ve düğmeleri göster.</translation>
     </message>
     <message>
-        <source>Target PrivateSend balance</source>
-        <translation>ÖzelGönder bakiyesi hedefle</translation>
+        <source>Enable advanced interface</source>
+        <translation>Gelişmiş arayüzünü etkinleştir</translation>
+    </message>
+    <message>
+        <source>Show system popups for mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
+        <translation>Karışım işlemleri için tıpkı diğer işlemler&lt;br/&gt;için olduğu gibi sistem popuplarını göster.</translation>
+    </message>
+    <message>
+        <source>Show popups for mixing transactions</source>
+        <translation>Karıştırma işlemleri için popup göster</translation>
+    </message>
+    <message>
+        <source>Show warning dialog when the wallet has very low number of keys left.</source>
+        <translation>Cüzdanda çok az sayıda anahtar kaldığı tespit ettiğinde bir uyarı göster.</translation>
+    </message>
+    <message>
+        <source>Warn if the wallet is running out of keys</source>
+        <translation>Cüzdan anahtarları tükeniyorsa uyar</translation>
+    </message>
+    <message>
+        <source>Whether to use experimental mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
+        <translation>Blok başına birden fazla karışım yapmak için deneysel modunu kullanıp kullanmayacağınızı belirler.&lt;br/&gt;Not: Bu özelliği dikkatli kullanmalısınız.&lt;br/&gt;Cüzdanınızın son (oto)yedeğinin güvenli bir yerde olduğundan her zaman emin olun!</translation>
+    </message>
+    <message>
+        <source>Enable &amp;multi-session</source>
+        <translation>&amp;Çoklu oturumu etkinleştir</translation>
+    </message>
+    <message>
+        <source>Mixing rounds</source>
+        <translation>Karıştırma Turları</translation>
+    </message>
+    <message>
+        <source>This amount acts as a threshold to turn off mixing once it's reached.</source>
+        <translation>Bu tutar ulaşıldığında karıştırma işlemini durdurmak için bir eşik olarak kullanılır</translation>
+    </message>
+    <message>
+        <source>Target balance</source>
+        <translation>Bakiyesi hedefle</translation>
     </message>
     <message>
         <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1499,14 +1465,6 @@
     <message>
         <source>Enable coin &amp;control features</source>
         <translation>Para &amp;kontrolü özelliklerini etkinleştir</translation>
-    </message>
-    <message>
-        <source>Show system popups for PrivateSend mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
-        <translation>Özel Gönder karışım işlemleri için tıpkı diğer işlemler&lt;br/&gt;için olduğu gibi sistem popuplarını göster.</translation>
-    </message>
-    <message>
-        <source>Show popups for PrivateSend transactions</source>
-        <translation>Özel Gönder işlemleri için popup göster.</translation>
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
@@ -1623,6 +1581,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;İptal</translation>
     </message>
     <message>
+        <source>Enable %1 features</source>
+        <translation>%1 özelliklerini etkinleştir</translation>
+    </message>
+    <message>
         <source>default</source>
         <translation>varsayılan</translation>
     </message>
@@ -1718,10 +1680,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Harcanabilir:</translation>
     </message>
     <message>
-        <source>PrivateSend</source>
-        <translation>Özel Gönder</translation>
-    </message>
-    <message>
         <source>Status:</source>
         <translation>Durum:</translation>
     </message>
@@ -1758,10 +1716,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Karışımı Başlat/Durdur</translation>
     </message>
     <message>
-        <source>PrivateSend Balance:</source>
-        <translation>Özel Gönder Bakiyesi:</translation>
-    </message>
-    <message>
         <source>The denominations you submitted to the Masternode.&lt;br&gt;To mix, other users must submit the exact same denominations.</source>
         <translation>Ana düğüme gönderdiğiniz birimler.&lt;br&gt;Karıştırmak için diğer kullanıcılar da tam olarak aynı birimleri göndermelidir.</translation>
     </message>
@@ -1774,16 +1728,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Otomatik yedekleme kapalı, karışım mevcut değil!</translation>
     </message>
     <message>
-        <source>Start Mixing</source>
-        <translation>Karışıma Başla</translation>
-    </message>
-    <message>
-        <source>Stop Mixing</source>
-        <translation>Karışımı Durdur</translation>
-    </message>
-    <message>
         <source>No inputs detected</source>
         <translation>Hiç girdi tespit edilmedi</translation>
+    </message>
+    <message>
+        <source>%1 Balance</source>
+        <translation>%1 Bakiye</translation>
     </message>
     <message numerus="yes">
         <source>%n Rounds</source>
@@ -1820,6 +1770,26 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>keys left: %1</source>
         <translation>kalan anahtarlar: %1</translation>
+    </message>
+    <message>
+        <source>Start %1</source>
+        <translation>%1 Başlat</translation>
+    </message>
+    <message>
+        <source>If you don't want to see internal %1 fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
+        <translation>Eğer %1 iç ücretlerini/işlemlerini görmek istemiyorsanız "İşlemler" sekmesinde Tür olarak "En Sıkı" seçin.</translation>
+    </message>
+    <message>
+        <source>%1 requires at least %2 to use.</source>
+        <translation>%1 en az %2 gerektiriyor.</translation>
+    </message>
+    <message>
+        <source>Wallet is locked and user declined to unlock. Disabling %1.</source>
+        <translation>Cüzdan kilitli ve kullanıcı kilidi açmadı. %1 devredışı bırakılıyor.</translation>
+    </message>
+    <message>
+        <source>Stop %1</source>
+        <translation>%1 Durdur</translation>
     </message>
     <message>
         <source>Disabled</source>
@@ -1861,18 +1831,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
         <translation>UYARI! Anahtar havuzu yenilenemedi, lütfen devam etmek için cüzdanınızın kilidini açın.</translation>
     </message>
-    <message>
-        <source>If you don't want to see internal PrivateSend fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
-        <translation>Eğer Özel Gönderin iç ücretlerini/işlemlerini görmek istemiyorsanız "İşlemler" sekmesinde Tür olarak "En Sıkı" seçin.</translation>
-    </message>
-    <message>
-        <source>PrivateSend requires at least %1 to use.</source>
-        <translation>Özel Gönder en az %1 gerektiriyor.</translation>
-    </message>
-    <message>
-        <source>Wallet is locked and user declined to unlock. Disabling PrivateSend.</source>
-        <translation>Cüzdan kilitli ve kullanıcı kilidi açmadı. Özel Gönder devredışı bırakılıyor.</translation>
-    </message>
 </context>
 <context>
     <name>PaymentServer</name>
@@ -1887,6 +1845,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>URI handling</source>
         <translation>URI yönetimi</translation>
+    </message>
+    <message>
+        <source>'dash://' is not a valid URI. Use 'dash:' instead.</source>
+        <translation>'dash://' geçerli bir URI değil. Bunun yerine 'dash:' kullanın.</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -1994,6 +1956,46 @@ https://www.transifex.com/projects/p/dash/</translation>
 </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Choose data directory on startup (default: %u)</source>
+        <translation>Başlangıçta veri klasörü seç (varsayılan: %u)</translation>
+    </message>
+    <message>
+        <source>Set the font family. Possible values: %1. (default: %2)</source>
+        <translation>Yazı tipi ailesini belirleyin. Olası değerler: %1. (varsayılan: %2)</translation>
+    </message>
+    <message>
+        <source>Set a scale factor which gets applied to the base font size. Possible range %1 (smallest fonts) to %2 (largest fonts). (default: %3)</source>
+        <translation>Temel yazı tipi boyutuna uygulanacak ölçek faktörünü belirleyin. Olası aralık %1 (en küçük yazı tipleri) ile %2 (en büyük yazı tipleri).(varsayılan: %3)</translation>
+    </message>
+    <message>
+        <source>Set the font weight for bold texts. Possible range %1 to %2 (default: %3)</source>
+        <translation>Kalın metinler için yazı tipi genişliği belirleyin. Olası aralık %1 ile %2 (varsayılan: %3)</translation>
+    </message>
+    <message>
+        <source>Set the font weight for normal texts. Possible range %1 to %2 (default: %3)</source>
+        <translation>Normal metinler için yazı tipi genişliği belirleyin. Olası aralık %1 ile %2 (varsayılan: %3)</translation>
+    </message>
+    <message>
+        <source>Set language, for example "de_DE" (default: system locale)</source>
+        <translation>Lisan belirt, mesela "tr_TR" (varsayılan: sistem dili)</translation>
+    </message>
+    <message>
+        <source>Start minimized</source>
+        <translation>Küçültülmüş olarak başlat</translation>
+    </message>
+    <message>
+        <source>Reset all settings changed in the GUI</source>
+        <translation>Grafik arayüzde yapılan tüm seçenek değişikliklerini sıfırla</translation>
+    </message>
+    <message>
+        <source>Set SSL root certificates for payment request (default: -system-)</source>
+        <translation>Ödeme talebi için SSL kök sertifikalarını belirle (varsayılan: -system-)</translation>
+    </message>
+    <message>
+        <source>Show splash screen on startup (default: %u)</source>
+        <translation>Başlatıldığında başlangıç ekranını göster (varsayılan: %u)</translation>
+    </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
         <translation>%1  henüz güvenli bir şekilde çıkış yapmamıştır...</translation>
@@ -2298,6 +2300,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&amp;Eşler</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation>Cüzdan:</translation>
+    </message>
+    <message>
         <source>Banned peers</source>
         <translation>Yasaklı eşler</translation>
     </message>
@@ -2330,6 +2336,22 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Eşleşmiş Bloklar</translation>
     </message>
     <message>
+        <source>Rescan blockchain files 1</source>
+        <translation>Blok zinciri dosyalarını yeniden tara 1</translation>
+    </message>
+    <message>
+        <source>Rescan blockchain files 2</source>
+        <translation>Blok zinciri dosyalarını yeniden tara 2</translation>
+    </message>
+    <message>
+        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>-rescan=1: Cüzdana ait görünmeyen işlemleri bulmak için blok zincirini cüzdan açılışından itibaren tarama.</translation>
+    </message>
+    <message>
+        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
+        <translation>-rescan=2: Cüzdana ait görünmeyen işlemleri bulmak için blok zincirini genesis blokundan itibaren tarama.</translation>
+    </message>
+    <message>
         <source>Wallet Path</source>
         <translation>Cüzdan Yolu</translation>
     </message>
@@ -2354,6 +2376,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>AnındaGönder kilitleri</translation>
     </message>
     <message>
+        <source>(none)</source>
+        <translation>(boş)</translation>
+    </message>
+    <message>
         <source>Decrease font size</source>
         <translation>Font boyutunu küçült</translation>
     </message>
@@ -2364,6 +2390,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Reset</source>
         <translation>&amp;Reset</translation>
+    </message>
+    <message>
+        <source>Node Type</source>
+        <translation>Düğüm Türü</translation>
+    </message>
+    <message>
+        <source>PoSe Score</source>
+        <translation>PoSe Puanı</translation>
     </message>
     <message>
         <source>Services</source>
@@ -2414,10 +2448,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Cüzdanı kurtar</translation>
     </message>
     <message>
-        <source>Rescan blockchain files</source>
-        <translation>Blok zinciri dosyalarını yeniden tara</translation>
-    </message>
-    <message>
         <source>Recover transactions 1</source>
         <translation>İşlemleri geri al 1</translation>
     </message>
@@ -2436,10 +2466,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>-salvagewallet: Attempt to recover private keys from a corrupt wallet.dat.</source>
         <translation>-salvagewallet: Bozuk bir wallet.dat dosyasında özel anahtarları kurtarma denemesi.</translation>
-    </message>
-    <message>
-        <source>-rescan: Rescan the block chain for missing wallet transactions.</source>
-        <translation>-rescan: Kayıp cüzdan işlemleri için blok zincirini yeniden tarama.</translation>
     </message>
     <message>
         <source>-zapwallettxes=1: Recover transactions from blockchain (keep meta-data, e.g. account owner).</source>
@@ -2530,6 +2556,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Toplam: %1 (Etkinleştirilen: %2)</translation>
     </message>
     <message>
+        <source>Executing command without any wallet</source>
+        <translation>Cüzdan olmaksızın komut yürütme</translation>
+    </message>
+    <message>
+        <source>Executing command using "%1" wallet</source>
+        <translation>"%1" cüzdanı kullanılarak komut yürütülüyor</translation>
+    </message>
+    <message>
         <source>(node id: %1)</source>
         <translation>(düğüm kimliği: %1)</translation>
     </message>
@@ -2556,6 +2590,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>No</source>
         <translation>Hayır</translation>
+    </message>
+    <message>
+        <source>Regular</source>
+        <translation>Düzenli</translation>
+    </message>
+    <message>
+        <source>Masternode</source>
+        <translation>Ana düğüm</translation>
+    </message>
+    <message>
+        <source>Verified Masternode</source>
+        <translation>Doğrulanmış Ana Düğüm</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -2698,6 +2744,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Message</source>
         <translation>İleti</translation>
+    </message>
+    <message>
+        <source>Wallet</source>
+        <translation>Cüzdan</translation>
     </message>
     <message>
         <source>Resulting URI too long, try to reduce the text for label / message.</source>
@@ -2914,6 +2964,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%1 (%2 blocks)</translation>
     </message>
     <message>
+        <source>from wallet %1</source>
+        <translation>%1 cüzdanından</translation>
+    </message>
+    <message>
         <source>using</source>
         <translation>bunu kullanarak:</translation>
     </message>
@@ -2938,20 +2992,24 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&lt;b&gt;(%1 / %2 girdi gösteriliyor)&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>Confirm the PrivateSend action</source>
-        <translation>ÖzelGönder işlemini onaylayın</translation>
+        <source>S&amp;end mixed funds</source>
+        <translation>Karıştırılmış fonları gönder</translation>
     </message>
     <message>
-        <source>PrivateSend funds only</source>
-        <translation>Yalnızca ÖzelGönder fonları</translation>
+        <source>Confirm the %1 send action</source>
+        <translation>%1 Gönderme işlemini onaylayın</translation>
+    </message>
+    <message>
+        <source>%1 funds only</source>
+        <translation>Yalnızca %1 fonları</translation>
     </message>
     <message>
         <source>any available funds</source>
         <translation>mevcut fonlar</translation>
     </message>
     <message>
-        <source>(PrivateSend transactions have higher fees usually due to no change output being allowed)</source>
-        <translation>(ÖzelGönder işlemlerinde genellikle değişken çıktıya izin verilmediği için ücretler daha yüksektir)</translation>
+        <source>(%1 transactions have higher fees usually due to no change output being allowed)</source>
+        <translation>(%1 işlemlerinde genellikle değişken çıktıya izin verilmediği için ücretler daha yüksektir)</translation>
     </message>
     <message>
         <source>Transaction size: %1</source>
@@ -2966,8 +3024,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation><numerusform>Bu işlem %n girdi tüketecektir</numerusform><numerusform>Bu işlem %n girdi tüketecektir</numerusform></translation>
     </message>
     <message>
-        <source>Warning: Using PrivateSend with %1 or more inputs can harm your privacy and is not recommended</source>
-        <translation>Uyarı: %1 veya daha fazla girdi ile ÖzelGönder kullanmak gizliliğinize zarar verebilir ve tavsiye edilmez</translation>
+        <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
+        <translation>Uyarı: %2 veya daha fazla girdi ile %1 kullanmak gizliliğinize zarar verebilir ve tavsiye edilmez</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3308,7 +3366,7 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>KB/s</translation>
     </message>
     <message>
-        <source>Totals</source>
+        <source>Total</source>
         <translation>Toplam</translation>
     </message>
     <message>
@@ -3569,8 +3627,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Alındığı kişi</translation>
     </message>
     <message>
-        <source>Received via PrivateSend</source>
-        <translation>Özel Gönder ile alındı</translation>
+        <source>Received via %1</source>
+        <translation>%1 üzerinden alındı</translation>
     </message>
     <message>
         <source>Sent to</source>
@@ -3585,20 +3643,24 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Madenden çıkarılan</translation>
     </message>
     <message>
-        <source>PrivateSend Denominate</source>
-        <translation>Özel Gönder Birimi</translation>
+        <source>%1 Mixing</source>
+        <translation>%1 Karıştırma</translation>
     </message>
     <message>
-        <source>PrivateSend Collateral Payment</source>
-        <translation>Özel Gönder Teminat Ödemesi</translation>
+        <source>%1 Collateral Payment</source>
+        <translation>%1 Teminat Ödemesi</translation>
     </message>
     <message>
-        <source>PrivateSend Make Collateral Inputs</source>
-        <translation>Özel Gönder Teminat Girdisi Yap</translation>
+        <source>%1 Make Collateral Inputs</source>
+        <translation>%1 Teminat Girdisi Yap</translation>
     </message>
     <message>
-        <source>PrivateSend Create Denominations</source>
-        <translation>Özel Gönder Birim Oluştur</translation>
+        <source>%1 Create Denominations</source>
+        <translation>%1 Birim Oluştur</translation>
+    </message>
+    <message>
+        <source>%1 Send</source>
+        <translation>%1 Gönder</translation>
     </message>
     <message>
         <source>watch-only</source>
@@ -3680,20 +3742,24 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Gönderildiği adres</translation>
     </message>
     <message>
-        <source>PrivateSend Make Collateral Inputs</source>
-        <translation>Özel Gönder Teminat Girdisi Yap</translation>
+        <source>%1 Send</source>
+        <translation>%1 Gönder</translation>
     </message>
     <message>
-        <source>PrivateSend Create Denominations</source>
-        <translation>Özel Gönder Birim Oluştur</translation>
+        <source>%1 Make Collateral Inputs</source>
+        <translation>%1 Teminat Girdisi Yap</translation>
     </message>
     <message>
-        <source>PrivateSend Denominate</source>
-        <translation>Özel Gönder Birimi</translation>
+        <source>%1 Create Denominations</source>
+        <translation>%1 Birim Oluştur</translation>
     </message>
     <message>
-        <source>PrivateSend Collateral Payment</source>
-        <translation>Özel Gönder Teminat Ödemesi</translation>
+        <source>%1 Mixing</source>
+        <translation>%1 Karıştırma</translation>
+    </message>
+    <message>
+        <source>%1 Collateral Payment</source>
+        <translation>%1 Teminat Ödemesi</translation>
     </message>
     <message>
         <source>To yourself</source>
@@ -3879,36 +3945,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>Cüzdan verileri %1 konumuna başarıyla kaydedildi.</translation>
     </message>
+    <message>
+        <source>Cancel</source>
+        <translation>İptal</translation>
+    </message>
 </context>
 <context>
     <name>dash-core</name>
     <message>
-        <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>
-        <translation>Belirtilen adrese bağlan ve daima ondan dinle. IPv6 için [makine]:port yazımını kullanınız</translation>
-    </message>
-    <message>
         <source>Error: Listening for incoming connections failed (listen returned error %s)</source>
         <translation>Hata: İçeri gelen bağlantıların dinlenmesi başarısız oldu (dinleme %s hatasını verdi)</translation>
-    </message>
-    <message>
-        <source>Execute command when a relevant alert is received or we see a really long fork (%s in cmd is replaced by message)</source>
-        <translation>İlgili bir uyarı alındığında ya da gerçekten uzun bir çatallama gördüğümüzde komutu çalıştır (komuttaki %s mesaj ile değiştirilir)</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet transaction changes (%s in cmd is replaced by TxID)</source>
-        <translation>Bir cüzdan muamelesi değiştiğinde komutu çalıştır (komuttaki %s TxID ile değiştirilecektir)</translation>
-    </message>
-    <message>
-        <source>Execute command when the best block changes (%s in cmd is replaced by block hash)</source>
-        <translation>En iyi blok değiştiğinde komutu çalıştır (komut için %s parametresi blok hash değeri ile değiştirilecektir)</translation>
-    </message>
-    <message>
-        <source>Name to construct url for KeePass entry that stores the wallet passphrase</source>
-        <translation>Cüzdan parolanızı bulunduran KeePass girdisine url oluşturmak için ad</translation>
-    </message>
-    <message>
-        <source>Set the number of script verification threads (%u to %d, 0 = auto, &lt;0 = leave that many cores free, default: %d)</source>
-        <translation>Betik kontrolü iş parçacıklarının sayısını belirler (%u ilâ %d, 0 = otomatik, &lt;0 = bu sayıda çekirdeği kullanma, varsayılan: %d)</translation>
     </message>
     <message>
         <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
@@ -3923,20 +3969,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Uyarı: eşlerimizle tamamen mutabık değiliz gibi görünüyor! Güncelleme yapmanız gerekebilir ya da diğer düğümlerin güncelleme yapmaları gerekebilir.</translation>
     </message>
     <message>
-        <source>Accept command line and JSON-RPC commands</source>
-        <translation>Komut satırı ve JSON-RPC komutlarını kabul et</translation>
-    </message>
-    <message>
-        <source>Allow DNS lookups for -addnode, -seednode and -connect</source>
-        <translation>-addnode, -seednode ve -connect için DNS aramalarına izin ver</translation>
-    </message>
-    <message>
         <source>Already have that input.</source>
         <translation>Bu girdi zaten var.</translation>
-    </message>
-    <message>
-        <source>Block creation options:</source>
-        <translation>Blok oluşturma seçenekleri:</translation>
     </message>
     <message>
         <source>Cannot downgrade wallet</source>
@@ -3947,20 +3981,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Teminat geçerli değil.</translation>
     </message>
     <message>
-        <source>Connection options:</source>
-        <translation>Bağlantı seçenekleri:</translation>
-    </message>
-    <message>
         <source>Corrupted block database detected</source>
         <translation>Bozuk blok veritabanı tespit edildi</translation>
-    </message>
-    <message>
-        <source>Debugging/Testing options:</source>
-        <translation>Hata ayıklama/deneme seçenekleri:</translation>
-    </message>
-    <message>
-        <source>Do not load the wallet and disable wallet RPC calls</source>
-        <translation>Cüzdanı yükleme ve cüzdan RPC çağrılarını devre dışı bırak</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -4007,80 +4029,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Herhangi bir portun dinlenmesi başarısız oldu. Bunu istiyorsanız -listen=0 seçeneğini kullanınız.</translation>
     </message>
     <message>
-        <source>(1 = keep tx meta data e.g. account owner and payment request information, 2 = drop tx meta data)</source>
-        <translation>(1 = tx meta verilerini tut mesela hesap sahibi ve ödeme talebi bilgileri, 2 = tx meta verilerini at)</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee çok yüksek bir değere ayarlanmış! Bu denli yüksek ücretler tek bir işlemde ödenebilir.</translation>
-    </message>
-    <message>
-        <source>A fee rate (in %s/kB) that will be used when fee estimation has insufficient data (default: %s)</source>
-        <translation>Ücret tahmini için yetersiz veri bulunduğunda kullanılacak ücret oranı (%s/kB olarak) (varsayılan: %s)</translation>
-    </message>
-    <message>
-        <source>Accept relayed transactions received from whitelisted peers even when not relaying transactions (default: %d)</source>
-        <translation>İşlemler aktarılmadığında dahi beyaz listedeki eşlerden aktarılan işlemleri kabul et (varsayılan: %d)</translation>
-    </message>
-    <message>
-        <source>Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info). This option can be specified multiple times to add multiple nodes.</source>
-        <translation>Bağlanmak için bir düğüm ekleyin ve bağlantıyı açık tutmaya çalışın (daha fazla bilgi için `addnode` RPC komut yardımına göz atın). Bu seçenek, birden çok düğüm eklemek için birden çok kez belirtilebilir.</translation>
-    </message>
-    <message>
-        <source>Allow JSON-RPC connections from specified source. Valid for &lt;ip&gt; are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24). This option can be specified multiple times</source>
-        <translation>Belirtilen kaynaktan JSON-RPC bağlantılarını kabul et. Bir &lt;ip&gt; için geçerli olanlar şunlardır: IP adresi (mesela 1.2.3.4), bir ağ/ağ maskesi (örneğin 1.2.3.4/255.255.255.0) ya da bir ağ/CIDR (mesela 1.2.3.4/24). Bu seçenek birden fazla kez belirtilebilir</translation>
-    </message>
-    <message>
-        <source>Bind to given address and whitelist peers connecting to it. Use [host]:port notation for IPv6</source>
-        <translation>Belirtilen adrese bağlan ve ona bağlanan eşleri beyaz listeye al. IPv6 için [makine]:port imlasını kullanınız</translation>
-    </message>
-    <message>
-        <source>Bind to given address to listen for JSON-RPC connections. Do not expose the RPC server to untrusted networks such as the public internet! This option is ignored unless -rpcallowip is also passed. Port is optional and overrides -rpcport. Use [host]:port notation for IPv6. This option can be specified multiple times (default: 127.0.0.1 and ::1 i.e., localhost, or if -rpcallowip has been specified, 0.0.0.0 and :: i.e., all addresses)</source>
-        <translation>JSON-RPC bağlantılarını dinlemek için verilen adrese bağlayın. -Rpcallowip de geçilmezse bu seçenek yoksayılır. RPC sunucusunu halka açık internet gibi güvenilmeyen ağlara maruz bırakmayın! Port isteğe bağlıdır ve -rpcport geçersiz kılar. [Host] kullanın: IPv6 için port notasyonu. Bu seçenek birden çok kez belirtilebilir (varsayılan: 127.0.0.1 ve :: 1, localhost veya -rpcallowip belirtilmişse, 0.0.0.0 ve :: i.e., tüm adresler)</translation>
     </message>
     <message>
         <source>Cannot provide specific connections and have addrman find outgoing connections at the same.</source>
         <translation>Giden bağlantıları addrman araması ile aynı zamanda belirli bağlantılar sağlayamaz.</translation>
     </message>
     <message>
-        <source>Connect only to the specified node; -connect=0 disables automatic connections (the rules for this peer are the same as for -addnode). This option can be specified multiple times to connect to multiple nodes.</source>
-        <translation>Sadece belirtilen düğüme bağlanın; -connect=0 otomatik bağlantıları devre dışı bırakır (bu eş için kurallar -addnode ile aynıdır). Bu seçenek, birden çok düğüme bağlanmak için birden çok kez belirtilebilir.</translation>
-    </message>
-    <message>
-        <source>Connect to a node to retrieve peer addresses, and disconnect. This option can be specified multiple times to connect to multiple nodes.</source>
-        <translation>Eş adresleri almak için bir düğüme bağlanın ve bağlantıyı kesin. Bu seçenek, birden çok düğüme bağlanmak için birden çok kez belirtilebilir.</translation>
-    </message>
-    <message>
-        <source>Create new files with system default permissions, instead of umask 077 (only effective with disabled wallet functionality)</source>
-        <translation>Yeni dosyaları umask 077 yerine varsayılan izinlerle oluştur (sadece devre dışı cüzdan işlevselliği ile etkilidir)</translation>
-    </message>
-    <message>
-        <source>Delete all wallet transactions and only recover those parts of the blockchain through -rescan on startup</source>
-        <translation>Tüm cüzdan işlemlerini sil ve başlangıçta -rescan ile sadece blok zincirinin parçası olanları geri getir</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transactions of attempted InstantSend double spend in &lt;address&gt;</source>
-        <translation>&lt;address&gt; adresindeki Anında Gönder çift harcama girişimleri için ham işlem yayınını etkinleştir.</translation>
-    </message>
-    <message>
-        <source>Enable publish transaction hashes of attempted InstantSend double spend in &lt;address&gt;</source>
-        <translation>&lt;address&gt; adresindeki Anında Gönder çift harcama girişimleri için işlem hash yayınını etkinleştir.</translation>
-    </message>
-    <message>
         <source>Found unconfirmed denominated outputs, will wait till they confirm to continue.</source>
         <translation>Teyit edilmemiş birimlendirilmiş çıktılar bulundu, devam etmek için teyit edilene kadar beklenecek.</translation>
-    </message>
-    <message>
-        <source>How thorough the block verification of -checkblocks is (0-4, default: %u)</source>
-        <translation>-checkblocks'un blok kontrolünün ne kadar kapsamlı olacağı (0 ilâ 4, varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>If paytxfee is not set, include enough fee so transactions begin confirmation on average within n blocks (default: %u)</source>
-        <translation>Eğer paytxfee ayarlanmadıysa kafi derecede ücret ekleyin ki işlemler teyite vasati n blok içinde başlasın (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>If this block is in the chain assume that it and its ancestors are valid and potentially skip their script verification (0 to verify all, default: %s, testnet: %s)</source>
-        <translation>Eğer bu blok zincirde yer alıyorsa onun ve atalarının geçerli olduğunu varsay ve potansiyel olarak onların betik doğrulamasını atla.  (Tümünü doğrulamak için 0, varsayılan %s, testnet: %s)</translation>
     </message>
     <message>
         <source>Invalid -socketevents ('%s') specified. Only these modes are supported: %s</source>
@@ -4091,112 +4049,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>-maxtxfee=&lt;tutar&gt; için geçersiz tutar: '%s' (Sıkışmış işlemleri önlemek için en az %s değerinde en düşük aktarım ücretine eşit olmalıdır)</translation>
     </message>
     <message>
-        <source>Location of the auth cookie. Relative paths will be prefixed by a net-specific datadir location. (default: data dir)</source>
-        <translation>Kimlik doğrulama çerezinin yeri. Göreli yollar ağa özgü bir veri konumu tarafından datadir olarak alınacaktır. (varsayılan: data dir)</translation>
-    </message>
-    <message>
-        <source>Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)</source>
-        <translation>İşlemlerin tamamının indeksini tut, getrawtransaction rpc çağrısı tarafından kullanılır (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Make outgoing connections only through network &lt;net&gt; (ipv4, ipv6 or onion). Incoming connections are not affected by this option. This option can be specified multiple times to allow multiple networks.</source>
-        <translation>Dışa dönük bağlantıları ağ üzerinden yapın &lt;net&gt; (ipv4, ipv6 veya onion). Gelen bağlantılar bu seçenekten etkilenmez. Bu seçenek, birden çok ağa izin vermek için birden çok kez belirtilebilir.</translation>
-    </message>
-    <message>
-        <source>Maximum size of data in data carrier transactions we relay and mine (default: %u)</source>
-        <translation>Aktardığımız ve oluşturduğumuz veri taşıyıcı işlemlerindeki en yüksek veri boyutu (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Number of seconds to keep misbehaving peers from reconnecting (default: %u)</source>
-        <translation>Aksaklık gösteren eşlerle terkar bağlantıyı engelleme süresi, saniye olarak (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Output debugging information (default: %u, supplying &lt;category&gt; is optional)</source>
-        <translation>Hata ayıklama bilgisini dök (varsayılan: %u, &lt;category&gt; sağlanması seçime dayalıdır)</translation>
-    </message>
-    <message>
-        <source>Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
-        <translation>Spork değerini değiştirmek için ereken spork imzacısı sayısını değiştirir. Sadece regtest ve devnet için kullanılır. Bunu mainnet veya testnette kullanırsanız atılırsınız.</translation>
-    </message>
-    <message>
-        <source>PrivateSend uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
-        <translation>Özel Gönder para göndermek için tam olarak birimlendirilmiş meblağlar kullanır, sadece biraz daha fazla parayı anonim hale getirmeniz gerekiyor.</translation>
-    </message>
-    <message>
-        <source>Reduce storage requirements by enabling pruning (deleting) of old blocks. This allows the pruneblockchain RPC to be called to delete specific blocks, and enables automatic pruning of old blocks if a target size in MiB is provided. This mode is incompatible with -txindex, -rescan and -disablegovernance=false. Warning: Reverting this setting requires re-downloading the entire blockchain. (default: 0 = disable pruning blocks, 1 = allow manual pruning via RPC, &gt;=%u = automatically prune block files to stay under the specified target size in MiB)</source>
-        <translation>Eski blokları budamayı (silme) etkinleştirerek depolama gereksinimlerini azaltın. Bu belirli blokları silmek için pruneblockchain uzak yordam çağrısına RPC izin verir. Eğer bloklar hedef mebibyte boyutuna ulaşırsa eski blokların otomatik olarak budanmasını sağlar. Bu kip, -txindex, -rescan ve -disablegovernance=false ile uyumsuzdur. Uyarı: Bu ayarı geri almak, blok zincirinin tamamını yeniden yüklemeyi gerektirir. (varsayılan: 0 = blok budaması devre dışı, 1 = RPC üzerinden manuel budamaya izin verir, &gt;=%u = mebibyte olarak belirtilen hedef boyutun altında kalması için blok dosyalarını otomatik olarak budar)</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to console (default: 1 when no -daemon. To disable logging to file, set debuglogfile=0)</source>
-        <translation>İzleme/hata ayıklama bilgilerini konsola gönder (varsayılan: -daemon olmadığında 1. Dosya kaydını devre dışı bırakmak için debuglogfile=0 olarak ayarlayın)</translation>
-    </message>
-    <message>
-        <source>Specify configuration file. Relative paths will be prefixed by datadir location. (default: %s)</source>
-        <translation>Yapılandırma dosyasını belirtin. Göreli yollar bir veri konumu tarafından datadir olarak alınacaktır. (varsayılan: %s)</translation>
-    </message>
-    <message>
-        <source>Specify directory to hold wallets (default: &lt;datadir&gt;/wallets if it exists, otherwise &lt;datadir&gt;)</source>
-        <translation>Cüzdanların tutulacağı dizini belirtin (varsayılan: varsa &lt;datadir&gt;/wallets, aksi takdirde &lt;datadir&gt;)</translation>
-    </message>
-    <message>
-        <source>Specify location of debug log file. Relative paths will be prefixed by a net-specific datadir location. (0 to disable; default: %s)</source>
-        <translation>Hata ayıklama günlük dosyasının konumunu belirtin. Göreli yollar ağa özgü bir veri konumu tarafından datadir olarak alınacaktır. (Devre dışı bırakmak için 0; varsayılan: %s)</translation>
-    </message>
-    <message>
-        <source>Specify pid file. Relative paths will be prefixed by a net-specific datadir location. (default: %s)</source>
-        <translation>Pid dosyasını belirtin. Göreli yollar bir veri konumu tarafından datadir olarak alınacaktır. (varsayılan: %s)</translation>
-    </message>
-    <message>
-        <source>Specify wallet database path. Can be specified multiple times to load multiple wallets. Path is interpreted relative to &lt;walletdir&gt; if it is not absolute, and will be created if it does not exist (as a directory containing a wallet.dat file and log files). For backwards compatibility this will also accept names of existing data files in &lt;walletdir&gt;.)</source>
-        <translation>Cüzdan veritabanı yolunu belirtin. Birden çok cüzdan yüklemek için birden çok kez belirtilebilir. Yol mutlak değilse &lt;walletdir&gt;'e göre yorumlanır, yoksa oluşturulur (wallet.dat dosyası ve günlük dosyalarını içeren bir dizin olarak). Geriye dönük uyumluluk için &lt;walletdir&gt;.)'deki mevcut veri dosyalarının adlarını da kabul edecektir.</translation>
-    </message>
-    <message>
         <source>Transaction index can't be disabled with governance validation enabled. Either start with -disablegovernance command line switch or enable transaction index.</source>
         <translation>Yönetim doğrulaması etkinken işlem endeksi devre dışı bırakılamaz. Ya -disablegovernance komut satırı anahtarıyla başlayın ya da işlem endeksini etkinleştirin.</translation>
     </message>
     <message>
-        <source>Use N separate masternodes in parallel to mix funds (%u-%u, default: %u)</source>
-        <translation>Meblağı karıştırmak için N tane farklı ana düğüm kullan (%u-%u, varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS5 proxy to reach peers via Tor hidden services (default: %s)</source>
-        <translation>Eşlere gizli Tor servisleri ile ulaşmak için ayrı SOCKS5 vekil sunucusu kullan (varsayılan: %s)</translation>
-    </message>
-    <message>
-        <source>User defined mnemonic for HD wallet (bip39). Only has effect during wallet creation/first start (default: randomly generated)</source>
-        <translation>HD cüzdan (bip39) için kullanıcı tarafından belirlenmiş anımsatıcı. Sadece cüzdan oluşturma/ilk açılış sırasında etkilidir (varsayılan: rastgele oluşturulur)</translation>
-    </message>
-    <message>
-        <source>User defined seed for HD wallet (should be in hex). Only has effect during wallet creation/first start (default: randomly generated)</source>
-        <translation>HD cüzdan (hex olmalıdır) için kullanıcı tarafından belirlenmiş kaynak. Sadece cüzdan oluşturma/ilk açılış sırasında etkilidir (varsayılan: rastgele oluşturulur)</translation>
-    </message>
-    <message>
-        <source>Whitelisted peers cannot be DoS banned and their transactions are always relayed, even if they are already in the mempool, useful e.g. for a gateway</source>
-        <translation>Beyaz listeye alınan eşler DoS yasaklamasına uğramazlar ve işlemleri zaten mempool'da olsalar da daima aktarılır, bu mesela bir geçit için kullanışlıdır</translation>
-    </message>
-    <message>
-        <source>Accept public REST requests (default: %u)</source>
-        <translation>Herkese açık REST taleplerini kabul et (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Always query for peer addresses via DNS lookup (default: %u)</source>
-        <translation>Eş adresleri sorgulaması için daima DNS aramasını kullan (varsayılan: %u)</translation>
-    </message>
-    <message>
         <source>Can't mix: no compatible inputs found!</source>
         <translation>Karıştırılamıyor: hiç uyumlu girdi bulunamadı!</translation>
-    </message>
-    <message>
-        <source>Chain selection options:</source>
-        <translation>Blok zinciri seçim ayarları:</translation>
-    </message>
-    <message>
-        <source>Connect through SOCKS5 proxy</source>
-        <translation>SOCKS5 vekil sunucusu vasıtasıyla bağlan</translation>
-    </message>
-    <message>
-        <source>Connect to KeePassHttp on port &lt;port&gt; (default: %u)</source>
-        <translation>Port &lt;port&gt; üstünde KeePassHttp'ye bağlan (varsayılan: %u)</translation>
     </message>
     <message>
         <source>Entry exceeds maximum size.</source>
@@ -4223,16 +4081,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Yeterli kullanıcı bulundu, imzalanıyor ...</translation>
     </message>
     <message>
-        <source>How many blocks to check at startup (default: %u, 0 = all)</source>
-        <translation>Başlangıçta kontrol edilecek blok sayısı (varsayılan: %u, 0 = hepsi)</translation>
-    </message>
-    <message>
         <source>Importing...</source>
         <translation>İçe aktarılıyor...</translation>
-    </message>
-    <message>
-        <source>Include IP addresses in debug output (default: %u)</source>
-        <translation>Hata ayıklama çıktısına IP adreslerini dahil et (varsayılan: %u)</translation>
     </message>
     <message>
         <source>Incompatible mode.</source>
@@ -4275,14 +4125,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Keypool tükendi, lütfen önce keypoolrefill'i çağırın</translation>
     </message>
     <message>
-        <source>Listen for JSON-RPC connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>JSON-RPC bağlantılarını &lt;port&gt; üzerinde dinle (varsayılan: %u veya tesnet: %u)</translation>
-    </message>
-    <message>
-        <source>Listen for connections on &lt;port&gt; (default: %u or testnet: %u)</source>
-        <translation>Bağlantılar için dinlenecek &lt;port&gt; (varsayılan: %u ya da testnet: %u)</translation>
-    </message>
-    <message>
         <source>Loading banlist...</source>
         <translation>Yasaklama listesi yükleniyor...</translation>
     </message>
@@ -4299,20 +4141,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Kilit zaten yerinde.</translation>
     </message>
     <message>
-        <source>Maximum per-connection receive buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>Her bağlantı için en yüksek alım tamponu, &lt;n&gt;*1000 bayt (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Maximum per-connection send buffer, &lt;n&gt;*1000 bytes (default: %u)</source>
-        <translation>Her bağlantı için çok gönderme tamponu, &lt;n&gt;*1000 bayt (varsayılan: %u)</translation>
-    </message>
-    <message>
         <source>Mixing in progress...</source>
         <translation>Karışım devam ediyor...</translation>
-    </message>
-    <message>
-        <source>Mnemonic passphrase is too long, must be at most 256 characters</source>
-        <translation>Anımsatıcı parola çok uzun, en fazla 256 karakter olmalı</translation>
     </message>
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
@@ -4335,56 +4165,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ana düğüm listesinde yok.</translation>
     </message>
     <message>
-        <source>Prepend debug output with timestamp (default: %u)</source>
-        <translation>Hata ayıklama verilerinin önüne zaman damgası ekle (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Rebuild chain state and block index from the blk*.dat files on disk</source>
-        <translation>Zincir durumu ve blok indeksini diskteki blk*.dat dosyalarından yeniden derle</translation>
-    </message>
-    <message>
-        <source>Rebuild chain state from the currently indexed blocks</source>
-        <translation>Zincir durumunu güncel olarak indekslenen bloklardan yeniden derle</translation>
-    </message>
-    <message>
-        <source>Send trace/debug info to debug.log file (default: %u)</source>
-        <translation>trace/debug bilgisini debug.log dosyasına gönder (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Set key pool size to &lt;n&gt; (default: %u)</source>
-        <translation>Anahtar alan boyutunu &lt;n&gt; değerine ayarla (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Set the number of threads to service RPC calls (default: %d)</source>
-        <translation>Hizmet RCP aramaları iş parçacığı sayısını belirle (varsayılan: %d)</translation>
-    </message>
-    <message>
-        <source>Specify connection timeout in milliseconds (minimum: 1, default: %d)</source>
-        <translation>Bağlantı zaman aşım süresini milisaniye olarak belirt (en düşüki: 1, varsayılan: %d)</translation>
-    </message>
-    <message>
-        <source>Spend unconfirmed change when sending transactions (default: %u)</source>
-        <translation>Gönderme işlemlerinde doğrulanmamış para üstünü harca (varsayılan: %u)</translation>
-    </message>
-    <message>
         <source>Submitted to masternode, waiting in queue %s</source>
         <translation>Ana düğüme gönderildi, kuyrukta bekleniyor %s</translation>
     </message>
     <message>
         <source>Synchronization finished</source>
         <translation>Eşleme bitti</translation>
-    </message>
-    <message>
-        <source>Threshold for disconnecting misbehaving peers (default: %u)</source>
-        <translation>Aksaklık gösteren eşlerle bağlantıyı kesme sınırı (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Tor control port password (default: empty)</source>
-        <translation>Tor kontrol portu parolası (varsayılan: boş)</translation>
-    </message>
-    <message>
-        <source>Tor control port to use if onion listening enabled (default: %s)</source>
-        <translation>Eğer onion dinlemesi etkinse kullanılacak Tor kontrol portu (varsayılan: %s)</translation>
     </message>
     <message>
         <source>Unable to start HTTP server. See debug log for details.</source>
@@ -4407,22 +4193,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Deskteklenmeyen -tor argümanı bulundu, -onion kullanınız.</translation>
     </message>
     <message>
-        <source>Upgrade wallet to latest format on startup</source>
-        <translation>Başlangıçta cüzdanı en yeni biçime güncelle</translation>
-    </message>
-    <message>
-        <source>Use KeePass 2 integration using KeePassHttp plugin (default: %u)</source>
-        <translation>KeePassHttp eklentisi kullanarak KeePass 2 entegrasyonu kullan (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: %u)</source>
-        <translation>Dinleme portunu haritalamak için UPnP kullan (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Use the test chain</source>
-        <translation>Test blok zincirini kullan</translation>
-    </message>
-    <message>
         <source>User Agent comment (%s) contains unsafe characters.</source>
         <translation>Kullanıcı Aracı açıklaması (%s) güvensiz karakterler içermektedir.</translation>
     </message>
@@ -4439,6 +4209,18 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Rastgele Ana düğüm bulunamıyor.</translation>
     </message>
     <message>
+        <source>%s can't be lower than %s</source>
+        <translation>%s, %s'den düşük olamaz</translation>
+    </message>
+    <message>
+        <source>%s is idle.</source>
+        <translation>%s boşta</translation>
+    </message>
+    <message>
+        <source>%s request incomplete: %s</source>
+        <translation>%s talebi tamamlanmadı: %s</translation>
+    </message>
+    <message>
         <source>Can't mix while sync in progress.</source>
         <translation>Eşleme sürerken karıştırılamaz.</translation>
     </message>
@@ -4451,14 +4233,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Geçersiz betik tespit edildi.</translation>
     </message>
     <message>
-        <source>KeePassHttp id for the established association</source>
-        <translation>Birliktelik başlatmak için KeePassHttp kimliği</translation>
-    </message>
-    <message>
-        <source>KeePassHttp key for AES encrypted communication with KeePass</source>
-        <translation>KeePass ile AES şifreli iletişim sağlamak için KeePassHttp anahtarı</translation>
-    </message>
-    <message>
         <source>%s file contains all private keys from this wallet. Do not share it with anyone!</source>
         <translation>%s dosyası bu cüzdana ait tüm özel anahtarları tutuyor. Kimseyle paylaşmayın!</translation>
     </message>
@@ -4467,64 +4241,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>-masternode seçeneği kullanımdan kaldırılmış ve yoksayılmıştır, -masternodeblsprivkey belirtilmesi bu düğümü anadüğüm olarak başlatmak için yeterlidir.</translation>
     </message>
     <message>
-        <source>Discover own IP addresses (default: 1 when listening and no -externalip or -proxy)</source>
-        <translation>Kendi IP adreslerini keşfet (varsayılan: dinlenildiğinde ve -externalip ya da -proxy yoksa 1)</translation>
-    </message>
-    <message>
-        <source>Do not keep transactions in the mempool longer than &lt;n&gt; hours (default: %u)</source>
-        <translation>İşlemleri bellek alanında &lt;n&gt; saatten fazla tutma (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)</source>
-        <translation>Blok başına birden fazla Özel Gönder karışım işlemini aç, deneysel (0-1, varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Execute command when a wallet InstantSend transaction is successfully locked (%s in cmd is replaced by TxID)</source>
-        <translation>Bir cüzdan bir Anında Gönder işlemini başarılı şekilde kilitlediğinde bir komut çalıştır (cmd içinde %s TxID ile değiştirilir)</translation>
-    </message>
-    <message>
-        <source>Extra transactions to keep in memory for compact block reconstructions (default: %u)</source>
-        <translation>Kompakt blok yeniden inşası için hafıza tutmak için ekstra işlemler (varsayılan: %u)</translation>
-    </message>
-    <message>
         <source>Failed to create backup, file already exists! This could happen if you restarted wallet in less than 60 seconds. You can continue if you are ok with this.</source>
         <translation>Yedek oluşturulamadı, dosya zaten mevcut! Bu durum eğer 60 saniyeden kısa sürede cüzdanı yenidden başlattıysanız oluşabilir. Sizin için sorun yoksa devam edebilirsiniz.</translation>
     </message>
     <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for relaying, mining and transaction creation (default: %s)</source>
-        <translation>Bundan düşük ücretler (%s/kB olarak) aktarma, oluşturma ve işlem yaratma için sıfır değerinde ücret olarak kabul edilir (varsayılan: %s)</translation>
-    </message>
-    <message>
-        <source>Fees (in %s/kB) smaller than this are considered zero fee for transaction creation (default: %s)</source>
-        <translation>Bundan düşük ücretler (%s/kB olarak) işlem oluşturulması için sıfır değerinde ücret olarak kabul edilir (varsayılan: %s)</translation>
-    </message>
-    <message>
-        <source>If &lt;category&gt; is not supplied or if &lt;category&gt; = 1, output all debugging information.</source>
-        <translation>Eğer &lt;category&gt; belirtilmemişse ya da &lt;category&gt; = 1 ise, tüm hata ayıklama verilerini çıktı al.</translation>
-    </message>
-    <message>
-        <source>Maintain a full address index, used to query for the balance, txids and unspent outputs for addresses (default: %u)</source>
-        <translation>Tam adres endeksi tut, bakiye, txid ve adresler için harcanmamış çıktı sorgusu yapmak için kullanılır (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain a full spent index, used to query the spending txid and input index for an outpoint (default: %u)</source>
-        <translation>Tam harcama endeksi tut, harcama txidleri ve bir çıkış noktası için girdi endeksi sorgusu yapmak için kullanılır (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain a timestamp index for block hashes, used to query blocks hashes by a range of timestamps (default: %u)</source>
-        <translation>Blok hashleri için bir zaman kodu endeksi tut, bir düzü zaman kodu ile hash bloğu sorgusu yapmak için kullanılır (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Maintain at most &lt;n&gt; connections to peers (temporary service connections excluded) (default: %u)</source>
-        <translation>Eşlerle en fazla &lt;n&gt; bağlantı sağla (geçici hizmet bağlantıları dahil değildir) (varsayılan: %u)</translation>
-    </message>
-    <message>
         <source>Make sure to encrypt your wallet and delete all non-encrypted backups after you have verified that the wallet works!</source>
         <translation>Cüzdanın çalıştığından emin olduktan sonra mutlaka cüzdanınızı şifreleyip şifrelenmemiş tüm yedekleri silin!</translation>
-    </message>
-    <message>
-        <source>Maximum total size of all orphan transactions in megabytes (default: %u)</source>
-        <translation>Tüm yetim işlemlerin megabayt cinsinden maksimum toplam boyutu (varsayılan: %u)</translation>
     </message>
     <message>
         <source>Prune configured below the minimum of %d MiB.  Please use a higher number.</source>
@@ -4535,28 +4257,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Budama: son cüzdan eşleşmesi budanmış verilerin ötesine gitmektedir. -reindex kullanmanız gerekmektedir (Budanmış düğüm ise tüm blok zincirini tekrar indirmeniz gerekir.)</translation>
     </message>
     <message>
-        <source>Query for peer addresses via DNS lookup, if low on addresses (default: 1 unless -connect used)</source>
-        <translation>Eğer adresler az ise, DNS arama yoluyla eş adres sorgulaması (-connect kullanılmadıkça default: 1)</translation>
-    </message>
-    <message>
-        <source>Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)</source>
-        <translation>Her vekil bağlantısı için kimlik verilerini rastgele yap. Bu, Tor akış izolasyonunu etkinleştirir (varsayılan: %u)</translation>
-    </message>
-    <message>
         <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
         <translation>Tekrar taramalar budanmış kipte mümkün değildir. Tüm blok zincirini tekrar indirecek olan -reindex seçeneğini kullanmanız gerekecektir.</translation>
-    </message>
-    <message>
-        <source>Set the masternode BLS private key and enable the client to act as a masternode</source>
-        <translation>Ana düğüm BLS özel anahtarını belirle ve istemcinin anadüğüm işlevi görmesini sağla</translation>
-    </message>
-    <message>
-        <source>Specify full path to directory for automatic wallet backups (must exist)</source>
-        <translation>Otomatik cüzdan yedekleri için tam yolu belirtin (yol şu an var olmalı)</translation>
-    </message>
-    <message>
-        <source>Support filtering of blocks and transaction with bloom filters (default: %u)</source>
-        <translation>Blokların ve işlemlerin bloom filtreleri ile süzülmesini destekle (varsayılan: %u)</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
@@ -4571,32 +4273,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Ağ sürümü zincirinin toplam boyutu (%i) en yüksek boyutu geçmektedir (%i). Kullanıcı aracı açıklamasının sayısı veya boyutunu azaltınız.</translation>
     </message>
     <message>
-        <source>Tries to keep outbound traffic under the given target (in MiB per 24h), 0 = no limit (default: %d)</source>
-        <translation>Giden trafiği belirtilen hedefin altında tutmaya çalışır (24 saat başı MiB olarak), 0 = sınırsız (varsayılan: %d)</translation>
-    </message>
-    <message>
-        <source>Try to create at least N inputs of each denominated amount (%u-%u, default: %u)</source>
-        <translation>Her bir miktar için en az N kadar girdi oluşturmayı deneyin (%u-%u, varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Unable to locate enough PrivateSend denominated funds for this transaction.</source>
-        <translation>Bu işlem için yeterli Özel Gönder ile birimlendirilmiş bakiye bulunamadı.</translation>
-    </message>
-    <message>
         <source>Unsupported argument -socks found. Setting SOCKS version isn't possible anymore, only SOCKS5 proxies are supported.</source>
         <translation>Desteklenmeyen -socks argümanı bulundu. SOCKS sürümünün ayarlanması artık mümkün değildir, sadece SOCKS5 vekilleri desteklenmektedir.</translation>
     </message>
     <message>
         <source>Unsupported argument -whitelistalwaysrelay ignored, use -whitelistrelay and/or -whitelistforcerelay.</source>
         <translation>Desteklenmeyen argüman -whitelistalwaysrelay görmezden gelindi, -whitelistrelay ve/veya -whitelistforcerelay kullanın.</translation>
-    </message>
-    <message>
-        <source>Use UPnP to map the listening port (default: 1 when listening and no -proxy)</source>
-        <translation>Dinlenecek portu haritalamak için UPnP kullan (varsayılan: dinlenildiğinde ve -proxy olmadığında 1)</translation>
-    </message>
-    <message>
-        <source>Username and hashed password for JSON-RPC connections. The field &lt;userpw&gt; comes in the format: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. A canonical python script is included in share/rpcauth. The client then connects normally using the rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; pair of arguments. This option can be specified multiple times</source>
-        <translation>JSON-RPC bağlantıları için kullanıcı adı ve karmalanmış parola. &lt;userpw&gt; alanı şu biçimdedir: &lt;USERNAME&gt;:&lt;SALT&gt;$&lt;HASH&gt;. Kanonik bir Python betiği share/rpcauth klasöründe bulunabilir. Ardından istemci normal şekilde rpcuser=&lt;USERNAME&gt;/rpcpassword=&lt;PASSWORD&gt; argüman çiftini kullanarak bağlanabilir. Bu seçenek birden çok kez belirtilebilir.</translation>
     </message>
     <message>
         <source>WARNING! Failed to replenish keypool, please unlock your wallet to do so.</source>
@@ -4619,10 +4301,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Budama olmayan kipe dönmek için veritabanını -reindex ile tekrar derlemeniz gerekir. Bu, tüm blok zincirini tekrar indirecektir</translation>
     </message>
     <message>
-        <source>(default: %u)</source>
-        <translation>(varsayılan: %u)</translation>
-    </message>
-    <message>
         <source>-litemode is deprecated.</source>
         <translation>-litemode kullanımdan kaldırıldı.</translation>
     </message>
@@ -4631,60 +4309,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>-maxmempool en az %d MB olmalıdır</translation>
     </message>
     <message>
-        <source>&lt;category&gt; can be:</source>
-        <translation>&lt;kategori&gt; şunlar olabilir:</translation>
-    </message>
-    <message>
-        <source>Append comment to the user agent string</source>
-        <translation>Kullanıcı aracı zincirine yorumu ekle</translation>
-    </message>
-    <message>
         <source>Automatic backups disabled</source>
         <translation>Otomatik yedekleme kapalı</translation>
     </message>
     <message>
-        <source>Automatically create Tor hidden service (default: %d)</source>
-        <translation>Otomatik olarak gizli Tor servisi oluştur (varsayılan: %d)</translation>
-    </message>
-    <message>
-        <source>Disable governance validation (0-1, default: %u)</source>
-        <translation>Yönetim doğrulamayı devre dışı bırak (0-1, varsayılan: %u)</translation>
-    </message>
-    <message>
         <source>ERROR! Failed to create automatic backup</source>
         <translation>HATA! Otomatik yedek oluşturulamadı</translation>
-    </message>
-    <message>
-        <source>Enable publish hash block in &lt;address&gt;</source>
-        <translation>Blok karma değerinin &lt;adres&gt;te yayınlanmasını etkinleştir</translation>
-    </message>
-    <message>
-        <source>Enable publish hash of governance objects (like proposals) in &lt;address&gt;</source>
-        <translation>Şuradaki yönetim nesnelerinin (teklifler gibi) hashlerini yayınlamayı etkinleştir: &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash of governance votes in &lt;address&gt;</source>
-        <translation>Şuradaki yönetim hashlerini yayınlamayı etkinleştir: &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash transaction (locked via InstantSend) in &lt;address&gt;</source>
-        <translation>Şurada hash işlemleri yayınlamayı etkinleştir (Anında Gönder ile kilitli): &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish hash transaction in &lt;address&gt;</source>
-        <translation>Karma değer işleminin &lt;adres&gt;te yayınlanmasını etkinleştir</translation>
-    </message>
-    <message>
-        <source>Enable publish raw block in &lt;address&gt;</source>
-        <translation>Ham blokun &lt;adres&gt;te yayınlanmasını etkinleştir</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transaction (locked via InstantSend) in &lt;address&gt;</source>
-        <translation>Şurada ham işlemleri yayınlamayı etkinleştir (Anında Gönder ile kilitli): &lt;address&gt;</translation>
-    </message>
-    <message>
-        <source>Enable publish raw transaction in &lt;address&gt;</source>
-        <translation>Ham işlemin &lt;adres&gt;te yayınlanmasını etkinleştir</translation>
     </message>
     <message>
         <source>Error upgrading evo database</source>
@@ -4739,18 +4369,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Başlatma sırasında cüzdan yeniden taranamadı</translation>
     </message>
     <message>
-        <source>Fee (in %s/kB) to add to transactions you send (default: %s)</source>
-        <translation>Yolladığınız işlemlere eklenecek ücret (%s/kB olarak) (varsayılan: %s)</translation>
-    </message>
-    <message>
-        <source>Imports blocks from external blk000??.dat file on startup</source>
-        <translation>Başlangıçta harici blk000??.dat dosyasından blokları içe aktarır</translation>
-    </message>
-    <message>
-        <source>InstantSend options:</source>
-        <translation>Anında Gönder seçenekleri:</translation>
-    </message>
-    <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation> -fallbackfee=&lt;tutar&gt; için geçersiz tutar: '%s'</translation>
     </message>
@@ -4765,18 +4383,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Its replacement -disablegovernance has been forced instead.</source>
         <translation>-disablegovernance bunun yerine zorlandı.</translation>
-    </message>
-    <message>
-        <source>Keep the transaction memory pool below &lt;n&gt; megabytes (default: %u)</source>
-        <translation>İşlem bellek alanını &lt;n&gt; megabayttan düşük tut (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Last PrivateSend was too recent.</source>
-        <translation>Son Özel Gönder çok yakında yapıldı.</translation>
-    </message>
-    <message>
-        <source>Last successful PrivateSend action was too recent.</source>
-        <translation>Son başarılı Özel Gönder eylemi çok yakında yapıldı.</translation>
     </message>
     <message>
         <source>Loading block index...</source>
@@ -4799,24 +4405,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Cüzdan yükleniyor...</translation>
     </message>
     <message>
-        <source>Make the wallet broadcast transactions</source>
-        <translation>Cüzdanın işlemleri yayınlamasını sağla</translation>
-    </message>
-    <message>
-        <source>Masternode options:</source>
-        <translation>Ana düğüm seçenekleri:</translation>
-    </message>
-    <message>
         <source>Masternode queue is full.</source>
         <translation>Ana düğüm kuyruğu dolu.</translation>
     </message>
     <message>
         <source>Masternode:</source>
         <translation>Ana düğüm:</translation>
-    </message>
-    <message>
-        <source>Minimum bytes per sigop in transactions we relay and mine (default: %u)</source>
-        <translation>Yönlendirip kazacağımız işlemlerde sigop başına minimum bayt (varsayılan: %u)</translation>
     </message>
     <message>
         <source>Missing input transaction information.</source>
@@ -4831,44 +4425,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Karışım için uyumlu birim bulunamadı.</translation>
     </message>
     <message>
-        <source>Node relay options:</source>
-        <translation>Düğüm aktarma seçenekleri:</translation>
-    </message>
-    <message>
         <source>Not compatible with existing transactions.</source>
         <translation>Var olan işlemlerle uyumlu değil.</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
         <translation>Kafi derecede dosya tanımlayıcıları mevcut değil.</translation>
-    </message>
-    <message>
-        <source>Number of automatic wallet backups (default: %u)</source>
-        <translation>Otomatik cüzdan yedeği sayısı (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Options:</source>
-        <translation>Seçenekler:</translation>
-    </message>
-    <message>
-        <source>Password for JSON-RPC connections</source>
-        <translation>JSON-RPC bağlantıları için parola</translation>
-    </message>
-    <message>
-        <source>Print version and exit</source>
-        <translation>Sürümü yaz ve çık</translation>
-    </message>
-    <message>
-        <source>PrivateSend is idle.</source>
-        <translation>Özel Gönder boşta.</translation>
-    </message>
-    <message>
-        <source>PrivateSend options:</source>
-        <translation>Özel Gönder seçenekleri:</translation>
-    </message>
-    <message>
-        <source>PrivateSend request incomplete:</source>
-        <translation>Özel Gönder talebi tamamlanmadı:</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -4887,18 +4449,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Blockstore budanıyor...</translation>
     </message>
     <message>
-        <source>Rescan the block chain for missing wallet transactions on startup</source>
-        <translation>Başlangıçta blok zincirini eksik cüzdan işlemleri için tekrar tara</translation>
-    </message>
-    <message>
-        <source>Send reject messages per BIP61 (default: %u)</source>
-        <translation>BIP61 adetince reddedilme mesajları gönder (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Socket events mode, which must be one of: %s (default: %s)</source>
-        <translation>Bunlardan biri olması gereken soket etkinlikleri modu: %s (varsayılan: %s)</translation>
-    </message>
-    <message>
         <source>Specified -walletdir "%s" does not exist</source>
         <translation>Belirtilen -walletdir "%s" mevcut değil.</translation>
     </message>
@@ -4911,16 +4461,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Belirtilen -walletdir "%s" dizin değildir</translation>
     </message>
     <message>
-        <source>Sync mempool from other nodes on start (default: %u)</source>
-        <translation>Başlangıçta diğer düğümlerden mempool'u senkronize et (varsayılan: %u)</translation>
-    </message>
-    <message>
         <source>Synchronizing blockchain...</source>
         <translation>Blok zinciri eşleniyor...</translation>
-    </message>
-    <message>
-        <source>Target PrivateSend balance (%u-%u, default: %u)</source>
-        <translation>ÖzelGönder bakiyesini hedefle (%u-%u, varsayılan: %u)</translation>
     </message>
     <message>
         <source>The wallet will avoid paying less than the minimum relay fee.</source>
@@ -4971,16 +4513,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>UTXO veritabanı yükseltiliyor</translation>
     </message>
     <message>
-        <source>Use devnet chain with provided name</source>
-        <translation>Verilen ad ile devnet zinciri kullan</translation>
-    </message>
-    <message>
         <source>Wallet %s resides outside wallet directory %s</source>
         <translation>Cüzdan %s, %s cüzdan dizininin dışında bulunuyor</translation>
-    </message>
-    <message>
-        <source>Wallet debugging/testing options:</source>
-        <translation>Cüzdan hata ayıklama/test etme seçenekleri:</translation>
     </message>
     <message>
         <source>Wallet needed to be rewritten: restart %s to complete</source>
@@ -4993,10 +4527,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Wasn't able to create wallet backup folder %s!</source>
         <translation>Cüzdan yedeği klasörü %s oluşturulamadı!</translation>
-    </message>
-    <message>
-        <source>Whether to operate in a blocks only mode (default: %u)</source>
-        <translation>Sadece blok kipinde çalışılıp çalışılmayacağı (varsayılan: %u)</translation>
     </message>
     <message>
         <source>You can not start a masternode with wallet enabled.</source>
@@ -5015,20 +4545,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>-txindex'i değiştirmek için veritabanını -reindex kullanarak tekrar inşa etmeniz gerekmektedir</translation>
     </message>
     <message>
-        <source>ZeroMQ notification options:</source>
-        <translation>ZeroMQ bildirim seçenekleri:</translation>
-    </message>
-    <message>
         <source>no mixing available.</source>
         <translation>karışım mevcut değil.</translation>
     </message>
     <message>
         <source>see debug.log for details.</source>
         <translation>ayrıntlar için debug.log dosyasına bakın</translation>
-    </message>
-    <message>
-        <source>RPC server options:</source>
-        <translation>RPC sunucu seçenekleri:</translation>
     </message>
     <message>
         <source>Dash Core</source>
@@ -5039,16 +4561,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%s geliştiricileri</translation>
     </message>
     <message>
+        <source>%s uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation>%s para göndermek için tam olarak birimlendirilmiş meblağlar kullanır, sadece biraz daha fazla parayı anonim hale getirmeniz gerekiyor.</translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>%s veri dizininde kilit elde edilemedi. %s muhtemelen hâlihazırda çalışmaktadır.</translation>
     </message>
     <message>
         <source>Distributed under the MIT software license, see the accompanying file %s or %s</source>
         <translation>MIT yazılım lisansı altında dağıtılmıştır, beraberindeki %s ya da %s dosyasına bakınız.</translation>
-    </message>
-    <message>
-        <source>Enable use of PrivateSend for funds stored in this wallet (0-1, default: %u)</source>
-        <translation>Bu cüzdanda saklanan fonlar için ÖzelGönder kullanımını etkinleştir (0-1, varsayılan: %u)</translation>
     </message>
     <message>
         <source>Error loading %s: You can't enable HD on an already existing non-HD wallet</source>
@@ -5059,28 +4581,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%s dosyasının okunması sırasında bir hata meydana geldi! Tüm anahtarlar doğru bir şekilde okundu, ancak işlem verileri ya da adres defteri ögeleri hatalı veya eksik olabilir.</translation>
     </message>
     <message>
-        <source>Exclude debugging information for a category. Can be used in conjunction with -debug=1 to output debug logs for all categories except one or more specified categories.</source>
-        <translation>Bir kategori için hata ayıklama bilgilerini hariç tut. Belirtilen bir veya daha fazla kategori dışındaki tüm kategoriler için hata ayıklama günlüklerini çıktılamak için -debug = 1 ile birlikte kullanılabilir.</translation>
-    </message>
-    <message>
-        <source>Force relay of transactions from whitelisted peers even if they violate local relay policy (default: %d)</source>
-        <translation>Yerel aktarma politikasını ihlal etseler bile beyaz listedeki eşlerden gelen işlemlerin aktarılmasını zorla (varsayılan: %d)</translation>
-    </message>
-    <message>
         <source>Incorrect or no devnet genesis block found. Wrong datadir for devnet specified?</source>
         <translation>Geçersiz veya sıfır devnet genesis bloğu bulundu. Devnet için belirtilen datadir yanlış mı?</translation>
-    </message>
-    <message>
-        <source>Maximum allowed median peer time offset adjustment. Local perspective of time may be influenced by peers forward or backward by this amount. (default: %u seconds)</source>
-        <translation>İzin verilen edilen en yüksek medyan eş zamanı değişiklik sınırının ayarlaması. Zamanın yerel perspektifi bu miktar kadar ileri ya da geri eşler tarafından etkilenebilir. (Varsayılan %u saniye)</translation>
-    </message>
-    <message>
-        <source>Maximum total fees (in %s) to use in a single wallet transaction or raw transaction; setting this too low may abort large transactions (default: %s)</source>
-        <translation>Tek bir cüzdan işleminde ya da ham işlemde kullanılacak en yüksek toplam ücret (%s olarak); bunu çok düşük olarak ayarlamak büyük işlemleri iptal edebilir (varsayılan: %s)</translation>
-    </message>
-    <message>
-        <source>Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.</source>
-        <translation>Spork adresini geçersiz kıl. Sadece regtest ve devnet içindir. Bunu mainnet veya testnet'te kullanmak engellenmenize yol açar.</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
@@ -5089,14 +4591,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation>%s programını faydalı buluyorsanız lütfen katkıda bulununuz. Yazılım hakkında daha fazla bilgi için %s adresini ziyaret ediniz.</translation>
-    </message>
-    <message>
-        <source>Set lowest fee rate (in %s/kB) for transactions to be included in block creation. (default: %s)</source>
-        <translation>Blok oluşturmaya dahil olan işlemler için en düşük ücret oranını (%s/kB olarak) ayarla. (varsayılan: %s)</translation>
-    </message>
-    <message>
-        <source>The fee rate (in %s/kB) that indicates your tolerance for discarding change by adding it to the fee (default: %s). Note: An output is discarded if it is dust at this rate, but we will always discard up to the dust relay fee and a discard fee above that is limited by the fee estimate for the longest target</source>
-        <translation>Ücrette (%s/kB cinsinden) para üstünü iptal etme toleransınızı gösteren ve bunu ücrete ekleyen (default: %s). Not: Bu orandaki çıktı toz olarak atılır, ancak her zaman toz geçişi ücretine ve yukarıdaki en uzun hedef için yapılan ücret tahmininin sınırladığı bir miktar atar.</translation>
     </message>
     <message>
         <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
@@ -5111,40 +4605,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bu ürün OpenSSL Projesi tarafından geliştirilen OpenSSL araç takımınında kullanılmak üzere yazılan yazılımları %s Eric Young  tarafından yazılmış şifreleme yazılımını ve Thomas Bernard tarafından yazılmış UPnP yazılımını içerir.</translation>
     </message>
     <message>
-        <source>Unable to locate enough PrivateSend non-denominated funds for this transaction.</source>
-        <translation>Bu işlem için yeterli Özel Gönder ile birimlendirilmemiş bakiye bulunamadı.</translation>
-    </message>
-    <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
         <translation>Bloklar tekrarlanamıyor. -Reindex-chainstate kullanarak veritabanını yeniden kurmanız gerekecek.</translation>
     </message>
     <message>
-        <source>Use N separate masternodes for each denominated input to mix funds (%u-%u, default: %u)</source>
-        <translation>Her birimlendirilmiş girdi tutarı için N ayrı ana düğüm kullan (%u-%u, varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Use hierarchical deterministic key generation (HD) after BIP39/BIP44. Only has effect during wallet creation/first start</source>
-        <translation>BIP39/BIP44'ten sonra hiyerarşik deterministik anahtar oluşturma (HD) kullan. Sadece cüzdan oluşturma/ilk açılış sırasında etkilidir</translation>
-    </message>
-    <message>
-        <source>User defined mnemonic passphrase for HD wallet (BIP39). Only has effect during wallet creation/first start (default: empty string)</source>
-        <translation>HD cüzdan (BIP39) için kullanıcı tarafından belirlenmiş anımsatıcı parola. Sadece cüzdan oluşturma/ilk açılış sırasında etkilidir (varsayılan: boş metin)</translation>
-    </message>
-    <message>
-        <source>Wallet will not create transactions that violate mempool chain limits (default: %u)</source>
-        <translation>Cüzdan, zincir bellek alanı limitlerini ihlal eden işlem oluşturmayacak. (varsayılan: %u)</translation>
-    </message>
-    <message>
         <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
         <translation>Uyarı: wallet.dat bozuk, veriler geri kazanıldı! Özgün %s, %s olarak %s klasörüne kaydedildi; bakiyeniz ya da işlemleriniz yanlışsa bir yedeklemeden tekrar yüklemeniz gerekir.</translation>
-    </message>
-    <message>
-        <source>Whether to save the mempool on shutdown and load on restart (default: %u)</source>
-        <translation>Kapatma sırasında mempool'un kaydedilip kaydedilmemesi ve yeniden başlatma sırasında yüklenmesi (default: %u)</translation>
-    </message>
-    <message>
-        <source>Whitelist peers connecting from the given IP address (e.g. 1.2.3.4) or CIDR notated network (e.g. 1.2.3.0/24). Can be specified multiple times.</source>
-        <translation>Beyaz listeye eklenen eşler verilen IP adresinden (ör. 1.2.3.4) veya CIDR ağından (ör. 1.2.3.0/24) bağlanabilir. Değerler birden çok kez kullanılabilir.</translation>
     </message>
     <message>
         <source>%d of last 100 blocks have unexpected version</source>
@@ -5175,20 +4641,12 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>-devnet ve -server belirtildiğinde -rpcport da belirtilmelidir</translation>
     </message>
     <message>
-        <source>Accept connections from outside (default: 1 if no -proxy or -connect)</source>
-        <translation>Dışarıdan gelen bağlantıları kabul et (varsayılan: -proxy veya -connect yoksa 1)</translation>
-    </message>
-    <message>
-        <source>Allow RFC1918 addresses to be relayed and connected to (default: %u)</source>
-        <translation>RFC1918 adreslerine iletim ve bağlantıya izin ver (varsayılan %u)</translation>
-    </message>
-    <message>
-        <source>Attempt to recover private keys from a corrupt wallet on startup</source>
-        <translation>Başlangıçta bozuk bir cüzdandan özel anahtarları geri kazanmayı dene</translation>
-    </message>
-    <message>
         <source>Cannot resolve -%s address: '%s'</source>
         <translation>Çözümlenemedi - %s adres: '%s'</translation>
+    </message>
+    <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation>'%s' veri dizinine yazılamıyor; izinleri kontrol edin.</translation>
     </message>
     <message>
         <source>Change index out of range</source>
@@ -5197,10 +4655,6 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Copyright (C)</source>
         <translation>Copyright (C)</translation>
-    </message>
-    <message>
-        <source>Create up to N inputs of each denominated amount (%u-%u, default: %u)</source>
-        <translation>Her bir miktar için en fazla N kadar giriş oluşturun (%u-%u, default: %u)</translation>
     </message>
     <message>
         <source>Error loading %s</source>
@@ -5227,12 +4681,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Zincirdurumu veritabanı yükseltme hatası</translation>
     </message>
     <message>
+        <source>Error: failed to add socket to kqueuefd (kevent returned error %s)</source>
+        <translation>Hata: kqueuefd'ye soket eklenemedi (kevent %s hatası verdi)</translation>
+    </message>
+    <message>
         <source>Failed to find mixing queue to join</source>
         <translation>Katılacak karışım kuyruğu bulunamadı</translation>
     </message>
     <message>
         <source>Failed to start a new mixing queue</source>
         <translation>Yeni bir karışım kuyruğu başlatılamadı</translation>
+    </message>
+    <message>
+        <source>Incorrect -rescan mode, falling back to default value</source>
+        <translation>Yanlış -rescan modu, varsayılan değere geri dönüyor.</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
@@ -5263,20 +4725,8 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>P2P adresleri yükleniyor...</translation>
     </message>
     <message>
-        <source>Print this help message and exit</source>
-        <translation>Bu yardım mesajını yaz ve çık</translation>
-    </message>
-    <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
         <translation>Sistem sınırlamaları sebebiyle -maxconnections %d değerinden %d değerine düşürülmüştür.</translation>
-    </message>
-    <message>
-        <source>Relay and mine data carrier transactions (default: %u)</source>
-        <translation>Veri taşıyıcı işlemleri oluştur ve aktar (varsayılan: %u)</translation>
-    </message>
-    <message>
-        <source>Relay non-P2SH multisig (default: %u)</source>
-        <translation>P2SH olmayan çoklu imzaları aktar (varsayılan: %u)</translation>
     </message>
     <message>
         <source>Replaying blocks...</source>
@@ -5287,10 +4737,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Yeniden tarama...</translation>
     </message>
     <message>
-        <source>Run in the background as a daemon and accept commands</source>
-        <translation>Arka planda daemon (servis) olarak çalış ve komutları kabul et</translation>
-    </message>
-    <message>
         <source>Session not complete!</source>
         <translation>Oturum tamamlanmadı!</translation>
     </message>
@@ -5299,36 +4745,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Oturum zaman aşımına uğradı.</translation>
     </message>
     <message>
-        <source>Set database cache size in megabytes (%d to %d, default: %d)</source>
-        <translation>Veritabanı önbellek boyutunu megabayt olarak belirt (%d ilâ %d, varsayılan: %d)</translation>
-    </message>
-    <message>
-        <source>Set maximum block size in bytes (default: %d)</source>
-        <translation>Azami blok boyutunu bayt olarak ayarla (varsayılan: %d)</translation>
-    </message>
-    <message>
-        <source>Show all debugging options (usage: --help -help-debug)</source>
-        <translation>Tüm hata ayıklama seçeneklerini göster (kullanımı: --help -help-debug)</translation>
-    </message>
-    <message>
-        <source>Shrink debug.log file on client startup (default: 1 when no -debug)</source>
-        <translation>İstemci başlatıldığında debug.log dosyasını küçült (varsayılan: -debug bulunmadığında 1)</translation>
-    </message>
-    <message>
         <source>Signing transaction failed</source>
         <translation>Muamelenin imzalanması başarısız oldu</translation>
     </message>
     <message>
-        <source>Specify data directory</source>
-        <translation>Veri dizinini belirt</translation>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>Belirtilen bloklar dizini "%s" mevcut değil.</translation>
     </message>
     <message>
-        <source>Specify your own public address</source>
-        <translation>Kendi genel adresinizi tanımlayın</translation>
+        <source>Last queue was created too recently.</source>
+        <translation>Son sıra çok yakın zamanda oluşturuldu.</translation>
     </message>
     <message>
-        <source>Start PrivateSend automatically (0-1, default: %u)</source>
-        <translation>ÖzelGönder'i otomatik olarak başlat (0-1, default: %u)</translation>
+        <source>Last successful action was too recent.</source>
+        <translation>Son başarılı eylemi çok yakında yapıldı.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>
@@ -5375,6 +4805,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Bu bilgisayarda %s ögesine bağlanılamadı (bağlanma %s hatasını verdi)</translation>
     </message>
     <message>
+        <source>Unable to locate enough mixed funds for this transaction.</source>
+        <translation>Bu işlem için yeterli karıştırılmış bakiye bulunamadı.</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough non-denominated funds for this transaction.</source>
+        <translation>Bu işlem için yeterli cinsten olmayan bakiye bulunamadı.</translation>
+    </message>
+    <message>
         <source>Unable to sign spork message, wrong key?</source>
         <translation>Spork mesajı imzalanamadı, anahtar mı yanlış?</translation>
     </message>
@@ -5391,10 +4829,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Desteklenmeyen günlük kaydı kategorisi %s=%s.</translation>
     </message>
     <message>
-        <source>Username for JSON-RPC connections</source>
-        <translation>JSON-RPC bağlantıları için kullanıcı ismi</translation>
-    </message>
-    <message>
         <source>Verifying blocks...</source>
         <translation>Bloklar kontrol ediliyor...</translation>
     </message>
@@ -5407,12 +4841,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Cüzdan kilitli.</translation>
     </message>
     <message>
-        <source>Wallet options:</source>
-        <translation>Cüzdan seçenekleri:</translation>
-    </message>
-    <message>
         <source>Warning</source>
         <translation>Uyarı</translation>
+    </message>
+    <message>
+        <source>Warning: %s is deprecated, please use %s instead</source>
+        <translation>Uyarı: %s kullanımdan kaldırıldı, lütfen bunun yerine %s kullanın</translation>
+    </message>
+    <message>
+        <source>Warning: can't use %s and %s together, will prefer %s</source>
+        <translation>Uyarı: %s ve %s birlikte kullanılamaz, %s tercih edilir</translation>
+    </message>
+    <message>
+        <source>Warning: incorrect parameter %s, path must exist! Using default path.</source>
+        <translation>Uyarı: %s yanlış parametre, yol mevcut olmalı! Varsayılan yol kullanılıyor.</translation>
     </message>
     <message>
         <source>You are starting with governance validation disabled.</source>
