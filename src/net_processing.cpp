@@ -2062,7 +2062,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
 /**
  * Reconsider orphan transactions after a parent has been accepted to the mempool.
  *
- * @param[in/out]  orphan_work_set  The set of orphan transactions to reconsider. Generally only one
+ * @param[in,out]  orphan_work_set  The set of orphan transactions to reconsider. Generally only one
  *                                  orphan will be reconsidered on each call of this function. This set
  *                                  may be added to if accepting an orphan causes its children to be
  *                                  reconsidered.

@@ -1029,7 +1029,7 @@ inline bool IsBlockPruned(const CBlockIndex* pblockindex)
 /**
  * Return the expected assumeutxo value for a given height, if one exists.
  *
- * @param height[in] Get the assumeutxo value for this height.
+ * @param[in] height Get the assumeutxo value for this height.
  *
  * @returns empty if no assumeutxo configuration exists for the given height.
  */
