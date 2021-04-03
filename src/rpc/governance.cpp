@@ -20,7 +20,7 @@ static RPCHelpMan gobject_count()
         {
             {"mode", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Output format: json (\"json\") or string in free form (\"all\")."},                
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("gobject_count", "json")
             + HelpExampleRpc("gobject_count", "json")
@@ -47,7 +47,7 @@ static RPCHelpMan gobject_deserialize()
         {
             {"hex_data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Data in hex string form."},                
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("gobject_deserialize", "")
             + HelpExampleRpc("gobject_deserialize", "")
@@ -75,7 +75,7 @@ static RPCHelpMan gobject_check()
         {
             {"hex_data", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Data in hex string form."},                
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("gobject_check", "")
             + HelpExampleRpc("gobject_check", "")
@@ -123,7 +123,7 @@ static RPCHelpMan gobject_submit()
             {"dataHex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Data in hex string form."},
             {"feeTxid", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Fee-tx id, required for all objects except triggers."},                                         
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("gobject_submit", "")
             + HelpExampleRpc("gobject_submit", "")
@@ -232,7 +232,7 @@ static RPCHelpMan gobject_vote_conf()
             {"vote", RPCArg::Type::STR, RPCArg::Optional::NO, "Vote, possible values: [funding|valid|delete|endorsed]."},   
             {"voteOutome", RPCArg::Type::STR, RPCArg::Optional::NO, "Vote outcome, possible values: [yes|no|abstain]."},                                  
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("gobject_vote_conf", "")
             + HelpExampleRpc("gobject_vote_conf", "")
@@ -397,7 +397,7 @@ static RPCHelpMan gobject_list()
             {"signal", RPCArg::Type::STR, "valid", "Cached signal, possible values: [valid|funding|delete|endorsed|all]."},
             {"type", RPCArg::Type::STR, "all", "Object type, possible values: [proposals|triggers|all]."},                                    
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("gobject_list", "")
             + HelpExampleRpc("gobject_list", "")
@@ -431,7 +431,7 @@ static RPCHelpMan gobject_diff()
             {"signal", RPCArg::Type::STR, "valid", "Cached signal, possible values: [valid|funding|delete|endorsed|all]."},
             {"type", RPCArg::Type::STR, "all", "Object type, possible values: [proposals|triggers|all]."},                                    
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("gobject_diff", "")
             + HelpExampleRpc("gobject_diff", "")
@@ -464,7 +464,7 @@ static RPCHelpMan gobject_get()
         {      
             {"governanceHash", RPCArg::Type::STR_HEX,  RPCArg::Optional::NO, "Object id."},                                   
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("gobject_get", "")
             + HelpExampleRpc("gobject_get", "")
@@ -553,7 +553,7 @@ static RPCHelpMan gobject_getcurrentvotes()
             {"txid", RPCArg::Type::STR_HEX,  RPCArg::Optional::OMITTED, "Masternode collateral txid."}, 
             {"vout", RPCArg::Type::NUM,  RPCArg::Optional::OMITTED, "Masternode collateral output index, required if <txid> presents."},                                   
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("gobject_getcurrentvotes", "")
             + HelpExampleRpc("gobject_getcurrentvotes", "")
@@ -610,7 +610,7 @@ static RPCHelpMan voteraw()
             {"time", RPCArg::Type::NUM, RPCArg::Optional::NO, "Time of vote."},
             {"voteSig", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Vote signature. Must be encoded in base64."},                 
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("voteraw", "")
             + HelpExampleRpc("voteraw", "")

@@ -83,7 +83,7 @@ static RPCHelpMan gobject_list_prepared()
         {      
             {"count", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Maximum number of objects to return."},                                                               
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("gobject_list_prepared", "")
             + HelpExampleRpc("gobject_list_prepared", "")
@@ -239,7 +239,7 @@ static RPCHelpMan gobject_vote_many()
             {"vote", RPCArg::Type::STR, RPCArg::Optional::NO, "Vote, possible values: [funding|valid|delete|endorsed]."},   
             {"voteOutome", RPCArg::Type::STR, RPCArg::Optional::NO, "Vote outcome, possible values: [yes|no|abstain]."},                                  
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("gobject_vote_many", "")
             + HelpExampleRpc("gobject_vote_many", "")
@@ -306,7 +306,7 @@ static RPCHelpMan gobject_vote_alias()
             {"voteOutome", RPCArg::Type::STR, RPCArg::Optional::NO, "Vote outcome, possible values: [yes|no|abstain]."},   
             {"protxHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Masternode's proTxHash."},                                                                 
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("gobject_vote_alias", "")
             + HelpExampleRpc("gobject_vote_alias", "")

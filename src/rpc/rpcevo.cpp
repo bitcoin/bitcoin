@@ -51,7 +51,7 @@ static RPCHelpMan protx_list()
             {"detailed", RPCArg::Type::BOOL, "false", "If true, only the hashes of the ProTx will be returned."},
             {"height", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Height to look for ProTx transactions, if not specified defaults to current chain-tip"},                   
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("protx_list", "registered true")
             + HelpExampleRpc("protx_list", "\"registered\", true")
@@ -101,7 +101,7 @@ static RPCHelpMan protx_info()
         {
             {"proTxHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hash of the initial ProRegTx."},                 
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("protx_info", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("protx_info", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
@@ -144,7 +144,7 @@ static RPCHelpMan protx_diff()
             {"baseBlock", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The starting block hash."},  
             {"block", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The ending block hash."},                 
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("protx_diff", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d")
             + HelpExampleRpc("protx_diff", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\"")
@@ -173,7 +173,7 @@ static RPCHelpMan bls_generate()
         "\nReturns a BLS secret/public key pair.\n",
         {              
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("bls_generate", "")
             + HelpExampleRpc("bls_generate", "")
@@ -199,7 +199,7 @@ static RPCHelpMan bls_fromsecret()
         {              
              {"secret", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The BLS secret key."},  
         },
-        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
                 HelpExampleCli("bls_fromsecret", "")
             + HelpExampleRpc("bls_fromsecret", "")

@@ -38,12 +38,7 @@ static RPCHelpMan mnsync()
             {
                 {"command", RPCArg::Type::STR, RPCArg::Optional::NO, "The command to issue (status|next|reset)"},
             },
-            RPCResult{
-                RPCResult::Type::OBJ, "", "",
-                {
-                    {RPCResult::Type::STR, "result", "Result"},
-                }
-            },
+            RPCResult{RPCResult::Type::ANY, "result", "Result"},
             RPCExamples{
                 HelpExampleCli("mnsync", "status")
                 + HelpExampleRpc("mnsync", "status")
@@ -97,11 +92,11 @@ static RPCHelpMan spork()
             },
             {
                 RPCResult{"for command = \"show\"",
-                    RPCResult::Type::NUM, "SPORK_NAME", "The value of the specific spork with the name SPORK_NAME"},
+                    RPCResult::Type::ANY, "SPORK_NAME", "The value of the specific spork with the name SPORK_NAME"},
                 RPCResult{"for command = \"active\"",
-                    RPCResult::Type::BOOL, "SPORK_NAME", "'true' for time-based sporks if spork is active and 'false' otherwise"},
+                    RPCResult::Type::ANY, "SPORK_NAME", "'true' for time-based sporks if spork is active and 'false' otherwise"},
                 RPCResult{"for updating",
-                    RPCResult::Type::STR, "result", "\"success\" if spork value was updated or this help otherwise"},
+                    RPCResult::Type::ANY, "result", "\"success\" if spork value was updated or this help otherwise"},
             },
             RPCExamples{
                 HelpExampleCli("spork", "SPORK_9_NEW_SIGS 4070908800") 
