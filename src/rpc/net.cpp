@@ -863,15 +863,11 @@ static RPCHelpMan getnodeaddresses()
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     }
 
-    int count = 1;
-    if (!request.params[0].isNull()) {
-        count = request.params[0].get_int();
-        if (count < 0) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Address count out of range");
-        }
-    }
+    const int count{request.params[0].isNull() ? 1 : request.params[0].get_int()};
+    if (count < 0) throw JSONRPCError(RPC_INVALID_PARAMETER, "Address count out of range");
+
     // returns a shuffled list of CAddress
-    std::vector<CAddress> vAddr = node.connman->GetAddresses(count, /* max_pct */ 0);
+    const std::vector<CAddress> vAddr{node.connman->GetAddresses(count, /* max_pct */ 0)};
     UniValue ret(UniValue::VARR);
 
     for (const CAddress& addr : vAddr) {
