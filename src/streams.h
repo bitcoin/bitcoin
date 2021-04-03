@@ -167,7 +167,7 @@ public:
     }
 
     template<typename T>
-    VectorReader& operator>>(T& obj)
+    VectorReader& operator>>(T&& obj)
     {
         // Unserialize from this stream
         ::Unserialize(*this, obj);
