@@ -303,6 +303,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/tx_out.cpp \
  test/fuzz/tx_pool.cpp \
  test/fuzz/txrequest.cpp \
+ test/fuzz/utxo_snapshot.cpp \
  test/fuzz/validation_load_mempool.cpp \
  test/fuzz/versionbits.cpp
 endif # ENABLE_FUZZ_BINARY
