@@ -1,0 +1,16 @@
+Qt lrelease tool depends on XML features.
+No need to build the libQt5Xml module if tools are
+bootstrapped, even if not cross-compiling.
+
+--- old/qtbase/mkspecs/features/qt_build_config.prf
++++ new/qtbase/mkspecs/features/qt_build_config.prf
+@@ -82,8 +82,7 @@
+ !prefix_build: \
+     CONFIG += qt_clear_installs
+ 
+-cross_compile: \
+-    CONFIG += force_bootstrap
++CONFIG += force_bootstrap
+ 
+ android|uikit|winrt: \
+     CONFIG += builtin_testdata
