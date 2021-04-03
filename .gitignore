@@ -149,3 +149,9 @@ db4/
 osx_volname
 dist/
 *.background.tiff
+
+*.suo
+Browse.VC.db
+ProjectSettings.json
+slnx.sqlite
+VSWorkspaceState.json
