@@ -8,6 +8,7 @@
 
 #include <chainparams.h>
 #include <clientversion.h>
+#include <coins.h>
 #include <hash.h>
 #include <messagesigner.h>
 #include <script/standard.h>
@@ -79,7 +80,7 @@ static bool CheckInputsHash(const CTransaction& tx, const ProTx& proTx, CValidat
     return true;
 }
 
-bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)
 {
     if (tx.nType != TRANSACTION_PROVIDER_REGISTER) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
@@ -134,7 +135,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
 
     if (!ptx.collateralOutpoint.hash.IsNull()) {
         Coin coin;
-        if (!GetUTXOCoin(ptx.collateralOutpoint, coin) || coin.out.nValue != 1000 * COIN) {
+        if (!view.GetCoin(ptx.collateralOutpoint, coin) || coin.IsSpent() || coin.out.nValue != 1000 * COIN) {
             return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral");
         }
 
@@ -267,7 +268,7 @@ bool CheckProUpServTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVa
     return true;
 }
 
-bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state)
+bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view)
 {
     if (tx.nType != TRANSACTION_PROVIDER_UPDATE_REGISTRAR) {
         return state.DoS(100, false, REJECT_INVALID, "bad-protx-type");
@@ -311,7 +312,7 @@ bool CheckProUpRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CVal
         }
 
         Coin coin;
-        if (!GetUTXOCoin(dmn->collateralOutpoint, coin)) {
+        if (!view.GetCoin(dmn->collateralOutpoint, coin) || coin.IsSpent()) {
             // this should never happen (there would be no dmn otherwise)
             return state.DoS(100, false, REJECT_INVALID, "bad-protx-collateral");
         }

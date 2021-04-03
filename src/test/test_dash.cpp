@@ -205,7 +205,7 @@ CBlock TestChainSetup::CreateBlock(const std::vector<CMutableTransaction>& txns,
             BOOST_ASSERT(false);
         }
         CValidationState state;
-        if (!CalcCbTxMerkleRootMNList(block, chainActive.Tip(), cbTx.merkleRootMNList, state)) {
+        if (!CalcCbTxMerkleRootMNList(block, chainActive.Tip(), cbTx.merkleRootMNList, state, *pcoinsTip.get())) {
             BOOST_ASSERT(false);
         }
         if (!CalcCbTxMerkleRootQuorums(block, chainActive.Tip(), cbTx.merkleRootQuorums, state)) {

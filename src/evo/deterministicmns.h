@@ -671,13 +671,13 @@ private:
 public:
     explicit CDeterministicMNManager(CEvoDB& _evoDb);
 
-    bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, bool fJustCheck);
+    bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, CValidationState& state, const CCoinsViewCache& view, bool fJustCheck);
     bool UndoBlock(const CBlock& block, const CBlockIndex* pindex);
 
     void UpdatedBlockTip(const CBlockIndex* pindex);
 
     // the returned list will not contain the correct block hash (we can't know it yet as the coinbase TX is not updated yet)
-    bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& state, CDeterministicMNList& mnListRet, bool debugLogs);
+    bool BuildNewListFromBlock(const CBlock& block, const CBlockIndex* pindexPrev, CValidationState& state, const CCoinsViewCache& view, CDeterministicMNList& mnListRet, bool debugLogs);
     static void HandleQuorumCommitment(llmq::CFinalCommitment& qc, const CBlockIndex* pindexQuorum, CDeterministicMNList& mnList, bool debugLogs);
     static void DecreasePoSePenalties(CDeterministicMNList& mnList);
 
