@@ -126,6 +126,9 @@ Changes to Wallet or GUI related settings can be found in the GUI or Wallet sect
 
 - Passing an invalid `-rpcauth` argument now cause bitcoind to fail to start.  (#20461)
 
+- The `getnodeaddresses` RPC now returns a "network" field indicating the
+  network type (ipv4, ipv6, onion, or i2p) for each address.  (#21594)
+
 Tools and Utilities
 -------------------
 

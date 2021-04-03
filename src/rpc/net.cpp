@@ -848,6 +848,7 @@ static RPCHelpMan getnodeaddresses()
                             {RPCResult::Type::NUM, "services", "The services offered"},
                             {RPCResult::Type::STR, "address", "The address of the node"},
                             {RPCResult::Type::NUM, "port", "The port of the node"},
+                            {RPCResult::Type::STR, "network", "The network (" + Join(GetNetworkNames(), ", ") + ") the node connected through"},
                         }},
                     }
                 },
@@ -879,6 +880,7 @@ static RPCHelpMan getnodeaddresses()
         obj.pushKV("services", (uint64_t)addr.nServices);
         obj.pushKV("address", addr.ToStringIP());
         obj.pushKV("port", addr.GetPort());
+        obj.pushKV("network", GetNetworkName(addr.GetNetClass()));
         ret.push_back(obj);
     }
     return ret;
