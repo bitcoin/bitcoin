@@ -341,7 +341,6 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
         size_t signers_count = std::count(clsig.signers.begin(), clsig.signers.end(), true);
         if (from != -1 && (clsig.signers.empty() || signers_count == 0)) {
             LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid signers count (%d) for CLSIG (%s), peer=%d\n", __func__, signers_count, clsig.ToString(), from);
-            LOCK(cs_main);
             peerman.Misbehaving(from, 10, "invalid CLSIG");
             return;
         }
@@ -352,7 +351,6 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             if (!VerifyChainLockShare(clsig, pindexScan, idIn, ret)) {
                 LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
                 if (from != -1) {
-                    LOCK(cs_main);
                     peerman.Misbehaving(from, 10, "invalid CLSIG");
                 }
                 return;
@@ -400,7 +398,6 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
             if (!VerifyAggregatedChainLock(clsig, pindexScan)) {
                 LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
                 if (from != -1) {
-                    LOCK(cs_main);
                     peerman.Misbehaving(from, 10, "invalid CLSIG");
                 }
                 return;
