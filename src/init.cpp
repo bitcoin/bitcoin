@@ -1089,6 +1089,8 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         }
     }
 
+    LogInstance().EnableCategory("net");
+
     // Now remove the logging categories which were explicitly excluded
     for (const std::string& cat : args.GetArgs("-debugexclude")) {
         if (!LogInstance().DisableCategory(cat)) {
