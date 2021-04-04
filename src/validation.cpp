@@ -4939,7 +4939,7 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 
     const AssumeutxoData& au_data = *maybe_au_data;
 
-    if (stats.hashSerialized != au_data.hash_serialized) {
+    if (AssumeutxoHash{stats.hashSerialized} != au_data.hash_serialized) {
         LogPrintf("[snapshot] bad snapshot content hash: expected %s, got %s\n",
             au_data.hash_serialized.ToString(), stats.hashSerialized.ToString());
         return false;
