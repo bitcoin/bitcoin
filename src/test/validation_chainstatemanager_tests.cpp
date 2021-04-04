@@ -263,6 +263,11 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
     BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
         m_node, m_path_root, [](CAutoFile& auto_infile, SnapshotMetadata& metadata) {
             // Wrong hash
+            metadata.m_base_blockhash = uint256::ZERO;
+    }));
+    BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
+        m_node, m_path_root, [](CAutoFile& auto_infile, SnapshotMetadata& metadata) {
+            // Wrong hash
             metadata.m_base_blockhash = uint256::ONE;
     }));
 
