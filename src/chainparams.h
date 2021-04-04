@@ -41,8 +41,6 @@ struct AssumeutxoData {
     const unsigned int nChainTx;
 };
 
-std::ostream& operator<<(std::ostream& o, const AssumeutxoData& aud);
-
 using MapAssumeutxo = std::map<int, const AssumeutxoData>;
 
 /**
