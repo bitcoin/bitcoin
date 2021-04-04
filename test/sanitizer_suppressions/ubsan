@@ -1,6 +1,6 @@
 # -fsanitize=undefined suppressions
 # =================================
-# No suppressions at the moment. Hooray!
+signed-integer-overflow:CTxMemPool::PrioritiseTransaction
 
 # -fsanitize=integer suppressions
 # ===============================
@@ -100,4 +100,3 @@ shift-base:leveldb/
 shift-base:net_processing.cpp
 shift-base:streams.h
 shift-base:util/bip32.cpp
-signed-integer-overflow:txmempool.cpp
