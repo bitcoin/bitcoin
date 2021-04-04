@@ -177,11 +177,7 @@ static RPCHelpMan getnotarysighash()
             {"hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Transaction to get sighash for."},
             {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "The guid of the asset to sighash for."}
         },
-        RPCResult{
-            RPCResult::Type::OBJ, "", "",
-            {
-                {RPCResult::Type::STR_HEX, "sighash", "Notary sighash (uint256)"},
-            }},	
+        RPCResult{RPCResult::Type::STR_HEX, "sighash", "Notary sighash (uint256)"},	
         RPCExamples{	
             HelpExampleCli("getnotarysighash", "\"hex\" 12121")
             + HelpExampleRpc("getnotarysighash", "\"hex\",12121")	
