@@ -200,7 +200,7 @@ CreateAndActivateUTXOSnapshot(NodeContext& node, const fs::path root, F malleati
 }
 
 //! Test basic snapshot activation.
-BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100DeterministicSetup)
+BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
 {
     ChainstateManager& chainman = *Assert(m_node.chainman);
 
