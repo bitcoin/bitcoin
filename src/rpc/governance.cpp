@@ -696,17 +696,13 @@ static RPCHelpMan getgovernanceinfo()
         {                
         },
         RPCResult{
-            RPCResult::Type::OBJ, "", "", {
-                {
-                    RPCResult::Type::OBJ, "", "",
-                    {
-                        {RPCResult::Type::NUM, "governanceminquorum", "The absolute minimum number of votes needed to trigger a governance action"},
-                        {RPCResult::Type::NUM, "proposalfee", "The collateral transaction fee which must be paid to create a proposal in " + CURRENCY_UNIT},
-                        {RPCResult::Type::NUM, "superblockcycle", "The number of blocks between superblocks"},
-                        {RPCResult::Type::NUM, "lastsuperblock", "The block number of the last superblock"},
-                        {RPCResult::Type::NUM, "nextsuperblock", "The block number of the next superblock"},
-                    }
-                },
+            RPCResult::Type::OBJ, "", "",
+            {
+                {RPCResult::Type::NUM, "governanceminquorum", "The absolute minimum number of votes needed to trigger a governance action"},
+                {RPCResult::Type::NUM, "proposalfee", "The collateral transaction fee which must be paid to create a proposal in " + CURRENCY_UNIT},
+                {RPCResult::Type::NUM, "superblockcycle", "The number of blocks between superblocks"},
+                {RPCResult::Type::NUM, "lastsuperblock", "The block number of the last superblock"},
+                {RPCResult::Type::NUM, "nextsuperblock", "The block number of the next superblock"},
             },
         },
         RPCExamples{
