@@ -195,15 +195,14 @@ class LLMQSigningTest(DashTestFramework):
         self.bump_mocktime(5)
         # Cleanup starts every 5 seconds
         wait_for_sigs(False, False, False, 15)
-
+        for i in range(len(self.nodes)):
+            force_finish_mnsync(self.nodes[i])
         for i in range(2):
             self.mninfo[i].node.quorum_sign(100, id, msgHashConflict)
         for i in range(2, 5):
             self.mninfo[i].node.quorum_sign(100, id, msgHash)
         self.nodes[0].generate(1)
         self.sync_blocks()
-        for i in range(len(self.nodes)):
-            force_finish_mnsync(self.nodes[i])
         self.bump_mocktime(5)
         wait_for_sigs(True, False, True, 15)
 
