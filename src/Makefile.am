@@ -246,6 +246,7 @@ BITCOIN_CORE_H = \
   util/fees.h \
   util/getuniquepath.h \
   util/golombrice.h \
+  util/hash_type.h \
   util/hasher.h \
   util/macros.h \
   util/message.h \
