@@ -213,7 +213,7 @@ TestChain100Setup::TestChain100Setup(bool deterministic)
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
             }
         };
-        coinbaseKey.Set(vchKey.begin(), vchKey.end(), false);
+        coinbaseKey.Set(vchKey.begin(), vchKey.end(), true);
     } else {
         coinbaseKey.MakeNewKey(true);
     }
@@ -225,7 +225,7 @@ TestChain100Setup::TestChain100Setup(bool deterministic)
         LOCK(::cs_main);
         assert(
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
-            "49c95db1e470fed04496d801c9d8fbb78155d2c7f855232c918823d2c17d0cf6");
+            "571d80a9967ae599cec0448b0b0ba1cfb606f584d8069bd7166b86854ba7a191");
     }
 }
 

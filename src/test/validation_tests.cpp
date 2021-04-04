@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(test_assumeutxo)
     }
 
     const auto out110 = *ExpectedAssumeutxo(110, *params);
-    BOOST_CHECK_EQUAL(out110.hash_serialized, uint256S("76fd7334ac7c1baf57ddc0c626f073a655a35d98a4258cd1382c8cc2b8392e10"));
+    BOOST_CHECK_EQUAL(out110.hash_serialized, uint256S("1ebbf5850204c0bdb15bf030f47c7fe91d45c44c712697e4509ba67adb01c618"));
     BOOST_CHECK_EQUAL(out110.nChainTx, (unsigned int)110);
 
     const auto out210 = *ExpectedAssumeutxo(210, *params);
