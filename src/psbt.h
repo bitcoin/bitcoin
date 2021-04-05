@@ -1181,7 +1181,7 @@ struct PartiallySignedTransaction
             SerializeToVector(s, CompactSizeWriter(PSBT_GLOBAL_UNSIGNED_TX));
 
             // Write serialized tx to a stream
-            SerializeToVector(s, TX_NO_WITNESS(*tx));
+            SerializeToVector(s, TX_NO_WITNESS(GetUnsignedTx()));
         }
 
         // Write xpubs
