@@ -1079,6 +1079,20 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
     PackageValidationState package_state;
     const unsigned int package_count = txns.size();
 
+    // These context-free package limits can be checked before taking the mempool lock.
+    if (package_count > MAX_PACKAGE_COUNT) {
+        package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-too-many-transactions");
+        return PackageMempoolAcceptResult(package_state, {});
+    }
+
+    const int64_t total_size = std::accumulate(txns.cbegin(), txns.cend(), 0,
+                               [](int64_t sum, const auto& tx) { return sum + GetVirtualTransactionSize(*tx); });
+    // If the package only contains 1 tx, it's better to report the policy violation on individual tx size.
+    if (package_count > 1 && total_size > MAX_PACKAGE_SIZE * 1000) {
+        package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-too-large");
+        return PackageMempoolAcceptResult(package_state, {});
+    }
+
     std::vector<Workspace> workspaces{};
     workspaces.reserve(package_count);
     std::transform(txns.cbegin(), txns.cend(), std::back_inserter(workspaces), [](const auto& tx) {

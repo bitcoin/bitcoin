@@ -10,6 +10,11 @@
 
 #include <vector>
 
+/** Default maximum number of transactions in a package. */
+static constexpr uint32_t MAX_PACKAGE_COUNT{25};
+/** Default maximum total virtual size of transactions in a package in KvB. */
+static constexpr uint32_t MAX_PACKAGE_SIZE{101};
+
 /** A "reason" why a package was invalid. It may be that one or more of the included
  * transactions is invalid or the package itself violates our rules.
  * We don't distinguish between consensus and policy violations right now.
