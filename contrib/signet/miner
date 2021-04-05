@@ -563,7 +563,7 @@ def do_calibrate(args):
 
 def bitcoin_cli(basecmd, args, **kwargs):
     cmd = basecmd + ["-signet"] + args
-    logging.debug("Calling bitcoin-cli: %r", cmd)
+    logging.debug("Calling syscoin-cli: %r", cmd)
     out = subprocess.run(cmd, stdout=subprocess.PIPE, **kwargs, check=True).stdout
     if isinstance(out, bytes):
         out = out.decode('utf8')
@@ -571,7 +571,7 @@ def bitcoin_cli(basecmd, args, **kwargs):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--cli", default="bitcoin-cli", type=str, help="bitcoin-cli command")
+    parser.add_argument("--cli", default="syscoin-cli", type=str, help="syscoin-cli command")
     parser.add_argument("--debug", action="store_true", help="Print debugging info")
     parser.add_argument("--quiet", action="store_true", help="Only print warnings/errors")
 

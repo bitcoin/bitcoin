@@ -81,8 +81,12 @@ extern CAmount AmountFromValue(const UniValue& value);
 // SYSCOIN
 extern CAmount AssetAmountFromValue(const UniValue& value, int precision);
 extern UniValue ValueFromAssetAmount(const CAmount& amount,int precision);
+
+using RPCArgList = std::vector<std::pair<std::string, UniValue>>;
 extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);
+extern std::string HelpExampleCliNamed(const std::string& methodname, const RPCArgList& args);
 extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
+extern std::string HelpExampleRpcNamed(const std::string& methodname, const RPCArgList& args);
 
 CPubKey HexToPubKey(const std::string& hex_in);
 CPubKey AddrToPubKey(const FillableSigningProvider& keystore, const std::string& addr_in);
