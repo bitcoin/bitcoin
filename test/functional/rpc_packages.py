@@ -169,10 +169,8 @@ class RPCPackagesTest(BitcoinTestFramework):
             chain_txns.append(tx)
 
         self.log.info("Check that testmempoolaccept requires packages to be sorted by dependency")
-        testres_multiple_unsorted = node.testmempoolaccept(rawtxs=chain_hex[::-1])
-        assert_equal(testres_multiple_unsorted,
-                     [{"txid": chain_txns[-1].rehash(), "wtxid": chain_txns[-1].getwtxid(), "allowed": False, "reject-reason": "missing-inputs"}]
-                     + [{"txid": tx.rehash(), "wtxid": tx.getwtxid()} for tx in chain_txns[::-1]][1:])
+        assert_equal(node.testmempoolaccept(rawtxs=chain_hex[::-1]),
+                [{"txid": tx.rehash(), "wtxid": tx.getwtxid(), "package-error": "package-not-sorted"} for tx in chain_txns[::-1]])
 
         self.log.info("Testmempoolaccept a chain of 25 transactions")
         testres_multiple = node.testmempoolaccept(rawtxs=chain_hex)
