@@ -15,6 +15,7 @@ $(package)_patches+= fix_qpainter_non_determinism.patch fix_lib_paths.patch fix_
 $(package)_patches+= fix_limits_header.patch
 $(package)_patches+= fix_montery_include.patch
 $(package)_patches += glibc_compatibility.patch
+$(package)_patches+= qtbase-moc-ignore-gcc-macro.patch
 
 # Update OSX_QT_TRANSLATIONS when this is updated
 $(package)_qttranslations_file_name=qttranslations-$($(package)_suffix)
@@ -239,6 +240,7 @@ define $(package)_preprocess_cmds
   patch -p1 -i $($(package)_patch_dir)/fix_limits_header.patch && \
   patch -p1 -i $($(package)_patch_dir)/fix_montery_include.patch && \
   patch -p1 -i $($(package)_patch_dir)/glibc_compatibility.patch && \
+  patch -p1 -i $($(package)_patch_dir)/qtbase-moc-ignore-gcc-macro.patch && \
   mkdir -p qtbase/mkspecs/macx-clang-linux &&\
   cp -f qtbase/mkspecs/macx-clang/qplatformdefs.h qtbase/mkspecs/macx-clang-linux/ &&\
   cp -f $($(package)_patch_dir)/mac-qmake.conf qtbase/mkspecs/macx-clang-linux/qmake.conf && \
