@@ -82,6 +82,16 @@ unsigned int ParseScriptFlags(std::string strFlags)
     return flags;
 }
 
+// Check that all flags in STANDARD_SCRIPT_VERIFY_FLAGS are present in mapFlagNames.
+bool CheckMapFlagNames()
+{
+    unsigned int standard_flags_missing{STANDARD_SCRIPT_VERIFY_FLAGS};
+    for (const auto& pair : mapFlagNames) {
+        standard_flags_missing &= ~(pair.second);
+    }
+    return standard_flags_missing == 0;
+}
+
 std::string FormatScriptFlags(unsigned int flags)
 {
     if (flags == 0) {
@@ -178,6 +188,7 @@ BOOST_FIXTURE_TEST_SUITE(transaction_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(tx_valid)
 {
+    BOOST_CHECK_MESSAGE(CheckMapFlagNames(), "mapFlagNames is missing a script verification flag");
     // Read tests from test/data/tx_valid.json
     UniValue tests = read_json(std::string(json_tests::tx_valid, json_tests::tx_valid + sizeof(json_tests::tx_valid)));
 
