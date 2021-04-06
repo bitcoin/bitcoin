@@ -486,7 +486,7 @@ private:
     }
 
     //! Make the data structure consistent with a given point in time:
-    //! - REQUESTED annoucements with expiry <= now are turned into COMPLETED.
+    //! - REQUESTED announcements with expiry <= now are turned into COMPLETED.
     //! - CANDIDATE_DELAYED announcements with reqtime <= now are turned into CANDIDATE_{READY,BEST}.
     //! - CANDIDATE_{READY,BEST} announcements with reqtime > now are turned into CANDIDATE_DELAYED.
     void SetTimePoint(std::chrono::microseconds now, std::vector<std::pair<NodeId, GenTxid>>* expired)
