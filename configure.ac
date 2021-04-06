@@ -1486,6 +1486,10 @@ if test x$build_bitcoin_cli$build_bitcoind$bitcoin_enable_qt$use_tests$use_bench
   if test x$TARGET_OS != xwindows; then
     PKG_CHECK_MODULES([EVENT_PTHREADS], [libevent_pthreads >= 2.0.21],, [AC_MSG_ERROR([libevent_pthreads version 2.0.21 or greater not found.])])
   fi
+
+  if test x$suppress_external_warnings != xno; then
+    EVENT_CFLAGS=SUPPRESS_WARNINGS($EVENT_CFLAGS)
+  fi
 fi
 
 dnl QR Code encoding library check
