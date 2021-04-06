@@ -5479,10 +5479,10 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
         return false;
     }
 
-    snapshot_chainstate.m_chain.SetTip(snapshot_start_block);
-
     // The remainder of this function requires modifying data protected by cs_main.
     LOCK(::cs_main);
+
+    snapshot_chainstate.m_chain.SetTip(snapshot_start_block);
 
     // Fake various pieces of CBlockIndex state:
     //

@@ -49,14 +49,19 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     auto all = manager.GetAll();
     BOOST_CHECK_EQUAL_COLLECTIONS(all.begin(), all.end(), chainstates.begin(), chainstates.end());
 
-    auto& active_chain = manager.ActiveChain();
-    BOOST_CHECK_EQUAL(&active_chain, &c1.m_chain);
+    CBlockIndex* exp_tip;
+    {
+        LOCK(::cs_main);
 
-    BOOST_CHECK_EQUAL(manager.ActiveHeight(), -1);
+        auto& active_chain = manager.ActiveChain();
+        BOOST_CHECK_EQUAL(&active_chain, &c1.m_chain);
 
-    auto active_tip = manager.ActiveTip();
-    auto exp_tip = c1.m_chain.Tip();
-    BOOST_CHECK_EQUAL(active_tip, exp_tip);
+        BOOST_CHECK_EQUAL(manager.ActiveHeight(), -1);
+
+        auto active_tip = manager.ActiveTip();
+        exp_tip = c1.m_chain.Tip();
+        BOOST_CHECK_EQUAL(active_tip, exp_tip);
+    }
 
     auto& validated_cs = manager.ValidatedChainstate();
     BOOST_CHECK_EQUAL(&validated_cs, &c1);
@@ -87,28 +92,31 @@ BOOST_AUTO_TEST_CASE(chainstatemanager)
     auto all2 = manager.GetAll();
     BOOST_CHECK_EQUAL_COLLECTIONS(all2.begin(), all2.end(), chainstates.begin(), chainstates.end());
 
-    auto& active_chain2 = manager.ActiveChain();
-    BOOST_CHECK_EQUAL(&active_chain2, &c2.m_chain);
+    {
+        LOCK(::cs_main);
+        auto& active_chain2 = manager.ActiveChain();
+        BOOST_CHECK_EQUAL(&active_chain2, &c2.m_chain);
 
-    BOOST_CHECK_EQUAL(manager.ActiveHeight(), 0);
+        BOOST_CHECK_EQUAL(manager.ActiveHeight(), 0);
 
-    auto active_tip2 = manager.ActiveTip();
-    auto exp_tip2 = c2.m_chain.Tip();
-    BOOST_CHECK_EQUAL(active_tip2, exp_tip2);
+        auto active_tip2 = manager.ActiveTip();
+        auto exp_tip2 = c2.m_chain.Tip();
+        BOOST_CHECK_EQUAL(active_tip2, exp_tip2);
 
-    // Ensure that these pointers actually correspond to different
-    // CCoinsViewCache instances.
-    BOOST_CHECK(exp_tip != exp_tip2);
+        // Ensure that these pointers actually correspond to different
+        // CCoinsViewCache instances.
+        BOOST_CHECK(exp_tip != exp_tip2);
 
-    auto& validated_cs2 = manager.ValidatedChainstate();
-    BOOST_CHECK_EQUAL(&validated_cs2, &c1);
+        auto& validated_cs2 = manager.ValidatedChainstate();
+        BOOST_CHECK_EQUAL(&validated_cs2, &c1);
 
-    auto& validated_chain = manager.ValidatedChain();
-    BOOST_CHECK_EQUAL(&validated_chain, &c1.m_chain);
+        auto& validated_chain = manager.ValidatedChain();
+        BOOST_CHECK_EQUAL(&validated_chain, &c1.m_chain);
 
-    auto validated_tip = manager.ValidatedTip();
-    exp_tip = c1.m_chain.Tip();
-    BOOST_CHECK_EQUAL(validated_tip, exp_tip);
+        auto validated_tip = manager.ValidatedTip();
+        exp_tip = c1.m_chain.Tip();
+        BOOST_CHECK_EQUAL(validated_tip, exp_tip);
+    }
 
     // Let scheduler events finish running to avoid accessing memory that is going to be unloaded
     SyncWithValidationInterfaceQueue();

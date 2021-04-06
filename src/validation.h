@@ -601,7 +601,7 @@ public:
 
     //! The current chain of blockheaders we consult and build on.
     //! @see CChain, CBlockIndex.
-    CChain m_chain;
+    CChain m_chain GUARDED_BY(::cs_main);
 
     /**
      * The blockhash which is the base of the snapshot this chainstate was created from.
@@ -725,7 +725,7 @@ public:
     /** Ensures we have a genesis block in the block tree, possibly writing one to disk. */
     bool LoadGenesisBlock(const CChainParams& chainparams);
 
-    void PruneBlockIndexCandidates();
+    void PruneBlockIndexCandidates() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     void UnloadBlockIndex();
 
