@@ -134,6 +134,14 @@ def check_ELF_separate_code(executable):
                 return False
     return True
 
+def check_PE_PIE(executable) -> bool:
+    '''
+    Check for position independent executable (PIE),
+    allowing for address space randomization.
+    '''
+    binary = lief.parse(executable)
+    return binary.is_pie
+
 def check_PE_DYNAMIC_BASE(executable) -> bool:
     '''PIE: DllCharacteristics bit 0x40 signifies dynamicbase (ASLR)'''
     binary = lief.parse(executable)
@@ -201,6 +209,7 @@ CHECKS = {
     ('separate_code', check_ELF_separate_code),
 ],
 'PE': [
+    ('PIE', check_PE_PIE),
     ('DYNAMIC_BASE', check_PE_DYNAMIC_BASE),
     ('HIGH_ENTROPY_VA', check_PE_HIGH_ENTROPY_VA),
     ('NX', check_PE_NX),
