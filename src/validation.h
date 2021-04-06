@@ -832,10 +832,6 @@ private:
     //!
     //! Once this pointer is set to a corresponding chainstate, it will not
     //! be reset until init.cpp:Shutdown().
-    //!
-    //! This is especially important when, e.g., calling ActivateBestChain()
-    //! on all chainstates because we are not able to hold ::cs_main going into
-    //! that call.
     std::unique_ptr<CChainState> m_ibd_chainstate GUARDED_BY(m_cs_chainstates);
 
     //! A chainstate initialized on the basis of a UTXO snapshot. If this is
@@ -843,21 +839,10 @@ private:
     //!
     //! Once this pointer is set to a corresponding chainstate, it will not
     //! be reset until init.cpp:Shutdown().
-    //!
-    //! This is especially important when, e.g., calling ActivateBestChain()
-    //! on all chainstates because we are not able to hold ::cs_main going into
-    //! that call.
     std::unique_ptr<CChainState> m_snapshot_chainstate GUARDED_BY(m_cs_chainstates);
 
     //! Points to either the ibd or snapshot chainstate; indicates our
     //! most-work chain.
-    //!
-    //! Once this pointer is set to a corresponding chainstate, it will not
-    //! be reset until init.cpp:Shutdown().
-    //!
-    //! This is especially important when, e.g., calling ActivateBestChain()
-    //! on all chainstates because we are not able to hold ::cs_main going into
-    //! that call.
     std::atomic<CChainState*> m_active_chainstate {nullptr};
 
     //! If true, the assumed-valid chainstate has been fully validated
