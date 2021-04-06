@@ -750,8 +750,8 @@ static RPCHelpMan listbanned()
                 {RPCResult::Type::OBJ, "", "",
                     {
                         {RPCResult::Type::STR, "address", ""},
-                        {RPCResult::Type::NUM_TIME, "banned_until", ""},
                         {RPCResult::Type::NUM_TIME, "ban_created", ""},
+                        {RPCResult::Type::NUM_TIME, "banned_until", ""},
                     }},
             }},
                 RPCExamples{
@@ -774,8 +774,8 @@ static RPCHelpMan listbanned()
         const CBanEntry& banEntry = entry.second;
         UniValue rec(UniValue::VOBJ);
         rec.pushKV("address", entry.first.ToString());
-        rec.pushKV("banned_until", banEntry.nBanUntil);
         rec.pushKV("ban_created", banEntry.nCreateTime);
+        rec.pushKV("banned_until", banEntry.nBanUntil);
 
         bannedAddresses.push_back(rec);
     }
