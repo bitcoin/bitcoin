@@ -28,7 +28,6 @@ race:BerkeleyBatch
 race:BerkeleyDatabase
 race:DatabaseBatch
 race:leveldb::DBImpl::DeleteObsoleteFiles
-race:validation_chainstatemanager_tests
 race:zmq::*
 race:bitcoin-qt
 
@@ -41,6 +40,10 @@ deadlock:TestPotentialDeadLockDetected
 # Wildcard for all gui tests, should be replaced with non-wildcard suppressions
 race:src/qt/test/*
 deadlock:src/qt/test/*
+
+# Race in src/test/main.cpp
+# Can be removed once upgraded to boost test 1.74 in depends
+race:validation_chainstatemanager_tests
 
 # External libraries
 deadlock:libdb
