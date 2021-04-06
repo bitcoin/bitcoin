@@ -6,9 +6,6 @@
 # Data races from zmq namespace
 race:zmq::*
 
-# race (TODO fix)
-race:validation_chainstatemanager_tests
-
 # double locks (TODO fix)
 mutex:g_genesis_wait_mutex
 mutex:Interrupt
@@ -57,6 +54,10 @@ race:InterruptRPC
 # Wildcard for all gui tests, should be replaced with non-wildcard suppressions
 race:src/qt/test/*
 deadlock:src/qt/test/*
+
+# Race in src/test/main.cpp
+# Can be removed once upgraded to boost test 1.74 in depends
+race:validation_chainstatemanager_tests
 
 # External libraries
 deadlock:libdb
