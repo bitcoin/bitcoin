@@ -991,7 +991,7 @@ public:
 };
 
 /** DEPRECATED! Please use node.chainman instead. May only be used in validation.cpp internally */
-extern ChainstateManager g_chainman GUARDED_BY(::cs_main);
+extern ChainstateManager g_chainman;
 
 /** Please prefer the identical ChainstateManager::ActiveChainstate */
 CChainState& ChainstateActive();
