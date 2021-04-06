@@ -5190,7 +5190,7 @@ std::optional<uint256> ChainstateManager::SnapshotBlockhash() const {
 
 std::vector<CChainState*> ChainstateManager::GetAll()
 {
-    LOCK(::cs_main);
+    LOCK(m_cs_chainstates);
     std::vector<CChainState*> out;
 
     if (!IsSnapshotValidated() && m_ibd_chainstate) {
@@ -5206,6 +5206,7 @@ std::vector<CChainState*> ChainstateManager::GetAll()
 
 CChainState& ChainstateManager::InitializeChainstate(CTxMemPool& mempool, const uint256& snapshot_blockhash)
 {
+    LOCK(m_cs_chainstates);
     bool is_snapshot = !snapshot_blockhash.IsNull();
     std::unique_ptr<CChainState>& to_modify =
         is_snapshot ? m_snapshot_chainstate : m_ibd_chainstate;
@@ -5303,9 +5304,10 @@ bool ChainstateManager::ActivateSnapshot(
     }
 
     {
-        LOCK(::cs_main);
+        LOCK2(::cs_main, m_cs_chainstates);
         assert(!m_snapshot_chainstate);
         m_snapshot_chainstate.swap(snapshot_chainstate);
+
         const bool chaintip_loaded = m_snapshot_chainstate->LoadChainTip(::Params());
         assert(chaintip_loaded);
 
@@ -5524,13 +5526,13 @@ CChainState& ChainstateManager::ActiveChainstate() const
 
 bool ChainstateManager::IsSnapshotActive() const
 {
-    LOCK(::cs_main);
+    LOCK(m_cs_chainstates);
     return m_snapshot_chainstate && m_active_chainstate.load() == m_snapshot_chainstate.get();
 }
 
 CChainState& ChainstateManager::ValidatedChainstate() const
 {
-    LOCK(::cs_main);
+    LOCK(m_cs_chainstates);
     if (m_snapshot_chainstate && IsSnapshotValidated()) {
         return *m_snapshot_chainstate.get();
     }
@@ -5540,7 +5542,7 @@ CChainState& ChainstateManager::ValidatedChainstate() const
 
 bool ChainstateManager::IsBackgroundIBD(CChainState* chainstate) const
 {
-    LOCK(::cs_main);
+    LOCK(m_cs_chainstates);
     return (m_snapshot_chainstate && chainstate == m_ibd_chainstate.get());
 }
 
@@ -5556,7 +5558,7 @@ void ChainstateManager::Unload()
 
 void ChainstateManager::Reset()
 {
-    LOCK(::cs_main);
+    LOCK2(::cs_main, m_cs_chainstates);
     m_ibd_chainstate.reset();
     m_snapshot_chainstate.reset();
     m_active_chainstate.store(nullptr);
@@ -5565,6 +5567,7 @@ void ChainstateManager::Reset()
 
 void ChainstateManager::MaybeRebalanceCaches()
 {
+    LOCK(m_cs_chainstates);
     if (m_ibd_chainstate && !m_snapshot_chainstate) {
         LogPrintf("[snapshot] allocating all cache to the IBD chainstate\n");
         // Allocate everything to the IBD chainstate.

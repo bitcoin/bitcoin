@@ -815,6 +815,12 @@ private:
 class ChainstateManager
 {
 private:
+    //! Serializes access to the references of all chainstates being
+    //! managed by this object (m_ibd_chainstate, m_snapshot_chainstate).
+    //! Note that this does not manage m_active_chainstate, which is has
+    //! no need for a mutex due to its use of std::atomic.
+    mutable RecursiveMutex m_cs_chainstates;
+
     //! The chainstate used under normal operation (i.e. "regular" IBD) or, if
     //! a snapshot is in use, for background validation.
     //!
@@ -830,7 +836,7 @@ private:
     //! This is especially important when, e.g., calling ActivateBestChain()
     //! on all chainstates because we are not able to hold ::cs_main going into
     //! that call.
-    std::unique_ptr<CChainState> m_ibd_chainstate GUARDED_BY(::cs_main);
+    std::unique_ptr<CChainState> m_ibd_chainstate GUARDED_BY(m_cs_chainstates);
 
     //! A chainstate initialized on the basis of a UTXO snapshot. If this is
     //! non-null, it is always our active chainstate.
@@ -841,7 +847,7 @@ private:
     //! This is especially important when, e.g., calling ActivateBestChain()
     //! on all chainstates because we are not able to hold ::cs_main going into
     //! that call.
-    std::unique_ptr<CChainState> m_snapshot_chainstate GUARDED_BY(::cs_main);
+    std::unique_ptr<CChainState> m_snapshot_chainstate GUARDED_BY(m_cs_chainstates);
 
     //! Points to either the ibd or snapshot chainstate; indicates our
     //! most-work chain.
