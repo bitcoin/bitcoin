@@ -6,21 +6,12 @@
 Perform basic security checks on a series of executables.
 Exit status will be 0 if successful, and the program will be silent.
 Otherwise the exit status will be 1 and it will log which executables failed which checks.
-Needs `objdump` (for PE).
 '''
-import subprocess
 import sys
-import os
 from typing import List, Optional
 
 import lief
 import pixie
-
-OBJDUMP_CMD = os.getenv('OBJDUMP', '/usr/bin/objdump')
-
-def run_command(command) -> str:
-    p = subprocess.run(command, stdout=subprocess.PIPE, check=True, universal_newlines=True)
-    return p.stdout
 
 def check_ELF_PIE(executable) -> bool:
     '''
@@ -143,46 +134,27 @@ def check_ELF_separate_code(executable):
                 return False
     return True
 
-def get_PE_dll_characteristics(executable) -> int:
-    '''Get PE DllCharacteristics bits'''
-    stdout = run_command([OBJDUMP_CMD, '-x',  executable])
-
-    bits = 0
-    for line in stdout.splitlines():
-        tokens = line.split()
-        if len(tokens)>=2 and tokens[0] == 'DllCharacteristics':
-            bits = int(tokens[1],16)
-    return bits
-
-IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA = 0x0020
-IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE    = 0x0040
-IMAGE_DLL_CHARACTERISTICS_NX_COMPAT       = 0x0100
-
 def check_PE_DYNAMIC_BASE(executable) -> bool:
     '''PIE: DllCharacteristics bit 0x40 signifies dynamicbase (ASLR)'''
-    bits = get_PE_dll_characteristics(executable)
-    return (bits & IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE) == IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE
+    binary = lief.parse(executable)
+    return lief.PE.DLL_CHARACTERISTICS.DYNAMIC_BASE in binary.optional_header.dll_characteristics_lists
 
 # Must support high-entropy 64-bit address space layout randomization
 # in addition to DYNAMIC_BASE to have secure ASLR.
 def check_PE_HIGH_ENTROPY_VA(executable) -> bool:
     '''PIE: DllCharacteristics bit 0x20 signifies high-entropy ASLR'''
-    bits = get_PE_dll_characteristics(executable)
-    return (bits & IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA) == IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA
+    binary = lief.parse(executable)
+    return lief.PE.DLL_CHARACTERISTICS.HIGH_ENTROPY_VA in binary.optional_header.dll_characteristics_lists
 
 def check_PE_RELOC_SECTION(executable) -> bool:
     '''Check for a reloc section. This is required for functional ASLR.'''
-    stdout = run_command([OBJDUMP_CMD, '-h',  executable])
-
-    for line in stdout.splitlines():
-        if '.reloc' in line:
-            return True
-    return False
+    binary = lief.parse(executable)
+    return binary.has_relocations
 
 def check_PE_NX(executable) -> bool:
     '''NX: DllCharacteristics bit 0x100 signifies nxcompat (DEP)'''
-    bits = get_PE_dll_characteristics(executable)
-    return (bits & IMAGE_DLL_CHARACTERISTICS_NX_COMPAT) == IMAGE_DLL_CHARACTERISTICS_NX_COMPAT
+    binary = lief.parse(executable)
+    return binary.has_nx
 
 def check_MACHO_PIE(executable) -> bool:
     '''
