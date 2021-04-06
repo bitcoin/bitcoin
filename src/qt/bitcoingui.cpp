@@ -639,8 +639,19 @@ void BitcoinGUI::createToolBars()
 
 #ifdef ENABLE_WALLET
         m_wallet_selector = new QComboBox(this);
-        m_wallet_selector->setHidden(true);
-        connect(m_wallet_selector, SIGNAL(currentIndexChanged(const QString&)), this, SLOT(setCurrentWallet(const QString&)));
+        connect(m_wallet_selector, SIGNAL(currentIndexChanged(int)), this, SLOT(setCurrentWalletBySelectorIndex(int)));
+
+        QVBoxLayout* walletSelectorLayout = new QVBoxLayout(this);
+        walletSelectorLayout->addWidget(m_wallet_selector);
+        walletSelectorLayout->setSpacing(0);
+        walletSelectorLayout->setMargin(0);
+        walletSelectorLayout->setContentsMargins(5, 0, 5, 0);
+        QWidget* walletSelector = new QWidget(this);
+        walletSelector->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
+        walletSelector->setObjectName("walletSelector");
+        walletSelector->setLayout(walletSelectorLayout);
+        m_wallet_selector_action = appToolBar->insertWidget(appToolBarLogoAction, walletSelector);
+        m_wallet_selector_action->setVisible(false);
 #endif
 
         QLabel *logoLabel = new QLabel();
@@ -769,23 +780,29 @@ bool BitcoinGUI::addWallet(WalletModel *walletModel)
     if(!walletFrame)
         return false;
     const QString name = walletModel->getWalletName();
+    QString display_name = name.isEmpty() ? "["+tr("default wallet")+"]" : name;
     setWalletActionsEnabled(true);
-    m_wallet_selector->addItem(name);
+    m_wallet_selector->addItem(display_name, name);
     if (m_wallet_selector->count() == 2) {
-        m_wallet_selector->setHidden(false);
-        QVBoxLayout* layout = new QVBoxLayout(this);
-        layout->addWidget(m_wallet_selector);
-        layout->setSpacing(0);
-        layout->setMargin(0);
-        layout->setContentsMargins(5, 0, 5, 0);
-        QWidget* walletSelector = new QWidget(this);
-        walletSelector->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
-        walletSelector->setObjectName("walletSelector");
-        walletSelector->setLayout(layout);
-        appToolBar->insertWidget(appToolBarLogoAction, walletSelector);
+        m_wallet_selector_action->setVisible(true);
     }
     rpcConsole->addWallet(walletModel);
     return walletFrame->addWallet(walletModel);
+}
+
+bool BitcoinGUI::removeWallet(WalletModel* walletModel)
+{
+    if (!walletFrame) return false;
+    QString name = walletModel->getWalletName();
+    int index = m_wallet_selector->findData(name);
+    m_wallet_selector->removeItem(index);
+    if (m_wallet_selector->count() == 0) {
+        setWalletActionsEnabled(false);
+    } else if (m_wallet_selector->count() == 1) {
+        m_wallet_selector_action->setVisible(false);
+    }
+    rpcConsole->removeWallet(walletModel);
+    return walletFrame->removeWallet(name);
 }
 
 bool BitcoinGUI::setCurrentWallet(const QString& name)
@@ -793,6 +810,12 @@ bool BitcoinGUI::setCurrentWallet(const QString& name)
     if(!walletFrame)
         return false;
     return walletFrame->setCurrentWallet(name);
+}
+
+bool BitcoinGUI::setCurrentWalletBySelectorIndex(int index)
+{
+    QString internal_name = m_wallet_selector->itemData(index).toString();
+    return setCurrentWallet(internal_name);
 }
 
 void BitcoinGUI::removeAllWallets()

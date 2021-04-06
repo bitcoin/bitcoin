@@ -680,6 +680,10 @@ QToolBar > QToolButton:checked {
     color: #c7c7c7;
 }
 
+QToolBar > QToolButton:disabled {
+    color: #4a4a4b;
+}
+
 /******************************************************
 QToolTip
 ******************************************************/

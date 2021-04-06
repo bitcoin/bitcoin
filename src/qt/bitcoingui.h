@@ -76,6 +76,7 @@ public:
         functionality.
     */
     bool addWallet(WalletModel *walletModel);
+    bool removeWallet(WalletModel* walletModel);
     void removeAllWallets();
 #endif // ENABLE_WALLET
     bool enableWallet;
@@ -140,8 +141,8 @@ private:
     QAction *openAction;
     QAction *showHelpMessageAction;
     QAction *showCoinJoinHelpAction;
+    QAction *m_wallet_selector_action = nullptr;
 
-    QLabel *m_wallet_selector_label;
     QComboBox *m_wallet_selector;
 
     QSystemTrayIcon *trayIcon;
@@ -238,6 +239,7 @@ public Q_SLOTS:
 
 #ifdef ENABLE_WALLET
     bool setCurrentWallet(const QString& name);
+    bool setCurrentWalletBySelectorIndex(int index);
     /** Set the UI status indicators based on the currently selected wallet.
     */
     void updateWalletStatus();
