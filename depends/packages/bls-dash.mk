@@ -1,18 +1,18 @@
 package=bls-dash
-$(package)_version=1.0.0
+$(package)_version=1.0.1
 $(package)_download_path=https://github.com/dashpay/bls-signatures/archive
 $(package)_download_file=$($(package)_version).tar.gz
 $(package)_file_name=$(package)-$($(package)_download_file)
 $(package)_build_subdir=build
-$(package)_sha256_hash=ecbc51457dd3de153af27333038f149ba585e16fe46351b763938cb6ef0f2d9a
+$(package)_sha256_hash=cff7552d8ebd6d29141f1acfa65b7d956c803b575baaaf076d4aea3c32178116
 $(package)_dependencies=gmp cmake
 
-$(package)_relic_version=186a15da6d07ef436dd8f00a4345838310a0aad3
+$(package)_relic_version=1885ae3b681c423c72b65ce1fe70910142cf941c
 $(package)_relic_download_path=https://github.com/relic-toolkit/relic/archive
 $(package)_relic_download_file=$($(package)_relic_version).tar.gz
 $(package)_relic_file_name=relic-toolkit-$($(package)_relic_download_file)
 $(package)_relic_build_subdir=relic
-$(package)_relic_sha256_hash=70fb36acfd206f2128f6da38bda9f9ef070062d50adb97b053d98477bf0112fc
+$(package)_relic_sha256_hash=951b989b0075212c34f124f508d35391b42f30e14fda9260a68a38c82ebbc032
 
 $(package)_extra_sources=$($(package)_relic_file_name)
 
