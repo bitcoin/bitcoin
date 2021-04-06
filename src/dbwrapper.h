@@ -173,7 +173,7 @@ public:
 
 // VeriBlock: put VBK block hash in the block index
 template <>
-inline bool CDBIterator::GetValue(altintegration::BlockIndex<altintegration::VbkBlock>& value)
+inline bool CDBIterator::GetValue(altintegration::StoredBlockIndex<altintegration::VbkBlock>& value)
 {
     leveldb::Slice slValue = piter->value();
     try {

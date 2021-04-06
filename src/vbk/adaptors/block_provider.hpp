@@ -15,7 +15,7 @@
 namespace VeriBlock {
 
 using altintegration::AltBlock;
-using altintegration::BlockIndex;
+using altintegration::StoredBlockIndex;
 using altintegration::BtcBlock;
 using altintegration::VbkBlock;
 
@@ -81,7 +81,7 @@ struct BlockIterator : public altintegration::BlockIterator<BlockT> {
         iter_->Next();
     }
 
-    bool value(BlockIndex<BlockT>& out) const override
+    bool value(StoredBlockIndex<BlockT>& out) const override
     {
         return iter_->GetValue(out);
     }
@@ -157,39 +157,39 @@ struct BlockBatch : public altintegration::BlockBatch {
 
     BlockBatch(CDBBatch& batch) : batch_(&batch) {}
 
-    void writeBlock(const BlockIndex<AltBlock>& value) override
+    void writeBlock(const StoredBlockIndex<AltBlock>& value) override
     {
-        auto key = block_key<AltBlock>(value.getHash());
+        auto key = block_key<AltBlock>(value.header->getHash());
         batch_->Write(key, value);
     }
 
-    void writeBlock(const BlockIndex<VbkBlock>& value) override
+    void writeBlock(const StoredBlockIndex<VbkBlock>& value) override
     {
-        auto key = block_key<VbkBlock>(value.getHash());
+        auto key = block_key<VbkBlock>(value.header->getHash());
         batch_->Write(key, value);
     }
 
-    void writeBlock(const BlockIndex<BtcBlock>& value) override
+    void writeBlock(const StoredBlockIndex<BtcBlock>& value) override
     {
-        auto key = block_key<BtcBlock>(value.getHash());
+        auto key = block_key<BtcBlock>(value.header->getHash());
         batch_->Write(key, value);
     }
 
-    void writeTip(const BlockIndex<AltBlock>& value) override
+    void writeTip(const StoredBlockIndex<AltBlock>& value) override
     {
-        auto hash = value.getHash();
+        auto hash = value.header->getHash();
         batch_->Write(tip_key<AltBlock>(), hash);
     }
 
-    void writeTip(const BlockIndex<VbkBlock>& value) override
+    void writeTip(const StoredBlockIndex<VbkBlock>& value) override
     {
-        auto hash = value.getHash();
+        auto hash = value.header->getHash();
         batch_->Write(tip_key<VbkBlock>(), hash);
     }
 
-    void writeTip(const BlockIndex<BtcBlock>& value) override
+    void writeTip(const StoredBlockIndex<BtcBlock>& value) override
     {
-        auto hash = value.getHash();
+        auto hash = value.header->getHash();
         batch_->Write(tip_key<BtcBlock>(), hash);
     }
 
