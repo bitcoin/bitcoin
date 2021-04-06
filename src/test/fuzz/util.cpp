@@ -5,6 +5,15 @@
 #include <test/fuzz/util.h>
 #include <version.h>
 
+bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred ) const
+{
+    if (!m_fuzzed_data_provider.ConsumeBool()) {
+        return false;
+    }
+    if (occurred) *occurred = 0;
+    return true;
+}
+
 void FillNode(FuzzedDataProvider& fuzzed_data_provider, CNode& node, bool init_version) noexcept
 {
     const ServiceFlags remote_services = ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS);
