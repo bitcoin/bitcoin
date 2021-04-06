@@ -749,9 +749,9 @@ static RPCHelpMan listbanned()
             {
                 {RPCResult::Type::OBJ, "", "",
                     {
-                        {RPCResult::Type::STR, "address", ""},
-                        {RPCResult::Type::NUM_TIME, "ban_created", ""},
-                        {RPCResult::Type::NUM_TIME, "banned_until", ""},
+                        {RPCResult::Type::STR, "address", "The IP/Subnet of the banned node"},
+                        {RPCResult::Type::NUM_TIME, "ban_created", "The " + UNIX_EPOCH_TIME + " the ban was created"},
+                        {RPCResult::Type::NUM_TIME, "banned_until", "The " + UNIX_EPOCH_TIME + " the ban expires"},
                     }},
             }},
                 RPCExamples{
