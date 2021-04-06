@@ -601,6 +601,7 @@ void CTxMemPool::_clear()
     cachedInnerUsage = 0;
     lastRollingFeeUpdate = GetTime();
     rollingMinimumFeeRate = 0;
+    bumpedMinimumFeeRate = 0;
     ++nTransactionsUpdated;
 }
 
@@ -1008,28 +1009,25 @@ CFeeRate CTxMemPool::GetMinFee(size_t sizelimit) const {
     LOCK(cs);
 
     int64_t time = GetTime();
-    if (time > lastRollingFeeUpdate + 10) {
-        double halflife = ROLLING_FEE_HALFLIFE;
-        if (DynamicMemoryUsage() < sizelimit / 4)
-            halflife /= 4;
-        else if (DynamicMemoryUsage() < sizelimit / 2)
-            halflife /= 2;
-
-        rollingMinimumFeeRate = rollingMinimumFeeRate / pow(2.0, (time - lastRollingFeeUpdate) / halflife);
-        lastRollingFeeUpdate = time;
-
-        if (rollingMinimumFeeRate < (double)incrementalRelayFee.GetFeePerK() / 2) {
-            rollingMinimumFeeRate = 0;
-            return CFeeRate(0);
+    if (time >= lastRollingFeeUpdate + 10) {
+        double newrolling = bumpedMinimumFeeRate * ((1.0 * DynamicMemoryUsage() / sizelimit) - 0.5) * 2.2;
+        if (newrolling < rollingMinimumFeeRate) {
+            double fraction = pow(2.0, (time - lastRollingFeeUpdate) / 300.0);
+            rollingMinimumFeeRate = rollingMinimumFeeRate / fraction + newrolling * ((fraction - 1) / fraction);
+            if (rollingMinimumFeeRate < 0)
+                rollingMinimumFeeRate = 0;
         }
+        lastRollingFeeUpdate = time;
     }
     return CFeeRate(llround(rollingMinimumFeeRate));
 }
 
 void CTxMemPool::trackPackageRemoved(const CFeeRate& rate) {
     AssertLockHeld(cs);
-    if (rate.GetFeePerK() > rollingMinimumFeeRate)
+    if (rate.GetFeePerK() > rollingMinimumFeeRate) {
         rollingMinimumFeeRate = rate.GetFeePerK();
+        bumpedMinimumFeeRate = rollingMinimumFeeRate;
+    }
 }
 
 void CTxMemPool::TrimToSize(size_t sizelimit, std::vector<COutPoint>* pvNoSpendsRemaining) {

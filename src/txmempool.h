@@ -487,6 +487,7 @@ protected:
 
     mutable int64_t lastRollingFeeUpdate;
     mutable double rollingMinimumFeeRate; //!< minimum fee to get into the pool, decreases exponentially
+    mutable double bumpedMinimumFeeRate; //!< The highest the fee rate got to last time mempool was full
     mutable Epoch m_epoch GUARDED_BY(cs);
 
     // In-memory counter for external mempool tracking purposes.
@@ -499,9 +500,6 @@ protected:
     bool m_is_loaded GUARDED_BY(cs){false};
 
 public:
-
-    static const int ROLLING_FEE_HALFLIFE = 60 * 60 * 12; // public only for testing
-
     typedef boost::multi_index_container<
         CTxMemPoolEntry,
         boost::multi_index::indexed_by<
