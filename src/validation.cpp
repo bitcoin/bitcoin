@@ -106,7 +106,6 @@ ChainstateManager g_chainman;
 
 CChainState& ChainstateActive()
 {
-    LOCK(::cs_main);
     assert(g_chainman.m_active_chainstate);
     return *g_chainman.m_active_chainstate;
 }
@@ -5181,7 +5180,6 @@ double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pin
 }
 
 std::optional<uint256> ChainstateManager::SnapshotBlockhash() const {
-    LOCK(::cs_main);
     CChainState* active_cs = m_active_chainstate.load();
     if (active_cs != nullptr && !active_cs->m_from_snapshot_blockhash.IsNull()) {
         // If a snapshot chainstate exists, it will always be our active.
@@ -5519,7 +5517,6 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 
 CChainState& ChainstateManager::ActiveChainstate() const
 {
-    LOCK(::cs_main);
     CChainState* active_cs = m_active_chainstate.load();
     assert(active_cs);
     return *active_cs;
