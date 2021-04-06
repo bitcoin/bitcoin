@@ -875,6 +875,8 @@ public:
     //! Instantiate a new chainstate and assign it based upon whether it is
     //! from a snapshot.
     //!
+    //! cs_main only required for access to m_blockman.
+    //!
     //! @param[in] mempool              The mempool to pass to the chainstate
     //                                  constructor
     //! @param[in] snapshot_blockhash   If given, signify that this chainstate
