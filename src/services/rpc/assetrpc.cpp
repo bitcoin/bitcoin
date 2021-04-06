@@ -531,21 +531,23 @@ static RPCHelpMan syscoingetspvproof()
     RPCExamples{""},
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    LOCK(cs_main);
-    UniValue res(UniValue::VOBJ);
-    uint256 txhash = ParseHashV(request.params[0], "parameter 1");
     CBlockIndex* pblockindex = nullptr;
     uint256 hashBlock;
-    if (!request.params[1].isNull()) {
-        hashBlock = ParseHashV(request.params[1], "blockhash");
-        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hashBlock);
-        if (!pblockindex) {
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
-        }
-    } else {
-        const Coin& coin = AccessByTxid(::ChainstateActive().CoinsTip(), txhash);
-        if (!coin.IsSpent()) {
-            pblockindex = ::ChainActive()[coin.nHeight];
+    uint256 txhash = ParseHashV(request.params[0], "parameter 1");
+    UniValue res(UniValue::VOBJ);
+    {
+        LOCK(cs_main);
+        if (!request.params[1].isNull()) {
+            hashBlock = ParseHashV(request.params[1], "blockhash");
+            pblockindex = g_chainman.m_blockman.LookupBlockIndex(hashBlock);
+            if (!pblockindex) {
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
+            }
+        } else {
+            const Coin& coin = AccessByTxid(::ChainstateActive().CoinsTip(), txhash);
+            if (!coin.IsSpent()) {
+                pblockindex = ::ChainActive()[coin.nHeight];
+            }
         }
     }
 
