@@ -41,7 +41,7 @@ public:
     void EraseForPeer(NodeId peer) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
 
     /** Erase all orphans included in or invalidated by a new block */
-    void EraseForBlock(const CBlock& block) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
+    void EraseForBlock(const CBlock& block) LOCKS_EXCLUDED(::g_cs_orphans);
 
     /** Limit the orphanage to the given maximum */
     unsigned int LimitOrphans(unsigned int max_orphans_size) EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
