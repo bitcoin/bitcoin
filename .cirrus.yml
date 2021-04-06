@@ -104,7 +104,7 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
-    cpu: 6  # Double CPU and increase Memory to avoid timeout
+    cpu: 6  # Increase CPU and Memory to avoid timeout
     memory: 24G
   env:
     MAKEJOBS: "-j12"
