@@ -178,7 +178,7 @@ bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event*
         EINTR,
         EINVAL,
     };
-    if (!m_fuzzed_data_provider.ConsumeBool()) {
+    if (m_fuzzed_data_provider.ConsumeBool()) {
         SetFuzzedErrNo(m_fuzzed_data_provider, wait_errnos);
         return false;
     }
