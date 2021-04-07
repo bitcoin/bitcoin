@@ -922,16 +922,16 @@ int fp2_srt(fp2_t c, fp2_t a);
 /**
  * Compresses an extension field element.
  *
- * @param[out] r			- the result.
- * @param[in] p				- the extension field element to compress.
+ * @param[out] c			- the result.
+ * @param[in] a				- the extension field element to compress.
  */
 void fp2_pck(fp2_t c, fp2_t a);
 
 /**
  * Decompresses an extension field element.
  *
- * @param[out] r			- the result.
- * @param[in] p				- the extension field element to decompress.
+ * @param[out] c			- the result.
+ * @param[in] a				- the extension field element to decompress.
  * @return if the decompression was successful
  */
 int fp2_upk(fp2_t c, fp2_t a);
@@ -939,22 +939,22 @@ int fp2_upk(fp2_t c, fp2_t a);
 /**
  * Copies the second argument to the first argument.
  *
- * @param[out] C			- the result.
- * @param[in] A				- the cubic extension field element to copy.
+ * @param[out] c			- the result.
+ * @param[in] a				- the cubic extension field element to copy.
  */
 void fp3_copy(fp3_t c, fp3_t a);
 
 /**
  * Assigns zero to a cubic extension field element.
  *
- * @param[out] A			- the cubic extension field element to zero.
+ * @param[out] a			- the cubic extension field element to zero.
  */
 void fp3_zero(fp3_t a);
 
 /**
  * Tests if a cubic extension field element is zero or not.
  *
- * @param[in] A				- the cubic extension field element to test.
+ * @param[in] a				- the cubic extension field element to test.
  * @return 1 if the argument is zero, 0 otherwise.
  */
 int fp3_is_zero(fp3_t a);
@@ -962,14 +962,14 @@ int fp3_is_zero(fp3_t a);
 /**
  * Assigns a random value to a cubic extension field element.
  *
- * @param[out] A			- the cubic extension field element to assign.
+ * @param[out] a			- the cubic extension field element to assign.
  */
 void fp3_rand(fp3_t a);
 
 /**
  * Prints a cubic extension field element to standard output.
  *
- * @param[in] A				- the cubic extension field element to print.
+ * @param[in] a				- the cubic extension field element to print.
  */
 void fp3_print(fp3_t a);
 
@@ -977,7 +977,6 @@ void fp3_print(fp3_t a);
  * Returns the number of bytes necessary to store a cubic extension field
  * element.
  *
- * @param[out] size			- the result.
  * @param[in] a				- the extension field element.
  */
 int fp3_size_bin(fp3_t a);
@@ -1008,8 +1007,8 @@ void fp3_write_bin(uint8_t *bin, int len, fp3_t a);
  * Returns the result of a comparison between two cubic extension field
  * elements.
  *
- * @param[in] A				- the first cubic extension field element.
- * @param[in] B				- the second cubic extension field element.
+ * @param[in] a				- the first cubic extension field element.
+ * @param[in] b				- the second cubic extension field element.
  * @return CMP_LT if a < b, CMP_EQ if a == b and CMP_GT if a > b.
  */
 int fp3_cmp(fp3_t a, fp3_t b);
@@ -1064,17 +1063,17 @@ void fp3_sub_basic(fp3_t c, fp3_t a, fp3_t b);
  * Subtracts a cubic extension field element from another using integrated
  * modular reduction.
  *
- * @param[out] C			- the result.
- * @param[in] A				- the first cubic extension field element.
- * @param[in] B				- the second cubic extension field element.
+ * @param[out] c			- the result.
+ * @param[in] a				- the first cubic extension field element.
+ * @param[in] b				- the second cubic extension field element.
  */
 void fp3_sub_integ(fp3_t c, fp3_t a, fp3_t b);
 
 /**
  * Negates a cubic extension field element. Computes c = -a.
  *
- * @param[out] C			- the result.
- * @param[out] A			- the cubic extension field element to negate.
+ * @param[out] c			- the result.
+ * @param[out] a			- the cubic extension field element to negate.
  */
 void fp3_neg(fp3_t c, fp3_t a);
 
