@@ -7,7 +7,7 @@
 #include <util/rbf.h>
 #include <version.h>
 
-bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred ) const
+bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
     if (!m_fuzzed_data_provider.ConsumeBool()) {
         return false;
