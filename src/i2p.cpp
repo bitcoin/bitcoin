@@ -147,7 +147,9 @@ bool Session::Accept(Connection& conn)
     try {
         while (!*m_interrupt) {
             Sock::Event occurred;
-            conn.sock->Wait(MAX_WAIT_FOR_IO, Sock::RECV, &occurred);
+            if (!conn.sock->Wait(MAX_WAIT_FOR_IO, Sock::RECV, &occurred)) {
+                throw std::runtime_error("wait on socket failed");
+            }
 
             if ((occurred & Sock::RECV) == 0) {
                 // Timeout, no incoming connections within MAX_WAIT_FOR_IO.
