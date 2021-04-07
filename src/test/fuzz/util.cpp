@@ -9,7 +9,13 @@
 
 bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
+    constexpr std::array wait_errnos{
+        EBADF,
+        EINTR,
+        EINVAL,
+    };
     if (!m_fuzzed_data_provider.ConsumeBool()) {
+        SetFuzzedErrNo(m_fuzzed_data_provider, wait_errnos);
         return false;
     }
     if (occurred) *occurred = 0;
