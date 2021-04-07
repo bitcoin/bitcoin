@@ -285,24 +285,24 @@ def identify_executable(executable) -> Optional[str]:
     return None
 
 if __name__ == '__main__':
-    retval = 0
+    retval: int = 0
     for filename in sys.argv[1:]:
         try:
             etype = identify_executable(filename)
             if etype is None:
-                print('%s: unknown format' % filename)
+                print(f'{filename}: unknown format')
                 retval = 1
                 continue
 
-            failed = []
+            failed: List[str] = []
             for (name, func) in CHECKS[etype]:
                 if not func(filename):
                     failed.append(name)
             if failed:
-                print('%s: failed %s' % (filename, ' '.join(failed)))
+                print(f'{filename}: failed {" ".join(failed)}')
                 retval = 1
         except IOError:
-            print('%s: cannot open' % filename)
+            print(f'{filename}: cannot open')
             retval = 1
     sys.exit(retval)
 
