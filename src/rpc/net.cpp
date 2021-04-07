@@ -753,6 +753,7 @@ static RPCHelpMan listbanned()
                         {RPCResult::Type::NUM_TIME, "ban_created", "The " + UNIX_EPOCH_TIME + " the ban was created"},
                         {RPCResult::Type::NUM_TIME, "banned_until", "The " + UNIX_EPOCH_TIME + " the ban expires"},
                         {RPCResult::Type::NUM_TIME, "ban_duration", "The ban duration, in seconds"},
+                        {RPCResult::Type::NUM_TIME, "time_remaining", "The time remaining until the ban expires, in seconds"},
                     }},
             }},
                 RPCExamples{
@@ -768,6 +769,7 @@ static RPCHelpMan listbanned()
 
     banmap_t banMap;
     node.banman->GetBanned(banMap);
+    const int64_t current_time{GetTime()};
 
     UniValue bannedAddresses(UniValue::VARR);
     for (const auto& entry : banMap)
@@ -778,6 +780,7 @@ static RPCHelpMan listbanned()
         rec.pushKV("ban_created", banEntry.nCreateTime);
         rec.pushKV("banned_until", banEntry.nBanUntil);
         rec.pushKV("ban_duration", (banEntry.nBanUntil - banEntry.nCreateTime));
+        rec.pushKV("time_remaining", (banEntry.nBanUntil - current_time));
 
         bannedAddresses.push_back(rec);
     }
