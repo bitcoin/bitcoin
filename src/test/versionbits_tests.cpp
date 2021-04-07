@@ -44,6 +44,12 @@ public:
     int GetStateSinceHeightFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateSinceHeightFor(pindexPrev, paramsDummy, cache); }
 };
 
+class TestDelayedActivationConditionChecker : public TestConditionChecker
+{
+public:
+    int MinActivationHeight(const Consensus::Params& params) const override { return 15000; }
+};
+
 class TestAlwaysActiveConditionChecker : public TestConditionChecker
 {
 public:
@@ -68,6 +74,8 @@ class VersionBitsTester
     // The first one performs all checks, the second only 50%, the third only 25%, etc...
     // This is to test whether lack of cached information leads to the same results.
     TestConditionChecker checker[CHECKERS];
+    // Another 6 that assume delayed activation
+    TestDelayedActivationConditionChecker checker_delayed[CHECKERS];
     // Another 6 that assume always active activation
     TestAlwaysActiveConditionChecker checker_always[CHECKERS];
     // Another 6 that assume never active activation
@@ -77,14 +85,18 @@ class VersionBitsTester
     int num;
 
 public:
-    VersionBitsTester() : num(0) {}
+    VersionBitsTester() : num(1000) {}
 
     VersionBitsTester& Reset() {
+        // Have each group of tests be counted by the 1000s part, starting at 1000
+        num = num - (num % 1000) + 1000;
+
         for (unsigned int i = 0; i < vpblock.size(); i++) {
             delete vpblock[i];
         }
         for (unsigned int  i = 0; i < CHECKERS; i++) {
             checker[i] = TestConditionChecker();
+            checker_delayed[i] = TestDelayedActivationConditionChecker();
             checker_always[i] = TestAlwaysActiveConditionChecker();
             checker_never[i] = TestNeverActiveConditionChecker();
         }
@@ -109,11 +121,18 @@ public:
         return *this;
     }
 
-    VersionBitsTester& TestStateSinceHeight(int height) {
+    VersionBitsTester& TestStateSinceHeight(int height)
+    {
+        return TestStateSinceHeight(height, height);
+    }
+
+    VersionBitsTester& TestStateSinceHeight(int height, int height_delayed)
+    {
         const CBlockIndex* tip = Tip();
         for (int i = 0; i < CHECKERS; i++) {
             if (InsecureRandBits(i) == 0) {
                 BOOST_CHECK_MESSAGE(checker[i].GetStateSinceHeightFor(tip) == height, strprintf("Test %i for StateSinceHeight", num));
+                BOOST_CHECK_MESSAGE(checker_delayed[i].GetStateSinceHeightFor(tip) == height_delayed, strprintf("Test %i for StateSinceHeight (delayed)", num));
                 BOOST_CHECK_MESSAGE(checker_always[i].GetStateSinceHeightFor(tip) == 0, strprintf("Test %i for StateSinceHeight (always active)", num));
 
                 // never active may go from DEFINED -> FAILED at the first period
@@ -125,17 +144,31 @@ public:
         return *this;
     }
 
-    VersionBitsTester& TestState(ThresholdState exp) {
+    VersionBitsTester& TestState(ThresholdState exp)
+    {
+        return TestState(exp, exp);
+    }
+
+    VersionBitsTester& TestState(ThresholdState exp, ThresholdState exp_delayed)
+    {
+        if (exp != exp_delayed) {
+            // only expected differences are that delayed stays in locked_in longer
+            BOOST_CHECK_EQUAL(exp, ThresholdState::ACTIVE);
+            BOOST_CHECK_EQUAL(exp_delayed, ThresholdState::LOCKED_IN);
+        }
+
         const CBlockIndex* pindex = Tip();
         for (int i = 0; i < CHECKERS; i++) {
             if (InsecureRandBits(i) == 0) {
                 ThresholdState got = checker[i].GetStateFor(pindex);
+                ThresholdState got_delayed = checker_delayed[i].GetStateFor(pindex);
                 ThresholdState got_always = checker_always[i].GetStateFor(pindex);
                 ThresholdState got_never = checker_never[i].GetStateFor(pindex);
                 // nHeight of the next block. If vpblock is empty, the next (ie first)
                 // block should be the genesis block with nHeight == 0.
                 int height = pindex == nullptr ? 0 : pindex->nHeight + 1;
                 BOOST_CHECK_MESSAGE(got == exp, strprintf("Test %i for %s height %d (got %s)", num, StateName(exp), height, StateName(got)));
+                BOOST_CHECK_MESSAGE(got_delayed == exp_delayed, strprintf("Test %i for %s height %d (got %s; delayed case)", num, StateName(exp_delayed), height, StateName(got_delayed)));
                 BOOST_CHECK_MESSAGE(got_always == ThresholdState::ACTIVE, strprintf("Test %i for ACTIVE height %d (got %s; always active case)", num, height, StateName(got_always)));
                 BOOST_CHECK_MESSAGE(got_never == ThresholdState::DEFINED|| got_never == ThresholdState::FAILED, strprintf("Test %i for DEFINED/FAILED height %d (got %s; never active case)", num, height, StateName(got_never)));
             }
@@ -149,6 +182,9 @@ public:
     VersionBitsTester& TestLockedIn() { return TestState(ThresholdState::LOCKED_IN); }
     VersionBitsTester& TestActive() { return TestState(ThresholdState::ACTIVE); }
     VersionBitsTester& TestFailed() { return TestState(ThresholdState::FAILED); }
+
+    // non-delayed should be active; delayed should still be locked in
+    VersionBitsTester& TestActiveDelayed() { return TestState(ThresholdState::ACTIVE, ThresholdState::LOCKED_IN); }
 
     CBlockIndex* Tip() { return vpblock.empty() ? nullptr : vpblock.back(); }
 };
@@ -170,7 +206,6 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
                            .Mine(2001, TestTime(30003), 0x100).TestFailed().TestStateSinceHeight(1000)
                            .Mine(2999, TestTime(30004), 0x100).TestFailed().TestStateSinceHeight(1000)
                            .Mine(3000, TestTime(30005), 0x100).TestFailed().TestStateSinceHeight(1000)
-
         // DEFINED -> STARTED -> FAILED
                            .Reset().TestDefined().TestStateSinceHeight(0)
                            .Mine(1, TestTime(1), 0).TestDefined().TestStateSinceHeight(0)
@@ -203,9 +238,10 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
                            .Mine(2999, TestTime(19999), 0x200).TestStarted().TestStateSinceHeight(2000) // 49 old blocks
                            .Mine(3000, TestTime(29999), 0x200).TestLockedIn().TestStateSinceHeight(3000) // 1 old block (so 900 out of the past 1000)
                            .Mine(3999, TestTime(30001), 0).TestLockedIn().TestStateSinceHeight(3000)
-                           .Mine(4000, TestTime(30002), 0).TestActive().TestStateSinceHeight(4000)
-                           .Mine(14333, TestTime(30003), 0).TestActive().TestStateSinceHeight(4000)
-                           .Mine(24000, TestTime(40000), 0).TestActive().TestStateSinceHeight(4000)
+                           .Mine(4000, TestTime(30002), 0).TestActiveDelayed().TestStateSinceHeight(4000, 3000) // delayed will not become active until height=15000
+                           .Mine(14333, TestTime(30003), 0).TestActiveDelayed().TestStateSinceHeight(4000, 3000)
+                           .Mine(15000, TestTime(40000), 0).TestActive().TestStateSinceHeight(4000, 15000)
+                           .Mine(24000, TestTime(40000), 0).TestActive().TestStateSinceHeight(4000, 15000)
 
         // DEFINED multiple periods -> STARTED multiple periods -> FAILED
                            .Reset().TestDefined().TestStateSinceHeight(0)
@@ -216,7 +252,8 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
                            .Mine(4000, TestTime(10000), 0).TestStarted().TestStateSinceHeight(3000)
                            .Mine(5000, TestTime(10000), 0).TestStarted().TestStateSinceHeight(3000)
                            .Mine(6000, TestTime(20000), 0).TestFailed().TestStateSinceHeight(6000)
-                           .Mine(7000, TestTime(20000), 0x100).TestFailed().TestStateSinceHeight(6000);
+                           .Mine(7000, TestTime(20000), 0x100).TestFailed().TestStateSinceHeight(6000)
+        ;
     }
 }
 
@@ -229,6 +266,13 @@ BOOST_AUTO_TEST_CASE(versionbits_sanity)
         uint32_t bitmask = VersionBitsMask(mainnetParams, static_cast<Consensus::DeploymentPos>(i));
         // Make sure that no deployment tries to set an invalid bit.
         BOOST_CHECK_EQUAL(bitmask & ~(uint32_t)VERSIONBITS_TOP_MASK, bitmask);
+
+        // Check min_activation_height is on a retarget boundary
+        BOOST_CHECK_EQUAL(mainnetParams.vDeployments[i].min_activation_height % mainnetParams.nMinerConfirmationWindow, 0U);
+        // Check min_activation_height is 0 for ALWAYS_ACTIVE and never active deployments
+        if (mainnetParams.vDeployments[i].nStartTime == Consensus::BIP9Deployment::ALWAYS_ACTIVE || mainnetParams.vDeployments[i].nTimeout <= 1230768000) {
+            BOOST_CHECK_EQUAL(mainnetParams.vDeployments[i].min_activation_height, 0);
+        }
 
         // Verify that the deployment windows of different deployment using the
         // same bit are disjoint.
@@ -268,7 +312,8 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
     BOOST_REQUIRE(nTimeout <= std::numeric_limits<uint32_t>::max() || nTimeout == Consensus::BIP9Deployment::NO_TIMEOUT);
     BOOST_REQUIRE(0 <= bit && bit < 32);
     BOOST_REQUIRE(((1 << bit) & VERSIONBITS_TOP_MASK) == 0);
-    BOOST_REQUIRE(min_activation_height == 0);
+    BOOST_REQUIRE(min_activation_height >= 0);
+    BOOST_REQUIRE_EQUAL(min_activation_height % params.nMinerConfirmationWindow, 0U);
 
     // In the first chain, test that the bit is set by CBV until it has failed.
     // In the second chain, test the bit is set by CBV while STARTED and
@@ -378,6 +423,16 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
     lastBlock = secondChain.Mine((params.nMinerConfirmationWindow * 3) - 1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
     BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
     lastBlock = secondChain.Mine(params.nMinerConfirmationWindow * 3, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+
+    if (lastBlock->nHeight + 1 < min_activation_height) {
+        // check signalling continues while min_activation_height is not reached
+        lastBlock = secondChain.Mine(min_activation_height - 1, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+        BOOST_CHECK((ComputeBlockVersion(lastBlock, params) & (1 << bit)) != 0);
+        // then reach min_activation_height, which was already REQUIRE'd to start a new period
+        lastBlock = secondChain.Mine(min_activation_height, nTime, VERSIONBITS_LAST_OLD_BLOCK_VERSION).Tip();
+    }
+
+    // Check that we don't signal after activation
     BOOST_CHECK_EQUAL(ComputeBlockVersion(lastBlock, params) & (1<<bit), 0);
 }
 
@@ -390,6 +445,16 @@ BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
         for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++i) {
             check_computeblockversion(chainParams->GetConsensus(), static_cast<Consensus::DeploymentPos>(i));
         }
+    }
+
+    {
+        // Use regtest/testdummy to ensure we always exercise the
+        // min_activation_height test, even if we're not using that in a
+        // live deployment
+        ArgsManager args;
+        args.ForceSetArg("-vbparams", "testdummy:1199145601:1230767999:403200"); // January 1, 2008 - December 31, 2008, min act height 403200
+        const auto chainParams = CreateChainParams(args, CBaseChainParams::REGTEST);
+        check_computeblockversion(chainParams->GetConsensus(), Consensus::DEPLOYMENT_TESTDUMMY);
     }
 }
 
