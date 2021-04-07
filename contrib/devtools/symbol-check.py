@@ -15,6 +15,7 @@ import sys
 import os
 from typing import List, Optional
 
+import lief
 import pixie
 
 # Debian 8 (Jessie) EOL: 2020. https://wiki.debian.org/DebianReleases#Production_Releases
@@ -53,7 +54,6 @@ IGNORE_EXPORTS = {
 }
 CPPFILT_CMD = os.getenv('CPPFILT', '/usr/bin/c++filt')
 OBJDUMP_CMD = os.getenv('OBJDUMP', '/usr/bin/objdump')
-OTOOL_CMD = os.getenv('OTOOL', '/usr/bin/otool')
 
 # Allowed NEEDED libraries
 ELF_ALLOWED_LIBRARIES = {
@@ -203,24 +203,13 @@ def check_ELF_libraries(filename) -> bool:
             ok = False
     return ok
 
-def macho_read_libraries(filename) -> List[str]:
-    p = subprocess.Popen([OTOOL_CMD, '-L', filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE, universal_newlines=True)
-    (stdout, stderr) = p.communicate()
-    if p.returncode:
-        raise IOError('Error opening file')
-    libraries = []
-    for line in stdout.splitlines():
-        tokens = line.split()
-        if len(tokens) == 1: # skip executable name
-            continue
-        libraries.append(tokens[0].split('/')[-1])
-    return libraries
-
 def check_MACHO_libraries(filename) -> bool:
     ok: bool = True
-    for dylib in macho_read_libraries(filename):
-        if dylib not in MACHO_ALLOWED_LIBRARIES:
-            print('{} is not in ALLOWED_LIBRARIES!'.format(dylib))
+    binary = lief.parse(filename)
+    for dylib in binary.libraries:
+        split = dylib.name.split('/')
+        if split[-1] not in MACHO_ALLOWED_LIBRARIES:
+            print(f'{split[-1]} is not in ALLOWED_LIBRARIES!')
             ok = False
     return ok
 
