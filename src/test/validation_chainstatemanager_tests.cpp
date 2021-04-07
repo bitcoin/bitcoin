@@ -9,12 +9,12 @@
 #include <rpc/blockchain.h>
 #include <sync.h>
 #include <test/util/setup_common.h>
+#include <test/util/chainstate.h>
 #include <uint256.h>
 #include <validation.h>
 #include <validationinterface.h>
 
 #include <tinyformat.h>
-#include <univalue.h>
 
 #include <vector>
 
@@ -152,36 +152,6 @@ BOOST_AUTO_TEST_CASE(chainstatemanager_rebalance_caches)
     BOOST_CHECK_CLOSE(c1.m_coinsdb_cache_size_bytes, max_cache * 0.05, 1);
     BOOST_CHECK_CLOSE(c2.m_coinstip_cache_size_bytes, max_cache * 0.95, 1);
     BOOST_CHECK_CLOSE(c2.m_coinsdb_cache_size_bytes, max_cache * 0.95, 1);
-}
-
-auto NoMalleation = [](CAutoFile& file, SnapshotMetadata& meta){};
-
-template<typename F = decltype(NoMalleation)>
-static bool
-CreateAndActivateUTXOSnapshot(NodeContext& node, const fs::path root, F malleation = NoMalleation)
-{
-    // Write out a snapshot to the test's tempdir.
-    //
-    int height;
-    WITH_LOCK(::cs_main, height = node.chainman->ActiveHeight());
-    fs::path snapshot_path = root / tfm::format("test_snapshot.%d.dat", height);
-    FILE* outfile{fsbridge::fopen(snapshot_path, "wb")};
-    CAutoFile auto_outfile{outfile, SER_DISK, CLIENT_VERSION};
-
-    UniValue result = CreateUTXOSnapshot(node, node.chainman->ActiveChainstate(), auto_outfile);
-    BOOST_TEST_MESSAGE(
-        "Wrote UTXO snapshot to " << snapshot_path.make_preferred().string() << ": " << result.write());
-
-    // Read the written snapshot in and then activate it.
-    //
-    FILE* infile{fsbridge::fopen(snapshot_path, "rb")};
-    CAutoFile auto_infile{infile, SER_DISK, CLIENT_VERSION};
-    SnapshotMetadata metadata;
-    auto_infile >> metadata;
-
-    malleation(auto_infile, metadata);
-
-    return node.chainman->ActivateSnapshot(auto_infile, metadata, /*in_memory*/ true);
 }
 
 //! Test basic snapshot activation.
