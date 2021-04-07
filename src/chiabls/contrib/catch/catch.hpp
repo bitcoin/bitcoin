@@ -35,12 +35,14 @@
 #       pragma clang diagnostic ignored "-Wpadded"
 #       pragma clang diagnostic ignored "-Wswitch-enum"
 #       pragma clang diagnostic ignored "-Wcovered-switch-default"
+#       pragma clang diagnostic ignored "-Wdocumentation"
 #    endif
 #elif defined __GNUC__
 #    pragma GCC diagnostic ignored "-Wparentheses"
 #    pragma GCC diagnostic push
 #    pragma GCC diagnostic ignored "-Wunused-variable"
 #    pragma GCC diagnostic ignored "-Wpadded"
+#    pragma GCC diagnostic ignored "-Wdocumentation"
 #endif
 // end catch_suppress_warnings.h
 #if defined(CATCH_CONFIG_MAIN) || defined(CATCH_CONFIG_RUNNER)
