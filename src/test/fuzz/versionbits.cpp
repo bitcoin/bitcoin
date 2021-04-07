@@ -147,19 +147,14 @@ FUZZ_TARGET_INIT(versionbits, initialize)
         // pick the timestamp to switch based on a block
         // note states will change *after* these blocks because mediantime lags
         int start_block = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, period * (max_periods - 3));
-        int end_block = fuzzed_data_provider.ConsumeIntegralInRange<int>(start_block, period * (max_periods - 3));
+        int end_block = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, period * (max_periods - 3));
 
         start_time = block_start_time + start_block * interval;
         timeout = block_start_time + end_block * interval;
 
-        assert(start_time <= timeout);
-
         // allow for times to not exactly match a block
         if (fuzzed_data_provider.ConsumeBool()) start_time += interval / 2;
         if (fuzzed_data_provider.ConsumeBool()) timeout += interval / 2;
-
-        // this may make timeout too early; if so, don't run the test
-        if (start_time > timeout) return;
     } else {
         if (fuzzed_data_provider.ConsumeBool()) {
             start_time = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
@@ -297,13 +292,12 @@ FUZZ_TARGET_INIT(versionbits, initialize)
         assert(since == 0);
         assert(exp_state == ThresholdState::DEFINED);
         assert(current_block->GetMedianTimePast() < checker.m_begin);
-        assert(current_block->GetMedianTimePast() < checker.m_end);
         break;
     case ThresholdState::STARTED:
         assert(current_block->GetMedianTimePast() >= checker.m_begin);
-        assert(current_block->GetMedianTimePast() < checker.m_end);
         if (exp_state == ThresholdState::STARTED) {
             assert(blocks_sig < threshold);
+            assert(current_block->GetMedianTimePast() < checker.m_end);
         } else {
             assert(exp_state == ThresholdState::DEFINED);
         }
@@ -313,7 +307,6 @@ FUZZ_TARGET_INIT(versionbits, initialize)
             assert(current_block->nHeight + 1 < min_activation);
         } else {
             assert(exp_state == ThresholdState::STARTED);
-            assert(current_block->GetMedianTimePast() < checker.m_end);
             assert(blocks_sig >= threshold);
         }
         break;
@@ -323,7 +316,11 @@ FUZZ_TARGET_INIT(versionbits, initialize)
         break;
     case ThresholdState::FAILED:
         assert(never_active_test || current_block->GetMedianTimePast() >= checker.m_end);
-        assert(exp_state != ThresholdState::LOCKED_IN && exp_state != ThresholdState::ACTIVE);
+        if (exp_state == ThresholdState::STARTED) {
+            assert(blocks_sig < threshold);
+        } else {
+            assert(exp_state == ThresholdState::FAILED);
+        }
         break;
     default:
         assert(false);
