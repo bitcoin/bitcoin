@@ -7,6 +7,14 @@
 #include <util/rbf.h>
 #include <version.h>
 
+bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred ) const
+{
+    if (!m_fuzzed_data_provider.ConsumeBool()) {
+        return false;
+    }
+    if (occurred) *occurred = 0;
+    return true;
+}
 
 void FillNode(FuzzedDataProvider& fuzzed_data_provider, CNode& node, bool init_version) noexcept
 {
