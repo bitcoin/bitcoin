@@ -604,22 +604,22 @@ typedef fp6_t fp18_t[3];
 /**
  * Copies the second argument to the first argument.
  *
- * @param[out] C			- the result.
- * @param[in] A				- the quadratic extension field element to copy.
+ * @param[out] c			- the result.
+ * @param[in] a				- the quadratic extension field element to copy.
  */
 void fp2_copy(fp2_t c, fp2_t a);
 
 /**
  * Assigns zero to a quadratic extension field element.
  *
- * @param[out] A			- the quadratic extension field element to zero.
+ * @param[out] a			- the quadratic extension field element to zero.
  */
 void fp2_zero(fp2_t a);
 
 /**
  * Tests if a quadratic extension field element is zero or not.
  *
- * @param[in] A				- the quadratic extension field element to test.
+ * @param[in] a				- the quadratic extension field element to test.
  * @return 1 if the argument is zero, 0 otherwise.
  */
 int fp2_is_zero(fp2_t a);
@@ -627,14 +627,14 @@ int fp2_is_zero(fp2_t a);
 /**
  * Assigns a random value to a quadratic extension field element.
  *
- * @param[out] A			- the quadratic extension field element to assign.
+ * @param[out] a			- the quadratic extension field element to assign.
  */
 void fp2_rand(fp2_t a);
 
 /**
  * Prints a quadratic extension field element to standard output.
  *
- * @param[in] A				- the quadratic extension field element to print.
+ * @param[in] a				- the quadratic extension field element to print.
  */
 void fp2_print(fp2_t a);
 
@@ -675,8 +675,8 @@ void fp2_write_bin(uint8_t *bin, int len, fp2_t a, int pack);
  * Returns the result of a comparison between two quadratic extension field
  * elements.
  *
- * @param[in] A				- the first quadratic extension field element.
- * @param[in] B				- the second quadratic extension field element.
+ * @param[in] a				- the first quadratic extension field element.
+ * @param[in] b				- the second quadratic extension field element.
  * @return CMP_LT if a < b, CMP_EQ if a == b and CMP_GT if a > b.
  */
 int fp2_cmp(fp2_t a, fp2_t b);
@@ -722,9 +722,9 @@ void fp2_add_integ(fp2_t c, fp2_t a, fp2_t b);
  * Subtracts a quadratic extension field element from another using basic
  * arithmetic.
  *
- * @param[out] C			- the result.
- * @param[in] A				- the first quadratic extension field element.
- * @param[in] B				- the second quadratic extension field element.
+ * @param[out] c			- the result.
+ * @param[in] a				- the first quadratic extension field element.
+ * @param[in] b				- the second quadratic extension field element.
  */
 void fp2_sub_basic(fp2_t c, fp2_t a, fp2_t b);
 
@@ -732,17 +732,17 @@ void fp2_sub_basic(fp2_t c, fp2_t a, fp2_t b);
  * Subtracts a quadratic extension field element from another using integrated
  * modular reduction.
  *
- * @param[out] C			- the result.
- * @param[in] A				- the first quadratic extension field element.
- * @param[in] B				- the second quadratic extension field element.
+ * @param[out] c			- the result.
+ * @param[in] a				- the first quadratic extension field element.
+ * @param[in] b				- the second quadratic extension field element.
  */
 void fp2_sub_integ(fp2_t c, fp2_t a, fp2_t b);
 
 /**
  * Negates a quadratic extension field element.
  *
- * @param[out] C			- the result.
- * @param[out] A			- the quadratic extension field element to negate.
+ * @param[out] c			- the result.
+ * @param[out] a			- the quadratic extension field element to negate.
  */
 void fp2_neg(fp2_t c, fp2_t a);
 

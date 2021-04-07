@@ -873,7 +873,6 @@ void bn_div_rem(bn_t c, bn_t d, const bn_t a, const bn_t b);
  * remainder. Computes c = floor(a / b).
  *
  * @param[out] c			- the resulting quotient.
- * @param[out] d			- the remainder.
  * @param[in] a				- the dividend.
  * @param[in] b				- the divisor.
  * @throw ERR_NO_VALID		- if the divisor is zero.
@@ -885,7 +884,7 @@ void bn_div_dig(bn_t c, const bn_t a, dig_t b);
  * and d = a mod b.
  *
  * @param[out] c			- the resulting quotient.
- * @param[out] d			- the remainder.
+ * @param[out] *d			- the remainder.
  * @param[in] a				- the dividend.
  * @param[in] b				- the divisor.
  * @throw ERR_NO_VALID		- if the divisor is zero.

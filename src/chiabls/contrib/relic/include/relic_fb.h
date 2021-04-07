@@ -455,7 +455,7 @@ const dig_t *fb_poly_tab_srz(int i);
 /**
  * Returns a table for accelerating repeated squarings.
  *
- * @param the number of the table.
+ * @param i the number of the table.
  * @return the precomputed result.
  */
 const fb_t *fb_poly_tab_sqr(int i);

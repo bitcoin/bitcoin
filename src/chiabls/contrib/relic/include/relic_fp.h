@@ -547,7 +547,6 @@ void fp_param_get_var(bn_t x);
  * @param[out] len			- the length of the parameter in sparse form.
  * @throw ERR_NO_BUFFER		- if the buffer capacity is insufficient.
  * @throw ERR_NO_VALID		- if the current configuration is invalid.
- * @return the integer parameter in sparse form.
  */
 void fp_param_get_sps(int *s, int *len);
 
@@ -996,7 +995,7 @@ void fp_inv_exgcd(fp_t c, const fp_t a);
  * using bns and a custum prime modulus.
  *
  * @param[out] c			- the result.
- * @param[in] a				- the prime field element to invert.
+ * @param[in] p				- the prime field element to invert.
  */
 void fp_inv_exgcd_bn(bn_t c, const bn_t u, const bn_t p);
 

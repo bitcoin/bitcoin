@@ -322,7 +322,7 @@ const ed_t *ed_curve_get_tab(void);
 /**
  * Returns the cofactor of the prime elliptic twisted Edwards curve.
  *
- * @param[out] n      - the returned cofactor.
+ * @param[out] h      - the returned cofactor.
  */
 void ed_curve_get_cof(bn_t h);
 

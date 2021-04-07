@@ -469,7 +469,7 @@ void eb_curve_get_ord(bn_t n);
 /**
  * Returns the cofactor of the binary elliptic curve.
  *
- * @param[out] n			- the returned cofactor.
+ * @param[out] h			- the returned cofactor.
  */
 void eb_curve_get_cof(bn_t h);
 
