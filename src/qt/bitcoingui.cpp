@@ -1138,7 +1138,17 @@ void BitcoinGUI::message(const QString& title, QString message, unsigned int sty
 
 void BitcoinGUI::changeEvent(QEvent *e)
 {
+#ifdef Q_OS_MACOS
+    if (e->type() == QEvent::PaletteChange) {
+        overviewAction->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/overview")));
+        sendCoinsAction->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/send")));
+        receiveCoinsAction->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/receiving_addresses")));
+        historyAction->setIcon(platformStyle->SingleColorIcon(QStringLiteral(":/icons/history")));
+    }
+#endif
+
     QMainWindow::changeEvent(e);
+
 #ifndef Q_OS_MAC // Ignored on Mac
     if(e->type() == QEvent::WindowStateChange)
     {
