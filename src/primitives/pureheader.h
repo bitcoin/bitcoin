@@ -135,7 +135,7 @@ public:
     static int32_t GetOldChainId(const int& ver);
     /**
      * Set the chain ID.  This is used for the test suite.
-     * @param ch The chain ID to set.
+     * @param chainId The chain ID to set.
      */
     inline void SetChainId(const int32_t &chainId)
     {
