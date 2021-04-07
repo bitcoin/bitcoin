@@ -18,7 +18,9 @@ bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event*
         SetFuzzedErrNo(m_fuzzed_data_provider, wait_errnos);
         return false;
     }
-    if (occurred) *occurred = 0;
+    if (occurred != nullptr) {
+        *occurred = m_fuzzed_data_provider.ConsumeBool() ? requested : 0;
+    }
     return true;
 }
 
