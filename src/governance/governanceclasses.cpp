@@ -542,10 +542,11 @@ CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
                         nPaymentsLimit =  272260.39 *COIN;
                         break;
             case 23:
-                        nPaymentsLimit =  231421.33 *COIN;
+                        nPaymentsLimit =  0;
                         break;
             case 24:
-                        nPaymentsLimit =  196708.13 *COIN;
+                        /* Syscoin 4.2 Upgrade - combine superblock 23 and 24 */
+                        nPaymentsLimit =  (231421.33 + 196708.13) *COIN;
                         break;
             case 25:
                         nPaymentsLimit =  151767.00 *COIN;
