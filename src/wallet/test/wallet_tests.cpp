@@ -229,8 +229,7 @@ BOOST_FIXTURE_TEST_CASE(importmulti_rescan, TestChain100Setup)
         key.pushKV("timestamp", newTip->GetBlockTimeMax() + TIMESTAMP_WINDOW + 1);
         key.pushKV("internal", UniValue(true));
         keys.push_back(key);
-        CoreContext context{m_node};
-        JSONRPCRequest request(context);
+        JSONRPCRequest request;
         request.params.setArray();
         request.params.push_back(keys);
 
@@ -281,9 +280,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
             AddWallet(wallet);
             wallet->SetLastBlockProcessed(m_node.chainman->ActiveChain().Height(), m_node.chainman->ActiveChain().Tip()->GetBlockHash());
         }
-        CoreContext context{m_node};
-        JSONRPCRequest request(context);
-
+        JSONRPCRequest request;
         request.params.setArray();
         request.params.push_back(backup_file);
 
@@ -298,8 +295,7 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
         LOCK(wallet->cs_wallet);
         wallet->SetupLegacyScriptPubKeyMan();
 
-        CoreContext context{m_node};
-        JSONRPCRequest request(context);
+        JSONRPCRequest request;
         request.params.setArray();
         request.params.push_back(backup_file);
         AddWallet(wallet);
@@ -324,7 +320,8 @@ BOOST_FIXTURE_TEST_CASE(rpc_getaddressinfo, TestChain100Setup)
     wallet->SetupLegacyScriptPubKeyMan();
     AddWallet(wallet);
     CoreContext context{m_node};
-    JSONRPCRequest request(context);
+    JSONRPCRequest request;
+    request.context = context;
     UniValue response;
 
     // test p2pkh
@@ -798,7 +795,9 @@ public:
         CoreContext context{m_node};
         std::vector<CRecipient> vecRecipients;
         for (auto entry : vecEntries) {
-            vecRecipients.push_back({GetScriptForDestination(DecodeDestination(getnewaddress().HandleRequest(JSONRPCRequest(context)).get_str())), entry.first, entry.second});
+            JSONRPCRequest request;
+            request.context = context;
+            vecRecipients.push_back({GetScriptForDestination(DecodeDestination(getnewaddress().HandleRequest(request).get_str())), entry.first, entry.second});
         }
         return vecRecipients;
     }

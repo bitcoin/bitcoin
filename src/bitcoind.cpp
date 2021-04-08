@@ -234,7 +234,7 @@ static bool AppInit(int argc, char* argv[])
             // If locking the data directory failed, exit immediately
             return false;
         }
-        fRet = AppInitInterfaces(node) && AppInitMain(context, node);
+        fRet = AppInitInterfaces(node) && AppInitMain(node);
     } catch (...) {
         PrintExceptionContinue(std::current_exception(), "AppInit()");
     }
