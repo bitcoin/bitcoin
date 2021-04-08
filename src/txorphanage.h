@@ -26,7 +26,7 @@ public:
     /** Check if we already have an orphan transaction (by txid or wtxid) */
     bool HaveTx(const GenTxid& gtxid) const LOCKS_EXCLUDED(::g_cs_orphans);
 
-    /** Get an orphan transaction and its orginating peer
+    /** Get an orphan transaction and its originating peer
      * (Transaction ref will be nullptr if not found)
      */
     std::pair<CTransactionRef, NodeId> GetTx(const uint256& txid) const EXCLUSIVE_LOCKS_REQUIRED(g_cs_orphans);
