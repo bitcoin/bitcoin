@@ -74,6 +74,7 @@ public:
 protected:
     virtual bool eventFilter(QObject* obj, QEvent *event) override;
     void keyPressEvent(QKeyEvent *) override;
+    void changeEvent(QEvent* e) override;
 
 private Q_SLOTS:
     void on_lineEdit_returnPressed();
