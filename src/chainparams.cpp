@@ -194,10 +194,10 @@ public:
         consensus.vchSYSXERC20Manager = ParseHex("FF957eA28b537b34E0c6E6B50c6c938668DD28a0");
         consensus.vchTokenFreezeMethod = ParseHex("9c6dea23fe3b510bb5d170df49dc74e387692eaa3258c691918cd3aa94f5fb74");
         consensus.nBridgeStartBlock = 348000;
-        consensus.nUTXOAssetsBlock = 1000000;
+        consensus.nUTXOAssetsBlock = 1004200;
         consensus.nUTXOAssetsBlockProvisioning = consensus.nUTXOAssetsBlock + 10000;
-        consensus.DIP0003Height = 1000000;
-        consensus.DIP0003EnforcementHeight = 1000000;
+        consensus.DIP0003Height = 1004200;
+        consensus.DIP0003EnforcementHeight = 1004200;
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
