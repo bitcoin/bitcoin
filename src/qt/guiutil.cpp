@@ -817,6 +817,11 @@ void ThemedLabel::updateThemedPixmap()
     setPixmap(m_platform_style->SingleColorIcon(m_image_filename).pixmap(m_pixmap_width, m_pixmap_height));
 }
 
+ClickableLabel::ClickableLabel(const PlatformStyle* platform_style, QWidget* parent)
+    : ThemedLabel{platform_style, parent}
+{
+}
+
 void ClickableLabel::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_EMIT clicked(event->pos());

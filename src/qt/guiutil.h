@@ -241,9 +241,12 @@ namespace GUIUtil
         void updateThemedPixmap();
     };
 
-    class ClickableLabel : public QLabel
+    class ClickableLabel : public ThemedLabel
     {
         Q_OBJECT
+
+    public:
+        explicit ClickableLabel(const PlatformStyle* platform_style, QWidget* parent = nullptr);
 
     Q_SIGNALS:
         /** Emitted when the label is clicked. The relative mouse coordinates of the click are
