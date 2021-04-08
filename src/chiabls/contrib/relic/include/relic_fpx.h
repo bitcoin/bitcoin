@@ -1053,7 +1053,7 @@ void fp3_add_integ(fp3_t c, fp3_t a, fp3_t b);
  * Subtracts a cubic extension field element from another using basic
  * arithmetic.
  *
- * @param[out] C			- the result.
+ * @param[out] c			- the result.
  * @param[in] A				- the first cubic extension field element.
  * @param[in] B				- the second cubic extension field element.
  */
@@ -1218,7 +1218,7 @@ int fp3_srt(fp3_t c, fp3_t a);
 /**
  * Copies the second argument to the first argument.
  *
- * @param[out] C			- the result.
+ * @param[out] c			- the result.
  * @param[in] A				- the sextic extension field element to copy.
  */
 void fp6_copy(fp6_t c, fp6_t a);
@@ -1226,7 +1226,7 @@ void fp6_copy(fp6_t c, fp6_t a);
 /**
  * Assigns zero to a sextic extension field element.
  *
- * @param[out] A			- the sextic extension field element to zero.
+ * @param[out] a			- the sextic extension field element to zero.
  */
 void fp6_zero(fp6_t a);
 
@@ -1241,14 +1241,14 @@ int fp6_is_zero(fp6_t a);
 /**
  * Assigns a random value to a sextic extension field element.
  *
- * @param[out] A			- the sextic extension field element to assign.
+ * @param[out] a			- the sextic extension field element to assign.
  */
 void fp6_rand(fp6_t a);
 
 /**
  * Prints a sextic extension field element to standard output.
  *
- * @param[in] A				- the sextic extension field element to print.
+ * @param[in] a				- the sextic extension field element to print.
  */
 void fp6_print(fp6_t a);
 
@@ -1256,7 +1256,6 @@ void fp6_print(fp6_t a);
  * Returns the number of bytes necessary to store a quadratic extension field
  * element.
  *
- * @param[out] size			- the result.
  * @param[in] a				- the extension field element.
  */
 int fp6_size_bin(fp6_t a);
@@ -1287,8 +1286,8 @@ void fp6_write_bin(uint8_t *bin, int len, fp6_t a);
  * Returns the result of a comparison between two sextic extension field
  * elements.
  *
- * @param[in] A				- the first sextic extension field element.
- * @param[in] B				- the second sextic extension field element.
+ * @param[in] a				- the first sextic extension field element.
+ * @param[in] b				- the second sextic extension field element.
  * @return CMP_LT if a < b, CMP_EQ if a == b and CMP_GT if a > b.
  */
 int fp6_cmp(fp6_t a, fp6_t b);
@@ -1333,8 +1332,8 @@ void fp6_sub(fp6_t c, fp6_t a, fp6_t b);
 /**
  * Negates a sextic extension field element. Computes c = -a.
  *
- * @param[out] C			- the result.
- * @param[out] A			- the sextic extension field element to negate.
+ * @param[out] c			- the result.
+ * @param[out] a			- the sextic extension field element to negate.
  */
 void fp6_neg(fp6_t c, fp6_t a);
 
@@ -1449,22 +1448,22 @@ void fp6_frb(fp6_t c, fp6_t a, int i);
 /**
  * Copies the second argument to the first argument.
  *
- * @param[out] C			- the result.
- * @param[in] A				- the dodecic extension field element to copy.
+ * @param[out] c			- the result.
+ * @param[in] a				- the dodecic extension field element to copy.
  */
 void fp12_copy(fp12_t c, fp12_t a);
 
 /**
  * Assigns zero to a dodecic extension field element.
  *
- * @param[out] A			- the dodecic extension field element to zero.
+ * @param[out] a			- the dodecic extension field element to zero.
  */
 void fp12_zero(fp12_t a);
 
 /**
  * Tests if a dodecic extension field element is zero or not.
  *
- * @param[in] A				- the dodecic extension field element to test.
+ * @param[in] a				- the dodecic extension field element to test.
  * @return 1 if the argument is zero, 0 otherwise.
  */
 int fp12_is_zero(fp12_t a);
@@ -1472,14 +1471,14 @@ int fp12_is_zero(fp12_t a);
 /**
  * Assigns a random value to a dodecic extension field element.
  *
- * @param[out] A			- the dodecic extension field element to assign.
+ * @param[out] a			- the dodecic extension field element to assign.
  */
 void fp12_rand(fp12_t a);
 
 /**
  * Prints a dodecic extension field element to standard output.
  *
- * @param[in] A				- the dodecic extension field element to print.
+ * @param[in] a				- the dodecic extension field element to print.
  */
 void fp12_print(fp12_t a);
 
@@ -1547,9 +1546,9 @@ void fp12_set_dig(fp12_t a, dig_t b);
 /**
  * Adds two dodecic extension field elements. Computes C = A + B.
  *
- * @param[out] C			- the result.
- * @param[in] A				- the first dodecic extension field element.
- * @param[in] B				- the second dodecic extension field element.
+ * @param[out] c			- the result.
+ * @param[in] a				- the first dodecic extension field element.
+ * @param[in] b				- the second dodecic extension field element.
  */
 void fp12_add(fp12_t c, fp12_t a, fp12_t b);
 
@@ -1557,17 +1556,17 @@ void fp12_add(fp12_t c, fp12_t a, fp12_t b);
  * Subtracts a dodecic extension field element from another. Computes
  * C = A - B.
  *
- * @param[out] C			- the result.
- * @param[in] A				- the first dodecic extension field element.
- * @param[in] B				- the second dodecic extension field element.
+ * @param[out] a			- the result.
+ * @param[in] a				- the first dodecic extension field element.
+ * @param[in] b				- the second dodecic extension field element.
  */
 void fp12_sub(fp12_t c, fp12_t a, fp12_t b);
 
 /**
  * Negates a dodecic extension field element.
  *
- * @param[out] C			- the result.
- * @param[out] A			- the dodecic extension field element to negate.
+ * @param[out] c			- the result.
+ * @param[out] a			- the dodecic extension field element to negate.
  */
 void fp12_neg(fp12_t c, fp12_t a);
 
@@ -1805,22 +1804,22 @@ int fp12_upk(fp12_t c, fp12_t a);
 /**
  * Copies the second argument to the first argument.
  *
- * @param[out] C			- the result.
- * @param[in] A				- the octodecic extension field element to copy.
+ * @param[out] c			- the result.
+ * @param[in] a				- the octodecic extension field element to copy.
  */
 void fp18_copy(fp18_t c, fp18_t a);
 
 /**
  * Assigns zero to a octodecic extension field element.
  *
- * @param[out] A			- the octodecic extension field element to zero.
+ * @param[out] a			- the octodecic extension field element to zero.
  */
 void fp18_zero(fp18_t a);
 
 /**
  * Tests if a octodecic extension field element is zero or not.
  *
- * @param[in] A				- the octodecic extension field element to test.
+ * @param[in] a				- the octodecic extension field element to test.
  * @return 1 if the argument is zero, 0 otherwise.
  */
 int fp18_is_zero(fp18_t a);
@@ -1828,14 +1827,14 @@ int fp18_is_zero(fp18_t a);
 /**
  * Assigns a random value to a octodecic extension field element.
  *
- * @param[out] A			- the octodecic extension field element to assign.
+ * @param[out] a			- the octodecic extension field element to assign.
  */
 void fp18_rand(fp18_t a);
 
 /**
  * Prints a octodecic extension field element to standard output.
  *
- * @param[in] A				- the octodecic extension field element to print.
+ * @param[in] a				- the octodecic extension field element to print.
  */
 void fp18_print(fp18_t a);
 
@@ -1870,9 +1869,9 @@ void fp18_set_dig(fp18_t a, dig_t b);
 /**
  * Adds two octodecic extension field elements. Computes C = A + B.
  *
- * @param[out] C			- the result.
- * @param[in] A				- the first octodecic extension field element.
- * @param[in] B				- the second octodecic extension field element.
+ * @param[out] c			- the result.
+ * @param[in] a				- the first octodecic extension field element.
+ * @param[in] b				- the second octodecic extension field element.
  */
 void fp18_add(fp18_t c, fp18_t a, fp18_t b);
 
@@ -1880,17 +1879,17 @@ void fp18_add(fp18_t c, fp18_t a, fp18_t b);
  * Subtracts a octodecic extension field element from another. Computes
  * C = A - B.
  *
- * @param[out] C			- the result.
- * @param[in] A				- the first octodecic extension field element.
- * @param[in] B				- the second octodecic extension field element.
+ * @param[out] a			- the result.
+ * @param[in] a				- the first octodecic extension field element.
+ * @param[in] b				- the second octodecic extension field element.
  */
 void fp18_sub(fp18_t c, fp18_t a, fp18_t b);
 
 /**
  * Negates a octodecic extension field element.
  *
- * @param[out] C			- the result.
- * @param[out] A			- the octodecic extension field element to negate.
+ * @param[out] c			- the result.
+ * @param[out] a			- the octodecic extension field element to negate.
  */
 void fp18_neg(fp18_t c, fp18_t a);
 
