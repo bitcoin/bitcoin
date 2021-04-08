@@ -141,7 +141,7 @@ public:
    * of the aux hash, the merkle tree size and the nonce.  Optionally,
    * the header can be added as well.
    * @param header Add the header?
-   * @param hashAux The aux merkle root hash.
+   * @param auxRoot The aux merkle root hash.
    * @param h Height of the merkle tree.
    * @param nonce The nonce value to use.
    * @return The constructed data.
