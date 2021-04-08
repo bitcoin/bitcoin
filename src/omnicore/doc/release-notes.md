@@ -113,6 +113,7 @@ The following list includes relevant pull requests merged into this release:
 - #1213 If watermark not in block index load from state files
 - #1214 Bump version and tests to 0.10
 - #1215 Add release notes for Omni Core 0.10
+- #1219 Trim Gitian build targets
 ```
 
 
