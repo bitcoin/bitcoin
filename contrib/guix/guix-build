@@ -15,7 +15,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/libexec/prelude.bash"
 ###################
 
 ################
-# Required non-builtin commands should be invokable
+# Required non-builtin commands should be invocable
 ################
 
 check_tools cat mkdir make git guix
