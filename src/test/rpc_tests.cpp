@@ -33,8 +33,8 @@ UniValue RPCTestingSetup::CallRPC(std::string args)
     boost::split(vArgs, args, boost::is_any_of(" \t"));
     std::string strMethod = vArgs[0];
     vArgs.erase(vArgs.begin());
-    std::any context{&m_node};
-    JSONRPCRequest request(context);
+    JSONRPCRequest request;
+    request.context = &m_node;
     request.strMethod = strMethod;
     request.params = RPCConvertValues(strMethod, vArgs);
     if (RPCIsInWarmup(nullptr)) SetRPCWarmupFinished();
