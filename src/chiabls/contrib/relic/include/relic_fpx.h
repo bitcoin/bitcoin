@@ -1054,8 +1054,8 @@ void fp3_add_integ(fp3_t c, fp3_t a, fp3_t b);
  * arithmetic.
  *
  * @param[out] c			- the result.
- * @param[in] A				- the first cubic extension field element.
- * @param[in] B				- the second cubic extension field element.
+ * @param[in] a				- the first cubic extension field element.
+ * @param[in] b				- the second cubic extension field element.
  */
 void fp3_sub_basic(fp3_t c, fp3_t a, fp3_t b);
 
@@ -1219,7 +1219,7 @@ int fp3_srt(fp3_t c, fp3_t a);
  * Copies the second argument to the first argument.
  *
  * @param[out] c			- the result.
- * @param[in] A				- the sextic extension field element to copy.
+ * @param[in] a				- the sextic extension field element to copy.
  */
 void fp6_copy(fp6_t c, fp6_t a);
 
@@ -1233,7 +1233,7 @@ void fp6_zero(fp6_t a);
 /**
  * Tests if a sextic extension field element is zero or not.
  *
- * @param[in] A				- the sextic extension field element to test.
+ * @param[in] a				- the sextic extension field element to test.
  * @return 1 if the argument is zero, 0 otherwise.
  */
 int fp6_is_zero(fp6_t a);
@@ -1556,7 +1556,7 @@ void fp12_add(fp12_t c, fp12_t a, fp12_t b);
  * Subtracts a dodecic extension field element from another. Computes
  * C = A - B.
  *
- * @param[out] a			- the result.
+ * @param[out] c			- the result.
  * @param[in] a				- the first dodecic extension field element.
  * @param[in] b				- the second dodecic extension field element.
  */
@@ -1787,16 +1787,16 @@ void fp12_exp_cyc_sps(fp12_t c, fp12_t a, int *b, int l);
 /**
  * Compresses an extension field element.
  *
- * @param[out] r			- the result.
- * @param[in] p				- the extension field element to compress.
+ * @param[out] c			- the result.
+ * @param[in] a				- the extension field element to compress.
  */
 void fp12_pck(fp12_t c, fp12_t a);
 
 /**
  * Decompresses an extension field element.
  *
- * @param[out] r			- the result.
- * @param[in] p				- the extension field element to decompress.
+ * @param[out] c			- the result.
+ * @param[in] a				- the extension field element to decompress.
  * @return if the decompression was successful
  */
 int fp12_upk(fp12_t c, fp12_t a);
@@ -1879,7 +1879,7 @@ void fp18_add(fp18_t c, fp18_t a, fp18_t b);
  * Subtracts a octodecic extension field element from another. Computes
  * C = A - B.
  *
- * @param[out] a			- the result.
+ * @param[out] c			- the result.
  * @param[in] a				- the first octodecic extension field element.
  * @param[in] b				- the second octodecic extension field element.
  */

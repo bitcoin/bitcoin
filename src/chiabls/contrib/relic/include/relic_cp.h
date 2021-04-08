@@ -1225,7 +1225,7 @@ int cp_ecdh_gen(bn_t d, ec_t q);
  * Derives a shared secret using ECDH.
  *
  * @param[out] key				- the shared key.
- * @param[int] key_len			- the intended shared key length in bytes.
+ * @param[in] key_len			- the intended shared key length in bytes.
  * @param[in] d					- the private key.
  * @param[in] q					- the point received from the other party.
  * @return STS_OK if no errors occurred, STS_ERR otherwise.
@@ -1246,7 +1246,7 @@ int cp_ecmqv_gen(bn_t d, ec_t q);
  * Derives a shared secret using ECMQV.
  *
  * @param[out] key				- the shared key.
- * @param[int] key_len			- the intended shared key length in bytes.
+ * @param[in] key_len			- the intended shared key length in bytes.
  * @param[in] d1				- the private key.
  * @param[in] d2				- the ephemeral private key.
  * @param[in] q2u				- the ephemeral public key.
@@ -1387,7 +1387,7 @@ int cp_sokaka_gen_prv(sokaka_t k, char *id, int len, bn_t master);
  * Computes a shared key between two entities.
  *
  * @param[out] key				- the shared key.
- * @param[int] key_len			- the intended shared key length in bytes.
+ * @param[in] key_len			- the intended shared key length in bytes.
  * @param[in] id1				- the first identity.
  * @param[in] len1				- the length of the first identity in bytes.
  * @param[in] k					- the private key of the first identity.

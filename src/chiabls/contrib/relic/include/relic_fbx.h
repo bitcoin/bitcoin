@@ -181,7 +181,6 @@ void fb2_mul(fb2_t c, fb2_t a, fb2_t b);
   *
   * @param[out] c			- the result.
   * @param[in] a				- the quadratic extension binary field element.
-  * @param[in] b				- the quadratic extension binary field element.
   */
  void fb2_mul_nor(fb2_t c, fb2_t a);
 

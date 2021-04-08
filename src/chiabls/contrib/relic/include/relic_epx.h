@@ -671,7 +671,7 @@ void ep2_sub_projc(ep2_t r, ep2_t p, ep2_t q);
  * a quadratic extension.
  *
  * @param[out] r			- the result.
- * @param[int] p			- the point to double.
+ * @param[in] p			- the point to double.
  */
 void ep2_dbl_basic(ep2_t r, ep2_t p);
 

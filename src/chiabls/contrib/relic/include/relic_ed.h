@@ -281,7 +281,7 @@ typedef ed_st *ed_t;
 /**
  * Configures a prime elliptic twisted Edwards curve by its parameter identifier.
  *
- * @param				- the parameter identifier.
+ * @param	param			- the parameter identifier.
  */
 void ed_param_set(int param);
 
@@ -353,7 +353,7 @@ void ed_rand(ed_t p);
 /**
  * Copies the second argument to the first argument.
  *
- * @param[out] q      - the result.
+ * @param[out] r      - the result.
  * @param[in] p       - the prime elliptic twisted Edwards curve point to copy.
  */
 void ed_copy(ed_t r, const ed_t p);
@@ -403,9 +403,9 @@ void ed_add(ed_t r, const ed_t p, const ed_t q);
  * Subtracts a prime elliptic twisted Edwards curve point from another, that is, compute
  * R = P - Q.
  *
- * @param[out] R			- the result.
- * @param[in] P				- the first point.
- * @param[in] Q				- the second point.
+ * @param[out] r			- the result.
+ * @param[in] p				- the first point.
+ * @param[in] q				- the second point.
  */
 void ed_sub(ed_t r, const ed_t p, const ed_t q);
 

@@ -172,7 +172,6 @@ void bench_overhead(void);
 /**
  * Resets the benchmark data.
  *
- * @param[in] label			- the benchmark label.
  */
 void bench_reset(void);
 
