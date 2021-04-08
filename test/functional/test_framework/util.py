@@ -355,6 +355,8 @@ def initialize_datadir(dirname, n, chain):
         f.write("upnp=0\n")
         f.write("natpmp=0\n")
         f.write("shrinkdebugfile=0\n")
+        # To improve SQLite wallet performance so that the tests don't timeout, use -unsafesqlitesync
+        f.write("unsafesqlitesync=1\n")
         os.makedirs(os.path.join(datadir, 'stderr'), exist_ok=True)
         os.makedirs(os.path.join(datadir, 'stdout'), exist_ok=True)
     return datadir
