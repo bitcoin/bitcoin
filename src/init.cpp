@@ -935,7 +935,7 @@ static bool InitSanityCheck()
     return true;
 }
 
-static bool AppInitServers(const std::any& context, NodeContext& node)
+static bool AppInitServers(NodeContext& node)
 {
     const ArgsManager& args = *Assert(node.args);
     RPCServer::OnStarted(&OnRPCStarted);
@@ -944,9 +944,9 @@ static bool AppInitServers(const std::any& context, NodeContext& node)
         return false;
     StartRPC();
     node.rpc_interruption_point = RpcInterruptionPoint;
-    if (!StartHTTPRPC(context))
+    if (!StartHTTPRPC(&node))
         return false;
-    if (args.GetBoolArg("-rest", DEFAULT_REST_ENABLE)) StartREST(context);
+    if (args.GetBoolArg("-rest", DEFAULT_REST_ENABLE)) StartREST(&node);
     StartHTTPServer();
     // SYSCOIN
     curl_global_init(CURL_GLOBAL_ALL);
@@ -1481,7 +1481,7 @@ bool AppInitInterfaces(NodeContext& node)
     return true;
 }
 
-bool AppInitMain(const std::any& context, NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
+bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 {
     const ArgsManager& args = *Assert(node.args);
     const CChainParams& chainparams = Params();
@@ -1634,7 +1634,7 @@ bool AppInitMain(const std::any& context, NodeContext& node, interfaces::BlockAn
      // SYSCOIN
     if (args.GetBoolArg("-server", true)) {
         uiInterface.InitMessage_connect(SetRPCWarmupStatus);
-        if (!AppInitServers(context, node))
+        if (!AppInitServers(node))
             return InitError(_("Unable to start HTTP server. See debug log for details."));
     }
 
