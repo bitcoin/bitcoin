@@ -45,12 +45,17 @@ Q_SIGNALS:
     void transactionClicked(const QModelIndex &index);
     void outOfSyncWarningClicked();
 
+protected:
+    void changeEvent(QEvent* e) override;
+
 private:
     Ui::OverviewPage *ui;
     ClientModel *clientModel;
     WalletModel *walletModel;
     interfaces::WalletBalances m_balances;
     bool m_privacy{false};
+
+    const PlatformStyle* m_platform_style;
 
     TxViewDelegate *txdelegate;
     std::unique_ptr<TransactionFilterProxy> filter;
