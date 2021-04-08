@@ -3966,12 +3966,13 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
     if (!ContextualCheckBlock(block, state, chainparams.GetConsensus(), pindexPrev, fCheckMerkleRoot))
         return error("%s: Consensus::ContextualCheckBlock: %s", __func__, state.GetRejectReason());
 
+    bool shouldRemove = false;
+
     if (VeriBlock::isPopEnabled()) {
         // VeriBlock: Block that have been passed to TestBlockValidity may not exist in alt tree, because technically it was not created ("mined").
         // in this case, add it and then remove
         auto& tree = VeriBlock::GetPop().getAltBlockTree();
         auto _hash = block_hash.asVector();
-        bool shouldRemove = false;
         if (!tree.getBlockIndex(_hash)) {
             shouldRemove = true;
             auto containing = VeriBlock::blockToAltBlock(indexDummy);
@@ -3981,17 +3982,19 @@ bool TestBlockValidity(BlockValidationState& state, const CChainParams& chainpar
 
             tree.acceptBlock(_hash, block.popData);
         }
-
-        auto _f = altintegration::Finalizer([shouldRemove, _hash, &tree]() {
-            if (shouldRemove) {
-                tree.removeSubtree(_hash);
-            }
-        });
     }
 
     if (!::ChainstateActive().ConnectBlock(block, state, &indexDummy, viewNew, chainparams, true))
         return false;
     assert(state.IsValid());
+
+    if (VeriBlock::isPopEnabled()) {
+        if (shouldRemove) {
+            auto& tree = VeriBlock::GetPop().getAltBlockTree();
+            auto _hash = block_hash.asVector();
+            tree.removeSubtree(_hash);
+        }
+    }
 
     return true;
 }

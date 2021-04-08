@@ -53,8 +53,8 @@ struct AltChainParamsVBTCDetRegTest : public altintegration::AltChainParams {
 
     AltChainParamsVBTCDetRegTest()
     {
-        bootstrap.hash = uint256S("22f15dd98c14badb8d58ec245a8539d86fa5344e984af023c8a7ea0316e24700").asVector();
-        // intentionally leave prevHash empty
+        bootstrap.hash = uint256S("393e1fea789a3ac750921d6d9f6aa7e84df9e031ecd63fca22dc3adc0632025c").asVector();
+        bootstrap.previousBlock = uint256S("42b16a400669ab1403410585e793cec350baa53ff3fddc2414be92f03f1b12f2").asVector();
         bootstrap.height = 1000;
         // intentionally leave timestamp empty
     }
