@@ -435,8 +435,8 @@ void pp_exp_k12(fp12_t c, fp12_t a);
  * Normalizes the accumulator point used inside pairing computation defined
  * over curves of embedding degree 2.
  *
- * @param[out] r			- the resulting point.
- * @param[in] p				- the point to normalize.
+ * @param[out] c			- the resulting point.
+ * @param[in] a				- the point to normalize.
  */
 void pp_norm_k2(ep_t c, ep_t a);
 
@@ -444,8 +444,8 @@ void pp_norm_k2(ep_t c, ep_t a);
  * Normalizes the accumulator point used inside pairing computation defined
  * over curves of embedding degree 12.
  *
- * @param[out] r			- the resulting point.
- * @param[in] p				- the point to normalize.
+ * @param[out] c			- the resulting point.
+ * @param[in] a				- the point to normalize.
  */
 void pp_norm_k12(ep2_t c, ep2_t a);
 

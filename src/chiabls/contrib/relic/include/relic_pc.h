@@ -829,7 +829,7 @@ void gt_exp(gt_t c, gt_t a, bn_t b);
  /**
   * Returns the generator of the group G_T.
   *
-  * @param[out] G			- the returned generator.
+  * @param[out] a			- the returned generator.
   */
 void gt_get_gen(gt_t a);
 

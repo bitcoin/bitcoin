@@ -1273,7 +1273,6 @@ int cp_ecies_gen(bn_t d, ec_t q);
  * @param[in, out] out_len	- the buffer capacity and number of bytes written.
  * @param[in] in			- the input buffer.
  * @param[in] in_len		- the number of bytes to encrypt.
- * @param[in] iv 			- the block cipher initialization vector.
  * @param[in] q				- the public key.
  * @return STS_OK if no errors occurred, STS_ERR otherwise.
  */
@@ -1287,7 +1286,6 @@ int cp_ecies_enc(ec_t r, uint8_t *out, int *out_len, uint8_t *in, int in_len,
  * @param[in, out] out_len	- the buffer capacity and number of bytes written.
  * @param[in] in			- the input buffer.
  * @param[in] in_len		- the number of bytes to encrypt.
- * @param[in] iv 			- the block cipher initialization vector.
  * @param[in] d				- the private key.
  * @return STS_OK if no errors occurred, STS_ERR otherwise.
  */
@@ -1341,7 +1339,7 @@ int cp_ecss_gen(bn_t d, ec_t q);
 /**
  * Signs a message using the Elliptic Curve Schnorr Signature.
  *
- * @param[out] r				- the first component of the signature.
+ * @param[out] e				- the first component of the signature.
  * @param[out] s				- the second component of the signature.
  * @param[in] msg				- the message to sign.
  * @param[in] len				- the message length in bytes.
@@ -1354,7 +1352,7 @@ int cp_ecss_sig(bn_t e, bn_t s, uint8_t *msg, int len, bn_t d);
  * Verifies a message signed with the Elliptic Curve Schnorr Signature using the
  * basic method.
  *
- * @param[out] r				- the first component of the signature.
+ * @param[out] e				- the first component of the signature.
  * @param[out] s				- the second component of the signature.
  * @param[in] msg				- the message to sign.
  * @param[in] len				- the message length in bytes.
@@ -1451,7 +1449,7 @@ int cp_bgn_enc2(g2_t out[2], dig_t in, bgn_t pub);
  * Decrypts in G_2 using the BGN cryptosystem.
  *
  * @param[out] out 				- the decrypted small integer.
- * @param[in] c 				- the ciphertext.
+ * @param[in] in 				- the ciphertext.
  * @param[in] prv 				- the private key.
  * @return STS_OK if no errors occurred, STS_ERR otherwise.
  */
@@ -1480,7 +1478,7 @@ int cp_bgn_mul(gt_t e[4], g1_t c[2], g2_t d[2]);
 /**
  * Decrypts in G_T using the BGN cryptosystem.
  * @param[out] out 				- the decrypted small integer.
- * @param[in] c 				- the ciphertext.
+ * @param[in] in 				- the ciphertext.
  * @param[in] prv 				- the private key.
  * @return STS_OK if no errors occurred, STS_ERR otherwise.
  */
@@ -1492,7 +1490,7 @@ int cp_bgn_dec(dig_t *out, gt_t in[4], bgn_t prv);
  * @param[out] prv				- the private key.
  * @param[in] id				- the identity.
  * @param[in] len				- the length of identity in bytes.
- * @param[in] s					- the master key.
+ * @param[in] master					- the master key.
  * @return STS_OK if no errors occurred, STS_ERR otherwise.
  */
 int cp_ibe_gen_prv(g2_t prv, char *id, int len, bn_t master);
@@ -1517,7 +1515,7 @@ int cp_ibe_enc(uint8_t *out, int *out_len, uint8_t *in, int in_len,
  * @param[in, out] out_len	- the buffer capacity and number of bytes written.
  * @param[in] in			- the input buffer.
  * @param[in] in_len		- the number of bytes to decrypt.
- * @param[in] pub			- the private key of the user.
+ * @param[in] prv			- the private key of the user.
  * @return STS_OK if no errors occurred, STS_ERR otherwise.
  */
 int cp_ibe_dec(uint8_t *out, int *out_len, uint8_t *in, int in_len, g2_t prv);

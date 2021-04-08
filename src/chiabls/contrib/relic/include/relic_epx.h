@@ -470,7 +470,7 @@ void ep2_curve_get_s3(bn_t s3);
 /**
  * Returns the (sqrt(-3) - 1) / 2 mod q in the curve, where q is the prime.
  *
- * @param[out] h			- the returned cofactor.
+ * @param[out] s32			- the returned cofactor.
  */
 void ep2_curve_get_s32(bn_t s32);
 

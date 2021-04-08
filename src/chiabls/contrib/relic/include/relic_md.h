@@ -208,8 +208,8 @@ void md_kdf2(uint8_t *key, int key_len, const uint8_t *in, int in_len);
  * Derives a mask from shared secret material through the PKCS#1 2.0 MGF1
  * function .
  *
- * @param[out] key				- the resulting mask.
- * @param[in] key_len			- the intended mask length in bytes.
+ * @param[out] mask				- the resulting mask.
+ * @param[in] mask_len			- the intended mask length in bytes.
  * @param[in] in				- the shared secret.
  * @param[in] in_len			- the length of the shared secret in bytes.
  */
