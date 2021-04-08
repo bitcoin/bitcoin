@@ -9,7 +9,7 @@ source contrib/shell/realpath.bash
 source contrib/shell/git-utils.bash
 
 ################
-# Required non-builtin commands should be invokable
+# Required non-builtin commands should be invocable
 ################
 
 check_tools() {

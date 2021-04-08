@@ -295,7 +295,7 @@ rebuild _just_ this derivation in a single-threaded fashion:
 $ guix build --cores=1 /gnu/store/...-foo-3.6.12.drv
 ```
 
-If the single-threaded rebuild stil did not succeed, you may need to dig deeper.
+If the single-threaded rebuild did not succeed, you may need to dig deeper.
 You may view `foo`'s build logs in `less` like so (please replace paths with the
 path you see in the build failure output):
 
