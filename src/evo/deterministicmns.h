@@ -368,16 +368,16 @@ public:
     /**
      * Calculates the projected MN payees for the next *count* blocks. The result is not guaranteed to be correct
      * as PoSe banning might occur later
-     * @param count
-     * @return
+     * @param[in] nCount
+     * @param [out] result
      */
     void GetProjectedMNPayees(size_t nCount, std::vector<CDeterministicMNCPtr>& result) const;
 
     /**
      * Calculate a quorum based on the modifier. The resulting list is deterministically sorted by score
-     * @param maxSize
-     * @param modifier
-     * @return
+     * @param [in] maxSize
+     * @param [in] modifier
+     * @param [out] members
      */
     void CalculateQuorum(size_t maxSize, const uint256& modifier, std::vector<CDeterministicMNCPtr> &members) const;
     void CalculateScores(const uint256& modifier, std::vector<std::pair<arith_uint256, CDeterministicMNCPtr>> &scores) const;
@@ -385,7 +385,6 @@ public:
     /**
      * Calculates the maximum penalty which is allowed at the height of this MN list. It is dynamic and might change
      * for every block.
-     * @return
      */
     int CalcMaxPoSePenalty() const;
 
@@ -394,8 +393,7 @@ public:
      * value later passed to PoSePunish. The percentage should be high enough to take per-block penalty decreasing for MNs
      * into account. This means, if you want to accept 2 failures per payment cycle, you should choose a percentage that
      * is higher then 50%, e.g. 66%.
-     * @param percent
-     * @return
+     * @param [in] percent
      */
     int CalcPenalty(int percent) const;
 
@@ -403,15 +401,16 @@ public:
      * Punishes a MN for misbehavior. If the resulting penalty score of the MN reaches the max penalty, it is banned.
      * Penalty scores are only increased when the MN is not already banned, which means that after banning the penalty
      * might appear lower then the current max penalty, while the MN is still banned.
-     * @param proTxHash
-     * @param penalty
+     * @param [in] proTxHash
+     * @param [in] penalty
+     * @param [in] debugLogs
      */
     void PoSePunish(const uint256& proTxHash, int penalty, bool debugLogs);
 
     /**
      * Decrease penalty score of MN by 1.
      * Only allowed on non-banned MNs.
-     * @param proTxHash
+     * @param [in] proTxHash
      */
     void PoSeDecrease(const uint256& proTxHash);
 

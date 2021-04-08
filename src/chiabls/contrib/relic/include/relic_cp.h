@@ -1438,8 +1438,8 @@ int cp_bgn_dec1(dig_t *out, g1_t in[2], bgn_t prv);
 /**
  * Encrypts in G_2 using the BGN cryptosystem.
  *
- * @param[out] c 				- the ciphertext.
- * @param[in] m 				- the plaintext as a small integer.
+ * @param[out] out 				- the ciphertext.
+ * @param[in] in 				- the plaintext as a small integer.
  * @param[in] pub 				- the public key.
  * @return STS_OK if no errors occurred, STS_ERR otherwise.
  */
