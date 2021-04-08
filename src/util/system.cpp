@@ -235,6 +235,19 @@ static bool CheckValid(const std::string& key, const util::SettingsValue& val, u
     return true;
 }
 
+namespace {
+fs::path StripRedundantLastElementsOfPath(const fs::path& path)
+{
+    auto result = path;
+    while (result.filename().string() == ".") {
+        result = result.parent_path();
+    }
+
+    assert(fs::equivalent(result, path));
+    return result;
+}
+} // namespace
+
 // Define default constructor and destructor that are not inline, so code instantiating this class doesn't need to
 // #include class definitions for all members.
 // For example, m_settings has an internal dependency on univalue.
@@ -722,19 +735,6 @@ fs::path GetDefaultDataDir()
 #endif
 #endif
 }
-
-namespace {
-fs::path StripRedundantLastElementsOfPath(const fs::path& path)
-{
-    auto result = path;
-    while (result.filename().string() == ".") {
-        result = result.parent_path();
-    }
-
-    assert(fs::equivalent(result, path));
-    return result;
-}
-} // namespace
 
 static fs::path g_blocks_path_cache_net_specific;
 static fs::path pathCached;
