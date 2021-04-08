@@ -4354,12 +4354,33 @@ void CChainState::CheckBlockIndex()
     while (pindex != nullptr) {
         nNodes++;
         if (pindexFirstInvalid == nullptr && pindex->nStatus & BLOCK_FAILED_VALID) pindexFirstInvalid = pindex;
-        if (pindexFirstMissing == nullptr && !(pindex->nStatus & BLOCK_HAVE_DATA)) pindexFirstMissing = pindex;
+        // Assumed-valid index entries will not have data since we haven't downloaded the
+        // full block yet.
+        if (pindexFirstMissing == nullptr && !(pindex->nStatus & BLOCK_HAVE_DATA) && !pindex->IsAssumedValid()) {
+            pindexFirstMissing = pindex;
+        }
         if (pindexFirstNeverProcessed == nullptr && pindex->nTx == 0) pindexFirstNeverProcessed = pindex;
         if (pindex->pprev != nullptr && pindexFirstNotTreeValid == nullptr && (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_TREE) pindexFirstNotTreeValid = pindex;
-        if (pindex->pprev != nullptr && pindexFirstNotTransactionsValid == nullptr && (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_TRANSACTIONS) pindexFirstNotTransactionsValid = pindex;
-        if (pindex->pprev != nullptr && pindexFirstNotChainValid == nullptr && (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_CHAIN) pindexFirstNotChainValid = pindex;
-        if (pindex->pprev != nullptr && pindexFirstNotScriptsValid == nullptr && (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_SCRIPTS) pindexFirstNotScriptsValid = pindex;
+
+        if (pindex->pprev != nullptr && !pindex->IsAssumedValid()) {
+            // Skip validity flag checks for BLOCK_ASSUMED_VALID index entries, since these
+            // *_VALID_MASK flags will not be present for index entries we are temporarily assuming
+            // valid.
+            if (pindexFirstNotTransactionsValid == nullptr &&
+                    (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_TRANSACTIONS) {
+                pindexFirstNotTransactionsValid = pindex;
+            }
+
+            if (pindexFirstNotChainValid == nullptr &&
+                    (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_CHAIN) {
+                pindexFirstNotChainValid = pindex;
+            }
+
+            if (pindexFirstNotScriptsValid == nullptr &&
+                    (pindex->nStatus & BLOCK_VALID_MASK) < BLOCK_VALID_SCRIPTS) {
+                pindexFirstNotScriptsValid = pindex;
+            }
+        }
 
         // Begin: actual consistency checks.
         if (pindex->pprev == nullptr) {
@@ -4370,7 +4391,9 @@ void CChainState::CheckBlockIndex()
         if (!pindex->HaveTxsDownloaded()) assert(pindex->nSequenceId <= 0); // nSequenceId can't be set positive for blocks that aren't linked (negative is used for preciousblock)
         // VALID_TRANSACTIONS is equivalent to nTx > 0 for all nodes (whether or not pruning has occurred).
         // HAVE_DATA is only equivalent to nTx > 0 (or VALID_TRANSACTIONS) if no pruning has occurred.
-        if (!fHavePruned) {
+        // Unless these indexes are assumed valid and pending block download on a
+        // background chainstate.
+        if (!fHavePruned && !pindex->IsAssumedValid()) {
             // If we've never pruned, then HAVE_DATA should be equivalent to nTx > 0
             assert(!(pindex->nStatus & BLOCK_HAVE_DATA) == (pindex->nTx == 0));
             assert(pindexFirstMissing == pindexFirstNeverProcessed);
@@ -4379,7 +4402,16 @@ void CChainState::CheckBlockIndex()
             if (pindex->nStatus & BLOCK_HAVE_DATA) assert(pindex->nTx > 0);
         }
         if (pindex->nStatus & BLOCK_HAVE_UNDO) assert(pindex->nStatus & BLOCK_HAVE_DATA);
-        assert(((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TRANSACTIONS) == (pindex->nTx > 0)); // This is pruning-independent.
+        if (pindex->IsAssumedValid()) {
+            // Assumed-valid blocks should have some nTx value.
+            assert(pindex->nTx > 0);
+            // Assumed-valid blocks should connect to the main chain.
+            assert((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TREE);
+        } else {
+            // Otherwise there should only be an nTx value if we have
+            // actually seen a block's transactions.
+            assert(((pindex->nStatus & BLOCK_VALID_MASK) >= BLOCK_VALID_TRANSACTIONS) == (pindex->nTx > 0)); // This is pruning-independent.
+        }
         // All parents having had data (at some point) is equivalent to all parents being VALID_TRANSACTIONS, which is equivalent to HaveTxsDownloaded().
         assert((pindexFirstNeverProcessed == nullptr) == pindex->HaveTxsDownloaded());
         assert((pindexFirstNotTransactionsValid == nullptr) == pindex->HaveTxsDownloaded());
@@ -4396,11 +4428,17 @@ void CChainState::CheckBlockIndex()
         }
         if (!CBlockIndexWorkComparator()(pindex, m_chain.Tip()) && pindexFirstNeverProcessed == nullptr) {
             if (pindexFirstInvalid == nullptr) {
+                const bool is_active = this == &m_chainman.ActiveChainstate();
+
                 // If this block sorts at least as good as the current tip and
                 // is valid and we have all data for its parents, it must be in
                 // setBlockIndexCandidates.  m_chain.Tip() must also be there
                 // even if some data has been pruned.
-                if (pindexFirstMissing == nullptr || pindex == m_chain.Tip()) {
+                //
+                // Don't perform this check for the background chainstate since
+                // its setBlockIndexCandidates shouldn't have some entries (i.e. those past the
+                // snapshot block) which do exist in the block index for the active chainstate.
+                if (is_active && (pindexFirstMissing == nullptr || pindex == m_chain.Tip())) {
                     assert(setBlockIndexCandidates.count(pindex));
                 }
                 // If some parent is missing, then it could be that this block was in
