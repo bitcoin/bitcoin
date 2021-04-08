@@ -63,7 +63,27 @@ TEST_EXIT_SKIPPED = 77
 
 GENESISTIME = 1417713337
 
-class BitcoinTestFramework():
+class BitcoinTestMetaClass(type):
+    """Metaclass for BitcoinTestFramework.
+
+    Ensures that any attempt to register a subclass of `BitcoinTestFramework`
+    adheres to a standard whereby the subclass overrides `set_test_params` and
+    `run_test` but DOES NOT override either `__init__` or `main`. If any of
+    those standards are violated, a ``TypeError`` is raised."""
+
+    def __new__(cls, clsname, bases, dct):
+        if not clsname == 'BitcoinTestFramework':
+            if not ('run_test' in dct and 'set_test_params' in dct):
+                raise TypeError("BitcoinTestFramework subclasses must override "
+                                "'run_test' and 'set_test_params'")
+            if '__init__' in dct or 'main' in dct:
+                raise TypeError("BitcoinTestFramework subclasses may not override "
+                                "'__init__' or 'main'")
+
+        return super().__new__(cls, clsname, bases, dct)
+
+
+class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     """Base class for a bitcoin test script.
 
     Individual bitcoin test scripts should subclass this class and override the set_test_params() and run_test() methods.
@@ -521,6 +541,14 @@ class MasternodeInfo:
 
 
 class DashTestFramework(BitcoinTestFramework):
+    def set_test_params(self):
+        """Tests must this method to change default values for number of nodes, topology, etc"""
+        raise NotImplementedError
+
+    def run_test(self):
+        """Tests must override this method to define test logic"""
+        raise NotImplementedError
+
     def set_dash_test_params(self, num_nodes, masterodes_count, extra_args=None, fast_dip3_enforcement=False):
         self.mn_count = masterodes_count
         self.num_nodes = num_nodes
