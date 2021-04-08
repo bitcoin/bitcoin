@@ -8,6 +8,7 @@
 #
 
 from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_node import ErrorMatch
 from test_framework.util import *
 from test_framework.script import *
 from test_framework.mininode import *
@@ -37,12 +38,12 @@ class SpentIndexTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("Test that settings can't be changed without -reindex...")
         self.stop_node(1)
-        self.nodes[1].assert_start_raises_init_error(["-spentindex=0"], "You need to rebuild the database using -reindex to change -spentindex", partial_match=True)
+        self.nodes[1].assert_start_raises_init_error(["-spentindex=0"], "You need to rebuild the database using -reindex to change -spentindex", match=ErrorMatch.PARTIAL_REGEX)
         self.start_node(1, ["-spentindex=0", "-reindex"])
         connect_nodes(self.nodes[0], 1)
         self.sync_all()
         self.stop_node(1)
-        self.nodes[1].assert_start_raises_init_error(["-spentindex"], "You need to rebuild the database using -reindex to change -spentindex", partial_match=True)
+        self.nodes[1].assert_start_raises_init_error(["-spentindex"], "You need to rebuild the database using -reindex to change -spentindex", match=ErrorMatch.PARTIAL_REGEX)
         self.start_node(1, ["-spentindex", "-reindex"])
         connect_nodes(self.nodes[0], 1)
         self.sync_all()
