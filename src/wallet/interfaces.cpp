@@ -543,7 +543,9 @@ public:
                 auto context = util::AnyPtr<NodeContext>(request.context);
                 if(context)
                     extendedCtx.nodeContext = context;
-                return command.actor({request, &extendedCtx}, result, last_handler);
+                JSONRPCRequest wallet_request = request;
+                wallet_request.context = &extendedCtx;
+                return command.actor(wallet_request, result, last_handler);
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
@@ -553,7 +555,9 @@ public:
                 auto context = util::AnyPtr<NodeContext>(request.context);
                 if(context)
                     extendedCtx.nodeContext = context;
-                return command.actor({request, &extendedCtx}, result, last_handler);
+                JSONRPCRequest wallet_request = request;
+                wallet_request.context = &extendedCtx;
+                return command.actor(wallet_request, result, last_handler);
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
@@ -563,7 +567,9 @@ public:
                 auto context = util::AnyPtr<NodeContext>(request.context);
                 if(context)
                     extendedCtx.nodeContext = context;
-                return command.actor({request, &extendedCtx}, result, last_handler);
+                JSONRPCRequest wallet_request = request;
+                wallet_request.context = &extendedCtx;
+                return command.actor(wallet_request, result, last_handler);
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         }
@@ -573,7 +579,9 @@ public:
                 auto context = util::AnyPtr<NodeContext>(request.context);
                 if(context)
                     extendedCtx.nodeContext = context;
-                return command.actor({request, &extendedCtx}, result, last_handler);
+                JSONRPCRequest wallet_request = request;
+                wallet_request.context = &extendedCtx;
+                return command.actor(wallet_request, result, last_handler);
             }, command.argNames, command.unique_id);
             m_rpc_handlers.emplace_back(m_context.chain->handleRpc(m_rpc_commands.back()));
         } 

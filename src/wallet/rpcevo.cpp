@@ -164,7 +164,8 @@ static UniValue SignAndSendSpecialTx(const JSONRPCRequest& request, const CMutab
     CDataStream ds(SER_NETWORK, PROTOCOL_VERSION);
     ds << tx;
 
-    JSONRPCRequest signRequest(request.context);
+    JSONRPCRequest signRequest;
+    signRequest.context = request.context;
     signRequest.URI = request.URI;
     signRequest.params.setArray();
     signRequest.params.push_back(HexStr(ds));
@@ -172,7 +173,8 @@ static UniValue SignAndSendSpecialTx(const JSONRPCRequest& request, const CMutab
     if (!fSubmit) {
         return signResult["hex"].get_str();
     }
-    JSONRPCRequest sendRequest(request.context);
+    JSONRPCRequest sendRequest;
+    sendRequest.context = request.context;
     sendRequest.URI = request.URI;
     sendRequest.params.setArray();
     sendRequest.params.push_back(signResult["hex"].get_str());

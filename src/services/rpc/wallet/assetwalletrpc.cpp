@@ -695,7 +695,8 @@ static RPCHelpMan assetnewtest()
         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");    
     for(int i = 1;i<=10;i++)
         paramsFund.push_back(params[i]);
-    JSONRPCRequest assetNewRequest(request.context);
+    JSONRPCRequest assetNewRequest;
+    assetNewRequest.context = request.context;
     assetNewRequest.params = paramsFund;
     assetNewRequest.URI = request.URI;
     return assetnew().HandleRequest(assetNewRequest);        
@@ -1188,7 +1189,8 @@ static RPCHelpMan assetsend()
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(params[0]);
     paramsFund.push_back(output);
-    JSONRPCRequest requestMany(request.context);
+    JSONRPCRequest requestMany;
+    requestMany.context = request.context;
     requestMany.params = paramsFund;
     requestMany.URI = request.URI;
     return assetsendmany().HandleRequest(requestMany);          
@@ -1875,7 +1877,8 @@ static RPCHelpMan assetallocationsend()
     paramsFund.push_back(commentObj); // comment
     paramsFund.push_back(confObj); // conf_target
     paramsFund.push_back(feeObj); // estimate_mode
-    JSONRPCRequest requestMany(request.context);
+    JSONRPCRequest requestMany;
+    requestMany.context = request.context;
     requestMany.params = paramsFund;
     requestMany.URI = request.URI;
     return assetallocationsendmany().HandleRequest(requestMany);          
@@ -2036,7 +2039,8 @@ static RPCHelpMan listunspentasset()
     UniValue options(UniValue::VOBJ);
     options.__pushKV("assetGuid", request.params[0]);
     paramsFund.push_back(options);
-    JSONRPCRequest requestSpent(request.context);
+    JSONRPCRequest requestSpent;
+    requestSpent.context = request.context;
     requestSpent.params = paramsFund;
     requestSpent.URI = request.URI;
     return listunspent().HandleRequest(requestSpent);  
@@ -2079,7 +2083,8 @@ static RPCHelpMan addressbalance() {
     paramsFund.push_back(nMinDepth);
     paramsFund.push_back(nMaxDepth);
     paramsFund.push_back(request.params[0]);
-    JSONRPCRequest requestSpent(request.context);
+    JSONRPCRequest requestSpent;
+    requestSpent.context = request.context;
     requestSpent.params = paramsFund;
     requestSpent.URI = request.URI;
     const UniValue &resUTXOs = listunspent().HandleRequest(requestSpent);
@@ -2179,7 +2184,8 @@ static RPCHelpMan assetallocationbalance() {
     UniValue options(UniValue::VOBJ);
     options.__pushKV("assetGuid", request.params[0]);
     paramsFund.push_back(options);
-    JSONRPCRequest requestSpent(request.context);
+    JSONRPCRequest requestSpent;
+    requestSpent.context = request.context;
     requestSpent.params = paramsFund;
     requestSpent.URI = request.URI;
     const UniValue &resUTXOs = listunspent().HandleRequest(requestSpent);  
@@ -2252,7 +2258,8 @@ static RPCHelpMan sendfrom() {
     paramsFund.push_back(nMinDepth);
     paramsFund.push_back(nMaxDepth);
     paramsFund.push_back(paramsAddress);
-    JSONRPCRequest requestSpent(request.context);
+    JSONRPCRequest requestSpent;
+    requestSpent.context = request.context;
     requestSpent.params = paramsFund;
     requestSpent.URI = request.URI;
     const UniValue &resUTXOs = listunspent().HandleRequest(requestSpent);
