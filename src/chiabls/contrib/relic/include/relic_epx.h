@@ -414,7 +414,7 @@ void ep2_curve_get_b(fp2_t b);
 /**
  * Returns the vector of coefficients required to perform GLV method.
  *
- * @param[out] b			- the vector of coefficients.
+ * @param[out] v			- the vector of coefficients.
  */
 void ep2_curve_get_vs(bn_t *v);
 
@@ -463,7 +463,7 @@ void ep2_curve_get_cof(bn_t h);
 /**
  * Returns the sqrt(-3) mod q in the curve, where q is the prime.
  *
- * @param[out] h			- the returned cofactor.
+ * @param[out] s3			- the returned cofactor.
  */
 void ep2_curve_get_s3(bn_t s3);
 
@@ -488,7 +488,7 @@ void ep2_curve_set(fp2_t a, fp2_t b, ep2_t g, bn_t r, bn_t h);
 /**
  * Configures an elliptic curve by twisting the curve over the base prime field.
  *
- *  @param				- the type of twist (multiplicative or divisive)
+ *  @param type				- the type of twist (multiplicative or divisive)
  */
 void ep2_curve_set_twist(int type);
 
@@ -510,7 +510,7 @@ void ep2_set_infty(ep2_t p);
 /**
  * Copies the second argument to the first argument.
  *
- * @param[out] q			- the result.
+ * @param[out] r			- the result.
  * @param[in] p				- the elliptic curve point to copy.
  */
 void ep2_copy(ep2_t r, ep2_t p);

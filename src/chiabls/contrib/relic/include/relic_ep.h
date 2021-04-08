@@ -511,14 +511,14 @@ const ep_t *ep_curve_get_tab(void);
 /**
  * Returns the order of the group of points in the prime elliptic curve.
  *
- * @param[out] r			- the returned order.
+ * @param[out] n			- the returned order.
  */
 void ep_curve_get_ord(bn_t n);
 
 /**
  * Returns the cofactor of the binary elliptic curve.
  *
- * @param[out] n			- the returned cofactor.
+ * @param[out] h			- the returned cofactor.
  */
 void ep_curve_get_cof(bn_t h);
 
@@ -565,7 +565,7 @@ void ep_curve_set_endom(const fp_t b, const ep_t g, const bn_t r, const bn_t h,
 /**
  * Configures a prime elliptic curve by its parameter identifier.
  *
- * @param				- the parameter identifier.
+ * @param param			- the parameter identifier.
  */
 void ep_param_set(int param);
 
@@ -647,7 +647,7 @@ void ep_set_infty(ep_t p);
 /**
  * Copies the second argument to the first argument.
  *
- * @param[out] q			- the result.
+ * @param[out] r			- the result.
  * @param[in] p				- the prime elliptic curve point to copy.
  */
 void ep_copy(ep_t r, const ep_t p);
