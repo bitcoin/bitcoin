@@ -46,6 +46,7 @@ FUZZ_TARGET(psbt)
         (void)PSBTInputSigned(input);
         (void)input.IsNull();
     }
+    (void)CountPSBTUnsignedInputs(psbt);
 
     for (const PSBTOutput& output : psbt.outputs) {
         (void)output.IsNull();
