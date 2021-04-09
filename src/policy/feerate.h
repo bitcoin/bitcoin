@@ -47,7 +47,6 @@ public:
      *
      *  @param[in] nFeePaid  CAmount fee rate to construct with
      *  @param[in] nBytes    size_t bytes (units) to construct with
-     *  @returns   fee rate
      */
     CFeeRate(const CAmount& nFeePaid, size_t nBytes);
     /**

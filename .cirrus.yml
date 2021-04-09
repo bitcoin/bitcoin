@@ -28,7 +28,6 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
     # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
     cpu: 2
     memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
-    kvm: true  # Use kvm to avoid spurious CI failures in the default virtualization cluster, see https://github.com/bitcoin/bitcoin/issues/20093
   ccache_cache:
     folder: "/tmp/ccache_dir"
   depends_built_cache:
@@ -113,7 +112,7 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
-    cpu: 4  # Double CPU and increase Memory to avoid timeout
+    cpu: 6  # Increase CPU and Memory to avoid timeout
     memory: 24G
   env:
     MAKEJOBS: "-j8"

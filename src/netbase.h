@@ -172,7 +172,6 @@ CService LookupNumeric(const std::string& name, uint16_t portDefault = 0, DNSLoo
  * @param strSubnet A string representation of a subnet of the form `network
  *                address [ "/", ( CIDR-style suffix | netmask ) ]`(e.g.
  *                `2001:db8::/32`, `192.0.2.0/255.255.255.0`, or `8.8.8.8`).
- * @param ret The resulting internal representation of a subnet.
  *
  * @returns Whether the operation succeeded or not.
  */
@@ -235,7 +234,7 @@ void InterruptSocks5(bool interrupt);
  * @param port The destination port.
  * @param auth The credentials with which to authenticate with the specified
  *             SOCKS5 proxy.
- * @param sock The SOCKS5 proxy socket.
+ * @param socket The SOCKS5 proxy socket.
  *
  * @returns Whether or not the operation succeeded.
  *

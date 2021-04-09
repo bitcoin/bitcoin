@@ -2,22 +2,26 @@
 export LC_ALL=C
 set -e -o pipefail
 
+# Source the common prelude, which:
+#   1. Checks if we're at the top directory of the Bitcoin Core repository
+#   2. Defines a few common functions and variables
+#
+# shellcheck source=libexec/prelude.bash
+source "$(dirname "${BASH_SOURCE[0]}")/libexec/prelude.bash"
+
+
 ###################
-## Sanity Checks ##
+## SANITY CHECKS ##
 ###################
 
 ################
-# Check 1: Make sure that we can invoke required tools
+# Required non-builtin commands should be invocable
 ################
-for cmd in git make guix cat mkdir curl; do
-    if ! command -v "$cmd" > /dev/null 2>&1; then
-        echo "ERR: This script requires that '$cmd' is installed and available in your \$PATH"
-        exit 1
-    fi
-done
+
+check_tools cat mkdir make git guix
 
 ################
-# Check 2: Make sure GUIX_BUILD_OPTIONS is empty
+# GUIX_BUILD_OPTIONS should be empty
 ################
 #
 # GUIX_BUILD_OPTIONS is an environment variable recognized by guix commands that
@@ -45,8 +49,9 @@ exit 1
 fi
 
 ################
-# Check 3: Make sure that we're not in a dirty worktree
+# The git worktree should not be dirty
 ################
+
 if ! git diff-index --quiet HEAD -- && [ -z "$FORCE_DIRTY_WORKTREE" ]; then
 cat << EOF
 ERR: The current git worktree is dirty, which may lead to broken builds.
@@ -60,12 +65,12 @@ Hint: To make your git worktree clean, You may want to:
          using a dirty worktree
 EOF
 exit 1
-else
-    GIT_COMMIT=$(git rev-parse --short=12 HEAD)
 fi
 
+mkdir -p "$VERSION_BASE"
+
 ################
-# Check 4: Make sure that build directories do not exist
+# Build directories should not exist
 ################
 
 # Default to building for all supported HOSTs (overridable by environment)
@@ -73,14 +78,12 @@ export HOSTS="${HOSTS:-x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu ri
                        x86_64-w64-mingw32
                        x86_64-apple-darwin18}"
 
-DISTSRC_BASE="${DISTSRC_BASE:-${PWD}}"
-
 # Usage: distsrc_for_host HOST
 #
 #   HOST: The current platform triple we're building for
 #
 distsrc_for_host() {
-    echo "${DISTSRC_BASE}/distsrc-${GIT_COMMIT}-${1}"
+    echo "${DISTSRC_BASE}/distsrc-${VERSION}-${1}"
 }
 
 # Accumulate a list of build directories that already exist...
@@ -100,24 +103,31 @@ ERR: Build directories for this commit already exist for the following platform
 
      Aborting...
 
+Hint: To blow everything away, you may want to use:
+
+  $ ./contrib/guix/guix-clean
+
+Specifically, this will remove all files without an entry in the index,
+excluding the SDK directory, the depends download cache, the depends built
+packages cache, the garbage collector roots for Guix environments, and the
+output directory.
 EOF
 for host in $hosts_distsrc_exists; do
     echo "     ${host} '$(distsrc_for_host "$host")'"
 done
 exit 1
 else
-
     mkdir -p "$DISTSRC_BASE"
 fi
 
 ################
-# Check 5: When building for darwin, make sure that the macOS SDK exists
+# When building for darwin, the macOS SDK should exists
 ################
 
 for host in $HOSTS; do
     case "$host" in
         *darwin*)
-            OSX_SDK="$(make -C "${PWD}/depends" --no-print-directory HOST="$host" print-OSX_SDK | sed 's@^[^=]\+=[[:space:]]\+@@g')"
+            OSX_SDK="$(make -C "${PWD}/depends" --no-print-directory HOST="$host" print-OSX_SDK | sed 's@^[^=]\+=@@g')"
             if [ -e "$OSX_SDK" ]; then
                 echo "Found macOS SDK at '${OSX_SDK}', using..."
             else
@@ -128,13 +138,40 @@ for host in $HOSTS; do
     esac
 done
 
+################
+# Check that we can connect to the guix-daemon
+################
+
+cat << EOF
+Checking that we can connect to the guix-daemon...
+
+Hint: If this hangs, you may want to try turning your guix-daemon off and on
+      again.
+
+EOF
+if ! guix gc --list-failures > /dev/null; then
+cat << EOF
+
+ERR: Failed to connect to the guix-daemon, please ensure that one is running and
+     reachable.
+EOF
+exit 1
+fi
+
+# Developer note: we could use `guix repl` for this check and run:
+#
+#     (import (guix store)) (close-connection (open-connection))
+#
+# However, the internal API is likely to change more than the CLI invocation
+
+
 #########
-# Setup #
+# SETUP #
 #########
 
 # Determine the maximum number of jobs to run simultaneously (overridable by
 # environment)
-MAX_JOBS="${MAX_JOBS:-$(nproc)}"
+JOBS="${JOBS:-$(nproc)}"
 
 # Usage: host_to_commonname HOST
 #
@@ -149,12 +186,6 @@ host_to_commonname() {
     esac
 }
 
-# Download the depends sources now as we won't have internet access in the build
-# container
-for host in $HOSTS; do
-  make -C "${PWD}/depends" -j"$MAX_JOBS" download-"$(host_to_commonname "$host")" ${V:+V=1} ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"}
-done
-
 # Determine the reference time used for determinism (overridable by environment)
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
 
@@ -164,19 +195,97 @@ time-machine() {
     # shellcheck disable=SC2086
     guix time-machine --url=https://github.com/dongcarl/guix.git \
                       --commit=490e39ff303f4f6873a04bfb8253755bdae1b29c \
-                      --max-jobs="$MAX_JOBS" \
+                      --cores="$JOBS" \
                       --keep-failed \
+                      --fallback \
                       ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
                       ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_TIMEMACHINE_FLAGS} \
                       -- "$@"
 }
 
+
+# Precious directories are those which should not be cleaned between successive
+# guix builds
+depends_precious_dir_names='SOURCES_PATH BASE_CACHE SDK_PATH'
+precious_dir_names="${depends_precious_dir_names} OUTDIR_BASE PROFILES_BASE"
+
+# Usage: contains IFS-SEPARATED-LIST ITEM
+contains() {
+    for i in ${1}; do
+        if [ "$i" = "${2}" ]; then
+            return 0  # Found!
+        fi
+    done
+    return 1
+}
+
+# If the user explicitly specified a precious directory, create it so we
+# can map it into the container
+for precious_dir_name in $precious_dir_names; do
+    precious_dir_path="${!precious_dir_name}"
+    if [ -n "$precious_dir_path" ]; then
+        if [ ! -e "$precious_dir_path" ]; then
+            mkdir -p "$precious_dir_path"
+        elif [ -L "$precious_dir_path" ]; then
+            echo "ERR: ${precious_dir_name} cannot be a symbolic link"
+            exit 1
+        elif [ ! -d "$precious_dir_path" ]; then
+            echo "ERR: ${precious_dir_name} must be a directory"
+            exit 1
+        fi
+    fi
+done
+
+mkdir -p "$VAR_BASE"
+
+# Record the _effective_ values of precious directories such that guix-clean can
+# avoid clobbering them if appropriate.
+#
+# shellcheck disable=SC2046,SC2086
+{
+    # Get depends precious dir definitions from depends
+    make -C "${PWD}/depends" \
+         --no-print-directory \
+         -- $(printf "print-%s\n" $depends_precious_dir_names)
+
+    # Get remaining precious dir definitions from the environment
+    for precious_dir_name in $precious_dir_names; do
+        precious_dir_path="${!precious_dir_name}"
+        if ! contains "$depends_precious_dir_names" "$precious_dir_name"; then
+            echo "${precious_dir_name}=${precious_dir_path}"
+        fi
+    done
+} > "${VAR_BASE}/precious_dirs"
+
 # Make sure an output directory exists for our builds
-OUTDIR="${OUTDIR:-${PWD}/output}"
-[ -e "$OUTDIR" ] || mkdir -p "$OUTDIR"
+OUTDIR_BASE="${OUTDIR_BASE:-${VERSION_BASE}/output}"
+mkdir -p "$OUTDIR_BASE"
+
+# Download the depends sources now as we won't have internet access in the build
+# container
+for host in $HOSTS; do
+    make -C "${PWD}/depends" -j"$JOBS" download-"$(host_to_commonname "$host")" ${V:+V=1} ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"}
+done
+
+# Usage: outdir_for_host HOST
+#
+#   HOST: The current platform triple we're building for
+#
+outdir_for_host() {
+    echo "${OUTDIR_BASE}/${1}"
+}
+
+# Usage: profiledir_for_host HOST COMMAND
+#
+#   HOST: The current platform triple we're building for
+#
+profiledir_for_host() {
+    echo "${PROFILES_BASE}/${2}-${1}"
+}
+
 
 #########
-# Build #
+# BUILD #
 #########
 
 # Function to be called when building for host ${1} and the user interrupts the
@@ -184,23 +293,18 @@ OUTDIR="${OUTDIR:-${PWD}/output}"
 int_trap() {
 cat << EOF
 ** INT received while building ${1}, you may want to clean up the relevant
-   output, deploy, and distsrc-* directories before rebuilding
+   work directories (e.g. distsrc-*) before rebuilding
 
 Hint: To blow everything away, you may want to use:
 
-  $ git clean -xdff --exclude='/depends/SDKs/*'
+  $ ./contrib/guix/guix-clean
 
 Specifically, this will remove all files without an entry in the index,
-excluding the SDK directory. Practically speaking, this means that all ignored
-and untracked files and directories will be wiped, allowing you to start anew.
+excluding the SDK directory, the depends download cache, the depends built
+packages cache, the garbage collector roots for Guix environments, and the
+output directory.
 EOF
 }
-
-# Create SOURCES_PATH, BASE_CACHE, and SDK_PATH if they are non-empty so that we
-# can map them into the container
-[ -z "$SOURCES_PATH" ] || mkdir -p "$SOURCES_PATH"
-[ -z "$BASE_CACHE" ]   || mkdir -p "$BASE_CACHE"
-[ -z "$SDK_PATH" ]     || mkdir -p "$SDK_PATH"
 
 # Deterministically build Bitcoin Core
 # shellcheck disable=SC2153
@@ -216,15 +320,15 @@ for host in $HOSTS; do
 
         # shellcheck disable=SC2030
 cat << EOF
-INFO: Building commit ${GIT_COMMIT:?not set} for platform triple ${HOST:?not set}:
+INFO: Building ${VERSION:?not set} for platform triple ${HOST:?not set}:
       ...using reference timestamp: ${SOURCE_DATE_EPOCH:?not set}
-      ...running at most ${MAX_JOBS:?not set} jobs
+      ...running at most ${JOBS:?not set} jobs
       ...from worktree directory: '${PWD}'
           ...bind-mounted in container to: '/bitcoin'
       ...in build directory: '$(distsrc_for_host "$HOST")'
           ...bind-mounted in container to: '$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")'
-      ...outputting in: '${OUTDIR:?not set}'
-          ...bind-mounted in container to: '/outdir'
+      ...outputting in: '$(outdir_for_host "$HOST")'
+          ...bind-mounted in container to: '$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST")'
 EOF
 
         # Run the build script 'contrib/guix/libexec/build.sh' in the build
@@ -299,24 +403,29 @@ EOF
                                  --no-cwd \
                                  --share="$PWD"=/bitcoin \
                                  --share="$DISTSRC_BASE"=/distsrc-base \
-                                 --share="$OUTDIR"=/outdir \
+                                 --share="$OUTDIR_BASE"=/outdir-base \
                                  --expose="$(git rev-parse --git-common-dir)" \
                                  ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
                                  ${BASE_CACHE:+--share="$BASE_CACHE"} \
                                  ${SDK_PATH:+--share="$SDK_PATH"} \
-                                 --max-jobs="$MAX_JOBS" \
+                                 --cores="$JOBS" \
                                  --keep-failed \
+                                 --fallback \
+                                 --link-profile \
+                                 --root="$(profiledir_for_host "${HOST}" build)" \
                                  ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
                                  ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS} \
                                  -- env HOST="$host" \
-                                        MAX_JOBS="$MAX_JOBS" \
+                                        DISTNAME="$DISTNAME" \
+                                        JOBS="$JOBS" \
                                         SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:?unable to determine value}" \
                                         ${V:+V=1} \
                                         ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"} \
                                         ${BASE_CACHE:+BASE_CACHE="$BASE_CACHE"} \
                                         ${SDK_PATH:+SDK_PATH="$SDK_PATH"} \
                                         DISTSRC="$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")" \
-                                        OUTDIR=/outdir \
+                                        OUTDIR="$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST")" \
+                                        DIST_ARCHIVE_BASE=/outdir-base/dist-archive \
                                       bash -c "cd /bitcoin && bash contrib/guix/libexec/build.sh"
     )
 

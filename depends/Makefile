@@ -2,7 +2,7 @@
 
 # Pattern rule to print variables, e.g. make print-top_srcdir
 print-%:
-	@echo '$*' = '$($*)'
+	@echo '$*'='$($*)'
 
 # When invoking a sub-make, keep only the command line variable definitions
 # matching the pattern in the filter function.
@@ -141,8 +141,8 @@ build_id_string+=system_clang
 $(host_arch)_$(host_os)_id_string+=system_clang
 endif
 
-build_id_string+=GUIX_ENVIRONMENT=$(GUIX_ENVIRONMENT)
-$(host_arch)_$(host_os)_id_string+=GUIX_ENVIRONMENT=$(GUIX_ENVIRONMENT)
+build_id_string+=GUIX_ENVIRONMENT=$(realpath $(GUIX_ENVIRONMENT))
+$(host_arch)_$(host_os)_id_string+=GUIX_ENVIRONMENT=$(realpath $(GUIX_ENVIRONMENT))
 
 qrencode_packages_$(NO_QR) = $(qrencode_packages)
 

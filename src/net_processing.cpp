@@ -448,7 +448,7 @@ private:
     /** Determine whether or not a peer can request a transaction, and return it (or nullptr if not found or not allowed). */
     CTransactionRef FindTxForGetData(const CNode& peer, const GenTxid& gtxid, const std::chrono::seconds mempool_req, const std::chrono::seconds now) LOCKS_EXCLUDED(cs_main);
 
-    void ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic<bool>& interruptMsgProc) EXCLUSIVE_LOCKS_REQUIRED(!cs_main, peer.m_getdata_requests_mutex);
+    void ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic<bool>& interruptMsgProc) EXCLUSIVE_LOCKS_REQUIRED(peer.m_getdata_requests_mutex) LOCKS_EXCLUDED(::cs_main);
 
     /** Relay map (txid or wtxid -> CTransactionRef) */
     typedef std::map<uint256, CTransactionRef> MapRelay;
@@ -2062,7 +2062,7 @@ void PeerManagerImpl::ProcessHeadersMessage(CNode& pfrom, const Peer& peer,
 /**
  * Reconsider orphan transactions after a parent has been accepted to the mempool.
  *
- * @param[in/out]  orphan_work_set  The set of orphan transactions to reconsider. Generally only one
+ * @param[in,out]  orphan_work_set  The set of orphan transactions to reconsider. Generally only one
  *                                  orphan will be reconsidered on each call of this function. This set
  *                                  may be added to if accepting an orphan causes its children to be
  *                                  reconsidered.

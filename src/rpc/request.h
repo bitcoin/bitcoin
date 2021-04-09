@@ -35,18 +35,7 @@ public:
     std::string URI;
     std::string authUser;
     std::string peerAddr;
-    const std::any& context;
-
-    explicit JSONRPCRequest(const std::any& context) : id(NullUniValue), params(NullUniValue), context(context) {}
-
-    //! Initializes request information from another request object and the
-    //! given context. The implementation should be updated if any members are
-    //! added or removed above.
-    JSONRPCRequest(const JSONRPCRequest& other, const std::any& context)
-        : id(other.id), strMethod(other.strMethod), params(other.params), mode(other.mode), URI(other.URI),
-          authUser(other.authUser), peerAddr(other.peerAddr), context(context)
-    {
-    }
+    std::any context;
 
     void parse(const UniValue& valRequest);
 };

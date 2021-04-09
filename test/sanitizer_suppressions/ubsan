@@ -1,6 +1,10 @@
 # -fsanitize=undefined suppressions
 # =================================
-# No suppressions at the moment. Hooray!
+# This would be `signed-integer-overflow:CTxMemPool::PrioritiseTransaction`,
+# however due to a bug in clang the symbolizer is disabled and thus no symbol
+# names can be used.
+# See https://github.com/google/sanitizers/issues/1364
+signed-integer-overflow:txmempool.cpp
 
 # -fsanitize=integer suppressions
 # ===============================

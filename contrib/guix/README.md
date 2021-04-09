@@ -80,6 +80,50 @@ at the end of the `guix pull`)
 export PATH="${HOME}/.config/guix/current/bin${PATH:+:}$PATH"
 ```
 
+### Controlling the number of threads used by `guix` build commands
+
+By default, the scripts under `./contrib/guix` will invoke all `guix` build
+commands with `--cores="$JOBS"`. Note that `$JOBS` defaults to `$(nproc)` if not
+specified. However, astute manual readers will also notice that there is a
+`--max-jobs=` flag (which defaults to 1 if unspecified).
+
+Here is the difference between `--cores=` and `--max-jobs=`:
+
+> Note: When I say "derivation," think "package"
+
+`--cores=`
+
+  - controls the number of CPU cores to build each derivation. This is the value
+    passed to `make`'s `--jobs=` flag.
+
+`--max-jobs=`
+
+  - controls how many derivations can be built in parallel
+  - defaults to 1
+
+Therefore, the default is for `guix` build commands to build one derivation at a
+time, utilizing `$JOBS` threads.
+
+Specifying the `$JOBS` environment variable will only modify `--cores=`, but you
+can also modify the value for `--max-jobs=` by specifying
+`$ADDITIONAL_GUIX_COMMON_FLAGS`. For example, if you have a LOT of memory, you
+may want to set:
+
+```sh
+export ADDITIONAL_GUIX_COMMON_FLAGS='--max-jobs=8'
+```
+
+Which allows for a maximum of 8 derivations to be built at the same time, each
+utilizing `$JOBS` threads.
+
+Or, if you'd like to avoid spurious build failures caused by issues with
+parallelism within a single package, but would still like to build multiple
+packages when the dependency graph allows for it, you may want to try:
+
+```sh
+export JOBS=1 ADDITIONAL_GUIX_COMMON_FLAGS='--max-jobs=8'
+```
+
 ## Usage
 
 ### As a Tool for Deterministic Builds
@@ -125,12 +169,16 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
   the actual SDK (e.g. SDK_PATH=$HOME/Downloads/macOS-SDKs instead of
   $HOME/Downloads/macOS-SDKs/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers).
 
-* _**MAX_JOBS**_
+* _**JOBS**_
 
-  Override the maximum number of jobs to run simultaneously, you might want to
-  do so on a memory-limited machine. This may be passed to `make` as in `make
-  --jobs="$MAX_JOBS"` or `xargs` as in `xargs -P"$MAX_JOBS"`. _(defaults to the
-  value of `nproc` outside the container)_
+  Override the number of jobs to run simultaneously, you might want to do so on
+  a memory-limited machine. This may be passed to:
+
+  - `guix` build commands as in `guix environment --cores="$JOBS"`
+  - `make` as in `make --jobs="$JOBS"`
+  - `xargs` as in `xargs -P"$JOBS"`
+
+  _(defaults to the value of `nproc` outside the container)_
 
 * _**SOURCE_DATE_EPOCH**_
 
@@ -216,6 +264,57 @@ To use dongcarl's substitute server for Bitcoin Core builds after having
 ```
 export SUBSTITUTE_URLS='https://guix.carldong.io https://ci.guix.gnu.org'
 ```
+
+## Troubleshooting
+
+### Derivation failed to build
+
+When you see a build failure like below:
+
+```
+building /gnu/store/...-foo-3.6.12.drv...
+/ 'check' phasenote: keeping build directory `/tmp/guix-build-foo-3.6.12.drv-0'
+builder for `/gnu/store/...-foo-3.6.12.drv' failed with exit code 1
+build of /gnu/store/...-foo-3.6.12.drv failed
+View build log at '/var/log/guix/drvs/../...-foo-3.6.12.drv.bz2'.
+cannot build derivation `/gnu/store/...-qux-7.69.1.drv': 1 dependencies couldn't be built
+cannot build derivation `/gnu/store/...-bar-3.16.5.drv': 1 dependencies couldn't be built
+cannot build derivation `/gnu/store/...-baz-2.0.5.drv': 1 dependencies couldn't be built
+guix time-machine: error: build of `/gnu/store/...-baz-2.0.5.drv' failed
+```
+
+It means that `guix` failed to build a package named `foo`, which was a
+dependency of `qux`, `bar`, and `baz`. Importantly, note that the last "failed"
+line is not necessarily the root cause, the first "failed" line is.
+
+Most of the time, the build failure is due to a spurious test failure or the
+package's build system/test suite breaking when running multi-threaded. To
+rebuild _just_ this derivation in a single-threaded fashion:
+
+```sh
+$ guix build --cores=1 /gnu/store/...-foo-3.6.12.drv
+```
+
+If the single-threaded rebuild did not succeed, you may need to dig deeper.
+You may view `foo`'s build logs in `less` like so (please replace paths with the
+path you see in the build failure output):
+
+```sh
+$ bzcat /var/log/guix/drvs/../...-foo-3.6.12.drv.bz2 | less
+```
+
+`foo`'s build directory is also preserved and available at
+`/tmp/guix-build-foo-3.6.12.drv-0`. However, if you fail to build `foo` multiple
+times, it may be `/tmp/...drv-1` or `/tmp/...drv-2`. Always consult the build
+failure output for the most accurate, up-to-date information.
+
+#### python(-minimal): [Errno 84] Invalid or incomplete multibyte or wide character
+
+This error occurs when your `$TMPDIR` (default: /tmp) exists on a filesystem
+which rejects characters not present in the UTF-8 character code set. An example
+is ZFS with the utf8only=on option set.
+
+More information: https://bugs.python.org/issue37584
 
 ## FAQ
 

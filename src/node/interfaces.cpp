@@ -80,7 +80,7 @@ public:
     }
     bool appInitMain(interfaces::BlockAndHeaderTipInfo* tip_info) override
     {
-        return AppInitMain(m_context_ref, *m_context, tip_info);
+        return AppInitMain(*m_context, tip_info);
     }
     void appShutdown() override
     {
@@ -244,7 +244,8 @@ public:
     CFeeRate getDustRelayFee() override { return ::dustRelayFee; }
     UniValue executeRpc(const std::string& command, const UniValue& params, const std::string& uri) override
     {
-        JSONRPCRequest req(m_context_ref);
+        JSONRPCRequest req;
+        req.context = m_context;
         req.params = params;
         req.strMethod = command;
         req.URI = uri;
@@ -314,14 +315,8 @@ public:
     void setContext(NodeContext* context) override
     {
         m_context = context;
-        if (context) {
-            m_context_ref = context;
-        } else {
-            m_context_ref.reset();
-        }
     }
     NodeContext* m_context{nullptr};
-    std::any m_context_ref;
 };
 
 bool FillBlock(const CBlockIndex* index, const FoundBlock& block, UniqueLock<RecursiveMutex>& lock, const CChain& active)

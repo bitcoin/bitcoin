@@ -202,43 +202,31 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     }
 }
 
-TestChain100Setup::TestChain100Setup(bool deterministic)
+TestChain100Setup::TestChain100Setup()
 {
-    m_deterministic = deterministic;
-
-    if (m_deterministic) {
-        SetMockTime(1598887952);
-        constexpr std::array<unsigned char, 32> vchKey = {
-            {
-                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1
-            }
-        };
-        coinbaseKey.Set(vchKey.begin(), vchKey.end(), false);
-    } else {
-        coinbaseKey.MakeNewKey(true);
-    }
+    SetMockTime(1598887952);
+    constexpr std::array<unsigned char, 32> vchKey = {
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}};
+    coinbaseKey.Set(vchKey.begin(), vchKey.end(), true);
 
     // Generate a 100-block chain:
     this->mineBlocks(COINBASE_MATURITY);
 
-    if (m_deterministic) {
+    {
         LOCK(::cs_main);
         assert(
             m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
-            "49c95db1e470fed04496d801c9d8fbb78155d2c7f855232c918823d2c17d0cf6");
+            "571d80a9967ae599cec0448b0b0ba1cfb606f584d8069bd7166b86854ba7a191");
     }
 }
 
 void TestChain100Setup::mineBlocks(int num_blocks)
 {
     CScript scriptPubKey = CScript() << ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;
-    for (int i = 0; i < num_blocks; i++)
-    {
+    for (int i = 0; i < num_blocks; i++) {
         std::vector<CMutableTransaction> noTxns;
         CBlock b = CreateAndProcessBlock(noTxns, scriptPubKey);
-        if (m_deterministic) {
-            SetMockTime(GetTime() + 1);
-        }
+        SetMockTime(GetTime() + 1);
         m_coinbase_txns.push_back(b.vtx[0]);
     }
 }
@@ -315,9 +303,7 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactio
 TestChain100Setup::~TestChain100Setup()
 {
     gArgs.ForceSetArg("-segwitheight", "0");
-    if (m_deterministic) {
-        SetMockTime(0);
-    }
+    SetMockTime(0);
 }
 
 CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction& tx) const

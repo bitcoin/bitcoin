@@ -137,8 +137,9 @@ static RPCHelpMan help()
                 {
                     {"command", RPCArg::Type::STR, /* default */ "all commands", "The command to get help on"},
                 },
-                RPCResult{
-                    RPCResult::Type::STR, "", "The help text"
+                {
+                    RPCResult{RPCResult::Type::STR, "", "The help text"},
+                    RPCResult{RPCResult::Type::ANY, "", ""},
                 },
                 RPCExamples{""},
         [&](const RPCHelpMan& self, const JSONRPCRequest& jsonRequest) -> UniValue

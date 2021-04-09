@@ -738,12 +738,10 @@ public:
         return 0;
     }
 
-    bool Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const override
-    {
-        return m_fuzzed_data_provider.ConsumeBool();
-    }
+    bool Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const override;
 
-    bool IsConnected(std::string& errmsg) const override {
+    bool IsConnected(std::string& errmsg) const override
+    {
         if (m_fuzzed_data_provider.ConsumeBool()) {
             return true;
         }

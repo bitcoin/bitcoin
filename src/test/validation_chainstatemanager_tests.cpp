@@ -200,7 +200,7 @@ CreateAndActivateUTXOSnapshot(NodeContext& node, const fs::path root, F malleati
 }
 
 //! Test basic snapshot activation.
-BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100DeterministicSetup)
+BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
 {
     ChainstateManager& chainman = *Assert(m_node.chainman);
 
@@ -258,6 +258,11 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Determi
         m_node, m_path_root, [](CAutoFile& auto_infile, SnapshotMetadata& metadata) {
             // Coins count is smaller than coins in file
             metadata.m_coins_count -= 1;
+    }));
+    BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
+        m_node, m_path_root, [](CAutoFile& auto_infile, SnapshotMetadata& metadata) {
+            // Wrong hash
+            metadata.m_base_blockhash = uint256::ONE;
     }));
 
     BOOST_REQUIRE(CreateAndActivateUTXOSnapshot(m_node, m_path_root));

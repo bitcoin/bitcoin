@@ -4,7 +4,7 @@
 
 # Pattern rule to print variables, e.g. make print-top_srcdir
 print-%:
-	@echo '$*' = '$($*)'
+	@echo '$*'='$($*)'
 
 DIST_SUBDIRS = secp256k1 univalue
 

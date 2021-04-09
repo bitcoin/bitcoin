@@ -113,15 +113,78 @@ std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey)
     return ParseHexV(find_value(o, strKey), strKey);
 }
 
+namespace {
+
+/**
+ * Quote an argument for shell.
+ *
+ * @note This is intended for help, not for security-sensitive purposes.
+ */
+std::string ShellQuote(const std::string& s)
+{
+    std::string result;
+    result.reserve(s.size() * 2);
+    for (const char ch: s) {
+        if (ch == '\'') {
+            result += "'\''";
+        } else {
+            result += ch;
+        }
+    }
+    return "'" + result + "'";
+}
+
+/**
+ * Shell-quotes the argument if it needs quoting, else returns it literally, to save typing.
+ *
+ * @note This is intended for help, not for security-sensitive purposes.
+ */
+std::string ShellQuoteIfNeeded(const std::string& s)
+{
+    for (const char ch: s) {
+        if (ch == ' ' || ch == '\'' || ch == '"') {
+            return ShellQuote(s);
+        }
+    }
+
+    return s;
+}
+
+}
+
 std::string HelpExampleCli(const std::string& methodname, const std::string& args)
 {
     return "> bitcoin-cli " + methodname + " " + args + "\n";
+}
+
+std::string HelpExampleCliNamed(const std::string& methodname, const RPCArgList& args)
+{
+    std::string result = "> bitcoin-cli -named " + methodname;
+    for (const auto& argpair: args) {
+        const auto& value = argpair.second.isStr()
+                ? argpair.second.get_str()
+                : argpair.second.write();
+        result += " " + argpair.first + "=" + ShellQuoteIfNeeded(value);
+    }
+    result += "\n";
+    return result;
 }
 
 std::string HelpExampleRpc(const std::string& methodname, const std::string& args)
 {
     return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\": \"curltest\", "
         "\"method\": \"" + methodname + "\", \"params\": [" + args + "]}' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
+}
+
+std::string HelpExampleRpcNamed(const std::string& methodname, const RPCArgList& args)
+{
+    UniValue params(UniValue::VOBJ);
+    for (const auto& param: args) {
+        params.pushKV(param.first, param.second);
+    }
+
+    return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\": \"curltest\", "
+           "\"method\": \"" + methodname + "\", \"params\": " + params.write() + "}' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
 }
 
 // Converts a hex string to a public key if possible
@@ -442,6 +505,7 @@ std::string RPCResults::ToDescriptionString() const
 {
     std::string result;
     for (const auto& r : m_results) {
+        if (r.m_type == RPCResult::Type::ANY) continue; // for testing only
         if (r.m_cond.empty()) {
             result += "\nResult:\n";
         } else {
@@ -459,7 +523,7 @@ std::string RPCExamples::ToDescriptionString() const
     return m_examples.empty() ? m_examples : "\nExamples:\n" + m_examples;
 }
 
-UniValue RPCHelpMan::HandleRequest(const JSONRPCRequest& request)
+UniValue RPCHelpMan::HandleRequest(const JSONRPCRequest& request) const
 {
     if (request.mode == JSONRPCRequest::GET_ARGS) {
         return GetArgMap();
@@ -471,7 +535,9 @@ UniValue RPCHelpMan::HandleRequest(const JSONRPCRequest& request)
     if (request.mode == JSONRPCRequest::GET_HELP || !IsValidNumArgs(request.params.size())) {
         throw std::runtime_error(ToString());
     }
-    return m_fun(*this, request);
+    const UniValue ret = m_fun(*this, request);
+    CHECK_NONFATAL(std::any_of(m_results.m_results.begin(), m_results.m_results.end(), [ret](const RPCResult& res) { return res.MatchesType(ret); }));
+    return ret;
 }
 
 bool RPCHelpMan::IsValidNumArgs(size_t num_args) const
@@ -677,6 +743,9 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
         sections.PushSection({indent + "..." + maybe_separator, m_description});
         return;
     }
+    case Type::ANY: {
+        CHECK_NONFATAL(false); // Only for testing
+    }
     case Type::NONE: {
         sections.PushSection({indent + "null" + maybe_separator, Description("json null")});
         return;
@@ -737,6 +806,42 @@ void RPCResult::ToSections(Sections& sections, const OuterType outer_type, const
         }
         sections.PushSection({indent + "}" + maybe_separator, ""});
         return;
+    }
+    } // no default case, so the compiler can warn about missing cases
+    CHECK_NONFATAL(false);
+}
+
+bool RPCResult::MatchesType(const UniValue& result) const
+{
+    switch (m_type) {
+    case Type::ELISION: {
+        return false;
+    }
+    case Type::ANY: {
+        return true;
+    }
+    case Type::NONE: {
+        return UniValue::VNULL == result.getType();
+    }
+    case Type::STR:
+    case Type::STR_HEX: {
+        return UniValue::VSTR == result.getType();
+    }
+    case Type::NUM:
+    case Type::STR_AMOUNT:
+    case Type::NUM_TIME: {
+        return UniValue::VNUM == result.getType();
+    }
+    case Type::BOOL: {
+        return UniValue::VBOOL == result.getType();
+    }
+    case Type::ARR_FIXED:
+    case Type::ARR: {
+        return UniValue::VARR == result.getType();
+    }
+    case Type::OBJ_DYN:
+    case Type::OBJ: {
+        return UniValue::VOBJ == result.getType();
     }
     } // no default case, so the compiler can warn about missing cases
     CHECK_NONFATAL(false);
