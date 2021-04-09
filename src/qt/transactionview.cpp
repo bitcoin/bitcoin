@@ -37,8 +37,8 @@
 #include <QUrl>
 #include <QVBoxLayout>
 
-TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *parent) :
-    QWidget(parent)
+TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *parent)
+    : QWidget(parent), m_platform_style{platformStyle}
 {
     // Build filter row
     setContentsMargins(0,0,0,0);
@@ -241,6 +241,20 @@ void TransactionView::setModel(WalletModel *_model)
         // Watch-only signal
         connect(_model, &WalletModel::notifyWatchonlyChanged, this, &TransactionView::updateWatchOnlyColumn);
     }
+}
+
+void TransactionView::changeEvent(QEvent* e)
+{
+#ifdef Q_OS_MACOS
+    if (e->type() == QEvent::PaletteChange) {
+        watchOnlyWidget->setItemIcon(
+            TransactionFilterProxy::WatchOnlyFilter_Yes,
+            m_platform_style->SingleColorIcon(QStringLiteral(":/icons/eye_plus")));
+        watchOnlyWidget->setItemIcon(
+            TransactionFilterProxy::WatchOnlyFilter_No,
+            m_platform_style->SingleColorIcon(QStringLiteral(":/icons/eye_minus")));
+    }
+#endif
 }
 
 void TransactionView::chooseDate(int idx)
