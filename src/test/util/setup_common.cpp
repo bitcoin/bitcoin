@@ -234,13 +234,6 @@ TestChain100Setup::TestChain100Setup(int count)
     // Generate a 100-block chain:
     this->mineBlocks(count);
 
-    {
-        LOCK(::cs_main);
-        // SYSCOIN
-        assert(
-            m_node.chainman->ActiveChain().Tip()->GetBlockHash().ToString() ==
-            "1236d85b6fdd769d2e5932d12e389eb7638485ba44956fc4f6105ad203909eef");
-    }
 }
 
 void TestChain100Setup::mineBlocks(int num_blocks)
