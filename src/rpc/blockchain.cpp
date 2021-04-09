@@ -46,6 +46,7 @@
 
 #include <vbk/adaptors/univalue_json.hpp>
 #include <vbk/pop_common.hpp>
+#include <vbk/pop_service.hpp>
 
 struct CUpdatedBlock
 {
@@ -922,7 +923,7 @@ static UniValue getblock(const JSONRPCRequest& request)
 
     UniValue json = blockToJSON(block, tip, pblockindex, verbosity >= 2);
 
-    {
+    if (VeriBlock::isPopEnabled()) {
         auto& pop = VeriBlock::GetPop();
         LOCK(cs_main);
         auto index = pop.getAltBlockTree().getBlockIndex(block.GetHash().asVector());

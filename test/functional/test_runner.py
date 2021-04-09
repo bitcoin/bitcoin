@@ -116,6 +116,7 @@ BASE_SCRIPTS = [
     # VeriBlock tests
     'feature_pop_activate.py',
     'feature_pop_e2e.py',
+    'feature_pop_enable.py',
     'feature_pop_fork_resolution.py',
     'feature_pop_init.py',
     'feature_pop_mempool_getpop.py',

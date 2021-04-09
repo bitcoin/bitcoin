@@ -48,6 +48,40 @@ struct AltChainParamsVBTC : public altintegration::AltChainParams {
     altintegration::AltBlock bootstrap;
 };
 
+struct AltChainParamsVBTCDetRegTest : public altintegration::AltChainParams {
+    ~AltChainParamsVBTCDetRegTest() override = default;
+
+    AltChainParamsVBTCDetRegTest()
+    {
+        bootstrap.hash = uint256S("393e1fea789a3ac750921d6d9f6aa7e84df9e031ecd63fca22dc3adc0632025c").asVector();
+        bootstrap.previousBlock = uint256S("42b16a400669ab1403410585e793cec350baa53ff3fddc2414be92f03f1b12f2").asVector();
+        bootstrap.height = 1000;
+        // intentionally leave timestamp empty
+    }
+
+    altintegration::AltBlock getBootstrapBlock() const noexcept override
+    {
+        return bootstrap;
+    }
+
+    int64_t getIdentifier() const noexcept override
+    {
+        return 0x3ae6ca;
+    }
+
+    std::vector<uint8_t> getHash(const std::vector<uint8_t>& bytes) const noexcept override;
+
+    // we should verify:
+    // - check that 'bytes' can be deserialized to a CBlockHeader
+    // - check that this CBlockHeader is valid (time, pow, version...)
+    // - check that 'root' is equal to Merkle Root in CBlockHeader
+    bool checkBlockHeader(
+            const std::vector<uint8_t>& bytes,
+            const std::vector<uint8_t>& root, altintegration::ValidationState& state) const noexcept override;
+
+    altintegration::AltBlock bootstrap;
+};
+
 void printConfig(const altintegration::Config& config);
 void selectPopConfig(const std::string& network = "test");
 

@@ -369,6 +369,136 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
     }
 }
 
+/**
+ * Deterministic regression test
+ */
+CDetRegTestParams::CDetRegTestParams(const ArgsManager& args)
+{
+    strNetworkID = CBaseChainParams::DETREGTEST;
+    consensus.nSubsidyHalvingInterval = 150;
+    consensus.BIP16Exception = uint256();
+    consensus.BIP34Height = 500; // BIP34 activated on regtest (Used in functional tests)
+    consensus.BIP34Hash = uint256();
+    consensus.BIP65Height = 1351; // BIP65 activated on regtest (Used in functional tests)
+    consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in functional tests)
+    consensus.CSVHeight = 432;    // CSV activated on regtest (Used in rpc activation tests)
+    consensus.SegwitHeight = 0;   // SEGWIT is always activated on regtest unless overridden
+    consensus.MinBIP9WarningHeight = 0;
+    consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    consensus.nPowTargetTimespan = 14 * 24 * 60 * 60; // two weeks
+    consensus.nPowTargetSpacing = 10 * 60;
+    consensus.fPowAllowMinDifficultyBlocks = true;
+    consensus.fPowNoRetargeting = true;
+    consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
+    consensus.nMinerConfirmationWindow = 144;       // Faster than normal for regtest (144 instead of 2016)
+    consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+    consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 0;
+    consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+
+    consensus.nMinimumChainWork = uint256{};
+    consensus.defaultAssumeValid = uint256{};
+
+    pchMessageStart[0] = 3;
+    pchMessageStart[1] = 3;
+    pchMessageStart[2] = 3;
+    pchMessageStart[3] = 3 + VBK_VERSION;
+    nDefaultPort = 18555;
+    nPruneAfterHeight = 1000;
+    m_assumed_blockchain_size = 0;
+    m_assumed_chain_state_size = 0;
+
+    UpdateActivationParametersFromArgs(args);
+
+    genesis = CreateGenesisBlockDefault(1296688602, 2, 0x207fffff, 1, 50 * COIN);
+    consensus.hashGenesisBlock = genesis.GetHash();
+    assert(consensus.hashGenesisBlock == uint256S("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
+    assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
+
+    vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
+    vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
+
+    fDefaultConsistencyChecks = true;
+    fRequireStandard = true;
+    m_is_test_chain = true;
+
+    checkpointData = {
+            {}};
+
+    chainTxData = ChainTxData{
+            0,
+            0,
+            0};
+
+    // VeriBlock
+    consensus.VeriBlockPopSecurityHeight = 1200;
+    // do not activate LWMA on regtest
+    {
+        consensus.ZawyLWMAHeight = std::numeric_limits<int>::max();
+        consensus.nZawyLwmaAveragingWindow = 45;
+        assert(consensus.ZawyLWMAHeight > consensus.nZawyLwmaAveragingWindow);
+        consensus.nZawyLwmaAdjustedWeight = 13772;
+        consensus.nZawyLwmaMinDenominator = 10;
+        consensus.bZawyLwmaSolvetimeLimitation = true;
+    }
+
+    base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 111);
+    base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 196);
+    base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 239);
+    base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
+    base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
+
+    bech32_hrp = "bcrt";
+}
+
+void CDetRegTestParams::UpdateVersionBitsParameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout)
+{
+    consensus.vDeployments[d].nStartTime = nStartTime;
+    consensus.vDeployments[d].nTimeout = nTimeout;
+}
+
+void CDetRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
+{
+    if (gArgs.IsArgSet("-segwitheight")) {
+        int64_t height = gArgs.GetArg("-segwitheight", consensus.SegwitHeight);
+        if (height < -1 || height >= std::numeric_limits<int>::max()) {
+            throw std::runtime_error(strprintf("Activation height %ld for segwit is out of valid range. Use -1 to disable segwit.", height));
+        } else if (height == -1) {
+            LogPrintf("Segwit disabled for testing\n");
+            height = std::numeric_limits<int>::max();
+        }
+        consensus.SegwitHeight = static_cast<int>(height);
+    }
+
+    if (!args.IsArgSet("-vbparams")) return;
+
+    for (const std::string& strDeployment : args.GetArgs("-vbparams")) {
+        std::vector<std::string> vDeploymentParams;
+        boost::split(vDeploymentParams, strDeployment, boost::is_any_of(":"));
+        if (vDeploymentParams.size() != 3) {
+            throw std::runtime_error("Version bits parameters malformed, expecting deployment:start:end");
+        }
+        int64_t nStartTime, nTimeout;
+        if (!ParseInt64(vDeploymentParams[1], &nStartTime)) {
+            throw std::runtime_error(strprintf("Invalid nStartTime (%s)", vDeploymentParams[1]));
+        }
+        if (!ParseInt64(vDeploymentParams[2], &nTimeout)) {
+            throw std::runtime_error(strprintf("Invalid nTimeout (%s)", vDeploymentParams[2]));
+        }
+        bool found = false;
+        for (int j = 0; j < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++j) {
+            if (vDeploymentParams[0] == VersionBitsDeploymentInfo[j].name) {
+                UpdateVersionBitsParameters(Consensus::DeploymentPos(j), nStartTime, nTimeout);
+                found = true;
+                LogPrintf("Setting version bits activation parameters for %s to start=%ld, timeout=%ld\n", vDeploymentParams[0], nStartTime, nTimeout);
+                break;
+            }
+        }
+        if (!found) {
+            throw std::runtime_error(strprintf("Invalid deployment (%s)", vDeploymentParams[0]));
+        }
+    }
+}
+
 static std::unique_ptr<const CChainParams> globalChainParams;
 
 const CChainParams& Params()
@@ -385,6 +515,8 @@ std::unique_ptr<const CChainParams> CreateChainParams(const std::string& chain)
         return std::unique_ptr<CChainParams>(new CTestNetParams());
     else if (chain == CBaseChainParams::REGTEST)
         return std::unique_ptr<CChainParams>(new CRegTestParams(gArgs));
+    else if (chain == CBaseChainParams::DETREGTEST)
+        return std::unique_ptr<CChainParams>(new CDetRegTestParams(gArgs));
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }
 
