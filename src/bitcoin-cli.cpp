@@ -256,9 +256,14 @@ public:
 
     UniValue ProcessReply(const UniValue& reply) override
     {
+        if (!reply["error"].isNull()) return reply;
+        const std::vector<UniValue>& nodes{reply["result"].getValues()};
+        if (!nodes.empty() && nodes.at(0)["network"].isNull()) {
+            throw std::runtime_error("-addrinfo requires bitcoind server to be running v22.0 and up");
+        }
         // Count the number of peers we know by network, including torv2 versus torv3.
         std::array<uint64_t, m_networks_size> counts{{}};
-        for (const UniValue& node : reply["result"].getValues()) {
+        for (const UniValue& node : nodes) {
             std::string network_name{node["network"].get_str()};
             if (network_name == "onion") {
                 network_name = node["address"].get_str().size() > 22 ? "torv3" : "torv2";
