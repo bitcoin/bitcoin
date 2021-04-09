@@ -2912,10 +2912,10 @@ UniValue settxfee(const JSONRPCRequest& request)
         return NullUniValue;
     }
 
-    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1)
+    if (request.fHelp || request.params.size() < 1 || request.params.size() > 1) {
         throw std::runtime_error(
             "settxfee amount\n"
-            "\nSet the transaction fee per kB. Overwrites the paytxfee parameter.\n"
+            "\nSet the transaction fee per kB for this wallet. Overrides the global -paytxfee command line parameter.\n"
             "\nArguments:\n"
             "1. amount         (numeric or string, required) The transaction fee in " + CURRENCY_UNIT + "/kB\n"
             "\nResult:\n"
@@ -2924,13 +2924,13 @@ UniValue settxfee(const JSONRPCRequest& request)
             + HelpExampleCli("settxfee", "0.00001")
             + HelpExampleRpc("settxfee", "0.00001")
         );
+    }
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
-    // Amount
     CAmount nAmount = AmountFromValue(request.params[0]);
 
-    payTxFee = CFeeRate(nAmount, 1000);
+    pwallet->m_pay_tx_fee = CFeeRate(nAmount, 1000);
     return true;
 }
 
@@ -3067,7 +3067,7 @@ UniValue getwalletinfo(const JSONRPCRequest& request)
     obj.pushKV("keys_left",     pwallet->nKeysLeftSinceAutoBackup);
     if (pwallet->IsCrypted())
         obj.pushKV("unlocked_until", pwallet->nRelockTime);
-    obj.pushKV("paytxfee",      ValueFromAmount(payTxFee.GetFeePerK()));
+    obj.pushKV("paytxfee",      ValueFromAmount(pwallet->m_pay_tx_fee.GetFeePerK()));
     if (fHDEnabled) {
         obj.pushKV("hdchainid", hdChainCurrent.GetID().GetHex());
         obj.pushKV("hdaccountcount", (int64_t)hdChainCurrent.CountAccounts());

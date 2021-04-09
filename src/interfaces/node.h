@@ -26,11 +26,9 @@ class Coin;
 class RPCTimerInterface;
 class UniValue;
 class proxyType;
-enum class FeeReason;
 struct CNodeStateStats;
 
 namespace interfaces {
-
 class Handler;
 class Wallet;
 
@@ -208,18 +206,6 @@ public:
 
     //! Get network active.
     virtual bool getNetworkActive() = 0;
-
-    //! Get tx confirm target.
-    virtual unsigned int getTxConfirmTarget() = 0;
-
-    //! Get required fee.
-    virtual CAmount getRequiredFee(unsigned int tx_bytes) = 0;
-
-    //! Get minimum fee.
-    virtual CAmount getMinimumFee(unsigned int tx_bytes,
-        const CCoinControl& coin_control,
-        int* returned_target,
-        FeeReason* reason) = 0;
 
     //! Get max tx fee.
     virtual CAmount getMaxTxFee() = 0;
