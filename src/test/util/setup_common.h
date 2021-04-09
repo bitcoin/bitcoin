@@ -115,7 +115,7 @@ class CScript;
  */
 struct TestChain100Setup : public RegTestingSetup {
     // SYSCOIN
-    TestChain100Setup(int count = COINBASE_MATURITY, bool deterministic = false);
+    TestChain100Setup(int count = COINBASE_MATURITY);
 
     /**
      * Create a new block with just given transactions, coinbase paying to
@@ -146,7 +146,6 @@ struct TestChain100Setup : public RegTestingSetup {
 
     ~TestChain100Setup();
 
-    bool m_deterministic;
     std::vector<CTransactionRef> m_coinbase_txns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
 };
@@ -162,10 +161,6 @@ struct TestChainDIP3Setup : public TestChain100Setup
 struct TestChainDIP3BeforeActivationSetup : public TestChain100Setup
 {
     TestChainDIP3BeforeActivationSetup() : TestChain100Setup(548) {}
-};
-struct TestChain100DeterministicSetup : public TestChain100Setup {
-    // SYSCOIN
-    TestChain100DeterministicSetup() : TestChain100Setup(100, true) { }
 };
 
 /**
