@@ -388,6 +388,32 @@ std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) co
     return std::nullopt;
 }
 
+const fs::path& ArgsManager::GetBlocksDirPath()
+{
+    LOCK(cs_args);
+    fs::path& path = m_cached_blocks_path;
+
+    // Cache the path to avoid calling fs::create_directories on every call of
+    // this function
+    if (!path.empty()) return path;
+
+    if (IsArgSet("-blocksdir")) {
+        path = fs::system_complete(GetArg("-blocksdir", ""));
+        if (!fs::is_directory(path)) {
+            path = "";
+            return path;
+        }
+    } else {
+        path = GetDataDirPath(false);
+    }
+
+    path /= BaseParams().DataDir();
+    path /= "blocks";
+    fs::create_directories(path);
+    path = StripRedundantLastElementsOfPath(path);
+    return path;
+}
+
 const fs::path& ArgsManager::GetDataDirPath(bool net_specific) const
 {
     LOCK(cs_args);
@@ -425,6 +451,7 @@ void ArgsManager::ClearDatadirPathCache()
 
     m_cached_datadir_path = fs::path();
     m_cached_network_datadir_path = fs::path();
+    m_cached_blocks_path = fs::path();
 }
 
 std::optional<const ArgsManager::Command> ArgsManager::GetCommand() const
@@ -775,35 +802,6 @@ fs::path GetDefaultDataDir()
 #endif
 }
 
-static fs::path g_blocks_path_cache_net_specific;
-static RecursiveMutex csPathCached;
-
-const fs::path &GetBlocksDir()
-{
-    LOCK(csPathCached);
-    fs::path &path = g_blocks_path_cache_net_specific;
-
-    // Cache the path to avoid calling fs::create_directories on every call of
-    // this function
-    if (!path.empty()) return path;
-
-    if (gArgs.IsArgSet("-blocksdir")) {
-        path = fs::system_complete(gArgs.GetArg("-blocksdir", ""));
-        if (!fs::is_directory(path)) {
-            path = "";
-            return path;
-        }
-    } else {
-        path = GetDataDir(false);
-    }
-
-    path /= BaseParams().DataDir();
-    path /= "blocks";
-    fs::create_directories(path);
-    path = StripRedundantLastElementsOfPath(path);
-    return path;
-}
-
 const fs::path &GetDataDir(bool fNetSpecific)
 {
     return gArgs.GetDataDirPath(fNetSpecific);
@@ -818,7 +816,6 @@ bool CheckDataDirOption()
 void ClearDatadirCache()
 {
     gArgs.ClearDatadirPathCache();
-    g_blocks_path_cache_net_specific = fs::path();
 }
 
 fs::path GetConfigFile(const std::string& confPath)
