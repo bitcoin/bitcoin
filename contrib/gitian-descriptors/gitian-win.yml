@@ -22,6 +22,7 @@ packages:
 - "zip"
 - "ca-certificates"
 - "python3"
+- "python3-pip"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
@@ -85,6 +86,8 @@ script: |
     done
   done
   }
+
+  pip3 install lief==0.11.4
 
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}
