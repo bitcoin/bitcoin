@@ -31,7 +31,7 @@ FUZZ_TARGET(node_eviction)
             /* nKeyedNetGroup */ fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
             /* prefer_evict */ fuzzed_data_provider.ConsumeBool(),
             /* m_is_local */ fuzzed_data_provider.ConsumeBool(),
-            /* m_is_onion */ fuzzed_data_provider.ConsumeBool(),
+            /* m_network */ fuzzed_data_provider.PickValueInArray(ALL_NETWORKS),
         });
     }
     // Make a copy since eviction_candidates may be in some valid but otherwise
