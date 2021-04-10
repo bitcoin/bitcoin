@@ -944,8 +944,7 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& vEvict
     // An attacker cannot manipulate this metric without performing useful work.
     EraseLastKElements(vEvictionCandidates, CompareNodeTXTime, 4);
     // Protect up to 8 non-tx-relay peers that have sent us novel blocks.
-    const size_t erase_size = std::min(size_t(8), vEvictionCandidates.size());
-    EraseLastKElements(vEvictionCandidates, CompareNodeBlockRelayOnlyTime, erase_size,
+    EraseLastKElements(vEvictionCandidates, CompareNodeBlockRelayOnlyTime, 8,
                        [](const NodeEvictionCandidate& n) { return !n.fRelayTxes && n.fRelevantServices; });
 
     // Protect 4 nodes that most recently sent us novel blocks.
