@@ -681,6 +681,34 @@ public:
      */
     bool CalculateMemPoolAncestors(const CTxMemPoolEntry& entry, setEntries& setAncestors, uint64_t limitAncestorCount, uint64_t limitAncestorSize, uint64_t limitDescendantCount, uint64_t limitDescendantSize, std::string& errString, bool fSearchForParents = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
+    /** Try to calculate all in-mempool ancestors of a set of entries, and check for ancestor and
+     * descendant limits (all are inclusive of the transactions in entries). The same limits are
+     * used no matter how many transactions are passed in. For example, if entries.size() = 3 and
+     * the limit is 25, the union of all 3 sets of ancestors must be <= 22.
+     * @param[in]       entries                 Entries corresponding to transaction(s) being
+     *                                          evaluated for acceptance to mempool. If there are
+     *                                          multiple, they must not already be in the mempool.
+     *                                          They need not be direct ancestors/descendants of
+     *                                          each other, though they will be treated as such.
+     * @param[in,out]   setAncestors            Set of in-mempool ancestors. Updated to include
+     *                                          any new ancestors found.
+     * @param[in]       limitAncestorCount      Max number of txns including ancestors.
+     * @param[in]       limitAncestorSize       Max virtual size including ancestors.
+     * @param[in]       limitDescendantCount    Max number of txns including descendants.
+     * @param[in]       limitDescendantSize     Max virtual size including descendants.
+     * @param[out]      errString               Populated with error reason if a limit is hit.
+     * @param[in]       fSearchForParents       Whether to search for entries' in-mempool parents.
+     *                                          Must be true if any entries are not already in mempool.
+     */
+    bool CalculateMemPoolAncestors(const std::vector<CTxMemPoolEntry::CTxMemPoolEntryRef>& entries,
+                                   setEntries& setAncestors,
+                                   const uint64_t limitAncestorCount,
+                                   const uint64_t limitAncestorSize,
+                                   const uint64_t limitDescendantCount,
+                                   const uint64_t limitDescendantSize,
+                                   std::string &errString,
+                                   const bool fSearchForParents = true) const EXCLUSIVE_LOCKS_REQUIRED(cs);
+
     /** Populate setDescendants with all in-mempool descendants of hash.
      *  Assumes that setDescendants includes all in-mempool descendants of anything
      *  already in it.  */

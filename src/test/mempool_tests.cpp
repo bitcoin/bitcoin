@@ -199,6 +199,9 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
     std::string dummy;
     BOOST_CHECK_EQUAL(pool.CalculateMemPoolAncestors(entry.Fee(2000000LL).FromTx(tx7), setAncestorsCalculated, 100, 1000000, 1000, 1000000, dummy), true);
     BOOST_CHECK(setAncestorsCalculated == setAncestors);
+    setAncestorsCalculated.clear();
+    BOOST_CHECK(pool.CalculateMemPoolAncestors({entry.Fee(2000000LL).FromTx(tx7)}, setAncestorsCalculated, 100, 1000000, 1000, 1000000, dummy));
+    BOOST_CHECK(setAncestorsCalculated == setAncestors);
 
     pool.addUnchecked(entry.FromTx(tx7), setAncestors);
     BOOST_CHECK_EQUAL(pool.size(), 7U);
@@ -256,6 +259,9 @@ BOOST_AUTO_TEST_CASE(MempoolIndexingTest)
 
     setAncestorsCalculated.clear();
     BOOST_CHECK_EQUAL(pool.CalculateMemPoolAncestors(entry.Fee(200000LL).Time(4).FromTx(tx10), setAncestorsCalculated, 100, 1000000, 1000, 1000000, dummy), true);
+    BOOST_CHECK(setAncestorsCalculated == setAncestors);
+    setAncestorsCalculated.clear();
+    BOOST_CHECK(pool.CalculateMemPoolAncestors({entry.Fee(200000LL).Time(4).FromTx(tx10)}, setAncestorsCalculated, 100, 1000000, 1000, 1000000, dummy));
     BOOST_CHECK(setAncestorsCalculated == setAncestors);
 
     pool.addUnchecked(entry.FromTx(tx10), setAncestors);
