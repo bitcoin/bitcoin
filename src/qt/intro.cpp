@@ -207,7 +207,7 @@ bool Intro::pickDataDirectory(interfaces::Node& node)
         /* Let the user choose one */
         Intro intro;
         GUIUtil::disableMacFocusRect(&intro);
-        GUIUtil::loadStyleSheet(node, &intro);
+        GUIUtil::loadStyleSheet(true);
         intro.setDataDirectory(dataDirDefaultCurrent);
         intro.setWindowIcon(QIcon(":icons/dash"));
 

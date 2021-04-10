@@ -110,7 +110,7 @@ void AppearanceWidget::updateTheme(const QString& theme)
         QSettings().setValue("theme", newValue);
         // Force loading the theme
         if (model) {
-            GUIUtil::loadTheme(model->node(), nullptr, true);
+            GUIUtil::loadTheme(true);
         }
     }
 }

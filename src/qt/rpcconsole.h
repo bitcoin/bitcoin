@@ -157,6 +157,8 @@ private:
     void updateNodeDetail(const CNodeCombinedStats *stats);
     /** Set required icons for buttons inside the dialog */
     void setButtonIcons();
+    /** Reload some themes related widgets */
+    void reloadThemedWidgets();
 
     enum ColumnWidths
     {

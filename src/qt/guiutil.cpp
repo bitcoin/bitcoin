@@ -1083,13 +1083,12 @@ const bool isValidTheme(const QString& strTheme)
     return strTheme == defaultTheme || strTheme == darkThemePrefix || strTheme == traditionalTheme;
 }
 
-void loadStyleSheet(interfaces::Node& node, QWidget* widget, bool fForceUpdate)
+void loadStyleSheet(bool fForceUpdate)
 {
     AssertLockNotHeld(cs_css);
     LOCK(cs_css);
 
     static std::unique_ptr<QString> stylesheet;
-    static std::set<QWidget*> setWidgets;
 
     bool fDebugCustomStyleSheets = gArgs.GetBoolArg("-debug-ui", false) && isStyleSheetDirectoryCustom();
     bool fStyleSheetChanged = false;
@@ -1178,26 +1177,8 @@ void loadStyleSheet(interfaces::Node& node, QWidget* widget, bool fForceUpdate)
 
     bool fUpdateStyleSheet = fForceUpdate || (fDebugCustomStyleSheets && fStyleSheetChanged);
 
-    if (widget) {
-        setWidgets.insert(widget);
-        widget->setStyleSheet(*stylesheet);
-    }
-
-    QWidgetList allWidgets = QApplication::allWidgets();
-    auto it = setWidgets.begin();
-    while (it != setWidgets.end()) {
-        if (!allWidgets.contains(*it)) {
-            it = setWidgets.erase(it);
-            continue;
-        }
-        if (fUpdateStyleSheet && *it != widget) {
-            (*it)->setStyleSheet(*stylesheet);
-        }
-        ++it;
-    }
-
-    if (!node.shutdownRequested() && fDebugCustomStyleSheets && !fForceUpdate) {
-        QTimer::singleShot(200, [&] { loadStyleSheet(node); });
+    if (fUpdateStyleSheet && stylesheet != nullptr) {
+        qApp->setStyleSheet(*stylesheet);
     }
 }
 
@@ -1717,9 +1698,9 @@ bool dashThemeActive()
     return theme != traditionalTheme;
 }
 
-void loadTheme(interfaces::Node& node, QWidget* widget, bool fForce)
+void loadTheme(bool fForce)
 {
-    loadStyleSheet(node, widget, fForce);
+    loadStyleSheet(fForce);
     updateFonts();
     updateMacFocusRects();
 }

@@ -184,6 +184,9 @@ private:
     std::list<IncomingTransactionMessage> incomingTransactions;
     QTimer* incomingTransactionsTimer;
 
+    /** Timer to update custom css styling in -debug-ui mode periodically */
+    QTimer* timerCustomCss;
+
     /** Create the main UI actions. */
     void createActions();
     /** Create the menu bar and sub-menus. */
