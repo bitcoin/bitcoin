@@ -109,10 +109,10 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         /* unprotected_peer_ids */ {0, 1, 2, 3, 4, 5},
         random_context));
 
-    // Test protection of onion and localhost peers...
+    // Test protection of onion, localhost, and I2P peers...
 
     // Expect 1/4 onion peers to be protected from eviction,
-    // if no localhost peers.
+    // if no localhost or I2P peers.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
             c.m_is_local = false;
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         random_context));
 
     // Expect 1/4 onion peers and 1/4 of the other peers to be protected,
-    // sorted by longest uptime (lowest nTimeConnected), if no localhost peers.
+    // sorted by longest uptime (lowest nTimeConnected), if no localhost or I2P peers.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
             c.nTimeConnected = c.id;
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         random_context));
 
     // Expect 1/4 localhost peers to be protected from eviction,
-    // if no onion peers.
+    // if no onion or I2P peers.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
             c.m_is_local = (c.id == 1 || c.id == 9 || c.id == 11);
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         random_context));
 
     // Expect 1/4 localhost peers and 1/4 of the other peers to be protected,
-    // sorted by longest uptime (lowest nTimeConnected), if no onion peers.
+    // sorted by longest uptime (lowest nTimeConnected), if no onion or I2P peers.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
             c.nTimeConnected = c.id;
