@@ -115,28 +115,28 @@ QAbstractSpinBox
 ******************************************************/
 
 QAbstractSpinBox::up-arrow {
-    border-image: url(':/images/arrow_up_light');
+    image: url(':/images/arrow_up_light');
 }
 QAbstractSpinBox::up-arrow:hover {
-    border-image: url(':/images/arrow_up_dark');
+    image: url(':/images/arrow_up_dark');
 }
 QAbstractSpinBox::up-arrow:pressed {
-    border-image: url(':/images/arrow_up_light');
+    image: url(':/images/arrow_up_light');
 }
 QAbstractSpinBox::up-arrow:disabled {
-    border-image: url(':/images/arrow_light_up_normal');
+    image: url(':/images/arrow_light_up_normal');
 }
 QAbstractSpinBox::down-arrow {
-    border-image: url(':/images/arrow_down_light');
+    image: url(':/images/arrow_down_light');
 }
 QAbstractSpinBox::down-arrow:hover {
-    border-image: url(':/images/arrow_down_dark');
+    image: url(':/images/arrow_down_dark');
 }
 QAbstractSpinBox::down-arrow:pressed {
-    border-image: url(':/images/arrow_down_light');
+    image: url(':/images/arrow_down_light');
 }
 QAbstractSpinBox::down-arrow:disabled {
-    border-image: url(':/images/arrow_light_down_normal');
+    image: url(':/images/arrow_light_down_normal');
 }
 
 /******************************************************
@@ -200,33 +200,33 @@ QCheckBox
 
 QCheckBox::indicator:unchecked,
 QCheckBox::indicator:unchecked:pressed {
-    border-image: url(':/images/checkbox_normal_light');
+    image: url(':/images/checkbox_normal_light');
 }
 QCheckBox::indicator:checked,
 QCheckBox::indicator:checked:pressed {
-    border-image: url(':/images/checkbox_checked_light');
+    image: url(':/images/checkbox_checked_light');
 }
 QCheckBox::indicator:indeterminate,
 QCheckBox::indicator:indeterminate:pressed {
-    border-image: url(':/images/checkbox_partly_checked_light');
+    image: url(':/images/checkbox_partly_checked_light');
 }
 QCheckBox::indicator:hover:!pressed:unchecked {
-    border-image: url(':/images/checkbox_normal_hover_light');
+    image: url(':/images/checkbox_normal_hover_light');
 }
 QCheckBox::indicator:unchecked:disabled {
-    border-image: url(':/images/checkbox_normal_disabled_light');
+    image: url(':/images/checkbox_normal_disabled_light');
 }
 QCheckBox::indicator:checked:!pressed:hover {
-    border-image: url(':/images/checkbox_checked_hover_light');
+    image: url(':/images/checkbox_checked_hover_light');
 }
 QCheckBox::indicator:checked:disabled {
-    border-image: url(':/images/checkbox_checked_disabled_light');
+    image: url(':/images/checkbox_checked_disabled_light');
 }
 QCheckBox::indicator:indeterminate:hover {
-    border-image: url(':/images/checkbox_partly_checked_hover_light');
+    image: url(':/images/checkbox_partly_checked_hover_light');
 }
 QCheckBox::indicator:indeterminate:disabled {
-    border-image: url(':/images/checkbox_partly_checked_disabled_light');
+    image: url(':/images/checkbox_partly_checked_disabled_light');
 }
 
 /******************************************************
@@ -251,16 +251,16 @@ QComboBox::item:selected {
 }
 
 QComboBox::down-arrow {
-    border-image: url(':/images/arrow_down_light') 0 0 0 0 stretch stretch;
+    image: url(':/images/arrow_down_light') 0 0 0 0 stretch stretch;
 }
 QComboBox::down-arrow:hover {
-    border-image: url(':/images/arrow_down_dark') 0 0 0 0 stretch stretch;
+    image: url(':/images/arrow_down_dark') 0 0 0 0 stretch stretch;
 }
 QComboBox::down-arrow:pressed {
-    border-image: url(':/images/arrow_down_light') 0 0 0 0 stretch stretch;
+    image: url(':/images/arrow_down_light') 0 0 0 0 stretch stretch;
 }
 QComboBox::down-arrow:disabled {
-    border-image: url(':/images/arrow_light_down_normal') 0 0 0 0 stretch stretch;
+    image: url(':/images/arrow_light_down_normal') 0 0 0 0 stretch stretch;
 }
 
 /******************************************************
@@ -534,23 +534,23 @@ QRadioButton
 
 QRadioButton::indicator:unchecked,
 QRadioButton::indicator:unchecked:pressed {
-    border-image: url(':/images/radio_normal_light');
+    image: url(':/images/radio_normal_light');
 }
 QRadioButton::indicator:checked,
 QRadioButton::indicator:checked:pressed {
-    border-image: url(':/images/radio_checked_light');
+    image: url(':/images/radio_checked_light');
 }
 QRadioButton::indicator:hover:unchecked:!pressed {
-    border-image: url(':/images/radio_normal_hover_light');
+    image: url(':/images/radio_normal_hover_light');
 }
 QRadioButton::indicator:checked:hover:!pressed {
-    border-image: url(':/images/radio_checked_hover_light');
+    image: url(':/images/radio_checked_hover_light');
 }
 QRadioButton::indicator:checked:disabled {
-    border-image: url(':/images/radio_checked_disabled_light');
+    image: url(':/images/radio_checked_disabled_light');
 }
 QRadioButton::indicator:unchecked:disabled {
-    border-image: url(':/images/radio_normal_disabled_light');
+    image: url(':/images/radio_normal_disabled_light');
 }
 
 
@@ -689,46 +689,46 @@ QTreeWidget {
     border-color: #dcdcdc;
 }
 QTreeWidget::branch::closed:has-children {
-    border-image: url(':/images/arrow_right_light');
+    image: url(':/images/arrow_right_light');
 }
 QTreeWidget::branch::closed:has-children:hover {
-    border-image: url(':/images/arrow_right_dark');
+    image: url(':/images/arrow_right_dark');
 }
 QTreeWidget::branch::open {
-    border-image: url(':/images/arrow_down_light');
+    image: url(':/images/arrow_down_light');
 }
 QTreeWidget::branch::open:hover {
-    border-image: url(':/images/arrow_down_dark');
+    image: url(':/images/arrow_down_dark');
 }
 QTreeWidget::indicator:unchecked,
 QTreeWidget::indicator:unchecked:pressed {
-    border-image: url(':/images/checkbox_normal_light');
+    image: url(':/images/checkbox_normal_light');
 }
 QTreeWidget::indicator:checked,
 QTreeWidget::indicator:checked:pressed {
-    border-image: url(':/images/checkbox_checked_light');
+    image: url(':/images/checkbox_checked_light');
 }
 QTreeWidget::indicator:indeterminate,
 QTreeWidget::indicator:indeterminate:pressed {
-    border-image: url(':/images/checkbox_partly_checked_light');
+    image: url(':/images/checkbox_partly_checked_light');
 }
 QTreeWidget::indicator:hover:unchecked {
-    border-image: url(':/images/checkbox_normal_hover_light');
+    image: url(':/images/checkbox_normal_hover_light');
 }
 QTreeWidget::indicator:unchecked:disabled {
-    border-image: url(':/images/checkbox_normal_disabled_light');
+    image: url(':/images/checkbox_normal_disabled_light');
 }
 QTreeWidget::indicator:checked:hover {
-    border-image: url(':/images/checkbox_checked_hover_light');
+    image: url(':/images/checkbox_checked_hover_light');
 }
 QTreeWidget::indicator:checked:disabled {
-    border-image: url(':/images/checkbox_checked_disabled_light');
+    image: url(':/images/checkbox_checked_disabled_light');
 }
 QTreeWidget::indicator:indeterminate:!pressed:hover {
-    border-image: url(':/images/checkbox_partly_checked_hover_light');
+    image: url(':/images/checkbox_partly_checked_hover_light');
 }
 QTreeWidget::indicator:indeterminate:disabled {
-    border-image: url(':/images/checkbox_partly_checked_disabled_light');
+    image: url(':/images/checkbox_partly_checked_disabled_light');
 }
 
 /******************************************************
@@ -1001,55 +1001,55 @@ QScrollBar::sub-line:horizontal:pressed {
 }
 
 QScrollBar:up-arrow {
-    border-image: url(':/images/arrow_up_light');
+    image: url(':/images/arrow_up_light');
 }
 QScrollBar:up-arrow:hover {
-    border-image: url(':/images/arrow_up_dark');
+    image: url(':/images/arrow_up_dark');
 }
 QScrollBar:up-arrow:pressed {
-    border-image: url(':/images/arrow_up_light');
+    image: url(':/images/arrow_up_light');
 }
 QScrollBar:up-arrow:disabled {
-    border-image: url(':/images/arrow_light_up_normal');
+    image: url(':/images/arrow_light_up_normal');
 }
 
 QScrollBar:down-arrow {
-    border-image: url(':/images/arrow_down_light');
+    image: url(':/images/arrow_down_light');
 }
 QScrollBar:down-arrow:hover {
-    border-image: url(':/images/arrow_down_dark');
+    image: url(':/images/arrow_down_dark');
 }
 QScrollBar:down-arrow:pressed {
-    border-image: url(':/images/arrow_down_light');
+    image: url(':/images/arrow_down_light');
 }
 QScrollBar:down-arrow:disabled {
-    border-image: url(':/images/arrow_light_down_normal');
+    image: url(':/images/arrow_light_down_normal');
 }
 
 QScrollBar:left-arrow {
-    border-image: url(':/images/arrow_left_light');
+    image: url(':/images/arrow_left_light');
 }
 QScrollBar:left-arrow:hover {
-    border-image: url(':/images/arrow_left_dark');
+    image: url(':/images/arrow_left_dark');
 }
 QScrollBar:left-arrow:pressed {
-    border-image: url(':/images/arrow_left_light');
+    image: url(':/images/arrow_left_light');
 }
 QScrollBar:left-arrow:disabled {
-    border-image: url(':/images/arrow_light_left_normal');
+    image: url(':/images/arrow_light_left_normal');
 }
 
 QScrollBar:right-arrow {
-    border-image: url(':/images/arrow_right_light');
+    image: url(':/images/arrow_right_light');
 }
 QScrollBar:right-arrow:hover {
-    border-image: url(':/images/arrow_right_dark');
+    image: url(':/images/arrow_right_dark');
 }
 QScrollBar:right-arrow:pressed {
-    border-image: url(':/images/arrow_right_light');
+    image: url(':/images/arrow_right_light');
 }
 QScrollBar:right-arrow:disabled {
-    border-image: url(':/images/arrow_light_right_normal');
+    image: url(':/images/arrow_light_right_normal');
 }
 
 </os>

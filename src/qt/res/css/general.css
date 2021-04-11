@@ -419,7 +419,7 @@ QHeaderView::section:last {
 QHeaderView::down-arrow {
     width: 20px;
     height: 20px;
-    border-image: url(':/images/arrow_light_down_normal');
+    image: url(':/images/arrow_light_down_normal');
     subcontrol-position: right center;
     subcontrol-origin: margin;
     margin-right: 5px;
@@ -428,7 +428,7 @@ QHeaderView::down-arrow {
 QHeaderView::up-arrow {
     width: 20px;
     height: 20px;
-    border-image: url(':/images/arrow_light_up_normal');
+    image: url(':/images/arrow_light_up_normal');
     subcontrol-position: right center;
     subcontrol-origin: margin;
     margin-right: 5px;
