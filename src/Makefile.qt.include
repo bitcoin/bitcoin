@@ -410,12 +410,12 @@ translate: $(srcdir)/qt/dashstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_
 $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	@test -f $(RCC)
 	@cp -f $< $(@D)/temp_$(<F)
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name dash_locale $(@D)/temp_$(<F) > $@
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name dash_locale --format-version 1 $(@D)/temp_$(<F) > $@
 	@rm $(@D)/temp_$(<F)
 
 $(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_CSS) $(RES_FONTS) $(RES_MOVIES)
 	@test -f $(RCC)
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name dash $< > $@
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name dash --format-version 1 $< > $@
 
 CLEAN_QT = $(nodist_qt_libdashqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno qt/temp_dash_locale.qrc qt/res/css/colors/*
 
