@@ -3,10 +3,19 @@
 env:
   PACKAGE_MANAGER_INSTALL: "apt-get update && apt-get install -y"
   MAKEJOBS: "-j4"
-  DANGER_RUN_CI_ON_HOST: "1"  # Containers will be discarded after the run, so there is no risk that the ci scripts modify the system
   TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
   CCACHE_SIZE: "200M"
   CCACHE_DIR: "/tmp/ccache_dir"
+  CCACHE_NOHASHDIR: "1"  # Debug info might contain a stale path if the build dir changes, but this is fine
+
+cirrus_ephemeral_worker_template_env: &CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+  DANGER_RUN_CI_ON_HOST: "1"  # Containers will be discarded after the run, so there is no risk that the ci scripts modify the system
+
+persistent_worker_template_env: &PERSISTENT_WORKER_TEMPLATE_ENV
+  RESTART_CI_DOCKER_BEFORE_RUN: "1"
+
+persistent_worker_template: &PERSISTENT_WORKER_TEMPLATE
+  persistent_worker: {}  # https://cirrus-ci.org/guide/persistent-workers/
 
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
 base_template: &BASE_TEMPLATE
@@ -31,9 +40,9 @@ global_task_template: &GLOBAL_TASK_TEMPLATE
   ccache_cache:
     folder: "/tmp/ccache_dir"
   depends_built_cache:
-    folder: "/tmp/cirrus-ci-build/depends/built"
+    folder: "depends/built"
   depends_sdk_cache:
-    folder: "/tmp/cirrus-ci-build/depends/sdk-sources"
+    folder: "depends/sdk-sources"
   ci_script:
     - ./ci/test_run_all.sh
 
@@ -69,6 +78,8 @@ task:
   << : *CREDITS_TEMPLATE
   lint_script:
     - ./ci/lint_run_all.sh
+  env:
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
 
 task:
   name: 'ARM [unit tests, no functional tests] [buster]'
@@ -76,6 +87,7 @@ task:
   container:
     image: debian:buster
   env:
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_arm.sh"
 
 task:
@@ -84,18 +96,17 @@ task:
   container:
     image: ubuntu:focal
   env:
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_win64.sh"
 
 task:
   name: '[previous releases, uses qt5 dev package and some depends packages] [unsigned char] [bionic]'
-  # For faster CI feedback, immediately schedule a task that compiles most modules
-  << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
   depends_releases_cache:
-    folder: "/tmp/cirrus-ci-build/releases"
-  container:
-    image: ubuntu:bionic
+    folder: "releases"
+  << : *PERSISTENT_WORKER_TEMPLATE
   env:
+    << : *PERSISTENT_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
 
 task:
@@ -106,6 +117,7 @@ task:
     cpu: 6  # Increase CPU and Memory to avoid timeout
     memory: 24G
   env:
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     MAKEJOBS: "-j12"
     FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
 
@@ -115,6 +127,7 @@ task:
   container:
     image: ubuntu:focal
   env:
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
 
 task:
@@ -125,6 +138,7 @@ task:
     cpu: 4  # Double CPU and Memory to avoid timeout
     memory: 16G
   env:
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     MAKEJOBS: "-j8"
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
 
@@ -136,6 +150,7 @@ task:
     cpu: 4  # Double CPU and Memory to avoid timeout
     memory: 16G
   env:
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
 
 task:
@@ -144,6 +159,7 @@ task:
   container:
     image: ubuntu:focal
   env:
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_multiprocess.sh"
 
 task:
@@ -152,6 +168,7 @@ task:
   container:
     image: ubuntu:bionic
   env:
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_nowallet.sh"
 
 task:
@@ -160,6 +177,7 @@ task:
   container:
     image: ubuntu:focal
   env:
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_mac.sh"
 
 task:
@@ -171,7 +189,7 @@ task:
     # Use latest image, but hardcode version to avoid silent upgrades (and breaks)
     image: big-sur-xcode-12.4  # https://cirrus-ci.org/guide/macOS
   env:
-    DANGER_RUN_CI_ON_HOST: "true"
+    << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
     CI_USE_APT_INSTALL: "no"
     PACKAGE_MANAGER_INSTALL: "echo"  # Nothing to do
     FILE_ENV: "./ci/test/00_setup_env_mac_host.sh"
