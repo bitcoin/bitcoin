@@ -12,12 +12,6 @@
 
 #include <boost/test/unit_test.hpp>
 
-static isminetype IsMine(const CKeyStore &keystore, const CScript& scriptPubKey, bool& isInvalid)
-{
-    isInvalid = false;
-    return IsMine(keystore, scriptPubKey);
-}
-
 BOOST_FIXTURE_TEST_SUITE(script_standard_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
