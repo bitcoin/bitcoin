@@ -111,9 +111,9 @@ task:
 
 task:
   name: '[previous releases, uses qt5 dev package and some depends packages] [unsigned char] [bionic]'
-  << : *GLOBAL_TASK_TEMPLATE
-  depends_releases_cache:
+  previous_releases_cache:
     folder: "releases"
+  << : *GLOBAL_TASK_TEMPLATE
   << : *PERSISTENT_WORKER_TEMPLATE
   env:
     << : *PERSISTENT_WORKER_TEMPLATE_ENV
