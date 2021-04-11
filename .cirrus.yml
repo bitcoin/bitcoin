@@ -105,6 +105,8 @@ task:
   depends_releases_cache:
     folder: "releases"
   << : *PERSISTENT_WORKER_TEMPLATE
+  container:
+    image: ubuntu:bionic
   env:
     << : *PERSISTENT_WORKER_TEMPLATE_ENV
     FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
