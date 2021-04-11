@@ -57,6 +57,8 @@ class GetblockstatsTest(BitcoinTestFramework):
         self.nodes[0].sendtoaddress(address=address, amount=10, subtractfeefromamount=False)
         self.nodes[0].settxfee(amount=0.003)
         self.nodes[0].sendtoaddress(address=address, amount=1, subtractfeefromamount=True)
+        # Send to OP_RETURN output to test its exclusion from statistics
+        self.nodes[0].send(outputs={"data": "21"})
         self.sync_all()
         self.generate(self.nodes[0], 1)
 
@@ -173,6 +175,12 @@ class GetblockstatsTest(BitcoinTestFramework):
         assert_equal(genesis_stats["utxo_increase_actual"], 0)
         assert_equal(genesis_stats["utxo_size_inc_actual"], 0)
 
+        self.log.info('Test tip including OP_RETURN')
+        tip_stats = self.nodes[0].getblockstats(tip)
+        assert_equal(tip_stats["utxo_increase"], 6)
+        assert_equal(tip_stats["utxo_size_inc"], 441)
+        assert_equal(tip_stats["utxo_increase_actual"], 4)
+        assert_equal(tip_stats["utxo_size_inc_actual"], 300)
 
 if __name__ == '__main__':
     GetblockstatsTest().main()
