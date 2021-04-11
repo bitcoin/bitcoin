@@ -160,3 +160,4 @@ osx_volname
 dist/
 *.background.tiff
 
+/guix-build-*
