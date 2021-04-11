@@ -317,6 +317,11 @@ QComboBox:editable {
     border: 0px solid #00000000;
 }
 
+QComboBox:focus {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
 QComboBox::drop-down {
     width: 25px;
     border: 0px;
