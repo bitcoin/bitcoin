@@ -100,16 +100,6 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_win64.sh"
 
 task:
-  name: '[previous releases, uses qt5 dev package and some depends packages] [unsigned char] [bionic]'
-  << : *GLOBAL_TASK_TEMPLATE
-  depends_releases_cache:
-    folder: "/tmp/cirrus-ci-build/releases"
-  container:
-    image: ubuntu:bionic
-  env:
-    FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
-
-task:
   name: '[depends, sanitizers: thread (TSan), no gui] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
