@@ -1,7 +1,7 @@
 Omni Core v0.8.01
 ================
 
-v0.8.1 is a minor release and incooperates significant performance improvements for the initial synchronization and upgrading from older versions of Omni Core.
+v0.8.1 is a minor release and incorporates significant performance improvements for the initial synchronization and upgrading from older versions of Omni Core.
 
 A consensus affecting issue in an earlier version of Omni Core has been identified, which may cause some transactions to be executed twice. This has been addressed and fixed in the previous major version 0.8.0.
 

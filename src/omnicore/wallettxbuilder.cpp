@@ -71,7 +71,7 @@ int WalletTxBuilder(
 
     // Encode the data outputs
     switch(omniTxClass) {
-        case OMNI_CLASS_B: { // declaring vars in a switch here so use an expicit code block
+        case OMNI_CLASS_B: { // declaring vars in a switch here so use an explicit code block
             CPubKey redeemingPubKey;
             const std::string& sAddress = redemptionAddress.empty() ? senderAddress : redemptionAddress;
             if (!AddressToPubKey(iWallet, sAddress, redeemingPubKey)) {

@@ -5,7 +5,7 @@ v0.7.0 is a major release and changes the code base of Omni Core from Bitcoin Co
 
 Compared to Omni Core v0.6.0 and previous versions, v0.7.0 enhances it's distributed exchange nad supports trading of any asset or token for Bitcoin. This version also fixes locking issues and the RPCs for funding transactions as well as omni_listtransactions.
 
-**Due to the upgrade from Bitcoin Core 0.13.2 to 0.18.1, this version incooperates many changes, so please take your time to read through all release notes carefully. The first time you run this version, all the database is reconstructed, which can easily consume several hours.**
+**Due to the upgrade from Bitcoin Core 0.13.2 to 0.18.1, this version incorporates many changes, so please take your time to read through all release notes carefully. The first time you run this version, all the database is reconstructed, which can easily consume several hours.**
 
 To avoid downtime of your system, running both versions on two instances is recommended and once v0.6.1 is up-to-date and it's behavior was confirmed to work, a hot swap may be done.
 

@@ -133,7 +133,7 @@ void DoCheck(const std::string& prv, const std::string& pub, int flags, const st
             // When the descriptor is hardened, evaluate with access to the private keys inside.
             const FlatSigningProvider& key_provider = (flags & HARDENED) ? keys_priv : keys_pub;
 
-            // Evaluate the descriptor selected by `t` in poisition `i`.
+            // Evaluate the descriptor selected by `t` in position `i`.
             FlatSigningProvider script_provider, script_provider_cached;
             std::vector<CScript> spks, spks_cached;
             DescriptorCache desc_cache;
