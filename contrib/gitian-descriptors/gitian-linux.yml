@@ -55,7 +55,6 @@ script: |
   HOST_CXXFLAGS="-O2 -g"
   HOST_LDFLAGS_BASE="-static-libstdc++ -Wl,-O2"
 
-  export QT_RCC_TEST=1
   export QT_RCC_SOURCE_DATE_OVERRIDE=1
   export TZ="UTC"
   export BUILD_DIR="$PWD"
