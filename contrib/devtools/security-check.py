@@ -134,14 +134,6 @@ def check_ELF_separate_code(executable):
                 return False
     return True
 
-def check_PE_PIE(executable) -> bool:
-    '''
-    Check for position independent executable (PIE),
-    allowing for address space randomization.
-    '''
-    binary = lief.parse(executable)
-    return binary.is_pie
-
 def check_PE_DYNAMIC_BASE(executable) -> bool:
     '''PIE: DllCharacteristics bit 0x40 signifies dynamicbase (ASLR)'''
     binary = lief.parse(executable)
@@ -159,31 +151,12 @@ def check_PE_RELOC_SECTION(executable) -> bool:
     binary = lief.parse(executable)
     return binary.has_relocations
 
-def check_PE_NX(executable) -> bool:
-    '''NX: DllCharacteristics bit 0x100 signifies nxcompat (DEP)'''
-    binary = lief.parse(executable)
-    return binary.has_nx
-
-def check_MACHO_PIE(executable) -> bool:
-    '''
-    Check for position independent executable (PIE), allowing for address space randomization.
-    '''
-    binary = lief.parse(executable)
-    return binary.is_pie
-
 def check_MACHO_NOUNDEFS(executable) -> bool:
     '''
     Check for no undefined references.
     '''
     binary = lief.parse(executable)
     return binary.header.has(lief.MachO.HEADER_FLAGS.NOUNDEFS)
-
-def check_MACHO_NX(executable) -> bool:
-    '''
-    Check for no stack execution
-    '''
-    binary = lief.parse(executable)
-    return binary.has_nx
 
 def check_MACHO_LAZY_BINDINGS(executable) -> bool:
     '''
@@ -200,6 +173,21 @@ def check_MACHO_Canary(executable) -> bool:
     binary = lief.parse(executable)
     return binary.has_symbol('___stack_chk_fail')
 
+def check_PIE(executable) -> bool:
+    '''
+    Check for position independent executable (PIE),
+    allowing for address space randomization.
+    '''
+    binary = lief.parse(executable)
+    return binary.is_pie
+
+def check_NX(executable) -> bool:
+    '''
+    Check for no stack execution
+    '''
+    binary = lief.parse(executable)
+    return binary.has_nx
+
 CHECKS = {
 'ELF': [
     ('PIE', check_ELF_PIE),
@@ -209,16 +197,16 @@ CHECKS = {
     ('separate_code', check_ELF_separate_code),
 ],
 'PE': [
-    ('PIE', check_PE_PIE),
+    ('PIE', check_PIE),
     ('DYNAMIC_BASE', check_PE_DYNAMIC_BASE),
     ('HIGH_ENTROPY_VA', check_PE_HIGH_ENTROPY_VA),
-    ('NX', check_PE_NX),
+    ('NX', check_NX),
     ('RELOC_SECTION', check_PE_RELOC_SECTION)
 ],
 'MACHO': [
-    ('PIE', check_MACHO_PIE),
+    ('PIE', check_PIE),
     ('NOUNDEFS', check_MACHO_NOUNDEFS),
-    ('NX', check_MACHO_NX),
+    ('NX', check_NX),
     ('LAZY_BINDINGS', check_MACHO_LAZY_BINDINGS),
     ('Canary', check_MACHO_Canary)
 ]
