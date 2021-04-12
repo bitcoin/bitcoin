@@ -3,8 +3,13 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the importprunedfunds and removeprunedfunds RPCs."""
+from decimal import Decimal
+
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
+from test_framework.util import (
+    assert_equal,
+    assert_raises_rpc_error,
+)
 
 class ImportPrunedFundsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -24,18 +29,18 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         address2 = self.nodes[0].getnewaddress()
         # privkey
         address3 = self.nodes[0].getnewaddress()
-        address3_privkey = self.nodes[0].dumpprivkey(address3)                              # Using privkey
+        address3_privkey = self.nodes[0].dumpprivkey(address3)  # Using privkey
 
-        #Check only one address
+        # Check only one address
         address_info = self.nodes[0].getaddressinfo(address1)
         assert_equal(address_info['ismine'], True)
 
         self.sync_all()
 
-        #Node 1 sync test
-        assert_equal(self.nodes[1].getblockcount(),101)
+        # Node 1 sync test
+        assert_equal(self.nodes[1].getblockcount(), 101)
 
-        #Address Test - before import
+        # Address Test - before import
         address_info = self.nodes[1].getaddressinfo(address1)
         assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], False)
@@ -48,7 +53,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], False)
 
-        #Send funds to self
+        # Send funds to self
         txnid1 = self.nodes[0].sendtoaddress(address1, 0.1)
         self.nodes[0].generate(1)
         rawtxn1 = self.nodes[0].gettransaction(txnid1)['hex']
@@ -66,13 +71,13 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
         self.sync_all()
 
-        #Import with no affiliated address
+        # Import with no affiliated address
         assert_raises_rpc_error(-5, "No addresses", self.nodes[1].importprunedfunds, rawtxn1, proof1)
 
         balance1 = self.nodes[1].getbalance()
         assert_equal(balance1, Decimal(0))
 
-        #Import with affiliated address with no rescan
+        # Import with affiliated address with no rescan
         self.nodes[1].importaddress(address=address2, rescan=False)
         self.nodes[1].importprunedfunds(rawtxn2, proof2)
         assert [tx for tx in self.nodes[1].listtransactions(include_watchonly=True) if tx['txid'] == txnid2]
@@ -84,7 +89,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         balance3 = self.nodes[1].getbalance()
         assert_equal(balance3, Decimal('0.025'))
 
-        #Addresses Test - after import
+        # Addresses Test - after import
         address_info = self.nodes[1].getaddressinfo(address1)
         assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], False)
@@ -95,7 +100,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         assert_equal(address_info['iswatchonly'], False)
         assert_equal(address_info['ismine'], True)
 
-        #Remove transactions
+        # Remove transactions
         assert_raises_rpc_error(-8, "Transaction does not exist in wallet.", self.nodes[1].removeprunedfunds, txnid1)
         assert not [tx for tx in self.nodes[1].listtransactions(include_watchonly=True) if tx['txid'] == txnid1]
 

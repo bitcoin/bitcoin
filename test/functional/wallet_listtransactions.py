@@ -3,13 +3,17 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the listtransactions API."""
-
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from test_framework.mininode import CTransaction
+from decimal import Decimal
 from io import BytesIO
 
-def txFromHex(hexstring):
+from test_framework.mininode import CTransaction
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    assert_array_result,
+    hex_str_to_bytes,
+)
+
+def tx_from_hex(hexstring):
     tx = CTransaction()
     f = BytesIO(hex_str_to_bytes(hexstring))
     tx.deserialize(f)
@@ -25,61 +29,61 @@ class ListTransactionsTest(BitcoinTestFramework):
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
         self.sync_all()
         assert_array_result(self.nodes[0].listtransactions(),
-                           {"txid":txid},
-                           {"category":"send","amount":Decimal("-0.1"),"confirmations":0})
+                            {"txid": txid},
+                            {"category": "send", "amount": Decimal("-0.1"), "confirmations": 0})
         assert_array_result(self.nodes[1].listtransactions(),
-                           {"txid":txid},
-                           {"category":"receive","amount":Decimal("0.1"),"confirmations":0})
+                            {"txid": txid},
+                            {"category": "receive", "amount": Decimal("0.1"), "confirmations": 0})
         # mine a block, confirmations should change:
         self.nodes[0].generate(1)
         self.sync_all()
         assert_array_result(self.nodes[0].listtransactions(),
-                           {"txid":txid},
-                           {"category":"send","amount":Decimal("-0.1"),"confirmations":1})
+                            {"txid": txid},
+                            {"category": "send", "amount": Decimal("-0.1"), "confirmations": 1})
         assert_array_result(self.nodes[1].listtransactions(),
-                           {"txid":txid},
-                           {"category":"receive","amount":Decimal("0.1"),"confirmations":1})
+                            {"txid": txid},
+                            {"category": "receive", "amount": Decimal("0.1"), "confirmations": 1})
 
         # send-to-self:
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 0.2)
         assert_array_result(self.nodes[0].listtransactions(),
-                           {"txid":txid, "category":"send"},
-                           {"amount":Decimal("-0.2")})
+                            {"txid": txid, "category": "send"},
+                            {"amount": Decimal("-0.2")})
         assert_array_result(self.nodes[0].listtransactions(),
-                           {"txid":txid, "category":"receive"},
-                           {"amount":Decimal("0.2")})
+                            {"txid": txid, "category": "receive"},
+                            {"amount": Decimal("0.2")})
 
         # sendmany from node1: twice to self, twice to node2:
-        send_to = { self.nodes[0].getnewaddress() : 0.11,
-                    self.nodes[1].getnewaddress() : 0.22,
-                    self.nodes[0].getnewaddress() : 0.33,
-                    self.nodes[1].getnewaddress() : 0.44 }
+        send_to = {self.nodes[0].getnewaddress(): 0.11,
+                   self.nodes[1].getnewaddress(): 0.22,
+                   self.nodes[0].getnewaddress(): 0.33,
+                   self.nodes[1].getnewaddress(): 0.44}
         txid = self.nodes[1].sendmany("", send_to)
         self.sync_all()
         assert_array_result(self.nodes[1].listtransactions(),
-                           {"category":"send","amount":Decimal("-0.11")},
-                           {"txid":txid} )
+                            {"category": "send", "amount": Decimal("-0.11")},
+                            {"txid": txid})
         assert_array_result(self.nodes[0].listtransactions(),
-                           {"category":"receive","amount":Decimal("0.11")},
-                           {"txid":txid} )
+                            {"category": "receive", "amount": Decimal("0.11")},
+                            {"txid": txid})
         assert_array_result(self.nodes[1].listtransactions(),
-                           {"category":"send","amount":Decimal("-0.22")},
-                           {"txid":txid} )
+                            {"category": "send", "amount": Decimal("-0.22")},
+                            {"txid": txid})
         assert_array_result(self.nodes[1].listtransactions(),
-                           {"category":"receive","amount":Decimal("0.22")},
-                           {"txid":txid} )
+                            {"category": "receive", "amount": Decimal("0.22")},
+                            {"txid": txid})
         assert_array_result(self.nodes[1].listtransactions(),
-                           {"category":"send","amount":Decimal("-0.33")},
-                           {"txid":txid} )
+                            {"category": "send", "amount": Decimal("-0.33")},
+                            {"txid": txid})
         assert_array_result(self.nodes[0].listtransactions(),
-                           {"category":"receive","amount":Decimal("0.33")},
-                           {"txid":txid} )
+                            {"category": "receive", "amount": Decimal("0.33")},
+                            {"txid": txid} )
         assert_array_result(self.nodes[1].listtransactions(),
-                           {"category":"send","amount":Decimal("-0.44")},
-                           {"txid":txid} )
+                            {"category": "send", "amount": Decimal("-0.44")},
+                            {"txid": txid} )
         assert_array_result(self.nodes[1].listtransactions(),
-                           {"category":"receive","amount":Decimal("0.44")},
-                           {"txid":txid} )
+                            {"category": "receive", "amount": Decimal("0.44")},
+                            {"txid": txid} )
 
         pubkey = self.nodes[1].getaddressinfo(self.nodes[1].getnewaddress())['pubkey']
         multisig = self.nodes[1].createmultisig(1, [pubkey])
