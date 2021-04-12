@@ -64,18 +64,21 @@ NodeContext& EnsureNodeContext(const std::any& context)
     return *node_context;
 }
 
-CTxMemPool& EnsureMemPool(const std::any& context)
+CTxMemPool& EnsureMemPool(const NodeContext& node)
 {
-    const NodeContext& node = EnsureNodeContext(context);
     if (!node.mempool) {
         throw JSONRPCError(RPC_CLIENT_MEMPOOL_DISABLED, "Mempool disabled or instance not found");
     }
     return *node.mempool;
 }
 
-ChainstateManager& EnsureChainman(const std::any& context)
+CTxMemPool& EnsureMemPool(const std::any& context)
 {
-    const NodeContext& node = EnsureNodeContext(context);
+    return EnsureMemPool(EnsureNodeContext(context));
+}
+
+ChainstateManager& EnsureChainman(const NodeContext& node)
+{
     if (!node.chainman) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Node chainman not found");
     }
@@ -83,13 +86,22 @@ ChainstateManager& EnsureChainman(const std::any& context)
     return *node.chainman;
 }
 
-CBlockPolicyEstimator& EnsureFeeEstimator(const std::any& context)
+ChainstateManager& EnsureChainman(const std::any& context)
 {
-    NodeContext& node = EnsureNodeContext(context);
+    return EnsureChainman(EnsureNodeContext(context));
+}
+
+CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node)
+{
     if (!node.fee_estimator) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Fee estimation disabled");
     }
     return *node.fee_estimator;
+}
+
+CBlockPolicyEstimator& EnsureFeeEstimator(const std::any& context)
+{
+    return EnsureFeeEstimator(EnsureNodeContext(context));
 }
 
 /* Calculate the difficulty for a given block index.

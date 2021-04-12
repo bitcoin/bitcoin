@@ -57,8 +57,11 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fInclud
 void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex = true, int serialize_flags = 0, const CTxUndo* txundo = nullptr);
 
 NodeContext& EnsureNodeContext(const std::any& context);
+CTxMemPool& EnsureMemPool(const NodeContext& node);
 CTxMemPool& EnsureMemPool(const std::any& context);
+ChainstateManager& EnsureChainman(const NodeContext& node);
 ChainstateManager& EnsureChainman(const std::any& context);
+CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node);
 CBlockPolicyEstimator& EnsureFeeEstimator(const std::any& context);
 
 /**
