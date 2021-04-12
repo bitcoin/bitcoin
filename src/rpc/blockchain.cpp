@@ -1240,21 +1240,21 @@ static RPCHelpMan verifychain()
     };
 }
 
-static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name, int height, int active_tip_nheight) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
+static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name, int softfork_height, int tip_height) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // For buried deployments.
     // A buried deployment is one where the height of the activation has been hardcoded into
     // the client implementation long after the consensus change has activated. See BIP 90.
     // Buried deployments with activation height value of
     // std::numeric_limits<int>::max() are disabled and thus hidden.
-    if (height == std::numeric_limits<int>::max()) return;
+    if (softfork_height == std::numeric_limits<int>::max()) return;
 
     UniValue rv(UniValue::VOBJ);
     rv.pushKV("type", "buried");
     // getblockchaininfo reports the softfork as active from when the chain height is
     // one below the activation height
-    rv.pushKV("active", active_tip_nheight + 1 >= height);
-    rv.pushKV("height", height);
+    rv.pushKV("active", tip_height + 1 >= softfork_height);
+    rv.pushKV("height", softfork_height);
     softforks.pushKV(name, rv);
 }
 
