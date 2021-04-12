@@ -18,7 +18,10 @@ source "$(dirname "${BASH_SOURCE[0]}")/libexec/prelude.bash"
 # Required non-builtin commands should be invokable
 ################
 
-check_tools cat env basename mkdir xargs find gpg
+check_tools cat env basename mkdir xargs find
+if [ -z "$NO_SIGN" ]; then
+    check_tools gpg
+fi
 
 ################
 # Required env vars should be non-empty
@@ -30,6 +33,7 @@ Synopsis:
 
     env GUIX_SIGS_REPO=<path/to/guix.sigs> \\
         SIGNER=GPG_KEY_NAME[=SIGNER_NAME] \\
+        [ NO_SIGN=1 ]
       ./contrib/guix/guix-attest
 
 Example w/o overriding signing name:
@@ -42,6 +46,13 @@ Example overriding signing name:
 
     env GUIX_SIGS_REPO=/home/dongcarl/guix.sigs \\
         SIGNER=0x96AB007F1A7ED999=dongcarl \\
+      ./contrib/guix/guix-attest
+
+Example w/o signing, just creating SHA256SUMS:
+
+    env GUIX_SIGS_REPO=/home/achow101/guix.sigs \\
+        SIGNER=achow101 \\
+        NO_SIGN=1 \\
       ./contrib/guix/guix-attest
 
 EOF
@@ -79,7 +90,7 @@ if [ -z "${signer_name}" ]; then
     signer_name="$gpg_key_name"
 fi
 
-if ! gpg --dry-run --list-secret-keys "${gpg_key_name}" >/dev/null 2>&1; then
+if [ -z "$NO_SIGN" ] && ! gpg --dry-run --list-secret-keys "${gpg_key_name}" >/dev/null 2>&1; then
     echo "ERR: GPG can't seem to find any key named '${gpg_key_name}'"
     exit 1
 fi
@@ -153,8 +164,12 @@ for outdir in "${OUTDIRS[@]}"; do
                 exit 1
             fi
         )
-        echo "${outname}: Signing SHA256SUMS to produce SHA256SUMS.asc"
-        gpg --detach-sign --local-user "$gpg_key_name" --armor --output "$outsigdir"/SHA256SUMS.asc "$outsigdir"/SHA256SUMS
+        if [ -z "$NO_SIGN" ]; then
+            echo "${outname}: Signing SHA256SUMS to produce SHA256SUMS.asc"
+            gpg --detach-sign --local-user "$gpg_key_name" --armor --output "$outsigdir"/SHA256SUMS.asc "$outsigdir"/SHA256SUMS
+        else
+            echo "${outname}: Not signing SHA256SUMS as \$NO_SIGN is not empty"
+        fi
         echo ""
     fi
 done
