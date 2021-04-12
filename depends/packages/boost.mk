@@ -1,6 +1,6 @@
 package=boost
 $(package)_version=1_71_0
-$(package)_download_path=https://dl.bintray.com/boostorg/release/$(subst _,.,$($(package)_version))/source/
+$(package)_download_path=https://boostorg.jfrog.io/artifactory/main/release/$(subst _,.,$($(package)_version))/source/
 $(package)_file_name=boost_$($(package)_version).tar.bz2
 $(package)_sha256_hash=d73a8da01e8bf8c7eda40b4c84915071a8c8a0df4a6734537ddde4a8580524ee
 $(package)_dependencies=native_b2
