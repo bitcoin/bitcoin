@@ -145,7 +145,13 @@ for outdir in "${OUTDIRS[@]}"; do
         echo "${outname}: Hashing build outputs to produce SHA256SUMS"
         (
             cd "$outdir"
-            find . -type f -printf '%P\0' | env LC_ALL=C sort -z | xargs -r0 sha256sum >> "$outsigdir"/SHA256SUMS
+            files="$(find . -type f)"
+            if [ -n "$files" ]; then
+                cut -c3- <<< "$files" | env LC_ALL=C sort | xargs sha256sum >> "$outsigdir"/SHA256SUMS
+            else
+                echo "ERR: ${outname}: No outputs found in '${outdir}'"
+                exit 1
+            fi
         )
         echo "${outname}: Signing SHA256SUMS to produce SHA256SUMS.asc"
         gpg --detach-sign --local-user "$gpg_key_name" --output "$outsigdir"/SHA256SUMS.asc "$outsigdir"/SHA256SUMS
