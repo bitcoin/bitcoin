@@ -100,9 +100,9 @@ static RPCHelpMan getnetworkhashps()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
-    const CChain& active_chain = EnsureAnyChainman(request.context).ActiveChain();
-    return GetNetworkHashPS(!request.params[0].isNull() ? request.params[0].get_int() : 120, !request.params[1].isNull() ? request.params[1].get_int() : -1, active_chain);
+    return GetNetworkHashPS(!request.params[0].isNull() ? request.params[0].get_int() : 120, !request.params[1].isNull() ? request.params[1].get_int() : -1, chainman.ActiveChain());
 },
     };
 }
@@ -235,8 +235,9 @@ static RPCHelpMan generatetodescriptor()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error);
     }
 
-    const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    const CTxMemPool& mempool = EnsureMemPool(node);
+    ChainstateManager& chainman = EnsureChainman(node);
 
     return generateBlocks(chainman, mempool, coinbase_script, num_blocks, max_tries);
 },
@@ -280,8 +281,9 @@ static RPCHelpMan generatetoaddress()
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
     }
 
-    const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    const CTxMemPool& mempool = EnsureMemPool(node);
+    ChainstateManager& chainman = EnsureChainman(node);
 
     CScript coinbase_script = GetScriptForDestination(destination);
 
@@ -329,7 +331,8 @@ static RPCHelpMan generateblock()
         coinbase_script = GetScriptForDestination(destination);
     }
 
-    const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    const CTxMemPool& mempool = EnsureMemPool(node);
 
     std::vector<CTransactionRef> txs;
     const auto raw_txs_or_txids = request.params[1].get_array();
@@ -358,7 +361,7 @@ static RPCHelpMan generateblock()
     CChainParams chainparams(Params());
     CBlock block;
 
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
     {
         LOCK(cs_main);
 
@@ -424,9 +427,11 @@ static RPCHelpMan getmininginfo()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    const CTxMemPool& mempool = EnsureMemPool(node);
+    ChainstateManager& chainman = EnsureChainman(node);
     LOCK(cs_main);
-    const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
-    const CChain& active_chain = EnsureAnyChainman(request.context).ActiveChain();
+    const CChain& active_chain = chainman.ActiveChain();
 
     UniValue obj(UniValue::VOBJ);
     obj.pushKV("blocks",           (int)active_chain.Height());
@@ -595,8 +600,9 @@ static RPCHelpMan getblocktemplate()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
     LOCK(cs_main);
-    ChainstateManager& chainman = EnsureAnyChainman(request.context);
 
     std::string strMode = "template";
     UniValue lpval = NullUniValue;
@@ -663,7 +669,6 @@ static RPCHelpMan getblocktemplate()
     if (strMode != "template")
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
 
-    NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
@@ -678,7 +683,7 @@ static RPCHelpMan getblocktemplate()
     }
 
     static unsigned int nTransactionsUpdatedLast;
-    const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
+    const CTxMemPool& mempool = EnsureMemPool(node);
 
     if (!lpval.isNull())
     {

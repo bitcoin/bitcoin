@@ -180,8 +180,8 @@ static bool rest_headers(const std::any& context,
     std::vector<const CBlockIndex *> headers;
     headers.reserve(count);
     {
-        LOCK(cs_main);
         ChainstateManager& chainman = EnsureAnyChainman(context);
+        LOCK(cs_main);
         tip = chainman.ActiveChain().Tip();
         const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(hash);
         while (pindex != nullptr && chainman.ActiveChain().Contains(pindex)) {
@@ -250,8 +250,8 @@ static bool rest_block(const std::any& context,
     CBlockIndex* pblockindex = nullptr;
     CBlockIndex* tip = nullptr;
     {
-        LOCK(cs_main);
         ChainstateManager& chainman = EnsureAnyChainman(context);
+        LOCK(cs_main);
         tip = chainman.ActiveChain().Tip();
         pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
         if (!pblockindex) {
@@ -641,8 +641,9 @@ static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req,
 
     CBlockIndex* pblockindex = nullptr;
     {
+        ChainstateManager& chainman = EnsureAnyChainman(context);
         LOCK(cs_main);
-        const CChain& active_chain = EnsureAnyChainman(context).ActiveChain();
+        const CChain& active_chain = chainman.ActiveChain();
         if (blockheight > active_chain.Height()) {
             return RESTERR(req, HTTP_NOT_FOUND, "Block height out of range");
         }
