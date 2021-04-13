@@ -212,7 +212,7 @@ static bool CheckTransactionSignature(const CMutableTransaction& tx)
         const auto& txin = tx.vin[i];
         Coin coin;
         GetUTXOCoin(txin.prevout, coin);
-        if (!VerifyScript(txin.scriptSig, coin.out.scriptPubKey, nullptr, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&tx, i, coin.out.nValue))) {
+        if (!VerifyScript(txin.scriptSig, coin.out.scriptPubKey, nullptr, STANDARD_SCRIPT_VERIFY_FLAGS, MutableTransactionSignatureChecker(&tx, i, coin.out.nValue, MissingDataBehavior::ASSERT_FAIL))) {
             return false;
         }
     }
