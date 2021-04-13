@@ -1009,6 +1009,8 @@ static RPCHelpMan pruneblockchain()
 
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
+    CChainState& active_chainstate = chainman.ActiveChainstate();
+    CChain& active_chain = active_chainstate.m_chain;
 
     int heightParam = request.params[0].get_int();
     if (heightParam < 0)
@@ -1018,7 +1020,7 @@ static RPCHelpMan pruneblockchain()
     // too low to be a block time (corresponds to timestamp from Sep 2001).
     if (heightParam > 1000000000) {
         // Add a 2 hour buffer to include blocks which might have had old timestamps
-        CBlockIndex* pindex = chainman.ActiveChain().FindEarliestAtLeast(heightParam - TIMESTAMP_WINDOW, 0);
+        CBlockIndex* pindex = active_chain.FindEarliestAtLeast(heightParam - TIMESTAMP_WINDOW, 0);
         if (!pindex) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Could not find block with at least the specified timestamp.");
         }
@@ -1026,7 +1028,7 @@ static RPCHelpMan pruneblockchain()
     }
 
     unsigned int height = (unsigned int) heightParam;
-    unsigned int chainHeight = (unsigned int) chainman.ActiveChain().Height();
+    unsigned int chainHeight = (unsigned int) active_chain.Height();
     if (chainHeight < Params().PruneAfterHeight())
         throw JSONRPCError(RPC_MISC_ERROR, "Blockchain is too short for pruning.");
     else if (height > chainHeight)
@@ -1036,8 +1038,8 @@ static RPCHelpMan pruneblockchain()
         height = chainHeight - MIN_BLOCKS_TO_KEEP;
     }
 
-    PruneBlockFilesManual(chainman.ActiveChainstate(), height);
-    const CBlockIndex* block = chainman.ActiveChain().Tip();
+    PruneBlockFilesManual(active_chainstate, height);
+    const CBlockIndex* block = active_chain.Tip();
     CHECK_NONFATAL(block);
     while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
         block = block->pprev;
@@ -1363,8 +1365,9 @@ RPCHelpMan getblockchaininfo()
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
+    CChainState& active_chainstate = chainman.ActiveChainstate();
 
-    const CBlockIndex* tip = chainman.ActiveChain().Tip();
+    const CBlockIndex* tip = active_chainstate.m_chain.Tip();
     CHECK_NONFATAL(tip);
     const int height = tip->nHeight;
     UniValue obj(UniValue::VOBJ);
@@ -1375,7 +1378,7 @@ RPCHelpMan getblockchaininfo()
     obj.pushKV("difficulty",            (double)GetDifficulty(tip));
     obj.pushKV("mediantime",            (int64_t)tip->GetMedianTimePast());
     obj.pushKV("verificationprogress",  GuessVerificationProgress(Params().TxData(), tip));
-    obj.pushKV("initialblockdownload",  chainman.ActiveChainstate().IsInitialBlockDownload());
+    obj.pushKV("initialblockdownload",  active_chainstate.IsInitialBlockDownload());
     obj.pushKV("chainwork",             tip->nChainWork.GetHex());
     obj.pushKV("size_on_disk",          CalculateCurrentUsage());
     obj.pushKV("pruned",                fPruneMode);
@@ -1457,6 +1460,7 @@ static RPCHelpMan getchaintips()
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
+    CChain& active_chain = chainman.ActiveChain();
 
     /*
      * Idea: The set of chain tips is the active chain tip, plus orphan blocks which do not have another orphan building off of them.
@@ -1470,7 +1474,7 @@ static RPCHelpMan getchaintips()
     std::set<const CBlockIndex*> setPrevs;
 
     for (const std::pair<const uint256, CBlockIndex*>& item : chainman.BlockIndex()) {
-        if (!chainman.ActiveChain().Contains(item.second)) {
+        if (!active_chain.Contains(item.second)) {
             setOrphans.insert(item.second);
             setPrevs.insert(item.second->pprev);
         }
@@ -1483,7 +1487,7 @@ static RPCHelpMan getchaintips()
     }
 
     // Always report the currently active tip.
-    setTips.insert(chainman.ActiveChain().Tip());
+    setTips.insert(active_chain.Tip());
 
     /* Construct the output array.  */
     UniValue res(UniValue::VARR);
@@ -1492,11 +1496,11 @@ static RPCHelpMan getchaintips()
         obj.pushKV("height", block->nHeight);
         obj.pushKV("hash", block->phashBlock->GetHex());
 
-        const int branchLen = block->nHeight - chainman.ActiveChain().FindFork(block)->nHeight;
+        const int branchLen = block->nHeight - active_chain.FindFork(block)->nHeight;
         obj.pushKV("branchlen", branchLen);
 
         std::string status;
-        if (chainman.ActiveChain().Contains(block)) {
+        if (active_chain.Contains(block)) {
             // This block is part of the currently active chain.
             status = "active";
         } else if (block->nStatus & BLOCK_FAILED_MASK) {
@@ -1903,11 +1907,12 @@ static RPCHelpMan getblockstats()
 {
     ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
+    CChain& active_chain = chainman.ActiveChain();
 
     CBlockIndex* pindex;
     if (request.params[0].isNum()) {
         const int height = request.params[0].get_int();
-        const int current_tip = chainman.ActiveChain().Height();
+        const int current_tip = active_chain.Height();
         if (height < 0) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Target block height %d is negative", height));
         }
@@ -1915,14 +1920,14 @@ static RPCHelpMan getblockstats()
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Target block height %d after current tip %d", height, current_tip));
         }
 
-        pindex = chainman.ActiveChain()[height];
+        pindex = active_chain[height];
     } else {
         const uint256 hash(ParseHashV(request.params[0], "hash_or_height"));
         pindex = chainman.m_blockman.LookupBlockIndex(hash);
         if (!pindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
-        if (!chainman.ActiveChain().Contains(pindex)) {
+        if (!active_chain.Contains(pindex)) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Block is not in chain %s", Params().NetworkIDString()));
         }
     }
@@ -2307,10 +2312,11 @@ static RPCHelpMan scantxoutset()
         {
             ChainstateManager& chainman = EnsureChainman(node);
             LOCK(cs_main);
-            chainman.ActiveChainstate().ForceFlushStateToDisk();
-            pcursor = std::unique_ptr<CCoinsViewCursor>(chainman.ActiveChainstate().CoinsDB().Cursor());
+            CChainState& active_chainstate = chainman.ActiveChainstate();
+            active_chainstate.ForceFlushStateToDisk();
+            pcursor = std::unique_ptr<CCoinsViewCursor>(active_chainstate.CoinsDB().Cursor());
             CHECK_NONFATAL(pcursor);
-            tip = chainman.ActiveChain().Tip();
+            tip = active_chainstate.m_chain.Tip();
             CHECK_NONFATAL(tip);
         }
         bool res = FindScriptPubKey(g_scan_progress, g_should_abort_scan, count, pcursor.get(), needles, coins, node.rpc_interruption_point);

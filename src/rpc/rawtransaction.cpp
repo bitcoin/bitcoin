@@ -268,12 +268,13 @@ static RPCHelpMan gettxoutproof()
         }
     } else {
         LOCK(cs_main);
+        CChainState& active_chainstate = chainman.ActiveChainstate();
 
         // Loop through txids and try to find which block they're in. Exit loop once a block is found.
         for (const auto& tx : setTxids) {
-            const Coin& coin = AccessByTxid(chainman.ActiveChainstate().CoinsTip(), tx);
+            const Coin& coin = AccessByTxid(active_chainstate.CoinsTip(), tx);
             if (!coin.IsSpent()) {
-                pblockindex = chainman.ActiveChain()[coin.nHeight];
+                pblockindex = active_chainstate.m_chain[coin.nHeight];
                 break;
             }
         }

@@ -182,13 +182,14 @@ static bool rest_headers(const std::any& context,
     {
         ChainstateManager& chainman = EnsureAnyChainman(context);
         LOCK(cs_main);
-        tip = chainman.ActiveChain().Tip();
+        CChain& active_chain = chainman.ActiveChain();
+        tip = active_chain.Tip();
         const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(hash);
-        while (pindex != nullptr && chainman.ActiveChain().Contains(pindex)) {
+        while (pindex != nullptr && active_chain.Contains(pindex)) {
             headers.push_back(pindex);
             if (headers.size() == (unsigned long)count)
                 break;
-            pindex = chainman.ActiveChain().Next(pindex);
+            pindex = active_chain.Next(pindex);
         }
     }
 
