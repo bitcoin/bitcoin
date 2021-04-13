@@ -151,3 +151,4 @@ dist/
 *.background.tiff
 
 /guix-build-*
+/node_modules
