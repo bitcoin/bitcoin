@@ -1554,7 +1554,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                         // work when we allow VerifyDB to be parameterized by chainstate.
                         if (&::ChainstateActive() == chainstate &&
                             !CVerifyDB().VerifyDB(
-                                chainparams, *chainstate, &chainstate->CoinsDB(),
+                                *chainstate, chainparams, &chainstate->CoinsDB(),
                                 args.GetArg("-checklevel", DEFAULT_CHECKLEVEL),
                                 args.GetArg("-checkblocks", DEFAULT_CHECKBLOCKS))) {
                             strLoadError = _("Corrupted block database detected");

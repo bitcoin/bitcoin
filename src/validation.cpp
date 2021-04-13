@@ -4101,17 +4101,21 @@ CVerifyDB::~CVerifyDB()
     uiInterface.ShowProgress("", 100, false);
 }
 
-bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CChainState& active_chainstate, CCoinsView *coinsview, int nCheckLevel, int nCheckDepth)
+bool CVerifyDB::VerifyDB(
+    CChainState& chainstate,
+    const CChainParams& chainparams,
+    CCoinsView* coinsview,
+    int nCheckLevel, int nCheckDepth)
 {
     AssertLockHeld(cs_main);
 
-    assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
-    if (active_chainstate.m_chain.Tip() == nullptr || active_chainstate.m_chain.Tip()->pprev == nullptr)
+    assert(std::addressof(::ChainstateActive()) == std::addressof(chainstate));
+    if (chainstate.m_chain.Tip() == nullptr || chainstate.m_chain.Tip()->pprev == nullptr)
         return true;
 
     // Verify blocks in the best chain
-    if (nCheckDepth <= 0 || nCheckDepth > active_chainstate.m_chain.Height())
-        nCheckDepth = active_chainstate.m_chain.Height();
+    if (nCheckDepth <= 0 || nCheckDepth > chainstate.m_chain.Height())
+        nCheckDepth = chainstate.m_chain.Height();
     nCheckLevel = std::max(0, std::min(4, nCheckLevel));
     LogPrintf("Verifying last %i blocks at level %i\n", nCheckDepth, nCheckLevel);
     CCoinsViewCache coins(coinsview);
@@ -4121,15 +4125,15 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CChainState& active_ch
     BlockValidationState state;
     int reportDone = 0;
     LogPrintf("[0%%]..."); /* Continued */
-    for (pindex = active_chainstate.m_chain.Tip(); pindex && pindex->pprev; pindex = pindex->pprev) {
-        const int percentageDone = std::max(1, std::min(99, (int)(((double)(active_chainstate.m_chain.Height() - pindex->nHeight)) / (double)nCheckDepth * (nCheckLevel >= 4 ? 50 : 100))));
+    for (pindex = chainstate.m_chain.Tip(); pindex && pindex->pprev; pindex = pindex->pprev) {
+        const int percentageDone = std::max(1, std::min(99, (int)(((double)(chainstate.m_chain.Height() - pindex->nHeight)) / (double)nCheckDepth * (nCheckLevel >= 4 ? 50 : 100))));
         if (reportDone < percentageDone/10) {
             // report every 10% step
             LogPrintf("[%d%%]...", percentageDone); /* Continued */
             reportDone = percentageDone/10;
         }
         uiInterface.ShowProgress(_("Verifying blocks...").translated, percentageDone, false);
-        if (pindex->nHeight <= active_chainstate.m_chain.Height()-nCheckDepth)
+        if (pindex->nHeight <= chainstate.m_chain.Height()-nCheckDepth)
             break;
         if (fPruneMode && !(pindex->nStatus & BLOCK_HAVE_DATA)) {
             // If pruning, only go back as far as we have data.
@@ -4154,9 +4158,11 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CChainState& active_ch
             }
         }
         // check level 3: check for inconsistencies during memory-only disconnect of tip blocks
-        if (nCheckLevel >= 3 && (coins.DynamicMemoryUsage() + active_chainstate.CoinsTip().DynamicMemoryUsage()) <= active_chainstate.m_coinstip_cache_size_bytes) {
+        int64_t curr_coins_usage = coins.DynamicMemoryUsage() + chainstate.CoinsTip().DynamicMemoryUsage();
+
+        if (nCheckLevel >= 3 && static_cast<unsigned long>(curr_coins_usage) <= chainstate.m_coinstip_cache_size_bytes) {
             assert(coins.GetBestBlock() == pindex->GetBlockHash());
-            DisconnectResult res = active_chainstate.DisconnectBlock(block, pindex, coins);
+            DisconnectResult res = chainstate.DisconnectBlock(block, pindex, coins);
             if (res == DISCONNECT_FAILED) {
                 return error("VerifyDB(): *** irrecoverable inconsistency in block data at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
             }
@@ -4170,26 +4176,26 @@ bool CVerifyDB::VerifyDB(const CChainParams& chainparams, CChainState& active_ch
         if (ShutdownRequested()) return true;
     }
     if (pindexFailure)
-        return error("VerifyDB(): *** coin database inconsistencies found (last %i blocks, %i good transactions before that)\n", active_chainstate.m_chain.Height() - pindexFailure->nHeight + 1, nGoodTransactions);
+        return error("VerifyDB(): *** coin database inconsistencies found (last %i blocks, %i good transactions before that)\n", chainstate.m_chain.Height() - pindexFailure->nHeight + 1, nGoodTransactions);
 
     // store block count as we move pindex at check level >= 4
-    int block_count = active_chainstate.m_chain.Height() - pindex->nHeight;
+    int block_count = chainstate.m_chain.Height() - pindex->nHeight;
 
     // check level 4: try reconnecting blocks
     if (nCheckLevel >= 4) {
-        while (pindex != active_chainstate.m_chain.Tip()) {
-            const int percentageDone = std::max(1, std::min(99, 100 - (int)(((double)(active_chainstate.m_chain.Height() - pindex->nHeight)) / (double)nCheckDepth * 50)));
+        while (pindex != chainstate.m_chain.Tip()) {
+            const int percentageDone = std::max(1, std::min(99, 100 - (int)(((double)(chainstate.m_chain.Height() - pindex->nHeight)) / (double)nCheckDepth * 50)));
             if (reportDone < percentageDone/10) {
                 // report every 10% step
                 LogPrintf("[%d%%]...", percentageDone); /* Continued */
                 reportDone = percentageDone/10;
             }
             uiInterface.ShowProgress(_("Verifying blocks...").translated, percentageDone, false);
-            pindex = active_chainstate.m_chain.Next(pindex);
+            pindex = chainstate.m_chain.Next(pindex);
             CBlock block;
             if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
                 return error("VerifyDB(): *** ReadBlockFromDisk failed at %d, hash=%s", pindex->nHeight, pindex->GetBlockHash().ToString());
-            if (!active_chainstate.ConnectBlock(block, state, pindex, coins, chainparams))
+            if (!chainstate.ConnectBlock(block, state, pindex, coins, chainparams))
                 return error("VerifyDB(): *** found unconnectable block at %d, hash=%s (%s)", pindex->nHeight, pindex->GetBlockHash().ToString(), state.ToString());
             if (ShutdownRequested()) return true;
         }
