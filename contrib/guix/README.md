@@ -131,7 +131,7 @@ export JOBS=1 ADDITIONAL_GUIX_COMMON_FLAGS='--max-jobs=8'
 From the top of a clean Bitcoin Core repository:
 
 ```sh
-./contrib/guix/guix-build.sh
+./contrib/guix/guix-build
 ```
 
 After the build finishes successfully (check the status code please), compare
