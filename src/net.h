@@ -27,6 +27,7 @@
 #include <threadinterrupt.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/sock.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -1049,12 +1050,12 @@ private:
     /**
      * Create a `CNode` object from a socket that has just been accepted and add the node to
      * the `vNodes` member.
-     * @param[in] hSocket Connected socket to communicate with the peer.
+     * @param[in] sock Connected socket to communicate with the peer.
      * @param[in] permissionFlags The peer's permissions.
      * @param[in] addr_bind The address and port at our side of the connection.
      * @param[in] addr The address and port at the peer's side of the connection.
      */
-    void CreateNodeFromAcceptedSocket(SOCKET hSocket,
+    void CreateNodeFromAcceptedSocket(std::unique_ptr<Sock> sock,
                                       NetPermissionFlags permissionFlags,
                                       const CAddress& addr_bind,
                                       const CAddress& addr);
