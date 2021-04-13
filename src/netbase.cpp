@@ -544,7 +544,7 @@ bool ConnectSocketDirectly(const CService &addrConnect, const Sock& sock, int nT
     // Create a sockaddr from the specified service.
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
-    if (sock.Get() == INVALID_SOCKET) {
+    if (!sock) {
         LogPrintf("Cannot connect to %s: invalid socket\n", addrConnect.ToString());
         return false;
     }

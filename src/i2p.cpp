@@ -397,7 +397,7 @@ std::unique_ptr<Sock> Session::StreamAccept()
 
 void Session::Disconnect()
 {
-    if (m_control_sock->Get() != INVALID_SOCKET) {
+    if (*m_control_sock) {
         if (m_session_id.empty()) {
             Log("Destroying incomplete session");
         } else {

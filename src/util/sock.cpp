@@ -45,6 +45,11 @@ Sock& Sock::operator=(Sock&& other)
     return *this;
 }
 
+Sock::operator bool() const
+{
+    return m_socket != INVALID_SOCKET;
+}
+
 SOCKET Sock::Get() const { return m_socket; }
 
 SOCKET Sock::Release()

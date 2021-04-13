@@ -61,6 +61,11 @@ public:
     virtual Sock& operator=(Sock&& other);
 
     /**
+     * Check whether *this owns a socket.
+     */
+    virtual explicit operator bool() const;
+
+    /**
      * Get the value of the contained socket.
      * @return socket or INVALID_SOCKET if empty
      */
