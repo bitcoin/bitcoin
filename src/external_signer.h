@@ -10,6 +10,8 @@
 #include <univalue.h>
 #include <util/system.h>
 
+#ifdef ENABLE_EXTERNAL_SIGNER
+
 struct PartiallySignedTransaction;
 
 class ExternalSignerException : public std::runtime_error {
@@ -43,7 +45,6 @@ public:
 
     const std::string NetworkArg() const;
 
-#ifdef ENABLE_EXTERNAL_SIGNER
     //! Obtain a list of signers. Calls `<command> enumerate`.
     //! @param[in]              command the command which handles interaction with the external signer
     //! @param[in,out] signers  vector to which new signers (with a unique master key fingerprint) are added
@@ -66,8 +67,8 @@ public:
     //! Calls `<command> signtransaction` and passes the PSBT via stdin.
     //! @param[in,out] psbt  PartiallySignedTransaction to be signed
     bool SignTransaction(PartiallySignedTransaction& psbt, std::string& error);
-
-#endif
 };
+
+#endif // ENABLE_EXTERNAL_SIGNER
 
 #endif // BITCOIN_EXTERNAL_SIGNER_H

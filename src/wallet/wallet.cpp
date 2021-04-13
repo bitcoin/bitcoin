@@ -4586,7 +4586,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
         }
 #else
         throw std::runtime_error(std::string(__func__) + ": Wallets with external signers require Boost::Process library.");
-#endif
+#endif // ENABLE_EXTERNAL_SIGNER
     }
 }
 
