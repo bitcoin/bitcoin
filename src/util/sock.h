@@ -98,6 +98,12 @@ public:
     [[nodiscard]] virtual int Connect(const sockaddr* addr, socklen_t addr_len) const;
 
     /**
+     * bind(2) wrapper. Equivalent to `bind(this->Get(), addr, addr_len)`. Code that uses this
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
+     */
+    [[nodiscard]] virtual int Bind(const sockaddr* addr, socklen_t addr_len) const;
+
+    /**
      * accept(2) wrapper. Equivalent to `std::make_unique<Sock>(accept(this->Get(), addr, addr_len))`.
      * Code that uses this wrapper can be unit tested if this method is overridden by a mock Sock
      * implementation.
