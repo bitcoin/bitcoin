@@ -241,7 +241,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
                             tr("If you are receiving this error you should request the merchant provide a BIP21 compatible URI."),
                             CClientUIInterface::ICON_WARNING);
                     }
-                    Q_EMIT message(tr("URI handling"), tr("Invalid payment address %1").arg(recipient.address),
+                    Q_EMIT message(tr("URI handling"), tr("Invalid payment address"),
                         CClientUIInterface::MSG_ERROR);
                 }
                 else
