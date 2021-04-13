@@ -111,6 +111,11 @@ int Sock::SetSockOpt(int level, int opt_name, const void* opt_val, socklen_t opt
     return setsockopt(m_socket, level, opt_name, static_cast<const char*>(opt_val), opt_len);
 }
 
+int Sock::GetSockName(sockaddr* name, socklen_t* name_len) const
+{
+    return getsockname(m_socket, name, name_len);
+}
+
 bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
     // We need a `shared_ptr` owning `this` for `WaitMany()`, but don't want

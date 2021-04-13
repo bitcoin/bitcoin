@@ -69,6 +69,8 @@ public:
 
     int SetSockOpt(int level, int opt_name, const void* opt_val, socklen_t opt_len) const override;
 
+    int GetSockName(sockaddr* name, socklen_t* name_len) const override;
+
     bool Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const override;
 
     bool WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per_sock) const override;
