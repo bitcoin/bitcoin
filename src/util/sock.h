@@ -127,6 +127,13 @@ public:
                                          socklen_t opt_len) const;
 
     /**
+     * getsockname(2) wrapper. Equivalent to
+     * `getsockname(this->Get(), name, name_len)`. Code that uses this
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
+     */
+    [[nodiscard]] virtual int GetSockName(sockaddr* name, socklen_t* name_len) const;
+
+    /**
      * Shortcut to set the TCP_NODELAY option with SetSockOpt().
      * @return true if set successfully
      */
