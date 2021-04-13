@@ -111,6 +111,13 @@ public:
     virtual int SetSockOpt(int level, int opt_name, const void* opt_val, socklen_t opt_len) const;
 
     /**
+     * getsockname(2) wrapper. Equivalent to
+     * `getsockname(this->Get(), name, name_len)`. Code that uses this
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
+     */
+    virtual int GetSockName(sockaddr* name, socklen_t* name_len) const;
+
+    /**
      * Shortcut to set the TCP_NODELAY option with SetSockOpt().
      * @return true if set successfully
      */
