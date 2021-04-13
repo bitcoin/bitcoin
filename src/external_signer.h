@@ -8,18 +8,12 @@
 #include <univalue.h>
 #include <util/system.h>
 
-#include <stdexcept>
 #include <string>
 #include <vector>
 
 #ifdef ENABLE_EXTERNAL_SIGNER
 
 struct PartiallySignedTransaction;
-
-class ExternalSignerException : public std::runtime_error {
-public:
-    using std::runtime_error::runtime_error;
-};
 
 //! Enables interaction with an external signing device or service, such as
 //! a hardware wallet. See doc/external-signer.md

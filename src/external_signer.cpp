@@ -9,6 +9,7 @@
 #include <util/system.h>
 #include <external_signer.h>
 
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -26,21 +27,21 @@ bool ExternalSigner::Enumerate(const std::string& command, std::vector<ExternalS
     // Call <command> enumerate
     const UniValue result = RunCommandParseJSON(command + " enumerate");
     if (!result.isArray()) {
-        throw ExternalSignerException(strprintf("'%s' received invalid response, expected array of signers", command));
+        throw std::runtime_error(strprintf("'%s' received invalid response, expected array of signers", command));
     }
     for (UniValue signer : result.getValues()) {
         // Check for error
         const UniValue& error = find_value(signer, "error");
         if (!error.isNull()) {
             if (!error.isStr()) {
-                throw ExternalSignerException(strprintf("'%s' error", command));
+                throw std::runtime_error(strprintf("'%s' error", command));
             }
-            throw ExternalSignerException(strprintf("'%s' error: %s", command, error.getValStr()));
+            throw std::runtime_error(strprintf("'%s' error: %s", command, error.getValStr()));
         }
         // Check if fingerprint is present
         const UniValue& fingerprint = find_value(signer, "fingerprint");
         if (fingerprint.isNull()) {
-            throw ExternalSignerException(strprintf("'%s' received invalid response, missing signer fingerprint", command));
+            throw std::runtime_error(strprintf("'%s' received invalid response, missing signer fingerprint", command));
         }
         const std::string fingerprintStr = fingerprint.get_str();
         // Skip duplicate signer

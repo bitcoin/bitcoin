@@ -49,7 +49,7 @@ static RPCHelpMan enumeratesigners()
                     signer_res.pushKV("name", signer.m_name);
                     signers_res.push_back(signer_res);
                 }
-            } catch (const ExternalSignerException& e) {
+            } catch (const std::exception& e) {
                 throw JSONRPCError(RPC_MISC_ERROR, e.what());
             }
             UniValue result(UniValue::VOBJ);
