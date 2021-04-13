@@ -52,7 +52,7 @@ public:
     //! @param[in,out] signers  vector to which new signers (with a unique master key fingerprint) are added
     //! @param chain            "main", "test", "regtest" or "signet"
     //! @returns success
-    static bool Enumerate(const std::string& command, std::vector<ExternalSigner>& signers, std::string chain, bool ignore_errors = false);
+    static bool Enumerate(const std::string& command, std::vector<ExternalSigner>& signers, std::string chain);
 
     //! Display address on the device. Calls `<command> displayaddress --desc <descriptor>`.
     //! @param[in] descriptor Descriptor specifying which address to display.
