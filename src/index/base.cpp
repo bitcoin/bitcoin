@@ -8,7 +8,7 @@
 #include <node/ui_interface.h>
 #include <shutdown.h>
 #include <tinyformat.h>
-#include <util/system.h>
+#include <util/thread.h>
 #include <util/translation.h>
 #include <validation.h> // For g_chainman
 #include <warnings.h>
@@ -349,7 +349,7 @@ void BaseIndex::Start()
         return;
     }
 
-    m_thread_sync = std::thread(&TraceThread<std::function<void()>>, GetName(),
+    m_thread_sync = std::thread(&util::TraceThread, GetName(),
                                 std::bind(&BaseIndex::ThreadSync, this));
 }
 
