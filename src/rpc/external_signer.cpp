@@ -9,6 +9,9 @@
 #include <util/strencodings.h>
 #include <rpc/protocol.h>
 
+#include <string>
+#include <vector>
+
 #ifdef ENABLE_EXTERNAL_SIGNER
 
 static RPCHelpMan enumeratesigners()

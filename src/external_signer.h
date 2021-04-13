@@ -5,10 +5,12 @@
 #ifndef BITCOIN_EXTERNAL_SIGNER_H
 #define BITCOIN_EXTERNAL_SIGNER_H
 
-#include <stdexcept>
-#include <string>
 #include <univalue.h>
 #include <util/system.h>
+
+#include <stdexcept>
+#include <string>
+#include <vector>
 
 #ifdef ENABLE_EXTERNAL_SIGNER
 

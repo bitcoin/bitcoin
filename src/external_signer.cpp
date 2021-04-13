@@ -9,6 +9,9 @@
 #include <util/system.h>
 #include <external_signer.h>
 
+#include <string>
+#include <vector>
+
 #ifdef ENABLE_EXTERNAL_SIGNER
 
 ExternalSigner::ExternalSigner(const std::string& command, const std::string& fingerprint, std::string chain, std::string name): m_command(command), m_fingerprint(fingerprint), m_chain(chain), m_name(name) {}
