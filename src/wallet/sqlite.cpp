@@ -233,6 +233,15 @@ void SQLiteDatabase::Open()
         throw std::runtime_error(strprintf("SQLiteDatabase: Failed to enable fullfsync: %s\n", sqlite3_errstr(ret)));
     }
 
+    if (gArgs.GetBoolArg("-unsafesqlitesync", false)) {
+        // Use normal synchronous mode for the journal
+        LogPrintf("WARNING SQLite is configured to not wait for data to be flushed to disk. Data loss and corruption may occur.\n");
+        ret = sqlite3_exec(m_db, "PRAGMA synchronous = OFF", nullptr, nullptr, nullptr);
+        if (ret != SQLITE_OK) {
+            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to set synchronous mode to OFF: %s\n", sqlite3_errstr(ret)));
+        }
+    }
+
     // Make the table for our key-value pairs
     // First check that the main table exists
     sqlite3_stmt* check_main_stmt{nullptr};
