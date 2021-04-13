@@ -4516,7 +4516,7 @@ void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc)
         auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(*this, desc));
         m_spk_managers[id] = std::move(spk_manager);
 #else
-        throw std::runtime_error(std::string(__func__) + ": Configure with --enable-external-signer to use external signer wallets");
+        throw std::runtime_error(std::string(__func__) + ": Compiled without external signing support (required for external signing)");
 #endif
     } else {
         auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc));
@@ -4585,7 +4585,7 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
             }
         }
 #else
-        throw std::runtime_error(std::string(__func__) + ": Wallets with external signers require Boost::Process library.");
+        throw std::runtime_error(std::string(__func__) + ": Compiled without external signing support (required for external signing)");
 #endif // ENABLE_EXTERNAL_SIGNER
     }
 }
