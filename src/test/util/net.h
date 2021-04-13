@@ -110,6 +110,8 @@ public:
 
     int Bind(const sockaddr*, socklen_t) const override { return 0; }
 
+    int Listen(int) const override { return 0; }
+
     int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const override
     {
         std::memset(opt_val, 0x0, *opt_len);

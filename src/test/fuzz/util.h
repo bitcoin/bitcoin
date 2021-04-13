@@ -598,6 +598,8 @@ public:
 
     int Bind(const sockaddr*, socklen_t) const override;
 
+    int Listen(int backlog) const override;
+
     int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const override;
 
     int SetSockOpt(int level, int opt_name, const void* opt_val, socklen_t opt_len) const override;

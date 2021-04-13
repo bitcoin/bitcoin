@@ -108,6 +108,12 @@ public:
     virtual int Bind(const sockaddr* addr, socklen_t addr_len) const;
 
     /**
+     * listen(2) wrapper. Equivalent to `listen(this->Get(), backlog)`. Code that uses this
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
+     */
+    virtual int Listen(int backlog) const;
+
+    /**
      * getsockopt(2) wrapper. Equivalent to
      * `getsockopt(this->Get(), level, opt_name, opt_val, opt_len)`. Code that uses this
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.

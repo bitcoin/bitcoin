@@ -167,6 +167,19 @@ int FuzzedSock::Bind(const sockaddr*, socklen_t) const
     return 0;
 }
 
+int FuzzedSock::Listen(int) const
+{
+    constexpr std::array listen_errnos{
+        EINVAL,
+        EOPNOTSUPP,
+    };
+    if (m_fuzzed_data_provider.ConsumeBool()) {
+        SetFuzzedErrNo(m_fuzzed_data_provider, listen_errnos);
+        return -1;
+    }
+    return 0;
+}
+
 int FuzzedSock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const
 {
     constexpr std::array getsockopt_errnos{

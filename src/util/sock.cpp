@@ -81,6 +81,11 @@ int Sock::Bind(const sockaddr* addr, socklen_t addr_len) const
     return bind(m_socket, addr, addr_len);
 }
 
+int Sock::Listen(int backlog) const
+{
+    return listen(m_socket, backlog);
+}
+
 int Sock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const
 {
     return getsockopt(m_socket, level, opt_name, static_cast<char*>(opt_val), opt_len);
