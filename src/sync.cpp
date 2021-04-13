@@ -103,7 +103,7 @@ LockData& GetLockData() {
     return lock_data;
 }
 
-static void potential_deadlock_detected(const LockPair& mismatch, const LockStack& s1, const LockStack& s2)
+[[noreturn]] static void potential_deadlock_detected(const LockPair& mismatch, const LockStack& s1, const LockStack& s2)
 {
     LogPrintf("POTENTIAL DEADLOCK DETECTED\n");
     LogPrintf("Previous lock order was:\n");
@@ -137,7 +137,7 @@ static void potential_deadlock_detected(const LockPair& mismatch, const LockStac
     throw std::logic_error(strprintf("potential deadlock detected: %s -> %s -> %s", mutex_b, mutex_a, mutex_b));
 }
 
-static void double_lock_detected(const void* mutex, const LockStack& lock_stack)
+[[noreturn]] static void double_lock_detected(const void* mutex, const LockStack& lock_stack)
 {
     LogPrintf("DOUBLE LOCK DETECTED\n");
     LogPrintf("Lock order:\n");

@@ -93,11 +93,12 @@ public:
     interfaces::Node& node() const { assert(m_node); return *m_node; }
     void setNode(interfaces::Node& node);
 
+    /// Handle runaway exceptions. Shows a message box with the problem and quits the program.
+    [[noreturn]] void handleRunawayException(const QString &message);
+
 public Q_SLOTS:
     void initializeResult(bool success, interfaces::BlockAndHeaderTipInfo tip_info);
     void shutdownResult();
-    /// Handle runaway exceptions. Shows a message box with the problem and quits the program.
-    void handleRunawayException(const QString &message);
 
 Q_SIGNALS:
     void requestedInitialize();

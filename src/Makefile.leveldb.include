@@ -37,7 +37,11 @@ endif
 
 leveldb_libleveldb_a_CPPFLAGS = $(AM_CPPFLAGS) $(LEVELDB_CPPFLAGS_INT) $(LEVELDB_CPPFLAGS)
 if SUPPRESS_EXTERNAL_WARNINGS
-leveldb_libleveldb_a_CXXFLAGS = $(filter-out -Wconditional-uninitialized -Werror=conditional-uninitialized -Wsuggest-override -Werror=suggest-override, $(AM_CXXFLAGS)) $(PIE_FLAGS)
+WARNINGS_TO_SUPPRESS =
+WARNINGS_TO_SUPPRESS += -Wconditional-uninitialized -Werror=conditional-uninitialized
+WARNINGS_TO_SUPPRESS += -Wmissing-noreturn -Werror=missing-noreturn
+WARNINGS_TO_SUPPRESS += -Wsuggest-override -Werror=suggest-override
+leveldb_libleveldb_a_CXXFLAGS = $(filter-out $(WARNINGS_TO_SUPPRESS), $(AM_CXXFLAGS)) $(PIE_FLAGS)
 else
 leveldb_libleveldb_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 endif
