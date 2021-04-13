@@ -102,6 +102,15 @@ bool Sock::SetNoDelay() const
     return SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == 0;
 }
 
+bool Sock::IsSelectable() const
+{
+#if defined(USE_POLL) || defined(WIN32)
+    return true;
+#else
+    return m_socket < FD_SETSIZE;
+#endif
+}
+
 bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
     // We need a `shared_ptr` owning `this` for `WaitMany()`, but don't want
@@ -170,10 +179,10 @@ bool Sock::WaitMany(std::chrono::milliseconds timeout, WaitData& what) const
     SOCKET socket_max{0};
 
     for (const auto& [sock, events] : what) {
-        const auto& s = sock->m_socket;
-        if (!IsSelectableSocket(s)) {
+        if (!sock->IsSelectable()) {
             return false;
         }
+        const auto& s = sock->m_socket;
         if (events.requested & RECV) {
             FD_SET(s, &recv);
         }
