@@ -161,14 +161,14 @@ case "$HOST" in
     *linux*)
         glibc_dynamic_linker=$(
             case "$HOST" in
-                i686-linux-gnu)        echo /lib/ld-linux.so.2 ;;
-                x86_64-linux-gnu)      echo /lib64/ld-linux-x86-64.so.2 ;;
-                arm-linux-gnueabihf)   echo /lib/ld-linux-armhf.so.3 ;;
-                aarch64-linux-gnu)     echo /lib/ld-linux-aarch64.so.1 ;;
-                riscv64-linux-gnu)     echo /lib/ld-linux-riscv64-lp64d.so.1 ;;
-                powerpc64-linux-gnu)   echo /lib/ld64.so.1;;
-                powerpc64le-linux-gnu) echo /lib/ld64.so.2;;
-                *)                     exit 1 ;;
+                i686-pc-linux-gnu)             echo /lib/ld-linux.so.2 ;;
+                x86_64-pc-linux-gnu)           echo /lib64/ld-linux-x86-64.so.2 ;;
+                arm-unknown-linux-gnueabihf)   echo /lib/ld-linux-armhf.so.3 ;;
+                aarch64-unknown-linux-gnu)     echo /lib/ld-linux-aarch64.so.1 ;;
+                riscv64-unknown-linux-gnu)     echo /lib/ld-linux-riscv64-lp64d.so.1 ;;
+                powerpc64-unknown-linux-gnu)   echo /lib/ld64.so.1;;
+                powerpc64le-unknown-linux-gnu) echo /lib/ld64.so.2;;
+                *)                             exit 1 ;;
             esac
         )
         ;;
@@ -199,19 +199,20 @@ make -C depends --jobs="$JOBS" HOST="$HOST" \
                                    ${SOURCES_PATH+SOURCES_PATH="$SOURCES_PATH"} \
                                    ${BASE_CACHE+BASE_CACHE="$BASE_CACHE"} \
                                    ${SDK_PATH+SDK_PATH="$SDK_PATH"} \
-                                   i686_linux_CC=i686-linux-gnu-gcc \
-                                   i686_linux_CXX=i686-linux-gnu-g++ \
-                                   i686_linux_AR=i686-linux-gnu-ar \
-                                   i686_linux_RANLIB=i686-linux-gnu-ranlib \
-                                   i686_linux_NM=i686-linux-gnu-nm \
-                                   i686_linux_STRIP=i686-linux-gnu-strip \
-                                   x86_64_linux_CC=x86_64-linux-gnu-gcc \
-                                   x86_64_linux_CXX=x86_64-linux-gnu-g++ \
-                                   x86_64_linux_AR=x86_64-linux-gnu-ar \
-                                   x86_64_linux_RANLIB=x86_64-linux-gnu-ranlib \
-                                   x86_64_linux_NM=x86_64-linux-gnu-nm \
-                                   x86_64_linux_STRIP=x86_64-linux-gnu-strip \
+                                   i686_linux_CC=i686-pc-linux-gnu-gcc \
+                                   i686_linux_CXX=i686-pc-linux-gnu-g++ \
+                                   i686_linux_AR=i686-pc-linux-gnu-ar \
+                                   i686_linux_RANLIB=i686-pc-linux-gnu-ranlib \
+                                   i686_linux_NM=i686-pc-linux-gnu-nm \
+                                   i686_linux_STRIP=i686-pc-linux-gnu-strip \
+                                   x86_64_linux_CC=x86_64-pc-linux-gnu-gcc \
+                                   x86_64_linux_CXX=x86_64-pc-linux-gnu-g++ \
+                                   x86_64_linux_AR=x86_64-pc-linux-gnu-ar \
+                                   x86_64_linux_RANLIB=x86_64-pc-linux-gnu-ranlib \
+                                   x86_64_linux_NM=x86_64-pc-linux-gnu-nm \
+                                   x86_64_linux_STRIP=x86_64-pc-linux-gnu-strip \
                                    qt_config_opts_i686_linux='-platform linux-g++ -xplatform bitcoin-linux-g++' \
+                                   qt_config_opts_aarch64_linux='-platform linux-g++ -xplatform bitcoin-linux-g++' \
                                    FORCE_USE_SYSTEM_CLANG=1
 
 
@@ -255,7 +256,7 @@ case "$HOST" in
 esac
 
 case "$HOST" in
-    powerpc64-linux-*|riscv64-linux-*) HOST_LDFLAGS="${HOST_LDFLAGS} -Wl,-z,noexecstack" ;;
+    powerpc64-unknown-linux-gnu|riscv64-unknown-linux-gnu) HOST_LDFLAGS="${HOST_LDFLAGS} -Wl,-z,noexecstack" ;;
 esac
 
 # Make $HOST-specific native binaries from depends available in $PATH

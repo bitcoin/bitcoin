@@ -146,9 +146,10 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
 * _**HOSTS**_
 
   Override the space-separated list of platform triples for which to perform a
-  bootstrappable build. _(defaults to "x86\_64-linux-gnu arm-linux-gnueabihf
-  aarch64-linux-gnu riscv64-linux-gnu powerpc64-linux-gnu powerpc64le-linux-gnu
-  x86\_64-w64-mingw32 x86\_64-apple-darwin18")_
+  bootstrappable build. _(defaults to "x86\_64-pc-linux-gnu
+  arm-unknown-linux-gnueabihf aarch64-unknown-linux-gnu
+  riscv64-unknown-linux-gnu powerpc64-unknown-linux-gnu
+  powerpc64le-unknown-linux-gnu x86\_64-w64-mingw32 x86\_64-apple-darwin18")_
 
 * _**SOURCES_PATH**_
 
