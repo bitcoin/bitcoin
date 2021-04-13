@@ -38,12 +38,12 @@ static RPCHelpMan enumeratesigners()
         {
             const std::string command = gArgs.GetArg("-signer", "");
             if (command == "") throw JSONRPCError(RPC_MISC_ERROR, "Error: restart bitcoind with -signer=<cmd>");
-            std::string chain = gArgs.GetChainName();
+            const std::string chain = gArgs.GetChainName();
             UniValue signers_res = UniValue::VARR;
             try {
                 std::vector<ExternalSigner> signers;
                 ExternalSigner::Enumerate(command, signers, chain);
-                for (ExternalSigner signer : signers) {
+                for (const ExternalSigner& signer : signers) {
                     UniValue signer_res = UniValue::VOBJ;
                     signer_res.pushKV("fingerprint", signer.m_fingerprint);
                     signer_res.pushKV("name", signer.m_name);
