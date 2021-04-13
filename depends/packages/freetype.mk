@@ -11,7 +11,7 @@ define $(package)_set_vars
 endef
 
 define $(package)_config_cmds
-  $($(package)_autoconf)
+  $($(package)_autoconf) CC_BUILD=$(build_CC)
 endef
 
 define $(package)_build_cmds

@@ -194,7 +194,7 @@ SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
 time-machine() {
     # shellcheck disable=SC2086
     guix time-machine --url=https://github.com/dongcarl/guix.git \
-                      --commit=490e39ff303f4f6873a04bfb8253755bdae1b29c \
+                      --commit=ec8d09ee672e0d357bb5bb597464c8b168f14bfb \
                       --cores="$JOBS" \
                       --keep-failed \
                       --fallback \
