@@ -102,6 +102,12 @@ public:
     virtual int Connect(const sockaddr* addr, socklen_t addr_len) const;
 
     /**
+     * bind(2) wrapper. Equivalent to `bind(this->Get(), addr, addr_len)`. Code that uses this
+     * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
+     */
+    virtual int Bind(const sockaddr* addr, socklen_t addr_len) const;
+
+    /**
      * getsockopt(2) wrapper. Equivalent to
      * `getsockopt(this->Get(), level, opt_name, opt_val, opt_len)`. Code that uses this
      * wrapper can be unit tested if this method is overridden by a mock Sock implementation.
