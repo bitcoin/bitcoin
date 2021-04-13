@@ -129,6 +129,8 @@ public:
 
     int Bind(const sockaddr*, socklen_t) const override { return 0; }
 
+    int Listen(int) const override { return 0; }
+
     std::unique_ptr<Sock> Accept(sockaddr* addr, socklen_t* addr_len) const override
     {
         if (addr != nullptr) {
