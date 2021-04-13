@@ -7,7 +7,7 @@
 #include <psbt.h>
 #include <util/strencodings.h>
 #include <util/system.h>
-#include <wallet/external_signer.h>
+#include <external_signer.h>
 
 ExternalSigner::ExternalSigner(const std::string& command, const std::string& fingerprint, std::string chain, std::string name): m_command(command), m_fingerprint(fingerprint), m_chain(chain), m_name(name) {}
 

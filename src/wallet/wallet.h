@@ -27,7 +27,7 @@
 #include <validationinterface.h>
 #include <wallet/crypter.h>
 #include <wallet/coinselection.h>
-#include <wallet/external_signer.h>
+#include <external_signer.h>
 #include <wallet/scriptpubkeyman.h>
 #include <wallet/transaction.h>
 #include <wallet/walletdb.h>

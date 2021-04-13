@@ -1102,6 +1102,9 @@ RPCHelpMan keypoolrefill();
 RPCHelpMan newkeypool();
 RPCHelpMan getaddressesbylabel();
 RPCHelpMan listlabels();
+#ifdef ENABLE_EXTERNAL_SIGNER
+RPCHelpMan walletdisplayaddress();
+#endif // ENABLE_EXTERNAL_SIGNER
 
 // backup
 RPCHelpMan dumpprivkey();
@@ -1225,6 +1228,9 @@ Span<const CRPCCommand> GetWalletRPCCommands()
         {"wallet", &unloadwallet},
         {"wallet", &upgradewallet},
         {"wallet", &upgradetohd},
+#ifdef ENABLE_EXTERNAL_SIGNER
+        {"wallet", &walletdisplayaddress},
+#endif // ENABLE_EXTERNAL_SIGNER
         {"wallet", &walletlock},
         {"wallet", &walletpassphrasechange},
         {"wallet", &walletpassphrase},

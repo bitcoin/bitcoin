@@ -46,7 +46,7 @@ Display an address on the device:
 
 ```sh
 $ bitcoin-cli -rpcwallet=<wallet> getnewaddress
-$ bitcoin-cli -rpcwallet=<wallet> signerdisplayaddress <address>
+$ bitcoin-cli -rpcwallet=<wallet> walletdisplayaddress <address>
 ```
 
 Replace `<address>` with the result of `getnewaddress`.
@@ -166,6 +166,6 @@ The `createwallet` RPC calls:
 
 It then imports descriptors for all support address types, in a BIP44/49/84 compatible manner.
 
-The `displayaddress` RPC reuses some code from `getaddressinfo` on the provided address and obtains the inferred descriptor. It then calls `<cmd> --fingerprint=00000000 displayaddress --desc=<descriptor>`.
+The `walletdisplayaddress` RPC reuses some code from `getaddressinfo` on the provided address and obtains the inferred descriptor. It then calls `<cmd> --fingerprint=00000000 displayaddress --desc=<descriptor>`.
 
 `sendtoaddress` and `sendmany` check `inputs->bip32_derivs` to see if any inputs have the same `master_fingerprint` as the signer. If so, it calls `<cmd> --fingerprint=00000000 signtransaction <psbt>`. It waits for the device to return a (partially) signed psbt, tries to finalize it and broadcasts the transaction.
