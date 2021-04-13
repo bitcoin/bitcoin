@@ -233,7 +233,7 @@ fi
 ###########################
 
 # CONFIGFLAGS
-CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
+CONFIGFLAGS="--enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary --disable-suppress-external-warnings"
 case "$HOST" in
     *linux*) CONFIGFLAGS+=" --enable-glibc-back-compat" ;;
 esac
