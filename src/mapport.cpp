@@ -256,7 +256,7 @@ void StartThreadMapPort()
 {
     if (!g_mapport_thread.joinable()) {
         assert(!g_mapport_interrupt);
-        g_mapport_thread = std::thread(std::bind(&util::TraceThread, "mapport", &ThreadMapPort));
+        g_mapport_thread = std::thread(&util::TraceThread, "mapport", &ThreadMapPort);
     }
 }
 
