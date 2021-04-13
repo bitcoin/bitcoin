@@ -1052,7 +1052,7 @@ static constexpr char LockCommand = 'L';
 static constexpr char UnlockCommand = 'U';
 static constexpr char ExitCommand = 'X';
 
-static void TestOtherProcess(fs::path dirname, std::string lockname, int fd)
+[[noreturn]] static void TestOtherProcess(fs::path dirname, std::string lockname, int fd)
 {
     char ch;
     while (true) {
