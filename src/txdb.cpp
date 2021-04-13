@@ -233,8 +233,10 @@ bool CBlockTreeDB::WriteBatchSync(const std::vector<std::pair<int, const CBlockF
         batch.Write(std::make_pair(DB_BLOCK_INDEX, (*it)->GetBlockHash()), CDiskBlockIndex(*it));
     }
 
-    // write BTC/VBK/ALT blocks
-    VeriBlock::saveTrees(&batch);
+    if (VeriBlock::isPopEnabled()) {
+        // write BTC/VBK/ALT blocks
+        VeriBlock::saveTrees(&batch);
+    }
     return WriteBatch(batch, true);
 }
 

@@ -333,4 +333,21 @@ void addDisconnectedPopdata(const altintegration::PopData& popData) EXCLUSIVE_LO
     }
 }
 
+bool isPopEnabled()
+{
+    auto block = VeriBlock::GetPop().getConfig().getAltParams().getBootstrapBlock();
+    CBlockIndex* index;
+    {
+        LOCK(cs_main);
+        index = LookupBlockIndex(uint256(block.hash));
+    }
+    if (index == nullptr) {
+        return false;
+    }
+    if (index->nHeight == 0) {
+        return true;
+    }
+    return ChainActive().Contains(index);
+}
+
 } // namespace VeriBlock

@@ -732,25 +732,28 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         result.pushKV("default_witness_commitment", HexStr(pblocktemplate->vchCoinbaseCommitment.begin(), pblocktemplate->vchCoinbaseCommitment.end()));
     }
 
-    //VeriBlock Data
-    const auto popDataRoot = pblock->popData.getMerkleRoot();
-    result.pushKV("pop_data_root", HexStr(popDataRoot.begin(), popDataRoot.end()));
-    result.pushKV("pop_data", altintegration::ToJSON<UniValue>(pblock->popData, /*verbose=*/true));
-    using altintegration::ContextInfoContainer;
-    auto ctx = ContextInfoContainer::createFromPrevious(VeriBlock::GetAltBlockIndex(pindexPrev), VeriBlock::GetPop().getConfig().getAltParams());
-    result.pushKV("pop_first_previous_keystone", HexStr(ctx.keystones.firstPreviousKeystone));
-    result.pushKV("pop_second_previous_keystone", HexStr(ctx.keystones.secondPreviousKeystone));
+    if (VeriBlock::isPopEnabled()) {
+        //VeriBlock Data
+        const auto popDataRoot = pblock->popData.getMerkleRoot();
+        result.pushKV("pop_data_root", HexStr(popDataRoot.begin(), popDataRoot.end()));
+        result.pushKV("pop_data", altintegration::ToJSON<UniValue>(pblock->popData, /*verbose=*/true));
+        using altintegration::ContextInfoContainer;
+        auto ctx = ContextInfoContainer::createFromPrevious(VeriBlock::GetAltBlockIndex(pindexPrev),
+                                                            VeriBlock::GetPop().getConfig().getAltParams());
+        result.pushKV("pop_first_previous_keystone", HexStr(ctx.keystones.firstPreviousKeystone));
+        result.pushKV("pop_second_previous_keystone", HexStr(ctx.keystones.secondPreviousKeystone));
 
-    // pop rewards
-    UniValue popRewardsArray(UniValue::VARR);
-    VeriBlock::PoPRewards popRewards = VeriBlock::getPopRewards(*pindexPrev, Params());
-    for (const auto& itr : popRewards) {
-        UniValue popRewardValue(UniValue::VOBJ);
-        popRewardValue.pushKV("payout_info", HexStr(itr.first.begin(), itr.first.end()));
-        popRewardValue.pushKV("amount", itr.second);
-        popRewardsArray.push_back(popRewardValue);
+        // pop rewards
+        UniValue popRewardsArray(UniValue::VARR);
+        VeriBlock::PoPRewards popRewards = VeriBlock::getPopRewards(*pindexPrev, Params());
+        for (const auto& itr : popRewards) {
+            UniValue popRewardValue(UniValue::VOBJ);
+            popRewardValue.pushKV("payout_info", HexStr(itr.first.begin(), itr.first.end()));
+            popRewardValue.pushKV("amount", itr.second);
+            popRewardsArray.push_back(popRewardValue);
+        }
+        result.pushKV("pop_rewards", popRewardsArray);
     }
-    result.pushKV("pop_rewards", popRewardsArray);
 
     return result;
 }

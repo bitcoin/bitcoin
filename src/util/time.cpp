@@ -15,6 +15,8 @@
 #include <ctime>
 #include <tinyformat.h>
 
+#include <veriblock/pop/time.hpp>
+
 static std::atomic<int64_t> nMockTime(0); //!< For unit testing
 
 int64_t GetTime()
@@ -44,6 +46,7 @@ template std::chrono::microseconds GetTime();
 void SetMockTime(int64_t nMockTimeIn)
 {
     nMockTime.store(nMockTimeIn, std::memory_order_relaxed);
+    altintegration::setMockTime(nMockTimeIn);
 }
 
 int64_t GetMockTime()

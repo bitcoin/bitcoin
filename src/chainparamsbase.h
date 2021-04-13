@@ -20,6 +20,7 @@ public:
     static const std::string MAIN;
     static const std::string TESTNET;
     static const std::string REGTEST;
+    static const std::string DETREGTEST;
     ///@}
 
     const std::string& DataDir() const { return strDataDir; }
