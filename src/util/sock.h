@@ -110,6 +110,12 @@ public:
      */
     virtual int SetSockOpt(int level, int opt_name, const void* opt_val, socklen_t opt_len) const;
 
+    /**
+     * Shortcut to set the TCP_NODELAY option with SetSockOpt().
+     * @return true if set successfully
+     */
+    [[nodiscard]] virtual bool SetNoDelay() const;
+
     using Event = uint8_t;
 
     /**

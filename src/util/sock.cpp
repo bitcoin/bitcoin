@@ -81,6 +81,12 @@ int Sock::SetSockOpt(int level, int opt_name, const void* opt_val, socklen_t opt
     return setsockopt(m_socket, level, opt_name, static_cast<const char*>(opt_val), opt_len);
 }
 
+bool Sock::SetNoDelay() const
+{
+    const int on{1};
+    return SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == 0;
+}
+
 bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
 #ifdef USE_POLL

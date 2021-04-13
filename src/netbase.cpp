@@ -515,7 +515,9 @@ std::unique_ptr<Sock> CreateSockTCP(const CService& address_family)
 #endif
 
     // Set the no-delay option (disable Nagle's algorithm) on the TCP socket.
-    SetSocketNoDelay(sock->Get());
+    if (!sock->SetNoDelay()) {
+        LogPrint(BCLog::NET, "Unable to set TCP_NODELAY on a newly created socket, continuing anyway\n");
+    }
 
     // Set the non-blocking option on the socket.
     if (!SetSocketNonBlocking(sock->Get(), true)) {
@@ -741,13 +743,6 @@ bool SetSocketNonBlocking(const SOCKET& hSocket, bool fNonBlocking)
     }
 
     return true;
-}
-
-bool SetSocketNoDelay(const SOCKET& hSocket)
-{
-    int set = 1;
-    int rc = setsockopt(hSocket, IPPROTO_TCP, TCP_NODELAY, (const char*)&set, sizeof(int));
-    return rc == 0;
 }
 
 void InterruptSocks5(bool interrupt)
