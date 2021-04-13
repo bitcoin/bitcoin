@@ -7,10 +7,47 @@
 
 #include <hash.h>
 #include <tinyformat.h>
+#include <crypto/common.h>
+#include <crypto/ripemd160.h>
+#include <crypto/sha256.h>
+
 
 uint256 CBlockHeader::GetHash() const
 {
-    return SerializeHash(*this);
+
+    CSHA256 ctx;
+
+    unsigned char* headerData = (unsigned char*)malloc(sizeof(*this));
+
+    memcpy(headerData, &nVersion, 4);
+    memcpy(headerData + 4, hashPrevBlock.data(), 32);
+    memcpy(headerData + 36, hashMerkleRoot.data(), 32);
+    memcpy(headerData + 68, &nTime, 4);
+    memcpy(headerData + 72, &nBits, 4);
+    memcpy(headerData + 76, &nNonce, 4);
+
+    /*
+    for (int i = 0; i < 80; i++)
+        printf("%02X", headerData[i]);
+    printf("\n");
+    */
+
+    uint256 resultLE;
+
+    ctx.Write(headerData, 80);
+    ctx.Finalize(resultLE.begin());
+    
+    uint256 resultBE;
+    for (int i = 0; i < 32; i++)
+        resultBE.data()[i] = resultLE.data()[31 - i];
+
+    //printf("%s", resultBE.GetHex().c_str());
+
+    free(headerData);
+
+    return resultBE;
+
+    //return SerializeHash(*this);
 }
 
 std::string CBlock::ToString() const

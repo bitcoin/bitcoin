@@ -109,9 +109,9 @@ public:
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 210000;
-        consensus.BIP16Exception = uint256S("0x589950646063b8e02207106a81311d3576431948ade89d766acf79e01fd80e09");
+        consensus.BIP16Exception = uint256S("0x000097275f3a2ea670ba11cd1b3118a6175202e82983e67ea55e669f76482acf");
         consensus.BIP34Height = 1;
-        consensus.BIP34Hash = uint256S("0x589950646063b8e02207106a81311d3576431948ade89d766acf79e01fd80e09");
+        consensus.BIP34Hash = uint256S("0x000097275f3a2ea670ba11cd1b3118a6175202e82983e67ea55e669f76482acf");
         consensus.BIP65Height = 1; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
         consensus.BIP66Height = 1; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
         consensus.CSVHeight = 1; // 000000000000000004a1b34462cb8aeebd5799177f7a29cf28f2d1961716b5b5
@@ -134,7 +134,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1230767999; // December 31, 2008
 
         consensus.nMinimumChainWork = uint256S("0000000000000000000000000000000000000000000000000000000000000001");
-        consensus.defaultAssumeValid = uint256S("0x589950646063b8e02207106a81311d3576431948ade89d766acf79e01fd80e09"); 
+        consensus.defaultAssumeValid = uint256S("0x000097275f3a2ea670ba11cd1b3118a6175202e82983e67ea55e669f76482acf"); 
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -157,11 +157,11 @@ public:
         MineGenesis(genesis, consensus.powLimit, true);
         */
 
-        genesis = CreateGenesisBlock(1618273705, 136035, 0x1f00ffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1618345285, 30275, 0x1f00ffff, 1, 50 * COIN);
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x00009c2e84daa64188eeac9709e37b35e1510f9c2905fa2d3adb7214bb6047d8"));
-        assert(genesis.hashMerkleRoot == uint256S("0x589950646063b8e02207106a81311d3576431948ade89d766acf79e01fd80e09"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000097275f3a2ea670ba11cd1b3118a6175202e82983e67ea55e669f76482acf"));
+        assert(genesis.hashMerkleRoot == uint256S("0xd4abb614bfed83e189403620669e98fd63bb0bf218151ffb98f5ffc066fb58db"));
 
         // Note that of those which support the service bits prefix, most only support a subset of
         // possible options.

@@ -123,6 +123,7 @@ public:
         uint256 result;
         ctx.Finalize(result.begin());
 
+        /*
         ctx.Reset();
         ctx.Write(result.begin(), CSHA256::OUTPUT_SIZE);
         ctx.Finalize(result.begin());
@@ -130,8 +131,9 @@ public:
         ctx.Reset();
         ctx.Write(result.begin(), CSHA256::OUTPUT_SIZE);
         ctx.Finalize(result.begin());
-        
-        //ctx.Reset().Write(result.begin(), CSHA256::OUTPUT_SIZE).Finalize(result.begin());
+        */
+
+        ctx.Reset().Write(result.begin(), CSHA256::OUTPUT_SIZE).Finalize(result.begin());
         return result;
     }
 
