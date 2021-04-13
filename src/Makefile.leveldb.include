@@ -36,7 +36,11 @@ LEVELDB_CPPFLAGS_INT += -DLEVELDB_PLATFORM_POSIX
 endif
 
 leveldb_libleveldb_a_CPPFLAGS = $(AM_CPPFLAGS) $(LEVELDB_CPPFLAGS_INT) $(LEVELDB_CPPFLAGS)
+if SUPPRESS_EXTERNAL_WARNINGS
 leveldb_libleveldb_a_CXXFLAGS = $(filter-out -Wconditional-uninitialized -Werror=conditional-uninitialized -Wsuggest-override -Werror=suggest-override, $(AM_CXXFLAGS)) $(PIE_FLAGS)
+else
+leveldb_libleveldb_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+endif
 
 leveldb_libleveldb_a_SOURCES=
 leveldb_libleveldb_a_SOURCES += leveldb/port/port_stdcxx.h
