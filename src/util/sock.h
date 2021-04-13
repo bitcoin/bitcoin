@@ -133,6 +133,12 @@ public:
      */
     [[nodiscard]] virtual int GetSockName(sockaddr* name, socklen_t* name_len) const;
 
+    /**
+     * Check if the underlying socket can be used for `select(2)` (or the `Wait()` method).
+     * @return true if selectable
+     */
+    [[nodiscard]] virtual bool IsSelectable() const;
+
     using Event = uint8_t;
 
     /**
@@ -266,8 +272,6 @@ private:
      */
     void Close();
 };
-
-bool IsSelectableSocket(const SOCKET& s);
 
 /** Return readable error string for a network error code */
 std::string NetworkErrorString(int err);

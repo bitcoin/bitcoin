@@ -48,6 +48,13 @@ class FuzzedSock : public Sock
      */
     mutable std::optional<uint8_t> m_peek_data;
 
+    /**
+     * Whether to pretend that the socket is select(2)-able. This is randomly set in the
+     * constructor. It should remain constant so that repeated calls to `IsSelectable()`
+     * return the same value.
+     */
+    const bool m_selectable;
+
 public:
     explicit FuzzedSock(FuzzedDataProvider& fuzzed_data_provider);
 
@@ -72,6 +79,8 @@ public:
     int SetSockOpt(int level, int opt_name, const void* opt_val, socklen_t opt_len) const override;
 
     int GetSockName(sockaddr* name, socklen_t* name_len) const override;
+
+    bool IsSelectable() const override;
 
     bool Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const override;
 

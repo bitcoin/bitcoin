@@ -117,11 +117,12 @@ int Sock::GetSockName(sockaddr* name, socklen_t* name_len) const
     return getsockname(m_socket, name, name_len);
 }
 
-bool IsSelectableSocket(const SOCKET& s) {
+bool Sock::IsSelectable() const
+{
 #if defined(USE_POLL) || defined(WIN32)
     return true;
 #else
-    return (s < FD_SETSIZE);
+    return m_socket < FD_SETSIZE;
 #endif
 }
 
@@ -193,10 +194,10 @@ bool Sock::WaitMany(std::chrono::milliseconds timeout, EventsPerSock& events_per
     SOCKET socket_max{0};
 
     for (const auto& [sock, events] : events_per_sock) {
-        const auto& s = sock->m_socket;
-        if (!IsSelectableSocket(s)) {
+        if (!sock->IsSelectable()) {
             return false;
         }
+        const auto& s = sock->m_socket;
         if (events.requested & RECV) {
             FD_SET(s, &recv);
         }
