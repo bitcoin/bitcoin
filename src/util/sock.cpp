@@ -76,6 +76,11 @@ int Sock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len)
     return getsockopt(m_socket, level, opt_name, static_cast<char*>(opt_val), opt_len);
 }
 
+int Sock::SetSockOpt(int level, int opt_name, const void* opt_val, socklen_t opt_len) const
+{
+    return setsockopt(m_socket, level, opt_name, static_cast<const char*>(opt_val), opt_len);
+}
+
 bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
 #ifdef USE_POLL

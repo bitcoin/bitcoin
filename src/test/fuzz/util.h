@@ -591,6 +591,8 @@ public:
 
     int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const override;
 
+    int SetSockOpt(int level, int opt_name, const void* opt_val, socklen_t opt_len) const override;
+
     bool Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const override;
 
     bool IsConnected(std::string& errmsg) const override;
