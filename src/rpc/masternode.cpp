@@ -10,6 +10,7 @@
 #include <rpc/blockchain.h>
 #include <node/context.h>
 #include <governance/governanceclasses.h>
+#include <node/blockstorage.h>
 RPCHelpMan masternodelist();
 
 static RPCHelpMan masternode_list()

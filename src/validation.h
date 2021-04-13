@@ -35,6 +35,7 @@
 #include <set>
 #include <stdint.h>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -309,16 +310,6 @@ public:
 };
 /** Initializes the script-execution cache */
 void InitScriptExecutionCache();
-
-
-/** Functions for disk access for blocks */
-bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams);
-bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
-bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos, const CMessageHeader::MessageStartChars& message_start);
-bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex, const CMessageHeader::MessageStartChars& message_start);
-// SYSCOIN
-bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
-bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex);
 
 /** Functions for validating blocks and updating the block tree */
 
@@ -902,6 +893,7 @@ private:
     friend CChain& ChainActive();
 
 public:
+    std::thread m_load_block;
     //! A single BlockManager instance is shared across each constructed
     //! chainstate to avoid duplicating block metadata.
     BlockManager m_blockman GUARDED_BY(::cs_main);

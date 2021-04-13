@@ -16,7 +16,6 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <compat/sanity.h>
-#include <consensus/validation.h>
 #include <fs.h>
 #include <hash.h>
 #include <httprpc.h>
@@ -32,6 +31,7 @@
 #include <net_permissions.h>
 #include <net_processing.h>
 #include <netbase.h>
+#include <node/blockstorage.h>
 #include <node/context.h>
 #include <node/ui_interface.h>
 #include <policy/feerate.h>
@@ -61,7 +61,6 @@
 #include <util/threadnames.h>
 #include <util/translation.h>
 #include <validation.h>
-
 #include <validationinterface.h>
 #include <walletinitinterface.h>
 
@@ -113,7 +112,6 @@ static CDSNotificationInterface* pdsNotificationInterface = NULL;
 
 static const bool DEFAULT_PROXYRANDOMIZE = true;
 static const bool DEFAULT_REST_ENABLE = false;
-static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
 
 #ifdef WIN32
 // Win32 LevelDB doesn't use filedescriptors, and the ones used for
@@ -197,8 +195,6 @@ static fs::path GetPidFile(const ArgsManager& args)
 
 static std::unique_ptr<ECCVerifyHandle> globalVerifyHandle;
 
-static std::thread g_load_block;
-
 void Interrupt(NodeContext& node)
 {
     InterruptHTTPServer();
@@ -266,7 +262,7 @@ void Shutdown(NodeContext& node)
     // After everything has been shut down, but before things get flushed, stop the
     // CScheduler/checkqueue, scheduler and load block thread.
     if (node.scheduler) node.scheduler->stop();
-    if (g_load_block.joinable()) g_load_block.join();
+    if (node.chainman && node.chainman->m_load_block.joinable()) node.chainman->m_load_block.join();
     StopScriptCheckWorkerThreads();
 
     // After the threads that potentially access these pointers have been stopped,
@@ -754,20 +750,6 @@ static void BlockNotifyGenesisWait(const CBlockIndex* pBlockIndex)
     }
 }
 
-struct CImportingNow
-{
-    CImportingNow() {
-        assert(fImporting == false);
-        fImporting = true;
-    }
-
-    ~CImportingNow() {
-        assert(fImporting == true);
-        fImporting = false;
-    }
-};
-
-
 // If we're using -prune with -reindex, then delete block files that will be ignored by the
 // reindex.  Since reindexing works by starting at block file 0 and looping until a blockfile
 // is missing, do the same here to delete any later block files after a gap.  Also delete all
@@ -819,93 +801,6 @@ static void StartupNotify(const ArgsManager& args)
     }
 }
 #endif
-
-static void ThreadImport(ChainstateManager& chainman, std::vector<fs::path> vImportFiles, const ArgsManager& args)
-{
-    const CChainParams& chainparams = Params();
-    ScheduleBatchPriority();
-
-    {
-    CImportingNow imp;
-
-    // -reindex
-    if (fReindex) {
-        int nFile = 0;
-        while (true) {
-            FlatFilePos pos(nFile, 0);
-            if (!fs::exists(GetBlockPosFilename(pos)))
-                break; // No block files left to reindex
-            FILE *file = OpenBlockFile(pos, true);
-            if (!file)
-                break; // This error is logged in OpenBlockFile
-            LogPrintf("Reindexing block file blk%05u.dat...\n", (unsigned int)nFile);
-            ::ChainstateActive().LoadExternalBlockFile(chainparams, file, &pos);
-            if (ShutdownRequested()) {
-                LogPrintf("Shutdown requested. Exit %s\n", __func__);
-                return;
-            }
-            nFile++;
-        }
-        pblocktree->WriteReindexing(false);
-        fReindex = false;
-        LogPrintf("Reindexing finished\n");
-        // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
-        ::ChainstateActive().LoadGenesisBlock(chainparams);
-    }
-
-    // -loadblock=
-    for (const fs::path& path : vImportFiles) {
-        FILE *file = fsbridge::fopen(path, "rb");
-        if (file) {
-            LogPrintf("Importing blocks file %s...\n", path.string());
-            ::ChainstateActive().LoadExternalBlockFile(chainparams, file);
-            if (ShutdownRequested()) {
-                LogPrintf("Shutdown requested. Exit %s\n", __func__);
-                return;
-            }
-        } else {
-            LogPrintf("Warning: Could not open blocks file %s\n", path.string());
-        }
-    }
-    // scan for better chains in the block chain database, that are not yet connected in the active best chain
-
-    // We can't hold cs_main during ActivateBestChain even though we're accessing
-    // the chainman unique_ptrs since ABC requires us not to be holding cs_main, so retrieve
-    // the relevant pointers before the ABC call.
-    for (CChainState* chainstate : WITH_LOCK(::cs_main, return chainman.GetAll())) {
-        BlockValidationState state;
-        if (!chainstate->ActivateBestChain(state, chainparams, nullptr)) {
-            LogPrintf("Failed to connect best block (%s)\n", state.ToString());
-            StartShutdown();
-            return;
-        }
-    }
-    // SYSCOIN
-    pdsNotificationInterface->InitializeCurrentBlockTip();
-    // Get all UTXOs for each MN collateral in one go so that we can fill coin cache early
-    // and reduce further locking overhead for cs_main in other parts of code including GUI
-    LogPrintf("Filling coin cache with masternode UTXOs...\n");
-    int64_t nStart = GetTimeMillis();
-    CDeterministicMNList mnList;
-    if(deterministicMNManager)
-        deterministicMNManager->GetListAtChainTip(mnList);
-    mnList.ForEachMN(false, [&](const CDeterministicMNCPtr& dmn) {
-        Coin coin;
-        GetUTXOCoin(dmn->collateralOutpoint, coin);
-    });
-    LogPrintf("Filling coin cache with masternode UTXOs: done in %dms\n", GetTimeMillis() - nStart);
-
-    
-    g_wallet_init_interface.AutoLockMasternodeCollaterals();
-
-    if (args.GetBoolArg("-stopafterblockimport", DEFAULT_STOPAFTERBLOCKIMPORT)) {
-        LogPrintf("Stopping after block import\n");
-        StartShutdown();
-        return;
-    }
-    } // End scope of CImportingNow
-    chainman.ActiveChainstate().LoadMempool(args);
-}
 
 /** Sanity checks
  *  Ensure that Syscoin is running in a usable environment with all
@@ -2188,8 +2083,9 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         vImportFiles.push_back(strFile);
     }
 
-    g_load_block = std::thread(&TraceThread<std::function<void()>>, "loadblk", [=, &chainman, &args] {
-        ThreadImport(chainman, vImportFiles, args);
+    chainman.m_load_block = std::thread(&TraceThread<std::function<void()>>, "loadblk", [=, &chainman, &args] {
+        // SYSCOIN
+        ThreadImport(chainman, vImportFiles, args, pdsNotificationInterface, deterministicMNManager, g_wallet_init_interface);
     });
 
     // Wait for genesis block to be processed

@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <validation.h>
+#include <node/blockstorage.h>
 #include <boost/algorithm/string.hpp>
 #include <rpc/util.h>
 #include <services/assetconsensus.h>

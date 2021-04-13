@@ -22,6 +22,7 @@
 #include <index/txindex.h>
 #include <logging.h>
 #include <logging/timer.h>
+#include <node/blockstorage.h>
 #include <node/coinstats.h>
 #include <node/ui_interface.h>
 #include <policy/policy.h>
@@ -1329,134 +1330,7 @@ bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params
 
     return true;
 }
-static bool WriteBlockToDisk(const CBlock& block, FlatFilePos& pos, const CMessageHeader::MessageStartChars& messageStart)
-{
-    // Open history file to append
-    CAutoFile fileout(OpenBlockFile(pos), SER_DISK, CLIENT_VERSION);
-    if (fileout.IsNull())
-        return error("WriteBlockToDisk: OpenBlockFile failed");
 
-    // Write index header
-    unsigned int nSize = GetSerializeSize(block, fileout.GetVersion());
-    fileout << messageStart << nSize;
-
-    // Write block
-    long fileOutPos = ftell(fileout.Get());
-    if (fileOutPos < 0)
-        return error("WriteBlockToDisk: ftell failed");
-    pos.nPos = (unsigned int)fileOutPos;
-    fileout << block;
-
-    return true;
-}
-
-/* Generic implementation of block reading that can handle
-   both a block and its header.  */
-
-template<typename T>
-static bool ReadBlockOrHeader(T& block, const FlatFilePos& pos, const Consensus::Params& consensusParams)
-{
-    block.SetNull();
-
-    // Open history file to read
-    CAutoFile filein(OpenBlockFile(pos, true), SER_DISK, CLIENT_VERSION);
-    if (filein.IsNull())
-        return error("ReadBlockFromDisk: OpenBlockFile failed for %s", pos.ToString());
-
-    // Read block
-    try {
-        filein >> block;
-    }
-    catch (const std::exception& e) {
-        return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
-    }
-
-    // Check the header
-    if (!CheckProofOfWork(block, consensusParams))
-        return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
-
-    // Signet only: check block solution
-    if (consensusParams.signet_blocks && !CheckSignetBlockSolution(block, consensusParams)) {
-        return error("ReadBlockFromDisk: Errors in block solution at %s", pos.ToString());
-    }
-
-    return true;
-}
-template<typename T>
-static bool ReadBlockOrHeader(T& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
-{
-    FlatFilePos blockPos;
-    {
-        LOCK(cs_main);
-        blockPos = pindex->GetBlockPos();
-    }
-
-    if (!ReadBlockOrHeader(block, blockPos, consensusParams))
-        return false;
-    if (block.GetHash() != pindex->GetBlockHash())
-        return error("ReadBlockFromDisk(CBlock&, CBlockIndex*): GetHash() doesn't match index for %s at %s",
-                pindex->ToString(), pindex->GetBlockPos().ToString());
-    return true;
-}
-bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams)
-{
-    return ReadBlockOrHeader(block, pos, consensusParams);
-}
-
- bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
-{
-    return ReadBlockOrHeader(block, pindex, consensusParams);
-}
-
- bool ReadBlockHeaderFromDisk(CBlockHeader& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams)
-{
-    return ReadBlockOrHeader(block, pindex, consensusParams);
-}
-bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos, const CMessageHeader::MessageStartChars& message_start)
-{
-    FlatFilePos hpos = pos;
-    hpos.nPos -= 8; // Seek back 8 bytes for meta header
-    CAutoFile filein(OpenBlockFile(hpos, true), SER_DISK, CLIENT_VERSION);
-    if (filein.IsNull()) {
-        return error("%s: OpenBlockFile failed for %s", __func__, pos.ToString());
-    }
-
-    try {
-        CMessageHeader::MessageStartChars blk_start;
-        unsigned int blk_size;
-
-        filein >> blk_start >> blk_size;
-
-        if (memcmp(blk_start, message_start, CMessageHeader::MESSAGE_START_SIZE)) {
-            return error("%s: Block magic mismatch for %s: %s versus expected %s", __func__, pos.ToString(),
-                    HexStr(blk_start),
-                    HexStr(message_start));
-        }
-
-        if (blk_size > MAX_SIZE) {
-            return error("%s: Block data is larger than maximum deserialization size for %s: %s versus %s", __func__, pos.ToString(),
-                    blk_size, MAX_SIZE);
-        }
-
-        block.resize(blk_size); // Zeroing of memory is intentional here
-        filein.read((char*)block.data(), blk_size);
-    } catch(const std::exception& e) {
-        return error("%s: Read from block file failed: %s for %s", __func__, e.what(), pos.ToString());
-    }
-
-    return true;
-}
-
-bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex, const CMessageHeader::MessageStartChars& message_start)
-{
-    FlatFilePos block_pos;
-    {
-        LOCK(cs_main);
-        block_pos = pindex->GetBlockPos();
-    }
-
-    return ReadRawBlockFromDisk(block, block_pos, message_start);
-}
 CAmount GetBlockSubsidyRegtest(int nHeight, const CChainParams& params)
 {
     const Consensus::Params& consensusParams = params.GetConsensus();
@@ -1871,19 +1745,6 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex)
         return error("%s: Checksum mismatch", __func__);
 
     return true;
-}
-
-/** Abort with a message */
-static bool AbortNode(const std::string& strMessage, bilingual_str user_message = bilingual_str())
-{
-    SetMiscWarning(Untranslated(strMessage));
-    LogPrintf("*** %s\n", strMessage);
-    if (user_message.empty()) {
-        user_message = _("A fatal internal error occurred, see debug.log for details");
-    }
-    AbortError(user_message);
-    StartShutdown();
-    return false;
 }
 
 static bool AbortNode(BlockValidationState& state, const std::string& strMessage, const bilingual_str& userMessage = bilingual_str())
@@ -3688,7 +3549,8 @@ void CChainState::ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pi
     }
 }
 
-static bool FindBlockPos(FlatFilePos &pos, unsigned int nAddSize, unsigned int nHeight, CChain& active_chain, uint64_t nTime, bool fKnown = false)
+// TODO move to blockstorage
+bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight, CChain& active_chain, uint64_t nTime, bool fKnown = false)
 {
     LOCK(cs_LastBlockFile);
 
@@ -4263,25 +4125,6 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
         }
     }
     return true;
-}
-
-/** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */
-static FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp) {
-    unsigned int nBlockSize = ::GetSerializeSize(block, CLIENT_VERSION);
-    FlatFilePos blockPos;
-    if (dbp != nullptr)
-        blockPos = *dbp;
-    if (!FindBlockPos(blockPos, nBlockSize+8, nHeight, active_chain, block.GetBlockTime(), dbp != nullptr)) {
-        error("%s: FindBlockPos failed", __func__);
-        return FlatFilePos();
-    }
-    if (dbp == nullptr) {
-        if (!WriteBlockToDisk(block, blockPos, chainparams.MessageStart())) {
-            AbortNode("Failed to write block");
-            return FlatFilePos();
-        }
-    }
-    return blockPos;
 }
 
 /** Store block on disk. If dbp is non-nullptr, the file is known to already reside on disk */

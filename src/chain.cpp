@@ -4,8 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
-#include <validation.h>
-
+#include <node/blockstorage.h>
 /* Moved here from the header, because we need auxpow and the logic
    becomes more involved.  */
 CBlockHeader CBlockIndex::GetBlockHeader(const Consensus::Params& consensusParams) const

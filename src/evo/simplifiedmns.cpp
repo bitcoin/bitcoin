@@ -15,7 +15,7 @@
 #include <consensus/merkle.h>
 #include <univalue.h>
 #include <validation.h>
-
+#include <node/blockstorage.h>
 CSimplifiedMNListEntry::CSimplifiedMNListEntry(const CDeterministicMN& dmn) :
     proRegTxHash(dmn.proTxHash),
     confirmedHash(dmn.pdmnState->confirmedHash),

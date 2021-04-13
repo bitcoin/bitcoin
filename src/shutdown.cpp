@@ -6,7 +6,9 @@
 #include <shutdown.h>
 
 #include <logging.h>
+#include <node/ui_interface.h>
 #include <util/tokenpipe.h>
+#include <warnings.h>
 
 #include <config/syscoin-config.h>
 
@@ -15,6 +17,18 @@
 #ifdef WIN32
 #include <condition_variable>
 #endif
+
+bool AbortNode(const std::string& strMessage, bilingual_str user_message)
+{
+    SetMiscWarning(Untranslated(strMessage));
+    LogPrintf("*** %s\n", strMessage);
+    if (user_message.empty()) {
+        user_message = _("A fatal internal error occurred, see debug.log for details");
+    }
+    AbortError(user_message);
+    StartShutdown();
+    return false;
+}
 
 static std::atomic<bool> fRequestShutdown(false);
 #ifdef WIN32
