@@ -12,4 +12,4 @@ export PACKAGES="python3-zmq clang-5.0 llvm-5.0"  # Use clang-5 to test C++17 co
 export DEP_OPTS="NO_WALLET=1"
 export GOAL="install"
 export TEST_RUNNER_EXTRA="--exclude feature_block"
-export SYSCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports CC=clang-5.0 CXX=clang++-5.0 --with-boost-process"
+export SYSCOIN_CONFIG="--enable-glibc-back-compat --enable-reduce-exports CC=clang-5.0 CXX=clang++-5.0 --enable-external-signer"

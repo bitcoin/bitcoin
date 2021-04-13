@@ -22,7 +22,6 @@
 #include <wallet/fees.h>
 #include <wallet/ismine.h>
 #include <wallet/load.h>
-#include <wallet/rpcsigner.h>
 #include <wallet/rpcwallet.h>
 #include <wallet/wallet.h>
 

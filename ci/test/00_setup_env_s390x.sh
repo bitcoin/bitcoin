@@ -23,4 +23,4 @@ export RUN_UNIT_TESTS=true
 export TEST_RUNNER_ENV="LC_ALL=C"
 export RUN_FUNCTIONAL_TESTS=true
 export GOAL="install"
-export SYSCOIN_CONFIG="--enable-reduce-exports --with-incompatible-bdb --with-boost-process"
+export SYSCOIN_CONFIG="--enable-reduce-exports --with-incompatible-bdb --enable-external-signer"

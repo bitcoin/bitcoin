@@ -11,7 +11,7 @@ export DOCKER_NAME_TAG=ubuntu:20.04
 export PACKAGES="cmake python3"
 export DEP_OPTS="MULTIPROCESS=1"
 export GOAL="install"
-export SYSCOIN_CONFIG="--with-boost-process"
+export SYSCOIN_CONFIG="--enable-external-signer"
 export TEST_RUNNER_EXTRA="--exclude feature_block"
 export TEST_RUNNER_ENV="SYSCOIND=syscoin-node"
 export RUN_SECURITY_TESTS="true"

@@ -4140,7 +4140,7 @@ void ReserveDestination::ReturnDestination()
 ExternalSigner CWallet::GetExternalSigner()
 {
     const std::string command = gArgs.GetArg("-signer", "");
-    if (command == "") throw std::runtime_error(std::string(__func__) + ": restart bitcoind with -signer=<cmd>");
+    if (command == "") throw std::runtime_error(std::string(__func__) + ": restart syscoind with -signer=<cmd>");
     std::vector<ExternalSigner> signers;
     ExternalSigner::Enumerate(command, signers, Params().NetworkIDString());
     if (signers.empty()) throw std::runtime_error(std::string(__func__) + ": No external signers found");
