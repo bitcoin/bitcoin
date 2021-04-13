@@ -157,8 +157,8 @@ static RPCHelpMan getrawtransaction()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const NodeContext& node = EnsureNodeContext(request.context);
-    ChainstateManager& chainman = EnsureChainman(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
 
     bool in_active_chain = true;
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
@@ -258,7 +258,7 @@ static RPCHelpMan gettxoutproof()
 
     CBlockIndex* pblockindex = nullptr;
     uint256 hashBlock;
-    ChainstateManager& chainman = EnsureChainman(request.context);
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     if (!request.params[1].isNull()) {
         LOCK(cs_main);
         hashBlock = ParseHashV(request.params[1], "blockhash");
@@ -352,7 +352,7 @@ static RPCHelpMan verifytxoutproof()
 
     LOCK(cs_main);
 
-    ChainstateManager& chainman = EnsureChainman(request.context);
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(merkleBlock.header.GetHash());
     if (!pindex || !chainman.ActiveChain().Contains(pindex) || pindex->nTx == 0) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
@@ -678,10 +678,10 @@ static RPCHelpMan combinerawtransaction()
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
     {
-        const CTxMemPool& mempool = EnsureMemPool(request.context);
+        const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
         LOCK(cs_main);
         LOCK(mempool.cs);
-        CCoinsViewCache &viewChain = EnsureChainman(request.context).ActiveChainstate().CoinsTip();
+        CCoinsViewCache &viewChain = EnsureAnyChainman(request.context).ActiveChainstate().CoinsTip();
         CCoinsViewMemPool viewMempool(&viewChain, mempool);
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
@@ -805,7 +805,7 @@ static RPCHelpMan signrawtransactionwithkey()
     for (const CTxIn& txin : mtx.vin) {
         coins[txin.prevout]; // Create empty map entry keyed by prevout.
     }
-    NodeContext& node = EnsureNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     FindCoins(node, coins);
 
     // Parse the prevtxs array
@@ -868,7 +868,7 @@ static RPCHelpMan sendrawtransaction()
 
     std::string err_string;
     AssertLockNotHeld(cs_main);
-    NodeContext& node = EnsureNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee, /*relay*/ true, /*wait_callback*/ true);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
@@ -943,7 +943,7 @@ static RPCHelpMan testmempoolaccept()
                                              DEFAULT_MAX_RAW_TX_FEE_RATE :
                                              CFeeRate(AmountFromValue(request.params[1]));
 
-    CTxMemPool& mempool = EnsureMemPool(request.context);
+    CTxMemPool& mempool = EnsureAnyMemPool(request.context);
     int64_t virtual_size = GetVirtualTransactionSize(*tx);
     CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
 
@@ -952,7 +952,7 @@ static RPCHelpMan testmempoolaccept()
     result_0.pushKV("txid", tx->GetHash().GetHex());
     result_0.pushKV("wtxid", tx->GetWitnessHash().GetHex());
 
-    const MempoolAcceptResult accept_result = WITH_LOCK(cs_main, return AcceptToMemoryPool(EnsureChainman(request.context).ActiveChainstate(), mempool, std::move(tx),
+    const MempoolAcceptResult accept_result = WITH_LOCK(cs_main, return AcceptToMemoryPool(EnsureAnyChainman(request.context).ActiveChainstate(), mempool, std::move(tx),
                                                   false /* bypass_limits */, /* test_accept */ true));
 
     // Only return the fee and vsize if the transaction would pass ATMP.
@@ -1601,9 +1601,9 @@ static RPCHelpMan utxoupdatepsbt()
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
     {
-        const CTxMemPool& mempool = EnsureMemPool(request.context);
+        const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
         LOCK2(cs_main, mempool.cs);
-        CCoinsViewCache &viewChain = EnsureChainman(request.context).ActiveChainstate().CoinsTip();
+        CCoinsViewCache &viewChain = EnsureAnyChainman(request.context).ActiveChainstate().CoinsTip();
         CCoinsViewMemPool viewMempool(&viewChain, mempool);
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 

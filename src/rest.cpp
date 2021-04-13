@@ -181,7 +181,7 @@ static bool rest_headers(const std::any& context,
     headers.reserve(count);
     {
         LOCK(cs_main);
-        ChainstateManager& chainman = EnsureChainman(context);
+        ChainstateManager& chainman = EnsureAnyChainman(context);
         tip = chainman.ActiveChain().Tip();
         const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(hash);
         while (pindex != nullptr && chainman.ActiveChain().Contains(pindex)) {
@@ -251,7 +251,7 @@ static bool rest_block(const std::any& context,
     CBlockIndex* tip = nullptr;
     {
         LOCK(cs_main);
-        ChainstateManager& chainman = EnsureChainman(context);
+        ChainstateManager& chainman = EnsureAnyChainman(context);
         tip = chainman.ActiveChain().Tip();
         pblockindex = chainman.m_blockman.LookupBlockIndex(hash);
         if (!pblockindex) {
@@ -538,7 +538,7 @@ static bool rest_getutxos(const std::any& context, HTTPRequest* req, const std::
     std::string bitmapStringRepresentation;
     std::vector<bool> hits;
     bitmap.resize((vOutPoints.size() + 7) / 8);
-    ChainstateManager& chainman = EnsureChainman(context);
+    ChainstateManager& chainman = EnsureAnyChainman(context);
     {
         auto process_utxos = [&vOutPoints, &outs, &hits](const CCoinsView& view, const CTxMemPool& mempool) {
             for (const COutPoint& vOutPoint : vOutPoints) {
@@ -642,7 +642,7 @@ static bool rest_blockhash_by_height(const std::any& context, HTTPRequest* req,
     CBlockIndex* pblockindex = nullptr;
     {
         LOCK(cs_main);
-        const CChain& active_chain = EnsureChainman(context).ActiveChain();
+        const CChain& active_chain = EnsureAnyChainman(context).ActiveChain();
         if (blockheight > active_chain.Height()) {
             return RESTERR(req, HTTP_NOT_FOUND, "Block height out of range");
         }
