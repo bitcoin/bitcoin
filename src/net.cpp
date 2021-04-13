@@ -1098,8 +1098,7 @@ void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock> sock,
         return;
     }
 
-    if (!IsSelectableSocket(sock->Get()))
-    {
+    if (!sock->IsSelectable()) {
         LogPrintf("connection from %s dropped: non-selectable socket\n", addr.ToString());
         return;
     }

@@ -8,7 +8,7 @@
 #include <version.h>
 
 FuzzedSock::FuzzedSock(FuzzedDataProvider& fuzzed_data_provider)
-    : m_fuzzed_data_provider{fuzzed_data_provider}
+    : m_fuzzed_data_provider{fuzzed_data_provider}, m_selectable{fuzzed_data_provider.ConsumeBool()}
 {
     m_socket = fuzzed_data_provider.ConsumeIntegralInRange<SOCKET>(INVALID_SOCKET - 1, INVALID_SOCKET);
 }
@@ -182,6 +182,11 @@ int FuzzedSock::SetSockOpt(int, int, const void*, socklen_t) const
         return -1;
     }
     return 0;
+}
+
+bool FuzzedSock::IsSelectable() const
+{
+    return m_selectable;
 }
 
 bool FuzzedSock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const

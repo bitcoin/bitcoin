@@ -116,6 +116,8 @@ public:
 
     int SetSockOpt(int, int, const void*, socklen_t) const override { return 0; }
 
+    bool IsSelectable() const override { return true; }
+
     bool Wait(std::chrono::milliseconds timeout,
               Event requested,
               Event* occurred = nullptr) const override

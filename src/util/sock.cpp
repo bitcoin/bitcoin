@@ -87,6 +87,15 @@ bool Sock::SetNoDelay() const
     return SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == 0;
 }
 
+bool Sock::IsSelectable() const
+{
+#if defined(USE_POLL) || defined(WIN32)
+    return true;
+#else
+    return m_socket < FD_SETSIZE;
+#endif
+}
+
 bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
 #ifdef USE_POLL
@@ -116,7 +125,7 @@ bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occur
 
     return true;
 #else
-    if (!IsSelectableSocket(m_socket)) {
+    if (!IsSelectable()) {
         return false;
     }
 
