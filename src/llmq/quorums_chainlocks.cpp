@@ -444,7 +444,7 @@ void CChainLocksHandler::AcceptedBlockHeader(const CBlockIndex* pindexNew)
         return;
     }
 
-    LogPrintf("CChainLocksHandler::%s -- block header %s came in late, updating and enforcing\n", __func__, pindexNew->GetBlockHash().ToString());
+    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- block header %s came in late, updating and enforcing\n", __func__, pindexNew->GetBlockHash().ToString());
 
     // when EnforceBestChainLock is called later, it might end up invalidating other chains but not activating the
     // CLSIG locked chain. This happens when only the header is known but the block is still missing yet. The usual

@@ -98,7 +98,7 @@ void CMasternodeSync::ProcessMessage(CNode* pfrom, const std::string& strCommand
         int nCount;
         vRecv >> nItemID >> nCount;
 
-        LogPrintf("SYNCSTATUSCOUNT -- got inventory count: nItemID=%d  nCount=%d  peer=%d\n", nItemID, nCount, pfrom->GetId());
+        LogPrint(BCLog::MNSYNC, "SYNCSTATUSCOUNT -- got inventory count: nItemID=%d  nCount=%d  peer=%d\n", nItemID, nCount, pfrom->GetId());
     }
 }
 
@@ -113,7 +113,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
     // reset the sync process if the last call to this function was more than 60 minutes ago (client was in sleep mode)
     static int64_t nTimeLastProcess = GetTime();
     if(GetTime() - nTimeLastProcess > 60*60 && !fMasternodeMode) {
-        LogPrintf("CMasternodeSync::ProcessTick -- WARNING: no actions for too long, restarting sync...\n");
+        LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- WARNING: no actions for too long, restarting sync...\n");
         Reset(true);
         nTimeLastProcess = GetTime();
         return;
@@ -137,7 +137,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
 
     // Calculate "progress" for LOG reporting / GUI notification
     double nSyncProgress = double(nTriedPeerCount + (nMode - 1) * 8) / (8*4);
-    LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d nTriedPeerCount %d nSyncProgress %f\n", nTick, nMode, nTriedPeerCount, nSyncProgress);
+    LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d nTriedPeerCount %d nSyncProgress %f\n", nTick, nMode, nTriedPeerCount, nSyncProgress);
     uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
 
     std::vector<CNode*> vNodesCopy;
@@ -189,7 +189,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                 netfulfilledman.AddFulfilledRequest(pnode->addr, "spork-sync");
                 // get current network sporks
                 connman.PushMessage(pnode, msgMaker.Make(NetMsgType::GETSPORKS));
-                LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nMode %d -- requesting sporks from peer=%d\n", nTick, nMode, pnode->GetId());
+                LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nMode %d -- requesting sporks from peer=%d\n", nTick, nMode, pnode->GetId());
             }
 
             if (nMode == MASTERNODE_SYNC_BLOCKCHAIN) {
@@ -213,7 +213,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                             if (pNodeTmp->nVersion >= 70216 && !pNodeTmp->IsInboundConn() && !fRequestedEarlier) {
                                 netfulfilledman.AddFulfilledRequest(pNodeTmp->addr, "mempool-sync");
                                 connman.PushMessage(pNodeTmp, msgMaker.Make(NetMsgType::MEMPOOL));
-                                LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nMode %d -- syncing mempool from peer=%d\n", nTick, nMode, pNodeTmp->GetId());
+                                LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nMode %d -- syncing mempool from peer=%d\n", nTick, nMode, pNodeTmp->GetId());
                             }
                         }
                     }

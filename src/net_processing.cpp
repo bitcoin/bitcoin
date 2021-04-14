@@ -1950,7 +1950,6 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                     break;
                 }
                 case(MSG_GOVERNANCE_OBJECT): {
-                    LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: inv = %s\n", inv.ToString());
                     CDataStream ss(SER_NETWORK, pfrom.GetCommonVersion());
                     bool topush = false;
                     {
@@ -1961,7 +1960,6 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                             }
                         }
                     }
-                    LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: topush = %d, inv = %s\n", topush, inv.ToString());
                     if(topush) {
                         m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
                         push = true;
@@ -1980,7 +1978,6 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                         }
                     }
                     if(topush) {
-                        LogPrint(BCLog::NET, "ProcessGetData -- pushing: inv = %s\n", inv.ToString());
                         m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
                         push = true;
                     }
