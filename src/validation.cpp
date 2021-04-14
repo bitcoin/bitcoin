@@ -1267,7 +1267,7 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
 
-    return 10;
+    return 10 * COIN;
 
     /*
     int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
@@ -2198,7 +2198,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
 
-    CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus());
+    CAmount blockReward = nFees + GetBlockSubsidy(pindex->nHeight, chainparams.GetConsensus()) + chainparams.devFeePerBlock;
     if (block.vtx[0]->GetValueOut() > blockReward) {
         LogPrintf("ERROR: ConnectBlock(): coinbase pays too much (actual=%d vs limit=%d)\n", block.vtx[0]->GetValueOut(), blockReward);
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount");
@@ -3366,11 +3366,11 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "first tx is not coinbase");
 
-    if (block.vtx.empty() || (block.vtx[0]->vout.size() != 2))
+    if (block.vtx.empty() || (block.vtx[0]->vout.size() != 3))      //2 txout + segwit
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "coinbase must have two outputs");
 
     if (!block.vtx.empty())
-        if (block.vtx[0]->vout.size() == 2)
+        if (block.vtx[0]->vout.size() == 3)
             if ((block.vtx[0]->vout[1].nValue != chainparams.devFeePerBlock) || (block.vtx[0]->vout[1].scriptPubKey != chainparams.developerFeeScript))
                 return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "dev fee incorrect amount or bad pubkey");
 
