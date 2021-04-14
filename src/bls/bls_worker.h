@@ -104,7 +104,7 @@ public:
 
 
     // Calculate public key share from public key vector and id. Not parallelized
-    CBLSPublicKey BuildPubKeyShare(const BLSVerificationVectorPtr& vvec, const CBLSId& id);
+    static CBLSPublicKey BuildPubKeyShare(const BLSVerificationVectorPtr& vvec, const CBLSId& id);
 
     // The following functions verify multiple verification vectors and contributions for the same id
     // This is parallelized by performing batched verification. The verification vectors and the contributions of
@@ -122,16 +122,16 @@ public:
     std::future<bool> AsyncVerifyContributionShare(const CBLSId& forId, const BLSVerificationVectorPtr& vvec, const CBLSSecretKey& skContribution);
 
     // Non paralellized verification of a single contribution
-    bool VerifyContributionShare(const CBLSId& forId, const BLSVerificationVectorPtr& vvec, const CBLSSecretKey& skContribution);
+    static bool VerifyContributionShare(const CBLSId& forId, const BLSVerificationVectorPtr& vvec, const CBLSSecretKey& skContribution);
 
     // Simple verification of vectors. Checks x.IsValid() for every entry and checks for duplicate entries
-    bool VerifyVerificationVector(const BLSVerificationVector& vvec, size_t start = 0, size_t count = 0);
-    bool VerifyVerificationVectors(const std::vector<BLSVerificationVectorPtr>& vvecs, size_t start = 0, size_t count = 0);
-    bool VerifySecretKeyVector(const BLSSecretKeyVector& secKeys, size_t start = 0, size_t count = 0);
-    bool VerifySignatureVector(const BLSSignatureVector& sigs, size_t start = 0, size_t count = 0);
+    static bool VerifyVerificationVector(const BLSVerificationVector& vvec, size_t start = 0, size_t count = 0);
+    static bool VerifyVerificationVectors(const std::vector<BLSVerificationVectorPtr>& vvecs, size_t start = 0, size_t count = 0);
+    static bool VerifySecretKeyVector(const BLSSecretKeyVector& secKeys, size_t start = 0, size_t count = 0);
+    static bool VerifySignatureVector(const BLSSignatureVector& sigs, size_t start = 0, size_t count = 0);
 
     // Internally batched signature signing and verification
-    void AsyncSign(const CBLSSecretKey& secKey, const uint256& msgHash, SignDoneCallback doneCallback);
+    void AsyncSign(const CBLSSecretKey& secKey, const uint256& msgHash, const SignDoneCallback &doneCallback);
     std::future<CBLSSignature> AsyncSign(const CBLSSecretKey& secKey, const uint256& msgHash);
     void AsyncVerifySig(const CBLSSignature& sig, const CBLSPublicKey& pubKey, const uint256& msgHash, SigVerifyDoneCallback doneCallback, CancelCond cancelCond = [] { return false; });
     std::future<bool> AsyncVerifySig(const CBLSSignature& sig, const CBLSPublicKey& pubKey, const uint256& msgHash, CancelCond cancelCond = [] { return false; });
@@ -174,7 +174,7 @@ public:
     CBLSPublicKey BuildPubKeyShare(const uint256& cacheKey, const BLSVerificationVectorPtr& vvec, const CBLSId& id)
     {
         return GetOrBuild(cacheKey, publicKeyShareCache, [&]() {
-            return worker.BuildPubKeyShare(vvec, id);
+            return CBLSWorker::BuildPubKeyShare(vvec, id);
         });
     }
 

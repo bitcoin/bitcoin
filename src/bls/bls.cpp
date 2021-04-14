@@ -12,8 +12,8 @@
 #include <support/allocators/mt_pooled_secure.h>
 #endif
 
-#include <assert.h>
-#include <string.h>
+#include <cassert>
+#include <cstring>
 
 void CBLSId::SetInt(int x)
 {
