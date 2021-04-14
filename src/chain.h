@@ -10,6 +10,7 @@
 #include <consensus/params.h>
 #include <flatfile.h>
 #include <primitives/block.h>
+#include <serialize.h>
 #include <sync.h>
 #include <tinyformat.h>
 #include <uint256.h>
