@@ -164,7 +164,6 @@ public:
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 20
         consensus.nPowTargetTimespan = 6 * 60 * 60; // 6h retarget
         consensus.nPowTargetSpacing = 1 * 60; // Syscoin: 1 minute
-        // TODO find right chainid
         consensus.nAuxpowChainId = 16;
         consensus.nAuxpowOldChainId = 4096;
         consensus.nAuxpowStartHeight = 1;
