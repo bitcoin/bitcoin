@@ -16,6 +16,12 @@
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <script/standard.h>
+
+#include "util/strencodings.h"
+#include <base58.h>
+#include <key.h>
+#include <bech32.h>
 
 
 const arith_uint256 maxUint = UintToArith256(
@@ -60,15 +66,22 @@ static void MineGenesis(CBlockHeader& genesisBlock, const uint256& powLimit, boo
 }
 
 
-static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward, CScript devFeeScript, CAmount devFeeAmt)
 {
     CMutableTransaction txNew;
     txNew.nVersion = 1;
     txNew.vin.resize(1);
-    txNew.vout.resize(1);
+
+    //two outputs for coinbase - miner and devfee
+    txNew.vout.resize(2);
     txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
+
     txNew.vout[0].nValue = genesisReward;
     txNew.vout[0].scriptPubKey = genesisOutputScript;
+
+    txNew.vout[1].nValue = devFeeAmt;
+    txNew.vout[1].scriptPubKey = devFeeScript;
+
 
     CBlock genesis;
     genesis.nTime    = nTime;
@@ -92,11 +105,11 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  *     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
  *   vMerkleTree: 4a5e1e
  */
-static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
+static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward, CScript devFeeScript, CAmount devFeeAmt)
 {
     const char* pszTimestamp = "A coin for all";
     const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
-    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
+    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward, devFeeScript, devFeeAmt );
 }
 
 /**
@@ -105,13 +118,17 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
+
+        #define genesisHash "0x0000fd0237617079828567b0aec5d3d621ea41db7321ee1c9e127d91ddef3582"
+        #define genesisMerkleRoot "0x9bda44268c64dc0c6693867f5c4596852e30a1a8a51cd6e7c359b139a1865d22"
+
         strNetworkID = CBaseChainParams::MAIN;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 210000;
-        consensus.BIP16Exception = uint256S("0x000097275f3a2ea670ba11cd1b3118a6175202e82983e67ea55e669f76482acf");
+        consensus.BIP16Exception = uint256S(genesisHash);
         consensus.BIP34Height = 1;
-        consensus.BIP34Hash = uint256S("0x000097275f3a2ea670ba11cd1b3118a6175202e82983e67ea55e669f76482acf");
+        consensus.BIP34Hash = uint256S(genesisHash);
         consensus.BIP65Height = 1; // 000000000000000004c2b624ed5d7756c508d90fd0da2c7c679febfa6c4735f0
         consensus.BIP66Height = 1; // 00000000000000000379eaa19dce8c9b722d46ae6a57c2f1a988119488b50931
         consensus.CSVHeight = 1; // 000000000000000004a1b34462cb8aeebd5799177f7a29cf28f2d1961716b5b5
@@ -134,7 +151,13 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = 1230767999; // December 31, 2008
 
         consensus.nMinimumChainWork = uint256S("0000000000000000000000000000000000000000000000000000000000000001");
-        consensus.defaultAssumeValid = uint256S("0x000097275f3a2ea670ba11cd1b3118a6175202e82983e67ea55e669f76482acf"); 
+        consensus.defaultAssumeValid = uint256S(genesisHash); 
+
+
+        bech32::DecodeResult r = bech32::Decode("dy1qjse34842k8xas54zsnpnt2dsl0p2pxg7j3h3kp");
+        CKeyID key = CPubKey(r.data).GetID();
+        developerFeeScript = GetScriptForDestination(PKHash(key));
+        devFeePerBlock = COIN;
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -153,15 +176,15 @@ public:
         /*
         time_t t;
         time(&t);
-        genesis = CreateGenesisBlock(t, 0, 0x1f00ffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(t, 0, 0x1f00ffff, 1, 10, developerFeeScript, devFeePerBlock);
         MineGenesis(genesis, consensus.powLimit, true);
         */
 
-        genesis = CreateGenesisBlock(1618345285, 30275, 0x1f00ffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1618417940, 13753, 0x1f00ffff, 1, 10, developerFeeScript, devFeePerBlock);
 
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000097275f3a2ea670ba11cd1b3118a6175202e82983e67ea55e669f76482acf"));
-        assert(genesis.hashMerkleRoot == uint256S("0xd4abb614bfed83e189403620669e98fd63bb0bf218151ffb98f5ffc066fb58db"));
+        assert(consensus.hashGenesisBlock == uint256S(genesisHash));
+        assert(genesis.hashMerkleRoot == uint256S(genesisMerkleRoot));
 
         // Note that of those which support the service bits prefix, most only support a subset of
         // possible options.
@@ -172,6 +195,9 @@ public:
         vSeeds.emplace_back("192.168.1.87");
         vSeeds.emplace_back("192.168.1.33");
         vSeeds.emplace_back("192.168.1.62");
+
+
+
 
         /*
         vSeeds.emplace_back("seed.bitcoin.sipa.be"); // Pieter Wuille, only supports x1, x5, x9, and xd
@@ -202,7 +228,7 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("0x00004ca70b57199078b25b6bddb3291e054d57068ea8b74a7ebe711bfbb994d1")},
+                {0, uint256S(genesisHash)},
                 /*
 
                 { 11111, uint256S("0x0000000069e244f73d78e8fd29ba2fd2ed618bd6fa2ee92559f542fdb26e7c1d")},
@@ -287,7 +313,7 @@ public:
 
         time_t t;
         time(&t);
-        genesis = CreateGenesisBlock(1617319298, 22276, 0x1f00ffff, 1, 50 * COIN);
+        //genesis = CreateGenesisBlock(1617319298, 22276, 0x1f00ffff, 1, 50 * COIN);
         //MineGenesis(genesis, consensus.powLimit, true);
 
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -430,7 +456,7 @@ public:
         nDefaultPort = 38364;
         nPruneAfterHeight = 1000;
 
-        genesis = CreateGenesisBlock(1598918400, 52613770, 0x1e0377ae, 1, 50 * COIN);
+        //genesis = CreateGenesisBlock(1598918400, 52613770, 0x1e0377ae, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x00000008819873e925422c1ff0f99f7cc9bbb232af63a077a480a3633bee1ef6"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
@@ -498,7 +524,7 @@ public:
 
         UpdateActivationParametersFromArgs(args);
 
-        genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 50 * COIN);
+        //genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b1a11466e2206"));
         assert(genesis.hashMerkleRoot == uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"));
