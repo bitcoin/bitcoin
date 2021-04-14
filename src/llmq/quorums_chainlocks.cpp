@@ -418,7 +418,12 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
         // when the block or the header later comes in, we will enforce the correct chain
         return;
     }
-    if (bestChainLockBlockIndex == pindexSig) {
+    bool bChainLockMatchSigIndex;
+    {
+        LOCK(cs);
+        bChainLockMatchSigIndex = bestChainLockBlockIndex == pindexSig;
+    }
+    if (bChainLockMatchSigIndex) {
         CheckActiveState();
         const CBlockIndex* pindex;
         {       
