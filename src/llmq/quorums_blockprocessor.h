@@ -44,9 +44,9 @@ public:
     bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool UndoBlock(const CBlock& block, const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
-    void AddMinableCommitment(const CFinalCommitment& fqc);
-    bool HasMinableCommitment(const uint256& hash);
-    bool GetMinableCommitmentByHash(const uint256& commitmentHash, CFinalCommitment& ret);
+    void AddMineableCommitment(const CFinalCommitment& fqc);
+    bool HasMineableCommitment(const uint256& hash);
+    bool GetMineableCommitmentByHash(const uint256& commitmentHash, CFinalCommitment& ret);
     bool GetMinableCommitment(uint8_t llmqType, int nHeight, CFinalCommitment& ret) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     bool HasMinedCommitment(uint8_t llmqType, const uint256& quorumHash);

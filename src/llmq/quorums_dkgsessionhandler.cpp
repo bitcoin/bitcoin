@@ -577,7 +577,7 @@ void CDKGSessionHandler::HandleDKGRound()
 
     auto finalCommitments = curSession->FinalizeCommitments();
     for (const auto& fqc : finalCommitments) {
-        quorumBlockProcessor->AddMinableCommitment(fqc);
+        quorumBlockProcessor->AddMineableCommitment(fqc);
     }
 }
 

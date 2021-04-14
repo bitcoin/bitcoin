@@ -1591,7 +1591,7 @@ bool PeerManagerImpl::AlreadyHaveTx(const GenTxid& gtxid)
         return !governance.ConfirmInventoryRequest(gtxid);
 
     case MSG_QUORUM_FINAL_COMMITMENT:
-        return llmq::quorumBlockProcessor->HasMinableCommitment(hash);
+        return llmq::quorumBlockProcessor->HasMineableCommitment(hash);
     case MSG_QUORUM_CONTRIB:
     case MSG_QUORUM_COMPLAINT:
     case MSG_QUORUM_JUSTIFICATION:
@@ -1988,7 +1988,7 @@ void PeerManagerImpl::ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic
                 }
                 case(MSG_QUORUM_FINAL_COMMITMENT): {
                     llmq::CFinalCommitment o;
-                    if (llmq::quorumBlockProcessor->GetMinableCommitmentByHash(inv.hash, o)) {
+                    if (llmq::quorumBlockProcessor->GetMineableCommitmentByHash(inv.hash, o)) {
                         m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QFCOMMITMENT, o));
                         push = true;
                     }

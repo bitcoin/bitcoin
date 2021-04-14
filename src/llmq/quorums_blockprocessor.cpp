@@ -131,7 +131,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
             LOCK(cs_main);
             peerman.ForgetTxHash(pfrom->GetId(), hash);
         }
-        AddMinableCommitment(qc);
+        AddMineableCommitment(qc);
     }
 }
 
@@ -285,7 +285,7 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pi
         }
 
         // if a reorg happened, we should allow to mine this commitment later
-        AddMinableCommitment(qc);
+        AddMineableCommitment(qc);
     }
     return true;
 }
@@ -442,13 +442,13 @@ void CQuorumBlockProcessor::GetMinedAndActiveCommitmentsUntilBlock(const CBlockI
 
 }
 
-bool CQuorumBlockProcessor::HasMinableCommitment(const uint256& hash)
+bool CQuorumBlockProcessor::HasMineableCommitment(const uint256& hash)
 {
     LOCK(minableCommitmentsCs);
     return minableCommitments.count(hash) != 0;
 }
 
-void CQuorumBlockProcessor::AddMinableCommitment(const CFinalCommitment& fqc)
+void CQuorumBlockProcessor::AddMineableCommitment(const CFinalCommitment& fqc)
 {
     bool relay = false;
     uint256 commitmentHash = ::SerializeHash(fqc);
@@ -480,7 +480,7 @@ void CQuorumBlockProcessor::AddMinableCommitment(const CFinalCommitment& fqc)
     }
 }
 
-bool CQuorumBlockProcessor::GetMinableCommitmentByHash(const uint256& commitmentHash, llmq::CFinalCommitment& ret)
+bool CQuorumBlockProcessor::GetMineableCommitmentByHash(const uint256& commitmentHash, llmq::CFinalCommitment& ret)
 {
     LOCK(minableCommitmentsCs);
     auto it = minableCommitments.find(commitmentHash);

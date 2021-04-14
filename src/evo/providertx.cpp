@@ -170,7 +170,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, TxVali
     }
 
     // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
-    // this check applies to internal and external collateral, but internal collaterals are not necessarely a P2PKH
+    // this check applies to internal and external collateral, but internal collaterals are not necessarily a P2PKH
     if (collateralTxDest == CTxDestination(WitnessV0KeyHash(ptx.keyIDOwner)) || collateralTxDest == CTxDestination(WitnessV0KeyHash(ptx.keyIDVoting))) {
         return FormatSyscoinErrorMessage(state, "bad-protx-collateral-reuse", fJustCheck);
     }
