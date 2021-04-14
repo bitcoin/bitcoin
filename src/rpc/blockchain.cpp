@@ -55,13 +55,21 @@ static Mutex cs_blockchange;
 static std::condition_variable cond_blockchange;
 static CUpdatedBlock latestblock GUARDED_BY(cs_blockchange);
 
-NodeContext& EnsureNodeContext(const std::any& context)
+NodeContext& EnsureNodeContext(const std::any& ctx) {
+    return EnsureAnyNodeContext(ctx);
+}
+
+NodeContext& EnsureAnyNodeContext(const std::any& context)
 {
     auto node_context = util::AnyPtr<NodeContext>(context);
     if (!node_context) {
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Node context not found");
     }
     return *node_context;
+}
+
+CTxMemPool& EnsureMemPool(const std::any& ctx) {
+    return EnsureAnyMemPool(ctx);
 }
 
 CTxMemPool& EnsureMemPool(const NodeContext& node)
@@ -72,9 +80,13 @@ CTxMemPool& EnsureMemPool(const NodeContext& node)
     return *node.mempool;
 }
 
-CTxMemPool& EnsureMemPool(const std::any& context)
+CTxMemPool& EnsureAnyMemPool(const std::any& context)
 {
     return EnsureMemPool(EnsureNodeContext(context));
+}
+
+ChainstateManager& EnsureChainman(const std::any& ctx) {
+    return EnsureAnyChainman(ctx);
 }
 
 ChainstateManager& EnsureChainman(const NodeContext& node)
@@ -86,9 +98,13 @@ ChainstateManager& EnsureChainman(const NodeContext& node)
     return *node.chainman;
 }
 
-ChainstateManager& EnsureChainman(const std::any& context)
+ChainstateManager& EnsureAnyChainman(const std::any& context)
 {
     return EnsureChainman(EnsureNodeContext(context));
+}
+
+CBlockPolicyEstimator& EnsureFeeEstimator(const std::any& ctx) {
+    return EnsureAnyFeeEstimator(ctx);
 }
 
 CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node)
@@ -99,7 +115,7 @@ CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node)
     return *node.fee_estimator;
 }
 
-CBlockPolicyEstimator& EnsureFeeEstimator(const std::any& context)
+CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context)
 {
     return EnsureFeeEstimator(EnsureNodeContext(context));
 }
