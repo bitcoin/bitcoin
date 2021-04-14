@@ -183,10 +183,10 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000f4667e38d26078471315f0");
+        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000003406e656987cee5a04e7e89");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x4c332acd53ca99ab78fb80a3dacffe234674674e0b682350c492d7fe839d128e"); // 419800
+        consensus.defaultAssumeValid = uint256S("0xc09210f41494f6427be913a727c61ef7f6da4bb991d419b288eebff983adbf25"); // 975000
         consensus.fStrictChainId = true;
         consensus.nLegacyBlocksBefore = 1;
         consensus.nSYSXAsset = 1045909988;
@@ -239,9 +239,8 @@ public:
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         fRequireRoutableExternalIP = true;
-        // TODO: add more addresses here from foundation members
-        vSporkAddresses = {"SSZvS59ddqG87koeUPu1J8ivg5yJsQiWGN"};
-        nMinSporkKeys = 1;   
+        vSporkAddresses = {"sys1qx0zzzjag402apkw4kn8unr0qa0k3pv3258v4sr", "sys1qk2kq7hhp58ycaevzzu5hugh7flxs7qcg8rjjlh", "sys1qm4ka204x3mn46sk6ussrex8um87qkj0r5xakyg"};
+        nMinSporkKeys = 2;   
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
         consensus.llmqTypeChainLocks = Consensus::LLMQ_50_60;
@@ -267,6 +266,10 @@ public:
                 { 390000, uint256S("0x8654451a7ed5286ba5c830cdf6e65cbbd7a77f650216541bfbe50af04933741b")},
                 { 391285, uint256S("76d13e8f08c2b7027251484078f734f91c485727031be6b4c21c42d5e103d0ad")},
                 { 419800, uint256S("4c332acd53ca99ab78fb80a3dacffe234674674e0b682350c492d7fe839d128e")},
+                { 600000, uint256S("de2321b2a3b927450835590111bbbc9220d49df865117a33fb3c4687aedbbe9c")},
+                { 700000, uint256S("f5d72e57625c2af8cd5147e1e029e8353fea22fde1fcea06f67149d0af1fbf09")},
+                { 800000, uint256S("54bf4bd4b5c7d36323fed4b649e75e0ce4902261533d13a15c861fa2ab3c7362")},
+                { 975000, uint256S("c09210f41494f6427be913a727c61ef7f6da4bb991d419b288eebff983adbf25")},
             }
         };
 
@@ -275,10 +278,10 @@ public:
         };
 
         chainTxData = ChainTxData{
-            // Data from rpc: getchaintxstats 43200 83460c100beedfdc467142fef347fc8369adc4a7feecbdc0462048f3493385f2 
-            /* nTime    */ 1584566854,
-            /* nTxCount */ 495978,
-            /* dTxRate  */ 0.01962572570795198 
+            // Data from rpc: getchaintxstats at block 981391
+            /* nTime    */ 1618420061,
+            /* nTxCount */ 1856072,
+            /* dTxRate  */ 0.0208549712699397
         };
     }
 };
