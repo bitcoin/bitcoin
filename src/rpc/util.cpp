@@ -646,7 +646,7 @@ std::string RPCArg::GetName() const
 
 bool RPCArg::IsOptional() const
 {
-    if (m_fallback.index() == 1) {
+    if (m_fallback.index() != 0) {
         return true;
     } else {
         return RPCArg::Optional::NO != std::get<RPCArg::Optional>(m_fallback);
@@ -694,7 +694,9 @@ std::string RPCArg::ToDescriptionString() const
         } // no default case, so the compiler can warn about missing cases
     }
     if (m_fallback.index() == 1) {
-        ret += ", optional, default=" + std::get<std::string>(m_fallback);
+        ret += ", optional, default=" + std::get<RPCArg::DefaultHint>(m_fallback);
+    } else if (m_fallback.index() == 2) {
+        ret += ", optional, default=" + std::get<RPCArg::Default>(m_fallback).write();
     } else {
         switch (std::get<RPCArg::Optional>(m_fallback)) {
         case RPCArg::Optional::OMITTED: {
