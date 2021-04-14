@@ -72,8 +72,8 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
     txNew.nVersion = 1;
     txNew.vin.resize(1);
 
-    //two outputs for coinbase - miner and devfee
-    txNew.vout.resize(2);
+    //two outputs for coinbase - miner and devfee, third is placeholder for segwit (not used in genesis)
+    txNew.vout.resize(3);
     txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
 
     txNew.vout[0].nValue = genesisReward;
@@ -81,6 +81,9 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
 
     txNew.vout[1].nValue = devFeeAmt;
     txNew.vout[1].scriptPubKey = devFeeScript;
+
+    txNew.vout[2].nValue = 0;
+    txNew.vout[2].scriptPubKey = CScript();
 
 
     CBlock genesis;
@@ -119,8 +122,8 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
 
-        #define genesisHash "0x0000fd0237617079828567b0aec5d3d621ea41db7321ee1c9e127d91ddef3582"
-        #define genesisMerkleRoot "0x9bda44268c64dc0c6693867f5c4596852e30a1a8a51cd6e7c359b139a1865d22"
+        #define genesisHash "0x0000fdf8a64a2252837e4b55923b533d39877b30b18fdbb05dbce5abb60dcc42"
+        #define genesisMerkleRoot "0xeaede17b43d81b7c30e563a04345207cfd3089d78540d774ac8c3876e9c695d0"
 
         strNetworkID = CBaseChainParams::MAIN;
         consensus.signet_blocks = false;
@@ -179,8 +182,9 @@ public:
         genesis = CreateGenesisBlock(t, 0, 0x1f00ffff, 1, 10, developerFeeScript, devFeePerBlock);
         MineGenesis(genesis, consensus.powLimit, true);
         */
+        
 
-        genesis = CreateGenesisBlock(1618417940, 13753, 0x1f00ffff, 1, 10, developerFeeScript, devFeePerBlock);
+        genesis = CreateGenesisBlock(1618422888, 171179, 0x1f00ffff, 1, 10, developerFeeScript, devFeePerBlock);
 
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S(genesisHash));
