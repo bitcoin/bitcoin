@@ -45,10 +45,12 @@
 #include <QApplication>
 #include <QDebug>
 #include <QFontDatabase>
+#include <QLatin1String>
 #include <QLibraryInfo>
 #include <QLocale>
 #include <QMessageBox>
 #include <QSettings>
+#include <QStringBuilder>
 #include <QThread>
 #include <QTimer>
 #include <QTranslator>
@@ -442,8 +444,21 @@ void SyscoinApplication::shutdownResult()
 
 void SyscoinApplication::handleRunawayException(const QString &message)
 {
-    QMessageBox::critical(nullptr, "Runaway exception", SyscoinGUI::tr("A fatal error occurred. %1 can no longer continue safely and will quit.").arg(PACKAGE_NAME) + QString("<br><br>") + message);
+    QMessageBox::critical(
+        nullptr, tr("Runaway exception"),
+        tr("A fatal error occurred. %1 can no longer continue safely and will quit.").arg(PACKAGE_NAME) %
+        QLatin1String("<br><br>") % GUIUtil::MakeHtmlLink(message, PACKAGE_BUGREPORT));
     ::exit(EXIT_FAILURE);
+}
+
+void SyscoinApplication::handleNonFatalException(const QString& message)
+{
+    assert(QThread::currentThread() == thread());
+    QMessageBox::warning(
+        nullptr, tr("Internal error"),
+        tr("An internal error occurred. %1 will attempt to continue safely. This is "
+           "an unexpected bug which can be reported as described below.").arg(PACKAGE_NAME) %
+        QLatin1String("<br><br>") % GUIUtil::MakeHtmlLink(message, PACKAGE_BUGREPORT));
 }
 
 WId SyscoinApplication::getMainWinId() const
