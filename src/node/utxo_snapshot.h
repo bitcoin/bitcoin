@@ -24,6 +24,8 @@ public:
 
     //! Necessary to "fake" the base nChainTx so that we can estimate progress during
     //! initial block download for the assumeutxo chainstate.
+    //!
+    //! TODO: this is unused and should be removed.
     unsigned int m_nchaintx = 0;
 
     SnapshotMetadata() { }

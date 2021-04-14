@@ -233,6 +233,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
 
     // Mine 10 more blocks, putting at us height 110 where a valid assumeutxo value can
     // be found.
+    constexpr int snapshot_height = 110;
     mineBlocks(10);
     initial_size += 10;
     initial_total_coins += 10;
@@ -265,13 +266,30 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
             metadata.m_base_blockhash = uint256::ONE;
     }));
 
-    BOOST_REQUIRE(CreateAndActivateUTXOSnapshot(m_node, m_path_root));
+    constexpr int bad_nchaintx = 9999;
+
+    BOOST_REQUIRE(CreateAndActivateUTXOSnapshot(
+        m_node, m_path_root, [](CAutoFile& auto_infile, SnapshotMetadata& metadata) {
+            // Provide an nChainTx that differs from the hardcoded one.
+            //
+            // Ultimately this malleation check should be removed when we remove
+            // the now-unnecessary nChainTx from the user-specified snapshot metadata.
+            metadata.m_nchaintx = bad_nchaintx;
+    }));
 
     // Ensure our active chain is the snapshot chainstate.
     BOOST_CHECK(!chainman.ActiveChainstate().m_from_snapshot_blockhash.IsNull());
     BOOST_CHECK_EQUAL(
         chainman.ActiveChainstate().m_from_snapshot_blockhash,
         *chainman.SnapshotBlockhash());
+
+    const AssumeutxoData& au_data = *ExpectedAssumeutxo(snapshot_height, ::Params());
+    const CBlockIndex* tip = chainman.ActiveTip();
+
+    // Ensure that, despite a bad nChainTx value being in the snapshot, activation
+    // uses the hardcoded value from chainparams.
+    BOOST_CHECK_EQUAL(tip->nChainTx, au_data.nChainTx);
+    BOOST_CHECK(tip->nChainTx != bad_nchaintx);
 
     // To be checked against later when we try loading a subsequent snapshot.
     uint256 loaded_snapshot_blockhash{*chainman.SnapshotBlockhash()};
