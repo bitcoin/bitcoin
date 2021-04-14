@@ -2771,7 +2771,7 @@ static RPCHelpMan createwallet()
 #ifdef ENABLE_EXTERNAL_SIGNER
         flags |= WALLET_FLAG_EXTERNAL_SIGNER;
 #else
-        throw JSONRPCError(RPC_WALLET_ERROR, "Configure with --enable-external-signer to use this");
+        throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without external signing support (required for external signing)");
 #endif
     }
 
