@@ -275,7 +275,11 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
 
     BOOST_CHECK_NO_THROW(CallRPC(std::string("clearbanned")));
 
+    auto now = 10'000s;
+    SetMockTime(now);
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("setban 127.0.0.0/24 add 200")));
+    SetMockTime(now += 2s);
+    const int64_t time_remaining_expected{198};
     BOOST_CHECK_NO_THROW(r = CallRPC(std::string("listbanned")));
     ar = r.get_array();
     o1 = ar[0].get_obj();
@@ -284,12 +288,10 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     const int64_t ban_created{find_value(o1, "ban_created").get_int64()};
     const int64_t ban_duration{find_value(o1, "ban_duration").get_int64()};
     const int64_t time_remaining{find_value(o1, "time_remaining").get_int64()};
-    const int64_t now{GetTime()};
     BOOST_CHECK_EQUAL(adr.get_str(), "127.0.0.0/24");
-    BOOST_CHECK(banned_until > now);
-    BOOST_CHECK(banned_until - now <= 200);
+    BOOST_CHECK_EQUAL(banned_until, time_remaining_expected + now.count());
     BOOST_CHECK_EQUAL(ban_duration, banned_until - ban_created);
-    BOOST_CHECK_EQUAL(time_remaining, banned_until - now);
+    BOOST_CHECK_EQUAL(time_remaining, time_remaining_expected);
 
     // must throw an exception because 127.0.0.1 is in already banned subnet range
     BOOST_CHECK_THROW(r = CallRPC(std::string("setban 127.0.0.1 add")), std::runtime_error);
@@ -333,6 +335,7 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     o1 = ar[0].get_obj();
     adr = find_value(o1, "address");
     BOOST_CHECK_EQUAL(adr.get_str(), "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/128");
+    SetMockTime(0s);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_convert_values_generatetoaddress)
