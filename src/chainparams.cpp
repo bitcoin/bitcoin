@@ -22,6 +22,7 @@
 #include <base58.h>
 #include <key.h>
 #include <bech32.h>
+#include <key_io.h>
 
 
 const arith_uint256 maxUint = UintToArith256(
@@ -122,8 +123,8 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
 
-        #define genesisHash "0x0000ed479db8bb955a30d3c475c4a89db9dbd52ab6afefaa78a9b10d7621e398"
-        #define genesisMerkleRoot "0xeaede17b43d81b7c30e563a04345207cfd3089d78540d774ac8c3876e9c695d0"
+        #define genesisHash "0x0000e7b3b089f7e004a47fed78de25c88725ed1f1d4ea3730fb5d4968cbe846c"
+        #define genesisMerkleRoot "0xca088b236bfc9e34195bd5741a600e5d06ffe5bf62bbda5811b9ad1c3dbd4b15"
 
         strNetworkID = CBaseChainParams::MAIN;
         consensus.signet_blocks = false;
@@ -157,11 +158,28 @@ public:
         consensus.defaultAssumeValid = uint256S(genesisHash); 
 
 
+        /*
         bech32::DecodeResult r = bech32::Decode("dy1q6y6uv9thwl99up2l4pj9q3l4lfuwml6wn5863q");
         CKeyID key = CPubKey(r.data).GetID();
         developerFeeScript = GetScriptForDestination(PKHash(key));
+        */
+
         devFeePerBlock = COIN;
 
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 0);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 5);
+        base58Prefixes[SECRET_KEY] = std::vector<unsigned char>(1, 128);
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
+        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
+
+        bech32_hrp = "dy";
+
+        std::string errMsg;
+        developerFeeScript = GetScriptForDestination(DecodeDestinationExtended(strDevFeeAddress, Base58Prefix(CChainParams::PUBKEY_ADDRESS),
+           Base58Prefix(CChainParams::SCRIPT_ADDRESS), bech32_hrp, errMsg));
+
+
+        
         /**
          * The message start string is designed to be unlikely to occur in normal data.
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -182,11 +200,9 @@ public:
         time(&t);
         genesis = CreateGenesisBlock(t, 0, 0x1f00ffff, 1, 10, developerFeeScript, devFeePerBlock);
         MineGenesis(genesis, consensus.powLimit, true);
-        */
-      
-        
+        */            
 
-        genesis = CreateGenesisBlock(1618424536, 86357, 0x1f00ffff, 1, 10, developerFeeScript, devFeePerBlock);
+        genesis = CreateGenesisBlock(1618439684, 14435, 0x1f00ffff, 1, 10, developerFeeScript, devFeePerBlock);
 
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S(genesisHash));
@@ -217,13 +233,7 @@ public:
         vSeeds.emplace_back("seed.bitcoin.wiz.biz"); // Jason Maurice
         */
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
-        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
-        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
 
-        bech32_hrp = "dy";
 
         //vFixedSeeds = std::vector<SeedSpec6>(std::begin(pnSeed6_main), std::end(pnSeed6_main));
 

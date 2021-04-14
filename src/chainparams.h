@@ -112,6 +112,7 @@ public:
     const CCheckpointData& Checkpoints() const { return checkpointData; }
 
     CScript developerFeeScript;
+    const std::string strDevFeeAddress = "dy1q6y6uv9thwl99up2l4pj9q3l4lfuwml6wn5863q";
     CAmount devFeePerBlock;
 
     //! Get allowed assumeutxo configuration.

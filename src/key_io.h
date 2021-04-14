@@ -24,6 +24,11 @@ std::string EncodeExtPubKey(const CExtPubKey& extpubkey);
 std::string EncodeDestination(const CTxDestination& dest);
 CTxDestination DecodeDestination(const std::string& str);
 CTxDestination DecodeDestination(const std::string& str, std::string& error_msg);
+
+
+CTxDestination DecodeDestinationExtended(const std::string& str, std::vector<unsigned char> chainPubkeyPrefix, std::vector<unsigned char> chainScriptAddress, const std::string Bech32HRP, std::string& error_str);
+
+
 bool IsValidDestinationString(const std::string& str);
 bool IsValidDestinationString(const std::string& str, const CChainParams& params);
 
