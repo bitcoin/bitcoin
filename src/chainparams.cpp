@@ -61,8 +61,8 @@ static void MineGenesis(CBlockHeader& genesisBlock, const uint256& powLimit, boo
     printf("\nGenesis nTime = %u \n", genesisBlock.nTime);
     printf("Genesis nNonce = %u \n", genesisBlock.nNonce);
     printf("Genesis nBits: %08x\n", genesisBlock.nBits);
-    printf("Genesis Hash = %s\n", newhash.ToString().c_str());
-    printf("Genesis Hash Merkle Root = %s\n", genesisBlock.hashMerkleRoot.ToString().c_str());
+    printf("Genesis Hash = 0x%s\n", newhash.ToString().c_str());
+    printf("Genesis Hash Merkle Root = 0x%s\n", genesisBlock.hashMerkleRoot.ToString().c_str());
 }
 
 
@@ -122,7 +122,7 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
 
-        #define genesisHash "0x0000fdf8a64a2252837e4b55923b533d39877b30b18fdbb05dbce5abb60dcc42"
+        #define genesisHash "0x0000ed479db8bb955a30d3c475c4a89db9dbd52ab6afefaa78a9b10d7621e398"
         #define genesisMerkleRoot "0xeaede17b43d81b7c30e563a04345207cfd3089d78540d774ac8c3876e9c695d0"
 
         strNetworkID = CBaseChainParams::MAIN;
@@ -157,7 +157,7 @@ public:
         consensus.defaultAssumeValid = uint256S(genesisHash); 
 
 
-        bech32::DecodeResult r = bech32::Decode("dy1qjse34842k8xas54zsnpnt2dsl0p2pxg7j3h3kp");
+        bech32::DecodeResult r = bech32::Decode("dy1q6y6uv9thwl99up2l4pj9q3l4lfuwml6wn5863q");
         CKeyID key = CPubKey(r.data).GetID();
         developerFeeScript = GetScriptForDestination(PKHash(key));
         devFeePerBlock = COIN;
@@ -176,15 +176,17 @@ public:
         m_assumed_blockchain_size = 350;
         m_assumed_chain_state_size = 6;
 
+
         /*
         time_t t;
         time(&t);
         genesis = CreateGenesisBlock(t, 0, 0x1f00ffff, 1, 10, developerFeeScript, devFeePerBlock);
         MineGenesis(genesis, consensus.powLimit, true);
         */
+      
         
 
-        genesis = CreateGenesisBlock(1618422888, 171179, 0x1f00ffff, 1, 10, developerFeeScript, devFeePerBlock);
+        genesis = CreateGenesisBlock(1618424536, 86357, 0x1f00ffff, 1, 10, developerFeeScript, devFeePerBlock);
 
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S(genesisHash));
