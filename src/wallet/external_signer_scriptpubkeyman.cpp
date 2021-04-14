@@ -6,6 +6,13 @@
 #include <external_signer.h>
 #include <wallet/external_signer_scriptpubkeyman.h>
 
+#include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+
 #ifdef ENABLE_EXTERNAL_SIGNER
 
 bool ExternalSignerScriptPubKeyMan::SetupDescriptor(std::unique_ptr<Descriptor> desc)
