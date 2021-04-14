@@ -233,6 +233,8 @@ Q_SIGNALS:
     // Notify that there are now keys in the keypool
     void canGetAddressesChanged();
 
+    void timerTimeout();
+
 public Q_SLOTS:
     /* Starts a timer to periodically update the balance */
     void startPollBalance();
