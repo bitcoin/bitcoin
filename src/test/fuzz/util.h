@@ -577,15 +577,15 @@ class FuzzedSock : public Sock
 public:
     explicit FuzzedSock(FuzzedDataProvider& fuzzed_data_provider) : m_fuzzed_data_provider{fuzzed_data_provider}
     {
-          m_socket = fuzzed_data_provider.ConsumeIntegral<SOCKET>();
+          m_socket = fuzzed_data_provider.ConsumeIntegralInRange<SOCKET>(INVALID_SOCKET - 1, INVALID_SOCKET);
     }
 
     ~FuzzedSock() override
     {
         // Sock::~Sock() will be called after FuzzedSock::~FuzzedSock() and it will call
         // Sock::Reset() (not FuzzedSock::Reset()!) which will call CloseSocket(m_socket).
-        // Avoid closing an arbitrary file descriptor (m_socket is just a random number which
-        // may concide with a real opened file descriptor).
+        // Avoid closing an arbitrary file descriptor (m_socket is just a random very high number which
+        // theoretically may concide with a real opened file descriptor).
         Reset();
     }
 
