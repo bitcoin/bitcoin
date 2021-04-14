@@ -335,7 +335,6 @@ BOOST_AUTO_TEST_CASE(rpc_ban)
     o1 = ar[0].get_obj();
     adr = find_value(o1, "address");
     BOOST_CHECK_EQUAL(adr.get_str(), "2001:4d48:ac57:400:cacf:e9ff:fe1d:9c63/128");
-    SetMockTime(0s);
 }
 
 BOOST_AUTO_TEST_CASE(rpc_convert_values_generatetoaddress)
