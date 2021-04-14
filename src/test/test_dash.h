@@ -161,4 +161,7 @@ private:
     const std::string m_reason;
 };
 
+// define an implicit conversion here so that uint256 may be used directly in BOOST_CHECK_*
+std::ostream& operator<<(std::ostream& os, const uint256& num);
+
 #endif
