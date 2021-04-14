@@ -3,31 +3,12 @@
 #
 # https://github.com/google/sanitizers/wiki/ThreadSanitizerSuppressions
 
-# double locks (TODO fix)
-mutex:g_genesis_wait_mutex
-mutex:Interrupt
-mutex:CThreadInterrupt
-mutex:CConnman::Interrupt
-mutex:CConnman::WakeMessageHandler
-mutex:CConnman::ThreadOpenConnections
-mutex:CConnman::ThreadOpenAddedConnections
-mutex:CConnman::SocketHandler
-mutex:UpdateTip
-mutex:PeerManagerImpl::UpdatedBlockTip
-mutex:g_best_block_mutex
-
 # race (TODO fix)
-race:CConnman::WakeMessageHandler
-race:CConnman::ThreadMessageHandler
-race:fHaveGenesis
-race:ProcessNewBlock
-race:ThreadImport
 race:LoadWallet
 race:WalletBatch::WriteHDChain
 race:BerkeleyBatch
 race:BerkeleyDatabase
 race:DatabaseBatch
-race:leveldb::DBImpl::DeleteObsoleteFiles
 race:zmq::*
 race:bitcoin-qt
 
