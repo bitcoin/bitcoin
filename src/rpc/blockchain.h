@@ -56,16 +56,12 @@ void CalculatePercentilesByWeight(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES],
 void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex = true, int serialize_flags = 0, const CTxUndo* txundo = nullptr);
 
-NodeContext& EnsureNodeContext(const std::any& context);
 NodeContext& EnsureAnyNodeContext(const std::any& context);
 CTxMemPool& EnsureMemPool(const NodeContext& node);
-CTxMemPool& EnsureMemPool(const std::any& context);
 CTxMemPool& EnsureAnyMemPool(const std::any& context);
 ChainstateManager& EnsureChainman(const NodeContext& node);
-ChainstateManager& EnsureChainman(const std::any& context);
 ChainstateManager& EnsureAnyChainman(const std::any& context);
 CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node);
-CBlockPolicyEstimator& EnsureFeeEstimator(const std::any& context);
 CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context);
 
 /**
