@@ -8,6 +8,8 @@
 #ifdef ENABLE_EXTERNAL_SIGNER
 #include <wallet/scriptpubkeyman.h>
 
+#include <memory>
+
 namespace wallet {
 class ExternalSignerScriptPubKeyMan : public DescriptorScriptPubKeyMan
 {

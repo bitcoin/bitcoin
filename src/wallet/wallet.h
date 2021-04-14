@@ -561,9 +561,6 @@ public:
 
     void RecalculateMixedCredit(const uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-#ifdef ENABLE_EXTERNAL_SIGNER
-    ExternalSigner GetExternalSigner() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-#endif
     /** Display address on an external signer. Returns false if external signer support is not compiled */
     bool DisplayAddress(const CTxDestination& dest) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
