@@ -9,7 +9,6 @@
 #include <stacktraces.h>
 #include <fs.h>
 #include <logging.h>
-#include <random.h>
 #include <streams.h>
 #include <utilstrencodings.h>
 
@@ -17,18 +16,18 @@
 #include <map>
 #include <vector>
 #include <memory>
-#include <thread>
 #include <atomic>
 
 #if WIN32
 #include <windows.h>
 #include <dbghelp.h>
+#include <thread>
 #else
 #ifdef ENABLE_STACKTRACES
 #include <execinfo.h>
 #endif
 #include <unistd.h>
-#include <signal.h>
+#include <csignal>
 #endif
 
 #if !WIN32
@@ -49,7 +48,7 @@
 #include <backtrace.h>
 #endif
 
-#include <string.h>
+#include <cstring>
 
 std::string DemangleSymbol(const std::string& name)
 {
@@ -356,8 +355,8 @@ static std::vector<stackframe_info> GetStackFrameInfos(const std::vector<uint64_
     std::vector<stackframe_info> infos;
     infos.reserve(stackframes.size());
 
-    for (size_t i = 0; i < stackframes.size(); i++) {
-        if (backtrace_pcinfo(GetLibBacktraceState(), stackframes[i], my_backtrace_full_callback, my_backtrace_error_callback, &infos)) {
+    for (uint64_t stackframe : stackframes) {
+        if (backtrace_pcinfo(GetLibBacktraceState(), stackframe, my_backtrace_full_callback, my_backtrace_error_callback, &infos)) {
             break;
         }
     }
@@ -499,9 +498,7 @@ static std::string GetCrashInfoStr(const crash_info& ci, size_t spaces)
     std::vector<std::string> lstrs;
     lstrs.reserve(ci.stackframeInfos.size());
 
-    for (size_t i = 0; i < ci.stackframeInfos.size(); i++) {
-        auto& si = ci.stackframeInfos[i];
-
+    for (const auto& si : ci.stackframeInfos) {
         std::string lstr;
         if (!si.filename.empty()) {
             lstr += fs::path(si.filename).filename().string();

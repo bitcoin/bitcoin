@@ -53,13 +53,13 @@ class StatsdClient {
 
     protected:
         int init();
-        void cleanup(std::string& key);
+        static void cleanup(std::string& key);
 
     protected:
         struct _StatsdClientData* d;
 };
 
-}; // namespace statsd
+} // namespace statsd
 
 extern statsd::StatsdClient statsClient;
 

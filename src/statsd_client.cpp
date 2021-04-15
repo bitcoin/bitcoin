@@ -35,10 +35,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <random.h>
 #include <util.h>
 
-#include <math.h>
-#include <time.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cmath>
+#include <cstdio>
 
 statsd::StatsdClient statsClient;
 
@@ -88,7 +86,7 @@ StatsdClient::~StatsdClient()
     // close socket
     CloseSocket(d->sock);
     delete d;
-    d = NULL;
+    d = nullptr;
 }
 
 void StatsdClient::config(const std::string& host, int port, const std::string& ns)
