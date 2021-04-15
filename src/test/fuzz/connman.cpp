@@ -187,6 +187,25 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                     /*permissions=*/ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS),
                     /*addr_bind=*/ConsumeAddress(fuzzed_data_provider),
                     /*addr_peer=*/peer);
+            },
+            [&] {
+                CConnman::Options options;
+
+                options.vBinds = ConsumeServiceVector(fuzzed_data_provider);
+
+                options.vWhiteBinds = std::vector<NetWhitebindPermissions>{
+                    fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 5)};
+                for (auto& wb : options.vWhiteBinds) {
+                    wb.m_flags = ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
+                    wb.m_service = ConsumeService(fuzzed_data_provider);
+                }
+
+                options.onion_binds = ConsumeServiceVector(fuzzed_data_provider);
+
+                options.bind_on_any = options.vBinds.empty() && options.vWhiteBinds.empty() &&
+                                      options.onion_binds.empty();
+
+                connman.InitBindsPublic(options);
             });
     }
     (void)connman.GetAddedNodeInfo(fuzzed_data_provider.ConsumeBool());
