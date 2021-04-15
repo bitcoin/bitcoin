@@ -59,6 +59,7 @@ class AddrTest(BitcoinTestFramework):
         self.oversized_addr_test()
         self.relay_tests()
         self.getaddr_tests()
+        self.blocksonly_mode_tests()
 
     def setup_addr_msg(self, num):
         addrs = []
@@ -167,6 +168,7 @@ class AddrTest(BitcoinTestFramework):
         self.log.info('Check that we answer getaddr messages only from inbound peers')
         inbound_peer = self.nodes[0].add_p2p_connection(GetAddrStore())
         inbound_peer.sync_with_ping()
+
         # Add some addresses to addrman
         for i in range(1000):
             first_octet = i >> 8
@@ -185,6 +187,27 @@ class AddrTest(BitcoinTestFramework):
         assert_equal(full_outbound_peer.num_ipv4_received, 0)
         assert_equal(block_relay_peer.num_ipv4_received, 0)
         assert inbound_peer.num_ipv4_received > 100
+
+        self.nodes[0].disconnect_p2ps()
+
+    def blocksonly_mode_tests(self):
+        self.log.info('Test addr relay in -blocksonly mode')
+        self.restart_node(0, ["-blocksonly"])
+        self.mocktime = int(time.time())
+
+        self.log.info('Check that we send getaddr messages')
+        full_outbound_peer = self.nodes[0].add_outbound_p2p_connection(GetAddrStore(), p2p_idx=0, connection_type="outbound-full-relay")
+        full_outbound_peer.sync_with_ping()
+        assert full_outbound_peer.getaddr_received
+
+        self.log.info('Check that we relay address messages')
+        addr_source = self.nodes[0].add_p2p_connection(P2PInterface())
+        msg = self.setup_addr_msg(2)
+        addr_source.send_and_ping(msg)
+        self.mocktime += 5 * 60
+        self.nodes[0].setmocktime(self.mocktime)
+        full_outbound_peer.sync_with_ping()
+        assert_equal(full_outbound_peer.num_ipv4_received, 2)
 
         self.nodes[0].disconnect_p2ps()
 
