@@ -78,8 +78,7 @@ public:
     explicit StaticContentsSock(const std::string& contents) : m_contents{contents}, m_consumed{0}
     {
         // Just a dummy number that is not INVALID_SOCKET.
-        static_assert(INVALID_SOCKET != 1000);
-        m_socket = 1000;
+        m_socket = INVALID_SOCKET - 1;
     }
 
     ~StaticContentsSock() override { Reset(); }
