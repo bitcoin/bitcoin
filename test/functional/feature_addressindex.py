@@ -48,7 +48,8 @@ class AddressIndexTest(BitcoinTestFramework):
         self.sync_all()
 
         self.log.info("Mining blocks...")
-        self.nodes[0].generate(105)
+        mining_address = self.nodes[0].getnewaddress()
+        self.nodes[0].generatetoaddress(105, mining_address)
         self.sync_all()
 
         chain_height = self.nodes[1].getblockcount()
@@ -58,7 +59,11 @@ class AddressIndexTest(BitcoinTestFramework):
 
         # Check that balances are correct
         balance0 = self.nodes[1].getaddressbalance("93bVhahvUKmQu8gu9g3QnPPa2cxFK98pMB")
+        balance_mining = self.nodes[1].getaddressbalance(mining_address)
         assert_equal(balance0["balance"], 0)
+        assert_equal(balance_mining["balance"], 105 * 500 * COIN)
+        assert_equal(balance_mining["balance_immature"], 100 * 500 * COIN)
+        assert_equal(balance_mining["balance_spendable"], 5 * 500 * COIN)
 
         # Check p2pkh and p2sh address indexes
         self.log.info("Testing p2pkh and p2sh address index...")
