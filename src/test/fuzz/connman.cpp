@@ -6,6 +6,7 @@
 #include <chainparams.h>
 #include <common/args.h>
 #include <net.h>
+#include <net_processing.h>
 #include <netaddress.h>
 #include <protocol.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -52,6 +53,19 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     }
     AddrManDeterministic& addr_man{*addr_man_ptr};
     auto net_events{ConsumeNetEvents(fuzzed_data_provider)};
+
+    // Mock CreateSock() to create FuzzedSock.
+    auto CreateSockOrig = CreateSock;
+    CreateSock = [&fuzzed_data_provider](int, int, int) {
+        return std::make_unique<FuzzedSock>(fuzzed_data_provider);
+    };
+
+    // Mock g_dns_lookup() to return a fuzzed address.
+    auto g_dns_lookup_orig = g_dns_lookup;
+    g_dns_lookup = [&fuzzed_data_provider](const std::string&, bool) {
+        return std::vector<CNetAddr>{ConsumeNetAddr(fuzzed_data_provider)};
+    };
+
     ConnmanTestMsg connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
                      fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
                      addr_man,
@@ -66,6 +80,7 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     connman.Init(options);
 
     CNetAddr random_netaddr;
+    CAddress random_address;
     CNode random_node = ConsumeNode(fuzzed_data_provider);
     CSubNet random_subnet;
     std::string random_string;
@@ -80,6 +95,9 @@ FUZZ_TARGET(connman, .init = initialize_connman)
             fuzzed_data_provider,
             [&] {
                 random_netaddr = ConsumeNetAddr(fuzzed_data_provider);
+            },
+            [&] {
+                random_address = ConsumeAddress(fuzzed_data_provider);
             },
             [&] {
                 random_subnet = ConsumeSubNet(fuzzed_data_provider);
@@ -145,6 +163,21 @@ FUZZ_TARGET(connman, .init = initialize_connman)
             },
             [&] {
                 connman.SetTryNewOutboundPeer(fuzzed_data_provider.ConsumeBool());
+            },
+            [&] {
+                ConnectionType conn_type{
+                    fuzzed_data_provider.PickValueInArray(ALL_CONNECTION_TYPES)};
+                if (conn_type == ConnectionType::INBOUND) { // INBOUND is not allowed
+                    conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
+                }
+
+                connman.OpenNetworkConnection(
+                    /*addrConnect=*/random_address,
+                    /*fCountFailure=*/fuzzed_data_provider.ConsumeBool(),
+                    /*grant_outbound=*/{},
+                    /*strDest=*/fuzzed_data_provider.ConsumeBool() ? nullptr : random_string.c_str(),
+                    /*conn_type=*/conn_type,
+                    /*use_v2transport=*/fuzzed_data_provider.ConsumeBool());
             });
     }
     (void)connman.GetAddedNodeInfo(fuzzed_data_provider.ConsumeBool());
@@ -164,4 +197,6 @@ FUZZ_TARGET(connman, .init = initialize_connman)
     (void)connman.ASMapHealthCheck();
 
     connman.ClearTestNodes();
+    g_dns_lookup = g_dns_lookup_orig;
+    CreateSock = CreateSockOrig;
 }
