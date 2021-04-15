@@ -273,20 +273,6 @@ BOOST_AUTO_TEST_CASE(versionbits_sanity)
         if (mainnetParams.vDeployments[i].nStartTime == Consensus::BIP9Deployment::ALWAYS_ACTIVE || mainnetParams.vDeployments[i].nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE) {
             BOOST_CHECK_EQUAL(mainnetParams.vDeployments[i].min_activation_height, 0);
         }
-
-        // Verify that the deployment windows of different deployment using the
-        // same bit are disjoint.
-        // This test may need modification at such time as a new deployment
-        // is proposed that reuses the bit of an activated soft fork, before the
-        // end time of that soft fork.  (Alternatively, the end time of that
-        // activated soft fork could be later changed to be earlier to avoid
-        // overlap.)
-        for (int j=i+1; j<(int) Consensus::MAX_VERSION_BITS_DEPLOYMENTS; j++) {
-            if (VersionBitsMask(mainnetParams, static_cast<Consensus::DeploymentPos>(j)) == bitmask) {
-                BOOST_CHECK(mainnetParams.vDeployments[j].nStartTime > mainnetParams.vDeployments[i].nTimeout ||
-                        mainnetParams.vDeployments[i].nStartTime > mainnetParams.vDeployments[j].nTimeout);
-            }
-        }
     }
 }
 
@@ -443,8 +429,18 @@ BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
     // ACTIVE and FAILED states in roughly the way we expect
     for (const auto& chain_name : {CBaseChainParams::MAIN, CBaseChainParams::TESTNET, CBaseChainParams::SIGNET, CBaseChainParams::REGTEST}) {
         const auto chainParams = CreateChainParams(*m_node.args, chain_name);
+        uint32_t chain_all_vbits{0};
         for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++i) {
-            check_computeblockversion(chainParams->GetConsensus(), static_cast<Consensus::DeploymentPos>(i));
+            const auto dep = static_cast<Consensus::DeploymentPos>(i);
+            // Check that no bits are re-used (within the same chain). This is
+            // disallowed because the transition to FAILED (on timeout) does
+            // not take precedence over STARTED/LOCKED_IN. So all softforks on
+            // the same bit might overlap, even when non-overlapping start-end
+            // times are picked.
+            const uint32_t dep_mask{VersionBitsMask(chainParams->GetConsensus(), dep)};
+            BOOST_CHECK(!(chain_all_vbits & dep_mask));
+            chain_all_vbits |= dep_mask;
+            check_computeblockversion(chainParams->GetConsensus(), dep);
         }
     }
 
