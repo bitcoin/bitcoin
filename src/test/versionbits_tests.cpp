@@ -255,25 +255,6 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
     }
 }
 
-BOOST_AUTO_TEST_CASE(versionbits_sanity)
-{
-    // Sanity checks of version bit deployments
-    const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
-    const Consensus::Params &mainnetParams = chainParams->GetConsensus();
-    for (int i=0; i<(int) Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
-        uint32_t bitmask = VersionBitsMask(mainnetParams, static_cast<Consensus::DeploymentPos>(i));
-        // Make sure that no deployment tries to set an invalid bit.
-        BOOST_CHECK_EQUAL(bitmask & ~(uint32_t)VERSIONBITS_TOP_MASK, bitmask);
-
-        // Check min_activation_height is on a retarget boundary
-        BOOST_CHECK_EQUAL(mainnetParams.vDeployments[i].min_activation_height % mainnetParams.nMinerConfirmationWindow, 0);
-        // Check min_activation_height is 0 for ALWAYS_ACTIVE and never active deployments
-        if (mainnetParams.vDeployments[i].nStartTime == Consensus::BIP9Deployment::ALWAYS_ACTIVE || mainnetParams.vDeployments[i].nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE) {
-            BOOST_CHECK_EQUAL(mainnetParams.vDeployments[i].min_activation_height, 0);
-        }
-    }
-}
-
 /** Check that ComputeBlockVersion will set the appropriate bit correctly */
 static void check_computeblockversion(const Consensus::Params& params, Consensus::DeploymentPos dep)
 {
@@ -289,16 +270,25 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
     BOOST_CHECK_EQUAL(ComputeBlockVersion(nullptr, params), VERSIONBITS_TOP_BITS);
 
     // always/never active deployments shouldn't need to be tested further
-    if (nStartTime == Consensus::BIP9Deployment::ALWAYS_ACTIVE) return;
-    if (nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE) return;
+    if (nStartTime == Consensus::BIP9Deployment::ALWAYS_ACTIVE ||
+        nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE)
+    {
+        BOOST_CHECK_EQUAL(min_activation_height, 0);
+        return;
+    }
 
     BOOST_REQUIRE(nStartTime < nTimeout);
     BOOST_REQUIRE(nStartTime >= 0);
     BOOST_REQUIRE(nTimeout <= std::numeric_limits<uint32_t>::max() || nTimeout == Consensus::BIP9Deployment::NO_TIMEOUT);
     BOOST_REQUIRE(0 <= bit && bit < 32);
+    // Make sure that no deployment tries to set an invalid bit.
     BOOST_REQUIRE(((1 << bit) & VERSIONBITS_TOP_MASK) == 0);
     BOOST_REQUIRE(min_activation_height >= 0);
+    // Check min_activation_height is on a retarget boundary
     BOOST_REQUIRE_EQUAL(min_activation_height % params.nMinerConfirmationWindow, 0U);
+
+    const uint32_t bitmask{VersionBitsMask(params, dep)};
+    BOOST_CHECK_EQUAL(bitmask, uint32_t{1} << bit);
 
     // In the first chain, test that the bit is set by CBV until it has failed.
     // In the second chain, test the bit is set by CBV while STARTED and
