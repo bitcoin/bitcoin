@@ -32,7 +32,7 @@ private:
     static const int32_t MASK_AUXPOW_CHAINID_SHIFTED = (0x001f << VERSION_START_BIT);
     // mask to get old Chain ID from version field, legacy one is 4096 (2^12) in SYS so 0x1fff mask is needed
     static const int32_t MASK_OLD_AUXPOW_CHAINID_SHIFTED = (0x1fff << VERSION_START_BIT);
-    // shifted Chain ID in version field, 8 is hardcoded we should really remove the magic number, it is SYS chain ID
+    // shifted Chain ID in version field
     static const int32_t VERSION_AUXPOW_CHAINID_SHIFTED = (CHAINID << VERSION_START_BIT);
     // shifted legaacy Chain ID, 4096 shifted by VERSION_START_BIT
     static const int32_t VERSION_OLD_AUXPOW_CHAINID_SHIFTED = (OLD_CHAINID << VERSION_START_BIT); 
