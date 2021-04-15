@@ -3594,19 +3594,6 @@ void ReserveDestination::ReturnDestination()
     address = CNoDestination();
 }
 
-#ifdef ENABLE_EXTERNAL_SIGNER
-ExternalSigner CWallet::GetExternalSigner()
-{
-    const std::string command = gArgs.GetArg("-signer", "");
-    if (command == "") throw std::runtime_error(std::string(__func__) + ": restart bitcoind with -signer=<cmd>");
-    std::vector<ExternalSigner> signers;
-    ExternalSigner::Enumerate(command, signers, Params().NetworkIDString());
-    if (signers.empty()) throw std::runtime_error(std::string(__func__) + ": No external signers found");
-    // TODO: add fingerprint argument in case of multiple signers
-    return signers[0];
-}
-#endif
-
 bool CWallet::DisplayAddress(const CTxDestination& dest)
 {
 #ifdef ENABLE_EXTERNAL_SIGNER
@@ -3619,7 +3606,7 @@ bool CWallet::DisplayAddress(const CTxDestination& dest)
     if (signer_spk_man == nullptr) {
         return false;
     }
-    ExternalSigner signer = GetExternalSigner(); // TODO: move signer in spk_man
+    ExternalSigner signer = ExternalSignerScriptPubKeyMan::GetExternalSigner();
     return signer_spk_man->DisplayAddress(scriptPubKey, signer);
 #else
     return false;
@@ -4516,7 +4503,7 @@ void CWallet::LoadDescriptorScriptPubKeyMan(uint256 id, WalletDescriptor& desc)
         auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new ExternalSignerScriptPubKeyMan(*this, desc));
         m_spk_managers[id] = std::move(spk_manager);
 #else
-        throw std::runtime_error(std::string(__func__) + ": Configure with --enable-external-signer to use external signer wallets");
+        throw std::runtime_error(std::string(__func__) + ": Compiled without external signing support (required for external signing)");
 #endif
     } else {
         auto spk_manager = std::unique_ptr<ScriptPubKeyMan>(new DescriptorScriptPubKeyMan(*this, desc));
@@ -4585,8 +4572,8 @@ void CWallet::SetupDescriptorScriptPubKeyMans()
             }
         }
 #else
-        throw std::runtime_error(std::string(__func__) + ": Wallets with external signers require Boost::Process library.");
-#endif
+        throw std::runtime_error(std::string(__func__) + ": Compiled without external signing support (required for external signing)");
+#endif // ENABLE_EXTERNAL_SIGNER
     }
 }
 

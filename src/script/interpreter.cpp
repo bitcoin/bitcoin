@@ -1488,8 +1488,20 @@ static const CHashWriter HASHER_TAPLEAF = TaggedHash("TapLeaf");
 static const CHashWriter HASHER_TAPBRANCH = TaggedHash("TapBranch");
 static const CHashWriter HASHER_TAPTWEAK = TaggedHash("TapTweak");
 
+static bool HandleMissingData(MissingDataBehavior mdb)
+{
+    switch (mdb) {
+    case MissingDataBehavior::ASSERT_FAIL:
+        assert(!"Missing data");
+        break;
+    case MissingDataBehavior::FAIL:
+        return false;
+    }
+    assert(!"Unknown MissingDataBehavior value");
+}
+
 template<typename T>
-bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata, const T& tx_to, uint32_t in_pos, uint8_t hash_type, SigVersion sigversion, const PrecomputedTransactionData& cache)
+bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata, const T& tx_to, uint32_t in_pos, uint8_t hash_type, SigVersion sigversion, const PrecomputedTransactionData& cache, MissingDataBehavior mdb)
 {
     uint8_t ext_flag, key_version;
     switch (sigversion) {
@@ -1509,7 +1521,9 @@ bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata
         assert(false);
     }
     assert(in_pos < tx_to.vin.size());
-    assert(cache.m_bip341_taproot_ready && cache.m_spent_outputs_ready);
+    if (!(cache.m_bip341_taproot_ready && cache.m_spent_outputs_ready)) {
+        return HandleMissingData(mdb);
+    }
 
     CHashWriter ss = HASHER_TAPSIGHASH;
 
@@ -1667,6 +1681,9 @@ bool GenericTransactionSignatureChecker<T>::CheckECDSASignature(const std::vecto
     int nHashType = vchSig.back();
     vchSig.pop_back();
 
+    // Witness sighashes need the amount.
+    if (sigversion == SigVersion::WITNESS_V0 && amount < 0) return HandleMissingData(m_mdb);
+
     uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->txdata);
 
     if (!VerifyECDSASignature(vchSig, pubkey, sighash))
@@ -1696,7 +1713,7 @@ bool GenericTransactionSignatureChecker<T>::CheckSchnorrSignature(Span<const uns
     }
     uint256 sighash;
     assert(this->txdata);
-    if (!SignatureHashSchnorr(sighash, execdata, *txTo, nIn, hashtype, sigversion, *this->txdata)) {
+    if (!SignatureHashSchnorr(sighash, execdata, *txTo, nIn, hashtype, sigversion, *this->txdata, m_mdb)) {
         return set_error(serror, SCRIPT_ERR_SCHNORR_SIG_HASHTYPE);
     }
     if (!VerifySchnorrSignature(sig, pubkey, sighash)) return set_error(serror, SCRIPT_ERR_SCHNORR_SIG);

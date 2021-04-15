@@ -108,7 +108,7 @@ bool CheckTxScripts(const CTransaction& tx, const std::map<COutPoint, CScript>& 
         const CAmount amount = map_prevout_values.count(input.prevout) ? map_prevout_values.at(input.prevout) : 0;
         try {
             tx_valid = VerifyScript(input.scriptSig, map_prevout_scriptPubKeys.at(input.prevout),
-                &input.scriptWitness, flags, TransactionSignatureChecker(&tx, i, amount, txdata), &err);
+                &input.scriptWitness, flags, TransactionSignatureChecker(&tx, i, amount, txdata, MissingDataBehavior::ASSERT_FAIL), &err);
         } catch (...) {
             BOOST_ERROR("Bad test: " << strTest);
             return true; // The test format is bad and an error is thrown. Return true to silence further error.
@@ -427,7 +427,7 @@ static void CheckWithFlag(const CTransactionRef& output, const CMutableTransacti
 {
     ScriptError error;
     CTransaction inputi(input);
-    bool ret = VerifyScript(inputi.vin[0].scriptSig, output->vout[0].scriptPubKey, &inputi.vin[0].scriptWitness, flags, TransactionSignatureChecker(&inputi, 0, output->vout[0].nValue), &error);
+    bool ret = VerifyScript(inputi.vin[0].scriptSig, output->vout[0].scriptPubKey, &inputi.vin[0].scriptWitness, flags, TransactionSignatureChecker(&inputi, 0, output->vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &error);
     assert(ret == success);
 }
 

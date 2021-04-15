@@ -5,6 +5,7 @@
 #include <test/util/blockfilter.h>
 
 #include <chainparams.h>
+#include <node/blockstorage.h>
 #include <validation.h>
 
 

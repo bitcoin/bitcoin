@@ -199,7 +199,7 @@ TransactionView::TransactionView(const PlatformStyle *platformStyle, QWidget *pa
     connect(transactionView, &QTableView::doubleClicked, this, &TransactionView::doubleClicked);
     connect(transactionView, &QTableView::customContextMenuRequested, this, &TransactionView::contextualMenu);
 
-    connect(bumpFeeAction, &QAction::triggered, this, &TransactionView::bumpFee);
+    GUIUtil::ExceptionSafeConnect(bumpFeeAction, &QAction::triggered, this, &TransactionView::bumpFee);
     connect(abandonAction, &QAction::triggered, this, &TransactionView::abandonTx);
     connect(copyAddressAction, &QAction::triggered, this, &TransactionView::copyAddress);
     connect(copyLabelAction, &QAction::triggered, this, &TransactionView::copyLabel);
@@ -424,7 +424,7 @@ void TransactionView::abandonTx()
     model->getTransactionTableModel()->updateTransaction(hashQStr, CT_UPDATED, false);
 }
 
-void TransactionView::bumpFee()
+void TransactionView::bumpFee([[maybe_unused]] bool checked)
 {
     if(!transactionView || !transactionView->selectionModel())
         return;

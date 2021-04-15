@@ -374,6 +374,8 @@ def write_config(config_path, *, n, chain, extra_config=""):
         f.write("upnp=0\n")
         f.write("natpmp=0\n")
         f.write("shrinkdebugfile=0\n")
+        # To improve SQLite wallet performance so that the tests don't timeout, use -unsafesqlitesync
+        f.write("unsafesqlitesync=1\n")
         f.write(extra_config)
 
 

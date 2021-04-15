@@ -22,7 +22,7 @@
 #include <wallet/coinselection.h>
 #include <wallet/crypter.h>
 #include <wallet/scriptpubkeyman.h>
-#include <wallet/external_signer.h>
+#include <external_signer.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
 
@@ -845,9 +845,6 @@ public:
 
     std::vector<OutputGroup> GroupOutputs(const std::vector<COutput>& outputs, bool separate_coins, const CFeeRate& effective_feerate, const CFeeRate& long_term_feerate, const CoinEligibilityFilter& filter, bool positive_only) const;
 
-#ifdef ENABLE_EXTERNAL_SIGNER
-    ExternalSigner GetExternalSigner() EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-#endif
     /** Display address on an external signer. Returns false if external signer support is not compiled */
     bool DisplayAddress(const CTxDestination& dest) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 

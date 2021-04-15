@@ -116,7 +116,6 @@ BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
         BOOST_CHECK(peerLogic->SendMessages(&dummyNode1)); // should result in disconnect
     }
     BOOST_CHECK(dummyNode1.fDisconnect == true);
-    SetMockTime(0);
 
     peerLogic->FinalizeNode(dummyNode1);
 }
