@@ -5,6 +5,7 @@
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <net.h>
+#include <net_processing.h>
 #include <netaddress.h>
 #include <protocol.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -16,18 +17,42 @@
 #include <cstdint>
 #include <vector>
 
+namespace {
+const TestingSetup* g_setup;
+} // namespace
+
 void initialize_connman()
 {
-    static const auto testing_setup = MakeNoLogFileContext<>();
+    static const auto testing_setup = MakeNoLogFileContext<TestingSetup>();
+    g_setup = testing_setup.get();
 }
 
 FUZZ_TARGET_INIT(connman, initialize_connman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    CAddrMan addrman;
-    CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(), fuzzed_data_provider.ConsumeIntegral<uint64_t>(), addrman, fuzzed_data_provider.ConsumeBool()};
+
+    // Mock CreateSock() to create FuzzedSock.
+    auto CreateSockOrig = CreateSock;
+    CreateSock = [&fuzzed_data_provider](const CService&) {
+        return std::make_unique<FuzzedSock>(fuzzed_data_provider);
+    };
+
+    // Mock g_dns_lookup() to return a fuzzed address.
+    g_dns_lookup = [&fuzzed_data_provider](const std::string&, bool) {
+        return std::vector<CNetAddr>{ConsumeNetAddr(fuzzed_data_provider)};
+    };
+
+    CConnman connman{fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
+                     fuzzed_data_provider.ConsumeIntegral<uint64_t>(),
+                     *g_setup->m_node.addrman,
+                     fuzzed_data_provider.ConsumeBool()};
+    CConnman::Options options;
+    options.m_msgproc = g_setup->m_node.peerman.get();
+    connman.Init(options);
+
     CNetAddr random_netaddr;
+    CAddress random_address;
     CNode random_node = ConsumeNode(fuzzed_data_provider);
     CSubNet random_subnet;
     std::string random_string;
@@ -36,6 +61,9 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
             fuzzed_data_provider,
             [&] {
                 random_netaddr = ConsumeNetAddr(fuzzed_data_provider);
+            },
+            [&] {
+                random_address = ConsumeAddress(fuzzed_data_provider);
             },
             [&] {
                 random_subnet = ConsumeSubNet(fuzzed_data_provider);
@@ -114,6 +142,25 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
             },
             [&] {
                 connman.SetTryNewOutboundPeer(fuzzed_data_provider.ConsumeBool());
+            },
+            [&] {
+                const auto& to_addr{random_address};
+
+                const bool count_failure{fuzzed_data_provider.ConsumeBool()};
+
+                CSemaphoreGrant grant;
+                CSemaphoreGrant* grant_ptr{fuzzed_data_provider.ConsumeBool() ? nullptr : &grant};
+
+                const char* to_str{fuzzed_data_provider.ConsumeBool() ? nullptr :
+                                                                        random_string.c_str()};
+
+                ConnectionType conn_type{
+                    fuzzed_data_provider.PickValueInArray(ALL_CONNECTION_TYPES)};
+                if (conn_type == ConnectionType::INBOUND) { // INBOUND is not allowed
+                    conn_type = ConnectionType::OUTBOUND_FULL_RELAY;
+                }
+
+                connman.OpenNetworkConnection(to_addr, count_failure, grant_ptr, to_str, conn_type);
             });
     }
     (void)connman.GetAddedNodeInfo();
@@ -131,4 +178,6 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
     (void)connman.GetTotalBytesSent();
     (void)connman.GetTryNewOutboundPeer();
     (void)connman.GetUseAddrmanOutgoing();
+
+    CreateSock = CreateSockOrig;
 }
