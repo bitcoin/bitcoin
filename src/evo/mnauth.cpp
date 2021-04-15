@@ -137,12 +137,17 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
         }
 
         connman.ForEachNode([&](CNode* pnode2) {
+            uint256 verifiedProRegTxHash;
+            {
+                LOCK(pnode->cs_mnauth);
+                verifiedProRegTxHash = pnode2->verifiedProRegTxHash;
+            }
             if (pnode->fDisconnect) {
                 // we've already disconnected the new peer
                 return;
             }
 
-            if (pnode2->verifiedProRegTxHash == mnauth.proRegTxHash) {
+            if (verifiedProRegTxHash == mnauth.proRegTxHash) {
                 if (fMasternodeMode) {
                     auto deterministicOutbound = llmq::CLLMQUtils::DeterministicOutboundConnection(activeMasternodeInfo.proTxHash, mnauth.proRegTxHash);
                     LogPrint(BCLog::NET, "CMNAuth::ProcessMessage -- Masternode %s has already verified as peer %d, deterministicOutbound=%s. peer=%d\n",
@@ -181,7 +186,7 @@ void CMNAuth::ProcessMessage(CNode* pnode, const std::string& strCommand, CDataS
             pnode->verifiedProRegTxHash = mnauth.proRegTxHash;
             pnode->verifiedPubKeyHash = dmn->pdmnState->pubKeyOperator.GetHash();
         }
-        if (!pnode->m_masternode_iqr_connection && connman.IsMasternodeQuorumRelayMember(pnode->verifiedProRegTxHash)) {
+        if (!pnode->m_masternode_iqr_connection && connman.IsMasternodeQuorumRelayMember(mnauth.proRegTxHash)) {
             // Tell our peer that we're interested in plain LLMQ recovered signatures.
             // Otherwise the peer would only announce/send messages resulting from QRECSIG,
             // e.g. InstantSend locks or ChainLocks. SPV and regular full nodes should not send
@@ -203,6 +208,7 @@ void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList&
 
     connman.ForEachNode([&](CNode* pnode) {
         CDeterministicMNCPtr verifiedDmn;
+        uint256 verifiedPubKeyHash;
         {
             LOCK(pnode->cs_mnauth);
             if (pnode->verifiedProRegTxHash.IsNull()) {
@@ -212,6 +218,7 @@ void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList&
             if (!verifiedDmn) {
                 return;
             }
+            verifiedPubKeyHash = pnode->verifiedPubKeyHash;
         }
         bool doRemove = false;
         if (diff.removedMns.count(verifiedDmn->GetInternalId())) {
@@ -219,7 +226,7 @@ void CMNAuth::NotifyMasternodeListChanged(bool undo, const CDeterministicMNList&
         } else {
             auto it = diff.updatedMNs.find(verifiedDmn->GetInternalId());
             if (it != diff.updatedMNs.end()) {
-                if ((it->second.fields & CDeterministicMNStateDiff::Field_pubKeyOperator) && it->second.state.pubKeyOperator.GetHash() != pnode->verifiedPubKeyHash) {
+                if ((it->second.fields & CDeterministicMNStateDiff::Field_pubKeyOperator) && it->second.state.pubKeyOperator.GetHash() != verifiedPubKeyHash) {
                     doRemove = true;
                 }
             }

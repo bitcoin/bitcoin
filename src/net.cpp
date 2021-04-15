@@ -1029,6 +1029,7 @@ bool CConnman::AttemptToEvictConnection()
                 continue;
             // SYSCOIN
             if (fMasternodeMode) {
+                LOCK(node->cs_mnauth);
                 // This handles eviction protected nodes. Nodes are always protected for a short time after the connection
                 // was accepted. This short time is meant for the VERSION/VERACK exchange and the possible MNAUTH that might
                 // follow when the incoming connection is from another masternode. When a message other than MNAUTH
@@ -1126,6 +1127,7 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
             // SYSCOIN
             if (pnode->IsInboundConn()) 
             {
+                LOCK(pnode->cs_mnauth);
                 nInbound++;
                 if (!pnode->verifiedProRegTxHash.IsNull()) {
                     nVerifiedInboundMasternodes++;
@@ -1959,6 +1961,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
         {
             LOCK(cs_vNodes);
             for (CNode* pnode : vNodes) {
+                LOCK(pnode->cs_mnauth);
                 if (!pnode->verifiedProRegTxHash.IsNull()) {
                     setConnectedMasternodes.emplace(pnode->verifiedProRegTxHash);
                 }
@@ -2166,6 +2169,7 @@ void CConnman::ThreadOpenMasternodeConnections()
         std::set<CService> connectedNodes;
         std::map<uint256, bool> connectedProRegTxHashes;
         ForEachNode([&](const CNode* pnode) {
+            LOCK(pnode->cs_mnauth);
             connectedNodes.emplace(pnode->addr);
             if (!pnode->verifiedProRegTxHash.IsNull()) {
                 connectedProRegTxHashes.try_emplace(pnode->verifiedProRegTxHash, pnode->IsInboundConn());
@@ -3061,7 +3065,12 @@ void CConnman::SetMasternodeQuorumRelayMembers(uint8_t llmqType, const uint256& 
 
     // Update existing connections
     ForEachNode([&](CNode* pnode) {
-        if (!pnode->verifiedProRegTxHash.IsNull() && !pnode->m_masternode_iqr_connection && IsMasternodeQuorumRelayMember(pnode->verifiedProRegTxHash)) {
+        uint256 verifiedProRegTxHash;
+        {
+            LOCK(pnode->cs_mnauth);
+            verifiedProRegTxHash = pnode->verifiedProRegTxHash;
+        }
+        if (!verifiedProRegTxHash.IsNull() && !pnode->m_masternode_iqr_connection && IsMasternodeQuorumRelayMember(verifiedProRegTxHash)) {
             // Tell our peer that we're interested in plain LLMQ recovered signatures.
             // Otherwise the peer would only announce/send messages resulting from QRECSIG,
             // e.g. InstantSend locks or ChainLocks. SPV and regular full nodes should not send
@@ -3102,6 +3111,7 @@ void CConnman::GetMasternodeQuorumNodes(uint8_t llmqType, const uint256& quorumH
     const auto& proRegTxHashes = it->second;
 
     for (const auto pnode : vNodes) {
+        LOCK(pnode->cs_mnauth);
         if (pnode->fDisconnect) {
             continue;
         }
@@ -3121,10 +3131,15 @@ void CConnman::RemoveMasternodeQuorumNodes(uint8_t llmqType, const uint256& quor
 
 bool CConnman::IsMasternodeQuorumNode(const CNode* pnode)
 {
+    uint256 verifiedProRegTxHash;
+    {
+        LOCK(pnode->cs_mnauth);
+        verifiedProRegTxHash = pnode->verifiedProRegTxHash;
+    }
     // Let's see if this is an outgoing connection to an address that is known to be a masternode
     // We however only need to know this if the node did not authenticate itself as a MN yet
     uint256 assumedProTxHash;
-    if (pnode->verifiedProRegTxHash.IsNull() && !pnode->IsInboundConn()) {
+    if (verifiedProRegTxHash.IsNull() && !pnode->IsInboundConn()) {
         CDeterministicMNList mnList;
         deterministicMNManager->GetListAtChainTip(mnList);
         auto dmn = mnList.GetMNByService(pnode->addr);
@@ -3137,8 +3152,8 @@ bool CConnman::IsMasternodeQuorumNode(const CNode* pnode)
 
     LOCK(cs_vPendingMasternodes);
     for (const auto& p : masternodeQuorumNodes) {
-        if (!pnode->verifiedProRegTxHash.IsNull()) {
-            if (p.second.count(pnode->verifiedProRegTxHash)) {
+        if (!verifiedProRegTxHash.IsNull()) {
+            if (p.second.count(verifiedProRegTxHash)) {
                 return true;
             }
         } else if (!assumedProTxHash.IsNull()) {

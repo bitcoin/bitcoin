@@ -4835,6 +4835,11 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
         // Message: inventory
         //
         std::vector<CInv> vInv;
+        uint256 verifiedProRegTxHash;
+        {
+            LOCK(pto->cs_mnauth);
+            verifiedProRegTxHash = pto->verifiedProRegTxHash;
+        }
         {
             LOCK(peer->m_block_inv_mutex);
             vInv.reserve(std::max<size_t>(peer->m_blocks_for_inv_relay.size(), INVENTORY_BROADCAST_MAX));
@@ -4862,7 +4867,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         // Use half the delay for regular outbound peers, as there is less privacy concern for them.
                         // and quarter the delay for Masternode outbound peers, as there is even less privacy concern in this case.
                         unsigned char verifiedMN = 0;
-                        if(!pto->verifiedProRegTxHash.IsNull()) {
+                        if(!verifiedProRegTxHash.IsNull()) {
                             verifiedMN = 1;
                         }
                         pto->m_tx_relay->nNextInvSend = PoissonNextSend(current_time, std::chrono::seconds{OUTBOUND_INVENTORY_BROADCAST_INTERVAL >> 1 >> verifiedMN });
