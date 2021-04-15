@@ -49,6 +49,14 @@ struct CConnmanTest : public CConnman {
     {
         CreateNodeFromAcceptedSocket(std::move(sock), permissions, addr_bind, addr_peer);
     }
+
+    bool InitBindsPublic(const std::vector<CService>& binds,
+                         const std::vector<NetWhitebindPermissions>& white_binds,
+                         const std::vector<CService>& onion_binds)
+    {
+        return InitBinds(binds, white_binds, onion_binds);
+    }
+
 };
 
 FUZZ_TARGET_INIT(connman, initialize_connman)
@@ -193,6 +201,23 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
                 auto sock = CreateSock(peer);
 
                 connman.CreateNodeFromAcceptedSocketPublic(std::move(sock), permissions, me, peer);
+            },
+            [&] {
+                const std::vector<CService> binds{
+                    ConsumeServiceVector(fuzzed_data_provider, 5)};
+
+                const std::vector<CService> onion_binds{
+                    ConsumeServiceVector(fuzzed_data_provider, 5)};
+
+                std::vector<NetWhitebindPermissions> white_binds(
+                    fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 5));
+                for (size_t i = 0; i < white_binds.size(); ++i) {
+                    white_binds[i].m_flags =
+                        ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS);
+                    white_binds[i].m_service = ConsumeService(fuzzed_data_provider);
+                }
+
+                connman.InitBindsPublic(binds, white_binds, onion_binds);
             });
     }
     (void)connman.GetAddedNodeInfo();
