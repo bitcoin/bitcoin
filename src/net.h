@@ -1075,12 +1075,15 @@ private:
     CNode* FindNode(const CSubNet& subNet);
     CNode* FindNode(const std::string& addrName);
     CNode* FindNode(const CService& addr);
+    CNode* FindNodeByIP(const CService& addr);
 
     /**
      * Determine whether we're already connected to a given address, in order to
      * avoid initiating duplicate connections.
      */
     bool AlreadyConnectedToAddress(const CAddress& addr);
+    bool AlreadyConnectedToIPAddress(const CAddress& addr);
+
 
     bool AttemptToEvictConnection();
     CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, ConnectionType conn_type);

@@ -312,6 +312,17 @@ CNode* CConnman::FindNode(const CNetAddr& ip)
     return nullptr;
 }
 
+CNode* CConnman::FindNodeByIP(const CService& addr)
+{
+    LOCK(cs_vNodes);
+    for (CNode* pnode : vNodes) {
+        if ((static_cast<CService>(pnode->addr)).ToStringIP() == addr.ToStringIP()) {
+            return pnode;
+        }
+    }
+    return nullptr;
+}
+
 CNode* CConnman::FindNode(const CSubNet& subNet)
 {
     LOCK(cs_vNodes);
@@ -347,7 +358,12 @@ CNode* CConnman::FindNode(const CService& addr)
 
 bool CConnman::AlreadyConnectedToAddress(const CAddress& addr)
 {
-    return FindNode(static_cast<CNetAddr>(addr)) || FindNode(addr.ToStringIPPort());
+    return FindNode(static_cast<CNetAddr>(addr)) || FindNode(addr.ToStringIP());
+}
+
+bool CConnman::AlreadyConnectedToIPAddress(const CAddress& addr)
+{
+    return FindNodeByIP(addr);
 }
 
 bool CConnman::CheckIncomingNonce(uint64_t nonce)
@@ -1134,6 +1150,31 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
             CloseSocket(hSocket);
             return;
         }
+    }
+
+	// Currently, users can open multiple connections to a reachable node using the same IP address and a 
+	// different port and request blockchain data at each connection. This behavior has the following impacts:
+	//   (1) Overwhelm the reachable node and consume its bandwidth by requesting data and discarding it
+	//     (see video demonstrations here: https://www.dropbox.com/s/pvasua7lnepdgfq/Occupy_Connections.mp4?dl=0
+	//     and https://www.dropbox.com/s/45ld1h7cxi3xzj6/RequestingBlockchain.mp4?dl=0)
+	//   (2) Undermine the transaction relaying anonymity since multiple connections to each node increase the
+	//     probability of mapping a transaction to an IP address (currently, the random delay factor in the
+	//     trickling effect implicitly assumes the attacker has one connection to each node). By establishing
+	//     multiple connections, the attacker undermines the anonymity property. 
+	// To address the two concerns above, we enforce 1 incoming connection per IP address. Please note that it will
+	// not significantly affect the nodes behind NAT since there are close to 10K reachable nodes and NATed nodes only
+	// need 8-10 outbound connections. Assuming 10K reachable nodes, each with default 117 incoming connections, there
+	// are 10K*117 incoming slots available out of which (10K*8) are supposedly occupied by the reachable nodes. As a result,
+	// the network has 1090000 slots for unreachable nodes. In the worst case, (i.e., the unreachable nodes really exceed in count),
+	// a natural equilibrium is self-enforced where some of the unreachable nodes must become reachable and support the rest
+	// of the network (altruism in the P2P network). 
+	// We were motivated to apply 1IP per-connection policy since we observed malicious behavior on our node whereby two IP addresses
+	// occupied multiple incoming connection slots which led to the bandwidth and privacy concerns.
+    if (AlreadyConnectedToIPAddress(addr)) {
+            // connection from this node already exists, drop the new connection
+            LogPrint(BCLog::NET, "duplicate connection attempt - connection dropped (full)\n");
+            CloseSocket(hSocket);
+            return;
     }
 
     NodeId id = GetNewNodeId();
