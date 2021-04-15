@@ -178,6 +178,15 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                     /*strDest=*/fuzzed_data_provider.ConsumeBool() ? nullptr : random_string.c_str(),
                     /*conn_type=*/conn_type,
                     /*use_v2transport=*/fuzzed_data_provider.ConsumeBool());
+            },
+            [&] {
+                connman.SetNetworkActive(fuzzed_data_provider.ConsumeBool());
+                const auto peer = ConsumeAddress(fuzzed_data_provider);
+                connman.CreateNodeFromAcceptedSocketPublic(
+                    /*sock=*/CreateSock(AF_INET, SOCK_STREAM, IPPROTO_TCP),
+                    /*permissions=*/ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS),
+                    /*addr_bind=*/ConsumeAddress(fuzzed_data_provider),
+                    /*addr_peer=*/peer);
             });
     }
     (void)connman.GetAddedNodeInfo(fuzzed_data_provider.ConsumeBool());
