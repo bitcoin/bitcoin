@@ -68,6 +68,14 @@ struct ConnmanTestMsg : public CConnman {
         m_nodes.clear();
     }
 
+    void CreateNodeFromAcceptedSocketPublic(std::unique_ptr<Sock> sock,
+                                            NetPermissionFlags permissions,
+                                            const CAddress& addr_bind,
+                                            const CAddress& addr_peer)
+    {
+        CreateNodeFromAcceptedSocket(std::move(sock), permissions, addr_bind, addr_peer);
+    }
+
     void Handshake(CNode& node,
                    bool successfully_connected,
                    ServiceFlags remote_services,
