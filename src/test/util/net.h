@@ -76,6 +76,11 @@ struct ConnmanTestMsg : public CConnman {
         CreateNodeFromAcceptedSocket(std::move(sock), permissions, addr_bind, addr_peer);
     }
 
+    bool InitBindsPublic(const CConnman::Options& options)
+    {
+        return InitBinds(options);
+    }
+
     void Handshake(CNode& node,
                    bool successfully_connected,
                    ServiceFlags remote_services,
