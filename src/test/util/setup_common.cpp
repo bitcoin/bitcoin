@@ -195,6 +195,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
 
 BasicTestingSetup::~BasicTestingSetup()
 {
+    SetMockTime(0s); // Reset mocktime for following tests
     connman.reset();
     llmq::quorumSnapshotManager.reset();
     m_node.cpoolman.reset();
@@ -498,7 +499,6 @@ TestChainSetup::~TestChainSetup()
     g_txindex->Stop();
     SyncWithValidationInterfaceQueue();
     g_txindex.reset();
-    SetMockTime(0);
 }
 
 CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CMutableTransaction& tx) const
