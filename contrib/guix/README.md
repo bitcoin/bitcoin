@@ -205,10 +205,7 @@ find output/ -type f -print0 | sort -z | xargs -r0 sha256sum
 
 * _**ADDITIONAL_GUIX_COMMON_FLAGS**_
 
-  Additional flags to be passed to all `guix` commands. For a fully-bootstrapped
-  build, set this to `--bootstrap --no-substitutes` (refer to the [security
-  model section](#choosing-your-security-model) for more details). Note that a
-  fully-bootstrapped build will take quite a long time on the first run.
+  Additional flags to be passed to all `guix` commands.
 
 * _**ADDITIONAL_GUIX_TIMEMACHINE_FLAGS**_
 
