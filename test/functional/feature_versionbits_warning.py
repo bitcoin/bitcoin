@@ -94,7 +94,7 @@ class VersionBitsWarningTest(SyscoinTestFramework):
         self.wait_until(lambda: not node.getblockchaininfo()['initialblockdownload'])
         # Generating one more block will be enough to generate an error.
         node.generatetoaddress(1, node_deterministic_address)
-        # Check that get*info() shows the versionbits unknown rules warning
+
         assert WARN_UNKNOWN_RULES_ACTIVE in node.getmininginfo()["warnings"]
         assert WARN_UNKNOWN_RULES_ACTIVE in node.getnetworkinfo()["warnings"]
         # Check that the alert file shows the versionbits unknown rules warning

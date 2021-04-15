@@ -295,8 +295,6 @@ BOOST_FIXTURE_TEST_CASE(importwallet_rescan, TestChain100Setup)
             BOOST_CHECK_EQUAL(found, expected);
         }
     }
-
-    SetMockTime(0);
 }
 
 // Check that GetImmatureCredit() returns a newly calculated value instead of
@@ -377,9 +375,6 @@ BOOST_AUTO_TEST_CASE(ComputeTimeSmart)
     // If there are future entries, new transaction should use time of the
     // newest entry that is no more than 300 seconds ahead of the clock time.
     BOOST_CHECK_EQUAL(AddTx(*m_node.chainman, m_wallet, 5, 50, 600), 300);
-
-    // Reset mock time for other tests.
-    SetMockTime(0);
 }
 
 BOOST_AUTO_TEST_CASE(LoadReceiveRequests)
