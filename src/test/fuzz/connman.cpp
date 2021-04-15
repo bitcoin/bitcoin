@@ -17,6 +17,7 @@
 #include <util/translation.h>
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 namespace {
@@ -158,6 +159,17 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                 }
 
                 connman.OpenNetworkConnection(to_addr, count_failure, grant_ptr, to_str, conn_type);
+            },
+            [&] {
+                connman.SetNetworkActive(true);
+
+                NetPermissionFlags permissions{
+                    ConsumeWeakEnum(fuzzed_data_provider, ALL_NET_PERMISSION_FLAGS)};
+                auto me = ConsumeAddress(fuzzed_data_provider);
+                auto peer = ConsumeAddress(fuzzed_data_provider);
+                auto sock = CreateSock(peer);
+
+                connman.CreateNodeFromAcceptedSocketPublic(std::move(sock), permissions, me, peer);
             });
     }
     (void)connman.GetAddedNodeInfo();
