@@ -41,7 +41,7 @@ using SimpleUTXOMap = std::map<COutPoint, std::pair<int, CAmount>>;
 struct TestChainBRRBeforeActivationSetup : public TestChainSetup
 {
     // Force fast DIP3 activation
-    TestChainBRRBeforeActivationSetup() : TestChainSetup(497, {"-dip3params=30:50", "-vbparams=mn_rr:0:999999999999:20:16:12:5:1"}) {}
+    TestChainBRRBeforeActivationSetup() : TestChainSetup(497, {"-dip3params=30:50", "-vbparams=mn_rr:0:999999999999:0:20:16:12:5:1"}) {}
 };
 
 static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransactionRef>& txs)

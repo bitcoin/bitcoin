@@ -1636,10 +1636,8 @@ static void SoftForkDescPushBack(const CBlockIndex* active_chain_tip, UniValue& 
 static void SoftForkDescPushBack(const CBlockIndex* active_chain_tip, const std::unordered_map<uint8_t, int>& signals, UniValue& softforks, const Consensus::Params& consensusParams, Consensus::DeploymentPos id)
 {
     // For BIP9 deployments.
-    // Deployments (e.g. testdummy) with timeout value before Jan 1, 2009 are hidden.
-    // A timeout value of 0 guarantees a softfork will never be activated.
-    // This is used when merging logic to implement a proposed softfork without a specified deployment schedule.
-    if (consensusParams.vDeployments[id].nTimeout <= 1230768000) return;
+    // Deployments that are never active are hidden.
+    if (consensusParams.vDeployments[id].nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE) return;
 
     UniValue bip9(UniValue::VOBJ);
     const ThresholdState thresholdState = g_versionbitscache.State(active_chain_tip, consensusParams, id);
@@ -1676,6 +1674,7 @@ static void SoftForkDescPushBack(const CBlockIndex* active_chain_tip, const std:
     else if (ThresholdState::LOCKED_IN == thresholdState) {
         bip9.pushKV("activation_height", since_height + static_cast<int>(consensusParams.vDeployments[id].nWindowSize));
     }
+    bip9.pushKV("min_activation_height", consensusParams.vDeployments[id].min_activation_height);
 
     UniValue rv(UniValue::VOBJ);
     rv.pushKV("type", "bip9");
@@ -1725,6 +1724,7 @@ RPCHelpMan getblockchaininfo()
                         {RPCResult::Type::NUM, "ehf_height", /* optional */ true, "the minimum height when miner's signals for the deployment matter. Below this height miner signaling cannot trigger hard fork lock-in. Not specified for non-EHF forks"},
                         {RPCResult::Type::NUM, "since", "height of the first block to which the status applies"},
                         {RPCResult::Type::NUM, "activation_height", "expected activation height for this softfork (only for \"locked_in\" status)"},
+                        {RPCResult::Type::NUM, "min_activation_height", "minimum height of blocks for which the rules may be enforced"},
                         {RPCResult::Type::OBJ, "statistics", "numeric statistics about BIP9 signalling for a softfork",
                         {
                             {RPCResult::Type::NUM, "period", "the length in blocks of the BIP9 signalling period"},

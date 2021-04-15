@@ -40,7 +40,7 @@ def unDERify(tx):
 class BIP66Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
-        self.extra_args = [['-whitelist=noban@127.0.0.1', '-dip3params=9000:9000', '-par=1', '-vbparams=v20:0:999999999999:480:384:288:5:0']]  # Use only one script thread to get the exact reject reason for testing
+        self.extra_args = [['-whitelist=noban@127.0.0.1', '-dip3params=9000:9000', '-par=1', '-vbparams=v20:0:999999999999:0:480:384:288:5:0']]  # Use only one script thread to get the exact reject reason for testing
         self.setup_clean_chain = True
         self.rpc_timeout = 240
 
