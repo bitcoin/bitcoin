@@ -109,11 +109,11 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  *     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
  *   vMerkleTree: 4a5e1e
  */
-static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward, CScript devFeeScript, CAmount devFeeAmt)
+static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward,  CAmount devFeeAmt)
 {
     const char* pszTimestamp = "A coin for all";
     const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
-    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward, devFeeScript, devFeeAmt );
+    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward, genesisOutputScript, devFeeAmt);
 }
 
 /**
@@ -123,8 +123,8 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
 
-        #define genesisHash "0x0000e7b3b089f7e004a47fed78de25c88725ed1f1d4ea3730fb5d4968cbe846c"
-        #define genesisMerkleRoot "0xca088b236bfc9e34195bd5741a600e5d06ffe5bf62bbda5811b9ad1c3dbd4b15"
+        #define genesisHash "0x00000f8215d1568c4c32199a939457ed4676c54204bc0bab95c0ce3d4e46ab5a"
+        #define genesisMerkleRoot "0x961dcac635d4bf3ecb71f93fd2c65855c0aa4619a52cbe2155a2fe46b204231e"
 
         strNetworkID = CBaseChainParams::MAIN;
         consensus.signet_blocks = false;
@@ -156,13 +156,6 @@ public:
 
         consensus.nMinimumChainWork = uint256S("0000000000000000000000000000000000000000000000000000000000000001");
         consensus.defaultAssumeValid = uint256S(genesisHash); 
-
-
-        /*
-        bech32::DecodeResult r = bech32::Decode("dy1q6y6uv9thwl99up2l4pj9q3l4lfuwml6wn5863q");
-        CKeyID key = CPubKey(r.data).GetID();
-        developerFeeScript = GetScriptForDestination(PKHash(key));
-        */
 
         devFeePerBlock = COIN;
 
@@ -198,11 +191,12 @@ public:
         /*
         time_t t;
         time(&t);
-        genesis = CreateGenesisBlock(t, 0, 0x1f00ffff, 1, 10, developerFeeScript, devFeePerBlock);
+        genesis = CreateGenesisBlock(t, 0, 0x1f00ffff, 1, 10, devFeePerBlock);
         MineGenesis(genesis, consensus.powLimit, true);
-        */            
+        */
+                  
 
-        genesis = CreateGenesisBlock(1618439684, 14435, 0x1f00ffff, 1, 10, developerFeeScript, devFeePerBlock);
+        genesis = CreateGenesisBlock(1618455749, 68282, 0x1f00ffff, 1, 10, devFeePerBlock);
 
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S(genesisHash));

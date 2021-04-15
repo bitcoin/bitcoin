@@ -166,8 +166,6 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(CChainState& chai
     coinbaseTx.vout[1].scriptPubKey = chainparams.developerFeeScript;
     coinbaseTx.vout[1].nValue = chainparams.devFeePerBlock;
 
-
-
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vchCoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
     pblocktemplate->vTxFees[0] = -nFees;

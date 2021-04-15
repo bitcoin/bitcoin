@@ -3369,10 +3369,12 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     if (block.vtx.empty() || (block.vtx[0]->vout.size() != 3))      //2 txout + segwit
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "coinbase must have two outputs");
 
-    if (!block.vtx.empty())
-        if (block.vtx[0]->vout.size() == 3)
-            if ((block.vtx[0]->vout[1].nValue != chainparams.devFeePerBlock) || (block.vtx[0]->vout[1].scriptPubKey != chainparams.developerFeeScript))
-                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "dev fee incorrect amount or bad pubkey");
+    //the genesis block should not be check for dev fee, so it doesnt get accidentally spent
+    if (block.hashMerkleRoot != chainparams.GenesisBlock().hashMerkleRoot)
+        if (!block.vtx.empty())
+            if (block.vtx[0]->vout.size() == 3)
+                if ((block.vtx[0]->vout[1].nValue != chainparams.devFeePerBlock) || (block.vtx[0]->vout[1].scriptPubKey != chainparams.developerFeeScript))
+                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "dev fee incorrect amount or bad pubkey");
 
 
     for (unsigned int i = 1; i < block.vtx.size(); i++)
