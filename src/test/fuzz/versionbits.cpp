@@ -29,14 +29,16 @@ public:
     const int64_t m_end;
     const int m_period;
     const int m_threshold;
+    const int m_min_activation_height;
     const int m_bit;
 
-    TestConditionChecker(int64_t begin, int64_t end, int period, int threshold, int bit)
-        : m_begin{begin}, m_end{end}, m_period{period}, m_threshold{threshold}, m_bit{bit}
+    TestConditionChecker(int64_t begin, int64_t end, int period, int threshold, int min_activation_height, int bit)
+        : m_begin{begin}, m_end{end}, m_period{period}, m_threshold{threshold}, m_min_activation_height{min_activation_height}, m_bit{bit}
     {
         assert(m_period > 0);
         assert(0 <= m_threshold && m_threshold <= m_period);
         assert(0 <= m_bit && m_bit < 32 && m_bit < VERSIONBITS_NUM_BITS);
+        assert(0 <= m_min_activation_height);
     }
 
     bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const override { return Condition(pindex->nVersion); }
@@ -44,6 +46,7 @@ public:
     int64_t EndTime(const Consensus::Params& params) const override { return m_end; }
     int Period(const Consensus::Params& params) const override { return m_period; }
     int Threshold(const Consensus::Params& params) const override { return m_threshold; }
+    int MinActivationHeight(const Consensus::Params& params) const override { return m_min_activation_height; }
 
     ThresholdState GetStateFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateFor(pindexPrev, dummy_params, m_cache); }
     int GetStateSinceHeightFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateSinceHeightFor(pindexPrev, dummy_params, m_cache); }
@@ -144,32 +147,27 @@ FUZZ_TARGET_INIT(versionbits, initialize)
         // pick the timestamp to switch based on a block
         // note states will change *after* these blocks because mediantime lags
         int start_block = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, period * (max_periods - 3));
-        int end_block = fuzzed_data_provider.ConsumeIntegralInRange<int>(start_block, period * (max_periods - 3));
+        int end_block = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, period * (max_periods - 3));
 
         start_time = block_start_time + start_block * interval;
         timeout = block_start_time + end_block * interval;
 
-        assert(start_time <= timeout);
-
         // allow for times to not exactly match a block
         if (fuzzed_data_provider.ConsumeBool()) start_time += interval / 2;
         if (fuzzed_data_provider.ConsumeBool()) timeout += interval / 2;
-
-        // this may make timeout too early; if so, don't run the test
-        if (start_time > timeout) return;
     } else {
         if (fuzzed_data_provider.ConsumeBool()) {
             start_time = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
-            timeout = Consensus::BIP9Deployment::NO_TIMEOUT;
             always_active_test = true;
         } else {
-            start_time = 1199145601; // January 1, 2008
-            timeout = 1230767999;    // December 31, 2008
+            start_time = Consensus::BIP9Deployment::NEVER_ACTIVE;
             never_active_test = true;
         }
+        timeout = fuzzed_data_provider.ConsumeBool() ? Consensus::BIP9Deployment::NO_TIMEOUT : fuzzed_data_provider.ConsumeIntegral<int64_t>();
     }
+    int min_activation = fuzzed_data_provider.ConsumeIntegralInRange<int>(0, period * max_periods);
 
-    TestConditionChecker checker(start_time, timeout, period, threshold, bit);
+    TestConditionChecker checker(start_time, timeout, period, threshold, min_activation, bit);
 
     // Early exit if the versions don't signal sensibly for the deployment
     if (!checker.Condition(ver_signal)) return;
@@ -294,28 +292,35 @@ FUZZ_TARGET_INIT(versionbits, initialize)
         assert(since == 0);
         assert(exp_state == ThresholdState::DEFINED);
         assert(current_block->GetMedianTimePast() < checker.m_begin);
-        assert(current_block->GetMedianTimePast() < checker.m_end);
         break;
     case ThresholdState::STARTED:
         assert(current_block->GetMedianTimePast() >= checker.m_begin);
-        assert(current_block->GetMedianTimePast() < checker.m_end);
         if (exp_state == ThresholdState::STARTED) {
             assert(blocks_sig < threshold);
+            assert(current_block->GetMedianTimePast() < checker.m_end);
         } else {
             assert(exp_state == ThresholdState::DEFINED);
         }
         break;
     case ThresholdState::LOCKED_IN:
-        assert(exp_state == ThresholdState::STARTED);
-        assert(current_block->GetMedianTimePast() < checker.m_end);
-        assert(blocks_sig >= threshold);
+        if (exp_state == ThresholdState::LOCKED_IN) {
+            assert(current_block->nHeight + 1 < min_activation);
+        } else {
+            assert(exp_state == ThresholdState::STARTED);
+            assert(blocks_sig >= threshold);
+        }
         break;
     case ThresholdState::ACTIVE:
+        assert(always_active_test || min_activation <= current_block->nHeight + 1);
         assert(exp_state == ThresholdState::ACTIVE || exp_state == ThresholdState::LOCKED_IN);
         break;
     case ThresholdState::FAILED:
-        assert(current_block->GetMedianTimePast() >= checker.m_end);
-        assert(exp_state != ThresholdState::LOCKED_IN && exp_state != ThresholdState::ACTIVE);
+        assert(never_active_test || current_block->GetMedianTimePast() >= checker.m_end);
+        if (exp_state == ThresholdState::STARTED) {
+            assert(blocks_sig < threshold);
+        } else {
+            assert(exp_state == ThresholdState::FAILED);
+        }
         break;
     default:
         assert(false);
@@ -326,26 +331,20 @@ FUZZ_TARGET_INIT(versionbits, initialize)
         assert(state == ThresholdState::ACTIVE || state == ThresholdState::FAILED);
     }
 
-    // "always active" has additional restrictions
     if (always_active_test) {
+        // "always active" has additional restrictions
         assert(state == ThresholdState::ACTIVE);
         assert(exp_state == ThresholdState::ACTIVE);
         assert(since == 0);
+    } else if (never_active_test) {
+        // "never active" does too
+        assert(state == ThresholdState::FAILED);
+        assert(exp_state == ThresholdState::FAILED);
+        assert(since == 0);
     } else {
-        // except for always active, the initial state is always DEFINED
+        // for signalled deployments, the initial state is always DEFINED
         assert(since > 0 || state == ThresholdState::DEFINED);
         assert(exp_since > 0 || exp_state == ThresholdState::DEFINED);
-    }
-
-    // "never active" does too
-    if (never_active_test) {
-        assert(state == ThresholdState::FAILED);
-        assert(since == period);
-        if (exp_since == 0) {
-            assert(exp_state == ThresholdState::DEFINED);
-        } else {
-            assert(exp_state == ThresholdState::FAILED);
-        }
     }
 }
 } // namespace
