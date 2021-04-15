@@ -117,6 +117,19 @@
         </widget>
        </item>
        <item>
+        <spacer name="horizontalSpacer_0_Main">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>5</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
         <widget class="QCheckBox" name="hideTrayIcon">
          <property name="toolTip">
           <string>Hide the icon from the system tray.</string>
@@ -143,6 +156,56 @@
          </property>
          <property name="text">
           <string>M&amp;inimize on close</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+       <layout class="QHBoxLayout" name="horizontalLayout_Main_Prune">
+        <item>
+         <widget class="QCheckBox" name="prune">
+          <property name="toolTip">
+           <string>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</string>
+          </property>
+          <property name="text">
+           <string>Prune &amp;block storage to</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="pruneSize"/>
+        </item>
+         <item>
+          <widget class="QLabel" name="pruneSizeUnitLabel">
+           <property name="text">
+            <string>GB</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::PlainText</enum>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_Main_Prune">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="pruneWarning">
+         <property name="text">
+          <string>Reverting this setting requires re-downloading the entire blockchain.</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
          </property>
         </widget>
        </item>
@@ -190,7 +253,7 @@
         </layout>
        </item>
        <item>
-        <layout class="QHBoxLayout" name="horizontalLayout_3_Main">
+        <layout class="QHBoxLayout" name="horizontalLayout_Main_VerifyLabel">
          <item>
           <widget class="QLabel" name="threadsScriptVerifLabel">
            <property name="text">
@@ -212,7 +275,7 @@
           </widget>
          </item>
          <item>
-          <spacer name="horizontalSpacer_3_Main">
+          <spacer name="horizontalSpacer_Main_Threads">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
