@@ -25,6 +25,8 @@ class LLMQ_IS_RetroactiveSigning(DashTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
+        self.sync_blocks(self.nodes, timeout=60*5)
+        self.confirm_mns()
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
 

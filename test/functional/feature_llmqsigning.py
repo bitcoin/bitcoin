@@ -34,6 +34,8 @@ class LLMQSigningTest(DashTestFramework):
                         help="Test with spork21 enabled")
 
     def run_test(self):
+        self.sync_blocks(self.nodes, timeout=60*5)
+        self.confirm_mns()
         for i in range(len(self.nodes)):
             force_finish_mnsync(self.nodes[i])
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
