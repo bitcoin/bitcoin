@@ -915,7 +915,7 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
     {
         LOCK(cs);
 
-        LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, islock=%s: processsing islock, peer=%d\n", __func__,
+        LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s, islock=%s: processing islock, peer=%d\n", __func__,
                  islock->txid.ToString(), hash.ToString(), from);
 
         creatingInstantSendLocks.erase(islock->GetRequestId());

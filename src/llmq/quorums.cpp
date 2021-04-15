@@ -666,10 +666,10 @@ void CQuorumManager::ProcessMessage(CNode* pFrom, const std::string& strCommand,
         // Check if request has QUORUM_VERIFICATION_VECTOR data
         if (request.GetDataMask() & CQuorumDataRequest::QUORUM_VERIFICATION_VECTOR) {
 
-            BLSVerificationVector verficationVector;
-            vRecv >> verficationVector;
+            BLSVerificationVector verificationVector;
+            vRecv >> verificationVector;
 
-            if (pQuorum->SetVerificationVector(verficationVector)) {
+            if (pQuorum->SetVerificationVector(verificationVector)) {
                 StartCachePopulatorThread(pQuorum);
             } else {
                 errorHandler("Invalid quorum verification vector");

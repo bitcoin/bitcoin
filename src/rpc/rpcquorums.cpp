@@ -210,7 +210,8 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
         }
 
         llmq::CFinalCommitment fqc;
-        if (llmq::quorumBlockProcessor->GetMinableCommitment(params.type, tipHeight, fqc)) {
+        if (llmq::quorumBlockProcessor->GetMineableCommitment(params.type,
+                                                              tipHeight, fqc)) {
             UniValue obj(UniValue::VOBJ);
             fqc.ToJson(obj);
             minableCommitments.pushKV(params.name, obj);

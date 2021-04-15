@@ -114,7 +114,7 @@ void CQuorumBlockProcessor::ProcessMessage(CNode* pfrom, const std::string& strC
         LogPrint(BCLog::LLMQ, "CQuorumBlockProcessor::%s -- received commitment for quorum %s:%d, validMembers=%d, signers=%d, peer=%d\n", __func__,
                   qc.quorumHash.ToString(), qc.llmqType, qc.CountValidMembers(), qc.CountSigners(), pfrom->GetId());
 
-        AddMinableCommitment(qc);
+        AddMineableCommitment(qc);
     }
 }
 
@@ -268,7 +268,7 @@ bool CQuorumBlockProcessor::UndoBlock(const CBlock& block, const CBlockIndex* pi
         }
 
         // if a reorg happened, we should allow to mine this commitment later
-        AddMinableCommitment(qc);
+        AddMineableCommitment(qc);
     }
 
     evoDb.Write(DB_BEST_BLOCK_UPGRADE, pindex->pprev->GetBlockHash());
@@ -491,13 +491,13 @@ std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> CQuorumBlockProce
     return ret;
 }
 
-bool CQuorumBlockProcessor::HasMinableCommitment(const uint256& hash)
+bool CQuorumBlockProcessor::HasMineableCommitment(const uint256& hash)
 {
     LOCK(minableCommitmentsCs);
     return minableCommitments.count(hash) != 0;
 }
 
-void CQuorumBlockProcessor::AddMinableCommitment(const CFinalCommitment& fqc)
+void CQuorumBlockProcessor::AddMineableCommitment(const CFinalCommitment& fqc)
 {
     bool relay = false;
     uint256 commitmentHash = ::SerializeHash(fqc);
@@ -529,7 +529,7 @@ void CQuorumBlockProcessor::AddMinableCommitment(const CFinalCommitment& fqc)
     }
 }
 
-bool CQuorumBlockProcessor::GetMinableCommitmentByHash(const uint256& commitmentHash, llmq::CFinalCommitment& ret)
+bool CQuorumBlockProcessor::GetMineableCommitmentByHash(const uint256& commitmentHash, llmq::CFinalCommitment& ret)
 {
     LOCK(minableCommitmentsCs);
     auto it = minableCommitments.find(commitmentHash);
@@ -541,8 +541,8 @@ bool CQuorumBlockProcessor::GetMinableCommitmentByHash(const uint256& commitment
 }
 
 // Will return false if no commitment should be mined
-// Will return true and a null commitment if no minable commitment is known and none was mined yet
-bool CQuorumBlockProcessor::GetMinableCommitment(Consensus::LLMQType llmqType, int nHeight, CFinalCommitment& ret)
+// Will return true and a null commitment if no mineable commitment is known and none was mined yet
+bool CQuorumBlockProcessor::GetMineableCommitment(Consensus::LLMQType llmqType, int nHeight, CFinalCommitment& ret)
 {
     AssertLockHeld(cs_main);
 
@@ -571,12 +571,12 @@ bool CQuorumBlockProcessor::GetMinableCommitment(Consensus::LLMQType llmqType, i
     return true;
 }
 
-bool CQuorumBlockProcessor::GetMinableCommitmentTx(Consensus::LLMQType llmqType, int nHeight, CTransactionRef& ret)
+bool CQuorumBlockProcessor::GetMineableCommitmentTx(Consensus::LLMQType llmqType, int nHeight, CTransactionRef& ret)
 {
     AssertLockHeld(cs_main);
 
     CFinalCommitmentTxPayload qc;
-    if (!GetMinableCommitment(llmqType, nHeight, qc.commitment)) {
+    if (!GetMineableCommitment(llmqType, nHeight, qc.commitment)) {
         return false;
     }
 

@@ -50,7 +50,7 @@ CRecoveredSigsDb::CRecoveredSigsDb(CDBWrapper& _db) :
     }
 }
 
-// This converts time values in "rs_t" from host endiannes to big endiannes, which is required to have proper ordering of the keys
+// This converts time values in "rs_t" from host endianness to big endianness, which is required to have proper ordering of the keys
 void CRecoveredSigsDb::ConvertInvalidTimeKeys()
 {
     LogPrintf("CRecoveredSigsDb::%s -- converting invalid rs_t keys\n", __func__);

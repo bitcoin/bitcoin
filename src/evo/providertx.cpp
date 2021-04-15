@@ -167,7 +167,7 @@ bool CheckProRegTx(const CTransaction& tx, const CBlockIndex* pindexPrev, CValid
     }
 
     // don't allow reuse of collateral key for other keys (don't allow people to put the collateral key onto an online server)
-    // this check applies to internal and external collateral, but internal collaterals are not necessarely a P2PKH
+    // this check applies to internal and external collateral, but internal collaterals are not necessarily a P2PKH
     if (collateralTxDest == CTxDestination(ptx.keyIDOwner) || collateralTxDest == CTxDestination(ptx.keyIDVoting)) {
         return state.DoS(10, false, REJECT_INVALID, "bad-protx-collateral-reuse");
     }
@@ -411,7 +411,7 @@ std::string CProRegTx::MakeSignString() const
     s += EncodeDestination(keyIDOwner) + "|";
     s += EncodeDestination(keyIDVoting) + "|";
 
-    // ... and also the full hash of the payload as a protection agains malleability and replays
+    // ... and also the full hash of the payload as a protection against malleability and replays
     s += ::SerializeHash(*this).ToString();
 
     return s;

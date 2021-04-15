@@ -1377,7 +1377,7 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return ! governance.ConfirmInventoryRequest(inv);
 
     case MSG_QUORUM_FINAL_COMMITMENT:
-        return llmq::quorumBlockProcessor->HasMinableCommitment(inv.hash);
+        return llmq::quorumBlockProcessor->HasMineableCommitment(inv.hash);
     case MSG_QUORUM_CONTRIB:
     case MSG_QUORUM_COMPLAINT:
     case MSG_QUORUM_JUSTIFICATION:
@@ -1674,7 +1674,8 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
 
             if (!push && (inv.type == MSG_QUORUM_FINAL_COMMITMENT)) {
                 llmq::CFinalCommitment o;
-                if (llmq::quorumBlockProcessor->GetMinableCommitmentByHash(inv.hash, o)) {
+                if (llmq::quorumBlockProcessor->GetMineableCommitmentByHash(
+                        inv.hash, o)) {
                     connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::QFCOMMITMENT, o));
                     push = true;
                 }
