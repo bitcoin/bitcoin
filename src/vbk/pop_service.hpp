@@ -57,6 +57,8 @@ void addDisconnectedPopdata(const altintegration::PopData& popData);
 
 bool isPopEnabled();
 
+bool isPopEnabled(int32_t height);
+
 } // namespace VeriBlock
 
 #endif //BITCOIN_SRC_VBK_POP_SERVICE_HPP

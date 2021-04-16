@@ -21,7 +21,7 @@ node[3] started with 0 blocks.
 After sync has been completed, expect all nodes to be on same height (fork A, block 323)
 """
 
-from test_framework.pop import endorse_block, create_endorsed_chain, mine_until_pop_enabled
+from test_framework.pop import endorse_block, create_endorsed_chain, mine_until_pop_active
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     connect_nodes,
@@ -42,7 +42,7 @@ class PopFr(BitcoinTestFramework):
 
     def setup_network(self):
         self.setup_nodes()
-        mine_until_pop_enabled(self.nodes[0])
+        mine_until_pop_active(self.nodes[0])
 
         # all nodes connected and synced
         for i in range(self.num_nodes - 1):

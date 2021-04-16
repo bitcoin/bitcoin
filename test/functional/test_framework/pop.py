@@ -65,10 +65,7 @@ def endorse_block(node, apm, height: int, addr: str) -> str:
     from pypoptools.pypopminer import PublicationData
 
     # get pubkey for that address
-    pubkey = node.getaddressinfo(addr)['pubkey']
-    pkh = hash160(hex_str_to_bytes(pubkey))
-    script = CScript([OP_DUP, OP_HASH160, pkh, OP_EQUALVERIFY, OP_CHECKSIG])
-    payoutInfo = script.hex()
+    payoutInfo = node.validateaddress(addr)['scriptPubKey']
 
     popdata = node.getpopdatabyheight(height)
     authctx = popdata['authenticated_context']['serialized']
@@ -170,14 +167,31 @@ def sync_pop_mempools(rpc_connections, *, wait=1, timeout=60, flush_scheduler=Tr
     ))
 
 
-def mine_until_pop_enabled(node):
+def mine_until_pop_enabled(node, address=None):
+    existing = node.getblockcount()
+    enabled = node.getpopparams()['bootstrapBlock']['height']
+    assert enabled >= 0, "POP security should be able to enable"
+    if existing < enabled:
+        assert enabled - existing < 2000, "POP security enables on height {}. Will take too long to enable".format(
+            enabled)
+        if address is None:
+            node.generate(nblocks=(enabled - existing))
+        else:
+            node.generatetoaddress(nblocks=(enabled - existing), address=address)
+        node.waitforblockheight(enabled)
+
+
+def mine_until_pop_active(node, address=None):
     existing = node.getblockcount()
     activate = node.getblockchaininfo()['softforks']['pop_security']['height']
     assert activate >= 0, "POP security should be able to activate"
     if existing < activate:
-        assert activate - existing < 1000, "POP security activates on height {}. Will take too long to activate".format(
+        assert activate - existing < 2000, "POP security activates on height {}. Will take too long to activate".format(
             activate)
-        node.generate(nblocks=(activate - existing))
+        if address is None:
+            node.generate(nblocks=(activate - existing))
+        else:
+            node.generatetoaddress(nblocks=(activate - existing), address=address)
         node.waitforblockheight(activate)
 
 

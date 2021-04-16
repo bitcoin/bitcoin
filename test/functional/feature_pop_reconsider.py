@@ -18,7 +18,7 @@ Reconsider block 101.
 Ensure shorter fork wins and new tip is block 120.
 """
 
-from test_framework.pop import endorse_block, create_endorsed_chain, mine_until_pop_enabled
+from test_framework.pop import endorse_block, create_endorsed_chain, mine_until_pop_active
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     wait_until,
@@ -39,7 +39,7 @@ class PopReconsider(BitcoinTestFramework):
 
     def setup_network(self):
         self.setup_nodes()
-        mine_until_pop_enabled(self.nodes[0])
+        mine_until_pop_active(self.nodes[0])
         self.sync_all()
 
     def get_best_block(self, node):

@@ -350,4 +350,10 @@ bool isPopEnabled()
     return ChainActive().Contains(index);
 }
 
+bool isPopEnabled(int32_t height)
+{
+    auto block = VeriBlock::GetPop().getConfig().getAltParams().getBootstrapBlock();
+    return height >= block.getHeight();
+}
+
 } // namespace VeriBlock
