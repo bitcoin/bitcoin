@@ -239,13 +239,39 @@ namespace BCLog {
     }
 }
 
-void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, const int source_line)
+static constexpr uint64_t HOURLY_LOG_QUOTA_IN_BYTES_PER_SOURCE_LOCATION{1024 * 1024};
+
+void ComputeQuotaUsageStats(const std::unordered_map<SourceLocation, QuotaUsage, SourceLocationHasher>& quota_usage_per_source_location,
+                            QuotaUsage& total_usage, std::string& all_locations, std::string& excessive_locations)
+{
+    for (const auto& quota_map_entry : quota_usage_per_source_location) {
+        const SourceLocation& location = quota_map_entry.first;
+        const QuotaUsage& location_usage = quota_map_entry.second;
+
+        total_usage.m_bytes_dropped += location_usage.m_bytes_dropped;
+        total_usage.m_messages_dropped += location_usage.m_messages_dropped;
+        total_usage.m_bytes_logged += location_usage.m_bytes_logged;
+
+        if (location_usage.m_messages_dropped > 0) {
+            // Append all locations that dropped at least one message.
+            all_locations = strprintf("%s%s:%d, ", all_locations, location.first, location.second);
+
+            if (location_usage.m_bytes_logged > HOURLY_LOG_QUOTA_IN_BYTES_PER_SOURCE_LOCATION ||
+                location_usage.m_bytes_dropped > HOURLY_LOG_QUOTA_IN_BYTES_PER_SOURCE_LOCATION) {
+                // Append all locations that either logged or dropped excessively.
+                excessive_locations = strprintf("%s%s:%d, ", excessive_locations, location.first, location.second);
+            }
+        }
+    }
+}
+
+void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& logging_function, const SourceLocation& source_location, const bool skip_disk_usage_rate_limiting)
 {
     StdLockGuard scoped_lock(m_cs);
     std::string str_prefixed = LogEscapeMessage(str);
 
     if (m_log_sourcelocations && m_started_new_line) {
-        str_prefixed.insert(0, "[" + RemovePrefix(source_file, "./") + ":" + ToString(source_line) + "] [" + logging_function + "] ");
+        str_prefixed.insert(0, "[" + RemovePrefix(source_location.first, "./") + ":" + ToString(source_location.second) + "] [" + logging_function + "] ");
     }
 
     if (m_log_threadnames && m_started_new_line) {
@@ -254,7 +280,66 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
 
     str_prefixed = LogTimestampStr(str_prefixed);
 
-    m_started_new_line = !str.empty() && str[str.size()-1] == '\n';
+    // Rate limit logging to disk to avoid disk filling attacks.
+    bool log_rate_limit_message = false;
+    if (!skip_disk_usage_rate_limiting && m_rate_limiting) {
+        // Every hour the quota usage for a all source locations is reset.
+        const std::chrono::seconds now = GetTime<std::chrono::seconds>();
+        if ((now - m_last_quota_usage_reset) > std::chrono::hours{1}) {
+            if (m_num_excessive_locations > 0) {
+                // There are source locations that exceeded the rate limits in the last hour.
+
+                // The total usage (bytes/messages dropped/logged) for the last hour.
+                QuotaUsage total_usage;
+                // Comma speparated list of source locations.
+                // - all_locations: All locations that were dropped.
+                // - excessive_locations: the subset of locations that tried to log excessively.
+                std::string all_locations, excessive_locations;
+                ComputeQuotaUsageStats(m_quota_usage_per_source_location, total_usage, all_locations, excessive_locations);
+                // Log the new message as well as the "restart" message.
+                str_prefixed = LogTimestampStr(
+                    strprintf(
+                        "Restarting logging! A total of %d messages (%.1f MiB) were dropped from these locations: %s. "
+                        "Rate limiting was triggered because %d locations tried to log excessively: %s.\n%s",
+                        total_usage.m_messages_dropped, total_usage.m_bytes_dropped / (1024.0 * 1024),
+                        all_locations, m_num_excessive_locations, excessive_locations, str_prefixed)),
+
+                m_num_excessive_locations = 0;
+                log_rate_limit_message = true;
+            }
+
+            // Clear the quota usage stats for all locations.
+            m_quota_usage_per_source_location.clear();
+            m_last_quota_usage_reset = now;
+        }
+
+        QuotaUsage& quota_usage = m_quota_usage_per_source_location[source_location];
+
+        bool quota_exceeded_before = quota_usage.m_bytes_logged > HOURLY_LOG_QUOTA_IN_BYTES_PER_SOURCE_LOCATION;
+        if (!log_rate_limit_message && !quota_exceeded_before) quota_usage.m_bytes_logged += str_prefixed.size();
+        bool quota_exceeded_after = quota_usage.m_bytes_logged > HOURLY_LOG_QUOTA_IN_BYTES_PER_SOURCE_LOCATION;
+
+        if (!quota_exceeded_before && quota_exceeded_after) {
+            if (m_num_excessive_locations == 0) {
+                // This is the first excessively logging location.
+                // We start dropping all logging to disk for up to one hour.
+                str_prefixed = LogTimestampStr(
+                    strprintf("Excessive logging detected from %s:%d: >%d MiB logged during the last hour. "
+                              "Suppressing all logging to disk for up to one hour. "
+                              "Console logging unaffected. Last log entry: %s",
+                              source_location.first, source_location.second,
+                              HOURLY_LOG_QUOTA_IN_BYTES_PER_SOURCE_LOCATION / (1024 * 1024), str_prefixed));
+                log_rate_limit_message = true;
+            }
+
+            ++m_num_excessive_locations;
+        } else if (quota_exceeded_after) {
+            quota_usage.m_messages_dropped++;
+            quota_usage.m_bytes_dropped += str_prefixed.size();
+        }
+    }
+
+    m_started_new_line = !str.empty() && str[str.size() - 1] == '\n';
 
     if (m_buffering) {
         // buffer if we haven't started logging yet
@@ -270,7 +355,13 @@ void BCLog::Logger::LogPrintStr(const std::string& str, const std::string& loggi
     for (const auto& cb : m_print_callbacks) {
         cb(str_prefixed);
     }
-    if (m_print_to_file) {
+    if (m_print_to_file &&
+        // We skip logging to disk if there is at least one source location that is trying to log excessively.
+        (m_num_excessive_locations == 0 ||
+         // We make an exception for messages that originate from the rate limiting logic.
+         log_rate_limit_message ||
+         // Ensure that the rate limiting skip flag is always respected.
+         skip_disk_usage_rate_limiting)) {
         assert(m_fileout != nullptr);
 
         // reopen the log file, if requested

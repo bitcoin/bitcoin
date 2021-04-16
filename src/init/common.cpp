@@ -76,6 +76,7 @@ void AddLoggingArgs(ArgsManager& argsman)
     argsman.AddArg("-logtimemicros", strprintf("Add microsecond precision to debug timestamps (default: %u)", DEFAULT_LOGTIMEMICROS), ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -daemon. To disable logging to file, set -nodebuglogfile)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-shrinkdebugfile", "Shrink debug.log file on client startup (default: 1 when no -debug)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
+    argsman.AddArg("-logratelimiting", strprintf("Rate limit debug logging to disk (default: %u)", DEFAULT_LOGRATELIMITING), ArgsManager::ALLOW_ANY, OptionsCategory::OPTIONS);
 }
 
 void SetLoggingOptions(const ArgsManager& args)
@@ -89,6 +90,7 @@ void SetLoggingOptions(const ArgsManager& args)
     LogInstance().m_log_threadnames = args.GetBoolArg("-logthreadnames", DEFAULT_LOGTHREADNAMES);
 #endif
     LogInstance().m_log_sourcelocations = args.GetBoolArg("-logsourcelocations", DEFAULT_LOGSOURCELOCATIONS);
+    LogInstance().m_rate_limiting = args.GetBoolArg("-logratelimiting", DEFAULT_LOGRATELIMITING);
 
     fLogIPs = args.GetBoolArg("-logips", DEFAULT_LOGIPS);
 }
