@@ -86,7 +86,7 @@ int ClientModel::getNumConnections(unsigned int flags) const
 void ClientModel::setMasternodeList(const CDeterministicMNList& mnList)
 {
     LOCK(cs_mnlinst);
-    if (mnListCached->GetBlockHash() == mnList.GetBlockHash()) {
+    if (mnListCached && mnListCached->GetBlockHash() == mnList.GetBlockHash()) {
         return;
     }
     mnListCached = std::make_shared<CDeterministicMNList>(mnList);
