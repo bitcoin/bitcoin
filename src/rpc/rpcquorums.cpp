@@ -684,13 +684,7 @@ UniValue verifyislock(const JSONRPCRequest& request)
         LOCK(cs_main);
         CTransactionRef tx;
         uint256 hash_block;
-        if (!GetTransaction(txid, tx, Params().GetConsensus(), hash_block, true)) {
-            std::string errmsg = fTxIndex
-                  ? "No such mempool or blockchain transaction"
-                  : "No such mempool transaction. Use -txindex to enable blockchain transaction queries";
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg);
-        }
-        if (!hash_block.IsNull()) {
+        if (GetTransaction(txid, tx, Params().GetConsensus(), hash_block, true) && !hash_block.IsNull()) {
             pindexMined = LookupBlockIndex(hash_block);
         }
     }
