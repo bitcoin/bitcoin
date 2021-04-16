@@ -52,9 +52,10 @@ public:
     int GetStateSinceHeightFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateSinceHeightFor(pindexPrev, dummy_params, m_cache); }
     BIP9Stats GetStateStatisticsFor(const CBlockIndex* pindexPrev) const { return AbstractThresholdConditionChecker::GetStateStatisticsFor(pindexPrev, dummy_params); }
 
-    bool Condition(int64_t version) const
+    bool Condition(int32_t version) const
     {
-        return ((version >> m_bit) & 1) != 0 && (version & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS;
+        uint32_t mask = ((uint32_t)1) << m_bit;
+        return (((version & VERSIONBITS_TOP_MASK) == VERSIONBITS_TOP_BITS) && (version & mask) != 0);
     }
 
     bool Condition(const CBlockIndex* pindex) const { return Condition(pindex->nVersion); }
@@ -98,17 +99,20 @@ public:
 };
 } // namespace
 
+std::unique_ptr<const CChainParams> g_params;
+
 void initialize()
 {
-    SelectParams(CBaseChainParams::MAIN);
+    // this is actually comparatively slow, so only do it once
+    g_params = CreateChainParams(ArgsManager{}, CBaseChainParams::MAIN);
+    assert(g_params != nullptr);
 }
 
-constexpr uint32_t MAX_TIME = 4102444800; // 2100-01-01
+constexpr uint32_t MAX_START_TIME = 4102444800; // 2100-01-01
 
 void test_one_input(const std::vector<uint8_t>& buffer)
 {
-    const CChainParams& params = Params();
-
+    const CChainParams& params = *g_params;
     const int64_t interval = params.GetConsensus().nPowTargetSpacing;
     assert(interval > 1); // need to be able to halve it
     assert(interval < std::numeric_limits<int32_t>::max());
@@ -125,9 +129,9 @@ void test_one_input(const std::vector<uint8_t>& buffer)
 
     // too many blocks at 10min each might cause uint32_t time to overflow if
     // block_start_time is at the end of the range above
-    assert(std::numeric_limits<uint32_t>::max() - MAX_TIME > interval * max_blocks);
+    assert(std::numeric_limits<uint32_t>::max() - MAX_START_TIME > interval * max_blocks);
 
-    const int64_t block_start_time = fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(params.GenesisBlock().nTime, MAX_TIME);
+    const int64_t block_start_time = fuzzed_data_provider.ConsumeIntegralInRange<uint32_t>(params.GenesisBlock().nTime, MAX_START_TIME);
 
     // what values for version will we use to signal / not signal?
     const int32_t ver_signal = fuzzed_data_provider.ConsumeIntegral<int32_t>();
@@ -171,8 +175,10 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     if (checker.Condition(ver_nosignal)) return;
     if (ver_nosignal < 0) return;
 
-    // TOP_BITS should ensure version will be positive
+    // TOP_BITS should ensure version will be positive and meet min
+    // version requirement
     assert(ver_signal > 0);
+    assert(ver_signal >= VERSIONBITS_LAST_OLD_BLOCK_VERSION);
 
     // Now that we have chosen time and versions, setup to mine blocks
     Blocks blocks(block_start_time, interval, ver_signal, ver_nosignal);
@@ -201,7 +207,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         }
 
         // don't risk exceeding max_blocks or times may wrap around
-        if (blocks.size() + period*2 > max_blocks) break;
+        if (blocks.size() + 2 * period > max_blocks) break;
     }
     // NOTE: fuzzed_data_provider may be fully consumed at this point and should not be used further
 
@@ -321,7 +327,7 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         assert(false);
     }
 
-    if (blocks.size() >= max_periods * period) {
+    if (blocks.size() >= period * max_periods) {
         // we chose the timeout (and block times) so that by the time we have this many blocks it's all over
         assert(state == ThresholdState::ACTIVE || state == ThresholdState::FAILED);
     }
