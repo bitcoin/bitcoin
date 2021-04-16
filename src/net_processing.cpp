@@ -234,6 +234,7 @@ public:
                     CTxMemPool& pool, bool ignore_incoming_txs, bool enable_rebroadcast);
 
     /** Overridden from CValidationInterface. */
+    void TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) override;
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
     void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) override;
     void UpdatedBlockTip(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override;
@@ -1310,9 +1311,42 @@ PeerManagerImpl::PeerManagerImpl(const CChainParams& chainparams, CConnman& conn
 }
 
 /**
- * Evict orphan txn pool entries based on a newly connected
- * block, remember the recently confirmed transactions, and delete tracked
- * announcements for them. Also save the time of the last tip update.
+ * If a transaction was removed from the mempool for a reason that entails it
+ * most likely will not re-enter, let the rebroadcast handler know.
+ */
+void PeerManagerImpl::TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence)
+{
+    if (!m_txrebroadcast) return;
+
+    switch(reason) {
+        case MemPoolRemovalReason::BLOCK:
+            // Although transactions removed for this reason will not be
+            // returned by this callback, include it here so the compiler
+            // can warn about missing cases in this switch statement.
+            // These transactions are handled by BlockConnected.
+        case MemPoolRemovalReason::EXPIRY:
+            // The rebroadcast attempt tracker should remember transactions
+            // even after they have expired from the mempool to avoid endlessly
+            // rebroadcasting certain transactions. For example, if two peers
+            // are unaware of new policy or consensus rules, we don't want them
+            // to ping-pong transactions that are considered invalid by the
+            // majority of the network.
+        case MemPoolRemovalReason::SIZELIMIT:
+            break;
+        case MemPoolRemovalReason::REORG:
+        case MemPoolRemovalReason::CONFLICT:
+        case MemPoolRemovalReason::REPLACED:
+            m_txrebroadcast->RemoveFromAttemptTracker(tx);
+    } // No default case, so the compiler can warn about missing cases
+}
+
+/**
+ * Update state based on a newly connected block:
+ * - Evict orphan txn pool entries
+ * - Save the time of the last tip update
+ * - Remember recently confirmed transactions
+ * - Delete tracked announcements for block transactions
+ * - Delete tracked rebroadcast attempts for block transactions
  */
 void PeerManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
 {
@@ -1328,6 +1362,13 @@ void PeerManagerImpl::BlockConnected(const std::shared_ptr<const CBlock>& pblock
             }
         }
     }
+
+    if (m_txrebroadcast) {
+        for (const auto& ptx : pblock->vtx) {
+            m_txrebroadcast->RemoveFromAttemptTracker(ptx);
+        }
+    }
+
     {
         LOCK(cs_main);
         for (const auto& ptx : pblock->vtx) {
