@@ -15,6 +15,11 @@
 /* Define a virtual block time, one block per 10 minutes after Nov 14 2014, 0:55:36am */
 static int32_t TestTime(int nHeight) { return 1415926536 + 600 * nHeight; }
 
+static int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params)
+{
+    return g_versionbitscache.ComputeBlockVersion(pindexPrev, params);
+}
+
 static const std::string StateName(ThresholdState state)
 {
     switch (state) {
