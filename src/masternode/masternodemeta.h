@@ -11,7 +11,8 @@
 
 #include <uint256.h>
 #include <sync.h>
-
+#include <version.h>
+#include <util/time.h>
 class CConnman;
 
 
@@ -73,7 +74,8 @@ private:
 
     std::map<uint256, CMasternodeMetaInfoPtr> metaInfos;
     std::vector<uint256> vecDirtyGovernanceObjectHashes;
-
+    int nCurrentVersion = 0;
+    int64_t nCurrentVersionStarted = 0;
 public:
     template<typename Stream>
     void Serialize(Stream& s) const
@@ -87,6 +89,14 @@ public:
             tmpMetaInfo.emplace_back(*p.second);
         }
         s << tmpMetaInfo;
+        if (nCurrentVersion == 0 && nCurrentVersionStarted == 0) {
+            // first time serialization
+            s << MIN_MASTERNODE_PROTO_VERSION;
+            s << GetTime();
+        } else {
+            s << nCurrentVersion;
+            s << nCurrentVersionStarted;
+        }
     }
     template<typename Stream>
     void Unserialize(Stream& s)
@@ -104,6 +114,8 @@ public:
         for (auto& mm : tmpMetaInfo) {
             metaInfos.try_emplace(mm.GetProTxHash(), std::make_shared<CMasternodeMetaInfo>(std::move(mm)));
         }
+        s >> nCurrentVersion;
+        s >> nCurrentVersionStarted;
     }
 
 public:
@@ -111,7 +123,7 @@ public:
 
     bool AddGovernanceVote(const uint256& proTxHash, const uint256& nGovernanceObjectHash);
     void RemoveGovernanceObject(const uint256& nGovernanceObjectHash);
-
+    int64_t GetCurrentVersionStarted() { LOCK(cs); return nCurrentVersionStarted; }
     std::vector<uint256> GetAndClearDirtyGovernanceObjectHashes();
 
     void Clear();

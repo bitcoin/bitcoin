@@ -83,7 +83,20 @@ bool CLLMQUtils::IsAllMembersConnectedEnabled(uint8_t llmqType)
 
 bool CLLMQUtils::IsQuorumPoseEnabled(uint8_t llmqType)
 {
-    return EvalSpork(llmqType, sporkManager.GetSporkValue(SPORK_23_QUORUM_POSE));
+    if (!EvalSpork(llmqType, sporkManager.GetSporkValue(SPORK_23_QUORUM_POSE))) {
+        return false;
+    }
+
+    static bool fPoSeCooldownPassed{false};
+    if (fPoSeCooldownPassed) {
+        return true;
+    }
+    CDeterministicMNList mnList;
+    deterministicMNManager->GetListAtChainTip(mnList);
+    // It takes 1 payment cycle (in seconds) since the latest local protocol update to start applying PoSe logic
+    const int64_t nPoSeCooldown = mnList.GetAllMNsCount() * Params().GetConsensus().nPowTargetSpacing;
+    fPoSeCooldownPassed = GetTime() - mmetaman.GetCurrentVersionStarted() > nPoSeCooldown;
+    return fPoSeCooldownPassed;
 }
 
 uint256 CLLMQUtils::DeterministicOutboundConnection(const uint256& proTxHash1, const uint256& proTxHash2)
