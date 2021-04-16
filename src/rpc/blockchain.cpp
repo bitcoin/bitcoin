@@ -45,6 +45,7 @@
 #include <memory>
 #include <mutex>
 #include <condition_variable>
+#include <merkleblock.h>
 
 struct CUpdatedBlock
 {

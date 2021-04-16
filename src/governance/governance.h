@@ -17,8 +17,6 @@
 #include <timedata.h>
 #include <util.h>
 
-#include <evo/deterministicmns.h>
-
 #include <univalue.h>
 
 class CGovernanceManager;
@@ -29,6 +27,9 @@ class CGovernanceVote;
 extern CGovernanceManager governance;
 
 static const int RATE_BUFFER_SIZE = 5;
+
+class CDeterministicMNList;
+typedef std::shared_ptr<CDeterministicMNList> CDeterministicMNListPtr;
 
 class CRateCheckBuffer
 {
@@ -207,7 +208,7 @@ private:
     bool fRateChecksEnabled;
 
     // used to check for changed voting keys
-    CDeterministicMNList lastMNListForVotingKeys;
+    CDeterministicMNListPtr lastMNListForVotingKeys;
 
     class ScopedLockBool
     {
@@ -302,7 +303,7 @@ public:
         READWRITE(cmmapOrphanVotes);
         READWRITE(mapObjects);
         READWRITE(mapLastMasternodeObject);
-        READWRITE(lastMNListForVotingKeys);
+        READWRITE(*lastMNListForVotingKeys);
     }
 
     void UpdatedBlockTip(const CBlockIndex* pindex, CConnman& connman);

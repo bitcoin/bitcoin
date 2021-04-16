@@ -5,6 +5,7 @@
 #include <coinjoin/coinjoin-server.h>
 
 #include <masternode/activemasternode.h>
+#include <evo/deterministicmns.h>
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <init.h>

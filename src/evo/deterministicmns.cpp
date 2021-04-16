@@ -4,6 +4,7 @@
 
 #include <evo/deterministicmns.h>
 #include <evo/specialtx.h>
+#include <evo/simplifiedmns.h>
 
 #include <base58.h>
 #include <chainparams.h>

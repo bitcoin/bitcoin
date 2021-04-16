@@ -9,6 +9,7 @@
 #include <governance/governance-vote.h>
 #include <governance/governance-classes.h>
 #include <governance/governance-validators.h>
+#include <evo/deterministicmns.h>
 #include <init.h>
 #include <txmempool.h>
 #include <validation.h>

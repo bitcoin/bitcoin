@@ -5,14 +5,18 @@
 #ifndef BITCOIN_LLMQ_QUORUMS_DKGSESSIONHANDLER_H
 #define BITCOIN_LLMQ_QUORUMS_DKGSESSIONHANDLER_H
 
-#include <llmq/quorums_dkgsession.h>
-
-#include <validation.h>
 
 #include <ctpl.h>
+#include <net.h>
+
+class CBLSWorker;
+class CBlockIndex;
 
 namespace llmq
 {
+
+class CDKGSession;
+class CDKGSessionManager;
 
 enum QuorumPhase {
     QuorumPhase_None = -1,

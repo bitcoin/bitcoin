@@ -3,12 +3,17 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <llmq/quorums.h>
+#include <llmq/quorums_commitment.h>
 #include <llmq/quorums_utils.h>
 
+#include <bls/bls.h>
+#include <evo/deterministicmns.h>
+#include <evo/evodb.h>
 #include <chainparams.h>
 #include <random.h>
 #include <spork.h>
 #include <validation.h>
+#include <versionbits.h>
 
 #include <masternode/masternode-meta.h>
 
@@ -290,7 +295,7 @@ bool CLLMQUtils::IsQuorumActive(Consensus::LLMQType llmqType, const uint256& quo
     // fail while we are on the brink of a new quorum
     auto quorums = quorumManager->ScanQuorums(llmqType, (int)params.signingActiveQuorumCount + 1);
     for (auto& q : quorums) {
-        if (q->qc.quorumHash == quorumHash) {
+        if (q->qc->quorumHash == quorumHash) {
             return true;
         }
     }

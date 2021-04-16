@@ -5,10 +5,6 @@
 #ifndef BITCOIN_LLMQ_QUORUMS_H
 #define BITCOIN_LLMQ_QUORUMS_H
 
-#include <evo/evodb.h>
-#include <evo/deterministicmns.h>
-#include <llmq/quorums_commitment.h>
-
 #include <chain.h>
 #include <consensus/params.h>
 #include <saltedhasher.h>
@@ -18,17 +14,24 @@
 #include <bls/bls.h>
 #include <bls/bls_worker.h>
 
-#include <ctpl.h>
+#include <evo/evodb.h>
 
 class CNode;
+
+class CBlockIndex;
+
+class CDeterministicMN;
+typedef std::shared_ptr<const CDeterministicMN> CDeterministicMNCPtr;
+
 
 namespace llmq
 {
 
+class CDKGSessionManager;
+
 // If true, we will connect to all new quorums and watch their communication
 static const bool DEFAULT_WATCH_QUORUMS = false;
 
-class CDKGSessionManager;
 
 /**
  * An object of this class represents a QGETDATA request or a QDATA response header
@@ -144,12 +147,16 @@ class CQuorum;
 typedef std::shared_ptr<CQuorum> CQuorumPtr;
 typedef std::shared_ptr<const CQuorum> CQuorumCPtr;
 
+class CFinalCommitment;
+typedef std::shared_ptr<CFinalCommitment> CFinalCommitmentPtr;
+
+
 class CQuorum
 {
     friend class CQuorumManager;
 public:
     const Consensus::LLMQParams& params;
-    CFinalCommitment qc;
+    CFinalCommitmentPtr qc;
     const CBlockIndex* pindexQuorum;
     uint256 minedBlockHash;
     std::vector<CDeterministicMNCPtr> members;
@@ -167,7 +174,7 @@ private:
 public:
     CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker);
     ~CQuorum();
-    void Init(const CFinalCommitment& _qc, const CBlockIndex* _pindexQuorum, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
+    void Init(const CFinalCommitmentPtr& _qc, const CBlockIndex* _pindexQuorum, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
 
     bool SetVerificationVector(const BLSVerificationVector& quorumVecIn);
     bool SetSecretKeyShare(const CBLSSecretKey& secretKeyShare);
@@ -233,7 +240,7 @@ private:
     void EnsureQuorumConnections(Consensus::LLMQType llmqType, const CBlockIndex *pindexNew) const;
 
     CQuorumPtr BuildQuorumFromCommitment(Consensus::LLMQType llmqType, const CBlockIndex* pindexQuorum) const;
-    bool BuildQuorumContributions(const CFinalCommitment& fqc, std::shared_ptr<CQuorum>& quorum) const;
+    bool BuildQuorumContributions(const CFinalCommitmentPtr& fqc, std::shared_ptr<CQuorum>& quorum) const;
 
     CQuorumCPtr GetQuorum(Consensus::LLMQType llmqType, const CBlockIndex* pindex) const;
     /// Returns the start offset for the masternode with the given proTxHash. This offset is applied when picking data recovery members of a quorum's

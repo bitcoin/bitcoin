@@ -5,19 +5,29 @@
 #ifndef BITCOIN_LLMQ_QUORUMS_SIGNING_H
 #define BITCOIN_LLMQ_QUORUMS_SIGNING_H
 
-#include <llmq/quorums.h>
+#include <bls/bls.h>
 
-#include <chainparams.h>
+#include <consensus/params.h>
 #include <saltedhasher.h>
 #include <univalue.h>
 #include <unordered_lru_cache.h>
 
+#include <evo/evodb.h>
+
 #include <unordered_map>
+#include <sync.h>
+#include <random.h>
 
 typedef int64_t NodeId;
+class CInv;
+class CNode;
 
 namespace llmq
 {
+
+class CQuorum;
+typedef std::shared_ptr<const CQuorum> CQuorumCPtr;
+
 // Keep recovered signatures for a week. This is a "-maxrecsigsage" option default.
 static const int64_t DEFAULT_MAX_RECOVERED_SIGS_AGE = 60 * 60 * 24 * 7;
 

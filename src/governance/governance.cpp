@@ -16,6 +16,8 @@
 #include <spork.h>
 #include <validation.h>
 
+#include <evo/deterministicmns.h>
+
 CGovernanceManager governance;
 
 int nSubmittedFinalBudget;
@@ -35,6 +37,7 @@ CGovernanceManager::CGovernanceManager() :
     mapLastMasternodeObject(),
     setRequestedObjects(),
     fRateChecksEnabled(true),
+    lastMNListForVotingKeys(std::make_shared<CDeterministicMNList>()),
     cs()
 {
 }
@@ -1258,11 +1261,11 @@ void CGovernanceManager::RemoveInvalidVotes()
     LOCK(cs);
 
     auto curMNList = deterministicMNManager->GetListAtChainTip();
-    auto diff = lastMNListForVotingKeys.BuildDiff(curMNList);
+    auto diff = lastMNListForVotingKeys->BuildDiff(curMNList);
 
     std::vector<COutPoint> changedKeyMNs;
     for (const auto& p : diff.updatedMNs) {
-        auto oldDmn = lastMNListForVotingKeys.GetMNByInternalId(p.first);
+        auto oldDmn = lastMNListForVotingKeys->GetMNByInternalId(p.first);
         if ((p.second.fields & CDeterministicMNStateDiff::Field_keyIDVoting) && p.second.state.keyIDVoting != oldDmn->pdmnState->keyIDVoting) {
             changedKeyMNs.emplace_back(oldDmn->collateralOutpoint);
         } else if ((p.second.fields & CDeterministicMNStateDiff::Field_pubKeyOperator) && p.second.state.pubKeyOperator != oldDmn->pdmnState->pubKeyOperator) {
@@ -1270,7 +1273,7 @@ void CGovernanceManager::RemoveInvalidVotes()
         }
     }
     for (const auto& id : diff.removedMns) {
-        auto oldDmn = lastMNListForVotingKeys.GetMNByInternalId(id);
+        auto oldDmn = lastMNListForVotingKeys->GetMNByInternalId(id);
         changedKeyMNs.emplace_back(oldDmn->collateralOutpoint);
     }
 
@@ -1290,7 +1293,7 @@ void CGovernanceManager::RemoveInvalidVotes()
     }
 
     // store current MN list for the next run so that we can determine which keys changed
-    lastMNListForVotingKeys = curMNList;
+    lastMNListForVotingKeys = std::make_shared<CDeterministicMNList>(curMNList);
 }
 
 bool AreSuperblocksEnabled()

@@ -6,22 +6,19 @@
 #define BITCOIN_EVO_DETERMINISTICMNS_H
 
 #include <arith_uint256.h>
-#include <bls/bls.h>
-#include <dbwrapper.h>
 #include <evo/evodb.h>
 #include <evo/providertx.h>
-#include <evo/simplifiedmns.h>
 #include <saltedhasher.h>
 #include <sync.h>
 
 #include <immer/map.hpp>
-#include <immer/map_transient.hpp>
 
 #include <unordered_map>
 
 class CBlock;
 class CBlockIndex;
 class CValidationState;
+class CSimplifiedMNListDiff;
 
 namespace llmq
 {

@@ -6,14 +6,11 @@
 #define BITCOIN_LLMQ_QUORUMS_COMMITMENT_H
 
 #include <llmq/quorums_utils.h>
-
-#include <consensus/params.h>
-
-#include <evo/deterministicmns.h>
-
 #include <bls/bls.h>
 
 #include <univalue.h>
+
+class CValidationState;
 
 namespace llmq
 {
@@ -105,6 +102,7 @@ public:
         obj.pushKV("membersSig", membersSig.ToString());
     }
 };
+typedef std::shared_ptr<CFinalCommitment> CFinalCommitmentPtr;
 
 class CFinalCommitmentTxPayload
 {

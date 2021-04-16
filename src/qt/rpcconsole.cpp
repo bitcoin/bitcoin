@@ -10,6 +10,8 @@
 #include <qt/rpcconsole.h>
 #include <qt/forms/ui_debugwindow.h>
 
+#include <evo/deterministicmns.h>
+
 #include <qt/bantablemodel.h>
 #include <qt/clientmodel.h>
 #include <qt/walletmodel.h>

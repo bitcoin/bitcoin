@@ -5,13 +5,13 @@
 #ifndef BITCOIN_EVO_CBTX_H
 #define BITCOIN_EVO_CBTX_H
 
-#include <consensus/validation.h>
 #include <primitives/transaction.h>
 #include <univalue.h>
 
 class CBlock;
 class CBlockIndex;
 class CCoinsViewCache;
+class CValidationState;
 
 // coinbase transaction
 class CCbTx

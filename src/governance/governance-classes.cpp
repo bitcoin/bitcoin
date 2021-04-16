@@ -4,7 +4,6 @@
 
 #include <governance/governance-classes.h>
 #include <core_io.h>
-#include <init.h>
 #include <utilstrencodings.h>
 #include <validation.h>
 

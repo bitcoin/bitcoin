@@ -7,7 +7,9 @@
 
 #include <coinjoin/coinjoin-util.h>
 #include <coinjoin/coinjoin.h>
-#include <evo/deterministicmns.h>
+
+class CDeterministicMN;
+typedef std::shared_ptr<const CDeterministicMN> CDeterministicMNCPtr;
 
 class CCoinJoinClientManager;
 class CCoinJoinClientQueueManager;

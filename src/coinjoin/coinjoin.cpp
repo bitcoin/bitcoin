@@ -6,6 +6,7 @@
 
 #include <core_io.h>
 #include <consensus/validation.h>
+#include <chain.h>
 #include <messagesigner.h>
 #include <netmessagemaker.h>
 #include <script/sign.h>
@@ -13,7 +14,7 @@
 #include <util.h>
 #include <utilmoneystr.h>
 #include <validation.h>
-
+#include <bls/bls.h>
 #include <masternode/activemasternode.h>
 #include <masternode/masternode-sync.h>
 

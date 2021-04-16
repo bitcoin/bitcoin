@@ -27,6 +27,7 @@
 #include <wallet/wallet.h>
 #include <wallet/walletdb.h>
 #include <wallet/walletutil.h>
+#include <key_io.h>
 
 #include <init.h>  // For StartShutdown
 

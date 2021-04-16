@@ -8,10 +8,11 @@
 #include <consensus/validation.h>
 #include <core_io.h>
 #include <init.h>
-#include <masternode/masternode-payments.h>
+#include <evo/deterministicmns.h>
 #include <masternode/masternode-sync.h>
 #include <masternode/masternode-meta.h>
 #include <netmessagemaker.h>
+#include <net_processing.h>
 #include <script/sign.h>
 #include <txmempool.h>
 #include <util.h>

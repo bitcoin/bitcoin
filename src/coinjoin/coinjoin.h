@@ -5,18 +5,16 @@
 #ifndef BITCOIN_COINJOIN_COINJOIN_H
 #define BITCOIN_COINJOIN_COINJOIN_H
 
-#include <bls/bls.h>
-#include <chain.h>
 #include <chainparams.h>
 #include <primitives/transaction.h>
-#include <pubkey.h>
 #include <sync.h>
-#include <spork.h>
 #include <timedata.h>
 #include <tinyformat.h>
 
 class CCoinJoin;
 class CConnman;
+class CBLSPublicKey;
+class CBlockIndex;
 
 // timeouts
 static const int COINJOIN_AUTO_TIMEOUT_MIN = 5;

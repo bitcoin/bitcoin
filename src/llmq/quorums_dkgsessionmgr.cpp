@@ -3,13 +3,15 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <llmq/quorums_dkgsessionmgr.h>
-#include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_debug.h>
 #include <llmq/quorums_utils.h>
+
+#include <evo/deterministicmns.h>
 
 #include <chainparams.h>
 #include <net_processing.h>
 #include <spork.h>
+#include <validation.h>
 
 namespace llmq
 {

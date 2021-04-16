@@ -4,10 +4,10 @@
 #ifndef BITCOIN_MASTERNODE_MASTERNODE_SYNC_H
 #define BITCOIN_MASTERNODE_MASTERNODE_SYNC_H
 
-#include <chain.h>
-#include <net.h>
-
 class CMasternodeSync;
+class CBlockIndex;
+class CConnman;
+class CNode;
 
 static const int MASTERNODE_SYNC_BLOCKCHAIN      = 1;
 static const int MASTERNODE_SYNC_GOVERNANCE      = 4;

@@ -8,6 +8,7 @@
 #include <llmq/quorums_commitment.h>
 #include <evo/simplifiedmns.h>
 #include <evo/specialtx.h>
+#include <consensus/validation.h>
 
 #include <chain.h>
 #include <chainparams.h>
@@ -183,11 +184,10 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
             auto& v = qcHashes[p.first];
             v.reserve(p.second.size());
             for (const auto& p2 : p.second) {
-                llmq::CFinalCommitment qc;
                 uint256 minedBlockHash;
-                bool found = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p2->GetBlockHash(), qc, minedBlockHash);
-                if (!found) return state.DoS(100, false, REJECT_INVALID, "commitment-not-found");
-                v.emplace_back(::SerializeHash(qc));
+                llmq::CFinalCommitmentPtr qc = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p2->GetBlockHash(), minedBlockHash);
+                if (qc == nullptr) return state.DoS(100, false, REJECT_INVALID, "commitment-not-found");
+                v.emplace_back(::SerializeHash(*qc));
                 hashCount++;
             }
         }

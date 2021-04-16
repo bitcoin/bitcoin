@@ -5,23 +5,22 @@
 #ifndef BITCOIN_LLMQ_QUORUMS_BLOCKPROCESSOR_H
 #define BITCOIN_LLMQ_QUORUMS_BLOCKPROCESSOR_H
 
-#include <llmq/quorums_commitment.h>
 #include <llmq/quorums_utils.h>
 
-#include <consensus/params.h>
-#include <primitives/transaction.h>
-#include <saltedhasher.h>
-#include <sync.h>
-
-#include <map>
 #include <unordered_map>
 #include <unordered_lru_cache.h>
+#include <saltedhasher.h>
 
 class CNode;
 class CConnman;
+class CValidationState;
+class CEvoDB;
 
 namespace llmq
 {
+
+class CFinalCommitment;
+typedef std::shared_ptr<CFinalCommitment> CFinalCommitmentPtr;
 
 class CQuorumBlockProcessor
 {
@@ -52,7 +51,7 @@ public:
     bool GetMineableCommitmentTx(Consensus::LLMQType llmqType, int nHeight, CTransactionRef& ret);
 
     bool HasMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash);
-    bool GetMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash, CFinalCommitment& ret, uint256& retMinedBlockHash);
+    CFinalCommitmentPtr GetMinedCommitment(Consensus::LLMQType llmqType, const uint256& quorumHash, uint256& retMinedBlockHash);
 
     std::vector<const CBlockIndex*> GetMinedCommitmentsUntilBlock(Consensus::LLMQType llmqType, const CBlockIndex* pindex, size_t maxCount);
     std::map<Consensus::LLMQType, std::vector<const CBlockIndex*>> GetMinedAndActiveCommitmentsUntilBlock(const CBlockIndex* pindex);

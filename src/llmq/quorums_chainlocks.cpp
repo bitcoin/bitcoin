@@ -3,16 +3,17 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums.h>
 #include <llmq/quorums_instantsend.h>
 #include <llmq/quorums_utils.h>
 
 #include <chain.h>
+#include <consensus/validation.h>
 #include <masternode/masternode-sync.h>
 #include <net_processing.h>
 #include <scheduler.h>
 #include <spork.h>
 #include <txmempool.h>
-#include <validation.h>
 
 namespace llmq
 {
