@@ -89,12 +89,9 @@ public:
             tmpMetaInfo.emplace_back(*p.second);
         }
         s << tmpMetaInfo;
-        if (nCurrentVersion == 0 && nCurrentVersionStarted == 0) {
-            // first time serialization
-            s << MIN_MASTERNODE_PROTO_VERSION;
-        } else {
-            s << nCurrentVersionStarted;
-        }
+        s << MIN_MASTERNODE_PROTO_VERSION;
+        s << nCurrentVersionStarted;
+
     }
     template<typename Stream>
     void Unserialize(Stream& s)
@@ -112,7 +109,13 @@ public:
         for (auto& mm : tmpMetaInfo) {
             metaInfos.try_emplace(mm.GetProTxHash(), std::make_shared<CMasternodeMetaInfo>(std::move(mm)));
         }
+        int nCurrentVersion;
+        s >> nCurrentVersion;
         s >> nCurrentVersionStarted;
+        if (nCurrentVersion != MIN_MASTERNODE_PROTO_VERSION) {
+            // serialized by some another version
+            nCurrentVersionStarted = GetTime();
+        }
     }
 
 public:
