@@ -5,10 +5,10 @@
 #include <masternode/masternodemeta.h>
 
 #include <timedata.h>
-#include <tinyformat.h>
+
 CMasternodeMetaMan mmetaman;
 
-const std::string CMasternodeMetaMan::SERIALIZATION_VERSION_STRING = "CMasternodeMetaMan-Version-3";
+const std::string CMasternodeMetaMan::SERIALIZATION_VERSION_STRING = "CMasternodeMetaMan-Version-2";
 
 UniValue CMasternodeMetaInfo::ToJson() const
 {
@@ -92,6 +92,8 @@ void CMasternodeMetaMan::CheckAndRemove()
 
 std::string CMasternodeMetaMan::ToString() const
 {
-    return strprintf("Masternodes: meta infos object count: %ld, nCurrentVersion: %d, nCurrentVersionStarted: %d",
-            metaInfos.size(), nCurrentVersion, nCurrentVersionStarted);
+    std::ostringstream info;
+
+    info << "Masternodes: meta infos object count: " << (int)metaInfos.size();
+    return info.str();
 }
