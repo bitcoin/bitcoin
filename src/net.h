@@ -462,7 +462,7 @@ public:
     // If 'true' this node will be disconnected after MNAUTH
     bool m_masternode_probe_connection;
     // If 'true', we identified it as an intra-quorum relay connection
-    bool m_masternode_iqr_connection{false};
+    bool m_masternode_iqr_connection;
     // Address of this peer
     const CAddress addr;
     // Bind address of our side of the connection
@@ -775,7 +775,7 @@ public:
     //! Sets the addrName only if it was not previously set
     void MaybeSetAddrName(const std::string& addrNameIn);
     // SYSCOIN
-    bool CanRelay() const { return !m_masternode_connection || m_masternode_iqr_connection; }
+    bool CanRelay() const { LOCK(cs_mnauth); return !m_masternode_connection || m_masternode_iqr_connection; }
     std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
 
     /** A ping-pong round trip has completed successfully. Update latest and minimum ping times. */

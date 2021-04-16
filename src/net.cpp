@@ -3066,18 +3066,23 @@ void CConnman::SetMasternodeQuorumRelayMembers(uint8_t llmqType, const uint256& 
     // Update existing connections
     ForEachNode([&](CNode* pnode) {
         uint256 verifiedProRegTxHash;
+        bool iqr;
         {
             LOCK(pnode->cs_mnauth);
             verifiedProRegTxHash = pnode->verifiedProRegTxHash;
+            iqr = pnode->m_masternode_iqr_connection;
         }
-        if (!verifiedProRegTxHash.IsNull() && !pnode->m_masternode_iqr_connection && IsMasternodeQuorumRelayMember(verifiedProRegTxHash)) {
+        if (!verifiedProRegTxHash.IsNull() && !iqr && IsMasternodeQuorumRelayMember(verifiedProRegTxHash)) {
             // Tell our peer that we're interested in plain LLMQ recovered signatures.
             // Otherwise the peer would only announce/send messages resulting from QRECSIG,
             // e.g. InstantSend locks or ChainLocks. SPV and regular full nodes should not send
             // this message as they are usually only interested in the higher level messages.
             const CNetMsgMaker msgMaker(pnode->GetCommonVersion());
             PushMessage(pnode, msgMaker.Make(NetMsgType::QSENDRECSIGS));
-            pnode->m_masternode_iqr_connection = true;
+            {
+                LOCK(pnode->cs_mnauth);
+                pnode->m_masternode_iqr_connection = true;
+            }
         }
     });
 }
@@ -3403,6 +3408,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
     // SYSCOIN
     m_masternode_connection = false;
     m_masternode_probe_connection = false;
+    m_masternode_iqr_connection = false;
 }
 
 CNode::~CNode()
