@@ -11,6 +11,7 @@ from test_framework.messages import (
     NODE_NETWORK,
     NODE_WITNESS,
     msg_addr,
+    msg_getaddr
 )
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
@@ -32,6 +33,21 @@ class AddrReceiver(P2PInterface):
             self.num_ipv4_received += 1
 
 
+class GetAddrStore(P2PInterface):
+    getaddr_received = False
+    num_ipv4_received = 0
+
+    def on_getaddr(self, message):
+        self.getaddr_received = True
+
+    def on_addr(self, message):
+        for addr in message.addrs:
+            self.num_ipv4_received += 1
+
+    def addr_received(self):
+        return self.num_ipv4_received != 0
+
+
 class AddrTest(BitcoinTestFramework):
     counter = 0
     mocktime = int(time.time())
@@ -42,6 +58,7 @@ class AddrTest(BitcoinTestFramework):
     def run_test(self):
         self.oversized_addr_test()
         self.relay_tests()
+        self.getaddr_tests()
 
     def setup_addr_msg(self, num):
         addrs = []
@@ -102,6 +119,42 @@ class AddrTest(BitcoinTestFramework):
         # originating node (addr_source).
         ipv4_branching_factor = 2
         assert_equal(total_ipv4_received, num_ipv4_addrs * ipv4_branching_factor)
+
+        self.nodes[0].disconnect_p2ps()
+
+    def getaddr_tests(self):
+        self.log.info('Test getaddr behavior')
+        self.log.info('Check that we send a getaddr message upon connecting to an outbound-full-relay peer')
+        full_outbound_peer = self.nodes[0].add_outbound_p2p_connection(GetAddrStore(), p2p_idx=0, connection_type="outbound-full-relay")
+        full_outbound_peer.sync_with_ping()
+        assert full_outbound_peer.getaddr_received
+
+        self.log.info('Check that we do not send a getaddr message upon connecting to a block-relay-only peer')
+        block_relay_peer = self.nodes[0].add_outbound_p2p_connection(GetAddrStore(), p2p_idx=1, connection_type="block-relay-only")
+        block_relay_peer.sync_with_ping()
+        assert_equal(block_relay_peer.getaddr_received, False)
+
+        self.log.info('Check that we answer getaddr messages only from inbound peers')
+        inbound_peer = self.nodes[0].add_p2p_connection(GetAddrStore())
+        inbound_peer.sync_with_ping()
+        # Add some addresses to addrman
+        for i in range(1000):
+            first_octet = i >> 8
+            second_octet = i % 256
+            a = f"{first_octet}.{second_octet}.1.1"
+            self.nodes[0].addpeeraddress(a, 8333)
+
+        full_outbound_peer.send_and_ping(msg_getaddr())
+        block_relay_peer.send_and_ping(msg_getaddr())
+        inbound_peer.send_and_ping(msg_getaddr())
+
+        self.mocktime += 5 * 60
+        self.nodes[0].setmocktime(self.mocktime)
+        inbound_peer.wait_until(inbound_peer.addr_received)
+
+        assert_equal(full_outbound_peer.num_ipv4_received, 0)
+        assert_equal(block_relay_peer.num_ipv4_received, 0)
+        assert inbound_peer.num_ipv4_received > 100
 
         self.nodes[0].disconnect_p2ps()
 
