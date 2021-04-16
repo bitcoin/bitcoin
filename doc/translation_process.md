@@ -22,8 +22,6 @@ cd src/
 make translate
 ```
 
-`contrib/syscoin-qt.pro` takes care of generating `.qm` (binary compiled) files from `.ts` (source files) files. It’s mostly automated, and you shouldn’t need to worry about it.
-
 **Example Qt translation**
 ```cpp
 QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
