@@ -74,8 +74,8 @@ private:
 
     std::map<uint256, CMasternodeMetaInfoPtr> metaInfos;
     std::vector<uint256> vecDirtyGovernanceObjectHashes;
-    int nCurrentVersion = 0;
-    int64_t nCurrentVersionStarted = 0;
+    // the time we first started with current MIN_MASTERNODE_PROTO_VERSION version
+    int64_t nCurrentVersionStarted{0};
 public:
     template<typename Stream>
     void Serialize(Stream& s) const
@@ -92,9 +92,7 @@ public:
         if (nCurrentVersion == 0 && nCurrentVersionStarted == 0) {
             // first time serialization
             s << MIN_MASTERNODE_PROTO_VERSION;
-            s << GetTime();
         } else {
-            s << nCurrentVersion;
             s << nCurrentVersionStarted;
         }
     }
@@ -114,11 +112,11 @@ public:
         for (auto& mm : tmpMetaInfo) {
             metaInfos.try_emplace(mm.GetProTxHash(), std::make_shared<CMasternodeMetaInfo>(std::move(mm)));
         }
-        s >> nCurrentVersion;
         s >> nCurrentVersionStarted;
     }
 
 public:
+    CMasternodeMetaMan() : nCurrentVersionStarted(GetTime()) {}
     CMasternodeMetaInfoPtr GetMetaInfo(const uint256& proTxHash, bool fCreate = true);
 
     bool AddGovernanceVote(const uint256& proTxHash, const uint256& nGovernanceObjectHash);

@@ -92,6 +92,6 @@ void CMasternodeMetaMan::CheckAndRemove()
 
 std::string CMasternodeMetaMan::ToString() const
 {
-    return strprintf("Masternodes: meta infos object count: %ld, nCurrentVersion: %d, nCurrentVersionStarted: %d",
-            metaInfos.size(), nCurrentVersion, nCurrentVersionStarted);
+    return strprintf("Masternodes: meta infos object count: %ld, MIN_MASTERNODE_PROTO_VERSION: %d, nCurrentVersionStarted: %d",
+            metaInfos.size(), MIN_MASTERNODE_PROTO_VERSION, nCurrentVersionStarted);
 }
