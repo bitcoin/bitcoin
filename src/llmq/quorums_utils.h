@@ -7,10 +7,19 @@
 
 #include <consensus/params.h>
 
-#include <evo/deterministicmns.h>
+#include <set>
 
 #include <vector>
 #include <random.h>
+#include <sync.h>
+#include <dbwrapper.h>
+#include <chainparams.h>
+#include <versionbits.h>
+
+class CBlockIndex;
+class CDeterministicMN;
+typedef std::shared_ptr<const CDeterministicMN> CDeterministicMNCPtr;
+class CBLSPublicKey;
 class CConnman;
 namespace llmq
 {

@@ -90,7 +90,6 @@
 #include <masternode/activemasternode.h>
 #include <dsnotificationinterface.h>
 #include <governance/governance.h>
-#include <masternode/masternodepayments.h>
 #include <masternode/masternodesync.h>
 #include <masternode/masternodemeta.h>
 #include <masternode/masternodeutils.h>
@@ -105,6 +104,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <flatdatabase.h>
+#include <llmq/quorums.h>
 #include <llmq/quorums_init.h>
 #include <evo/deterministicmns.h>
 #include <curl/curl.h>

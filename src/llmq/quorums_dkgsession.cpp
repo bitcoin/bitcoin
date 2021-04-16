@@ -9,6 +9,8 @@
 #include <llmq/quorums_dkgsessionmgr.h>
 #include <llmq/quorums_utils.h>
 
+#include <evo/deterministicmns.h>
+
 #include <evo/specialtx.h>
 
 #include <masternode/activemasternode.h>

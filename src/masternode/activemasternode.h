@@ -6,14 +6,11 @@
 #define SYSCOIN_MASTERNODE_ACTIVEMASTERNODE_H
 
 #include <chainparams.h>
-#include <key.h>
-#include <net.h>
 #include <primitives/transaction.h>
 #include <validationinterface.h>
 
-#include <evo/deterministicmns.h>
-#include <evo/providertx.h>
-
+class CBLSPublicKey;
+class CBLSSecretKey;
 struct CActiveMasternodeInfo;
 extern CActiveMasternodeInfo activeMasternodeInfo;
 

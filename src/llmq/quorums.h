@@ -5,9 +5,6 @@
 #ifndef SYSCOIN_LLMQ_QUORUMS_H
 #define SYSCOIN_LLMQ_QUORUMS_H
 
-#include <evo/evodb.h>
-#include <evo/deterministicmns.h>
-#include <llmq/quorums_commitment.h>
 #include <threadinterrupt.h>
 
 #include <validationinterface.h>
@@ -19,8 +16,12 @@
 #include <bls/bls_worker.h>
 class CNode;
 class CConnman;
+class CBlockIndex;
 
-#include <ctpl.h>
+class CDeterministicMN;
+typedef std::shared_ptr<const CDeterministicMN> CDeterministicMNCPtr;
+
+#include <evo/evodb.h>
 
 namespace llmq
 {
@@ -40,13 +41,14 @@ class CDKGSessionManager;
 class CQuorum;
 typedef std::shared_ptr<CQuorum> CQuorumPtr;
 typedef std::shared_ptr<const CQuorum> CQuorumCPtr;
-
+class CFinalCommitment;
+typedef std::shared_ptr<CFinalCommitment> CFinalCommitmentPtr;
 class CQuorum
 {
     friend class CQuorumManager;
 public:
     const Consensus::LLMQParams& params;
-    CFinalCommitment qc;
+    CFinalCommitmentPtr qc;
     const CBlockIndex* pindexQuorum;
     uint256 minedBlockHash;
     std::vector<CDeterministicMNCPtr> members;
@@ -63,7 +65,7 @@ private:
 public:
     CQuorum(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker);
     ~CQuorum();
-    void Init(const CFinalCommitment& _qc, const CBlockIndex* _pindexQuorum, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
+    void Init(const CFinalCommitmentPtr& _qc, const CBlockIndex* _pindexQuorum, const uint256& _minedBlockHash, const std::vector<CDeterministicMNCPtr>& _members);
 
     bool IsMember(const uint256& proTxHash) const;
     bool IsValidMember(const uint256& proTxHash) const;
@@ -121,7 +123,7 @@ private:
     void EnsureQuorumConnections(uint8_t llmqType, const CBlockIndex *pindexNew);
 
     bool BuildQuorumFromCommitment(const uint8_t llmqType, const CBlockIndex* pindexQuorum, std::shared_ptr<CQuorum>& quorum) const EXCLUSIVE_LOCKS_REQUIRED(quorumsCacheCs);
-    bool BuildQuorumContributions(const CFinalCommitment& fqc, std::shared_ptr<CQuorum>& quorum) const;
+    bool BuildQuorumContributions(const CFinalCommitmentPtr& fqc, std::shared_ptr<CQuorum>& quorum) const;
 
     CQuorumCPtr GetQuorum(uint8_t llmqType, const CBlockIndex* pindex) const;
     void StartCachePopulatorThread(const CQuorumCPtr pQuorum) const;

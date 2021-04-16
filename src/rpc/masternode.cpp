@@ -11,6 +11,7 @@
 #include <node/context.h>
 #include <governance/governanceclasses.h>
 #include <node/blockstorage.h>
+#include <evo/deterministicmns.h>
 RPCHelpMan masternodelist();
 
 static RPCHelpMan masternode_list()

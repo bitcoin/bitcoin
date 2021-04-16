@@ -4,11 +4,12 @@
 #ifndef SYSCOIN_MASTERNODE_MASTERNODESYNC_H
 #define SYSCOIN_MASTERNODE_MASTERNODESYNC_H
 
-#include <chain.h>
-#include <net.h>
 #include <util/translation.h>
 class CMasternodeSync;
 class PeerManager;
+class CBlockIndex;
+class CConnman;
+class CNode;
 static const int MASTERNODE_SYNC_BLOCKCHAIN      = 1;
 static const int MASTERNODE_SYNC_GOVERNANCE      = 4;
 static const int MASTERNODE_SYNC_GOVOBJ          = 10;

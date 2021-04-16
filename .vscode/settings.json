@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "algorithm": "cpp",
+        "__functional_03": "cpp",
+        "vector": "cpp"
+    }
+}

@@ -6,17 +6,13 @@
 #define SYSCOIN_EVO_DETERMINISTICMNS_H
 
 #include <arith_uint256.h>
-#include <bls/bls.h>
-#include <dbwrapper.h>
 #include <evo/evodb.h>
 #include <evo/providertx.h>
-#include <evo/simplifiedmns.h>
 #include <saltedhasher.h>
 #include <sync.h>
 #include <threadsafety.h>
 
 #include <immer/map.hpp>
-#include <immer/map_transient.hpp>
 
 #include <unordered_map>
 #include <unordered_set>
@@ -24,7 +20,7 @@
 class CBlock;
 class CBlockIndex;
 class BlockValidationState;
-
+class CSimplifiedMNListDiff;
 namespace llmq
 {
     class CFinalCommitment;

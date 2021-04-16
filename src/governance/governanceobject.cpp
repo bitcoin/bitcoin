@@ -9,6 +9,7 @@
 #include <governance/governance.h>
 #include <masternode/masternodemeta.h>
 #include <masternode/masternodesync.h>
+#include <evo/deterministicmns.h>
 #include <messagesigner.h>
 #include <spork.h>
 #include <util/system.h>

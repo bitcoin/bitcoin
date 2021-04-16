@@ -10,7 +10,7 @@
 #include <script/standard.h>
 #include <util/system.h>
 #include <threadsafety.h>
-
+#include <key_io.h>
 class CSuperblock;
 class CGovernanceTriggerManager;
 class CSuperblockManager;

@@ -204,11 +204,10 @@ bool CalcCbTxMerkleRootQuorums(const CBlock& block, const CBlockIndex* pindexPre
             auto& v = qcHashes[p.first];
             v.reserve(p.second.size());
             for (const auto& p2 : p.second) {
-                llmq::CFinalCommitment qc;
                 uint256 minedBlockHash;
-                bool found = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p2->GetBlockHash(), qc, minedBlockHash);
-                if (!found) return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "commitment-not-found");
-                v.emplace_back(::SerializeHash(qc));
+                llmq::CFinalCommitmentPtr qc = llmq::quorumBlockProcessor->GetMinedCommitment(p.first, p2->GetBlockHash(), minedBlockHash);
+                if (qc == nullptr) return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "commitment-not-found");
+                v.emplace_back(::SerializeHash(*qc));
                 hashCount++;
             }
         }

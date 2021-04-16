@@ -1,13 +1,15 @@
 // Copyright (c) 2018-2019 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
+#include <llmq/quorums.h>
+#include <llmq/quorums_commitment.h>
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_utils.h>
 #include <llmq/quorums_signing_shares.h>
 
 #include <masternode/activemasternode.h>
 #include <bls/bls_batchverifier.h>
+#include <chainparams.h>
 #include <cxxtimer.hpp>
 #include <init.h>
 #include <net_processing.h>
@@ -531,7 +533,7 @@ bool CSigningManager::PreVerifyRecoveredSig(const CRecoveredSig& recoveredSig, b
                   recoveredSig.quorumHash.ToString());
         return false;
     }
-    if (!CLLMQUtils::IsQuorumActive(llmqType, quorum->qc.quorumHash)) {
+    if (!CLLMQUtils::IsQuorumActive(llmqType, quorum->qc->quorumHash)) {
         return false;
     }
 
@@ -589,7 +591,7 @@ void CSigningManager::CollectPendingRecoveredSigsToVerify(
                     it = v.erase(it);
                     continue;
                 }
-                if (!CLLMQUtils::IsQuorumActive(llmqType, quorum->qc.quorumHash)) {
+                if (!CLLMQUtils::IsQuorumActive(llmqType, quorum->qc->quorumHash)) {
                     LogPrint(BCLog::LLMQ, "CSigningManager::%s -- quorum %s not active anymore, node=%d\n", __func__,
                               recSig->quorumHash.ToString(), nodeId);
                     it = v.erase(it);
@@ -646,7 +648,7 @@ bool CSigningManager::ProcessPendingRecoveredSigs()
             }
 
             const auto& quorum = quorums.at(std::make_pair(recSig->llmqType, recSig->quorumHash));
-            batchVerifier.PushMessage(nodeId, recSig->GetHash(), CLLMQUtils::BuildSignHash(*recSig), recSig->sig.Get(), quorum->qc.quorumPublicKey);
+            batchVerifier.PushMessage(nodeId, recSig->GetHash(), CLLMQUtils::BuildSignHash(*recSig), recSig->sig.Get(), quorum->qc->quorumPublicKey);
             verifyCount++;
         }
     }
@@ -943,7 +945,7 @@ CQuorumCPtr CSigningManager::SelectQuorumForSigning(uint8_t llmqType, const uint
     for (size_t i = 0; i < quorums.size(); i++) {
         CHashWriter h(SER_NETWORK, 0);
         h << llmqType;
-        h << quorums[i]->qc.quorumHash;
+        h << quorums[i]->qc->quorumHash;
         h << selectionHash;
         scores.emplace_back(h.GetHash(), i);
     }
@@ -958,8 +960,8 @@ bool CSigningManager::VerifyRecoveredSig(uint8_t llmqType, int signedAtHeight, c
         return false;
     }
 
-    uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, id, msgHash);
-    return sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash);
+    uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc->quorumHash, id, msgHash);
+    return sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash);
 }
 
 } // namespace llmq

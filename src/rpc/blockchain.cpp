@@ -50,6 +50,10 @@
 #include <wallet/context.h>
 #include <services/asset.h>
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums_utils.h>
+#include <llmq/quorums.h>
+#include <llmq/quorums_commitment.h>
+#include <key_io.h>
 struct CUpdatedBlock
 {
     uint256 hash;
@@ -338,7 +342,7 @@ static RPCHelpMan getchainlocks()
 
     for (const auto& pair : clsigsShares) {
         UniValue sig(UniValue::VOBJ);
-        sig.pushKV("quorumHash", pair.first->qc.quorumHash.GetHex());
+        sig.pushKV("quorumHash", pair.first->qc->quorumHash.GetHex());
         sig.pushKV("signers", llmq::CLLMQUtils::ToHexStr(pair.second->signers));
         sig.pushKV("signature", pair.second->sig.ToString());
         activeChainlockShares.push_back(sig);

@@ -1,11 +1,13 @@
 // Copyright (c) 2018-2019 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
+#include <llmq/quorums.h>
+#include <llmq/quorums_commitment.h>
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
 #include <llmq/quorums_utils.h>
 
+#include <evo/deterministicmns.h>
 #include <masternode/activemasternode.h>
 #include <bls/bls_batchverifier.h>
 #include <init.h>
@@ -485,7 +487,7 @@ void CSigSharesManager::ProcessMessageSigShare(NodeId fromId, const CSigShare& s
     if (!quorum) {
         return;
     }
-    if (!CLLMQUtils::IsQuorumActive(sigShare.llmqType, quorum->qc.quorumHash)) {
+    if (!CLLMQUtils::IsQuorumActive(sigShare.llmqType, quorum->qc->quorumHash)) {
         // quorum is too old
         return;
     }
@@ -496,7 +498,7 @@ void CSigSharesManager::ProcessMessageSigShare(NodeId fromId, const CSigShare& s
     if (quorum->quorumVvec == nullptr) {
         // TODO we should allow to ask other nodes for the quorum vvec if we missed it in the DKG
         LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- we don't have the quorum vvec for %s, no verification possible. node=%d\n", __func__,
-                 quorum->qc.quorumHash.ToString(), fromId);
+                 quorum->qc->quorumHash.ToString(), fromId);
         return;
     }
 
@@ -505,7 +507,7 @@ void CSigSharesManager::ProcessMessageSigShare(NodeId fromId, const CSigShare& s
         BanNode(fromId);
         return;
     }
-    if (!quorum->qc.validMembers[sigShare.quorumMember]) {
+    if (!quorum->qc->validMembers[sigShare.quorumMember]) {
         LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- quorumMember not valid\n", __func__);
         BanNode(fromId);
         return;
@@ -534,7 +536,7 @@ bool CSigSharesManager::PreVerifyBatchedSigShares(const CSigSharesNodeState::Ses
 {
     retBan = false;
 
-    if (!CLLMQUtils::IsQuorumActive(session.llmqType, session.quorum->qc.quorumHash)) {
+    if (!CLLMQUtils::IsQuorumActive(session.llmqType, session.quorum->qc->quorumHash)) {
         // quorum is too old
         return false;
     }
@@ -563,7 +565,7 @@ bool CSigSharesManager::PreVerifyBatchedSigShares(const CSigSharesNodeState::Ses
             retBan = true;
             return false;
         }
-        if (!session.quorum->qc.validMembers[quorumMember]) {
+        if (!session.quorum->qc->validMembers[quorumMember]) {
             LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- quorumMember not valid\n", __func__);
             retBan = true;
             return false;
@@ -786,7 +788,7 @@ void CSigSharesManager::TryRecoverSig(const CQuorumCPtr& quorum, const uint256& 
     {
         LOCK(cs);
 
-        auto signHash = CLLMQUtils::BuildSignHash(quorum->params.type, quorum->qc.quorumHash, id, msgHash);
+        auto signHash = CLLMQUtils::BuildSignHash(quorum->params.type, quorum->qc->quorumHash, id, msgHash);
         auto sigShares = this->sigShares.GetAllForSignHash(signHash);
         if (!sigShares) {
             return;
@@ -820,7 +822,7 @@ void CSigSharesManager::TryRecoverSig(const CQuorumCPtr& quorum, const uint256& 
 
     std::shared_ptr<CRecoveredSig> rs = std::make_shared<CRecoveredSig>();
     rs->llmqType = quorum->params.type;
-    rs->quorumHash = quorum->qc.quorumHash;
+    rs->quorumHash = quorum->qc->quorumHash;
     rs->id = id;
     rs->msgHash = msgHash;
     rs->sig.Set(recoveredSig);
@@ -831,7 +833,7 @@ void CSigSharesManager::TryRecoverSig(const CQuorumCPtr& quorum, const uint256& 
     // verification because this is unbatched and thus slow verification that happens here.
     if (((recoveredSigsCounter++) % 100) == 0) {
         auto signHash = CLLMQUtils::BuildSignHash(*rs);
-        bool valid = recoveredSig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash);
+        bool valid = recoveredSig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash);
         if (!valid) {
             // this should really not happen as we have verified all signature shares before
             LogPrintf("CSigSharesManager::%s -- own recovered signature is invalid. id=%s, msgHash=%s\n", __func__,
@@ -1566,7 +1568,7 @@ CSigShare CSigSharesManager::CreateSigShare(const CQuorumCPtr& quorum, const uin
 
     const CBLSSecretKey& skShare = quorum->GetSkShare();
     if (!skShare.IsValid()) {
-        LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- we don't have our skShare for quorum %s\n", __func__, quorum->qc.quorumHash.ToString());
+        LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- we don't have our skShare for quorum %s\n", __func__, quorum->qc->quorumHash.ToString());
         return {};
     }
 
@@ -1578,7 +1580,7 @@ CSigShare CSigSharesManager::CreateSigShare(const CQuorumCPtr& quorum, const uin
 
     CSigShare sigShare;
     sigShare.llmqType = quorum->params.type;
-    sigShare.quorumHash = quorum->qc.quorumHash;
+    sigShare.quorumHash = quorum->qc->quorumHash;
     sigShare.id = id;
     sigShare.msgHash = msgHash;
     sigShare.quorumMember = (uint16_t)memberIdx;
@@ -1594,7 +1596,7 @@ CSigShare CSigSharesManager::CreateSigShare(const CQuorumCPtr& quorum, const uin
     sigShare.UpdateKey();
 
     LogPrint(BCLog::LLMQ_SIGS, "CSigSharesManager::%s -- created sigShare. signHash=%s, id=%s, msgHash=%s, llmqType=%d, quorum=%s, time=%s\n", __func__,
-              signHash.ToString(), sigShare.id.ToString(), sigShare.msgHash.ToString(), quorum->params.type, quorum->qc.quorumHash.ToString(), t.count());
+              signHash.ToString(), sigShare.id.ToString(), sigShare.msgHash.ToString(), quorum->params.type, quorum->qc->quorumHash.ToString(), t.count());
 
     return sigShare;
 }
@@ -1607,7 +1609,7 @@ void CSigSharesManager::ForceReAnnouncement(const CQuorumCPtr& quorum, uint8_t l
     }
 
     LOCK(cs);
-    auto signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, id, msgHash);
+    auto signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc->quorumHash, id, msgHash);
     auto sigs = sigShares.GetAllForSignHash(signHash);
     if (sigs) {
         for (auto& p : *sigs) {

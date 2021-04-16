@@ -12,7 +12,7 @@
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
 #include <llmq/quorums_chainlocks.h>
-
+#include <consensus/validation.h>
 #include <dbwrapper.h>
 #include <net.h>
 namespace llmq

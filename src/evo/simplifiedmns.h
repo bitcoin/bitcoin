@@ -5,12 +5,8 @@
 #ifndef SYSCOIN_EVO_SIMPLIFIEDMNS_H
 #define SYSCOIN_EVO_SIMPLIFIEDMNS_H
 
-#include <bls/bls.h>
 #include <merkleblock.h>
-#include <netaddress.h>
 #include <pubkey.h>
-#include <serialize.h>
-#include <version.h>
 #include <script/standard.h>
 #include <threadsafety.h>
 #include <sync.h>

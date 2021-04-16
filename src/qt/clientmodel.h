@@ -5,7 +5,6 @@
 #ifndef SYSCOIN_QT_CLIENTMODEL_H
 #define SYSCOIN_QT_CLIENTMODEL_H
 
-#include <evo/deterministicmns.h>
 #include <sync.h>
 
 #include <QObject>
@@ -48,6 +47,8 @@ enum NumConnections {
     CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
 
+class CDeterministicMNList;
+typedef std::shared_ptr<CDeterministicMNList> CDeterministicMNListPtr;
 /** Model for Syscoin network client. */
 class ClientModel : public QObject
 {
@@ -121,7 +122,7 @@ private:
     // caches it internally for recent blocks but it's not enough to get consistent
     // representation of the list in UI during initial sync/reindex, so we cache it here too.
     mutable RecursiveMutex cs_mnlinst; // protects mnListCached
-    CDeterministicMNList mnListCached;
+    CDeterministicMNListPtr mnListCached;
 
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();

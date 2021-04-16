@@ -7,8 +7,10 @@
 #include <validation.h>
 
 #include <masternode/activemasternode.h>
+#include <evo/deterministicmns.h>
 
 #include <llmq/quorums.h>
+#include <llmq/quorums_commitment.h>
 #include <llmq/quorums_blockprocessor.h>
 #include <llmq/quorums_debug.h>
 #include <llmq/quorums_dkgsession.h>
@@ -52,7 +54,7 @@ static RPCHelpMan quorum_list()
         std::vector<llmq::CQuorumCPtr> quorums;
         llmq::quorumManager->ScanQuorums(p.first, ::ChainActive().Tip(), count > -1 ? count : p.second.signingActiveQuorumCount, quorums);
         for (auto& q : quorums) {
-            v.push_back(q->qc.quorumHash.ToString());
+            v.push_back(q->qc->quorumHash.ToString());
         }
 
         ret.pushKV(p.second.name, v);
@@ -70,7 +72,7 @@ UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMembers, b
 
     ret.pushKV("height", quorum->pindexQuorum->nHeight);
     ret.pushKV("type", quorum->params.name);
-    ret.pushKV("quorumHash", quorum->qc.quorumHash.ToString());
+    ret.pushKV("quorumHash", quorum->qc->quorumHash.ToString());
     ret.pushKV("minedBlock", quorum->minedBlockHash.ToString());
 
     if (includeMembers) {
@@ -80,8 +82,8 @@ UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMembers, b
             UniValue mo(UniValue::VOBJ);
             mo.pushKV("proTxHash", dmn->proTxHash.ToString());
             mo.pushKV("pubKeyOperator", dmn->pdmnState->pubKeyOperator.Get().ToString());
-            mo.pushKV("valid", quorum->qc.validMembers[i]);
-            if (quorum->qc.validMembers[i]) {
+            mo.pushKV("valid", quorum->qc->validMembers[i]);
+            if (quorum->qc->validMembers[i]) {
                 CBLSPublicKey pubKey = quorum->GetPubKeyShare(i);
                 if (pubKey.IsValid()) {
                     mo.pushKV("pubKeyShare", pubKey.ToString());
@@ -92,7 +94,7 @@ UniValue BuildQuorumInfo(const llmq::CQuorumCPtr& quorum, bool includeMembers, b
 
         ret.pushKV("members", membersArr);
     }
-    ret.pushKV("quorumPublicKey", quorum->qc.quorumPublicKey.ToString());
+    ret.pushKV("quorumPublicKey", quorum->qc->quorumPublicKey.ToString());
     const CBLSSecretKey& skShare = quorum->GetSkShare();
     if (includeSkShare && skShare.IsValid()) {
         ret.pushKV("secretKeyShare", skShare.ToString());
@@ -433,8 +435,8 @@ static RPCHelpMan quorum_verify()
         if (!quorum) {
             throw JSONRPCError(RPC_INVALID_PARAMETER, "quorum not found");
         }
-        uint256 signHash = llmq::CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, id, msgHash);
-        return sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash);
+        uint256 signHash = llmq::CLLMQUtils::BuildSignHash(llmqType, quorum->qc->quorumHash, id, msgHash);
+        return sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash);
     }
 },
     };
@@ -534,7 +536,7 @@ static RPCHelpMan quorum_selectquorum()
     if (!quorum) {
         throw JSONRPCError(RPC_MISC_ERROR, "no quorums active");
     }
-    ret.pushKV("quorumHash", quorum->qc.quorumHash.ToString());
+    ret.pushKV("quorumHash", quorum->qc->quorumHash.ToString());
 
     UniValue recoveryMembers(UniValue::VARR);
     for (int i = 0; i < quorum->params.recoveryMembers; i++) {

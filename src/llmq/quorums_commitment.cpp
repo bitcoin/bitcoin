@@ -5,10 +5,12 @@
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_utils.h>
 
+#include <evo/deterministicmns.h>
+#include <evo/specialtx.h>
+
 #include <chainparams.h>
 #include <validation.h>
 
-#include <evo/specialtx.h>
 #include <evo/cbtx.h>
 #include <logging.h>
 namespace llmq

@@ -7,11 +7,10 @@
 
 #include <serialize.h>
 
-#include <evo/deterministicmns.h>
-
 #include <univalue.h>
 
-#include <memory>
+#include <uint256.h>
+#include <sync.h>
 
 class CConnman;
 

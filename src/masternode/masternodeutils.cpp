@@ -3,9 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <masternode/masternodeutils.h>
+#include <evo/deterministicmns.h>
 
 #include <init.h>
 #include <masternode/masternodesync.h>
+#include <net.h>
 #include <validation.h>
 #include <shutdown.h>
 struct CompareScoreMN

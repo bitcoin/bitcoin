@@ -19,7 +19,8 @@ namespace Ui
 {
 class MasternodeList;
 }
-
+class CDeterministicMN;
+typedef std::shared_ptr<const CDeterministicMN> CDeterministicMNCPtr;
 class ClientModel;
 class WalletModel;
 

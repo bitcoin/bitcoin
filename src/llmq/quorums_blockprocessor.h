@@ -5,24 +5,21 @@
 #ifndef SYSCOIN_LLMQ_QUORUMS_BLOCKPROCESSOR_H
 #define SYSCOIN_LLMQ_QUORUMS_BLOCKPROCESSOR_H
 
-#include <llmq/quorums_commitment.h>
 #include <llmq/quorums_utils.h>
 
-#include <consensus/params.h>
-#include <primitives/transaction.h>
-#include <saltedhasher.h>
-#include <sync.h>
-
-#include <map>
 #include <unordered_map>
 #include <unordered_lru_cache.h>
+#include <saltedhasher.h>
 extern RecursiveMutex cs_main;
 class CNode;
 class CConnman;
+class CEvoDB;
 class PeerManager;
+class BlockValidationState;
 namespace llmq
 {
-
+class CFinalCommitment;
+typedef std::shared_ptr<CFinalCommitment> CFinalCommitmentPtr;
 class CQuorumBlockProcessor
 {
 private:
@@ -50,7 +47,7 @@ public:
     bool GetMinableCommitment(uint8_t llmqType, int nHeight, CFinalCommitment& ret) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     bool HasMinedCommitment(uint8_t llmqType, const uint256& quorumHash);
-    bool GetMinedCommitment(uint8_t llmqType, const uint256& quorumHash, CFinalCommitment& ret, uint256& retMinedBlockHash);
+    CFinalCommitmentPtr GetMinedCommitment(uint8_t llmqType, const uint256& quorumHash, uint256& retMinedBlockHash);
 
     void GetMinedCommitmentsUntilBlock(uint8_t llmqType, const CBlockIndex* pindex, size_t maxCount, std::vector<const CBlockIndex*> &ret);
     void GetMinedAndActiveCommitmentsUntilBlock(const CBlockIndex* pindex, std::map<uint8_t, std::vector<const CBlockIndex*>> &ret);

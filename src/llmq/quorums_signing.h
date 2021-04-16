@@ -5,21 +5,29 @@
 #ifndef SYSCOIN_LLMQ_QUORUMS_SIGNING_H
 #define SYSCOIN_LLMQ_QUORUMS_SIGNING_H
 
-#include <llmq/quorums.h>
+#include <bls/bls.h>
 
-#include <chainparams.h>
+#include <consensus/params.h>
 #include <saltedhasher.h>
 #include <univalue.h>
 #include <unordered_lru_cache.h>
 
+#include <evo/evodb.h>
+
 #include <unordered_map>
+#include <sync.h>
+#include <random.h>
 #include <streams.h>
 #include <threadsafety.h>
 typedef int64_t NodeId;
+class CNode;
+class CConnman;
 class PeerManager;
 namespace llmq
 {
 
+class CQuorum;
+typedef std::shared_ptr<const CQuorum> CQuorumCPtr;
 class CRecoveredSig
 {
 public:

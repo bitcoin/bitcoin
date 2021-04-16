@@ -4,12 +4,16 @@
 
 #include <llmq/quorums.h>
 #include <llmq/quorums_utils.h>
+#include <llmq/quorums_commitment.h>
 
+#include <bls/bls.h>
+#include <evo/deterministicmns.h>
+#include <evo/evodb.h>
 #include <chainparams.h>
 #include <random.h>
 #include <spork.h>
 #include <validation.h>
-
+#include <versionbits.h>
 #include <masternode/masternodemeta.h>
 
 namespace llmq
@@ -294,7 +298,7 @@ bool CLLMQUtils::IsQuorumActive(uint8_t llmqType, const uint256& quorumHash)
     std::vector<CQuorumCPtr> quorums;
     quorumManager->ScanQuorums(llmqType, (int)params.signingActiveQuorumCount + 1, quorums);
     for (auto& q : quorums) {
-        if (q->qc.quorumHash == quorumHash) {
+        if (q->qc->quorumHash == quorumHash) {
             return true;
         }
     }

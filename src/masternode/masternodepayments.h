@@ -5,13 +5,7 @@
 #ifndef SYSCOIN_MASTERNODE_MASTERNODEPAYMENTS_H
 #define SYSCOIN_MASTERNODE_MASTERNODEPAYMENTS_H
 
-#include <util/system.h>
-#include <core_io.h>
-#include <key.h>
-#include <net_processing.h>
-#include <util/strencodings.h>
 
-#include <evo/deterministicmns.h>
 
 class CMasternodePayments;
 

@@ -5,16 +5,18 @@
 #ifndef SYSCOIN_LLMQ_QUORUMS_DKGSESSIONHANDLER_H
 #define SYSCOIN_LLMQ_QUORUMS_DKGSESSIONHANDLER_H
 
-#include <llmq/quorums_dkgsession.h>
-
-#include <validation.h>
 
 #include <ctpl.h>
+#include <net.h>
+
+class CBLSWorker;
+class CBlockIndex;
 class CConnman;
 class PeerManager;
 namespace llmq
 {
-
+class CDKGSession;
+class CDKGSessionManager;
 enum QuorumPhase {
     QuorumPhase_None = -1,
     QuorumPhase_Initialized = 1,

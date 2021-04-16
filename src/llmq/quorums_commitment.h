@@ -7,10 +7,6 @@
 
 #include <llmq/quorums_utils.h>
 
-#include <consensus/params.h>
-
-#include <evo/deterministicmns.h>
-
 #include <bls/bls.h>
 
 #include <univalue.h>
@@ -94,7 +90,7 @@ public:
         obj.pushKV("membersSig", membersSig.ToString());
     }
 };
-
+typedef std::shared_ptr<CFinalCommitment> CFinalCommitmentPtr;
 class CFinalCommitmentTxPayload
 {
 public:

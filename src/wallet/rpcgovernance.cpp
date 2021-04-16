@@ -10,7 +10,7 @@
 #include <wallet/wallet.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
-
+#include <evo/deterministicmns.h>
 
 UniValue VoteWithMasternodes(const std::map<uint256, CKey>& keys,
                              const uint256& hash, vote_signal_enum_t eVoteSignal,

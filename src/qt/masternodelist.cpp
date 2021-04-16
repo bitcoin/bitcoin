@@ -1,6 +1,7 @@
 #include <qt/masternodelist.h>
 #include <qt/forms/ui_masternodelist.h>
 
+#include <evo/deterministicmns.h>
 #include <masternode/activemasternode.h>
 #include <qt/clientmodel.h>
 #include <clientversion.h>

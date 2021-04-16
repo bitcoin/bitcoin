@@ -4,6 +4,7 @@
 
 #include <evo/deterministicmns.h>
 #include <evo/specialtx.h>
+#include <evo/simplifiedmns.h>
 
 #include <base58.h>
 #include <chainparams.h>
@@ -15,7 +16,6 @@
 
 #include <llmq/quorums_commitment.h>
 #include <llmq/quorums_utils.h>
-
 #include <univalue.h>
 #include <shutdown.h>
 static const std::string DB_LIST_SNAPSHOT = "dmn_S";

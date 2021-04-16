@@ -5,13 +5,14 @@
 #ifndef SYSCOIN_EVO_CBTX_H
 #define SYSCOIN_EVO_CBTX_H
 
-#include <consensus/validation.h>
 #include <primitives/transaction.h>
 #include <univalue.h>
 #include <sync.h>
 extern RecursiveMutex cs_main;
 class CBlock;
 class CBlockIndex;
+class BlockValidationState;
+class TxValidationState;
 namespace llmq 
 {
     class CFinalCommitmentTxPayload;

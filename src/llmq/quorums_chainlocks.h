@@ -5,13 +5,11 @@
 #ifndef SYSCOIN_LLMQ_QUORUMS_CHAINLOCKS_H
 #define SYSCOIN_LLMQ_QUORUMS_CHAINLOCKS_H
 
-#include <llmq/quorums.h>
 #include <llmq/quorums_signing.h>
 
 #include <chainparams.h>
 
 #include <atomic>
-#include <unordered_set>
 
 
 class CBlockIndex;

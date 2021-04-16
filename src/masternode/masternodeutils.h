@@ -5,7 +5,6 @@
 #ifndef SYSCOIN_MASTERNODE_MASTERNODEUTILS_H
 #define SYSCOIN_MASTERNODE_MASTERNODEUTILS_H
 
-#include <evo/deterministicmns.h>
 
 class CConnman;
 

@@ -5,10 +5,11 @@
 #include <llmq/quorums_dkgsessionhandler.h>
 #include <llmq/quorums_dkgsessionmgr.h>
 #include <llmq/quorums_blockprocessor.h>
+#include <llmq/quorums_commitment.h>
 #include <llmq/quorums_debug.h>
 #include <llmq/quorums_init.h>
 #include <llmq/quorums_utils.h>
-
+#include <evo/deterministicmns.h>
 #include <masternode/activemasternode.h>
 #include <chainparams.h>
 #include <net_processing.h>

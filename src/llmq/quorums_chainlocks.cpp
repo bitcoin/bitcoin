@@ -3,16 +3,17 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <llmq/quorums_chainlocks.h>
+#include <llmq/quorums.h>
 #include <llmq/quorums_utils.h>
-
+#include <llmq/quorums_commitment.h>
 #include <chain.h>
+#include <consensus/validation.h>
 #include <masternode/activemasternode.h>
 #include <masternode/masternodesync.h>
 #include <net_processing.h>
 #include <spork.h>
 #include <txmempool.h>
 #include <validation.h>
-
 namespace llmq
 {
 
@@ -183,25 +184,25 @@ bool CChainLocksHandler::VerifyChainLockShare(const CChainLockSig& clsig, const 
         if (quorum == nullptr) {
             return false;
         }
-        uint256 requestId = ::SerializeHash(std::make_tuple(CLSIG_REQUESTID_PREFIX, clsig.nHeight, quorum->qc.quorumHash));
+        uint256 requestId = ::SerializeHash(std::make_tuple(CLSIG_REQUESTID_PREFIX, clsig.nHeight, quorum->qc->quorumHash));
         if ((!idIn.IsNull() && idIn != requestId)) {
             continue;
         }
         if (fHaveSigner && !clsig.signers[i]) {
             continue;
         }
-        uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, requestId, clsig.blockHash);
+        uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc->quorumHash, requestId, clsig.blockHash);
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG (%s) requestId=%s, signHash=%s\n",
                 __func__, clsig.ToString(), requestId.ToString(), signHash.ToString());
 
-        if (clsig.sig.VerifyInsecure(quorum->qc.quorumPublicKey, signHash)) {
+        if (clsig.sig.VerifyInsecure(quorum->qc->quorumPublicKey, signHash)) {
             if (idIn.IsNull() && !quorumSigningManager->HasRecoveredSigForId(llmqType, requestId)) {
                 // We can reconstruct the CRecoveredSig from the clsig and pass it to the signing manager, which
                 // avoids unnecessary double-verification of the signature. We can do this here because we just
                 // verified the sig.
                 std::shared_ptr<CRecoveredSig> rs = std::make_shared<CRecoveredSig>();
                 rs->llmqType = llmqType;
-                rs->quorumHash = quorum->qc.quorumHash;
+                rs->quorumHash = quorum->qc->quorumHash;
                 rs->id = requestId;
                 rs->msgHash = clsig.blockHash;
                 rs->sig.Set(clsig.sig);
@@ -247,9 +248,9 @@ bool CChainLocksHandler::VerifyAggregatedChainLock(const CChainLockSig& clsig, c
         if (!clsig.signers[i]) {
             continue;
         }
-        quorumPublicKeys.emplace_back(quorum->qc.quorumPublicKey);
-        uint256 requestId = ::SerializeHash(std::make_tuple(CLSIG_REQUESTID_PREFIX, clsig.nHeight, quorum->qc.quorumHash));
-        uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc.quorumHash, requestId, clsig.blockHash);
+        quorumPublicKeys.emplace_back(quorum->qc->quorumPublicKey);
+        uint256 requestId = ::SerializeHash(std::make_tuple(CLSIG_REQUESTID_PREFIX, clsig.nHeight, quorum->qc->quorumHash));
+        uint256 signHash = CLLMQUtils::BuildSignHash(llmqType, quorum->qc->quorumHash, requestId, clsig.blockHash);
         hashes.emplace_back(signHash);
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- CLSIG (%s) requestId=%s, signHash=%s\n",
                 __func__, clsig.ToString(), requestId.ToString(), signHash.ToString());
@@ -600,7 +601,7 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
                         break;
                     }
                     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum (%d, %s) didn't sign a chainlock at height %d yet\n",
-                            __func__, nQuorumIndexPrev, quorums_scanned[nQuorumIndexPrev]->qc.quorumHash.ToString(), pindex->nHeight);
+                            __func__, nQuorumIndexPrev, quorums_scanned[nQuorumIndexPrev]->qc->quorumHash.ToString(), pindex->nHeight);
                 }
             }
             if (it2 == mapSharesAtTip.end()) {
@@ -618,12 +619,12 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
                 if (shareBlockIndex != nullptr && shareBlockIndex->nHeight == pindex->nHeight) {
                     // previous quorum signed an alternative chain tip, sign it too instead
                     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum (%d, %s) signed an alternative chaintip (%s != %s) at height %d, join it\n",
-                            __func__, nQuorumIndexPrev, quorums_scanned[nQuorumIndexPrev]->qc.quorumHash.ToString(), it2->second->blockHash.ToString(), pindex->GetBlockHash().ToString(), pindex->nHeight);
+                            __func__, nQuorumIndexPrev, quorums_scanned[nQuorumIndexPrev]->qc->quorumHash.ToString(), it2->second->blockHash.ToString(), pindex->GetBlockHash().ToString(), pindex->nHeight);
                     pindex = shareBlockIndex;
                 } else if (attempt <= (int)i) {
                     // previous quorum signed some different hash we have no idea about, bail out for now
                     LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum (%d, %s) signed an unknown or an invalid blockHash (%s != %s) at height %d\n",
-                            __func__, nQuorumIndexPrev, quorums_scanned[nQuorumIndexPrev]->qc.quorumHash.ToString(), it2->second->blockHash.ToString(), pindex->GetBlockHash().ToString(), pindex->nHeight);
+                            __func__, nQuorumIndexPrev, quorums_scanned[nQuorumIndexPrev]->qc->quorumHash.ToString(), it2->second->blockHash.ToString(), pindex->GetBlockHash().ToString(), pindex->nHeight);
                     return;
                 }
                 // else
@@ -632,8 +633,8 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
             }
         }
         LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- use quorum (%d, %s) and try to sign %s at height %d\n",
-                __func__, nQuorumIndex, quorums_scanned[nQuorumIndex]->qc.quorumHash.ToString(), pindex->GetBlockHash().ToString(), pindex->nHeight);
-        uint256 requestId = ::SerializeHash(std::make_tuple(CLSIG_REQUESTID_PREFIX, pindex->nHeight, quorum->qc.quorumHash));
+                __func__, nQuorumIndex, quorums_scanned[nQuorumIndex]->qc->quorumHash.ToString(), pindex->GetBlockHash().ToString(), pindex->nHeight);
+        uint256 requestId = ::SerializeHash(std::make_tuple(CLSIG_REQUESTID_PREFIX, pindex->nHeight, quorum->qc->quorumHash));
         {
             LOCK(cs);
             if (bestChainLockWithKnownBlock.nHeight >= pindex->nHeight) {
@@ -642,7 +643,7 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
             }
             mapSignedRequestIds.try_emplace(requestId, std::make_pair(pindex->nHeight, pindex->GetBlockHash()));
         }
-        quorumSigningManager->AsyncSignIfMember(llmqType, requestId, pindex->GetBlockHash(), quorum->qc.quorumHash);
+        quorumSigningManager->AsyncSignIfMember(llmqType, requestId, pindex->GetBlockHash(), quorum->qc->quorumHash);
         if (!fMemberOfSomeQuorum && attempt < (int)quorums_scanned.size()) {
             // not a member or tried too many times, nothing to do
             attempt = attempt_start;

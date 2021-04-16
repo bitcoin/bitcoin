@@ -7,12 +7,12 @@
 #include <governance/governance.h>
 #include <governance/governanceclasses.h>
 #include <governance/governancevalidators.h>
+#include <evo/deterministicmns.h>
 #include <validation.h>
 #include <masternode/masternodesync.h>
 #include <rpc/server.h>
 #include <rpc/blockchain.h>
 #include <node/context.h>
-
 static RPCHelpMan gobject_count()
 {
     return RPCHelpMan{"gobject_count",
