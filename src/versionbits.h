@@ -96,4 +96,9 @@ public:
     void Clear();
 };
 
+/**
+ * Determine what nVersion a new block should use.
+ */
+int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params);
+
 #endif // BITCOIN_VERSIONBITS_H
