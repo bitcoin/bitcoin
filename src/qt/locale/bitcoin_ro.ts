@@ -47,11 +47,11 @@
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Alege $adresa unde să trimiteţi monede</translation>
+        <translation>Alege adresa unde să trimiteţi monede</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
-        <translation>Alege adresa la care sa primesti monedele cu</translation>
+        <translation>Alege adresa la care să primești monedele</translation>
     </message>
     <message>
         <source>C&amp;hoose</source>
@@ -174,6 +174,19 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Portofel criptat</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Introduceti o parola noua pentru portofel. &lt;br/&gt;Va rugam sa folositi o parola de &lt;b&gt; zece sau mai multe caractere&lt;/b&gt;, sau &lt;b&gt;mai mult de opt cuvinte&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Introduceţi vechea şi noua parolă pentru portofel.
+ </translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>Reţineti: criptarea portofelului dvs. nu vă poate proteja în totalitate bitcoin-urile împotriva furtului de malware care vă infectează computerul.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
@@ -482,6 +495,10 @@
         <translation>&amp;Adresele de primire</translation>
     </message>
     <message>
+        <source>Open a bitcoin: URI</source>
+        <translation>Deschidere bitcoin: o adresa URI sau o cerere de plată</translation>
+    </message>
+    <message>
         <source>Open Wallet</source>
         <translation>Deschide portofel</translation>
     </message>
@@ -764,6 +781,10 @@
 <context>
     <name>CreateWalletActivity</name>
     <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>Creare Portofel &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
         <source>Create wallet failed</source>
         <translation>Crearea portofelului a eşuat</translation>
     </message>
@@ -797,6 +818,14 @@
     <message>
         <source>Disable Private Keys</source>
         <translation>Dezactivează cheile private</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>Faceți Portofel gol</translation>
     </message>
     <message>
         <source>Create</source>
@@ -1023,6 +1052,14 @@
 </context>
 <context>
     <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>Deschiderea portofelului a eșuat</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>Atenționare la deschiderea portofelului</translation>
+    </message>
     <message>
         <source>default wallet</source>
         <translation>portofel implicit</translation>
@@ -3326,6 +3363,10 @@ Nota: Cum taxa este calculata per byte, o taxa de "100 satoshi per kB" pentru o 
         <translation>Eroare la actualizarea bazei de date chainstate</translation>
     </message>
     <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation>Eroare: Spațiul pe disc este redus pentru %s</translation>
+    </message>
+    <message>
         <source>Invalid -onion address or hostname: '%s'</source>
         <translation>Adresa sau hostname -onion invalide: '%s'</translation>
     </message>
@@ -3364,6 +3405,12 @@ Nota: Cum taxa este calculata per byte, o taxa de "100 satoshi per kB" pentru o 
     <message>
         <source>Specified -walletdir "%s" is not a directory</source>
         <translation>-walletdir "%s" specificat nu este un director</translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist
+</source>
+        <translation>Fișierul de configurare specificat %s nu există
+</translation>
     </message>
     <message>
         <source>The transaction amount is too small to pay the fee</source>

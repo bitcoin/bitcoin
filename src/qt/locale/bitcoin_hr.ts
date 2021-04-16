@@ -1081,12 +1081,20 @@
         <translation>Esc</translation>
     </message>
     <message>
+        <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
+        <translation>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</translation>
+    </message>
+    <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
         <translation>Nepoznato. Sinkroniziranje zaglavlja (%1, %2%)...</translation>
     </message>
 </context>
 <context>
     <name>OpenURIDialog</name>
+    <message>
+        <source>Open bitcoin URI</source>
+        <translation>Otvori bitcoin: URI</translation>
+    </message>
     <message>
         <source>URI:</source>
         <translation>URI:</translation>
@@ -1487,6 +1495,10 @@
         <translation>'bitcoin://' nije ispravan URI. Koristite 'bitcoin:' umjesto toga.</translation>
     </message>
     <message>
+        <source>Cannot process payment request because BIP70 is not supported.</source>
+        <translation>Ne može se obraditi zahtjev jer BIP70 nije podržan</translation>
+    </message>
+    <message>
         <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
         <translation>Zbog rasprostranjenih sigurnosnih mana u BIP70-u, strogo se preporučuje da se ignoriraju bilo kakve naredbe o zamjeni novčanika sa strane trgovca.</translation>
     </message>
@@ -1791,6 +1803,10 @@
         <translation>Broj sinkronizranih blokova</translation>
     </message>
     <message>
+        <source>Mapped AS</source>
+        <translation>Mapirano kao</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>Korisnički agent</translation>
     </message>
@@ -1996,6 +2012,10 @@
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>Opcionalan iznos koji možete zahtijevati. Ostavite ovo prazno ili unesite nulu ako ne želite zahtijevati specifičan iznos.</translation>
+    </message>
+    <message>
+        <source>An optional message that is attached to the payment request and may be displayed to the sender.</source>
+        <translation>Izborna poruka je priložena zahtjevu za plaćanje i može se prikazati pošiljatelju.</translation>
     </message>
     <message>
         <source>&amp;Create new receiving address</source>
@@ -2316,6 +2336,10 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
         <translation>%1 (%2 blokova)</translation>
     </message>
     <message>
+        <source>Cr&amp;eate Unsigned</source>
+        <translation>Cr&amp;eate nije potpisan</translation>
+    </message>
+    <message>
         <source> from wallet '%1'</source>
         <translation>iz novčanika '%1'</translation>
     </message>
@@ -2326,6 +2350,10 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message>
         <source>%1 to %2</source>
         <translation>%1 na %2</translation>
+    </message>
+    <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>Želite li kreirati nacrt transakcije?</translation>
     </message>
     <message>
         <source>Are you sure you want to send?</source>
@@ -2364,8 +2392,16 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
         <translation>Potvrdi slanje novca</translation>
     </message>
     <message>
+        <source>Confirm transaction proposal</source>
+        <translation>Potvrdi predloženu transakciju </translation>
+    </message>
+    <message>
         <source>Send</source>
         <translation>Pošalji</translation>
+    </message>
+    <message>
+        <source>Watch-only balance:</source>
+        <translation>Saldo samo za gledanje:</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2591,6 +2627,14 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message>
         <source>The Bitcoin address the message was signed with</source>
         <translation>Bitcoin adresa kojom je poruka potpisana</translation>
+    </message>
+    <message>
+        <source>The signed message to verify</source>
+        <translation>Potpisana poruka za provjeru</translation>
+    </message>
+    <message>
+        <source>The signature given when the message was signed</source>
+        <translation>Potpis predan kad je poruka bila potpisana</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
@@ -3184,6 +3228,14 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
         <translation>Potvrdite povećanje naknade</translation>
     </message>
     <message>
+        <source>Can't draft transaction.</source>
+        <translation>Nije moguće pripremiti nacrt transakcije</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>PSBT kopiran</translation>
+    </message>
+    <message>
         <source>Can't sign transaction.</source>
         <translation>Transakcija ne može biti potpisana.</translation>
     </message>
@@ -3336,6 +3388,14 @@ Napomena: Budući da se naknada računa po bajtu, naknada od "100 satošija po k
     <message>
         <source>Corrupted block database detected</source>
         <translation>Pokvarena baza blokova otkrivena</translation>
+    </message>
+    <message>
+        <source>Could not find asmap file %s</source>
+        <translation>Nije pronađena asmap datoteka %s</translation>
+    </message>
+    <message>
+        <source>Could not parse asmap file %s</source>
+        <translation>Nije moguće pročitati asmap datoteku %s</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>

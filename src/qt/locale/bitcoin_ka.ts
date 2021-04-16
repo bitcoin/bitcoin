@@ -132,6 +132,10 @@
         <translation>გაიმეორეთ ახალი ფრაზა-პაროლი</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>აჩვენეთ საიდუმლო ფრაზა</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>საფულის დაშიფრვა</translation>
     </message>
@@ -170,6 +174,30 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>საფულე დაშიფრულია</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>შეიყვანეთ საფულის ახალი საიდუმლო ფრაზა .1 გამოიყენეთ მე –2 ან მეტი შემთხვევითი სიმბოლოების 2 ან 3 – ზე მეტი რვა ან მეტი სიტყვის პაროლი 3.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>შეიყვანეთ ძველი საიდუმლო ფრაზა და ახალი საიდუმლო ფრაზა საფულისთვის</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>გახსოვდეთ, რომ თქვენი საფულის დაშიფვრა ვერ უზრუნველყოფს სრულად დაიცვას თქვენი ბიტკოინების მოპარვა კომპიუტერში მავნე პროგრამებით.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>დაშიფრულია საფულე</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>თქვენი საფულე იშიფრება</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>თქვენი საფულე ახლა დაშიფრულია</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -214,7 +242,11 @@
         <source>IP/Netmask</source>
         <translation>IP/ქსელის მასკა</translation>
     </message>
-    </context>
+    <message>
+        <source>Banned Until</source>
+        <translation>სანამ აიკრძალა</translation>
+    </message>
+</context>
 <context>
     <name>BitcoinGUI</name>
     <message>
@@ -290,6 +322,14 @@
         <translation>&amp;URI-ის გახსნა...</translation>
     </message>
     <message>
+        <source>Create Wallet...</source>
+        <translation>შექმენით საფულე</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>შექმენით ახალი საფულე</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation>საფულე:</translation>
     </message>
@@ -300,6 +340,10 @@
     <message>
         <source>Network activity disabled.</source>
         <translation>ქსელური აქტივობა გათიშულია.</translation>
+    </message>
+    <message>
+        <source>Click to enable network activity again.</source>
+        <translation>დააჭირეთ ქსელის აქტივობის კვლავ ჩართვას</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -382,6 +426,14 @@
         <translation>საკომანდო სტრიქონის ოპ&amp;ციები</translation>
     </message>
     <message>
+        <source>Indexing blocks on disk...</source>
+        <translation>ინდექსაციის ბლოკები დისკზე </translation>
+    </message>
+    <message>
+        <source>Processing blocks on disk...</source>
+        <translation>დამუშავება ბლოკები დისკზე</translation>
+    </message>
+    <message>
         <source>%1 behind</source>
         <translation>%1 გავლილია</translation>
     </message>
@@ -408,6 +460,38 @@
     <message>
         <source>Up to date</source>
         <translation>განახლებულია</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>კვანძის ფანჯარა</translation>
+    </message>
+    <message>
+        <source>Open node debugging and diagnostic console</source>
+        <translation>გახსენით კვანძის გამართვის და დიაგნოსტიკური კონსოლი</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses</source>
+        <translation>მისამართების გაგზავნა</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>მისამართების მიღება</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI</source>
+        <translation>გახსენით ბიტკოინი: URI</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>ღია საფულე</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>გახსენით საფულე</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>საფულის ფახურვა</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -1106,6 +1190,10 @@
     <message>
         <source>Block chain</source>
         <translation>ბლოკთა ჯაჭვი</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>კვანძის ფანჯარა</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1988,7 +2076,11 @@
     </context>
 <context>
     <name>WalletFrame</name>
-    </context>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>შექმენით ახალი საფულე</translation>
+    </message>
+</context>
 <context>
     <name>WalletModel</name>
     <message>

@@ -164,12 +164,24 @@
         <translation>Apstiprināt maciņa šifrēšanu</translation>
     </message>
     <message>
+        <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
+        <translation>Brīdinājums: Šifrējot Jūsu maciņu, gadījumā ja aizmirsīsiet savu paroli, Jūs NEATGRIEZENISKI ZAUDĒSIET VISUS SAVUS "BITKOINUS"!</translation>
+    </message>
+    <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>Vai tu tiešām vēlies šifrēt savu maciņu?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
         <translation>Maciņš šifrēts</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Ievadiet savu paroli Jūsu maciņam, lūdzu lietojiet vismaz desmit simbolus, astoņus vai vairāk vārdus.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Ievadiet veco un jauno paroli Jūsu maciņam</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
@@ -182,6 +194,14 @@
     <message>
         <source>Wallet encryption failed</source>
         <translation>Maciņa šifrēšana neizdevās</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>Maciņa atslēgšana neizdevās</translation>
+    </message>
+    <message>
+        <source>Wallet decryption failed</source>
+        <translation>Maciņa atšifrēšana neizdevās</translation>
     </message>
     </context>
 <context>
@@ -220,6 +240,10 @@
     <message>
         <source>Quit application</source>
         <translation>Aizvērt programmu</translation>
+    </message>
+    <message>
+        <source>&amp;About %1</source>
+        <translation>&amp;Par %1</translation>
     </message>
     <message>
         <source>About &amp;Qt</source>

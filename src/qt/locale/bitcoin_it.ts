@@ -549,11 +549,11 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
     </message>
     <message>
         <source>&amp;Mask values</source>
-        <translation>&amp;Valori della maschera</translation>
+        <translation>&amp;Mascherare gli importi</translation>
     </message>
     <message>
         <source>Mask the values in the Overview tab</source>
-        <translation>Maschera i valori nella sezione "Panoramica"</translation>
+        <translation>Maschera gli importi nella sezione "Panoramica"</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -884,7 +884,11 @@ E' possibile firmare solo con indirizzi di tipo "legacy".</translation>
         <source>Create</source>
         <translation>Crea</translation>
     </message>
-    </context>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>Compilato senza il supporto a sqlite (richiesto per i wallet descrittori)</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1502,7 +1506,7 @@ Per specificare più URL separarli con una barra verticale "|".</translation>
     </message>
     <message>
         <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
-        <translation>Modalità privacy attivata per la scheda "Panoramica". Per smascherare i valori, deseleziona Impostazioni-&gt; Valori maschera.</translation>
+        <translation>Modalità privacy attivata per la scheda "Panoramica". Per mostrare gli importi, deseleziona Impostazioni-&gt; Mascherare gli importi.</translation>
     </message>
 </context>
 <context>
@@ -3585,6 +3589,14 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
         <translation>Per favore contribuite se ritenete %s utile. Visitate %s per maggiori informazioni riguardo il software.</translation>
     </message>
     <message>
+        <source>SQLiteDatabase: Failed to prepare the statement to fetch the application id: %s</source>
+        <translation>SQLiteDatabase: Impossibile preparare l'istruzione per recuperare l'id dell'applicazione: %s </translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
+        <translation>SQLiteDatabase: Versione dello schema del portafoglio sqlite sconosciuta %d. Solo la versione %d è supportata</translation>
+    </message>
+    <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
         <translation>Il database dei blocchi contiene un blocco che sembra provenire dal futuro. Questo può essere dovuto alla data e ora del tuo computer impostate in modo scorretto. Ricostruisci il database dei blocchi se sei certo che la data e l'ora sul tuo computer siano corrette</translation>
     </message>
@@ -3725,6 +3737,10 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
         <translation>SQLiteDatabase: Errore nell'eseguire l'operazione di verifica del database: %s</translation>
     </message>
     <message>
+        <source>SQLiteDatabase: Failed to fetch sqlite wallet schema version: %s</source>
+        <translation>SQLiteDatabase: Impossibile recuperare la versione dello schema del portafoglio sqlite: %s </translation>
+    </message>
+    <message>
         <source>SQLiteDatabase: Failed to prepare statement to verify database: %s</source>
         <translation>SQLiteDatabase: Errore nel verificare il database: %s</translation>
     </message>
@@ -3839,6 +3855,10 @@ Vai su File &gt; Apri Portafoglio per caricare un portafoglio.
     <message>
         <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
         <translation>Questo errore potrebbe essersi verificato se questo portafoglio non è stato chiuso in modo pulito ed è stato caricato l'ultima volta utilizzando una build con una versione più recente di Berkeley DB. In tal caso, utilizza il software che ha caricato per ultimo questo portafoglio</translation>
+    </message>
+    <message>
+        <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
+        <translation>Questa è la commissione di transazione massima che puoi pagare (in aggiunta alla normale commissione) per dare la priorità ad una spesa parziale rispetto alla classica selezione delle monete.</translation>
     </message>
     <message>
         <source>Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.</source>

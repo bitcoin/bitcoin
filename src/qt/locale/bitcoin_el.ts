@@ -637,7 +637,11 @@
         <source>Original message:</source>
         <translation>Αρχικό Μήνυμα:</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation>Συνέβη ενα μοιραίο σφάλμα. %1 δε μπορεί να συνεχιστεί με ασφάλεια και θα σταματήσει</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -658,7 +662,7 @@
     </message>
     <message>
         <source>Fee:</source>
-        <translation>Ταρίφα:</translation>
+        <translation>Τέλη:</translation>
     </message>
     <message>
         <source>Dust:</source>
@@ -666,7 +670,7 @@
     </message>
     <message>
         <source>After Fee:</source>
-        <translation>Ταρίφα αλλαγής:</translation>
+        <translation>Τέλη αλλαγής:</translation>
     </message>
     <message>
         <source>Change:</source>
@@ -842,7 +846,11 @@
         <source>Create</source>
         <translation>Δημιουργία</translation>
     </message>
-    </context>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>Μεταγλωτίστηκε χωρίς την υποστήριξη sqlite (απαραίτητη για περιγραφικά πορτοφόλια )</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1450,6 +1458,10 @@
         <translation>Αποθήκευση...</translation>
     </message>
     <message>
+        <source>Close</source>
+        <translation>Κλείσιμο</translation>
+    </message>
+    <message>
         <source>Failed to load transaction: %1</source>
         <translation>Αποτυχία φόρτωσης μεταφοράς: %1</translation>
     </message>
@@ -1458,8 +1470,21 @@
         <translation>Αποτυχία εκπλήρωσης συναλλαγής: %1</translation>
     </message>
     <message>
+        <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
+        <translation>Η συναλλαγή υπογράφηκε με επιτυχία. Η συναλλαγή είναι έτοιμη για μετάδοση.</translation>
+    </message>
+    <message>
         <source>Unknown error processing transaction.</source>
         <translation>Άγνωστο λάθος  επεξεργασίας μεταφοράς.</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast successfully! Transaction ID: %1</source>
+        <translation>Έγινε επιτυχής αναμετάδοση της συναλλαγής! 
+ID Συναλλαγής: %1</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast failed: %1</source>
+        <translation>Η αναμετάδοση της συναλαγής απέτυχε: %1</translation>
     </message>
     <message>
         <source>PSBT copied to clipboard.</source>
