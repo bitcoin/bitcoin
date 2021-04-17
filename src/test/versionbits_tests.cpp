@@ -81,11 +81,9 @@ class VersionBitsTester
     TestNeverActiveConditionChecker checker_never[CHECKERS];
 
     // Test counter (to identify failures)
-    int num;
+    int num{1000};
 
 public:
-    VersionBitsTester() : num(1000) {}
-
     VersionBitsTester& Reset() {
         // Have each group of tests be counted by the 1000s part, starting at 1000
         num = num - (num % 1000) + 1000;
@@ -300,7 +298,7 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
     BOOST_REQUIRE(0 <= bit && bit < 32);
     BOOST_REQUIRE(((1 << bit) & VERSIONBITS_TOP_MASK) == 0);
     BOOST_REQUIRE(min_activation_height >= 0);
-    BOOST_REQUIRE_EQUAL(min_activation_height % params.nMinerConfirmationWindow, 0);
+    BOOST_REQUIRE_EQUAL(min_activation_height % params.nMinerConfirmationWindow, 0U);
 
     // In the first chain, test that the bit is set by CBV until it has failed.
     // In the second chain, test the bit is set by CBV while STARTED and
