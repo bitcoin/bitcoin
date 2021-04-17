@@ -98,6 +98,8 @@ class WalletTest(BitcoinTestFramework):
         # but invisible if you include mempool
         txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index, False)
         assert_equal(txout['value'], 500)
+        txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index)  # by default include_mempool=True
+        assert txout is None
         txout = self.nodes[0].gettxout(confirmed_txid, confirmed_index, True)
         assert txout is None
         # new utxo from mempool should be invisible if you exclude mempool
