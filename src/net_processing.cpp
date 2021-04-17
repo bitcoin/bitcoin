@@ -1637,7 +1637,6 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
             }
 
             if (!push && inv.type == MSG_GOVERNANCE_OBJECT) {
-                LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: inv = %s\n", inv.ToString());
                 CDataStream ss(SER_NETWORK, pfrom->GetSendVersion());
                 bool topush = false;
                 {
@@ -1648,7 +1647,6 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                         }
                     }
                 }
-                LogPrint(BCLog::NET, "ProcessGetData -- MSG_GOVERNANCE_OBJECT: topush = %d, inv = %s\n", topush, inv.ToString());
                 if(topush) {
                     connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECT, ss));
                     push = true;
@@ -1667,7 +1665,6 @@ void static ProcessGetData(CNode* pfrom, const CChainParams& chainparams, CConnm
                     }
                 }
                 if(topush) {
-                    LogPrint(BCLog::NET, "ProcessGetData -- pushing: inv = %s\n", inv.ToString());
                     connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::MNGOVERNANCEOBJECTVOTE, ss));
                     push = true;
                 }

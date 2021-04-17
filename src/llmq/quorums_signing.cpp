@@ -91,7 +91,7 @@ void CRecoveredSigsDb::ConvertInvalidTimeKeys()
 // This causes cleanup of all these votes a week later.
 void CRecoveredSigsDb::AddVoteTimeKeys()
 {
-    LogPrintf("CRecoveredSigsDb::%s -- adding rs_vt keys with current time\n", __func__);
+    LogPrint(BCLog::LLMQ, "CRecoveredSigsDb::%s -- adding rs_vt keys with current time\n", __func__);
 
     auto curTime = GetAdjustedTime();
 
@@ -123,7 +123,7 @@ void CRecoveredSigsDb::AddVoteTimeKeys()
 
     db.WriteBatch(batch);
 
-    LogPrintf("CRecoveredSigsDb::%s -- added %d rs_vt entries\n", __func__, cnt);
+    LogPrint(BCLog::LLMQ, "CRecoveredSigsDb::%s -- added %d rs_vt entries\n", __func__, cnt);
 }
 
 bool CRecoveredSigsDb::HasRecoveredSig(Consensus::LLMQType llmqType, const uint256& id, const uint256& msgHash)

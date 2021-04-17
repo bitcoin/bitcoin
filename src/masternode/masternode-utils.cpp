@@ -55,9 +55,9 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
         if (fFound) return; // do NOT disconnect mixing masternodes
 #endif // ENABLE_WALLET
         if (fLogIPs) {
-            LogPrintf("Closing Masternode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToString());
+            LogPrint(BCLog::NET_NETCONN, "Closing Masternode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToString());
         } else {
-            LogPrintf("Closing Masternode connection: peer=%d\n", pnode->GetId());
+            LogPrint(BCLog::NET_NETCONN, "Closing Masternode connection: peer=%d\n", pnode->GetId());
         }
         pnode->fDisconnect = true;
     });

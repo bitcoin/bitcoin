@@ -1090,20 +1090,20 @@ public:
         LOCK(cs_inventory);
         if (inv.type == MSG_TX || inv.type == MSG_DSTX) {
             if (!filterInventoryKnown.contains(inv.hash)) {
-                LogPrint(BCLog::NET, "PushInventory --  inv: %s peer=%d\n", inv.ToString(), id);
+                LogPrint(BCLog::NET, "%s -- adding new inv: %s peer=%d\n", __func__, inv.ToString(), id);
                 setInventoryTxToSend.insert(inv.hash);
             } else {
-                LogPrint(BCLog::NET, "PushInventory --  filtered inv: %s peer=%d\n", inv.ToString(), id);
+                LogPrint(BCLog::NET, "%s -- skipping known inv: %s peer=%d\n", __func__, inv.ToString(), id);
             }
         } else if (inv.type == MSG_BLOCK) {
-            LogPrint(BCLog::NET, "PushInventory --  inv: %s peer=%d\n", inv.ToString(), id);
+            LogPrint(BCLog::NET, "%s -- adding new inv: %s peer=%d\n", __func__, inv.ToString(), id);
             vInventoryBlockToSend.push_back(inv.hash);
         } else {
             if (!filterInventoryKnown.contains(inv.hash)) {
-                LogPrint(BCLog::NET, "PushInventory --  inv: %s peer=%d\n", inv.ToString(), id);
+                LogPrint(BCLog::NET, "%s -- adding new inv: %s peer=%d\n", __func__, inv.ToString(), id);
                 vInventoryOtherToSend.push_back(inv);
             } else {
-                LogPrint(BCLog::NET, "PushInventory --  filtered inv: %s peer=%d\n", inv.ToString(), id);
+                LogPrint(BCLog::NET, "%s -- skipping known inv: %s peer=%d\n", __func__, inv.ToString(), id);
             }
         }
     }

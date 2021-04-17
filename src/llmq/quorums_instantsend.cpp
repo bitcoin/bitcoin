@@ -794,7 +794,7 @@ bool CInstantSendManager::ProcessPendingInstantSendLocks()
     // First check against the current active set and don't ban
     auto badISLocks = ProcessPendingInstantSendLocks(0, pend, false);
     if (!badISLocks.empty()) {
-        LogPrintf("CInstantSendManager::%s -- doing verification on old active set\n", __func__);
+        LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- doing verification on old active set\n", __func__);
 
         // filter out valid IS locks from "pend"
         for (auto it = pend.begin(); it != pend.end(); ) {
