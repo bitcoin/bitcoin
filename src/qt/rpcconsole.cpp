@@ -494,7 +494,7 @@ RPCConsole::RPCConsole(interfaces::Node& node, const PlatformStyle *_platformSty
     ui->lineEdit->setMaxLength(16 * 1024 * 1024);
     ui->messagesWidget->installEventFilter(this);
 
-    connect(ui->clearButton, &QPushButton::clicked, this, &RPCConsole::clear);
+    connect(ui->clearButton, &QPushButton::clicked, [this] { clear(/* clearHistory */ false); });
     connect(ui->fontBiggerButton, &QPushButton::clicked, this, &RPCConsole::fontBigger);
     connect(ui->fontSmallerButton, &QPushButton::clicked, this, &RPCConsole::fontSmaller);
     connect(ui->btnClearTrafficGraph, &QPushButton::clicked, ui->trafficGraph, &TrafficGraphWidget::clear);
