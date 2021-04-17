@@ -776,15 +776,15 @@ void RPCConsole::setFontSize(int newSize)
 
     // clear console (reset icon sizes, default stylesheet) and re-add the content
     float oldPosFactor = 1.0 / ui->messagesWidget->verticalScrollBar()->maximum() * ui->messagesWidget->verticalScrollBar()->value();
-    clear();
+    clear(/* keep_prompt */ true);
     ui->messagesWidget->setHtml(str);
     ui->messagesWidget->verticalScrollBar()->setValue(oldPosFactor * ui->messagesWidget->verticalScrollBar()->maximum());
 }
 
-void RPCConsole::clear()
+void RPCConsole::clear(bool keep_prompt)
 {
     ui->messagesWidget->clear();
-    ui->lineEdit->clear();
+    if (!keep_prompt) ui->lineEdit->clear();
     ui->lineEdit->setFocus();
 
     // Add smoothly scaled icon images.
