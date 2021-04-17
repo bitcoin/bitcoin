@@ -34,11 +34,18 @@ jobs:
 
     - name: Docker meta
       id: docker_meta
-      uses: crazy-max/ghaction-docker-meta@v1
+      uses: crazy-max/ghaction-docker-meta@v2
       with:
         images: dashpay/dashd
-        tag-match: v(.*)
-        tag-match-group: 1
+        tags: |
+          type=match,pattern=v(\d+.\d+.\d+.\d+),group=1,enable=${{ !contains(github.event.release.tag_name, '-rc') }}
+          type=match,pattern=v(\d+.\d+.\d+),group=1,enable=${{ !contains(github.event.release.tag_name, '-rc') }}
+          type=match,pattern=v(\d+.\d+),group=1,enable=${{ !contains(github.event.release.tag_name, '-rc') }}
+          type=raw,value=latest,enable=${{ !contains(github.event.release.tag_name, '-rc') }}
+          type=match,pattern=v(.*),group=1,latest=false,enable=${{ contains(github.event.release.tag_name, '-rc') }}
+          type=raw,value=latest-dev,enable=${{ contains(github.event.release.tag_name, '-rc') }}
+        flavor: |
+          latest=false
 
     - name: Build and push
       id: docker_build
