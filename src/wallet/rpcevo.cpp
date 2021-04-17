@@ -1033,7 +1033,7 @@ static RPCHelpMan protx_list_wallet()
     if (wallet)
         pwallet = wallet.get();
 
-    const NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     UniValue ret(UniValue::VARR);
 
     if (!pwallet) {
@@ -1089,7 +1089,7 @@ static RPCHelpMan protx_info_wallet()
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     if (wallet)
         pwallet = wallet.get();
-    const NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     uint256 proTxHash = ParseHashV(request.params[0], "proTxHash");
     CDeterministicMNList mnList;
     if(deterministicMNManager)

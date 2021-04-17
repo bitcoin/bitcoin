@@ -76,7 +76,7 @@ static RPCHelpMan masternode_connect()
     CService addr;
     if (!Lookup(strAddress.c_str(), addr, 0, false))
         throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect masternode address %s", strAddress));
-  NodeContext& node = EnsureNodeContext(request.context);
+  NodeContext& node = EnsureAnyNodeContext(request.context);
   if(!node.connman)
       throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     // TODO: Pass CConnman instance somehow and don't use global variable.
@@ -331,7 +331,7 @@ RPCHelpMan masternode_payments()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     CBlockIndex* pindex{nullptr};
-    const NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     if (request.params[0].isNull()) {
         LOCK(cs_main);
         pindex = ::ChainActive().Tip();

@@ -131,13 +131,13 @@ AuxpowMiner::lookupSavedBlock (const std::string& hashHex) const
 UniValue
 AuxpowMiner::createAuxBlock (const CScript& scriptPubKey, const std::any& context)
 {
-  NodeContext& node = EnsureNodeContext(context);
+  NodeContext& node = EnsureAnyNodeContext(context);
   if(!node.connman)
       throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
   auxMiningCheck (*node.connman);
   LOCK (cs);
 
-  const auto& mempool = EnsureMemPool (context);
+  const auto& mempool = EnsureAnyMemPool (context);
 
   uint256 target;
   const CBlock* pblock = getCurrentBlock (mempool, scriptPubKey, target);
@@ -159,7 +159,7 @@ bool
 AuxpowMiner::submitAuxBlock (const std::string& hashHex,
                              const std::string& auxpowHex, const std::any& context) const
 {
-  NodeContext& node = EnsureNodeContext(context);
+  NodeContext& node = EnsureAnyNodeContext(context);
   if(!node.connman)
       throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
   auxMiningCheck (*node.connman);
@@ -177,7 +177,7 @@ AuxpowMiner::submitAuxBlock (const std::string& hashHex,
   ss >> *pow;
   shared_block->SetAuxpow (std::move (pow));
   CHECK_NONFATAL(shared_block->GetHash ().GetHex () == hashHex);
-  return EnsureChainman(context).ProcessNewBlock (Params (), shared_block, true, nullptr);
+  return EnsureAnyChainman(context).ProcessNewBlock (Params (), shared_block, true, nullptr);
 }
 
 AuxpowMiner&

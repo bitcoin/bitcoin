@@ -59,7 +59,7 @@ static RPCHelpMan protx_list()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 
-    const NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     std::string type = "registered";
     if (!request.params[0].isNull()) {
         type = request.params[0].get_str();
@@ -108,7 +108,7 @@ static RPCHelpMan protx_info()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
     uint256 proTxHash = ParseHashV(request.params[0], "proTxHash");
     CDeterministicMNList mnList;
     if(deterministicMNManager)

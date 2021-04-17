@@ -174,7 +174,7 @@ static RPCHelpMan quorum_dkgstatus()
 
     UniValue minableCommitments(UniValue::VOBJ);
     UniValue quorumConnections(UniValue::VOBJ);
-    NodeContext& node = EnsureNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 

@@ -133,7 +133,7 @@ static RPCHelpMan gobject_submit()
     if(!masternodeSync.IsBlockchainSynced()) {
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
     }
-    NodeContext& node = EnsureNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     CDeterministicMNList mnList;
@@ -239,7 +239,7 @@ static RPCHelpMan gobject_vote_conf()
         },
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    NodeContext& node = EnsureNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
@@ -618,7 +618,7 @@ static RPCHelpMan voteraw()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 
-    NodeContext& node = EnsureNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 

@@ -209,8 +209,7 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainParams);
 
 // SYSCOIN
-// TODO just accept a CBlockIndex*
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
-void RegenerateCommitments(CBlock& block, BlockManager& blockman, const std::vector<unsigned char> &vchExtraData);
+void RegenerateCommitments(CBlock& block, CBlockIndex* prev_block, const std::vector<unsigned char> &vchExtraData);
 
 #endif // SYSCOIN_MINER_H

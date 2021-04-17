@@ -291,7 +291,8 @@ CBlock TestChain100Setup::CreateAndProcessBlock(const std::vector<CMutableTransa
     }
     // SYSCOIN
     std::vector<unsigned char> vchCoinbaseCommitmentExtra(ds.begin(), ds.end());
-    RegenerateCommitments(block, WITH_LOCK(::cs_main, return std::ref(g_chainman.m_blockman)), vchCoinbaseCommitmentExtra);
+    CBlockIndex* prev_block = WITH_LOCK(::cs_main, return g_chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock));
+    RegenerateCommitments(block, prev_block, vchCoinbaseCommitmentExtra);
 
     while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
 

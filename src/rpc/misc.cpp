@@ -46,7 +46,7 @@ static RPCHelpMan mnsync()
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 
-    NodeContext& node = EnsureNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     std::string strMode = request.params[0].get_str();
 
     if(strMode == "status") {
@@ -108,7 +108,7 @@ static RPCHelpMan spork()
 {
     std::string strCommand = request.params[0].get_str();
     if(strCommand != "show" && strCommand != "active") {
-        NodeContext& node = EnsureNodeContext(request.context);
+        NodeContext& node = EnsureAnyNodeContext(request.context);
         // advanced mode, update spork values
         int nSporkID = sporkManager.GetSporkIDByName(request.params[0].get_str());
         if(nSporkID == SPORK_INVALID)
@@ -326,7 +326,7 @@ static RPCHelpMan mnauth()
             },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    NodeContext& node = EnsureNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     if(!node.connman)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
     if (!Params().MineBlocksOnDemand())

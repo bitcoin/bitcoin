@@ -39,7 +39,7 @@ double GetDifficulty(const CBlockIndex* blockindex);
 void RPCNotifyBlockChange(const CBlockIndex*);
 
 /** Block description to JSON */
-UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, bool txDetails = false) LOCKS_EXCLUDED(cs_main);
+UniValue blockToJSON(const CBlock& block, const CBlockIndex* tip, const CBlockIndex* blockindex, bool txDetails = false, ChainstateManager* chainstate = nullptr) LOCKS_EXCLUDED(cs_main);
 
 /** Mempool information to JSON */
 UniValue MempoolInfoToJSON(const CTxMemPool& pool);
@@ -56,10 +56,13 @@ void CalculatePercentilesByWeight(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES],
 void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex);
 void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex = true, int serialize_flags = 0, const CTxUndo* txundo = nullptr);
 
-NodeContext& EnsureNodeContext(const std::any& context);
-CTxMemPool& EnsureMemPool(const std::any& context);
-ChainstateManager& EnsureChainman(const std::any& context);
-CBlockPolicyEstimator& EnsureFeeEstimator(const std::any& context);
+NodeContext& EnsureAnyNodeContext(const std::any& context);
+CTxMemPool& EnsureMemPool(const NodeContext& node);
+CTxMemPool& EnsureAnyMemPool(const std::any& context);
+ChainstateManager& EnsureChainman(const NodeContext& node);
+ChainstateManager& EnsureAnyChainman(const std::any& context);
+CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node);
+CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context);
 
 /**
  * Helper to create UTXO snapshots given a chainstate and a file handle.

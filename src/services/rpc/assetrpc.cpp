@@ -340,7 +340,7 @@ static RPCHelpMan assetallocationverifyzdag()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 	const UniValue &params = request.params;
-    const CTxMemPool& mempool = EnsureMemPool(request.context);
+    const CTxMemPool& mempool = EnsureAnyMemPool(request.context);
 	uint256 txid;
 	txid.SetHex(params[0].get_str());
 	UniValue oAssetAllocationStatus(UniValue::VOBJ);
@@ -382,7 +382,7 @@ static RPCHelpMan syscoindecoderawtransaction()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
     const UniValue &params = request.params;
-    const NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
 
     std::string hexstring = params[0].get_str();
     CMutableTransaction tx;

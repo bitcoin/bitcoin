@@ -41,7 +41,7 @@
 
 #include <univalue.h>
 // SYSCOIN
-void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
+void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry, ChainstateManager& chainstate)
 {
     // Call into TxToUniv() in syscoin-common to decode the transaction hex.
     //
@@ -52,12 +52,12 @@ void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry)
 
     if (!hashBlock.IsNull()) {
         LOCK(cs_main);
-
+        CChainState& active_chainstate = chainstate.ActiveChainstate();
         entry.pushKV("blockhash", hashBlock.GetHex());
-        CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(hashBlock);
+        CBlockIndex* pindex = active_chainstate.m_blockman.LookupBlockIndex(hashBlock);
         if (pindex) {
-            if (::ChainActive().Contains(pindex)) {
-                entry.pushKV("confirmations", 1 + ::ChainActive().Height() - pindex->nHeight);
+            if (active_chainstate.m_chain.Contains(pindex)) {
+                entry.pushKV("confirmations", 1 + active_chainstate.m_chain.Height() - pindex->nHeight);
                 entry.pushKV("time", pindex->GetBlockTime());
                 entry.pushKV("blocktime", pindex->GetBlockTime());
             }
@@ -158,7 +158,8 @@ static RPCHelpMan getrawtransaction()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const NodeContext& node = EnsureNodeContext(request.context);
+    const NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
 
     bool in_active_chain = true;
     uint256 hash = ParseHashV(request.params[0], "parameter 1");
@@ -179,17 +180,17 @@ static RPCHelpMan getrawtransaction()
         LOCK(cs_main);
 
         uint256 blockhash = ParseHashV(request.params[2], "parameter 3");
-        blockindex = g_chainman.m_blockman.LookupBlockIndex(blockhash);
+        blockindex = chainman.m_blockman.LookupBlockIndex(blockhash);
         if (!blockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block hash not found");
         }
-        in_active_chain = ::ChainActive().Contains(blockindex);
+        in_active_chain = chainman.ActiveChain().Contains(blockindex);
     // SYSCOIN
     } else {
         uint32_t nBlockHeight;
         if(pblockindexdb->ReadBlockHeight(hash, nBlockHeight)){	    
             LOCK(cs_main);
-            blockindex = ::ChainActive()[nBlockHeight];
+            blockindex = chainman.ActiveChain()[nBlockHeight];
         } 
  
     }
@@ -224,7 +225,7 @@ static RPCHelpMan getrawtransaction()
 
     UniValue result(UniValue::VOBJ);
     if (blockindex) result.pushKV("in_active_chain", in_active_chain);
-    TxToJSON(*tx, hash_block, result);
+    TxToJSON(*tx, hash_block, result, chainman);
     return result;
 },
     };
@@ -266,21 +267,23 @@ static RPCHelpMan gettxoutproof()
 
     CBlockIndex* pblockindex = nullptr;
     uint256 hashBlock;
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     if (!request.params[1].isNull()) {
         LOCK(cs_main);
         hashBlock = ParseHashV(request.params[1], "blockhash");
-        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hashBlock);
+        pblockindex = chainman.m_blockman.LookupBlockIndex(hashBlock);
         if (!pblockindex) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         }
     } else {
         LOCK(cs_main);
+        CChainState& active_chainstate = chainman.ActiveChainstate();
 
         // Loop through txids and try to find which block they're in. Exit loop once a block is found.
         for (const auto& tx : setTxids) {
-            const Coin& coin = AccessByTxid(::ChainstateActive().CoinsTip(), tx);
+            const Coin& coin = AccessByTxid(active_chainstate.CoinsTip(), tx);
             if (!coin.IsSpent()) {
-                pblockindex = ::ChainActive()[coin.nHeight];
+                pblockindex = active_chainstate.m_chain[coin.nHeight];
                 break;
             }
         }
@@ -298,7 +301,7 @@ static RPCHelpMan gettxoutproof()
         if (!tx || hashBlock.IsNull()) {
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Transaction not yet in block");
         }
-        pblockindex = g_chainman.m_blockman.LookupBlockIndex(hashBlock);
+        pblockindex = chainman.m_blockman.LookupBlockIndex(hashBlock);
         if (!pblockindex) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "Transaction index corrupt");
         }
@@ -356,10 +359,11 @@ static RPCHelpMan verifytxoutproof()
     if (merkleBlock.txn.ExtractMatches(vMatch, vIndex) != merkleBlock.header.hashMerkleRoot)
         return res;
 
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
     LOCK(cs_main);
 
-    const CBlockIndex* pindex = g_chainman.m_blockman.LookupBlockIndex(merkleBlock.header.GetHash());
-    if (!pindex || !::ChainActive().Contains(pindex) || pindex->nTx == 0) {
+    const CBlockIndex* pindex = chainman.m_blockman.LookupBlockIndex(merkleBlock.header.GetHash());
+    if (!pindex || !chainman.ActiveChain().Contains(pindex) || pindex->nTx == 0) {
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found in chain");
     }
 
@@ -683,10 +687,11 @@ static RPCHelpMan combinerawtransaction()
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
     {
-        const CTxMemPool& mempool = EnsureMemPool(request.context);
-        LOCK(cs_main);
-        LOCK(mempool.cs);
-        CCoinsViewCache &viewChain = ::ChainstateActive().CoinsTip();
+        NodeContext& node = EnsureAnyNodeContext(request.context);
+        const CTxMemPool& mempool = EnsureMemPool(node);
+        ChainstateManager& chainman = EnsureChainman(node);
+        LOCK2(cs_main, mempool.cs);
+        CCoinsViewCache &viewChain = chainman.ActiveChainstate().CoinsTip();
         CCoinsViewMemPool viewMempool(&viewChain, mempool);
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 
@@ -810,7 +815,7 @@ static RPCHelpMan signrawtransactionwithkey()
     for (const CTxIn& txin : mtx.vin) {
         coins[txin.prevout]; // Create empty map entry keyed by prevout.
     }
-    NodeContext& node = EnsureNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     FindCoins(node, coins);
 
     // Parse the prevtxs array
@@ -873,7 +878,7 @@ RPCHelpMan sendrawtransaction()
 
     std::string err_string;
     AssertLockNotHeld(cs_main);
-    NodeContext& node = EnsureNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     const TransactionError err = BroadcastTransaction(node, tx, err_string, max_raw_tx_fee, /*relay*/ true, /*wait_callback*/ true);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
@@ -948,7 +953,9 @@ static RPCHelpMan testmempoolaccept()
                                              DEFAULT_MAX_RAW_TX_FEE_RATE :
                                              CFeeRate(AmountFromValue(request.params[1]));
 
-    CTxMemPool& mempool = EnsureMemPool(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+
+    CTxMemPool& mempool = EnsureMemPool(node);
     int64_t virtual_size = GetVirtualTransactionSize(*tx);
     CAmount max_raw_tx_fee = max_raw_tx_fee_rate.GetFee(virtual_size);
 
@@ -957,7 +964,8 @@ static RPCHelpMan testmempoolaccept()
     result_0.pushKV("txid", tx->GetHash().GetHex());
     result_0.pushKV("wtxid", tx->GetWitnessHash().GetHex());
 
-    const MempoolAcceptResult accept_result = WITH_LOCK(cs_main, return AcceptToMemoryPool(::ChainstateActive(), mempool, std::move(tx),
+    ChainstateManager& chainman = EnsureChainman(node);
+    const MempoolAcceptResult accept_result = WITH_LOCK(cs_main, return AcceptToMemoryPool(chainman.ActiveChainstate(), mempool, std::move(tx),
                                                   false /* bypass_limits */, /* test_accept */ true));
 
     // Only return the fee and vsize if the transaction would pass ATMP.
@@ -1606,9 +1614,11 @@ static RPCHelpMan utxoupdatepsbt()
     CCoinsView viewDummy;
     CCoinsViewCache view(&viewDummy);
     {
-        const CTxMemPool& mempool = EnsureMemPool(request.context);
+        NodeContext& node = EnsureAnyNodeContext(request.context);
+        const CTxMemPool& mempool = EnsureMemPool(node);
+        ChainstateManager& chainman = EnsureChainman(node);
         LOCK2(cs_main, mempool.cs);
-        CCoinsViewCache &viewChain = ::ChainstateActive().CoinsTip();
+        CCoinsViewCache &viewChain = chainman.ActiveChainstate().CoinsTip();
         CCoinsViewMemPool viewMempool(&viewChain, mempool);
         view.SetBackend(viewMempool); // temporarily switch cache backend to db+mempool view
 

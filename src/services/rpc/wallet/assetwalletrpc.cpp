@@ -375,7 +375,7 @@ static RPCHelpMan syscoinburntoassetallocation()
     }
     std::string err_string;
     AssertLockNotHeld(cs_main);
-    NodeContext& node = EnsureNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
@@ -629,7 +629,7 @@ RPCHelpMan assetnew()
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     std::string err_string;
     AssertLockNotHeld(cs_main);
-    NodeContext& node = EnsureNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
@@ -778,7 +778,7 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     }
     std::string err_string;
     AssertLockNotHeld(cs_main);
-    NodeContext& node = EnsureNodeContext(context);
+    NodeContext& node = EnsureAnyNodeContext(context);
     const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
@@ -1449,7 +1449,7 @@ static RPCHelpMan assetallocationsendmany()
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     std::string err_string;
     AssertLockNotHeld(cs_main);
-    NodeContext& node = EnsureNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
@@ -1622,7 +1622,7 @@ static RPCHelpMan assetallocationburn()
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     std::string err_string;
     AssertLockNotHeld(cs_main);
-    NodeContext& node = EnsureNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
@@ -1813,7 +1813,7 @@ static RPCHelpMan assetallocationmint()
     CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     std::string err_string;
     AssertLockNotHeld(cs_main);
-    NodeContext& node = EnsureNodeContext(request.context);
+    NodeContext& node = EnsureAnyNodeContext(request.context);
     const TransactionError err = BroadcastTransaction(node, tx, err_string, DEFAULT_MAX_RAW_TX_FEE_RATE.GetFeePerK(), /*relay*/ true, /*wait_callback*/ false);
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
