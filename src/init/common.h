@@ -8,6 +8,8 @@
 #ifndef BITCOIN_INIT_COMMON_H
 #define BITCOIN_INIT_COMMON_H
 
+class ArgsManager;
+
 namespace init {
 void SetGlobals();
 void UnsetGlobals();
@@ -16,6 +18,7 @@ void UnsetGlobals();
  *  necessary library support.
  */
 bool SanityChecks();
+void AddLoggingArgs(ArgsManager& args);
 } // namespace init
 
 #endif // BITCOIN_INIT_COMMON_H
