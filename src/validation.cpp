@@ -3531,6 +3531,18 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, strprintf("bad-version(0x%08x)", block.nVersion),
                                  strprintf("rejected nVersion=0x%08x block", block.nVersion));
 
+    auto consensus = params.GetConsensus();
+    for (int deployment = 0; deployment < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; deployment++) {
+        if (!consensus.vDeployments[deployment].mandatory_signaling_during_locked_in) continue;
+        auto pos = static_cast<Consensus::DeploymentPos>(deployment);
+        ThresholdState vbit_state = VersionBitsState(pindexPrev, consensus, pos, versionbitscache);
+        if (vbit_state != ThresholdState::LOCKED_IN) continue;
+        if (block.nVersion & VersionBitsMask(consensus, pos)) continue;
+
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, strprintf("bad-version(0x%08x)", block.nVersion),
+                             strprintf("rejected nVersion=0x%08x block", block.nVersion));
+    }
+
     return true;
 }
 

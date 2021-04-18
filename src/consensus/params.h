@@ -40,6 +40,10 @@ struct BIP9Deployment {
      */
     bool flag_day_on_timeout{false};
 
+    /** When we are locked in does signaling become required until we are ACTIVE
+     */
+    bool mandatory_signaling_during_locked_in{false};
+
     /** Constant for nTimeout very far in the future. */
     static constexpr int64_t NO_TIMEOUT = std::numeric_limits<int64_t>::max();
 
