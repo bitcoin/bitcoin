@@ -58,7 +58,8 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
         util::ThreadRename("qt-clientmodl");
     });
 
-
+    // SYSCOIN
+    mnListCached = std::make_shared<CDeterministicMNList>();
     subscribeToCoreSignals();
 }
 
