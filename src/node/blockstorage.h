@@ -25,6 +25,21 @@ struct Params;
 
 static constexpr bool DEFAULT_STOPAFTERBLOCKIMPORT{false};
 
+extern std::atomic_bool fImporting;
+extern std::atomic_bool fReindex;
+/** Pruning-related variables and constants */
+/** True if any block files have ever been pruned. */
+extern bool fHavePruned;
+/** True if we're running in -prune mode. */
+extern bool fPruneMode;
+/** Number of MiB of block files that we're trying to stay below. */
+extern uint64_t nPruneTarget;
+
+//! Check whether the block associated with this index entry is pruned or not.
+bool IsBlockPruned(const CBlockIndex* pblockindex);
+
+void CleanupBlockRevFiles();
+
 /** Functions for disk access for blocks */
 bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams);
 bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
