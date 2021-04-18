@@ -26,6 +26,17 @@ namespace util {
 class Ref;
 } // namespace util
 
+struct ServerArgsOptions {
+    constexpr ServerArgsOptions(bool gui_, bool printtoconsole_default_, bool server_default_)
+        : gui{gui_}, printtoconsole_default{printtoconsole_default_}, server_default{server_default_}
+    {
+    }
+
+    const bool gui;
+    const bool printtoconsole_default;
+    const bool server_default;
+};
+
 /** Interrupt threads */
 void Interrupt(NodeContext& node);
 void Shutdown(NodeContext& node);
