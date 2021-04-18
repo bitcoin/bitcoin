@@ -816,14 +816,8 @@ void RPCConsole::clear(bool clearHistory)
             ).arg(fixedFontInfo.family(), QString("%1pt").arg(consoleFontSize))
         );
 
-#ifdef Q_OS_MAC
-    QString clsKey = "(⌘)-L";
-#else
-    QString clsKey = "Ctrl-L";
-#endif
-
     message(CMD_REPLY, (tr("Welcome to the %1 RPC console.").arg(PACKAGE_NAME) + "<br>" +
-                        tr("Use up and down arrows to navigate history, and %1 to clear screen.").arg("<b>"+clsKey+"</b>") + "<br>" +
+                        tr("Use up and down arrows to navigate history, and %1 to clear screen.").arg("<b>" + ui->clearButton->shortcut().toString(QKeySequence::NativeText) + "</b>") + "<br>" +
                         tr("Type %1 for an overview of available commands.").arg("<b>help</b>") + "<br>" +
                         tr("For more information on using this console type %1.").arg("<b>help-console</b>") +
                         "<br><span class=\"secwarning\"><br>" +
