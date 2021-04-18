@@ -1,6 +1,6 @@
 all:
-	$(MAKE) -C .. bitcoin_test
+	$(MAKE) -C .. widecoin_test
 clean:
-	$(MAKE) -C .. bitcoin_test_clean
+	$(MAKE) -C .. widecoin_test_clean
 check:
-	$(MAKE) -C .. bitcoin_test_check
+	$(MAKE) -C .. widecoin_test_check

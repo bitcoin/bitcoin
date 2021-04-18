@@ -67,7 +67,7 @@
         <string>&amp;New</string>
        </property>
        <property name="icon">
-        <iconset resource="../bitcoin.qrc">
+        <iconset resource="../widecoin.qrc">
          <normaloff>:/icons/add</normaloff>:/icons/add</iconset>
        </property>
        <property name="autoDefault">
@@ -84,7 +84,7 @@
         <string>&amp;Copy</string>
        </property>
        <property name="icon">
-        <iconset resource="../bitcoin.qrc">
+        <iconset resource="../widecoin.qrc">
          <normaloff>:/icons/editcopy</normaloff>:/icons/editcopy</iconset>
        </property>
        <property name="autoDefault">
@@ -101,7 +101,7 @@
         <string>&amp;Delete</string>
        </property>
        <property name="icon">
-        <iconset resource="../bitcoin.qrc">
+        <iconset resource="../widecoin.qrc">
          <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
        </property>
        <property name="autoDefault">
@@ -131,7 +131,7 @@
         <string>&amp;Export</string>
        </property>
        <property name="icon">
-        <iconset resource="../bitcoin.qrc">
+        <iconset resource="../widecoin.qrc">
          <normaloff>:/icons/export</normaloff>:/icons/export</iconset>
        </property>
        <property name="autoDefault">
@@ -160,7 +160,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../bitcoin.qrc"/>
+  <include location="../widecoin.qrc"/>
  </resources>
  <connections/>
 </ui>

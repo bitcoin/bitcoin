@@ -1,19 +1,19 @@
-# Copyright (c) 2015-2016 The Bitcoin Core developers
+# Copyright (c) 2015-2016 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-bin_PROGRAMS += bench/bench_bitcoin
+bin_PROGRAMS += bench/bench_widecoin
 BENCH_SRCDIR = bench
-BENCH_BINARY = bench/bench_bitcoin$(EXEEXT)
+BENCH_BINARY = bench/bench_widecoin$(EXEEXT)
 
 RAW_BENCH_FILES = \
   bench/data/block413567.raw
 GENERATED_BENCH_FILES = $(RAW_BENCH_FILES:.raw=.raw.h)
 
-bench_bench_bitcoin_SOURCES = \
+bench_bench_widecoin_SOURCES = \
   $(RAW_BENCH_FILES) \
   bench/addrman.cpp \
-  bench/bench_bitcoin.cpp \
+  bench/bench_widecoin.cpp \
   bench/bench.cpp \
   bench/bench.h \
   bench/block_assemble.cpp \
@@ -45,17 +45,17 @@ bench_bench_bitcoin_SOURCES = \
   bench/poly1305.cpp \
   bench/prevector.cpp
 
-nodist_bench_bench_bitcoin_SOURCES = $(GENERATED_BENCH_FILES)
+nodist_bench_bench_widecoin_SOURCES = $(GENERATED_BENCH_FILES)
 
-bench_bench_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
-bench_bench_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-bench_bench_bitcoin_LDADD = \
-  $(LIBBITCOIN_SERVER) \
-  $(LIBBITCOIN_WALLET) \
-  $(LIBBITCOIN_COMMON) \
-  $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_CONSENSUS) \
-  $(LIBBITCOIN_CRYPTO) \
+bench_bench_widecoin_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
+bench_bench_widecoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+bench_bench_widecoin_LDADD = \
+  $(LIBWIDECOIN_SERVER) \
+  $(LIBWIDECOIN_WALLET) \
+  $(LIBWIDECOIN_COMMON) \
+  $(LIBWIDECOIN_UTIL) \
+  $(LIBWIDECOIN_CONSENSUS) \
+  $(LIBWIDECOIN_CRYPTO) \
   $(LIBTEST_UTIL) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
@@ -66,30 +66,30 @@ bench_bench_bitcoin_LDADD = \
   $(EVENT_LIBS)
 
 if ENABLE_ZMQ
-bench_bench_bitcoin_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
+bench_bench_widecoin_LDADD += $(LIBWIDECOIN_ZMQ) $(ZMQ_LIBS)
 endif
 
 if ENABLE_WALLET
-bench_bench_bitcoin_SOURCES += bench/coin_selection.cpp
-bench_bench_bitcoin_SOURCES += bench/wallet_balance.cpp
+bench_bench_widecoin_SOURCES += bench/coin_selection.cpp
+bench_bench_widecoin_SOURCES += bench/wallet_balance.cpp
 endif
 
-bench_bench_bitcoin_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(SQLITE_LIBS)
-bench_bench_bitcoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+bench_bench_widecoin_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(SQLITE_LIBS)
+bench_bench_widecoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
-CLEAN_BITCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)
+CLEAN_WIDECOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)
 
-CLEANFILES += $(CLEAN_BITCOIN_BENCH)
+CLEANFILES += $(CLEAN_WIDECOIN_BENCH)
 
 bench/data.cpp: bench/data/block413567.raw.h
 
-bitcoin_bench: $(BENCH_BINARY)
+widecoin_bench: $(BENCH_BINARY)
 
 bench: $(BENCH_BINARY) FORCE
 	$(BENCH_BINARY)
 
-bitcoin_bench_clean : FORCE
-	rm -f $(CLEAN_BITCOIN_BENCH) $(bench_bench_bitcoin_OBJECTS) $(BENCH_BINARY)
+widecoin_bench_clean : FORCE
+	rm -f $(CLEAN_WIDECOIN_BENCH) $(bench_bench_widecoin_OBJECTS) $(BENCH_BINARY)
 
 %.raw.h: %.raw
 	@$(MKDIR_P) $(@D)

@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_COMPRESSOR_H
-#define BITCOIN_COMPRESSOR_H
+#ifndef WIDECOIN_COMPRESSOR_H
+#define WIDECOIN_COMPRESSOR_H
 
 #include <primitives/transaction.h>
 #include <script/script.h>
@@ -103,4 +103,4 @@ struct TxOutCompression
     FORMATTER_METHODS(CTxOut, obj) { READWRITE(Using<AmountCompression>(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey)); }
 };
 
-#endif // BITCOIN_COMPRESSOR_H
+#endif // WIDECOIN_COMPRESSOR_H

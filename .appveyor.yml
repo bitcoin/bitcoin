@@ -10,7 +10,7 @@ environment:
   QT_DOWNLOAD_URL: 'https://github.com/sipsorcery/qt_win_binary/releases/download/qt598x64_vs2019_v1681/qt598_x64_vs2019_1681.zip'
   QT_DOWNLOAD_HASH: '00cf7327818c07d74e0b1a4464ffe987c2728b00d49d4bf333065892af0515c3'
   QT_LOCAL_PATH: 'C:\Qt5.9.8_x64_static_vs2019'
-  VCPKG_TAG: '75522bb1f2e7d863078bcd06322348f053a9e33f'
+  VCPKG_TAG: '2020.11-1'
 install:
 # Disable zmq test for now since python zmq library on Windows would cause Access violation sometimes.
 # - cmd: pip install zmq
@@ -45,19 +45,19 @@ before_build:
       }
 - cmd: python build_msvc\msvc-autogen.py
 build_script:
-- cmd: msbuild /p:TrackFileAccess=false build_msvc\bitcoin.sln /m /v:q /nologo
+- cmd: msbuild /p:TrackFileAccess=false build_msvc\widecoin.sln /m /v:q /nologo
 after_build:
-#- 7z a bitcoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
+#- 7z a widecoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
 test_script:
-- cmd: src\test_bitcoin.exe -l test_suite
-- cmd: src\bench_bitcoin.exe > NUL
-- ps:  python test\util\bitcoin-util-test.py
+- cmd: src\test_widecoin.exe -l test_suite
+- cmd: src\bench_widecoin.exe > NUL
+- ps:  python test\util\widecoin-util-test.py
 - cmd: python test\util\rpcauth-test.py
 # Fee estimation test failing on appveyor with: WinError 10048] Only one usage of each socket address (protocol/network address/port) is normally permitted.
 # functional tests disabled for now. See
-# https://github.com/bitcoin/bitcoin/pull/18626#issuecomment-613396202
-# https://github.com/bitcoin/bitcoin/issues/18623
+# https://github.com/widecoin/widecoin/pull/18626#issuecomment-613396202
+# https://github.com/widecoin/widecoin/issues/18623
 # - cmd: python test\functional\test_runner.py --ci --quiet --combinedlogslen=4000 --failfast --exclude feature_fee_estimation
 artifacts:
-#- path: bitcoin-%APPVEYOR_BUILD_VERSION%.zip
+#- path: widecoin-%APPVEYOR_BUILD_VERSION%.zip
 deploy: off

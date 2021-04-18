@@ -1,14 +1,14 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_WALLETFRAME_H
-#define BITCOIN_QT_WALLETFRAME_H
+#ifndef WIDECOIN_QT_WALLETFRAME_H
+#define WIDECOIN_QT_WALLETFRAME_H
 
 #include <QFrame>
 #include <QMap>
 
-class BitcoinGUI;
+class WidecoinGUI;
 class ClientModel;
 class PlatformStyle;
 class SendCoinsRecipient;
@@ -21,9 +21,9 @@ QT_END_NAMESPACE
 
 /**
  * A container for embedding all wallet-related
- * controls into BitcoinGUI. The purpose of this class is to allow future
+ * controls into WidecoinGUI. The purpose of this class is to allow future
  * refinements of the wallet controls with minimal need for further
- * modifications to BitcoinGUI, thus greatly simplifying merges while
+ * modifications to WidecoinGUI, thus greatly simplifying merges while
  * reducing the risk of breaking top-level stuff.
  */
 class WalletFrame : public QFrame
@@ -31,7 +31,7 @@ class WalletFrame : public QFrame
     Q_OBJECT
 
 public:
-    explicit WalletFrame(const PlatformStyle *platformStyle, BitcoinGUI *_gui = nullptr);
+    explicit WalletFrame(const PlatformStyle *platformStyle, WidecoinGUI *_gui = nullptr);
     ~WalletFrame();
 
     void setClientModel(ClientModel *clientModel);
@@ -53,7 +53,7 @@ Q_SIGNALS:
 
 private:
     QStackedWidget *walletStack;
-    BitcoinGUI *gui;
+    WidecoinGUI *gui;
     ClientModel *clientModel;
     QMap<WalletModel*, WalletView*> mapWalletViews;
 
@@ -82,7 +82,7 @@ public Q_SLOTS:
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
 
-    /** Load Partially Signed Bitcoin Transaction */
+    /** Load Partially Signed Widecoin Transaction */
     void gotoLoadPSBT(bool from_clipboard = false);
 
     /** Encrypt the wallet */
@@ -102,4 +102,4 @@ public Q_SLOTS:
     void outOfSyncWarningClicked();
 };
 
-#endif // BITCOIN_QT_WALLETFRAME_H
+#endif // WIDECOIN_QT_WALLETFRAME_H

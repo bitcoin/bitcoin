@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -924,9 +924,9 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
 #ifndef WIN32
         // Substituting the wallet name isn't currently supported on windows
         // because windows shell escaping has not been implemented yet:
-        // https://github.com/bitcoin/bitcoin/pull/13339#issuecomment-537384875
+        // https://github.com/widecoin/widecoin/pull/13339#issuecomment-537384875
         // A few ways it could be implemented in the future are described in:
-        // https://github.com/bitcoin/bitcoin/pull/13339#issuecomment-461288094
+        // https://github.com/widecoin/widecoin/pull/13339#issuecomment-461288094
         boost::replace_all(strCmd, "%w", ShellEscape(GetName()));
 #endif
         std::thread t(runCommand, strCmd);
@@ -1185,7 +1185,7 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
         //    provide the conflicting block's hash and height, and for backwards
         //    compatibility reasons it may not be not safe to store conflicted
         //    wallet transactions with a null block hash. See
-        //    https://github.com/bitcoin/bitcoin/pull/18600#discussion_r420195993.
+        //    https://github.com/widecoin/widecoin/pull/18600#discussion_r420195993.
         // 2. For most of these transactions, the wallet's internal conflict
         //    detection in the blockConnected handler will subsequently call
         //    MarkConflicted and update them with CONFLICTED status anyway. This
@@ -1193,7 +1193,7 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
         //    block, or that has ancestors in the wallet with inputs spent by
         //    the block.
         // 3. Longstanding behavior since the sync implementation in
-        //    https://github.com/bitcoin/bitcoin/pull/9371 and the prior sync
+        //    https://github.com/widecoin/widecoin/pull/9371 and the prior sync
         //    implementation before that was to mark these transactions
         //    unconfirmed rather than conflicted.
         //
@@ -1201,7 +1201,7 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
         // when improving this code in the future. The wallet's heuristics for
         // distinguishing between conflicted and unconfirmed transactions are
         // imperfect, and could be improved in general, see
-        // https://github.com/bitcoin-core/bitcoin-devwiki/wiki/Wallet-Transaction-Conflict-Tracking
+        // https://github.com/widecoin-core/widecoin-devwiki/wiki/Wallet-Transaction-Conflict-Tracking
         SyncTransaction(tx, {CWalletTx::Status::UNCONFIRMED, /* block height */ 0, /* block hash */ {}, /* index */ 0});
     }
 }
@@ -1782,7 +1782,7 @@ CWallet::ScanResult CWallet::ScanForWalletTransactions(const uint256& start_bloc
                 // Abort scan if current block is no longer active, to prevent
                 // marking transactions as coming from the wrong block.
                 // TODO: This should return success instead of failure, see
-                // https://github.com/bitcoin/bitcoin/pull/14711#issuecomment-458342518
+                // https://github.com/widecoin/widecoin/pull/14711#issuecomment-458342518
                 result.last_failed_block = block_hash;
                 result.status = ScanResult::FAILURE;
                 break;
@@ -2362,8 +2362,14 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
 
     std::vector<OutputGroup> utxo_pool;
     if (coin_selection_params.use_bnb) {
+        // Get long term estimate
+        FeeCalculation feeCalc;
+        CCoinControl temp;
+        temp.m_confirm_target = 1008;
+        CFeeRate long_term_feerate = GetMinimumFeeRate(*this, temp, &feeCalc);
+
         // Calculate cost of change
-        CAmount cost_of_change = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size) + coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.change_output_size);
+        CAmount cost_of_change = GetDiscardRate(*this).GetFee(coin_selection_params.change_spend_size) + coin_selection_params.effective_fee.GetFee(coin_selection_params.change_output_size);
 
         // Filter by the min conf specs and add to utxo_pool and calculate effective value
         for (OutputGroup& group : groups) {
@@ -2371,16 +2377,16 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
 
             if (coin_selection_params.m_subtract_fee_outputs) {
                 // Set the effective feerate to 0 as we don't want to use the effective value since the fees will be deducted from the output
-                group.SetFees(CFeeRate(0) /* effective_feerate */, coin_selection_params.m_long_term_feerate);
+                group.SetFees(CFeeRate(0) /* effective_feerate */, long_term_feerate);
             } else {
-                group.SetFees(coin_selection_params.m_effective_feerate, coin_selection_params.m_long_term_feerate);
+                group.SetFees(coin_selection_params.effective_fee, long_term_feerate);
             }
 
             OutputGroup pos_group = group.GetPositiveOnlyGroup();
             if (pos_group.effective_value > 0) utxo_pool.push_back(pos_group);
         }
         // Calculate the fees for things that aren't inputs
-        CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.tx_noinputs_size);
+        CAmount not_input_fees = coin_selection_params.effective_fee.GetFee(coin_selection_params.tx_noinputs_size);
         bnb_used = true;
         return SelectCoinsBnB(utxo_pool, nTargetValue, cost_of_change, setCoinsRet, nValueRet, not_input_fees);
     } else {
@@ -2437,7 +2443,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             if (coin.m_input_bytes <= 0) {
                 return false; // Not solvable, can't estimate size for fee
             }
-            coin.effective_value = coin.txout.nValue - coin_selection_params.m_effective_feerate.GetFee(coin.m_input_bytes);
+            coin.effective_value = coin.txout.nValue - coin_selection_params.effective_fee.GetFee(coin.m_input_bytes);
             if (coin_selection_params.use_bnb) {
                 value_to_select -= coin.effective_value;
             } else {
@@ -2776,7 +2782,7 @@ bool CWallet::CreateTransactionInternal(
 
             // Create change script that will be used if we need change
             // TODO: pass in scriptChange instead of reservedest so
-            // change transaction isn't always pay-to-bitcoin-address
+            // change transaction isn't always pay-to-widecoin-address
             CScript scriptChange;
 
             // coin control: send change to custom address
@@ -2805,27 +2811,16 @@ bool CWallet::CreateTransactionInternal(
             CTxOut change_prototype_txout(0, scriptChange);
             coin_selection_params.change_output_size = GetSerializeSize(change_prototype_txout);
 
-            // Set discard feerate
-            coin_selection_params.m_discard_feerate = GetDiscardRate(*this);
+            CFeeRate discard_rate = GetDiscardRate(*this);
 
             // Get the fee rate to use effective values in coin selection
-            coin_selection_params.m_effective_feerate = GetMinimumFeeRate(*this, coin_control, &feeCalc);
+            CFeeRate nFeeRateNeeded = GetMinimumFeeRate(*this, coin_control, &feeCalc);
             // Do not, ever, assume that it's fine to change the fee rate if the user has explicitly
             // provided one
-            if (coin_control.m_feerate && coin_selection_params.m_effective_feerate > *coin_control.m_feerate) {
-                error = strprintf(_("Fee rate (%s) is lower than the minimum fee rate setting (%s)"), coin_control.m_feerate->ToString(FeeEstimateMode::SAT_VB), coin_selection_params.m_effective_feerate.ToString(FeeEstimateMode::SAT_VB));
+            if (coin_control.m_feerate && nFeeRateNeeded > *coin_control.m_feerate) {
+                error = strprintf(_("Fee rate (%s) is lower than the minimum fee rate setting (%s)"), coin_control.m_feerate->ToString(FeeEstimateMode::SAT_VB), nFeeRateNeeded.ToString(FeeEstimateMode::SAT_VB));
                 return false;
             }
-            if (feeCalc.reason == FeeReason::FALLBACK && !m_allow_fallback_fee) {
-                // eventually allow a fallback fee
-                error = _("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.");
-                return false;
-            }
-
-            // Get long term estimate
-            CCoinControl cc_temp;
-            cc_temp.m_confirm_target = chain().estimateMaxBlocks();
-            coin_selection_params.m_long_term_feerate = GetMinimumFeeRate(*this, cc_temp, nullptr);
 
             nFeeRet = 0;
             bool pick_new_inputs = true;
@@ -2900,6 +2895,7 @@ bool CWallet::CreateTransactionInternal(
                     } else {
                         coin_selection_params.change_spend_size = (size_t)change_spend_size;
                     }
+                    coin_selection_params.effective_fee = nFeeRateNeeded;
                     if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coin_control, coin_selection_params, bnb_used))
                     {
                         // If BnB was used, it was the first pass. No longer the first pass and continue loop with knapsack.
@@ -2925,7 +2921,7 @@ bool CWallet::CreateTransactionInternal(
                     // Never create dust outputs; if we would, just
                     // add the dust to the fee.
                     // The nChange when BnB is used is always going to go to fees.
-                    if (IsDust(newTxOut, coin_selection_params.m_discard_feerate) || bnb_used)
+                    if (IsDust(newTxOut, discard_rate) || bnb_used)
                     {
                         nChangePosInOut = -1;
                         nFeeRet += nChange;
@@ -2962,7 +2958,13 @@ bool CWallet::CreateTransactionInternal(
                     return false;
                 }
 
-                nFeeNeeded = coin_selection_params.m_effective_feerate.GetFee(nBytes);
+                nFeeNeeded = GetMinimumFee(*this, nBytes, coin_control, &feeCalc);
+                if (feeCalc.reason == FeeReason::FALLBACK && !m_allow_fallback_fee) {
+                    // eventually allow a fallback fee
+                    error = _("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.");
+                    return false;
+                }
+
                 if (nFeeRet >= nFeeNeeded) {
                     // Reduce fee to only the needed amount if possible. This
                     // prevents potential overpayment in fees if the coins
@@ -2976,8 +2978,8 @@ bool CWallet::CreateTransactionInternal(
                     // change output. Only try this once.
                     if (nChangePosInOut == -1 && nSubtractFeeFromAmount == 0 && pick_new_inputs) {
                         unsigned int tx_size_with_change = nBytes + coin_selection_params.change_output_size + 2; // Add 2 as a buffer in case increasing # of outputs changes compact size
-                        CAmount fee_needed_with_change = coin_selection_params.m_effective_feerate.GetFee(tx_size_with_change);
-                        CAmount minimum_value_for_change = GetDustThreshold(change_prototype_txout, coin_selection_params.m_discard_feerate);
+                        CAmount fee_needed_with_change = GetMinimumFee(*this, tx_size_with_change, coin_control, nullptr);
+                        CAmount minimum_value_for_change = GetDustThreshold(change_prototype_txout, discard_rate);
                         if (nFeeRet >= fee_needed_with_change + minimum_value_for_change) {
                             pick_new_inputs = false;
                             nFeeRet = fee_needed_with_change;
@@ -3674,8 +3676,8 @@ void CWallet::GetKeyBirthTimes(std::map<CKeyID, int64_t>& mapKeyBirth) const {
  *   the block time.
  *
  * For more information see CWalletTx::nTimeSmart,
- * https://bitcointalk.org/?topic=54527, or
- * https://github.com/bitcoin/bitcoin/pull/1393.
+ * https://widecointalk.org/?topic=54527, or
+ * https://github.com/widecoin/widecoin/pull/1393.
  */
 unsigned int CWallet::ComputeTimeSmart(const CWalletTx& wtx) const
 {

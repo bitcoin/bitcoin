@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019 The Bitcoin Core developers
+# Copyright (c) 2019 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 
 class TestShell:
-    """Wrapper Class for BitcoinTestFramework.
+    """Wrapper Class for WidecoinTestFramework.
 
-    The TestShell class extends the BitcoinTestFramework
+    The TestShell class extends the WidecoinTestFramework
     rpc & daemon process management functionality to external
     python environments.
 
     It is a singleton class, which ensures that users only
     start a single TestShell at a time."""
 
-    class __TestShell(BitcoinTestFramework):
+    class __TestShell(WidecoinTestFramework):
         def set_test_params(self):
             pass
 
@@ -28,7 +28,7 @@ class TestShell:
                 return
 
             # Num_nodes parameter must be set
-            # by BitcoinTestFramework child class.
+            # by WidecoinTestFramework child class.
             self.num_nodes = 1
 
             # User parameters override default values.

@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_POLICY_SETTINGS_H
-#define BITCOIN_POLICY_SETTINGS_H
+#ifndef WIDECOIN_POLICY_SETTINGS_H
+#define WIDECOIN_POLICY_SETTINGS_H
 
 #include <policy/policy.h>
 
@@ -32,4 +32,4 @@ static inline int64_t GetVirtualTransactionSize(const CTransaction& tx, int64_t 
     return GetVirtualTransactionSize(tx, sigop_cost, ::nBytesPerSigOp);
 }
 
-#endif // BITCOIN_POLICY_SETTINGS_H
+#endif // WIDECOIN_POLICY_SETTINGS_H

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,7 +24,7 @@ namespace {
 //!
 //! BerkeleyDB generates unique fileids by default
 //! (https://docs.oracle.com/cd/E17275_01/html/programmer_reference/program_copy.html),
-//! so bitcoin should never create different databases with the same fileid, but
+//! so widecoin should never create different databases with the same fileid, but
 //! this error can be triggered if users manually copy database files.
 void CheckUniqueFileid(const BerkeleyEnvironment& env, const std::string& filename, Db& db, WalletDatabaseFileId& fileid)
 {
@@ -135,7 +135,7 @@ bool BerkeleyEnvironment::Open(bilingual_str& err)
     fs::path pathIn = strPath;
     TryCreateDirectories(pathIn);
     if (!LockDirectory(pathIn, ".walletlock")) {
-        LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance of bitcoin may be using it.\n", strPath);
+        LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance of widecoin may be using it.\n", strPath);
         err = strprintf(_("Error initializing wallet database environment %s!"), Directory());
         return false;
     }
@@ -277,7 +277,7 @@ bool BerkeleyDatabase::Verify(bilingual_str& errorStr)
         Db db(env->dbenv.get(), 0);
         int result = db.verify(strFile.c_str(), nullptr, nullptr, 0);
         if (result != 0) {
-            errorStr = strprintf(_("%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup."), file_path);
+            errorStr = strprintf(_("%s corrupt. Try using the wallet tool widecoin-wallet to salvage or restoring a backup."), file_path);
             return false;
         }
     }

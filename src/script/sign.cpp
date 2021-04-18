@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -253,17 +253,17 @@ bool ProduceSignature(const SigningProvider& provider, const BaseSignatureCreato
 }
 
 namespace {
-class SignatureExtractorChecker final : public DeferringSignatureChecker
+class SignatureExtractorChecker final : public BaseSignatureChecker
 {
 private:
     SignatureData& sigdata;
+    BaseSignatureChecker& checker;
 
 public:
-    SignatureExtractorChecker(SignatureData& sigdata, BaseSignatureChecker& checker) : DeferringSignatureChecker(checker), sigdata(sigdata) {}
-
+    SignatureExtractorChecker(SignatureData& sigdata, BaseSignatureChecker& checker) : sigdata(sigdata), checker(checker) {}
     bool CheckECDSASignature(const std::vector<unsigned char>& scriptSig, const std::vector<unsigned char>& vchPubKey, const CScript& scriptCode, SigVersion sigversion) const override
     {
-        if (m_checker.CheckECDSASignature(scriptSig, vchPubKey, scriptCode, sigversion)) {
+        if (checker.CheckECDSASignature(scriptSig, vchPubKey, scriptCode, sigversion)) {
             CPubKey pubkey(vchPubKey);
             sigdata.signatures.emplace(pubkey.GetID(), SigPair(pubkey, scriptSig));
             return true;

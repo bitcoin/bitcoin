@@ -16,7 +16,7 @@ calling code in the other directories directly, and only invoke it indirectly
 through the more limited [`src/interfaces/`](../interfaces/) classes.
 
 The [`src/node/`](./) directory is a new directory introduced in
-[#14978](https://github.com/bitcoin/bitcoin/pull/14978) and at the moment is
+[#14978](https://github.com/widecoin/widecoin/pull/14978) and at the moment is
 sparsely populated. Eventually more substantial files like
 [`src/validation.cpp`](../validation.cpp) and
 [`src/txmempool.cpp`](../txmempool.cpp) might be moved there.

@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_HASH_H
-#define BITCOIN_HASH_H
+#ifndef WIDECOIN_HASH_H
+#define WIDECOIN_HASH_H
 
 #include <attributes.h>
 #include <crypto/common.h>
@@ -20,7 +20,7 @@
 
 typedef uint256 ChainCode;
 
-/** A hasher class for Bitcoin's 256-bit hash (double SHA-256). */
+/** A hasher class for Widecoin's 256-bit hash (double SHA-256). */
 class CHash256 {
 private:
     CSHA256 sha;
@@ -45,7 +45,7 @@ public:
     }
 };
 
-/** A hasher class for Bitcoin's 160-bit hash (SHA-256 + RIPEMD-160). */
+/** A hasher class for Widecoin's 160-bit hash (SHA-256 + RIPEMD-160). */
 class CHash160 {
 private:
     CSHA256 sha;
@@ -211,4 +211,4 @@ void BIP32Hash(const ChainCode &chainCode, unsigned int nChild, unsigned char he
  */
 CHashWriter TaggedHash(const std::string& tag);
 
-#endif // BITCOIN_HASH_H
+#endif // WIDECOIN_HASH_H

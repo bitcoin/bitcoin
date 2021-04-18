@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2019 The Bitcoin Core developers
+# Copyright (c) 2015-2019 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the ZMQ notification interface."""
@@ -7,7 +7,7 @@ import struct
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE, ADDRESS_BCRT1_P2WSH_OP_TRUE
 from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 from test_framework.messages import CTransaction, hash256, FromHex
 from test_framework.util import (
     assert_equal,
@@ -59,13 +59,13 @@ class ZMQSubscriber:
         return (hash, label, mempool_sequence)
 
 
-class ZMQTest (BitcoinTestFramework):
+class ZMQTest (WidecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_py3_zmq()
-        self.skip_if_no_bitcoind_zmq()
+        self.skip_if_no_widecoind_zmq()
 
     def run_test(self):
         self.ctx = zmq.Context()
@@ -85,7 +85,7 @@ class ZMQTest (BitcoinTestFramework):
         # Invalid zmq arguments don't take down the node, see #17185.
         self.restart_node(0, ["-zmqpubrawtx=foo", "-zmqpubhashtx=bar"])
 
-        address = 'tcp://127.0.0.1:28332'
+        address = 'tcp://127.0.0.1:28552'
         sockets = []
         subs = []
         services = [b"hashblock", b"hashtx", b"rawblock", b"rawtx"]
@@ -172,7 +172,7 @@ class ZMQTest (BitcoinTestFramework):
             self.log.info("Skipping reorg test because wallet is disabled")
             return
 
-        address = 'tcp://127.0.0.1:28333'
+        address = 'tcp://127.0.0.1:28553'
 
         services = [b"hashblock", b"hashtx"]
         sockets = []
@@ -240,7 +240,7 @@ class ZMQTest (BitcoinTestFramework):
         <32-byte hash>A<8-byte LE uint> : Transactionhash added mempool
         """
         self.log.info("Testing 'sequence' publisher")
-        address = 'tcp://127.0.0.1:28333'
+        address = 'tcp://127.0.0.1:28553'
         socket = self.ctx.socket(zmq.SUB)
         socket.set(zmq.RCVTIMEO, 60000)
         seq = ZMQSubscriber(socket, b'sequence')
@@ -399,7 +399,7 @@ class ZMQTest (BitcoinTestFramework):
             return
 
         self.log.info("Testing 'mempool sync' usage of sequence notifier")
-        address = 'tcp://127.0.0.1:28333'
+        address = 'tcp://127.0.0.1:28553'
         socket = self.ctx.socket(zmq.SUB)
         socket.set(zmq.RCVTIMEO, 60000)
         seq = ZMQSubscriber(socket, b'sequence')

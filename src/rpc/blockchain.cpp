@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1106,8 +1106,8 @@ static RPCHelpMan gettxout()
                                 {RPCResult::Type::STR_HEX, "hex", ""},
                                 {RPCResult::Type::NUM, "reqSigs", "Number of required signatures"},
                                 {RPCResult::Type::STR_HEX, "type", "The type, eg pubkeyhash"},
-                                {RPCResult::Type::ARR, "addresses", "array of bitcoin addresses",
-                                    {{RPCResult::Type::STR, "address", "bitcoin address"}}},
+                                {RPCResult::Type::ARR, "addresses", "array of widecoin addresses",
+                                    {{RPCResult::Type::STR, "address", "widecoin address"}}},
                             }},
                         {RPCResult::Type::BOOL, "coinbase", "Coinbase or not"},
                     }},
@@ -1214,8 +1214,10 @@ static void BuriedForkDescPushBack(UniValue& softforks, const std::string &name,
 static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &name, const Consensus::Params& consensusParams, Consensus::DeploymentPos id) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     // For BIP9 deployments.
-    // Deployments that are never active are hidden.
-    if (consensusParams.vDeployments[id].nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE) return;
+    // Deployments (e.g. testdummy) with timeout value before Jan 1, 2009 are hidden.
+    // A timeout value of 0 guarantees a softfork will never be activated.
+    // This is used when merging logic to implement a proposed softfork without a specified deployment schedule.
+    if (consensusParams.vDeployments[id].nTimeout <= 1230768000) return;
 
     UniValue bip9(UniValue::VOBJ);
     const ThresholdState thresholdState = VersionBitsTipState(consensusParams, id);
@@ -1245,7 +1247,6 @@ static void BIP9SoftForkDescPushBack(UniValue& softforks, const std::string &nam
         statsUV.pushKV("possible", statsStruct.possible);
         bip9.pushKV("statistics", statsUV);
     }
-    bip9.pushKV("min_activation_height", consensusParams.vDeployments[id].min_activation_height);
 
     UniValue rv(UniValue::VOBJ);
     rv.pushKV("type", "bip9");
@@ -1292,7 +1293,6 @@ RPCHelpMan getblockchaininfo()
                                     {RPCResult::Type::NUM_TIME, "start_time", "the minimum median time past of a block at which the bit gains its meaning"},
                                     {RPCResult::Type::NUM_TIME, "timeout", "the median time past of a block at which the deployment is considered failed if not yet locked in"},
                                     {RPCResult::Type::NUM, "since", "height of the first block to which the status applies"},
-                                    {RPCResult::Type::NUM, "min_activation_height", "minimum height of blocks for which the rules may be enforced"},
                                     {RPCResult::Type::OBJ, "statistics", "numeric statistics about BIP9 signalling for a softfork (only for \"started\" status)",
                                     {
                                         {RPCResult::Type::NUM, "period", "the length in blocks of the BIP9 signalling period"},
@@ -2413,7 +2413,7 @@ static RPCHelpMan dumptxoutset()
         // use below this block.
         //
         // See discussion here:
-        //   https://github.com/bitcoin/bitcoin/pull/15606#discussion_r274479369
+        //   https://github.com/widecoin/widecoin/pull/15606#discussion_r274479369
         //
         LOCK(::cs_main);
 

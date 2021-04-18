@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_OPENURIDIALOG_H
-#define BITCOIN_QT_OPENURIDIALOG_H
+#ifndef WIDECOIN_QT_OPENURIDIALOG_H
+#define WIDECOIN_QT_OPENURIDIALOG_H
 
 #include <QDialog>
 
@@ -28,4 +28,4 @@ private:
     Ui::OpenURIDialog *ui;
 };
 
-#endif // BITCOIN_QT_OPENURIDIALOG_H
+#endif // WIDECOIN_QT_OPENURIDIALOG_H

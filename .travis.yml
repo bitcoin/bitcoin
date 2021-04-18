@@ -1,13 +1,13 @@
 # Travis caches can be manually removed if necessary. This is one of the very
 # few manual operations that is possible with Travis, and it can be done by a
-# Bitcoin Core GitHub member via the Travis web interface [0].
+# Widecoin Core GitHub member via the Travis web interface [0].
 #
 # Travis CI uploads the cache after the script phase of the build [1].
 # However, the build is terminated without saving the cache if it takes over
 # 50 minutes [2]. Thus, if we spent too much time in early build stages, fail
 # with an error and save the cache.
 #
-# [0] https://travis-ci.org/bitcoin/bitcoin/caches
+# [0] https://travis-ci.org/widecoin/widecoin/caches
 # [1] https://docs.travis-ci.com/user/caching/#build-phases
 # [2] https://docs.travis-ci.com/user/customizing-the-build#build-timeouts
 
@@ -36,16 +36,16 @@ before_install:
 install:
   - set -o errexit; source ./ci/test/04_install.sh
 before_script:
-  # Temporary workaround for https://github.com/bitcoin/bitcoin/issues/16368
+  # Temporary workaround for https://github.com/widecoin/widecoin/issues/16368
   - for i in {1..4}; do echo "$(sleep 500)" ; done &
   - set -o errexit; source ./ci/test/05_before_script.sh &> "/dev/null"
 script:
   - export CONTINUE=1
   - if [ $SECONDS -gt 1200 ]; then export CONTINUE=0; fi  # Likely the depends build took very long
-  - if [ $TRAVIS_REPO_SLUG = "bitcoin/bitcoin" ]; then export CONTINUE=1; fi  # continue on repos with extended build time (90 minutes)
+  - if [ $TRAVIS_REPO_SLUG = "widecoin/widecoin" ]; then export CONTINUE=1; fi  # continue on repos with extended build time (90 minutes)
   - if [ $CONTINUE = "1" ]; then set -o errexit; source ./ci/test/06_script_a.sh; else set +o errexit; echo "$CACHE_ERR_MSG"; false; fi
   - if [[ $SECONDS -gt 50*60-$EXPECTED_TESTS_DURATION_IN_SECONDS ]]; then export CONTINUE=0; fi
-  - if [ $TRAVIS_REPO_SLUG = "bitcoin/bitcoin" ]; then export CONTINUE=1; fi  # continue on repos with extended build time (90 minutes)
+  - if [ $TRAVIS_REPO_SLUG = "widecoin/widecoin" ]; then export CONTINUE=1; fi  # continue on repos with extended build time (90 minutes)
   - if [ $CONTINUE = "1" ]; then set -o errexit; source ./ci/test/06_script_b.sh; else set +o errexit; echo "$CACHE_ERR_MSG"; false; fi
 after_script:
   - echo $TRAVIS_COMMIT_RANGE

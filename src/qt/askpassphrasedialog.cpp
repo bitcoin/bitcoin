@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/widecoin-config.h>
 #endif
 
 #include <qt/askpassphrasedialog.h>
@@ -116,7 +116,7 @@ void AskPassphraseDialog::accept()
             break;
         }
         QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm wallet encryption"),
-                 tr("Warning: If you encrypt your wallet and lose your passphrase, you will <b>LOSE ALL OF YOUR BITCOINS</b>!") + "<br><br>" + tr("Are you sure you wish to encrypt your wallet?"),
+                 tr("Warning: If you encrypt your wallet and lose your passphrase, you will <b>LOSE ALL OF YOUR WIDECOINS</b>!") + "<br><br>" + tr("Are you sure you wish to encrypt your wallet?"),
                  QMessageBox::Yes|QMessageBox::Cancel,
                  QMessageBox::Cancel);
         if(retval == QMessageBox::Yes)
@@ -124,7 +124,7 @@ void AskPassphraseDialog::accept()
             if(newpass1 == newpass2)
             {
                 QString encryption_reminder = tr("Remember that encrypting your wallet cannot fully protect "
-                "your bitcoins from being stolen by malware infecting your computer.");
+                "your widecoins from being stolen by malware infecting your computer.");
                 if (m_passphrase_out) {
                     m_passphrase_out->assign(newpass1);
                     QMessageBox::warning(this, tr("Wallet to be encrypted"),

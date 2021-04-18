@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2019 The Bitcoin Core developers
+# Copyright (c) 2017-2019 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test deprecation of RPC calls."""
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 from test_framework.util import assert_raises_rpc_error, find_vout_for_address
 
-class DeprecatedRpcTest(BitcoinTestFramework):
+class DeprecatedRpcTest(WidecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
@@ -50,7 +50,7 @@ class DeprecatedRpcTest(BitcoinTestFramework):
             txid = w0.sendrawtransaction(signed_tx)
             self.sync_all()
 
-            assert_raises_rpc_error(-32, 'Using bumpfee with wallets that have private keys disabled is deprecated. Use psbtbumpfee instead or restart bitcoind with -deprecatedrpc=bumpfee. This functionality will be removed in 0.22', noprivs0.bumpfee, txid)
+            assert_raises_rpc_error(-32, 'Using bumpfee with wallets that have private keys disabled is deprecated. Use psbtbumpfee instead or restart widecoind with -deprecatedrpc=bumpfee. This functionality will be removed in 0.22', noprivs0.bumpfee, txid)
             bumped_psbt = noprivs1.bumpfee(txid)
             assert 'psbt' in bumped_psbt
         else:

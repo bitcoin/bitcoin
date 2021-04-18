@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test node responses to invalid transactions.
@@ -14,14 +14,14 @@ from test_framework.messages import (
     CTxOut,
 )
 from test_framework.p2p import P2PDataStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
 from data import invalid_txs
 
 
-class InvalidTxRequestTest(BitcoinTestFramework):
+class InvalidTxRequestTest(WidecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [[

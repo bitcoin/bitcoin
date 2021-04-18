@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2019 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -26,7 +26,7 @@ static void addCoin(const CAmount& nValue, const CWallet& wallet, std::vector<st
 // the hardest, as you need a wider selection of scenarios, just testing the
 // same one over and over isn't too useful. Generating random isn't useful
 // either for measurements."
-// (https://github.com/bitcoin/bitcoin/issues/7883#issuecomment-224807484)
+// (https://github.com/widecoin/widecoin/issues/7883#issuecomment-224807484)
 static void CoinSelection(benchmark::Bench& bench)
 {
     NodeContext node;
@@ -50,10 +50,7 @@ static void CoinSelection(benchmark::Bench& bench)
     }
 
     const CoinEligibilityFilter filter_standard(1, 6, 0);
-    const CoinSelectionParams coin_selection_params(/* use_bnb= */ true, /* change_output_size= */ 34,
-                                                    /* change_spend_size= */ 148, /* effective_feerate= */ CFeeRate(0),
-                                                    /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
-                                                    /* tx_no_inputs_size= */ 0);
+    const CoinSelectionParams coin_selection_params(true, 34, 148, CFeeRate(0), 0);
     bench.run([&] {
         std::set<CInputCoin> setCoinsRet;
         CAmount nValueRet;

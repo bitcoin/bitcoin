@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_TRANSACTIONRECORD_H
-#define BITCOIN_QT_TRANSACTIONRECORD_H
+#ifndef WIDECOIN_QT_TRANSACTIONRECORD_H
+#define WIDECOIN_QT_TRANSACTIONRECORD_H
 
 #include <amount.h>
 #include <uint256.h>
@@ -144,4 +144,4 @@ public:
     bool statusUpdateNeeded(const uint256& block_hash) const;
 };
 
-#endif // BITCOIN_QT_TRANSACTIONRECORD_H
+#endif // WIDECOIN_QT_TRANSACTIONRECORD_H

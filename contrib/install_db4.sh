@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (c) 2017-2019 The Bitcoin Core developers
+# Copyright (c) 2017-2019 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,7 +12,7 @@ if [ -z "${1}" ]; then
   echo "Usage: $0 <base-dir> [<extra-bdb-configure-flag> ...]"
   echo
   echo "Must specify a single argument: the directory in which db4 will be built."
-  echo "This is probably \`pwd\` if you're at the root of the bitcoin repository."
+  echo "This is probably \`pwd\` if you're at the root of the widecoin repository."
   exit 1
 fi
 
@@ -75,7 +75,7 @@ patch -p2 < clang.patch
 
 # The packaged config.guess and config.sub are ancient (2009) and can cause build issues.
 # Replace them with modern versions.
-# See https://github.com/bitcoin/bitcoin/issues/16064
+# See https://github.com/widecoin/widecoin/issues/16064
 CONFIG_GUESS_URL='https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.guess;hb=55eaf3e779455c4e5cc9f82efb5278be8f8f900b'
 CONFIG_GUESS_HASH='2d1ff7bca773d2ec3c6217118129220fa72d8adda67c7d2bf79994b3129232c1'
 CONFIG_SUB_URL='https://git.savannah.gnu.org/gitweb/?p=config.git;a=blob_plain;f=config.sub;hb=55eaf3e779455c4e5cc9f82efb5278be8f8f900b'
@@ -99,7 +99,7 @@ echo
 echo "db4 build complete."
 echo
 # shellcheck disable=SC2016
-echo 'When compiling bitcoind, run `./configure` in the following way:'
+echo 'When compiling widecoind, run `./configure` in the following way:'
 echo
 echo "  export BDB_PREFIX='${BDB_PREFIX}'"
 # shellcheck disable=SC2016

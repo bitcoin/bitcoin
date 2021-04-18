@@ -1,9 +1,9 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_WALLETCONTROLLER_H
-#define BITCOIN_QT_WALLETCONTROLLER_H
+#ifndef WIDECOIN_QT_WALLETCONTROLLER_H
+#define WIDECOIN_QT_WALLETCONTROLLER_H
 
 #include <qt/sendcoinsrecipient.h>
 #include <support/allocators/secure.h>
@@ -150,4 +150,4 @@ private:
     void finish();
 };
 
-#endif // BITCOIN_QT_WALLETCONTROLLER_H
+#endif // WIDECOIN_QT_WALLETCONTROLLER_H

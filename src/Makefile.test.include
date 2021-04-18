@@ -1,4 +1,4 @@
-# Copyright (c) 2013-2016 The Bitcoin Core developers
+# Copyright (c) 2013-2016 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -126,7 +126,7 @@ FUZZ_TARGETS = \
   test/fuzz/rbf \
   test/fuzz/rolling_bloom_filter \
   test/fuzz/script \
-  test/fuzz/script_bitcoin_consensus \
+  test/fuzz/script_widecoin_consensus \
   test/fuzz/script_descriptor_cache \
   test/fuzz/script_deserialize \
   test/fuzz/script_flags \
@@ -157,17 +157,16 @@ FUZZ_TARGETS = \
   test/fuzz/txrequest \
   test/fuzz/txundo_deserialize \
   test/fuzz/uint160_deserialize \
-  test/fuzz/uint256_deserialize \
-  test/fuzz/versionbits
+  test/fuzz/uint256_deserialize
 
 if ENABLE_FUZZ
 noinst_PROGRAMS += $(FUZZ_TARGETS:=)
 else
-bin_PROGRAMS += test/test_bitcoin
+bin_PROGRAMS += test/test_widecoin
 endif
 
 TEST_SRCDIR = test
-TEST_BINARY=test/test_bitcoin$(EXEEXT)
+TEST_BINARY=test/test_widecoin$(EXEEXT)
 
 JSON_TEST_FILES = \
   test/data/script_tests.json \
@@ -185,19 +184,19 @@ RAW_TEST_FILES = \
 
 GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
 
-BITCOIN_TEST_SUITE = \
+WIDECOIN_TEST_SUITE = \
   test/main.cpp \
   $(TEST_UTIL_H)
 
 FUZZ_SUITE_LD_COMMON = \
- $(LIBBITCOIN_SERVER) \
- $(LIBBITCOIN_COMMON) \
- $(LIBBITCOIN_UTIL) \
+ $(LIBWIDECOIN_SERVER) \
+ $(LIBWIDECOIN_COMMON) \
+ $(LIBWIDECOIN_UTIL) \
  $(LIBTEST_UTIL) \
  $(LIBTEST_FUZZ) \
- $(LIBBITCOIN_CONSENSUS) \
- $(LIBBITCOIN_CRYPTO) \
- $(LIBBITCOIN_CLI) \
+ $(LIBWIDECOIN_CONSENSUS) \
+ $(LIBWIDECOIN_CRYPTO) \
+ $(LIBWIDECOIN_CLI) \
  $(LIBUNIVALUE) \
  $(LIBLEVELDB) \
  $(LIBLEVELDB_SSE42) \
@@ -207,8 +206,8 @@ FUZZ_SUITE_LD_COMMON = \
  $(EVENT_LIBS) \
  $(EVENT_PTHREADS_LIBS)
 
-# test_bitcoin binary #
-BITCOIN_TESTS =\
+# test_widecoin binary #
+WIDECOIN_TESTS =\
   test/arith_uint256_tests.cpp \
   test/scriptnum10.h \
   test/addrman_tests.cpp \
@@ -292,7 +291,7 @@ BITCOIN_TESTS =\
   test/versionbits_tests.cpp
 
 if ENABLE_WALLET
-BITCOIN_TESTS += \
+WIDECOIN_TESTS += \
   wallet/test/db_tests.cpp \
   wallet/test/psbt_wallet_tests.cpp \
   wallet/test/wallet_tests.cpp \
@@ -302,1008 +301,1002 @@ BITCOIN_TESTS += \
   wallet/test/ismine_tests.cpp \
   wallet/test/scriptpubkeyman_tests.cpp
 
-BITCOIN_TEST_SUITE += \
+WIDECOIN_TEST_SUITE += \
   wallet/test/wallet_test_fixture.cpp \
   wallet/test/wallet_test_fixture.h \
   wallet/test/init_test_fixture.cpp \
   wallet/test/init_test_fixture.h
 endif
 
-test_test_bitcoin_SOURCES = $(BITCOIN_TEST_SUITE) $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
-test_test_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS)
-test_test_bitcoin_LDADD = $(LIBTEST_UTIL)
+test_test_widecoin_SOURCES = $(WIDECOIN_TEST_SUITE) $(WIDECOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
+test_test_widecoin_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS)
+test_test_widecoin_LDADD = $(LIBTEST_UTIL)
 if ENABLE_WALLET
-test_test_bitcoin_LDADD += $(LIBBITCOIN_WALLET)
+test_test_widecoin_LDADD += $(LIBWIDECOIN_WALLET)
 endif
 
-test_test_bitcoin_LDADD += $(LIBBITCOIN_SERVER) $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) \
+test_test_widecoin_LDADD += $(LIBWIDECOIN_SERVER) $(LIBWIDECOIN_CLI) $(LIBWIDECOIN_COMMON) $(LIBWIDECOIN_UTIL) $(LIBWIDECOIN_CONSENSUS) $(LIBWIDECOIN_CRYPTO) $(LIBUNIVALUE) \
   $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(BOOST_UNIT_TEST_FRAMEWORK_LIB) $(LIBSECP256K1) $(EVENT_LIBS) $(EVENT_PTHREADS_LIBS)
-test_test_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_test_widecoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
-test_test_bitcoin_LDADD += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(SQLITE_LIBS)
-test_test_bitcoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS) -static
+test_test_widecoin_LDADD += $(BDB_LIBS) $(MINIUPNPC_LIBS) $(SQLITE_LIBS)
+test_test_widecoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS) -static
 
 if ENABLE_ZMQ
-test_test_bitcoin_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
+test_test_widecoin_LDADD += $(LIBWIDECOIN_ZMQ) $(ZMQ_LIBS)
 endif
 
 if ENABLE_FUZZ
 
 FUZZ_SUITE_LDFLAGS_COMMON = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
-test_fuzz_addition_overflow_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_addition_overflow_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_addition_overflow_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_addition_overflow_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_addition_overflow_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_addition_overflow_SOURCES = test/fuzz/addition_overflow.cpp
 
-test_fuzz_addr_info_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DADDR_INFO_DESERIALIZE=1
+test_fuzz_addr_info_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DADDR_INFO_DESERIALIZE=1
 test_fuzz_addr_info_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_addr_info_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_addr_info_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_addr_info_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_addrdb_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_addrdb_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_addrdb_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_addrdb_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_addrdb_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_addrdb_SOURCES = test/fuzz/addrdb.cpp
 
-test_fuzz_address_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DADDRESS_DESERIALIZE=1
+test_fuzz_address_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DADDRESS_DESERIALIZE=1
 test_fuzz_address_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_address_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_address_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_address_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_addrman_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_addrman_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_addrman_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_addrman_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_addrman_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_addrman_SOURCES = test/fuzz/addrman.cpp
 
-test_fuzz_addrman_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DADDRMAN_DESERIALIZE=1
+test_fuzz_addrman_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DADDRMAN_DESERIALIZE=1
 test_fuzz_addrman_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_addrman_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_addrman_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_addrman_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_asmap_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_asmap_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_asmap_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_asmap_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_asmap_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_asmap_SOURCES = test/fuzz/asmap.cpp
 
-test_fuzz_asmap_direct_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_asmap_direct_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_asmap_direct_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_asmap_direct_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_asmap_direct_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_asmap_direct_SOURCES = test/fuzz/asmap_direct.cpp
 
-test_fuzz_autofile_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_autofile_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_autofile_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_autofile_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_autofile_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_autofile_SOURCES = test/fuzz/autofile.cpp
 
-test_fuzz_banentry_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBANENTRY_DESERIALIZE=1
+test_fuzz_banentry_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DBANENTRY_DESERIALIZE=1
 test_fuzz_banentry_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_banentry_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_banentry_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_banentry_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_banman_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_banman_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_banman_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_banman_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_banman_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_banman_SOURCES = test/fuzz/banman.cpp
 
-test_fuzz_base_encode_decode_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_base_encode_decode_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_base_encode_decode_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_base_encode_decode_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_base_encode_decode_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_base_encode_decode_SOURCES = test/fuzz/base_encode_decode.cpp
 
-test_fuzz_bech32_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_bech32_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_bech32_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_bech32_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_bech32_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_bech32_SOURCES = test/fuzz/bech32.cpp
 
-test_fuzz_block_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_block_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_block_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_block_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_block_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_block_SOURCES = test/fuzz/block.cpp
 
-test_fuzz_block_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCK_DESERIALIZE=1
+test_fuzz_block_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DBLOCK_DESERIALIZE=1
 test_fuzz_block_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_block_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_block_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_block_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_block_file_info_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCK_FILE_INFO_DESERIALIZE=1
+test_fuzz_block_file_info_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DBLOCK_FILE_INFO_DESERIALIZE=1
 test_fuzz_block_file_info_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_block_file_info_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_block_file_info_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_block_file_info_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_block_filter_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCK_FILTER_DESERIALIZE=1
+test_fuzz_block_filter_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DBLOCK_FILTER_DESERIALIZE=1
 test_fuzz_block_filter_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_block_filter_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_block_filter_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_block_filter_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_block_header_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_block_header_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_block_header_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_block_header_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_block_header_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_block_header_SOURCES = test/fuzz/block_header.cpp
 
-test_fuzz_block_header_and_short_txids_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCK_HEADER_AND_SHORT_TXIDS_DESERIALIZE=1
+test_fuzz_block_header_and_short_txids_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DBLOCK_HEADER_AND_SHORT_TXIDS_DESERIALIZE=1
 test_fuzz_block_header_and_short_txids_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_block_header_and_short_txids_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_block_header_and_short_txids_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_block_header_and_short_txids_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_blockfilter_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_blockfilter_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_blockfilter_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_blockfilter_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_blockfilter_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_blockfilter_SOURCES = test/fuzz/blockfilter.cpp
 
-test_fuzz_blockheader_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCKHEADER_DESERIALIZE=1
+test_fuzz_blockheader_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DBLOCKHEADER_DESERIALIZE=1
 test_fuzz_blockheader_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_blockheader_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_blockheader_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_blockheader_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_blocklocator_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCKLOCATOR_DESERIALIZE=1
+test_fuzz_blocklocator_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DBLOCKLOCATOR_DESERIALIZE=1
 test_fuzz_blocklocator_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_blocklocator_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_blocklocator_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_blocklocator_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_blockmerkleroot_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCKMERKLEROOT=1
+test_fuzz_blockmerkleroot_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DBLOCKMERKLEROOT=1
 test_fuzz_blockmerkleroot_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_blockmerkleroot_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_blockmerkleroot_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_blockmerkleroot_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_blocktransactions_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCKTRANSACTIONS_DESERIALIZE=1
+test_fuzz_blocktransactions_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DBLOCKTRANSACTIONS_DESERIALIZE=1
 test_fuzz_blocktransactions_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_blocktransactions_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_blocktransactions_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_blocktransactions_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_blocktransactionsrequest_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCKTRANSACTIONSREQUEST_DESERIALIZE=1
+test_fuzz_blocktransactionsrequest_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DBLOCKTRANSACTIONSREQUEST_DESERIALIZE=1
 test_fuzz_blocktransactionsrequest_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_blocktransactionsrequest_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_blocktransactionsrequest_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_blocktransactionsrequest_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_blockundo_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOCKUNDO_DESERIALIZE=1
+test_fuzz_blockundo_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DBLOCKUNDO_DESERIALIZE=1
 test_fuzz_blockundo_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_blockundo_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_blockundo_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_blockundo_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_bloom_filter_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_bloom_filter_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_bloom_filter_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_bloom_filter_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_bloom_filter_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_bloom_filter_SOURCES = test/fuzz/bloom_filter.cpp
 
-test_fuzz_bloomfilter_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DBLOOMFILTER_DESERIALIZE=1
+test_fuzz_bloomfilter_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DBLOOMFILTER_DESERIALIZE=1
 test_fuzz_bloomfilter_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_bloomfilter_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_bloomfilter_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_bloomfilter_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_buffered_file_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_buffered_file_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_buffered_file_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_buffered_file_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_buffered_file_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_buffered_file_SOURCES = test/fuzz/buffered_file.cpp
 
-test_fuzz_chain_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_chain_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_chain_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_chain_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_chain_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_chain_SOURCES = test/fuzz/chain.cpp
 
-test_fuzz_checkqueue_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_checkqueue_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_checkqueue_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_checkqueue_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_checkqueue_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_checkqueue_SOURCES = test/fuzz/checkqueue.cpp
 
-test_fuzz_coins_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DCOINS_DESERIALIZE=1
+test_fuzz_coins_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DCOINS_DESERIALIZE=1
 test_fuzz_coins_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_coins_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_coins_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_coins_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_coins_view_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_coins_view_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_coins_view_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_coins_view_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_coins_view_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_coins_view_SOURCES = test/fuzz/coins_view.cpp
 
-test_fuzz_connman_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_connman_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_connman_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_connman_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_connman_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_connman_SOURCES = test/fuzz/connman.cpp
 
-test_fuzz_crypto_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_crypto_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_crypto_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_crypto_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_crypto_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_crypto_SOURCES = test/fuzz/crypto.cpp
 
-test_fuzz_crypto_aes256_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_crypto_aes256_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_crypto_aes256_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_crypto_aes256_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_crypto_aes256_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_crypto_aes256_SOURCES = test/fuzz/crypto_aes256.cpp
 
-test_fuzz_crypto_aes256cbc_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_crypto_aes256cbc_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_crypto_aes256cbc_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_crypto_aes256cbc_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_crypto_aes256cbc_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_crypto_aes256cbc_SOURCES = test/fuzz/crypto_aes256cbc.cpp
 
-test_fuzz_crypto_chacha20_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_crypto_chacha20_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_crypto_chacha20_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_crypto_chacha20_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_crypto_chacha20_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_crypto_chacha20_SOURCES = test/fuzz/crypto_chacha20.cpp
 
-test_fuzz_crypto_chacha20_poly1305_aead_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_crypto_chacha20_poly1305_aead_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_crypto_chacha20_poly1305_aead_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_crypto_chacha20_poly1305_aead_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_crypto_chacha20_poly1305_aead_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_crypto_chacha20_poly1305_aead_SOURCES = test/fuzz/crypto_chacha20_poly1305_aead.cpp
 
-test_fuzz_crypto_common_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_crypto_common_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_crypto_common_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_crypto_common_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_crypto_common_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_crypto_common_SOURCES = test/fuzz/crypto_common.cpp
 
-test_fuzz_crypto_hkdf_hmac_sha256_l32_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_crypto_hkdf_hmac_sha256_l32_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_crypto_hkdf_hmac_sha256_l32_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_crypto_hkdf_hmac_sha256_l32_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_crypto_hkdf_hmac_sha256_l32_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_crypto_hkdf_hmac_sha256_l32_SOURCES = test/fuzz/crypto_hkdf_hmac_sha256_l32.cpp
 
-test_fuzz_crypto_poly1305_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_crypto_poly1305_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_crypto_poly1305_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_crypto_poly1305_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_crypto_poly1305_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_crypto_poly1305_SOURCES = test/fuzz/crypto_poly1305.cpp
 
-test_fuzz_cuckoocache_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_cuckoocache_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_cuckoocache_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_cuckoocache_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_cuckoocache_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_cuckoocache_SOURCES = test/fuzz/cuckoocache.cpp
 
-test_fuzz_decode_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_decode_tx_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_decode_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_decode_tx_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_decode_tx_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_decode_tx_SOURCES = test/fuzz/decode_tx.cpp
 
-test_fuzz_descriptor_parse_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_descriptor_parse_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_descriptor_parse_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_descriptor_parse_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_descriptor_parse_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_descriptor_parse_SOURCES = test/fuzz/descriptor_parse.cpp
 
-test_fuzz_diskblockindex_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DDISKBLOCKINDEX_DESERIALIZE=1
+test_fuzz_diskblockindex_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DDISKBLOCKINDEX_DESERIALIZE=1
 test_fuzz_diskblockindex_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_diskblockindex_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_diskblockindex_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_diskblockindex_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_eval_script_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_eval_script_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_eval_script_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_eval_script_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_eval_script_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_eval_script_SOURCES = test/fuzz/eval_script.cpp
 
-test_fuzz_fee_rate_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_fee_rate_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_fee_rate_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_fee_rate_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_fee_rate_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_fee_rate_SOURCES = test/fuzz/fee_rate.cpp
 
-test_fuzz_fee_rate_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DFEE_RATE_DESERIALIZE=1
+test_fuzz_fee_rate_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DFEE_RATE_DESERIALIZE=1
 test_fuzz_fee_rate_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_fee_rate_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_fee_rate_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_fee_rate_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_fees_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_fees_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_fees_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_fees_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_fees_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_fees_SOURCES = test/fuzz/fees.cpp
 
-test_fuzz_flat_file_pos_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DFLAT_FILE_POS_DESERIALIZE=1
+test_fuzz_flat_file_pos_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DFLAT_FILE_POS_DESERIALIZE=1
 test_fuzz_flat_file_pos_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_flat_file_pos_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_flat_file_pos_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_flat_file_pos_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_flatfile_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_flatfile_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_flatfile_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_flatfile_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_flatfile_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_flatfile_SOURCES = test/fuzz/flatfile.cpp
 
-test_fuzz_float_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_float_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_float_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_float_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_float_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_float_SOURCES = test/fuzz/float.cpp
 
-test_fuzz_golomb_rice_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_golomb_rice_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_golomb_rice_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_golomb_rice_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_golomb_rice_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_golomb_rice_SOURCES = test/fuzz/golomb_rice.cpp
 
-test_fuzz_hex_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_hex_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_hex_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_hex_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_hex_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_hex_SOURCES = test/fuzz/hex.cpp
 
-test_fuzz_http_request_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_http_request_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_http_request_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_http_request_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_http_request_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_http_request_SOURCES = test/fuzz/http_request.cpp
 
-test_fuzz_integer_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_integer_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_integer_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_integer_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_integer_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_integer_SOURCES = test/fuzz/integer.cpp
 
-test_fuzz_inv_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DINV_DESERIALIZE=1
+test_fuzz_inv_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DINV_DESERIALIZE=1
 test_fuzz_inv_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_inv_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_inv_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_inv_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_key_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_key_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_key_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_key_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_key_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_key_SOURCES = test/fuzz/key.cpp
 
-test_fuzz_key_io_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_key_io_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_key_io_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_key_io_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_key_io_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_key_io_SOURCES = test/fuzz/key_io.cpp
 
-test_fuzz_key_origin_info_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DKEY_ORIGIN_INFO_DESERIALIZE=1
+test_fuzz_key_origin_info_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DKEY_ORIGIN_INFO_DESERIALIZE=1
 test_fuzz_key_origin_info_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_key_origin_info_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_key_origin_info_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_key_origin_info_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_kitchen_sink_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_kitchen_sink_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_kitchen_sink_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_kitchen_sink_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_kitchen_sink_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_kitchen_sink_SOURCES = test/fuzz/kitchen_sink.cpp
 
-test_fuzz_load_external_block_file_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_load_external_block_file_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_load_external_block_file_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_load_external_block_file_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_load_external_block_file_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_load_external_block_file_SOURCES = test/fuzz/load_external_block_file.cpp
 
-test_fuzz_locale_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_locale_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_locale_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_locale_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_locale_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_locale_SOURCES = test/fuzz/locale.cpp
 
-test_fuzz_merkle_block_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMERKLE_BLOCK_DESERIALIZE=1
+test_fuzz_merkle_block_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMERKLE_BLOCK_DESERIALIZE=1
 test_fuzz_merkle_block_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_merkle_block_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_merkle_block_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_merkle_block_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_merkleblock_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_merkleblock_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_merkleblock_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_merkleblock_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_merkleblock_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_merkleblock_SOURCES = test/fuzz/merkleblock.cpp
 
-test_fuzz_message_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_message_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_message_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_message_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_message_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_message_SOURCES = test/fuzz/message.cpp
 
-test_fuzz_messageheader_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGEHEADER_DESERIALIZE=1
+test_fuzz_messageheader_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGEHEADER_DESERIALIZE=1
 test_fuzz_messageheader_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_messageheader_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_messageheader_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_messageheader_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_multiplication_overflow_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_multiplication_overflow_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_multiplication_overflow_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_multiplication_overflow_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_multiplication_overflow_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_multiplication_overflow_SOURCES = test/fuzz/multiplication_overflow.cpp
 
-test_fuzz_net_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_net_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_net_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_net_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_net_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_net_SOURCES = test/fuzz/net.cpp
 
-test_fuzz_net_permissions_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_net_permissions_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_net_permissions_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_net_permissions_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_net_permissions_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_net_permissions_SOURCES = test/fuzz/net_permissions.cpp
 
-test_fuzz_netaddr_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DNETADDR_DESERIALIZE=1
+test_fuzz_netaddr_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DNETADDR_DESERIALIZE=1
 test_fuzz_netaddr_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_netaddr_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_netaddr_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_netaddr_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_netaddress_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_netaddress_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_netaddress_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_netaddress_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_netaddress_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_netaddress_SOURCES = test/fuzz/netaddress.cpp
 
-test_fuzz_out_point_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DOUT_POINT_DESERIALIZE=1
+test_fuzz_out_point_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DOUT_POINT_DESERIALIZE=1
 test_fuzz_out_point_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_out_point_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_out_point_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_out_point_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_p2p_transport_deserializer_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_p2p_transport_deserializer_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_p2p_transport_deserializer_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_p2p_transport_deserializer_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_p2p_transport_deserializer_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_p2p_transport_deserializer_SOURCES = test/fuzz/p2p_transport_deserializer.cpp
 
-test_fuzz_parse_hd_keypath_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_parse_hd_keypath_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_parse_hd_keypath_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_parse_hd_keypath_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_parse_hd_keypath_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_parse_hd_keypath_SOURCES = test/fuzz/parse_hd_keypath.cpp
 
-test_fuzz_parse_iso8601_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_parse_iso8601_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_parse_iso8601_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_parse_iso8601_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_parse_iso8601_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_parse_iso8601_SOURCES = test/fuzz/parse_iso8601.cpp
 
-test_fuzz_parse_numbers_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_parse_numbers_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_parse_numbers_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_parse_numbers_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_parse_numbers_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_parse_numbers_SOURCES = test/fuzz/parse_numbers.cpp
 
-test_fuzz_parse_script_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_parse_script_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_parse_script_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_parse_script_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_parse_script_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_parse_script_SOURCES = test/fuzz/parse_script.cpp
 
-test_fuzz_parse_univalue_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_parse_univalue_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_parse_univalue_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_parse_univalue_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_parse_univalue_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_parse_univalue_SOURCES = test/fuzz/parse_univalue.cpp
 
-test_fuzz_prevector_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_prevector_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_prevector_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_prevector_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_prevector_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_prevector_SOURCES = test/fuzz/prevector.cpp
 
-test_fuzz_partial_merkle_tree_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DPARTIAL_MERKLE_TREE_DESERIALIZE=1
+test_fuzz_partial_merkle_tree_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DPARTIAL_MERKLE_TREE_DESERIALIZE=1
 test_fuzz_partial_merkle_tree_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_partial_merkle_tree_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_partial_merkle_tree_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_partial_merkle_tree_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_partially_signed_transaction_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DPARTIALLY_SIGNED_TRANSACTION_DESERIALIZE=1
+test_fuzz_partially_signed_transaction_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DPARTIALLY_SIGNED_TRANSACTION_DESERIALIZE=1
 test_fuzz_partially_signed_transaction_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_partially_signed_transaction_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_partially_signed_transaction_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_partially_signed_transaction_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_policy_estimator_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_policy_estimator_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_policy_estimator_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_policy_estimator_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_policy_estimator_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_policy_estimator_SOURCES = test/fuzz/policy_estimator.cpp
 
-test_fuzz_policy_estimator_io_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_policy_estimator_io_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_policy_estimator_io_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_policy_estimator_io_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_policy_estimator_io_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_policy_estimator_io_SOURCES = test/fuzz/policy_estimator_io.cpp
 
-test_fuzz_pow_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_pow_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_pow_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_pow_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_pow_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_pow_SOURCES = test/fuzz/pow.cpp
 
-test_fuzz_prefilled_transaction_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DPREFILLED_TRANSACTION_DESERIALIZE=1
+test_fuzz_prefilled_transaction_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DPREFILLED_TRANSACTION_DESERIALIZE=1
 test_fuzz_prefilled_transaction_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_prefilled_transaction_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_prefilled_transaction_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_prefilled_transaction_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_primitives_transaction_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_primitives_transaction_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_primitives_transaction_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_primitives_transaction_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_primitives_transaction_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_primitives_transaction_SOURCES = test/fuzz/primitives_transaction.cpp
 
-test_fuzz_process_messages_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_process_messages_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_process_messages_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_messages_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_messages_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_messages_SOURCES = test/fuzz/process_messages.cpp
 
-test_fuzz_process_message_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_process_message_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_process_message_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_addr_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=addr
+test_fuzz_process_message_addr_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=addr
 test_fuzz_process_message_addr_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_addr_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_addr_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_addr_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_block_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=block
+test_fuzz_process_message_block_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=block
 test_fuzz_process_message_block_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_block_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_block_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_block_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_blocktxn_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=blocktxn
+test_fuzz_process_message_blocktxn_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=blocktxn
 test_fuzz_process_message_blocktxn_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_blocktxn_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_blocktxn_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_blocktxn_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_cmpctblock_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=cmpctblock
+test_fuzz_process_message_cmpctblock_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=cmpctblock
 test_fuzz_process_message_cmpctblock_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_cmpctblock_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_cmpctblock_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_cmpctblock_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_feefilter_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=feefilter
+test_fuzz_process_message_feefilter_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=feefilter
 test_fuzz_process_message_feefilter_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_feefilter_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_feefilter_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_feefilter_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_filteradd_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=filteradd
+test_fuzz_process_message_filteradd_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=filteradd
 test_fuzz_process_message_filteradd_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_filteradd_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_filteradd_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_filteradd_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_filterclear_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=filterclear
+test_fuzz_process_message_filterclear_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=filterclear
 test_fuzz_process_message_filterclear_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_filterclear_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_filterclear_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_filterclear_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_filterload_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=filterload
+test_fuzz_process_message_filterload_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=filterload
 test_fuzz_process_message_filterload_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_filterload_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_filterload_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_filterload_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_getaddr_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=getaddr
+test_fuzz_process_message_getaddr_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=getaddr
 test_fuzz_process_message_getaddr_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_getaddr_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_getaddr_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_getaddr_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_getblocks_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=getblocks
+test_fuzz_process_message_getblocks_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=getblocks
 test_fuzz_process_message_getblocks_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_getblocks_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_getblocks_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_getblocks_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_getblocktxn_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=getblocktxn
+test_fuzz_process_message_getblocktxn_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=getblocktxn
 test_fuzz_process_message_getblocktxn_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_getblocktxn_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_getblocktxn_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_getblocktxn_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_getdata_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=getdata
+test_fuzz_process_message_getdata_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=getdata
 test_fuzz_process_message_getdata_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_getdata_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_getdata_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_getdata_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_getheaders_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=getheaders
+test_fuzz_process_message_getheaders_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=getheaders
 test_fuzz_process_message_getheaders_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_getheaders_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_getheaders_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_getheaders_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_headers_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=headers
+test_fuzz_process_message_headers_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=headers
 test_fuzz_process_message_headers_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_headers_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_headers_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_headers_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_inv_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=inv
+test_fuzz_process_message_inv_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=inv
 test_fuzz_process_message_inv_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_inv_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_inv_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_inv_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_mempool_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=mempool
+test_fuzz_process_message_mempool_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=mempool
 test_fuzz_process_message_mempool_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_mempool_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_mempool_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_mempool_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_notfound_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=notfound
+test_fuzz_process_message_notfound_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=notfound
 test_fuzz_process_message_notfound_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_notfound_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_notfound_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_notfound_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_ping_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=ping
+test_fuzz_process_message_ping_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=ping
 test_fuzz_process_message_ping_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_ping_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_ping_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_ping_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_pong_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=pong
+test_fuzz_process_message_pong_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=pong
 test_fuzz_process_message_pong_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_pong_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_pong_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_pong_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_sendcmpct_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=sendcmpct
+test_fuzz_process_message_sendcmpct_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=sendcmpct
 test_fuzz_process_message_sendcmpct_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_sendcmpct_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_sendcmpct_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_sendcmpct_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_sendheaders_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=sendheaders
+test_fuzz_process_message_sendheaders_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=sendheaders
 test_fuzz_process_message_sendheaders_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_sendheaders_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_sendheaders_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_sendheaders_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=tx
+test_fuzz_process_message_tx_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=tx
 test_fuzz_process_message_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_tx_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_tx_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_tx_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_verack_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=verack
+test_fuzz_process_message_verack_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=verack
 test_fuzz_process_message_verack_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_verack_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_verack_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_verack_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_process_message_version_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DMESSAGE_TYPE=version
+test_fuzz_process_message_version_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DMESSAGE_TYPE=version
 test_fuzz_process_message_version_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_process_message_version_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_process_message_version_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_process_message_version_SOURCES = test/fuzz/process_message.cpp
 
-test_fuzz_protocol_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_protocol_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_protocol_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_protocol_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_protocol_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_protocol_SOURCES = test/fuzz/protocol.cpp
 
-test_fuzz_psbt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_psbt_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_psbt_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_psbt_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_psbt_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_psbt_SOURCES = test/fuzz/psbt.cpp
 
-test_fuzz_psbt_input_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DPSBT_INPUT_DESERIALIZE=1
+test_fuzz_psbt_input_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DPSBT_INPUT_DESERIALIZE=1
 test_fuzz_psbt_input_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_psbt_input_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_psbt_input_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_psbt_input_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_psbt_output_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DPSBT_OUTPUT_DESERIALIZE=1
+test_fuzz_psbt_output_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DPSBT_OUTPUT_DESERIALIZE=1
 test_fuzz_psbt_output_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_psbt_output_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_psbt_output_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_psbt_output_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_pub_key_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DPUB_KEY_DESERIALIZE=1
+test_fuzz_pub_key_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DPUB_KEY_DESERIALIZE=1
 test_fuzz_pub_key_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_pub_key_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_pub_key_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_pub_key_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_random_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_random_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_random_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_random_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_random_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_random_SOURCES = test/fuzz/random.cpp
 
-test_fuzz_rbf_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_rbf_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_rbf_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_rbf_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_rbf_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_rbf_SOURCES = test/fuzz/rbf.cpp
 
-test_fuzz_rolling_bloom_filter_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_rolling_bloom_filter_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_rolling_bloom_filter_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_rolling_bloom_filter_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_rolling_bloom_filter_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_rolling_bloom_filter_SOURCES = test/fuzz/rolling_bloom_filter.cpp
 
-test_fuzz_script_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_script_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_script_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_script_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_script_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_script_SOURCES = test/fuzz/script.cpp
 
-test_fuzz_script_bitcoin_consensus_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-test_fuzz_script_bitcoin_consensus_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-test_fuzz_script_bitcoin_consensus_LDADD = $(FUZZ_SUITE_LD_COMMON)
-test_fuzz_script_bitcoin_consensus_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
-test_fuzz_script_bitcoin_consensus_SOURCES = test/fuzz/script_bitcoin_consensus.cpp
+test_fuzz_script_widecoin_consensus_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
+test_fuzz_script_widecoin_consensus_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+test_fuzz_script_widecoin_consensus_LDADD = $(FUZZ_SUITE_LD_COMMON)
+test_fuzz_script_widecoin_consensus_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
+test_fuzz_script_widecoin_consensus_SOURCES = test/fuzz/script_widecoin_consensus.cpp
 
-test_fuzz_script_descriptor_cache_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_script_descriptor_cache_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_script_descriptor_cache_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_script_descriptor_cache_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_script_descriptor_cache_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_script_descriptor_cache_SOURCES = test/fuzz/script_descriptor_cache.cpp
 
-test_fuzz_script_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DSCRIPT_DESERIALIZE=1
+test_fuzz_script_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DSCRIPT_DESERIALIZE=1
 test_fuzz_script_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_script_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_script_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_script_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_script_flags_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_script_flags_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_script_flags_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_script_flags_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_script_flags_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_script_flags_SOURCES = test/fuzz/script_flags.cpp
 
-test_fuzz_script_interpreter_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_script_interpreter_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_script_interpreter_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_script_interpreter_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_script_interpreter_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_script_interpreter_SOURCES = test/fuzz/script_interpreter.cpp
 
-test_fuzz_script_assets_test_minimizer_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_script_assets_test_minimizer_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_script_assets_test_minimizer_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_script_assets_test_minimizer_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_script_assets_test_minimizer_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_script_assets_test_minimizer_SOURCES = test/fuzz/script_assets_test_minimizer.cpp
 
-test_fuzz_script_ops_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_script_ops_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_script_ops_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_script_ops_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_script_ops_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_script_ops_SOURCES = test/fuzz/script_ops.cpp
 
-test_fuzz_script_sigcache_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_script_sigcache_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_script_sigcache_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_script_sigcache_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_script_sigcache_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_script_sigcache_SOURCES = test/fuzz/script_sigcache.cpp
 
-test_fuzz_script_sign_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_script_sign_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_script_sign_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_script_sign_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_script_sign_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_script_sign_SOURCES = test/fuzz/script_sign.cpp
 
-test_fuzz_scriptnum_ops_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_scriptnum_ops_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_scriptnum_ops_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_scriptnum_ops_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_scriptnum_ops_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_scriptnum_ops_SOURCES = test/fuzz/scriptnum_ops.cpp
 
-test_fuzz_secp256k1_ec_seckey_import_export_der_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_secp256k1_ec_seckey_import_export_der_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_secp256k1_ec_seckey_import_export_der_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_secp256k1_ec_seckey_import_export_der_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_secp256k1_ec_seckey_import_export_der_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_secp256k1_ec_seckey_import_export_der_SOURCES = test/fuzz/secp256k1_ec_seckey_import_export_der.cpp
 
-test_fuzz_secp256k1_ecdsa_signature_parse_der_lax_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_secp256k1_ecdsa_signature_parse_der_lax_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_secp256k1_ecdsa_signature_parse_der_lax_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_secp256k1_ecdsa_signature_parse_der_lax_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_secp256k1_ecdsa_signature_parse_der_lax_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_secp256k1_ecdsa_signature_parse_der_lax_SOURCES = test/fuzz/secp256k1_ecdsa_signature_parse_der_lax.cpp
 
-test_fuzz_service_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DSERVICE_DESERIALIZE=1
+test_fuzz_service_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DSERVICE_DESERIALIZE=1
 test_fuzz_service_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_service_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_service_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_service_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_signature_checker_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_signature_checker_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_signature_checker_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_signature_checker_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_signature_checker_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_signature_checker_SOURCES = test/fuzz/signature_checker.cpp
 
-test_fuzz_signet_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_signet_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_signet_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_signet_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_signet_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 test_fuzz_signet_SOURCES = test/fuzz/signet.cpp
 
-test_fuzz_snapshotmetadata_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DSNAPSHOTMETADATA_DESERIALIZE=1
+test_fuzz_snapshotmetadata_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DSNAPSHOTMETADATA_DESERIALIZE=1
 test_fuzz_snapshotmetadata_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_snapshotmetadata_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_snapshotmetadata_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_snapshotmetadata_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_span_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_span_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_span_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_span_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_span_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_span_SOURCES = test/fuzz/span.cpp
 
-test_fuzz_spanparsing_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_spanparsing_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_spanparsing_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_spanparsing_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_spanparsing_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_spanparsing_SOURCES = test/fuzz/spanparsing.cpp
 
-test_fuzz_string_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_string_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_string_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_string_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_string_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_string_SOURCES = test/fuzz/string.cpp
 
-test_fuzz_strprintf_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_strprintf_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_strprintf_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_strprintf_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_strprintf_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_strprintf_SOURCES = test/fuzz/strprintf.cpp
 
-test_fuzz_sub_net_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DSUB_NET_DESERIALIZE=1
+test_fuzz_sub_net_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DSUB_NET_DESERIALIZE=1
 test_fuzz_sub_net_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_sub_net_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_sub_net_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_sub_net_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_system_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_system_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_system_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_system_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_system_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_system_SOURCES = test/fuzz/system.cpp
 
-test_fuzz_timedata_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_timedata_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_timedata_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_timedata_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_timedata_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_timedata_SOURCES = test/fuzz/timedata.cpp
 
-test_fuzz_transaction_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_transaction_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_transaction_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_transaction_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_transaction_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_transaction_SOURCES = test/fuzz/transaction.cpp
 
-test_fuzz_tx_in_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_tx_in_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_tx_in_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_tx_in_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_tx_in_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_tx_in_SOURCES = test/fuzz/tx_in.cpp
 
-test_fuzz_tx_in_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DTX_IN_DESERIALIZE=1
+test_fuzz_tx_in_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DTX_IN_DESERIALIZE=1
 test_fuzz_tx_in_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_tx_in_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_tx_in_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_tx_in_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_tx_out_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_tx_out_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_tx_out_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_tx_out_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_tx_out_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_tx_out_SOURCES = test/fuzz/tx_out.cpp
 
-test_fuzz_txoutcompressor_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DTXOUTCOMPRESSOR_DESERIALIZE=1
+test_fuzz_txoutcompressor_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DTXOUTCOMPRESSOR_DESERIALIZE=1
 test_fuzz_txoutcompressor_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_txoutcompressor_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_txoutcompressor_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_txoutcompressor_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_txrequest_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+test_fuzz_txrequest_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES)
 test_fuzz_txrequest_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_txrequest_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_txrequest_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_txrequest_SOURCES = test/fuzz/txrequest.cpp
 
-test_fuzz_txundo_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DTXUNDO_DESERIALIZE=1
+test_fuzz_txundo_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DTXUNDO_DESERIALIZE=1
 test_fuzz_txundo_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_txundo_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_txundo_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_txundo_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_uint160_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DUINT160_DESERIALIZE=1
+test_fuzz_uint160_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DUINT160_DESERIALIZE=1
 test_fuzz_uint160_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_uint160_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_uint160_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_uint160_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_uint256_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -DUINT256_DESERIALIZE=1
+test_fuzz_uint256_deserialize_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) -DUINT256_DESERIALIZE=1
 test_fuzz_uint256_deserialize_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 test_fuzz_uint256_deserialize_LDADD = $(FUZZ_SUITE_LD_COMMON)
 test_fuzz_uint256_deserialize_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
 test_fuzz_uint256_deserialize_SOURCES = test/fuzz/deserialize.cpp
 
-test_fuzz_versionbits_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-test_fuzz_versionbits_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-test_fuzz_versionbits_LDADD = $(FUZZ_SUITE_LD_COMMON)
-test_fuzz_versionbits_LDFLAGS = $(FUZZ_SUITE_LDFLAGS_COMMON)
-test_fuzz_versionbits_SOURCES = test/fuzz/versionbits.cpp
-
 endif # ENABLE_FUZZ
 
-nodist_test_test_bitcoin_SOURCES = $(GENERATED_TEST_FILES)
+nodist_test_test_widecoin_SOURCES = $(GENERATED_TEST_FILES)
 
-$(BITCOIN_TESTS): $(GENERATED_TEST_FILES)
+$(WIDECOIN_TESTS): $(GENERATED_TEST_FILES)
 
-CLEAN_BITCOIN_TEST = test/*.gcda test/*.gcno test/fuzz/*.gcda test/fuzz/*.gcno test/util/*.gcda test/util/*.gcno $(GENERATED_TEST_FILES) $(BITCOIN_TESTS:=.log)
+CLEAN_WIDECOIN_TEST = test/*.gcda test/*.gcno test/fuzz/*.gcda test/fuzz/*.gcno test/util/*.gcda test/util/*.gcno $(GENERATED_TEST_FILES) $(WIDECOIN_TESTS:=.log)
 
-CLEANFILES += $(CLEAN_BITCOIN_TEST)
+CLEANFILES += $(CLEAN_WIDECOIN_TEST)
 
 if TARGET_WINDOWS
-bitcoin_test: $(TEST_BINARY)
+widecoin_test: $(TEST_BINARY)
 else
 if ENABLE_BENCH
-bitcoin_test: $(TEST_BINARY) $(BENCH_BINARY)
+widecoin_test: $(TEST_BINARY) $(BENCH_BINARY)
 else
-bitcoin_test: $(TEST_BINARY)
+widecoin_test: $(TEST_BINARY)
 endif
 endif
 
-bitcoin_test_check: $(TEST_BINARY) FORCE
+widecoin_test_check: $(TEST_BINARY) FORCE
 	$(MAKE) check-TESTS TESTS=$^
 
-bitcoin_test_clean : FORCE
-	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_bitcoin_OBJECTS) $(TEST_BINARY)
+widecoin_test_clean : FORCE
+	rm -f $(CLEAN_WIDECOIN_TEST) $(test_test_widecoin_OBJECTS) $(TEST_BINARY)
 
-check-local: $(BITCOIN_TESTS:.cpp=.cpp.test)
-if BUILD_BITCOIN_TX
-	@echo "Running test/util/bitcoin-util-test.py..."
-	$(PYTHON) $(top_builddir)/test/util/bitcoin-util-test.py
+check-local: $(WIDECOIN_TESTS:.cpp=.cpp.test)
+if BUILD_WIDECOIN_TX
+	@echo "Running test/util/widecoin-util-test.py..."
+	$(PYTHON) $(top_builddir)/test/util/widecoin-util-test.py
 endif
 	@echo "Running test/util/rpcauth-test.py..."
 	$(PYTHON) $(top_builddir)/test/util/rpcauth-test.py
 if TARGET_WINDOWS
 else
 if ENABLE_BENCH
-	@echo "Running bench/bench_bitcoin ..."
+	@echo "Running bench/bench_widecoin ..."
 	$(BENCH_BINARY) > /dev/null
 endif
 endif

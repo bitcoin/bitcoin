@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2020 The Bitcoin Core developers
+# Copyright (c) 2016-2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test various net timeouts.
 
-- Create three bitcoind nodes:
+- Create three widecoind nodes:
 
     no_verack_node - we never send a verack in response to their version
     no_version_node - we never send a version (only a ping)
@@ -25,7 +25,7 @@ from time import sleep
 
 from test_framework.messages import msg_ping
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 
 
 class TestP2PConn(P2PInterface):
@@ -34,7 +34,7 @@ class TestP2PConn(P2PInterface):
         pass
 
 
-class TimeoutsTest(BitcoinTestFramework):
+class TimeoutsTest(WidecoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

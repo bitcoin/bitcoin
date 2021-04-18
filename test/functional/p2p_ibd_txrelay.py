@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test fee filters during and after IBD."""
@@ -7,13 +7,13 @@
 from decimal import Decimal
 
 from test_framework.messages import COIN
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 
 MAX_FEE_FILTER = Decimal(9170997) / COIN
 NORMAL_FEE_FILTER = Decimal(100) / COIN
 
 
-class P2PIBDTxRelayTest(BitcoinTestFramework):
+class P2PIBDTxRelayTest(WidecoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2

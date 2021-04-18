@@ -10,7 +10,7 @@ During the deployment process, the disk image window will pop up briefly
 when the fancy settings are applied. This is normal, please do not interfere,
 the process will unmount the DMG and cleanup before finishing.
 
-When complete, it will have produced `Bitcoin-Qt.dmg`.
+When complete, it will have produced `Widecoin-Qt.dmg`.
 
 ## SDK Extraction
 
@@ -29,7 +29,7 @@ approach (tested on Debian Buster) is outlined below:
 ```bash
 # Install/clone tools needed for extracting Xcode.app
 apt install cpio
-git clone https://github.com/bitcoin-core/apple-sdk-tools.git
+git clone https://github.com/widecoin-core/apple-sdk-tools.git
 
 # Unpack Xcode_11.3.1.xip and place the resulting Xcode.app in your current
 # working directory
@@ -98,7 +98,7 @@ redistributed.
 
 `genisoimage` is used to create the initial DMG. It is not deterministic as-is, so it has been
 patched. A system `genisoimage` will work fine, but it will not be deterministic because
-the file-order will change between invocations. The patch can be seen here: [cdrkit-deterministic.patch](https://github.com/bitcoin/bitcoin/blob/master/depends/patches/native_cdrkit/cdrkit-deterministic.patch).
+the file-order will change between invocations. The patch can be seen here: [cdrkit-deterministic.patch](https://github.com/widecoin/widecoin/blob/master/depends/patches/native_cdrkit/cdrkit-deterministic.patch).
 No effort was made to fix this cleanly, so it likely leaks memory badly, however it's only used for
 a single invocation, so that's no real concern.
 
@@ -123,6 +123,6 @@ deterministic. Here's how it works:
   of a tarball, which also contains all of the tools that have been previously (deterministically)
   built in order to create a final DMG.
 - The Apple keyholder uses this unsigned app to create a detached signature, using the
-  script that is also included there. Detached signatures are available from this [repository](https://github.com/bitcoin-core/bitcoin-detached-sigs).
+  script that is also included there. Detached signatures are available from this [repository](https://github.com/widecoin-core/widecoin-detached-sigs).
 - Builders feed the unsigned app + detached signature back into Gitian. It uses the
   pre-built tools to recombine the pieces into a deterministic DMG.

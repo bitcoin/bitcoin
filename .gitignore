@@ -2,17 +2,17 @@
 
 *.exe
 *.pdb
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-gui
-src/bitcoin-node
-src/bitcoin-tx
-src/bitcoin-wallet
+src/widecoin
+src/widecoind
+src/widecoin-cli
+src/widecoin-gui
+src/widecoin-node
+src/widecoin-tx
+src/widecoin-wallet
 src/test/fuzz/*
 !src/test/fuzz/*.*
-src/test/test_bitcoin
-src/qt/test/test_bitcoin-qt
+src/test/test_widecoin
+src/qt/test/test_widecoin-qt
 
 # autoreconf
 Makefile.in
@@ -36,8 +36,8 @@ config.log
 config.status
 configure
 libtool
-src/config/bitcoin-config.h
-src/config/bitcoin-config.h.in
+src/config/widecoin-config.h
+src/config/widecoin-config.h.in
 src/config/stamp-h1
 src/obj
 share/setup.nsi
@@ -51,11 +51,11 @@ src/qt/forms/ui_*.h
 
 src/qt/test/moc*.cpp
 
-src/qt/bitcoin-qt.config
-src/qt/bitcoin-qt.creator
-src/qt/bitcoin-qt.creator.user
-src/qt/bitcoin-qt.files
-src/qt/bitcoin-qt.includes
+src/qt/widecoin-qt.config
+src/qt/widecoin-qt.creator
+src/qt/widecoin-qt.creator.user
+src/qt/widecoin-qt.files
+src/qt/widecoin-qt.includes
 
 .deps
 .dirstamp
@@ -92,8 +92,8 @@ src/qt/bitcoin-qt.includes
 *.qm
 Makefile
 !depends/Makefile
-src/qt/bitcoin-qt
-Bitcoin-Qt.app
+src/qt/widecoin-qt
+Widecoin-Qt.app
 background.tiff*
 
 # Qt Creator
@@ -101,7 +101,7 @@ Makefile.am.user
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+widecoin-qt_test
 
 # Resources cpp
 qrc_*.cpp
@@ -117,7 +117,7 @@ releases
 *.gcno
 *.gcda
 /*.info
-test_bitcoin.coverage/
+test_widecoin.coverage/
 total.coverage/
 fuzz.coverage/
 coverage_percent.txt
@@ -136,7 +136,7 @@ test/.mypy_cache/
 
 /doc/doxygen/
 
-libbitcoinconsensus.pc
+libwidecoinconsensus.pc
 contrib/devtools/split-debug.sh
 
 # Output from running db4 installation

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019 The Bitcoin Core developers
+# Copyright (c) 2019 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test getdescriptorinfo RPC.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 from test_framework.descriptors import descsum_create
 from test_framework.util import (
     assert_equal,
@@ -13,7 +13,7 @@ from test_framework.util import (
 )
 
 
-class DescriptorTest(BitcoinTestFramework):
+class DescriptorTest(WidecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [["-disablewallet"]]

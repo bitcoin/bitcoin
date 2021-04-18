@@ -1,9 +1,9 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) 2018-2019 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_SPANPARSING_H
-#define BITCOIN_UTIL_SPANPARSING_H
+#ifndef WIDECOIN_UTIL_SPANPARSING_H
+#define WIDECOIN_UTIL_SPANPARSING_H
 
 #include <span.h>
 
@@ -47,4 +47,4 @@ std::vector<Span<const char>> Split(const Span<const char>& sp, char sep);
 
 } // namespace spanparsing
 
-#endif // BITCOIN_UTIL_SPANPARSING_H
+#endif // WIDECOIN_UTIL_SPANPARSING_H

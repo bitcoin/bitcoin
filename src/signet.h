@@ -1,9 +1,9 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SIGNET_H
-#define BITCOIN_SIGNET_H
+#ifndef WIDECOIN_SIGNET_H
+#define WIDECOIN_SIGNET_H
 
 #include <consensus/params.h>
 #include <primitives/block.h>
@@ -34,4 +34,4 @@ public:
     const CTransaction m_to_sign;
 };
 
-#endif // BITCOIN_SIGNET_H
+#endif // WIDECOIN_SIGNET_H

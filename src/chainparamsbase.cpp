@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -23,7 +23,7 @@ void SetupChainParamsBaseOptions(ArgsManager& argsman)
                  "This is intended for regression testing tools and app development. Equivalent to -chain=regtest.", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CHAINPARAMS);
     argsman.AddArg("-segwitheight=<n>", "Set the activation height of segwit. -1 to disable. (regtest-only)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-testnet", "Use the test chain. Equivalent to -chain=test.", ArgsManager::ALLOW_ANY, OptionsCategory::CHAINPARAMS);
-    argsman.AddArg("-vbparams=deployment:start:end[:min_activation_height]", "Use given start/end times and min_activation_height for specified version bits deployment (regtest-only)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CHAINPARAMS);
+    argsman.AddArg("-vbparams=deployment:start:end", "Use given start/end times for specified version bits deployment (regtest-only)", ArgsManager::ALLOW_ANY | ArgsManager::DEBUG_ONLY, OptionsCategory::CHAINPARAMS);
     argsman.AddArg("-signet", "Use the signet chain. Equivalent to -chain=signet. Note that the network is defined by the -signetchallenge parameter", ArgsManager::ALLOW_ANY, OptionsCategory::CHAINPARAMS);
     argsman.AddArg("-signetchallenge", "Blocks must satisfy the given script to be considered valid (only for signet networks; defaults to the global default signet test network challenge)", ArgsManager::ALLOW_STRING, OptionsCategory::CHAINPARAMS);
     argsman.AddArg("-signetseednode", "Specify a seed node for the signet network, in the hostname[:port] format, e.g. sig.net:1234 (may be used multiple times to specify multiple seed nodes; defaults to the global default signet test network seed node(s))", ArgsManager::ALLOW_STRING, OptionsCategory::CHAINPARAMS);
@@ -38,17 +38,18 @@ const CBaseChainParams& BaseParams()
 }
 
 /**
- * Port numbers for incoming Tor connections (8334, 18334, 38334, 18445) have
+ * Port numbers for incoming Tor connections (8554, 18554, 38554, 18445) have
  * been chosen arbitrarily to keep ranges of used ports tight.
  */
+
 std::unique_ptr<CBaseChainParams> CreateBaseChainParams(const std::string& chain)
 {
     if (chain == CBaseChainParams::MAIN) {
-        return MakeUnique<CBaseChainParams>("", 8332, 8334);
+        return MakeUnique<CBaseChainParams>("", 8552, 8554);
     } else if (chain == CBaseChainParams::TESTNET) {
-        return MakeUnique<CBaseChainParams>("testnet3", 18332, 18334);
+        return MakeUnique<CBaseChainParams>("testnet3", 18552, 18554);
     } else if (chain == CBaseChainParams::SIGNET) {
-        return MakeUnique<CBaseChainParams>("signet", 38332, 38334);
+        return MakeUnique<CBaseChainParams>("signet", 38552, 38554);
     } else if (chain == CBaseChainParams::REGTEST) {
         return MakeUnique<CBaseChainParams>("regtest", 18443, 18445);
     }

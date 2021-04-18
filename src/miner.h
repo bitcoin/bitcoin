@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_MINER_H
-#define BITCOIN_MINER_H
+#ifndef WIDECOIN_MINER_H
+#define WIDECOIN_MINER_H
 
 #include <optional.h>
 #include <primitives/block.h>
@@ -204,4 +204,4 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
 /** Update an old GenerateCoinbaseCommitment from CreateNewBlock after the block txs have changed */
 void RegenerateCommitments(CBlock& block);
 
-#endif // BITCOIN_MINER_H
+#endif // WIDECOIN_MINER_H

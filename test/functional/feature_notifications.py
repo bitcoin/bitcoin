@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2019 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the -alertnotify, -blocknotify and -walletnotify options."""
 import os
 
 from test_framework.address import ADDRESS_BCRT1_UNSPENDABLE, keyhash_to_p2pkh
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 from test_framework.util import (
     assert_equal,
     hex_str_to_bytes,
@@ -23,7 +23,7 @@ def notify_outputname(walletname, txid):
     return txid if os.name == 'nt' else '{}_{}'.format(walletname, txid)
 
 
-class NotificationsTest(BitcoinTestFramework):
+class NotificationsTest(WidecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
@@ -102,7 +102,7 @@ class NotificationsTest(BitcoinTestFramework):
 
             # Generate bump transaction, sync mempools, and check for bump1
             # notification. In the future, per
-            # https://github.com/bitcoin/bitcoin/pull/9371, it might be better
+            # https://github.com/widecoin/widecoin/pull/9371, it might be better
             # to have notifications for both tx1 and bump1.
             bump1 = self.nodes[0].bumpfee(tx1)["txid"]
             assert_equal(bump1 in self.nodes[0].getrawmempool(), True)

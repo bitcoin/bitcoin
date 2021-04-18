@@ -9,7 +9,7 @@
 unsigned-integer-overflow:arith_uint256.h
 unsigned-integer-overflow:basic_string.h
 unsigned-integer-overflow:bench/bench.h
-unsigned-integer-overflow:bitcoin-tx.cpp
+unsigned-integer-overflow:widecoin-tx.cpp
 unsigned-integer-overflow:bloom.cpp
 unsigned-integer-overflow:chain.cpp
 unsigned-integer-overflow:chain.h
@@ -50,7 +50,7 @@ implicit-integer-sign-change:key.cpp
 implicit-integer-sign-change:noui.cpp
 implicit-integer-sign-change:prevector.h
 implicit-integer-sign-change:protocol.cpp
-implicit-integer-sign-change:script/bitcoinconsensus.cpp
+implicit-integer-sign-change:script/widecoinconsensus.cpp
 implicit-integer-sign-change:script/interpreter.cpp
 implicit-integer-sign-change:serialize.h
 implicit-integer-sign-change:test/arith_uint256_tests.cpp

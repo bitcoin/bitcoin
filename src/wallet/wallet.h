@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_WALLET_H
-#define BITCOIN_WALLET_WALLET_H
+#ifndef WIDECOIN_WALLET_WALLET_H
+#define WIDECOIN_WALLET_WALLET_H
 
 #include <amount.h>
 #include <interfaces/chain.h>
@@ -319,7 +319,7 @@ public:
     unsigned int nTimeSmart;
     /**
      * From me flag is set to 1 for transactions that were created by the wallet
-     * on this bitcoin node, and set to 0 for transactions that were created
+     * on this widecoin node, and set to 0 for transactions that were created
      * externally and came in through the network or sendrawtransaction RPC.
      */
     bool fFromMe;
@@ -606,23 +606,12 @@ struct CoinSelectionParams
     bool use_bnb = true;
     size_t change_output_size = 0;
     size_t change_spend_size = 0;
-    CFeeRate m_effective_feerate;
-    CFeeRate m_long_term_feerate;
-    CFeeRate m_discard_feerate;
+    CFeeRate effective_fee = CFeeRate(0);
     size_t tx_noinputs_size = 0;
     //! Indicate that we are subtracting the fee from outputs
     bool m_subtract_fee_outputs = false;
 
-    CoinSelectionParams(bool use_bnb, size_t change_output_size, size_t change_spend_size, CFeeRate effective_feerate,
-                        CFeeRate long_term_feerate, CFeeRate discard_feerate, size_t tx_noinputs_size) :
-        use_bnb(use_bnb),
-        change_output_size(change_output_size),
-        change_spend_size(change_spend_size),
-        m_effective_feerate(effective_feerate),
-        m_long_term_feerate(long_term_feerate),
-        m_discard_feerate(discard_feerate),
-        tx_noinputs_size(tx_noinputs_size)
-    {}
+    CoinSelectionParams(bool use_bnb, size_t change_output_size, size_t change_spend_size, CFeeRate effective_fee, size_t tx_noinputs_size) : use_bnb(use_bnb), change_output_size(change_output_size), change_spend_size(change_spend_size), effective_fee(effective_fee), tx_noinputs_size(tx_noinputs_size) {}
     CoinSelectionParams() {}
 };
 
@@ -1341,4 +1330,4 @@ bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
 //! Remove wallet name from persistent configuration so it will not be loaded on startup.
 bool RemoveWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
 
-#endif // BITCOIN_WALLET_WALLET_H
+#endif // WIDECOIN_WALLET_WALLET_H

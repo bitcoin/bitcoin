@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2019 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test descendant package tracking code."""
@@ -8,7 +8,7 @@ from decimal import Decimal
 
 from test_framework.messages import COIN
 from test_framework.p2p import P2PTxInvStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -23,7 +23,7 @@ MAX_ANCESTORS_CUSTOM = 5
 MAX_DESCENDANTS_CUSTOM = 10
 assert MAX_DESCENDANTS_CUSTOM >= MAX_ANCESTORS_CUSTOM
 
-class MempoolPackagesTest(BitcoinTestFramework):
+class MempoolPackagesTest(WidecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [

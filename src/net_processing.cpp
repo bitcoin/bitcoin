@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -2025,11 +2025,11 @@ void PeerManager::ProcessOrphanTx(std::set<uint256>& orphan_work_set)
                 // adding such txids to the reject filter would potentially
                 // interfere with relay of valid transactions from peers that
                 // do not support wtxid-based relay. See
-                // https://github.com/bitcoin/bitcoin/issues/8279 for details.
+                // https://github.com/widecoin/widecoin/issues/8279 for details.
                 // We can remove this restriction (and always add wtxids to
                 // the filter even for witness stripped transactions) once
                 // wtxid-based relay is broadly deployed.
-                // See also comments in https://github.com/bitcoin/bitcoin/pull/18044#discussion_r443419034
+                // See also comments in https://github.com/widecoin/widecoin/pull/18044#discussion_r443419034
                 // for concerns around weakening security of unupgraded nodes
                 // if we start doing this too early.
                 assert(recentRejects);
@@ -2305,9 +2305,6 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
         bool fRelay = true;
 
         vRecv >> nVersion >> nServiceInt >> nTime >> addrMe;
-        if (nTime < 0) {
-            nTime = 0;
-        }
         nServices = ServiceFlags(nServiceInt);
         if (!pfrom.IsInboundConn())
         {
@@ -3102,11 +3099,11 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
                 // adding such txids to the reject filter would potentially
                 // interfere with relay of valid transactions from peers that
                 // do not support wtxid-based relay. See
-                // https://github.com/bitcoin/bitcoin/issues/8279 for details.
+                // https://github.com/widecoin/widecoin/issues/8279 for details.
                 // We can remove this restriction (and always add wtxids to
                 // the filter even for witness stripped transactions) once
                 // wtxid-based relay is broadly deployed.
-                // See also comments in https://github.com/bitcoin/bitcoin/pull/18044#discussion_r443419034
+                // See also comments in https://github.com/widecoin/widecoin/pull/18044#discussion_r443419034
                 // for concerns around weakening security of unupgraded nodes
                 // if we start doing this too early.
                 assert(recentRejects);

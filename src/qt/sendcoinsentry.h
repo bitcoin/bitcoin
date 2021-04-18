@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_SENDCOINSENTRY_H
-#define BITCOIN_QT_SENDCOINSENTRY_H
+#ifndef WIDECOIN_QT_SENDCOINSENTRY_H
+#define WIDECOIN_QT_SENDCOINSENTRY_H
 
 #include <qt/sendcoinsrecipient.h>
 
@@ -21,7 +21,7 @@ namespace Ui {
 }
 
 /**
- * A single entry in the dialog for sending bitcoins.
+ * A single entry in the dialog for sending widecoins.
  * Stacked widget, with different UIs for payment requests
  * with a strong payee identity.
  */
@@ -78,4 +78,4 @@ private:
     bool updateLabel(const QString &address);
 };
 
-#endif // BITCOIN_QT_SENDCOINSENTRY_H
+#endif // WIDECOIN_QT_SENDCOINSENTRY_H

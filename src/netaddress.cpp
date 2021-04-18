@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1063,23 +1063,14 @@ CSubNet::CSubNet(const CNetAddr& addr, const CNetAddr& mask) : CSubNet()
 
 CSubNet::CSubNet(const CNetAddr& addr) : CSubNet()
 {
-    switch (addr.m_net) {
-    case NET_IPV4:
-    case NET_IPV6:
-        valid = true;
-        assert(addr.m_addr.size() <= sizeof(netmask));
-        memset(netmask, 0xFF, addr.m_addr.size());
-        break;
-    case NET_ONION:
-    case NET_I2P:
-    case NET_CJDNS:
-        valid = true;
-        break;
-    case NET_INTERNAL:
-    case NET_UNROUTABLE:
-    case NET_MAX:
+    valid = addr.IsIPv4() || addr.IsIPv6();
+    if (!valid) {
         return;
     }
+
+    assert(addr.m_addr.size() <= sizeof(netmask));
+
+    memset(netmask, 0xFF, addr.m_addr.size());
 
     network = addr;
 }
@@ -1092,21 +1083,6 @@ bool CSubNet::Match(const CNetAddr &addr) const
 {
     if (!valid || !addr.IsValid() || network.m_net != addr.m_net)
         return false;
-
-    switch (network.m_net) {
-    case NET_IPV4:
-    case NET_IPV6:
-        break;
-    case NET_ONION:
-    case NET_I2P:
-    case NET_CJDNS:
-    case NET_INTERNAL:
-        return addr == network;
-    case NET_UNROUTABLE:
-    case NET_MAX:
-        return false;
-    }
-
     assert(network.m_addr.size() == addr.m_addr.size());
     for (size_t x = 0; x < addr.m_addr.size(); ++x) {
         if ((addr.m_addr[x] & netmask[x]) != network.m_addr[x]) {
@@ -1118,35 +1094,18 @@ bool CSubNet::Match(const CNetAddr &addr) const
 
 std::string CSubNet::ToString() const
 {
-    std::string suffix;
+    assert(network.m_addr.size() <= sizeof(netmask));
 
-    switch (network.m_net) {
-    case NET_IPV4:
-    case NET_IPV6: {
-        assert(network.m_addr.size() <= sizeof(netmask));
+    uint8_t cidr = 0;
 
-        uint8_t cidr = 0;
-
-        for (size_t i = 0; i < network.m_addr.size(); ++i) {
-            if (netmask[i] == 0x00) {
-                break;
-            }
-            cidr += NetmaskBits(netmask[i]);
+    for (size_t i = 0; i < network.m_addr.size(); ++i) {
+        if (netmask[i] == 0x00) {
+            break;
         }
-
-        suffix = strprintf("/%u", cidr);
-        break;
-    }
-    case NET_ONION:
-    case NET_I2P:
-    case NET_CJDNS:
-    case NET_INTERNAL:
-    case NET_UNROUTABLE:
-    case NET_MAX:
-        break;
+        cidr += NetmaskBits(netmask[i]);
     }
 
-    return network.ToString() + suffix;
+    return network.ToString() + strprintf("/%u", cidr);
 }
 
 bool CSubNet::IsValid() const
@@ -1156,19 +1115,7 @@ bool CSubNet::IsValid() const
 
 bool CSubNet::SanityCheck() const
 {
-    switch (network.m_net) {
-    case NET_IPV4:
-    case NET_IPV6:
-        break;
-    case NET_ONION:
-    case NET_I2P:
-    case NET_CJDNS:
-        return true;
-    case NET_INTERNAL:
-    case NET_UNROUTABLE:
-    case NET_MAX:
-        return false;
-    }
+    if (!(network.IsIPv4() || network.IsIPv6())) return false;
 
     for (size_t x = 0; x < network.m_addr.size(); ++x) {
         if (network.m_addr[x] & ~netmask[x]) return false;

@@ -1,14 +1,14 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/widecoin-config.h>
 #endif
 
 #include <qt/optionsmodel.h>
 
-#include <qt/bitcoinunits.h>
+#include <qt/widecoinunits.h>
 #include <qt/guiconstants.h>
 #include <qt/guiutil.h>
 
@@ -69,7 +69,7 @@ void OptionsModel::Init(bool resetSettings)
 
     // Display
     if (!settings.contains("nDisplayUnit"))
-        settings.setValue("nDisplayUnit", BitcoinUnits::BTC);
+        settings.setValue("nDisplayUnit", WidecoinUnits::WCN);
     nDisplayUnit = settings.value("nDisplayUnit").toInt();
 
     if (!settings.contains("strThirdPartyTxUrls"))
@@ -515,7 +515,7 @@ void OptionsModel::checkAndMigrate()
     if (settingsVersion < CLIENT_VERSION)
     {
         // -dbcache was bumped from 100 to 300 in 0.13
-        // see https://github.com/bitcoin/bitcoin/pull/8273
+        // see https://github.com/widecoin/widecoin/pull/8273
         // force people to upgrade to the new value if they are using 100MB
         if (settingsVersion < 130000 && settings.contains("nDatabaseCache") && settings.value("nDatabaseCache").toLongLong() == 100)
             settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);

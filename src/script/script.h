@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SCRIPT_SCRIPT_H
-#define BITCOIN_SCRIPT_SCRIPT_H
+#ifndef WIDECOIN_SCRIPT_SCRIPT_H
+#define WIDECOIN_SCRIPT_SCRIPT_H
 
 #include <crypto/common.h>
 #include <prevector.h>
@@ -510,7 +510,7 @@ public:
     }
 
     /**
-     * Pre-version-0.6, Bitcoin always counted CHECKMULTISIGs
+     * Pre-version-0.6, Widecoin always counted CHECKMULTISIGs
      * as 20 sigops. With pay-to-script-hash, that changed:
      * CHECKMULTISIGs serialized in scriptSigs are
      * counted more accurately, assuming they are of the form
@@ -572,4 +572,4 @@ struct CScriptWitness
 /** Test for OP_SUCCESSx opcodes as defined by BIP342. */
 bool IsOpSuccess(const opcodetype& opcode);
 
-#endif // BITCOIN_SCRIPT_SCRIPT_H
+#endif // WIDECOIN_SCRIPT_SCRIPT_H

@@ -1,9 +1,9 @@
-// Copyright (c) 2016-2019 The Bitcoin Core developers
+// Copyright (c) 2016-2019 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_VERSIONBITS_H
-#define BITCOIN_VERSIONBITS_H
+#ifndef WIDECOIN_VERSIONBITS_H
+#define WIDECOIN_VERSIONBITS_H
 
 #include <chain.h>
 #include <map>
@@ -25,7 +25,7 @@ static const int32_t VERSIONBITS_NUM_BITS = 29;
 enum class ThresholdState {
     DEFINED,   // First state that each softfork starts out as. The genesis block is by definition in this state for each deployment.
     STARTED,   // For blocks past the starttime.
-    LOCKED_IN, // For at least one retarget period after the first retarget period with STARTED blocks of which at least threshold have the associated bit set in nVersion, until min_activation_height is reached.
+    LOCKED_IN, // For one retarget period after the first retarget period with STARTED blocks of which at least threshold have the associated bit set in nVersion.
     ACTIVE,    // For all blocks after the LOCKED_IN retarget period (final state)
     FAILED,    // For all blocks once the first retarget period after the timeout time is hit, if LOCKED_IN wasn't already reached (final state)
 };
@@ -57,7 +57,6 @@ protected:
     virtual bool Condition(const CBlockIndex* pindex, const Consensus::Params& params) const =0;
     virtual int64_t BeginTime(const Consensus::Params& params) const =0;
     virtual int64_t EndTime(const Consensus::Params& params) const =0;
-    virtual int MinActivationHeight(const Consensus::Params& params) const { return 0; }
     virtual int Period(const Consensus::Params& params) const =0;
     virtual int Threshold(const Consensus::Params& params) const =0;
 
@@ -85,4 +84,4 @@ BIP9Stats VersionBitsStatistics(const CBlockIndex* pindexPrev, const Consensus::
 int VersionBitsStateSinceHeight(const CBlockIndex* pindexPrev, const Consensus::Params& params, Consensus::DeploymentPos pos, VersionBitsCache& cache);
 uint32_t VersionBitsMask(const Consensus::Params& params, Consensus::DeploymentPos pos);
 
-#endif // BITCOIN_VERSIONBITS_H
+#endif // WIDECOIN_VERSIONBITS_H

@@ -1,9 +1,9 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) 2018-2019 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
-#define BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
+#ifndef WIDECOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
+#define WIDECOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
 
 #include <interfaces/chain.h>
 #include <interfaces/wallet.h>
@@ -23,4 +23,4 @@ struct InitWalletDirTestingSetup: public BasicTestingSetup {
     std::unique_ptr<interfaces::WalletClient> m_wallet_client;
 };
 
-#endif // BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
+#endif // WIDECOIN_WALLET_TEST_INIT_TEST_FIXTURE_H

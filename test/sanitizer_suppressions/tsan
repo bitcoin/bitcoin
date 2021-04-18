@@ -26,7 +26,7 @@ race:BerkeleyDatabase
 race:DatabaseBatch
 race:leveldb::DBImpl::DeleteObsoleteFiles
 race:zmq::*
-race:bitcoin-qt
+race:widecoin-qt
 # deadlock (TODO fix)
 deadlock:CConnman::ForNode
 deadlock:CConnman::GetNodeStats
@@ -47,4 +47,4 @@ deadlock:src/qt/test/*
 # External libraries
 deadlock:libdb
 race:libzmq
-race:epoll_ctl  # https://github.com/bitcoin/bitcoin/pull/20218
+race:epoll_ctl  # https://github.com/widecoin/widecoin/pull/20218

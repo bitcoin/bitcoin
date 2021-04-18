@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2020 The Bitcoin Core developers
+# Copyright (c) 2016-2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test NULLDUMMY softfork.
@@ -17,7 +17,7 @@ import time
 from test_framework.blocktools import NORMAL_GBT_REQUEST_PARAMS, create_block, create_transaction, add_witness_commitment
 from test_framework.messages import CTransaction
 from test_framework.script import CScript
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
 NULLDUMMY_ERROR = "non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argument must be zero)"
@@ -34,7 +34,7 @@ def trueDummy(tx):
     tx.vin[0].scriptSig = CScript(newscript)
     tx.rehash()
 
-class NULLDUMMYTest(BitcoinTestFramework):
+class NULLDUMMYTest(WidecoinTestFramework):
 
     def set_test_params(self):
         # Need two nodes only so GBT doesn't complain that it's not connected

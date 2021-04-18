@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -226,7 +226,7 @@ void SQLiteDatabase::Open()
     // Now begin a transaction to acquire the exclusive lock. This lock won't be released until we close because of the exclusive locking mode.
     ret = sqlite3_exec(m_db, "BEGIN EXCLUSIVE TRANSACTION", nullptr, nullptr, nullptr);
     if (ret != SQLITE_OK) {
-        throw std::runtime_error("SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another bitcoind?\n");
+        throw std::runtime_error("SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another widecoind?\n");
     }
     ret = sqlite3_exec(m_db, "COMMIT", nullptr, nullptr, nullptr);
     if (ret != SQLITE_OK) {

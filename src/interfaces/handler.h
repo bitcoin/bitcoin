@@ -1,9 +1,9 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_INTERFACES_HANDLER_H
-#define BITCOIN_INTERFACES_HANDLER_H
+#ifndef WIDECOIN_INTERFACES_HANDLER_H
+#define WIDECOIN_INTERFACES_HANDLER_H
 
 #include <functional>
 #include <memory>
@@ -36,4 +36,4 @@ std::unique_ptr<Handler> MakeHandler(std::function<void()> cleanup);
 
 } // namespace interfaces
 
-#endif // BITCOIN_INTERFACES_HANDLER_H
+#endif // WIDECOIN_INTERFACES_HANDLER_H

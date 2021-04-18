@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests some generic aspects of the RPC interface."""
 
 import os
 from test_framework.authproxy import JSONRPCException
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 from test_framework.util import assert_equal, assert_greater_than_or_equal
 
 def expect_http_status(expected_http_status, expected_rpc_code,
@@ -18,7 +18,7 @@ def expect_http_status(expected_http_status, expected_rpc_code,
         assert_equal(exc.error["code"], expected_rpc_code)
         assert_equal(exc.http_status, expected_http_status)
 
-class RPCInterfaceTest(BitcoinTestFramework):
+class RPCInterfaceTest(WidecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

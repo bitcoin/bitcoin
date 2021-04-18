@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2019 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the rawtransaction RPCs.
@@ -16,7 +16,7 @@ from collections import OrderedDict
 from decimal import Decimal
 from io import BytesIO
 from test_framework.messages import CTransaction, ToHex
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
@@ -44,7 +44,7 @@ class multidict(dict):
 
 
 # Create one-input, one-output, no-fee transaction:
-class RawTransactionsTest(BitcoinTestFramework):
+class RawTransactionsTest(WidecoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
@@ -106,7 +106,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.nodes[0].createrawtransaction(inputs=[], outputs={})  # Should not throw for backwards compatibility
         self.nodes[0].createrawtransaction(inputs=[], outputs=[])
         assert_raises_rpc_error(-8, "Data must be hexadecimal string", self.nodes[0].createrawtransaction, [], {'data': 'foo'})
-        assert_raises_rpc_error(-5, "Invalid Bitcoin address", self.nodes[0].createrawtransaction, [], {'foo': 0})
+        assert_raises_rpc_error(-5, "Invalid Widecoin address", self.nodes[0].createrawtransaction, [], {'foo': 0})
         assert_raises_rpc_error(-3, "Invalid amount", self.nodes[0].createrawtransaction, [], {address: 'foo'})
         assert_raises_rpc_error(-3, "Amount out of range", self.nodes[0].createrawtransaction, [], {address: -1})
         assert_raises_rpc_error(-8, "Invalid parameter, duplicated address: %s" % address, self.nodes[0].createrawtransaction, [], multidict([(address, 1), (address, 1)]))
@@ -266,7 +266,7 @@ class RawTransactionsTest(BitcoinTestFramework):
             #use balance deltas instead of absolute values
             bal = self.nodes[2].getbalance()
 
-            # send 1.2 BTC to msig adr
+            # send 1.2 WCN to msig adr
             txId = self.nodes[0].sendtoaddress(mSigObj, 1.2)
             self.sync_all()
             self.nodes[0].generate(1)
@@ -372,7 +372,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         encrawtx = "01000000010000000000000072c1a6a246ae63f74f931e8365e15a089c68d61900000000000000000000ffffffff0100e1f505000000000000000000"
         decrawtx = self.nodes[0].decoderawtransaction(encrawtx, False) # decode as non-witness transaction
         assert_equal(decrawtx['vout'][0]['value'], Decimal('1.00000000'))
-        # known ambiguous transaction in the chain (see https://github.com/bitcoin/bitcoin/issues/20579)
+        # known ambiguous transaction in the chain (see https://github.com/widecoin/widecoin/issues/20579)
         encrawtx = "020000000001010000000000000000000000000000000000000000000000000000000000000000ffffffff4b03c68708046ff8415c622f4254432e434f4d2ffabe6d6de1965d02c68f928e5b244ab1965115a36f56eb997633c7f690124bbf43644e23080000000ca3d3af6d005a65ff0200fd00000000ffffffff03f4c1fb4b0000000016001497cfc76442fe717f2a3f0cc9c175f7561b6619970000000000000000266a24aa21a9ed957d1036a80343e0d1b659497e1b48a38ebe876a056d45965fac4a85cda84e1900000000000000002952534b424c4f434b3a8e092581ab01986cbadc84f4b43f4fa4bb9e7a2e2a0caf9b7cf64d939028e22c0120000000000000000000000000000000000000000000000000000000000000000000000000"
         decrawtx = self.nodes[0].decoderawtransaction(encrawtx)
         decrawtx_wit = self.nodes[0].decoderawtransaction(encrawtx, True)
@@ -468,12 +468,12 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         self.sync_all()
         inputs = [{ "txid" : txId, "vout" : vout['n'] }]
-        # Fee 10,000 satoshis, (1 - (10000 sat * 0.00000001 BTC/sat)) = 0.9999
+        # Fee 10,000 satoshis, (1 - (10000 sat * 0.00000001 WCN/sat)) = 0.9999
         outputs = { self.nodes[0].getnewaddress() : Decimal("0.99990000") }
         rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
         rawTxSigned = self.nodes[2].signrawtransactionwithwallet(rawTx)
         assert_equal(rawTxSigned['complete'], True)
-        # Fee 10,000 satoshis, ~100 b transaction, fee rate should land around 100 sat/byte = 0.00100000 BTC/kB
+        # Fee 10,000 satoshis, ~100 b transaction, fee rate should land around 100 sat/byte = 0.00100000 WCN/kB
         # Thus, testmempoolaccept should reject
         testres = self.nodes[2].testmempoolaccept([rawTxSigned['hex']], 0.00001000)[0]
         assert_equal(testres['allowed'], False)
@@ -492,12 +492,12 @@ class RawTransactionsTest(BitcoinTestFramework):
 
         self.sync_all()
         inputs = [{ "txid" : txId, "vout" : vout['n'] }]
-        # Fee 2,000,000 satoshis, (1 - (2000000 sat * 0.00000001 BTC/sat)) = 0.98
+        # Fee 2,000,000 satoshis, (1 - (2000000 sat * 0.00000001 WCN/sat)) = 0.98
         outputs = { self.nodes[0].getnewaddress() : Decimal("0.98000000") }
         rawTx = self.nodes[2].createrawtransaction(inputs, outputs)
         rawTxSigned = self.nodes[2].signrawtransactionwithwallet(rawTx)
         assert_equal(rawTxSigned['complete'], True)
-        # Fee 2,000,000 satoshis, ~100 b transaction, fee rate should land around 20,000 sat/byte = 0.20000000 BTC/kB
+        # Fee 2,000,000 satoshis, ~100 b transaction, fee rate should land around 20,000 sat/byte = 0.20000000 WCN/kB
         # Thus, testmempoolaccept should reject
         testres = self.nodes[2].testmempoolaccept([rawTxSigned['hex']])[0]
         assert_equal(testres['allowed'], False)

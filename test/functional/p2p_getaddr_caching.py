@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test addr response caching"""
@@ -11,7 +11,7 @@ from test_framework.p2p import (
     P2PInterface,
     p2p_lock
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -39,7 +39,7 @@ class AddrReceiver(P2PInterface):
         return self.received_addrs is not None
 
 
-class AddrTest(BitcoinTestFramework):
+class AddrTest(WidecoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 1
@@ -50,7 +50,7 @@ class AddrTest(BitcoinTestFramework):
             first_octet = i >> 8
             second_octet = i % 256
             a = "{}.{}.1.1".format(first_octet, second_octet)
-            self.nodes[0].addpeeraddress(a, 8333)
+            self.nodes[0].addpeeraddress(a, 8553)
 
         # Need to make sure we hit MAX_ADDR_TO_SEND records in the addr response later because
         # only a fraction of all known addresses can be cached and returned.

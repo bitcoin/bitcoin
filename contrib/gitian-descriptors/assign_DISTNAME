@@ -1,4 +1,4 @@
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -9,4 +9,4 @@ if RECENT_TAG="$(git describe --exact-match HEAD)"; then
 else
     VERSION="$(git rev-parse --short=12 HEAD)"
 fi
-DISTNAME="bitcoin-${VERSION}"
+DISTNAME="widecoin-${VERSION}"

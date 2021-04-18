@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -56,6 +56,8 @@
 #define MICRO 0.000001
 #define MILLI 0.001
 
+/**Get pre-values**/
+#define GET_PRE_VALUES 3500000  
 /**
  * An extra transaction can be added to a package, as long as it only has one
  * ancestor and is no larger than this. Not really any reason to make this
@@ -781,7 +783,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
         // being able to broadcast descendants of an unconfirmed transaction
         // to be secure by simply only having two immediately-spendable
         // outputs - one for each counterparty. For more info on the uses for
-        // this, see https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2018-November/016518.html
+        // this, see https://lists.linuxfoundation.org/pipermail/widecoin-dev/2018-November/016518.html
         if (nSize >  EXTRA_DESCENDANT_TX_SIZE_LIMIT ||
                 !m_pool.CalculateMemPoolAncestors(*entry, setAncestors, 2, m_limit_ancestor_size, m_limit_descendants + 1, m_limit_descendant_size + EXTRA_DESCENDANT_TX_SIZE_LIMIT, dummy_err_string)) {
             return state.Invalid(TxValidationResult::TX_MEMPOOL_POLICY, "too-long-mempool-chain", errString);
@@ -1240,8 +1242,12 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
     if (halvings >= 64)
         return 0;
 
-    CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
+    CAmount nSubsidy;    
+    if (nHeight == 1)
+        nSubsidy = GET_PRE_VALUES * COIN;
+    else
+        nSubsidy = 50 * COIN;
+    // Subsidy is cut in half every 2102400 blocks which will occur approximately every 2 years.
     nSubsidy >>= halvings;
     return nSubsidy;
 }

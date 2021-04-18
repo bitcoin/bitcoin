@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WARNINGS_H
-#define BITCOIN_WARNINGS_H
+#ifndef WIDECOIN_WARNINGS_H
+#define WIDECOIN_WARNINGS_H
 
 #include <string>
 
@@ -22,4 +22,4 @@ void SetfLargeWorkInvalidChainFound(bool flag);
  */
 bilingual_str GetWarnings(bool verbose);
 
-#endif //  BITCOIN_WARNINGS_H
+#endif //  WIDECOIN_WARNINGS_H

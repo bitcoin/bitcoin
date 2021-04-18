@@ -1,9 +1,9 @@
-// Copyright (c) 2017-2018 The Bitcoin Core developers
+// Copyright (c) 2017-2018 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_COINSELECTION_H
-#define BITCOIN_WALLET_COINSELECTION_H
+#ifndef WIDECOIN_WALLET_COINSELECTION_H
+#define WIDECOIN_WALLET_COINSELECTION_H
 
 #include <amount.h>
 #include <primitives/transaction.h>
@@ -106,4 +106,4 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_v
 // Original coin selection algorithm as a fallback
 bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);
 
-#endif // BITCOIN_WALLET_COINSELECTION_H
+#endif // WIDECOIN_WALLET_COINSELECTION_H

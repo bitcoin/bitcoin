@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-dmg-signer"
+name: "widecoin-dmg-signer"
 distro: "ubuntu"
 suites:
 - "bionic"
@@ -8,10 +8,10 @@ architectures:
 packages:
 - "faketime"
 remotes:
-- "url": "https://github.com/bitcoin-core/bitcoin-detached-sigs.git"
+- "url": "https://github.com/widecoin-core/widecoin-detached-sigs.git"
   "dir": "signature"
 files:
-- "bitcoin-osx-unsigned.tar.gz"
+- "widecoin-osx-unsigned.tar.gz"
 script: |
   set -e -o pipefail
 
@@ -30,8 +30,8 @@ script: |
     chmod +x ${WRAP_DIR}/${prog}
   done
 
-  UNSIGNED=bitcoin-osx-unsigned.tar.gz
-  SIGNED=bitcoin-osx-signed.dmg
+  UNSIGNED=widecoin-osx-unsigned.tar.gz
+  SIGNED=widecoin-osx-signed.dmg
 
   tar -xf ${UNSIGNED}
   OSX_VOLNAME="$(cat osx_volname)"

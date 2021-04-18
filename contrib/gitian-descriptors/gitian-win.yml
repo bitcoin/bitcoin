@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-core-win-0.21"
+name: "widecoin-core-win-0.21"
 enable_cache: true
 distro: "ubuntu"
 suites:
@@ -23,8 +23,8 @@ packages:
 - "ca-certificates"
 - "python3"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
-  "dir": "bitcoin"
+- "url": "https://github.com/widecoin/widecoin.git"
+  "dir": "widecoin"
 files: []
 script: |
   set -e -o pipefail
@@ -94,7 +94,7 @@ script: |
   create_per-host_compiler_wrapper "2000-01-01 12:00:00"
   export PATH=${WRAP_DIR}:${PATH}
 
-  cd bitcoin
+  cd widecoin
   BASEPREFIX="${PWD}/depends"
   # Build dependencies for each host
   for i in $HOSTS; do
@@ -133,7 +133,7 @@ script: |
     make ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
     make ${MAKEOPTS} -C src check-symbols
-    make deploy BITCOIN_WIN_INSTALLER="${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
+    make deploy WIDECOIN_WIN_INSTALLER="${OUTDIR}/${DISTNAME}-win64-setup-unsigned.exe"
     make install DESTDIR=${INSTALLPATH}
     cd installed
     mv ${DISTNAME}/bin/*.dll ${DISTNAME}/lib/

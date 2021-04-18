@@ -92,7 +92,7 @@ before_install:
 
 before_script: ./autogen.sh
 
-# travis auto terminates jobs that go for 10 minutes without printing to stdout, but travis_wait doesn't work well with forking programs like valgrind (https://docs.travis-ci.com/user/common-build-problems/#build-times-out-because-no-output-was-received https://github.com/bitcoin-core/secp256k1/pull/750#issuecomment-623476860)
+# travis auto terminates jobs that go for 10 minutes without printing to stdout, but travis_wait doesn't work well with forking programs like valgrind (https://docs.travis-ci.com/user/common-build-problems/#build-times-out-because-no-output-was-received https://github.com/widecoin-core/secp256k1/pull/750#issuecomment-623476860)
 script:
   - function keep_alive() { while true; do echo -en "\a"; sleep 60; done }
   - keep_alive &

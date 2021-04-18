@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the send RPC command."""
@@ -8,7 +8,7 @@ from decimal import Decimal, getcontext
 from itertools import product
 
 from test_framework.authproxy import JSONRPCException
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_fee_amount,
@@ -16,7 +16,7 @@ from test_framework.util import (
     assert_raises_rpc_error,
 )
 
-class WalletSendTest(BitcoinTestFramework):
+class WalletSendTest(WidecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         # whitelist all peers to speed up tx relay / mempool sync
@@ -289,14 +289,14 @@ class WalletSendTest(BitcoinTestFramework):
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode,
                 expect_error=(-8, "Invalid conf_target, must be between 1 and 1008"))  # max value of 1008 per src/policy/fees.h
         msg = 'Invalid estimate_mode parameter, must be one of: "unset", "economical", "conservative"'
-        for target, mode in product([-1, 0], ["btc/kb", "sat/b"]):
+        for target, mode in product([-1, 0], ["wcn/kb", "sat/b"]):
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=target, estimate_mode=mode, expect_error=(-8, msg))
         for mode in ["", "foo", Decimal("3.141592")]:
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=0.1, estimate_mode=mode, expect_error=(-8, msg))
             self.test_send(from_wallet=w0, to_wallet=w1, amount=1, arg_conf_target=0.1, arg_estimate_mode=mode, expect_error=(-8, msg))
             assert_raises_rpc_error(-8, msg, w0.send, {w1.getnewaddress(): 1}, 0.1, mode)
 
-        for mode in ["economical", "conservative", "btc/kb", "sat/b"]:
+        for mode in ["economical", "conservative", "wcn/kb", "sat/b"]:
             self.log.debug("{}".format(mode))
             for k, v in {"string": "true", "object": {"foo": "bar"}}.items():
                 self.test_send(from_wallet=w0, to_wallet=w1, amount=1, conf_target=v, estimate_mode=mode,
@@ -336,7 +336,7 @@ class WalletSendTest(BitcoinTestFramework):
 
         self.log.info("Manual change address and position...")
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, change_address="not an address",
-                       expect_error=(-5, "Change address must be a valid bitcoin address"))
+                       expect_error=(-5, "Change address must be a valid widecoin address"))
         change_address = w0.getnewaddress()
         self.test_send(from_wallet=w0, to_wallet=w1, amount=1, add_to_wallet=False, change_address=change_address)
         assert res["complete"]

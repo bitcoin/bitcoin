@@ -1,4 +1,4 @@
-This directory contains the BitcoinQT graphical user interface (GUI). It uses the cross-platform framework [Qt](https://www1.qt.io/developers/).
+This directory contains the WidecoinQT graphical user interface (GUI). It uses the cross-platform framework [Qt](https://www1.qt.io/developers/).
 
 The current precise version for Qt 5 is specified in [qt.mk](/depends/packages/qt.mk).
 
@@ -9,7 +9,7 @@ See build instructions ([macOS](/doc/build-osx.md), [Windows](/doc/build-windows
 To run:
 
 ```sh
-./src/qt/bitcoin-qt
+./src/qt/widecoin-qt
 ```
 
 ## Files and directories
@@ -30,15 +30,15 @@ Resources such as the icon.
 
 Tests.
 
-### bitcoingui.(h/cpp)
+### widecoingui.(h/cpp)
 
-Represents the main window of the Bitcoin UI.
+Represents the main window of the Widecoin UI.
 
 ### \*model.(h/cpp)
 
 The model. When it has a corresponding controller, it generally inherits from  [QAbstractTableModel](https://doc.qt.io/qt-5/qabstracttablemodel.html). Models that are used by controllers as helpers inherit from other Qt classes like [QValidator](https://doc.qt.io/qt-5/qvalidator.html).
 
-ClientModel is used by the main application `bitcoingui` and several models like `peertablemodel`.
+ClientModel is used by the main application `widecoingui` and several models like `peertablemodel`.
 
 ### \*page.(h/cpp)
 
@@ -50,7 +50,7 @@ Various dialogs, e.g. to open a URL. Inherit from [QDialog](https://doc.qt.io/qt
 
 ### paymentserver.(h/cpp)
 
-Used to process BIP21 payment URI requests. Also handles URI based application switching (e.g. when following a bitcoin:... link from a browser).
+Used to process BIP21 payment URI requests. Also handles URI based application switching (e.g. when following a widecoin:... link from a browser).
 
 ### walletview.(h/cpp)
 
@@ -58,9 +58,9 @@ Represents the view to a single wallet.
 
 ### Other .h/cpp files
 
-* UI elements like BitcoinAmountField, which inherit from QWidget.
-* `bitcoinstrings.cpp`: automatically generated
-* `bitcoinunits.(h/cpp)`: BTC / mBTC / etc handling
+* UI elements like WidecoinAmountField, which inherit from QWidget.
+* `widecoinstrings.cpp`: automatically generated
+* `widecoinunits.(h/cpp)`: WCN / mWCN / etc handling
 * `callback.h`
 * `guiconstants.h`: UI colors, app name, etc
 * `guiutil.h`: several helper functions
@@ -71,7 +71,7 @@ Represents the view to a single wallet.
 
 See [CONTRIBUTING.md](/CONTRIBUTING.md) for general guidelines. Specifically for Qt:
 
-* don't change `local/bitcoin_en.ts`; this happens [automatically](/doc/translation_process.md#writing-code-with-translations)
+* don't change `local/widecoin_en.ts`; this happens [automatically](/doc/translation_process.md#writing-code-with-translations)
 
 ## Using Qt Creator as IDE
 
@@ -86,10 +86,10 @@ Instructions for macOS:
 1. Make sure you installed everything through Homebrew mentioned in the [macOS build instructions](/doc/build-osx.md)
 2. Use `./configure` with the `--enable-debug` flag
 3. In Qt Creator do "New Project" -> Import Project -> Import Existing Project
-4. Enter "bitcoin-qt" as project name, enter src/qt as location
+4. Enter "widecoin-qt" as project name, enter src/qt as location
 5. Leave the file selection as it is
 6. Confirm the "summary page"
 7. In the "Projects" tab select "Manage Kits..."
 8. Select the default "Desktop" kit and select "Clang (x86 64bit in /usr/bin)" as compiler
 9. Select LLDB as debugger (you might need to set the path to your installation)
-10. Start debugging with Qt Creator (you might need to the executable to "bitcoin-qt" under "Run", which is where you can also add command line arguments)
+10. Start debugging with Qt Creator (you might need to the executable to "widecoin-qt" under "Run", which is where you can also add command line arguments)

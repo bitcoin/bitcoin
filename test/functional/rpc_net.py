@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2019 The Bitcoin Core developers
+# Copyright (c) 2017-2019 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test RPC calls related to net.
@@ -17,7 +17,7 @@ from test_framework.messages import (
     NODE_NETWORK,
     NODE_WITNESS,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 from test_framework.util import (
     assert_approx,
     assert_equal,
@@ -40,7 +40,7 @@ def assert_net_servicesnames(servicesflag, servicenames):
     assert servicesflag_generated == servicesflag
 
 
-class NetTest(BitcoinTestFramework):
+class NetTest(WidecoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
@@ -188,7 +188,7 @@ class NetTest(BitcoinTestFramework):
             second_octet = i % 256
             a = "{}.{}.1.1".format(first_octet, second_octet)
             imported_addrs.append(a)
-            self.nodes[0].addpeeraddress(a, 8333)
+            self.nodes[0].addpeeraddress(a, 8553)
 
         # Obtain addresses via rpc call and check they were ones sent in before.
         #
@@ -202,7 +202,7 @@ class NetTest(BitcoinTestFramework):
             assert_greater_than(a["time"], 1527811200)  # 1st June 2018
             assert_equal(a["services"], NODE_NETWORK | NODE_WITNESS)
             assert a["address"] in imported_addrs
-            assert_equal(a["port"], 8333)
+            assert_equal(a["port"], 8553)
 
         node_addresses = self.nodes[0].getnodeaddresses(1)
         assert_equal(len(node_addresses), 1)

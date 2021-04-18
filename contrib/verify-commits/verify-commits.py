@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2019 The Bitcoin Core developers
+# Copyright (c) 2018-2019 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Verify commits against a trusted keys list."""
@@ -16,7 +16,7 @@ GIT = os.getenv('GIT', 'git')
 def tree_sha512sum(commit='HEAD'):
     """Calculate the Tree-sha512 for the commit.
 
-    This is copied from github-merge.py. See https://github.com/bitcoin-core/bitcoin-maintainer-tools."""
+    This is copied from github-merge.py. See https://github.com/widecoin-core/widecoin-maintainer-tools."""
 
     # request metadata for entire tree, recursively
     files = []
@@ -114,8 +114,8 @@ def main():
             verify_tree = False
             no_sha1 = False
 
-        os.environ['BITCOIN_VERIFY_COMMITS_ALLOW_SHA1'] = "0" if no_sha1 else "1"
-        os.environ['BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG'] = "1" if current_commit in revsig_allowed else "0"
+        os.environ['WIDECOIN_VERIFY_COMMITS_ALLOW_SHA1'] = "0" if no_sha1 else "1"
+        os.environ['WIDECOIN_VERIFY_COMMITS_ALLOW_REVSIG'] = "1" if current_commit in revsig_allowed else "0"
 
         # Check that the commit (and parents) was signed with a trusted key
         if subprocess.call([GIT, '-c', 'gpg.program={}/gpg.sh'.format(dirname), 'verify-commit', current_commit], stdout=subprocess.DEVNULL):

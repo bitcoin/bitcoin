@@ -1,5 +1,5 @@
 // Copyright (c) 2014 BitPay Inc.
-// Copyright (c) 2014-2016 The Bitcoin Core developers
+// Copyright (c) 2014-2016 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 

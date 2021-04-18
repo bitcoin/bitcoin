@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
@@ -13,7 +13,7 @@ from test_framework.messages import (
     msg_addr,
 )
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -25,7 +25,7 @@ for i in range(10):
     addr.time = int(time.time()) + i
     addr.nServices = NODE_NETWORK | NODE_WITNESS
     addr.ip = "123.123.123.{}".format(i % 256)
-    addr.port = 8333 + i
+    addr.port = 8553 + i
     ADDRS.append(addr)
 
 
@@ -34,10 +34,10 @@ class AddrReceiver(P2PInterface):
         for addr in message.addrs:
             assert_equal(addr.nServices, 9)
             assert addr.ip.startswith('123.123.123.')
-            assert (8333 <= addr.port < 8343)
+            assert (8553 <= addr.port < 8343)
 
 
-class AddrTest(BitcoinTestFramework):
+class AddrTest(WidecoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 1

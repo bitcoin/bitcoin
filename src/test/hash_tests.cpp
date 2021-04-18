@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2020 The Bitcoin Core developers
+// Copyright (c) 2013-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(murmurhash3)
 
     // Test MurmurHash3 with various inputs. Of course this is retested in the
     // bloom filter tests - they would fail if MurmurHash3() had any problems -
-    // but is useful for those trying to implement Bitcoin libraries as a
+    // but is useful for those trying to implement Widecoin libraries as a
     // source of test data for their MurmurHash3() primitive during
     // development.
     //

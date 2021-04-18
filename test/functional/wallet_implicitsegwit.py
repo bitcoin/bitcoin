@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019 The Bitcoin Core developers
+# Copyright (c) 2019 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet implicit segwit feature."""
 
 import test_framework.address as address
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 
 # TODO: Might be nice to test p2pk here too
 address_types = ('legacy', 'bech32', 'p2sh-segwit')
@@ -38,7 +38,7 @@ def check_implicit_transactions(implicit_keys, implicit_node):
             b_address = key_to_address(pubkey, b)
             assert(('receive', b_address) in tuple((tx['category'], tx['address']) for tx in txs))
 
-class ImplicitSegwitTest(BitcoinTestFramework):
+class ImplicitSegwitTest(WidecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.supports_cli = False

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """upgradewallet RPC functional test
@@ -19,7 +19,7 @@ from io import BytesIO
 
 from test_framework.bdb import dump_bdb_kv
 from test_framework.messages import deser_compact_size, deser_string
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_is_hex_string,
@@ -44,7 +44,7 @@ def deser_keymeta(f):
         has_key_orig = bool(f.read(1))
     return ver, create_time, kp_str, seed_id, fpr, path_len, path, has_key_orig
 
-class UpgradeWalletTest(BitcoinTestFramework):
+class UpgradeWalletTest(WidecoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3
@@ -79,7 +79,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
         v0.15.2 is only being used to test for version upgrade
         and master hash key presence.
         v0.16.3 is being used to test for version upgrade and balances.
-        Further info: https://github.com/bitcoin/bitcoin/pull/18774#discussion_r416967844
+        Further info: https://github.com/widecoin/widecoin/pull/18774#discussion_r416967844
         """
         node_from = self.nodes[0]
         v16_3_node = self.nodes[1]
@@ -148,7 +148,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
 
         def copy_v16():
             node_master.get_wallet_rpc(self.default_wallet_name).unloadwallet()
-            # Copy the 0.16.3 wallet to the last Bitcoin Core version and open it:
+            # Copy the 0.16.3 wallet to the last Widecoin Core version and open it:
             shutil.rmtree(node_master_wallet_dir)
             os.mkdir(node_master_wallet_dir)
             shutil.copy(
@@ -159,7 +159,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
 
         def copy_non_hd():
             node_master.get_wallet_rpc(self.default_wallet_name).unloadwallet()
-            # Copy the 0.15.2 non hd wallet to the last Bitcoin Core version and open it:
+            # Copy the 0.15.2 non hd wallet to the last Widecoin Core version and open it:
             shutil.rmtree(node_master_wallet_dir)
             os.mkdir(node_master_wallet_dir)
             shutil.copy(
@@ -170,7 +170,7 @@ class UpgradeWalletTest(BitcoinTestFramework):
 
         def copy_split_hd():
             node_master.get_wallet_rpc(self.default_wallet_name).unloadwallet()
-            # Copy the 0.15.2 split hd wallet to the last Bitcoin Core version and open it:
+            # Copy the 0.15.2 split hd wallet to the last Widecoin Core version and open it:
             shutil.rmtree(node_master_wallet_dir)
             os.mkdir(node_master_wallet_dir)
             shutil.copy(

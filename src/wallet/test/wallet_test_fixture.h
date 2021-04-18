@@ -1,9 +1,9 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_TEST_WALLET_TEST_FIXTURE_H
-#define BITCOIN_WALLET_TEST_WALLET_TEST_FIXTURE_H
+#ifndef WIDECOIN_WALLET_TEST_WALLET_TEST_FIXTURE_H
+#define WIDECOIN_WALLET_TEST_WALLET_TEST_FIXTURE_H
 
 #include <test/util/setup_common.h>
 
@@ -26,4 +26,4 @@ struct WalletTestingSetup : public TestingSetup {
     std::unique_ptr<interfaces::Handler> m_chain_notifications_handler;
 };
 
-#endif // BITCOIN_WALLET_TEST_WALLET_TEST_FIXTURE_H
+#endif // WIDECOIN_WALLET_TEST_WALLET_TEST_FIXTURE_H

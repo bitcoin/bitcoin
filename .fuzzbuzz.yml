@@ -9,7 +9,7 @@ setup:
   - ./autogen.sh
   - CC=clang CXX=clang++ ./configure --enable-fuzz --with-sanitizers=address,fuzzer,undefined
   - make
-  - git clone https://github.com/bitcoin-core/qa-assets
+  - git clone https://github.com/widecoin-core/qa-assets
 auto_targets:
   find_targets_command: find src/test/fuzz/ -executable -type f ! -name "*.cpp" ! -name "*.h"
   base_corpus_dir: qa-assets/fuzz_seed_corpus/

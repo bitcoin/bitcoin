@@ -1,8 +1,8 @@
 # ==============================================================================
-#                          Bitcoin Core CODEOWNERS
+#                          Widecoin Core CODEOWNERS
 # ==============================================================================
 
-# Configuration of code ownership and review approvals for the bitcoin/bitcoin
+# Configuration of code ownership and review approvals for the widecoin/widecoin
 # repo.
 
 # Order is important; the last matching pattern takes the most precedence.
@@ -35,7 +35,7 @@
 /doc/Doxyfile.in                            @fanquake
 /doc/REST-interface.md                      @jonasschnelli
 /doc/benchmarking.md                        @ariard
-/doc/bitcoin-conf.md                        @hebasto
+/doc/widecoin-conf.md                        @hebasto
 /doc/build-freebsd.md                       @fanquake
 /doc/build-netbsd.md                        @fanquake
 /doc/build-openbsd.md                       @laanwj
@@ -52,7 +52,7 @@
 /doc/translation_strings_policy.md          @laanwj
 
 # Build aux
-/build-aux/m4/bitcoin_qt.m4                 @hebasto
+/build-aux/m4/widecoin_qt.m4                 @hebasto
 
 # MSVC build system
 /build_msvc/                                @sipsorcery
@@ -67,7 +67,7 @@
 # Test framework
 /test/functional/mempool_updatefromblock.py @hebasto
 /test/functional/feature_asmap.py           @jonatack
-/test/functional/interface_bitcoin_cli.py   @jonatack
+/test/functional/interface_widecoin_cli.py   @jonatack
 /test/functional/tool_wallet.py             @jonatack
 
 # Translations
@@ -92,7 +92,7 @@
 /src/wallet/                                @achow101
 
 # CLI
-/src/bitcoin-cli.cpp                        @jonatack
+/src/widecoin-cli.cpp                        @jonatack
 
 # Coinstats
 /src/node/coinstats.*                       @fjahr

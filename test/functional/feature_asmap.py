@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test asmap config argument for ASN-based IP bucketing.
 
-Verify node behaviour and debug log when launching bitcoind in these cases:
+Verify node behaviour and debug log when launching widecoind in these cases:
 
-1. `bitcoind` with no -asmap arg, using /16 prefix for IP bucketing
+1. `widecoind` with no -asmap arg, using /16 prefix for IP bucketing
 
-2. `bitcoind -asmap=<absolute path>`, using the unit test skeleton asmap
+2. `widecoind -asmap=<absolute path>`, using the unit test skeleton asmap
 
-3. `bitcoind -asmap=<relative path>`, using the unit test skeleton asmap
+3. `widecoind -asmap=<relative path>`, using the unit test skeleton asmap
 
-4. `bitcoind -asmap/-asmap=` with no file specified, using the default asmap
+4. `widecoind -asmap/-asmap=` with no file specified, using the default asmap
 
-5. `bitcoind -asmap` with no file specified and a missing default asmap file
+5. `widecoind -asmap` with no file specified and a missing default asmap file
 
-6. `bitcoind -asmap` with an empty (unparsable) default asmap file
+6. `widecoind -asmap` with an empty (unparsable) default asmap file
 
 The tests are order-independent.
 
@@ -24,7 +24,7 @@ The tests are order-independent.
 import os
 import shutil
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 
 DEFAULT_ASMAP_FILENAME = 'ip_asn.map' # defined in src/init.cpp
 ASMAP = '../../src/test/data/asmap.raw' # path to unit test skeleton asmap
@@ -34,19 +34,19 @@ def expected_messages(filename):
     return ['Opened asmap file "{}" (59 bytes) from disk'.format(filename),
             'Using asmap version {} for IP bucketing'.format(VERSION)]
 
-class AsmapTest(BitcoinTestFramework):
+class AsmapTest(WidecoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 1
 
     def test_without_asmap_arg(self):
-        self.log.info('Test bitcoind with no -asmap arg passed')
+        self.log.info('Test widecoind with no -asmap arg passed')
         self.stop_node(0)
         with self.node.assert_debug_log(['Using /16 prefix for IP bucketing']):
             self.start_node(0)
 
     def test_asmap_with_absolute_path(self):
-        self.log.info('Test bitcoind -asmap=<absolute path>')
+        self.log.info('Test widecoind -asmap=<absolute path>')
         self.stop_node(0)
         filename = os.path.join(self.datadir, 'my-map-file.map')
         shutil.copyfile(self.asmap_raw, filename)
@@ -55,7 +55,7 @@ class AsmapTest(BitcoinTestFramework):
         os.remove(filename)
 
     def test_asmap_with_relative_path(self):
-        self.log.info('Test bitcoind -asmap=<relative path>')
+        self.log.info('Test widecoind -asmap=<relative path>')
         self.stop_node(0)
         name = 'ASN_map'
         filename = os.path.join(self.datadir, name)
@@ -67,20 +67,20 @@ class AsmapTest(BitcoinTestFramework):
     def test_default_asmap(self):
         shutil.copyfile(self.asmap_raw, self.default_asmap)
         for arg in ['-asmap', '-asmap=']:
-            self.log.info('Test bitcoind {} (using default map file)'.format(arg))
+            self.log.info('Test widecoind {} (using default map file)'.format(arg))
             self.stop_node(0)
             with self.node.assert_debug_log(expected_messages(self.default_asmap)):
                 self.start_node(0, [arg])
         os.remove(self.default_asmap)
 
     def test_default_asmap_with_missing_file(self):
-        self.log.info('Test bitcoind -asmap with missing default map file')
+        self.log.info('Test widecoind -asmap with missing default map file')
         self.stop_node(0)
         msg = "Error: Could not find asmap file \"{}\"".format(self.default_asmap)
         self.node.assert_start_raises_init_error(extra_args=['-asmap'], expected_msg=msg)
 
     def test_empty_asmap(self):
-        self.log.info('Test bitcoind -asmap with empty map file')
+        self.log.info('Test widecoind -asmap with empty map file')
         self.stop_node(0)
         with open(self.default_asmap, "w", encoding="utf-8") as f:
             f.write("")

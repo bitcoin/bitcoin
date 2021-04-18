@@ -1,9 +1,9 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_REF_H
-#define BITCOIN_UTIL_REF_H
+#ifndef WIDECOIN_UTIL_REF_H
+#define WIDECOIN_UTIL_REF_H
 
 #include <util/check.h>
 
@@ -16,7 +16,7 @@ namespace util {
  *
  * This implements a small subset of the functionality in C++17's std::any
  * class, and can be dropped when the project updates to C++17
- * (https://github.com/bitcoin/bitcoin/issues/16684)
+ * (https://github.com/widecoin/widecoin/issues/16684)
  */
 class Ref
 {
@@ -35,4 +35,4 @@ private:
 
 } // namespace util
 
-#endif // BITCOIN_UTIL_REF_H
+#endif // WIDECOIN_UTIL_REF_H

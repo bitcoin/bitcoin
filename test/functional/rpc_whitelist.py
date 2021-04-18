@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2019 The Bitcoin Core developers
+# Copyright (c) 2017-2019 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """
 A test for RPC users with restricted permissions
 """
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 import os
 from test_framework.util import (
     get_datadir_path,
@@ -26,7 +26,7 @@ def rpccall(node, user, method):
     return resp
 
 
-class RPCWhitelistTest(BitcoinTestFramework):
+class RPCWhitelistTest(WidecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
@@ -55,7 +55,7 @@ class RPCWhitelistTest(BitcoinTestFramework):
         ]
         # These commands shouldn't be allowed for any user to test failures
         self.never_allowed = ["getnetworkinfo"]
-        with open(os.path.join(get_datadir_path(self.options.tmpdir, 0), "bitcoin.conf"), 'a', encoding='utf8') as f:
+        with open(os.path.join(get_datadir_path(self.options.tmpdir, 0), "widecoin.conf"), 'a', encoding='utf8') as f:
             f.write("\nrpcwhitelistdefault=0\n")
             for user in self.users:
                 f.write("rpcauth=" + user[0] + ":" + user[1] + "\n")

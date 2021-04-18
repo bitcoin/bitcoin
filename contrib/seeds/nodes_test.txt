@@ -1,11 +1,2 @@
-# List of fixed seed nodes for testnet
-
-# Onion nodes
-thfsmmn2jbitcoin.onion
-it2pj4f7657g3rhi.onion
-nkf5e6b7pl4jfd4a.onion
-4zhkir2ofl7orfom.onion
-t6xj6wilh4ytvcs7.onion
-i6y6ivorwakd7nw3.onion
-ubqj4rsu3nqtxmtp.onion
-
+138.68.139.151:18553
+143.198.237.205:18553

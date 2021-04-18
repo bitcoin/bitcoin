@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_CSVMODELWRITER_H
-#define BITCOIN_QT_CSVMODELWRITER_H
+#ifndef WIDECOIN_QT_CSVMODELWRITER_H
+#define WIDECOIN_QT_CSVMODELWRITER_H
 
 #include <QList>
 #include <QObject>
@@ -43,4 +43,4 @@ private:
     QList<Column> columns;
 };
 
-#endif // BITCOIN_QT_CSVMODELWRITER_H
+#endif // WIDECOIN_QT_CSVMODELWRITER_H

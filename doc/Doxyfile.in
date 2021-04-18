@@ -32,7 +32,7 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = "Bitcoin Core"
+PROJECT_NAME           = "Widecoin Core"
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
@@ -51,7 +51,7 @@ PROJECT_BRIEF          = "P2P Digital Currency"
 # pixels and the maximum width should not exceed 200 pixels. Doxygen will copy
 # the logo to the output directory.
 
-PROJECT_LOGO           = doc/bitcoin_logo_doxygen.png
+PROJECT_LOGO           = doc/widecoin_logo_doxygen.png
 
 # The OUTPUT_DIRECTORY tag is used to specify the (relative or absolute) path
 # into which the generated documentation will be written. If a relative path is
@@ -1266,7 +1266,7 @@ DOCSET_FEEDNAME        = "Doxygen generated docs"
 # The default value is: org.doxygen.Project.
 # This tag requires that the tag GENERATE_DOCSET is set to YES.
 
-DOCSET_BUNDLE_ID       = org.bitcoin.Bitcoin-Core
+DOCSET_BUNDLE_ID       = org.widecoin.Widecoin-Core
 
 # The DOCSET_PUBLISHER_ID tag specifies a string that should uniquely identify
 # the documentation publisher. This should be a reverse domain-name style
@@ -1274,7 +1274,7 @@ DOCSET_BUNDLE_ID       = org.bitcoin.Bitcoin-Core
 # The default value is: org.doxygen.Publisher.
 # This tag requires that the tag GENERATE_DOCSET is set to YES.
 
-DOCSET_PUBLISHER_ID    = org.bitcoin.Bitcoin-Core
+DOCSET_PUBLISHER_ID    = org.widecoin.Widecoin-Core
 
 # The DOCSET_PUBLISHER_NAME tag identifies the documentation publisher.
 # The default value is: Publisher.

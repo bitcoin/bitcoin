@@ -54,7 +54,7 @@
       <item>
        <widget class="QValidatedLineEdit" name="payTo">
         <property name="toolTip">
-         <string>The Bitcoin address to send the payment to</string>
+         <string>The Widecoin address to send the payment to</string>
         </property>
        </widget>
       </item>
@@ -67,7 +67,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../bitcoin.qrc">
+         <iconset resource="../widecoin.qrc">
           <normaloff>:/icons/address-book</normaloff>:/icons/address-book</iconset>
         </property>
         <property name="iconSize">
@@ -90,7 +90,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../bitcoin.qrc">
+         <iconset resource="../widecoin.qrc">
           <normaloff>:/icons/editpaste</normaloff>:/icons/editpaste</iconset>
         </property>
         <property name="iconSize">
@@ -113,7 +113,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../bitcoin.qrc">
+         <iconset resource="../widecoin.qrc">
           <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
         </property>
         <property name="iconSize">
@@ -165,7 +165,7 @@
     <item row="2" column="1">
      <layout class="QHBoxLayout" name="horizontalLayoutAmount" stretch="0,1,0">
       <item>
-       <widget class="BitcoinAmountField" name="payAmount">
+       <widget class="WidecoinAmountField" name="payAmount">
          <property name="toolTip">
           <string>The amount to send in the selected unit</string>
          </property>
@@ -174,7 +174,7 @@
       <item>
        <widget class="QCheckBox" name="checkboxSubtractFeeFromAmount">
         <property name="toolTip">
-         <string>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</string>
+         <string>The fee will be deducted from the amount being sent. The recipient will receive less widecoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</string>
         </property>
         <property name="text">
          <string>S&amp;ubtract fee from amount</string>
@@ -203,7 +203,7 @@
     <item row="3" column="1">
      <widget class="QLabel" name="messageTextLabel">
       <property name="toolTip">
-       <string>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</string>
+       <string>A message that was attached to the widecoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Widecoin network.</string>
       </property>
       <property name="textFormat">
        <enum>Qt::PlainText</enum>
@@ -675,7 +675,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../bitcoin.qrc">
+         <iconset resource="../widecoin.qrc">
           <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
         </property>
        </widget>
@@ -713,7 +713,7 @@
      </widget>
     </item>
     <item row="2" column="1">
-     <widget class="BitcoinAmountField" name="payAmount_is">
+     <widget class="WidecoinAmountField" name="payAmount_is">
       <property name="acceptDrops">
        <bool>false</bool>
       </property>
@@ -1208,7 +1208,7 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../bitcoin.qrc">
+         <iconset resource="../widecoin.qrc">
           <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
         </property>
        </widget>
@@ -1246,7 +1246,7 @@
      </widget>
     </item>
     <item row="2" column="1">
-     <widget class="BitcoinAmountField" name="payAmount_s">
+     <widget class="WidecoinAmountField" name="payAmount_s">
       <property name="acceptDrops">
        <bool>false</bool>
       </property>
@@ -1262,9 +1262,9 @@
    <header>qt/qvalidatedlineedit.h</header>
   </customwidget>
   <customwidget>
-   <class>BitcoinAmountField</class>
+   <class>WidecoinAmountField</class>
    <extends>QLineEdit</extends>
-   <header>qt/bitcoinamountfield.h</header>
+   <header>qt/widecoinamountfield.h</header>
   </customwidget>
  </customwidgets>
  <tabstops>
@@ -1280,7 +1280,7 @@
   <tabstop>deleteButton_s</tabstop>
  </tabstops>
  <resources>
-  <include location="../bitcoin.qrc"/>
+  <include location="../widecoin.qrc"/>
  </resources>
  <connections/>
 </ui>

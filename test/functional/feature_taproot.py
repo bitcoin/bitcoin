@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2020 The Bitcoin Core developers
+# Copyright (c) 2019-2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 # Test Taproot softfork (BIPs 340-342)
@@ -76,7 +76,7 @@ from test_framework.script import (
     is_op_success,
     taproot_construct,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 from test_framework.util import assert_raises_rpc_error, assert_equal
 from test_framework.key import generate_privkey, compute_xonly_pubkey, sign_schnorr, tweak_add_privkey, ECKey
 from test_framework.address import (
@@ -515,6 +515,7 @@ def add_spender(spenders, *args, **kwargs):
 
 def random_checksig_style(pubkey):
     """Creates a random CHECKSIG* tapscript that would succeed with only the valid signature on witness stack."""
+    return bytes(CScript([pubkey, OP_CHECKSIG]))
     opcode = random.choice([OP_CHECKSIG, OP_CHECKSIGVERIFY, OP_CHECKSIGADD])
     if (opcode == OP_CHECKSIGVERIFY):
         ret = CScript([pubkey, opcode, OP_1])
@@ -1187,7 +1188,7 @@ def dump_json_test(tx, input_utxos, idx, success, failure):
 # Data type to keep track of UTXOs, where they were created, and how to spend them.
 UTXOData = namedtuple('UTXOData', 'outpoint,output,spender')
 
-class TaprootTest(BitcoinTestFramework):
+class TaprootTest(WidecoinTestFramework):
     def add_options(self, parser):
         parser.add_argument("--dumptests", dest="dump_tests", default=False, action="store_true",
                             help="Dump generated test cases to directory set by TEST_DUMP_DIR environment variable")

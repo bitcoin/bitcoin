@@ -1,16 +1,16 @@
-# Copyright (c) 2013-2016 The Bitcoin Core developers
+# Copyright (c) 2013-2016 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-bin_PROGRAMS += qt/bitcoin-qt
+bin_PROGRAMS += qt/widecoin-qt
 
-if BUILD_BITCOIN_GUI
-  bin_PROGRAMS += bitcoin-gui
+if BUILD_WIDECOIN_GUI
+  bin_PROGRAMS += widecoin-gui
 endif
 
-EXTRA_LIBRARIES += qt/libbitcoinqt.a
+EXTRA_LIBRARIES += qt/libwidecoinqt.a
 
-# bitcoin qt core #
+# widecoin qt core #
 include Makefile.qt_locale.include
 
 QT_FORMS_UI = \
@@ -40,11 +40,11 @@ QT_MOC_CPP = \
   qt/moc_askpassphrasedialog.cpp \
   qt/moc_createwalletdialog.cpp \
   qt/moc_bantablemodel.cpp \
-  qt/moc_bitcoinaddressvalidator.cpp \
-  qt/moc_bitcoinamountfield.cpp \
-  qt/moc_bitcoin.cpp \
-  qt/moc_bitcoingui.cpp \
-  qt/moc_bitcoinunits.cpp \
+  qt/moc_widecoinaddressvalidator.cpp \
+  qt/moc_widecoinamountfield.cpp \
+  qt/moc_widecoin.cpp \
+  qt/moc_widecoingui.cpp \
+  qt/moc_widecoinunits.cpp \
   qt/moc_clientmodel.cpp \
   qt/moc_coincontroldialog.cpp \
   qt/moc_coincontroltreewidget.cpp \
@@ -78,7 +78,6 @@ QT_MOC_CPP = \
   qt/moc_transactiondesc.cpp \
   qt/moc_transactiondescdialog.cpp \
   qt/moc_transactionfilterproxy.cpp \
-  qt/moc_transactionoverviewwidget.cpp \
   qt/moc_transactiontablemodel.cpp \
   qt/moc_transactionview.cpp \
   qt/moc_utilitydialog.cpp \
@@ -87,32 +86,32 @@ QT_MOC_CPP = \
   qt/moc_walletmodel.cpp \
   qt/moc_walletview.cpp
 
-BITCOIN_MM = \
+WIDECOIN_MM = \
   qt/macdockiconhandler.mm \
   qt/macnotificationhandler.mm \
   qt/macos_appnap.mm
 
 QT_MOC = \
-  qt/bitcoinamountfield.moc \
+  qt/widecoinamountfield.moc \
   qt/intro.moc \
   qt/overviewpage.moc \
   qt/rpcconsole.moc
 
-QT_QRC_CPP = qt/qrc_bitcoin.cpp
-QT_QRC = qt/bitcoin.qrc
-QT_QRC_LOCALE_CPP = qt/qrc_bitcoin_locale.cpp
-QT_QRC_LOCALE = qt/bitcoin_locale.qrc
+QT_QRC_CPP = qt/qrc_widecoin.cpp
+QT_QRC = qt/widecoin.qrc
+QT_QRC_LOCALE_CPP = qt/qrc_widecoin_locale.cpp
+QT_QRC_LOCALE = qt/widecoin_locale.qrc
 
-BITCOIN_QT_H = \
+WIDECOIN_QT_H = \
   qt/addressbookpage.h \
   qt/addresstablemodel.h \
   qt/askpassphrasedialog.h \
   qt/bantablemodel.h \
-  qt/bitcoinaddressvalidator.h \
-  qt/bitcoinamountfield.h \
-  qt/bitcoin.h \
-  qt/bitcoingui.h \
-  qt/bitcoinunits.h \
+  qt/widecoinaddressvalidator.h \
+  qt/widecoinamountfield.h \
+  qt/widecoin.h \
+  qt/widecoingui.h \
+  qt/widecoinunits.h \
   qt/clientmodel.h \
   qt/coincontroldialog.h \
   qt/coincontroltreewidget.h \
@@ -152,7 +151,6 @@ BITCOIN_QT_H = \
   qt/transactiondesc.h \
   qt/transactiondescdialog.h \
   qt/transactionfilterproxy.h \
-  qt/transactionoverviewwidget.h \
   qt/transactionrecord.h \
   qt/transactiontablemodel.h \
   qt/transactionview.h \
@@ -167,9 +165,9 @@ BITCOIN_QT_H = \
 RES_ICONS = \
   qt/res/icons/add.png \
   qt/res/icons/address-book.png \
-  qt/res/icons/bitcoin.ico \
-  qt/res/icons/bitcoin_testnet.ico \
-  qt/res/icons/bitcoin.png \
+  qt/res/icons/widecoin.ico \
+  qt/res/icons/widecoin_testnet.ico \
+  qt/res/icons/widecoin.png \
   qt/res/icons/chevron.png \
   qt/res/icons/clock1.png \
   qt/res/icons/clock2.png \
@@ -212,13 +210,13 @@ RES_ICONS = \
   qt/res/icons/tx_mined.png \
   qt/res/icons/warning.png
 
-BITCOIN_QT_BASE_CPP = \
+WIDECOIN_QT_BASE_CPP = \
   qt/bantablemodel.cpp \
-  qt/bitcoin.cpp \
-  qt/bitcoinaddressvalidator.cpp \
-  qt/bitcoinamountfield.cpp \
-  qt/bitcoingui.cpp \
-  qt/bitcoinunits.cpp \
+  qt/widecoin.cpp \
+  qt/widecoinaddressvalidator.cpp \
+  qt/widecoinamountfield.cpp \
+  qt/widecoingui.cpp \
+  qt/widecoinunits.cpp \
   qt/clientmodel.cpp \
   qt/csvmodelwriter.cpp \
   qt/guiutil.cpp \
@@ -237,9 +235,9 @@ BITCOIN_QT_BASE_CPP = \
   qt/trafficgraphwidget.cpp \
   qt/utilitydialog.cpp
 
-BITCOIN_QT_WINDOWS_CPP = qt/winshutdownmonitor.cpp
+WIDECOIN_QT_WINDOWS_CPP = qt/winshutdownmonitor.cpp
 
-BITCOIN_QT_WALLET_CPP = \
+WIDECOIN_QT_WALLET_CPP = \
   qt/addressbookpage.cpp \
   qt/addresstablemodel.cpp \
   qt/askpassphrasedialog.cpp \
@@ -270,32 +268,32 @@ BITCOIN_QT_WALLET_CPP = \
   qt/walletmodeltransaction.cpp \
   qt/walletview.cpp
 
-BITCOIN_QT_CPP = $(BITCOIN_QT_BASE_CPP)
+WIDECOIN_QT_CPP = $(WIDECOIN_QT_BASE_CPP)
 if TARGET_WINDOWS
-BITCOIN_QT_CPP += $(BITCOIN_QT_WINDOWS_CPP)
+WIDECOIN_QT_CPP += $(WIDECOIN_QT_WINDOWS_CPP)
 endif
 if ENABLE_WALLET
-BITCOIN_QT_CPP += $(BITCOIN_QT_WALLET_CPP)
+WIDECOIN_QT_CPP += $(WIDECOIN_QT_WALLET_CPP)
 endif # ENABLE_WALLET
 
 RES_ANIMATION = $(wildcard $(srcdir)/qt/res/animation/spinner-*.png)
 
-BITCOIN_RC = qt/res/bitcoin-qt-res.rc
+WIDECOIN_RC = qt/res/widecoin-qt-res.rc
 
-BITCOIN_QT_INCLUDES = -DQT_NO_KEYWORDS
+WIDECOIN_QT_INCLUDES = -DQT_NO_KEYWORDS
 
-qt_libbitcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
+qt_libwidecoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) $(WIDECOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_DBUS_INCLUDES) $(QR_CFLAGS)
-qt_libbitcoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
-qt_libbitcoinqt_a_OBJCXXFLAGS = $(AM_OBJCXXFLAGS) $(QT_PIE_FLAGS)
+qt_libwidecoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
+qt_libwidecoinqt_a_OBJCXXFLAGS = $(AM_OBJCXXFLAGS) $(QT_PIE_FLAGS)
 
-qt_libbitcoinqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
+qt_libwidecoinqt_a_SOURCES = $(WIDECOIN_QT_CPP) $(WIDECOIN_QT_H) $(QT_FORMS_UI) \
   $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(RES_ICONS) $(RES_ANIMATION)
 if TARGET_DARWIN
-  qt_libbitcoinqt_a_SOURCES += $(BITCOIN_MM)
+  qt_libwidecoinqt_a_SOURCES += $(WIDECOIN_MM)
 endif
 
-nodist_qt_libbitcoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
+nodist_qt_libwidecoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
 
 # forms/foo.h -> forms/ui_foo.h
 QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:.ui=.h))))
@@ -303,77 +301,77 @@ QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:
 # Most files will depend on the forms and moc files as includes. Generate them
 # before anything else.
 $(QT_MOC): $(QT_FORMS_H)
-$(qt_libbitcoinqt_a_OBJECTS) $(qt_bitcoin_qt_OBJECTS) $(bitcoin_gui_OBJECTS) : | $(QT_MOC)
+$(qt_libwidecoinqt_a_OBJECTS) $(qt_widecoin_qt_OBJECTS) $(widecoin_gui_OBJECTS) : | $(QT_MOC)
 
-# bitcoin-qt and bitcoin-gui binaries #
-bitcoin_qt_cppflags = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
+# widecoin-qt and widecoin-gui binaries #
+widecoin_qt_cppflags = $(AM_CPPFLAGS) $(WIDECOIN_INCLUDES) $(WIDECOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(QR_CFLAGS)
-bitcoin_qt_cxxflags = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
+widecoin_qt_cxxflags = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 
-bitcoin_qt_sources = qt/main.cpp
+widecoin_qt_sources = qt/main.cpp
 if TARGET_WINDOWS
-  bitcoin_qt_sources += $(BITCOIN_RC)
+  widecoin_qt_sources += $(WIDECOIN_RC)
 endif
-bitcoin_qt_ldadd = qt/libbitcoinqt.a $(LIBBITCOIN_SERVER)
+widecoin_qt_ldadd = qt/libwidecoinqt.a $(LIBWIDECOIN_SERVER)
 if ENABLE_WALLET
-bitcoin_qt_ldadd += $(LIBBITCOIN_UTIL) $(LIBBITCOIN_WALLET)
+widecoin_qt_ldadd += $(LIBWIDECOIN_UTIL) $(LIBWIDECOIN_WALLET)
 endif
 if ENABLE_ZMQ
-bitcoin_qt_ldadd += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
+widecoin_qt_ldadd += $(LIBWIDECOIN_ZMQ) $(ZMQ_LIBS)
 endif
-bitcoin_qt_ldadd += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) \
+widecoin_qt_ldadd += $(LIBWIDECOIN_CLI) $(LIBWIDECOIN_COMMON) $(LIBWIDECOIN_UTIL) $(LIBWIDECOIN_CONSENSUS) $(LIBWIDECOIN_CRYPTO) $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBLEVELDB_SSE42) $(LIBMEMENV) \
   $(BOOST_LIBS) $(QT_LIBS) $(QT_DBUS_LIBS) $(QR_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) \
   $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(SQLITE_LIBS)
-bitcoin_qt_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
-bitcoin_qt_libtoolflags = $(AM_LIBTOOLFLAGS) --tag CXX
+widecoin_qt_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
+widecoin_qt_libtoolflags = $(AM_LIBTOOLFLAGS) --tag CXX
 
-qt_bitcoin_qt_CPPFLAGS = $(bitcoin_qt_cppflags)
-qt_bitcoin_qt_CXXFLAGS = $(bitcoin_qt_cxxflags)
-qt_bitcoin_qt_SOURCES = $(bitcoin_qt_sources)
-qt_bitcoin_qt_LDADD = $(bitcoin_qt_ldadd)
-qt_bitcoin_qt_LDFLAGS = $(bitcoin_qt_ldflags)
-qt_bitcoin_qt_LIBTOOLFLAGS = $(bitcoin_qt_libtoolflags)
+qt_widecoin_qt_CPPFLAGS = $(widecoin_qt_cppflags)
+qt_widecoin_qt_CXXFLAGS = $(widecoin_qt_cxxflags)
+qt_widecoin_qt_SOURCES = $(widecoin_qt_sources)
+qt_widecoin_qt_LDADD = $(widecoin_qt_ldadd)
+qt_widecoin_qt_LDFLAGS = $(widecoin_qt_ldflags)
+qt_widecoin_qt_LIBTOOLFLAGS = $(widecoin_qt_libtoolflags)
 
-bitcoin_gui_CPPFLAGS = $(bitcoin_qt_cppflags)
-bitcoin_gui_CXXFLAGS = $(bitcoin_qt_cxxflags)
-bitcoin_gui_SOURCES = $(bitcoin_qt_sources)
-bitcoin_gui_LDADD = $(bitcoin_qt_ldadd)
-bitcoin_gui_LDFLAGS = $(bitcoin_qt_ldflags)
-bitcoin_gui_LIBTOOLFLAGS = $(bitcoin_qt_libtoolflags)
+widecoin_gui_CPPFLAGS = $(widecoin_qt_cppflags)
+widecoin_gui_CXXFLAGS = $(widecoin_qt_cxxflags)
+widecoin_gui_SOURCES = $(widecoin_qt_sources)
+widecoin_gui_LDADD = $(widecoin_qt_ldadd)
+widecoin_gui_LDFLAGS = $(widecoin_qt_ldflags)
+widecoin_gui_LIBTOOLFLAGS = $(widecoin_qt_libtoolflags)
 
 #locale/foo.ts -> locale/foo.qm
 QT_QM=$(QT_TS:.ts=.qm)
 
 SECONDARY: $(QT_QM)
 
-$(srcdir)/qt/bitcoinstrings.cpp: FORCE
+$(srcdir)/qt/widecoinstrings.cpp: FORCE
 	@test -n $(XGETTEXT) || echo "xgettext is required for updating translations"
-	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) COPYRIGHT_HOLDERS="$(COPYRIGHT_HOLDERS)" $(PYTHON) ../share/qt/extract_strings_qt.py $(libbitcoin_server_a_SOURCES) $(libbitcoin_wallet_a_SOURCES) $(libbitcoin_common_a_SOURCES) $(libbitcoin_zmq_a_SOURCES) $(libbitcoin_consensus_a_SOURCES) $(libbitcoin_util_a_SOURCES)
+	$(AM_V_GEN) cd $(srcdir); XGETTEXT=$(XGETTEXT) COPYRIGHT_HOLDERS="$(COPYRIGHT_HOLDERS)" $(PYTHON) ../share/qt/extract_strings_qt.py $(libwidecoin_server_a_SOURCES) $(libwidecoin_wallet_a_SOURCES) $(libwidecoin_common_a_SOURCES) $(libwidecoin_zmq_a_SOURCES) $(libwidecoin_consensus_a_SOURCES) $(libwidecoin_util_a_SOURCES)
 
-translate: $(srcdir)/qt/bitcoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(BITCOIN_QT_BASE_CPP) qt/bitcoin.cpp $(BITCOIN_QT_WINDOWS_CPP) $(BITCOIN_QT_WALLET_CPP) $(BITCOIN_QT_H) $(BITCOIN_MM)
+translate: $(srcdir)/qt/widecoinstrings.cpp $(QT_FORMS_UI) $(QT_FORMS_UI) $(WIDECOIN_QT_BASE_CPP) qt/widecoin.cpp $(WIDECOIN_QT_WINDOWS_CPP) $(WIDECOIN_QT_WALLET_CPP) $(WIDECOIN_QT_H) $(WIDECOIN_MM)
 	@test -n $(LUPDATE) || echo "lupdate is required for updating translations"
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts $(srcdir)/qt/locale/bitcoin_en.ts
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(LUPDATE) $^ -locations relative -no-obsolete -ts $(srcdir)/qt/locale/widecoin_en.ts
 
 $(QT_QRC_LOCALE_CPP): $(QT_QRC_LOCALE) $(QT_QM)
 	@test -f $(RCC)
 	@cp -f $< $(@D)/temp_$(<F)
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name bitcoin_locale $(@D)/temp_$(<F) | \
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name widecoin_locale $(@D)/temp_$(<F) | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 	@rm $(@D)/temp_$(<F)
 
 $(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_ANIMATION)
 	@test -f $(RCC)
-	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name bitcoin $< | \
+	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name widecoin $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 
-CLEAN_QT = $(nodist_qt_libbitcoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno qt/temp_bitcoin_locale.qrc
+CLEAN_QT = $(nodist_qt_libwidecoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno qt/temp_widecoin_locale.qrc
 
 CLEANFILES += $(CLEAN_QT)
 
-bitcoin_qt_clean: FORCE
-	rm -f $(CLEAN_QT) $(qt_libbitcoinqt_a_OBJECTS) $(qt_bitcoin_qt_OBJECTS) qt/bitcoin-qt$(EXEEXT) $(LIBBITCOINQT)
+widecoin_qt_clean: FORCE
+	rm -f $(CLEAN_QT) $(qt_libwidecoinqt_a_OBJECTS) $(qt_widecoin_qt_OBJECTS) qt/widecoin-qt$(EXEEXT) $(LIBWIDECOINQT)
 
-bitcoin_qt : qt/bitcoin-qt$(EXEEXT)
+widecoin_qt : qt/widecoin-qt$(EXEEXT)
 
 ui_%.h: %.ui
 	@test -f $(UIC)

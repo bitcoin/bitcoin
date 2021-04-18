@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2019-2020 The Bitcoin Core developers
+# Copyright (c) 2019-2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,4 +16,4 @@ export RUN_UNIT_TESTS_SEQUENTIAL="true"
 export RUN_UNIT_TESTS="false"
 export GOAL="install"
 export PREVIOUS_RELEASES_TO_DOWNLOAD="v0.15.2 v0.16.3 v0.17.2 v0.18.1 v0.19.1"
-export BITCOIN_CONFIG="--enable-zmq --with-libs=no --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports --enable-c++17 --enable-debug CFLAGS=\"-g0 -O2 -funsigned-char\" CXXFLAGS=\"-g0 -O2 -funsigned-char\" --with-boost-process"
+export WIDECOIN_CONFIG="--enable-zmq --with-libs=no --with-gui=qt5 --enable-glibc-back-compat --enable-reduce-exports --enable-c++17 --enable-debug CFLAGS=\"-g0 -O2 -funsigned-char\" CXXFLAGS=\"-g0 -O2 -funsigned-char\" --with-boost-process"

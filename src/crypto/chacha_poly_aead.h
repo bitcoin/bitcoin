@@ -1,9 +1,9 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CRYPTO_CHACHA_POLY_AEAD_H
-#define BITCOIN_CRYPTO_CHACHA_POLY_AEAD_H
+#ifndef WIDECOIN_CRYPTO_CHACHA_POLY_AEAD_H
+#define WIDECOIN_CRYPTO_CHACHA_POLY_AEAD_H
 
 #include <crypto/chacha20.h>
 
@@ -14,7 +14,7 @@ static constexpr int CHACHA20_POLY1305_AEAD_AAD_LEN = 3; /* 3 bytes length */
 static constexpr int CHACHA20_ROUND_OUTPUT = 64;         /* 64 bytes per round */
 static constexpr int AAD_PACKAGES_PER_ROUND = 21;        /* 64 / 3 round down*/
 
-/* A AEAD class for ChaCha20-Poly1305@bitcoin.
+/* A AEAD class for ChaCha20-Poly1305@widecoin.
  *
  * ChaCha20 is a stream cipher designed by Daniel Bernstein and described in
  * <ref>[http://cr.yp.to/chacha/chacha-20080128.pdf ChaCha20]</ref>. It operates
@@ -26,7 +26,7 @@ static constexpr int AAD_PACKAGES_PER_ROUND = 21;        /* 64 / 3 round down*/
  * by Daniel Bernstein, is a one-time Carter-Wegman MAC that computes a 128 bit
  * integrity tag given a message and a single-use 256 bit secret key.
  *
- * The chacha20-poly1305@bitcoin combines these two primitives into an
+ * The chacha20-poly1305@widecoin combines these two primitives into an
  * authenticated encryption mode. The construction used is based on that proposed
  * for TLS by Adam Langley in
  * <ref>[http://tools.ietf.org/html/draft-agl-tls-chacha20poly1305-03 "ChaCha20
@@ -36,7 +36,7 @@ static constexpr int AAD_PACKAGES_PER_ROUND = 21;        /* 64 / 3 round down*/
  *
  * ==== Detailed Construction ====
  *
- * The chacha20-poly1305@bitcoin cipher requires two 256 bits of key material as
+ * The chacha20-poly1305@widecoin cipher requires two 256 bits of key material as
  * output from the key exchange. Each key (K_1 and K_2) are used by two separate
  * instances of chacha20.
  *
@@ -96,7 +96,7 @@ static constexpr int AAD_PACKAGES_PER_ROUND = 21;        /* 64 / 3 round down*/
  * the receive channel, <code>K_1_B, K_2_B</code> MUST be used to encrypt messages
  * on the send channel.
  *
- * Optimized implementations of ChaCha20-Poly1305@bitcoin are relatively fast in
+ * Optimized implementations of ChaCha20-Poly1305@widecoin are relatively fast in
  * general, therefore it is very likely that encrypted messages require not more
  * CPU cycles per bytes then the current unencrypted p2p message format
  * (ChaCha20/Poly1305 versus double SHA256).
@@ -143,4 +143,4 @@ public:
     bool GetLength(uint32_t* len24_out, uint64_t seqnr_aad, int aad_pos, const uint8_t* ciphertext);
 };
 
-#endif // BITCOIN_CRYPTO_CHACHA_POLY_AEAD_H
+#endif // WIDECOIN_CRYPTO_CHACHA_POLY_AEAD_H

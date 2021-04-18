@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\common.init.vcxproj" />
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{2B384FA8-9EE1-4544-93CB-0D733C25E8CE}</ProjectGuid>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\arith_uint256.cpp" />
+    <ClCompile Include="..\..\src\consensus\merkle.cpp" />
+    <ClCompile Include="..\..\src\consensus\tx_check.cpp" />
+    <ClCompile Include="..\..\src\crypto\aes.cpp" />
+    <ClCompile Include="..\..\src\crypto\chacha20.cpp" />
+    <ClCompile Include="..\..\src\crypto\hmac_sha256.cpp" />
+    <ClCompile Include="..\..\src\crypto\hmac_sha512.cpp" />
+    <ClCompile Include="..\..\src\crypto\ripemd160.cpp" />
+    <ClCompile Include="..\..\src\crypto\sha1.cpp" />
+    <ClCompile Include="..\..\src\crypto\sha256.cpp" />
+    <ClCompile Include="..\..\src\crypto\sha256_sse4.cpp" />
+    <ClCompile Include="..\..\src\crypto\sha512.cpp" />
+    <ClCompile Include="..\..\src\hash.cpp" />
+    <ClCompile Include="..\..\src\primitives\block.cpp" />
+    <ClCompile Include="..\..\src\primitives\transaction.cpp" />
+    <ClCompile Include="..\..\src\pubkey.cpp" />
+    <ClCompile Include="..\..\src\script\widecoinconsensus.cpp" />
+    <ClCompile Include="..\..\src\script\interpreter.cpp" />
+    <ClCompile Include="..\..\src\script\script.cpp" />
+    <ClCompile Include="..\..\src\script\script_error.cpp" />
+    <ClCompile Include="..\..\src\uint256.cpp" />
+    <ClCompile Include="..\..\src\util\strencodings.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="..\common.vcxproj" />
+</Project>

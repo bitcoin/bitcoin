@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2019 The Bitcoin Core developers
+# Copyright (c) 2017-2019 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests NODE_NETWORK_LIMITED.
@@ -10,7 +10,7 @@ and that it responds to getdata requests for blocks correctly:
     - disconnect peers who request blocks older than that."""
 from test_framework.messages import CInv, MSG_BLOCK, msg_getdata, msg_verack, NODE_NETWORK_LIMITED, NODE_WITNESS
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -31,7 +31,7 @@ class P2PIgnoreInv(P2PInterface):
         getdata_request.inv.append(CInv(MSG_BLOCK, int(blockhash, 16)))
         self.send_message(getdata_request)
 
-class NodeNetworkLimitedTest(BitcoinTestFramework):
+class NodeNetworkLimitedTest(WidecoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 3

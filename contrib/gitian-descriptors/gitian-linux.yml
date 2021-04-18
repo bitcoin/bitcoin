@@ -1,5 +1,5 @@
 ---
-name: "bitcoin-core-linux-0.21"
+name: "widecoin-core-linux-0.21"
 enable_cache: true
 distro: "ubuntu"
 suites:
@@ -31,8 +31,8 @@ packages:
 - "binutils-riscv64-linux-gnu"
 - "g++-8-riscv64-linux-gnu"
 remotes:
-- "url": "https://github.com/bitcoin/bitcoin.git"
-  "dir": "bitcoin"
+- "url": "https://github.com/widecoin/widecoin.git"
+  "dir": "widecoin"
 files: []
 script: |
   set -e -o pipefail
@@ -91,7 +91,7 @@ script: |
   create_per-host_faketime_wrappers "2000-01-01 12:00:00"
   export PATH=${WRAP_DIR}:${PATH}
 
-  cd bitcoin
+  cd widecoin
   BASEPREFIX="${PWD}/depends"
   # Build dependencies for each host
   for i in $HOSTS; do

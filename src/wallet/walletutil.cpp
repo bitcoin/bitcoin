@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2019 The Bitcoin Core developers
+// Copyright (c) 2017-2019 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -64,7 +64,7 @@ std::vector<fs::path> ListWalletDir()
                     // as a wallet.
                     paths.emplace_back();
                 } else {
-                    // Found top-level btree file not called wallet.dat. Current bitcoin
+                    // Found top-level btree file not called wallet.dat. Current widecoin
                     // software will never create these files but will allow them to be
                     // opened in a shared database environment for backwards compatibility.
                     // Add it to the list of available wallets.

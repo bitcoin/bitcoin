@@ -1,9 +1,9 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2018 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
-#define BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
+#ifndef WIDECOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
+#define WIDECOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
 
 #include <util/memory.h>
 
@@ -64,4 +64,4 @@ protected:
     int outbound_message_high_water_mark; // aka SNDHWM
 };
 
-#endif // BITCOIN_ZMQ_ZMQABSTRACTNOTIFIER_H
+#endif // WIDECOIN_ZMQ_ZMQABSTRACTNOTIFIER_H

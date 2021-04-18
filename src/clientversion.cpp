@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2018 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,10 +9,10 @@
 
 /**
  * Name of client reported in the 'version' message. Report the same name
- * for both bitcoind and bitcoin-qt, to make it harder for attackers to
+ * for both widecoind and widecoin-qt, to make it harder for attackers to
  * target servers or GUI users specifically.
  */
-const std::string CLIENT_NAME("Satoshi");
+const std::string CLIENT_NAME("WidecoinCore");
 
 
 #ifdef HAVE_BUILD_INFO
@@ -24,7 +24,8 @@ const std::string CLIENT_NAME("Satoshi");
 //   - "// No build information available", if proper git information is not available
 #endif
 
-//! git will put "#define GIT_COMMIT_ID ..." on the next line inside archives. $Format:%n#define GIT_COMMIT_ID "%H"$
+//! git will put "#define GIT_COMMIT_ID ..." on the next line inside archives. 
+#define GIT_COMMIT_ID ""
 
 #ifdef BUILD_GIT_TAG
     #define BUILD_DESC BUILD_GIT_TAG
@@ -39,6 +40,7 @@ const std::string CLIENT_NAME("Satoshi");
     #else
         #define BUILD_SUFFIX "-unk"
     #endif
+    #define BUILD_SUFFIX ""
 #endif
 
 const std::string CLIENT_BUILD(BUILD_DESC BUILD_SUFFIX);
@@ -57,7 +59,7 @@ std::string FormatFullVersion()
 }
 
 /**
- * Format the subversion field according to BIP 14 spec (https://github.com/bitcoin/bips/blob/master/bip-0014.mediawiki)
+ * Format the subversion field according to BIP 14 spec (https://github.com/widecoin/bips/blob/master/bip-0014.mediawiki)
  */
 std::string FormatSubVersion(const std::string& name, int nClientVersion, const std::vector<std::string>& comments)
 {

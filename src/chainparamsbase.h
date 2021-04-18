@@ -1,9 +1,9 @@
-// Copyright (c) 2014-2019 The Bitcoin Core developers
+// Copyright (c) 2014-2019 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CHAINPARAMSBASE_H
-#define BITCOIN_CHAINPARAMSBASE_H
+#ifndef WIDECOIN_CHAINPARAMSBASE_H
+#define WIDECOIN_CHAINPARAMSBASE_H
 
 #include <memory>
 #include <string>
@@ -11,8 +11,8 @@
 class ArgsManager;
 
 /**
- * CBaseChainParams defines the base parameters (shared between bitcoin-cli and bitcoind)
- * of a given instance of the Bitcoin system.
+ * CBaseChainParams defines the base parameters (shared between widecoin-cli and widecoind)
+ * of a given instance of the Widecoin system.
  */
 class CBaseChainParams
 {
@@ -60,4 +60,4 @@ const CBaseChainParams& BaseParams();
 /** Sets the params returned by Params() to those for the given network. */
 void SelectBaseParams(const std::string& chain);
 
-#endif // BITCOIN_CHAINPARAMSBASE_H
+#endif // WIDECOIN_CHAINPARAMSBASE_H

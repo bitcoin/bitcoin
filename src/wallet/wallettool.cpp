@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,7 +12,7 @@
 namespace WalletTool {
 
 // The standard wallet deleter function blocks on the validation interface
-// queue, which doesn't exist for the bitcoin-wallet. Define our own
+// queue, which doesn't exist for the widecoin-wallet. Define our own
 // deleter here.
 static void WalletToolReleaseWallet(CWallet* wallet)
 {

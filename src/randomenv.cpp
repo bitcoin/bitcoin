@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/widecoin-config.h>
 #endif
 
 #include <randomenv.h>
@@ -38,7 +38,7 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 #endif
-#if HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS
+#if HAVE_DECL_GETIFADDRS
 #include <ifaddrs.h>
 #endif
 #if HAVE_SYSCTL
@@ -323,7 +323,7 @@ void RandAddStaticEnv(CSHA512& hasher)
     hasher.Write((const unsigned char*)COMPILER_VERSION, strlen(COMPILER_VERSION) + 1);
 #endif
 
-    // Bitcoin client version
+    // Widecoin client version
     hasher << CLIENT_VERSION;
 
 #ifdef __linux__
@@ -361,7 +361,7 @@ void RandAddStaticEnv(CSHA512& hasher)
         hasher.Write((const unsigned char*)hname, strnlen(hname, 256));
     }
 
-#if HAVE_DECL_GETIFADDRS && HAVE_DECL_FREEIFADDRS
+#if HAVE_DECL_GETIFADDRS
     // Network interfaces
     struct ifaddrs *ifad = NULL;
     getifaddrs(&ifad);

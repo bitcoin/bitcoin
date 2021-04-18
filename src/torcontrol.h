@@ -1,12 +1,12 @@
-// Copyright (c) 2015-2019 The Bitcoin Core developers
+// Copyright (c) 2015-2019 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 /**
  * Functionality for communicating with Tor.
  */
-#ifndef BITCOIN_TORCONTROL_H
-#define BITCOIN_TORCONTROL_H
+#ifndef WIDECOIN_TORCONTROL_H
+#define WIDECOIN_TORCONTROL_H
 
 #include <string>
 
@@ -21,4 +21,4 @@ void StopTorControl();
 
 CService DefaultOnionServiceTarget();
 
-#endif /* BITCOIN_TORCONTROL_H */
+#endif /* WIDECOIN_TORCONTROL_H */

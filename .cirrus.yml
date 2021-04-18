@@ -6,7 +6,7 @@ container:
   # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
   cpu: 2
   memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
-  kvm: true  # Use kvm to avoid spurious CI failures in the default virtualization cluster, see https://github.com/bitcoin/bitcoin/issues/20093
+  kvm: true  # Use kvm to avoid spurious CI failures in the default virtualization cluster, see https://github.com/widecoin/widecoin/issues/20093
 env:
   PACKAGE_MANAGER_INSTALL: "apt-get update && apt-get install -y"
   MAKEJOBS: "-j4"
@@ -19,7 +19,7 @@ env:
 
 # https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
 global_task_template: &GLOBAL_TASK_TEMPLATE
-  skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == ""  # No need to run on the read-only mirror, unless it is a PR. https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
+  skip: $CIRRUS_REPO_FULL_NAME == "widecoin-core/gui" && $CIRRUS_PR == ""  # No need to run on the read-only mirror, unless it is a PR. https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
   ccache_cache:
     folder: "/tmp/ccache_dir"
   depends_built_cache:

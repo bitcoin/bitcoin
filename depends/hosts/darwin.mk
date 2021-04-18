@@ -11,7 +11,7 @@ OSX_SDK=$(SDK_PATH)/Xcode-$(XCODE_VERSION)-$(XCODE_BUILD_ID)-extracted-SDK-with-
 #     -mlinker-version
 #
 #         Ensures that modern linker features are enabled. See here for more
-#         details: https://github.com/bitcoin/bitcoin/pull/19407.
+#         details: https://github.com/widecoin/widecoin/pull/19407.
 #
 #     -B$(build_prefix)/bin
 #

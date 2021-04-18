@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,7 +17,7 @@ export CONTAINER_NAME="ci_native_msan"
 export PACKAGES="clang-9 llvm-9 cmake"
 export DEP_OPTS="NO_BDB=1 NO_QT=1 CC='clang' CXX='clang++' CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}' boost_cxxflags='-std=c++11 -fvisibility=hidden -fPIC ${MSAN_AND_LIBCXX_FLAGS}' zeromq_cxxflags='-std=c++11 ${MSAN_AND_LIBCXX_FLAGS}'"
 export GOAL="install"
-export BITCOIN_CONFIG="--enable-wallet --with-sanitizers=memory --with-asm=no --prefix=${BASE_ROOT_DIR}/depends/x86_64-pc-linux-gnu/ CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}' BDB_LIBS='-L${BDB_PREFIX}/lib -ldb_cxx-4.8' BDB_CFLAGS='-I${BDB_PREFIX}/include'"
+export WIDECOIN_CONFIG="--enable-wallet --with-sanitizers=memory --with-asm=no --prefix=${BASE_ROOT_DIR}/depends/x86_64-pc-linux-gnu/ CC=clang CXX=clang++ CFLAGS='${MSAN_FLAGS}' CXXFLAGS='${MSAN_AND_LIBCXX_FLAGS}' BDB_LIBS='-L${BDB_PREFIX}/lib -ldb_cxx-4.8' BDB_CFLAGS='-I${BDB_PREFIX}/include'"
 export USE_MEMORY_SANITIZER="true"
 export RUN_FUNCTIONAL_TESTS="false"
 export CCACHE_SIZE=250M

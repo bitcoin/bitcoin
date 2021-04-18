@@ -1,0 +1,33 @@
+# /etc/conf.d/widecoind: config file for /etc/init.d/widecoind
+
+# Config file location
+#WIDECOIND_CONFIGFILE="/etc/widecoin/widecoin.conf"
+
+# What directory to write pidfile to?  (created and owned by $WIDECOIND_USER)
+#WIDECOIND_PIDDIR="/var/run/widecoind"
+
+# What filename to give the pidfile
+#WIDECOIND_PIDFILE="${WIDECOIND_PIDDIR}/widecoind.pid"
+
+# Where to write widecoind data (be mindful that the blockchain is large)
+#WIDECOIND_DATADIR="/var/lib/widecoind"
+
+# User and group to own widecoind process
+#WIDECOIND_USER="widecoin"
+#WIDECOIND_GROUP="widecoin"
+
+# Path to widecoind executable
+#WIDECOIND_BIN="/usr/bin/widecoind"
+
+# Nice value to run widecoind under
+#WIDECOIND_NICE=0
+
+# Additional options (avoid -conf and -datadir, use flags above)
+#WIDECOIND_OPTS=""
+
+# The timeout in seconds OpenRC will wait for widecoind to terminate
+# after a SIGTERM has been raised.
+# Note that this will be mapped as argument to start-stop-daemon's
+# '--retry' option, which means you can specify a retry schedule
+# here. For more information see man 8 start-stop-daemon.
+WIDECOIND_SIGTERM_TIMEOUT=600

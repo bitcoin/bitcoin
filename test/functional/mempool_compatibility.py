@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Bitcoin Core developers
+# Copyright (c) 2017-2020 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that mempool.dat is both backward and forward compatible between versions
@@ -15,10 +15,10 @@ Only v0.15.2 is required by this test. The rest is used in other backwards compa
 
 import os
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 
 
-class MempoolCompatibilityTest(BitcoinTestFramework):
+class MempoolCompatibilityTest(WidecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.wallet_names = [None, self.default_wallet_name]

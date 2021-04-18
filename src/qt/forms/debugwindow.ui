@@ -510,7 +510,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../bitcoin.qrc">
+            <iconset resource="../widecoin.qrc">
              <normaloff>:/icons/fontsmaller</normaloff>:/icons/fontsmaller</iconset>
            </property>
            <property name="iconSize">
@@ -542,7 +542,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../bitcoin.qrc">
+            <iconset resource="../widecoin.qrc">
              <normaloff>:/icons/fontbigger</normaloff>:/icons/fontbigger</iconset>
            </property>
            <property name="iconSize">
@@ -577,7 +577,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../bitcoin.qrc">
+            <iconset resource="../widecoin.qrc">
              <normaloff>:/icons/remove</normaloff>:/icons/remove</iconset>
            </property>
            <property name="shortcut">
@@ -632,7 +632,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../bitcoin.qrc">
+            <iconset resource="../widecoin.qrc">
              <normaloff>:/icons/prompticon</normaloff>
              <disabledoff>:/icons/prompticon</disabledoff>:/icons/prompticon</iconset>
            </property>
@@ -1538,7 +1538,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../bitcoin.qrc"/>
+  <include location="../widecoin.qrc"/>
  </resources>
  <connections/>
 </ui>

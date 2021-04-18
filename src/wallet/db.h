@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_DB_H
-#define BITCOIN_WALLET_DB_H
+#ifndef WIDECOIN_WALLET_DB_H
+#define WIDECOIN_WALLET_DB_H
 
 #include <clientversion.h>
 #include <fs.h>
@@ -225,4 +225,4 @@ enum class DatabaseStatus {
 
 std::unique_ptr<WalletDatabase> MakeDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
 
-#endif // BITCOIN_WALLET_DB_H
+#endif // WIDECOIN_WALLET_DB_H

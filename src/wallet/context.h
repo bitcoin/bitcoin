@@ -1,9 +1,9 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_CONTEXT_H
-#define BITCOIN_WALLET_CONTEXT_H
+#ifndef WIDECOIN_WALLET_CONTEXT_H
+#define WIDECOIN_WALLET_CONTEXT_H
 
 class ArgsManager;
 namespace interfaces {
@@ -31,4 +31,4 @@ struct WalletContext {
     ~WalletContext();
 };
 
-#endif // BITCOIN_WALLET_CONTEXT_H
+#endif // WIDECOIN_WALLET_CONTEXT_H

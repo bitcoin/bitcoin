@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_MACOS_APPNAP_H
-#define BITCOIN_QT_MACOS_APPNAP_H
+#ifndef WIDECOIN_QT_MACOS_APPNAP_H
+#define WIDECOIN_QT_MACOS_APPNAP_H
 
 #include <memory>
 
@@ -21,4 +21,4 @@ private:
     std::unique_ptr<CAppNapImpl> impl;
 };
 
-#endif // BITCOIN_QT_MACOS_APPNAP_H
+#endif // WIDECOIN_QT_MACOS_APPNAP_H

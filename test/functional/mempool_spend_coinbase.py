@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2018 The Bitcoin Core developers
+# Copyright (c) 2014-2018 The Widecoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test spending coinbase transactions.
@@ -12,12 +12,12 @@ in the next block are accepted into the memory pool,
 but less mature coinbase spends are NOT.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import WidecoinTestFramework
 from test_framework.blocktools import create_raw_transaction
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
 
-class MempoolSpendCoinbaseTest(BitcoinTestFramework):
+class MempoolSpendCoinbaseTest(WidecoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

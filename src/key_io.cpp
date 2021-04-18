@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2019 The Bitcoin Core developers
+// Copyright (c) 2014-2019 The Widecoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -44,7 +44,7 @@ public:
         std::vector<unsigned char> data = {0};
         data.reserve(33);
         ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, id.begin(), id.end());
-        return bech32::Encode(bech32::Encoding::BECH32, m_params.Bech32HRP(), data);
+        return bech32::Encode(m_params.Bech32HRP(), data);
     }
 
     std::string operator()(const WitnessV0ScriptHash& id) const
@@ -52,7 +52,7 @@ public:
         std::vector<unsigned char> data = {0};
         data.reserve(53);
         ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, id.begin(), id.end());
-        return bech32::Encode(bech32::Encoding::BECH32, m_params.Bech32HRP(), data);
+        return bech32::Encode(m_params.Bech32HRP(), data);
     }
 
     std::string operator()(const WitnessUnknown& id) const
@@ -63,7 +63,7 @@ public:
         std::vector<unsigned char> data = {(unsigned char)id.version};
         data.reserve(1 + (id.length * 8 + 4) / 5);
         ConvertBits<8, 5, true>([&](unsigned char c) { data.push_back(c); }, id.program, id.program + id.length);
-        return bech32::Encode(bech32::Encoding::BECH32M, m_params.Bech32HRP(), data);
+        return bech32::Encode(m_params.Bech32HRP(), data);
     }
 
     std::string operator()(const CNoDestination& no) const { return {}; }
@@ -74,7 +74,7 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
     std::vector<unsigned char> data;
     uint160 hash;
     if (DecodeBase58Check(str, data, 21)) {
-        // base58-encoded Bitcoin addresses.
+        // base58-encoded Widecoin addresses.
         // Public-key-hash-addresses have version 0 (or 111 testnet).
         // The data vector contains RIPEMD160(SHA256(pubkey)), where pubkey is the serialized public key.
         const std::vector<unsigned char>& pubkey_prefix = params.Base58Prefix(CChainParams::PUBKEY_ADDRESS);
@@ -91,19 +91,13 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
         }
     }
     data.clear();
-    const auto dec = bech32::Decode(str);
-    if ((dec.encoding == bech32::Encoding::BECH32 || dec.encoding == bech32::Encoding::BECH32M) && dec.data.size() > 0 && dec.hrp == params.Bech32HRP()) {
+    auto bech = bech32::Decode(str);
+    if (bech.second.size() > 0 && bech.first == params.Bech32HRP()) {
         // Bech32 decoding
-        int version = dec.data[0]; // The first 5 bit symbol is the witness version (0-16)
-        if (version == 0 && dec.encoding != bech32::Encoding::BECH32) {
-            return CNoDestination();
-        }
-        if (version != 0 && dec.encoding != bech32::Encoding::BECH32M) {
-            return CNoDestination();
-        }
+        int version = bech.second[0]; // The first 5 bit symbol is the witness version (0-16)
         // The rest of the symbols are converted witness program bytes.
-        data.reserve(((dec.data.size() - 1) * 5) / 8);
-        if (ConvertBits<5, 8, false>([&](unsigned char c) { data.push_back(c); }, dec.data.begin() + 1, dec.data.end())) {
+        data.reserve(((bech.second.size() - 1) * 5) / 8);
+        if (ConvertBits<5, 8, false>([&](unsigned char c) { data.push_back(c); }, bech.second.begin() + 1, bech.second.end())) {
             if (version == 0) {
                 {
                     WitnessV0KeyHash keyid;
