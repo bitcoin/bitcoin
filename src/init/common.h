@@ -21,6 +21,7 @@ bool SanityChecks();
 void AddLoggingArgs(ArgsManager& args);
 void SetLoggingOptions(const ArgsManager& args);
 void SetLoggingCategories(const ArgsManager& args);
+bool StartLogging(const ArgsManager& args);
 } // namespace init
 
 #endif // BITCOIN_INIT_COMMON_H
