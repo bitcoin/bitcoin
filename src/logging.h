@@ -27,6 +27,9 @@ extern bool fLogIPs;
 /** Flag to indicate, whether the Omni Core log file should be reopened. */
 extern std::atomic<bool> fReopenOmniCoreLog;
 
+/** override to print to omni log to console */
+extern std::atomic<bool> fOmniCoreConsoleLog;
+
 struct CLogCategoryActive
 {
     std::string category;
