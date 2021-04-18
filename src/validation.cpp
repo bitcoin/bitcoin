@@ -19,7 +19,6 @@
 #include <deploymentstatus.h>
 #include <flatfile.h>
 #include <hash.h>
-#include <index/blockfilterindex.h>
 #include <logging.h>
 #include <logging/timer.h>
 #include <node/blockstorage.h>
@@ -2348,10 +2347,6 @@ bool CChainState::FlushStateToDisk(
             // pruning is height-based
             int last_prune{m_chain.Height()}; // last height we can prune
             std::optional<std::string> limiting_lock; // prune lock that actually was the limiting factor, only used for logging
-
-            ForEachBlockFilterIndex([&](BlockFilterIndex& index) {
-                last_prune = std::max(1, std::min(last_prune, index.GetSummary().best_block_height));
-            });
 
             for (const auto& prune_lock : m_blockman.m_prune_locks) {
                 if (prune_lock.second.height_first == std::numeric_limits<int>::max()) continue;
