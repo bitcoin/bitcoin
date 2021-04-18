@@ -35,6 +35,11 @@ struct BIP9Deployment {
      */
     int min_activation_height{0};
 
+    /** If the timeout is reached, should the deployment proceed to LOCKED_IN (true) or FAILED
+     * (false).
+     */
+    bool flag_day_on_timeout{false};
+
     /** Constant for nTimeout very far in the future. */
     static constexpr int64_t NO_TIMEOUT = std::numeric_limits<int64_t>::max();
 
