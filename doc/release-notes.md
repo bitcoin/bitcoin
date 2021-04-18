@@ -31,7 +31,7 @@ If you want to be able to downgrade smoothly, make a backup of your entire data
 directory. Without this your node will need start syncing (or importing from
 bootstrap.dat) anew afterwards. 
 
-This does not affect wallet forward or backward compatibility.  
+This does not affect wallet forward or backward compatibility.
 
 Widecoin 1.0.0 Change log
 =========================
@@ -49,7 +49,7 @@ Protocol:
 - 35 million coin limit  (instead of 21 million)
 - Magic 0xf8bfc3dc       (instead of 0xf9beb4d9)
 - Target Block Time 0.5 minutes (instead of 10 minutes)
-- Target Timespan 1 hours      (instead of two weeks)
+- Target Timespan 1 hour      (instead of two weeks)
 - max block weight 32000000 (instead of 4000000)
 - max block serialized size 8000000 (instead of 4000000)
 - coinbase maturity 50 (instead of 100)
