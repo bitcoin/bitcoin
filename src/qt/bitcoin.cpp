@@ -311,10 +311,9 @@ void BitcoinApplication::startThread()
 
 void BitcoinApplication::parameterSetup()
 {
-    gArgs.SoftSetBoolArg("-printtoconsole", SERVER_ARGS_OPTIONS.printtoconsole_default);
     gArgs.SoftSetBoolArg("-server", SERVER_ARGS_OPTIONS.server_default);
 
-    InitLogging(gArgs);
+    InitLogging(gArgs, SERVER_ARGS_OPTIONS);
     InitParameterInteraction(gArgs);
 }
 

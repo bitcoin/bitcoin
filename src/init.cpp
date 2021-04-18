@@ -887,11 +887,15 @@ void InitParameterInteraction(ArgsManager& args)
  * Note that this is called very early in the process lifetime, so you should be
  * careful about what global state you rely on here.
  */
-void InitLogging(const ArgsManager& args)
+void InitLogging(const ArgsManager& args, const ServerArgsOptions& options)
 {
     LogInstance().m_print_to_file = !args.IsArgNegated("-debuglogfile");
     LogInstance().m_file_path = AbsPathForConfigVal(args.GetArg("-debuglogfile", DEFAULT_DEBUGLOGFILE));
-    LogInstance().m_print_to_console = args.GetBoolArg("-printtoconsole", !args.GetBoolArg("-daemon", false));
+    if (args.GetBoolArg("-daemon", DEFAULT_DAEMON) || args.GetBoolArg("-daemonwait", DEFAULT_DAEMONWAIT)) {
+        LogInstance().m_print_to_console = false;
+    } else {
+        LogInstance().m_print_to_console = args.GetBoolArg("-printtoconsole", options.printtoconsole_default);
+    }
     LogInstance().m_log_timestamps = args.GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
     LogInstance().m_log_time_micros = args.GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
 #ifdef HAVE_THREAD_LOCAL

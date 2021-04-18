@@ -41,7 +41,7 @@ struct ServerArgsOptions {
 void Interrupt(NodeContext& node);
 void Shutdown(NodeContext& node);
 //!Initialize the logging infrastructure
-void InitLogging(const ArgsManager& args);
+void InitLogging(const ArgsManager& args, const ServerArgsOptions& options);
 //!Parameter interaction: change current parameters depending on various rules
 void InitParameterInteraction(ArgsManager& args);
 

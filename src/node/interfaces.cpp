@@ -66,7 +66,7 @@ class NodeImpl : public Node
 {
 public:
     explicit NodeImpl(NodeContext* context) { setContext(context); }
-    void initLogging() override { InitLogging(*Assert(m_context->args)); }
+    void initLogging(const ServerArgsOptions& options) override { InitLogging(*Assert(m_context->args), options); }
     void initParameterInteraction() override { InitParameterInteraction(*Assert(m_context->args)); }
     bilingual_str getWarnings() override { return GetWarnings(true); }
     uint32_t getLogCategories() override { return LogInstance().GetCategoryMask(); }

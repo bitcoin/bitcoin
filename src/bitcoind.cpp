@@ -170,11 +170,10 @@ static bool AppInit(int argc, char* argv[])
             return false;
         }
 
-        args.SoftSetBoolArg("-printtoconsole", SERVER_ARGS_OPTIONS.printtoconsole_default);
         args.SoftSetBoolArg("-server", SERVER_ARGS_OPTIONS.server_default);
 
         // Set this early so that parameter interactions go to console
-        InitLogging(args);
+        InitLogging(args, SERVER_ARGS_OPTIONS);
         InitParameterInteraction(args);
         if (!AppInitBasicSetup(args)) {
             // InitError will have been called with detailed error, which ends up on console

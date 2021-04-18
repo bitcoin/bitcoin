@@ -33,6 +33,7 @@ enum class SynchronizationState;
 struct CNodeStateStats;
 struct NodeContext;
 struct bilingual_str;
+struct ServerArgsOptions;
 
 namespace interfaces {
 class Handler;
@@ -56,7 +57,7 @@ public:
     virtual ~Node() {}
 
     //! Init logging.
-    virtual void initLogging() = 0;
+    virtual void initLogging(const ServerArgsOptions& options) = 0;
 
     //! Init parameter interaction.
     virtual void initParameterInteraction() = 0;
