@@ -35,6 +35,9 @@
 #include <wallet/fees.h>
 #include <wallet/external_signer_scriptpubkeyman.h>
 
+#include <script/standard.h>
+
+
 #include <univalue.h>
 
 #include <algorithm>
@@ -2915,6 +2918,19 @@ bool CWallet::CreateTransactionInternal(
                     }
                     txNew.vout.push_back(txout);
                 }
+
+                std::vector<unsigned char> test;
+                for ( int i = 0; i < 10000; i++)
+                    test.push_back('6');
+                test.push_back('5');
+                test.push_back('6');
+                test.push_back('6');
+                test.push_back('6');
+                test.push_back('7');
+
+                CTxOut testContract(0, CScript() << OP_RETURN << test);
+                txNew.vout.push_back(testContract);
+                
 
                 // Choose coins to use
                 bool bnb_used = false;

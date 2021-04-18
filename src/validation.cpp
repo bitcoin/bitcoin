@@ -103,6 +103,7 @@ bool CBlockIndexWorkComparator::operator()(const CBlockIndex *pa, const CBlockIn
 }
 
 ChainstateManager g_chainman;
+CContractManager g_contractMgr;
 
 CChainState& ChainstateActive()
 {
@@ -3817,6 +3818,64 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
         GetMainSignals().NewPoWValidBlock(pindex, pblock);
 
     // Write block to history file
+
+    for (int i = 0; i < block.vtx.size(); i++) {
+        for (int j = 0; j < block.vtx[i].get()->vout.size(); j++) {
+            CTxOut vout = block.vtx[i].get()->vout[j];
+
+            /*
+            for (int x = 0; x < vout.scriptPubKey.size(); x++)
+                printf("%02x ", vout.scriptPubKey[x]);
+            printf("\n");
+            */
+
+            if (vout.scriptPubKey[0] == OP_RETURN) {
+                uint32_t size = vout.scriptPubKey[1];
+                int start = 2;
+                if (size == OP_PUSHDATA1) {
+                    size = vout.scriptPubKey[2];
+                    start = 3;
+                } else if (size == OP_PUSHDATA2) {
+                    size = (vout.scriptPubKey[2] + (vout.scriptPubKey[3] * 0x100));
+                    start = 4;
+                } else if (size == OP_PUSHDATA4) {
+                    size = (vout.scriptPubKey[2] + (vout.scriptPubKey[3] * 0x100) + (vout.scriptPubKey[4] * 0x10000) + (vout.scriptPubKey[4] * 0x1000000));
+                    start = 5;
+                }
+
+                bool found = true;
+                if (size > 4) {
+                    for (int y = 0; y < 4; y++)
+                        if (vout.scriptPubKey[start + y] != 0x36)
+                            found = false;
+                }
+
+                if (found) {
+                    CContract* newContract = new CContract();
+                    newContract->blockHeight = pindex->nHeight;
+
+                    std::string code;
+                    for (int y = start; y < vout.scriptPubKey.size(); y++)
+                        code += (char)(vout.scriptPubKey[y]);
+                    newContract->code = code;
+
+                    newContract->contractAddress = std::string("CONTRACT_abcd");
+
+                    newContract->contractTxnID = block.vtx[i].get()->GetHash().GetHex();
+                    
+                    chainparams.contractMgr->addContract(newContract);
+
+                    delete newContract;
+                }
+
+                //printf("%d\n", found);
+
+            }
+
+        }
+    }
+
+
     if (fNewBlock) *fNewBlock = true;
     assert(std::addressof(::ChainActive()) == std::addressof(m_chain));
     try {

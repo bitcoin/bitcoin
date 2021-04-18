@@ -10,6 +10,7 @@
 #include <consensus/params.h>
 #include <primitives/block.h>
 #include <protocol.h>
+#include <primitives/contract_manager.h>
 
 #include <memory>
 #include <vector>
@@ -115,11 +116,15 @@ public:
     const std::string strDevFeeAddress = "dy1q6y6uv9thwl99up2l4pj9q3l4lfuwml6wn5863q";
     CAmount devFeePerBlock;
 
+    CContractManager* contractMgr;
+
     //! Get allowed assumeutxo configuration.
     //! @see ChainstateManager
     const MapAssumeutxo& Assumeutxo() const { return m_assumeutxo_data; }
 
     const ChainTxData& TxData() const { return chainTxData; }
+
+
 protected:
     CChainParams() {}
 

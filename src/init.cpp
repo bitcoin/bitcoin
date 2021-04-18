@@ -1909,7 +1909,17 @@ bool AppInitMain(const std::any& context, NodeContext& node, interfaces::BlockAn
         return false;
     }
 
-    // ********************************************************* Step 12: start node
+
+    // ********************************************************* Step 12: open contract manager database
+
+
+    fs::path datadir = GetDataDir();
+
+    chainparams.contractMgr->CreateOrOpenDatabase(datadir.string());
+
+
+
+    // ********************************************************* Step 13: start node
 
     int chain_active_height;
 

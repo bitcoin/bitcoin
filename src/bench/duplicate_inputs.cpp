@@ -14,6 +14,8 @@
 
 static void DuplicateInputs(benchmark::Bench& bench)
 {
+
+    /*
     const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
 
     const CScript SCRIPT_PUB{CScript(OP_TRUE)};
@@ -60,6 +62,7 @@ static void DuplicateInputs(benchmark::Bench& bench)
         assert(!CheckBlock(block, cvstate, chainparams.GetConsensus(), false, false));
         assert(cvstate.GetRejectReason() == "bad-txns-inputs-duplicate");
     });
+    */
 }
 
 BENCHMARK(DuplicateInputs);

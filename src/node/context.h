@@ -10,6 +10,8 @@
 #include <memory>
 #include <vector>
 
+#include <primitives/contract_manager.h>
+
 class ArgsManager;
 class BanMan;
 class CAddrMan;

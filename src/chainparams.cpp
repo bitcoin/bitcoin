@@ -272,6 +272,7 @@ public:
         };
         chainTxData = ChainTxData();
 
+        contractMgr = new CContractManager();
     }
 };
 
