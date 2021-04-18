@@ -21,6 +21,23 @@ bool fHavePruned = false;
 bool fPruneMode = false;
 uint64_t nPruneTarget = 0;
 
+// TODO make namespace {
+RecursiveMutex cs_LastBlockFile;
+std::vector<CBlockFileInfo> vinfoBlockFile;
+int nLastBlockFile = 0;
+/** Global flag to indicate we should check to see if there are
+*  block/undo files that should be deleted.  Set on startup
+*  or if we allocate more file space when we're in prune mode
+*/
+bool fCheckForPruning = false;
+
+/** Dirty block index entries. */
+std::set<CBlockIndex*> setDirtyBlockIndex;
+
+/** Dirty block file entries. */
+std::set<int> setDirtyFileInfo;
+// } // namespace
+
 bool IsBlockPruned(const CBlockIndex* pblockindex)
 {
     return (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0);
