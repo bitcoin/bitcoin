@@ -12,7 +12,9 @@
 #include <protocol.h> // For CMessageHeader::MessageStartChars
 
 class ArgsManager;
+class BlockValidationState;
 class CBlock;
+class CBlockFileInfo;
 class CBlockIndex;
 class CBlockUndo;
 class CChain;
@@ -47,6 +49,22 @@ bool IsBlockPruned(const CBlockIndex* pblockindex);
 
 void CleanupBlockRevFiles();
 
+/** Open a block file (blk?????.dat) */
+FILE* OpenBlockFile(const FlatFilePos &pos, bool fReadOnly = false);
+/** Translation to a filesystem path */
+fs::path GetBlockPosFilename(const FlatFilePos &pos);
+
+/** Get block file info entry for one block file */
+CBlockFileInfo* GetBlockFileInfo(size_t n);
+
+/** Calculate the amount of disk space the block & undo files currently use */
+uint64_t CalculateCurrentUsage();
+
+/**
+ *  Actually unlink the specified files
+ */
+void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune);
+
 /** Functions for disk access for blocks */
 bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::Params& consensusParams);
 bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus::Params& consensusParams);
@@ -54,6 +72,7 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const FlatFilePos& pos, c
 bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex, const CMessageHeader::MessageStartChars& message_start);
 
 bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex);
+bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& state, CBlockIndex* pindex, const CChainParams& chainparams);
 
 FlatFilePos SaveBlockToDisk(const CBlock& block, int nHeight, CChain& active_chain, const CChainParams& chainparams, const FlatFilePos* dbp);
 
