@@ -47,6 +47,8 @@ protected:
 
     const char* GetName() const override { return "coinstatsindex"; }
 
+    bool AllowPrune() const override { return false; }
+
 public:
     // Constructs the index, which becomes available to be queried.
     explicit CoinStatsIndex(size_t n_cache_size, bool f_memory = false, bool f_wipe = false);
