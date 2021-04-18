@@ -39,6 +39,7 @@ This release is based upon Bitcoin Core v0.21.0.  Their upstream changelog appli
 is included in as separate release-notes.  This section describes the Widecoin-specific differences.
 
 Protocol:
+
 - Keep Sha256d Proof-of-Work.
 - Widecoin TCP port 8553 (instead of 8333)
 - RPC TCP port 8552 (instead of 8332)
@@ -46,13 +47,13 @@ Protocol:
 - Testnet RPC TCP port 18552 (instead of 18332)
 - Signet TCP port 38553 (instead of 38333)
 - Signet RPC TCP port 38552 (instead of 38332)
-- 35 million coin limit  (instead of 21 million)
+- 35 Million Coin Limit  (instead of 21 million)
 - Magic 0xf8bfc3dc       (instead of 0xf9beb4d9)
 - Target Block Time 0.5 minutes (instead of 10 minutes)
 - Target Timespan 1 hour      (instead of two weeks)
-- max block weight 32000000 (instead of 4000000)
-- max block serialized size 8000000 (instead of 4000000)
-- coinbase maturity 50 (instead of 100)
+- Max Block Weight 32000000 (instead of 4000000)
+- Max Block Serialized Size 8000000 (instead of 4000000)
+- Coinbase Maturity 50 (instead of 100)
 - nbits 0x1e0ffff0 (instead of 0x1d00ffff)
 - SubsidyHalvingInterval 2years (instead of 4years)
 
@@ -66,4 +67,3 @@ Thanks to everyone who directly contributed to this release:
 - Jonh
 - Tony
 - Cole
-
