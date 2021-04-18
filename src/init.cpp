@@ -755,17 +755,7 @@ void InitParameterInteraction(ArgsManager& args)
  */
 void InitLogging(const ArgsManager& args)
 {
-    LogInstance().m_print_to_file = !args.IsArgNegated("-debuglogfile");
-    LogInstance().m_file_path = AbsPathForConfigVal(args.GetArg("-debuglogfile", DEFAULT_DEBUGLOGFILE));
-    LogInstance().m_print_to_console = args.GetBoolArg("-printtoconsole", !args.GetBoolArg("-daemon", false));
-    LogInstance().m_log_timestamps = args.GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
-    LogInstance().m_log_time_micros = args.GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
-#ifdef HAVE_THREAD_LOCAL
-    LogInstance().m_log_threadnames = args.GetBoolArg("-logthreadnames", DEFAULT_LOGTHREADNAMES);
-#endif
-    LogInstance().m_log_sourcelocations = args.GetBoolArg("-logsourcelocations", DEFAULT_LOGSOURCELOCATIONS);
-
-    fLogIPs = args.GetBoolArg("-logips", DEFAULT_LOGIPS);
+    init::SetLoggingOptions(args);
 
     std::string version_string = FormatFullVersion();
 #ifdef DEBUG
@@ -941,26 +931,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         InitWarning(strprintf(_("Reducing -maxconnections from %d to %d, because of system limitations."), nUserMaxConnections, nMaxConnections));
 
     // ********************************************************* Step 3: parameter-to-internal-flags
-    if (args.IsArgSet("-debug")) {
-        // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
-        const std::vector<std::string> categories = args.GetArgs("-debug");
-
-        if (std::none_of(categories.begin(), categories.end(),
-            [](std::string cat){return cat == "0" || cat == "none";})) {
-            for (const auto& cat : categories) {
-                if (!LogInstance().EnableCategory(cat)) {
-                    InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debug", cat));
-                }
-            }
-        }
-    }
-
-    // Now remove the logging categories which were explicitly excluded
-    for (const std::string& cat : args.GetArgs("-debugexclude")) {
-        if (!LogInstance().DisableCategory(cat)) {
-            InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat));
-        }
-    }
+    init::SetLoggingCategories(args);
 
     fCheckBlockIndex = args.GetBoolArg("-checkblockindex", chainparams.DefaultConsistencyChecks());
     fCheckpointsEnabled = args.GetBoolArg("-checkpoints", DEFAULT_CHECKPOINTS_ENABLED);

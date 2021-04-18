@@ -76,4 +76,43 @@ void AddLoggingArgs(ArgsManager& argsman)
     argsman.AddArg("-printtoconsole", "Send trace/debug info to console (default: 1 when no -daemon. To disable logging to file, set -nodebuglogfile)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
     argsman.AddArg("-shrinkdebugfile", "Shrink debug.log file on client startup (default: 1 when no -debug)", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST);
 }
+
+void SetLoggingOptions(const ArgsManager& args)
+{
+    LogInstance().m_print_to_file = !args.IsArgNegated("-debuglogfile");
+    LogInstance().m_file_path = AbsPathForConfigVal(args.GetArg("-debuglogfile", DEFAULT_DEBUGLOGFILE));
+    LogInstance().m_print_to_console = args.GetBoolArg("-printtoconsole", !args.GetBoolArg("-daemon", false));
+    LogInstance().m_log_timestamps = args.GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
+    LogInstance().m_log_time_micros = args.GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
+#ifdef HAVE_THREAD_LOCAL
+    LogInstance().m_log_threadnames = args.GetBoolArg("-logthreadnames", DEFAULT_LOGTHREADNAMES);
+#endif
+    LogInstance().m_log_sourcelocations = args.GetBoolArg("-logsourcelocations", DEFAULT_LOGSOURCELOCATIONS);
+
+    fLogIPs = args.GetBoolArg("-logips", DEFAULT_LOGIPS);
+}
+
+void SetLoggingCategories(const ArgsManager& args)
+{
+    if (args.IsArgSet("-debug")) {
+        // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
+        const std::vector<std::string> categories = args.GetArgs("-debug");
+
+        if (std::none_of(categories.begin(), categories.end(),
+            [](std::string cat){return cat == "0" || cat == "none";})) {
+            for (const auto& cat : categories) {
+                if (!LogInstance().EnableCategory(cat)) {
+                    InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debug", cat));
+                }
+            }
+        }
+    }
+
+    // Now remove the logging categories which were explicitly excluded
+    for (const std::string& cat : args.GetArgs("-debugexclude")) {
+        if (!LogInstance().DisableCategory(cat)) {
+            InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat));
+        }
+    }
+}
 } // namespace init
