@@ -126,6 +126,8 @@ public:
         return 0;
     }
 
+    bool SetNonBlocking() const override { return true; }
+
     bool IsSelectable() const override { return true; }
 
     bool Wait(std::chrono::milliseconds timeout,

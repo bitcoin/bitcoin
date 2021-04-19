@@ -141,6 +141,12 @@ public:
     [[nodiscard]] virtual bool SetNoDelay() const;
 
     /**
+     * Set the non-blocking option on the socket.
+     * @return true if set successfully
+     */
+    [[nodiscard]] virtual bool SetNonBlocking() const;
+
+    /**
      * Check if the underlying socket can be used for `select(2)` (or the `Wait()` method).
      * @return true if selectable
      */

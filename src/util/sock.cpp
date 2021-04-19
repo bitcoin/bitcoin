@@ -107,6 +107,25 @@ bool Sock::SetNoDelay() const
     return SetSockOpt(IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on)) == 0;
 }
 
+bool Sock::SetNonBlocking() const
+{
+#ifdef WIN32
+    u_long on{1};
+    if (ioctlsocket(m_socket, FIONBIO, &on) == SOCKET_ERROR) {
+        return false;
+    }
+#else
+    const int flags{fcntl(m_socket, F_GETFL, 0)};
+    if (flags == SOCKET_ERROR) {
+        return false;
+    }
+    if (fcntl(m_socket, F_SETFL, flags | O_NONBLOCK) == SOCKET_ERROR) {
+        return false;
+    }
+#endif
+    return true;
+}
+
 bool Sock::IsSelectable() const
 {
 #if defined(USE_POLL) || defined(WIN32)
