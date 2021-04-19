@@ -19,7 +19,7 @@ static RPCHelpMan masternode_list()
     return RPCHelpMan{"masternode_list",
         "\nGet a list of masternodes in different modes. This call is identical to 'masternode list' call\n",
         {
-            {"mode", RPCArg::Type::STR, "json", "The mode to run list in.\n"
+            {"mode", RPCArg::Type::STR, RPCArg::Default{"json"}, "The mode to run list in.\n"
             "\nAvailable modes:\n"
             "  addr           - Print ip address associated with a masternode (can be additionally filtered, partial match)\n"
             "  full           - Print info in format 'status payee lastpaidtime lastpaidblock IP'\n"

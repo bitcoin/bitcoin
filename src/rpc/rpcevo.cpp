@@ -43,12 +43,12 @@ static RPCHelpMan protx_list()
         "\nLists all ProTxs on-chain, depending on the given type.\n"
         "This will also include ProTx which failed PoSe verification.\n",
         {
-             {"type", RPCArg::Type::STR, "registered", "Type of ProTx.\n",
+             {"type", RPCArg::Type::STR, RPCArg::Default{"registered"}, "Type of ProTx.\n",
             "\nAvailable types:\n"
             "  registered   - List all ProTx which are registered at the given chain height.\n"
             "                 This will also include ProTx which failed PoSe verification.\n"
             "  valid        - List only ProTx which are active/valid at the given chain height.\n"},
-            {"detailed", RPCArg::Type::BOOL, "false", "If true, only the hashes of the ProTx will be returned."},
+            {"detailed", RPCArg::Type::BOOL,  RPCArg::Default{false}, "If true, only the hashes of the ProTx will be returned."},
             {"height", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Height to look for ProTx transactions, if not specified defaults to current chain-tip"},                   
         },
         RPCResult{RPCResult::Type::ANY, "", ""},

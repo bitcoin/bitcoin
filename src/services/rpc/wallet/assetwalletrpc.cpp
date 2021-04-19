@@ -1216,13 +1216,11 @@ static RPCHelpMan assetallocationsendmany()
                     },
                     "[assetallocationsend object]..."
             },
-            {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Allow this transaction to be replaced by a transaction with higher fees via BIP 125. ZDAG is only possible if RBF is disabled."},
+            {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "Allow this transaction to be replaced by a transaction with higher fees via BIP 125. ZDAG is only possible if RBF is disabled."},
             {"comment", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "A comment"},
-            {"conf_target", RPCArg::Type::NUM, /* default */ "wallet default", "Confirmation target (in blocks)"},
-            {"estimate_mode", RPCArg::Type::STR, /* default */ "UNSET", "The fee estimate mode, must be one of:\n"
-            "       \"UNSET\"\n"
-            "       \"ECONOMICAL\"\n"
-            "       \"CONSERVATIVE\""},
+            {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet default"}, "Confirmation target (in blocks)"},
+            {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
+            "       \"" + FeeModes("\"\n\"") + "\""},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -1833,7 +1831,7 @@ static RPCHelpMan assetallocationsend()
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The address to send the allocation to"},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send"},
             {"sys_amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "Amount of syscoin to send"},
-            {"replaceable", RPCArg::Type::BOOL, /* default */ "wallet default", "Allow this transaction to be replaced by a transaction with higher fees via BIP 125. ZDAG is only possible if RBF is disabled."},
+            {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "Allow this transaction to be replaced by a transaction with higher fees via BIP 125. ZDAG is only possible if RBF is disabled."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -1893,7 +1891,7 @@ static RPCHelpMan convertaddresswallet()
     {	
         {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to get the information of."},	
         {"label", RPCArg::Type::STR,RPCArg::Optional::NO, "Label Syscoin V4 address and store in receiving address. Set to \"\" to not add to receiving address", "An optional label"},	
-        {"rescan", RPCArg::Type::BOOL, /* default */ "false", "Rescan the wallet for transactions. Useful if you provided label to add to receiving address"},	
+        {"rescan", RPCArg::Type::BOOL, RPCArg::Default{false}, "Rescan the wallet for transactions. Useful if you provided label to add to receiving address"},	
     },	
     RPCResult{
         RPCResult::Type::OBJ, "", "",
@@ -1986,7 +1984,7 @@ static RPCHelpMan listunspentasset()
     "\nHelper function which just calls listunspent to find unspent UTXO's for an asset.",   
     {	
         {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin asset guid to get the information of."},	
-        {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum confirmations to filter"},	
+        {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "The minimum confirmations to filter"},	
     },	
     RPCResult{
         RPCResult::Type::ARR, "", "",
@@ -2057,8 +2055,8 @@ static RPCHelpMan addressbalance() {
                         {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "syscoin address"},
                     },
                 },
-                {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum confirmations to filter"},
-                {"maxconf", RPCArg::Type::NUM, /* default */ "9999999", "The maximum confirmations to filter"},
+                {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "The minimum confirmations to filter"},
+                {"maxconf", RPCArg::Type::NUM, RPCArg::Default{9999999}, "The maximum confirmations to filter"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -2107,14 +2105,14 @@ static RPCHelpMan assetallocationbalance() {
         "\nShow asset and allocated balance information pertaining to an asset owned in your wallet.\n",	
         {	
                 {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin asset guid to get the information of."},
-                {"addresses", RPCArg::Type::ARR, /* default */ "empty array", "The syscoin addresses to filter",
+                {"addresses", RPCArg::Type::ARR, RPCArg::Default{UniValue::VARR}, "The syscoin addresses to filter",
                     {
                         {"address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "syscoin address"},
                     },
                 },
-                {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum confirmations to filter"},
-                {"maxconf", RPCArg::Type::NUM, /* default */ "9999999", "The maximum confirmations to filter"},
-                {"verbose", RPCArg::Type::BOOL, /* default */ "false", "If false, return just balances, otherwise return asset information as well as balances"},
+                {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "The minimum confirmations to filter"},
+                {"maxconf", RPCArg::Type::NUM, RPCArg::Default{9999999}, "The maximum confirmations to filter"},
+                {"verbose", RPCArg::Type::BOOL,RPCArg::Default{false}, "If false, return just balances, otherwise return asset information as well as balances"},
         },
         {
             RPCResult{"for verbose = false",
@@ -2216,8 +2214,8 @@ static RPCHelpMan sendfrom() {
             {"funding_address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to send from"},
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "The syscoin address to send to."},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
-            {"minconf", RPCArg::Type::NUM, /* default */ "1", "The minimum confirmations to filter"},
-            {"maxconf", RPCArg::Type::NUM, /* default */ "9999999", "The maximum confirmations to filter"},
+            {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "The minimum confirmations to filter"},
+            {"maxconf", RPCArg::Type::NUM, RPCArg::Default{9999999}, "The maximum confirmations to filter"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",

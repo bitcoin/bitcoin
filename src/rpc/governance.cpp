@@ -394,8 +394,8 @@ static RPCHelpMan gobject_list()
     return RPCHelpMan{"gobject_list",
         "\nList governance objects (can be filtered by signal and/or object type)\n",
         {      
-            {"signal", RPCArg::Type::STR, "valid", "Cached signal, possible values: [valid|funding|delete|endorsed|all]."},
-            {"type", RPCArg::Type::STR, "all", "Object type, possible values: [proposals|triggers|all]."},                                    
+            {"signal", RPCArg::Type::STR, RPCArg::Default{"valid"}, "Cached signal, possible values: [valid|funding|delete|endorsed|all]."},
+            {"type", RPCArg::Type::STR, RPCArg::Default{"all"}, "Object type, possible values: [proposals|triggers|all]."},                                    
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
@@ -428,8 +428,8 @@ static RPCHelpMan gobject_diff()
     return RPCHelpMan{"gobject_diff",
         "\nList differences since last diff or list\n",
         {      
-            {"signal", RPCArg::Type::STR, "valid", "Cached signal, possible values: [valid|funding|delete|endorsed|all]."},
-            {"type", RPCArg::Type::STR, "all", "Object type, possible values: [proposals|triggers|all]."},                                    
+            {"signal", RPCArg::Type::STR, RPCArg::Default{"valid"}, "Cached signal, possible values: [valid|funding|delete|endorsed|all]."},
+            {"type", RPCArg::Type::STR, RPCArg::Default{"all"}, "Object type, possible values: [proposals|triggers|all]."},                                    
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{

@@ -205,7 +205,7 @@ static RPCHelpMan protx_register()
                     {"operatorReward", RPCArg::Type::NUM, RPCArg::Optional::NO, "The fraction in %% to share with the operator. The value must be\n"
                                         "between 0.00 and 100.00."},
                     {"payoutAddress", RPCArg::Type::STR, RPCArg::Optional::NO, "The Syscoin address to use for masternode reward payments."},
-                    {"fundAddress", RPCArg::Type::STR, "", "If specified wallet will only use coins from this address to fund ProTx.\n"
+                    {"fundAddress", RPCArg::Type::STR, RPCArg::Default{""}, "If specified wallet will only use coins from this address to fund ProTx.\n"
                                         "If not specified, payoutAddress is the one that is going to be used.\n"
                                         "The private key belonging to this address must be known in your wallet."},
                     {"submit", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "If true, the resulting transaction is sent to the network."},
@@ -356,7 +356,7 @@ static RPCHelpMan protx_register_fund()
                     {"operatorReward", RPCArg::Type::NUM, RPCArg::Optional::NO, "The fraction in %% to share with the operator. The value must be\n"
                                         "between 0.00 and 100.00."},
                     {"payoutAddress", RPCArg::Type::STR, RPCArg::Optional::NO, "The Syscoin address to use for masternode reward payments."},
-                    {"fundAddress", RPCArg::Type::STR, "", "If specified wallet will only use coins from this address to fund ProTx.\n"
+                    {"fundAddress", RPCArg::Type::STR, RPCArg::Default{""}, "If specified wallet will only use coins from this address to fund ProTx.\n"
                                         "If not specified, payoutAddress is the one that is going to be used.\n"
                                         "The private key belonging to this address must be known in your wallet."},
                     {"submit", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED, "If true, the resulting transaction is sent to the network."},
@@ -483,7 +483,7 @@ static RPCHelpMan protx_register_prepare()
                 {"operatorReward", RPCArg::Type::NUM, RPCArg::Optional::NO, "The fraction in %% to share with the operator. The value must be\n"
                                     "between 0.00 and 100.00."},
                 {"payoutAddress", RPCArg::Type::STR, RPCArg::Optional::NO, "The Syscoin address to use for masternode reward payments."},
-                {"fundAddress", RPCArg::Type::STR, "", "If specified wallet will only use coins from this address to fund ProTx.\n"
+                {"fundAddress", RPCArg::Type::STR, RPCArg::Default{""}, "If specified wallet will only use coins from this address to fund ProTx.\n"
                                     "If not specified, payoutAddress is the one that is going to be used.\n"
                                     "The private key belonging to this address must be known in your wallet."},
             },
@@ -656,10 +656,10 @@ static RPCHelpMan protx_update_service()
                                     "Must be unique on the network. Can be set to 0, which will require a ProUpServTx afterwards."},
                 {"operatorKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The operator BLS private key associated with the\n"
                                     "registered operator public key."},                   
-                {"operatorPayoutAddress", RPCArg::Type::STR_HEX, "", "The address used for operator reward payments.\n"
+                {"operatorPayoutAddress", RPCArg::Type::STR_HEX, RPCArg::Default{""}, "The address used for operator reward payments.\n"
                                     "Only allowed when the ProRegTx had a non-zero operatorReward value.\n"
                                     "If set to an empty string, the currently active payout address is reused."}, 
-                {"feeSourceAddress", RPCArg::Type::STR, "", "If specified wallet will only use coins from this address to fund ProTx.\n"
+                {"feeSourceAddress", RPCArg::Type::STR, RPCArg::Default{""}, "If specified wallet will only use coins from this address to fund ProTx.\n"
                                     "If not specified, payoutAddress is the one that is going to be used.\n"
                                     "The private key belonging to this address must be known in your wallet."},
             },
@@ -760,7 +760,7 @@ static RPCHelpMan protx_update_registrar()
                                 "If set to an empty string, the currently active voting key address is reused."}, 
                 {"payoutAddress", RPCArg::Type::STR, RPCArg::Optional::NO, "The Syscoin address to use for masternode reward payments.\n"
                                  "If set to an empty string, the currently active payout address is reused."}, 
-                {"feeSourceAddress", RPCArg::Type::STR, "", "If specified wallet will only use coins from this address to fund ProTx.\n"
+                {"feeSourceAddress", RPCArg::Type::STR, RPCArg::Default{""}, "If specified wallet will only use coins from this address to fund ProTx.\n"
                                     "If not specified, payoutAddress is the one that is going to be used.\n"
                                     "The private key belonging to this address must be known in your wallet."},
             },
@@ -855,8 +855,8 @@ static RPCHelpMan protx_revoke()
                 {"proTxHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The hash of the initial ProRegTx."},
                 {"operatorKey", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "The operator BLS private key associated with the\n"
                                     "registered operator public key."},                   
-                {"reason", RPCArg::Type::NUM, "0", "The reason for masternode service revocation."},   
-                {"feeSourceAddress", RPCArg::Type::STR, /* default */ "0", "If specified wallet will only use coins from this address to fund ProTx.\n"
+                {"reason", RPCArg::Type::NUM, RPCArg::Default{0}, "The reason for masternode service revocation."},   
+                {"feeSourceAddress", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "If specified wallet will only use coins from this address to fund ProTx.\n"
                                     "If not specified, payoutAddress is the one that is going to be used.\n"
                                     "The private key belonging to this address must be known in your wallet."},
             },
@@ -1018,7 +1018,7 @@ static RPCHelpMan protx_list_wallet()
         "\nList only ProTx which are found in your wallet at the given chain height.\n"
         "This will also include ProTx which failed PoSe verification.\n",
         {
-            {"detailed", RPCArg::Type::NUM, "0", "If 0, only the hashes of the ProTx will be returned. If 1 returns voting details for each DMN and keys and if 2 returns full details of each DMN"},
+            {"detailed", RPCArg::Type::NUM, RPCArg::Default{0}, "If 0, only the hashes of the ProTx will be returned. If 1 returns voting details for each DMN and keys and if 2 returns full details of each DMN"},
             {"height", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "Height to look for ProTx transactions, if not specified defaults to current chain-tip"},                   
         },
         RPCResult{RPCResult::Type::ANY, "", ""},

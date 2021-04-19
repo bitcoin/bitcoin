@@ -463,8 +463,8 @@ static RPCHelpMan listassets()
     return RPCHelpMan{"listassets",
         "\nScan through all assets.\n",
         {
-            {"count", RPCArg::Type::NUM, "10", "The number of results to return."},
-            {"from", RPCArg::Type::NUM, "0", "The number of results to skip."},
+            {"count", RPCArg::Type::NUM, RPCArg::Default{10}, "The number of results to return."},
+            {"from", RPCArg::Type::NUM, RPCArg::Default{0}, "The number of results to skip."},
             {"options", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "A json object with options to filter results.",
                 {
                     {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Asset GUID to filter"},

@@ -26,7 +26,7 @@ static RPCHelpMan quorum_list()
     return RPCHelpMan{"quorum_list",
         "\nList of on-chain quorums\n",
         {
-            {"count", RPCArg::Type::NUM, /* default */ "0", "Number of quorums to list. Will list active quorums\n"
+            {"count", RPCArg::Type::NUM, RPCArg::Default{0}, "Number of quorums to list. Will list active quorums\n"
                                 "if \"count\" is not specified.\n"},                 
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
@@ -109,7 +109,7 @@ static RPCHelpMan quorum_info()
         {
             {"llmqType", RPCArg::Type::NUM, RPCArg::Optional::NO, "LLMQ type.\n"},      
             {"quorumHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Block hash of quorum.\n"},      
-            {"includeSkShare", RPCArg::Type::BOOL, "false", "Include secret key share in output.\n"},                 
+            {"includeSkShare", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include secret key share in output.\n"},                 
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
         RPCExamples{
@@ -145,7 +145,7 @@ static RPCHelpMan quorum_dkgstatus()
     return RPCHelpMan{"quorum_dkgstatus",
         "\nReturn the status of the current DKG process.\n",
         {
-            {"detail_level", RPCArg::Type::NUM, /* default */ "0", "Detail level of output.\n"
+            {"detail_level", RPCArg::Type::NUM, RPCArg::Default{0}, "Detail level of output.\n"
                             "0=Only show counts. 1=Show member indexes. 2=Show member's ProTxHashes.\n"},                     
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
@@ -234,7 +234,7 @@ static RPCHelpMan quorum_memberof()
         "\nChecks which quorums the given masternode is a member of.\n",
         {
             {"proTxHash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "ProTxHash of the masternode.\n"},  
-            {"scanQuorumsCount", RPCArg::Type::NUM, /* default */ "-1", "Number of quorums to scan for. If not specified,\n"
+            {"scanQuorumsCount", RPCArg::Type::NUM, RPCArg::Default{-1}, "Number of quorums to scan for. If not specified,\n"
                                  "the active quorum count for each specific quorum type is used."},                     
         },
         RPCResult{RPCResult::Type::ANY, "", ""},
