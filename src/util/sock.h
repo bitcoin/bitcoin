@@ -134,6 +134,12 @@ public:
     [[nodiscard]] virtual int GetSockName(sockaddr* name, socklen_t* name_len) const;
 
     /**
+     * Set the non-blocking option on the socket.
+     * @return true if set successfully
+     */
+    [[nodiscard]] virtual bool SetNonBlocking() const;
+
+    /**
      * Check if the underlying socket can be used for `select(2)` (or the `Wait()` method).
      * @return true if selectable
      */
@@ -272,9 +278,6 @@ private:
      */
     void Close();
 };
-
-/** Enable non-blocking mode for a socket */
-bool SetSocketNonBlocking(const SOCKET& hSocket);
 
 /** Return readable error string for a network error code */
 std::string NetworkErrorString(int err);

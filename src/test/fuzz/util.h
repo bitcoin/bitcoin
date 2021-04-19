@@ -80,6 +80,8 @@ public:
 
     int GetSockName(sockaddr* name, socklen_t* name_len) const override;
 
+    bool SetNonBlocking() const override;
+
     bool IsSelectable() const override;
 
     bool Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const override;
