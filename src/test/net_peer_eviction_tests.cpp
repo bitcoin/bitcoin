@@ -15,11 +15,6 @@
 
 BOOST_FIXTURE_TEST_SUITE(net_peer_eviction_tests, BasicTestingSetup)
 
-namespace {
-constexpr int NODE_EVICTION_TEST_ROUNDS{10};
-constexpr int NODE_EVICTION_TEST_UP_TO_N_NODES{200};
-} // namespace
-
 std::vector<NodeEvictionCandidate> GetRandomNodeEvictionCandidates(const int n_candidates, FastRandomContext& random_context)
 {
     std::vector<NodeEvictionCandidate> candidates;
@@ -257,91 +252,89 @@ BOOST_AUTO_TEST_CASE(peer_eviction_test)
 {
     FastRandomContext random_context{true};
 
-    for (int i = 0; i < NODE_EVICTION_TEST_ROUNDS; ++i) {
-        for (int number_of_nodes = 0; number_of_nodes < NODE_EVICTION_TEST_UP_TO_N_NODES; ++number_of_nodes) {
-            // Four nodes with the highest keyed netgroup values should be
-            // protected from eviction.
-            BOOST_CHECK(!IsEvicted(
-                number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                    candidate.nKeyedNetGroup = number_of_nodes - candidate.id;
-                },
-                {0, 1, 2, 3}, random_context));
+    for (int number_of_nodes = 0; number_of_nodes < 200; ++number_of_nodes) {
+        // Four nodes with the highest keyed netgroup values should be
+        // protected from eviction.
+        BOOST_CHECK(!IsEvicted(
+                        number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
+                            candidate.nKeyedNetGroup = number_of_nodes - candidate.id;
+                        },
+                        {0, 1, 2, 3}, random_context));
 
-            // Eight nodes with the lowest minimum ping time should be protected
-            // from eviction.
-            BOOST_CHECK(!IsEvicted(
-                number_of_nodes, [](NodeEvictionCandidate& candidate) {
-                    candidate.m_min_ping_time = std::chrono::microseconds{candidate.id};
-                },
-                {0, 1, 2, 3, 4, 5, 6, 7}, random_context));
+        // Eight nodes with the lowest minimum ping time should be protected
+        // from eviction.
+        BOOST_CHECK(!IsEvicted(
+                        number_of_nodes, [](NodeEvictionCandidate& candidate) {
+                            candidate.m_min_ping_time = std::chrono::microseconds{candidate.id};
+                        },
+                        {0, 1, 2, 3, 4, 5, 6, 7}, random_context));
 
-            // Four nodes that most recently sent us novel transactions accepted
-            // into our mempool should be protected from eviction.
-            BOOST_CHECK(!IsEvicted(
-                number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                    candidate.nLastTXTime = number_of_nodes - candidate.id;
-                },
-                {0, 1, 2, 3}, random_context));
+        // Four nodes that most recently sent us novel transactions accepted
+        // into our mempool should be protected from eviction.
+        BOOST_CHECK(!IsEvicted(
+                        number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
+                            candidate.nLastTXTime = number_of_nodes - candidate.id;
+                        },
+                        {0, 1, 2, 3}, random_context));
 
-            // Up to eight non-tx-relay peers that most recently sent us novel
-            // blocks should be protected from eviction.
-            BOOST_CHECK(!IsEvicted(
-                number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                    candidate.nLastBlockTime = number_of_nodes - candidate.id;
-                    if (candidate.id <= 7) {
-                        candidate.fRelayTxes = false;
-                        candidate.fRelevantServices = true;
-                    }
-                },
-                {0, 1, 2, 3, 4, 5, 6, 7}, random_context));
+        // Up to eight non-tx-relay peers that most recently sent us novel
+        // blocks should be protected from eviction.
+        BOOST_CHECK(!IsEvicted(
+                        number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
+                            candidate.nLastBlockTime = number_of_nodes - candidate.id;
+                            if (candidate.id <= 7) {
+                                candidate.fRelayTxes = false;
+                                candidate.fRelevantServices = true;
+                            }
+                        },
+                        {0, 1, 2, 3, 4, 5, 6, 7}, random_context));
 
-            // Four peers that most recently sent us novel blocks should be
-            // protected from eviction.
-            BOOST_CHECK(!IsEvicted(
-                number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                    candidate.nLastBlockTime = number_of_nodes - candidate.id;
-                },
-                {0, 1, 2, 3}, random_context));
+        // Four peers that most recently sent us novel blocks should be
+        // protected from eviction.
+        BOOST_CHECK(!IsEvicted(
+                        number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
+                            candidate.nLastBlockTime = number_of_nodes - candidate.id;
+                        },
+                        {0, 1, 2, 3}, random_context));
 
-            // Combination of the previous two tests.
-            BOOST_CHECK(!IsEvicted(
-                number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                    candidate.nLastBlockTime = number_of_nodes - candidate.id;
-                    if (candidate.id <= 7) {
-                        candidate.fRelayTxes = false;
-                        candidate.fRelevantServices = true;
-                    }
-                },
-                {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, random_context));
+        // Combination of the previous two tests.
+        BOOST_CHECK(!IsEvicted(
+                        number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
+                            candidate.nLastBlockTime = number_of_nodes - candidate.id;
+                            if (candidate.id <= 7) {
+                                candidate.fRelayTxes = false;
+                                candidate.fRelevantServices = true;
+                            }
+                        },
+                        {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}, random_context));
 
-            // Combination of all tests above.
-            BOOST_CHECK(!IsEvicted(
-                number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
-                    candidate.nKeyedNetGroup = number_of_nodes - candidate.id;           // 4 protected
-                    candidate.m_min_ping_time = std::chrono::microseconds{candidate.id}; // 8 protected
-                    candidate.nLastTXTime = number_of_nodes - candidate.id;              // 4 protected
-                    candidate.nLastBlockTime = number_of_nodes - candidate.id;           // 4 protected
-                },
-                {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}, random_context));
+        // Combination of all tests above.
+        BOOST_CHECK(!IsEvicted(
+                        number_of_nodes, [number_of_nodes](NodeEvictionCandidate& candidate) {
+                            candidate.nKeyedNetGroup = number_of_nodes - candidate.id;           // 4 protected
+                            candidate.m_min_ping_time = std::chrono::microseconds{candidate.id}; // 8 protected
+                            candidate.nLastTXTime = number_of_nodes - candidate.id;              // 4 protected
+                            candidate.nLastBlockTime = number_of_nodes - candidate.id;           // 4 protected
+                        },
+                        {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}, random_context));
 
-            // An eviction is expected given >= 29 random eviction candidates. The eviction logic protects at most
-            // four peers by net group, eight by lowest ping time, four by last time of novel tx, up to eight non-tx-relay
-            // peers by last novel block time, and four more peers by last novel block time.
-            if (number_of_nodes >= 29) {
-                BOOST_CHECK(SelectNodeToEvict(GetRandomNodeEvictionCandidates(number_of_nodes, random_context)));
-            }
-
-            // No eviction is expected given <= 20 random eviction candidates. The eviction logic protects at least
-            // four peers by net group, eight by lowest ping time, four by last time of novel tx and four peers by last
-            // novel block time.
-            if (number_of_nodes <= 20) {
-                BOOST_CHECK(!SelectNodeToEvict(GetRandomNodeEvictionCandidates(number_of_nodes, random_context)));
-            }
-
-            // Cases left to test:
-            // * "If any remaining peers are preferred for eviction consider only them. [...]"
-            // * "Identify the network group with the most connections and youngest member. [...]"
+        // An eviction is expected given >= 29 random eviction candidates. The eviction logic protects at most
+        // four peers by net group, eight by lowest ping time, four by last time of novel tx, up to eight non-tx-relay
+        // peers by last novel block time, and four more peers by last novel block time.
+        if (number_of_nodes >= 29) {
+            BOOST_CHECK(SelectNodeToEvict(GetRandomNodeEvictionCandidates(number_of_nodes, random_context)));
         }
+
+        // No eviction is expected given <= 20 random eviction candidates. The eviction logic protects at least
+        // four peers by net group, eight by lowest ping time, four by last time of novel tx and four peers by last
+        // novel block time.
+        if (number_of_nodes <= 20) {
+            BOOST_CHECK(!SelectNodeToEvict(GetRandomNodeEvictionCandidates(number_of_nodes, random_context)));
+        }
+
+        // Cases left to test:
+        // * "If any remaining peers are preferred for eviction consider only them. [...]"
+        // * "Identify the network group with the most connections and youngest member. [...]"
     }
 }
 
