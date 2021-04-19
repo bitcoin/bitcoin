@@ -608,7 +608,6 @@ void SetupServerArgs()
     gArgs.AddArg("-minsporkkeys=<n>", "Overrides minimum spork signers to change spork value. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.", false, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-printpriority", strprintf("Log transaction fee per kB when mining blocks (default: %u)", DEFAULT_PRINTPRIORITY), true, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-printtoconsole", "Send trace/debug info to console instead of debug.log file", false, OptionsCategory::DEBUG_TEST);
-    gArgs.AddArg("-printtodebuglog", strprintf("Send trace/debug info to debug.log file (default: %u)", 1), false, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-shrinkdebugfile", "Shrink debug.log file on client startup (default: 1 when no -debug)", false, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-sporkaddr=<dashaddress>", "Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.", false, OptionsCategory::DEBUG_TEST);
     gArgs.AddArg("-sporkkey=<privatekey>", "Set the private key to be used for signing spork messages.", false, OptionsCategory::DEBUG_TEST);
@@ -1070,16 +1069,26 @@ static std::string ResolveErrMsg(const char * const optname, const std::string& 
     return strprintf(_("Cannot resolve -%s address: '%s'"), optname, strBind);
 }
 
+/**
+ * Initialize global loggers.
+ *
+ * Note that this is called very early in the process lifetime, so you should be
+ * careful about what global state you rely on here.
+ */
 void InitLogging()
 {
-    fPrintToConsole = gArgs.GetBoolArg("-printtoconsole", false);
-    fPrintToDebugLog = gArgs.GetBoolArg("-printtodebuglog", true) && !fPrintToConsole;
+    // Add newlines to the logfile to distinguish this execution from the last
+    // one; called before console logging is set up, so this is only sent to
+    // debug.log.
+    LogPrintf("\n\n\n\n\n");
+
+    fPrintToConsole = gArgs.GetBoolArg("-printtoconsole", !gArgs.GetBoolArg("-daemon", false));
+    fPrintToDebugLog = !gArgs.IsArgNegated("-debuglogfile");
     fLogTimestamps = gArgs.GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
     fLogTimeMicros = gArgs.GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
     fLogThreadNames = gArgs.GetBoolArg("-logthreadnames", DEFAULT_LOGTHREADNAMES);
     fLogIPs = gArgs.GetBoolArg("-logips", DEFAULT_LOGIPS);
 
-    LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
     std::string version_string = FormatFullVersion();
 #ifdef DEBUG
     version_string += " (debug build)";
@@ -1685,13 +1694,12 @@ bool AppInitMain()
 #ifndef WIN32
     CreatePidFile(GetPidFile(), getpid());
 #endif
-    if (gArgs.GetBoolArg("-shrinkdebugfile", logCategories == BCLog::NONE)) {
-        // Do this first since it both loads a bunch of debug.log into memory,
-        // and because this needs to happen before any other debug.log printing
-        ShrinkDebugFile();
-    }
-
     if (fPrintToDebugLog) {
+        if (gArgs.GetBoolArg("-shrinkdebugfile", logCategories == BCLog::NONE)) {
+            // Do this first since it both loads a bunch of debug.log into memory,
+            // and because this needs to happen before any other debug.log printing
+            ShrinkDebugFile();
+        }
         if (!OpenDebugLog()) {
             return InitError(strprintf("Could not open debug log file %s", GetDebugLogPath().string()));
         }

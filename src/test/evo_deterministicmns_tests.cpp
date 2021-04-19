@@ -23,13 +23,13 @@
 
 typedef std::map<COutPoint, std::pair<int, CAmount>> SimpleUTXOMap;
 
-static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransaction>& txs)
+static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransactionRef>& txs)
 {
     SimpleUTXOMap utxos;
     for (size_t i = 0; i < txs.size(); i++) {
         auto& tx = txs[i];
-        for (size_t j = 0; j < tx.vout.size(); j++) {
-            utxos.emplace(COutPoint(tx.GetHash(), j), std::make_pair((int)i + 1, tx.vout[j].nValue));
+        for (size_t j = 0; j < tx->vout.size(); j++) {
+            utxos.emplace(COutPoint(tx->GetHash(), j), std::make_pair((int)i + 1, tx->vout[j].nValue));
         }
     }
     return utxos;
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_SUITE(evo_dip3_activation_tests)
 
 BOOST_FIXTURE_TEST_CASE(dip3_activation, TestChainDIP3BeforeActivationSetup)
 {
-    auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
+    auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
     CKey ownerKey;
     CBLSSecretKey operatorKey;
     CTxDestination payoutDest = DecodeDestination("yRq1Ky1AfFmf597rnotj7QRxsDUKePVWNF");
@@ -267,7 +267,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
     sporkManager.SetSporkAddress(EncodeDestination(sporkKey.GetPubKey().GetID()));
     sporkManager.SetPrivKey(EncodeSecret(sporkKey));
 
-    auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
+    auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
 
     int nHeight = chainActive.Height();
     int port = 1;
@@ -441,7 +441,7 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 BOOST_FIXTURE_TEST_CASE(dip3_verify_db, TestChainDIP3Setup)
 {
     int nHeight = chainActive.Height();
-    auto utxos = BuildSimpleUtxoMap(coinbaseTxns);
+    auto utxos = BuildSimpleUtxoMap(m_coinbase_txns);
 
     CKey ownerKey;
     CKey payoutKey;

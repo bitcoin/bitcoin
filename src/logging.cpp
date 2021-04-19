@@ -289,14 +289,12 @@ int LogPrintStr(const std::string &str)
     else
         fStartedNewLine = false;
 
-    if (fPrintToConsole)
-    {
+    if (fPrintToConsole) {
         // print to console
         ret = fwrite(strTimestamped.data(), 1, strTimestamped.size(), stdout);
         fflush(stdout);
     }
-    else if (fPrintToDebugLog)
-    {
+    if (fPrintToDebugLog) {
         std::call_once(debugPrintInitFlag, &DebugPrintInit);
         std::lock_guard<std::mutex> scoped_lock(*mutexDebugLog);
 
@@ -329,9 +327,16 @@ void ShrinkDebugFile()
     // Scroll debug.log if it's getting too big
     fs::path pathLog = GetDebugLogPath();
     FILE* file = fsbridge::fopen(pathLog, "r");
+
+    // Special files (e.g. device nodes) may not have a size.
+    size_t log_size = 0;
+    try {
+        log_size = fs::file_size(pathLog);
+    } catch (boost::filesystem::filesystem_error &) {}
+
     // If debug.log file is more than 10% bigger the RECENT_DEBUG_HISTORY_SIZE
     // trim it down by saving only the last RECENT_DEBUG_HISTORY_SIZE bytes
-    if (file && fs::file_size(pathLog) > 11 * (RECENT_DEBUG_HISTORY_SIZE / 10))
+    if (file && log_size > 11 * (RECENT_DEBUG_HISTORY_SIZE / 10))
     {
         // Restart the file with some of the end
         std::vector<char> vch(RECENT_DEBUG_HISTORY_SIZE, 0);

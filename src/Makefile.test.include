@@ -3,7 +3,6 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-TESTS += test/test_dash
 bin_PROGRAMS += test/test_dash
 noinst_PROGRAMS += test/test_dash_fuzzy
 TEST_SRCDIR = test
@@ -25,6 +24,11 @@ JSON_TEST_FILES = \
 RAW_TEST_FILES =
 
 GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.raw.h)
+
+BITCOIN_TEST_SUITE = \
+  test/test_dash_main.cpp \
+  test/test_dash.h \
+  test/test_dash.cpp
 
 # test_dash binary #
 BITCOIN_TESTS =\
@@ -96,9 +100,6 @@ BITCOIN_TESTS =\
   test/skiplist_tests.cpp \
   test/streams_tests.cpp \
   test/subsidy_tests.cpp \
-  test/test_dash.cpp \
-  test/test_dash.h \
-  test/test_dash_main.cpp \
   test/timedata_tests.cpp \
   test/torcontrol_tests.cpp \
   test/transaction_tests.cpp \
@@ -111,15 +112,17 @@ BITCOIN_TESTS =\
 if ENABLE_WALLET
 BITCOIN_TESTS += \
   wallet/test/coinjoin_tests.cpp \
-  wallet/test/wallet_test_fixture.cpp \
-  wallet/test/wallet_test_fixture.h \
   wallet/test/accounting_tests.cpp \
   wallet/test/wallet_tests.cpp \
   wallet/test/wallet_crypto_tests.cpp \
   wallet/test/coinselector_tests.cpp
+
+BITCOIN_TEST_SUITE += \
+  wallet/test/wallet_test_fixture.cpp \
+  wallet/test/wallet_test_fixture.h
 endif
 
-test_test_dash_SOURCES = $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
+test_test_dash_SOURCES = $(BITCOIN_TEST_SUITE) $(BITCOIN_TESTS) $(JSON_TEST_FILES) $(RAW_TEST_FILES)
 test_test_dash_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(TESTDEFS) $(EVENT_CFLAGS)
 test_test_dash_LDADD =
 if ENABLE_WALLET
@@ -174,7 +177,7 @@ dash_test_check: $(TEST_BINARY) FORCE
 dash_test_clean : FORCE
 	rm -f $(CLEAN_BITCOIN_TEST) $(test_test_dash_OBJECTS) $(TEST_BINARY)
 
-check-local:
+check-local: $(BITCOIN_TESTS:.cpp=.cpp.test)
 	@echo "Running test/util/bitcoin-util-test.py..."
 	$(PYTHON) $(top_builddir)/test/util/bitcoin-util-test.py
 	@echo "Running test/util/rpcauth-test.py..."
@@ -183,6 +186,10 @@ check-local:
 if EMBEDDED_UNIVALUE
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C univalue check
 endif
+
+%.cpp.test: %.cpp
+	@echo Running tests: `cat $< | grep "BOOST_FIXTURE_TEST_SUITE(\|BOOST_AUTO_TEST_SUITE(" | cut -d '(' -f 2 | cut -d ',' -f 1 | cut -d ')' -f 1` from $<
+	$(AM_V_at)$(TEST_BINARY) -l test_suite -t "`cat $< | grep "BOOST_FIXTURE_TEST_SUITE(\|BOOST_AUTO_TEST_SUITE(" | cut -d '(' -f 2 | cut -d ',' -f 1 | cut -d ')' -f 1`" > $<.log 2>&1 || (cat $<.log && false)
 
 test/data/%.json.h: test/data/%.json
 	@$(MKDIR_P) $(@D)

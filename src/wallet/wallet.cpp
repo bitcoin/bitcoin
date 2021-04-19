@@ -2019,7 +2019,7 @@ bool CWallet::DummySignInput(CTxIn &tx_in, const CTxOut &txout) const
     const CScript& scriptPubKey = txout.scriptPubKey;
     SignatureData sigdata;
 
-    if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata))
+    if (!ProduceSignature(*this, DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata))
     {
         return false;
     } else {
@@ -3740,7 +3740,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                     for (const auto& coin : vecCoins) {
                         const CScript& scriptPubKey = coin.txout.scriptPubKey;
                         SignatureData sigdata;
-                        if (!ProduceSignature(DummySignatureCreator(this), scriptPubKey, sigdata)) {
+                        if (!ProduceSignature(*this, DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata)) {
                             strFailReason = _("Signing transaction failed");
                             return false;
                         } else {
@@ -3929,7 +3929,7 @@ bool CWallet::CreateTransaction(const std::vector<CRecipient>& vecSend, CTransac
                 const CScript& scriptPubKey = coin.txout.scriptPubKey;
                 SignatureData sigdata;
 
-                if (!ProduceSignature(TransactionSignatureCreator(this, &txNewConst, nIn, SIGHASH_ALL), scriptPubKey, sigdata))
+                if (!ProduceSignature(*this, TransactionSignatureCreator(&txNewConst, nIn, SIGHASH_ALL), scriptPubKey, sigdata))
                 {
                     strFailReason = _("Signing transaction failed");
                     return false;
@@ -5297,7 +5297,10 @@ bool CWallet::AutoBackupWallet(const fs::path& wallet_path, std::string& strBack
     }
 
     // Create backup of the ...
-    std::string dateTimeStr = DateTimeStrFormat(".%Y-%m-%d-%H-%M", GetTime());
+    struct tm ts;
+    time_t time_val = GetTime();
+    gmtime_r(&time_val, &ts);
+    std::string dateTimeStr = strprintf(".%04i-%02i-%02i-%02i-%02i", ts.tm_year + 1900, ts.tm_mon + 1, ts.tm_mday, ts.tm_hour, ts.tm_min);
     if (wallet_path.empty()) {
         // ... opened wallet
         LOCK2(cs_main, cs_wallet);

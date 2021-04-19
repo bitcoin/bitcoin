@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(fastrandom_randbits)
     for (int bits = 0; bits < 63; ++bits) {
         for (int j = 0; j < 1000; ++j) {
             uint64_t rangebits = ctx1.randbits(bits);
-            BOOST_CHECK_EQUAL(rangebits >> bits, 0);
+            BOOST_CHECK_EQUAL(rangebits >> bits, 0U);
             uint64_t range = ((uint64_t)1) << bits | rangebits;
             uint64_t rand = ctx2.randrange(range);
             BOOST_CHECK(rand < range);

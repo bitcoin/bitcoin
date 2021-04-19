@@ -10,5 +10,5 @@ Terminal=false
 Type=Application
 Icon=dash128
 MimeType=x-scheme-handler/dash;
-Categories=Office;Finance;
+Categories=Office;Finance;P2P;Network;Qt;
 StartupWMClass=Dash-qt

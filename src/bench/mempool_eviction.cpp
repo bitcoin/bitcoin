@@ -9,7 +9,7 @@
 #include <list>
 #include <vector>
 
-static void AddTx(const CTransaction& tx, const CAmount& nFee, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
+static void AddTx(const CMutableTransaction& tx, const CAmount& nFee, CTxMemPool& pool) EXCLUSIVE_LOCKS_REQUIRED(pool.cs)
 {
     int64_t nTime = 0;
     unsigned int nHeight = 1;

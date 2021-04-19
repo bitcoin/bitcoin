@@ -139,7 +139,7 @@ CTransactionBuilder::CTransactionBuilder(std::shared_ptr<CWallet> pwalletIn, con
         for (const auto& coin : tallyItem.vecInputCoins) {
             const CScript& scriptPubKey = coin.txout.scriptPubKey;
             SignatureData sigdata;
-            bool res = ProduceSignature(DummySignatureCreator(pwallet.get()), scriptPubKey, sigdata);
+            bool res = ProduceSignature(*pwallet, DUMMY_SIGNATURE_CREATOR, scriptPubKey, sigdata);
             assert(res);
             UpdateTransaction(dummyTx, nIn, sigdata);
             nIn++;
