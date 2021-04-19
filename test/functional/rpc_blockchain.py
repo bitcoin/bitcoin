@@ -408,6 +408,9 @@ class BlockchainTest(SyscoinTestFramework):
         self.log.info("Test that getblock with verbosity 2 still works with pruned Undo data")
         datadir = get_datadir_path(self.options.tmpdir, 0)
 
+        self.log.info("Test that getblock with invalid verbosity type returns proper error message")
+        assert_raises_rpc_error(-1, "JSON value is not an integer as expected", node.getblock, blockhash, "2")
+
         def move_block_file(old, new):
             old_path = os.path.join(datadir, self.chain, 'blocks', old)
             new_path = os.path.join(datadir, self.chain, 'blocks', new)

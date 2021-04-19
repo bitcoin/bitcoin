@@ -1100,10 +1100,11 @@ static RPCHelpMan getblock()
 
     int verbosity = 1;
     if (!request.params[1].isNull()) {
-        if(request.params[1].isNum())
-            verbosity = request.params[1].get_int();
-        else
+        if (request.params[1].isBool()) {
             verbosity = request.params[1].get_bool() ? 1 : 0;
+        } else {
+            verbosity = request.params[1].get_int();
+        }
     }
 
     CBlock block;
