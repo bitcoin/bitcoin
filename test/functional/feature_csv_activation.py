@@ -9,8 +9,8 @@ BIP 68  - nSequence relative lock times
 BIP 112 - CHECKSEQUENCEVERIFY
 BIP 113 - MedianTimePast semantics for nLockTime
 
-mine 82 blocks whose coinbases will be used to generate inputs for our tests
-mine 345 blocks and seed block chain with the 82 inputs will use for our tests at height 427
+mine 83 blocks whose coinbases will be used to generate inputs for our tests
+mine 344 blocks and seed block chain with the 83 inputs used for our tests at height 427
 mine 2 blocks and verify soft fork not yet activated
 mine 1 block and test that soft fork is activated (rules enforced for next block)
 Test BIP 113 is enforced
