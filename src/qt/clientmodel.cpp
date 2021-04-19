@@ -48,6 +48,7 @@ ClientModel::ClientModel(interfaces::Node& node, OptionsModel *_optionsModel, QO
     pollTimer = new QTimer(this);
     connect(pollTimer, SIGNAL(timeout()), this, SLOT(updateTimer()));
     pollTimer->start(MODEL_UPDATE_DELAY);
+    mnListCached = std::make_shared<CDeterministicMNList>();
 
     subscribeToCoreSignals();
 }
