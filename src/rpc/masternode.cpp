@@ -278,8 +278,8 @@ static RPCHelpMan masternode_winners()
     return RPCHelpMan{"masternode winners",
         "Print list of masternode winners\n",
         {
-            {"count", RPCArg::Type::NUM, /* default */ "", "number of last winners to return"},
-            {"filter", RPCArg::Type::STR, /* default */ "", "filter for returned winners"},
+            {"count", RPCArg::Type::NUM, RPCArg::Default{10}, "number of last winners to return"},
+            {"filter", RPCArg::Type::STR, RPCArg::Default{""}, "filter for returned winners"},
         },
         RPCResults{},
         RPCExamples{""},
@@ -340,8 +340,8 @@ static RPCHelpMan masternode_payments()
     return RPCHelpMan{"masternode payments",
         "\nReturns an array of deterministic masternodes and their payments for the specified block\n",
         {
-            {"blockhash", RPCArg::Type::STR_HEX, /* default */ "tip", "The hash of the starting block"},
-            {"count", RPCArg::Type::NUM, /* default */ "1", "The number of blocks to return. Will return <count> previous blocks if <count> is negative. Both 1 and -1 correspond to the chain tip."},
+            {"blockhash", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"tip"}, "The hash of the starting block"},
+            {"count", RPCArg::Type::NUM, RPCArg::Default{1}, "The number of blocks to return. Will return <count> previous blocks if <count> is negative. Both 1 and -1 correspond to the chain tip."},
         },
         RPCResult {
             RPCResult::Type::ARR, "", "Blocks",
@@ -531,8 +531,8 @@ static RPCHelpMan masternodelist_helper(bool is_composite)
         "                   (can be additionally filtered, partial match)\n"
         "  votingaddress  - Print the masternode voting Dash address\n",
         {
-            {"mode", RPCArg::Type::STR, /* default */ "json", "The mode to run list in"},
-            {"filter", RPCArg::Type::STR, /* default */ "", "Filter results. Partial match by outpoint by default in all modes, additional matches in some modes are also available"},
+            {"mode", RPCArg::Type::STR, RPCArg::DefaultHint{"json"}, "The mode to run list in"},
+            {"filter", RPCArg::Type::STR, RPCArg::Default{""}, "Filter results. Partial match by outpoint by default in all modes, additional matches in some modes are also available"},
         },
         RPCResults{},
         RPCExamples{""},

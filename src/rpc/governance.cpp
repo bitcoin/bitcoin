@@ -33,7 +33,7 @@ static RPCHelpMan gobject_count()
     return RPCHelpMan{"gobject count",
         "Count governance objects and votes\n",
         {
-            {"mode", RPCArg::Type::STR, /* default */ "json", "Output format: json (\"json\") or string in free form (\"all\")"},
+            {"mode", RPCArg::Type::STR, RPCArg::DefaultHint{"json"}, "Output format: json (\"json\") or string in free form (\"all\")"},
         },
         RPCResults{},
         RPCExamples{""},
@@ -133,9 +133,9 @@ static RPCHelpMan gobject_prepare()
             {"revision", RPCArg::Type::NUM, RPCArg::Optional::NO, "object revision in the system"},
             {"time", RPCArg::Type::NUM, RPCArg::Optional::NO, "time this object was created"},
             {"data-hex", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "data in hex string form"},
-            {"use-IS", RPCArg::Type::BOOL, /* default */ "false", "Deprecated and ignored"},
-            {"outputHash", RPCArg::Type::STR_HEX, /* default */ "", "the single output to submit the proposal fee from"},
-            {"outputIndex", RPCArg::Type::NUM, /* default */ "", "The output index."},
+            {"use-IS", RPCArg::Type::BOOL, RPCArg::Default{false}, "Deprecated and ignored"},
+            {"outputHash", RPCArg::Type::STR_HEX, RPCArg::Default{""}, "the single output to submit the proposal fee from"},
+            {"outputIndex", RPCArg::Type::NUM, RPCArg::Default{0}, "The output index."},
         },
         RPCResults{},
         RPCExamples{""},
@@ -245,7 +245,7 @@ static RPCHelpMan gobject_list_prepared()
         "Returns a list of governance objects prepared by this wallet with \"gobject prepare\" sorted by their creation time.\n"
         + HELP_REQUIRING_PASSPHRASE,
         {
-            {"count", RPCArg::Type::NUM, /* default */ "10", "Maximum number of objects to return."},
+            {"count", RPCArg::Type::NUM, RPCArg::Default{10}, "Maximum number of objects to return."},
         },
         RPCResults{},
         RPCExamples{""},
@@ -694,8 +694,8 @@ static RPCHelpMan gobject_list_helper(const bool make_a_diff)
     return RPCHelpMan{command,
         description,
         {
-            {"signal", RPCArg::Type::STR, /* default */ "valid", "cached signal, possible values: [valid|funding|delete|endorsed|all]"},
-            {"type", RPCArg::Type::STR, /* default */ "all", "object type, possible values: [proposals|triggers|all]"},
+            {"signal", RPCArg::Type::STR, RPCArg::Default{"valid"}, "cached signal, possible values: [valid|funding|delete|endorsed|all]"},
+            {"type", RPCArg::Type::STR, RPCArg::Default{"all"}, "object type, possible values: [proposals|triggers|all]"},
         },
         RPCResults{},
         RPCExamples{""},
@@ -837,8 +837,8 @@ static RPCHelpMan gobject_getcurrentvotes()
         "Get only current (tallying) votes for a governance object hash (does not include old votes)\n",
         {
             {"governance-hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "object id"},
-            {"txid", RPCArg::Type::STR_HEX, /* default */ "", "masternode collateral txid"},
-            {"vout", RPCArg::Type::STR, /* default */ "", "masternode collateral output index, required if <txid> present"},
+            {"txid", RPCArg::Type::STR_HEX, RPCArg::Default{""}, "masternode collateral txid"},
+            {"vout", RPCArg::Type::STR, RPCArg::Default{""}, "masternode collateral output index, required if <txid> present"},
         },
         RPCResults{},
         RPCExamples{""},

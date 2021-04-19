@@ -59,13 +59,13 @@ static RPCArg GetRpcArg(const std::string& strParamName)
                 "The collateral transaction output index."}
         },
         {"feeSourceAddress",
-            {"feeSourceAddress", RPCArg::Type::STR, /* default */ "",
+            {"feeSourceAddress", RPCArg::Type::STR, RPCArg::Default{""},
                 "If specified wallet will only use coins from this address to fund ProTx.\n"
                 "If not specified, payoutAddress is the one that is going to be used.\n"
                 "The private key belonging to this address must be known in your wallet."}
         },
         {"fundAddress",
-            {"fundAddress", RPCArg::Type::STR, /* default */ "",
+            {"fundAddress", RPCArg::Type::STR, RPCArg::Default{""},
                 "If specified wallet will only use coins from this address to fund ProTx.\n"
                 "If not specified, payoutAddress is the one that is going to be used.\n"
                 "The private key belonging to this address must be known in your wallet."}
@@ -85,7 +85,7 @@ static RPCArg GetRpcArg(const std::string& strParamName)
                 "registered operator public key."}
         },
         {"operatorPayoutAddress",
-            {"operatorPayoutAddress", RPCArg::Type::STR, /* default */ "",
+            {"operatorPayoutAddress", RPCArg::Type::STR, RPCArg::Default{""},
                 "The address used for operator reward payments.\n"
                 "Only allowed when the ProRegTx had a non-zero operatorReward value.\n"
                 "If set to an empty string, the currently active payout address is reused."}
@@ -137,11 +137,11 @@ static RPCArg GetRpcArg(const std::string& strParamName)
                 "The hash of the initial ProRegTx."}
         },
         {"reason",
-            {"reason", RPCArg::Type::NUM, /* default */ "",
+            {"reason", RPCArg::Type::NUM, RPCArg::DefaultHint{"Reason is not specified"},
                 "The reason for masternode service revocation."}
         },
         {"submit",
-            {"submit", RPCArg::Type::BOOL, /* default */ "true",
+            {"submit", RPCArg::Type::BOOL, RPCArg::Default{true},
                 "If true, the resulting transaction is sent to the network."}
         },
         {"votingAddress_register",
@@ -1349,7 +1349,7 @@ static RPCHelpMan protx_list()
     return RPCHelpMan{"protx list",
         "\nLists all ProTxs in your wallet or on-chain, depending on the given type.\n",
         {
-            {"type", RPCArg::Type::STR, /* default */ "registered",
+            {"type", RPCArg::Type::STR, RPCArg::Default{"registered"},
                 "\nAvailable types:\n"
                 "  registered   - List all ProTx which are registered at the given chain height.\n"
                 "                 This will also include ProTx which failed PoSe verification.\n"
@@ -1360,8 +1360,8 @@ static RPCHelpMan protx_list()
                 "                 This will also include ProTx which failed PoSe verification.\n"
 #endif
             },
-            {"detailed", RPCArg::Type::BOOL, /* default */ "false", "If not specified, only the hashes of the ProTx will be returned."},
-            {"height", RPCArg::Type::NUM, /* default */ "current chain-tip", ""},
+            {"detailed", RPCArg::Type::BOOL, RPCArg::Default{false}, "If not specified, only the hashes of the ProTx will be returned."},
+            {"height", RPCArg::Type::NUM, RPCArg::DefaultHint{"current chain-tip"}, ""},
         },
         RPCResults{},
         RPCExamples{""},
@@ -1470,7 +1470,7 @@ static RPCHelpMan protx_info()
         "\nReturns detailed information about a deterministic masternode.\n",
         {
             GetRpcArg("proTxHash"),
-            {"blockHash", RPCArg::Type::STR_HEX, /* default*/ "(chain tip)", "The hash of the block to get deterministic masternode state at"},
+            {"blockHash", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"(chain tip)"}, "The hash of the block to get deterministic masternode state at"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "Details about a specific deterministic masternode",
@@ -1720,7 +1720,7 @@ static RPCHelpMan bls_generate()
     return RPCHelpMan{"bls generate",
         "\nReturns a BLS secret/public key pair.\n",
         {
-            {"legacy", RPCArg::Type::BOOL, /* default */ "true until the v19 fork is activated, otherwise false", "Use legacy BLS scheme"},
+            {"legacy", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true until the v19 fork is activated, otherwise false"}, "Use legacy BLS scheme"},
             },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -1759,7 +1759,7 @@ static RPCHelpMan bls_fromsecret()
         "\nParses a BLS secret key and returns the secret/public key pair.\n",
         {
             {"secret", RPCArg::Type::STR, RPCArg::Optional::NO, "The BLS secret key"},
-            {"legacy", RPCArg::Type::BOOL, /* default */ "true until the v19 fork is activated, otherwise false", "Use legacy BLS scheme"},
+            {"legacy", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true until the v19 fork is activated, otherwise false"}, "Use legacy BLS scheme"},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
