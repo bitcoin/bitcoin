@@ -487,6 +487,8 @@ private:
 
     void ProcessGetData(CNode& pfrom, Peer& peer, const std::atomic<bool>& interruptMsgProc) EXCLUSIVE_LOCKS_REQUIRED(peer.m_getdata_requests_mutex) LOCKS_EXCLUDED(::cs_main);
 
+    void ProcessBlock(CNode& pfrom, const std::shared_ptr<const CBlock>& pblock, bool fForceProcessing);
+
     /** Relay map (txid or wtxid -> CTransactionRef) */
     typedef std::map<uint256, CTransactionRef> MapRelay;
     MapRelay mapRelay GUARDED_BY(cs_main);
@@ -2556,6 +2558,18 @@ void PeerManagerImpl::ProcessGetCFCheckPt(CNode& peer, CDataStream& vRecv)
     m_connman.PushMessage(&peer, std::move(msg));
 }
 
+void PeerManagerImpl::ProcessBlock(CNode& pfrom, const std::shared_ptr<const CBlock>& pblock, bool fForceProcessing)
+{
+    bool fNewBlock = false;
+    m_chainman.ProcessNewBlock(m_chainparams, pblock, fForceProcessing, &fNewBlock);
+    if (fNewBlock) {
+        pfrom.nLastBlockTime = GetTime();
+    } else {
+        LOCK(cs_main);
+        mapBlockSource.erase(pblock->GetHash());
+    }
+}
+
 void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDataStream& vRecv,
                                      const std::chrono::microseconds time_received,
                                      const std::atomic<bool>& interruptMsgProc)
@@ -3720,7 +3734,6 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                 LOCK(cs_main);
                 mapBlockSource.try_emplace(pblock->GetHash(), pfrom.GetId(), false);
             }
-            bool fNewBlock = false;
             // Setting fForceProcessing to true means that we bypass some of
             // our anti-DoS protections in AcceptBlock, which filters
             // unrequested blocks that might be trying to waste our resources
@@ -3730,13 +3743,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // we have a chain with at least nMinimumChainWork), and we ignore
             // compact blocks with less work than our tip, it is safe to treat
             // reconstructed compact blocks as having been requested.
-            m_chainman.ProcessNewBlock(m_chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
-            if (fNewBlock) {
-                pfrom.nLastBlockTime = GetTime();
-            } else {
-                LOCK(cs_main);
-                mapBlockSource.erase(pblock->GetHash());
-            }
+            ProcessBlock(pfrom, pblock, /*fForceProcessing=*/true);
             LOCK(cs_main); // hold cs_main for CBlockIndex::IsValid()
             if (pindex->IsValid(BLOCK_VALID_TRANSACTIONS)) {
                 // Clear download state for this block, which is in
@@ -3813,20 +3820,13 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             }
         } // Don't hold cs_main when we call into ProcessNewBlock
         if (fBlockRead) {
-            bool fNewBlock = false;
             // Since we requested this block (it was in mapBlocksInFlight), force it to be processed,
             // even if it would not be a candidate for new tip (missing previous block, chain not long enough, etc)
             // This bypasses some anti-DoS logic in AcceptBlock (eg to prevent
             // disk-space attacks), but this should be safe due to the
             // protections in the compact block handler -- see related comment
             // in compact block optimistic reconstruction handling.
-            m_chainman.ProcessNewBlock(m_chainparams, pblock, /*fForceProcessing=*/true, &fNewBlock);
-            if (fNewBlock) {
-                pfrom.nLastBlockTime = GetTime();
-            } else {
-                LOCK(cs_main);
-                mapBlockSource.erase(pblock->GetHash());
-            }
+            ProcessBlock(pfrom, pblock, /*fForceProcessing=*/true);
         }
         return;
     }
@@ -3881,14 +3881,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             // cs_main in ProcessNewBlock is fine.
             mapBlockSource.try_emplace(hash, pfrom.GetId(), true);
         }
-        bool fNewBlock = false;
-        m_chainman.ProcessNewBlock(m_chainparams, pblock, forceProcessing, &fNewBlock);
-        if (fNewBlock) {
-            pfrom.nLastBlockTime = GetTime();
-        } else {
-            LOCK(cs_main);
-            mapBlockSource.erase(pblock->GetHash());
-        }
+        ProcessBlock(pfrom, pblock, forceProcessing);
         return;
     }
 
