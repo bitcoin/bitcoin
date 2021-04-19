@@ -42,7 +42,7 @@ std::set<CBlockIndex*> setDirtyBlockIndex;
 std::set<int> setDirtyFileInfo;
 // } // namespace
 
-static FILE* OpenUndoFile(const FlatFilePos &pos, bool fReadOnly = false);
+static FILE* OpenUndoFile(const FlatFilePos& pos, bool fReadOnly = false);
 static FlatFileSeq BlockFileSeq();
 static FlatFileSeq UndoFileSeq();
 
@@ -71,10 +71,11 @@ void CleanupBlockRevFiles()
             it->path().filename().string().length() == 12 &&
             it->path().filename().string().substr(8,4) == ".dat")
         {
-            if (it->path().filename().string().substr(0,3) == "blk")
-                mapBlockFiles[it->path().filename().string().substr(3,5)] = it->path();
-            else if (it->path().filename().string().substr(0,3) == "rev")
+            if (it->path().filename().string().substr(0, 3) == "blk") {
+                mapBlockFiles[it->path().filename().string().substr(3, 5)] = it->path();
+            } else if (it->path().filename().string().substr(0, 3) == "rev") {
                 remove(it->path());
+            }
         }
     }
 
@@ -108,8 +109,9 @@ static bool UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos, const
 {
     // Open history file to append
     CAutoFile fileout(OpenUndoFile(pos), SER_DISK, CLIENT_VERSION);
-    if (fileout.IsNull())
+    if (fileout.IsNull()) {
         return error("%s: OpenUndoFile failed", __func__);
+    }
 
     // Write index header
     unsigned int nSize = GetSerializeSize(blockundo, fileout.GetVersion());
@@ -117,8 +119,9 @@ static bool UndoWriteToDisk(const CBlockUndo& blockundo, FlatFilePos& pos, const
 
     // Write undo data
     long fileOutPos = ftell(fileout.Get());
-    if (fileOutPos < 0)
+    if (fileOutPos < 0) {
         return error("%s: ftell failed", __func__);
+    }
     pos.nPos = (unsigned int)fileOutPos;
     fileout << blockundo;
 
@@ -140,8 +143,9 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex)
 
     // Open history file to read
     CAutoFile filein(OpenUndoFile(pos, true), SER_DISK, CLIENT_VERSION);
-    if (filein.IsNull())
+    if (filein.IsNull()) {
         return error("%s: OpenUndoFile failed", __func__);
+    }
 
     // Read block
     uint256 hashChecksum;
@@ -150,14 +154,14 @@ bool UndoReadFromDisk(CBlockUndo& blockundo, const CBlockIndex* pindex)
         verifier << pindex->pprev->GetBlockHash();
         verifier >> blockundo;
         filein >> hashChecksum;
-    }
-    catch (const std::exception& e) {
+    } catch (const std::exception& e) {
         return error("%s: Deserialize or I/O error - %s", __func__, e.what());
     }
 
     // Verify checksum
-    if (hashChecksum != verifier.GetHash())
+    if (hashChecksum != verifier.GetHash()) {
         return error("%s: Checksum mismatch", __func__);
+    }
 
     return true;
 }
@@ -187,7 +191,7 @@ uint64_t CalculateCurrentUsage()
     LOCK(cs_LastBlockFile);
 
     uint64_t retval = 0;
-    for (const CBlockFileInfo &file : vinfoBlockFile) {
+    for (const CBlockFileInfo& file : vinfoBlockFile) {
         retval += file.nSize + file.nUndoSize;
     }
     return retval;
@@ -213,16 +217,18 @@ static FlatFileSeq UndoFileSeq()
     return FlatFileSeq(gArgs.GetBlocksDirPath(), "rev", UNDOFILE_CHUNK_SIZE);
 }
 
-FILE* OpenBlockFile(const FlatFilePos &pos, bool fReadOnly) {
+FILE* OpenBlockFile(const FlatFilePos& pos, bool fReadOnly)
+{
     return BlockFileSeq().Open(pos, fReadOnly);
 }
 
 /** Open an undo file (rev?????.dat) */
-static FILE* OpenUndoFile(const FlatFilePos &pos, bool fReadOnly) {
+static FILE* OpenUndoFile(const FlatFilePos& pos, bool fReadOnly)
+{
     return UndoFileSeq().Open(pos, fReadOnly);
 }
 
-fs::path GetBlockPosFilename(const FlatFilePos &pos)
+fs::path GetBlockPosFilename(const FlatFilePos& pos)
 {
     return BlockFileSeq().FileName(pos);
 }
@@ -262,10 +268,11 @@ bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight,
     }
 
     vinfoBlockFile[nFile].AddBlock(nHeight, nTime);
-    if (fKnown)
+    if (fKnown) {
         vinfoBlockFile[nFile].nSize = std::max(pos.nPos + nAddSize, vinfoBlockFile[nFile].nSize);
-    else
+    } else {
         vinfoBlockFile[nFile].nSize += nAddSize;
+    }
 
     if (!fKnown) {
         bool out_of_space;
@@ -282,7 +289,7 @@ bool FindBlockPos(FlatFilePos& pos, unsigned int nAddSize, unsigned int nHeight,
     return true;
 }
 
-static bool FindUndoPos(BlockValidationState &state, int nFile, FlatFilePos &pos, unsigned int nAddSize)
+static bool FindUndoPos(BlockValidationState& state, int nFile, FlatFilePos& pos, unsigned int nAddSize)
 {
     pos.nFile = nFile;
 
@@ -332,10 +339,12 @@ bool WriteUndoDataForBlock(const CBlockUndo& blockundo, BlockValidationState& st
     // Write undo information to disk
     if (pindex->GetUndoPos().IsNull()) {
         FlatFilePos _pos;
-        if (!FindUndoPos(state, pindex->nFile, _pos, ::GetSerializeSize(blockundo, CLIENT_VERSION) + 40))
+        if (!FindUndoPos(state, pindex->nFile, _pos, ::GetSerializeSize(blockundo, CLIENT_VERSION) + 40)) {
             return error("ConnectBlock(): FindUndoPos failed");
-        if (!UndoWriteToDisk(blockundo, _pos, pindex->pprev->GetBlockHash(), chainparams.MessageStart()))
+        }
+        if (!UndoWriteToDisk(blockundo, _pos, pindex->pprev->GetBlockHash(), chainparams.MessageStart())) {
             return AbortNode(state, "Failed to write undo data");
+        }
         // rev files are written in block height order, whereas blk files are written as blocks come in (often out of order)
         // we want to flush the rev (undo) file once we've written the last block, which is indicated by the last height
         // in the block file info as below; note that this does not catch the case where the undo writes are keeping up
