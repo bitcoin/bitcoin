@@ -1,7 +1,7 @@
-1.0.0 Release Notes
+1.1.0 Release Notes
 ====================
 
-Widecoin Core version 1.0.0 is now available from:
+Widecoin Core version 1.1.0 is now available from:
 
   <https://widecoin.org>
 
@@ -33,29 +33,24 @@ bootstrap.dat) anew afterwards.
 
 This does not affect wallet forward or backward compatibility.
 
-Widecoin 1.0.0 Change log
+Widecoin 1.1.0 Change log
 =========================
-This release is based upon Bitcoin Core v0.21.0.  Their upstream changelog applies to us and
-is included in as separate release-notes.  This section describes the Widecoin-specific differences.
 
-Protocol:
+Block reward rule is adjusted due to the block is only 0.5 minutes and limitation of max supply:
 
-- Keep Sha256d Proof-of-Work.
-- Widecoin TCP port 8553 (instead of 8333)
-- RPC TCP port 8552 (instead of 8332)
-- Testnet TCP port 18553 (instead of 18333)
-- Testnet RPC TCP port 18552 (instead of 18332)
-- Signet TCP port 38553 (instead of 38333)
-- Signet RPC TCP port 38552 (instead of 38332)
-- 35 Million Coin Limit  (instead of 21 million)
-- Magic 0xf8bfc3dc       (instead of 0xf9beb4d9)
-- Target Block Time 0.5 minutes (instead of 10 minutes)
-- Target Timespan 1 hour      (instead of two weeks)
-- Max Block Weight 32000000 (instead of 4000000)
-- Max Block Serialized Size 8000000 (instead of 4000000)
-- Coinbase Maturity 50 (instead of 100)
-- nbits 0x1e0ffff0 (instead of 0x1d00ffff)
-- SubsidyHalvingInterval 2years (instead of 4years)
+Block Height (BH)
+
+Block (B)
+
+BH > 1 and BH <= 50,000 => Receive 50 WCN/B
+
+BH >= 50,001  and BH <= 100,000 => Receive 20 WCN/B
+
+BH >= 100,001  and BH <= 500,000 => Receive 10 WCN/B
+
+BH >= 500,001  and BH <= 2,102,399 => Receive 5 WCN/B
+
+BH = 2102400 = 5 WCN (Subsidy is cut in half every 2,102,400 blocks which will occur approximately every 2 years)
 
 Credits
 =======
