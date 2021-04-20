@@ -92,7 +92,12 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
 
         // Set potential error message.
         // This message may be changed if the address can also be interpreted as a Bech32 address.
-        error_str = "Invalid prefix for Base58-encoded address";
+        if (data.size() != hash.size() + pubkey_prefix.size() &&
+            data.size() != hash.size() + script_prefix.size()) {
+            error_str = "Invalid length for Base58 address";
+        } else {
+            error_str = "Invalid prefix for Base58-encoded address";
+        }
     }
     data.clear();
     const auto dec = bech32::Decode(str);
@@ -152,9 +157,6 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
             return unk;
         }
     }
-
-    // Set error message if address can't be interpreted as Base58 or Bech32.
-    if (error_str.empty()) error_str = "Invalid address format";
 
     return CNoDestination();
 }
@@ -263,4 +265,30 @@ bool IsValidDestinationString(const std::string& str, const CChainParams& params
 bool IsValidDestinationString(const std::string& str)
 {
     return IsValidDestinationString(str, Params());
+}
+
+std::string LocateErrorsInDestinationString(const std::string& str, std::vector<int>& error_locations)
+{
+    // If DecodeDestination failed to diagnose the error, we shall assume the address is typed
+    // incorrectly, and give more specific error information for Bech32 addresses based on their HRP
+
+    // Note this will fail if it is a valid Bech32 address for a different network
+    if (ToLower(str.substr(0, Params().Bech32HRP().size())) == Params().Bech32HRP()) {
+        // Bech32 encoding
+        auto bech = bech32::Decode(str);
+        if (bech.data.size() == 0) {
+            //TODO: locate Bech32 errors
+            return "Error in Bech32 encoding";
+        }
+    } else {
+        // Assume base58 encoding
+        std::vector<unsigned char> data;
+        if (!DecodeBase58(str, data, 21)) {
+            return "Invalid HRP or Base58 character in address";
+        }
+        if (!DecodeBase58Check(str, data, 21)) {
+            return "Invalid checksum for Base58 address";
+        }
+    }
+    return ""; // No error
 }

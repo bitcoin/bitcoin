@@ -3820,7 +3820,7 @@ RPCHelpMan getaddressinfo()
     // Make sure the destination is valid
     if (!IsValidDestination(dest)) {
         // Set generic error message in case 'DecodeDestination' didn't set it
-        if (error_msg.empty()) error_msg = "Invalid address";
+        if (error_msg.empty()) error_msg = "Invalid address format";
 
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, error_msg);
     }
