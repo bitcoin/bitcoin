@@ -128,8 +128,6 @@ bool TryCreateDirectories(const fs::path& p);
 bool ExistsOldAssetDir();
 void DeleteOldAssetDir();
 fs::path GetDefaultDataDir();
-// The blocks directory is always net specific.
-const fs::path &GetBlocksDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
 // SYSCOIN
 fs::path GetGethPidFile();
@@ -139,8 +137,6 @@ std::string GetRelayerFilename();
 std::string GetGethFilename();
 // Return true if -datadir option points to a valid directory or is not specified.
 bool CheckDataDirOption();
-/** Tests only */
-void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
@@ -243,6 +239,9 @@ protected:
     std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
     bool m_accept_any_command GUARDED_BY(cs_args){true};
     std::list<SectionInfo> m_config_sections GUARDED_BY(cs_args);
+    fs::path m_cached_blocks_path GUARDED_BY(cs_args);
+    mutable fs::path m_cached_datadir_path GUARDED_BY(cs_args);
+    mutable fs::path m_cached_network_datadir_path GUARDED_BY(cs_args);
 
     [[nodiscard]] bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false);
 
@@ -305,6 +304,27 @@ public:
      * Get the command and command args (returns std::nullopt if no command provided)
      */
     std::optional<const Command> GetCommand() const;
+
+    /**
+     * Get blocks directory path
+     *
+     * @return Blocks path which is network specific
+     */
+    const fs::path& GetBlocksDirPath();
+
+    /**
+     * Get data directory path
+     *
+     * @param net_specific Append network identifier to the returned path
+     * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
+     * @post Returned directory path is created unless it is empty
+     */
+    const fs::path& GetDataDirPath(bool net_specific = true) const;
+
+    /**
+     * Clear cached directory paths
+     */
+    void ClearPathCache();
 
     /**
      * Return a vector of strings of the given argument

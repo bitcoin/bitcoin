@@ -764,7 +764,7 @@ static void CleanupBlockRevFiles()
     // Remove the rev files immediately and insert the blk file paths into an
     // ordered map keyed by block file index.
     LogPrintf("Removing unusable blk?????.dat and rev?????.dat files for -reindex with -prune\n");
-    fs::path blocksdir = GetBlocksDir();
+    fs::path blocksdir = gArgs.GetBlocksDirPath();
     for (fs::directory_iterator it(blocksdir); it != fs::directory_iterator(); it++) {
         if (fs::is_regular_file(*it) &&
             it->path().filename().string().length() == 12 &&
@@ -1075,7 +1075,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
         InitWarning(warnings);
     }
 
-    if (!fs::is_directory(GetBlocksDir())) {
+    if (!fs::is_directory(gArgs.GetBlocksDirPath())) {
         return InitError(strprintf(_("Specified blocks directory \"%s\" does not exist."), args.GetArg("-blocksdir", "")));
     }
 
@@ -2052,8 +2052,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         InitError(strprintf(_("Error: Disk space is low for %s"), GetDataDir()));
         return false;
     }
-    if (!CheckDiskSpace(GetBlocksDir())) {
-        InitError(strprintf(_("Error: Disk space is low for %s"), GetBlocksDir()));
+    if (!CheckDiskSpace(gArgs.GetBlocksDirPath())) {
+        InitError(strprintf(_("Error: Disk space is low for %s"), gArgs.GetBlocksDirPath()));
         return false;
     }
     // Either install a handler to notify us when genesis activates, or set fHaveGenesis directly.

@@ -2449,7 +2449,7 @@ bool CChainState::FlushStateToDisk(
         // Write blocks and block index to disk.
         if (fDoFullFlush || fPeriodicWrite) {
             // Depend on nMinDiskSpace to ensure we can write block index
-            if (!CheckDiskSpace(GetBlocksDir())) {
+            if (!CheckDiskSpace(gArgs.GetBlocksDirPath())) {
                 return AbortNode(state, "Disk space is too low!", _("Disk space is too low!"));
             }
             {
@@ -4443,12 +4443,12 @@ void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPr
 
 static FlatFileSeq BlockFileSeq()
 {
-    return FlatFileSeq(GetBlocksDir(), "blk", gArgs.GetBoolArg("-fastprune", false) ? 0x4000 /* 16kb */ : BLOCKFILE_CHUNK_SIZE);
+    return FlatFileSeq(gArgs.GetBlocksDirPath(), "blk", gArgs.GetBoolArg("-fastprune", false) ? 0x4000 /* 16kb */ : BLOCKFILE_CHUNK_SIZE);
 }
 
 static FlatFileSeq UndoFileSeq()
 {
-    return FlatFileSeq(GetBlocksDir(), "rev", UNDOFILE_CHUNK_SIZE);
+    return FlatFileSeq(gArgs.GetBlocksDirPath(), "rev", UNDOFILE_CHUNK_SIZE);
 }
 
 FILE* OpenBlockFile(const FlatFilePos &pos, bool fReadOnly) {

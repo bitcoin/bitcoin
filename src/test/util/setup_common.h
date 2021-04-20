@@ -8,6 +8,7 @@
 #include <chainparamsbase.h>
 #include <fs.h>
 #include <key.h>
+#include <util/system.h>
 #include <node/context.h>
 #include <pubkey.h>
 #include <random.h>
@@ -81,6 +82,7 @@ struct BasicTestingSetup {
     ~BasicTestingSetup();
 
     const fs::path m_path_root;
+    ArgsManager m_args;
 };
 
 /** Testing setup that performs all steps up until right before
