@@ -13,7 +13,7 @@ out collectively by the network. Widecoin Core is the name of open source
 software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the widecoin Core software, see [https://widecoin.org](https://widecoin.org).
+the Widecoin Core software, see [https://widecoin.org](https://widecoin.org).
 
 License
 -------
