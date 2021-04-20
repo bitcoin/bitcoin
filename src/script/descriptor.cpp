@@ -495,7 +495,7 @@ protected:
      *  This function is invoked once by ExpandHelper.
      *
      *  @param pubkeys The evaluations of the m_pubkey_args field.
-     *  @param script The evaluations of m_subdescriptor_args (one for each m_subdescriptor_args element).
+     *  @param scripts The evaluations of m_subdescriptor_args (one for each m_subdescriptor_args element).
      *  @param out A FlatSigningProvider to put scripts or public keys in that are necessary to the solver.
      *             The origin info of the provided pubkeys is automatically added.
      *  @return A vector with scriptPubKeys for this descriptor.
