@@ -277,8 +277,7 @@ std::string LocateErrorsInDestinationString(const std::string& str, std::vector<
         // Bech32 encoding
         auto bech = bech32::Decode(str);
         if (bech.data.size() == 0) {
-            //TODO: locate Bech32 errors
-            return "Error in Bech32 encoding";
+            return bech32::LocateErrors(str, error_locations);
         }
     } else {
         // Assume base58 encoding
