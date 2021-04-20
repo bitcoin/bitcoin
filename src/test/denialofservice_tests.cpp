@@ -44,6 +44,8 @@ BOOST_FIXTURE_TEST_SUITE(denialofservice_tests, TestingSetup)
 // work.
 BOOST_AUTO_TEST_CASE(outbound_slow_chain_eviction)
 {
+    LOCK(NetEventsInterface::g_mutex_msgproc_thread);
+
     const CChainParams& chainparams = Params();
     auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
     // Disable inactivity checks for this test to avoid interference
@@ -274,6 +276,8 @@ BOOST_AUTO_TEST_CASE(block_relay_only_eviction)
 
 BOOST_AUTO_TEST_CASE(peer_discouragement)
 {
+    LOCK(NetEventsInterface::g_mutex_msgproc_thread);
+
     const CChainParams& chainparams = Params();
     auto banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     auto connman = std::make_unique<ConnmanTestMsg>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);
@@ -390,6 +394,8 @@ BOOST_AUTO_TEST_CASE(peer_discouragement)
 
 BOOST_AUTO_TEST_CASE(DoS_bantime)
 {
+    LOCK(NetEventsInterface::g_mutex_msgproc_thread);
+
     const CChainParams& chainparams = Params();
     auto banman = std::make_unique<BanMan>(m_args.GetDataDirBase() / "banlist", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     auto connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman, *m_node.netgroupman);

@@ -66,6 +66,8 @@ void initialize_process_message()
 
 void fuzz_target(FuzzBufferType buffer, const std::string& LIMIT_TO_MESSAGE_TYPE)
 {
+    LOCK(NetEventsInterface::g_mutex_msgproc_thread);
+
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     ConnmanTestMsg& connman = *static_cast<ConnmanTestMsg*>(g_setup->m_node.connman.get());

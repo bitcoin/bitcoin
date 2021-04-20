@@ -2309,8 +2309,12 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     }
 }
 
+Mutex NetEventsInterface::g_mutex_msgproc_thread; // instantiate static member
+
 void CConnman::ThreadMessageHandler()
 {
+    LOCK(NetEventsInterface::g_mutex_msgproc_thread);
+
     SetSyscallSandboxPolicy(SyscallSandboxPolicy::MESSAGE_HANDLER);
     while (!flagInterruptMsgProc)
     {

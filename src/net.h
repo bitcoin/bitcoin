@@ -708,7 +708,7 @@ public:
     * @param[in]   interrupt       Interrupt condition for processing threads
     * @return                      True if there is more work to be done
     */
-    virtual bool ProcessMessages(CNode* pnode, std::atomic<bool>& interrupt) = 0;
+    virtual bool ProcessMessages(CNode* pnode, std::atomic<bool>& interrupt) EXCLUSIVE_LOCKS_REQUIRED(g_mutex_msgproc_thread) = 0;
 
     /**
     * Send queued protocol messages to a given node.
@@ -716,8 +716,11 @@ public:
     * @param[in]   pnode           The node which we are sending messages to.
     * @return                      True if there is more work to be done
     */
-    virtual bool SendMessages(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_sendProcessing) = 0;
+    virtual bool SendMessages(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_sendProcessing, g_mutex_msgproc_thread) = 0;
 
+    /** Mutex for anything that assumes it is only accessed from a single,
+     * dedicated message processing thread */
+    static Mutex g_mutex_msgproc_thread;
 
 protected:
     /**

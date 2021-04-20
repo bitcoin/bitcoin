@@ -33,6 +33,8 @@ void initialize_process_messages()
 
 FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
 {
+    LOCK(NetEventsInterface::g_mutex_msgproc_thread);
+
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     ConnmanTestMsg& connman = *static_cast<ConnmanTestMsg*>(g_setup->m_node.connman.get());
