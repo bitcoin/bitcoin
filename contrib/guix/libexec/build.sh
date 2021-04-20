@@ -33,6 +33,9 @@ Required environment variables as seen inside the container:
     OUTDIR: ${OUTDIR:?not set}
 EOF
 
+ACTUAL_OUTDIR="${OUTDIR}"
+OUTDIR="${DISTSRC}/output"
+
 #####################
 # Environment Setup #
 #####################
@@ -429,3 +432,5 @@ mkdir -p "$DISTSRC"
             ;;
     esac
 )  # $DISTSRC
+
+mv --no-target-directory "$OUTDIR" "$ACTUAL_OUTDIR"
