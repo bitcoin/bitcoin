@@ -368,7 +368,7 @@ public:
 
     CTransactionRef tx;
 
-    /* New transactions start as UNCONFIRMED. At BlockConnected,
+    /** New transactions start as UNCONFIRMED. At BlockConnected,
      * they will transition to CONFIRMED. In case of reorg, at BlockDisconnected,
      * they roll back to UNCONFIRMED. If we detect a conflicting transaction at
      * block connection, we update conflicted tx and its dependencies as CONFLICTED.
@@ -383,7 +383,7 @@ public:
         ABANDONED
     };
 
-    /* Confirmation includes tx status and a triplet of {block height/block hash/tx index in block}
+    /** Confirmation includes tx status and a triplet of {block height/block hash/tx index in block}
      * at which tx has been confirmed. All three are set to 0 if tx is unconfirmed or abandoned.
      * Meaning of these fields changes with CONFLICTED state where they instead point to block hash
      * and block height of the deepest conflicting tx.
@@ -481,7 +481,7 @@ public:
     CAmount GetImmatureWatchOnlyCredit(const bool fUseCache = true) const;
     CAmount GetChange() const;
 
-    // Get the marginal bytes if spending the specified output from this transaction
+    /** Get the marginal bytes if spending the specified output from this transaction */
     int GetSpendSize(unsigned int out, bool use_max_sig = false) const
     {
         return CalculateMaximumSignedInputSize(tx->vout[out], pwallet, use_max_sig);
@@ -495,7 +495,7 @@ public:
         return (GetDebit(filter) > 0);
     }
 
-    // True if only scriptSigs are different
+    /** True if only scriptSigs are different */
     bool IsEquivalentTo(const CWalletTx& tx) const;
 
     bool InMempool() const;
@@ -503,7 +503,7 @@ public:
 
     int64_t GetTxTime() const;
 
-    // Pass this transaction to node for mempool insertion and relay to peers if flag set to true
+    /** Pass this transaction to node for mempool insertion and relay to peers if flag set to true */
     bool SubmitMemoryPoolAndRelay(std::string& err_string, bool relay);
 
     // TODO: Remove "NO_THREAD_SAFETY_ANALYSIS" and replace it with the correct
@@ -613,7 +613,7 @@ struct CoinSelectionParams
     CFeeRate m_long_term_feerate;
     CFeeRate m_discard_feerate;
     size_t tx_noinputs_size = 0;
-    //! Indicate that we are subtracting the fee from outputs
+    /** Indicate that we are subtracting the fee from outputs */
     bool m_subtract_fee_outputs = false;
     bool m_avoid_partial_spends = false;
 
@@ -682,10 +682,10 @@ private:
      */
     bool AddToWalletIfInvolvingMe(const CTransactionRef& tx, CWalletTx::Confirmation confirm, bool fUpdate) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    /* Mark a transaction (and its in-wallet descendants) as conflicting with a particular block. */
+    /** Mark a transaction (and its in-wallet descendants) as conflicting with a particular block. */
     void MarkConflicted(const uint256& hashBlock, int conflicting_height, const uint256& hashTx);
 
-    /* Mark a transaction's inputs dirty, thus forcing the outputs to be recomputed */
+    /** Mark a transaction's inputs dirty, thus forcing the outputs to be recomputed */
     void MarkInputsDirty(const CTransactionRef& tx) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     void SyncMetaData(std::pair<TxSpends::iterator, TxSpends::iterator>) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
@@ -722,7 +722,7 @@ private:
      */
     uint256 m_last_block_processed GUARDED_BY(cs_wallet);
 
-    /* Height of last block processed is used by wallet to know depth of transactions
+    /** Height of last block processed is used by wallet to know depth of transactions
      * without relying on Chain interface beyond asynchronous updates. For safety, we
      * initialize it to -1. Height is a pointer on node's tip and doesn't imply
      * that the wallet has scanned sequentially all blocks up to this one.
@@ -739,7 +739,7 @@ private:
     bool CreateTransactionInternal(const std::vector<CRecipient>& vecSend, CTransactionRef& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, const CCoinControl& coin_control, FeeCalculation& fee_calc_out, bool sign);
 
 public:
-    /*
+    /**
      * Main wallet lock.
      * This lock protects all the fields added by CWallet.
      */
@@ -956,9 +956,9 @@ public:
      * calling CreateTransaction();
      */
     bool FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl);
-    // Fetch the inputs and sign with SIGHASH_ALL.
+    /** Fetch the inputs and sign with SIGHASH_ALL. */
     bool SignTransaction(CMutableTransaction& tx) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
-    // Sign the tx given the input coins and sighash.
+    /** Sign the tx given the input coins and sighash. */
     bool SignTransaction(CMutableTransaction& tx, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors) const;
     SigningResult SignMessage(const std::string& message, const PKHash& pkhash, std::string& str_sig) const;
 
@@ -1333,10 +1333,10 @@ public:
     }
 };
 
-// Calculate the size of the transaction assuming all signatures are max size
-// Use DummySignatureCreator, which inserts 71 byte signatures everywhere.
-// NOTE: this requires that all inputs must be in mapWallet (eg the tx should
-// be IsAllFromMe).
+/** Calculate the size of the transaction assuming all signatures are max size
+* Use DummySignatureCreator, which inserts 71 byte signatures everywhere.
+* NOTE: this requires that all inputs must be in mapWallet (eg the tx should
+* be IsAllFromMe). */
 std::pair<int64_t, int64_t> CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, bool use_max_sig = false) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
 std::pair<int64_t, int64_t> CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, bool use_max_sig = false);
 
