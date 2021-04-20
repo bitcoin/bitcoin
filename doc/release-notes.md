@@ -36,14 +36,21 @@ This does not affect wallet forward or backward compatibility.
 Widecoin 1.1.0 Change log
 =========================
 
-Block reward rule is adjusted due to the block is only 0.5 minutes and limitation of max supply:\
-Block Height (BH)\
-Block (B)\
-BH > 1 and BH <= 50,000 => Receive 50 WCN/B\
-BH >= 50,001  and BH <= 100,000 => Receive 20 WCN/B\
-BH >= 100,001  and BH <= 500,000 => Receive 10 WCN/B\
-BH >= 500,001  and BH <= 2,102,399 => Receive 5 WCN/B\
-BH = 2102400 = 5 WCN (Subsidy is cut in half every 2,102,400 blocks which will occur approximately every 2 years)\
+Block reward rule is adjusted due to the block is only 0.5 minutes and limitation of max supply:
+
+Block Height (BH)
+
+Block (B)
+
+BH > 1 and BH <= 50,000 => Receive 50 WCN/B
+
+BH >= 50,001  and BH <= 100,000 => Receive 20 WCN/B
+
+BH >= 100,001  and BH <= 500,000 => Receive 10 WCN/B
+
+BH >= 500,001  and BH <= 2,102,399 => Receive 5 WCN/B
+
+BH = 2102400 = 5 WCN (Subsidy is cut in half every 2,102,400 blocks which will occur approximately every 2 years)
 
 Credits
 =======
