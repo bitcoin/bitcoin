@@ -7,9 +7,9 @@ clone_depth: 5
 environment:
   PATH: 'C:\Python37-x64;C:\Python37-x64\Scripts;%PATH%'
   PYTHONUTF8: 1
-  QT_DOWNLOAD_URL: 'https://github.com/sipsorcery/qt_win_binary/releases/download/qt598x64_vs2019_v1681/qt598_x64_vs2019_1681.zip'
-  QT_DOWNLOAD_HASH: '00cf7327818c07d74e0b1a4464ffe987c2728b00d49d4bf333065892af0515c3'
-  QT_LOCAL_PATH: 'C:\Qt5.9.8_x64_static_vs2019'
+  QT_DOWNLOAD_URL: 'https://github.com/sipsorcery/qt_win_binary/releases/download/qt51210x64_vs2019_1694/Qt5.12.10_x64_static_vs2019_1694.zip'
+  QT_DOWNLOAD_HASH: '3035a1307e8302bb3a76eba9bb3102979f945ab4022cc3bc2e1583edd44bdc99'
+  QT_LOCAL_PATH: 'C:\Qt5.12.10_x64_static_vs2019_1694'
   VCPKG_TAG: '75522bb1f2e7d863078bcd06322348f053a9e33f'
 install:
 # Disable zmq test for now since python zmq library on Windows would cause Access violation sometimes.
