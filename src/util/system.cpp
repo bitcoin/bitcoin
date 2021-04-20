@@ -235,6 +235,19 @@ static bool CheckValid(const std::string& key, const util::SettingsValue& val, u
     return true;
 }
 
+namespace {
+fs::path StripRedundantLastElementsOfPath(const fs::path& path)
+{
+    auto result = path;
+    while (result.filename().string() == ".") {
+        result = result.parent_path();
+    }
+
+    assert(fs::equivalent(result, path));
+    return result;
+}
+} // namespace
+
 // Define default constructor and destructor that are not inline, so code instantiating this class doesn't need to
 // #include class definitions for all members.
 // For example, m_settings has an internal dependency on univalue.
@@ -375,6 +388,72 @@ std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) co
     return std::nullopt;
 }
 
+const fs::path& ArgsManager::GetBlocksDirPath()
+{
+    LOCK(cs_args);
+    fs::path& path = m_cached_blocks_path;
+
+    // Cache the path to avoid calling fs::create_directories on every call of
+    // this function
+    if (!path.empty()) return path;
+
+    if (IsArgSet("-blocksdir")) {
+        path = fs::system_complete(GetArg("-blocksdir", ""));
+        if (!fs::is_directory(path)) {
+            path = "";
+            return path;
+        }
+    } else {
+        path = GetDataDirPath(false);
+    }
+
+    path /= BaseParams().DataDir();
+    path /= "blocks";
+    fs::create_directories(path);
+    path = StripRedundantLastElementsOfPath(path);
+    return path;
+}
+
+const fs::path& ArgsManager::GetDataDirPath(bool net_specific) const
+{
+    LOCK(cs_args);
+    fs::path& path = net_specific ? m_cached_network_datadir_path : m_cached_datadir_path;
+
+    // Cache the path to avoid calling fs::create_directories on every call of
+    // this function
+    if (!path.empty()) return path;
+
+    std::string datadir = GetArg("-datadir", "");
+    if (!datadir.empty()) {
+        path = fs::system_complete(datadir);
+        if (!fs::is_directory(path)) {
+            path = "";
+            return path;
+        }
+    } else {
+        path = GetDefaultDataDir();
+    }
+    if (net_specific)
+        path /= BaseParams().DataDir();
+
+    if (fs::create_directories(path)) {
+        // This is the first run, create wallets subdirectory too
+        fs::create_directories(path / "wallets");
+    }
+
+    path = StripRedundantLastElementsOfPath(path);
+    return path;
+}
+
+void ArgsManager::ClearPathCache()
+{
+    LOCK(cs_args);
+
+    m_cached_datadir_path = fs::path();
+    m_cached_network_datadir_path = fs::path();
+    m_cached_blocks_path = fs::path();
+}
+
 std::optional<const ArgsManager::Command> ArgsManager::GetCommand() const
 {
     Command ret;
@@ -434,7 +513,7 @@ bool ArgsManager::GetSettingsPath(fs::path* filepath, bool temp) const
     }
     if (filepath) {
         std::string settings = GetArg("-settings", BITCOIN_SETTINGS_FILENAME);
-        *filepath = fsbridge::AbsPathJoin(GetDataDir(/* net_specific= */ true), temp ? settings + ".tmp" : settings);
+        *filepath = fsbridge::AbsPathJoin(GetDataDirPath(/* net_specific= */ true), temp ? settings + ".tmp" : settings);
     }
     return true;
 }
@@ -723,94 +802,15 @@ fs::path GetDefaultDataDir()
 #endif
 }
 
-namespace {
-fs::path StripRedundantLastElementsOfPath(const fs::path& path)
-{
-    auto result = path;
-    while (result.filename().string() == ".") {
-        result = result.parent_path();
-    }
-
-    assert(fs::equivalent(result, path));
-    return result;
-}
-} // namespace
-
-static fs::path g_blocks_path_cache_net_specific;
-static fs::path pathCached;
-static fs::path pathCachedNetSpecific;
-static RecursiveMutex csPathCached;
-
-const fs::path &GetBlocksDir()
-{
-    LOCK(csPathCached);
-    fs::path &path = g_blocks_path_cache_net_specific;
-
-    // Cache the path to avoid calling fs::create_directories on every call of
-    // this function
-    if (!path.empty()) return path;
-
-    if (gArgs.IsArgSet("-blocksdir")) {
-        path = fs::system_complete(gArgs.GetArg("-blocksdir", ""));
-        if (!fs::is_directory(path)) {
-            path = "";
-            return path;
-        }
-    } else {
-        path = GetDataDir(false);
-    }
-
-    path /= BaseParams().DataDir();
-    path /= "blocks";
-    fs::create_directories(path);
-    path = StripRedundantLastElementsOfPath(path);
-    return path;
-}
-
 const fs::path &GetDataDir(bool fNetSpecific)
 {
-    LOCK(csPathCached);
-    fs::path &path = fNetSpecific ? pathCachedNetSpecific : pathCached;
-
-    // Cache the path to avoid calling fs::create_directories on every call of
-    // this function
-    if (!path.empty()) return path;
-
-    std::string datadir = gArgs.GetArg("-datadir", "");
-    if (!datadir.empty()) {
-        path = fs::system_complete(datadir);
-        if (!fs::is_directory(path)) {
-            path = "";
-            return path;
-        }
-    } else {
-        path = GetDefaultDataDir();
-    }
-    if (fNetSpecific)
-        path /= BaseParams().DataDir();
-
-    if (fs::create_directories(path)) {
-        // This is the first run, create wallets subdirectory too
-        fs::create_directories(path / "wallets");
-    }
-
-    path = StripRedundantLastElementsOfPath(path);
-    return path;
+    return gArgs.GetDataDirPath(fNetSpecific);
 }
 
 bool CheckDataDirOption()
 {
     std::string datadir = gArgs.GetArg("-datadir", "");
     return datadir.empty() || fs::is_directory(fs::system_complete(datadir));
-}
-
-void ClearDatadirCache()
-{
-    LOCK(csPathCached);
-
-    pathCached = fs::path();
-    pathCachedNetSpecific = fs::path();
-    g_blocks_path_cache_net_specific = fs::path();
 }
 
 fs::path GetConfigFile(const std::string& confPath)
@@ -971,7 +971,7 @@ bool ArgsManager::ReadConfigFiles(std::string& error, bool ignore_invalid_keys)
     }
 
     // If datadir is changed in .conf file:
-    ClearDatadirCache();
+    gArgs.ClearPathCache();
     if (!CheckDataDirOption()) {
         error = strprintf("specified data directory \"%s\" does not exist.", GetArg("-datadir", ""));
         return false;
