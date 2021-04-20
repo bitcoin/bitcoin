@@ -443,8 +443,6 @@ public:
     std::list<CNetMessage> vProcessMsg GUARDED_BY(cs_vProcessMsg);
     size_t nProcessQueueSize GUARDED_BY(cs_vProcessMsg){0};
 
-    RecursiveMutex cs_sendProcessing;
-
     uint64_t nRecvBytes GUARDED_BY(cs_vRecv){0};
 
     std::atomic<std::chrono::seconds> m_last_send{0s};
@@ -716,7 +714,7 @@ public:
     * @param[in]   pnode           The node which we are sending messages to.
     * @return                      True if there is more work to be done
     */
-    virtual bool SendMessages(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(pnode->cs_sendProcessing, g_mutex_msgproc_thread) = 0;
+    virtual bool SendMessages(CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(g_mutex_msgproc_thread) = 0;
 
     /** Mutex for anything that assumes it is only accessed from a single,
      * dedicated message processing thread */

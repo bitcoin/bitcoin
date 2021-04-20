@@ -260,10 +260,8 @@ void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman,
     (void)connman.ReceiveMsgFrom(node, msg_version);
     node.fPauseSend = false;
     connman.ProcessMessagesOnce(node);
-    {
-        LOCK(node.cs_sendProcessing);
-        peerman.SendMessages(&node);
-    }
+    peerman.SendMessages(&node);
+
     if (node.fDisconnect) return;
     assert(node.nVersion == version);
     assert(node.GetCommonVersion() == std::min(version, PROTOCOL_VERSION));
@@ -277,10 +275,7 @@ void FillNode(FuzzedDataProvider& fuzzed_data_provider, ConnmanTestMsg& connman,
         (void)connman.ReceiveMsgFrom(node, msg_verack);
         node.fPauseSend = false;
         connman.ProcessMessagesOnce(node);
-        {
-            LOCK(node.cs_sendProcessing);
-            peerman.SendMessages(&node);
-        }
+        peerman.SendMessages(&node);
         assert(node.fSuccessfullyConnected == true);
     }
 }
