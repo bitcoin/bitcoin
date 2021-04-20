@@ -293,7 +293,8 @@ mkdir -p "$DISTSRC"
     # version symbols for Linux distro back-compatibility.
     make -C src --jobs=1 check-symbols  ${V:+V=1}
 
-    mkdir -p ${OUTDIR}
+    mkdir -p "$OUTDIR"
+
     # Make the os-specific installers
     case "$HOST" in
         *mingw*)
