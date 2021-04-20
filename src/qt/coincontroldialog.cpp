@@ -55,40 +55,19 @@ CoinControlDialog::CoinControlDialog(CCoinControl& coin_control, WalletModel* _m
 {
     ui->setupUi(this);
 
-    // context menu actions
-    QAction *copyAddressAction = new QAction(tr("Copy address"), this);
-    QAction *copyLabelAction = new QAction(tr("Copy label"), this);
-    QAction *copyAmountAction = new QAction(tr("Copy amount"), this);
-             copyTransactionHashAction = new QAction(tr("Copy transaction ID"), this);  // we need to enable/disable this
-             lockAction = new QAction(tr("Lock unspent"), this);                        // we need to enable/disable this
-             unlockAction = new QAction(tr("Unlock unspent"), this);                    // we need to enable/disable this
-    // SYSCOIN
-    QAction *copyAmountAssetAction = new QAction(tr("Copy asset amount"), this);
-    QAction *copyAssetAction = new QAction(tr("Copy asset"), this);
     // context menu
     contextMenu = new QMenu(this);
-    contextMenu->addAction(copyAddressAction);
-    contextMenu->addAction(copyLabelAction);
-    contextMenu->addAction(copyAmountAction);
+    contextMenu->addAction(tr("Copy address"), this, &CoinControlDialog::copyAddress);
+    contextMenu->addAction(tr("Copy label"), this, &CoinControlDialog::copyLabel);
+    contextMenu->addAction(tr("Copy amount"), this, &CoinControlDialog::copyAmount);
+    copyTransactionHashAction = contextMenu->addAction(tr("Copy transaction ID"), this, &CoinControlDialog::copyTransactionHash);
     // SYSCOIN
-    contextMenu->addAction(copyAmountAssetAction);
-    contextMenu->addAction(copyAssetAction);
-    contextMenu->addAction(copyTransactionHashAction);
+    contextMenu->addAction(tr("Copy asset amount"), this, &CoinControlDialog::copyAmountAsset);
+    contextMenu->addAction(tr("Copy asset"), this, &CoinControlDialog::copyAsset);
     contextMenu->addSeparator();
-    contextMenu->addAction(lockAction);
-    contextMenu->addAction(unlockAction);
-
-    // context menu signals
+    lockAction = contextMenu->addAction(tr("Lock unspent"), this, &CoinControlDialog::lockCoin);
+    unlockAction = contextMenu->addAction(tr("Unlock unspent"), this, &CoinControlDialog::unlockCoin);
     connect(ui->treeWidget, &QWidget::customContextMenuRequested, this, &CoinControlDialog::showMenu);
-    connect(copyAddressAction, &QAction::triggered, this, &CoinControlDialog::copyAddress);
-    connect(copyLabelAction, &QAction::triggered, this, &CoinControlDialog::copyLabel);
-    connect(copyAmountAction, &QAction::triggered, this, &CoinControlDialog::copyAmount);
-    // SYSCOIN
-    connect(copyAmountAssetAction, &QAction::triggered, this, &CoinControlDialog::copyAmountAsset);
-    connect(copyAssetAction, &QAction::triggered, this, &CoinControlDialog::copyAsset);
-    connect(copyTransactionHashAction, &QAction::triggered, this, &CoinControlDialog::copyTransactionHash);
-    connect(lockAction, &QAction::triggered, this, &CoinControlDialog::lockCoin);
-    connect(unlockAction, &QAction::triggered, this, &CoinControlDialog::unlockCoin);
 
     // clipboard actions
     QAction *clipboardQuantityAction = new QAction(tr("Copy quantity"), this);

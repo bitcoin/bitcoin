@@ -626,29 +626,14 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         ui->peerWidget->setColumnWidth(PeerTableModel::Ping, PING_COLUMN_WIDTH);
         ui->peerWidget->horizontalHeader()->setStretchLastSection(true);
 
-        // create peer table context menu actions
-        QAction* disconnectAction = new QAction(tr("&Disconnect"), this);
-        QAction* banAction1h = new QAction(ts.ban_for + " " + tr("1 &hour"), this);
-        QAction* banAction24h = new QAction(ts.ban_for + " " + tr("1 &day"), this);
-        QAction* banAction7d = new QAction(ts.ban_for + " " + tr("1 &week"), this);
-        QAction* banAction365d = new QAction(ts.ban_for + " " + tr("1 &year"), this);
-
         // create peer table context menu
         peersTableContextMenu = new QMenu(this);
-        peersTableContextMenu->addAction(disconnectAction);
-        peersTableContextMenu->addAction(banAction1h);
-        peersTableContextMenu->addAction(banAction24h);
-        peersTableContextMenu->addAction(banAction7d);
-        peersTableContextMenu->addAction(banAction365d);
-
-        connect(banAction1h, &QAction::triggered, [this] { banSelectedNode(60 * 60); });
-        connect(banAction24h, &QAction::triggered, [this] { banSelectedNode(60 * 60 * 24); });
-        connect(banAction7d, &QAction::triggered, [this] { banSelectedNode(60 * 60 * 24 * 7); });
-        connect(banAction365d, &QAction::triggered, [this] { banSelectedNode(60 * 60 * 24 * 365); });
-
-        // peer table context menu signals
+        peersTableContextMenu->addAction(tr("Disconnect"), this, &RPCConsole::disconnectSelectedNode);
+        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 hour"), [this] { banSelectedNode(60 * 60); });
+        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 day"), [this] { banSelectedNode(60 * 60 * 24); });
+        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 week"), [this] { banSelectedNode(60 * 60 * 24 * 7); });
+        peersTableContextMenu->addAction(ts.ban_for + " " + tr("1 year"), [this] { banSelectedNode(60 * 60 * 24 * 365); });
         connect(ui->peerWidget, &QTableView::customContextMenuRequested, this, &RPCConsole::showPeersTableContextMenu);
-        connect(disconnectAction, &QAction::triggered, this, &RPCConsole::disconnectSelectedNode);
 
         // peer table signal handling - update peer details when selecting new node
         connect(ui->peerWidget->selectionModel(), &QItemSelectionModel::selectionChanged, this, &RPCConsole::updateDetailWidget);
@@ -667,16 +652,10 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         ui->banlistWidget->setColumnWidth(BanTableModel::Bantime, BANTIME_COLUMN_WIDTH);
         ui->banlistWidget->horizontalHeader()->setStretchLastSection(true);
 
-        // create ban table context menu action
-        QAction* unbanAction = new QAction(tr("&Unban"), this);
-
         // create ban table context menu
         banTableContextMenu = new QMenu(this);
-        banTableContextMenu->addAction(unbanAction);
-
-        // ban table context menu signals
+        banTableContextMenu->addAction(tr("Unban"), this, &RPCConsole::unbanSelectedNode);
         connect(ui->banlistWidget, &QTableView::customContextMenuRequested, this, &RPCConsole::showBanTableContextMenu);
-        connect(unbanAction, &QAction::triggered, this, &RPCConsole::unbanSelectedNode);
 
         // ban table signal handling - clear peer details when clicking a peer in the ban table
         connect(ui->banlistWidget, &QTableView::clicked, this, &RPCConsole::clearSelectedNode);
