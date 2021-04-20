@@ -17,13 +17,17 @@ QT_TRANSLATE_NOOP("syscoin-core", ""
 "-maxtxfee is set very high! Fees this large could be paid on a single "
 "transaction."),
 QT_TRANSLATE_NOOP("syscoin-core", ""
+"Cannot downgrade wallet from version %i to version %i. Wallet version "
+"unchanged."),
+QT_TRANSLATE_NOOP("syscoin-core", ""
 "Cannot obtain a lock on data directory %s. %s is probably already running."),
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "Cannot provide specific connections and have addrman find outgoing "
 "connections at the same."),
 QT_TRANSLATE_NOOP("syscoin-core", ""
-"Cannot upgrade a non HD split wallet without upgrading to support pre split "
-"keypool. Please use version 169900 or no version specified."),
+"Cannot upgrade a non HD split wallet from version %i to version %i without "
+"upgrading to support pre-split keypool. Please use version %i or no version "
+"specified."),
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "Distributed under the MIT software license, see the accompanying file %s or "
 "%s"),
@@ -31,16 +35,34 @@ QT_TRANSLATE_NOOP("syscoin-core", ""
 "Error reading %s! All keys read correctly, but transaction data or address "
 "book entries might be missing or incorrect."),
 QT_TRANSLATE_NOOP("syscoin-core", ""
+"Error: Dumpfile format record is incorrect. Got \"%s\", expected \"format\"."),
+QT_TRANSLATE_NOOP("syscoin-core", ""
+"Error: Dumpfile identifier record is incorrect. Got \"%s\", expected \"%s\"."),
+QT_TRANSLATE_NOOP("syscoin-core", ""
+"Error: Dumpfile version is not supported. This version of syscoin-wallet "
+"only supports version 1 dumpfiles. Got dumpfile with version %s"),
+QT_TRANSLATE_NOOP("syscoin-core", ""
 "Error: Listening for incoming connections failed (listen returned error %s)"),
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -"
 "fallbackfee."),
+QT_TRANSLATE_NOOP("syscoin-core", ""
+"File %s already exists. If you are sure this is what you want, move it out "
+"of the way first."),
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "Invalid amount for -maxtxfee=<amount>: '%s' (must be at least the minrelay "
 "fee of %s to prevent stuck transactions)"),
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "More than one onion bind address is provided. Using %s for the automatically "
 "created Tor onion service."),
+QT_TRANSLATE_NOOP("syscoin-core", ""
+"No dump file provided. To use createfromdump, -dumpfile=<filename> must be "
+"provided."),
+QT_TRANSLATE_NOOP("syscoin-core", ""
+"No dump file provided. To use dump, -dumpfile=<filename> must be provided."),
+QT_TRANSLATE_NOOP("syscoin-core", ""
+"No wallet file format provided. To use createfromdump, -format=<format> must "
+"be provided."),
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "Please check that your computer's date and time are correct! If your clock "
 "is wrong, %s will not work properly."),
@@ -96,10 +118,13 @@ QT_TRANSLATE_NOOP("syscoin-core", ""
 "Unable to rewind the database to a pre-fork state. You will need to "
 "redownload the blockchain"),
 QT_TRANSLATE_NOOP("syscoin-core", ""
-"Warning: Private keys detected in wallet {%s} with disabled private keys"),
+"Unknown wallet file format \"%s\" provided. Please provide one of \"bdb\" or "
+"\"sqlite\"."),
 QT_TRANSLATE_NOOP("syscoin-core", ""
-"Warning: The network does not appear to fully agree! Some miners appear to "
-"be experiencing issues."),
+"Warning: Dumpfile wallet format \"%s\" does not match command line specified "
+"format \"%s\"."),
+QT_TRANSLATE_NOOP("syscoin-core", ""
+"Warning: Private keys detected in wallet {%s} with disabled private keys"),
 QT_TRANSLATE_NOOP("syscoin-core", ""
 "Warning: We do not appear to fully agree with our peers! You may need to "
 "upgrade, or other nodes may need to upgrade."),
@@ -109,7 +134,6 @@ QT_TRANSLATE_NOOP("syscoin-core", ""
 QT_TRANSLATE_NOOP("syscoin-core", "%s is set very high!"),
 QT_TRANSLATE_NOOP("syscoin-core", "-maxmempool must be at least %d MB"),
 QT_TRANSLATE_NOOP("syscoin-core", "A fatal internal error occurred, see debug.log for details"),
-QT_TRANSLATE_NOOP("syscoin-core", "Cannot downgrade wallet"),
 QT_TRANSLATE_NOOP("syscoin-core", "Cannot resolve -%s address: '%s'"),
 QT_TRANSLATE_NOOP("syscoin-core", "Cannot set -peerblockfilters without -blockfilterindex."),
 QT_TRANSLATE_NOOP("syscoin-core", "Cannot write to data directory '%s'; check permissions."),
@@ -122,6 +146,8 @@ QT_TRANSLATE_NOOP("syscoin-core", "Could not parse asmap file %s"),
 QT_TRANSLATE_NOOP("syscoin-core", "Disk space is too low!"),
 QT_TRANSLATE_NOOP("syscoin-core", "Do you want to rebuild the block database now?"),
 QT_TRANSLATE_NOOP("syscoin-core", "Done loading"),
+QT_TRANSLATE_NOOP("syscoin-core", "Dump file %s does not exist."),
+QT_TRANSLATE_NOOP("syscoin-core", "Error creating %s"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error initializing block database"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error initializing wallet database environment %s!"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error loading %s"),
@@ -131,9 +157,17 @@ QT_TRANSLATE_NOOP("syscoin-core", "Error loading %s: Wallet requires newer versi
 QT_TRANSLATE_NOOP("syscoin-core", "Error loading block database"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error opening block database"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error reading from database, shutting down."),
+QT_TRANSLATE_NOOP("syscoin-core", "Error reading next record from wallet database"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error upgrading chainstate database"),
+QT_TRANSLATE_NOOP("syscoin-core", "Error: Couldn't create cursor into database"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error: Disk space is low for %s"),
+QT_TRANSLATE_NOOP("syscoin-core", "Error: Dumpfile checksum does not match. Computed %s, expected %s"),
+QT_TRANSLATE_NOOP("syscoin-core", "Error: Got key that was not hex: %s"),
+QT_TRANSLATE_NOOP("syscoin-core", "Error: Got value that was not hex: %s"),
 QT_TRANSLATE_NOOP("syscoin-core", "Error: Keypool ran out, please call keypoolrefill first"),
+QT_TRANSLATE_NOOP("syscoin-core", "Error: Missing checksum"),
+QT_TRANSLATE_NOOP("syscoin-core", "Error: Unable to parse version %u as a uint32_t"),
+QT_TRANSLATE_NOOP("syscoin-core", "Error: Unable to write record to new wallet"),
 QT_TRANSLATE_NOOP("syscoin-core", "Failed to listen on any port. Use -listen=0 if you want this."),
 QT_TRANSLATE_NOOP("syscoin-core", "Failed to rescan the wallet during initialization"),
 QT_TRANSLATE_NOOP("syscoin-core", "Failed to verify database"),
@@ -143,6 +177,7 @@ QT_TRANSLATE_NOOP("syscoin-core", "Importing..."),
 QT_TRANSLATE_NOOP("syscoin-core", "Incorrect or no genesis block found. Wrong datadir for network?"),
 QT_TRANSLATE_NOOP("syscoin-core", "Initialization sanity check failed. %s is shutting down."),
 QT_TRANSLATE_NOOP("syscoin-core", "Insufficient funds"),
+QT_TRANSLATE_NOOP("syscoin-core", "Invalid -i2psam address or hostname: '%s'"),
 QT_TRANSLATE_NOOP("syscoin-core", "Invalid -onion address or hostname: '%s'"),
 QT_TRANSLATE_NOOP("syscoin-core", "Invalid -proxy address or hostname: '%s'"),
 QT_TRANSLATE_NOOP("syscoin-core", "Invalid P2P permission: '%s'"),
@@ -159,7 +194,6 @@ QT_TRANSLATE_NOOP("syscoin-core", "Need to specify a port with -whitebind: '%s'"
 QT_TRANSLATE_NOOP("syscoin-core", "No proxy server specified. Use -proxy=<ip> or -proxy=<ip:port>."),
 QT_TRANSLATE_NOOP("syscoin-core", "Not enough file descriptors available."),
 QT_TRANSLATE_NOOP("syscoin-core", "Prune cannot be configured with a negative value."),
-QT_TRANSLATE_NOOP("syscoin-core", "Prune mode is incompatible with -blockfilterindex."),
 QT_TRANSLATE_NOOP("syscoin-core", "Prune mode is incompatible with -txindex."),
 QT_TRANSLATE_NOOP("syscoin-core", "Pruning blockstore..."),
 QT_TRANSLATE_NOOP("syscoin-core", "Reducing -maxconnections from %d to %d, because of system limitations."),
@@ -180,7 +214,7 @@ QT_TRANSLATE_NOOP("syscoin-core", "Specified -walletdir \"%s\" is not a director
 QT_TRANSLATE_NOOP("syscoin-core", "Specified blocks directory \"%s\" does not exist."),
 QT_TRANSLATE_NOOP("syscoin-core", "Starting network threads..."),
 QT_TRANSLATE_NOOP("syscoin-core", "The source code is available from %s."),
-QT_TRANSLATE_NOOP("syscoin-core", "The specified config file %s does not exist\n"),
+QT_TRANSLATE_NOOP("syscoin-core", "The specified config file %s does not exist"),
 QT_TRANSLATE_NOOP("syscoin-core", "The transaction amount is too small to pay the fee"),
 QT_TRANSLATE_NOOP("syscoin-core", "The wallet will avoid paying less than the minimum relay fee."),
 QT_TRANSLATE_NOOP("syscoin-core", "This is experimental software."),
@@ -197,6 +231,7 @@ QT_TRANSLATE_NOOP("syscoin-core", "Unable to bind to %s on this computer. %s is 
 QT_TRANSLATE_NOOP("syscoin-core", "Unable to create the PID file '%s': %s"),
 QT_TRANSLATE_NOOP("syscoin-core", "Unable to generate initial keys"),
 QT_TRANSLATE_NOOP("syscoin-core", "Unable to generate keys"),
+QT_TRANSLATE_NOOP("syscoin-core", "Unable to open %s for writing"),
 QT_TRANSLATE_NOOP("syscoin-core", "Unable to start HTTP server. See debug log for details."),
 QT_TRANSLATE_NOOP("syscoin-core", "Unknown -blockfilterindex value %s."),
 QT_TRANSLATE_NOOP("syscoin-core", "Unknown address type '%s'"),

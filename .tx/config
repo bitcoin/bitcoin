@@ -3,5 +3,5 @@ host = https://www.transifex.com
 
 [syscoin.qt-translation-420x]
 file_filter = src/qt/locale/syscoin_<lang>.ts
-source_file = src/qt/locale/syscoin_en.ts
+source_file = src/qt/locale/syscoin_.xlf
 source_lang = en

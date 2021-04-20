@@ -309,7 +309,8 @@ void AddressBookPage::on_exportButton_clicked()
 
     if(!writer.write()) {
         QMessageBox::critical(this, tr("Exporting Failed"),
-            tr("There was an error trying to save the address list to %1. Please try again.").arg(filename));
+            //: %1 is a name of the file (e.g., "addrbook.csv") that the bitcoin addresses were exported to.
+            tr("There was an error trying to save the address list to %1. Please try again.", "An error message.").arg(filename));
     }
 }
 
