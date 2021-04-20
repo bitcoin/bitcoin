@@ -9,7 +9,7 @@
  * network protocol versioning
  */
 
-static const int PROTOCOL_VERSION = 70017;
+static const int PROTOCOL_VERSION = 70016;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
