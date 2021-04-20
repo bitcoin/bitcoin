@@ -13,11 +13,6 @@
 #include <util.h>
 #include <validation.h>
 
-#include <governance/governance-vote.h>
-#include <governance/governance-object.h>
-#include <llmq/quorums_chainlocks.h>
-#include <llmq/quorums_instantsend.h>
-
 #include <list>
 #include <atomic>
 #include <future>
