@@ -421,7 +421,7 @@ protected:
      *  m_subdescriptor_arg, or just once in case m_subdescriptor_arg is nullptr.
 
      *  @param pubkeys The evaluations of the m_pubkey_args field.
-     *  @param script The evaluation of m_subdescriptor_arg (or nullptr when m_subdescriptor_arg is nullptr).
+     *  @param scripts The evaluation of m_subdescriptor_arg (or nullptr when m_subdescriptor_arg is nullptr).
      *  @param out A FlatSigningProvider to put scripts or public keys in that are necessary to the solver.
      *             The script arguments to this function are automatically added, as is the origin info of the provided pubkeys.
      *  @return A vector with scriptPubKeys for this descriptor.
