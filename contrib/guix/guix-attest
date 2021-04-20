@@ -153,10 +153,17 @@ for outdir in "${OUTDIRS[@]}"; do
         outdirs_already_attested_to+=("$outdir")
     else
         mkdir -p "$outsigdir"
-        echo "${outname}: Hashing build outputs to produce SHA256SUMS"
+
         (
             cd "$outdir"
-            files="$(find . -type f)"
+
+            if [ -e inputs.SHA256SUMS ]; then
+                echo "${outname}: Including existent input SHA256SUMS"
+                cat inputs.SHA256SUMS >> "$outsigdir"/SHA256SUMS
+            fi
+
+            echo "${outname}: Hashing build outputs to produce SHA256SUMS"
+            files="$(find -L . -type f ! -iname '*.SHA256SUMS')"
             if [ -n "$files" ]; then
                 cut -c3- <<< "$files" | env LC_ALL=C sort | xargs sha256sum >> "$outsigdir"/SHA256SUMS
             else
