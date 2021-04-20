@@ -572,15 +572,13 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
     return successful;
 }
 
-/** Updates current unit in memory, settings and emits displayUnitChanged(newUnit) signal */
-void OptionsModel::setDisplayUnit(const QVariant &value)
+void OptionsModel::setDisplayUnit(const QVariant& new_unit)
 {
-    if (!value.isNull()) {
-        QSettings settings;
-        m_display_bitcoin_unit = value.value<BitcoinUnit>();
-        settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(m_display_bitcoin_unit));
-        Q_EMIT displayUnitChanged(m_display_bitcoin_unit);
-    }
+    if (new_unit.isNull() || new_unit.value<BitcoinUnit>() == m_display_bitcoin_unit) return;
+    m_display_bitcoin_unit = new_unit.value<BitcoinUnit>();
+    QSettings settings;
+    settings.setValue("DisplayBitcoinUnit", QVariant::fromValue(m_display_bitcoin_unit));
+    Q_EMIT displayUnitChanged(m_display_bitcoin_unit);
 }
 
 void OptionsModel::setRestartRequired(bool fRequired)
