@@ -58,18 +58,14 @@ class PopEnableSync(BitcoinTestFramework):
                                 endorse_block, self.nodes[1], apm, 1100, mock_address)
 
         disconnect_nodes(self.nodes[0], 1)
-        self.nodes[0].generatetoaddress(nblocks=199, address=mock_address)
-        assert self.nodes[0].getblockcount() == 1299
-        atv_id = endorse_block(self.nodes[0], apm, 1100, mock_address)
-        self.nodes[0].generatetoaddress(nblocks=1, address=mock_address)
+        self.nodes[0].generatetoaddress(nblocks=200, address=mock_address)
         assert self.nodes[0].getblockcount() == 1300
+        endorse_block(self.nodes[0], apm, 1300, mock_address)
 
         connect_nodes(self.nodes[0], 1)
-        self.sync_all()
+        self.sync_blocks()
         assert self.nodes[1].getblockcount() == 1300
-        block_hash = self.nodes[1].getblockhash(1300)
-        pop_data = self.nodes[1].getblock(block_hash)['pop']['data']
-        assert atv_id in pop_data['atvs']
+        endorse_block(self.nodes[1], apm, 1300, mock_address)
 
 
 if __name__ == '__main__':
