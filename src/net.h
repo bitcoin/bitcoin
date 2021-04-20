@@ -1228,20 +1228,18 @@ struct NodeEvictionCandidate
  * longest, to replicate the non-eviction implicit behavior and preclude attacks
  * that start later.
  *
- * Half of these protected spots (1/4 of the total) are reserved for onion peers
- * connected via our tor control service, if any, sorted by longest uptime, even
- * if they're not longest uptime overall. Any remaining slots of the 1/4 are
- * then allocated to protect localhost peers, if any (or up to 2 localhost peers
- * if no slots remain and 2 or more onion peers were protected), sorted by
- * longest uptime, as manually configured hidden services not using
- * `-bind=addr[:port]=onion` will not be detected as inbound onion connections.
+ * Half of these protected spots (1/4 of the total) are reserved for the
+ * following categories of peers, sorted by longest uptime, even if they're not
+ * longest uptime overall:
  *
- * This helps protect onion peers, which tend to be otherwise disadvantaged
- * under our eviction criteria for their higher min ping times relative to IPv4
- * and IPv6 peers, and favorise the diversity of peer connections.
+ * - onion peers connected via our tor control service
  *
- * This function was extracted from SelectNodeToEvict() to be able to test the
- * ratio-based protection logic deterministically.
+ * - localhost peers, as manually configured hidden services not using
+ *   `-bind=addr[:port]=onion` will not be detected as inbound onion connections
+ *
+ * This helps protect these privacy network peers, which tend to be otherwise
+ * disadvantaged under our eviction criteria for their higher min ping times
+ * relative to IPv4/IPv6 peers, and favorise the diversity of peer connections.
  */
 void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& vEvictionCandidates);
 
