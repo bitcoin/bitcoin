@@ -93,6 +93,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         num_peers, [](NodeEvictionCandidate& c) {
             c.nTimeConnected = c.id;
             c.m_is_onion = c.m_is_local = false;
+            c.m_network = NET_IPV4;
         },
         /* protected_peer_ids */ {0, 1, 2, 3, 4, 5},
         /* unprotected_peer_ids */ {6, 7, 8, 9, 10, 11},
@@ -103,6 +104,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         num_peers, [num_peers](NodeEvictionCandidate& c) {
             c.nTimeConnected = num_peers - c.id;
             c.m_is_onion = c.m_is_local = false;
+            c.m_network = NET_IPV6;
         },
         /* protected_peer_ids */ {6, 7, 8, 9, 10, 11},
         /* unprotected_peer_ids */ {0, 1, 2, 3, 4, 5},
@@ -111,22 +113,23 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
     // Test protection of onion and localhost peers...
 
     // Expect 1/4 onion peers to be protected from eviction,
-    // independently of other characteristics.
+    // if no localhost peers.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
-            c.m_is_onion = (c.id == 3 || c.id == 8 || c.id == 9);
+            c.m_is_local = false;
+            c.m_network = (c.id == 3 || c.id == 8 || c.id == 9) ? NET_ONION : NET_IPV4;
         },
         /* protected_peer_ids */ {3, 8, 9},
         /* unprotected_peer_ids */ {},
         random_context));
 
-    // Expect 1/4 onion peers and 1/4 of the others to be protected
-    // from eviction, sorted by longest uptime (lowest nTimeConnected).
+    // Expect 1/4 onion peers and 1/4 of the other peers to be protected,
+    // sorted by longest uptime (lowest nTimeConnected), if no localhost peers.
     BOOST_CHECK(IsProtected(
         num_peers, [](NodeEvictionCandidate& c) {
             c.nTimeConnected = c.id;
             c.m_is_local = false;
-            c.m_is_onion = (c.id == 3 || c.id > 7);
+            c.m_network = (c.id == 3 || c.id > 7) ? NET_ONION : NET_IPV6;
         },
         /* protected_peer_ids */ {0, 1, 2, 3, 8, 9},
         /* unprotected_peer_ids */ {4, 5, 6, 7, 10, 11},
@@ -138,6 +141,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         num_peers, [](NodeEvictionCandidate& c) {
             c.m_is_onion = false;
             c.m_is_local = (c.id == 1 || c.id == 9 || c.id == 11);
+            c.m_network = NET_IPV4;
         },
         /* protected_peer_ids */ {1, 9, 11},
         /* unprotected_peer_ids */ {},
@@ -150,6 +154,7 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
             c.nTimeConnected = c.id;
             c.m_is_onion = false;
             c.m_is_local = (c.id > 6);
+            c.m_network = NET_IPV6;
         },
         /* protected_peer_ids */ {0, 1, 2, 7, 8, 9},
         /* unprotected_peer_ids */ {3, 4, 5, 6, 10, 11},

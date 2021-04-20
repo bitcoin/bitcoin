@@ -42,6 +42,7 @@
 #endif
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <functional>
 #include <optional>
@@ -918,35 +919,66 @@ void ProtectEvictionCandidatesByRatio(std::vector<NodeEvictionCandidate>& evicti
 {
     // Protect the half of the remaining nodes which have been connected the longest.
     // This replicates the non-eviction implicit behavior, and precludes attacks that start later.
-    // To favorise the diversity of our peer connections, reserve up to (half + 2) of
-    // these protected spots for onion and localhost peers, if any, even if they're not
-    // longest uptime overall. This helps protect tor peers, which tend to be otherwise
+    // To favorise the diversity of our peer connections, reserve up to half of these protected
+    // spots for Tor/onion and localhost peers, even if they're not longest uptime overall.
+    // This helps protect these higher-latency peers that tend to be otherwise
     // disadvantaged under our eviction criteria.
     const size_t initial_size = eviction_candidates.size();
     const size_t total_protect_size{initial_size / 2};
-    const size_t onion_protect_size = total_protect_size / 2;
 
-    if (onion_protect_size) {
-        // Pick out up to 1/4 peers connected via our onion service, sorted by longest uptime.
-        EraseLastKElements(eviction_candidates, CompareOnionTimeConnected, onion_protect_size,
-                           [](const NodeEvictionCandidate& n) { return n.m_is_onion; });
+    // Disadvantaged networks to protect: localhost and Tor/onion. In case of equal counts, earlier
+    // array members have first opportunity to recover unused slots from the previous iteration.
+    struct Net { bool is_local; Network id; size_t count; };
+    std::array<Net, 3> networks{{{/* localhost */ true, NET_MAX, 0}, {false, NET_ONION, 0}}};
+
+    // Count and store the number of eviction candidates per network.
+    for (Net& n : networks) {
+        n.count = std::count_if(eviction_candidates.cbegin(), eviction_candidates.cend(),
+                                [&n](const NodeEvictionCandidate& c) {
+                                    return n.is_local ? c.m_is_local : c.m_network == n.id;
+                                });
     }
+    // Sort `networks` by ascending candidate count, to give networks having fewer candidates
+    // the first opportunity to recover unused protected slots from the previous iteration.
+    std::stable_sort(networks.begin(), networks.end(), [](Net a, Net b) { return a.count < b.count; });
 
-    const size_t localhost_min_protect_size{2};
-    if (onion_protect_size >= localhost_min_protect_size) {
-        // Allocate any remaining slots of the 1/4, or minimum 2 additional slots,
-        // to localhost peers, sorted by longest uptime, as manually configured
-        // hidden services not using `-bind=addr[:port]=onion` will not be detected
-        // as inbound onion connections.
-        const size_t remaining_tor_slots{onion_protect_size - (initial_size - eviction_candidates.size())};
-        const size_t localhost_protect_size{std::max(remaining_tor_slots, localhost_min_protect_size)};
-        EraseLastKElements(eviction_candidates, CompareLocalHostTimeConnected, localhost_protect_size,
-                           [](const NodeEvictionCandidate& n) { return n.m_is_local; });
+    // Protect up to 25% of the eviction candidates by disadvantaged network.
+    const size_t max_protect_by_network{total_protect_size / 2};
+    size_t num_protected{0};
+
+    while (num_protected < max_protect_by_network) {
+        const size_t disadvantaged_to_protect{max_protect_by_network - num_protected};
+        const size_t protect_per_network{
+            std::max(disadvantaged_to_protect / networks.size(), static_cast<size_t>(1))};
+
+        // Early exit flag if there are no remaining candidates by disadvantaged network.
+        bool protected_at_least_one{false};
+
+        for (const Net& n : networks) {
+            if (n.count == 0) continue;
+            const size_t before = eviction_candidates.size();
+            EraseLastKElements(eviction_candidates, CompareNodeNetworkTime(n.is_local, n.id),
+                               protect_per_network, [&n](const NodeEvictionCandidate& c) {
+                                   return n.is_local ? c.m_is_local : c.m_network == n.id;
+                               });
+            const size_t after = eviction_candidates.size();
+            if (before > after) {
+                protected_at_least_one = true;
+                num_protected += before - after;
+                if (num_protected >= max_protect_by_network) {
+                    break;
+                }
+            }
+        }
+        if (!protected_at_least_one) {
+            break;
+        }
     }
 
     // Calculate how many we removed, and update our total number of peers that
     // we want to protect based on uptime accordingly.
-    const size_t remaining_to_protect{total_protect_size - (initial_size - eviction_candidates.size())};
+    assert(num_protected == initial_size - eviction_candidates.size());
+    const size_t remaining_to_protect{total_protect_size - num_protected};
     EraseLastKElements(eviction_candidates, ReverseCompareNodeTimeConnected, remaining_to_protect);
 }
 
