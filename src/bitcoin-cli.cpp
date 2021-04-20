@@ -234,11 +234,10 @@ public:
 class AddrinfoRequestHandler : public BaseRequestHandler
 {
 private:
-    static constexpr uint8_t m_networks_size{5};
-    const std::array<std::string, m_networks_size> m_networks{{"ipv4", "ipv6", "torv2", "torv3", "i2p"}};
+    static constexpr std::array m_networks{"ipv4", "ipv6", "torv2", "torv3", "i2p"};
     int8_t NetworkStringToId(const std::string& str) const
     {
-        for (uint8_t i = 0; i < m_networks_size; ++i) {
+        for (size_t i = 0; i < m_networks.size(); ++i) {
             if (str == m_networks.at(i)) return i;
         }
         return UNKNOWN_NETWORK;
@@ -262,7 +261,7 @@ public:
             throw std::runtime_error("-addrinfo requires bitcoind server to be running v22.0 and up");
         }
         // Count the number of peers we know by network, including torv2 versus torv3.
-        std::array<uint64_t, m_networks_size> counts{{}};
+        std::array<uint64_t, m_networks.size()> counts{{}};
         for (const UniValue& node : nodes) {
             std::string network_name{node["network"].get_str()};
             if (network_name == "onion") {
@@ -275,7 +274,7 @@ public:
         // Prepare result to return to user.
         UniValue result{UniValue::VOBJ}, addresses{UniValue::VOBJ};
         uint64_t total{0}; // Total address count
-        for (uint8_t i = 0; i < m_networks_size; ++i) {
+        for (size_t i = 0; i < m_networks.size(); ++i) {
             addresses.pushKV(m_networks.at(i), counts.at(i));
             total += counts.at(i);
         }
@@ -356,15 +355,14 @@ public:
 class NetinfoRequestHandler : public BaseRequestHandler
 {
 private:
-    static constexpr uint8_t m_networks_size{4};
     static constexpr uint8_t MAX_DETAIL_LEVEL{4};
-    const std::array<std::string, m_networks_size> m_networks{{"ipv4", "ipv6", "onion", "i2p"}};
-    std::array<std::array<uint16_t, m_networks_size + 1>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total)
+    static constexpr std::array m_networks{"ipv4", "ipv6", "onion", "i2p"};
+    std::array<std::array<uint16_t, m_networks.size() + 1>, 3> m_counts{{{}}}; //!< Peer counts by (in/out/total, networks/total)
     uint8_t m_block_relay_peers_count{0};
     uint8_t m_manual_peers_count{0};
     int8_t NetworkStringToId(const std::string& str) const
     {
-        for (uint8_t i = 0; i < m_networks_size; ++i) {
+        for (size_t i = 0; i < m_networks.size(); ++i) {
             if (str == m_networks.at(i)) return i;
         }
         return UNKNOWN_NETWORK;
@@ -461,10 +459,10 @@ public:
             const bool is_outbound{!peer["inbound"].get_bool()};
             const bool is_block_relay{!peer["relaytxes"].get_bool()};
             const std::string conn_type{peer["connection_type"].get_str()};
-            ++m_counts.at(is_outbound).at(network_id);      // in/out by network
-            ++m_counts.at(is_outbound).at(m_networks_size); // in/out overall
-            ++m_counts.at(2).at(network_id);                // total by network
-            ++m_counts.at(2).at(m_networks_size);           // total overall
+            ++m_counts.at(is_outbound).at(network_id);        // in/out by network
+            ++m_counts.at(is_outbound).at(m_networks.size()); // in/out overall
+            ++m_counts.at(2).at(network_id);                  // total by network
+            ++m_counts.at(2).at(m_networks.size());           // total overall
             if (conn_type == "block-relay-only") ++m_block_relay_peers_count;
             if (conn_type == "manual") ++m_manual_peers_count;
             if (DetailsRequested()) {
@@ -534,11 +532,11 @@ public:
         if (any_i2p_peers) result += "     i2p";
         result += "   total   block";
         if (m_manual_peers_count) result += "  manual";
-        const std::array<std::string, 3> rows{{"in", "out", "total"}};
+        const std::array rows{"in", "out", "total"};
         for (uint8_t i = 0; i < 3; ++i) {
             result += strprintf("\n%-5s  %5i   %5i   %5i", rows.at(i), m_counts.at(i).at(0), m_counts.at(i).at(1), m_counts.at(i).at(2)); // ipv4/ipv6/onion peers counts
             if (any_i2p_peers) result += strprintf("   %5i", m_counts.at(i).at(3)); // i2p peers count
-            result += strprintf("   %5i", m_counts.at(i).at(m_networks_size)); // total peers count
+            result += strprintf("   %5i", m_counts.at(i).at(m_networks.size())); // total peers count
             if (i == 1) { // the outbound row has two extra columns for block relay and manual peer counts
                 result += strprintf("   %5i", m_block_relay_peers_count);
                 if (m_manual_peers_count) result += strprintf("   %5i", m_manual_peers_count);
