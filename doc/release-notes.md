@@ -36,7 +36,7 @@ This does not affect wallet forward or backward compatibility.
 Widecoin 1.1.0 Change log
 =========================
 
-Block reward rule is adjusted due to the block is only 0.5 minutes and limitation of max supply:
+Block reward rule is adjusted due to the block time is only 0.5 minute and limitation of max supply:
 
 Block Height (BH)
 
