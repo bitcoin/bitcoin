@@ -11,7 +11,6 @@
 #include <coinjoin/coinjoin-server.h>
 #include <rpc/server.h>
 #include <utilstrencodings.h>
-#include <version.h>
 
 #include <univalue.h>
 

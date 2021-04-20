@@ -9,7 +9,6 @@
 #endif // ENABLE_WALLET
 #include <dsnotificationinterface.h>
 #include <governance/governance.h>
-#include <masternode/masternode-payments.h>
 #include <masternode/masternode-sync.h>
 #include <validation.h>
 
@@ -85,12 +84,12 @@ void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& 
 
 void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
 {
-    // TODO: Tempoarily ensure that mempool removals are notified before
+    // TODO: Temporarily ensure that mempool removals are notified before
     // connected transactions.  This shouldn't matter, but the abandoned
     // state of transactions in our wallet is currently cleared when we
     // receive another notification and there is a race condition where
     // notification of a connected conflict might cause an outside process
-    // to abandon a transaction and then have it inadvertantly cleared by
+    // to abandon a transaction and then have it inadvertently cleared by
     // the notification that the conflicted transaction was evicted.
 
     llmq::quorumInstantSendManager->BlockConnected(pblock, pindex, vtxConflicted);
