@@ -81,11 +81,9 @@ class VersionBitsTester
     TestNeverActiveConditionChecker checker_never[CHECKERS];
 
     // Test counter (to identify failures)
-    int num;
+    int num{1000};
 
 public:
-    VersionBitsTester() : num(1000) {}
-
     VersionBitsTester& Reset() {
         // Have each group of tests be counted by the 1000s part, starting at 1000
         num = num - (num % 1000) + 1000;
@@ -257,39 +255,6 @@ BOOST_AUTO_TEST_CASE(versionbits_test)
     }
 }
 
-BOOST_AUTO_TEST_CASE(versionbits_sanity)
-{
-    // Sanity checks of version bit deployments
-    const auto chainParams = CreateChainParams(*m_node.args, CBaseChainParams::MAIN);
-    const Consensus::Params &mainnetParams = chainParams->GetConsensus();
-    for (int i=0; i<(int) Consensus::MAX_VERSION_BITS_DEPLOYMENTS; i++) {
-        uint32_t bitmask = VersionBitsMask(mainnetParams, static_cast<Consensus::DeploymentPos>(i));
-        // Make sure that no deployment tries to set an invalid bit.
-        BOOST_CHECK_EQUAL(bitmask & ~(uint32_t)VERSIONBITS_TOP_MASK, bitmask);
-
-        // Check min_activation_height is on a retarget boundary
-        BOOST_CHECK_EQUAL(mainnetParams.vDeployments[i].min_activation_height % mainnetParams.nMinerConfirmationWindow, 0);
-        // Check min_activation_height is 0 for ALWAYS_ACTIVE and never active deployments
-        if (mainnetParams.vDeployments[i].nStartTime == Consensus::BIP9Deployment::ALWAYS_ACTIVE || mainnetParams.vDeployments[i].nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE) {
-            BOOST_CHECK_EQUAL(mainnetParams.vDeployments[i].min_activation_height, 0);
-        }
-
-        // Verify that the deployment windows of different deployment using the
-        // same bit are disjoint.
-        // This test may need modification at such time as a new deployment
-        // is proposed that reuses the bit of an activated soft fork, before the
-        // end time of that soft fork.  (Alternatively, the end time of that
-        // activated soft fork could be later changed to be earlier to avoid
-        // overlap.)
-        for (int j=i+1; j<(int) Consensus::MAX_VERSION_BITS_DEPLOYMENTS; j++) {
-            if (VersionBitsMask(mainnetParams, static_cast<Consensus::DeploymentPos>(j)) == bitmask) {
-                BOOST_CHECK(mainnetParams.vDeployments[j].nStartTime > mainnetParams.vDeployments[i].nTimeout ||
-                        mainnetParams.vDeployments[i].nStartTime > mainnetParams.vDeployments[j].nTimeout);
-            }
-        }
-    }
-}
-
 /** Check that ComputeBlockVersion will set the appropriate bit correctly */
 static void check_computeblockversion(const Consensus::Params& params, Consensus::DeploymentPos dep)
 {
@@ -305,16 +270,25 @@ static void check_computeblockversion(const Consensus::Params& params, Consensus
     BOOST_CHECK_EQUAL(ComputeBlockVersion(nullptr, params), VERSIONBITS_TOP_BITS);
 
     // always/never active deployments shouldn't need to be tested further
-    if (nStartTime == Consensus::BIP9Deployment::ALWAYS_ACTIVE) return;
-    if (nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE) return;
+    if (nStartTime == Consensus::BIP9Deployment::ALWAYS_ACTIVE ||
+        nStartTime == Consensus::BIP9Deployment::NEVER_ACTIVE)
+    {
+        BOOST_CHECK_EQUAL(min_activation_height, 0);
+        return;
+    }
 
     BOOST_REQUIRE(nStartTime < nTimeout);
     BOOST_REQUIRE(nStartTime >= 0);
     BOOST_REQUIRE(nTimeout <= std::numeric_limits<uint32_t>::max() || nTimeout == Consensus::BIP9Deployment::NO_TIMEOUT);
     BOOST_REQUIRE(0 <= bit && bit < 32);
+    // Make sure that no deployment tries to set an invalid bit.
     BOOST_REQUIRE(((1 << bit) & VERSIONBITS_TOP_MASK) == 0);
     BOOST_REQUIRE(min_activation_height >= 0);
-    BOOST_REQUIRE_EQUAL(min_activation_height % params.nMinerConfirmationWindow, 0);
+    // Check min_activation_height is on a retarget boundary
+    BOOST_REQUIRE_EQUAL(min_activation_height % params.nMinerConfirmationWindow, 0U);
+
+    const uint32_t bitmask{VersionBitsMask(params, dep)};
+    BOOST_CHECK_EQUAL(bitmask, uint32_t{1} << bit);
 
     // In the first chain, test that the bit is set by CBV until it has failed.
     // In the second chain, test the bit is set by CBV while STARTED and
@@ -443,8 +417,18 @@ BOOST_AUTO_TEST_CASE(versionbits_computeblockversion)
     // ACTIVE and FAILED states in roughly the way we expect
     for (const auto& chain_name : {CBaseChainParams::MAIN, CBaseChainParams::TESTNET, CBaseChainParams::SIGNET, CBaseChainParams::REGTEST}) {
         const auto chainParams = CreateChainParams(*m_node.args, chain_name);
+        uint32_t chain_all_vbits{0};
         for (int i = 0; i < (int)Consensus::MAX_VERSION_BITS_DEPLOYMENTS; ++i) {
-            check_computeblockversion(chainParams->GetConsensus(), static_cast<Consensus::DeploymentPos>(i));
+            const auto dep = static_cast<Consensus::DeploymentPos>(i);
+            // Check that no bits are re-used (within the same chain). This is
+            // disallowed because the transition to FAILED (on timeout) does
+            // not take precedence over STARTED/LOCKED_IN. So all softforks on
+            // the same bit might overlap, even when non-overlapping start-end
+            // times are picked.
+            const uint32_t dep_mask{VersionBitsMask(chainParams->GetConsensus(), dep)};
+            BOOST_CHECK(!(chain_all_vbits & dep_mask));
+            chain_all_vbits |= dep_mask;
+            check_computeblockversion(chainParams->GetConsensus(), dep);
         }
     }
 
