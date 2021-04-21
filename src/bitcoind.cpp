@@ -22,7 +22,9 @@
 #include <util/translation.h>
 
 #include <functional>
+
 #include <omnicore/utilsui.h>
+#include <omnicore/version.h>
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 
@@ -60,7 +62,7 @@ static bool AppInit(int argc, char* argv[])
 
     // Process help and version before taking care about datadir
     if (HelpRequested(gArgs) || gArgs.IsArgSet("-version")) {
-        std::string strUsage = PACKAGE_NAME " version " + FormatFullVersion() + "\n";
+        std::string strUsage = PACKAGE_NAME " version " + OmniCoreVersion() + "\n";
 
         if (gArgs.IsArgSet("-version"))
         {

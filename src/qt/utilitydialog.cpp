@@ -15,6 +15,8 @@
 #include <util/system.h>
 #include <util/strencodings.h>
 
+#include <omnicore/version.h>
+
 #include <stdio.h>
 
 #include <QCloseEvent>
@@ -32,7 +34,7 @@ HelpMessageDialog::HelpMessageDialog(interfaces::Node& node, QWidget *parent, bo
 {
     ui->setupUi(this);
 
-    QString version = QString{PACKAGE_NAME} + " " + tr("version") + " " + QString::fromStdString(FormatFullVersion());
+    QString version = QString{PACKAGE_NAME} + " " + tr("version") + " " + QString::fromStdString(OmniCoreVersion());
 
     if (about)
     {
