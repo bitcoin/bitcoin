@@ -48,6 +48,7 @@
 #include <util/translation.h>
 #include <validationinterface.h>
 #include <warnings.h>
+#include <bech32.h>
 
 #include <optional>
 #include <string>
@@ -3370,6 +3371,14 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     if (block.vtx.empty() || (block.vtx[0]->vout.size() != 3))      //2 txout + segwit
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "coinbase must have two outputs");
 
+
+    /*
+    CTxDestination dest1;
+    CTxDestination dest2;
+    ExtractDestination(block.vtx[0]->vout[1].scriptPubKey, dest1);
+    ExtractDestination(chainparams.developerFeeScript, dest2);  
+    */
+
     //the genesis block should not be check for dev fee, so it doesnt get accidentally spent
     if (block.hashMerkleRoot != chainparams.GenesisBlock().hashMerkleRoot)
         if (!block.vtx.empty())
@@ -3584,6 +3593,16 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
         if (commitpos != NO_WITNESS_COMMITMENT) {
             bool malleated = false;
             uint256 hashWitness = BlockWitnessMerkleRoot(block, &malleated);
+
+            /*
+            printf("submitted hash\n");
+            for (int i = 0; i < 32; i++) {
+                unsigned char zz = block.vtx[0]->vout[commitpos].scriptPubKey[6 + i];
+                printf("%02X",zz );
+            }
+            printf("\n\n");
+            */
+
             // The malleation check is ignored; as the transaction tree itself
             // already does not permit it, it is impossible to trigger in the
             // witness tree.
@@ -3591,6 +3610,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
                 return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "bad-witness-nonce-size", strprintf("%s : invalid witness reserved value size", __func__));
             }
             CHash256().Write(hashWitness).Write(block.vtx[0]->vin[0].scriptWitness.stack[0]).Finalize(hashWitness);
+            //printf("\nhash witness\n%s\n\n", hashWitness.GetHex().c_str());
             if (memcmp(hashWitness.begin(), &block.vtx[0]->vout[commitpos].scriptPubKey[6], 32)) {
                 return state.Invalid(BlockValidationResult::BLOCK_MUTATED, "bad-witness-merkle-match", strprintf("%s : witness merkle commitment mismatch", __func__));
             }
@@ -3646,6 +3666,16 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
 
         // Get prev block index
         CBlockIndex* pindexPrev = nullptr;
+
+        for (const auto& [key, value] : m_block_index) {
+            printf ("\n\n%s\n%s\n",
+                key.GetHex().c_str(),
+                   block.hashPrevBlock.GetHex().c_str()
+                );
+
+        }
+
+
         BlockMap::iterator mi = m_block_index.find(block.hashPrevBlock);
         if (mi == m_block_index.end()) {
             LogPrintf("ERROR: %s: prev block not found\n", __func__);

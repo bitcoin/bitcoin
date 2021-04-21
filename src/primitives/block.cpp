@@ -19,35 +19,41 @@ uint256 CBlockHeader::GetHash() const
 
     unsigned char* headerData = (unsigned char*)malloc(sizeof(*this));
 
+    unsigned char strPrevBlock[32];
+    memcpy(strPrevBlock, hashPrevBlock.data(), 32);
+    for (int i = 0; i < 16; i++) {
+        unsigned char swap = strPrevBlock[i];
+        strPrevBlock[i] = strPrevBlock[31 - i];
+        strPrevBlock[31 - i] = swap;
+    }
+
+
     memcpy(headerData, &nVersion, 4);
-    memcpy(headerData + 4, hashPrevBlock.data(), 32);
+    //memcpy(headerData + 4, hashPrevBlock.data(), 32);
+    memcpy(headerData + 4, strPrevBlock, 32);
     memcpy(headerData + 36, hashMerkleRoot.data(), 32);
     memcpy(headerData + 68, &nTime, 4);
     memcpy(headerData + 72, &nBits, 4);
     memcpy(headerData + 76, &nNonce, 4);
 
     /*
+    printf("\n");
     for (int i = 0; i < 80; i++)
         printf("%02X", headerData[i]);
     printf("\n");
     */
 
-    uint256 resultLE;
 
+    uint256 resultLE;
     ctx.Write(headerData, 80);
     ctx.Finalize(resultLE.begin());
-    
     uint256 resultBE;
     for (int i = 0; i < 32; i++)
         resultBE.data()[i] = resultLE.data()[31 - i];
 
-    //printf("%s", resultBE.GetHex().c_str());
-
     free(headerData);
 
     return resultBE;
-
-    //return SerializeHash(*this);
 }
 
 std::string CBlock::ToString() const
