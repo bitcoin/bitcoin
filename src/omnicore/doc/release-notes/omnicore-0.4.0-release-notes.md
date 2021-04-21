@@ -113,7 +113,7 @@ When, due to whatever reason, a rescan of Omni Layer transactions is triggered d
 Add system for random database consistency checks
 -----------------------------------------
 
-During startup, the existence of a collection of historical transactions is checked to detect DB inconsistencies. In this case, all Omni Layer transcations are rescaned during the start.
+During startup, the existence of a collection of historical transactions is checked to detect DB inconsistencies. In this case, all Omni Layer transcations are rescanned during the start.
 
 
 Add checkpoint for block 562708

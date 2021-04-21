@@ -3,7 +3,7 @@ Omni Core v0.7.1
 
 Omni Core 0.7.1 paves the way for trading any asset on the Omni Layer for Bitcoin in a decentralized fashion. It adds new commands to accept and execute orders on the distributed exchange.
 
-Please note, if you have not yet upgrade from 0.6 or earlier versions: Omni Core 0.7 changed the code base of Omni Core from Bitcoin Core 0.13.2 to Bitcoin Core 0.18.1. Once consensus affecting features are enabled, this version is no longer compatible with previous versions and an upgrade is required. Due to the upgrade from Bitcoin Core 0.13.2 to 0.18.1, this version incooperates many changes, so please take your time to read through all previous release notes carefully. The first time you upgrade from Omni Core 0.6 or older versions, the database is reconstructed, which can easily consume several hours. An upgrade from 0.7 to 0.7.1 is seamless.
+Please note, if you have not yet upgrade from 0.6 or earlier versions: Omni Core 0.7 changed the code base of Omni Core from Bitcoin Core 0.13.2 to Bitcoin Core 0.18.1. Once consensus affecting features are enabled, this version is no longer compatible with previous versions and an upgrade is required. Due to the upgrade from Bitcoin Core 0.13.2 to 0.18.1, this version incorporates many changes, so please take your time to read through all previous release notes carefully. The first time you upgrade from Omni Core 0.6 or older versions, the database is reconstructed, which can easily consume several hours. An upgrade from 0.7 to 0.7.1 is seamless.
 
 Please report bugs using the issue tracker on GitHub:
 

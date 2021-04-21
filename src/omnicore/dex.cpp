@@ -192,7 +192,7 @@ int DEx_offerCreate(const std::string& addressSeller, uint32_t propertyId, int64
     int rc = DEX_ERROR_SELLOFFER;
 
     // sanity checks
-    // shold not be removed, because it may be used when updating/destroying an offer
+    // should not be removed, because it may be used when updating/destroying an offer
     if (paymentWindow == 0) {
         return (DEX_ERROR_SELLOFFER -101);
     }

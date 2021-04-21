@@ -37,6 +37,9 @@ bool fLogIPs = DEFAULT_LOGIPS;
 /** Flag to indicate, whether the Omni Core log file should be reopened. */
 std::atomic<bool> fReopenOmniCoreLog(false);
 
+/** override to print to omni log to console */
+std::atomic<bool> fOmniCoreConsoleLog(false);
+
 static int FileWriteStr(const std::string &str, FILE *fp)
 {
     return fwrite(str.data(), 1, str.size(), fp);

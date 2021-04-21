@@ -437,7 +437,7 @@ static int write_state_file(const CBlockIndex* pBlockIndex, int what)
             break;
     }
 
-    // generate and wite the double hash of all the contents written
+    // generate and write the double hash of all the contents written
     uint256 hash;
     hasher.Finalize(hash.begin());
     file << "!" << hash.ToString() << std::endl;
@@ -652,7 +652,7 @@ int RestoreInMemoryState(const std::string& filename, int what, bool verifyHash)
     file.close();
 
     if (verifyHash && res == 0) {
-        // generate and wite the double hash of all the contents written
+        // generate and write the double hash of all the contents written
         uint256 hash;
         hasher.Finalize(hash.begin());
 

@@ -16,7 +16,7 @@ class OmniFreeDExSpec(BitcoinTestFramework):
     def run_test(self):
         self.log.info("test dex spec using free dex")
 
-        # Create varaibles that will remain unchanged
+        # Create variables that will remain unchanged
         stdBlockSpan = 10
         stdCommitFee = "0.00010000"
         actionNew = 1
@@ -148,7 +148,7 @@ class OmniFreeDExSpec(BitcoinTestFramework):
 
         # The amount offered for sale is reserved from the available balance
 
-        # Setup varaibles
+        # Setup variables
         startBTC = 0.1
         startMSC = "100"
         amountOffered = "90.00000000"
@@ -185,7 +185,7 @@ class OmniFreeDExSpec(BitcoinTestFramework):
 
         # Receiving tokens doesn't increase the offered amount of a published offer
 
-        # Setup varaibles
+        # Setup variables
         startBTC = 0.1
         startMSC = "2.5"
         offerMSC = "90.00000000"
@@ -246,7 +246,7 @@ class OmniFreeDExSpec(BitcoinTestFramework):
 
         # There can be only one active offer that accepts BTC
 
-        # Setup varaibles
+        # Setup variables
         startBTC = 0.1
         startMSC = "2.5"
         firstOfferMSC = "1"
@@ -283,7 +283,7 @@ class OmniFreeDExSpec(BitcoinTestFramework):
 
         # An offer can be updated with action = 2 (update), and cancelled with action = 3 (cancel)
 
-        # Setup varaibles
+        # Setup variables
         startBTC = 0.1
         startMSC = "1.0"
         offeredMSC = "0.50000000"
@@ -349,7 +349,7 @@ class OmniFreeDExSpec(BitcoinTestFramework):
 
         # An offer can be accepted with an accept transaction of type 22
 
-        # Setup varaibles
+        # Setup variables
         startBTC = 0.1
         startMSC = "0.1"
         offeredMSC = "0.05000000"

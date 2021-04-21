@@ -1,23 +1,128 @@
-task:
-  name: "x86_64 Linux  [GOAL: install]  [bionic]  [Using ./ci/ system]"
-  container:
-    image: ubuntu:18.04
-    cpu: 8
-    memory: 8G
-  timeout_in: 60m
-  env:
-    MAKEJOBS: "-j9"
-    DANGER_RUN_CI_ON_HOST: "1"
-    TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
-    CCACHE_SIZE: "200M"
-    CCACHE_DIR: "/tmp/ccache_dir"
+### Global defaults
+
+timeout_in: 120m  # https://cirrus-ci.org/faq/#instance-timed-out
+container:
+  # https://cirrus-ci.org/faq/#are-there-any-limits
+  # Each project has 16 CPU in total, assign 2 to each container, so that 8 tasks run in parallel
+  cpu: 2
+  memory: 8G  # Set to 8GB to avoid OOM. https://cirrus-ci.org/guide/linux/#linux-containers
+  kvm: true  # Use kvm to avoid spurious CI failures in the default virtualization cluster, see https://github.com/bitcoin/bitcoin/issues/20093
+env:
+  PACKAGE_MANAGER_INSTALL: "apt-get update && apt-get install -y"
+  MAKEJOBS: "-j4"
+  DANGER_RUN_CI_ON_HOST: "1"  # Containers will be discarded after the run, so there is no risk that the ci scripts modify the system
+  TEST_RUNNER_PORT_MIN: "14000"  # Must be larger than 12321, which is used for the http cache. See https://cirrus-ci.org/guide/writing-tasks/#http-cache
+  CCACHE_SIZE: "200M"
+  CCACHE_DIR: "/tmp/ccache_dir"
+
+### Base template
+# https://cirrus-ci.org/guide/tips-and-tricks/#sharing-configuration-between-tasks
+base_template: &BASE_TEMPLATE
+  skip: $CIRRUS_REPO_FULL_NAME == "bitcoin-core/gui" && $CIRRUS_PR == "" # No need to run on the read-only mirror, unless it is a PR. https://cirrus-ci.org/guide/writing-tasks/#conditional-task-execution
+  merge_base_script:
+    - if [ "$CIRRUS_PR" = "" ]; then exit 0; fi
+    - bash -c "$PACKAGE_MANAGER_INSTALL git"
+    - git fetch $CIRRUS_REPO_CLONE_URL $CIRRUS_BASE_BRANCH
+    - git config --global user.email "ci@ci.ci"
+    - git config --global user.name "ci"
+    - git merge FETCH_HEAD  # Merge base to detect silent merge conflicts
+
+### Global task template
+global_task_template: &GLOBAL_TASK_TEMPLATE
+  << : *BASE_TEMPLATE
   ccache_cache:
     folder: "/tmp/ccache_dir"
   depends_built_cache:
     folder: "/tmp/cirrus-ci-build/depends/built"
-  install_script:
-    - apt-get update
-    - apt-get -y install git bash ccache
-    - ccache --max-size=${CCACHE_SIZE}
+  depends_sdk_cache:
+    folder: "/tmp/cirrus-ci-build/depends/sdk-sources"
+  depends_releases_cache:
+    folder: "/tmp/cirrus-ci-build/releases"
   ci_script:
     - ./ci/test_run_all.sh
+
+#task:
+#  name: "Windows"
+#  windows_container:
+#    image: cirrusci/windowsservercore:2019
+#  env:
+#    CIRRUS_SHELL: powershell
+#    PATH: 'C:\Python37;C:\Python37\Scripts;%PATH%'
+#    PYTHONUTF8: 1
+#    QT_DOWNLOAD_URL: 'https://github.com/sipsorcery/qt_win_binary/releases/download/v1.6/Qt5.9.8_x64_static_vs2019.zip'
+#    QT_DOWNLOAD_HASH: '9a8c6eb20967873785057fdcd329a657c7f922b0af08c5fde105cc597dd37e21'
+#    QT_LOCAL_PATH: 'C:\Qt5.9.8_x64_static_vs2019'
+#    VCPKG_INSTALL_PATH: 'C:\tools\vcpkg\installed'
+#    VCPKG_COMMIT_ID: 'ed0df8ecc4ed7e755ea03e18aaf285fd9b4b4a74'
+#  install_script:
+#    - choco install python --version=3.7.7 -y
+
+task:
+  name: 'lint'
+  << : *BASE_TEMPLATE
+  container:
+    image: ubuntu:bionic # For python 3.6, oldest supported version according to doc/dependencies.md
+  # For faster CI feedback, immediately schedule the linters. https://cirrus-ci.org/pricing/#compute-credits
+  use_compute_credits: $CIRRUS_REPO_FULL_NAME == 'OmniLayer/omnicore'
+  lint_script:
+    - ./ci/lint_run_all.sh
+
+task:
+  name: 'ARM [unit tests, no functional tests] [buster]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: debian:buster
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_arm.sh"
+
+task:
+  name: 'Win64 [unit tests, no gui tests, no boost::process, no functional tests] [focal]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:focal
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_win64.sh"
+
+task:
+  name: '[previous releases, uses qt5 dev package and some depends packages] [unsigned char] [bionic]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:bionic
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_native_qt5.sh"
+
+task:
+  name: '[no depends, only system libx, sanitizers: thread (TSan), no wallet] [xenial]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:xenial
+    cpu: 6 # Increase CPU and Memory to avoid timeout
+    memory: 24G
+  env:
+    MAKEJOBS: "-j8"
+    FILE_ENV: "./ci/test/00_setup_env_native_tsan.sh"
+
+task:
+  name: '[no wallet] [bionic]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:bionic
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_native_nowallet.sh"
+
+task:
+  name: 'macOS 10.14 [gui, no tests] [bionic]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:bionic
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_mac.sh"
+
+task:
+  name: '[omnij] [bionic]'
+  << : *GLOBAL_TASK_TEMPLATE
+  container:
+    image: ubuntu:bionic
+  env:
+    FILE_ENV: "./ci/test/00_setup_env_native_omnij.sh"
+

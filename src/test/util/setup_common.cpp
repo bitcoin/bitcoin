@@ -74,6 +74,9 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     SelectParams(chainName);
     SeedInsecureRand();
     gArgs.ForceSetArg("-printtoconsole", "0");
+#ifdef WIN32
+    fOmniCoreConsoleLog = true;
+#endif
     if (G_TEST_LOG_FUN) LogInstance().PushBackCallback(G_TEST_LOG_FUN);
     InitLogging();
     LogInstance().StartLogging();
@@ -150,11 +153,11 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
 
 TestingSetup::~TestingSetup()
 {
-    mastercore_shutdown();
     if (m_node.scheduler) m_node.scheduler->stop();
     threadGroup.interrupt_all();
     threadGroup.join_all();
     GetMainSignals().FlushBackgroundCallbacks();
+    mastercore_shutdown();
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     g_rpc_node = nullptr;
     m_node.connman.reset();

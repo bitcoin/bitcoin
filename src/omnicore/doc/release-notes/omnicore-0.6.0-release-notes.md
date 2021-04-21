@@ -3,7 +3,7 @@ Omni Core v0.6.0
 
 v0.6.0 is a major release and changes the code base of Omni Core from Bitcoin Core 0.13.2 to Bitcoin Core 0.18.1. No Omni Layer consensus rules were changed and the consensus behavior of this version is identidcal with Omni Core v0.5.0. An upgrade is **not required**, but recommended in an experimental environment.
 
-**Due to the upgrade from Bitcoin Core 0.13.2 to 0.18.1, this version incooperates many changes, so please take your time to read through all release notes carefully. The first time you run this version, all the database is reconstructed, which can easily consume several hours.**
+**Due to the upgrade from Bitcoin Core 0.13.2 to 0.18.1, this version incorporates many changes, so please take your time to read through all release notes carefully. The first time you run this version, all the database is reconstructed, which can easily consume several hours.**
 
 To avoid downtime of your system, running both versions on two instances is recommended and once v0.6.0 is up-to-date and it's behavior was confirmed to work, a hot swap may be done.
 

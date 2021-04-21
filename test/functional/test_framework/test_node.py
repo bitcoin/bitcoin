@@ -483,7 +483,7 @@ class TestNode():
             # transaction that will be added to the mempool as soon as we return here.
             #
             # So syncing here is redundant when we only want to send a message, but the cost is low (a few milliseconds)
-            # in comparision to the upside of making tests less fragile and unexpected intermittent errors less likely.
+            # in comparison to the upside of making tests less fragile and unexpected intermittent errors less likely.
             p2p_conn.sync_with_ping()
 
         return p2p_conn

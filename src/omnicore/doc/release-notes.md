@@ -5,7 +5,7 @@ v0.10.0 is a major release and updates the underlying version of Bitcoin Core fr
 
 While this release is not mandatory and doesn't change the consensus rules of the Omni Layer protocol, an upgrade is nevertheless recommended.
 
-**Due to the upgrade from Bitcoin Core 0.18.1 to 0.20.1, this version incooperates many changes, so please take your time to read through all release notes carefully.**
+**Due to the upgrade from Bitcoin Core 0.18.1 to 0.20.1, this version incorporates many changes, so please take your time to read through all release notes carefully.**
 
 Upgrading from 0.9.0, 0.8.2, 0.8.1 or 0.8.0 does not require a rescan and can be done very fast without interruption.
 

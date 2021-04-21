@@ -148,7 +148,7 @@ static std::string GetTimestamp()
 int LogFilePrint(const std::string& str)
 {
     int ret = 0; // Number of characters written
-    if (LogInstance().m_print_to_console) {
+    if (LogInstance().m_print_to_console || fOmniCoreConsoleLog) {
         // Print to console
         ret = ConsolePrint(str);
     }

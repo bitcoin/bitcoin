@@ -3823,7 +3823,7 @@ bool CWallet::Verify(interfaces::Chain& chain, const WalletLocation& location, b
     }
 
     if (salvage_wallet) {
-        // Recover readable keypairs:
+        // Recover readable key pairs:
         CWallet dummyWallet(&chain, WalletLocation(), WalletDatabase::CreateDummy());
         std::string backup_filename;
         // Even if we don't use this lock in this function, we want to preserve

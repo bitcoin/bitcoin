@@ -195,7 +195,7 @@ The following list includes relevant pull requests merged into this release:
 - #1102 Fix parsing of redeemkey of omni_createrawtx_multisig
 - #1103 Fix typo: depreciated -> deprecated
 - #1114 Split string to maintain property ID
-- #1115 Add seperate RPCs for each DEx 1 action
+- #1115 Add separate RPCs for each DEx 1 action
 - #1116 Bump version to Omni Core 0.8.2
 - #1118 Add error text for omni_decodetransaction, when inputs are missing
 - #1119 Add more information when listing tokens
