@@ -19,6 +19,7 @@
 #include <net.h>
 #include <node/context.h>
 #include <rpc/blockchain.h>
+#include <rpc/net.h>
 #include <rpc/server.h>
 #include <rpc/util.h>
 #include <scheduler.h>
@@ -213,15 +214,13 @@ static RPCHelpMan sporkupdate()
     }
 
     const NodeContext& node = EnsureAnyNodeContext(request.context);
-    if (!node.connman) {
-        throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-    }
+    CConnman& connman = EnsureConnman(node);
 
     // SPORK VALUE
     int64_t nValue = request.params[1].get_int64();
 
     // broadcast new spork
-    if (node.sporkman->UpdateSpork(nSporkID, nValue, *node.connman)) {
+    if (node.sporkman->UpdateSpork(nSporkID, nValue, connman)) {
         return "success";
     }
 
