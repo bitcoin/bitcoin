@@ -335,7 +335,11 @@ void addDisconnectedPopdata(const altintegration::PopData& popData) EXCLUSIVE_LO
 
 bool isPopEnabled()
 {
-    return isPopEnabled(ChainActive().Tip()->nHeight);
+    auto* tip = ChainActive().Tip();
+    if (tip != nullptr) {
+        return isPopEnabled(tip->nHeight);
+    }
+    return false;
 }
 
 bool isPopEnabled(int32_t height)
