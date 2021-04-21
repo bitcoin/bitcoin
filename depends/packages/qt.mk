@@ -173,7 +173,6 @@ $(package)_config_opts_armv7a_android += -android-arch armeabi-v7a
 $(package)_config_opts_x86_64_android += -android-arch x86_64
 $(package)_config_opts_i686_android += -android-arch i686
 
-$(package)_build_env  = QT_RCC_TEST=1
 $(package)_build_env += QT_RCC_SOURCE_DATE_OVERRIDE=1
 endef
 
