@@ -15,7 +15,7 @@ node[0] mines pop tx in block 101 (fork A tip)
 Pop is disabled before block 200 therefore can't handle Pop data
 """
 
-from test_framework.pop import endorse_block, create_endorsed_chain, mine_until_pop_enabled
+from test_framework.pop import endorse_block, create_endorsed_chain, mine_until_pop_active
 from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -63,7 +63,7 @@ class PopActivate(BitcoinTestFramework):
         self.sync_all()
         disconnect_nodes(self.nodes[1], 0)
 
-        mine_until_pop_enabled(self.nodes[0])
+        mine_until_pop_active(self.nodes[0])
         lastblock = self.nodes[0].getblockcount()
 
         # endorse block 200 (fork A tip)

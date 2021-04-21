@@ -8,7 +8,7 @@
 
 # Avoid wildcard * imports
 from test_framework.messages import ser_uint256, deser_uint256, uint256_from_str
-from test_framework.pop import mine_until_pop_enabled, PopMiningContext, ContextInfoContainer, \
+from test_framework.pop import mine_until_pop_active, PopMiningContext, ContextInfoContainer, \
     _calculateTopLevelMerkleRoot
 from test_framework.blocktools import (create_block, create_coinbase)
 from test_framework.mininode import (
@@ -30,7 +30,7 @@ class PoPMerkleRootTest(BitcoinTestFramework):
         self.add_nodes(self.num_nodes)
         self.start_node(0)
         # POP should be enabled because merkle root calculation differs for non-POP blocks
-        mine_until_pop_enabled(self.nodes[0])
+        mine_until_pop_active(self.nodes[0])
         self.popctx = PopMiningContext(self.nodes[0])
 
     def _check_algorithm_sanity(self):

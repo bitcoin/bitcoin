@@ -11,7 +11,7 @@ from test_framework.messages import ToHex
 from test_framework.mininode import P2PInterface, mininode_lock
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, wait_until
-from test_framework.pop import mine_until_pop_enabled, PopMiningContext
+from test_framework.pop import mine_until_pop_active, PopMiningContext
 
 
 class P2PStoreTxInvs(P2PInterface):
@@ -34,7 +34,7 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         self.skip_if_no_wallet()
 
     def run_test(self):
-        mine_until_pop_enabled(self.nodes[0])
+        mine_until_pop_active(self.nodes[0])
         node = self.nodes[0]  # alias
         self.popctx = PopMiningContext(self.nodes[0])
 

@@ -10,7 +10,7 @@ from test_framework.mininode import (
     P2PInterface,
     msg_get_atv,
 )
-from test_framework.pop import endorse_block, mine_until_pop_enabled
+from test_framework.pop import endorse_block, mine_until_pop_active
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     connect_nodes, assert_equal,
@@ -84,7 +84,7 @@ class PopP2P(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()
 
-        mine_until_pop_enabled(self.nodes[0])
+        mine_until_pop_active(self.nodes[0])
         connect_nodes(self.nodes[0], 1)
         self.sync_all(self.nodes)
 
