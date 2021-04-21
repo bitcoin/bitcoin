@@ -1046,7 +1046,7 @@ public:
     void ReleaseNodeVector(const std::vector<CNode*>& vecNodes);
 
     // Addrman functions
-    std::vector<CAddress> GetAddresses(size_t max_addresses, size_t max_pct);
+    std::vector<CAddress> GetAddresses(size_t max_addresses, size_t max_pct) const;
     /**
      * Cache is used to minimize topology leaks, so it should
      * be used for all non-trusted calls, for example, p2p.
@@ -1058,7 +1058,7 @@ public:
     // This allows temporarily exceeding m_max_outbound_full_relay, with the goal of finding
     // a peer that is better than all our current peers.
     void SetTryNewOutboundPeer(bool flag);
-    bool GetTryNewOutboundPeer();
+    bool GetTryNewOutboundPeer() const;
 
     void StartExtraBlockRelayPeers() {
         LogPrint(BCLog::NET, "net: enabling extra block-relay-only peers\n");
@@ -1071,9 +1071,9 @@ public:
     // return a value less than (num_outbound_connections - num_outbound_slots)
     // in cases where some outbound connections are not yet fully connected, or
     // not yet fully disconnected.
-    int GetExtraFullOutboundCount();
+    int GetExtraFullOutboundCount() const;
     // Count the number of block-relay-only peers we have over our limit.
-    int GetExtraBlockRelayCount();
+    int GetExtraBlockRelayCount() const;
 
     bool AddNode(const std::string& node);
     bool RemoveAddedNode(const std::string& node);
@@ -1090,7 +1090,7 @@ public:
     bool IsMasternodeQuorumRelayMember(const uint256& protxHash);
     void AddPendingProbeConnections(const std::set<uint256>& proTxHashes);
     size_t GetMaxOutboundNodeCount();
-    std::vector<AddedNodeInfo> GetAddedNodeInfo();
+    std::vector<AddedNodeInfo> GetAddedNodeInfo() const;
 
     /**
      * Attempts to open a connection. Currently only used from tests.
@@ -1105,8 +1105,8 @@ public:
      */
     bool AddConnection(const std::string& address, ConnectionType conn_type);
 
-    size_t GetNodeCount(ConnectionDirection);
-    void GetNodeStats(std::vector<CNodeStats>& vstats);
+    size_t GetNodeCount(ConnectionDirection) const;
+    void GetNodeStats(std::vector<CNodeStats>& vstats) const;
     bool DisconnectNode(const std::string& node);
     bool DisconnectNode(const CSubNet& subnet);
     bool DisconnectNode(const CNetAddr& addr);
@@ -1120,24 +1120,24 @@ public:
     //! that peer during `net_processing.cpp:PushNodeVersion()`.
     ServiceFlags GetLocalServices() const;
 
-    uint64_t GetMaxOutboundTarget();
-    std::chrono::seconds GetMaxOutboundTimeframe();
+    uint64_t GetMaxOutboundTarget() const;
+    std::chrono::seconds GetMaxOutboundTimeframe() const;
 
     //! check if the outbound target is reached
     //! if param historicalBlockServingLimit is set true, the function will
     //! response true if the limit for serving historical blocks has been reached
-    bool OutboundTargetReached(bool historicalBlockServingLimit);
+    bool OutboundTargetReached(bool historicalBlockServingLimit) const;
 
     //! response the bytes left in the current max outbound cycle
     //! in case of no limit, it will always response 0
-    uint64_t GetOutboundTargetBytesLeft();
+    uint64_t GetOutboundTargetBytesLeft() const;
 
     //! returns the time left in the current max outbound cycle
     //! in case of no limit, it will always return 0
-    std::chrono::seconds GetMaxOutboundTimeLeftInCycle();
+    std::chrono::seconds GetMaxOutboundTimeLeftInCycle() const;
 
-    uint64_t GetTotalBytesRecv();
-    uint64_t GetTotalBytesSent();
+    uint64_t GetTotalBytesRecv() const;
+    uint64_t GetTotalBytesSent() const;
 
     /** Get a unique deterministic randomizer. */
     CSipHasher GetDeterministicRandomizer(uint64_t id) const;
@@ -1245,8 +1245,8 @@ private:
     // static bool NodeFullyConnected(const CNode* pnode);
 
     // Network usage totals
-    RecursiveMutex cs_totalBytesRecv;
-    RecursiveMutex cs_totalBytesSent;
+    mutable RecursiveMutex cs_totalBytesRecv;
+    mutable RecursiveMutex cs_totalBytesSent;
     uint64_t nTotalBytesRecv GUARDED_BY(cs_totalBytesRecv) {0};
     uint64_t nTotalBytesSent GUARDED_BY(cs_totalBytesSent) {0};
 
@@ -1272,7 +1272,7 @@ private:
     std::deque<std::string> m_addr_fetches GUARDED_BY(m_addr_fetches_mutex);
     RecursiveMutex m_addr_fetches_mutex;
     std::vector<std::string> vAddedNodes GUARDED_BY(cs_vAddedNodes);
-    RecursiveMutex cs_vAddedNodes;
+    mutable RecursiveMutex cs_vAddedNodes;
     // SYSCOIN
     std::vector<uint256> vPendingMasternodes GUARDED_BY(cs_vPendingMasternodes);
     std::map<std::pair<uint8_t, uint256>, std::set<uint256>> masternodeQuorumNodes GUARDED_BY(cs_vPendingMasternodes);
