@@ -18,7 +18,6 @@ extern RecursiveMutex cs_main;
 
 class CBlock;
 class CBlockIndex;
-class CBlockPolicyEstimator;
 class CChainState;
 class CTxMemPool;
 class ChainstateManager;
@@ -52,14 +51,6 @@ UniValue blockheaderToJSON(const CBlockIndex* tip, const CBlockIndex* blockindex
 
 /** Used by getblockstats to get feerates at different percentiles by weight  */
 void CalculatePercentilesByWeight(CAmount result[NUM_GETBLOCKSTATS_PERCENTILES], std::vector<std::pair<CAmount, int64_t>>& scores, int64_t total_weight);
-
-NodeContext& EnsureAnyNodeContext(const std::any& context);
-CTxMemPool& EnsureMemPool(const NodeContext& node);
-CTxMemPool& EnsureAnyMemPool(const std::any& context);
-ChainstateManager& EnsureChainman(const NodeContext& node);
-ChainstateManager& EnsureAnyChainman(const std::any& context);
-CBlockPolicyEstimator& EnsureFeeEstimator(const NodeContext& node);
-CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context);
 
 /**
  * Helper to create UTXO snapshots given a chainstate and a file handle.
