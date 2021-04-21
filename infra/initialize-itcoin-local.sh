@@ -103,7 +103,11 @@ errecho "Address ${ADDR} generated"
 # Ask the miner to send bitcoins to that address. Being the first block in the
 # chain, we need to choose a date. We'll use "-1", which means "current time".
 errecho "Mine the first block"
-"${MINER}" --cli="${BITCOIN_CLI} -datadir=${DATADIR}" generate --address "${ADDR}" --grind-cmd="${BITCOIN_UTIL} grind" --min-nbits --set-block-time -1
+
+TIME_SHIFT="${1:-120}"
+BLOCK_1_DATE=$(date --date "-${TIME_SHIFT} min" '+%s')
+
+"${MINER}" --cli="${BITCOIN_CLI} -datadir=${DATADIR}" generate --address "${ADDR}" --grind-cmd="${BITCOIN_UTIL} grind" --min-nbits --set-block-time "${BLOCK_1_DATE}"
 errecho "First block mined"
 
 cat <<-EOF
