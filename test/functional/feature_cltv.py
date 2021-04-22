@@ -47,13 +47,11 @@ def cltv_modify_tx(node, tx, prepend_scriptsig, nsequence=None, nlocktime=None):
 
         # Need to re-sign, since nSequence and nLockTime changed
         signed_result = node.signrawtransactionwithwallet(ToHex(tx))
-        new_tx = CTransaction()
-        new_tx.deserialize(BytesIO(hex_str_to_bytes(signed_result['hex'])))
-    else:
-        new_tx = tx
+        tx = CTransaction()
+        tx.deserialize(BytesIO(hex_str_to_bytes(signed_result['hex'])))
 
-    new_tx.vin[0].scriptSig = CScript(prepend_scriptsig + list(CScript(new_tx.vin[0].scriptSig)))
-    return new_tx
+    tx.vin[0].scriptSig = CScript(prepend_scriptsig + list(CScript(tx.vin[0].scriptSig)))
+    return tx
 
 
 def cltv_invalidate(node, tx, failure_reason):
