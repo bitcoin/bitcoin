@@ -48,6 +48,7 @@ void DummyWalletInit::AddWalletOptions(ArgsManager& argsman) const
         "-walletrbf",
         "-dblogsize=<n>",
         "-flushwallet",
+        "-flushwalletinterval=<n>",
         "-privdb",
         "-walletrejectlongchains",
         "-unsafesqlitesync",
