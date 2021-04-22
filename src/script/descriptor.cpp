@@ -507,6 +507,13 @@ public:
     DescriptorImpl(std::vector<std::unique_ptr<PubkeyProvider>> pubkeys, std::unique_ptr<DescriptorImpl> script, const std::string& name) : m_pubkey_args(std::move(pubkeys)), m_name(name), m_subdescriptor_args(Vector(std::move(script))) {}
     DescriptorImpl(std::vector<std::unique_ptr<PubkeyProvider>> pubkeys, std::vector<std::unique_ptr<DescriptorImpl>> scripts, const std::string& name) : m_pubkey_args(std::move(pubkeys)), m_name(name), m_subdescriptor_args(std::move(scripts)) {}
 
+    enum class StringType
+    {
+        PUBLIC,
+        PRIVATE,
+        NORMALIZED,
+    };
+
     bool IsSolvable() const override
     {
         for (const auto& arg : m_subdescriptor_args) {
@@ -526,19 +533,19 @@ public:
         return false;
     }
 
-    virtual bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, bool priv, bool normalized) const
+    virtual bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, const StringType type) const
     {
         size_t pos = 0;
         for (const auto& scriptarg : m_subdescriptor_args) {
             if (pos++) ret += ",";
             std::string tmp;
-            if (!scriptarg->ToStringHelper(arg, tmp, priv, normalized)) return false;
+            if (!scriptarg->ToStringHelper(arg, tmp, type)) return false;
             ret += std::move(tmp);
         }
         return true;
     }
 
-    bool ToStringHelper(const SigningProvider* arg, std::string& out, bool priv, bool normalized) const
+    bool ToStringHelper(const SigningProvider* arg, std::string& out, const StringType type) const
     {
         std::string extra = ToStringExtra();
         size_t pos = extra.size() > 0 ? 1 : 0;
@@ -546,17 +553,21 @@ public:
         for (const auto& pubkey : m_pubkey_args) {
             if (pos++) ret += ",";
             std::string tmp;
-            if (normalized) {
-                if (!pubkey->ToNormalizedString(*arg, tmp)) return false;
-            } else if (priv) {
-                if (!pubkey->ToPrivateString(*arg, tmp)) return false;
-            } else {
-                tmp = pubkey->ToString();
+            switch (type) {
+                case StringType::NORMALIZED:
+                    if (!pubkey->ToNormalizedString(*arg, tmp)) return false;
+                    break;
+                case StringType::PRIVATE:
+                    if (!pubkey->ToPrivateString(*arg, tmp)) return false;
+                    break;
+                case StringType::PUBLIC:
+                    tmp = pubkey->ToString();
+                    break;
             }
             ret += std::move(tmp);
         }
         std::string subscript;
-        if (!ToStringSubScriptHelper(arg, subscript, priv, normalized)) return false;
+        if (!ToStringSubScriptHelper(arg, subscript, type)) return false;
         if (pos && subscript.size()) ret += ',';
         out = std::move(ret) + std::move(subscript) + ")";
         return true;
@@ -565,20 +576,20 @@ public:
     std::string ToString() const final
     {
         std::string ret;
-        ToStringHelper(nullptr, ret, false, false);
+        ToStringHelper(nullptr, ret, StringType::PUBLIC);
         return AddChecksum(ret);
     }
 
     bool ToPrivateString(const SigningProvider& arg, std::string& out) const final
     {
-        bool ret = ToStringHelper(&arg, out, true, false);
+        bool ret = ToStringHelper(&arg, out, StringType::PRIVATE);
         out = AddChecksum(out);
         return ret;
     }
 
     bool ToNormalizedString(const SigningProvider& arg, std::string& out) const override final
     {
-        bool ret = ToStringHelper(&arg, out, false, true);
+        bool ret = ToStringHelper(&arg, out, StringType::NORMALIZED);
         out = AddChecksum(out);
         return ret;
     }
@@ -832,7 +843,7 @@ protected:
         out.tr_spenddata[output].Merge(builder.GetSpendData());
         return Vector(GetScriptForDestination(output));
     }
-    bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, bool priv, bool normalized) const override
+    bool ToStringSubScriptHelper(const SigningProvider* arg, std::string& ret, const StringType type) const override
     {
         if (m_depths.empty()) return true;
         std::vector<bool> path;
@@ -843,7 +854,7 @@ protected:
                 path.push_back(false);
             }
             std::string tmp;
-            if (!m_subdescriptor_args[pos]->ToStringHelper(arg, tmp, priv, normalized)) return false;
+            if (!m_subdescriptor_args[pos]->ToStringHelper(arg, tmp, type)) return false;
             ret += std::move(tmp);
             while (!path.empty() && path.back()) {
                 if (path.size() > 1) ret += '}';
