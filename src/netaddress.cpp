@@ -578,15 +578,6 @@ std::string CNetAddr::ToStringIP() const
     case NET_IPV4:
         return IPv4ToString(m_addr);
     case NET_IPV6: {
-        CService serv(*this, 0);
-        struct sockaddr_storage sockaddr;
-        socklen_t socklen = sizeof(sockaddr);
-        if (serv.GetSockAddr((struct sockaddr*)&sockaddr, &socklen)) {
-            char name[1025] = "";
-            if (!getnameinfo((const struct sockaddr*)&sockaddr, socklen, name,
-                             sizeof(name), nullptr, 0, NI_NUMERICHOST))
-                return std::string(name);
-        }
         return IPv6ToString(m_addr);
     }
     case NET_ONION:
