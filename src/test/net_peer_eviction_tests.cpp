@@ -283,6 +283,179 @@ BOOST_AUTO_TEST_CASE(peer_protection_test)
         /* protected_peer_ids */ {0, 1, 2, 3, 7, 8, 9, 15},
         /* unprotected_peer_ids */ {5, 6, 10, 11, 12, 13, 14},
         random_context));
+
+    // Combined test: expect having 2 onion and 4 I2P out of 12 peers to protect
+    // 2 onion (prioritized for having fewer candidates) and 1 I2P, plus 3
+    // others, sorted by longest uptime.
+    BOOST_CHECK(IsProtected(
+        num_peers, [](NodeEvictionCandidate& c) {
+            c.nTimeConnected = c.id;
+            c.m_is_local = false;
+            if (c.id == 8 || c.id == 10) {
+                c.m_network = NET_ONION;
+            } else if (c.id == 6 || c.id == 9 || c.id == 11 || c.id == 12) {
+                c.m_network = NET_I2P;
+            } else {
+                c.m_network = NET_IPV4;
+            }
+        },
+        /* protected_peer_ids */ {0, 1, 2, 6, 8, 10},
+        /* unprotected_peer_ids */ {3, 4, 5, 7, 9, 11},
+        random_context));
+
+    // Tests with 3 networks...
+
+    // Combined test: expect having 1 localhost, 1 I2P and 1 onion peer out of 4
+    // to protect 1 I2P, 0 localhost, 0 onion and 1 other peer (2 total), sorted
+    // by longest uptime; stable sort breaks tie with array order of I2P first.
+    BOOST_CHECK(IsProtected(
+        4, [](NodeEvictionCandidate& c) {
+            c.nTimeConnected = c.id;
+            c.m_is_local = (c.id == 3);
+            if (c.id == 4) {
+                c.m_network = NET_I2P;
+            } else if (c.id == 2) {
+                c.m_network = NET_ONION;
+            } else {
+                c.m_network = NET_IPV6;
+            }
+        },
+        /* protected_peer_ids */ {0, 4},
+        /* unprotected_peer_ids */ {1, 2},
+        random_context));
+
+    // Combined test: expect having 1 localhost, 1 I2P and 1 onion peer out of 7
+    // to protect 1 I2P, 0 localhost, 0 onion and 2 other peers (3 total) sorted
+    // by longest uptime; stable sort breaks tie with array order of I2P first.
+    BOOST_CHECK(IsProtected(
+        7, [](NodeEvictionCandidate& c) {
+            c.nTimeConnected = c.id;
+            c.m_is_local = (c.id == 4);
+            if (c.id == 6) {
+                c.m_network = NET_I2P;
+            } else if (c.id == 5) {
+                c.m_network = NET_ONION;
+            } else {
+                c.m_network = NET_IPV6;
+            }
+        },
+        /* protected_peer_ids */ {0, 1, 6},
+        /* unprotected_peer_ids */ {2, 3, 4, 5},
+        random_context));
+
+    // Combined test: expect having 1 localhost, 1 I2P and 1 onion peer out of 8
+    // to protect 1 I2P, 1 localhost, 0 onion and 2 other peers (4 total) sorted
+    // by uptime; stable sort breaks tie with array order of I2P then localhost.
+    BOOST_CHECK(IsProtected(
+        8, [](NodeEvictionCandidate& c) {
+            c.nTimeConnected = c.id;
+            c.m_is_local = (c.id == 6);
+            if (c.id == 5) {
+                c.m_network = NET_I2P;
+            } else if (c.id == 4) {
+                c.m_network = NET_ONION;
+            } else {
+                c.m_network = NET_IPV6;
+            }
+        },
+        /* protected_peer_ids */ {0, 1, 5, 6},
+        /* unprotected_peer_ids */ {2, 3, 4, 7},
+        random_context));
+
+    // Combined test: expect having 4 localhost, 2 I2P, and 2 onion peers out of
+    // 16 to protect 1 localhost, 2 I2P, and 1 onion (4/16 total), plus 4 others
+    // for 8 total, sorted by longest uptime.
+    BOOST_CHECK(IsProtected(
+        16, [](NodeEvictionCandidate& c) {
+            c.nTimeConnected = c.id;
+            c.m_is_local = (c.id == 6 || c.id > 11);
+            if (c.id == 7 || c.id == 11) {
+                c.m_network = NET_I2P;
+            } else if (c.id == 9 || c.id == 10) {
+                c.m_network = NET_ONION;
+            } else {
+                c.m_network = NET_IPV4;
+            }
+        },
+        /* protected_peer_ids */ {0, 1, 2, 3, 6, 7, 9, 11},
+        /* unprotected_peer_ids */ {4, 5, 8, 10, 12, 13, 14, 15},
+        random_context));
+
+    // Combined test: expect having 1 localhost, 8 I2P and 1 onion peer out of
+    // 24 to protect 1, 4, and 1 (6 total), plus 6 others for 12/24 total,
+    // sorted by longest uptime.
+    BOOST_CHECK(IsProtected(
+        24, [](NodeEvictionCandidate& c) {
+            c.nTimeConnected = c.id;
+            c.m_is_local = (c.id == 12);
+            if (c.id > 14 && c.id < 23) { // 4 protected instead of usual 2
+                c.m_network = NET_I2P;
+            } else if (c.id == 23) {
+                c.m_network = NET_ONION;
+            } else {
+                c.m_network = NET_IPV6;
+            }
+        },
+        /* protected_peer_ids */ {0, 1, 2, 3, 4, 5, 12, 15, 16, 17, 18, 23},
+        /* unprotected_peer_ids */ {6, 7, 8, 9, 10, 11, 13, 14, 19, 20, 21, 22},
+        random_context));
+
+    // Combined test: expect having 1 localhost, 3 I2P and 6 onion peers out of
+    // 24 to protect 1, 3, and 2 (6 total, I2P has fewer candidates and so gets the
+    // unused localhost slot), plus 6 others for 12/24 total, sorted by longest uptime.
+    BOOST_CHECK(IsProtected(
+        24, [](NodeEvictionCandidate& c) {
+            c.nTimeConnected = c.id;
+            c.m_is_local = (c.id == 15);
+            if (c.id == 12 || c.id == 14 || c.id == 17) {
+                c.m_network = NET_I2P;
+            } else if (c.id > 17) { // 4 protected instead of usual 2
+                c.m_network = NET_ONION;
+            } else {
+                c.m_network = NET_IPV4;
+            }
+        },
+        /* protected_peer_ids */ {0, 1, 2, 3, 4, 5, 12, 14, 15, 17, 18, 19},
+        /* unprotected_peer_ids */ {6, 7, 8, 9, 10, 11, 13, 16, 20, 21, 22, 23},
+        random_context));
+
+    // Combined test: expect having 1 localhost, 7 I2P and 4 onion peers out of
+    // 24 to protect 1 localhost, 2 I2P, and 3 onions (6 total), plus 6 others
+    // for 12/24 total, sorted by longest uptime.
+    BOOST_CHECK(IsProtected(
+        24, [](NodeEvictionCandidate& c) {
+            c.nTimeConnected = c.id;
+            c.m_is_local = (c.id == 13);
+            if (c.id > 16) {
+                c.m_network = NET_I2P;
+            } else if (c.id == 12 || c.id == 14 || c.id == 15 || c.id == 16) {
+                c.m_network = NET_ONION;
+            } else {
+                c.m_network = NET_IPV6;
+            }
+        },
+        /* protected_peer_ids */ {0, 1, 2, 3, 4, 5, 12, 13, 14, 15, 17, 18},
+        /* unprotected_peer_ids */ {6, 7, 8, 9, 10, 11, 16, 19, 20, 21, 22, 23},
+        random_context));
+
+    // Combined test: expect having 8 localhost, 4 I2P, and 3 onion peers out of
+    // 24 to protect 2 of each (6 total), plus 6 others for 12/24 total, sorted
+    // by longest uptime.
+    BOOST_CHECK(IsProtected(
+        24, [](NodeEvictionCandidate& c) {
+            c.nTimeConnected = c.id;
+            c.m_is_local = (c.id > 15);
+            if (c.id > 10 && c.id < 15) {
+                c.m_network = NET_I2P;
+            } else if (c.id > 6 && c.id < 10) {
+                c.m_network = NET_ONION;
+            } else {
+                c.m_network = NET_IPV4;
+            }
+        },
+        /* protected_peer_ids */ {0, 1, 2, 3, 4, 5, 7, 8, 11, 12, 16, 17},
+        /* unprotected_peer_ids */ {6, 9, 10, 13, 14, 15, 18, 19, 20, 21, 22, 23},
+        random_context));
 }
 
 // Returns true if any of the node ids in node_ids are selected for eviction.
