@@ -4,6 +4,7 @@
 
 #include <coinjoin/coinjoin-util.h>
 #include <consensus/validation.h>
+#include <net.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <script/sign.h>

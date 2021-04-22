@@ -3,9 +3,12 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <governance/governance-vote.h>
-#include <governance/governance-object.h>
+
+#include <bls/bls.h>
+#include <key.h>
 #include <masternode/masternode-sync.h>
 #include <messagesigner.h>
+#include <net.h>
 #include <util.h>
 
 #include <evo/deterministicmns.h>

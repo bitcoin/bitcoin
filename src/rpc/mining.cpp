@@ -28,12 +28,10 @@
 #include <warnings.h>
 
 #include <governance/governance-classes.h>
-#include <masternode/masternode-payments.h>
+#include <governance/governance.h>
 #include <masternode/masternode-sync.h>
 
 #include <evo/deterministicmns.h>
-#include <evo/specialtx.h>
-#include <evo/cbtx.h>
 
 #include <memory>
 #include <stdint.h>

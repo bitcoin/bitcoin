@@ -2,26 +2,14 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <masternode/activemasternode.h>
-#include <base58.h>
-#include <clientversion.h>
-#include <init.h>
-#include <netbase.h>
-#include <validation.h>
-#include <util.h>
-#include <utilmoneystr.h>
-#include <txmempool.h>
-
-#include <evo/specialtx.h>
 #include <evo/deterministicmns.h>
-
 #include <governance/governance-classes.h>
-
+#include <masternode/activemasternode.h>
 #include <masternode/masternode-payments.h>
-#include <masternode/masternode-sync.h>
-
+#include <net.h>
+#include <netbase.h>
 #include <rpc/server.h>
-
+#include <validation.h>
 #include <wallet/coincontrol.h>
 #include <wallet/rpcwallet.h>
 #ifdef ENABLE_WALLET

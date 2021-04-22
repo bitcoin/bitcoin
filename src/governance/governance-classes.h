@@ -4,12 +4,14 @@
 #ifndef BITCOIN_GOVERNANCE_GOVERNANCE_CLASSES_H
 #define BITCOIN_GOVERNANCE_GOVERNANCE_CLASSES_H
 
-#include <base58.h>
-#include <governance/governance.h>
-#include <key.h>
+#include <amount.h>
+#include <governance/governance-object.h>
+#include <script/script.h>
 #include <script/standard.h>
-#include <util.h>
-#include <key_io.h>
+#include <uint256.h>
+
+class CTxOut;
+class CTransaction;
 
 class CSuperblock;
 class CGovernanceTriggerManager;
@@ -85,23 +87,7 @@ public:
     {
     }
 
-    CGovernancePayment(const CTxDestination& destIn, CAmount nAmountIn) :
-        fValid(false),
-        script(),
-        nAmount(0)
-    {
-        try {
-            script = GetScriptForDestination(destIn);
-            nAmount = nAmountIn;
-            fValid = true;
-        } catch (std::exception& e) {
-            LogPrintf("CGovernancePayment Payment not valid: destIn = %s, nAmountIn = %d, what = %s\n",
-                EncodeDestination(destIn), nAmountIn, e.what());
-        } catch (...) {
-            LogPrintf("CGovernancePayment Payment not valid: destIn = %s, nAmountIn = %d\n",
-                EncodeDestination(destIn), nAmountIn);
-        }
-    }
+    CGovernancePayment(const CTxDestination& destIn, CAmount nAmountIn);
 
     bool IsValid() const { return fValid; }
 };
@@ -149,12 +135,7 @@ public:
     // TELL THE ENGINE WE EXECUTED THIS EVENT
     void SetExecuted() { nStatus = SEEN_OBJECT_EXECUTED; }
 
-    CGovernanceObject* GetGovernanceObject()
-    {
-        AssertLockHeld(governance.cs);
-        CGovernanceObject* pObj = governance.FindGovernanceObject(nGovObjHash);
-        return pObj;
-    }
+    CGovernanceObject* GetGovernanceObject();
 
     int GetBlockHeight() const
     {

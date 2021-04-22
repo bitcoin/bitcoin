@@ -3,14 +3,15 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <governance/governance-object.h>
+
 #include <core_io.h>
+#include <evo/deterministicmns.h>
 #include <governance/governance-validators.h>
 #include <governance/governance.h>
 #include <masternode/masternode-meta.h>
 #include <masternode/masternode-sync.h>
-#include <evo/deterministicmns.h>
 #include <messagesigner.h>
-#include <spork.h>
+#include <net.h>
 #include <validation.h>
 #include <validationinterface.h>
 

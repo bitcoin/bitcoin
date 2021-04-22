@@ -5,18 +5,17 @@
 #ifndef BITCOIN_GOVERNANCE_GOVERNANCE_OBJECT_H
 #define BITCOIN_GOVERNANCE_GOVERNANCE_OBJECT_H
 
-#include <cachemultimap.h>
 #include <governance/governance-exceptions.h>
 #include <governance/governance-vote.h>
 #include <governance/governance-votedb.h>
-#include <key.h>
-#include <net.h>
+#include <logging.h>
 #include <sync.h>
-#include <util.h>
-#include <utilstrencodings.h>
-#include <bls/bls.h>
 
 #include <univalue.h>
+
+class CBLSSecretKey;
+class CBLSPublicKey;
+class CNode;
 
 class CGovernanceManager;
 class CGovernanceTriggerManager;
