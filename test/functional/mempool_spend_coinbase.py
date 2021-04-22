@@ -40,9 +40,10 @@ class MempoolSpendCoinbaseTest(BitcoinTestFramework):
         spend_101_id = wallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_101)["txid"]
 
         # coinbase at height 102 should be too immature to spend
+        immature_tx = wallet.create_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_102, mempool_valid=False)
         assert_raises_rpc_error(-26,
                                 "bad-txns-premature-spend-of-coinbase",
-                                lambda: wallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_102))
+                                lambda: self.nodes[0].sendrawtransaction(immature_tx['hex']))
 
         # mempool should have just spend_101:
         assert_equal(self.nodes[0].getrawmempool(), [spend_101_id])
@@ -52,7 +53,7 @@ class MempoolSpendCoinbaseTest(BitcoinTestFramework):
         assert_equal(set(self.nodes[0].getrawmempool()), set())
 
         # ... and now height 102 can be spent:
-        spend_102_id = wallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_102)["txid"]
+        spend_102_id = self.nodes[0].sendrawtransaction(immature_tx['hex'])
         assert_equal(self.nodes[0].getrawmempool(), [spend_102_id])
 
 
