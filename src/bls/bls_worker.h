@@ -11,6 +11,7 @@
 
 #include <future>
 #include <mutex>
+#include <utility>
 
 // Low level BLS/DKG stuff. All very compute intensive and optimized for parallelization
 // The worker tries to parallelize as much as possible and utilizes a few properties of BLS aggregation to speed up things
@@ -33,11 +34,11 @@ private:
         CBLSSignature sig;
         CBLSPublicKey pubKey;
         uint256 msgHash;
-        SigVerifyJob(SigVerifyDoneCallback&& _doneCallback, CancelCond&& _cancelCond, const CBLSSignature& _sig, const CBLSPublicKey& _pubKey, const uint256& _msgHash) :
+        SigVerifyJob(SigVerifyDoneCallback&& _doneCallback, CancelCond&& _cancelCond, const CBLSSignature& _sig, CBLSPublicKey _pubKey, const uint256& _msgHash) :
             doneCallback(_doneCallback),
             cancelCond(_cancelCond),
             sig(_sig),
-            pubKey(_pubKey),
+            pubKey(std::move(_pubKey)),
             msgHash(_msgHash)
         {
         }

@@ -8,6 +8,9 @@
 
 #include <util.h>
 
+#include <memory>
+#include <utility>
+
 template <typename T>
 bool VerifyVectorHelper(const std::vector<T>& vec, size_t start, size_t count)
 {
@@ -431,11 +434,11 @@ struct ContributionVerifier {
     std::atomic<size_t> verifyDoneCount{0};
     std::function<void(const std::vector<bool>&)> doneCallback;
 
-    ContributionVerifier(const CBLSId& _forId, const std::vector<BLSVerificationVectorPtr>& _vvecs,
+    ContributionVerifier(CBLSId _forId, const std::vector<BLSVerificationVectorPtr>& _vvecs,
                          const BLSSecretKeyVector& _skShares, size_t _batchSize,
                          bool _parallel, bool _aggregated, ctpl::thread_pool& _workerPool,
                          std::function<void(const std::vector<bool>&)> _doneCallback) :
-        forId(_forId),
+        forId(std::move(_forId)),
         vvecs(_vvecs),
         skShares(_skShares),
         batchSize(_batchSize),
@@ -461,7 +464,7 @@ struct ContributionVerifier {
         for (size_t i = 0; i < batchCount; i++) {
             auto& batchState = batchStates[i];
 
-            batchState.aggDone.reset(new std::atomic<int>(0));
+            batchState.aggDone = std::make_unique<std::atomic<int>>(0);
             batchState.start = i * batchSize;
             batchState.count = std::min(batchSize, vvecs.size() - batchState.start);
             batchState.verifyResults.assign(batchState.count, 0);

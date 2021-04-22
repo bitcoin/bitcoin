@@ -72,7 +72,7 @@ bool CBLSIESEncryptedBlob::Decrypt(size_t idx, const CBLSSecretKey& secretKey, C
 
 bool CBLSIESEncryptedBlob::IsValid() const
 {
-    return ephemeralPubKey.IsValid() && data.size() > 0 && !ivSeed.IsNull();
+    return ephemeralPubKey.IsValid() && !data.empty() && !ivSeed.IsNull();
 }
 
 
