@@ -37,9 +37,13 @@ class MiniWallet:
         for i in range(start, start + num):
             block = self._test_node.getblock(blockhash=self._test_node.getblockhash(i), verbosity=2)
             for tx in block['tx']:
-                for out in tx['vout']:
-                    if out['scriptPubKey']['hex'] == self._scriptPubKey.hex():
-                        self._utxos.append({'txid': tx['txid'], 'vout': out['n'], 'value': out['value']})
+                self.scan_tx(tx)
+
+    def scan_tx(self, tx):
+        """Scan the tx for self._scriptPubKey outputs and add them to self._utxos"""
+        for out in tx['vout']:
+            if out['scriptPubKey']['hex'] == self._scriptPubKey.hex():
+                self._utxos.append({'txid': tx['txid'], 'vout': out['n'], 'value': out['value']})
 
     def generate(self, num_blocks):
         """Generate blocks with coinbase outputs to the internal address, and append the outputs to the internal list"""
@@ -84,8 +88,11 @@ class MiniWallet:
         tx_hex = tx.serialize().hex()
 
         tx_info = from_node.testmempoolaccept([tx_hex])[0]
-        self._utxos.append({'txid': tx_info['txid'], 'vout': 0, 'value': send_value})
-        from_node.sendrawtransaction(tx_hex)
+        self.sendrawtransaction(from_node=from_node, tx_hex=tx_hex)
         assert_equal(tx_info['vsize'], vsize)
         assert_equal(tx_info['fees']['base'], fee)
         return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex}
+
+    def sendrawtransaction(self, *, from_node, tx_hex):
+        from_node.sendrawtransaction(tx_hex)
+        self.scan_tx(from_node.decoderawtransaction(tx_hex))
