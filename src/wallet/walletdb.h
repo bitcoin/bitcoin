@@ -29,7 +29,7 @@
  */
 
 static const bool DEFAULT_FLUSHWALLET = true;
-static const int DEFAULT_FLUSHWALLET = 500;
+static const int DEFAULT_FLUSHWALLETINTERVAL = 500;
 
 struct CBlockLocator;
 class CKeyPool;
