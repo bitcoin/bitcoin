@@ -248,6 +248,23 @@ bool WalletBatch::WriteDescriptorParentCache(const CExtPubKey& xpub, const uint2
     return WriteIC(std::make_pair(std::make_pair(DBKeys::WALLETDESCRIPTORCACHE, desc_id), key_exp_index), ser_xpub);
 }
 
+bool WalletBatch::WriteDescriptorCacheItems(const uint256& desc_id, const DescriptorCache& cache)
+{
+    for (const auto& parent_xpub_pair : cache.GetCachedParentExtPubKeys()) {
+        if (!WriteDescriptorParentCache(parent_xpub_pair.second, desc_id, parent_xpub_pair.first)) {
+            return false;
+        }
+    }
+    for (const auto& derived_xpub_map_pair : cache.GetCachedDerivedExtPubKeys()) {
+        for (const auto& derived_xpub_pair : derived_xpub_map_pair.second) {
+            if (!WriteDescriptorDerivedCache(derived_xpub_pair.second, desc_id, derived_xpub_map_pair.first, derived_xpub_pair.first)) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 class CWalletScanState {
 public:
     unsigned int nKeys{0};
