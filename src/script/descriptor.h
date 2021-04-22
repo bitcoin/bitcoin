@@ -55,6 +55,11 @@ public:
     const ExtPubKeyMap GetCachedParentExtPubKeys() const;
     /** Retrieve all cached derived xpubs */
     const std::unordered_map<uint32_t, ExtPubKeyMap> GetCachedDerivedExtPubKeys() const;
+
+    /** Combine another DescriptorCache into this one.
+     * Returns a cache containing the items from the other cache unknown to current cache
+     */
+    DescriptorCache MergeAndDiff(const DescriptorCache& other);
 };
 
 /** \brief Interface for parsed descriptor objects.
