@@ -139,7 +139,8 @@ public:
         bool sign,
         int& change_pos,
         CAmount& fee,
-        bilingual_str& fail_reason) = 0;
+        bilingual_str& fail_reason,
+        std::vector<unsigned char> vecContract) = 0;
 
     //! Commit transaction.
     virtual void commitTransaction(CTransactionRef tx,
@@ -161,7 +162,8 @@ public:
         std::vector<bilingual_str>& errors,
         CAmount& old_fee,
         CAmount& new_fee,
-        CMutableTransaction& mtx) = 0;
+        CMutableTransaction& mtx,
+        std::vector<unsigned char>vecContract) = 0;
 
     //! Sign bump transaction.
     virtual bool signBumpTransaction(CMutableTransaction& mtx) = 0;

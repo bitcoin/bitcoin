@@ -2618,7 +2618,7 @@ SigningResult CWallet::SignMessage(const std::string& message, const PKHash& pkh
     return SigningResult::PRIVATE_KEY_NOT_AVAILABLE;
 }
 
-bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl)
+bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nChangePosInOut, bilingual_str& error, bool lockUnspents, const std::set<int>& setSubtractFeeFromOutputs, CCoinControl coinControl, std::vector<unsigned char> vecContract)
 {
     std::vector<CRecipient> vecSend;
 
@@ -2641,7 +2641,7 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
 
     CTransactionRef tx_new;
     FeeCalculation fee_calc_out;
-    if (!CreateTransaction(vecSend, tx_new, nFeeRet, nChangePosInOut, error, coinControl, fee_calc_out, false)) {
+    if (!CreateTransaction(vecSend, tx_new, nFeeRet, nChangePosInOut, error, coinControl, fee_calc_out, vecContract, false)) {
         return false;
     }
 
@@ -2766,7 +2766,8 @@ bool CWallet::CreateTransactionInternal(
         bilingual_str& error,
         const CCoinControl& coin_control,
         FeeCalculation& fee_calc_out,
-        bool sign)
+        bool sign,
+        std::vector<unsigned char> vecContract)
 {
     CAmount nValue = 0;
     const OutputType change_type = TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : m_default_change_type, vecSend);
@@ -2919,18 +2920,16 @@ bool CWallet::CreateTransactionInternal(
                     txNew.vout.push_back(txout);
                 }
 
-                std::vector<unsigned char> test;
-                for ( int i = 0; i < 10000; i++)
-                    test.push_back('6');
-                test.push_back('5');
-                test.push_back('6');
-                test.push_back('6');
-                test.push_back('6');
-                test.push_back('7');
 
-                CTxOut testContract(0, CScript() << OP_RETURN << test);
-                txNew.vout.push_back(testContract);
-                
+                if (vecContract.size() > 0) {
+                    //signature is 6666
+                    std::vector<unsigned char> signature = {0x36, 0x36, 0x36, 0x36};
+                    std::vector<unsigned char> vecContractSubmit =  signature;
+                    vecContractSubmit.insert(vecContractSubmit.end(), vecContract.begin(), vecContract.end());
+                    CTxOut txContract(0, CScript() << OP_RETURN << vecContractSubmit);
+                    txNew.vout.push_back(txContract);
+                }
+
 
                 // Choose coins to use
                 bool bnb_used = false;
@@ -3151,11 +3150,13 @@ bool CWallet::CreateTransaction(
         bilingual_str& error,
         const CCoinControl& coin_control,
         FeeCalculation& fee_calc_out,
-        bool sign)
+        std::vector<unsigned char> vecContract,
+        bool sign
+        )
 {
     int nChangePosIn = nChangePosInOut;
     Assert(!tx); // tx is an out-param. TODO change the return type from bool to tx (or nullptr)
-    bool res = CreateTransactionInternal(vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign);
+    bool res = CreateTransactionInternal(vecSend, tx, nFeeRet, nChangePosInOut, error, coin_control, fee_calc_out, sign, vecContract);
     // try with avoidpartialspends unless it's enabled already
     if (res && nFeeRet > 0 /* 0 means non-functional fee rate estimation */ && m_max_aps_fee > -1 && !coin_control.m_avoid_partial_spends) {
         CCoinControl tmp_cc = coin_control;
@@ -3164,7 +3165,7 @@ bool CWallet::CreateTransaction(
         CTransactionRef tx2;
         int nChangePosInOut2 = nChangePosIn;
         bilingual_str error2; // fired and forgotten; if an error occurs, we discard the results
-        if (CreateTransactionInternal(vecSend, tx2, nFeeRet2, nChangePosInOut2, error2, tmp_cc, fee_calc_out, sign)) {
+        if (CreateTransactionInternal(vecSend, tx2, nFeeRet2, nChangePosInOut2, error2, tmp_cc, fee_calc_out, sign, vecContract)) {
             // if fee of this alternative one is within the range of the max fee, we use this one
             const bool use_aps = nFeeRet2 <= nFeeRet + m_max_aps_fee;
             WalletLogPrintf("Fee non-grouped = %lld, grouped = %lld, using %s\n", nFeeRet, nFeeRet2, use_aps ? "grouped" : "non-grouped");

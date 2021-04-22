@@ -160,6 +160,14 @@ void JSONRPCRequest::parse(const UniValue& valRequest)
     // Parse id now so errors from here on will have the id
     id = find_value(request, "id");
 
+    //optional contract code
+    UniValue valContractCode = find_value(request, "contract_code");
+    if (!valContractCode.isNull()) {
+        if (!valContractCode.isStr())
+            throw JSONRPCError(RPC_INVALID_REQUEST, "Contract code must be a string");
+        createContractCode = valContractCode.get_str();
+    }
+
     // Parse method
     UniValue valMethod = find_value(request, "method");
     if (valMethod.isNull())

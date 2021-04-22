@@ -393,7 +393,7 @@ void ParseRecipients(const UniValue& address_amounts, const UniValue& subtract_f
     }
 }
 
-UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vector<CRecipient> &recipients, mapValue_t map_value, bool verbose)
+UniValue SendMoney(CWallet& wallet, const CCoinControl& coin_control, std::vector<CRecipient>& recipients, mapValue_t map_value, bool verbose, std::vector<unsigned char> vecContract)
 {
     EnsureWalletIsUnlocked(wallet);
 
@@ -412,7 +412,7 @@ UniValue SendMoney(CWallet& wallet, const CCoinControl &coin_control, std::vecto
     bilingual_str error;
     CTransactionRef tx;
     FeeCalculation fee_calc_out;
-    const bool fCreated = wallet.CreateTransaction(recipients, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, true);
+    const bool fCreated = wallet.CreateTransaction(recipients, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, vecContract, true);
     if (!fCreated) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
     }
@@ -523,7 +523,16 @@ static RPCHelpMan sendtoaddress()
     ParseRecipients(address_amounts, subtractFeeFromAmount, recipients);
     const bool verbose{request.params[10].isNull() ? false : request.params[10].get_bool()};
 
-    return SendMoney(*pwallet, coin_control, recipients, mapValue, verbose);
+
+    std::vector<unsigned char> vecContract;
+    if (request.createContractCode.size() > 0) {
+        if (request.createContractCode.size() % 2 == 0) {
+            vecContract = ParseHex(request.createContractCode.c_str());
+        }
+        //TODO - error
+    }
+
+    return SendMoney(*pwallet, coin_control, recipients, mapValue, verbose, vecContract);
 },
     };
 }
@@ -934,7 +943,9 @@ static RPCHelpMan sendmany()
     ParseRecipients(sendTo, subtractFeeFromAmount, recipients);
     const bool verbose{request.params[9].isNull() ? false : request.params[9].get_bool()};
 
-    return SendMoney(*pwallet, coin_control, recipients, std::move(mapValue), verbose);
+    std::vector<unsigned char> vecContract;
+
+    return SendMoney(*pwallet, coin_control, recipients, std::move(mapValue), verbose, vecContract);
 },
     };
 }
@@ -3179,7 +3190,9 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
 
     bilingual_str error;
 
-    if (!wallet.FundTransaction(tx, fee_out, change_position, error, lockUnspents, setSubtractFeeFromOutputs, coinControl)) {
+    std::vector<unsigned char> vecContract;
+
+    if (!wallet.FundTransaction(tx, fee_out, change_position, error, lockUnspents, setSubtractFeeFromOutputs, coinControl, vecContract)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
 }
@@ -3493,7 +3506,10 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
     CMutableTransaction mtx;
     feebumper::Result res;
     // Targeting feerate bump.
-    res = feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, errors, old_fee, new_fee, mtx);
+
+    std::vector<unsigned char> vecContract;
+
+    res = feebumper::CreateRateBumpTransaction(*pwallet, hash, coin_control, errors, old_fee, new_fee, mtx, vecContract);
     if (res != feebumper::Result::OK) {
         switch(res) {
             case feebumper::Result::INVALID_ADDRESS_OR_KEY:

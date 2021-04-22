@@ -240,13 +240,14 @@ public:
         bool sign,
         int& change_pos,
         CAmount& fee,
-        bilingual_str& fail_reason) override
+        bilingual_str& fail_reason,
+        std::vector<unsigned char> vecContract) override
     {
         LOCK(m_wallet->cs_wallet);
         CTransactionRef tx;
         FeeCalculation fee_calc_out;
         if (!m_wallet->CreateTransaction(recipients, tx, fee, change_pos,
-                fail_reason, coin_control, fee_calc_out, sign)) {
+                fail_reason, coin_control, fee_calc_out, vecContract, sign)) {
             return {};
         }
         return tx;
@@ -273,9 +274,10 @@ public:
         std::vector<bilingual_str>& errors,
         CAmount& old_fee,
         CAmount& new_fee,
-        CMutableTransaction& mtx) override
+        CMutableTransaction& mtx,
+        std::vector<unsigned char> vecContract) override
     {
-        return feebumper::CreateRateBumpTransaction(*m_wallet.get(), txid, coin_control, errors, old_fee, new_fee, mtx) == feebumper::Result::OK;
+        return feebumper::CreateRateBumpTransaction(*m_wallet.get(), txid, coin_control, errors, old_fee, new_fee, mtx, vecContract) == feebumper::Result::OK;
     }
     bool signBumpTransaction(CMutableTransaction& mtx) override { return feebumper::SignTransaction(*m_wallet.get(), mtx); }
     bool commitBumpTransaction(const uint256& txid,

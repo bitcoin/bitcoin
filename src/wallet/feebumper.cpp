@@ -152,7 +152,7 @@ bool TransactionCanBeBumped(const CWallet& wallet, const uint256& txid)
 }
 
 Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCoinControl& coin_control, std::vector<bilingual_str>& errors,
-                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx)
+                                 CAmount& old_fee, CAmount& new_fee, CMutableTransaction& mtx, std::vector<unsigned char> vecContract)
 {
     // We are going to modify coin control later, copy to re-use
     CCoinControl new_coin_control(coin_control);
@@ -220,7 +220,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     int change_pos_in_out = -1; // No requested location for change
     bilingual_str fail_reason;
     FeeCalculation fee_calc_out;
-    if (!wallet.CreateTransaction(recipients, tx_new, fee_ret, change_pos_in_out, fail_reason, new_coin_control, fee_calc_out, false)) {
+    if (!wallet.CreateTransaction(recipients, tx_new, fee_ret, change_pos_in_out, fail_reason, new_coin_control, fee_calc_out, vecContract, false)) {
         errors.push_back(Untranslated("Unable to create transaction.") + Untranslated(" ") + fail_reason);
         return Result::WALLET_ERROR;
     }
