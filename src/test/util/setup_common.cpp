@@ -40,6 +40,7 @@
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = nullptr;
+constexpr ServerArgsOptions SERVER_ARGS_OPTIONS{/*gui*/ false, /*printtoconsole_default*/ true, /*server_default*/ true};
 
 FastRandomContext g_insecure_rand_ctx;
 /** Random context to get unique temp data dirs. Separate from g_insecure_rand_ctx, which can be seeded from a const env var */
@@ -92,7 +93,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     gArgs.ForceSetArg("-datadir", m_path_root.string());
     gArgs.ClearPathCache();
     {
-        SetupServerArgs(m_node);
+        SetupServerArgs(m_node, SERVER_ARGS_OPTIONS);
         std::string error;
         const bool success{m_node.args->ParseParameters(arguments.size(), arguments.data(), error)};
         assert(success);
@@ -101,7 +102,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     SelectParams(chainName);
     SeedInsecureRand();
     if (G_TEST_LOG_FUN) LogInstance().PushBackCallback(G_TEST_LOG_FUN);
-    InitLogging(*m_node.args);
+    InitLogging(*m_node.args, SERVER_ARGS_OPTIONS);
     AppInitParameterInteraction(*m_node.args);
     LogInstance().StartLogging();
     SHA256AutoDetect();

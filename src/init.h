@@ -24,11 +24,22 @@ namespace boost {
 class thread_group;
 } // namespace boost
 
+struct ServerArgsOptions {
+    constexpr ServerArgsOptions(bool gui_, bool printtoconsole_default_, bool server_default_)
+        : gui{gui_}, printtoconsole_default{printtoconsole_default_}, server_default{server_default_}
+    {
+    }
+
+    const bool gui;
+    const bool printtoconsole_default;
+    const bool server_default;
+};
+
 /** Interrupt threads */
 void Interrupt(NodeContext& node);
 void Shutdown(NodeContext& node);
 //!Initialize the logging infrastructure
-void InitLogging(const ArgsManager& args);
+void InitLogging(const ArgsManager& args, const ServerArgsOptions& options);
 //!Parameter interaction: change current parameters depending on various rules
 void InitParameterInteraction(ArgsManager& args);
 
@@ -69,7 +80,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info 
 /**
  * Register all arguments with the ArgsManager
  */
-void SetupServerArgs(NodeContext& node);
+void SetupServerArgs(NodeContext& node, ServerArgsOptions options);
 
 /** Returns licensing information (for -version) */
 std::string LicenseInfo();
