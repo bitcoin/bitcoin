@@ -181,7 +181,7 @@ public:
     virtual bool ToPrivateString(const SigningProvider& arg, std::string& out) const = 0;
 
     /** Get the descriptor string form with the xpub at the last hardened derivation */
-    virtual bool ToNormalizedString(const SigningProvider& arg, std::string& out, bool priv) const = 0;
+    virtual bool ToNormalizedString(const SigningProvider& arg, std::string& out) const = 0;
 
     /** Derive a private key, if private data is available in arg. */
     virtual bool GetPrivKey(int pos, const SigningProvider& arg, CKey& key) const = 0;
@@ -216,10 +216,10 @@ public:
         ret = "[" + OriginString() + "]" + std::move(sub);
         return true;
     }
-    bool ToNormalizedString(const SigningProvider& arg, std::string& ret, bool priv) const override
+    bool ToNormalizedString(const SigningProvider& arg, std::string& ret) const override
     {
         std::string sub;
-        if (!m_provider->ToNormalizedString(arg, sub, priv)) return false;
+        if (!m_provider->ToNormalizedString(arg, sub)) return false;
         // If m_provider is a BIP32PubkeyProvider, we may get a string formatted like a OriginPubkeyProvider
         // In that case, we need to strip out the leading square bracket and fingerprint from the substring,
         // and append that to our own origin string.
@@ -263,9 +263,8 @@ public:
         ret = EncodeSecret(key);
         return true;
     }
-    bool ToNormalizedString(const SigningProvider& arg, std::string& ret, bool priv) const override
+    bool ToNormalizedString(const SigningProvider& arg, std::string& ret) const override
     {
-        if (priv) return ToPrivateString(arg, ret);
         ret = ToString();
         return true;
     }
@@ -413,11 +412,10 @@ public:
         }
         return true;
     }
-    bool ToNormalizedString(const SigningProvider& arg, std::string& out, bool priv) const override
+    bool ToNormalizedString(const SigningProvider& arg, std::string& out) const override
     {
         // For hardened derivation type, just return the typical string, nothing to normalize
         if (m_derive == DeriveType::HARDENED) {
-            if (priv) return ToPrivateString(arg, out);
             out = ToString();
             return true;
         }
@@ -430,7 +428,6 @@ public:
         }
         // Either no derivation or all unhardened derivation
         if (i == -1) {
-            if (priv) return ToPrivateString(arg, out);
             out = ToString();
             return true;
         }
@@ -456,7 +453,7 @@ public:
         }
         // Build the string
         std::string origin_str = HexStr(origin.fingerprint) + FormatHDKeypath(origin.path);
-        out = "[" + origin_str + "]" + (priv ? EncodeExtKey(xprv) : EncodeExtPubKey(xprv.Neuter())) + FormatHDKeypath(end_path);
+        out = "[" + origin_str + "]" + EncodeExtPubKey(xprv.Neuter()) + FormatHDKeypath(end_path);
         if (IsRange()) {
             out += "/*";
             assert(m_derive == DeriveType::UNHARDENED);
@@ -550,7 +547,7 @@ public:
             if (pos++) ret += ",";
             std::string tmp;
             if (normalized) {
-                if (!pubkey->ToNormalizedString(*arg, tmp, priv)) return false;
+                if (!pubkey->ToNormalizedString(*arg, tmp)) return false;
             } else if (priv) {
                 if (!pubkey->ToPrivateString(*arg, tmp)) return false;
             } else {
@@ -579,9 +576,9 @@ public:
         return ret;
     }
 
-    bool ToNormalizedString(const SigningProvider& arg, std::string& out, bool priv) const override final
+    bool ToNormalizedString(const SigningProvider& arg, std::string& out) const override final
     {
-        bool ret = ToStringHelper(&arg, out, priv, true);
+        bool ret = ToStringHelper(&arg, out, false, true);
         out = AddChecksum(out);
         return ret;
     }

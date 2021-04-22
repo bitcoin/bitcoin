@@ -1802,7 +1802,7 @@ RPCHelpMan listdescriptors()
         LOCK(desc_spk_man->cs_desc_man);
         const auto& wallet_descriptor = desc_spk_man->GetWalletDescriptor();
         std::string descriptor;
-        if (!desc_spk_man->GetDescriptorString(descriptor, false)) {
+        if (!desc_spk_man->GetDescriptorString(descriptor)) {
             throw JSONRPCError(RPC_WALLET_ERROR, "Can't get normalized descriptor string.");
         }
         spk.pushKV("desc", descriptor);

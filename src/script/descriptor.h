@@ -115,7 +115,7 @@ struct Descriptor {
     virtual bool ToPrivateString(const SigningProvider& provider, std::string& out) const = 0;
 
     /** Convert the descriptor to a normalized string. Normalized descriptors have the xpub at the last hardened step. This fails if the provided provider does not have the private keys to derive that xpub. */
-    virtual bool ToNormalizedString(const SigningProvider& provider, std::string& out, bool priv) const = 0;
+    virtual bool ToNormalizedString(const SigningProvider& provider, std::string& out) const = 0;
 
     /** Expand a descriptor at a specified position.
      *
