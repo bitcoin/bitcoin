@@ -41,7 +41,6 @@
 #include <memory>
 #include <stdint.h>
 // SYSCOIN
-#include <spork.h>
 #include <governance/governanceclasses.h>
 #include <masternode/masternodepayments.h>
 #include <masternode/masternodesync.h>

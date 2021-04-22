@@ -49,9 +49,8 @@ bool CGovernanceObjectVoteFile::SerializeVoteToStream(const uint256& nHash, CDat
 std::vector<CGovernanceVote> CGovernanceObjectVoteFile::GetVotes() const
 {
     std::vector<CGovernanceVote> vecResult;
-    for (auto it = listVotes.begin(); it != listVotes.end(); ++it) {
-        vecResult.push_back(*it);
-    }
+    vecResult.reserve(listVotes.size());
+    std::copy(std::begin(listVotes), std::end(listVotes), std::back_inserter(vecResult));
     return vecResult;
 }
 

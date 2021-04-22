@@ -4,6 +4,11 @@
 
 #include <governance/governanceclasses.h>
 #include <core_io.h>
+#include <governance/governance.h>
+#include <key_io.h>
+#include <primitives/transaction.h>
+#include <script/standard.h>
+#include <timedata.h>
 #include <util/strencodings.h>
 #include <validation.h>
 
@@ -422,7 +427,12 @@ CSuperblock::
     LogPrint(BCLog::GOBJECT, "CSuperblock -- nBlockHeight = %d, strAddresses = %s, strAmounts = %s, vecPayments.size() = %d\n",
         nBlockHeight, strAddresses, strAmounts, vecPayments.size());
 }
-
+CGovernanceObject* CSuperblock::GetGovernanceObject()
+{
+    AssertLockHeld(governance.cs);
+    CGovernanceObject* pObj = governance.FindGovernanceObject(nGovObjHash);
+    return pObj;
+}
 /**
  *   Is Valid Superblock Height
  *
@@ -1040,4 +1050,21 @@ bool CSuperblock::IsExpired() const
     }
 
     return false;
+}
+CGovernancePayment::CGovernancePayment(const CTxDestination& destIn, const CAmount &nAmountIn) :
+        fValid(false),
+        script(),
+        nAmount(0)
+{
+    try {
+        script = GetScriptForDestination(destIn);
+        nAmount = nAmountIn;
+        fValid = true;
+    } catch (std::exception& e) {
+        LogPrintf("CGovernancePayment Payment not valid: destIn = %s, nAmountIn = %d, what = %s\n",
+                  EncodeDestination(destIn), nAmountIn, e.what());
+    } catch (...) {
+        LogPrintf("CGovernancePayment Payment not valid: destIn = %s, nAmountIn = %d\n",
+                  EncodeDestination(destIn), nAmountIn);
+    }
 }

@@ -5,20 +5,20 @@
 #ifndef SYSCOIN_GOVERNANCE_GOVERNANCEOBJECT_H
 #define SYSCOIN_GOVERNANCE_GOVERNANCEOBJECT_H
 
-#include <cachemultimap.h>
+#include <logging.h>
 #include <governance/governanceexceptions.h>
 #include <governance/governancevote.h>
 #include <governance/governancevotedb.h>
-#include <key.h>
-#include <net.h>
 #include <sync.h>
 #include <util/system.h>
-#include <util/strencodings.h>
-#include <bls/bls.h>
 #include <threadsafety.h>
 
 #include <univalue.h>
 extern RecursiveMutex cs_main;
+
+class CBLSSecretKey;
+class CBLSPublicKey;
+class CNode;
 class CGovernanceManager;
 class CGovernanceTriggerManager;
 class CGovernanceObject;

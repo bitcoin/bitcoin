@@ -5,22 +5,13 @@
 #ifndef SYSCOIN_GOVERNANCE_GOVERNANCE_H
 #define SYSCOIN_GOVERNANCE_GOVERNANCE_H
 
-#include <bloom.h>
 #include <cachemap.h>
 #include <cachemultimap.h>
-#include <chain.h>
-#include <governance/governanceexceptions.h>
 #include <governance/governanceobject.h>
-#include <governance/governancevote.h>
-#include <net.h>
-#include <sync.h>
-#include <timedata.h>
-#include <util/system.h>
-#include <threadsafety.h>
 
-
-#include <univalue.h>
-
+class CBloomFilter;
+class CBlockIndex;
+class CInv;
 class CGovernanceManager;
 class CGovernanceTriggerManager;
 class CGovernanceObject;
@@ -375,7 +366,7 @@ private:
 
     static bool AcceptMessage(const uint256& nHash, hash_s_t& setHash);
 
-    void CheckOrphanVotes(CGovernanceObject& govobj, CGovernanceException& exception, CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void CheckOrphanVotes(CGovernanceObject& govobj, CConnman& connman) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void RebuildIndexes();
 

@@ -5,12 +5,14 @@
 #ifndef SYSCOIN_GOVERNANCE_GOVERNANCEVOTE_H
 #define SYSCOIN_GOVERNANCE_GOVERNANCEVOTE_H
 
-#include <key.h>
 #include <primitives/transaction.h>
-#include <bls/bls.h>
 
 class CGovernanceVote;
+class CBLSPublicKey;
+class CBLSSecretKey;
 class CConnman;
+class CKey;
+class CKeyID;
 
 // INTENTION OF MASTERNODES REGARDING ITEM
 enum vote_outcome_enum_t {

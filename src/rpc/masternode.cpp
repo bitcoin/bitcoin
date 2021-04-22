@@ -3,8 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <masternode/activemasternode.h>
-#include <netbase.h>
-#include <validation.h>
 #include <masternode/masternodepayments.h>
 #include <rpc/server.h>
 #include <rpc/blockchain.h>
@@ -12,6 +10,8 @@
 #include <governance/governanceclasses.h>
 #include <node/blockstorage.h>
 #include <evo/deterministicmns.h>
+#include <net.h>
+#include <validation.h>
 RPCHelpMan masternodelist();
 
 static RPCHelpMan masternode_list()
