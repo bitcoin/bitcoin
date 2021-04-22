@@ -92,15 +92,25 @@ CTxDestination DecodeDestination(const std::string& str, const CChainParams& par
 
         // Set potential error message.
         // This message may be changed if the address can also be interpreted as a Bech32 address.
-        error_str = "Invalid prefix for Base58-encoded address";
+        error_str = "Invalid prefix for Base58-encoded address. Valid address starts with `1` or `3` (mainnet) and `m` or `n` or `2` (testnet)";
     }
     data.clear();
     const auto dec = bech32::Decode(str);
     if ((dec.encoding == bech32::Encoding::BECH32 || dec.encoding == bech32::Encoding::BECH32M) && dec.data.size() > 0) {
         // Bech32 decoding
         error_str = "";
+	std::string error_nw = "";
+        if (params.Bech32HRP() == "bc")
+            error_nw = "mainnet";
+        else if (params.Bech32HRP() == "tb")
+            error_nw = "testnet";
+        else
+            error_nw = "this network";
         if (dec.hrp != params.Bech32HRP()) {
-            error_str = "Invalid prefix for Bech32 address";
+            error_str = "Invalid prefix '";
+            error_str.append(dec.hrp);
+            error_str.append("' for Bech32 address on ");
+            error_str.append(error_nw);
             return CNoDestination();
         }
         int version = dec.data[0]; // The first 5 bit symbol is the witness version (0-16)
