@@ -336,7 +336,7 @@ syscoin_qt_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFL
 syscoin_qt_libtoolflags = $(AM_LIBTOOLFLAGS) --tag CXX
 
 if GLIBC_BACK_COMPAT
-  syscoin_gui_SOURCES += compat/glibc_compat.cpp
+  syscoin_qt_sources += compat/glibc_compat.cpp
 endif
 
 qt_syscoin_qt_CPPFLAGS = $(syscoin_qt_cppflags)
