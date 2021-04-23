@@ -132,6 +132,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     AppInitParameterInteraction(*m_node.args);
     LogInstance().StartLogging();
     m_node.kernel = std::make_unique<kernel::Context>();
+    Assert(AppInitSanityChecks(*m_node.kernel));
     SetupNetworking();
     InitSignatureCache();
     InitScriptExecutionCache();

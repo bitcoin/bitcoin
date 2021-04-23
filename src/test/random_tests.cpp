@@ -13,11 +13,6 @@
 
 BOOST_FIXTURE_TEST_SUITE(random_tests, BasicTestingSetup)
 
-BOOST_AUTO_TEST_CASE(osrandom_tests)
-{
-    BOOST_CHECK(Random_SanityCheck());
-}
-
 BOOST_AUTO_TEST_CASE(fastrandom_tests)
 {
     // Check that deterministic FastRandomContexts are deterministic
