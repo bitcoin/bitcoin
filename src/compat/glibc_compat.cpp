@@ -133,7 +133,7 @@ extern "C" ssize_t __wrap_getrandom (void *buffer, size_t length, unsigned int f
 
 /* Write LENGTH bytes of randomness starting at BUFFER.  Return 0 on
    success and -1 on failure.  */
-extern "C" int __wrap_getentropy (void *buffer, size_t length)
+extern "C" int getentropy (void *buffer, size_t length)
 {
   /* The interface is documented to return EIO for buffer lengths
      longer than 256 bytes.  */
