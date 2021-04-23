@@ -110,7 +110,7 @@ task:
     memory: 16G
   env:
     CIRRUS_WORKING_DIR: "C:\\Windows\\Temp\\bitcoin"
-  install_script:\
+  install_script:
     # Install Vistual Studio build tools and other prerequisites
     - choco upgrade -y visualstudio2019-workload-vctools
     - choco install -y python3
