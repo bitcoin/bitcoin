@@ -2692,10 +2692,11 @@ char* curl_fetch_url(CURL *curl, const char *url, const char* payload, std::stri
   CURLcode res;
   struct MemoryStruct chunk;
   struct curl_slist *headers = NULL;                      /* http headers to send with request */
-  chunk.memory = (char*)malloc(1);  /* will be grown as needed by realloc above */ 
   chunk.size = 0;    /* no data at this point */ 
- 
+  chunk.memory = nullptr;
   if(curl) {
+    chunk.memory = (char*)malloc(1);  /* will be grown as needed by realloc above */ 
+ 
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15);
     curl_easy_setopt(curl, CURLOPT_MAXREDIRS, 1);
@@ -2729,6 +2730,8 @@ char* curl_fetch_url(CURL *curl, const char *url, const char* payload, std::stri
       return nullptr;
     } 
     curl_slist_free_all(headers);
+  } else {
+      return nullptr;
   }
   return chunk.memory;
 }
