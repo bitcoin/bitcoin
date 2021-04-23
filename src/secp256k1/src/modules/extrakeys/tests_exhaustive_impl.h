@@ -1,11 +1,11 @@
-/**********************************************************************
- * Copyright (c) 2020 Pieter Wuille                                   *
- * Distributed under the MIT software license, see the accompanying   *
- * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
- **********************************************************************/
+/***********************************************************************
+ * Copyright (c) 2020 Pieter Wuille                                    *
+ * Distributed under the MIT software license, see the accompanying    *
+ * file COPYING or https://www.opensource.org/licenses/mit-license.php.*
+ ***********************************************************************/
 
-#ifndef _SECP256K1_MODULE_EXTRAKEYS_TESTS_EXHAUSTIVE_
-#define _SECP256K1_MODULE_EXTRAKEYS_TESTS_EXHAUSTIVE_
+#ifndef SECP256K1_MODULE_EXTRAKEYS_TESTS_EXHAUSTIVE_H
+#define SECP256K1_MODULE_EXTRAKEYS_TESTS_EXHAUSTIVE_H
 
 #include "src/modules/extrakeys/main_impl.h"
 #include "include/secp256k1_extrakeys.h"
