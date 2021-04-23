@@ -37,13 +37,19 @@
      <property name="rightMargin">
       <number>0</number>
      </property>
-     <item>
+     <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
       <widget class="QLabel" name="aboutLogo">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Preferred" vsizetype="Ignored">
          <horstretch>0</horstretch>
          <verstretch>0</verstretch>
         </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
        </property>
        <property name="maximumSize">
         <size>
@@ -52,7 +58,7 @@
         </size>
        </property>
        <property name="pixmap">
-        <pixmap resource="../bitcoin.qrc">:/icons/bitcoin</pixmap>
+        <pixmap resource="../bitcoin.qrc">:/icons/dynamo_white</pixmap>
        </property>
        <property name="scaledContents">
         <bool>true</bool>
@@ -95,6 +101,14 @@
         <bool>true</bool>
        </property>
        <widget class="QWidget" name="scrollAreaWidgetContents">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>635</width>
+          <height>137</height>
+         </rect>
+        </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
           <widget class="QLabel" name="aboutMessage">

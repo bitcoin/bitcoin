@@ -248,22 +248,22 @@
 #define LT_OBJDIR ".libs/"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "https://github.com/bitcoin/bitcoin/issues"
+#define PACKAGE_BUGREPORT "https://github.com/dynamo-foundation/dynamo-core/issues"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "Bitcoin Core"
+#define PACKAGE_NAME "Dynamo Core"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Bitcoin Core 21.99.0"
+#define PACKAGE_STRING "Dynamo Core 1.0"
 
 /* Define to the one symbol short name of this package. */
-#define PACKAGE_TARNAME "bitcoin"
+#define PACKAGE_TARNAME "dynamo"
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL "https://bitcoincore.org/"
+#define PACKAGE_URL "https://dynamocoin.org/"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "21.99.0"
+#define PACKAGE_VERSION "1.0"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */

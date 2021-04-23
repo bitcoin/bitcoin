@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>740</width>
+    <width>747</width>
     <height>430</height>
    </rect>
   </property>
@@ -36,7 +36,7 @@
    <item>
     <widget class="QTabWidget" name="tabWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="tab_info">
       <attribute name="title">
@@ -1048,8 +1048,8 @@
                <rect>
                 <x>0</x>
                 <y>0</y>
-                <width>300</width>
-                <height>426</height>
+                <width>263</width>
+                <height>455</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_2" columnstretch="0,1">

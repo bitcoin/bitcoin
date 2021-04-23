@@ -73,7 +73,7 @@
 // Application startup time (used for uptime calculation)
 const int64_t nStartupTime = GetTime();
 
-const char * const BITCOIN_CONF_FILENAME = "bitcoin.conf";
+const char * const BITCOIN_CONF_FILENAME = "dynamo.conf";
 const char * const BITCOIN_SETTINGS_FILENAME = "settings.json";
 
 ArgsManager gArgs;
@@ -705,7 +705,7 @@ fs::path GetDefaultDataDir()
     // Unix-like: ~/.bitcoin
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "Dyanmo";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "Dynamo";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -1344,8 +1344,8 @@ std::string CopyrightHolders(const std::string& strPrefix)
     std::string strCopyrightHolders = strPrefix + copyright_devs;
 
     // Make sure Bitcoin Core copyright is not removed by accident
-    if (copyright_devs.find("Bitcoin Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + "The Bitcoin Core developers";
+    if (copyright_devs.find("Dynamo Core") == std::string::npos) {
+        strCopyrightHolders += "\n" + strPrefix + "The Dynamo Core developers";
     }
     return strCopyrightHolders;
 }

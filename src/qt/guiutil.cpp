@@ -113,7 +113,7 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
     widget->setFont(fixedPitchFont());
     // We don't want translators to use own addresses in translations
     // and this is the only place, where this address is supplied.
-    widget->setPlaceholderText(QObject::tr("Enter a Bitcoin address (e.g. %1)").arg(
+    widget->setPlaceholderText(QObject::tr("Enter a Dynamo address (e.g. %1)").arg(
         QString::fromStdString(DummyAddress(Params()))));
     widget->setValidator(new BitcoinAddressEntryValidator(parent));
     widget->setCheckValidator(new BitcoinAddressCheckValidator(parent));
@@ -122,7 +122,7 @@ void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent)
 bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out)
 {
     // return if URI is not valid or is no bitcoin: URI
-    if(!uri.isValid() || uri.scheme() != QString("bitcoin"))
+    if(!uri.isValid() || uri.scheme() != QString("dynamo"))
         return false;
 
     SendCoinsRecipient rv;
@@ -186,7 +186,7 @@ QString formatBitcoinURI(const SendCoinsRecipient &info)
 {
     bool bech_32 = info.address.startsWith(QString::fromStdString(Params().Bech32HRP() + "1"));
 
-    QString ret = QString("bitcoin:%1").arg(bech_32 ? info.address.toUpper() : info.address);
+    QString ret = QString("dynamo:%1").arg(bech_32 ? info.address.toUpper() : info.address);
     int paramCount = 0;
 
     if (info.amount)
@@ -480,7 +480,7 @@ fs::path static StartupShortcutPath()
 {
     std::string chain = gArgs.GetChainName();
     if (chain == CBaseChainParams::MAIN)
-        return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin.lnk";
+        return GetSpecialFolderPath(CSIDL_STARTUP) / "dynamo.lnk";
     if (chain == CBaseChainParams::TESTNET) // Remove this special case when CBaseChainParams::TESTNET = "testnet4"
         return GetSpecialFolderPath(CSIDL_STARTUP) / "Bitcoin (testnet).lnk";
     return GetSpecialFolderPath(CSIDL_STARTUP) / strprintf("Bitcoin (%s).lnk", chain);
