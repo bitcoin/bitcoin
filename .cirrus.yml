@@ -102,16 +102,14 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_win64.sh"
 
 task:
+  env:
+    CIRRUS_WORKING_DIR: "c:\\"
   name: 'Win64 [installer]'
   timeout_in: 120m
   windows_container:
     image: cirrusci/windowsservercore:2019
     cpu: 8
     memory: 16G
-  clone_script:
-    - choco install -y git
-    - cd c:\
-    - git clone -b %CIRRUS_BRANCH% %CIRRUS_REPO_CLONE_URL%
   install_script:
     # Install Vistual Studio build tools and other prerequisites
     - choco upgrade -y visualstudio2019-workload-vctools
