@@ -1220,9 +1220,10 @@ bool CConnman::AttemptToEvictConnection()
 void CConnman::AcceptConnection(const ListenSocket& hListenSocket, CMasternodeSync& mn_sync) {
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
-    SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
+    auto sock = hListenSocket.sock->Accept((struct sockaddr*)&sockaddr, &len);
     CAddress addr;
-    if (hSocket == INVALID_SOCKET) {
+
+    if (!sock) {
         const int nErr = WSAGetLastError();
         if (nErr != WSAEWOULDBLOCK) {
             LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
@@ -1236,15 +1237,15 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket, CMasternodeSy
         addr = CAddress{MaybeFlipIPv6toCJDNS(addr), NODE_NONE};
     }
 
-    const CAddress addr_bind{MaybeFlipIPv6toCJDNS(GetBindAddress(hSocket)), NODE_NONE};
+    const CAddress addr_bind{MaybeFlipIPv6toCJDNS(GetBindAddress(sock->Get())), NODE_NONE};
 
     NetPermissionFlags permissionFlags = NetPermissionFlags::None;
     hListenSocket.AddSocketPermissionFlags(permissionFlags);
 
-    CreateNodeFromAcceptedSocket(hSocket, permissionFlags, addr_bind, addr, mn_sync);
+    CreateNodeFromAcceptedSocket(std::move(sock), permissionFlags, addr_bind, addr, mn_sync);
 }
 
-void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
+void CConnman::CreateNodeFromAcceptedSocket(std::unique_ptr<Sock>&& sock,
                                             NetPermissionFlags permissionFlags,
                                             const CAddress& addr_bind,
                                             const CAddress& addr,
@@ -1287,27 +1288,24 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
 
     if (!fNetworkActive) {
         LogPrint(BCLog::NET_NETCONN, "%s: not accepting new connections\n", strDropped);
-        CloseSocket(hSocket);
         return;
     }
 
-    if (!IsSelectableSocket(hSocket))
+    if (!IsSelectableSocket(sock->Get()))
     {
         LogPrintf("%s: non-selectable socket\n", strDropped);
-        CloseSocket(hSocket);
         return;
     }
 
     // According to the internet TCP_NODELAY is not carried into accepted sockets
     // on all platforms.  Set it again here just to be sure.
-    SetSocketNoDelay(hSocket);
+    SetSocketNoDelay(sock->Get());
 
     // Don't accept connections from banned peers.
     bool banned = m_banman && m_banman->IsBanned(addr);
     if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::NoBan) && banned)
     {
         LogPrint(BCLog::NET, "%s (banned)\n", strDropped);
-        CloseSocket(hSocket);
         return;
     }
 
@@ -1316,7 +1314,6 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
     if (!NetPermissions::HasFlag(permissionFlags, NetPermissionFlags::NoBan) && nInbound + 1 >= nMaxInbound && discouraged)
     {
         LogPrint(BCLog::NET, "connection from %s dropped (discouraged)\n", addr.ToString());
-        CloseSocket(hSocket);
         return;
     }
 
@@ -1330,7 +1327,6 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
         if (!AttemptToEvictConnection()) {
             // No connection to evict, disconnect the new connection
             LogPrint(BCLog::NET, "failed to find an eviction candidate - connection dropped (full)\n");
-            CloseSocket(hSocket);
             return;
         }
         nInbound--;
@@ -1339,7 +1335,6 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
     // don't accept incoming connections until blockchain is synced
     if (fMasternodeMode && !mn_sync.IsBlockchainSynced()) {
         LogPrint(BCLog::NET, "AcceptConnection -- blockchain is not synced yet, skipping inbound connection attempt\n");
-        CloseSocket(hSocket);
         return;
     }
 
@@ -1352,7 +1347,7 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
     }
 
     const bool inbound_onion = std::find(m_onion_binds.begin(), m_onion_binds.end(), addr_bind) != m_onion_binds.end();
-    CNode* pnode = new CNode(id, nodeServices, hSocket, addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", ConnectionType::INBOUND, inbound_onion);
+    CNode* pnode = new CNode(id, nodeServices, sock->Release(), addr, CalculateKeyedNetGroup(addr), nonce, addr_bind, "", ConnectionType::INBOUND, inbound_onion);
     pnode->AddRef();
     pnode->m_permissionFlags = permissionFlags;
     // If this flag is present, the user probably expect that RPC and QT report it as whitelisted (backward compatibility)
@@ -1361,17 +1356,19 @@ void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
     m_msgproc->InitializeNode(pnode);
 
     if (fLogIPs) {
-        LogPrint(BCLog::NET_NETCONN, "connection from %s accepted, sock=%d, peer=%d\n", addr.ToString(), hSocket, pnode->GetId());
+        LogPrint(BCLog::NET_NETCONN, "connection from %s accepted, sock=%d, peer=%d\n", addr.ToString(), sock->Get(), pnode->GetId());
     } else {
-        LogPrint(BCLog::NET_NETCONN, "connection accepted, sock=%d, peer=%d\n", hSocket, pnode->GetId());
+        LogPrint(BCLog::NET_NETCONN, "connection accepted, sock=%d, peer=%d\n", sock->Get(), pnode->GetId());
     }
 
     {
         LOCK(m_nodes_mutex);
         m_nodes.push_back(pnode);
-        WITH_LOCK(cs_mapSocketToNode, mapSocketToNode.emplace(hSocket, pnode));
+    }
+    {
+        LOCK(pnode->cs_hSocket);
+        WITH_LOCK(cs_mapSocketToNode, mapSocketToNode.emplace(pnode->hSocket, pnode));
         if (m_edge_trig_events) {
-            LOCK(pnode->cs_hSocket);
             if (!m_edge_trig_events->RegisterEvents(pnode->hSocket)) {
                 LogPrint(BCLog::NET, "EdgeTriggeredEvents::RegisterEvents() failed\n");
             }
@@ -1656,7 +1653,7 @@ bool CConnman::GenerateSelectSet(const std::vector<CNode*>& nodes,
                                  std::set<SOCKET>& error_set)
 {
     for (const ListenSocket& hListenSocket : vhListenSocket) {
-        recv_set.insert(hListenSocket.socket);
+        recv_set.insert(hListenSocket.sock->Get());
     }
 
     for (CNode* pnode : nodes)
@@ -2128,7 +2125,7 @@ void CConnman::SocketHandlerListening(const std::set<SOCKET>& recv_set, CMastern
         if (interruptNet) {
             return;
         }
-        if (recv_set.count(listen_socket.socket) > 0) {
+        if (recv_set.count(listen_socket.sock->Get()) > 0) {
             AcceptConnection(listen_socket, mn_sync);
         }
     }
@@ -3168,7 +3165,7 @@ void CConnman::ThreadI2PAcceptIncoming(CMasternodeSync& mn_sync)
             continue;
         }
 
-        CreateNodeFromAcceptedSocket(conn.sock->Release(), NetPermissionFlags::None,
+        CreateNodeFromAcceptedSocket(std::move(conn.sock), NetPermissionFlags::None,
                                      CAddress{conn.me, NODE_NONE}, CAddress{conn.peer, NODE_NONE}, mn_sync);
     }
 }
@@ -3235,7 +3232,7 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
         return false;
     }
 
-    vhListenSocket.push_back(ListenSocket(sock->Release(), permissions));
+    vhListenSocket.emplace_back(std::move(sock), permissions);
 
     return true;
 }
@@ -3582,12 +3579,10 @@ void CConnman::StopNodes()
             pnode->CloseSocketDisconnect(this);
     }
     for (ListenSocket& hListenSocket : vhListenSocket) {
-        if (hListenSocket.socket != INVALID_SOCKET) {
-            if (m_edge_trig_events && !m_edge_trig_events->RemoveSocket(hListenSocket.socket)) {
+        if (hListenSocket.sock->Get() != INVALID_SOCKET) {
+            if (m_edge_trig_events && !m_edge_trig_events->RemoveSocket(hListenSocket.sock->Get())) {
                 LogPrintf("EdgeTriggeredEvents::RemoveSocket() failed\n");
             }
-            if (!CloseSocket(hListenSocket.socket))
-                LogPrintf("CloseSocket(hListenSocket) failed with error %s\n", NetworkErrorString(WSAGetLastError()));
         }
     }
 
