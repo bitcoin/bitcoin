@@ -26,6 +26,8 @@ bool PeerTableSortProxy::lessThan(const QModelIndex& left_index, const QModelInd
         return left_stats.nodeid < right_stats.nodeid;
     case PeerTableModel::Address:
         return left_stats.addrName.compare(right_stats.addrName) < 0;
+    case PeerTableModel::Direction:
+        return left_stats.fInbound > right_stats.fInbound; // default sort Inbound, then Outbound
     case PeerTableModel::ConnectionType:
         return left_stats.m_conn_type < right_stats.m_conn_type;
     case PeerTableModel::Network:
