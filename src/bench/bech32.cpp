@@ -18,7 +18,7 @@ static void Bech32Encode(benchmark::State& state)
     tmp.reserve(1 + 32 * 8 / 5);
     ConvertBits<8, 5, true>([&](unsigned char c) { tmp.push_back(c); }, v.begin(), v.end());
     while (state.KeepRunning()) {
-        bech32::Encode("bc", tmp);
+        bech32::Encode(bech32::Encoding::BECH32, "bc", tmp);
     }
 }
 
