@@ -612,47 +612,6 @@ public:
     }
 };
 
-/** Parameters for one iteration of Coin Selection. */
-struct CoinSelectionParams
-{
-    /** Size of a change output in bytes, determined by the output type. */
-    size_t change_output_size = 0;
-    /** Size of the input to spend a change output in virtual bytes. */
-    size_t change_spend_size = 0;
-    /** Cost of creating the change output. */
-    CAmount m_change_fee{0};
-    /** Cost of creating the change output + cost of spending the change output in the future. */
-    CAmount m_cost_of_change{0};
-    /** The targeted feerate of the transaction being built. */
-    CFeeRate m_effective_feerate;
-    /** The feerate estimate used to estimate an upper bound on what should be sufficient to spend
-     * the change output sometime in the future. */
-    CFeeRate m_long_term_feerate;
-    /** If the cost to spend a change output at the discard feerate exceeds its value, drop it to fees. */
-    CFeeRate m_discard_feerate;
-    /** Size of the transaction before coin selection, consisting of the header and recipient
-     * output(s), excluding the inputs and change output(s). */
-    size_t tx_noinputs_size = 0;
-    /** Indicate that we are subtracting the fee from outputs */
-    bool m_subtract_fee_outputs = false;
-    /** When true, always spend all (up to OUTPUT_GROUP_MAX_ENTRIES) or none of the outputs
-     * associated with the same address. This helps reduce privacy leaks resulting from address
-     * reuse. Dust outputs are not eligible to be added to output groups and thus not considered. */
-    bool m_avoid_partial_spends = false;
-
-    CoinSelectionParams(size_t change_output_size, size_t change_spend_size, CFeeRate effective_feerate,
-                        CFeeRate long_term_feerate, CFeeRate discard_feerate, size_t tx_noinputs_size, bool avoid_partial) :
-        change_output_size(change_output_size),
-        change_spend_size(change_spend_size),
-        m_effective_feerate(effective_feerate),
-        m_long_term_feerate(long_term_feerate),
-        m_discard_feerate(discard_feerate),
-        tx_noinputs_size(tx_noinputs_size),
-        m_avoid_partial_spends(avoid_partial)
-    {}
-    CoinSelectionParams() {}
-};
-
 class WalletRescanReserver; //forward declarations for ScanForWalletTransactions/RescanFromTime
 /**
  * A CWallet maintains a set of transactions and balances, and provides the ability to create new transactions.
@@ -883,7 +842,7 @@ public:
     bool IsSpentKey(const uint256& hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
     void SetSpentKeyState(WalletBatch& batch, const uint256& hash, unsigned int n, bool used, std::set<CTxDestination>& tx_destinations) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
-    std::vector<OutputGroup> GroupOutputs(const std::vector<COutput>& outputs, bool separate_coins, const CFeeRate& effective_feerate, const CFeeRate& long_term_feerate, const CoinEligibilityFilter& filter, bool positive_only) const;
+    std::vector<OutputGroup> GroupOutputs(const std::vector<COutput>& outputs, const CoinSelectionParams& coin_sel_params, const CoinEligibilityFilter& filter, bool positive_only) const;
 
     /** Display address on an external signer. Returns false if external signer support is not compiled */
     bool DisplayAddress(const CTxDestination& dest) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);

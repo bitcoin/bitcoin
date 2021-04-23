@@ -2399,20 +2399,13 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
     setCoinsRet.clear();
     nValueRet = 0;
 
-    // Get the feerate for effective value.
-    // When subtracting the fee from the outputs, we want the effective feerate to be 0
-    CFeeRate effective_feerate{0};
-    if (!coin_selection_params.m_subtract_fee_outputs) {
-        effective_feerate = coin_selection_params.m_effective_feerate;
-    }
-
-    std::vector<OutputGroup> positive_groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, effective_feerate, coin_selection_params.m_long_term_feerate, eligibility_filter, true /* positive_only */);
     // Note that unlike KnapsackSolver, we do not include the fee for creating a change output as BnB will not create a change output.
+    std::vector<OutputGroup> positive_groups = GroupOutputs(coins, coin_selection_params, eligibility_filter, true /* positive_only */);
     if (SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change, setCoinsRet, nValueRet)) {
         return true;
     }
     // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
-    std::vector<OutputGroup> all_groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, effective_feerate, coin_selection_params.m_long_term_feerate, eligibility_filter, false /* positive_only */);
+    std::vector<OutputGroup> all_groups = GroupOutputs(coins, coin_selection_params, eligibility_filter, false /* positive_only */);
     // While nTargetValue includes the transaction fees for non-input things, it does not include the fee for creating a change output.
     // So we need to include that for KnapsackSolver as well, as we are expecting to create a change output.
     return KnapsackSolver(nTargetValue + coin_selection_params.m_change_fee, all_groups, setCoinsRet, nValueRet);
@@ -4223,12 +4216,12 @@ bool CWalletTx::IsImmatureCoinBase() const
     return GetBlocksToMaturity() > 0;
 }
 
-std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outputs, bool separate_coins, const CFeeRate& effective_feerate, const CFeeRate& long_term_feerate, const CoinEligibilityFilter& filter, bool positive_only) const
+std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outputs, const CoinSelectionParams& coin_sel_params, const CoinEligibilityFilter& filter, bool positive_only) const
 {
     std::vector<OutputGroup> groups_out;
 
-    if (separate_coins) {
-        // Single coin means no grouping. Each COutput gets its own OutputGroup.
+    if (!coin_sel_params.m_avoid_partial_spends) {
+        // Allowing partial spends  means no grouping. Each COutput gets its own OutputGroup.
         for (const COutput& output : outputs) {
             // Skip outputs we cannot spend
             if (!output.fSpendable) continue;
@@ -4238,11 +4231,11 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
             CInputCoin input_coin = output.GetInputCoin();
 
             // Make an OutputGroup containing just this output
-            OutputGroup group{effective_feerate, long_term_feerate};
+            OutputGroup group{coin_sel_params};
             group.Insert(input_coin, output.nDepth, output.tx->IsFromMe(ISMINE_ALL), ancestors, descendants, positive_only);
 
             // Check the OutputGroup's eligibility. Only add the eligible ones.
-            if (positive_only && group.effective_value <= 0) continue;
+            if (positive_only && group.GetSelectionAmount() <= 0) continue;
             if (group.m_outputs.size() > 0 && group.EligibleForSpending(filter)) groups_out.push_back(group);
         }
         return groups_out;
@@ -4268,7 +4261,7 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
 
         if (groups.size() == 0) {
             // No OutputGroups for this scriptPubKey yet, add one
-            groups.emplace_back(effective_feerate, long_term_feerate);
+            groups.emplace_back(coin_sel_params);
         }
 
         // Get the last OutputGroup in the vector so that we can add the CInputCoin to it
@@ -4279,7 +4272,7 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
         // to avoid surprising users with very high fees.
         if (group->m_outputs.size() >= OUTPUT_GROUP_MAX_ENTRIES) {
             // The last output group is full, add a new group to the vector and use that group for the insertion
-            groups.emplace_back(effective_feerate, long_term_feerate);
+            groups.emplace_back(coin_sel_params);
             group = &groups.back();
         }
 
@@ -4301,7 +4294,7 @@ std::vector<OutputGroup> CWallet::GroupOutputs(const std::vector<COutput>& outpu
             }
 
             // Check the OutputGroup's eligibility. Only add the eligible ones.
-            if (positive_only && group.effective_value <= 0) continue;
+            if (positive_only && group.GetSelectionAmount() <= 0) continue;
             if (group.m_outputs.size() > 0 && group.EligibleForSpending(filter)) groups_out.push_back(group);
         }
     }
