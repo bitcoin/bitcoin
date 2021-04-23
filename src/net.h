@@ -408,7 +408,7 @@ public:
      * Socket used for communication with the node.
      * May not own a Sock object (after `CloseSocketDisconnect()` or during tests).
      */
-    std::shared_ptr<Sock> m_sock GUARDED_BY(cs_hSocket);
+    std::shared_ptr<Sock> m_sock GUARDED_BY(m_sock_mutex);
 
     /** Total size of all vSendMsg entries */
     size_t nSendSize GUARDED_BY(cs_vSend){0};
@@ -417,7 +417,7 @@ public:
     uint64_t nSendBytes GUARDED_BY(cs_vSend){0};
     std::deque<std::vector<unsigned char>> vSendMsg GUARDED_BY(cs_vSend);
     Mutex cs_vSend;
-    Mutex cs_hSocket;
+    Mutex m_sock_mutex;
     Mutex cs_vRecv;
 
     RecursiveMutex cs_vProcessMsg;
