@@ -71,6 +71,18 @@ class LoadblockTest(BitcoinTestFramework):
         subprocess.run([sys.executable, linearize_data_file, cfg_file],
                        check=True)
 
+        # Test that -loadblock can work with blocks that are out of order.
+        # In this test environment, blocks will always be in order (since
+        # we're generating them rather than getting them from peers), so to
+        # test out-of-order handling, swap blocks 1 and 2 on disk.
+        with open(bootstrap_file, 'r+b') as bf:
+            b = bf.read(814)
+
+            # Swap the same-size second and third blocks (don't change genesis).
+            bf.seek(293)
+            bf.write(b[553:813])
+            bf.write(b[293:553])
+
         self.log.info("Restart second, unsynced node with bootstrap file")
         self.restart_node(1, extra_args=["-loadblock=" + bootstrap_file])
         assert_equal(self.nodes[1].getblockcount(), 100)  # start_node is blocking on all block files being imported

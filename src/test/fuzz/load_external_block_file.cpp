@@ -31,13 +31,8 @@ FUZZ_TARGET_INIT(load_external_block_file, initialize_load_external_block_file)
     if (fuzzed_block_file == nullptr) {
         return;
     }
-    if (fuzzed_data_provider.ConsumeBool()) {
-        // Corresponds to the -reindex case (track orphan blocks across files).
-        FlatFilePos flat_file_pos;
-        std::multimap<uint256, FlatFilePos> blocks_with_unknown_parent;
-        g_setup->m_node.chainman->ActiveChainstate().LoadExternalBlockFile(fuzzed_block_file, &flat_file_pos, &blocks_with_unknown_parent);
-    } else {
-        // Corresponds to the -loadblock= case (orphan blocks aren't tracked across files).
-        g_setup->m_node.chainman->ActiveChainstate().LoadExternalBlockFile(fuzzed_block_file);
-    }
+    std::vector<fs::path> blk_paths = {"no_such_file"};
+    std::multimap<uint256, FlatFilePos> blocks_with_unknown_parent;
+    bool write_to_disk = fuzzed_data_provider.ConsumeBool();
+    g_setup->m_node.chainman->ActiveChainstate().LoadExternalBlockFile(blk_paths, 0, fuzzed_block_file, blocks_with_unknown_parent, write_to_disk);
 }

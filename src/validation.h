@@ -686,9 +686,16 @@ public:
 
     /** Import blocks from an external file */
     void LoadExternalBlockFile(
-        FILE* fileIn,
-        FlatFilePos* dbp = nullptr,
-        std::multimap<uint256, FlatFilePos>* blocks_with_unknown_parent = nullptr);
+        const std::vector<fs::path>& blk_paths,
+        size_t n_file,
+        FILE* file,
+        std::multimap<uint256, FlatFilePos>& blocks_with_unknown_parent,
+        bool write_to_disk);
+
+    /** Import blocks from one or more external files */
+    void LoadExternalBlockFiles(
+        const std::vector<fs::path>& blk_paths,
+        bool write_to_disk);
 
     /**
      * Update the on-disk chain state.
