@@ -845,6 +845,7 @@ if test x$use_glibc_compat != xno; then
   AX_CHECK_LINK_FLAG([[-Wl,--wrap=log2f]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=log2f"])
   dnl SYSCOIN
   AX_CHECK_LINK_FLAG([[-Wl,--wrap=getrandom]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=getrandom"])
+  AX_CHECK_LINK_FLAG([[-Wl,--wrap=getentropy]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=getentropy"])
   AX_CHECK_LINK_FLAG([[-Wl,--wrap=fmemopen]], [COMPAT_LDFLAGS="$COMPAT_LDFLAGS -Wl,--wrap=fmemopen"])
   case $host in
     powerpc64* | ppc64*)
