@@ -335,6 +335,10 @@ syscoin_qt_ldadd += $(LIBSYSCOIN_CLI) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_UTIL) $(
 syscoin_qt_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 syscoin_qt_libtoolflags = $(AM_LIBTOOLFLAGS) --tag CXX
 
+if GLIBC_BACK_COMPAT
+  syscoin_gui_SOURCES += compat/glibc_compat.cpp
+endif
+
 qt_syscoin_qt_CPPFLAGS = $(syscoin_qt_cppflags)
 qt_syscoin_qt_CXXFLAGS = $(syscoin_qt_cxxflags)
 qt_syscoin_qt_SOURCES = $(syscoin_qt_sources)
