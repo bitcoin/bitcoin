@@ -1086,10 +1086,10 @@ bool CConnman::AttemptToEvictConnection()
 void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     struct sockaddr_storage sockaddr;
     socklen_t len = sizeof(sockaddr);
-    SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr*)&sockaddr, &len);
+    auto sock = hListenSocket.sock->Accept((struct sockaddr*)&sockaddr, &len);
     CAddress addr;
 
-    if (hSocket == INVALID_SOCKET) {
+    if (!sock) {
         const int nErr = WSAGetLastError();
         if (nErr != WSAEWOULDBLOCK) {
             LogPrintf("socket error accept failed: %s\n", NetworkErrorString(nErr));
@@ -1101,12 +1101,12 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         LogPrintf("Warning: Unknown socket family\n");
     }
 
-    const CAddress addr_bind = GetBindAddress(hSocket);
+    const CAddress addr_bind = GetBindAddress(sock->Get());
 
     NetPermissionFlags permissionFlags = NetPermissionFlags::None;
     hListenSocket.AddSocketPermissionFlags(permissionFlags);
 
-    CreateNodeFromAcceptedSocket(hSocket, permissionFlags, addr_bind, addr);
+    CreateNodeFromAcceptedSocket(sock->Release(), permissionFlags, addr_bind, addr);
 }
 
 void CConnman::CreateNodeFromAcceptedSocket(SOCKET hSocket,
@@ -1329,7 +1329,7 @@ bool CConnman::InactivityCheck(const CNode& node) const
 bool CConnman::GenerateSelectSet(std::set<SOCKET> &recv_set, std::set<SOCKET> &send_set, std::set<SOCKET> &error_set)
 {
     for (const ListenSocket& hListenSocket : vhListenSocket) {
-        recv_set.insert(hListenSocket.socket);
+        recv_set.insert(hListenSocket.sock->Get());
     }
 
     {
@@ -1502,8 +1502,7 @@ void CConnman::SocketHandler()
     //
     for (const ListenSocket& hListenSocket : vhListenSocket)
     {
-        if (hListenSocket.socket != INVALID_SOCKET && recv_set.count(hListenSocket.socket) > 0)
-        {
+        if (hListenSocket.sock->Get() != INVALID_SOCKET && recv_set.count(hListenSocket.sock->Get()) > 0) {
             AcceptConnection(hListenSocket);
         }
     }
@@ -2362,7 +2361,7 @@ bool CConnman::BindListenPort(const CService& addrBind, bilingual_str& strError,
         return false;
     }
 
-    vhListenSocket.push_back(ListenSocket(sock->Release(), permissions));
+    vhListenSocket.emplace_back(std::move(sock), permissions);
     return true;
 }
 
@@ -2684,16 +2683,6 @@ void CConnman::StopNodes()
         pnode->CloseSocketDisconnect();
         DeleteNode(pnode);
     }
-
-    // Close listening sockets.
-    for (ListenSocket& hListenSocket : vhListenSocket) {
-        if (hListenSocket.socket != INVALID_SOCKET) {
-            if (!CloseSocket(hListenSocket.socket)) {
-                LogPrintf("CloseSocket(hListenSocket) failed with error %s\n", NetworkErrorString(WSAGetLastError()));
-            }
-        }
-    }
-
     for (CNode* pnode : vNodesDisconnected) {
         DeleteNode(pnode);
     }
