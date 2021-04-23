@@ -107,74 +107,31 @@ static ssize_t GetDevURandom(unsigned char *ent32, size_t length)
 /* Write LENGTH bytes of randomness starting at BUFFER.  Return 0 on
     success and -1 on failure.  */
 extern "C" ssize_t __wrap_getrandom (void *buffer, size_t length, unsigned int flags)
-{
-    ssize_t rv = -1;
-    #if defined(HAVE_SYS_GETRANDOM)
-    /* Linux. From the getrandom(2) man page:
-    * "If the urandom source has been initialized, reads of up to 256 bytes
-    * will always return as many bytes as requested and will not be
-    * interrupted by signals."
-    */
-    rv = syscall(SYS_getrandom, buffer, length, flags);
-    if ((size_t)rv != length) {
-        if (rv < 0 && errno == ENOSYS) {
-            /* Fallback for kernel <3.17: the return value will be -1 and errno
-            * ENOSYS if the syscall is not available, in that case fall back
-            * to /dev/urandom.
-            */
+    {
+        ssize_t rv = -1;
+        #if defined(HAVE_SYS_GETRANDOM)
+        /* Linux. From the getrandom(2) man page:
+        * "If the urandom source has been initialized, reads of up to 256 bytes
+        * will always return as many bytes as requested and will not be
+        * interrupted by signals."
+        */
+        rv = syscall(SYS_getrandom, buffer, length, flags);
+        if ((size_t)rv != length) {
+            if (rv < 0 && errno == ENOSYS) {
+                /* Fallback for kernel <3.17: the return value will be -1 and errno
+                * ENOSYS if the syscall is not available, in that case fall back
+                * to /dev/urandom.
+                */
+                return GetDevURandom((unsigned char*)buffer, length);
+            }
+        }
+        #else 
             return GetDevURandom((unsigned char*)buffer, length);
-        }
-    }
-    #else 
-        return GetDevURandom((unsigned char*)buffer, length);
-    #endif
-    return rv;
-}
-
-/* Write LENGTH bytes of randomness starting at BUFFER.  Return 0 on
-   success and -1 on failure.  */
-extern "C" int getentropy (void *buffer, size_t length)
-{
-  /* The interface is documented to return EIO for buffer lengths
-     longer than 256 bytes.  */
-  if (length > 256)
-    {
-      errno = EIO;
-      return -1;
+        #endif
+        return rv;
     }
 
-  /* Try to fill the buffer completely.  Even with the 256 byte limit
-     above, we might still receive an EINTR error (when blocking
-     during boot).  */
-  void *end = buffer + length;
-  while (buffer < end)
-    {
-      /* NB: No cancellation point.  */
-      
-      ssize_t bytes = getrandom(buffer, end - buffer, 0);
-      if (bytes < 0)
-        {
-          if (errno == EINTR)
-            /* Try again if interrupted by a signal.  */
-            continue;
-          else
-            return -1;
-        }
-      if (bytes == 0)
-        {
-          /* No more bytes available.  This should not happen under
-             normal circumstances.  */
-          errno = EIO;
-          return -1;
-        }
-      /* Try again in case of a short read.  */
-      buffer += bytes;
-    }
-  return 0;
-}
-
-
-// fmemopen
+    // fmemopen
 
 
 typedef struct fmemopen_cookie_struct fmemopen_cookie_t;
