@@ -26,6 +26,7 @@
 #include <threadinterrupt.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <util/sock.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -947,9 +948,13 @@ public:
 private:
     struct ListenSocket {
     public:
-        SOCKET socket;
+        std::shared_ptr<Sock> sock;
         inline void AddSocketPermissionFlags(NetPermissionFlags& flags) const { NetPermissions::AddFlag(flags, m_permissions); }
-        ListenSocket(SOCKET socket_, NetPermissionFlags permissions_) : socket(socket_), m_permissions(permissions_) {}
+        ListenSocket(std::shared_ptr<Sock> sock_, NetPermissionFlags permissions_)
+            : sock{sock_}, m_permissions{permissions_}
+        {
+        }
+
     private:
         NetPermissionFlags m_permissions;
     };
