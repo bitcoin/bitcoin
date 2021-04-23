@@ -102,15 +102,15 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_win64.sh"
 
 task:
-  env:
-    CIRRUS_WORKING_DIR: "c:\\"
   name: 'Win64 [installer]'
   timeout_in: 120m
   windows_container:
     image: cirrusci/windowsservercore:2019
     cpu: 8
     memory: 16G
-  install_script:
+  env:
+    CIRRUS_WORKING_DIR: "C:\\Windows\\Temp\\bitcoin"
+  install_script:\
     # Install Vistual Studio build tools and other prerequisites
     - choco upgrade -y visualstudio2019-workload-vctools
     - choco install -y python3
@@ -132,19 +132,19 @@ task:
     - unzip Qt5.12.10_x64_static_vs2019_1694.zip -d c:\Qt5.12.10_x64_static_vs2019_1694
   build_script:
     # Build bitcoin
-    - cd c:\bitcoin\build_msvc
+    - cd c:\Windows\Temp\bitcoin\build_msvc
     - py msvc-autogen.py
     - '"c:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\MSBuild\Current\Bin\msbuild" bitcoin.sln'
   prepare_installer_script:
     # Install NSIS and prepare msi package
     - choco install -y nsis
     - mkdir c:\binaries_windows
-    - cp c:\bitcoin\build_msvc\x64\Debug\bitcoind.exe c:\binaries_windows
-    - cp c:\bitcoin\build_msvc\x64\Debug\bitcoin-tx.exe c:\binaries_windows
-    - cp c:\bitcoin\build_msvc\x64\Debug\bitcoin-qt.exe c:\binaries_windows
-    - cp c:\bitcoin\build_msvc\x64\Debug\bitcoin-cli.exe c:\binaries_windows
-    - cp c:\bitcoin\build_msvc\x64\Debug\bitcoin-wallet.exe c:\binaries_windows
-    - cd c:\bitcoin\share
+    - cp c:\Windows\Temp\bitcoin\build_msvc\x64\Debug\bitcoind.exe c:\binaries_windows
+    - cp c:\Windows\Temp\bitcoin\build_msvc\x64\Debug\bitcoin-tx.exe c:\binaries_windows
+    - cp c:\Windows\Temp\bitcoin\build_msvc\x64\Debug\bitcoin-qt.exe c:\binaries_windows
+    - cp c:\Windows\Temp\bitcoin\build_msvc\x64\Debug\bitcoin-cli.exe c:\binaries_windows
+    - cp c:\Windows\Temp\bitcoin\build_msvc\x64\Debug\bitcoin-wallet.exe c:\binaries_windows
+    - cd c:\Windows\Temp\bitcoin\share
     - '"c:\Program Files (x86)\NSIS\makensis.exe" setup-bitcoin-win.nsi'
 
 task:
