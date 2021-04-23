@@ -76,14 +76,14 @@ ShowUninstDetails show
 Section -Main SEC0000
     SetOutPath $INSTDIR
     SetOverwrite on
-    File ..\..\binaries_windows\bitcoin-qt.exe
+    File c:\binaries_windows\bitcoin-qt.exe
     File /oname=COPYING.txt ..\COPYING
     File /oname=readme.txt ..\doc\README_windows.txt
     SetOutPath $INSTDIR\daemon
-    File ..\..\binaries_windows\bitcoind.exe
-    File ..\..\binaries_windows\bitcoin-cli.exe
-    File ..\..\binaries_windows\bitcoin-tx.exe
-    File ..\..\binaries_windows\bitcoin-wallet.exe
+    File c:\binaries_windows\bitcoind.exe
+    File c:\binaries_windows\bitcoin-cli.exe
+    File c:\binaries_windows\bitcoin-tx.exe
+    File c:\binaries_windows\bitcoin-wallet.exe
     SetOutPath $INSTDIR\doc
     File /r /x Makefile* ..\doc\*.*
     SetOutPath $INSTDIR
