@@ -628,8 +628,8 @@ void CNode::copyStats(CNodeStats &stats, const std::vector<bool> &m_asmap)
         LOCK(cs_mnauth);
         X(verifiedProRegTxHash);
         X(verifiedPubKeyHash);
+        X(m_masternode_connection);
     }
-    X(m_masternode_connection);
 
     X(m_conn_type);
 }
@@ -1820,8 +1820,9 @@ int CConnman::GetExtraFullOutboundCount() const
     {
         LOCK(cs_vNodes);
         for (const CNode* pnode : vNodes) {
+
             // SYSCOIN don't count outbound masternodes
-            if (pnode->m_masternode_connection) {
+            if (pnode->IsMasternodeConnection()) {
                 continue;
             }
             if (pnode->fSuccessfullyConnected && !pnode->fDisconnect && !pnode->m_masternode_probe_connection && pnode->IsFullOutboundConn()) {
@@ -1937,7 +1938,7 @@ void CConnman::ThreadOpenConnections(const std::vector<std::string> connect)
             LOCK(cs_vNodes);
             for (const CNode* pnode : vNodes) {
                 // SYSCOIN
-                if (pnode->m_masternode_connection) continue;
+                if (pnode->IsMasternodeConnection()) continue;
                 if (pnode->IsFullOutboundConn()) nOutboundFullRelay++;
                 if (pnode->IsBlockOnlyConn()) nOutboundBlockRelay++;
                 // Netgroups for inbound and manual peers are not excluded because our goal here
@@ -2425,8 +2426,10 @@ void CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         grantOutbound->MoveTo(pnode->grantOutbound);
 
     // SYSCOIN
-    if (masternode_connection)
-        pnode->m_masternode_connection = true;        
+    if (masternode_connection) {
+        LOCK(pnode->cs_mnauth);
+        pnode->m_masternode_connection = true;    
+    }    
     if (m_masternode_probe_connection)
         pnode->m_masternode_probe_connection = true;
 
@@ -2476,7 +2479,7 @@ void CConnman::ThreadMessageHandler()
                 return;
                 
             // SYSCOIN Send messages
-            if (!fSkipSendMessagesForMasternodes || !pnode->m_masternode_connection) {
+            if (!fSkipSendMessagesForMasternodes || !pnode->IsMasternodeConnection()) {
                 LOCK(pnode->cs_sendProcessing);
                 m_msgproc->SendMessages(pnode);
             }
@@ -3483,8 +3486,9 @@ bool CConnman::IsMasternodeOrDisconnectRequested(const CService& addr) {
     if(!pnode) {
         pnode = FindNode(addr.ToStringIPPort());
     }
-    if(pnode)
-        return pnode->m_masternode_connection || pnode->fDisconnect;
+    if(pnode) {
+        return pnode->IsMasternodeConnection() || pnode->fDisconnect;
+    }
     return false;
 }
 

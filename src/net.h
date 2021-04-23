@@ -776,6 +776,7 @@ public:
     void MaybeSetAddrName(const std::string& addrNameIn);
     // SYSCOIN
     bool CanRelay() const { LOCK(cs_mnauth); return !m_masternode_connection || m_masternode_iqr_connection; }
+    bool IsMasternodeConnection() const { LOCK(cs_mnauth); return m_masternode_connection; }
     std::string ConnectionTypeAsString() const { return ::ConnectionTypeAsString(m_conn_type); }
 
     /** A ping-pong round trip has completed successfully. Update latest and minimum ping times. */

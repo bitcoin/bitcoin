@@ -1014,7 +1014,7 @@ void PeerManagerImpl::PushNodeVersion(CNode& pnode, int64_t nTime)
     }
     const bool tx_relay = !m_ignore_incoming_txs && pnode.m_tx_relay != nullptr;
     m_connman.PushMessage(&pnode, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::VERSION, nProtocolVersion, (uint64_t)nLocalNodeServices, nTime, addrYou, addrMe,
-            nonce, strSubVersion, nNodeStartingHeight, tx_relay, mnauthChallenge, pnode.m_masternode_connection));
+            nonce, strSubVersion, nNodeStartingHeight, tx_relay, mnauthChallenge, pnode.IsMasternodeConnection()));
 
     if (fLogIPs) {
         LogPrint(BCLog::NET, "send version message: version %d, blocks=%d, us=%s, them=%s, txrelay=%d, peer=%d\n", nProtocolVersion, nNodeStartingHeight, addrMe.ToString(), addrYou.ToString(), tx_relay, nodeid);
@@ -2640,7 +2640,10 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             bool fOtherMasternode = false;
             vRecv >> fOtherMasternode;
             if (pfrom.IsInboundConn()) {
-                pfrom.m_masternode_connection = fOtherMasternode;
+                {
+                    LOCK(pfrom.cs_mnauth);
+                    pfrom.m_masternode_connection = fOtherMasternode;
+                }
                 peer->m_masternode_connection = fOtherMasternode;
                 if (fOtherMasternode) {
                     LogPrint(BCLog::NET, "peer=%d is an inbound masternode connection, not relaying anything to it\n", pfrom.GetId());
@@ -2847,8 +2850,7 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
             nCMPCTBLOCKVersion = 1;
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::SENDCMPCT, fAnnounceUsingCMPCTBLOCK, nCMPCTBLOCKVersion));
         }
-
-        if (gArgs.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS) && !pfrom.m_masternode_connection) {
+        if (gArgs.GetBoolArg("-watchquorums", llmq::DEFAULT_WATCH_QUORUMS) && !pfrom.IsMasternodeConnection()) {
             m_connman.PushMessage(&pfrom, msgMaker.Make(NetMsgType::QWATCH));
         }
         pfrom.fSuccessfullyConnected = true;
@@ -4423,8 +4425,9 @@ void PeerManagerImpl::EvictExtraOutboundPeers(int64_t time_in_seconds)
 
         m_connman.ForEachNode([&](CNode* pnode) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
             AssertLockHeld(::cs_main);
+
             // SYSCOIN Don't disconnect masternodes just because they were slow in block announcement
-            if (pnode->m_masternode_connection) return;
+            if (pnode->IsMasternodeConnection()) return;
             // Only consider outbound-full-relay peers that are not already
             // marked for disconnection
             if (!pnode->IsFullOutboundConn() || pnode->fDisconnect) return;

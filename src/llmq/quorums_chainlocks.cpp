@@ -389,7 +389,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
                         LOCK(pnode->m_tx_relay->cs_filter);
                         fSPV = pnode->m_tx_relay->pfilter != nullptr;
                     }
-                    if (!fSPV && !pnode->m_masternode_connection) {
+                    if (!fSPV && !pnode->IsMasternodeConnection()) {
                         pnode->PushOtherInventory(clsigInv);
                     }
                 });
