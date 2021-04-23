@@ -290,7 +290,7 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
 {
     const NodeId node_id = node_id_in.value_or(fuzzed_data_provider.ConsumeIntegralInRange<NodeId>(0, std::numeric_limits<NodeId>::max()));
     const ServiceFlags local_services = ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS);
-    const SOCKET socket = INVALID_SOCKET;
+    const auto sock = std::make_shared<FuzzedSock>(fuzzed_data_provider);
     const CAddress address = ConsumeAddress(fuzzed_data_provider);
     const uint64_t keyed_net_group = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
     const uint64_t local_host_nonce = fuzzed_data_provider.ConsumeIntegral<uint64_t>();
@@ -299,9 +299,27 @@ auto ConsumeNode(FuzzedDataProvider& fuzzed_data_provider, const std::optional<N
     const ConnectionType conn_type = fuzzed_data_provider.PickValueInArray(ALL_CONNECTION_TYPES);
     const bool inbound_onion{conn_type == ConnectionType::INBOUND ? fuzzed_data_provider.ConsumeBool() : false};
     if constexpr (ReturnUniquePtr) {
-        return std::make_unique<CNode>(node_id, local_services, socket, address, keyed_net_group, local_host_nonce, addr_bind, addr_name, conn_type, inbound_onion);
+        return std::make_unique<CNode>(node_id,
+                                       local_services,
+                                       sock,
+                                       address,
+                                       keyed_net_group,
+                                       local_host_nonce,
+                                       addr_bind,
+                                       addr_name,
+                                       conn_type,
+                                       inbound_onion);
     } else {
-        return CNode{node_id, local_services, socket, address, keyed_net_group, local_host_nonce, addr_bind, addr_name, conn_type, inbound_onion};
+        return CNode{node_id,
+                     local_services,
+                     sock,
+                     address,
+                     keyed_net_group,
+                     local_host_nonce,
+                     addr_bind,
+                     addr_name,
+                     conn_type,
+                     inbound_onion};
     }
 }
 inline std::unique_ptr<CNode> ConsumeNodeAsUniquePtr(FuzzedDataProvider& fdp, const std::optional<NodeId>& node_id_in = std::nullopt) { return ConsumeNode<true>(fdp, node_id_in); }
