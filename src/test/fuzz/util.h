@@ -38,6 +38,46 @@
 
 class PeerManager;
 
+class FuzzedSock : public Sock
+{
+    FuzzedDataProvider& m_fuzzed_data_provider;
+
+    /**
+     * Data to return when `MSG_PEEK` is used as a `Recv()` flag.
+     * If `MSG_PEEK` is used, then our `Recv()` returns some random data as usual, but on the next
+     * `Recv()` call we must return the same data, thus we remember it here.
+     */
+    mutable std::optional<uint8_t> m_peek_data;
+
+public:
+    explicit FuzzedSock(FuzzedDataProvider& fuzzed_data_provider);
+
+    ~FuzzedSock() override;
+
+    FuzzedSock& operator=(Sock&& other) override;
+
+    void Reset() override;
+
+    ssize_t Send(const void* data, size_t len, int flags) const override;
+
+    ssize_t Recv(void* buf, size_t len, int flags) const override;
+
+    int Connect(const sockaddr*, socklen_t) const override;
+
+    std::unique_ptr<Sock> Accept(sockaddr* addr, socklen_t* addr_len) const override;
+
+    int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const override;
+
+    bool Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const override;
+
+    bool IsConnected(std::string& errmsg) const override;
+};
+
+[[nodiscard]] inline FuzzedSock ConsumeSock(FuzzedDataProvider& fuzzed_data_provider)
+{
+    return FuzzedSock{fuzzed_data_provider};
+}
+
 template <typename... Callables>
 size_t CallOneOf(FuzzedDataProvider& fuzzed_data_provider, Callables... callables)
 {
@@ -373,46 +413,6 @@ void ReadFromStream(FuzzedDataProvider& fuzzed_data_provider, Stream& stream) no
             break;
         }
     }
-}
-
-class FuzzedSock : public Sock
-{
-    FuzzedDataProvider& m_fuzzed_data_provider;
-
-    /**
-     * Data to return when `MSG_PEEK` is used as a `Recv()` flag.
-     * If `MSG_PEEK` is used, then our `Recv()` returns some random data as usual, but on the next
-     * `Recv()` call we must return the same data, thus we remember it here.
-     */
-    mutable std::optional<uint8_t> m_peek_data;
-
-public:
-    explicit FuzzedSock(FuzzedDataProvider& fuzzed_data_provider);
-
-    ~FuzzedSock() override;
-
-    FuzzedSock& operator=(Sock&& other) override;
-
-    void Reset() override;
-
-    ssize_t Send(const void* data, size_t len, int flags) const override;
-
-    ssize_t Recv(void* buf, size_t len, int flags) const override;
-
-    int Connect(const sockaddr*, socklen_t) const override;
-
-    std::unique_ptr<Sock> Accept(sockaddr* addr, socklen_t* addr_len) const override;
-
-    int GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len) const override;
-
-    bool Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const override;
-
-    bool IsConnected(std::string& errmsg) const override;
-};
-
-[[nodiscard]] inline FuzzedSock ConsumeSock(FuzzedDataProvider& fuzzed_data_provider)
-{
-    return FuzzedSock{fuzzed_data_provider};
 }
 
 #endif // BITCOIN_TEST_FUZZ_UTIL_H
