@@ -111,6 +111,7 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     if (G_TEST_COMMAND_LINE_ARGUMENTS) {
         arguments = Cat(arguments, G_TEST_COMMAND_LINE_ARGUMENTS());
     }
+    SetupEnvironment();
     util::ThreadRename("test");
     fs::create_directories(m_path_root);
     m_args.ForceSetArg("-datadir", fs::PathToString(m_path_root));
@@ -131,7 +132,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
     AppInitParameterInteraction(*m_node.args);
     LogInstance().StartLogging();
     m_node.kernel = std::make_unique<kernel::Context>();
-    SetupEnvironment();
     SetupNetworking();
     InitSignatureCache();
     InitScriptExecutionCache();
