@@ -22,22 +22,15 @@ public:
     //! during snapshot load to estimate progress of UTXO set reconstruction.
     uint64_t m_coins_count = 0;
 
-    //! Necessary to "fake" the base nChainTx so that we can estimate progress during
-    //! initial block download for the assumeutxo chainstate.
-    //!
-    //! TODO: this is unused and should be removed.
-    unsigned int m_nchaintx = 0;
-
     SnapshotMetadata() { }
     SnapshotMetadata(
         const uint256& base_blockhash,
         uint64_t coins_count,
         unsigned int nchaintx) :
             m_base_blockhash(base_blockhash),
-            m_coins_count(coins_count),
-            m_nchaintx(nchaintx) { }
+            m_coins_count(coins_count) { }
 
-    SERIALIZE_METHODS(SnapshotMetadata, obj) { READWRITE(obj.m_base_blockhash, obj.m_coins_count, obj.m_nchaintx); }
+    SERIALIZE_METHODS(SnapshotMetadata, obj) { READWRITE(obj.m_base_blockhash, obj.m_coins_count); }
 };
 
 #endif // BITCOIN_NODE_UTXO_SNAPSHOT_H
