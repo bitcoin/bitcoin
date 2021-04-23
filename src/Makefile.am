@@ -793,6 +793,10 @@ libsyscoin_cli_a_SOURCES = \
   rpc/client.cpp \
   $(SYSCOIN_CORE_H)
 
+if GLIBC_BACK_COMPAT
+  libsyscoin_cli_a_SOURCES += compat/glibc_compat.cpp
+endif
+
 nodist_libsyscoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
@@ -847,9 +851,6 @@ if TARGET_WINDOWS
 syscoin_cli_SOURCES += syscoin-cli-res.rc
 endif
 
-if GLIBC_BACK_COMPAT
-  syscoin_cli_SOURCES += compat/glibc_compat.cpp
-endif
 
 syscoin_cli_LDADD = \
   $(LIBSYSCOIN_CLI) \

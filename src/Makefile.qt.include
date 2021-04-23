@@ -303,6 +303,10 @@ if TARGET_DARWIN
   qt_libsyscoinqt_a_SOURCES += $(SYSCOIN_MM)
 endif
 
+if GLIBC_BACK_COMPAT
+  qt_libsyscoinqt_a_SOURCES += compat/glibc_compat.cpp
+endif
+
 nodist_qt_libsyscoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
 
 # forms/foo.h -> forms/ui_foo.h
@@ -335,9 +339,6 @@ syscoin_qt_ldadd += $(LIBSYSCOIN_CLI) $(LIBSYSCOIN_COMMON) $(LIBSYSCOIN_UTIL) $(
 syscoin_qt_ldflags = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 syscoin_qt_libtoolflags = $(AM_LIBTOOLFLAGS) --tag CXX
 
-if GLIBC_BACK_COMPAT
-  syscoin_qt_sources += compat/glibc_compat.cpp
-endif
 
 qt_syscoin_qt_CPPFLAGS = $(syscoin_qt_cppflags)
 qt_syscoin_qt_CXXFLAGS = $(syscoin_qt_cxxflags)
