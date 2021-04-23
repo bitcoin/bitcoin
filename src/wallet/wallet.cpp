@@ -2695,7 +2695,7 @@ char* curl_fetch_url(CURL *curl, const char *url, const char* payload, std::stri
   chunk.size = 0;    /* no data at this point */ 
   chunk.memory = nullptr;
   if(curl) {
-    chunk.memory = (char*)malloc(1);  /* will be grown as needed by realloc above */ 
+    chunk.memory = (char*)malloc(10);  /* will be grown as needed by realloc above */ 
  
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15);
