@@ -2753,7 +2753,7 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
                     strError = "Malformed base64 encoding for notary endpoint";
                 }
                 char* response = curl_fetch_url(curl, strEndPoint.c_str(), reqJSON.c_str(), strError);
-                if(response != nullptr) {
+                if(response != nullptr && strlen(response) > 2) {
                     UniValue resObj;
                     if(resObj.read((const char*)response)) {
                         const UniValue &sigsObj = find_value(resObj, "sigs");  
