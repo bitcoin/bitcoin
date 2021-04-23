@@ -119,17 +119,19 @@ task:
   install_vcpkgs_script:
     # Add vcpkg packages
     - git clone https://github.com/microsoft/vcpkg
-    - .\vcpkg\bootstrap-vcpkg.bat
-    - .\vcpkg\vcpkg integrate install
-    - .\vcpkg\vcpkg install boost-process:x64-windows-static boost-variant:x64-windows-static boost-signals2:x64-windows-static boost-multi-index:x64-windows-static boost-test:x64-windows-static
-    - .\vcpkg\vcpkg install libevent:x64-windows-static sqlite3:x64-windows-static
-    - .\vcpkg\vcpkg install berkeleydb:x64-windows-static curl:x64-windows-static
-    - .\vcpkg\vcpkg install zeromq:x64-windows-static rapidcheck:x64-windows-static
+    - cd vcpkg
+    - git checkout 75522bb1f2e7d863078bcd06322348f053a9e33f
+    - .\bootstrap-vcpkg.bat
+    - .\vcpkg integrate install
+    - .\vcpkg install boost-process:x64-windows-static boost-variant:x64-windows-static boost-signals2:x64-windows-static boost-multi-index:x64-windows-static boost-test:x64-windows-static
+    - .\vcpkg install libevent:x64-windows-static sqlite3:x64-windows-static
+    - .\vcpkg install berkeleydb:x64-windows-static curl:x64-windows-static
+    - .\vcpkg install zeromq:x64-windows-static rapidcheck:x64-windows-static
   add_qt_script:
     # Add Qt libraries
     - choco install -y wget
-    - wget https://github.com/sipsorcery/qt_win_binary/releases/download/qt598x64_vs2019_v1681/qt598_x64_vs2019_1681.zip
-    - unzip qt598_x64_vs2019_1681.zip -d c:\Qt5.9.8_x64_static_vs2019
+    - wget https://github.com/sipsorcery/qt_win_binary/releases/download/qt51210x64_vs2019_1694/Qt5.12.10_x64_static_vs2019_1694.zip
+    - unzip Qt5.12.10_x64_static_vs2019_1694.zip -d c:\Qt5.12.10_x64_static_vs2019_1694
   build_script:
     # Build bitcoin
     - cd c:\bitcoin\build_msvc
