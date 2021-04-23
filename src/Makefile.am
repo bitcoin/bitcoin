@@ -206,6 +206,7 @@ SYSCOIN_CORE_H = \
   index/txindex.h \
   indirectmap.h \
   init.h \
+  init/common.h \
   interfaces/chain.h \
   interfaces/handler.h \
   interfaces/node.h \
@@ -706,6 +707,7 @@ libsyscoin_common_a_SOURCES = \
   core_write.cpp \
   dbwrapper.cpp \
   external_signer.cpp \
+  init/common.cpp \
   key.cpp \
   key_io.cpp \
   merkleblock.cpp \
