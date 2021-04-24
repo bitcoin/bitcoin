@@ -303,10 +303,6 @@ if TARGET_DARWIN
   qt_libsyscoinqt_a_SOURCES += $(SYSCOIN_MM)
 endif
 
-if GLIBC_BACK_COMPAT
-  qt_libsyscoinqt_a_SOURCES += compat/glibc_compat.cpp
-endif
-
 nodist_qt_libsyscoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
 
 # forms/foo.h -> forms/ui_foo.h
