@@ -2695,7 +2695,7 @@ char* curl_fetch_url(CURL *curl, const char *url, const char* payload, std::stri
   chunk.size = 0;    /* no data at this point */ 
   chunk.memory = nullptr;
   if(curl) {
-    chunk.memory = (char*)malloc(10);  /* will be grown as needed by realloc above */ 
+    chunk.memory = (char*)malloc(1);  /* will be grown as needed by realloc above */ 
  
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15);
@@ -2756,9 +2756,9 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
                     strError = "Malformed base64 encoding for notary endpoint";
                 }
                 char* response = curl_fetch_url(curl, strEndPoint.c_str(), reqJSON.c_str(), strError);
-                if(response != nullptr && strlen(response) > 2) {
+                if(response != nullptr) {
                     UniValue resObj;
-                    if(resObj.read((const char*)response)) {
+                    if(resObj.read(response)) {
                         const UniValue &sigsObj = find_value(resObj, "sigs");  
                         if(sigsObj.isArray()) {
                             const UniValue &sigsArr = sigsObj.get_array();  
