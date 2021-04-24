@@ -124,7 +124,7 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
 
-        #define genesisHash "0x00008b46ca3b73f36443a06305cbf89a3aaa6579c3b949f3d411e2459296cddd"
+        #define genesisHash "0x0000cfc2be1db1e4be048ada6f45a014d419db62d204420edea5903eff9a14ab"
         #define genesisMerkleRoot "0x961dcac635d4bf3ecb71f93fd2c65855c0aa4619a52cbe2155a2fe46b204231e"
 
         strNetworkID = CBaseChainParams::MAIN;
@@ -214,7 +214,7 @@ public:
         */
                   
 
-        genesis = CreateGenesisBlock(1619279732, 31974, 0x1f00ffff, 1, 10, devFeePerBlock);
+        genesis = CreateGenesisBlock(1619294907, 38220, 0x1f00ffff, 1, 10, devFeePerBlock);
 
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S(genesisHash));

@@ -27,7 +27,7 @@ void CDynHash::load(std::string program) {
 }
 
 
-uint256 CDynHash::calcBlockHeaderHash(uint32_t blockTime, unsigned char* blockHeader, uint256 prevBlockHash, uint256 merkleRoot)
+std::string CDynHash::calcBlockHeaderHash(uint32_t blockTime, unsigned char* blockHeader, std::string prevBlockHash, std::string merkleRoot)
 {
 
     bool found = false;

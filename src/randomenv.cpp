@@ -76,9 +76,13 @@ void RandAddSeedPerfmon(CSHA512& hasher)
     last_perfmon = current_time;
 
     std::vector<unsigned char> vData(250000, 0);
-    long ret = 0;
+
+    //causes access violation, removed
+    long ret = -1;
+
     unsigned long nSize = 0;
     const size_t nMaxSize = 10000000; // Bail out at more than 10MB of performance data
+    /*
     while (true) {
         nSize = vData.size();
         ret = RegQueryValueExA(HKEY_PERFORMANCE_DATA, "Global", nullptr, nullptr, vData.data(), &nSize);
@@ -87,6 +91,7 @@ void RandAddSeedPerfmon(CSHA512& hasher)
         vData.resize(std::min((vData.size() * 3) / 2, nMaxSize)); // Grow size of buffer exponentially
     }
     RegCloseKey(HKEY_PERFORMANCE_DATA);
+    */
     if (ret == ERROR_SUCCESS) {
         hasher.Write(vData.data(), nSize);
         memory_cleanse(vData.data(), nSize);

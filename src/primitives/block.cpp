@@ -54,9 +54,13 @@ uint256 CBlockHeader::GetHash() const
     for (int i = 0; i < 32; i++)
         resultBE.data()[i] = resultLE.data()[31 - i];
         */
-   
-    uint256 result = g_hashFunction->calcBlockHeaderHash(nTime, headerData, hashPrevBlock, hashMerkleRoot);
+
+    std::string strResult = g_hashFunction->calcBlockHeaderHash(nTime, headerData, hashPrevBlock.GetHex(), hashMerkleRoot.GetHex());
     free(headerData);
+
+
+    uint256 result;
+    result.SetHex(strResult);
     return result;
 
     //return resultBE;

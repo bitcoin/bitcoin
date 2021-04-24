@@ -39,6 +39,8 @@
 #include <memory>
 #include <stdint.h>
 
+#include "global.h"
+
 /**
  * Return average network hashes per second based on the last 'lookup' blocks,
  * or from the last difficulty change if 'lookup' is nonpositive.
@@ -919,6 +921,38 @@ static RPCHelpMan getblocktemplate()
     };
 }
 
+
+static RPCHelpMan gethashfunction()
+{
+    return RPCHelpMan{
+        "gethashfunction",
+        "\nReturns most recent hash program text.\n",        
+        {
+        },
+        {
+            RPCResult{"Returns current hash program", RPCResult::Type::STR, "", ""}
+        },
+        RPCExamples{
+            HelpExampleCli("gethashfunction", "")
+        },
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+
+            UniValue result(UniValue::VARR);
+            for (int i = 0; i < g_hashFunction->programs.size(); i++) {
+                UniValue programResult(UniValue::VOBJ);
+                programResult.pushKV("start_time", g_hashFunction->programs[i]->startingTime);
+                programResult.pushKV("program", g_hashFunction->programs[i]->getProgramString());
+                result.push_back(programResult);
+            }
+
+
+        return result;
+        },
+    };
+}
+
+
+
 class submitblock_StateCatcher final : public CValidationInterface
 {
 public:
@@ -1244,6 +1278,7 @@ static const CRPCCommand commands[] =
     { "mining",              &getblocktemplate,        },
     { "mining",              &submitblock,             },
     { "mining",              &submitheader,            },
+    { "mining",              &gethashfunction,         },
 
 
     { "generating",          &generatetoaddress,       },

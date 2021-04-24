@@ -1,8 +1,6 @@
 #pragma once
 #include <vector>
 #include <string>
-#include <uint256.h>
-#include <arith_uint256.h>
 #include <crypto/common.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha256.h>
@@ -18,5 +16,11 @@ public:
     int32_t startingTime;
     std::vector<std::string> program;
 
-    uint256 execute(unsigned char* blockHeader, uint256 prevBlockHash, uint256 merkleRoot);
+    const std::vector<char> hexDigit = {'0', '1', '2', '3', '4','5','6','7','8','9','A','B','C','D','E','F'};
+
+    std::string execute(unsigned char* blockHeader, std::string prevBlockHash, std::string merkleRoot);
+    std::string getProgramString();
+    void parseHex(std::string input, unsigned char* output);
+    unsigned char decodeHex(char in);
+    std::string makeHex(unsigned char* in, int len);
 };
