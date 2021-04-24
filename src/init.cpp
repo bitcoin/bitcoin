@@ -62,6 +62,8 @@
 #include <util/translation.h>
 #include <validation.h>
 
+#include "global.h"
+
 #include <validationinterface.h>
 #include <walletinitinterface.h>
 
@@ -367,12 +369,18 @@ void SetupServerArgs(NodeContext& node)
     SetupHelpOptions(argsman);
     argsman.AddArg("-help-debug", "Print help message with debugging options and exit", ArgsManager::ALLOW_ANY, OptionsCategory::DEBUG_TEST); // server-only for now
 
+
+
     const auto defaultBaseParams = CreateBaseChainParams(CBaseChainParams::MAIN);
     /*
     const auto testnetBaseParams = CreateBaseChainParams(CBaseChainParams::TESTNET);
     const auto signetBaseParams = CreateBaseChainParams(CBaseChainParams::SIGNET);
     const auto regtestBaseParams = CreateBaseChainParams(CBaseChainParams::REGTEST);
     */
+
+
+
+
     const auto defaultChainParams = CreateChainParams(argsman, CBaseChainParams::MAIN);
     /*
     const auto testnetChainParams = CreateChainParams(argsman, CBaseChainParams::TESTNET);
@@ -1287,7 +1295,10 @@ bool AppInitInterfaces(NodeContext& node)
 }
 
 bool AppInitMain(const std::any& context, NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
+
 {
+
+
     const ArgsManager& args = *Assert(node.args);
     const CChainParams& chainparams = Params();
     // ********************************************************* Step 4a: application initialization
@@ -1919,7 +1930,8 @@ bool AppInitMain(const std::any& context, NodeContext& node, interfaces::BlockAn
 
 
 
-    // ********************************************************* Step 13: start node
+
+    // ********************************************************* Step 14: start node
 
     int chain_active_height;
 

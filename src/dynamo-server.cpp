@@ -31,6 +31,9 @@
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = urlDecode;
 
+CDynHash* g_hashFunction;
+
+
 #if HAVE_DECL_FORK
 
 /** Custom implementation of daemon(). This implements the same order of operations as glibc.

@@ -11,6 +11,7 @@
 #include <primitives/block.h>
 #include <protocol.h>
 #include <primitives/contract_manager.h>
+#include "crypto/dynhash.h"
 
 #include <memory>
 #include <vector>

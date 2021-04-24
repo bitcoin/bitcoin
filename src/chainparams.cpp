@@ -24,6 +24,7 @@
 #include <bech32.h>
 #include <key_io.h>
 
+#include "global.h"
 
 const arith_uint256 maxUint = UintToArith256(
     uint256S("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
@@ -123,7 +124,7 @@ class CMainParams : public CChainParams {
 public:
     CMainParams() {
 
-        #define genesisHash "0x00000f8215d1568c4c32199a939457ed4676c54204bc0bab95c0ce3d4e46ab5a"
+        #define genesisHash "0x00008b46ca3b73f36443a06305cbf89a3aaa6579c3b949f3d411e2459296cddd"
         #define genesisMerkleRoot "0x961dcac635d4bf3ecb71f93fd2c65855c0aa4619a52cbe2155a2fe46b204231e"
 
         strNetworkID = CBaseChainParams::MAIN;
@@ -139,8 +140,8 @@ public:
         consensus.SegwitHeight = 1; // 0000000000000000001c8018d9cb3b742ef25114f27563e3fc4a1902167f9893
         consensus.MinBIP9WarningHeight = 1; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nPowTargetTimespan = 10 * 60; // ten mins
-        consensus.nPowTargetSpacing = 60;  //one minute
+        consensus.nPowTargetTimespan = 60; // one minute
+        consensus.nPowTargetSpacing = 15;  //fifteen seconds
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nRuleChangeActivationThreshold = 1916; // 95% of 2016
@@ -171,6 +172,23 @@ public:
         developerFeeScript = GetScriptForDestination(DecodeDestinationExtended(strDevFeeAddress, Base58Prefix(CChainParams::PUBKEY_ADDRESS),
            Base58Prefix(CChainParams::SCRIPT_ADDRESS), bech32_hrp, errMsg));
 
+        g_hashFunction = new CDynHash();
+        g_hashFunction->load("1\n"
+                             "SHA2 10\n"
+                             "ADD db4e52bbc9a1d2a02106ae30821f4992ab9d56f7b6142889377ea15f707bbe22\n"
+                             "XOR 58434e1209c715064b4317845ebcddd417cde333a9b0fe1752a38fca7f2e503a\n"
+                             "SHA2 2\n"
+                             "ADD db4e52bbc9a1d2a02106ae3082199992ab9d56f7b6142889377ea15f707bbe22\n"
+                             "XOR 58434e1209c715064b4317845ebc999417cde333a9b0fe1752a38fca7f2e503a\n"
+                             "MEMGEN SHA2 512\n"
+                             "MEMXOR 5fb73fa6c2dc424ac733da866b20c14d179d073dd648206358e41e44ba04e60a\n"
+                             "READMEM MERKLE\n"
+                             "MEMGEN SHA2 1024\n"
+                             "MEMADD 5fb73fa6c2dc424ac733da866b20c14d179d073dd648206358e41e44ba04e60a\n"
+                             "READMEM HASHPREV\n"
+                             "XOR 5fb73fa6c2dc424ac733da866b20c14d179d073dd648206358e41e44ba04e60a\n"
+                             "SHA2\n"
+                             "-END PROGRAM-\n");
 
         
         /**
@@ -196,7 +214,7 @@ public:
         */
                   
 
-        genesis = CreateGenesisBlock(1618455749, 68282, 0x1f00ffff, 1, 10, devFeePerBlock);
+        genesis = CreateGenesisBlock(1619279732, 31974, 0x1f00ffff, 1, 10, devFeePerBlock);
 
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S(genesisHash));
@@ -273,6 +291,7 @@ public:
         chainTxData = ChainTxData();
 
         contractMgr = new CContractManager();
+
     }
 };
 

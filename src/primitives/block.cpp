@@ -10,7 +10,8 @@
 #include <crypto/common.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha256.h>
-
+#include <chainparams.h>
+#include "global.h"
 
 uint256 CBlockHeader::GetHash() const
 {
@@ -36,6 +37,8 @@ uint256 CBlockHeader::GetHash() const
     memcpy(headerData + 72, &nBits, 4);
     memcpy(headerData + 76, &nNonce, 4);
 
+
+
     /*
     printf("\n");
     for (int i = 0; i < 80; i++)
@@ -43,17 +46,20 @@ uint256 CBlockHeader::GetHash() const
     printf("\n");
     */
 
-
+    /*
     uint256 resultLE;
     ctx.Write(headerData, 80);
     ctx.Finalize(resultLE.begin());
     uint256 resultBE;
     for (int i = 0; i < 32; i++)
         resultBE.data()[i] = resultLE.data()[31 - i];
-
+        */
+   
+    uint256 result = g_hashFunction->calcBlockHeaderHash(nTime, headerData, hashPrevBlock, hashMerkleRoot);
     free(headerData);
+    return result;
 
-    return resultBE;
+    //return resultBE;
 }
 
 std::string CBlock::ToString() const
