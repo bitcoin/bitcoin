@@ -1,5 +1,5 @@
 #include "dynhash.h"
-
+//
 
 
 void CDynHash::load(std::string program) {

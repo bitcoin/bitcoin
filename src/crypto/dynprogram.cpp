@@ -1,5 +1,5 @@
 #include "dynprogram.h"
-
+//
 
 std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlockHash, std::string merkleRoot) {
 
