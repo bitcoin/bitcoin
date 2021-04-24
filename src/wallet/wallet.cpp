@@ -2740,7 +2740,7 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
     std::string strHex = EncodeHexTx(CTransaction(mtx));
     UniValue reqObj(UniValue::VOBJ);
     reqObj.pushKV("tx", strHex); 
-    std::string reqJSON = reqObj.write();
+    const std::string reqJSON = reqObj.write();
     std::map<uint64_t, std::vector<unsigned char> > mapSigs;
     // fill notary signatures for assets that require them
     for(auto& vecOut: voutAssets) {
@@ -2751,7 +2751,7 @@ bool FillNotarySigFromEndpoint(const CMutableTransaction& mtx, std::vector<CAsse
         if(mapSigs.find(nBaseAsset) == mapSigs.end() && GetAsset(nBaseAsset, theAsset) && !theAsset.vchNotaryKeyID.empty()) {
             if(!theAsset.notaryDetails.strEndPoint.empty()) {
                 bool fInvalid = false;
-                const std::string &strEndPoint = DecodeBase64(theAsset.notaryDetails.strEndPoint, &fInvalid);
+                const std::string strEndPoint = DecodeBase64(theAsset.notaryDetails.strEndPoint, &fInvalid);
                 if (fInvalid) {
                     strError = "Malformed base64 encoding for notary endpoint";
                 }
