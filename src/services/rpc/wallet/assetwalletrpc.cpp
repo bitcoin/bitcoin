@@ -1397,7 +1397,7 @@ static RPCHelpMan assetallocationsendmany()
         nChangePosRet = -1;
         nFeeRequired = 0;
         coin_control.assetInfo = CAssetCoinInfo(it.first, it.second.second);
-        // find the largest output and subtract fee from the output, incase change was added in previous loop
+        // find the largest output and subtract fee from the output, in case change was added in previous loop
         size_t idxLargest = 0;
         CAmount nAmountLargest = nAmountSys;
         setSubtractFeeFromOutputs.clear();
