@@ -152,7 +152,7 @@ extern "C" int __wrap_getentropy (void *buffer, size_t length)
     {
       /* NB: No cancellation point.  */
       
-      ssize_t bytes = getrandom(cbuff, end - cbuff, 0);
+      ssize_t bytes = __wrap_getrandom(cbuff, end - cbuff, 0);
       if (bytes < 0)
         {
           if (errno == EINTR)
