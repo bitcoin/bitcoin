@@ -76,8 +76,7 @@ private:
     // Format confirmation message
     bool PrepareSendText(QString& question_string, QString& informative_text, QString& detailed_text);
     void updateFeeMinimizedLabel();
-    // Update the passed in CCoinControl with state from the GUI
-    void updateCoinControlState(CCoinControl& ctrl);
+    void updateCoinControlState();
 
 private Q_SLOTS:
     void sendButtonClicked(bool checked);
