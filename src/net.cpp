@@ -4301,13 +4301,15 @@ void CConnman::StopNodes()
         }
     }
 
-    {
-        LOCK(m_nodes_mutex);
-
-        // Close sockets
-        for (CNode *pnode : m_nodes)
-            pnode->CloseSocketDisconnect(this);
+    // Delete peer connections.
+    std::vector<CNode*> nodes;
+    WITH_LOCK(m_nodes_mutex, nodes.swap(m_nodes));
+    for (CNode *pnode : nodes) {
+        pnode->CloseSocketDisconnect(this);
+        DeleteNode(pnode);
     }
+
+    // Close listening sockets.
     for (ListenSocket& hListenSocket : vhListenSocket) {
         if (hListenSocket.sock) {
             if (m_edge_trig_events && !m_edge_trig_events->RemoveSocket(hListenSocket.sock->Get())) {
@@ -4316,12 +4318,6 @@ void CConnman::StopNodes()
         }
     }
 
-    // clean up some globals (to help leak detection)
-    std::vector<CNode*> nodes;
-    WITH_LOCK(m_nodes_mutex, nodes.swap(m_nodes));
-    for (CNode* pnode : nodes) {
-        DeleteNode(pnode);
-    }
     for (CNode* pnode : m_nodes_disconnected) {
         DeleteNode(pnode);
     }

@@ -76,6 +76,5 @@ FUZZ_TARGET_INIT(process_messages, initialize_process_messages)
         g_setup->m_node.peerman->SendMessages(&random_node);
     }
     SyncWithValidationInterfaceQueue();
-    LOCK2(::cs_main, g_cs_orphans); // See init.cpp for rationale for implicit locking order requirement
     g_setup->m_node.connman->StopNodes();
 }
