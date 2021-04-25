@@ -3949,7 +3949,7 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
             CMintSyscoin mintSyscoin(*txRef);
             bool readTxRootFail;
             if(!mintSyscoin.IsNull()) {
-                const bool &ethTxRootShouldExist = !::ChainstateActive().IsInitialBlockDownload() && fLoaded && fGethSynced;
+                const bool &ethTxRootShouldExist = true/*!::ChainstateActive().IsInitialBlockDownload() && fLoaded && fGethSynced*/;
                 {
                     LOCK(cs_setethstatus);
                     readTxRootFail = !pethereumtxrootsdb || !pethereumtxrootsdb->ReadTxRoots(mintSyscoin.nBlockNumber, txRootDB);
