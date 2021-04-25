@@ -147,7 +147,7 @@ extern "C" int __wrap_getentropy (void *buffer, size_t length)
   /* Try to fill the buffer completely.  Even with the 256 byte limit
      above, we might still receive an EINTR error (when blocking
      during boot).  */
-  void *end = cbuff + length;
+  char *end = cbuff + length;
   while (cbuff < end)
     {
       /* NB: No cancellation point.  */
