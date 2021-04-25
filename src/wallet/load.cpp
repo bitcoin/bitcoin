@@ -128,7 +128,7 @@ void StartWallets(CScheduler& scheduler, const ArgsManager& args)
 
     // Schedule periodic wallet flushes and tx rebroadcasts
     if (args.GetBoolArg("-flushwallet", DEFAULT_FLUSHWALLET)) {
-        scheduler.scheduleEvery(MaybeCompactWalletDB, std::chrono::milliseconds{gArgs.GetArg("-flushwalletinterval", DEFAULT_FLUSHWALLETINTERVAL});
+        scheduler.scheduleEvery(MaybeCompactWalletDB, std::chrono::milliseconds{gArgs.GetArg("-flushwalletinterval", DEFAULT_FLUSHWALLETINTERVAL)});
     }
     scheduler.scheduleEvery(MaybeResendWalletTxs, std::chrono::milliseconds{1000});
 }
