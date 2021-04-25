@@ -135,6 +135,7 @@ extern "C" ssize_t __wrap_getrandom (void *buffer, size_t length, unsigned int f
    success and -1 on failure.  */
 extern "C" int __wrap_getentropy (void *buffer, size_t length)
 {
+  char* cbuff = (char*)buffer;
   /* The interface is documented to return EIO for buffer lengths
      longer than 256 bytes.  */
   if (length > 256)
@@ -146,12 +147,12 @@ extern "C" int __wrap_getentropy (void *buffer, size_t length)
   /* Try to fill the buffer completely.  Even with the 256 byte limit
      above, we might still receive an EINTR error (when blocking
      during boot).  */
-  void *end = buffer + length;
-  while (buffer < end)
+  void *end = cbuff + length;
+  while (cbuff < end)
     {
       /* NB: No cancellation point.  */
       
-      ssize_t bytes = getrandom(buffer, end - buffer, 0);
+      ssize_t bytes = getrandom(cbuff, end - cbuff, 0);
       if (bytes < 0)
         {
           if (errno == EINTR)
@@ -168,7 +169,7 @@ extern "C" int __wrap_getentropy (void *buffer, size_t length)
           return -1;
         }
       /* Try again in case of a short read.  */
-      buffer += bytes;
+      cbuff += bytes;
     }
   return 0;
 }
