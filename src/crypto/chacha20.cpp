@@ -8,6 +8,7 @@
 #include <crypto/common.h>
 #include <crypto/chacha20.h>
 
+#include <stdexcept>
 #include <string.h>
 
 constexpr static inline uint32_t rotl32(uint32_t v, int c) { return (v << c) | (v >> (32 - c)); }
@@ -23,6 +24,10 @@ static const unsigned char tau[] = "expand 16-byte k";
 
 void ChaCha20::SetKey(const unsigned char* k, size_t keylen)
 {
+    if (keylen != 16 && keylen != 32) {
+        throw std::invalid_argument("ChaCha20 key size must be 16 or 32");
+    }
+
     const unsigned char *constants;
 
     input[4] = ReadLE32(k + 0);
