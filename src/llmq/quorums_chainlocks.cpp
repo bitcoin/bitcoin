@@ -18,7 +18,7 @@
 namespace llmq
 {
 
-static const std::string CLSIG_REQUESTID_PREFIX = "clsig";
+const std::string CLSIG_REQUESTID_PREFIX = "clsig";
 
 CChainLocksHandler* chainLocksHandler;
 
