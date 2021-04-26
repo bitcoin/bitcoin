@@ -166,6 +166,8 @@ class NotificationsTest(BitcoinTestFramework):
         # Should now verify contents of each file
         for tx_id, blockheight, blockhash in tx_details:
             fname = os.path.join(self.walletnotify_dir, notify_outputname(self.wallet, tx_id))
+            # Wait for the cached writes to hit storage
+            self.wait_until(lambda: os.path.getsize(fname) > 0, timeout=10)
             with open(fname, 'rt', encoding='utf-8') as f:
                 text = f.read()
                 # Universal newline ensures '\n' on 'nt'
