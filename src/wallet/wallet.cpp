@@ -279,7 +279,7 @@ std::shared_ptr<CWallet> CreateWallet(interfaces::Chain& chain, const std::strin
     // Wallet::Verify will check if we're trying to create a wallet with a duplicate name.
     std::unique_ptr<WalletDatabase> database = MakeWalletDatabase(name, options, status, error);
     if (!database) {
-        error = Untranslated("Wallet file verification failed.") + Untranslated(" ") + error;
+        error = Untranslated("Wallet file verification failed.") + error;
         status = DatabaseStatus::FAILED_VERIFY;
         return nullptr;
     }
