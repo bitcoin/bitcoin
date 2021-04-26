@@ -869,7 +869,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
 
     // First run the tests with only one input containing 100k duffs
     {
-        coinControl.SetNull();
+        coinControl = CCoinControl();
         coinControl.Select(GetCoins({{100000, false}})[0]);
 
         // Start with fallback feerate
@@ -909,7 +909,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
     }
     // Now use 4 different inputs with a total of 100k duff
     {
-        coinControl.SetNull();
+        coinControl = CCoinControl();
         auto setCoins = GetCoins({{1000, false}, {5000, false}, {10000, false}, {84000, false}});
         for (auto coin : setCoins) {
             coinControl.Select(coin);
@@ -953,7 +953,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
 
     // Last use 10 equal inputs with a total of 100k duff
     {
-        coinControl.SetNull();
+        coinControl = CCoinControl();
         auto setCoins = GetCoins({{10000, false}, {10000, false}, {10000, false}, {10000, false}, {10000, false},
                                   {10000, false}, {10000, false}, {10000, false}, {10000, false}, {10000, false}});
 
@@ -999,7 +999,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
     // Some tests without selected coins in coinControl, let the wallet decide
     // which inputs to use
     {
-        coinControl.SetNull();
+        coinControl = CCoinControl();
         coinControl.m_feerate = CFeeRate(fallbackFee);
         auto setCoins = GetCoins({{1000, false}, {1000, false}, {1000, false}, {1000, false}, {1000, false},
                                   {1100, false}, {1200, false}, {1300, false}, {1400, false}, {1500, false},
@@ -1048,7 +1048,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
     }
     // Test if the change output ends up at the requested position
     {
-        coinControl.SetNull();
+        coinControl = CCoinControl();
         coinControl.m_feerate = CFeeRate(fallbackFee);
         coinControl.Select(GetCoins({{100000, false}})[0]);
 
@@ -1059,7 +1059,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
     }
     // Test error cases
     {
-        coinControl.SetNull();
+        coinControl = CCoinControl();
         coinControl.m_feerate = CFeeRate(fallbackFee);
         // First try to send something without any coins available
         {
@@ -1096,7 +1096,7 @@ BOOST_FIXTURE_TEST_CASE(CreateTransactionTest, CreateTransactionTestSetup)
             }
         };
 
-        coinControl.SetNull();
+        coinControl = CCoinControl();
         coinControl.m_feerate = CFeeRate(fallbackFee);
         coinControl.Select(GetCoins({{100 * COIN, false}})[0]);
 

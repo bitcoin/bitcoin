@@ -6,24 +6,8 @@
 
 #include <util/system.h>
 
-void CCoinControl::SetNull(bool fResetCoinType)
+CCoinControl::CCoinControl(CoinType coinType)
+: nCoinType(coinType)
 {
-    destChange = CNoDestination();
-    m_add_inputs = true;
-    fAllowOtherInputs = false;
-    fAllowWatchOnly = false;
     m_avoid_partial_spends = gArgs.GetBoolArg("-avoidpartialspends", DEFAULT_AVOIDPARTIALSPENDS);
-    m_avoid_address_reuse = false;
-    setSelected.clear();
-    m_feerate.reset();
-    fOverrideFeeRate = false;
-    m_confirm_target.reset();
-    m_fee_mode = FeeEstimateMode::UNSET;
-    fRequireAllInputs = true;
-    m_discard_feerate.reset();
-    m_min_depth = DEFAULT_MIN_DEPTH;
-    m_max_depth = DEFAULT_MAX_DEPTH;
-    if (fResetCoinType) {
-        nCoinType = CoinType::ALL_COINS;
-    }
 }

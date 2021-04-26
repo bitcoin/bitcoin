@@ -36,17 +36,18 @@ const int DEFAULT_MAX_DEPTH = 9999999;
 class CCoinControl
 {
 public:
-    CTxDestination destChange;
+    //! Custom change destination, if not set an address is generated
+    CTxDestination destChange = CNoDestination();
     //! If false, only selected inputs are used
-    bool m_add_inputs;
+    bool m_add_inputs = true;
     //! If false, allows unselected inputs, but requires all selected inputs be used if fAllowOtherInputs is true (default)
-    bool fAllowOtherInputs;
+    bool fAllowOtherInputs = false;
     //! If false, only include as many inputs as necessary to fulfill a coin selection request. Only usable together with fAllowOtherInputs
-    bool fRequireAllInputs;
+    bool fRequireAllInputs = true;
     //! Includes watch only addresses which are solvable
-    bool fAllowWatchOnly;
+    bool fAllowWatchOnly = false;
     //! Override automatic min/max checks on fee, m_feerate must be set if true
-    bool fOverrideFeeRate;
+    bool fOverrideFeeRate = false;
     //! Override the wallet's m_pay_tx_fee if set
     std::optional<CFeeRate> m_feerate;
     //! Override the discard feerate estimation with m_discard_feerate in CreateTransaction if set
@@ -54,24 +55,19 @@ public:
     //! Override the default confirmation target if set
     std::optional<unsigned int> m_confirm_target;
     //! Avoid partial use of funds sent to a given address
-    bool m_avoid_partial_spends;
+    bool m_avoid_partial_spends = DEFAULT_AVOIDPARTIALSPENDS;
     //! Forbids inclusion of dirty (previously used) addresses
-    bool m_avoid_address_reuse;
+    bool m_avoid_address_reuse = false;
     //! Fee estimation mode to control arguments to estimateSmartFee
-    FeeEstimateMode m_fee_mode;
+    FeeEstimateMode m_fee_mode = FeeEstimateMode::UNSET;
     //! Minimum chain depth value for coin availability
     int m_min_depth = DEFAULT_MIN_DEPTH;
     //! Maximum chain depth value for coin availability
     int m_max_depth = DEFAULT_MAX_DEPTH;
     //! Controls which types of coins are allowed to be used (default: ALL_COINS)
-    CoinType nCoinType;
+    CoinType nCoinType = CoinType::ALL_COINS;
 
-    CCoinControl()
-    {
-        SetNull();
-    }
-
-    void SetNull(bool fResetCoinType = true);
+    CCoinControl(CoinType coin_type = CoinType::ALL_COINS);
 
     bool HasSelected() const
     {

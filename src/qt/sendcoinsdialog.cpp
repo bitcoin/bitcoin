@@ -924,7 +924,7 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
     ui->frameCoinControl->setVisible(checked);
 
     if (!checked && model) { // coin control features disabled
-        m_coin_control->SetNull(false);
+        m_coin_control = std::make_unique<CCoinControl>(m_coin_control->nCoinType);
     }
 
     coinControlUpdateLabels();
