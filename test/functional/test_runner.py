@@ -162,6 +162,7 @@ BASE_SCRIPTS= [
     'rpc_masternode.py',
     'rpc_mnauth.py',
     'rpc_verifyislock.py',
+    'rpc_verifychainlock.py',
     'p2p_fingerprint.py',
     'rpc_platform_filter.py',
     'feature_dip0020_activation.py',
