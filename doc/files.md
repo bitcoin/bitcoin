@@ -110,7 +110,7 @@ Subdirectory | File                 | Description
 
 ## Legacy subdirectories and files
 
-These subdirectories and files are no longer used by the Bitcoin Core:
+These subdirectories and files are no longer used by Bitcoin Core:
 
 Path           | Description | Repository notes
 ---------------|-------------|-----------------
