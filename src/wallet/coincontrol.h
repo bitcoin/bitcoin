@@ -23,17 +23,17 @@ class CCoinControl
 {
 public:
     //! Custom change destination, if not set an address is generated
-    CTxDestination destChange;
+    CTxDestination destChange = CNoDestination();
     //! Override the default change type if set, ignored if destChange is set
     std::optional<OutputType> m_change_type;
     //! If false, only selected inputs are used
-    bool m_add_inputs;
+    bool m_add_inputs = true;
     //! If false, allows unselected inputs, but requires all selected inputs be used
-    bool fAllowOtherInputs;
+    bool fAllowOtherInputs = false;
     //! Includes watch only addresses which are solvable
-    bool fAllowWatchOnly;
+    bool fAllowWatchOnly = false;
     //! Override automatic min/max checks on fee, m_feerate must be set if true
-    bool fOverrideFeeRate;
+    bool fOverrideFeeRate = false;
     //! Override the wallet's m_pay_tx_fee if set
     std::optional<CFeeRate> m_feerate;
     //! Override the default confirmation target if set
@@ -41,11 +41,11 @@ public:
     //! Override the wallet's m_signal_rbf if set
     std::optional<bool> m_signal_bip125_rbf;
     //! Avoid partial use of funds sent to a given address
-    bool m_avoid_partial_spends;
+    bool m_avoid_partial_spends = DEFAULT_AVOIDPARTIALSPENDS;
     //! Forbids inclusion of dirty (previously used) addresses
-    bool m_avoid_address_reuse;
+    bool m_avoid_address_reuse = false;
     //! Fee estimation mode to control arguments to estimateSmartFee
-    FeeEstimateMode m_fee_mode;
+    FeeEstimateMode m_fee_mode = FeeEstimateMode::UNSET;
     //! Minimum chain depth value for coin availability
     int m_min_depth = DEFAULT_MIN_DEPTH;
     //! Maximum chain depth value for coin availability
@@ -54,12 +54,7 @@ public:
     //! Asset info for filtering/selecting available coins
     std::optional<CAssetCoinInfo> assetInfo;
 
-    CCoinControl()
-    {
-        SetNull();
-    }
-
-    void SetNull();
+    CCoinControl();
 
     bool HasSelected() const
     {
