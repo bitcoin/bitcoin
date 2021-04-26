@@ -6,19 +6,18 @@ LD64_VERSION=609
 
 OSX_SDK=$(SDK_PATH)/Xcode-$(XCODE_VERSION)-$(XCODE_BUILD_ID)-extracted-SDK-with-libcxx-headers
 
-darwin_native_binutils=native_cctools
+darwin_native_binutils=native_llvm
 
 ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
 # FORCE_USE_SYSTEM_CLANG is empty, so we use our depends-managed, pinned clang
 # from llvm.org
 
-# Clang is a dependency of native_cctools when FORCE_USE_SYSTEM_CLANG is empty
-darwin_native_toolchain=native_cctools
+darwin_native_toolchain=native_llvm
 
 clang_prog=$(build_prefix)/bin/clang
 clangxx_prog=$(clang_prog)++
 
-clang_resource_dir=$(build_prefix)/lib/clang/$(native_clang_version)
+clang_resource_dir=$(build_prefix)/lib/clang/$(native_llvm_version)
 else
 # FORCE_USE_SYSTEM_CLANG is non-empty, so we use the clang from the user's
 # system
@@ -38,15 +37,15 @@ clangxx_prog=$(shell $(SHELL) $(.SHELLFLAGS) "command -v clang++")
 clang_resource_dir=$(shell clang -print-resource-dir)
 endif
 
-cctools_TOOLS=AR RANLIB STRIP NM LIBTOOL OTOOL INSTALL_NAME_TOOL
+llvm_TOOLS=AR RANLIB STRIP NM LIBTOOL OTOOL INSTALL_NAME_TOOL
 
 # Make-only lowercase function
 lc = $(subst A,a,$(subst B,b,$(subst C,c,$(subst D,d,$(subst E,e,$(subst F,f,$(subst G,g,$(subst H,h,$(subst I,i,$(subst J,j,$(subst K,k,$(subst L,l,$(subst M,m,$(subst N,n,$(subst O,o,$(subst P,p,$(subst Q,q,$(subst R,r,$(subst S,s,$(subst T,t,$(subst U,u,$(subst V,v,$(subst W,w,$(subst X,x,$(subst Y,y,$(subst Z,z,$1))))))))))))))))))))))))))
 
-# For well-known tools provided by cctools, make sure that their well-known
+# For well-known tools provided by LLVM, make sure that their well-known
 # variable is set to the full path of the tool, just like how AC_PATH_{TOO,PROG}
 # would.
-$(foreach TOOL,$(cctools_TOOLS),$(eval darwin_$(TOOL) = $$(build_prefix)/bin/$$(host)-$(call lc,$(TOOL))))
+$(foreach TOOL,$(llvm_TOOLS),$(eval darwin_$(TOOL) = $$(build_prefix)/bin/llvm-$(call lc,$(TOOL))))
 
 # Flag explanations:
 #
@@ -57,7 +56,7 @@ $(foreach TOOL,$(cctools_TOOLS),$(eval darwin_$(TOOL) = $$(build_prefix)/bin/$$(
 #
 #     -B$(build_prefix)/bin
 #
-#         Explicitly point to our binaries (e.g. cctools) so that they are
+#         Explicitly point to our binaries (e.g. LLVM) so that they are
 #         ensured to be found and preferred over other possibilities.
 #
 #     -stdlib=libc++ -stdlib++-isystem$(OSX_SDK)/usr/include/c++/v1
