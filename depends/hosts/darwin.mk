@@ -60,15 +60,10 @@ $(foreach TOOL,$(cctools_TOOLS),$(eval darwin_$(TOOL) = $$(build_prefix)/bin/$$(
 #         Explicitly point to our binaries (e.g. cctools) so that they are
 #         ensured to be found and preferred over other possibilities.
 #
-#     -stdlib=libc++ -nostdinc++ -Xclang -cxx-isystem$(OSX_SDK)/usr/include/c++/v1
+#     -stdlib=libc++ -stdlib++-isystem$(OSX_SDK)/usr/include/c++/v1
 #
 #         Forces clang to use the libc++ headers from our SDK and completely
 #         forget about the libc++ headers from the standard directories
-#
-#         TODO: Once we start requiring a clang version that has the
-#         -stdlib++-isystem<directory> flag first introduced here:
-#         https://reviews.llvm.org/D64089, we should use that instead. Read the
-#         differential summary there for more details.
 #
 #     -Xclang -*system<path_a> \
 #     -Xclang -*system<path_b> \
@@ -109,8 +104,8 @@ darwin_CXX=env -u C_INCLUDE_PATH -u CPLUS_INCLUDE_PATH \
              $(clangxx_prog) --target=$(host) -mmacosx-version-min=$(OSX_MIN_VERSION) \
                -B$(build_prefix)/bin -mlinker-version=$(LD64_VERSION) \
                -isysroot$(OSX_SDK) \
-               -stdlib=libc++ -nostdinc++ \
-               -Xclang -cxx-isystem$(OSX_SDK)/usr/include/c++/v1 \
+               -stdlib=libc++ \
+               -stdlib++-isystem$(OSX_SDK)/usr/include/c++/v1 \
                -Xclang -internal-externc-isystem$(clang_resource_dir)/include \
                -Xclang -internal-externc-isystem$(OSX_SDK)/usr/include
 
