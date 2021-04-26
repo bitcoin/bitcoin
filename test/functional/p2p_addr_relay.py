@@ -27,9 +27,8 @@ class AddrReceiver(P2PInterface):
     def on_addr(self, message):
         for addr in message.addrs:
             assert_equal(addr.nServices, 9)
-            # SYSCOIN
-            if not 8369 <= addr.port < 8379:
-                raise AssertionError("Invalid addr.port of {} (8369-8379 expected)".format(addr.port))
+            if not 8333 <= addr.port < 8343:
+                raise AssertionError("Invalid addr.port of {} (8333-8342 expected)".format(addr.port))
             assert addr.ip.startswith('123.123.123.')
             self.num_ipv4_received += 1
 
@@ -51,7 +50,7 @@ class GetAddrStore(P2PInterface):
 
 class AddrTest(SyscoinTestFramework):
     counter = 0
-    mocktime = int(time.time())
+    mock_time = int(time.time())
 
     def set_test_params(self):
         self.num_nodes = 1
@@ -66,10 +65,10 @@ class AddrTest(SyscoinTestFramework):
         addrs = []
         for i in range(num):
             addr = CAddress()
-            addr.time = self.mocktime + i
+            addr.time = self.mock_time + i
             addr.nServices = NODE_NETWORK | NODE_WITNESS
             addr.ip = f"123.123.123.{self.counter % 256}"
-            addr.port = 8369 + i
+            addr.port = 8333 + i
             addrs.append(addr)
             self.counter += 1
 
@@ -80,8 +79,8 @@ class AddrTest(SyscoinTestFramework):
     def send_addr_msg(self, source, msg, receivers):
         source.send_and_ping(msg)
         # pop m_next_addr_send timer
-        self.mocktime += 5 * 60
-        self.nodes[0].setmocktime(self.mocktime)
+        self.mock_time += 5 * 60
+        self.nodes[0].setmocktime(self.mock_time)
         for peer in receivers:
             peer.sync_with_ping()
 
@@ -175,14 +174,14 @@ class AddrTest(SyscoinTestFramework):
             first_octet = i >> 8
             second_octet = i % 256
             a = f"{first_octet}.{second_octet}.1.1"
-            self.nodes[0].addpeeraddress(a, 8369)
+            self.nodes[0].addpeeraddress(a, 8333)
 
         full_outbound_peer.send_and_ping(msg_getaddr())
         block_relay_peer.send_and_ping(msg_getaddr())
         inbound_peer.send_and_ping(msg_getaddr())
 
-        self.mocktime += 5 * 60
-        self.nodes[0].setmocktime(self.mocktime)
+        self.mock_time += 5 * 60
+        self.nodes[0].setmocktime(self.mock_time)
         inbound_peer.wait_until(inbound_peer.addr_received)
 
         assert_equal(full_outbound_peer.num_ipv4_received, 0)
@@ -194,7 +193,7 @@ class AddrTest(SyscoinTestFramework):
     def blocksonly_mode_tests(self):
         self.log.info('Test addr relay in -blocksonly mode')
         self.restart_node(0, ["-blocksonly"])
-        self.mocktime = int(time.time())
+        self.mock_time = int(time.time())
 
         self.log.info('Check that we send getaddr messages')
         full_outbound_peer = self.nodes[0].add_outbound_p2p_connection(GetAddrStore(), p2p_idx=0, connection_type="outbound-full-relay")
@@ -205,8 +204,8 @@ class AddrTest(SyscoinTestFramework):
         addr_source = self.nodes[0].add_p2p_connection(P2PInterface())
         msg = self.setup_addr_msg(2)
         addr_source.send_and_ping(msg)
-        self.mocktime += 5 * 60
-        self.nodes[0].setmocktime(self.mocktime)
+        self.mock_time += 5 * 60
+        self.nodes[0].setmocktime(self.mock_time)
         full_outbound_peer.sync_with_ping()
         assert_equal(full_outbound_peer.num_ipv4_received, 2)
 
