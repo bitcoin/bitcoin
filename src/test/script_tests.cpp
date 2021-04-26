@@ -147,7 +147,7 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, uint32_t flag
     uint32_t libconsensus_flags{flags & dashconsensus_SCRIPT_FLAGS_VERIFY_ALL};
     if (libconsensus_flags == flags) {
         int expectedSuccessCode = expect ? 1 : 0;
-        BOOST_CHECK_MESSAGE(dashconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), 0, libconsensus_flags, nullptr) == expectedSuccessCode, message);
+        BOOST_CHECK_MESSAGE(dashconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), stream.data(), stream.size(), 0, libconsensus_flags, nullptr) == expectedSuccessCode, message);
     }
 #endif
 }
@@ -212,7 +212,7 @@ struct KeyData
         pubkey0 = key0.GetPubKey();
         pubkey0H = key0.GetPubKey();
         pubkey0C = key0C.GetPubKey();
-        *const_cast<unsigned char*>(&pubkey0H[0]) = 0x06 | (pubkey0H[64] & 1);
+        *const_cast<unsigned char*>(pubkey0H.data()) = 0x06 | (pubkey0H[64] & 1);
 
         key1.Set(vchKey1, vchKey1 + 32, false);
         key1C.Set(vchKey1, vchKey1 + 32, true);
@@ -1421,7 +1421,7 @@ BOOST_AUTO_TEST_CASE(dashconsensus_verify_script_returns_true)
     stream << spendTx;
 
     dashconsensus_error err;
-    int result = dashconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
+    int result = dashconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), stream.data(), stream.size(), nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 1);
     BOOST_CHECK_EQUAL(err, dashconsensus_ERR_OK);
 }
@@ -1443,7 +1443,7 @@ BOOST_AUTO_TEST_CASE(dashconsensus_verify_script_tx_index_err)
     stream << spendTx;
 
     dashconsensus_error err;
-    int result = dashconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
+    int result = dashconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), stream.data(), stream.size(), nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 0);
     BOOST_CHECK_EQUAL(err, dashconsensus_ERR_TX_INDEX);
 }
@@ -1465,7 +1465,7 @@ BOOST_AUTO_TEST_CASE(dashconsensus_verify_script_tx_size)
     stream << spendTx;
 
     dashconsensus_error err;
-    int result = dashconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size() * 2, nIn, libconsensus_flags, &err);
+    int result = dashconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), stream.data(), stream.size() * 2, nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 0);
     BOOST_CHECK_EQUAL(err, dashconsensus_ERR_TX_SIZE_MISMATCH);
 }
@@ -1487,7 +1487,7 @@ BOOST_AUTO_TEST_CASE(dashconsensus_verify_script_tx_serialization)
     stream << 0xffffffff;
 
     dashconsensus_error err;
-    int result = dashconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
+    int result = dashconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), stream.data(), stream.size(), nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 0);
     BOOST_CHECK_EQUAL(err, dashconsensus_ERR_TX_DESERIALIZE);
 }
@@ -1509,7 +1509,7 @@ BOOST_AUTO_TEST_CASE(dashconsensus_verify_script_invalid_flags)
     stream << spendTx;
 
     dashconsensus_error err;
-    int result = dashconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
+    int result = dashconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), stream.data(), stream.size(), nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 0);
     BOOST_CHECK_EQUAL(err, dashconsensus_ERR_INVALID_FLAGS);
 }
