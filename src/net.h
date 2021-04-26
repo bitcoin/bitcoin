@@ -1177,6 +1177,43 @@ private:
      */
     std::vector<CService> m_onion_binds;
 
+    /**
+     * RAII helper to atomically create a copy of `vNodes` and add a reference
+     * to each of the nodes. The nodes are released when this object is destroyed.
+     */
+    class NodesSnapshot
+    {
+    public:
+        explicit NodesSnapshot(const CConnman& connman, bool shuffle)
+        {
+            {
+                LOCK(connman.cs_vNodes);
+                m_nodes_copy = connman.vNodes;
+                for (auto& node : m_nodes_copy) {
+                    node->AddRef();
+                }
+            }
+            if (shuffle) {
+                Shuffle(m_nodes_copy.begin(), m_nodes_copy.end(), FastRandomContext{});
+            }
+        }
+
+        ~NodesSnapshot()
+        {
+            for (auto& node : m_nodes_copy) {
+                node->Release();
+            }
+        }
+
+        const std::vector<CNode*>& Nodes() const
+        {
+            return m_nodes_copy;
+        }
+
+    private:
+        std::vector<CNode*> m_nodes_copy;
+    };
+
     friend struct CConnmanTest;
     friend struct ConnmanTestMsg;
 };
