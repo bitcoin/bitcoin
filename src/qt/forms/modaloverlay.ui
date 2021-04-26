@@ -271,16 +271,6 @@ QLabel { color: rgb(40,40,40);  }</string>
                </property>
               </widget>
              </item>
-             <item>
-              <widget class="QProgressBar" name="progressBar">
-               <property name="value">
-                <number>24</number>
-               </property>
-               <property name="format">
-                <string/>
-               </property>
-              </widget>
-             </item>
             </layout>
            </item>
            <item row="4" column="0">
