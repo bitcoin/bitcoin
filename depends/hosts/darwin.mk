@@ -1,5 +1,11 @@
 OSX_MIN_VERSION=10.14
-OSX_SDK_VERSION=10.15.1
+
+ifeq ($(build_os),darwin)
+OSX_SDK_VERSION := $(shell xcrun --show-sdk-version)
+else
+OSX_SDK_VERSION := 10.15.1
+endif
+
 XCODE_VERSION=11.3.1
 XCODE_BUILD_ID=11C505
 LD64_VERSION=530
@@ -122,5 +128,7 @@ darwin_release_CXXFLAGS=$(darwin_release_CFLAGS)
 
 darwin_debug_CFLAGS=-O1
 darwin_debug_CXXFLAGS=$(darwin_debug_CFLAGS)
+
+darwin_FLAGS := -Wl,-platform_version -Wl,macos -Wl,$(OSX_MIN_VERSION) -Wl,$(OSX_SDK_VERSION)
 
 darwin_cmake_system=Darwin

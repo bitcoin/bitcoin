@@ -120,3 +120,6 @@ fi
 if test -n "@LDFLAGS@"; then
   LDFLAGS="@LDFLAGS@ ${LDFLAGS}"
 fi
+if test -n "@DARWIN_FLAGS@"; then
+  DARWIN_FLAGS="@DARWIN_FLAGS@"
+fi

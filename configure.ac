@@ -734,6 +734,9 @@ case $host in
        esac
      fi
 
+     if test "x$DARWIN_FLAGS" != x; then
+       AX_CHECK_LINK_FLAG([$DARWIN_FLAGS], [LDFLAGS="$LDFLAGS $DARWIN_FLAGS"])
+     fi
      AX_CHECK_LINK_FLAG([[-Wl,-headerpad_max_install_names]], [LDFLAGS="$LDFLAGS -Wl,-headerpad_max_install_names"],, [[$LDFLAG_WERROR]])
      CPPFLAGS="$CPPFLAGS -DMAC_OSX -DOBJC_OLD_DISPATCH_PROTOTYPES=0"
      OBJCXXFLAGS="$CXXFLAGS"
