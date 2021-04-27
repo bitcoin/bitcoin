@@ -1972,7 +1972,8 @@ class SegWitTest(SyscoinTestFramework):
         with self.nodes[2].assert_debug_log(expected_msgs=[
                 f"Witness data for blocks after height {SEGWIT_HEIGHT} requires validation. Please restart with -reindex."], timeout=10):
             self.nodes[2].start([f"-segwitheight={SEGWIT_HEIGHT}"])
-
+        # SYSCOIN
+        time.sleep(3000)
         # As directed, the user restarts the node with -reindex
         self.start_node(2, extra_args=["-reindex", f"-segwitheight={SEGWIT_HEIGHT}"])
 
