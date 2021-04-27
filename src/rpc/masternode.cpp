@@ -190,11 +190,11 @@ UniValue masternode_outputs(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
     CWallet* const pwallet = wallet.get();
-    if (request.fHelp)
-        masternode_outputs_help();
-
     if (!EnsureWalletIsAvailable(pwallet, request.fHelp))
         return NullUniValue;
+
+    if (request.fHelp)
+        masternode_outputs_help();
 
     LOCK2(cs_main, pwallet->cs_wallet);
 
