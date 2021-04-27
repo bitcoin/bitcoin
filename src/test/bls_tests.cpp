@@ -4,6 +4,7 @@
 
 #include <bls/bls.h>
 #include <bls/bls_batchverifier.h>
+#include <random.h>
 #include <test/test_dash.h>
 
 #include <boost/test/unit_test.hpp>
@@ -44,6 +45,162 @@ BOOST_AUTO_TEST_CASE(bls_sig_tests)
     BOOST_CHECK(!sig2.VerifyInsecure(sk1.GetPublicKey(), msgHash1));
     BOOST_CHECK(!sig2.VerifyInsecure(sk2.GetPublicKey(), msgHash2));
     BOOST_CHECK(sig2.VerifyInsecure(sk2.GetPublicKey(), msgHash1));
+}
+
+BOOST_AUTO_TEST_CASE(bls_key_agg_tests)
+{
+    CBLSSecretKey sk1, sk2;
+    sk1.MakeNewKey();
+    sk2.MakeNewKey();
+
+    CBLSPublicKey ag_pk = sk1.GetPublicKey();
+    ag_pk.AggregateInsecure(sk2.GetPublicKey());
+
+    CBLSSecretKey ag_sk = sk1;
+    ag_sk.AggregateInsecure(sk2);
+
+    BOOST_CHECK(ag_pk == ag_sk.GetPublicKey());
+
+    uint256 msgHash1 = uint256S("0000000000000000000000000000000000000000000000000000000000000001");
+    uint256 msgHash2 = uint256S("0000000000000000000000000000000000000000000000000000000000000002");
+
+    auto sig = ag_sk.Sign(msgHash1);
+    BOOST_CHECK(sig.VerifyInsecure(ag_pk, msgHash1));
+    BOOST_CHECK(!sig.VerifyInsecure(ag_pk, msgHash2));
+}
+
+BOOST_AUTO_TEST_CASE(bls_key_agg_vec_tests)
+{
+    std::vector<CBLSSecretKey> vec_sk;
+    std::vector<CBLSPublicKey> vec_pk;
+
+    {
+        auto ret = CBLSSecretKey::AggregateInsecure(vec_sk);
+        BOOST_CHECK(ret == CBLSSecretKey());
+    }
+    {
+        auto ret = CBLSPublicKey::AggregateInsecure(vec_pk);
+        BOOST_CHECK(ret == CBLSPublicKey());
+    }
+
+    // In practice, we only aggregate 400 key shares at any given time, something substantially larger than that should
+    // be good. Plus this is very very fast, so who cares!
+    int key_count = 10000;
+    vec_sk.reserve(key_count);
+    vec_pk.reserve(key_count);
+    CBLSSecretKey sk;
+    for (int i = 0; i < key_count; i++) {
+        sk.MakeNewKey();
+        vec_sk.push_back(sk);
+        vec_pk.push_back(sk.GetPublicKey());
+    }
+
+    CBLSSecretKey ag_sk = CBLSSecretKey::AggregateInsecure(vec_sk);
+    CBLSPublicKey ag_pk = CBLSPublicKey::AggregateInsecure(vec_pk);
+
+    BOOST_CHECK(ag_sk.IsValid());
+    BOOST_CHECK(ag_pk.IsValid());
+
+    uint256 msgHash1 = uint256S("0000000000000000000000000000000000000000000000000000000000000001");
+    uint256 msgHash2 = uint256S("0000000000000000000000000000000000000000000000000000000000000002");
+
+    auto sig = ag_sk.Sign(msgHash1);
+    BOOST_CHECK(sig.VerifyInsecure(ag_pk, msgHash1));
+    BOOST_CHECK(!sig.VerifyInsecure(ag_pk, msgHash2));
+}
+
+BOOST_AUTO_TEST_CASE(bls_sig_agg_sub_tests)
+{
+    int count = 20;
+    std::vector<CBLSPublicKey> vec_pks;
+    std::vector<uint256> vec_hashes;
+    std::vector<CBLSSignature> vec_sigs;
+    vec_pks.reserve(count);
+    vec_hashes.reserve(count);
+    vec_sigs.reserve(count);
+
+    CBLSSignature sig;
+    auto sk = CBLSSecretKey();
+    uint256 hash;
+    for (int i = 0; i < count; i++) {
+        sk.MakeNewKey();
+        vec_pks.push_back(sk.GetPublicKey());
+        hash = GetRandHash();
+        vec_hashes.push_back(hash);
+        CBLSSignature sig_i = sk.Sign(hash);
+        vec_sigs.push_back(sig_i);
+        if (i == 0) {
+            // first sig is assigned directly
+            sig = sig_i;
+        } else {
+            // all other sigs are aggregated into the previously computed/stored sig
+            sig.AggregateInsecure(sig_i);
+        }
+        BOOST_CHECK(sig.VerifyInsecureAggregated(vec_pks, vec_hashes));
+    }
+    // Create an aggregated signature from the vector of individual signatures
+    auto vecSig = CBLSSignature::AggregateInsecure(vec_sigs);
+    BOOST_CHECK(vecSig.VerifyInsecureAggregated(vec_pks, vec_hashes));
+    // Check that these two signatures are equal
+    BOOST_CHECK(sig == vecSig);
+
+    // Test that the sig continues to be valid when subtracting sigs via `SubInsecure`
+
+    for (int i = 0; i < count - 1; i++) {
+        auto top_sig = vec_sigs.back();
+        vec_pks.pop_back();
+        vec_hashes.pop_back();
+        BOOST_CHECK(!sig.VerifyInsecureAggregated(vec_pks, vec_hashes));
+        sig.SubInsecure(top_sig);
+        BOOST_CHECK(sig.VerifyInsecureAggregated(vec_pks, vec_hashes));
+        vec_sigs.pop_back();
+    }
+    // Check that the final left-over sig validates
+    BOOST_CHECK_EQUAL(vec_sigs.size(), 1);
+    BOOST_CHECK_EQUAL(vec_pks.size(), 1);
+    BOOST_CHECK_EQUAL(vec_hashes.size(), 1);
+    BOOST_CHECK(vec_sigs[0].VerifyInsecure(vec_pks[0], vec_hashes[0]));
+}
+
+BOOST_AUTO_TEST_CASE(bls_sig_agg_secure_tests)
+{
+    int count = 10;
+
+    uint256 hash = GetRandHash();
+
+    std::vector<CBLSSignature> vec_sigs;
+    std::vector<CBLSPublicKey> vec_pks;
+
+    CBLSSecretKey sk;
+    for (int i = 0; i < count; i++) {
+        sk.MakeNewKey();
+        vec_pks.push_back(sk.GetPublicKey());
+        vec_sigs.push_back(sk.Sign(hash));
+    }
+
+    auto sec_agg_sig = CBLSSignature::AggregateSecure(vec_sigs, vec_pks, hash);
+    BOOST_CHECK(sec_agg_sig.IsValid());
+    BOOST_CHECK(sec_agg_sig.VerifySecureAggregated(vec_pks, hash));
+}
+
+BOOST_AUTO_TEST_CASE(bls_dh_exchange_tests)
+{
+    CBLSSecretKey sk1, sk2;
+    sk1.MakeNewKey();
+    sk2.MakeNewKey();
+
+    CBLSPublicKey pk1, pk2;
+    pk1 = sk1.GetPublicKey();
+    pk2 = sk2.GetPublicKey();
+
+    // Perform diffie-helman exchange
+    CBLSPublicKey pke1, pke2;
+    pke1.DHKeyExchange(sk1, pk2);
+    pke2.DHKeyExchange(sk2, pk1);
+
+    BOOST_CHECK(pke1.IsValid());
+    BOOST_CHECK(pke2.IsValid());
+    BOOST_CHECK(pke1 == pke2);
 }
 
 struct Message
