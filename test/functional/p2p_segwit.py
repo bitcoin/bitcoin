@@ -2085,19 +2085,17 @@ class SegWitTest(BitcoinTestFramework):
             flags = 3
             r = b""
             r += struct.pack("<i", tx.nVersion)
-            if flags:
-                dummy = []
-                r += ser_vector(dummy)
-                r += struct.pack("<B", flags)
+            dummy = []
+            r += ser_vector(dummy)
+            r += struct.pack("<B", flags)
             r += ser_vector(tx.vin)
             r += ser_vector(tx.vout)
-            if flags & 1:
-                if (len(tx.wit.vtxinwit) != len(tx.vin)):
-                    # vtxinwit must have the same length as vin
-                    tx.wit.vtxinwit = tx.wit.vtxinwit[:len(tx.vin)]
-                    for _ in range(len(tx.wit.vtxinwit), len(tx.vin)):
-                        tx.wit.vtxinwit.append(CTxInWitness())
-                r += tx.wit.serialize()
+            if (len(tx.wit.vtxinwit) != len(tx.vin)):
+                # vtxinwit must have the same length as vin
+                tx.wit.vtxinwit = tx.wit.vtxinwit[:len(tx.vin)]
+                for _ in range(len(tx.wit.vtxinwit), len(tx.vin)):
+                    tx.wit.vtxinwit.append(CTxInWitness())
+            r += tx.wit.serialize()
             r += struct.pack("<I", tx.nLockTime)
             return r
 
