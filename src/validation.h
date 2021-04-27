@@ -743,7 +743,9 @@ public:
 
     /** Replay blocks that aren't fully applied to the database. */
     bool ReplayBlocks(const CChainParams& params);
-    bool RewindBlockIndex(const CChainParams& params) LOCKS_EXCLUDED(cs_main);
+
+    /** Whether the chain state needs to be redownloaded due to lack of witness data */
+    [[nodiscard]] bool NeedsRedownload(const CChainParams& params) const EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     /** Ensures we have a genesis block in the block tree, possibly writing one to disk. */
     bool LoadGenesisBlock(const CChainParams& chainparams);
 
@@ -789,9 +791,6 @@ private:
     void ReceivedBlockTransactions(const CBlock& block, CBlockIndex* pindexNew, const FlatFilePos& pos, const Consensus::Params& consensusParams) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     bool RollforwardBlock(const CBlockIndex* pindex, CCoinsViewCache& inputs, const CChainParams& params, AssetMap &mapAssets, EthereumMintTxMap &mapMintKeys, std::vector<std::pair<uint256, uint32_t> > &vecTXIDPairs) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
-
-    //! Mark a block as not having block data
-    void EraseBlockData(CBlockIndex* index) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
     void CheckForkWarningConditions() EXCLUSIVE_LOCKS_REQUIRED(cs_main);
     void InvalidChainFound(CBlockIndex* pindexNew) EXCLUSIVE_LOCKS_REQUIRED(cs_main);

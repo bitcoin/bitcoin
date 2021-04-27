@@ -4897,143 +4897,23 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     return true;
 }
 
-//! Helper for CChainState::RewindBlockIndex
-void CChainState::EraseBlockData(CBlockIndex* index)
+bool CChainState::NeedsRedownload(const CChainParams& params) const
 {
     AssertLockHeld(cs_main);
-    assert(!m_chain.Contains(index)); // Make sure this block isn't active
 
-    // Reduce validity
-    index->nStatus = std::min<unsigned int>(index->nStatus & BLOCK_VALID_MASK, BLOCK_VALID_TREE) | (index->nStatus & ~BLOCK_VALID_MASK);
-    // Remove have-data flags.
-    index->nStatus &= ~(BLOCK_HAVE_DATA | BLOCK_HAVE_UNDO);
-    // Remove storage location.
-    index->nFile = 0;
-    index->nDataPos = 0;
-    index->nUndoPos = 0;
-    // Remove various other things
-    index->nTx = 0;
-    index->nChainTx = 0;
-    index->nSequenceId = 0;
-    // Make sure it gets written.
-    setDirtyBlockIndex.insert(index);
-    // Update indexes
-    setBlockIndexCandidates.erase(index);
-    auto ret = m_blockman.m_blocks_unlinked.equal_range(index->pprev);
-    while (ret.first != ret.second) {
-        if (ret.first->second == index) {
-            m_blockman.m_blocks_unlinked.erase(ret.first++);
-        } else {
-            ++ret.first;
+    // At and above params.SegwitHeight, segwit consensus rules must be validated
+    CBlockIndex* block{m_chain.Tip()};
+    const int segwit_height{params.GetConsensus().SegwitHeight};
+
+    while (block != nullptr && block->nHeight >= segwit_height) {
+        if (!(block->nStatus & BLOCK_OPT_WITNESS)) {
+            // block is insufficiently validated for a segwit client
+            return true;
         }
-    }
-    // Mark parent as eligible for main chain again
-    if (index->pprev && index->pprev->IsValid(BLOCK_VALID_TRANSACTIONS) && index->pprev->HaveTxsDownloaded()) {
-        setBlockIndexCandidates.insert(index->pprev);
-    }
-}
-
-bool CChainState::RewindBlockIndex(const CChainParams& params)
-{
-    // Note that during -reindex-chainstate we are called with an empty m_chain!
-
-    // First erase all post-segwit blocks without witness not in the main chain,
-    // as this can we done without costly DisconnectTip calls. Active
-    // blocks will be dealt with below (releasing cs_main in between).
-    {
-        LOCK(cs_main);
-        for (const auto& entry : m_blockman.m_block_index) {
-            if (IsWitnessEnabled(entry.second->pprev, params.GetConsensus()) && !(entry.second->nStatus & BLOCK_OPT_WITNESS) && !m_chain.Contains(entry.second)) {
-                EraseBlockData(entry.second);
-            }
-        }
+        block = block->pprev;
     }
 
-    // Find what height we need to reorganize to.
-    CBlockIndex *tip;
-    int nHeight = 1;
-    {
-        LOCK(cs_main);
-        while (nHeight <= m_chain.Height()) {
-            // Although SCRIPT_VERIFY_WITNESS is now generally enforced on all
-            // blocks in ConnectBlock, we don't need to go back and
-            // re-download/re-verify blocks from before segwit actually activated.
-            if (IsWitnessEnabled(m_chain[nHeight - 1], params.GetConsensus()) && !(m_chain[nHeight]->nStatus & BLOCK_OPT_WITNESS)) {
-                break;
-            }
-            nHeight++;
-        }
-
-        tip = m_chain.Tip();
-    }
-    // nHeight is now the height of the first insufficiently-validated block, or tipheight + 1
-
-    BlockValidationState state;
-    // Loop until the tip is below nHeight, or we reach a pruned block.
-    while (!ShutdownRequested()) {
-        {
-            LOCK(cs_main);
-            LOCK(m_mempool.cs);
-            // Make sure nothing changed from under us (this won't happen because RewindBlockIndex runs before importing/network are active)
-            assert(tip == m_chain.Tip());
-            if (tip == nullptr || tip->nHeight < nHeight) break;
-            if (fPruneMode && !(tip->nStatus & BLOCK_HAVE_DATA)) {
-                // If pruning, don't try rewinding past the HAVE_DATA point;
-                // since older blocks can't be served anyway, there's
-                // no need to walk further, and trying to DisconnectTip()
-                // will fail (and require a needless reindex/redownload
-                // of the blockchain).
-                break;
-            }
-
-            // Disconnect block
-            if (!DisconnectTip(state, params, nullptr)) {
-                return error("RewindBlockIndex: unable to disconnect block at height %i (%s)", tip->nHeight, state.ToString());
-            }
-
-            // Reduce validity flag and have-data flags.
-            // We do this after actual disconnecting, otherwise we'll end up writing the lack of data
-            // to disk before writing the chainstate, resulting in a failure to continue if interrupted.
-            // Note: If we encounter an insufficiently validated block that
-            // is on m_chain, it must be because we are a pruning node, and
-            // this block or some successor doesn't HAVE_DATA, so we were unable to
-            // rewind all the way.  Blocks remaining on m_chain at this point
-            // must not have their validity reduced.
-            EraseBlockData(tip);
-
-            tip = tip->pprev;
-        }
-        // Make sure the queue of validation callbacks doesn't grow unboundedly.
-        LimitValidationInterfaceQueue();
-
-        // Occasionally flush state to disk.
-        if (!FlushStateToDisk(params, state, FlushStateMode::PERIODIC)) {
-            LogPrintf("RewindBlockIndex: unable to flush state to disk (%s)\n", state.ToString());
-            return false;
-        }
-    }
-
-    {
-        LOCK(cs_main);
-        if (m_chain.Tip() != nullptr) {
-            // We can't prune block index candidates based on our tip if we have
-            // no tip due to m_chain being empty!
-            PruneBlockIndexCandidates();
-
-            CheckBlockIndex(params.GetConsensus());
-
-            // FlushStateToDisk can possibly read ::ChainActive(). Be conservative
-            // and skip it here, we're about to -reindex-chainstate anyway, so
-            // it'll get called a bunch real soon.
-            BlockValidationState state;
-            if (!FlushStateToDisk(params, state, FlushStateMode::ALWAYS)) {
-                LogPrintf("RewindBlockIndex: unable to flush state to disk (%s)\n", state.ToString());
-                return false;
-            }
-        }
-    }
-
-    return true;
+    return false;
 }
 
 void CChainState::UnloadBlockIndex() {
