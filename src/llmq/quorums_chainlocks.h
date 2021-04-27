@@ -59,23 +59,23 @@ class CChainLocksHandler : public CRecoveredSigsListener
 
 private:
     mutable RecursiveMutex cs;
-    bool isEnabled{false};
-    bool isEnforced{false};
-    bool tryLockChainTipScheduled{false};
+    bool isEnabled GUARDED_BY(cs) {false};
+    bool isEnforced GUARDED_BY(cs) {false};
+    bool tryLockChainTipScheduled GUARDED_BY(cs) {false};
 
-    CChainLockSig mostRecentChainLockShare;
-    CChainLockSig bestChainLockWithKnownBlock;
-    const CBlockIndex* bestChainLockBlockIndex{nullptr};
+    CChainLockSig mostRecentChainLockShare GUARDED_BY(cs);
+    CChainLockSig bestChainLockWithKnownBlock GUARDED_BY(cs);
+    const CBlockIndex* bestChainLockBlockIndex GUARDED_BY(cs) {nullptr};
     // Keep best chainlock shares and candidates, sorted by height (highest heght first).
-    std::map<int, std::map<CQuorumCPtr, CChainLockSigCPtr>, ReverseHeightComparator> bestChainLockShares;
-    std::map<int, CChainLockSigCPtr, ReverseHeightComparator> bestChainLockCandidates;
+    std::map<int, std::map<CQuorumCPtr, CChainLockSigCPtr>, ReverseHeightComparator> bestChainLockShares GUARDED_BY(cs);
+    std::map<int, CChainLockSigCPtr, ReverseHeightComparator> bestChainLockCandidates GUARDED_BY(cs);
 
-    std::map<uint256, std::pair<int, uint256> > mapSignedRequestIds;
+    std::map<uint256, std::pair<int, uint256> > mapSignedRequestIds GUARDED_BY(cs);
 
 
-    std::map<uint256, int64_t> seenChainLocks;
+    std::map<uint256, int64_t> seenChainLocks GUARDED_BY(cs);
 
-    int64_t lastCleanupTime{0};
+    int64_t lastCleanupTime GUARDED_BY(cs) {0};
 
 public:
     CConnman& connman;

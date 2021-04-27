@@ -357,20 +357,19 @@ private:
     std::thread workThread;
     CThreadInterrupt workInterrupt;
 
-    SigShareMap<CSigShare> sigShares;
-    std::unordered_map<uint256, CSignedSession, StaticSaltedHasher> signedSessions;
+    SigShareMap<CSigShare> sigShares GUARDED_BY(cs);
+    std::unordered_map<uint256, CSignedSession, StaticSaltedHasher> signedSessions GUARDED_BY(cs);
 
     // stores time of last receivedSigShare. Used to detect timeouts
-    std::unordered_map<uint256, int64_t, StaticSaltedHasher> timeSeenForSessions;
+    std::unordered_map<uint256, int64_t, StaticSaltedHasher> timeSeenForSessions GUARDED_BY(cs);
 
-    std::unordered_map<NodeId, CSigSharesNodeState> nodeStates;
-    SigShareMap<std::pair<NodeId, int64_t>> sigSharesRequested;
-    SigShareMap<bool> sigSharesQueuedToAnnounce;
+    std::unordered_map<NodeId, CSigSharesNodeState> nodeStates GUARDED_BY(cs);
+    SigShareMap<std::pair<NodeId, int64_t>> sigSharesRequested GUARDED_BY(cs);
+    SigShareMap<bool> sigSharesQueuedToAnnounce GUARDED_BY(cs);
 
-    std::vector<std::tuple<const CQuorumCPtr, uint256, uint256>> pendingSigns;
+    std::vector<std::tuple<const CQuorumCPtr, uint256, uint256>> pendingSigns GUARDED_BY(cs);
 
-    // must be protected by cs
-    FastRandomContext rnd;
+    FastRandomContext rnd GUARDED_BY(cs);
 
     int64_t lastCleanupTime{0};
     std::atomic<uint32_t> recoveredSigsCounter{0};

@@ -82,9 +82,9 @@ private:
     CDBWrapper& db;
 
     mutable RecursiveMutex cs;
-    unordered_lru_cache<std::pair<uint8_t, uint256>, bool, StaticSaltedHasher, 30000> hasSigForIdCache;
-    unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForSessionCache;
-    unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForHashCache;
+    unordered_lru_cache<std::pair<uint8_t, uint256>, bool, StaticSaltedHasher, 30000> hasSigForIdCache GUARDED_BY(cs);
+    unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForSessionCache GUARDED_BY(cs);
+    unordered_lru_cache<uint256, bool, StaticSaltedHasher, 30000> hasSigForHashCache GUARDED_BY(cs);
 
 public:
     explicit CRecoveredSigsDb(CDBWrapper& _db);
@@ -136,15 +136,14 @@ private:
     CConnman& connman;
     PeerManager& peerman;
     // Incoming and not verified yet
-    std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>> pendingRecoveredSigs;
-    std::unordered_map<uint256, std::shared_ptr<const CRecoveredSig>, StaticSaltedHasher> pendingReconstructedRecoveredSigs;
+    std::unordered_map<NodeId, std::list<std::shared_ptr<const CRecoveredSig>>> pendingRecoveredSigs GUARDED_BY(cs);
+    std::unordered_map<uint256, std::shared_ptr<const CRecoveredSig>, StaticSaltedHasher> pendingReconstructedRecoveredSigs GUARDED_BY(cs);
 
-    // must be protected by cs
-    FastRandomContext rnd;
+    FastRandomContext rnd GUARDED_BY(cs);
 
     int64_t lastCleanupTime{0};
 
-    std::vector<CRecoveredSigsListener*> recoveredSigsListeners;
+    std::vector<CRecoveredSigsListener*> recoveredSigsListeners GUARDED_BY(cs);
 
 public:
     // when selecting a quorum for signing and verification, we use CQuorumManager::SelectQuorum with this offset as

@@ -42,7 +42,7 @@ private:
         BLSVerificationVectorPtr vvec;
         CBLSSecretKey skContribution;
     };
-    std::map<ContributionsCacheKey, ContributionsCacheEntry> contributionsCache;
+    std::map<ContributionsCacheKey, ContributionsCacheEntry> contributionsCache GUARDED_BY(contributionsCacheCs);
 
 public:
     CConnman& connman;

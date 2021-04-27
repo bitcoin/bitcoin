@@ -241,16 +241,16 @@ private:
     // conflicting messages as otherwise an attacker might be able to broadcast conflicting (valid+invalid) messages
     // and thus split the quorum. Such members are later removed from the quorum.
     mutable RecursiveMutex invCs;
-    std::map<uint256, CDKGContribution> contributions;
-    std::map<uint256, CDKGComplaint> complaints;
-    std::map<uint256, CDKGJustification> justifications;
-    std::map<uint256, CDKGPrematureCommitment> prematureCommitments;
+    std::map<uint256, CDKGContribution> contributions GUARDED_BY(invCs);
+    std::map<uint256, CDKGComplaint> complaints GUARDED_BY(invCs);
+    std::map<uint256, CDKGJustification> justifications GUARDED_BY(invCs);
+    std::map<uint256, CDKGPrematureCommitment> prematureCommitments GUARDED_BY(invCs);
 
     mutable RecursiveMutex cs_pending;
-    std::vector<size_t> pendingContributionVerifications;
+    std::vector<size_t> pendingContributionVerifications GUARDED_BY(cs_pending);
 
     // filled by ReceivePrematureCommitment and used by FinalizeCommitments
-    std::set<uint256> validCommitments;
+    std::set<uint256> validCommitments GUARDED_BY(invCs);
 
 public:
     CDKGSession(const Consensus::LLMQParams& _params, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :

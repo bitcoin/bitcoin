@@ -127,6 +127,7 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
 
 void CDKGSessionHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
 {
+    LOCK2(cs_main, cs);
     // We don't handle messages in the calling thread as deserialization/processing of these would block everything
     if (strCommand == NetMsgType::QCONTRIB) {
         pendingContributions.PushPendingMessage(pfrom, vRecv);
@@ -542,36 +543,44 @@ void CDKGSessionHandler::HandleDKGRound()
 
     // Contribute
     auto fContributeStart = [this]() {
+        LOCK2(cs_main, cs);
         curSession->Contribute(pendingContributions);
     };
     auto fContributeWait = [this] {
+        LOCK2(cs_main, cs);
         return ProcessPendingMessageBatch<CDKGContribution>(*curSession, pendingContributions, 8, peerman);
     };
     HandlePhase(QuorumPhase_Contribute, QuorumPhase_Complain, curQuorumHash, 0.05, fContributeStart, fContributeWait);
 
     // Complain
     auto fComplainStart = [this]() {
+        LOCK2(cs_main, cs);
         curSession->VerifyAndComplain(pendingComplaints);
     };
     auto fComplainWait = [this] {
+        LOCK2(cs_main, cs);
         return ProcessPendingMessageBatch<CDKGComplaint>(*curSession, pendingComplaints, 8, peerman);
     };
     HandlePhase(QuorumPhase_Complain, QuorumPhase_Justify, curQuorumHash, 0.05, fComplainStart, fComplainWait);
 
     // Justify
     auto fJustifyStart = [this]() {
+        LOCK2(cs_main, cs);
         curSession->VerifyAndJustify(pendingJustifications);
     };
     auto fJustifyWait = [this] {
+        LOCK2(cs_main, cs);
         return ProcessPendingMessageBatch<CDKGJustification>(*curSession, pendingJustifications, 8, peerman);
     };
     HandlePhase(QuorumPhase_Justify, QuorumPhase_Commit, curQuorumHash, 0.05, fJustifyStart, fJustifyWait);
 
     // Commit
     auto fCommitStart = [this]() {
+        LOCK2(cs_main, cs);
         curSession->VerifyAndCommit(pendingPrematureCommitments);
     };
     auto fCommitWait = [this] {
+        LOCK2(cs_main, cs);
         return ProcessPendingMessageBatch<CDKGPrematureCommitment>(*curSession, pendingPrematureCommitments, 8, peerman);
     };
     HandlePhase(QuorumPhase_Commit, QuorumPhase_Finalize, curQuorumHash, 0.1, fCommitStart, fCommitWait);

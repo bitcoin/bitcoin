@@ -101,9 +101,10 @@ bool CDKGSessionManager::AlreadyHave(const uint256& hash) const
 {
     if (!IsQuorumDKGEnabled())
         return false;
-
+    
     for (const auto& p : dkgSessionHandlers) {
         auto& dkgType = p.second;
+        LOCK(dkgType.cs);   
         if (dkgType.pendingContributions.HasSeen(hash)
             || dkgType.pendingComplaints.HasSeen(hash)
             || dkgType.pendingJustifications.HasSeen(hash)
