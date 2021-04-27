@@ -190,6 +190,8 @@ public:
                              "SHA2\n"
                              "-END PROGRAM-\n");
 
+        g_contractMgr = new CContractManager();
+        g_dynEngine = new CDynEngine();
         
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -290,7 +292,7 @@ public:
         };
         chainTxData = ChainTxData();
 
-        contractMgr = new CContractManager();
+        
 
     }
 };

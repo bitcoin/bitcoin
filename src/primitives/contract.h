@@ -5,6 +5,7 @@
 #include <amount.h>
 #include <uint256.h>
 #include <sqlite/sqlite3.h>
+#include "random.h"
 
 
 
@@ -16,13 +17,13 @@ public:
 
     std::string contractAddress;
     std::string contractTxnID;
-    uint64_t blockHeight;
+    std::string blockHash;
     std::string code;
     std::string createdBy;
-    
+    int64_t balance;
 
 
-    CContract();
+    CContract(std::string txnID, std::string, std::string iCode, std::string iCreatedBy, int64_t initialBalance, std::string address);
 };
 
 

@@ -11,6 +11,11 @@
 
 #include <functional>
 #include <string>
+#include <consensus/dynengine.h>
+
+CDynHash* g_hashFunction;
+CDynEngine* g_engine;
+CContractManager* g_contractMgr;
 
 /** Translate string to current locale using Qt. */
 extern const std::function<std::string(const char*)> G_TRANSLATION_FUN = [](const char* psz) {

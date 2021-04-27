@@ -1926,7 +1926,7 @@ bool AppInitMain(const std::any& context, NodeContext& node, interfaces::BlockAn
 
     fs::path datadir = GetDataDir();
 
-    chainparams.contractMgr->CreateOrOpenDatabase(datadir.string());
+    g_contractMgr->CreateOrOpenDatabase(datadir.string());
 
 
 

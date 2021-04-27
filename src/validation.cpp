@@ -53,7 +53,11 @@
 #include <optional>
 #include <string>
 
+#include "global.h"
+#include "consensus/dynengine.h"
+
 #include <boost/algorithm/string/replace.hpp>
+#include <key_io.h>
 
 #define MICRO 0.000001
 #define MILLI 0.001
@@ -104,7 +108,7 @@ bool CBlockIndexWorkComparator::operator()(const CBlockIndex *pa, const CBlockIn
 }
 
 ChainstateManager g_chainman;
-CContractManager g_contractMgr;
+
 
 CChainState& ChainstateActive()
 {
@@ -3853,12 +3857,6 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
         for (int j = 0; j < block.vtx[i].get()->vout.size(); j++) {
             CTxOut vout = block.vtx[i].get()->vout[j];
 
-            /*
-            for (int x = 0; x < vout.scriptPubKey.size(); x++)
-                printf("%02x ", vout.scriptPubKey[x]);
-            printf("\n");
-            */
-
             if (vout.scriptPubKey[0] == OP_RETURN) {
                 uint32_t size = vout.scriptPubKey[1];
                 int start = 2;
@@ -3881,25 +3879,57 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                 }
 
                 if (found) {
-                    CContract* newContract = new CContract();
-                    newContract->blockHeight = pindex->nHeight;
 
+                    //load contract code to string
                     std::string code;
-                    for (int y = start; y < vout.scriptPubKey.size(); y++)
-                        code += (char)(vout.scriptPubKey[y]);
-                    newContract->code = code;
+                    for (int k = start; k < vout.scriptPubKey.size(); k++)
+                        code += (char)(vout.scriptPubKey[k]);
 
-                    newContract->contractAddress = std::string("CONTRACT_abcd");
 
-                    newContract->contractTxnID = block.vtx[i].get()->GetHash().GetHex();
-                    
-                    chainparams.contractMgr->addContract(newContract);
+                    //decode owner
+                    char cOwnerLen[3];
+                    cOwnerLen[0] = code.c_str()[4];
+                    cOwnerLen[1] = code.c_str()[5];
+                    cOwnerLen[2] = 0;
 
-                    delete newContract;
+                    int ownerLen = ParseHex(cOwnerLen)[0];
+
+                    std::string strHexOwner;
+                    for (int k = 0; k < ownerLen * 2; k++)
+                        strHexOwner += code[k + 6];
+                    std::vector<unsigned char> vecOwner = ParseHex(strHexOwner);
+
+                    std::string strOwner;
+                    for (int k = 0; k < vecOwner.size(); k++)
+                        strOwner += vecOwner[k];
+
+                    //find txout associated with owner (there might be change, or other txouts)
+                    bool txoutFound = false;
+                    int iVout = 0;
+                    while ((!txoutFound) && (iVout < block.vtx[i].get()->vout.size())) {
+                        CTxDestination address;
+                        const CScript& scriptPubKey = block.vtx[i].get()->vout[iVout].scriptPubKey;
+                        bool fValidAddress = ExtractDestination(scriptPubKey, address);
+
+                        std::string strScriptDest;
+                        if (fValidAddress)
+                            strScriptDest = EncodeDestination(address);
+
+                        if (strScriptDest == strOwner)
+                            txoutFound = true;
+                        else
+                            iVout++;
+                    }
+
+
+                    //add contract to engine and database
+                    if (txoutFound) {
+                        g_dynEngine->createContract(block.vtx[i].get()->GetHash().GetHex(), block.GetBlockHeader().GetHash().GetHex(), strOwner, block.vtx[i].get()->vout[iVout].nValue, code);
+                    }
+                    else {
+                        //TODO - fail validation
+                    }
                 }
-
-                //printf("%d\n", found);
-
             }
 
         }

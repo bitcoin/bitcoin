@@ -2864,6 +2864,7 @@ bool CWallet::CreateTransactionInternal(
             bool pick_new_inputs = true;
             CAmount nValueIn = 0;
 
+
             // BnB selector is the only selector used when this is true.
             // That should only happen on the first pass through the loop.
             coin_selection_params.use_bnb = true;
@@ -2921,14 +2922,6 @@ bool CWallet::CreateTransactionInternal(
                 }
 
 
-                if (vecContract.size() > 0) {
-                    //signature is 6666
-                    std::vector<unsigned char> signature = {0x36, 0x36, 0x36, 0x36};
-                    std::vector<unsigned char> vecContractSubmit =  signature;
-                    vecContractSubmit.insert(vecContractSubmit.end(), vecContract.begin(), vecContract.end());
-                    CTxOut txContract(0, CScript() << OP_RETURN << vecContractSubmit);
-                    txNew.vout.push_back(txContract);
-                }
 
 
                 // Choose coins to use
@@ -3076,6 +3069,40 @@ bool CWallet::CreateTransactionInternal(
             if (scriptChange.empty() && nChangePosInOut != -1) {
                 return false;
             }
+        }
+
+        //if submitting a contract, add the txout
+        if (vecContract.size() > 0) {
+            //get the original recipient - this is the intended owner
+            CRecipient recp = vecSend[0];
+
+            CTxDestination address;
+            const CScript& scriptPubKey = recp.scriptPubKey;
+            bool fValidAddress = ExtractDestination(scriptPubKey, address);
+
+            std::string ownerAddr;
+            if (fValidAddress) 
+                ownerAddr = EncodeDestination(address);
+                
+            //contract create signature is 6666
+            std::vector<unsigned char> signature = {0x36, 0x36, 0x36, 0x36};
+
+            std::vector<unsigned char> ownerAddrVec;
+            ownerAddrVec.push_back(ownerAddr.length());
+            for (int i = 0; i < ownerAddr.length(); i++)
+                ownerAddrVec.push_back(ownerAddr[i]);
+
+            std::string strOwnerAddrHex = HexStr(ownerAddrVec);
+
+            std::vector<unsigned char> ownerAddrHex;
+            for (int i = 0; i < strOwnerAddrHex.length(); i++)
+                ownerAddrHex.push_back(strOwnerAddrHex[i]);
+
+            std::vector<unsigned char> vecContractSubmit = signature;
+            vecContractSubmit.insert(vecContractSubmit.end(), ownerAddrHex.begin(), ownerAddrHex.end());
+            vecContractSubmit.insert(vecContractSubmit.end(), vecContract.begin(), vecContract.end());
+            CTxOut txContract(0, CScript() << OP_RETURN << vecContractSubmit);
+            txNew.vout.push_back(txContract);
         }
 
         // Shuffle selected coins and fill in final vin

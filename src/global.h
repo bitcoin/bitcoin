@@ -1,5 +1,5 @@
 #pragma once
-#include "crypto/dynhash.h"
 
-extern CDynHash* g_hashFunction;
-
+extern class CDynHash* g_hashFunction;
+extern class CDynEngine* g_dynEngine;
+extern class CContractManager* g_contractMgr;

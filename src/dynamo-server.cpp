@@ -27,12 +27,15 @@
 #include <any>
 #include <functional>
 #include <optional>
+#include <consensus/dynengine.h>
+
 
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = urlDecode;
 
 CDynHash* g_hashFunction;
-
+CDynEngine* g_dynEngine;
+CContractManager* g_contractMgr;
 
 #if HAVE_DECL_FORK
 
