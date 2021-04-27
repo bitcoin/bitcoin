@@ -10,6 +10,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\syscoind.cpp" />
+    <ClCompile Include="..\..\src\init\syscoind.cpp">
+      <ObjectFileName>$(IntDir)init_syscoind.obj</ObjectFileName>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\libsyscoinconsensus\libsyscoinconsensus.vcxproj">

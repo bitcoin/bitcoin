@@ -7,6 +7,9 @@
 #include <index/blockfilterindex.h>
 #include <index/txindex.h>
 #include <interfaces/chain.h>
+#include <interfaces/echo.h>
+#include <interfaces/init.h>
+#include <interfaces/ipc.h>
 #include <key_io.h>
 #include <node/context.h>
 #include <outputtype.h>
@@ -739,15 +742,15 @@ static RPCHelpMan logging()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    uint32_t original_log_categories = LogInstance().GetCategoryMask();
+    uint64_t original_log_categories = LogInstance().GetCategoryMask();
     if (request.params[0].isArray()) {
         EnableOrDisableLogCategories(request.params[0], true);
     }
     if (request.params[1].isArray()) {
         EnableOrDisableLogCategories(request.params[1], false);
     }
-    uint32_t updated_log_categories = LogInstance().GetCategoryMask();
-    uint32_t changed_log_categories = original_log_categories ^ updated_log_categories;
+    uint64_t updated_log_categories = LogInstance().GetCategoryMask();
+    uint64_t changed_log_categories = original_log_categories ^ updated_log_categories;
 
     // Update libevent logging if BCLog::LIBEVENT has changed.
     // If the library version doesn't allow it, UpdateHTTPServerLogging() returns false,
@@ -807,6 +810,43 @@ static RPCHelpMan echo(const std::string& name)
 
 static RPCHelpMan echo() { return echo("echo"); }
 static RPCHelpMan echojson() { return echo("echojson"); }
+
+static RPCHelpMan echoipc()
+{
+    return RPCHelpMan{
+        "echoipc",
+        "\nEcho back the input argument, passing it through a spawned process in a multiprocess build.\n"
+        "This command is for testing.\n",
+        {{"arg", RPCArg::Type::STR, RPCArg::Optional::NO, "The string to echo",}},
+        RPCResult{RPCResult::Type::STR, "echo", "The echoed string."},
+        RPCExamples{HelpExampleCli("echo", "\"Hello world\"") +
+                    HelpExampleRpc("echo", "\"Hello world\"")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            std::unique_ptr<interfaces::Echo> echo;
+            if (interfaces::Ipc* ipc = Assert(EnsureAnyNodeContext(request.context).init)->ipc()) {
+                // Spawn a new syscoin-node process and call makeEcho to get a
+                // client pointer to a interfaces::Echo instance running in
+                // that process. This is just for testing. A slightly more
+                // realistic test spawning a different executable instead of
+                // the same executable would add a new syscoin-echo executable,
+                // and spawn syscoin-echo below instead of syscoin-node. But
+                // using syscoin-node avoids the need to build and install a
+                // new executable just for this one test.
+                auto init = ipc->spawnProcess("syscoin-node");
+                echo = init->makeEcho();
+                ipc->addCleanup(*echo, [init = init.release()] { delete init; });
+            } else {
+                // IPC support is not available because this is a syscoind
+                // process not a syscoind-node process, so just create a local
+                // interfaces::Echo object and return it so the `echoipc` RPC
+                // method will work, and the python test calling `echoipc`
+                // can expect the same result.
+                echo = interfaces::MakeEcho();
+            }
+            return echo->echo(request.params[0].get_str());
+        },
+    };
+}
 
 static UniValue SummaryToJSON(const IndexSummary&& summary, std::string index_name)
 {
@@ -888,6 +928,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            &mnsync,                  },
     { "syscoin",            &spork,                   },
     { "util",               &getindexinfo,            },
+    { "hidden",             &echoipc,                 },
 };
 // clang-format on
     for (const auto& c : commands) {

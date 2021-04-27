@@ -88,6 +88,7 @@ EXTRA_LIBRARIES += \
   $(LIBSYSCOIN_CONSENSUS) \
   $(LIBSYSCOIN_SERVER) \
   $(LIBSYSCOIN_CLI) \
+  $(LIBSYSCOIN_IPC) \
   $(LIBSYSCOIN_WALLET) \
   $(LIBSYSCOIN_WALLET_TOOL) \
   $(LIBSYSCOIN_ZMQ) \
@@ -208,7 +209,10 @@ SYSCOIN_CORE_H = \
   init.h \
   init/common.h \
   interfaces/chain.h \
+  interfaces/echo.h \
   interfaces/handler.h \
+  interfaces/init.h \
+  interfaces/ipc.h \
   interfaces/node.h \
   interfaces/wallet.h \
   key.h \
@@ -364,7 +368,6 @@ obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
 	@$(top_srcdir)/share/genbuild.sh "$(abs_top_builddir)/src/obj/build.h" \
 	  "$(abs_top_srcdir)"
-libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
 
  # ethereum
  ethereum_libethereum_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
@@ -418,6 +421,11 @@ libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
   chiabls/src/util.hpp \
   $(SYSCOIN_CORE_H)
 
+
+# server: shared between syscoind and syscoin-qt
+libsyscoin_util_a-clientversion.$(OBJEXT): obj/build.h
+
+ipc/capnp/libsyscoin_ipc_a-ipc.$(OBJEXT): $(libsyscoin_ipc_mpgen_input:=.h)
 
 # server: shared between syscoind and syscoin-qt
 # Contains code accessing mempool and chain state that is meant to be separated
@@ -739,7 +747,9 @@ libsyscoin_util_a_SOURCES = \
   compat/glibcxx_sanity.cpp \
   compat/strnlen.cpp \
   fs.cpp \
+  interfaces/echo.cpp \
   interfaces/handler.cpp \
+  interfaces/init.cpp \
   logging.cpp \
   random.cpp \
   randomenv.cpp \
@@ -819,17 +829,17 @@ syscoin_bin_ldadd = \
 
 syscoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS)
 
-syscoind_SOURCES = $(syscoin_daemon_sources)
+syscoind_SOURCES = $(syscoin_daemon_sources) init/syscoind.cpp
 syscoind_CPPFLAGS = $(syscoin_bin_cppflags)
 syscoind_CXXFLAGS = $(syscoin_bin_cxxflags)
 syscoind_LDFLAGS = $(syscoin_bin_ldflags)
 syscoind_LDADD = $(LIBSYSCOIN_SERVER) $(syscoin_bin_ldadd)
 
-syscoin_node_SOURCES = $(syscoin_daemon_sources)
+syscoin_node_SOURCES = $(syscoin_daemon_sources) init/syscoin-node.cpp
 syscoin_node_CPPFLAGS = $(syscoin_bin_cppflags)
 syscoin_node_CXXFLAGS = $(syscoin_bin_cxxflags)
 syscoin_node_LDFLAGS = $(syscoin_bin_ldflags)
-syscoin_node_LDADD = $(LIBSYSCOIN_SERVER) $(syscoin_bin_ldadd)
+syscoin_node_LDADD = $(LIBSYSCOIN_SERVER) $(syscoin_bin_ldadd) $(LIBSYSCOIN_IPC) $(LIBMULTIPROCESS_LIBS)
 
 # syscoin-cli binary #
 syscoin_cli_SOURCES = syscoin-cli.cpp
@@ -1010,6 +1020,39 @@ check-security: $(bin_PROGRAMS)
 if HARDEN
 	@echo "Checking binary security..."
 	$(AM_V_at) OBJDUMP=$(OBJDUMP) OTOOL=$(OTOOL) $(PYTHON) $(top_srcdir)/contrib/devtools/security-check.py $(bin_PROGRAMS)
+endif
+
+libsyscoin_ipc_mpgen_input = \
+  ipc/capnp/echo.capnp \
+  ipc/capnp/init.capnp
+EXTRA_DIST += $(libsyscoin_ipc_mpgen_input)
+%.capnp:
+
+if BUILD_MULTIPROCESS
+LIBSYSCOIN_IPC=libsyscoin_ipc.a
+libsyscoin_ipc_a_SOURCES = \
+  ipc/capnp/init-types.h \
+  ipc/capnp/protocol.cpp \
+  ipc/capnp/protocol.h \
+  ipc/exception.h \
+  ipc/interfaces.cpp \
+  ipc/process.cpp \
+  ipc/process.h \
+  ipc/protocol.h
+libsyscoin_ipc_a_CPPFLAGS = $(AM_CPPFLAGS) $(SYSCOIN_INCLUDES)
+libsyscoin_ipc_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(LIBMULTIPROCESS_CFLAGS)
+
+include $(MPGEN_PREFIX)/include/mpgen.mk
+libsyscoin_ipc_mpgen_output = \
+  $(libsyscoin_ipc_mpgen_input:=.c++) \
+  $(libsyscoin_ipc_mpgen_input:=.h) \
+  $(libsyscoin_ipc_mpgen_input:=.proxy-client.c++) \
+  $(libsyscoin_ipc_mpgen_input:=.proxy-server.c++) \
+  $(libsyscoin_ipc_mpgen_input:=.proxy-types.c++) \
+  $(libsyscoin_ipc_mpgen_input:=.proxy-types.h) \
+  $(libsyscoin_ipc_mpgen_input:=.proxy.h)
+nodist_libsyscoin_ipc_a_SOURCES = $(libsyscoin_ipc_mpgen_output)
+CLEANFILES += $(libsyscoin_ipc_mpgen_output)
 endif
 
 if EMBEDDED_LEVELDB
