@@ -90,19 +90,19 @@ private:
      * Request ids of inputs that we signed. Used to determine if a recovered signature belongs to an
      * in-progress input lock.
      */
-    std::unordered_set<uint256, StaticSaltedHasher> inputRequestIds;
+    std::unordered_set<uint256, StaticSaltedHasher> inputRequestIds GUARDED_BY(cs);
 
     /**
      * These are the islocks that are currently in the middle of being created. Entries are created when we observed
      * recovered signatures for all inputs of a TX. At the same time, we initiate signing of our sigshare for the islock.
      * When the recovered sig for the islock later arrives, we can finish the islock and propagate it.
      */
-    std::unordered_map<uint256, CInstantSendLock, StaticSaltedHasher> creatingInstantSendLocks;
+    std::unordered_map<uint256, CInstantSendLock, StaticSaltedHasher> creatingInstantSendLocks GUARDED_BY(cs);
     // maps from txid to the in-progress islock
-    std::unordered_map<uint256, CInstantSendLock*, StaticSaltedHasher> txToCreatingInstantSendLocks;
+    std::unordered_map<uint256, CInstantSendLock*, StaticSaltedHasher> txToCreatingInstantSendLocks GUARDED_BY(cs);
 
     // Incoming and not verified yet
-    std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher> pendingInstantSendLocks;
+    std::unordered_map<uint256, std::pair<NodeId, CInstantSendLockPtr>, StaticSaltedHasher> pendingInstantSendLocks GUARDED_BY(cs);
 
     // TXs which are neither IS locked nor ChainLocked. We use this to determine for which TXs we need to retry IS locking
     // of child TXs
@@ -111,10 +111,10 @@ private:
         CTransactionRef tx;
         std::unordered_set<uint256, StaticSaltedHasher> children;
     };
-    std::unordered_map<uint256, NonLockedTxInfo, StaticSaltedHasher> nonLockedTxs;
-    std::unordered_map<COutPoint, uint256, SaltedOutpointHasher> nonLockedTxsByOutpoints;
+    std::unordered_map<uint256, NonLockedTxInfo, StaticSaltedHasher> nonLockedTxs GUARDED_BY(cs);
+    std::unordered_map<COutPoint, uint256, SaltedOutpointHasher> nonLockedTxsByOutpoints GUARDED_BY(cs);
 
-    std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs;
+    std::unordered_set<uint256, StaticSaltedHasher> pendingRetryTxs GUARDED_BY(cs);
 
 public:
     explicit CInstantSendManager(CDBWrapper& _llmqDb);

@@ -44,11 +44,11 @@ public:
 
 private:
     mutable CCriticalSection cs;
-    int invType;
-    size_t maxMessagesPerNode;
-    std::list<BinaryMessage> pendingMessages;
-    std::map<NodeId, size_t> messagesPerNode;
-    std::set<uint256> seenMessages;
+    const int invType;
+    size_t maxMessagesPerNode GUARDED_BY(cs);
+    std::list<BinaryMessage> pendingMessages GUARDED_BY(cs);
+    std::map<NodeId, size_t> messagesPerNode GUARDED_BY(cs);
+    std::set<uint256> seenMessages GUARDED_BY(cs);
 
 public:
     explicit CDKGPendingMessages(size_t _maxMessagesPerNode, int _invType);
@@ -110,17 +110,18 @@ private:
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
 
-    QuorumPhase phase{QuorumPhase_Idle};
-    int currentHeight{-1};
-    int quorumHeight{-1};
-    uint256 quorumHash;
+    QuorumPhase phase GUARDED_BY(cs) {QuorumPhase_Idle};
+    int currentHeight GUARDED_BY(cs) {-1};
+    int quorumHeight GUARDED_BY(cs) {-1};
+    uint256 quorumHash GUARDED_BY(cs);
+
     std::shared_ptr<CDKGSession> curSession;
     std::thread phaseHandlerThread;
 
-    CDKGPendingMessages pendingContributions;
-    CDKGPendingMessages pendingComplaints;
-    CDKGPendingMessages pendingJustifications;
-    CDKGPendingMessages pendingPrematureCommitments;
+    CDKGPendingMessages pendingContributions GUARDED_BY(cs);
+    CDKGPendingMessages pendingComplaints GUARDED_BY(cs);
+    CDKGPendingMessages pendingJustifications GUARDED_BY(cs);
+    CDKGPendingMessages pendingPrematureCommitments GUARDED_BY(cs);
 
 public:
     CDKGSessionHandler(const Consensus::LLMQParams& _params, CBLSWorker& blsWorker, CDKGSessionManager& _dkgManager);

@@ -29,10 +29,10 @@ private:
 
     // TODO cleanup
     CCriticalSection minableCommitmentsCs;
-    std::map<std::pair<Consensus::LLMQType, uint256>, uint256> minableCommitmentsByQuorum;
-    std::map<uint256, CFinalCommitment> minableCommitments;
+    std::map<std::pair<Consensus::LLMQType, uint256>, uint256> minableCommitmentsByQuorum GUARDED_BY(minableCommitmentsCs);
+    std::map<uint256, CFinalCommitment> minableCommitments GUARDED_BY(minableCommitmentsCs);
 
-    std::map<Consensus::LLMQType, unordered_lru_cache<uint256, bool, StaticSaltedHasher>> mapHasMinedCommitmentCache;
+    std::map<Consensus::LLMQType, unordered_lru_cache<uint256, bool, StaticSaltedHasher>> mapHasMinedCommitmentCache GUARDED_BY(minableCommitmentsCs);
 
 public:
     explicit CQuorumBlockProcessor(CEvoDB& _evoDb);

@@ -90,7 +90,7 @@ class CDKGDebugManager
 {
 private:
     CCriticalSection cs;
-    CDKGDebugStatus localStatus;
+    CDKGDebugStatus localStatus GUARDED_BY(cs);
 
 public:
     CDKGDebugManager();

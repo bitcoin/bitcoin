@@ -57,29 +57,29 @@ private:
     CScheduler* scheduler;
     boost::thread* scheduler_thread;
     CCriticalSection cs;
-    bool tryLockChainTipScheduled{false};
-    bool isEnabled{false};
-    bool isEnforced{false};
+    bool tryLockChainTipScheduled GUARDED_BY(cs) {false};
+    bool isEnabled GUARDED_BY(cs) {false};
+    bool isEnforced GUARDED_BY(cs) {false};
 
-    uint256 bestChainLockHash;
-    CChainLockSig bestChainLock;
+    uint256 bestChainLockHash GUARDED_BY(cs);
+    CChainLockSig bestChainLock GUARDED_BY(cs);
 
-    CChainLockSig bestChainLockWithKnownBlock;
-    const CBlockIndex* bestChainLockBlockIndex{nullptr};
-    const CBlockIndex* lastNotifyChainLockBlockIndex{nullptr};
+    CChainLockSig bestChainLockWithKnownBlock GUARDED_BY(cs);
+    const CBlockIndex* bestChainLockBlockIndex GUARDED_BY(cs) {nullptr};
+    const CBlockIndex* lastNotifyChainLockBlockIndex GUARDED_BY(cs) {nullptr};
 
-    int32_t lastSignedHeight{-1};
-    uint256 lastSignedRequestId;
-    uint256 lastSignedMsgHash;
+    int32_t lastSignedHeight GUARDED_BY(cs) {-1};
+    uint256 lastSignedRequestId GUARDED_BY(cs);
+    uint256 lastSignedMsgHash GUARDED_BY(cs);
 
     // We keep track of txids from recently received blocks so that we can check if all TXs got islocked
     typedef std::unordered_map<uint256, std::shared_ptr<std::unordered_set<uint256, StaticSaltedHasher>>> BlockTxs;
-    BlockTxs blockTxs;
-    std::unordered_map<uint256, int64_t> txFirstSeenTime;
+    BlockTxs blockTxs GUARDED_BY(cs);
+    std::unordered_map<uint256, int64_t> txFirstSeenTime GUARDED_BY(cs);
 
-    std::map<uint256, int64_t> seenChainLocks;
+    std::map<uint256, int64_t> seenChainLocks GUARDED_BY(cs);
 
-    int64_t lastCleanupTime{0};
+    int64_t lastCleanupTime GUARDED_BY(cs) {0};
 
 public:
     explicit CChainLocksHandler();
