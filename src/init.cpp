@@ -1961,7 +1961,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     bool fLoaded = false;
 
     while (!fLoaded && !ShutdownRequested()) {
-        bool fReset = fReindex;
+        const bool fReset = fReindex;
         auto is_coinsview_empty = [&](CChainState* chainstate) EXCLUSIVE_LOCKS_REQUIRED(::cs_main) {
             return fReset || fReindexChainState || chainstate->CoinsTip().GetBestBlock().IsNull();
         };
