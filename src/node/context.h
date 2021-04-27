@@ -36,6 +36,7 @@ struct LLMQContext;
 namespace interfaces {
 class Chain;
 class ChainClient;
+class Init;
 class WalletLoader;
 namespace CoinJoin {
 class Loader;
@@ -53,6 +54,8 @@ class Loader;
 //! any member functions. It should just be a collection of references that can
 //! be used without pulling in unwanted dependencies or functionality.
 struct NodeContext {
+    //! Init interface for initializing current process and connecting to other processes.
+    interfaces::Init* init{nullptr};
     std::unique_ptr<AddrMan> addrman;
     std::unique_ptr<CConnman> connman;
     std::unique_ptr<CTxMemPool> mempool;
