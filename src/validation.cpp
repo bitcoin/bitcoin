@@ -3909,15 +3909,25 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
                     while ((!txoutFound) && (iVout < block.vtx[i].get()->vout.size())) {
                         CTxDestination address;
                         const CScript& scriptPubKey = block.vtx[i].get()->vout[iVout].scriptPubKey;
-                        bool fValidAddress = ExtractDestination(scriptPubKey, address);
+                        if ((scriptPubKey[0] == OP_RETURN) && (scriptPubKey.size() > 10)) {
+                            if ((scriptPubKey[2] == 'c') && (scriptPubKey[3] == 'o')) {         //todo - finish the rest of "contract"
+                                std::vector<unsigned char> vecOrigScript;
+                                for (int s = 11; s < scriptPubKey.size(); s++)
+                                    vecOrigScript.push_back(scriptPubKey.data()[s]);
+                                CScript origScript (vecOrigScript.begin(), vecOrigScript.end());
+                                bool fValidAddress = ExtractDestination(origScript, address);
 
-                        std::string strScriptDest;
-                        if (fValidAddress)
-                            strScriptDest = EncodeDestination(address);
+                                std::string strScriptDest;
+                                if (fValidAddress)
+                                    strScriptDest = EncodeDestination(address);
 
-                        if (strScriptDest == strOwner)
-                            txoutFound = true;
-                        else
+                                if (strScriptDest == strOwner)
+                                    txoutFound = true;
+                                else
+                                    iVout++;
+                            } else
+                                iVout++;
+                        } else
                             iVout++;
                     }
 

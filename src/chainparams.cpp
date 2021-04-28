@@ -191,6 +191,7 @@ public:
                              "-END PROGRAM-\n");
 
         g_contractMgr = new CContractManager();
+
         g_dynEngine = new CDynEngine();
         
         /**

@@ -14,7 +14,7 @@
 #include <consensus/dynengine.h>
 
 CDynHash* g_hashFunction;
-CDynEngine* g_engine;
+CDynEngine* g_dynEngine;
 CContractManager* g_contractMgr;
 
 /** Translate string to current locale using Qt. */

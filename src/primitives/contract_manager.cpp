@@ -26,7 +26,8 @@ void CContractManager::CreateOrOpenDatabase(std::string dataDirectory)
                     "contract_txn_id         TEXT                      NOT NULL,"
                     "contract_block_hash     TEXT                      NOT NULL,"
                     "contract_addr           TEXT                      NOT NULL,"
-                    "contract_code           TEXT                      NOT NULL)";
+                    "contract_code           TEXT                      NOT NULL,"
+                    "contract_balance        INTEGER                   NOT NULL)";
 
         sqlite3_exec(contractDB, sql, NULL, NULL, NULL);
 
@@ -67,7 +68,7 @@ uint32_t CContractManager::execScalar(char* sql) {
 
 void CContractManager::addContract(CContract* contract) {
 
-    std::string sql = "insert into contract (contract_txn_id, contract_block_hash, contract_addr, contract_code) values (@txn, @height, @addr, @code)";
+    std::string sql = "insert into contract (contract_txn_id, contract_block_hash, contract_addr, contract_code, contract_balance) values (@txn, @height, @addr, @code, @bal)";
 
     sqlite3_stmt* stmt = NULL;
     sqlite3_prepare_v2(contractDB, sql.c_str(), -1, &stmt, NULL);
@@ -76,6 +77,7 @@ void CContractManager::addContract(CContract* contract) {
     sqlite3_bind_text(stmt, 2, contract->blockHash.c_str(), -1, NULL);
     sqlite3_bind_text(stmt, 3, contract->contractAddress.c_str(), -1, NULL);
     sqlite3_bind_text(stmt, 4, contract->code.c_str(), -1, NULL);
+    sqlite3_bind_int64(stmt, 5, contract->balance);
 
     sqlite3_step(stmt);
 

@@ -2889,6 +2889,32 @@ bool CWallet::CreateTransactionInternal(
                 {
                     CTxOut txout(recipient.nAmount, recipient.scriptPubKey);
 
+                    //if we are loading a contract, any amount sent to the original destination is burned and loaded into the contract value store
+                    if (vecContract.size() > 0) {
+                        std::vector<unsigned char> vecOldScript;
+                        for (int i = 0; i < txout.scriptPubKey.size(); i++)
+                            vecOldScript.push_back(txout.scriptPubKey.data()[i]);
+
+                        std::vector<unsigned char> data = {'c', 'o', 'n', 't', 'r', 'a', 'c', 't'};
+                        CScript burnScript;
+                        burnScript << OP_RETURN << data << vecOldScript;
+                        txout.scriptPubKey = burnScript;
+
+                        /*
+                        CTxDestination address;
+
+                        bool fValidAddress = ExtractDestination(txout.scriptPubKey, address);
+
+                        std::string strScriptDest;
+                        if (fValidAddress) {
+                            strScriptDest = EncodeDestination(address);
+                            strScriptDest = "dx" + strScriptDest.substr(2);
+                            CScript newSig = GetScriptForDestination(DecodeDestination(strScriptDest));
+                        }
+                        */
+                    }
+                    
+
                     if (recipient.fSubtractFeeFromAmount)
                     {
                         assert(nSubtractFeeFromAmount != 0);
