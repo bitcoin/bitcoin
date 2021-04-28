@@ -288,6 +288,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/random.cpp \
  test/fuzz/rbf.cpp \
  test/fuzz/rolling_bloom_filter.cpp \
+ test/fuzz/rpc.cpp \
  test/fuzz/script.cpp \
  test/fuzz/script_assets_test_minimizer.cpp \
  test/fuzz/script_syscoin_consensus.cpp \
