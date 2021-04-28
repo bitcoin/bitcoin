@@ -203,10 +203,7 @@ class AddrTest(BitcoinTestFramework):
         self.log.info('Check that we relay address messages')
         addr_source = self.nodes[0].add_p2p_connection(P2PInterface())
         msg = self.setup_addr_msg(2)
-        addr_source.send_and_ping(msg)
-        self.mocktime += 5 * 60
-        self.nodes[0].setmocktime(self.mocktime)
-        full_outbound_peer.sync_with_ping()
+        self.send_addr_msg(addr_source, msg, [full_outbound_peer])
         assert_equal(full_outbound_peer.num_ipv4_received, 2)
 
         self.nodes[0].disconnect_p2ps()
