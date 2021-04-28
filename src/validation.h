@@ -555,7 +555,7 @@ enum class CoinsCacheSizeState
  *
  * Anything that is contingent on the current tip of the chain is stored here,
  * whereas block information and metadata independent of the current tip is
- * kept in `BlockMetadataManager`.
+ * kept in `BlockManager`.
  */
 class CChainState
 {
