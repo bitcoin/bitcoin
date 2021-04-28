@@ -142,7 +142,7 @@ Note: Building with Qt binaries downloaded from the Qt website is not officially
 See the notes in [#7714](https://github.com/bitcoin/bitcoin/issues/7714).
 
 Note: Ensure that the `qt@5` package is installed, not the `qt` package.
-If 'qt' is installed, the build process will fail. 
+If 'qt' is installed, the build process will fail.
 if installed, remove the `qt` package with the following command:
 
 ``` bash
