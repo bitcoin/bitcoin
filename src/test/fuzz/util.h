@@ -26,7 +26,6 @@
 #include <test/util/net.h>
 #include <txmempool.h>
 #include <uint256.h>
-#include <util/time.h>
 #include <version.h>
 
 #include <algorithm>
@@ -127,13 +126,7 @@ template <typename WeakEnumType, size_t size>
     return fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(0, MAX_MONEY);
 }
 
-[[nodiscard]] inline int64_t ConsumeTime(FuzzedDataProvider& fuzzed_data_provider) noexcept
-{
-    // Avoid t=0 (1970-01-01T00:00:00Z) since SetMockTime(0) is a no-op.
-    static const int64_t time_min = ParseISO8601DateTime("1970-01-01T00:00:01Z");
-    static const int64_t time_max = ParseISO8601DateTime("9999-12-31T23:59:59Z");
-    return fuzzed_data_provider.ConsumeIntegralInRange<int64_t>(time_min, time_max);
-}
+[[nodiscard]] int64_t ConsumeTime(FuzzedDataProvider& fuzzed_data_provider, const std::optional<int64_t>& min = std::nullopt, const std::optional<int64_t>& max = std::nullopt) noexcept;
 
 [[nodiscard]] CMutableTransaction ConsumeTransaction(FuzzedDataProvider& fuzzed_data_provider, const std::optional<std::vector<uint256>>& prevout_txids, const int max_num_in = 10, const int max_num_out = 10) noexcept;
 
