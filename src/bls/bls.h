@@ -231,6 +231,8 @@ public:
     using CBLSWrapper::CBLSWrapper;
 
     CBLSSecretKey() {}
+    CBLSSecretKey(const CBLSSecretKey&) = default;
+    CBLSSecretKey& operator=(const CBLSSecretKey&) = default;
 
     void AggregateInsecure(const CBLSSecretKey& o);
     static CBLSSecretKey AggregateInsecure(const std::vector<CBLSSecretKey>& sks);

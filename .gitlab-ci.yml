@@ -237,6 +237,13 @@ linux64-build:
   variables:
     BUILD_TARGET: linux64
 
+linux64_cxx17-build:
+  extends: .build-template
+  needs:
+    - x86_64-unknown-linux-gnu-debug
+  variables:
+    BUILD_TARGET: linux64_cxx17
+
 linux64_nowallet-build:
   extends:
     - .build-template
