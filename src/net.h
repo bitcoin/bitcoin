@@ -576,6 +576,7 @@ public:
         /** Minimum fee rate with which to filter inv's to this node */
         std::atomic<CAmount> minFeeFilter{0};
         CAmount lastSentFeeFilter{0};
+        CAmount lastFeeFilter{0};
         std::chrono::microseconds m_next_send_feefilter{0};
     };
 
