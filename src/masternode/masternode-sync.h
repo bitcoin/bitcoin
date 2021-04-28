@@ -4,6 +4,8 @@
 #ifndef BITCOIN_MASTERNODE_MASTERNODE_SYNC_H
 #define BITCOIN_MASTERNODE_MASTERNODE_SYNC_H
 
+#include <sync.h>
+
 class CMasternodeSync;
 class CBlockIndex;
 class CConnman;
@@ -29,33 +31,35 @@ extern CMasternodeSync masternodeSync;
 class CMasternodeSync
 {
 private:
+    mutable CCriticalSection cs;
+
     // Keep track of current asset
-    int nCurrentAsset;
+    int nCurrentAsset GUARDED_BY(cs);
     // Count peers we've requested the asset from
-    int nTriedPeerCount;
+    int nTriedPeerCount GUARDED_BY(cs);
 
     // Time when current masternode asset sync started
-    int64_t nTimeAssetSyncStarted;
+    int64_t nTimeAssetSyncStarted GUARDED_BY(cs);
     // ... last bumped
-    int64_t nTimeLastBumped;
+    int64_t nTimeLastBumped GUARDED_BY(cs);
 
     /// Set to true if best header is reached in CMasternodeSync::UpdatedBlockTip
-    bool fReachedBestHeader{false};
+    bool fReachedBestHeader GUARDED_BY(cs) {false};
     /// Last time UpdateBlockTip has been called
-    int64_t nTimeLastUpdateBlockTip{0};
+    int64_t nTimeLastUpdateBlockTip GUARDED_BY(cs) {0};
 
 public:
     CMasternodeSync() { Reset(true, false); }
 
     static void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman);
 
-    bool IsBlockchainSynced() const { return nCurrentAsset > MASTERNODE_SYNC_BLOCKCHAIN; }
-    bool IsSynced() const { return nCurrentAsset == MASTERNODE_SYNC_FINISHED; }
+    bool IsBlockchainSynced() const { LOCK(cs); return nCurrentAsset > MASTERNODE_SYNC_BLOCKCHAIN; }
+    bool IsSynced() const { LOCK(cs); return nCurrentAsset == MASTERNODE_SYNC_FINISHED; }
 
-    int GetAssetID() const { return nCurrentAsset; }
-    int GetAttempt() const { return nTriedPeerCount; }
+    int GetAssetID() const { LOCK(cs); return nCurrentAsset; }
+    int GetAttempt() const { LOCK(cs); return nTriedPeerCount; }
     void BumpAssetLastTime(const std::string& strFuncName);
-    int64_t GetAssetStartTime() const { return nTimeAssetSyncStarted; }
+    int64_t GetAssetStartTime() const { LOCK(cs); return nTimeAssetSyncStarted; }
     std::string GetAssetName() const;
     std::string GetSyncStatus() const;
 
