@@ -38,6 +38,10 @@ void test_one_input(const std::vector<uint8_t>& buffer)
         for (unsigned i = 0; i < tx.vin.size(); ++i) {
             CTxOut prevout;
             ds >> prevout;
+            if (!MoneyRange(prevout.nValue)) {
+                // prevouts should be consensus-valid
+                prevout.nValue = 1;
+            }
             spent_outputs.push_back(prevout);
         }
         PrecomputedTransactionData txdata;
