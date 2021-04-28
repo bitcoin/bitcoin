@@ -1966,9 +1966,10 @@ class SegWitTest(BitcoinTestFramework):
         # Restarting node 2 should result in a shutdown because the blockchain consists of
         # insufficiently validated blocks per segwit consensus rules.
         self.stop_node(2)
-        with self.nodes[2].assert_debug_log(expected_msgs=[
-                f"Witness data for blocks after height {SEGWIT_HEIGHT} requires validation. Please restart with -reindex."], timeout=10):
-            self.nodes[2].start([f"-segwitheight={SEGWIT_HEIGHT}"])
+        self.nodes[2].assert_start_raises_init_error(
+            extra_args=[f"-segwitheight={SEGWIT_HEIGHT}"],
+            expected_msg=f": Witness data for blocks after height {SEGWIT_HEIGHT} requires validation. Please restart with -reindex..\nPlease restart with -reindex or -reindex-chainstate to recover.",
+        )
 
         # As directed, the user restarts the node with -reindex
         self.start_node(2, extra_args=["-reindex", f"-segwitheight={SEGWIT_HEIGHT}"])
