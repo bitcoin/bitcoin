@@ -30,18 +30,6 @@ struct CNodeCombinedStats {
 };
 Q_DECLARE_METATYPE(CNodeCombinedStats*)
 
-class NodeLessThan
-{
-public:
-    NodeLessThan(int nColumn, Qt::SortOrder fOrder) :
-        column(nColumn), order(fOrder) {}
-    bool operator()(const CNodeCombinedStats &left, const CNodeCombinedStats &right) const;
-
-private:
-    int column;
-    Qt::SortOrder order;
-};
-
 /**
    Qt model providing information about connected peers, similar to the
    "getpeerinfo" RPC call. Used by the rpc console UI.
@@ -53,7 +41,6 @@ class PeerTableModel : public QAbstractTableModel
 public:
     explicit PeerTableModel(interfaces::Node& node, QObject* parent);
     ~PeerTableModel();
-    int getRowByNodeId(NodeId nodeid);
     void startAutoRefresh();
     void stopAutoRefresh();
 
@@ -80,7 +67,6 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
     QModelIndex index(int row, int column, const QModelIndex &parent) const override;
     Qt::ItemFlags flags(const QModelIndex &index) const override;
-    void sort(int column, Qt::SortOrder order) override;
     /*@}*/
 
 public Q_SLOTS:
