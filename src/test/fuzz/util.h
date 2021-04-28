@@ -57,18 +57,20 @@ auto& PickValue(FuzzedDataProvider& fuzzed_data_provider, Collection& col)
     return *it;
 }
 
-[[nodiscard]] inline std::vector<uint8_t> ConsumeRandomLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
+[[nodiscard]] inline std::vector<uint8_t> ConsumeRandomLengthByteVector(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
-    const std::string s = fuzzed_data_provider.ConsumeRandomLengthString(max_length);
+    const std::string s = max_length ?
+                              fuzzed_data_provider.ConsumeRandomLengthString(*max_length) :
+                              fuzzed_data_provider.ConsumeRandomLengthString();
     return {s.begin(), s.end()};
 }
 
-[[nodiscard]] inline std::vector<bool> ConsumeRandomLengthBitVector(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
+[[nodiscard]] inline std::vector<bool> ConsumeRandomLengthBitVector(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
     return BytesToBits(ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length));
 }
 
-[[nodiscard]] inline CDataStream ConsumeDataStream(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
+[[nodiscard]] inline CDataStream ConsumeDataStream(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
     return CDataStream{ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length), SER_NETWORK, INIT_PROTO_VERSION};
 }
@@ -95,7 +97,7 @@ template <typename T>
 }
 
 template <typename T>
-[[nodiscard]] inline std::optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096) noexcept
+[[nodiscard]] inline std::optional<T> ConsumeDeserializable(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt) noexcept
 {
     const std::vector<uint8_t> buffer = ConsumeRandomLengthByteVector(fuzzed_data_provider, max_length);
     CDataStream ds{buffer, SER_NETWORK, INIT_PROTO_VERSION};
@@ -132,7 +134,7 @@ template <typename WeakEnumType, size_t size>
 
 [[nodiscard]] CScriptWitness ConsumeScriptWitness(FuzzedDataProvider& fuzzed_data_provider, const size_t max_stack_elem_size = 32) noexcept;
 
-[[nodiscard]] CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const size_t max_length = 4096, const bool maybe_p2wsh = false) noexcept;
+[[nodiscard]] CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const std::optional<size_t>& max_length = std::nullopt, const bool maybe_p2wsh = false) noexcept;
 
 [[nodiscard]] uint32_t ConsumeSequence(FuzzedDataProvider& fuzzed_data_provider) noexcept;
 
