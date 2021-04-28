@@ -4732,7 +4732,7 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 CAmount filterToSend = g_filter_rounder.round(currentFilter);
                 // We always have a fee filter of at least minRelayTxFee
                 filterToSend = std::max(filterToSend, ::minRelayTxFee.GetFeePerK());
-                if (filterToSend != pto->m_tx_relay->lastSentFeeFilter) {
+                if (abs(filterToSend - currentFilter) < abs(pto->m_tx_relay->lastSentFeeFilter - currentFilter)) {
                     m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::FEEFILTER, filterToSend));
                     pto->m_tx_relay->lastSentFeeFilter = filterToSend;
                 }
