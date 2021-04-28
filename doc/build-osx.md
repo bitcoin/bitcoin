@@ -141,7 +141,7 @@ brew install qt@5
 Note: Building with Qt binaries downloaded from the Qt website is not officially supported.
 See the notes in [#7714](https://github.com/bitcoin/bitcoin/issues/7714).
 
-Note: Be sure 'qt' (version 6.x) is not installed in brew together with 'qt@5'. Only 'qt@5' is required.
+Note: Ensure that the `qt@5` package is installed, not the `qt` package.
 If 'qt' (v6.x) is installed in macOS the build process will fail with a "unknown type name 'QStringRef'; did you mean 'CFStringRef'?" error. 
 You can use the following two commands to verify if 'qt' (version 6.x) is installed and remove it:
 
