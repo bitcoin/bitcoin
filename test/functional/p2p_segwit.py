@@ -9,11 +9,10 @@ import random
 import struct
 import time
 
-from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment, get_witness_script, WITNESS_COMMITMENT_HEADER
+from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment, WITNESS_COMMITMENT_HEADER
 from test_framework.key import ECKey
 from test_framework.messages import (
     BIP125_SEQUENCE_NUMBER,
-    CBlock,
     CBlockHeader,
     CInv,
     COutPoint,
@@ -214,7 +213,7 @@ class SegWitTest(BitcoinTestFramework):
         self.extra_args = [
             ["-acceptnonstdtxn=1", "-segwitheight={}".format(SEGWIT_HEIGHT), "-whitelist=noban@127.0.0.1"],
             ["-acceptnonstdtxn=0", "-segwitheight={}".format(SEGWIT_HEIGHT)],
-            ["-acceptnonstdtxn=1", "-segwitheight=-1"],
+            ["-acceptnonstdtxn=1"],
         ]
         self.supports_cli = False
 
@@ -224,8 +223,7 @@ class SegWitTest(BitcoinTestFramework):
     def setup_network(self):
         self.setup_nodes()
         self.connect_nodes(0, 1)
-        self.connect_nodes(0, 2)
-        self.sync_all()
+        self.sync_all([self.nodes[0], self.nodes[1]])
 
     # Helper functions
 
@@ -267,7 +265,6 @@ class SegWitTest(BitcoinTestFramework):
         self.test_non_witness_transaction()
         self.test_v0_outputs_arent_spendable()
         self.test_block_relay()
-        self.test_getblocktemplate_before_lockin()
         self.test_unnecessary_witness_before_segwit_activation()
         self.test_witness_tx_relay_before_segwit_activation()
         self.test_standardness_v0()
@@ -311,7 +308,7 @@ class SegWitTest(BitcoinTestFramework):
             func(self, *args, **kwargs)
             # Each subtest should leave some utxos for the next subtest
             assert self.utxo
-            self.sync_blocks()
+            self.sync_blocks([self.nodes[0], self.nodes[1]])
             # Assert segwit status is as expected at end of subtest
             assert_equal(softfork_active(self.nodes[0], 'segwit'), self.segwit_active)
 
@@ -485,11 +482,6 @@ class SegWitTest(BitcoinTestFramework):
         witness, and so can't be spent before segwit activation (the point at which
         blocks are permitted to contain witnesses)."""
 
-        # node2 doesn't need to be connected for this test.
-        # (If it's connected, node0 may propagate an invalid block to it over
-        # compact blocks and the nodes would have inconsistent tips.)
-        self.disconnect_nodes(0, 2)
-
         # Create two outputs, a p2wsh and p2sh-p2wsh
         witness_program = CScript([OP_TRUE])
         witness_hash = sha256(witness_program)
@@ -550,36 +542,8 @@ class SegWitTest(BitcoinTestFramework):
             # TODO: support multiple acceptable reject reasons.
             test_witness_block(self.nodes[0], self.test_node, block, accepted=False, with_witness=False)
 
-        self.connect_nodes(0, 2)
-
         self.utxo.pop(0)
         self.utxo.append(UTXO(txid, 2, value))
-
-    @subtest  # type: ignore
-    def test_getblocktemplate_before_lockin(self):
-        txid = int(self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1), 16)
-
-        for node in [self.nodes[0], self.nodes[2]]:
-            gbt_results = node.getblocktemplate({"rules": ["segwit"]})
-            if node == self.nodes[2]:
-                # If this is a non-segwit node, we should not get a witness
-                # commitment.
-                assert 'default_witness_commitment' not in gbt_results
-            else:
-                # For segwit-aware nodes, check the witness
-                # commitment is correct.
-                assert 'default_witness_commitment' in gbt_results
-                witness_commitment = gbt_results['default_witness_commitment']
-
-                # Check that default_witness_commitment is present.
-                witness_root = CBlock.get_merkle_root([ser_uint256(0),
-                                                       ser_uint256(txid)])
-                script = get_witness_script(witness_root, 0)
-                assert_equal(witness_commitment, script.hex())
-
-        # Clear out the mempool
-        self.nodes[0].generate(1)
-        self.sync_blocks()
 
     @subtest  # type: ignore
     def test_witness_tx_relay_before_segwit_activation(self):
@@ -646,7 +610,7 @@ class SegWitTest(BitcoinTestFramework):
         # Mine it on test_node to create the confirmed output.
         test_transaction_acceptance(self.nodes[0], self.test_node, p2sh_tx, with_witness=True, accepted=True)
         self.nodes[0].generate(1)
-        self.sync_blocks()
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
 
         # Now test standardness of v0 P2WSH outputs.
         # Start by creating a transaction with two outputs.
@@ -718,7 +682,7 @@ class SegWitTest(BitcoinTestFramework):
         test_transaction_acceptance(self.nodes[0], self.test_node, tx3, with_witness=True, accepted=True)
 
         self.nodes[0].generate(1)
-        self.sync_blocks()
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
         self.utxo.pop(0)
         self.utxo.append(UTXO(tx3.sha256, 0, tx3.vout[0].nValue))
         assert_equal(len(self.nodes[1].getrawmempool()), 0)
@@ -757,7 +721,7 @@ class SegWitTest(BitcoinTestFramework):
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True, with_witness=True)
-        self.sync_blocks()
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
 
         # Now test attempts to spend the output.
         spend_tx = CTransaction()
@@ -1405,7 +1369,7 @@ class SegWitTest(BitcoinTestFramework):
             for i in range(NUM_SEGWIT_VERSIONS):
                 self.utxo.append(UTXO(tx.sha256, i, split_value))
 
-        self.sync_blocks()
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
         temp_utxo = []
         tx = CTransaction()
         witness_program = CScript([OP_TRUE])
@@ -1427,7 +1391,7 @@ class SegWitTest(BitcoinTestFramework):
             temp_utxo.append(UTXO(tx.sha256, 0, tx.vout[0].nValue))
 
         self.nodes[0].generate(1)  # Mine all the transactions
-        self.sync_blocks()
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
         assert len(self.nodes[0].getrawmempool()) == 0
 
         # Finally, verify that version 0 -> version 2 transactions
@@ -1471,7 +1435,7 @@ class SegWitTest(BitcoinTestFramework):
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx2, tx3])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
-        self.sync_blocks()
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
 
         # Add utxo to our list
         self.utxo.append(UTXO(tx3.sha256, 0, tx3.vout[0].nValue))
@@ -1499,7 +1463,7 @@ class SegWitTest(BitcoinTestFramework):
 
         # Now test a premature spend.
         self.nodes[0].generate(98)
-        self.sync_blocks()
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
         block2 = self.build_next_block()
         self.update_witness_block_with_transactions(block2, [spend_tx])
         test_witness_block(self.nodes[0], self.test_node, block2, accepted=False)
@@ -1509,7 +1473,7 @@ class SegWitTest(BitcoinTestFramework):
         block2 = self.build_next_block()
         self.update_witness_block_with_transactions(block2, [spend_tx])
         test_witness_block(self.nodes[0], self.test_node, block2, accepted=True)
-        self.sync_blocks()
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
 
     @subtest  # type: ignore
     def test_uncompressed_pubkey(self):
@@ -1638,7 +1602,7 @@ class SegWitTest(BitcoinTestFramework):
         block = self.build_next_block()
         self.update_witness_block_with_transactions(block, [tx])
         test_witness_block(self.nodes[0], self.test_node, block, accepted=True)
-        self.sync_blocks()
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
         self.utxo.pop(0)
 
         # Test each hashtype
@@ -1817,7 +1781,7 @@ class SegWitTest(BitcoinTestFramework):
         tx.rehash()
         test_transaction_acceptance(self.nodes[0], self.test_node, tx, False, True)
         self.nodes[0].generate(1)
-        self.sync_blocks()
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
 
         # We'll add an unnecessary witness to this transaction that would cause
         # it to be non-standard, to test that violating policy with a witness
@@ -1846,7 +1810,7 @@ class SegWitTest(BitcoinTestFramework):
         test_transaction_acceptance(self.nodes[0], self.test_node, tx3, False, True)
 
         self.nodes[0].generate(1)
-        self.sync_blocks()
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
 
         # Update our utxo list; we spent the first entry.
         self.utxo.pop(0)
@@ -1882,7 +1846,7 @@ class SegWitTest(BitcoinTestFramework):
         test_transaction_acceptance(self.nodes[0], self.test_node, tx, with_witness=False, accepted=True)
 
         self.nodes[0].generate(1)
-        self.sync_blocks()
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
 
         # Creating transactions for tests
         p2wsh_txs = []
@@ -1946,7 +1910,7 @@ class SegWitTest(BitcoinTestFramework):
 
         self.nodes[0].generate(1)  # Mine and clean up the mempool of non-standard node
         # Valid but non-standard transactions in a block should be accepted by standard node
-        self.sync_blocks()
+        self.sync_blocks([self.nodes[0], self.nodes[1]])
         assert_equal(len(self.nodes[0].getrawmempool()), 0)
         assert_equal(len(self.nodes[1].getrawmempool()), 0)
 
@@ -1954,27 +1918,32 @@ class SegWitTest(BitcoinTestFramework):
 
     @subtest  # type: ignore
     def test_upgrade_after_activation(self):
-        """Test the behavior of starting up a segwit-aware node after the softfork has activated."""
+        """A pre-segwit node with insufficiently validated blocks needs IBD to enforce segwit rules"""
 
-        # All nodes are caught up and node 2 is a pre-segwit node that will soon upgrade.
-        for n in range(2):
-            assert_equal(self.nodes[n].getblockcount(), self.nodes[2].getblockcount())
-            assert softfork_active(self.nodes[n], "segwit")
-        assert SEGWIT_HEIGHT < self.nodes[2].getblockcount()
-        assert 'segwit' not in self.nodes[2].getblockchaininfo()['softforks']
-
-        # Restarting node 2 should result in a shutdown because the blockchain consists of
-        # insufficiently validated blocks per segwit consensus rules.
+        # Node 2 hasn't been used or connected yet
+        assert_equal(self.nodes[2].getblockcount(), 0)
         self.stop_node(2)
+        self.start_node(2, extra_args=["-segwitheight=10"])
+
+        # Generate 8 blocks without witness data
+        self.nodes[2].generate(8)
+        assert_equal(self.nodes[2].getblockcount(), 8)
+
+        self.stop_node(2)
+        # Restarting node 2 (with segwit activation height set to 5) should result in a shutdown
+        # because the blockchain consists of 3 insufficiently validated blocks per segwit consensus rules.
         with self.nodes[2].assert_debug_log(expected_msgs=[
-                f"Witness data for blocks after height {SEGWIT_HEIGHT} requires validation. Please restart with -reindex."], timeout=10):
-            self.nodes[2].start([f"-segwitheight={SEGWIT_HEIGHT}"])
+                "Witness data for blocks after height 5 requires validation. Please restart with -reindex."], timeout=10):
+            self.nodes[2].start(["-segwitheight=5"])
 
         # As directed, the user restarts the node with -reindex
-        self.start_node(2, extra_args=["-reindex", f"-segwitheight={SEGWIT_HEIGHT}"])
+        self.start_node(2, extra_args=["-reindex", "-segwitheight=5"])
 
-        # With the segwit consensus rules, the node is able to validate only up to SEGWIT_HEIGHT - 1
-        assert_equal(self.nodes[2].getblockcount(), SEGWIT_HEIGHT - 1)
+        # With the segwit consensus rules, the node is able to validate only up to 4
+        assert_equal(self.nodes[2].getblockcount(), 4)
+
+        # Restart node and connect to other peers with correct segwit activation height
+        self.restart_node(2, extra_args=[f"-segwitheight={SEGWIT_HEIGHT}"])
         self.connect_nodes(0, 2)
 
         # We reconnect more than 100 blocks, give it plenty of time
