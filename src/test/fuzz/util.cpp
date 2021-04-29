@@ -24,7 +24,7 @@ FuzzedSock::FuzzedSock(FuzzedDataProvider& fuzzed_data_provider)
 FuzzedSock::~FuzzedSock()
 {
     // Sock::~Sock() will be called after FuzzedSock::~FuzzedSock() and it will call
-    // Sock::Reset() (not FuzzedSock::Reset()!) which will call CloseSocket(m_socket).
+    // Sock::Reset() (not FuzzedSock::Reset()!) which will call close(m_socket).
     // Avoid closing an arbitrary file descriptor (m_socket is just a random very high number which
     // theoretically may concide with a real opened file descriptor).
     Reset();
