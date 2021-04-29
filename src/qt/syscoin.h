@@ -73,7 +73,7 @@ public:
     /// Create options model
     void createOptionsModel(bool resetSettings);
     /// Initialize prune setting
-    void InitializePruneSetting(bool prune);
+    void InitPruneSetting(int64_t prune_MiB);
     /// Create main window
     void createWindow(const NetworkStyle *networkStyle);
     /// Create splash screen
