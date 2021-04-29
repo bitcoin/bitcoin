@@ -10,6 +10,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\arith_uint256.cpp" />
     <ClCompile Include="..\..\src\consensus\dynengine.cpp" />
+    <ClCompile Include="..\..\src\consensus\dynvm.cpp" />
     <ClCompile Include="..\..\src\consensus\merkle.cpp" />
     <ClCompile Include="..\..\src\consensus\tx_check.cpp" />
     <ClCompile Include="..\..\src\crypto\aes.cpp" />
@@ -36,6 +37,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\consensus\dynengine.h" />
+    <ClInclude Include="..\..\src\consensus\dynvm.h" />
     <ClInclude Include="..\..\src\primitives\contract.h" />
     <ClInclude Include="..\..\src\primitives\contract_manager.h" />
   </ItemGroup>

@@ -25,4 +25,13 @@ void CDynEngine::createContract(std::string txnID, std::string blockHash, std::s
 
 void CDynEngine::execContract(sAddressType contractAddress, sAddressType caller, int64_t sentAmount, unsigned char* data, unsigned char* method)
 {
+
+
+
+    CDynVM* vm = new CDynVM();
+    vm->exec()
+
+    free(vm);
+
+
 }

@@ -4,6 +4,7 @@
 #include "global.h"
 #include <primitives/contract.h>
 #include "primitives/contract_manager.h"
+#include "dynvm.h"
 
 struct sAddressType {
     unsigned char addr[32];
