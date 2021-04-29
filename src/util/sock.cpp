@@ -45,8 +45,6 @@ Sock& Sock::operator=(Sock&& other)
     return *this;
 }
 
-SOCKET Sock::Get() const { return m_socket; }
-
 void Sock::Reset() {
     if (m_socket == INVALID_SOCKET) {
         return;
