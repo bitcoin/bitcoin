@@ -494,6 +494,7 @@ class TestNode():
                 self.start(extra_args, stdout=log_stdout, stderr=log_stderr, *args, **kwargs)
                 ret = self.process.wait(timeout=self.rpc_timeout)
                 self.log.debug(self._node_msg(f'syscoind exited with status {ret} during initialization'))
+                assert ret != 0  # Exit code must indicate failure
                 self.running = False
                 self.process = None
                 # Check stderr for expected message
