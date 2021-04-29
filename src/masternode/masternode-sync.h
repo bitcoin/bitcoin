@@ -34,14 +34,14 @@ private:
     mutable CCriticalSection cs;
 
     // Keep track of current asset
-    int nCurrentAsset GUARDED_BY(cs);
+    int nCurrentAsset GUARDED_BY(cs) {MASTERNODE_SYNC_BLOCKCHAIN};
     // Count peers we've requested the asset from
-    int nTriedPeerCount GUARDED_BY(cs);
+    int nTriedPeerCount GUARDED_BY(cs) {0};
 
     // Time when current masternode asset sync started
-    int64_t nTimeAssetSyncStarted GUARDED_BY(cs);
+    int64_t nTimeAssetSyncStarted GUARDED_BY(cs) {0};
     // ... last bumped
-    int64_t nTimeLastBumped GUARDED_BY(cs);
+    int64_t nTimeLastBumped GUARDED_BY(cs) {0};
 
     /// Set to true if best header is reached in CMasternodeSync::UpdatedBlockTip
     bool fReachedBestHeader GUARDED_BY(cs) {false};
@@ -49,7 +49,7 @@ private:
     int64_t nTimeLastUpdateBlockTip GUARDED_BY(cs) {0};
 
 public:
-    CMasternodeSync() { Reset(true, false); }
+    CMasternodeSync() = default;
 
     static void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman);
 
