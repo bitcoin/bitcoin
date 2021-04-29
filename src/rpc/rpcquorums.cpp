@@ -48,8 +48,6 @@ UniValue quorum_list(const JSONRPCRequest& request)
     if (request.fHelp || (request.params.size() != 1 && request.params.size() != 2))
         quorum_list_help();
 
-    LOCK(cs_main);
-
     int count = -1;
     if (!request.params[1].isNull()) {
         count = ParseInt32V(request.params[1], "count");
@@ -60,11 +58,17 @@ UniValue quorum_list(const JSONRPCRequest& request)
 
     UniValue ret(UniValue::VOBJ);
 
-    for (auto& type : llmq::CLLMQUtils::GetEnabledQuorumTypes(chainActive.Tip())) {
+    CBlockIndex* pindexTip;
+    {
+        LOCK(cs_main);
+        pindexTip = chainActive.Tip();
+    }
+
+    for (auto& type : llmq::CLLMQUtils::GetEnabledQuorumTypes(pindexTip)) {
         const auto& params = llmq::GetLLMQParams(type);
         UniValue v(UniValue::VARR);
 
-        auto quorums = llmq::quorumManager->ScanQuorums(type, chainActive.Tip(), count > -1 ? count : params.signingActiveQuorumCount);
+        auto quorums = llmq::quorumManager->ScanQuorums(type, pindexTip, count > -1 ? count : params.signingActiveQuorumCount);
         for (auto& q : quorums) {
             v.push_back(q->qc->quorumHash.ToString());
         }
@@ -129,8 +133,6 @@ UniValue quorum_info(const JSONRPCRequest& request)
     if (request.fHelp || (request.params.size() != 3 && request.params.size() != 4))
         quorum_info_help();
 
-    LOCK(cs_main);
-
     Consensus::LLMQType llmqType = (Consensus::LLMQType)ParseInt32V(request.params[1], "llmqType");
     if (!Params().GetConsensus().llmqs.count(llmqType)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid LLMQ type");
@@ -181,16 +183,24 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
 
     auto ret = status.ToJson(detailLevel);
 
-    LOCK(cs_main);
-    int tipHeight = chainActive.Height();
+    CBlockIndex* pindexTip;
+    {
+        LOCK(cs_main);
+        pindexTip = chainActive.Tip();
+    }
+    int tipHeight = pindexTip->nHeight;
 
     UniValue minableCommitments(UniValue::VOBJ);
     UniValue quorumConnections(UniValue::VOBJ);
-    for (const auto& type : llmq::CLLMQUtils::GetEnabledQuorumTypes(chainActive.Tip())) {
+    for (const auto& type : llmq::CLLMQUtils::GetEnabledQuorumTypes(pindexTip)) {
         const auto& params = llmq::GetLLMQParams(type);
 
         if (fMasternodeMode) {
-            const CBlockIndex* pindexQuorum = chainActive[tipHeight - (tipHeight % params.dkgInterval)];
+            const CBlockIndex* pindexQuorum;
+            {
+                LOCK(cs_main);
+                pindexQuorum = chainActive[tipHeight - (tipHeight % params.dkgInterval)];
+            }
             auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, false);
             auto outboundConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, true);
             std::map<uint256, CAddress> foundConnections;
@@ -215,6 +225,7 @@ UniValue quorum_dkgstatus(const JSONRPCRequest& request)
             quorumConnections.pushKV(params.name, arr);
         }
 
+        LOCK(cs_main);
         llmq::CFinalCommitment fqc;
         if (llmq::quorumBlockProcessor->GetMineableCommitment(params.type,
                                                               tipHeight, fqc)) {
