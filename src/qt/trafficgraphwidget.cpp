@@ -77,7 +77,7 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
 
     // decide what order of magnitude we are
     int base = floor(log10(fMax));
-    float val = pow(10.0f, base);
+    float val = powf(10.0f, base);
 
     const QString units = tr("kB/s");
     const float yMarginText = 2.0;
@@ -92,7 +92,7 @@ void TrafficGraphWidget::paintEvent(QPaintEvent *)
     // if we drew 3 or fewer lines, break them up at the next lower order of magnitude
     if(fMax / val <= 3.0f) {
         axisCol = axisCol.darker();
-        val = pow(10.0f, base - 1);
+        val = powf(10.0f, base - 1);
         painter.setPen(axisCol);
         painter.drawText(XMARGIN, YMARGIN + h - h * val / fMax-yMarginText, QString("%1 %2").arg(val).arg(units));
         int count = 1;
