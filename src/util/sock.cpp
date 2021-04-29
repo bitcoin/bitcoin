@@ -44,8 +44,6 @@ Sock& Sock::operator=(Sock&& other)
     return *this;
 }
 
-SOCKET Sock::Get() const { return m_socket; }
-
 ssize_t Sock::Send(const void* data, size_t len, int flags) const
 {
     return send(m_socket, static_cast<const char*>(data), len, flags);
@@ -410,6 +408,11 @@ void Sock::Close()
     }
     m_socket = INVALID_SOCKET;
 }
+
+bool Sock::operator==(SOCKET s) const
+{
+    return m_socket == s;
+};
 
 std::string NetworkErrorString(int err)
 {
