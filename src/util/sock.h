@@ -21,8 +21,7 @@
 static constexpr auto MAX_WAIT_FOR_IO = 1s;
 
 /**
- * RAII helper class that manages a socket. Mimics `std::unique_ptr`, but instead of a pointer it
- * contains a socket and closes it automatically when it goes out of scope.
+ * RAII helper class that manages a socket and closes it automatically when it goes out of scope.
  */
 class Sock
 {
@@ -61,12 +60,6 @@ public:
      * Move assignment operator, grab the socket from another object and close ours (if set).
      */
     virtual Sock& operator=(Sock&& other);
-
-    /**
-     * Get the value of the contained socket.
-     * @return socket or INVALID_SOCKET if empty
-     */
-    [[nodiscard]] virtual SOCKET Get() const;
 
     /**
      * send(2) wrapper. Equivalent to `send(this->Get(), data, len, flags);`. Code that uses this
