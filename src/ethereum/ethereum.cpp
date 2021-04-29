@@ -149,10 +149,10 @@ bool parseEthMethodInputData(const std::vector<unsigned char>& vchInputExpectedM
     // local precision can range between 0 and 8 decimal places, so it should fit within a CAmount
     // we pad zero's if erc20's precision is less than ours so we can accurately get the whole value of the amount transferred
     if(nLocalPrecision > nERC20Precision){
-      outputAmountArith *= pow(10.0, nLocalPrecision-nERC20Precision);
+      outputAmountArith *= powf(10.0, nLocalPrecision-nERC20Precision);
     // ensure we truncate decimals to fit within int64 if erc20's precision is more than our asset precision
     } else if(nLocalPrecision < nERC20Precision){
-      outputAmountArith /= pow(10.0, nERC20Precision-nLocalPrecision);
+      outputAmountArith /= powf(10.0, nERC20Precision-nLocalPrecision);
     }
     outputAmount = (CAmount)outputAmountArith.GetLow64();
     

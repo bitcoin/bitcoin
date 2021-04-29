@@ -198,7 +198,7 @@ UniValue ValueFromAmount(const CAmount amount, const uint32_t &nBaseAsset)
     int64_t remainder = 0;
     std::string strPrecision = "0";
     if (nPrecision > 0) {
-        divByAmount = pow(10.0, nPrecision);
+        divByAmount = powf(10.0, nPrecision);
         quotient = amount / divByAmount;
         remainder = amount % divByAmount;
         strPrecision = itostr(nPrecision);
