@@ -271,7 +271,7 @@ bool SendCoinsDialog::PrepareSendText(QString& question_string, QString& informa
     m_current_transaction = std::make_unique<WalletModelTransaction>(recipients);
     WalletModel::SendCoinsReturn prepareStatus;
 
-    updateCoinControlState(*m_coin_control);
+    updateCoinControlState();
 
     prepareStatus = model->prepareTransaction(*m_current_transaction, *m_coin_control);
 
@@ -740,19 +740,19 @@ void SendCoinsDialog::updateFeeMinimizedLabel()
     }
 }
 
-void SendCoinsDialog::updateCoinControlState(CCoinControl& ctrl)
+void SendCoinsDialog::updateCoinControlState()
 {
     if (ui->radioCustomFee->isChecked()) {
-        ctrl.m_feerate = CFeeRate(ui->customFee->value());
+        m_coin_control->m_feerate = CFeeRate(ui->customFee->value());
     } else {
-        ctrl.m_feerate.reset();
+        m_coin_control->m_feerate.reset();
     }
     // Avoid using global defaults when sending money from the GUI
     // Either custom fee will be used or if not selected, the confirmation target from dropdown box
-    ctrl.m_confirm_target = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
-    ctrl.m_signal_bip125_rbf = ui->optInRBF->isChecked();
+    m_coin_control->m_confirm_target = getConfTargetForIndex(ui->confTargetSelector->currentIndex());
+    m_coin_control->m_signal_bip125_rbf = ui->optInRBF->isChecked();
     // Include watch-only for wallets without private key
-    ctrl.fAllowWatchOnly = model->wallet().privateKeysDisabled();
+    m_coin_control->fAllowWatchOnly = model->wallet().privateKeysDisabled();
 }
 
 void SendCoinsDialog::updateNumberOfBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers, SynchronizationState sync_state) {
@@ -765,7 +765,7 @@ void SendCoinsDialog::updateSmartFeeLabel()
 {
     if(!model || !model->getOptionsModel())
         return;
-    updateCoinControlState(*m_coin_control);
+    updateCoinControlState();
     m_coin_control->m_feerate.reset(); // Explicitly use only fee estimation rate for smart fee labels
     int returned_target;
     FeeReason reason;
@@ -839,8 +839,9 @@ void SendCoinsDialog::coinControlFeatureChanged(bool checked)
 {
     ui->frameCoinControl->setVisible(checked);
 
-    if (!checked && model) // coin control features disabled
-        m_coin_control->SetNull();
+    if (!checked && model) { // coin control features disabled
+        m_coin_control = std::make_unique<CCoinControl>();
+    }
 
     coinControlUpdateLabels();
 }
@@ -928,7 +929,7 @@ void SendCoinsDialog::coinControlUpdateLabels()
     if (!model || !model->getOptionsModel())
         return;
 
-    updateCoinControlState(*m_coin_control);
+    updateCoinControlState();
 
     // set pay amounts
     CoinControlDialog::payAmounts.clear();

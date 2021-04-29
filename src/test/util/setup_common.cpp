@@ -71,7 +71,8 @@ std::ostream& operator<<(std::ostream& os, const uint256& num)
 }
 
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::vector<const char*>& extra_args)
-    : m_path_root{fs::temp_directory_path() / "test_common_" PACKAGE_NAME / g_insecure_rand_ctx_temp_path.rand256().ToString()}
+    : m_path_root{fs::temp_directory_path() / "test_common_" PACKAGE_NAME / g_insecure_rand_ctx_temp_path.rand256().ToString()},
+      m_args{}
 {
     const std::vector<const char*> arguments = Cat(
         {
@@ -87,8 +88,9 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
         extra_args);
     util::ThreadRename("test");
     fs::create_directories(m_path_root);
+    m_args.ForceSetArg("-datadir", m_path_root.string());
     gArgs.ForceSetArg("-datadir", m_path_root.string());
-    ClearDatadirCache();
+    gArgs.ClearPathCache();
     {
         SetupServerArgs(m_node);
         std::string error;
@@ -191,7 +193,7 @@ TestingSetup::TestingSetup(const std::string& chainName, const std::vector<const
     }
 
     m_node.addrman = std::make_unique<CAddrMan>();
-    m_node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
+    m_node.banman = std::make_unique<BanMan>(m_args.GetDataDirPath() / "banlist.dat", nullptr, DEFAULT_MISBEHAVING_BANTIME);
     m_node.connman = std::make_unique<CConnman>(0x1337, 0x1337, *m_node.addrman); // Deterministic randomness for tests.
     m_node.peerman = PeerManager::make(chainparams, *m_node.connman, *m_node.addrman,
                                        m_node.banman.get(), *m_node.scheduler, *m_node.chainman,

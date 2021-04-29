@@ -42,28 +42,14 @@ ReceiveCoinsDialog::ReceiveCoinsDialog(const PlatformStyle *_platformStyle, QWid
         ui->removeRequestButton->setIcon(_platformStyle->SingleColorIcon(":/icons/remove"));
     }
 
-    // context menu actions
-    QAction *copyURIAction = new QAction(tr("Copy URI"), this);
-    QAction* copyAddressAction = new QAction(tr("Copy address"), this);
-    copyLabelAction = new QAction(tr("Copy label"), this);
-    copyMessageAction = new QAction(tr("Copy message"), this);
-    copyAmountAction = new QAction(tr("Copy amount"), this);
-
     // context menu
     contextMenu = new QMenu(this);
-    contextMenu->addAction(copyURIAction);
-    contextMenu->addAction(copyAddressAction);
-    contextMenu->addAction(copyLabelAction);
-    contextMenu->addAction(copyMessageAction);
-    contextMenu->addAction(copyAmountAction);
-
-    // context menu signals
+    contextMenu->addAction(tr("Copy URI"), this, &ReceiveCoinsDialog::copyURI);
+    contextMenu->addAction(tr("Copy address"), this, &ReceiveCoinsDialog::copyAddress);
+    copyLabelAction = contextMenu->addAction(tr("Copy label"), this, &ReceiveCoinsDialog::copyLabel);
+    copyMessageAction = contextMenu->addAction(tr("Copy message"), this, &ReceiveCoinsDialog::copyMessage);
+    copyAmountAction = contextMenu->addAction(tr("Copy amount"), this, &ReceiveCoinsDialog::copyAmount);
     connect(ui->recentRequestsView, &QWidget::customContextMenuRequested, this, &ReceiveCoinsDialog::showMenu);
-    connect(copyURIAction, &QAction::triggered, this, &ReceiveCoinsDialog::copyURI);
-    connect(copyAddressAction, &QAction::triggered, this, &ReceiveCoinsDialog::copyAddress);
-    connect(copyLabelAction, &QAction::triggered, this, &ReceiveCoinsDialog::copyLabel);
-    connect(copyMessageAction, &QAction::triggered, this, &ReceiveCoinsDialog::copyMessage);
-    connect(copyAmountAction, &QAction::triggered, this, &ReceiveCoinsDialog::copyAmount);
 
     connect(ui->clearButton, &QPushButton::clicked, this, &ReceiveCoinsDialog::clear);
 

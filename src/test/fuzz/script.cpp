@@ -43,7 +43,7 @@ FUZZ_TARGET_INIT(script, initialize_script)
     if (!script_opt) return;
     const CScript script{*script_opt};
 
-    std::vector<unsigned char> compressed;
+    CompressedScript compressed;
     if (CompressScript(script, compressed)) {
         const unsigned int size = compressed[0];
         compressed.erase(compressed.begin());
@@ -55,22 +55,45 @@ FUZZ_TARGET_INIT(script, initialize_script)
     }
 
     CTxDestination address;
-    (void)ExtractDestination(script, address);
-
     TxoutType type_ret;
     std::vector<CTxDestination> addresses;
     int required_ret;
-    (void)ExtractDestinations(script, type_ret, addresses, required_ret);
-
-    const FlatSigningProvider signing_provider;
-    (void)InferDescriptor(script, signing_provider);
-
-    (void)IsSegWitOutput(signing_provider, script);
-
-    (void)IsSolvable(signing_provider, script);
+    bool extract_destinations_ret = ExtractDestinations(script, type_ret, addresses, required_ret);
+    bool extract_destination_ret = ExtractDestination(script, address);
+    if (!extract_destinations_ret) {
+        assert(!extract_destination_ret);
+        if (type_ret == TxoutType::MULTISIG) {
+            assert(addresses.empty() && required_ret == 0);
+        } else {
+            assert(type_ret == TxoutType::PUBKEY ||
+                   type_ret == TxoutType::NONSTANDARD ||
+                   type_ret == TxoutType::NULL_DATA);
+        }
+    } else {
+        assert(required_ret >= 1 && required_ret <= 16);
+        assert((unsigned long)required_ret == addresses.size());
+        assert(type_ret == TxoutType::MULTISIG || required_ret == 1);
+    }
+    if (type_ret == TxoutType::NONSTANDARD || type_ret == TxoutType::NULL_DATA) {
+        assert(!extract_destinations_ret);
+    }
+    if (!extract_destination_ret) {
+        assert(type_ret == TxoutType::PUBKEY ||
+               type_ret == TxoutType::NONSTANDARD ||
+               type_ret == TxoutType::NULL_DATA ||
+               type_ret == TxoutType::MULTISIG);
+    } else {
+        assert(address == addresses[0]);
+    }
+    if (type_ret == TxoutType::NONSTANDARD ||
+        type_ret == TxoutType::NULL_DATA ||
+        type_ret == TxoutType::MULTISIG) {
+        assert(!extract_destination_ret);
+    }
 
     TxoutType which_type;
     bool is_standard_ret = IsStandard(script, which_type);
+    assert(type_ret == which_type);
     if (!is_standard_ret) {
         assert(which_type == TxoutType::NONSTANDARD ||
                which_type == TxoutType::NULL_DATA ||
@@ -86,6 +109,11 @@ FUZZ_TARGET_INIT(script, initialize_script)
         assert(which_type == TxoutType::NULL_DATA ||
                which_type == TxoutType::NONSTANDARD);
     }
+
+    const FlatSigningProvider signing_provider;
+    (void)InferDescriptor(script, signing_provider);
+    (void)IsSegWitOutput(signing_provider, script);
+    (void)IsSolvable(signing_provider, script);
 
     (void)RecursiveDynamicUsage(script);
 
@@ -115,10 +143,12 @@ FUZZ_TARGET_INIT(script, initialize_script)
 
     {
         const std::vector<uint8_t> bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);
+        CompressedScript compressed_script;
+        compressed_script.assign(bytes.begin(), bytes.end());
         // DecompressScript(..., ..., bytes) is not guaranteed to be defined if the bytes vector is too short
-        if (bytes.size() >= 32) {
+        if (compressed_script.size() >= 32) {
             CScript decompressed_script;
-            DecompressScript(decompressed_script, fuzzed_data_provider.ConsumeIntegral<unsigned int>(), bytes);
+            DecompressScript(decompressed_script, fuzzed_data_provider.ConsumeIntegral<unsigned int>(), compressed_script);
         }
     }
 

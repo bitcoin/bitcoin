@@ -89,11 +89,7 @@ class P2PBlocksOnly(BitcoinTestFramework):
         # Bump time forward to ensure nNextInvSend timer pops
         self.nodes[0].setmocktime(int(time.time()) + 60)
 
-        # Calling sync_with_ping twice requires that the node calls
-        # `ProcessMessage` twice, and thus ensures `SendMessages` must have
-        # been called at least once
-        conn.sync_with_ping()
-        conn.sync_with_ping()
+        conn.sync_send_with_ping()
         assert(int(txid, 16) not in conn.get_invs())
 
     def check_p2p_tx_violation(self, index=1):

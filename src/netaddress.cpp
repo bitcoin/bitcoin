@@ -551,6 +551,11 @@ enum Network CNetAddr::GetNetwork() const
     return m_net;
 }
 
+static std::string IPv4ToString(Span<const uint8_t> a)
+{
+    return strprintf("%u.%u.%u.%u", a[0], a[1], a[2], a[3]);
+}
+
 static std::string IPv6ToString(Span<const uint8_t> a)
 {
     assert(a.size() == ADDR_IPV6_SIZE);
@@ -571,6 +576,7 @@ std::string CNetAddr::ToStringIP() const
 {
     switch (m_net) {
     case NET_IPV4:
+        return IPv4ToString(m_addr);
     case NET_IPV6: {
         CService serv(*this, 0);
         struct sockaddr_storage sockaddr;
@@ -580,9 +586,6 @@ std::string CNetAddr::ToStringIP() const
             if (!getnameinfo((const struct sockaddr*)&sockaddr, socklen, name,
                              sizeof(name), nullptr, 0, NI_NUMERICHOST))
                 return std::string(name);
-        }
-        if (m_net == NET_IPV4) {
-            return strprintf("%u.%u.%u.%u", m_addr[0], m_addr[1], m_addr[2], m_addr[3]);
         }
         return IPv6ToString(m_addr);
     }

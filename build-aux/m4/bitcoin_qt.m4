@@ -225,6 +225,7 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
   BITCOIN_QT_PATH_PROGS([RCC], [rcc-qt5 rcc5 rcc], $qt_bin_path)
   BITCOIN_QT_PATH_PROGS([LRELEASE], [lrelease-qt5 lrelease5 lrelease], $qt_bin_path)
   BITCOIN_QT_PATH_PROGS([LUPDATE], [lupdate-qt5 lupdate5 lupdate],$qt_bin_path, yes)
+  BITCOIN_QT_PATH_PROGS([LCONVERT], [lconvert-qt5 lconvert5 lconvert], $qt_bin_path, yes)
 
   MOC_DEFS='-DHAVE_CONFIG_H -I$(srcdir)'
   case $host in
@@ -258,7 +259,10 @@ AC_DEFUN([BITCOIN_QT_CONFIGURE],[
       AC_MSG_ERROR([libQtDBus not found. Install libQtDBus or remove --with-qtdbus.])
     fi
     if test "x$LUPDATE" = x; then
-      AC_MSG_WARN([lupdate is required to update qt translations])
+      AC_MSG_WARN([lupdate tool is required to update Qt translations.])
+    fi
+    if test "x$LCONVERT" = x; then
+      AC_MSG_WARN([lconvert tool is required to update Qt translations.])
     fi
   ],[
     bitcoin_enable_qt=no
