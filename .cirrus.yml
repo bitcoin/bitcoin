@@ -136,10 +136,10 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
 
 task:
-  name: '[no depends, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer] [focal]'
+  name: '[no depends, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer] [hirsute]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:focal
+    image: ubuntu:hirsute
     cpu: 4  # Double CPU and Memory to avoid timeout
     memory: 16G
   env:
