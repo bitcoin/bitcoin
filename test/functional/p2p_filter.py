@@ -174,8 +174,7 @@ class FilterTest(SyscoinTestFramework):
         filter_peer.merkleblock_received = False
         filter_peer.tx_received = False
         self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 90)
-        filter_peer.sync_with_ping()
-        filter_peer.sync_with_ping()
+        filter_peer.sync_send_with_ping()
         assert not filter_peer.merkleblock_received
         assert not filter_peer.tx_received
 
