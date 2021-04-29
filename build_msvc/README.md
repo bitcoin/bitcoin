@@ -81,3 +81,25 @@ For safety reasons the Bitcoin Core .appveyor.yml file has the artifact options 
     #- 7z a bitcoin-%APPVEYOR_BUILD_VERSION%.zip %APPVEYOR_BUILD_FOLDER%\build_msvc\%platform%\%configuration%\*.exe
     #- path: bitcoin-%APPVEYOR_BUILD_VERSION%.zip
 ```
+
+Security
+---------------------
+[Base address randomization](https://docs.microsoft.com/en-us/cpp/build/reference/dynamicbase-use-address-space-layout-randomization?view=msvc-160) is used to make Bitcoin Core more secure. When building Bitcoin using the `build_msvc` process base address randomization can be disabled by editing `common.init.vcproj` to change `RandomizedBaseAddress` from `true` to `false` and then rebuilding the project.
+
+To check if `bitcoind` has `RandomizedBaseAddress` enabled or disabled run
+
+```
+.\dumpbin.exe /headers src/bitcoind.exe
+```
+
+If is it enabled then in the output `Dynamic base` will be listed in the `DLL characteristics` under `OPTIONAL HEADER VALUES` as shown below
+
+```
+            8160 DLL characteristics
+                   High Entropy Virtual Addresses
+                   Dynamic base
+                   NX compatible
+                   Terminal Server Aware
+```
+
+This may not disable all stack randomization as versions of windows employ additional stack randomization protections. These protections must be turned off in the OS configuration.
