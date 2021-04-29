@@ -33,7 +33,7 @@ class FeatureBlockfilterindexPruneTest(SyscoinTestFramework):
 
         self.log.info("prune some blocks")
         pruneheight = self.nodes[0].pruneblockchain(400)
-        assert_equal(pruneheight, 250)
+        assert_equal(pruneheight, 248)
 
         self.log.info("check if we can access the tips blockfilter when we have pruned some blocks")
         assert_greater_than(len(self.nodes[0].getblockfilter(self.nodes[0].getbestblockhash())['filter']), 0)

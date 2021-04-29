@@ -37,9 +37,13 @@ class MiniWallet:
         for i in range(start, start + num):
             block = self._test_node.getblock(blockhash=self._test_node.getblockhash(i), verbosity=2)
             for tx in block['tx']:
-                for out in tx['vout']:
-                    if out['scriptPubKey']['hex'] == self._scriptPubKey.hex():
-                        self._utxos.append({'txid': tx['txid'], 'vout': out['n'], 'value': out['value']})
+                self.scan_tx(tx)
+
+    def scan_tx(self, tx):
+        """Scan the tx for self._scriptPubKey outputs and add them to self._utxos"""
+        for out in tx['vout']:
+            if out['scriptPubKey']['hex'] == self._scriptPubKey.hex():
+                self._utxos.append({'txid': tx['txid'], 'vout': out['n'], 'value': out['value']})
 
     def generate(self, num_blocks):
         """Generate blocks with coinbase outputs to the internal address, and append the outputs to the internal list"""
@@ -69,6 +73,12 @@ class MiniWallet:
 
     def send_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None):
         """Create and send a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
+        tx = self.create_self_transfer(fee_rate=fee_rate, from_node=from_node, utxo_to_spend=utxo_to_spend)
+        self.sendrawtransaction(from_node=from_node, tx_hex=tx['hex'])
+        return tx
+
+    def create_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None, mempool_valid=True):
+        """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
         self._utxos = sorted(self._utxos, key=lambda k: k['value'])
         utxo_to_spend = utxo_to_spend or self._utxos.pop()  # Pick the largest utxo (if none provided) and hope it covers the fee
         vsize = Decimal(96)
@@ -84,8 +94,12 @@ class MiniWallet:
         tx_hex = tx.serialize().hex()
 
         tx_info = from_node.testmempoolaccept([tx_hex])[0]
-        self._utxos.append({'txid': tx_info['txid'], 'vout': 0, 'value': send_value})
-        from_node.sendrawtransaction(tx_hex)
-        assert_equal(tx_info['vsize'], vsize)
-        assert_equal(tx_info['fees']['base'], fee)
+        assert_equal(mempool_valid, tx_info['allowed'])
+        if mempool_valid:
+            assert_equal(tx_info['vsize'], vsize)
+            assert_equal(tx_info['fees']['base'], fee)
         return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex}
+
+    def sendrawtransaction(self, *, from_node, tx_hex):
+        from_node.sendrawtransaction(tx_hex)
+        self.scan_tx(from_node.decoderawtransaction(tx_hex))
