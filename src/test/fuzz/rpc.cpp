@@ -143,6 +143,8 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "assetallocationbalance",
     "sendfrom",
     "getauxblock",
+    "createauxblock",
+    "submitauxblock",
     "syscoingettxroots",
     "syscoingetspvproof",
     "convertaddress",
