@@ -335,19 +335,11 @@ void addDisconnectedPopdata(const altintegration::PopData& popData) EXCLUSIVE_LO
 
 bool isPopEnabled()
 {
-    auto block = VeriBlock::GetPop().getConfig().getAltParams().getBootstrapBlock();
-    CBlockIndex* index;
-    {
-        LOCK(cs_main);
-        index = LookupBlockIndex(uint256(block.hash));
+    auto* tip = ChainActive().Tip();
+    if (tip != nullptr) {
+        return isPopEnabled(tip->nHeight);
     }
-    if (index == nullptr) {
-        return false;
-    }
-    if (index->nHeight == 0) {
-        return true;
-    }
-    return ChainActive().Contains(index);
+    return false;
 }
 
 bool isPopEnabled(int32_t height)
