@@ -69,13 +69,6 @@ public:
     [[nodiscard]] virtual SOCKET Get() const;
 
     /**
-     * Get the value of the contained socket and drop ownership. It will not be closed by the
-     * destructor after this call.
-     * @return socket or INVALID_SOCKET if empty
-     */
-    virtual SOCKET Release();
-
-    /**
      * Close if non-empty.
      */
     virtual void Reset();

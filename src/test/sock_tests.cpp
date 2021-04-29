@@ -69,16 +69,6 @@ BOOST_AUTO_TEST_CASE(move_assignment)
     BOOST_CHECK(SocketIsClosed(s));
 }
 
-BOOST_AUTO_TEST_CASE(release)
-{
-    SOCKET s = CreateSocket();
-    Sock* sock = new Sock(s);
-    BOOST_CHECK_EQUAL(sock->Release(), s);
-    delete sock;
-    BOOST_CHECK(!SocketIsClosed(s));
-    BOOST_REQUIRE(CloseSocket(s));
-}
-
 BOOST_AUTO_TEST_CASE(reset)
 {
     const SOCKET s = CreateSocket();
