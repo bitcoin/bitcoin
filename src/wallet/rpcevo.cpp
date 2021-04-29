@@ -487,7 +487,7 @@ static RPCHelpMan protx_register_prepare()
                                     "If not specified, payoutAddress is the one that is going to be used.\n"
                                     "The private key belonging to this address must be known in your wallet."},
             },
-            RPCResult{RPCResult::Type::STR_HEX, "hex", "Unsigned ProTX transaction hex"},
+            RPCResult{RPCResult::Type::ANY, "", "Unsigned ProTX transaction object"},
             RPCExamples{
                 HelpExampleCli("protx_register_prepare", "1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d 0 173.249.49.9:18369 tsys1q2j57a4rtserh9022a63pvk3jqmg7un55stux0v 003bc97fcd6023996f8703b4da34dedd1641bd45ed12ac7a4d74a529dd533ecb99d4fb8ddb04853bb110f0d747ee8e63 tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r 5 tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r")
             + HelpExampleRpc("protx_register_prepare", "\"1075db55d416d3ca199f55b6084e2115b9345e16c5cf302fc80e9d5fbf5d48d\", 0, \"173.249.49.9:18369\", \"tsys1q2j57a4rtserh9022a63pvk3jqmg7un55stux0v\", \"003bc97fcd6023996f8703b4da34dedd1641bd45ed12ac7a4d74a529dd533ecb99d4fb8ddb04853bb110f0d747ee8e63\", \"tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r\", 5, \"tsys1qxh8am0c9w0q9kv7h7f9q2c4jrfjg63yawrgm0r\"")
