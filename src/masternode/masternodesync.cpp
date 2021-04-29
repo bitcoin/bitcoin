@@ -20,13 +20,16 @@ CMasternodeSync masternodeSync;
 void CMasternodeSync::Reset(bool fForce, bool fNotifyReset)
 {
     // Avoid resetting the sync process if we just "recently" received a new block
-    if (fForce || (GetTime() - nTimeLastUpdateBlockTip > MASTERNODE_SYNC_RESET_SECONDS)) {
-        SetSyncMode(MASTERNODE_SYNC_BLOCKCHAIN);
-        nTriedPeerCount = 0;
-        nTimeAssetSyncStarted = GetTime();
-        nTimeLastBumped = GetTime();
-        nTimeLastUpdateBlockTip = 0;
-        fReachedBestHeader = false;
+    if (fForce || (GetTime() - GetLastUpdateBlockTip() > MASTERNODE_SYNC_RESET_SECONDS)) {
+        {
+            LOCK(cs);
+            SetSyncMode(MASTERNODE_SYNC_BLOCKCHAIN);
+            nTriedPeerCount = 0;
+            nTimeAssetSyncStarted = GetTime();
+            nTimeLastBumped = GetTime();
+            nTimeLastUpdateBlockTip = 0;
+            fReachedBestHeader = false;
+        }
         if (fNotifyReset) {
             uiInterface.NotifyAdditionalDataSyncProgressChanged(-1);
         }
@@ -36,6 +39,7 @@ void CMasternodeSync::Reset(bool fForce, bool fNotifyReset)
 void CMasternodeSync::BumpAssetLastTime(const std::string& strFuncName)
 {
     if(IsSynced()) return;
+    LOCK(cs);
     nTimeLastBumped = GetTime();
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::BumpAssetLastTime -- %s\n", strFuncName);
 }
@@ -56,12 +60,12 @@ void CMasternodeSync::SwitchToNextAsset(CConnman& connman)
     switch(GetAssetID())
     {
         case(MASTERNODE_SYNC_BLOCKCHAIN):
-            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Completed %s in %llds\n", GetAssetName(), GetTime() - nTimeAssetSyncStarted);
+            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Completed %s in %llds\n", GetAssetName(), GetTime() - GetAssetStartTime());
             SetSyncMode(MASTERNODE_SYNC_GOVERNANCE);
             LogPrintf("CMasternodeSync::SwitchToNextAsset -- Starting %s\n", GetAssetName());
             break;
         case(MASTERNODE_SYNC_GOVERNANCE):
-            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Completed %s in %llds\n", GetAssetName(), GetTime() - nTimeAssetSyncStarted);
+            LogPrintf("CMasternodeSync::SwitchToNextAsset -- Completed %s in %llds\n", GetAssetName(), GetTime() - GetAssetStartTime());
             SetSyncMode(MASTERNODE_SYNC_FINISHED);
             uiInterface.NotifyAdditionalDataSyncProgressChanged(1);
 
@@ -72,8 +76,11 @@ void CMasternodeSync::SwitchToNextAsset(CConnman& connman)
 
             break;
     }
-    nTriedPeerCount = 0;
-    nTimeAssetSyncStarted = GetTime();
+    {
+        LOCK(cs);
+        nTriedPeerCount = 0;
+        nTimeAssetSyncStarted = GetTime();
+    }
     BumpAssetLastTime("CMasternodeSync::SwitchToNextAsset");
 }
 
@@ -134,10 +141,10 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
         connman.ReleaseNodeVector(vNodesCopy);
         return;
     }
-
+    const int nTriedCount = GetAttempt();
     // Calculate "progress" for LOG reporting / GUI notification
-    double nSyncProgress = double(nTriedPeerCount + (nMode - 1) * 8) / (8*4);
-    LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d nTriedPeerCount %d nSyncProgress %f\n", nTick, nMode, nTriedPeerCount, nSyncProgress);
+    double nSyncProgress = double(nTriedCount + (nMode - 1) * 8) / (8*4);
+    LogPrint(BCLog::MNSYNC, "CMasternodeSync::ProcessTick -- nTick %d nCurrentAsset %d nTriedPeerCount %d nSyncProgress %f\n", nTick, nMode, GetAttempt(), nSyncProgress);
     uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
 
     std::vector<CNode*> vNodesCopy;
@@ -194,7 +201,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
 
             if (nMode == MASTERNODE_SYNC_BLOCKCHAIN) {
                 int64_t nTimeSyncTimeout = vNodesCopy.size() > 3 ? MASTERNODE_SYNC_TICK_SECONDS : MASTERNODE_SYNC_TIMEOUT_SECONDS;
-                if (fReachedBestHeader && (GetTime() - nTimeLastBumped > nTimeSyncTimeout)) {
+                if (ReachedBestHeader() && (GetTime() - GetTimeLastBumped() > nTimeSyncTimeout)) {
                     // At this point we know that:
                     // a) there are peers (because we are looping on at least one of them);
                     // b) we waited for at least MASTERNODE_SYNC_TICK_SECONDS/MASTERNODE_SYNC_TIMEOUT_SECONDS
@@ -228,12 +235,12 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                     connman.ReleaseNodeVector(vNodesCopy);
                     return;
                 }
-                LogPrint(BCLog::GOBJECT, "CMasternodeSync::ProcessTick -- nTick %d nMode %d nTimeLastBumped %lld GetTime() %lld diff %lld\n", nTick, nMode, nTimeLastBumped, GetTime(), GetTime() - nTimeLastBumped);
+                LogPrint(BCLog::GOBJECT, "CMasternodeSync::ProcessTick -- nTick %d nMode %d nTimeLastBumped %lld GetTime() %lld diff %lld\n", nTick, nMode, GetTimeLastBumped(), GetTime(), GetTime() - GetTimeLastBumped());
 
                 // check for timeout first
-                if(GetTime() - nTimeLastBumped > MASTERNODE_SYNC_TIMEOUT_SECONDS) {
+                if(GetTime() - GetTimeLastBumped() > MASTERNODE_SYNC_TIMEOUT_SECONDS) {
                     LogPrintf("CMasternodeSync::ProcessTick -- nTick %d nMode %d -- timeout\n", nTick, nMode);
-                    if(nTriedPeerCount == 0) {
+                    if(nTriedCount == 0) {
                         LogPrintf("CMasternodeSync::ProcessTick -- WARNING: failed to sync %s\n", GetAssetName());
                         // it's kind of ok to skip this for now, hopefully we'll catch up later?
                     }
@@ -276,8 +283,10 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
                     continue;
                 }
                 netfulfilledman.AddFulfilledRequest(pnode->addr, "governance-sync");
-
-                nTriedPeerCount++;
+                {
+                    LOCK(cs);
+                    nTriedPeerCount++;
+                }
 
                 SendGovernanceSyncRequest(pnode, connman);
 
@@ -312,9 +321,12 @@ void CMasternodeSync::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 
 void CMasternodeSync::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload, CConnman& connman)
 {
+    if (pindexNew == nullptr) {
+        return;
+    }
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::NotifyHeaderTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
 
-    if (IsSynced() || !pindexBestHeader)
+    if (IsSynced())
         return;
 
     if (!IsBlockchainSynced()) {
@@ -327,16 +339,18 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
 {
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::UpdatedBlockTip -- pindexNew->nHeight: %d fInitialDownload=%d\n", pindexNew->nHeight, fInitialDownload);
 
-    nTimeLastUpdateBlockTip = GetAdjustedTime();
-
-    if (IsSynced() || !pindexNew)
-        return;
+    {
+        LOCK(cs);
+        nTimeLastUpdateBlockTip = GetAdjustedTime();
+    }
+    CBlockIndex* pindexTip;
     {
         LOCK(cs_main);
-        if(!pindexBestHeader) {
-            return;
-        }
+        pindexTip = pindexBestHeader;
     }
+
+    if (IsSynced() || !pindexTip || !pindexNew)
+        return;
 
     if (!IsBlockchainSynced()) {
         // Postpone timeout each time new block arrives while we are still syncing blockchain
@@ -352,26 +366,22 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
         // no need to check any further while still in IBD mode
         return;
     }
-    bool fReachedBestHeaderNew;
-    int32_t bestHeight;
-    {
-        LOCK(cs_main);
-        // Note: since we sync headers first, it should be ok to use this
-        fReachedBestHeaderNew = pindexNew->GetBlockHash() == pindexBestHeader->GetBlockHash();
-        bestHeight = pindexBestHeader->nHeight;
-    }
+    // Note: since we sync headers first, it should be ok to use this
+    bool fReachedBestHeaderNew = pindexNew->GetBlockHash() == pindexTip->GetBlockHash();
 
-    if (fReachedBestHeader && !fReachedBestHeaderNew) {
+    if (ReachedBestHeader() && !fReachedBestHeaderNew) {
         // Switching from true to false means that we previously stuck syncing headers for some reason,
         // probably initial timeout was not enough,
         // because there is no way we can update tip not having best header
         Reset(true);
     }
 
-    fReachedBestHeader = fReachedBestHeaderNew;
-
+    {
+        LOCK(cs);
+        fReachedBestHeader = fReachedBestHeaderNew;
+    }
     LogPrint(BCLog::MNSYNC, "CMasternodeSync::UpdatedBlockTip -- pindexNew->nHeight: %d pindexBestHeader->nHeight: %d fInitialDownload=%d fReachedBestHeader=%d\n",
-                pindexNew->nHeight, bestHeight, fInitialDownload, fReachedBestHeader);
+                pindexNew->nHeight, pindexTip->nHeight, fInitialDownload, ReachedBestHeader());
 }
 
 void CMasternodeSync::DoMaintenance(CConnman &connman, const PeerManager& peerman)
