@@ -927,7 +927,6 @@ static const CRPCCommand commands[] =
     { "syscoin",            &mnauth,                  },
     { "syscoin",            &mnsync,                  },
     { "syscoin",            &spork,                   },
-    { "util",               &getindexinfo,            },
     { "hidden",             &echoipc,                 },
 };
 // clang-format on
