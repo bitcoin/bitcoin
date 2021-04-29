@@ -170,9 +170,9 @@ QVariant PeerTableModel::data(const QModelIndex &index, int role) const
         case Ping:
             return GUIUtil::formatPingTime(rec->nodeStats.m_min_ping_time);
         case Sent:
-            return GUIUtil::formatBytes(rec->nodeStats.nSendBytes);
+            return GUIUtil::formatBps(rec->nodeStats.nSendBytes / (GetSystemTimeInSeconds() + 1 - rec->nodeStats.nTimeConnected));
         case Received:
-            return GUIUtil::formatBytes(rec->nodeStats.nRecvBytes);
+            return GUIUtil::formatBps(rec->nodeStats.nRecvBytes / (GetSystemTimeInSeconds() + 1 - rec->nodeStats.nTimeConnected));
         case Subversion:
             return QString::fromStdString(rec->nodeStats.cleanSubVer);
         } // no default case, so the compiler can warn about missing cases
