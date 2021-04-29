@@ -27,15 +27,18 @@ static RPCHelpMan masternode_outputs()
     std::vector<COutput> vPossibleCoins;
     {
         LOCK(pwallet->cs_wallet);
-        pwallet->AvailableCoins(vPossibleCoins, true, nullptr, nMNCollateralRequired, nMNCollateralRequired, MAX_MONEY, 0, true);
+        pwallet->AvailableCoins(vPossibleCoins, true, nullptr, nMNCollateralRequired, nMNCollateralRequired, MAX_MONEY, 0, MAX_ASSET, MAX_ASSET, 0, true);
     }
 
-    UniValue obj(UniValue::VOBJ);
+    UniValue objArr(UniValue::VARR);
     for (const auto& out : vPossibleCoins) {
-        obj.pushKV(out.tx->GetHash().ToString(), strprintf("%d", out.i));
+        UniValue outObj(UniValue::VOBJ);
+        outObj.pushKV("txid", out.tx->GetHash().ToString());  
+        outObj.pushKV("index", out.i);
+        objArr.push_back(outObj);
     }
 
-    return obj;
+    return objArr;
 },
     };
 } 
