@@ -163,7 +163,7 @@ class TestP2PConn(P2PInterface):
     def on_wtxidrelay(self, message):
         self.last_wtxidrelay.append(message)
 
-    def announce_tx_and_wait_for_getdata(self, tx, timeout=60, success=True, use_wtxid=False):
+    def announce_tx_and_wait_for_getdata(self, tx, success=True, use_wtxid=False):
         if success:
             # sanity check
             assert (self.wtxidrelay and use_wtxid) or (not self.wtxidrelay and not use_wtxid)
@@ -177,11 +177,11 @@ class TestP2PConn(P2PInterface):
 
         if success:
             if use_wtxid:
-                self.wait_for_getdata([wtxid], timeout)
+                self.wait_for_getdata([wtxid])
             else:
-                self.wait_for_getdata([tx.sha256], timeout)
+                self.wait_for_getdata([tx.sha256])
         else:
-            time.sleep(timeout)
+            time.sleep(5)
             assert not self.last_message.get("getdata")
 
     def announce_block_and_wait_for_getdata(self, block, use_header, timeout=60):
@@ -604,7 +604,7 @@ class SegWitTest(SyscoinTestFramework):
 
         # Since we haven't delivered the tx yet, inv'ing the same tx from
         # a witness transaction ought not result in a getdata.
-        self.test_node.announce_tx_and_wait_for_getdata(tx, timeout=2, success=False)
+        self.test_node.announce_tx_and_wait_for_getdata(tx, success=False)
 
         # Delivering this transaction with witness should fail (no matter who
         # its from)
@@ -1464,7 +1464,7 @@ class SegWitTest(SyscoinTestFramework):
         self.std_node.announce_tx_and_wait_for_getdata(tx3)
         test_transaction_acceptance(self.nodes[1], self.std_node, tx3, with_witness=True, accepted=False, reason="bad-txns-nonstandard-inputs")
         # Now the node will no longer ask for getdata of this transaction when advertised by same txid
-        self.std_node.announce_tx_and_wait_for_getdata(tx3, timeout=5, success=False)
+        self.std_node.announce_tx_and_wait_for_getdata(tx3, success=False)
 
         # Spending a higher version witness output is not allowed by policy,
         # even with fRequireStandard=false.
