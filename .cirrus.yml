@@ -116,10 +116,10 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_msan.sh"
 
 task:
-  name: '[no depends, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer] [focal]'
+  name: '[no depends, sanitizers: address/leak (ASan + LSan) + undefined (UBSan) + integer] [hirsute]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
-    image: ubuntu:focal
+    image: ubuntu:hirsute
   env:
     FILE_ENV: "./ci/test/00_setup_env_native_asan.sh"
 
