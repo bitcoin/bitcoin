@@ -128,7 +128,6 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "quorum_sign",
     "gobject_getcurrentvotes",
     "gobject_submit",
-    "gobject_list_prepared",
     "protx_list_wallet",
     "protx_info_wallet",
     "protx_register",
