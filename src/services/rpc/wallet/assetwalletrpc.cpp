@@ -2433,11 +2433,11 @@ static RPCHelpMan getauxblock()
                             {RPCResult::Type::NUM, "coinbasevalue", "value of the block's coinbase"},
                             {RPCResult::Type::STR, "bits", "compressed target of the block"},
                             {RPCResult::Type::NUM, "height", "height of the block"},
-                            {RPCResult::Type::STR, "_target", "target in reversed byte order, deprecated"},
+                            {RPCResult::Type::STR_HEX, "_target", "target in reversed byte order, deprecated"},
                         },
                     },
                     RPCResult{"with arguments",
-                        RPCResult::Type::BOOL, "xxxxx", "whether the submitted block was correct"
+                        RPCResult::Type::BOOL, "", "whether the submitted block was correct"
                     },
                 },
                 RPCExamples{
@@ -2459,17 +2459,17 @@ static RPCHelpMan getauxblock()
     if (request.params.size() == 0)
     {
         const CScript coinbaseScript = g_mining_keys.GetCoinbaseScript(pwallet);
-        const UniValue res = AuxpowMiner::get().createAuxBlock(coinbaseScript, request.context);
+        const UniValue res = AuxpowMiner::get().createAuxBlock(request, coinbaseScript);
         g_mining_keys.AddBlockHash(pwallet, res["hash"].get_str ());
         return res;
     }
 
     /* Submit a block instead.  */
-    CHECK_NONFATAL(request.params.size() == 2);
+    assert(request.params.size() == 2);
     const std::string& hash = request.params[0].get_str();
 
     const bool fAccepted
-        = AuxpowMiner::get().submitAuxBlock(hash, request.params[1].get_str(), request.context);
+        = AuxpowMiner::get().submitAuxBlock(request, hash, request.params[1].get_str());
     if (fAccepted)
         g_mining_keys.MarkBlockSubmitted(pwallet, hash);
 

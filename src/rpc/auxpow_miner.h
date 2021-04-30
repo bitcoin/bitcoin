@@ -79,7 +79,8 @@ public:
    * to work on with the given address for the block reward and return the
    * necessary information for the miner to construct an auxpow for it.
    */
-  UniValue createAuxBlock (const CScript& scriptPubKey, const std::any& context);
+  UniValue createAuxBlock (const JSONRPCRequest& request,
+                           const CScript& scriptPubKey);
 
   /**
    * Performs the main work for the "submitauxblock" RPC:  Look up the block
@@ -87,8 +88,9 @@ public:
    * and try to submit it.  Returns true if all was successful and the block
    * was accepted.
    */
-  bool submitAuxBlock (const std::string& hashHex,
-                       const std::string& auxpowHex, const std::any& context) const;
+  bool submitAuxBlock (const JSONRPCRequest& request,
+                       const std::string& hashHex,
+                       const std::string& auxpowHex) const;
 
   /**
    * Returns the singleton instance of AuxpowMiner that is used for RPCs.

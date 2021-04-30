@@ -1349,7 +1349,7 @@ static RPCHelpMan createauxblock()
     }
     const CScript scriptPubKey = GetScriptForDestination(coinbaseScript);
 
-    return AuxpowMiner::get ().createAuxBlock(scriptPubKey, request.context);
+    return AuxpowMiner::get ().createAuxBlock(request, scriptPubKey);
 },
     };
 }
@@ -1372,8 +1372,8 @@ static RPCHelpMan submitauxblock()
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    return AuxpowMiner::get ().submitAuxBlock(request.params[0].get_str(),
-                                          request.params[1].get_str(), request.context);
+    return AuxpowMiner::get ().submitAuxBlock(request, request.params[0].get_str(),
+                                          request.params[1].get_str());
 },
     };
 }

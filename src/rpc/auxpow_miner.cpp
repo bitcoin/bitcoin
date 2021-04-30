@@ -21,10 +21,15 @@
 namespace
 {
 
-void auxMiningCheck(CConnman &connman)
+void auxMiningCheck(const JSONRPCRequest& request)
 {
+  NodeContext& node = EnsureAnyNodeContext (request.context);
+  if (!node.connman)
+    throw JSONRPCError (RPC_CLIENT_P2P_DISABLED,
+                        "Error: Peer-to-peer functionality missing or"
+                        " disabled");
 
-  if (connman.GetNodeCount (ConnectionDirection::Both) == 0
+  if (node.connman->GetNodeCount (ConnectionDirection::Both) == 0
         && !Params ().MineBlocksOnDemand ())
     throw JSONRPCError (RPC_CLIENT_NOT_CONNECTED,
                         "Syscoin is not connected!");
@@ -129,15 +134,13 @@ AuxpowMiner::lookupSavedBlock (const std::string& hashHex) const
 }
 
 UniValue
-AuxpowMiner::createAuxBlock (const CScript& scriptPubKey, const std::any& context)
+AuxpowMiner::createAuxBlock (const JSONRPCRequest& request,
+                             const CScript& scriptPubKey)
 {
-  NodeContext& node = EnsureAnyNodeContext(context);
-  if(!node.connman)
-      throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-  auxMiningCheck (*node.connman);
+  auxMiningCheck (request);
   LOCK (cs);
 
-  const auto& mempool = EnsureAnyMemPool (context);
+  const auto& mempool = EnsureAnyMemPool (request.context);
 
   uint256 target;
   const CBlock* pblock = getCurrentBlock (mempool, scriptPubKey, target);
@@ -156,13 +159,12 @@ AuxpowMiner::createAuxBlock (const CScript& scriptPubKey, const std::any& contex
 }
 
 bool
-AuxpowMiner::submitAuxBlock (const std::string& hashHex,
-                             const std::string& auxpowHex, const std::any& context) const
+AuxpowMiner::submitAuxBlock (const JSONRPCRequest& request,
+                             const std::string& hashHex,
+                             const std::string& auxpowHex) const
 {
-  NodeContext& node = EnsureAnyNodeContext(context);
-  if(!node.connman)
-      throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
-  auxMiningCheck (*node.connman);
+  auxMiningCheck (request);
+  auto& chainman = EnsureAnyChainman (request.context);
 
   std::shared_ptr<CBlock> shared_block;
   {
@@ -176,8 +178,9 @@ AuxpowMiner::submitAuxBlock (const std::string& hashHex,
   std::unique_ptr<CAuxPow> pow(new CAuxPow ());
   ss >> *pow;
   shared_block->SetAuxpow (std::move (pow));
-  CHECK_NONFATAL(shared_block->GetHash ().GetHex () == hashHex);
-  return EnsureAnyChainman(context).ProcessNewBlock (Params (), shared_block, true, nullptr);
+  assert (shared_block->GetHash ().GetHex () == hashHex);
+
+  return chainman.ProcessNewBlock (Params (), shared_block, true, nullptr);
 }
 
 AuxpowMiner&
