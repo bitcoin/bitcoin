@@ -1890,7 +1890,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
             const valtype& script_bytes = SpanPopBack(stack);
             exec_script = CScript(script_bytes.begin(), script_bytes.end());
             uint256 hash_exec_script;
-            CSHA256().Write(&exec_script[0], exec_script.size()).Finalize(hash_exec_script.begin());
+            CSHA256().Write(exec_script.data(), exec_script.size()).Finalize(hash_exec_script.begin());
             if (memcmp(hash_exec_script.begin(), program.data(), 32)) {
                 return set_error(serror, SCRIPT_ERR_WITNESS_PROGRAM_MISMATCH);
             }

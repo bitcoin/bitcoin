@@ -273,7 +273,7 @@ CScript ConsumeScript(FuzzedDataProvider& fuzzed_data_provider, const size_t max
     CScript r_script{b.begin(), b.end()};
     if (maybe_p2wsh && fuzzed_data_provider.ConsumeBool()) {
         uint256 script_hash;
-        CSHA256().Write(&r_script[0], r_script.size()).Finalize(script_hash.begin());
+        CSHA256().Write(r_script.data(), r_script.size()).Finalize(script_hash.begin());
         r_script.clear();
         r_script << OP_0 << ToByteVector(script_hash);
     }

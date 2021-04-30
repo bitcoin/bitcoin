@@ -167,7 +167,7 @@ static bool SignStep(const SigningProvider& provider, const BaseSignatureCreator
         return true;
 
     case TxoutType::WITNESS_V0_SCRIPTHASH:
-        CRIPEMD160().Write(&vSolutions[0][0], vSolutions[0].size()).Finalize(h160.begin());
+        CRIPEMD160().Write(vSolutions[0].data(), vSolutions[0].size()).Finalize(h160.begin());
         if (GetCScript(provider, sigdata, CScriptID{h160}, scriptRet)) {
             ret.push_back(std::vector<unsigned char>(scriptRet.begin(), scriptRet.end()));
             return true;

@@ -45,7 +45,7 @@ int main()
     stream << vanillaSpendTx;
 
     bitcoinconsensus_error err;
-    auto op0Result = bitcoinconsensus_verify_script_with_amount(pubKeyScript.data(), pubKeyScript.size(), amount, (const unsigned char*)&stream[0], stream.size(), 0, bitcoinconsensus_SCRIPT_FLAGS_VERIFY_ALL, &err);
+    auto op0Result = bitcoinconsensus_verify_script_with_amount(pubKeyScript.data(), pubKeyScript.size(), amount, stream.data(), stream.size(), 0, bitcoinconsensus_SCRIPT_FLAGS_VERIFY_ALL, &err);
     std::cout << "Op0 result: " << op0Result << ", error code " << err << std::endl;
 
     getchar();

@@ -155,10 +155,10 @@ void DoTest(const CScript& scriptPubKey, const CScript& scriptSig, const CScript
     if (libconsensus_flags == flags) {
         int expectedSuccessCode = expect ? 1 : 0;
         if (flags & bitcoinconsensus_SCRIPT_FLAGS_VERIFY_WITNESS) {
-            BOOST_CHECK_MESSAGE(bitcoinconsensus_verify_script_with_amount(scriptPubKey.data(), scriptPubKey.size(), txCredit.vout[0].nValue, (const unsigned char*)&stream[0], stream.size(), 0, libconsensus_flags, nullptr) == expectedSuccessCode, message);
+            BOOST_CHECK_MESSAGE(bitcoinconsensus_verify_script_with_amount(scriptPubKey.data(), scriptPubKey.size(), txCredit.vout[0].nValue, stream.data(), stream.size(), 0, libconsensus_flags, nullptr) == expectedSuccessCode, message);
         } else {
-            BOOST_CHECK_MESSAGE(bitcoinconsensus_verify_script_with_amount(scriptPubKey.data(), scriptPubKey.size(), 0, (const unsigned char*)&stream[0], stream.size(), 0, libconsensus_flags, nullptr) == expectedSuccessCode, message);
-            BOOST_CHECK_MESSAGE(bitcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), 0, libconsensus_flags, nullptr) == expectedSuccessCode, message);
+            BOOST_CHECK_MESSAGE(bitcoinconsensus_verify_script_with_amount(scriptPubKey.data(), scriptPubKey.size(), 0, stream.data(), stream.size(), 0, libconsensus_flags, nullptr) == expectedSuccessCode, message);
+            BOOST_CHECK_MESSAGE(bitcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), stream.data(), stream.size(), 0, libconsensus_flags, nullptr) == expectedSuccessCode, message);
         }
     }
 #endif
@@ -224,7 +224,7 @@ struct KeyData
         pubkey0 = key0.GetPubKey();
         pubkey0H = key0.GetPubKey();
         pubkey0C = key0C.GetPubKey();
-        *const_cast<unsigned char*>(&pubkey0H[0]) = 0x06 | (pubkey0H[64] & 1);
+        *const_cast<unsigned char*>(pubkey0H.data()) = 0x06 | (pubkey0H[64] & 1);
 
         key1.Set(vchKey1, vchKey1 + 32, false);
         key1C.Set(vchKey1, vchKey1 + 32, true);
@@ -290,7 +290,7 @@ public:
         } else if (wm == WitnessMode::SH) {
             witscript = scriptPubKey;
             uint256 hash;
-            CSHA256().Write(&witscript[0], witscript.size()).Finalize(hash.begin());
+            CSHA256().Write(witscript.data(), witscript.size()).Finalize(hash.begin());
             scriptPubKey = CScript() << witnessversion << ToByteVector(hash);
         }
         if (P2SH) {
@@ -774,7 +774,7 @@ BOOST_AUTO_TEST_CASE(script_build)
     {
         CScript witscript = CScript() << ToByteVector(keys.pubkey0);
         uint256 hash;
-        CSHA256().Write(&witscript[0], witscript.size()).Finalize(hash.begin());
+        CSHA256().Write(witscript.data(), witscript.size()).Finalize(hash.begin());
         std::vector<unsigned char> hashBytes = ToByteVector(hash);
         hashBytes.pop_back();
         tests.push_back(TestBuilder(CScript() << OP_0 << hashBytes,
@@ -1520,7 +1520,7 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_returns_true)
     stream << spendTx;
 
     bitcoinconsensus_error err;
-    int result = bitcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
+    int result = bitcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), stream.data(), stream.size(), nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 1);
     BOOST_CHECK_EQUAL(err, bitcoinconsensus_ERR_OK);
 }
@@ -1543,7 +1543,7 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_tx_index_err)
     stream << spendTx;
 
     bitcoinconsensus_error err;
-    int result = bitcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
+    int result = bitcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), stream.data(), stream.size(), nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 0);
     BOOST_CHECK_EQUAL(err, bitcoinconsensus_ERR_TX_INDEX);
 }
@@ -1566,7 +1566,7 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_tx_size)
     stream << spendTx;
 
     bitcoinconsensus_error err;
-    int result = bitcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size() * 2, nIn, libconsensus_flags, &err);
+    int result = bitcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), stream.data(), stream.size() * 2, nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 0);
     BOOST_CHECK_EQUAL(err, bitcoinconsensus_ERR_TX_SIZE_MISMATCH);
 }
@@ -1589,7 +1589,7 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_tx_serialization)
     stream << 0xffffffff;
 
     bitcoinconsensus_error err;
-    int result = bitcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
+    int result = bitcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), stream.data(), stream.size(), nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 0);
     BOOST_CHECK_EQUAL(err, bitcoinconsensus_ERR_TX_DESERIALIZE);
 }
@@ -1612,7 +1612,7 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_amount_required_err)
     stream << spendTx;
 
     bitcoinconsensus_error err;
-    int result = bitcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
+    int result = bitcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), stream.data(), stream.size(), nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 0);
     BOOST_CHECK_EQUAL(err, bitcoinconsensus_ERR_AMOUNT_REQUIRED);
 }
@@ -1635,7 +1635,7 @@ BOOST_AUTO_TEST_CASE(bitcoinconsensus_verify_script_invalid_flags)
     stream << spendTx;
 
     bitcoinconsensus_error err;
-    int result = bitcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), (const unsigned char*)&stream[0], stream.size(), nIn, libconsensus_flags, &err);
+    int result = bitcoinconsensus_verify_script(scriptPubKey.data(), scriptPubKey.size(), stream.data(), stream.size(), nIn, libconsensus_flags, &err);
     BOOST_CHECK_EQUAL(result, 0);
     BOOST_CHECK_EQUAL(err, bitcoinconsensus_ERR_INVALID_FLAGS);
 }
@@ -1733,7 +1733,7 @@ BOOST_AUTO_TEST_CASE(script_assets_test)
     size_t length = file.tellg();
     file.seekg(0, std::ios::beg);
     std::string data(length, '\0');
-    file.read(&data[0], data.size());
+    file.read(data.data(), data.size());
     UniValue tests = read_json(data);
     BOOST_CHECK(tests.isArray());
     BOOST_CHECK(tests.size() > 0);
