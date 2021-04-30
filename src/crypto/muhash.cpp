@@ -341,6 +341,6 @@ MuHash3072& MuHash3072::Insert(Span<const unsigned char> in) noexcept {
 }
 
 MuHash3072& MuHash3072::Remove(Span<const unsigned char> in) noexcept {
-    m_numerator.Divide(ToNum3072(in));
+    m_denominator.Multiply(ToNum3072(in));
     return *this;
 }

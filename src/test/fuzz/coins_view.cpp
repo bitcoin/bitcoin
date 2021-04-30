@@ -258,10 +258,10 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
                 (void)GetTransactionSigOpCost(transaction, coins_view_cache, flags);
             },
             [&] {
-                CCoinsStats stats;
+                CCoinsStats stats{CoinStatsHashType::HASH_SERIALIZED};
                 bool expected_code_path = false;
                 try {
-                    (void)GetUTXOStats(&coins_view_cache, WITH_LOCK(::cs_main, return std::ref(g_chainman.m_blockman)), stats, CoinStatsHashType::HASH_SERIALIZED);
+                    (void)GetUTXOStats(&coins_view_cache, WITH_LOCK(::cs_main, return std::ref(g_chainman.m_blockman)), stats);
                 } catch (const std::logic_error&) {
                     expected_code_path = true;
                 }
