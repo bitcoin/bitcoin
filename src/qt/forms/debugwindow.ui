@@ -791,6 +791,9 @@
              <property name="tabKeyNavigation">
               <bool>false</bool>
              </property>
+             <property name="alternatingRowColors">
+              <bool>true</bool>
+             </property>
              <property name="textElideMode">
               <enum>Qt::ElideMiddle</enum>
              </property>
@@ -846,6 +849,9 @@
             <widget class="QTableView" name="banlistWidget">
              <property name="tabKeyNavigation">
               <bool>false</bool>
+             </property>
+             <property name="alternatingRowColors">
+              <bool>true</bool>
              </property>
              <property name="sortingEnabled">
               <bool>true</bool>
