@@ -10,7 +10,5 @@ CContract::CContract(std::string txnID, std::string hash, std::string iCode, std
     createdBy = iCreatedBy;
     balance = initialBalance;
     contractAddress = address;
-
-
 }
 

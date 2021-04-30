@@ -1,8 +1,0 @@
-// IMPLEMENTATION BUILD HEADER
-#ifndef _UINT256_T_BUILD
-  #define _UINT256_T_BUILD
-  #include "uint256_t_config.include"
-  #define UINT256_T_EXTERN _UINT256_T_EXPORT
-#endif
-#include "uint128_t.include"
-

@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include <amount.h>
-#include <uint256.h>
 #include <sqlite/sqlite3.h>
 #include "random.h"
 
@@ -23,7 +22,7 @@ public:
     int64_t balance;
 
 
-    CContract(std::string txnID, std::string, std::string iCode, std::string iCreatedBy, int64_t initialBalance, std::string address);
+    CContract(std::string txnID, std::string hash, std::string iCode, std::string iCreatedBy, int64_t initialBalance, std::string address);
 };
 
 
