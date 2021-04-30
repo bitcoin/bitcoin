@@ -57,6 +57,7 @@ struct CConnmanTest : public CConnman {
         return InitBinds(binds, white_binds, onion_binds);
     }
 
+    void SocketHandlerPublic() { SocketHandler(); }
 };
 
 FUZZ_TARGET_INIT(connman, initialize_connman)
@@ -218,6 +219,9 @@ FUZZ_TARGET_INIT(connman, initialize_connman)
                 }
 
                 connman.InitBindsPublic(binds, white_binds, onion_binds);
+            },
+            [&] {
+                connman.SocketHandlerPublic();
             });
     }
     (void)connman.GetAddedNodeInfo();
