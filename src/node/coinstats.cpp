@@ -133,7 +133,7 @@ bool GetUTXOStats(CCoinsView* view, BlockManager& blockman, CCoinsStats& stats, 
 {
     switch (hash_type) {
     case(CoinStatsHashType::HASH_SERIALIZED): {
-        CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
+        CHashWriter ss(PROTOCOL_VERSION);
         return GetUTXOStats(view, blockman, stats, ss, interruption_point);
     }
     case(CoinStatsHashType::MUHASH): {

@@ -12,7 +12,7 @@
 
 #include <netaddress.h>
 #include <primitives/transaction.h>
-#include <serialize.h>
+#include <serialize.h> // For SER_GETHASH
 #include <uint256.h>
 #include <version.h>
 

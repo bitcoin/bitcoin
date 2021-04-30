@@ -8,7 +8,6 @@
 #include <key_io.h>          // For DecodeDestination()
 #include <pubkey.h>          // For CPubKey
 #include <script/standard.h> // For CTxDestination, IsValidDestination(), PKHash
-#include <serialize.h>       // For SER_GETHASH
 #include <util/message.h>
 #include <util/strencodings.h> // For DecodeBase64()
 
@@ -71,7 +70,7 @@ bool MessageSign(
 
 uint256 MessageHash(const std::string& message)
 {
-    CHashWriter hasher(SER_GETHASH, 0);
+    CHashWriter hasher;
     hasher << MESSAGE_MAGIC << message;
 
     return hasher.GetHash();

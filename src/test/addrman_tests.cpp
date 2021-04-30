@@ -460,8 +460,8 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket_legacy)
 
     CAddrInfo info1 = CAddrInfo(addr1, source1);
 
-    uint256 nKey1 = (uint256)(CHashWriter(SER_GETHASH, 0) << 1).GetHash();
-    uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
+    uint256 nKey1 = (uint256)(CHashWriter() << 1).GetHash();
+    uint256 nKey2 = (uint256)(CHashWriter() << 2).GetHash();
 
     std::vector<bool> asmap; // use /16
 
@@ -514,8 +514,8 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket_legacy)
 
     CAddrInfo info1 = CAddrInfo(addr1, source1);
 
-    uint256 nKey1 = (uint256)(CHashWriter(SER_GETHASH, 0) << 1).GetHash();
-    uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
+    uint256 nKey1 = (uint256)(CHashWriter() << 1).GetHash();
+    uint256 nKey2 = (uint256)(CHashWriter() << 2).GetHash();
 
     std::vector<bool> asmap; // use /16
 
@@ -593,8 +593,8 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_tried_bucket)
 
     CAddrInfo info1 = CAddrInfo(addr1, source1);
 
-    uint256 nKey1 = (uint256)(CHashWriter(SER_GETHASH, 0) << 1).GetHash();
-    uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
+    uint256 nKey1 = (uint256)(CHashWriter() << 1).GetHash();
+    uint256 nKey2 = (uint256)(CHashWriter() << 2).GetHash();
 
     std::vector<bool> asmap = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
 
@@ -647,8 +647,8 @@ BOOST_AUTO_TEST_CASE(caddrinfo_get_new_bucket)
 
     CAddrInfo info1 = CAddrInfo(addr1, source1);
 
-    uint256 nKey1 = (uint256)(CHashWriter(SER_GETHASH, 0) << 1).GetHash();
-    uint256 nKey2 = (uint256)(CHashWriter(SER_GETHASH, 0) << 2).GetHash();
+    uint256 nKey1 = (uint256)(CHashWriter() << 1).GetHash();
+    uint256 nKey2 = (uint256)(CHashWriter() << 2).GetHash();
 
     std::vector<bool> asmap = FromBytes(asmap_raw, sizeof(asmap_raw) * 8);
 

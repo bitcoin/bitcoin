@@ -11,7 +11,7 @@
 #include <crypto/ripemd160.h>
 #include <crypto/sha256.h>
 #include <prevector.h>
-#include <serialize.h>
+#include <serialize.h> // For Serialize, Unserialize, SER_GETHASH
 #include <uint256.h>
 #include <version.h>
 
@@ -106,6 +106,8 @@ private:
     const int nVersion;
 public:
 
+    CHashWriter() : CHashWriter(SER_GETHASH, 0) {}
+    CHashWriter(int nVersionIn) : CHashWriter(SER_GETHASH, nVersionIn) {}
     CHashWriter(int nTypeIn, int nVersionIn) : nType(nTypeIn), nVersion(nVersionIn) {}
 
     int GetType() const { return nType; }
@@ -189,9 +191,9 @@ public:
 
 /** Compute the 256-bit hash of an object's serialization. */
 template<typename T>
-uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL_VERSION)
+uint256 SerializeHash(const T& obj, int nVersion=PROTOCOL_VERSION)
 {
-    CHashWriter ss(nType, nVersion);
+    CHashWriter ss(nVersion);
     ss << obj;
     return ss.GetHash();
 }

@@ -1367,7 +1367,7 @@ public:
 template <class T>
 uint256 GetPrevoutsSHA256(const T& txTo)
 {
-    CHashWriter ss(SER_GETHASH, 0);
+    CHashWriter ss;
     for (const auto& txin : txTo.vin) {
         ss << txin.prevout;
     }
@@ -1378,7 +1378,7 @@ uint256 GetPrevoutsSHA256(const T& txTo)
 template <class T>
 uint256 GetSequencesSHA256(const T& txTo)
 {
-    CHashWriter ss(SER_GETHASH, 0);
+    CHashWriter ss;
     for (const auto& txin : txTo.vin) {
         ss << txin.nSequence;
     }
@@ -1389,7 +1389,7 @@ uint256 GetSequencesSHA256(const T& txTo)
 template <class T>
 uint256 GetOutputsSHA256(const T& txTo)
 {
-    CHashWriter ss(SER_GETHASH, 0);
+    CHashWriter ss;
     for (const auto& txout : txTo.vout) {
         ss << txout;
     }
@@ -1399,7 +1399,7 @@ uint256 GetOutputsSHA256(const T& txTo)
 /** Compute the (single) SHA256 of the concatenation of all amounts spent by a tx. */
 uint256 GetSpentAmountsSHA256(const std::vector<CTxOut>& outputs_spent)
 {
-    CHashWriter ss(SER_GETHASH, 0);
+    CHashWriter ss;
     for (const auto& txout : outputs_spent) {
         ss << txout.nValue;
     }
@@ -1409,7 +1409,7 @@ uint256 GetSpentAmountsSHA256(const std::vector<CTxOut>& outputs_spent)
 /** Compute the (single) SHA256 of the concatenation of all scriptPubKeys spent by a tx. */
 uint256 GetSpentScriptsSHA256(const std::vector<CTxOut>& outputs_spent)
 {
-    CHashWriter ss(SER_GETHASH, 0);
+    CHashWriter ss;
     for (const auto& txout : outputs_spent) {
         ss << txout.scriptPubKey;
     }
@@ -1569,7 +1569,7 @@ bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata
     // Data about the output (if only one).
     if (output_type == SIGHASH_SINGLE) {
         if (in_pos >= tx_to.vout.size()) return false;
-        CHashWriter sha_single_output(SER_GETHASH, 0);
+        CHashWriter sha_single_output;
         sha_single_output << tx_to.vout[in_pos];
         ss << sha_single_output.GetSHA256();
     }
@@ -1610,12 +1610,12 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
         if ((nHashType & 0x1f) != SIGHASH_SINGLE && (nHashType & 0x1f) != SIGHASH_NONE) {
             hashOutputs = cacheready ? cache->hashOutputs : SHA256Uint256(GetOutputsSHA256(txTo));
         } else if ((nHashType & 0x1f) == SIGHASH_SINGLE && nIn < txTo.vout.size()) {
-            CHashWriter ss(SER_GETHASH, 0);
+            CHashWriter ss;
             ss << txTo.vout[nIn];
             hashOutputs = ss.GetHash();
         }
 
-        CHashWriter ss(SER_GETHASH, 0);
+        CHashWriter ss;
         // Version
         ss << txTo.nVersion;
         // Input prevouts/nSequence (none/all, depending on flags)
@@ -1650,7 +1650,7 @@ uint256 SignatureHash(const CScript& scriptCode, const T& txTo, unsigned int nIn
     CTransactionSignatureSerializer<T> txTmp(txTo, scriptCode, nIn, nHashType);
 
     // Serialize and hash
-    CHashWriter ss(SER_GETHASH, 0);
+    CHashWriter ss;
     ss << txTmp << nHashType;
     return ss.GetHash();
 }
@@ -1912,7 +1912,7 @@ static bool VerifyWitnessProgram(const CScriptWitness& witness, int witversion, 
         if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
             // Drop annex (this is non-standard; see IsWitnessStandard)
             const valtype& annex = SpanPopBack(stack);
-            execdata.m_annex_hash = (CHashWriter(SER_GETHASH, 0) << annex).GetSHA256();
+            execdata.m_annex_hash = (CHashWriter() << annex).GetSHA256();
             execdata.m_annex_present = true;
         } else {
             execdata.m_annex_present = false;
