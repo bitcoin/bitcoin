@@ -1814,7 +1814,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // may have let in a block that violates the rule prior to updating the
     // software, and we would NOT be enforcing the rule here. Fully solving
     // upgrade from one software version to the next after a consensus rule
-    // change is potentially tricky and issue-specific (see RewindBlockIndex()
+    // change is potentially tricky and issue-specific (see NeedsRedownload()
     // for one general approach that was used for BIP 141 deployment).
     // Also, currently the rule against blocks more than 2 hours in the future
     // is enforced in ContextualCheckBlockHeader(); we wouldn't want to
@@ -5228,8 +5228,9 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
         }
         index->nChainTx = index->pprev ? index->pprev->nChainTx + index->nTx : 1;
 
-        // We need to fake this flag so that CChainState::RewindBlockIndex()
-        // won't try to rewind the entire assumed-valid chain on startup.
+        // We need to fake this flag so that CChainState::NeedsRedownload()
+        // won't try to direct the user to restart with -reindex and redownload
+        // the entire assumed-valid chain on startup.
         if (index->pprev && ::IsWitnessEnabled(index->pprev, ::Params().GetConsensus())) {
             index->nStatus |= BLOCK_OPT_WITNESS;
         }
