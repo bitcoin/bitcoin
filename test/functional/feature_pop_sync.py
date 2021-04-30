@@ -38,11 +38,12 @@ class PoPSync(BitcoinTestFramework):
     def _check_pop_sync(self):
         self.log.info("running _check_pop_sync()")
         height = self.nodes[0].getblockcount()
+        topheight = height + 52
         addr0 = self.nodes[0].getnewaddress()
         addr1 = self.nodes[1].getnewaddress()
         addr2 = self.nodes[2].getnewaddress()
 
-        while height < 52:
+        while height < topheight:
             self.nodes[0].generate(nblocks=1)
             # endorse every block
             self.nodes[2].waitforblockheight(height)
