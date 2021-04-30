@@ -3,7 +3,7 @@ name: "syscoin-core-osx-4.2"
 enable_cache: true
 distro: "ubuntu"
 suites:
-- "bionic"
+- "focal"
 architectures:
 - "amd64"
 packages:
@@ -26,6 +26,7 @@ packages:
 - "python3-setuptools"
 - "fonts-tuffy"
 - "xorriso"
+- "libtinfo5"
 remotes:
 - "url": "https://github.com/syscoin/syscoin.git"
   "dir": "syscoin"
