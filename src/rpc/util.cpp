@@ -99,7 +99,7 @@ UniValue ValueFromAssetAmount(const CAmount& amount,int precision)
     int64_t remainder = 0;
     std::string strPrecision = "0";
     if (precision > 0) {
-        divByAmount = powf(10.0, precision);
+        divByAmount = pow(10.0, precision);
         quotient = n_abs / divByAmount;
         remainder = n_abs % divByAmount;
         strPrecision = itostr(precision);
