@@ -1031,7 +1031,7 @@ void CSigSharesManager::CollectSigSharesToSendConcentrated(std::unordered_map<No
         }
 
         if (curTime >= p.second.nextAttemptTime) {
-            int64_t waitTime = exp2(p.second.attempt) * EXP_SEND_FOR_RECOVERY_TIMEOUT;
+            int64_t waitTime = exp2f(p.second.attempt) * EXP_SEND_FOR_RECOVERY_TIMEOUT;
             waitTime = std::min(MAX_SEND_FOR_RECOVERY_TIMEOUT, waitTime);
             p.second.nextAttemptTime = curTime + waitTime;
             auto dmn = SelectMemberForRecovery(p.second.quorum, p.second.sigShare.id, p.second.attempt);
