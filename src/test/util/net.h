@@ -55,6 +55,11 @@ struct ConnmanTestMsg : public CConnman {
         return InitBinds(options);
     }
 
+    void SocketHandlerPublic()
+    {
+        SocketHandler();
+    }
+
     void Handshake(CNode& node,
                    bool successfully_connected,
                    ServiceFlags remote_services,

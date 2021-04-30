@@ -189,6 +189,9 @@ FUZZ_TARGET(connman, .init = initialize_connman)
                                       options.onion_binds.empty();
 
                 connman.InitBindsPublic(options);
+            },
+            [&] {
+                connman.SocketHandlerPublic();
             });
     }
     (void)connman.GetAddedNodeInfo();
