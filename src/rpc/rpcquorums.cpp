@@ -37,8 +37,6 @@ static RPCHelpMan quorum_list()
     [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
 
-    LOCK(cs_main);
-
     int count = -1;
     if (!request.params[0].isNull()) {
         count = request.params[0].get_int();
@@ -46,13 +44,17 @@ static RPCHelpMan quorum_list()
             throw JSONRPCError(RPC_INVALID_PARAMETER, "count can't be negative");
         }
     }
-
+    CBlockIndex* pindexTip;
+    {
+        LOCK(cs_main);
+        pindexTip = ::ChainActive().Tip();
+    }
     UniValue ret(UniValue::VOBJ);
 
     for (auto& p : Params().GetConsensus().llmqs) {
         UniValue v(UniValue::VARR);
         std::vector<llmq::CQuorumCPtr> quorums;
-        llmq::quorumManager->ScanQuorums(p.first, ::ChainActive().Tip(), count > -1 ? count : p.second.signingActiveQuorumCount, quorums);
+        llmq::quorumManager->ScanQuorums(p.first, pindexTip, count > -1 ? count : p.second.signingActiveQuorumCount, quorums);
         for (auto& q : quorums) {
             v.push_back(q->qc->quorumHash.ToString());
         }
@@ -168,9 +170,12 @@ static RPCHelpMan quorum_dkgstatus()
     llmq::quorumDKGDebugManager->GetLocalDebugStatus(status);
 
     auto ret = status.ToJson(detailLevel);
-
-    LOCK(cs_main);
-    int tipHeight = ::ChainActive().Height();
+    CBlockIndex* pindexTip;
+    {
+        LOCK(cs_main);
+        pindexTip = ::ChainActive().Tip();
+    }
+    int tipHeight = pindexTip->nHeight;
 
     UniValue minableCommitments(UniValue::VOBJ);
     UniValue quorumConnections(UniValue::VOBJ);
@@ -182,7 +187,11 @@ static RPCHelpMan quorum_dkgstatus()
         auto& params = p.second;
 
         if (fMasternodeMode) {
-            const CBlockIndex* pindexQuorum = ::ChainActive()[tipHeight - (tipHeight % params.dkgInterval)];
+            const CBlockIndex* pindexQuorum;
+            {
+                LOCK(cs_main);
+                pindexQuorum = ::ChainActive()[tipHeight - (tipHeight % params.dkgInterval)];
+            }
             if(!pindexQuorum)
                 continue;
             auto allConnections = llmq::CLLMQUtils::GetQuorumConnections(params.type, pindexQuorum, activeMasternodeInfo.proTxHash, false);
@@ -209,7 +218,7 @@ static RPCHelpMan quorum_dkgstatus()
             }
             quorumConnections.pushKV(params.name, arr);
         }
-
+        LOCK(cs_main);
         llmq::CFinalCommitment fqc;
         if (llmq::quorumBlockProcessor->GetMinableCommitment(params.type, tipHeight, fqc)) {
             if(!fqc.IsNull()) {
