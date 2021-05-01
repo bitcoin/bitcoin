@@ -56,7 +56,7 @@ Working macOS DMGs are created in Linux by combining a recent `clang`, the Apple
 
 Apple uses `clang` extensively for development and has upstreamed the necessary
 functionality so that a vanilla clang can take advantage. It supports the use of `-F`,
-`-target`, `-mmacosx-version-min`, and `--sysroot`, which are all necessary when
+`-target`, `-mmacosx-version-min`, and `-isysroot`, which are all necessary when
 building for macOS.
 
 Apple's version of `binutils` (called `cctools`) contains lots of functionality missing in the
