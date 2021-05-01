@@ -1387,8 +1387,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         };
         bilingual_str strLoadError;
 
-        uiInterface.InitMessage(_("Loading block index...").translated);
-
         do {
             const int64_t load_block_index_start_time = GetTimeMillis();
             try {
