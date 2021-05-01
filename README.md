@@ -1,41 +1,38 @@
-Bitcoin Core integration/staging tree
+Xbitcoin Core integration/staging tree
 =====================================
 
-https://bitcoincore.org
+https://Xbitcc.com/
 
-For an immediately usable, binary version of the Bitcoin Core software, see
-https://bitcoincore.org/en/download/.
 
-Further information about Bitcoin Core is available in the [doc folder](/doc).
+For an immediately usable, binary version of the Xbitcoin Core software, see
+https://Xbitcc.com/en/download/.
 
-What is Bitcoin?
+Further information about Xbitcoin Core is available in the [doc folder](/doc).
+
+What is Xbitcoin?
 ----------------
 
-Bitcoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Bitcoin uses peer-to-peer technology to operate
+Xbitcoin is an experimental digital currency that enables instant payments to
+anyone, anywhere in the world. Xbitcoin uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Bitcoin Core is the name of open source
+out collectively by the network. Xbitcoin Core is the name of open source
 software which enables the use of this currency.
 
-For more information read the original Bitcoin whitepaper.
+For more information read the original Xbitcoin whitepaper.
 
 License
 -------
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+Xbitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/licenses/MIT.
 
 Development Process
 -------------------
 
 The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly from release branches to indicate new official, stable release versions of Bitcoin Core.
+completely stable. [Tags](https://github.com/Xbitcoin/Xbitcoin/tags) are created
+regularly from release branches to indicate new official, stable release versions of Xbitcoin Core.
 
-The https://github.com/bitcoin-core/gui repository is used exclusively for the
-development of the GUI. Its master branch is identical in all monotree
-repositories. Release branches and tags do not exist, so please do not fork
-that repository unless it is for development reasons.
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
 and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
@@ -73,7 +70,7 @@ Translations
 ------------
 
 Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://www.transifex.com/bitcoin/bitcoin/).
+[Xbitcoin Core's Transifex page](https://www.transifex.com/Xbitcoin/Xbitcoin/).
 
 Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.
