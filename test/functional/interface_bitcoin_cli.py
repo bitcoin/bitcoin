@@ -151,7 +151,7 @@ class TestBitcoinCli(BitcoinTestFramework):
             assert_equal(cli_get_info['balance'], amounts[1])
 
             self.log.info("Test -getinfo with -rpcwallet=unloaded wallet returns no balances")
-            cli_get_info = self.nodes[0].cli('-getinfo', rpcwallet3).send_cli()
+            cli_get_info_keys = self.nodes[0].cli('-getinfo', rpcwallet3).send_cli().keys()
             assert 'balance' not in cli_get_info_keys
             assert 'balances' not in cli_get_info_keys
 
