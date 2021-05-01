@@ -96,13 +96,12 @@ static void FundSpecialTx(CWallet& pwallet, CMutableTransaction& tx, const Speci
         if (!coinControl.HasSelected()) {
             throw JSONRPCError(RPC_INTERNAL_ERROR, "No funds at specified address");
         }
-        CCoinControl coin_control;
         CAmount nFeeRequired = 0;
         int nChangePosRet = -1;
         bilingual_str error;
         CTransactionRef wtx;
         FeeCalculation fee_calc_out;
-        bool fCreated = pwallet.CreateTransaction(vecSend, wtx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out);
+        bool fCreated = pwallet.CreateTransaction(vecSend, wtx, nFeeRequired, nChangePosRet, error, coinControl, fee_calc_out);
         if (!fCreated)
             throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
 
