@@ -13,7 +13,6 @@
 extern RecursiveMutex cs_main;
 class CNode;
 class CConnman;
-class CEvoDB;
 class PeerManager;
 class BlockValidationState;
 namespace llmq
