@@ -100,8 +100,6 @@ TransactionError BroadcastTransaction(NodeContext& node, const CTransactionRef t
         // the mempool tracks locally submitted transactions to make a
         // best-effort of initial broadcast
         node.mempool->AddUnbroadcastTx(hashTx);
-
-        LOCK(cs_main);
         node.peerman->RelayTransaction(hashTx, tx->GetWitnessHash());
     }
 

@@ -7,15 +7,12 @@
 #define BITCOIN_NET_PROCESSING_H
 
 #include <net.h>
-#include <sync.h>
 #include <validationinterface.h>
 
 class CAddrMan;
 class CChainParams;
 class CTxMemPool;
 class ChainstateManager;
-
-extern RecursiveMutex cs_main;
 
 /** Default for -maxorphantx, maximum number of orphan transactions kept in memory */
 static const unsigned int DEFAULT_MAX_ORPHAN_TRANSACTIONS = 100;
@@ -49,8 +46,7 @@ public:
     virtual bool IgnoresIncomingTxs() = 0;
 
     /** Relay transaction to all peers. */
-    virtual void RelayTransaction(const uint256& txid, const uint256& wtxid)
-        EXCLUSIVE_LOCKS_REQUIRED(cs_main) = 0;
+    virtual void RelayTransaction(const uint256& txid, const uint256& wtxid) = 0;
 
     /** Send ping message to all peers */
     virtual void SendPings() = 0;
