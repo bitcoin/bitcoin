@@ -1,37 +1,37 @@
-Xbitcoin Core integration/staging tree
+Xbit Coin Core integration/staging tree
 =====================================
 
 https://Xbitcc.com/
 
 
-For an immediately usable, binary version of the Xbitcoin Core software, see
+For an immediately usable, binary version of the Xbit Coin Core software, see
 https://Xbitcc.com/en/download/.
 
-Further information about Xbitcoin Core is available in the [doc folder](/doc).
+Further information about Xbit Coin Core is available in the [doc folder](/doc).
 
-What is Xbitcoin?
+What is Xbit Coin?
 ----------------
 
-Xbitcoin is an experimental digital currency that enables instant payments to
-anyone, anywhere in the world. Xbitcoin uses peer-to-peer technology to operate
+Xbit Coin is an experimental digital currency that enables instant payments to
+anyone, anywhere in the world. Xbit Coin uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
-out collectively by the network. Xbitcoin Core is the name of open source
+out collectively by the network. Xbit Coin Core is the name of open source
 software which enables the use of this currency.
 
-For more information read the original Xbitcoin whitepaper.
+For more information read the original Xbit Coin whitepaper.
 
 License
 -------
 
-Xbitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
+Xbit Coin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
 information or see https://opensource.org/licenses/MIT.
 
 Development Process
 -------------------
 
 The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
-completely stable. [Tags](https://github.com/Xbitcoin/Xbitcoin/tags) are created
-regularly from release branches to indicate new official, stable release versions of Xbitcoin Core.
+completely stable. [Tags](https://github.com/Xbit Coin/Xbit Coin/tags) are created
+regularly from release branches to indicate new official, stable release versions of Xbit Coin Core.
 
 
 The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
@@ -70,7 +70,7 @@ Translations
 ------------
 
 Changes to translations as well as new translations can be submitted to
-[Xbitcoin Core's Transifex page](https://www.transifex.com/Xbitcoin/Xbitcoin/).
+[Xbit Coin Core's Transifex page](https://www.transifex.com/Xbit Coin/Xbit Coin/).
 
 Translations are periodically pulled from Transifex and merged into the git repository. See the
 [translation process](doc/translation_process.md) for details on how this works.
