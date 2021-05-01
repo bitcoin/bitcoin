@@ -1654,6 +1654,30 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 if(fAssetIndex) {
                     LogPrintf("Asset Index enabled, allowing for an asset aware spending policy\n");
                 }
+                fReindexGeth = fReindex || fReindexChainState; 
+                passetdb.reset();
+                pethereumtxrootsdb.reset();
+                pethereumtxmintdb.reset();
+                pblockindexdb.reset();
+                llmq::DestroyLLMQSystem();
+                evoDb.reset();
+                evoDb.reset(new CEvoDB(nEvoDbCache, false, fReindexGeth));
+                deterministicMNManager.reset();
+                deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
+                llmq::InitLLMQSystem(*evoDb, false, *node.connman, *node.banman, *node.peerman, fReindexGeth);
+                passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReindexGeth));    
+                pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache, false, fReindexGeth));
+                pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, fReindexGeth));
+                pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, fReindexGeth));
+                if (!evoDb->CommitRootTransaction()) {
+                    strLoadError = _("Failed to commit EvoDB");
+                    break;
+                }
+                if (fReindexGeth && !evoDb->IsEmpty()) {
+                    // EvoDB processed some blocks earlier but we have no blocks anymore, something is wrong
+                    strLoadError = _("Error initializing block database");
+                    break;
+                }
                 // new CBlockTreeDB tries to delete the existing file, which
                 // fails if it's still open from the previous loop. Close it first:
                 pblocktree.reset();
@@ -1750,30 +1774,29 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                         coinsViewEmpty = true;
                     }
                 }
-                // SYSCOIN
-                fReindexGeth = fReindex || fReindexChainState || coinsViewEmpty; 
-                passetdb.reset();
-                pethereumtxrootsdb.reset();
-                pethereumtxmintdb.reset();
-                pblockindexdb.reset();
-                llmq::DestroyLLMQSystem();
-                evoDb.reset();
-                evoDb.reset(new CEvoDB(nEvoDbCache, false, fReset || fReindexChainState || coinsViewEmpty));
-                deterministicMNManager.reset();
-                deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
-                llmq::InitLLMQSystem(*evoDb, false, *node.connman, *node.banman, *node.peerman, fReset || fReindexChainState|| coinsViewEmpty);
-                passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset || fReindexChainState|| coinsViewEmpty));    
-                pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache, false, fReindexGeth));
-                pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, fReset || fReindexChainState|| coinsViewEmpty));
-                pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, fReset || fReindexChainState|| coinsViewEmpty));
-                if (!evoDb->CommitRootTransaction()) {
-                    strLoadError = _("Failed to commit EvoDB");
-                    break;
-                }
-                if ((fReset || fReindexChainState || coinsViewEmpty) && !evoDb->IsEmpty()) {
-                    // EvoDB processed some blocks earlier but we have no blocks anymore, something is wrong
-                    strLoadError = _("Error initializing block database");
-                    break;
+                // if coinsview is empty we clear all SYS db's overriding anything we did before
+                if(coinsViewEmpty && !fReindexGeth) {
+                    passetdb.reset();
+                    pethereumtxrootsdb.reset();
+                    pethereumtxmintdb.reset();
+                    pblockindexdb.reset();
+                    llmq::DestroyLLMQSystem();
+                    evoDb.reset();
+                    evoDb.reset(new CEvoDB(nEvoDbCache, false, coinsViewEmpty));
+                    llmq::InitLLMQSystem(*evoDb, false, *node.connman, *node.banman, *node.peerman, coinsViewEmpty);
+                    passetdb.reset(new CAssetDB(nCoinDBCache*16, false, coinsViewEmpty));    
+                    pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache, false, coinsViewEmpty));
+                    pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, coinsViewEmpty));
+                    pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, coinsViewEmpty));
+                    if (!evoDb->CommitRootTransaction()) {
+                        strLoadError = _("Failed to commit EvoDB");
+                        break;
+                    }
+                    if (!evoDb->IsEmpty()) {
+                        // EvoDB processed some blocks earlier but we have no blocks anymore, something is wrong
+                        strLoadError = _("Error initializing block database");
+                        break;
+                    }
                 }
                 if (failed_chainstate_init) {
                     break; // out of the chainstate activation do-while
