@@ -4159,7 +4159,12 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, std::chrono::microseconds curre
         // bandwidth cost that we can incur by doing this (which happens
         // once a day on average).
         if (node.m_next_local_addr_send != 0us) {
+            #if ENABLE_RUSTY
+            rcf_cuckoofilter_free(node.m_addr_known);
+            node.m_addr_known = rcf_cuckoofilter_with_capacity(5000);
+            #else
             node.m_addr_known->reset();
+            #endif
         }
         if (std::optional<CAddress> local_addr = GetLocalAddrForPeer(&node)) {
             FastRandomContext insecure_rand;
@@ -4182,8 +4187,13 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, std::chrono::microseconds curre
     // Remove addr records that the peer already knows about, and add new
     // addrs to the m_addr_known filter on the same pass.
     auto addr_already_known = [&node](const CAddress& addr) {
+        #if ENABLE_RUSTY
+        bool ret = (rcf_cuckoofilter_contains(node.m_addr_known, addr.GetHashedKey()) == RCF_OK);
+        if (!ret) rcf_cuckoofilter_add(node.m_addr_known, addr.GetHashedKey());
+        #else
         bool ret = node.m_addr_known->contains(addr.GetKey());
         if (!ret) node.m_addr_known->insert(addr.GetKey());
+        #endif
         return ret;
     };
     node.vAddrToSend.erase(std::remove_if(node.vAddrToSend.begin(), node.vAddrToSend.end(), addr_already_known),

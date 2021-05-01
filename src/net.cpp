@@ -2934,7 +2934,11 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, SOCKET hSocketIn, const
     }
 
     if (RelayAddrsWithConn()) {
+        #if ENABLE_RUSTY
+        m_addr_known = rcf_cuckoofilter_with_capacity(5000);
+        #else
         m_addr_known = std::make_unique<CRollingBloomFilter>(5000, 0.001);
+        #endif
     }
 
     for (const std::string &msg : getAllNetMessageTypes())

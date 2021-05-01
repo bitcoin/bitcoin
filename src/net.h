@@ -38,6 +38,12 @@
 #include <thread>
 #include <vector>
 
+#if ENABLE_RUSTY
+extern "C" {
+#include <rusty/out/rcf_cuckoofilter.h>
+}
+#endif
+
 class CScheduler;
 class CNode;
 class BanMan;
@@ -547,7 +553,11 @@ public:
 
     // flood relay
     std::vector<CAddress> vAddrToSend;
+    #if ENABLE_RUSTY
+    rcf_cuckoofilter* m_addr_known;
+    #else
     std::unique_ptr<CRollingBloomFilter> m_addr_known{nullptr};
+    #endif
     bool fGetAddr{false};
     Mutex m_addr_send_times_mutex;
     std::chrono::microseconds m_next_addr_send GUARDED_BY(m_addr_send_times_mutex){0};
@@ -660,7 +670,11 @@ public:
     void AddAddressKnown(const CAddress& _addr)
     {
         assert(m_addr_known);
+        #if ENABLE_RUSTY
+        rcf_cuckoofilter_add(m_addr_known, _addr.GetHashedKey());
+        #else
         m_addr_known->insert(_addr.GetKey());
+        #endif
     }
 
     /**
@@ -679,7 +693,13 @@ public:
         // SendMessages will filter it again for knowns that were added
         // after addresses were pushed.
         assert(m_addr_known);
-        if (_addr.IsValid() && !m_addr_known->contains(_addr.GetKey()) && IsAddrCompatible(_addr)) {
+        bool contains;
+        #if ENABLE_RUSTY
+        contains = (rcf_cuckoofilter_contains(m_addr_known, _addr.GetHashedKey()) == RCF_OK);
+        #else
+        contains = m_addr_known->contains(_addr.GetKey());
+        #endif
+        if (_addr.IsValid() && !contains && IsAddrCompatible(_addr)) {
             if (vAddrToSend.size() >= MAX_ADDR_TO_SEND) {
                 vAddrToSend[insecure_rand.randrange(vAddrToSend.size())] = _addr;
             } else {

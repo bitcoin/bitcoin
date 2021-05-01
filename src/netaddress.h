@@ -565,6 +565,9 @@ class CService : public CNetAddr
         friend bool operator!=(const CService& a, const CService& b) { return !(a == b); }
         friend bool operator<(const CService& a, const CService& b);
         std::vector<unsigned char> GetKey() const;
+        #if ENABLE_RUSTY
+        std::size_t GetHashedKey() const;
+        #endif
         std::string ToString() const;
         std::string ToStringPort() const;
         std::string ToStringIPPort() const;

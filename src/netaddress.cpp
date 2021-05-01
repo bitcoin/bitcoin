@@ -1014,6 +1014,15 @@ std::vector<unsigned char> CService::GetKey() const
     return key;
 }
 
+#if ENABLE_RUSTY
+// data is rehashed on the Rust side
+std::size_t CService::GetHashedKey() const
+{
+    const std::vector<unsigned char> vec = GetKey();
+    return MurmurHash3(vec.size(), vec);
+}
+#endif
+
 std::string CService::ToStringPort() const
 {
     return strprintf("%u", port);
