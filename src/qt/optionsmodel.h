@@ -60,6 +60,7 @@ public:
         ThirdPartyTxUrls,       // QString
         Language,               // QString
         UseEmbeddedMonospacedFont, // bool
+        PeersTabAlternatingRowColors, // bool
         CoinControlFeatures,    // bool
         ThreadsScriptVerif,     // int
         Prune,                  // bool
@@ -87,6 +88,7 @@ public:
     int getDisplayUnit() const { return nDisplayUnit; }
     QString getThirdPartyTxUrls() const { return strThirdPartyTxUrls; }
     bool getUseEmbeddedMonospacedFont() const { return m_use_embedded_monospaced_font; }
+    bool getPeersTabAlternatingRowColors() const { return m_peers_tab_alternating_row_colors; }
     bool getCoinControlFeatures() const { return fCoinControlFeatures; }
     const QString& getOverriddenByCommandLine() { return strOverriddenByCommandLine; }
 
@@ -111,6 +113,7 @@ private:
     int nDisplayUnit;
     QString strThirdPartyTxUrls;
     bool m_use_embedded_monospaced_font;
+    bool m_peers_tab_alternating_row_colors;
     bool fCoinControlFeatures;
     /* settings that were overridden by command-line */
     QString strOverriddenByCommandLine;
@@ -125,6 +128,7 @@ Q_SIGNALS:
     void coinControlFeaturesChanged(bool);
     void showTrayIconChanged(bool);
     void useEmbeddedMonospacedFontChanged(bool);
+    void peersTabAlternatingRowColorsChanged(bool);
 };
 
 #endif // BITCOIN_QT_OPTIONSMODEL_H
