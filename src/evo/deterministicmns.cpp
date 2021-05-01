@@ -519,8 +519,7 @@ void CDeterministicMNList::RemoveMN(const uint256& proTxHash)
     mnInternalIdMap = mnInternalIdMap.erase(dmn->GetInternalId());
 }
 
-CDeterministicMNManager::CDeterministicMNManager(CEvoDB& _evoDb) :
-    evoDb(_evoDb)
+CDeterministicMNManager::CDeterministicMNManager()
 {
 }
 
@@ -559,13 +558,14 @@ bool CDeterministicMNManager::ProcessBlock(const CBlock& block, const CBlockInde
         GetListForBlock(pindex->pprev, oldList);
         CDeterministicMNListDiff diff;
         oldList.BuildDiff(newList, diff);
-
-        evoDb.Write(std::make_pair(DB_LIST_DIFF, newList.GetBlockHash()), diff);
-        if ((nHeight % DISK_SNAPSHOT_PERIOD) == 0 || oldList.GetHeight() == -1) {
-            evoDb.Write(std::make_pair(DB_LIST_SNAPSHOT, newList.GetBlockHash()), newList);
-            mnListsCache.try_emplace(newList.GetBlockHash(), newList);
-            LogPrintf("CDeterministicMNManager::%s -- Wrote snapshot. nHeight=%d, mapCurMNs.allMNsCount=%d\n",
-                __func__, nHeight, newList.GetAllMNsCount());
+        if(evoDb) {
+            evoDb->Write(std::make_pair(DB_LIST_DIFF, newList.GetBlockHash()), diff);
+            if ((nHeight % DISK_SNAPSHOT_PERIOD) == 0 || oldList.GetHeight() == -1) {
+                evoDb->Write(std::make_pair(DB_LIST_SNAPSHOT, newList.GetBlockHash()), newList);
+                mnListsCache.try_emplace(newList.GetBlockHash(), newList);
+                LogPrintf("CDeterministicMNManager::%s -- Wrote snapshot. nHeight=%d, mapCurMNs.allMNsCount=%d\n",
+                    __func__, nHeight, newList.GetAllMNsCount());
+            }
         }
 
         diff.nHeight = pindex->nHeight;
@@ -596,7 +596,8 @@ bool CDeterministicMNManager::UndoBlock(const CBlock& block, const CBlockIndex* 
     CDeterministicMNListDiff diff;
     {
         LOCK(cs);
-        evoDb.Read(std::make_pair(DB_LIST_DIFF, blockHash), diff);
+        if(evoDb)
+            evoDb->Read(std::make_pair(DB_LIST_DIFF, blockHash), diff);
 
         if (diff.HasChanges()) {
             // need to call this before erasing
@@ -936,11 +937,10 @@ void CDeterministicMNManager::GetListForBlock(const CBlockIndex* pindex, CDeterm
             break;
         }
 
-        if (evoDb.Read(std::make_pair(DB_LIST_SNAPSHOT, pindex->GetBlockHash()), snapshot)) {
+        if (evoDb && evoDb->Read(std::make_pair(DB_LIST_SNAPSHOT, pindex->GetBlockHash()), snapshot)) {
             mnListsCache.try_emplace(pindex->GetBlockHash(), snapshot);
             break;
         }
-
         // no snapshot found yet, check diffs
         auto itDiffs = mnListDiffsCache.find(pindex->GetBlockHash());
         if (itDiffs != mnListDiffsCache.end()) {
@@ -948,21 +948,18 @@ void CDeterministicMNManager::GetListForBlock(const CBlockIndex* pindex, CDeterm
             pindex = pindex->pprev;
             continue;
         }
-
         CDeterministicMNListDiff diff;
-        if (!evoDb.Read(std::make_pair(DB_LIST_DIFF, pindex->GetBlockHash()), diff)) {
+        if (evoDb && !evoDb->Read(std::make_pair(DB_LIST_DIFF, pindex->GetBlockHash()), diff)) {
             // no snapshot and no diff on disk means that it's the initial snapshot
             snapshot = CDeterministicMNList(pindex->GetBlockHash(), -1, 0);
             mnListsCache.try_emplace(pindex->GetBlockHash(), snapshot);
             break;
         }
-
         diff.nHeight = pindex->nHeight;
         mnListDiffsCache.try_emplace(pindex->GetBlockHash(), std::move(diff));
         listDiffIndexes.emplace_front(pindex);
         pindex = pindex->pprev;
     }
-
     for (const auto& diffIndex : listDiffIndexes) {
         const auto& diff = mnListDiffsCache.at(diffIndex->GetBlockHash());
         if (diff.HasChanges()) {
@@ -972,7 +969,6 @@ void CDeterministicMNManager::GetListForBlock(const CBlockIndex* pindex, CDeterm
             snapshot.SetHeight(diffIndex->nHeight);
         }
     }
-
     if (tipIndex) {
         // always keep a snapshot for the tip
         if (snapshot.GetBlockHash() == tipIndex->GetBlockHash()) {

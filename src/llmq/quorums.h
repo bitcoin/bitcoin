@@ -17,11 +17,9 @@
 class CNode;
 class CConnman;
 class CBlockIndex;
-
 class CDeterministicMN;
 typedef std::shared_ptr<const CDeterministicMN> CDeterministicMNCPtr;
 
-#include <evo/evodb.h>
 
 namespace llmq
 {
@@ -75,8 +73,8 @@ public:
     const CBLSSecretKey& GetSkShare() const;
 
 private:
-    void WriteContributions(CEvoDB& evoDb);
-    bool ReadContributions(CEvoDB& evoDb);
+    void WriteContributions();
+    bool ReadContributions();
 };
 
 /**
@@ -88,7 +86,6 @@ private:
 class CQuorumManager
 {
 private:
-    CEvoDB& evoDb;
     CBLSWorker& blsWorker;
     CDKGSessionManager& dkgManager;
 
@@ -100,7 +97,7 @@ private:
     mutable CThreadInterrupt quorumThreadInterrupt;
 
 public:
-    CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager);
+    CQuorumManager(CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager);
     ~CQuorumManager();
 
     void Start();

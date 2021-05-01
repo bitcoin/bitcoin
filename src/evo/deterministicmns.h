@@ -550,14 +550,13 @@ public:
     mutable RecursiveMutex cs;
 
 private:
-    CEvoDB& evoDb;
 
     std::unordered_map<uint256, CDeterministicMNList, StaticSaltedHasher> mnListsCache;
     std::unordered_map<uint256, CDeterministicMNListDiff, StaticSaltedHasher> mnListDiffsCache;
     const CBlockIndex* tipIndex{};
 
 public:
-    explicit CDeterministicMNManager(CEvoDB& _evoDb);
+    explicit CDeterministicMNManager();
 
     bool ProcessBlock(const CBlock& block, const CBlockIndex* pindex, BlockValidationState& state, CCoinsViewCache& view, bool fJustCheck) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
     bool UndoBlock(const CBlock& block, const CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(::cs_main);

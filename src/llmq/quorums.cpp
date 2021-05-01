@@ -99,24 +99,28 @@ int CQuorum::GetMemberIndex(const uint256& proTxHash) const
     return -1;
 }
 
-void CQuorum::WriteContributions(CEvoDB& evoDb)
+void CQuorum::WriteContributions()
 {
+    if(!evoDb)
+        return;
     uint256 dbKey = MakeQuorumKey(*this);
 
     if (quorumVvec != nullptr) {
-        evoDb.GetRawDB().Write(std::make_pair(DB_QUORUM_QUORUM_VVEC, dbKey), *quorumVvec);
+        evoDb->GetRawDB().Write(std::make_pair(DB_QUORUM_QUORUM_VVEC, dbKey), *quorumVvec);
     }
     if (skShare.IsValid()) {
-        evoDb.GetRawDB().Write(std::make_pair(DB_QUORUM_SK_SHARE, dbKey), skShare);
+        evoDb->GetRawDB().Write(std::make_pair(DB_QUORUM_SK_SHARE, dbKey), skShare);
     }
 }
 
-bool CQuorum::ReadContributions(CEvoDB& evoDb)
+bool CQuorum::ReadContributions()
 {
+    if(!evoDb)
+        return false;
     uint256 dbKey = MakeQuorumKey(*this);
 
     BLSVerificationVector qv;
-    if (evoDb.Read(std::make_pair(DB_QUORUM_QUORUM_VVEC, dbKey), qv)) {
+    if (evoDb->Read(std::make_pair(DB_QUORUM_QUORUM_VVEC, dbKey), qv)) {
         quorumVvec = std::make_shared<BLSVerificationVector>(std::move(qv));
     } else {
         return false;
@@ -124,13 +128,12 @@ bool CQuorum::ReadContributions(CEvoDB& evoDb)
 
     // We ignore the return value here as it is ok if this fails. If it fails, it usually means that we are not a
     // member of the quorum but observed the whole DKG process to have the quorum verification vector.
-    evoDb.Read(std::make_pair(DB_QUORUM_SK_SHARE, dbKey), skShare);
+    evoDb->Read(std::make_pair(DB_QUORUM_SK_SHARE, dbKey), skShare);
 
     return true;
 }
 
-CQuorumManager::CQuorumManager(CEvoDB& _evoDb, CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
-    evoDb(_evoDb),
+CQuorumManager::CQuorumManager(CBLSWorker& _blsWorker, CDKGSessionManager& _dkgManager) :
     blsWorker(_blsWorker),
     dkgManager(_dkgManager)
 {
@@ -213,11 +216,11 @@ bool CQuorumManager::BuildQuorumFromCommitment(const uint8_t llmqType, const CBl
     quorum->Init(qc, pindexQuorum, minedBlockHash, members);
 
     bool hasValidVvec = false;
-    if (quorum->ReadContributions(evoDb)) {
+    if (quorum->ReadContributions()) {
         hasValidVvec = true;
     } else {
         if (BuildQuorumContributions(qc, quorum)) {
-            quorum->WriteContributions(evoDb);
+            quorum->WriteContributions();
             hasValidVvec = true;
         } else {
             LogPrint(BCLog::LLMQ, "CQuorumManager::%s -- quorum.ReadContributions and BuildQuorumContributions for block %s failed\n", __func__, qc->quorumHash.ToString());

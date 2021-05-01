@@ -1654,6 +1654,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 if(fAssetIndex) {
                     LogPrintf("Asset Index enabled, allowing for an asset aware spending policy\n");
                 }
+                LogPrintf("Creating LLMQ and asset databases...\n");
                 fReindexGeth = fReindex || fReindexChainState; 
                 passetdb.reset();
                 pethereumtxrootsdb.reset();
@@ -1663,8 +1664,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 evoDb.reset();
                 evoDb.reset(new CEvoDB(nEvoDbCache, false, fReindexGeth));
                 deterministicMNManager.reset();
-                deterministicMNManager.reset(new CDeterministicMNManager(*evoDb));
-                llmq::InitLLMQSystem(*evoDb, false, *node.connman, *node.banman, *node.peerman, fReindexGeth);
+                deterministicMNManager.reset(new CDeterministicMNManager());
+                llmq::InitLLMQSystem(false, *node.connman, *node.banman, *node.peerman, fReindexGeth);
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReindexGeth));    
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache, false, fReindexGeth));
                 pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, fReindexGeth));
@@ -1776,6 +1777,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 }
                 // if coinsview is empty we clear all SYS db's overriding anything we did before
                 if(coinsViewEmpty && !fReindexGeth) {
+                    LogPrintf("coinsViewEmpty recreating LLMQ and asset databases\n");
                     passetdb.reset();
                     pethereumtxrootsdb.reset();
                     pethereumtxmintdb.reset();
@@ -1783,7 +1785,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     llmq::DestroyLLMQSystem();
                     evoDb.reset();
                     evoDb.reset(new CEvoDB(nEvoDbCache, false, coinsViewEmpty));
-                    llmq::InitLLMQSystem(*evoDb, false, *node.connman, *node.banman, *node.peerman, coinsViewEmpty);
+                    llmq::InitLLMQSystem(false, *node.connman, *node.banman, *node.peerman, coinsViewEmpty);
                     passetdb.reset(new CAssetDB(nCoinDBCache*16, false, coinsViewEmpty));    
                     pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache, false, coinsViewEmpty));
                     pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, coinsViewEmpty));
@@ -1980,7 +1982,6 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
         // SYSCOIN
         ThreadImport(chainman, vImportFiles, args, pdsNotificationInterface, deterministicMNManager, g_wallet_init_interface);
     });
-
     // Wait for genesis block to be processed
     {
         WAIT_LOCK(g_genesis_wait_mutex, lock);
