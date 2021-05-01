@@ -2344,11 +2344,10 @@ private:
    */
   std::map<std::string, PerWallet> data;
 
-  /** Lock for this instance.  */
-  mutable RecursiveMutex cs;
 
 public:
-
+  /** Lock for this instance.  */
+  mutable RecursiveMutex cs;
   ReservedKeysForMining () = default;
 
   /**
@@ -2408,7 +2407,7 @@ public:
 
 };
 
-ReservedKeysForMining g_mining_keys;
+ReservedKeysForMining g_mining_keys GUARDED_BY(cs);
 
 } // anonymous namespace
 
@@ -2455,6 +2454,7 @@ static RPCHelpMan getauxblock()
     if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
     }
+    LOCK(g_mining_keys.cs);
     /* Create a new block */
     if (request.params.size() == 0)
     {
