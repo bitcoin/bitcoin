@@ -145,6 +145,8 @@ Tools and Utilities
   like `-onlynet=<network>` or to upgrade to current and future Tor releases
   that support Tor v3 addresses only.  (#21595)
 
+- Update `-getinfo` to return data in a user-friendly format that also reduces vertical space. (#21832)
+
 Wallet
 ------
 
