@@ -27,6 +27,8 @@
 #include <version.h>
 #include <warnings.h>
 
+#include <optional>
+
 #include <univalue.h>
 
 static UniValue getconnectioncount(const JSONRPCRequest& request)
@@ -820,7 +822,7 @@ static UniValue getnodeaddresses(const JSONRPCRequest& request)
         }
     }
     // returns a shuffled list of CAddress
-    std::vector<CAddress> vAddr = node.connman->GetAddresses(count, /* max_pct */ 0);
+    std::vector<CAddress> vAddr = node.connman->GetAddresses(count, /* max_pct */ 0, /* network */ std::nullopt);
     UniValue ret(UniValue::VARR);
 
     for (const CAddress& addr : vAddr) {
