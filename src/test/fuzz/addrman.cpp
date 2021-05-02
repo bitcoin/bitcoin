@@ -60,7 +60,10 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
                 (void)addr_man.Select(fuzzed_data_provider.ConsumeBool());
             },
             [&] {
-                (void)addr_man.GetAddr(fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096), fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096));
+                (void)addr_man.GetAddr(
+                    /* max_addresses */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
+                    /* max_pct */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
+                    /* network */ std::nullopt);
             },
             [&] {
                 const std::optional<CAddress> opt_address = ConsumeDeserializable<CAddress>(fuzzed_data_provider);

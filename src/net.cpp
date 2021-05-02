@@ -2671,7 +2671,7 @@ CConnman::~CConnman()
 
 std::vector<CAddress> CConnman::GetAddresses(size_t max_addresses, size_t max_pct) const
 {
-    std::vector<CAddress> addresses = addrman.GetAddr(max_addresses, max_pct);
+    std::vector<CAddress> addresses = addrman.GetAddr(max_addresses, max_pct, /* network */ std::nullopt);
     if (m_banman) {
         addresses.erase(std::remove_if(addresses.begin(), addresses.end(),
                         [this](const CAddress& addr){return m_banman->IsDiscouraged(addr) || m_banman->IsBanned(addr);}),
