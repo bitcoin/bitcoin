@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2018 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SUPPORT_ALLOCATORS_ZEROAFTERFREE_H
-#define BITCOIN_SUPPORT_ALLOCATORS_ZEROAFTERFREE_H
+#ifndef XBIT_SUPPORT_ALLOCATORS_ZEROAFTERFREE_H
+#define XBIT_SUPPORT_ALLOCATORS_ZEROAFTERFREE_H
 
 #include <support/cleanse.h>
 
@@ -42,7 +42,7 @@ struct zero_after_free_allocator : public std::allocator<T> {
     }
 };
 
-/** Byte-vector that clears its contents before deletion. */
-using SerializeData = std::vector<uint8_t, zero_after_free_allocator<uint8_t>>;
+// Byte-vector that clears its contents before deletion.
+typedef std::vector<char, zero_after_free_allocator<char> > CSerializeData;
 
-#endif // BITCOIN_SUPPORT_ALLOCATORS_ZEROAFTERFREE_H
+#endif // XBIT_SUPPORT_ALLOCATORS_ZEROAFTERFREE_H

@@ -7,135 +7,140 @@
     <x>0</x>
     <y>0</y>
     <width>364</width>
-    <height>249</height>
+    <height>213</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Create Wallet</string>
   </property>
-  <property name="sizeGripEnabled">
-   <bool>true</bool>
-  </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QLabel" name="wallet_name_label">
-       <property name="text">
-        <string>Wallet Name</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="wallet_name_line_edit">
-       <property name="minimumSize">
-        <size>
-         <width>262</width>
-         <height>0</height>
-        </size>
-       </property>
-       <property name="placeholderText">
-        <string>Wallet</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item>
-    <widget class="QCheckBox" name="encrypt_wallet_checkbox">
-     <property name="toolTip">
-      <string>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</string>
-     </property>
-     <property name="text">
-      <string>Encrypt Wallet</string>
-     </property>
-     <property name="checked">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
-   <item>
-    <spacer name="verticalSpacer_1">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Fixed</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>8</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item>
-    <widget class="QGroupBox" name="groupBox">
-     <property name="title">
-      <string>Advanced Options</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_groupbox">
-      <item>
-       <widget class="QCheckBox" name="disable_privkeys_checkbox">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-        <property name="toolTip">
-         <string>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</string>
-        </property>
-        <property name="text">
-         <string>Disable Private Keys</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="blank_wallet_checkbox">
-        <property name="toolTip">
-         <string>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</string>
-        </property>
-        <property name="text">
-         <string>Make Blank Wallet</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="descriptor_checkbox">
-        <property name="toolTip">
-         <string>Use descriptors for scriptPubKey management</string>
-        </property>
-        <property name="text">
-         <string>Descriptor Wallet</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <spacer name="verticalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>0</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item>
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
-  </layout>
+  <widget class="QDialogButtonBox" name="buttonBox">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>170</y>
+     <width>341</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="orientation">
+    <enum>Qt::Horizontal</enum>
+   </property>
+   <property name="standardButtons">
+    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="wallet_name_line_edit">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>20</y>
+     <width>231</width>
+     <height>24</height>
+    </rect>
+   </property>
+   <property name="placeholderText">
+     <string>Wallet</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>20</y>
+     <width>101</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Wallet Name</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="encrypt_wallet_checkbox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>50</y>
+     <width>220</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</string>
+   </property>
+   <property name="text">
+    <string>Encrypt Wallet</string>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="advanced_options_label">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>90</y>
+     <width>220</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font-weight:bold;</string>
+   </property>
+   <property name="text">
+    <string>Advanced options</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="disable_privkeys_checkbox">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>115</y>
+     <width>220</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</string>
+   </property>
+   <property name="text">
+    <string>Disable Private Keys</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="blank_wallet_checkbox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>135</y>
+     <width>220</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</string>
+   </property>
+   <property name="text">
+    <string>Make Blank Wallet</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="descriptor_checkbox">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>155</y>
+     <width>220</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>Use descriptors for scriptPubKey management</string>
+   </property>
+   <property name="text">
+    <string>Descriptor Wallet</string>
+   </property>
+  </widget>
  </widget>
  <tabstops>
   <tabstop>wallet_name_line_edit</tabstop>

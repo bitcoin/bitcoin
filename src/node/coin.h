@@ -1,9 +1,9 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NODE_COIN_H
-#define BITCOIN_NODE_COIN_H
+#ifndef XBIT_NODE_COIN_H
+#define XBIT_NODE_COIN_H
 
 #include <map>
 
@@ -21,4 +21,4 @@ struct NodeContext;
  */
 void FindCoins(const NodeContext& node, std::map<COutPoint, Coin>& coins);
 
-#endif // BITCOIN_NODE_COIN_H
+#endif // XBIT_NODE_COIN_H

@@ -1,9 +1,9 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_HTTPSERVER_H
-#define BITCOIN_HTTPSERVER_H
+#ifndef XBIT_HTTPSERVER_H
+#define XBIT_HTTPSERVER_H
 
 #include <string>
 #include <functional>
@@ -147,4 +147,4 @@ private:
     struct event* ev;
 };
 
-#endif // BITCOIN_HTTPSERVER_H
+#endif // XBIT_HTTPSERVER_H

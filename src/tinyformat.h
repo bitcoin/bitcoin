@@ -144,7 +144,7 @@ namespace tfm = tinyformat;
 #include <algorithm>
 #include <iostream>
 #include <sstream>
-#include <stdexcept> // Added for Bitcoin Core
+#include <stdexcept> // Added for XBit Core
 
 #ifndef TINYFORMAT_ASSERT
 #   include <cassert>
@@ -178,7 +178,7 @@ namespace tfm = tinyformat;
 
 namespace tinyformat {
 
-// Added for Bitcoin Core
+// Added for XBit Core
 class format_error: public std::runtime_error
 {
 public:
@@ -514,7 +514,7 @@ class FormatArg
         { }
 
         template<typename T>
-        explicit FormatArg(const T& value)
+        FormatArg(const T& value)
             : m_value(static_cast<const void*>(&value)),
             m_formatImpl(&formatImpl<T>),
             m_toIntImpl(&toIntImpl<T>)
@@ -970,7 +970,7 @@ class FormatListN : public FormatList
     public:
 #ifdef TINYFORMAT_USE_VARIADIC_TEMPLATES
         template<typename... Args>
-        explicit FormatListN(const Args&... args)
+        FormatListN(const Args&... args)
             : FormatList(&m_formatterStore[0], N),
             m_formatterStore { FormatArg(args)... }
         { static_assert(sizeof...(args) == N, "Number of args must be N"); }
@@ -1148,7 +1148,7 @@ TINYFORMAT_FOREACH_ARGNUM(TINYFORMAT_MAKE_FORMAT_FUNCS)
 
 #endif
 
-// Added for Bitcoin Core
+// Added for XBit Core
 template<typename... Args>
 std::string format(const std::string &fmt, const Args&... args)
 {
@@ -1159,7 +1159,7 @@ std::string format(const std::string &fmt, const Args&... args)
 
 } // namespace tinyformat
 
-// Added for Bitcoin Core:
+// Added for XBit Core:
 /** Format arguments and return the string or write to given std::ostream (see tinyformat::format doc for details) */
 #define strprintf tfm::format
 

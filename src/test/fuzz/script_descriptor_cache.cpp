@@ -1,7 +1,8 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <optional.h>
 #include <pubkey.h>
 #include <script/descriptor.h>
 #include <test/fuzz/FuzzedDataProvider.h>
@@ -9,11 +10,10 @@
 #include <test/fuzz/util.h>
 
 #include <cstdint>
-#include <optional>
 #include <string>
 #include <vector>
 
-FUZZ_TARGET(script_descriptor_cache)
+void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     DescriptorCache descriptor_cache;

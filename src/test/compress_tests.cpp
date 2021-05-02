@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,10 +17,10 @@
 #define NUM_MULTIPLES_CENT 10000
 
 // amounts 1 .. 10000
-#define NUM_MULTIPLES_1BTC 10000
+#define NUM_MULTIPLES_1XBT 10000
 
 // amounts 50 .. 21000000
-#define NUM_MULTIPLES_50BTC 420000
+#define NUM_MULTIPLES_50XBT 420000
 
 BOOST_FIXTURE_TEST_SUITE(compress_tests, BasicTestingSetup)
 
@@ -52,10 +52,10 @@ BOOST_AUTO_TEST_CASE(compress_amounts)
     for (uint64_t i = 1; i <= NUM_MULTIPLES_CENT; i++)
         BOOST_CHECK(TestEncode(i * CENT));
 
-    for (uint64_t i = 1; i <= NUM_MULTIPLES_1BTC; i++)
+    for (uint64_t i = 1; i <= NUM_MULTIPLES_1XBT; i++)
         BOOST_CHECK(TestEncode(i * COIN));
 
-    for (uint64_t i = 1; i <= NUM_MULTIPLES_50BTC; i++)
+    for (uint64_t i = 1; i <= NUM_MULTIPLES_50XBT; i++)
         BOOST_CHECK(TestEncode(i * 50 * COIN));
 
     for (uint64_t i = 0; i < 100000; i++)
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(compress_script_to_ckey_id)
     CScript script = CScript() << OP_DUP << OP_HASH160 << ToByteVector(pubkey.GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
     BOOST_CHECK_EQUAL(script.size(), 25U);
 
-    CompressedScript out;
+    std::vector<unsigned char> out;
     bool done = CompressScript(script, out);
     BOOST_CHECK_EQUAL(done, true);
 
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(compress_script_to_cscript_id)
     script << OP_HASH160 << ToByteVector(CScriptID(redeemScript)) << OP_EQUAL;
     BOOST_CHECK_EQUAL(script.size(), 23U);
 
-    CompressedScript out;
+    std::vector<unsigned char> out;
     bool done = CompressScript(script, out);
     BOOST_CHECK_EQUAL(done, true);
 
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(compress_script_to_compressed_pubkey_id)
     CScript script = CScript() << ToByteVector(key.GetPubKey()) << OP_CHECKSIG; // COMPRESSED_PUBLIC_KEY_SIZE (33)
     BOOST_CHECK_EQUAL(script.size(), 35U);
 
-    CompressedScript out;
+    std::vector<unsigned char> out;
     bool done = CompressScript(script, out);
     BOOST_CHECK_EQUAL(done, true);
 
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(compress_script_to_uncompressed_pubkey_id)
     CScript script =  CScript() << ToByteVector(key.GetPubKey()) << OP_CHECKSIG; // PUBLIC_KEY_SIZE (65)
     BOOST_CHECK_EQUAL(script.size(), 67U);                   // 1 char code + 65 char pubkey + OP_CHECKSIG
 
-    CompressedScript out;
+    std::vector<unsigned char> out;
     bool done = CompressScript(script, out);
     BOOST_CHECK_EQUAL(done, true);
 

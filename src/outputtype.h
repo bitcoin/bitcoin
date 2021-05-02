@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_OUTPUTTYPE_H
-#define BITCOIN_OUTPUTTYPE_H
+#ifndef XBIT_OUTPUTTYPE_H
+#define XBIT_OUTPUTTYPE_H
 
 #include <attributes.h>
 #include <script/signingprovider.h>
@@ -20,13 +20,9 @@ enum class OutputType {
     BECH32,
 };
 
-static constexpr auto OUTPUT_TYPES = std::array{
-    OutputType::LEGACY,
-    OutputType::P2SH_SEGWIT,
-    OutputType::BECH32,
-};
+extern const std::array<OutputType, 3> OUTPUT_TYPES;
 
-[[nodiscard]] bool ParseOutputType(const std::string& str, OutputType& output_type);
+NODISCARD bool ParseOutputType(const std::string& str, OutputType& output_type);
 const std::string& FormatOutputType(OutputType type);
 
 /**
@@ -45,4 +41,4 @@ std::vector<CTxDestination> GetAllDestinationsForKey(const CPubKey& key);
  */
 CTxDestination AddAndGetDestinationForScript(FillableSigningProvider& keystore, const CScript& script, OutputType);
 
-#endif // BITCOIN_OUTPUTTYPE_H
+#endif // XBIT_OUTPUTTYPE_H

@@ -1,9 +1,9 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_VECTOR_H
-#define BITCOIN_UTIL_VECTOR_H
+#ifndef XBIT_UTIL_VECTOR_H
+#define XBIT_UTIL_VECTOR_H
 
 #include <initializer_list>
 #include <type_traits>
@@ -48,4 +48,4 @@ inline V Cat(V v1, const V& v2)
     return v1;
 }
 
-#endif // BITCOIN_UTIL_VECTOR_H
+#endif // XBIT_UTIL_VECTOR_H

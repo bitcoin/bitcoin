@@ -51,7 +51,7 @@
   <ItemDefinitionGroup>
      <ClCompile>
        <PreprocessorDefinitions>HAVE_CRC32C=0;HAVE_SNAPPY=0;__STDC_LIMIT_MACROS;LEVELDB_IS_BIG_ENDIAN=0;_UNICODE;UNICODE;_CRT_NONSTDC_NO_DEPRECATE;LEVELDB_PLATFORM_WINDOWS;LEVELDB_ATOMIC_PRESENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-       <DisableSpecificWarnings>4244;4267</DisableSpecificWarnings>
+       <DisableSpecificWarnings>4244;4267;4312;4722;</DisableSpecificWarnings>
        <AdditionalIncludeDirectories>..\..\src\leveldb;..\..\src\leveldb\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
      </ClCompile>
   </ItemDefinitionGroup>

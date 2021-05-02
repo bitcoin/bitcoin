@@ -1,9 +1,9 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TEST_UTIL_TRANSACTION_UTILS_H
-#define BITCOIN_TEST_UTIL_TRANSACTION_UTILS_H
+#ifndef XBIT_TEST_UTIL_TRANSACTION_UTILS_H
+#define XBIT_TEST_UTIL_TRANSACTION_UTILS_H
 
 #include <primitives/transaction.h>
 
@@ -26,4 +26,4 @@ CMutableTransaction BuildSpendingTransaction(const CScript& scriptSig, const CSc
 // the second nValues[2] and nValues[3] outputs paid to a TxoutType::PUBKEYHASH.
 std::vector<CMutableTransaction> SetupDummyInputs(FillableSigningProvider& keystoreRet, CCoinsViewCache& coinsRet, const std::array<CAmount,4>& nValues);
 
-#endif // BITCOIN_TEST_UTIL_TRANSACTION_UTILS_H
+#endif // XBIT_TEST_UTIL_TRANSACTION_UTILS_H

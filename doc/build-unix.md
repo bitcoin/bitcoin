@@ -1,15 +1,15 @@
 UNIX BUILD NOTES
 ====================
-Some notes on how to build Bitcoin Core in Unix.
+Some notes on how to build XBit Core in Unix.
 
 (For BSD specific instructions, see `build-*bsd.md` in this directory.)
 
 Note
 ---------------------
-Always use absolute paths to configure and compile Bitcoin Core and the dependencies.
+Always use absolute paths to configure and compile XBit Core and the dependencies.
 For example, when specifying the path of the dependency:
 
-    ../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
+	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
 
 Here BDB_PREFIX must be an absolute path - it is defined using $(pwd) which ensures
 the usage of the absolute path.
@@ -24,7 +24,7 @@ make
 make install # optional
 ```
 
-This will build bitcoin-qt as well, if the dependencies are met.
+This will build xbit-qt as well, if the dependencies are met.
 
 Dependencies
 ---------------------
@@ -41,8 +41,7 @@ Optional dependencies:
  Library     | Purpose          | Description
  ------------|------------------|----------------------
  miniupnpc   | UPnP Support     | Firewall-jumping support
- libnatpmp   | NAT-PMP Support  | Firewall-jumping support
- libdb4.8    | Berkeley DB      | Optional, wallet storage (only needed when wallet enabled)
+ libdb4.8    | Berkeley DB      | Wallet storage (only needed when wallet enabled)
  qt          | GUI              | GUI toolkit (only needed when GUI enabled)
  libqrencode | QR codes in GUI  | Optional for generating QR codes (only needed when GUI enabled)
  univalue    | Utility          | JSON parsing and encoding (bundled version will be used unless --with-system-univalue passed to configure)
@@ -55,7 +54,7 @@ Memory Requirements
 --------------------
 
 C++ compilers are memory-hungry. It is recommended to have at least 1.5 GB of
-memory available when compiling Bitcoin Core. On systems with less, gcc can be
+memory available when compiling XBit Core. On systems with less, gcc can be
 tuned to conserve memory with additional CXXFLAGS:
 
 
@@ -82,26 +81,27 @@ Build requirements:
 
 Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
 
-    sudo apt-get install libevent-dev libboost-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev
+    sudo apt-get install libevent-dev libboost-system-dev libboost-filesystem-dev libboost-test-dev libboost-thread-dev
 
-Berkeley DB is required for the wallet.
+BerkeleyDB is required for the wallet.
 
 Ubuntu and Debian have their own `libdb-dev` and `libdb++-dev` packages, but these will install
-Berkeley DB 5.1 or later. This will break binary wallet compatibility with the distributed executables, which
+BerkeleyDB 5.1 or later. This will break binary wallet compatibility with the distributed executables, which
 are based on BerkeleyDB 4.8. If you do not care about wallet compatibility,
 pass `--with-incompatible-bdb` to configure.
 
-Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
+Otherwise, you can build from self-compiled `depends` (see above).
 
-SQLite is required for the descriptor wallet:
+SQLite is required for the wallet:
 
     sudo apt install libsqlite3-dev
 
-To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
+To build XBit Core without wallet, see [*Disable-wallet mode*](/doc/build-unix.md#disable-wallet-mode)
 
-Optional port mapping libraries (see: `--with-miniupnpc`, `--enable-upnp-default`, and `--with-natpmp`, `--enable-natpmp-default`):
 
-    sudo apt install libminiupnpc-dev libnatpmp-dev
+Optional (see `--with-miniupnpc` and `--enable-upnp-default`):
+
+    sudo apt-get install libminiupnpc-dev
 
 ZMQ dependencies (provides ZMQ API):
 
@@ -109,7 +109,7 @@ ZMQ dependencies (provides ZMQ API):
 
 GUI dependencies:
 
-If you want to build bitcoin-qt, make sure that the required packages for Qt development
+If you want to build xbit-qt, make sure that the required packages for Qt development
 are installed. Qt 5 is necessary to build the GUI.
 To build without GUI pass `--without-gui`.
 
@@ -121,7 +121,7 @@ libqrencode (optional) can be installed with:
 
     sudo apt-get install libqrencode-dev
 
-Once these are installed, they will be found by configure and a bitcoin-qt executable will be
+Once these are installed, they will be found by configure and a xbit-qt executable will be
 built by default.
 
 
@@ -131,42 +131,15 @@ built by default.
 
 Build requirements:
 
-    sudo dnf install gcc-c++ libtool make autoconf automake python3
+    sudo dnf install gcc-c++ libtool make autoconf automake libevent-devel boost-devel libdb4-devel libdb4-cxx-devel python3
 
-Now, you can either build from self-compiled [depends](/depends/README.md) or install the required dependencies:
+Optional (see `--with-miniupnpc` and `--enable-upnp-default`):
 
-    sudo dnf install libevent-devel boost-devel
-
-Berkeley DB is required for the wallet:
-
-    sudo dnf install libdb4-devel libdb4-cxx-devel
-
-Newer Fedora releases, since Fedora 33, have only `libdb-devel` and `libdb-cxx-devel` packages, but these will install
-Berkeley DB 5.3 or later. This will break binary wallet compatibility with the distributed executables, which
-are based on Berkeley DB 4.8. If you do not care about wallet compatibility,
-pass `--with-incompatible-bdb` to configure.
-
-Otherwise, you can build Berkeley DB [yourself](#berkeley-db).
-
-SQLite is required for the descriptor wallet:
-
-    sudo dnf install sqlite-devel
-
-To build Bitcoin Core without wallet, see [*Disable-wallet mode*](#disable-wallet-mode)
-
-Optional port mapping libraries (see: `--with-miniupnpc`, `--enable-upnp-default`, and `--with-natpmp`, `--enable-natpmp-default`):
-
-    sudo dnf install miniupnpc-devel libnatpmp-devel
+    sudo dnf install miniupnpc-devel
 
 ZMQ dependencies (provides ZMQ API):
 
     sudo dnf install zeromq-devel
-
-GUI dependencies:
-
-If you want to build bitcoin-qt, make sure that the required packages for Qt development
-are installed. Qt 5 is necessary to build the GUI.
-To build without GUI pass `--without-gui`.
 
 To build with Qt 5 you need the following:
 
@@ -176,35 +149,27 @@ libqrencode (optional) can be installed with:
 
     sudo dnf install qrencode-devel
 
-Once these are installed, they will be found by configure and a bitcoin-qt executable will be
-built by default.
+SQLite can be installed with:
+
+    sudo dnf install sqlite-devel
 
 Notes
 -----
-The release is built with GCC and then "strip bitcoind" to strip the debug
+The release is built with GCC and then "strip xbitd" to strip the debug
 symbols, which reduces the executable size by about 90%.
+
 
 miniupnpc
 ---------
 
 [miniupnpc](https://miniupnp.tuxfamily.org) may be used for UPnP port mapping.  It can be downloaded from [here](
 https://miniupnp.tuxfamily.org/files/).  UPnP support is compiled in and
-turned off by default.  See the configure options for UPnP behavior desired:
+turned off by default.  See the configure options for upnp behavior desired:
 
-    --without-miniupnpc      No UPnP support, miniupnp not required
-    --disable-upnp-default   (the default) UPnP support turned off by default at runtime
-    --enable-upnp-default    UPnP support turned on by default at runtime
+	--without-miniupnpc      No UPnP support miniupnp not required
+	--disable-upnp-default   (the default) UPnP support turned off by default at runtime
+	--enable-upnp-default    UPnP support turned on by default at runtime
 
-libnatpmp
----------
-
-[libnatpmp](https://miniupnp.tuxfamily.org/libnatpmp.html) may be used for NAT-PMP port mapping. It can be downloaded
-from [here](https://miniupnp.tuxfamily.org/files/). NAT-PMP support is compiled in and
-turned off by default. See the configure options for NAT-PMP behavior desired:
-
-    --without-natpmp          No NAT-PMP support, libnatpmp not required
-    --disable-natpmp-default  (the default) NAT-PMP support turned off by default at runtime
-    --enable-natpmp-default   NAT-PMP support turned on by default at runtime
 
 Berkeley DB
 -----------
@@ -218,29 +183,27 @@ like so:
 
 from the root of the repository.
 
-Otherwise, you can build Bitcoin Core from self-compiled [depends](/depends/README.md).
-
-**Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](#disable-wallet-mode)).
+**Note**: You only need Berkeley DB if the wallet is enabled (see [*Disable-wallet mode*](/doc/build-unix.md#disable-wallet-mode)).
 
 Boost
 -----
 If you need to build Boost yourself:
 
-    sudo su
-    ./bootstrap.sh
-    ./bjam install
+	sudo su
+	./bootstrap.sh
+	./bjam install
 
 
 Security
 --------
-To help make your Bitcoin Core installation more secure by making certain attacks impossible to
+To help make your XBit Core installation more secure by making certain attacks impossible to
 exploit even if a vulnerability is found, binaries are hardened by default.
 This can be disabled with:
 
 Hardening Flags:
 
-    ./configure --enable-hardening
-    ./configure --disable-hardening
+	./configure --enable-hardening
+	./configure --disable-hardening
 
 
 Hardening enables the following features:
@@ -255,7 +218,7 @@ Hardening enables the following features:
 
     To test that you have built PIE executable, install scanelf, part of paxutils, and use:
 
-        scanelf -e ./bitcoin
+    	scanelf -e ./xbit
 
     The output should contain:
 
@@ -263,23 +226,23 @@ Hardening enables the following features:
     ET_DYN
 
 * _Non-executable Stack_: If the stack is executable then trivial stack-based buffer overflow exploits are possible if
-    vulnerable buffers are found. By default, Bitcoin Core should be built with a non-executable stack,
+    vulnerable buffers are found. By default, XBit Core should be built with a non-executable stack,
     but if one of the libraries it uses asks for an executable stack or someone makes a mistake
     and uses a compiler extension which requires an executable stack, it will silently build an
     executable without the non-executable stack protection.
 
     To verify that the stack is non-executable after compiling use:
-    `scanelf -e ./bitcoin`
+    `scanelf -e ./xbit`
 
     The output should contain:
-    STK/REL/PTL
-    RW- R-- RW-
+	STK/REL/PTL
+	RW- R-- RW-
 
     The STK RW- means that the stack is readable and writeable but not executable.
 
 Disable-wallet mode
 --------------------
-When the intention is to run only a P2P node without a wallet, Bitcoin Core may be compiled in
+When the intention is to run only a P2P node without a wallet, XBit Core may be compiled in
 disable-wallet mode with:
 
     ./configure --disable-wallet
@@ -300,8 +263,8 @@ Setup and Build Example: Arch Linux
 This example lists the steps necessary to setup and build a command line only, non-wallet distribution of the latest changes on Arch Linux:
 
     pacman -S git base-devel boost libevent python
-    git clone https://github.com/bitcoin/bitcoin.git
-    cd bitcoin/
+    git clone https://github.com/xbit/xbit.git
+    cd xbit/
     ./autogen.sh
     ./configure --disable-wallet --without-gui --without-miniupnpc
     make check
@@ -309,8 +272,8 @@ This example lists the steps necessary to setup and build a command line only, n
 Note:
 Enabling wallet support requires either compiling against a Berkeley DB newer than 4.8 (package `db`) using `--with-incompatible-bdb`,
 or building and depending on a local version of Berkeley DB 4.8. The readily available Arch Linux packages are currently built using
-`--with-incompatible-bdb` according to the [PKGBUILD](https://projects.archlinux.org/svntogit/community.git/tree/bitcoin/trunk/PKGBUILD).
-As mentioned above, when maintaining portability of the wallet between the standard Bitcoin Core distributions and independently built
+`--with-incompatible-bdb` according to the [PKGBUILD](https://projects.archlinux.org/svntogit/community.git/tree/xbit/trunk/PKGBUILD).
+As mentioned above, when maintaining portability of the wallet between the standard XBit Core distributions and independently built
 node software is desired, Berkeley DB 4.8 must be used.
 
 
@@ -331,7 +294,7 @@ To build executables for ARM:
     make HOST=arm-linux-gnueabihf NO_QT=1
     cd ..
     ./autogen.sh
-    CONFIG_SITE=$PWD/depends/arm-linux-gnueabihf/share/config.site ./configure --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++
+    ./configure --prefix=$PWD/depends/arm-linux-gnueabihf --enable-glibc-back-compat --enable-reduce-exports LDFLAGS=-static-libstdc++
     make
 
 

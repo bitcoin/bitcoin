@@ -1,9 +1,9 @@
-// Copyright (c) 2018 The Bitcoin Core developers
+// Copyright (c) 2018 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CRYPTO_HKDF_SHA256_32_H
-#define BITCOIN_CRYPTO_HKDF_SHA256_32_H
+#ifndef XBIT_CRYPTO_HKDF_SHA256_32_H
+#define XBIT_CRYPTO_HKDF_SHA256_32_H
 
 #include <crypto/hmac_sha256.h>
 
@@ -22,4 +22,4 @@ public:
     void Expand32(const std::string& info, unsigned char hash[OUTPUT_SIZE]);
 };
 
-#endif // BITCOIN_CRYPTO_HKDF_SHA256_32_H
+#endif // XBIT_CRYPTO_HKDF_SHA256_32_H

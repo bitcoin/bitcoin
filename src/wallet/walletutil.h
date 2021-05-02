@@ -1,9 +1,9 @@
-// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Copyright (c) 2017-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_WALLETUTIL_H
-#define BITCOIN_WALLET_WALLETUTIL_H
+#ifndef XBIT_WALLET_WALLETUTIL_H
+#define XBIT_WALLET_WALLETUTIL_H
 
 #include <fs.h>
 #include <script/descriptor.h>
@@ -54,19 +54,19 @@ enum WalletFlags : uint64_t {
     //! initialization that should only happen on first run.
     //!
     //! This flag is also a mandatory flag to prevent previous versions of
-    //! bitcoin from opening the wallet, thinking it was newly created, and
+    //! xbit from opening the wallet, thinking it was newly created, and
     //! then improperly reinitializing it.
     WALLET_FLAG_BLANK_WALLET = (1ULL << 33),
 
     //! Indicate that this wallet supports DescriptorScriptPubKeyMan
     WALLET_FLAG_DESCRIPTORS = (1ULL << 34),
-
-    //! Indicates that the wallet needs an external signer
-    WALLET_FLAG_EXTERNAL_SIGNER = (1ULL << 35),
 };
 
 //! Get the path of the wallet directory.
 fs::path GetWalletDir();
+
+//! Get wallets in wallet directory.
+std::vector<fs::path> ListWalletDir();
 
 /** Descriptor with some wallet metadata */
 class WalletDescriptor
@@ -101,4 +101,4 @@ public:
     WalletDescriptor(std::shared_ptr<Descriptor> descriptor, uint64_t creation_time, int32_t range_start, int32_t range_end, int32_t next_index) : descriptor(descriptor), creation_time(creation_time), range_start(range_start), range_end(range_end), next_index(next_index) {}
 };
 
-#endif // BITCOIN_WALLET_WALLETUTIL_H
+#endif // XBIT_WALLET_WALLETUTIL_H

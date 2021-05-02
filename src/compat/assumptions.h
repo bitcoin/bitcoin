@@ -1,12 +1,12 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 // Compile-time verification of assumptions we make.
 
-#ifndef BITCOIN_COMPAT_ASSUMPTIONS_H
-#define BITCOIN_COMPAT_ASSUMPTIONS_H
+#ifndef XBIT_COMPAT_ASSUMPTIONS_H
+#define XBIT_COMPAT_ASSUMPTIONS_H
 
 #include <limits>
 
@@ -14,15 +14,19 @@
 // Example(s): We use assert(...) extensively with the assumption of it never
 //             being a noop at runtime.
 #if defined(NDEBUG)
-# error "Bitcoin cannot be compiled without assertions."
+# error "XBit cannot be compiled without assertions."
 #endif
 
-// Assumption: We assume a C++17 (ISO/IEC 14882:2017) compiler (minimum requirement).
-// Example(s): We assume the presence of C++17 features everywhere :-)
-// ISO Standard C++17 [cpp.predefined]p1:
-// "The name __cplusplus is defined to the value 201703L when compiling a C++
+// Assumption: We assume a C++11 (ISO/IEC 14882:2011) compiler (minimum requirement).
+// Example(s): We assume the presence of C++11 features everywhere :-)
+// Note:       MSVC does not report the expected __cplusplus value due to legacy
+//             reasons.
+#if !defined(_MSC_VER)
+// ISO Standard C++11 [cpp.predefined]p1:
+// "The name __cplusplus is defined to the value 201103L when compiling a C++
 //  translation unit."
-static_assert(__cplusplus >= 201703L, "C++17 standard assumed");
+static_assert(__cplusplus >= 201103L, "C++11 standard assumed");
+#endif
 
 // Assumption: We assume the floating-point types to fulfill the requirements of
 //             IEC 559 (IEEE 754) standard.
@@ -59,4 +63,4 @@ static_assert(sizeof(size_t) == sizeof(void*), "Sizes of size_t and void* assume
 // * We are NOT assuming a specific value for std::locale("").name().
 // * We are NOT assuming a specific value for std::numeric_limits<char>::is_signed.
 
-#endif // BITCOIN_COMPAT_ASSUMPTIONS_H
+#endif // XBIT_COMPAT_ASSUMPTIONS_H

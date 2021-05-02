@@ -28,7 +28,7 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_Main">
        <item>
-        <widget class="QCheckBox" name="bitcoinAtStartup">
+        <widget class="QCheckBox" name="xbitAtStartup">
          <property name="toolTip">
           <string>Automatically start %1 after logging in to the system.</string>
          </property>
@@ -55,7 +55,7 @@
         <item>
          <widget class="QCheckBox" name="prune">
           <property name="toolTip">
-           <string>Enabling pruning significantly reduces the disk space required to store transactions. All blocks are still fully validated. Reverting this setting requires re-downloading the entire blockchain.</string>
+           <string>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</string>
           </property>
           <property name="text">
            <string>Prune &amp;block storage to</string>
@@ -252,20 +252,10 @@
        <item>
         <widget class="QCheckBox" name="mapPortUpnp">
          <property name="toolTip">
-          <string>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</string>
+          <string>Automatically open the XBit client port on the router. This only works when your router supports UPnP and it is enabled.</string>
          </property>
          <property name="text">
           <string>Map port using &amp;UPnP</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="mapPortNatpmp">
-         <property name="toolTip">
-          <string>Automatically open the Bitcoin client port on the router. This only works when your router supports NAT-PMP and it is enabled. The external port could be random.</string>
-         </property>
-         <property name="text">
-          <string>Map port using NA&amp;T-PMP</string>
          </property>
         </widget>
        </item>
@@ -282,7 +272,7 @@
        <item>
         <widget class="QCheckBox" name="connectSocks">
          <property name="toolTip">
-          <string>Connect to the Bitcoin network through a SOCKS5 proxy.</string>
+          <string>Connect to the XBit network through a SOCKS5 proxy.</string>
          </property>
          <property name="text">
           <string>&amp;Connect through SOCKS5 proxy (default proxy):</string>
@@ -469,7 +459,7 @@
        <item>
         <widget class="QCheckBox" name="connectSocksTor">
          <property name="toolTip">
-          <string>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</string>
+          <string>Connect to the XBit network through a separate SOCKS5 proxy for Tor onion services.</string>
          </property>
          <property name="text">
           <string>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</string>
@@ -578,15 +568,12 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_Window">
        <item>
-        <widget class="QCheckBox" name="showTrayIcon">
+        <widget class="QCheckBox" name="hideTrayIcon">
          <property name="toolTip">
-          <string>Show the icon in the system tray.</string>
+          <string>Hide the icon from the system tray.</string>
          </property>
          <property name="text">
-          <string>&amp;Show tray icon</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
+          <string>&amp;Hide tray icon</string>
          </property>
         </widget>
        </item>
@@ -706,106 +693,6 @@
         </layout>
        </item>
        <item>
-        <widget class="QGroupBox" name="font_groupBox">
-         <property name="title">
-          <string>Monospaced font in the Overview tab:</string>
-         </property>
-         <layout class="QVBoxLayout" name="font_verticalLayout">
-          <item>
-           <layout class="QHBoxLayout" name="embeddedFont_horizontalLayout">
-            <item>
-             <widget class="QRadioButton" name="embeddedFont_radioButton">
-              <property name="text">
-               <string>embedded &quot;%1&quot;</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="embeddedFont_horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <layout class="QVBoxLayout" name="embeddedFont_verticalLayout">
-              <item>
-               <widget class="QLabel" name="embeddedFont_label_1">
-                <property name="text">
-                 <string>111.11111111 BTC</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="embeddedFont_label_9">
-                <property name="text">
-                 <string>909.09090909 BTC</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="Line" name="font_line">
-            <property name="orientation">
-             <enum>Qt::Horizontal</enum>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="systemFont_horizontalLayout">
-            <item>
-             <widget class="QRadioButton" name="systemFont_radioButton">
-              <property name="text">
-               <string>closest matching &quot;%1&quot;</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="systemFont_horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <layout class="QVBoxLayout" name="systemFont_verticalLayout">
-              <item>
-               <widget class="QLabel" name="systemFont_label_1">
-                <property name="text">
-                 <string>111.11111111 BTC</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QLabel" name="systemFont_label_9">
-                <property name="text">
-                 <string>909.09090909 BTC</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-           </layout>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item>
         <spacer name="verticalSpacer_Display">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -873,7 +760,7 @@
      <item>
       <layout class="QVBoxLayout" name="verticalLayout_Buttons">
        <item>
-        <widget class="QPushButton" name="openBitcoinConfButton">
+        <widget class="QPushButton" name="openXBitConfButton">
          <property name="toolTip">
           <string>Open the %1 configuration file from the working directory.</string>
          </property>

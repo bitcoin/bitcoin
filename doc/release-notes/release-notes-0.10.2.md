@@ -1,13 +1,13 @@
-Bitcoin Core version 0.10.2 is now available from:
+XBit Core version 0.10.2 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.10.2/>
+  <https://xbit.org/bin/xbit-core-0.10.2/>
 
 This is a new minor version release, bringing minor bug fixes and translation 
 updates. It is recommended to upgrade to this version.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/xbit/xbit/issues>
 
 Upgrading and downgrading
 =========================
@@ -17,15 +17,15 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
-bitcoind/bitcoin-qt (on Linux).
+installer (on Windows) or just copy over /Applications/XBit-Qt (on Mac) or
+xbitd/xbit-qt (on Linux).
 
 Downgrade warning
 ------------------
 
 Because release 0.10.0 and later makes use of headers-first synchronization and
 parallel block download (see further), the block files and databases are not
-backwards-compatible with pre-0.10 versions of Bitcoin Core or other software:
+backwards-compatible with pre-0.10 versions of XBit Core or other software:
 
 * Blocks will be stored on disk out of order (in the order they are
 received, really), which makes it incompatible with some tools or
@@ -47,12 +47,12 @@ Notable changes
 ===============
 
 This fixes a serious problem on Windows with data directories that have non-ASCII
-characters (https://github.com/bitcoin/bitcoin/issues/6078).
+characters (https://github.com/xbit/xbit/issues/6078).
 
 For other platforms there are no notable changes.
 
 For the notable changes in 0.10, refer to the release notes
-at https://github.com/bitcoin/bitcoin/blob/v0.10.0/doc/release-notes.md
+at https://github.com/xbit/xbit/blob/v0.10.0/doc/release-notes.md
 
 0.10.2 Change log
 =================
@@ -83,4 +83,4 @@ And all those who contributed additional code review and/or security research:
 - Pieter Wuille
 - vayvanne
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/xbit/).

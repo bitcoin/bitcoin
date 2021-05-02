@@ -1,5 +1,5 @@
 {
-  "name": "bitcoin-core",
+  "name": "xbit-core",
   "version-string": "1",
   "dependencies": [
     "berkeleydb",
@@ -8,6 +8,7 @@
     "boost-process",
     "boost-signals2",
     "boost-test",
+    "boost-thread",
     "sqlite3",
     "double-conversion",
     {

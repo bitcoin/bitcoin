@@ -1,18 +1,22 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_INDEX_BLOCKFILTERINDEX_H
-#define BITCOIN_INDEX_BLOCKFILTERINDEX_H
+#ifndef XBIT_INDEX_BLOCKFILTERINDEX_H
+#define XBIT_INDEX_BLOCKFILTERINDEX_H
 
 #include <blockfilter.h>
 #include <chain.h>
 #include <flatfile.h>
 #include <index/base.h>
-#include <util/hasher.h>
 
 /** Interval between compact filter checkpoints. See BIP 157. */
 static constexpr int CFCHECKPT_INTERVAL = 1000;
+
+struct FilterHeaderHasher
+{
+    size_t operator()(const uint256& hash) const { return ReadLE64(hash.begin()); }
+};
 
 /**
  * BlockFilterIndex is used to store and retrieve block filters, hashes, and headers for a range of
@@ -99,4 +103,4 @@ bool DestroyBlockFilterIndex(BlockFilterType filter_type);
 /** Destroy all open block filter indexes. */
 void DestroyAllBlockFilterIndexes();
 
-#endif // BITCOIN_INDEX_BLOCKFILTERINDEX_H
+#endif // XBIT_INDEX_BLOCKFILTERINDEX_H

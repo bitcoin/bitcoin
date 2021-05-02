@@ -2,10 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file. See the AUTHORS file for names of contributors.
 
-// ARM-specific code
+// Linux-specific code checking the availability for ARM CRC32C instructions.
 
-#ifndef CRC32C_CRC32C_ARM_H_
-#define CRC32C_CRC32C_ARM_H_
+#ifndef CRC32C_CRC32C_ARM_LINUX_H_
+#define CRC32C_CRC32C_ARM_LINUX_H_
 
 #include <cstddef>
 #include <cstdint>
@@ -24,4 +24,4 @@ uint32_t ExtendArm64(uint32_t crc, const uint8_t* data, size_t count);
 
 #endif  // HAVE_ARM64_CRC32C
 
-#endif  // CRC32C_CRC32C_ARM_H_
+#endif  // CRC32C_CRC32C_ARM_LINUX_H_

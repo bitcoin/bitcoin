@@ -1,9 +1,9 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) 2018-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_UTIL_SPANPARSING_H
-#define BITCOIN_UTIL_SPANPARSING_H
+#ifndef XBIT_UTIL_SPANPARSING_H
+#define XBIT_UTIL_SPANPARSING_H
 
 #include <span.h>
 
@@ -47,4 +47,4 @@ std::vector<Span<const char>> Split(const Span<const char>& sp, char sep);
 
 } // namespace spanparsing
 
-#endif // BITCOIN_UTIL_SPANPARSING_H
+#endif // XBIT_UTIL_SPANPARSING_H

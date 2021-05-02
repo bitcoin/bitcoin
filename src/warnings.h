@@ -1,16 +1,18 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WARNINGS_H
-#define BITCOIN_WARNINGS_H
+#ifndef XBIT_WARNINGS_H
+#define XBIT_WARNINGS_H
 
 #include <string>
 
 struct bilingual_str;
 
 void SetMiscWarning(const bilingual_str& warning);
+void SetfLargeWorkForkFound(bool flag);
+bool GetfLargeWorkForkFound();
 void SetfLargeWorkInvalidChainFound(bool flag);
 /** Format a string that describes several potential problems detected by the core.
  * @param[in] verbose bool
@@ -20,4 +22,4 @@ void SetfLargeWorkInvalidChainFound(bool flag);
  */
 bilingual_str GetWarnings(bool verbose);
 
-#endif //  BITCOIN_WARNINGS_H
+#endif //  XBIT_WARNINGS_H

@@ -1,9 +1,9 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
-#ifndef BITCOIN_POLICY_FEES_H
-#define BITCOIN_POLICY_FEES_H
+#ifndef XBIT_POLICY_FEES_H
+#define XBIT_POLICY_FEES_H
 
 #include <amount.h>
 #include <policy/feerate.h>
@@ -11,7 +11,6 @@
 #include <random.h>
 #include <sync.h>
 
-#include <array>
 #include <map>
 #include <memory>
 #include <string>
@@ -26,15 +25,9 @@ class TxConfirmStats;
 /* Identifier for each of the 3 different TxConfirmStats which will track
  * history over different time horizons. */
 enum class FeeEstimateHorizon {
-    SHORT_HALFLIFE,
-    MED_HALFLIFE,
-    LONG_HALFLIFE,
-};
-
-static constexpr auto ALL_FEE_ESTIMATE_HORIZONS = std::array{
-    FeeEstimateHorizon::SHORT_HALFLIFE,
-    FeeEstimateHorizon::MED_HALFLIFE,
-    FeeEstimateHorizon::LONG_HALFLIFE,
+    SHORT_HALFLIFE = 0,
+    MED_HALFLIFE = 1,
+    LONG_HALFLIFE = 2
 };
 
 std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon);
@@ -222,9 +215,6 @@ public:
     /** Calculation of highest target that estimates are tracked for */
     unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const;
 
-    /** Drop still unconfirmed transactions and record current estimations, if the fee estimation file is present. */
-    void Flush();
-
 private:
     mutable RecursiveMutex m_cs_fee_estimator;
 
@@ -291,4 +281,4 @@ private:
     FastRandomContext insecure_rand;
 };
 
-#endif // BITCOIN_POLICY_FEES_H
+#endif // XBIT_POLICY_FEES_H

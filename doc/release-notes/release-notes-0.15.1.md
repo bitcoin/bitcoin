@@ -1,29 +1,29 @@
-Bitcoin Core version *0.15.1* is now available from:
+XBit Core version *0.15.1* is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.15.1/>
+  <https://xbitcore.org/bin/xbit-core-0.15.1/>
 
 or
 
-  <https://bitcoin.org/bin/bitcoin-core-0.15.1/>
+  <https://xbit.org/bin/xbit-core-0.15.1/>
 
 This is a new minor version release, including various bugfixes and
 performance improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/xbit/xbit/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+  <https://xbitcore.org/en/list/announcements/join/>
 
 How to Upgrade
 ==============
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the 
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+installer (on Windows) or just copy over `/Applications/XBit-Qt` (on Mac)
+or `xbitd`/`xbit-qt` (on Linux).
 
 The first time you run version 0.15.0 or higher, your chainstate database will
 be converted to a new format, which will take anywhere from a few minutes to
@@ -52,10 +52,10 @@ processing the entire blockchain.
 Compatibility
 ==============
 
-Bitcoin Core is extensively tested on multiple operating systems using
+XBit Core is extensively tested on multiple operating systems using
 the Linux kernel, macOS 10.8+, and Windows Vista and later. Windows XP is not supported.
 
-Bitcoin Core should also work on most other Unix-like systems but is not
+XBit Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
 
@@ -65,7 +65,7 @@ Notable changes
 Network fork safety enhancements
 --------------------------------
 
-A number of changes to the way Bitcoin Core deals with peer connections and invalid blocks
+A number of changes to the way XBit Core deals with peer connections and invalid blocks
 have been made, as a safety precaution against blockchain forks and misbehaving peers.
 
 - Unrequested blocks with less work than the minimum-chain-work are now no longer processed even
@@ -202,19 +202,19 @@ Low-level RPC changes
 - #11399 `a825d4a` Fix bip68-sequence rpc test (jl2012)
 - #11150 `847c75e` Add getmininginfo test (mess110)
 - #11407 `806c78f` add functional test for mempoolreplacement command line arg (instagibbs)
-- #11433 `e169349` Restore bitcoin-util-test py2 compatibility (MarcoFalke)
+- #11433 `e169349` Restore xbit-util-test py2 compatibility (MarcoFalke)
 - #11308 `2e1ac70` zapwallettxes: Wait up to 3s for mempool reload (MarcoFalke)
-- #10798 `716066d` test bitcoin-cli (jnewbery)
+- #10798 `716066d` test xbit-cli (jnewbery)
 - #11443 `019c492` Allow "make cov" out-of-tree; Fix rpc mapping check (MarcoFalke)
 - #11445 `51bad91` 0.15.1 Backports (MarcoFalke)
 - #11319 `2f0b30a` Fix error introduced into p2p-segwit.py, and prevent future similar errors (sdaftuar)
 - #10552 `e4605d9` Tests for zmqpubrawtx and zmqpubrawblock (achow101)
 - #11067 `eeb24a3` TestNode: Add wait_until_stopped helper method (MarcoFalke)
 - #11068 `5398f20` Move wait_until to util (MarcoFalke)
-- #11125 `812c870` Add bitcoin-cli -stdin and -stdinrpcpass functional tests (promag)
+- #11125 `812c870` Add xbit-cli -stdin and -stdinrpcpass functional tests (promag)
 - #11077 `1d80d1e` fix timeout issues from TestNode (jnewbery)
 - #11078 `f1ced0d` Make p2p-leaktests.py more robust (jnewbery)
-- #11210 `f3f7891` Stop test_bitcoin-qt touching ~/.bitcoin (MeshCollider)
+- #11210 `f3f7891` Stop test_xbit-qt touching ~/.xbit (MeshCollider)
 - #11234 `f0b6795` Remove redundant testutil.cpp|h files (MeshCollider)
 - #11215 `cef0319` fixups from set_test_params() (jnewbery)
 - #11345 `f9cf7b5` Check connectivity before sending in assumevalid.py (jnewbery)
@@ -232,7 +232,7 @@ Low-level RPC changes
 - #11310 `b6468d3` Test listwallets RPC (mess110)
 
 ### Miscellaneous
-- #11377 `75997c3` Disallow uncompressed pubkeys in bitcoin-tx [multisig] output adds (TheBlueMatt)
+- #11377 `75997c3` Disallow uncompressed pubkeys in xbit-tx [multisig] output adds (TheBlueMatt)
 - #11437 `dea3b87` [Docs] Update Windows build instructions for using WSL and Ubuntu 17.04 (fanquake)
 - #11318 `8b61aee` Put back inadvertently removed copyright notices (gmaxwell)
 - #11442 `cf18f42` [Docs] Update OpenBSD Build Instructions for OpenBSD 6.2 (fanquake)
@@ -274,4 +274,4 @@ Thanks to everyone who directly contributed to this release:
 - Tomas van der Wansem
 - Wladimir J. van der Laan
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/xbit/).

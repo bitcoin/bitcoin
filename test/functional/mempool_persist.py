@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2020 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test mempool persistence.
 
-By default, bitcoind will dump mempool on shutdown and
+By default, xbitd will dump mempool on shutdown and
 then reload it on startup. This can be overridden with
 the -persistmempool=0 command line option.
 
@@ -40,7 +40,7 @@ import os
 import time
 
 from test_framework.p2p import P2PTxInvStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import XBitTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than_or_equal,
@@ -48,7 +48,7 @@ from test_framework.util import (
 )
 
 
-class MempoolPersistTest(BitcoinTestFramework):
+class MempoolPersistTest(XBitTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         self.extra_args = [[], ["-persistmempool=0"], []]
@@ -69,18 +69,12 @@ class MempoolPersistTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[0].getrawmempool()), 5)
         assert_equal(len(self.nodes[1].getrawmempool()), 5)
 
-        total_fee_old = self.nodes[0].getmempoolinfo()['total_fee']
-
         self.log.debug("Prioritize a transaction on node0")
         fees = self.nodes[0].getmempoolentry(txid=last_txid)['fees']
         assert_equal(fees['base'], fees['modified'])
         self.nodes[0].prioritisetransaction(txid=last_txid, fee_delta=1000)
         fees = self.nodes[0].getmempoolentry(txid=last_txid)['fees']
         assert_equal(fees['base'] + Decimal('0.00001000'), fees['modified'])
-
-        self.log.info('Check the total base fee is unchanged after prioritisetransaction')
-        assert_equal(total_fee_old, self.nodes[0].getmempoolinfo()['total_fee'])
-        assert_equal(total_fee_old, sum(v['fees']['base'] for k, v in self.nodes[0].getrawmempool(verbose=True).items()))
 
         tx_creation_time = self.nodes[0].getmempoolentry(txid=last_txid)['time']
         assert_greater_than_or_equal(tx_creation_time, tx_creation_time_lower)
@@ -145,7 +139,7 @@ class MempoolPersistTest(BitcoinTestFramework):
         assert self.nodes[1].getmempoolinfo()["loaded"]
         assert_equal(len(self.nodes[1].getrawmempool()), 6)
 
-        self.log.debug("Prevent bitcoind from writing mempool.dat to disk. Verify that `savemempool` fails")
+        self.log.debug("Prevent xbitd from writing mempool.dat to disk. Verify that `savemempool` fails")
         # to test the exception we are creating a tmp folder called mempool.dat.new
         # which is an implementation detail that could change and break this test
         mempooldotnew1 = mempooldat1 + '.new'

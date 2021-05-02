@@ -4,7 +4,7 @@ Unauthenticated REST Interface
 The REST API can be enabled with the `-rest` option.
 
 The interface runs on the same port as the JSON-RPC interface, by default port 8332 for mainnet, port 18332 for testnet,
-port 38332 for signet, and port 18443 for regtest.
+and port 18443 for regtest.
 
 REST Interface consistency guarantees
 -------------------------------------
@@ -62,7 +62,7 @@ Given a height: returns hash of block in best-block-chain at height provided.
 
 Returns various state info regarding block chain processing.
 Only supports JSON as output format.
-* chain : (string) current network name (main, test, signet, regtest)
+* chain : (string) current network name (main, test, regtest)
 * blocks : (numeric) the current number of blocks processed in the server
 * headers : (numeric) the current number of headers we have validated
 * bestblockhash : (string) the hash of the currently best block
@@ -79,7 +79,7 @@ Only supports JSON as output format.
 
 The getutxo command allows querying of the UTXO set given a set of outpoints.
 See BIP64 for input and output serialisation:
-https://github.com/bitcoin/bips/blob/master/bip-0064.mediawiki
+https://github.com/xbit/bips/blob/master/bip-0064.mediawiki
 
 Example:
 ```
@@ -95,8 +95,11 @@ $ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff76
          "scriptPubKey" : {
             "asm" : "OP_DUP OP_HASH160 1c7cebb529b86a04c683dfa87be49de35bcf589e OP_EQUALVERIFY OP_CHECKSIG",
             "hex" : "76a9141c7cebb529b86a04c683dfa87be49de35bcf589e88ac",
+            "reqSigs" : 1,
             "type" : "pubkeyhash",
-            "address" : "mi7as51dvLJsizWnTMurtRmrP8hG2m1XvD"
+            "addresses" : [
+               "mi7as51dvLJsizWnTMurtRmrP8hG2m1XvD"
+            ]
          }
       }
    ]
@@ -108,7 +111,12 @@ $ curl localhost:18332/rest/getutxos/checkmempool/b2cdfd7b89def827ff8af7cd9bff76
 
 Returns various information about the TX mempool.
 Only supports JSON as output format.
-Refer to the `getmempoolinfo` RPC for documentation of the fields.
+* loaded : (boolean) if the mempool is fully loaded
+* size : (numeric) the number of transactions in the TX mempool
+* bytes : (numeric) size of the TX mempool in bytes
+* usage : (numeric) total TX mempool memory usage
+* maxmempool : (numeric) maximum memory usage for the mempool in bytes
+* mempoolminfee : (numeric) minimum feerate (XBT per KB) for tx to be accepted
 
 `GET /rest/mempool/contents.json`
 
@@ -117,4 +125,4 @@ Only supports JSON as output format.
 
 Risks
 -------------
-Running a web browser on the same node with a REST enabled bitcoind can be a risk. Accessing prepared XSS websites could read out tx/block data of your node by placing links like `<script src="http://127.0.0.1:8332/rest/tx/1234567890.json">` which might break the nodes privacy.
+Running a web browser on the same node with a REST enabled xbitd can be a risk. Accessing prepared XSS websites could read out tx/block data of your node by placing links like `<script src="http://127.0.0.1:8332/rest/tx/1234567890.json">` which might break the nodes privacy.

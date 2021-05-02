@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -128,20 +128,10 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     }
 
     // Instantiate model and register it.
-    WalletModel* wallet_model = new WalletModel(std::move(wallet), m_client_model, m_platform_style,
-                                                nullptr /* required for the following moveToThread() call */);
-
-    // Move WalletModel object to the thread that created the WalletController
-    // object (GUI main thread), instead of the current thread, which could be
-    // an outside wallet thread or RPC thread sending a LoadWallet notification.
-    // This ensures queued signals sent to the WalletModel object will be
-    // handled on the GUI event loop.
+    WalletModel* wallet_model = new WalletModel(std::move(wallet), m_client_model, m_platform_style, nullptr);
+    // Handler callback runs in a different thread so fix wallet model thread affinity.
     wallet_model->moveToThread(thread());
-    // setParent(parent) must be called in the thread which created the parent object. More details in #18948.
-    GUIUtil::ObjectInvoke(this, [wallet_model, this] {
-        wallet_model->setParent(this);
-    }, GUIUtil::blockingGUIThreadConnection());
-
+    wallet_model->setParent(this);
     m_wallets.push_back(wallet_model);
 
     // WalletModel::startPollBalance needs to be called in a thread managed by
@@ -152,7 +142,7 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
 
     connect(wallet_model, &WalletModel::unload, this, [this, wallet_model] {
         // Defer removeAndDeleteWallet when no modal widget is active.
-        // TODO: remove this workaround by removing usage of QDialog::exec.
+        // TODO: remove this workaround by removing usage of QDiallog::exec.
         if (QApplication::activeModalWidget()) {
             connect(qApp, &QApplication::focusWindowChanged, wallet_model, [this, wallet_model]() {
                 if (!QApplication::activeModalWidget()) {
@@ -167,6 +157,7 @@ WalletModel* WalletController::getOrCreateWallet(std::unique_ptr<interfaces::Wal
     // Re-emit coinsSent signal from wallet model.
     connect(wallet_model, &WalletModel::coinsSent, this, &WalletController::coinsSent);
 
+    // Notify walletAdded signal on the GUI thread.
     Q_EMIT walletAdded(wallet_model);
 
     return wallet_model;

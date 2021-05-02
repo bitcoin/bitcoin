@@ -1,16 +1,17 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/xbit-config.h>
 #endif
 
 #include <interfaces/node.h>
-#include <qt/bitcoin.h>
+#include <qt/xbit.h>
 #include <qt/test/apptests.h>
 #include <qt/test/rpcnestedtests.h>
 #include <qt/test/uritests.h>
+#include <qt/test/compattests.h>
 #include <test/util/setup_common.h>
 
 #ifdef ENABLE_WALLET
@@ -53,13 +54,6 @@ int main(int argc, char* argv[])
 
     NodeContext node_context;
     std::unique_ptr<interfaces::Node> node = interfaces::MakeNode(&node_context);
-    gArgs.ForceSetArg("-listen", "0");
-    gArgs.ForceSetArg("-listenonion", "0");
-    gArgs.ForceSetArg("-discover", "0");
-    gArgs.ForceSetArg("-dnsseed", "0");
-    gArgs.ForceSetArg("-fixedseeds", "0");
-    gArgs.ForceSetArg("-upnp", "0");
-    gArgs.ForceSetArg("-natpmp", "0");
 
     bool fInvalid = false;
 
@@ -74,9 +68,9 @@ int main(int argc, char* argv[])
 
     // Don't remove this, it's needed to access
     // QApplication:: and QCoreApplication:: in the tests
-    BitcoinApplication app;
+    XBitApplication app;
     app.setNode(*node);
-    app.setApplicationName("Bitcoin-Qt-test");
+    app.setApplicationName("XBit-Qt-test");
 
     app.node().context()->args = &gArgs;     // Make gArgs available in the NodeContext
     AppTests app_tests(app);
@@ -89,6 +83,10 @@ int main(int argc, char* argv[])
     }
     RPCNestedTests test3(app.node());
     if (QTest::qExec(&test3) != 0) {
+        fInvalid = true;
+    }
+    CompatTests test4;
+    if (QTest::qExec(&test4) != 0) {
         fInvalid = true;
     }
 #ifdef ENABLE_WALLET

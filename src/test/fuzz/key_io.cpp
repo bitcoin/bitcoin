@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,14 +14,14 @@
 #include <string>
 #include <vector>
 
-void initialize_key_io()
+void initialize()
 {
     static const ECCVerifyHandle verify_handle;
     ECC_Start();
     SelectParams(CBaseChainParams::MAIN);
 }
 
-FUZZ_TARGET_INIT(key_io, initialize_key_io)
+void test_one_input(const std::vector<uint8_t>& buffer)
 {
     const std::string random_string(buffer.begin(), buffer.end());
 

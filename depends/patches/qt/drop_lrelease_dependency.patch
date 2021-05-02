@@ -14,7 +14,7 @@ diff --git a/qttranslations/translations/translations.pro b/qttranslations/trans
 index 694544c..eff339d 100644
 --- a/qttranslations/translations/translations.pro
 +++ b/qttranslations/translations/translations.pro
-@@ -107,3 +107,2 @@ updateqm.commands = $$LRELEASE ${QMAKE_FILE_IN} -qm ${QMAKE_FILE_OUT}
+@@ -109,3 +109,2 @@ updateqm.commands = $$LRELEASE ${QMAKE_FILE_IN} -qm ${QMAKE_FILE_OUT}
  silent:updateqm.commands = @echo lrelease ${QMAKE_FILE_IN} && $$updateqm.commands
 -updateqm.depends = $$LRELEASE_EXE
  updateqm.name = LRELEASE ${QMAKE_FILE_IN}

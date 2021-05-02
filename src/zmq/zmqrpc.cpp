@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -52,9 +52,9 @@ static RPCHelpMan getzmqnotifications()
 }
 
 const CRPCCommand commands[] =
-{ //  category           actor (function)
-  //  -----------------  -----------------------
-    { "zmq",             &getzmqnotifications,    },
+{ //  category              name                                actor (function)                argNames
+  //  -----------------     ------------------------            -----------------------         ----------
+    { "zmq",                "getzmqnotifications",              &getzmqnotifications,           {} },
 };
 
 } // anonymous namespace

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,7 +24,7 @@ namespace {
 //!
 //! BerkeleyDB generates unique fileids by default
 //! (https://docs.oracle.com/cd/E17275_01/html/programmer_reference/program_copy.html),
-//! so bitcoin should never create different databases with the same fileid, but
+//! so xbit should never create different databases with the same fileid, but
 //! this error can be triggered if users manually copy database files.
 void CheckUniqueFileid(const BerkeleyEnvironment& env, const std::string& filename, Db& db, WalletDatabaseFileId& fileid)
 {
@@ -53,13 +53,16 @@ bool WalletDatabaseFileId::operator==(const WalletDatabaseFileId& rhs) const
 }
 
 /**
- * @param[in] env_directory Path to environment directory
+ * @param[in] wallet_path Path to wallet directory. Or (for backwards compatibility only) a path to a berkeley btree data file inside a wallet directory.
+ * @param[out] database_filename Filename of berkeley btree data file inside the wallet directory.
  * @return A shared pointer to the BerkeleyEnvironment object for the wallet directory, never empty because ~BerkeleyEnvironment
  * erases the weak pointer from the g_dbenvs map.
  * @post A new BerkeleyEnvironment weak pointer is inserted into g_dbenvs if the directory path key was not already in the map.
  */
-std::shared_ptr<BerkeleyEnvironment> GetBerkeleyEnv(const fs::path& env_directory)
+std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& wallet_path, std::string& database_filename)
 {
+    fs::path env_directory;
+    SplitWalletPath(wallet_path, env_directory, database_filename);
     LOCK(cs_db);
     auto inserted = g_dbenvs.emplace(env_directory.string(), std::weak_ptr<BerkeleyEnvironment>());
     if (inserted.second) {
@@ -132,7 +135,7 @@ bool BerkeleyEnvironment::Open(bilingual_str& err)
     fs::path pathIn = strPath;
     TryCreateDirectories(pathIn);
     if (!LockDirectory(pathIn, ".walletlock")) {
-        LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance of bitcoin may be using it.\n", strPath);
+        LogPrintf("Cannot obtain a lock on wallet directory %s. Another instance of xbit may be using it.\n", strPath);
         err = strprintf(_("Error initializing wallet database environment %s!"), Directory());
         return false;
     }
@@ -274,7 +277,7 @@ bool BerkeleyDatabase::Verify(bilingual_str& errorStr)
         Db db(env->dbenv.get(), 0);
         int result = db.verify(strFile.c_str(), nullptr, nullptr, 0);
         if (result != 0) {
-            errorStr = strprintf(_("%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup."), file_path);
+            errorStr = strprintf(_("%s corrupt. Try using the wallet tool xbit-wallet to salvage or restoring a backup."), file_path);
             return false;
         }
     }
@@ -331,7 +334,7 @@ void BerkeleyDatabase::Open()
 
         if (m_db == nullptr) {
             int ret;
-            std::unique_ptr<Db> pdb_temp = std::make_unique<Db>(env->dbenv.get(), 0);
+            std::unique_ptr<Db> pdb_temp = MakeUnique<Db>(env->dbenv.get(), 0);
 
             bool fMockDb = env->IsMock();
             if (fMockDb) {
@@ -462,7 +465,7 @@ bool BerkeleyDatabase::Rewrite(const char* pszSkip)
                 std::string strFileRes = strFile + ".rewrite";
                 { // surround usage of db with extra {}
                     BerkeleyBatch db(*this, true);
-                    std::unique_ptr<Db> pdbCopy = std::make_unique<Db>(env->dbenv.get(), 0);
+                    std::unique_ptr<Db> pdbCopy = MakeUnique<Db>(env->dbenv.get(), 0);
 
                     int ret = pdbCopy->open(nullptr,               // Txn pointer
                                             strFileRes.c_str(), // Filename
@@ -488,9 +491,9 @@ bool BerkeleyDatabase::Rewrite(const char* pszSkip)
                                 break;
                             }
                             if (pszSkip &&
-                                strncmp((const char*)ssKey.data(), pszSkip, std::min(ssKey.size(), strlen(pszSkip))) == 0)
+                                strncmp(ssKey.data(), pszSkip, std::min(ssKey.size(), strlen(pszSkip))) == 0)
                                 continue;
-                            if (strncmp((const char*)ssKey.data(), "\x07version", 8) == 0) {
+                            if (strncmp(ssKey.data(), "\x07version", 8) == 0) {
                                 // Update version:
                                 ssValue.clear();
                                 ssValue << CLIENT_VERSION;
@@ -723,23 +726,6 @@ bool BerkeleyBatch::TxnAbort()
     return (ret == 0);
 }
 
-bool BerkeleyDatabaseSanityCheck()
-{
-    int major, minor;
-    DbEnv::version(&major, &minor, nullptr);
-
-    /* If the major version differs, or the minor version of library is *older*
-     * than the header that was compiled against, flag an error.
-     */
-    if (major != DB_VERSION_MAJOR || minor < DB_VERSION_MINOR) {
-        LogPrintf("BerkeleyDB database version conflict: header version is %d.%d, library version is %d.%d\n",
-            DB_VERSION_MAJOR, DB_VERSION_MINOR, major, minor);
-        return false;
-    }
-
-    return true;
-}
-
 std::string BerkeleyDatabaseVersion()
 {
     return DbEnv::version(nullptr, nullptr, nullptr);
@@ -819,23 +805,30 @@ void BerkeleyDatabase::RemoveRef()
 
 std::unique_ptr<DatabaseBatch> BerkeleyDatabase::MakeBatch(bool flush_on_close)
 {
-    return std::make_unique<BerkeleyBatch>(*this, false, flush_on_close);
+    return MakeUnique<BerkeleyBatch>(*this, false, flush_on_close);
+}
+
+bool ExistsBerkeleyDatabase(const fs::path& path)
+{
+    fs::path env_directory;
+    std::string data_filename;
+    SplitWalletPath(path, env_directory, data_filename);
+    return IsBDBFile(env_directory / data_filename);
 }
 
 std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error)
 {
-    fs::path data_file = BDBDataFile(path);
     std::unique_ptr<BerkeleyDatabase> db;
     {
         LOCK(cs_db); // Lock env.m_databases until insert in BerkeleyDatabase constructor
-        std::string data_filename = data_file.filename().string();
-        std::shared_ptr<BerkeleyEnvironment> env = GetBerkeleyEnv(data_file.parent_path());
+        std::string data_filename;
+        std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(path, data_filename);
         if (env->m_databases.count(data_filename)) {
             error = Untranslated(strprintf("Refusing to load database. Data file '%s' is already loaded.", (env->Directory() / data_filename).string()));
             status = DatabaseStatus::FAILED_ALREADY_LOADED;
             return nullptr;
         }
-        db = std::make_unique<BerkeleyDatabase>(std::move(env), std::move(data_filename));
+        db = MakeUnique<BerkeleyDatabase>(std::move(env), std::move(data_filename));
     }
 
     if (options.verify && !db->Verify(error)) {
@@ -845,4 +838,29 @@ std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, con
 
     status = DatabaseStatus::SUCCESS;
     return db;
+}
+
+bool IsBDBFile(const fs::path& path)
+{
+    if (!fs::exists(path)) return false;
+
+    // A Berkeley DB Btree file has at least 4K.
+    // This check also prevents opening lock files.
+    boost::system::error_code ec;
+    auto size = fs::file_size(path, ec);
+    if (ec) LogPrintf("%s: %s %s\n", __func__, ec.message(), path.string());
+    if (size < 4096) return false;
+
+    fsbridge::ifstream file(path, std::ios::binary);
+    if (!file.is_open()) return false;
+
+    file.seekg(12, std::ios::beg); // Magic bytes start at offset 12
+    uint32_t data = 0;
+    file.read((char*) &data, sizeof(data)); // Read 4 bytes of file to compare against magic
+
+    // Berkeley DB Btree magic bytes, from:
+    //  https://github.com/file/file/blob/5824af38469ec1ca9ac3ffd251e7afe9dc11e227/magic/Magdir/database#L74-L75
+    //  - big endian systems - 00 05 31 62
+    //  - little endian systems - 62 31 05 00
+    return data == 0x00053162 || data == 0x62310500;
 }

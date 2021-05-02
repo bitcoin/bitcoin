@@ -1,16 +1,15 @@
-// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Copyright (c) 2017-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
 #include <index/base.h>
-#include <node/blockstorage.h>
 #include <node/ui_interface.h>
 #include <shutdown.h>
 #include <tinyformat.h>
 #include <util/system.h>
 #include <util/translation.h>
-#include <validation.h> // For g_chainman
+#include <validation.h>
 #include <warnings.h>
 
 constexpr char DB_BEST_BLOCK = 'B';
@@ -63,46 +62,9 @@ bool BaseIndex::Init()
     if (locator.IsNull()) {
         m_best_block_index = nullptr;
     } else {
-        m_best_block_index = g_chainman.m_blockman.FindForkInGlobalIndex(::ChainActive(), locator);
+        m_best_block_index = FindForkInGlobalIndex(::ChainActive(), locator);
     }
     m_synced = m_best_block_index.load() == ::ChainActive().Tip();
-    if (!m_synced) {
-        bool prune_violation = false;
-        if (!m_best_block_index) {
-            // index is not built yet
-            // make sure we have all block data back to the genesis
-            const CBlockIndex* block = ::ChainActive().Tip();
-            while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
-                block = block->pprev;
-            }
-            prune_violation = block != ::ChainActive().Genesis();
-        }
-        // in case the index has a best block set and is not fully synced
-        // check if we have the required blocks to continue building the index
-        else {
-            const CBlockIndex* block_to_test = m_best_block_index.load();
-            if (!ChainActive().Contains(block_to_test)) {
-                // if the bestblock is not part of the mainchain, find the fork
-                // and make sure we have all data down to the fork
-                block_to_test = ::ChainActive().FindFork(block_to_test);
-            }
-            const CBlockIndex* block = ::ChainActive().Tip();
-            prune_violation = true;
-            // check backwards from the tip if we have all block data until we reach the indexes bestblock
-            while (block_to_test && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
-                if (block_to_test == block) {
-                    prune_violation = false;
-                    break;
-                }
-                block = block->pprev;
-            }
-        }
-        if (prune_violation) {
-            // throw error and graceful shutdown if we can't build the index
-            FatalError("%s: %s best block of the index goes beyond pruned data. Please disable the index or reindex (which will download the whole blockchain again)", __func__, GetName());
-            return false;
-        }
-    }
     return true;
 }
 
@@ -215,10 +177,6 @@ bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_ti
     assert(current_tip->GetAncestor(new_tip->nHeight) == new_tip);
 
     // In the case of a reorg, ensure persisted block locator is not stale.
-    // Pruning has a minimum of 288 blocks-to-keep and getting the index
-    // out of sync may be possible but a users fault.
-    // In case we reorg beyond the pruned depth, ReadBlockFromDisk would
-    // throw and lead to a graceful shutdown
     m_best_block_index = new_tip;
     if (!Commit()) {
         // If commit fails, revert the best block index to avoid corruption.
@@ -281,7 +239,7 @@ void BaseIndex::ChainStateFlushed(const CBlockLocator& locator)
     const CBlockIndex* locator_tip_index;
     {
         LOCK(cs_main);
-        locator_tip_index = g_chainman.m_blockman.LookupBlockIndex(locator_tip_hash);
+        locator_tip_index = LookupBlockIndex(locator_tip_hash);
     }
 
     if (!locator_tip_index) {
@@ -367,6 +325,6 @@ IndexSummary BaseIndex::GetSummary() const
     IndexSummary summary{};
     summary.name = GetName();
     summary.synced = m_synced;
-    summary.best_block_height = m_best_block_index ? m_best_block_index.load()->nHeight : 0;
+    summary.best_block_height = m_best_block_index.load()->nHeight;
     return summary;
 }

@@ -1,10 +1,10 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <qt/walletframe.h>
 
-#include <qt/bitcoingui.h>
+#include <qt/xbitgui.h>
 #include <qt/createwalletdialog.h>
 #include <qt/overviewpage.h>
 #include <qt/walletcontroller.h>
@@ -19,7 +19,7 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
-WalletFrame::WalletFrame(const PlatformStyle* _platformStyle, BitcoinGUI* _gui)
+WalletFrame::WalletFrame(const PlatformStyle* _platformStyle, XBitGUI* _gui)
     : QFrame(_gui),
       gui(_gui),
       platformStyle(_platformStyle),
@@ -89,15 +89,15 @@ bool WalletFrame::addWallet(WalletModel *walletModel)
     mapWalletViews[walletModel] = walletView;
 
     connect(walletView, &WalletView::outOfSyncWarningClicked, this, &WalletFrame::outOfSyncWarningClicked);
-    connect(walletView, &WalletView::transactionClicked, gui, &BitcoinGUI::gotoHistoryPage);
-    connect(walletView, &WalletView::coinsSent, gui, &BitcoinGUI::gotoHistoryPage);
+    connect(walletView, &WalletView::transactionClicked, gui, &XBitGUI::gotoHistoryPage);
+    connect(walletView, &WalletView::coinsSent, gui, &XBitGUI::gotoHistoryPage);
     connect(walletView, &WalletView::message, [this](const QString& title, const QString& message, unsigned int style) {
         gui->message(title, message, style);
     });
-    connect(walletView, &WalletView::encryptionStatusChanged, gui, &BitcoinGUI::updateWalletStatus);
-    connect(walletView, &WalletView::incomingTransaction, gui, &BitcoinGUI::incomingTransaction);
-    connect(walletView, &WalletView::hdEnabledStatusChanged, gui, &BitcoinGUI::updateWalletStatus);
-    connect(gui, &BitcoinGUI::setPrivacy, walletView, &WalletView::setPrivacy);
+    connect(walletView, &WalletView::encryptionStatusChanged, gui, &XBitGUI::updateWalletStatus);
+    connect(walletView, &WalletView::incomingTransaction, gui, &XBitGUI::incomingTransaction);
+    connect(walletView, &WalletView::hdEnabledStatusChanged, gui, &XBitGUI::updateWalletStatus);
+    connect(gui, &XBitGUI::setPrivacy, walletView, &WalletView::setPrivacy);
 
     return true;
 }
@@ -106,24 +106,9 @@ void WalletFrame::setCurrentWallet(WalletModel* wallet_model)
 {
     if (mapWalletViews.count(wallet_model) == 0) return;
 
-    // Stop the effect of hidden widgets on the size hint of the shown one in QStackedWidget.
-    WalletView* view_about_to_hide = currentWalletView();
-    if (view_about_to_hide) {
-        QSizePolicy sp = view_about_to_hide->sizePolicy();
-        sp.setHorizontalPolicy(QSizePolicy::Ignored);
-        view_about_to_hide->setSizePolicy(sp);
-    }
-
     WalletView *walletView = mapWalletViews.value(wallet_model);
-    assert(walletView);
-
-    // Set or restore the default QSizePolicy which could be set to QSizePolicy::Ignored previously.
-    QSizePolicy sp = walletView->sizePolicy();
-    sp.setHorizontalPolicy(QSizePolicy::Preferred);
-    walletView->setSizePolicy(sp);
-    walletView->updateGeometry();
-
     walletStack->setCurrentWidget(walletView);
+    assert(walletView);
     walletView->updateEncryptionStatus();
 }
 
@@ -211,11 +196,11 @@ void WalletFrame::gotoLoadPSBT(bool from_clipboard)
     }
 }
 
-void WalletFrame::encryptWallet()
+void WalletFrame::encryptWallet(bool status)
 {
     WalletView *walletView = currentWalletView();
     if (walletView)
-        walletView->encryptWallet();
+        walletView->encryptWallet(status);
 }
 
 void WalletFrame::backupWallet()

@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,7 +14,7 @@
 #if __has_builtin(__builtin_add_overflow)
 #define HAVE_BUILTIN_ADD_OVERFLOW
 #endif
-#elif defined(__GNUC__)
+#elif defined(__GNUC__) && (__GNUC__ >= 5)
 #define HAVE_BUILTIN_ADD_OVERFLOW
 #endif
 
@@ -40,7 +40,7 @@ void TestAdditionOverflow(FuzzedDataProvider& fuzzed_data_provider)
 }
 } // namespace
 
-FUZZ_TARGET(addition_overflow)
+void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     TestAdditionOverflow<int64_t>(fuzzed_data_provider);

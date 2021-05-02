@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,6 +9,8 @@
 #include <pubkey.h>
 #include <random.h>
 #include <util/system.h>
+
+#include <boost/thread/thread.hpp>
 
 #include <vector>
 
@@ -42,9 +44,12 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
         void swap(PrevectorJob& x){p.swap(x.p);};
     };
     CCheckQueue<PrevectorJob> queue {QUEUE_BATCH_SIZE};
+    boost::thread_group tg;
     // The main thread should be counted to prevent thread oversubscription, and
     // to decrease the variance of benchmark results.
-    queue.StartWorkerThreads(GetNumCores() - 1);
+    for (auto x = 0; x < GetNumCores() - 1; ++x) {
+       tg.create_thread([&]{queue.Thread();});
+    }
 
     // create all the data once, then submit copies in the benchmark.
     FastRandomContext insecure_rand(true);
@@ -65,7 +70,8 @@ static void CCheckQueueSpeedPrevectorJob(benchmark::Bench& bench)
         // it is done explicitly here for clarity
         control.Wait();
     });
-    queue.StopWorkerThreads();
+    tg.interrupt_all();
+    tg.join_all();
     ECC_Stop();
 }
 BENCHMARK(CCheckQueueSpeedPrevectorJob);

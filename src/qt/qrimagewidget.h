@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_QRIMAGEWIDGET_H
-#define BITCOIN_QT_QRIMAGEWIDGET_H
+#ifndef XBIT_QT_QRIMAGEWIDGET_H
+#define XBIT_QT_QRIMAGEWIDGET_H
 
 #include <QImage>
 #include <QLabel>
@@ -44,4 +44,4 @@ private:
     QMenu *contextMenu;
 };
 
-#endif // BITCOIN_QT_QRIMAGEWIDGET_H
+#endif // XBIT_QT_QRIMAGEWIDGET_H

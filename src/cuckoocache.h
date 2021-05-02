@@ -2,8 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CUCKOOCACHE_H
-#define BITCOIN_CUCKOOCACHE_H
+#ifndef XBIT_CUCKOOCACHE_H
+#define XBIT_CUCKOOCACHE_H
 
 #include <algorithm> // std::find
 #include <array>
@@ -225,7 +225,7 @@ private:
      *  [0, 1) and simply multiply it by the size. Then we just shift the result down by
      *  32-bits to get our bucket number. The result has non-uniformity the same as a
      *  mod, but it is much faster to compute. More about this technique can be found at
-     *  https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/ .
+     *  http://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/ .
      *
      * The resulting non-uniformity is also more equally distributed which would be
      *  advantageous for something like linear probing, though it shouldn't matter
@@ -480,4 +480,4 @@ public:
 };
 } // namespace CuckooCache
 
-#endif // BITCOIN_CUCKOOCACHE_H
+#endif // XBIT_CUCKOOCACHE_H

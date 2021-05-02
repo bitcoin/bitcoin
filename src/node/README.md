@@ -15,7 +15,8 @@ As a rule of thumb, code in one of the [`src/node/`](./),
 calling code in the other directories directly, and only invoke it indirectly
 through the more limited [`src/interfaces/`](../interfaces/) classes.
 
-This directory is at the moment
+The [`src/node/`](./) directory is a new directory introduced in
+[#14978](https://github.com/xbit/xbit/pull/14978) and at the moment is
 sparsely populated. Eventually more substantial files like
 [`src/validation.cpp`](../validation.cpp) and
 [`src/txmempool.cpp`](../txmempool.cpp) might be moved there.

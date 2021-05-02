@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_CLIENTMODEL_H
-#define BITCOIN_QT_CLIENTMODEL_H
+#ifndef XBIT_QT_CLIENTMODEL_H
+#define XBIT_QT_CLIENTMODEL_H
 
 #include <QObject>
 #include <QDateTime>
@@ -17,7 +17,6 @@ class BanTableModel;
 class CBlockIndex;
 class OptionsModel;
 class PeerTableModel;
-class PeerTableSortProxy;
 enum class SynchronizationState;
 
 namespace interfaces {
@@ -43,7 +42,7 @@ enum NumConnections {
     CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
 
-/** Model for Bitcoin network client. */
+/** Model for XBit network client. */
 class ClientModel : public QObject
 {
     Q_OBJECT
@@ -55,7 +54,6 @@ public:
     interfaces::Node& node() const { return m_node; }
     OptionsModel *getOptionsModel();
     PeerTableModel *getPeerTableModel();
-    PeerTableSortProxy* peerTableSortProxy();
     BanTableModel *getBanTableModel();
 
     //! Return number of connections, default is in- and outbound (total)
@@ -98,7 +96,6 @@ private:
     std::unique_ptr<interfaces::Handler> m_handler_notify_header_tip;
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
-    PeerTableSortProxy* m_peer_table_sort_proxy{nullptr};
     BanTableModel *banTableModel;
 
     //! A thread to interact with m_node asynchronously
@@ -128,4 +125,4 @@ public Q_SLOTS:
     void updateBanlist();
 };
 
-#endif // BITCOIN_QT_CLIENTMODEL_H
+#endif // XBIT_QT_CLIENTMODEL_H

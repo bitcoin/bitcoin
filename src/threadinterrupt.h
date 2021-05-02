@@ -1,9 +1,9 @@
-// Copyright (c) 2016-2019 The Bitcoin Core developers
+// Copyright (c) 2016-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_THREADINTERRUPT_H
-#define BITCOIN_THREADINTERRUPT_H
+#ifndef XBIT_THREADINTERRUPT_H
+#define XBIT_THREADINTERRUPT_H
 
 #include <sync.h>
 
@@ -33,4 +33,4 @@ private:
     std::atomic<bool> flag;
 };
 
-#endif //BITCOIN_THREADINTERRUPT_H
+#endif //XBIT_THREADINTERRUPT_H

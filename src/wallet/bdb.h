@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_BDB_H
-#define BITCOIN_WALLET_BDB_H
+#ifndef XBIT_WALLET_BDB_H
+#define XBIT_WALLET_BDB_H
 
 #include <clientversion.h>
 #include <fs.h>
@@ -56,7 +56,7 @@ public:
     std::unordered_map<std::string, WalletDatabaseFileId> m_fileids;
     std::condition_variable_any m_db_in_use;
 
-    explicit BerkeleyEnvironment(const fs::path& env_directory);
+    BerkeleyEnvironment(const fs::path& env_directory);
     BerkeleyEnvironment();
     ~BerkeleyEnvironment();
     void Reset();
@@ -83,8 +83,11 @@ public:
     }
 };
 
-/** Get BerkeleyEnvironment given a directory path. */
-std::shared_ptr<BerkeleyEnvironment> GetBerkeleyEnv(const fs::path& env_directory);
+/** Get BerkeleyEnvironment and database filename given a wallet path. */
+std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& wallet_path, std::string& database_filename);
+
+/** Check format of database file */
+bool IsBDBFile(const fs::path& path);
 
 class BerkeleyBatch;
 
@@ -223,11 +226,10 @@ public:
 
 std::string BerkeleyDatabaseVersion();
 
-/** Perform sanity check of runtime BDB version versus linked BDB version.
- */
-bool BerkeleyDatabaseSanityCheck();
+//! Check if Berkeley database exists at specified path.
+bool ExistsBerkeleyDatabase(const fs::path& path);
 
 //! Return object giving access to Berkeley database at specified path.
 std::unique_ptr<BerkeleyDatabase> MakeBerkeleyDatabase(const fs::path& path, const DatabaseOptions& options, DatabaseStatus& status, bilingual_str& error);
 
-#endif // BITCOIN_WALLET_BDB_H
+#endif // XBIT_WALLET_BDB_H

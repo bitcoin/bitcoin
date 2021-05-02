@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2021 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,6 +20,7 @@
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
 #include <univalue.h>
+#include <util/memory.h>
 
 #include <algorithm>
 #include <cassert>
@@ -28,7 +29,7 @@
 #include <string>
 #include <vector>
 
-void initialize_script()
+void initialize()
 {
     // Fuzzers using pubkey must hold an ECCVerifyHandle.
     static const ECCVerifyHandle verify_handle;
@@ -36,14 +37,14 @@ void initialize_script()
     SelectParams(CBaseChainParams::REGTEST);
 }
 
-FUZZ_TARGET_INIT(script, initialize_script)
+void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const std::optional<CScript> script_opt = ConsumeDeserializable<CScript>(fuzzed_data_provider);
     if (!script_opt) return;
     const CScript script{*script_opt};
 
-    CompressedScript compressed;
+    std::vector<unsigned char> compressed;
     if (CompressScript(script, compressed)) {
         const unsigned int size = compressed[0];
         compressed.erase(compressed.begin());
@@ -55,65 +56,22 @@ FUZZ_TARGET_INIT(script, initialize_script)
     }
 
     CTxDestination address;
+    (void)ExtractDestination(script, address);
+
     TxoutType type_ret;
     std::vector<CTxDestination> addresses;
     int required_ret;
-    bool extract_destinations_ret = ExtractDestinations(script, type_ret, addresses, required_ret);
-    bool extract_destination_ret = ExtractDestination(script, address);
-    if (!extract_destinations_ret) {
-        assert(!extract_destination_ret);
-        if (type_ret == TxoutType::MULTISIG) {
-            assert(addresses.empty() && required_ret == 0);
-        } else {
-            assert(type_ret == TxoutType::PUBKEY ||
-                   type_ret == TxoutType::NONSTANDARD ||
-                   type_ret == TxoutType::NULL_DATA);
-        }
-    } else {
-        assert(required_ret >= 1 && required_ret <= 16);
-        assert((unsigned long)required_ret == addresses.size());
-        assert(type_ret == TxoutType::MULTISIG || required_ret == 1);
-    }
-    if (type_ret == TxoutType::NONSTANDARD || type_ret == TxoutType::NULL_DATA) {
-        assert(!extract_destinations_ret);
-    }
-    if (!extract_destination_ret) {
-        assert(type_ret == TxoutType::PUBKEY ||
-               type_ret == TxoutType::NONSTANDARD ||
-               type_ret == TxoutType::NULL_DATA ||
-               type_ret == TxoutType::MULTISIG);
-    } else {
-        assert(address == addresses[0]);
-    }
-    if (type_ret == TxoutType::NONSTANDARD ||
-        type_ret == TxoutType::NULL_DATA ||
-        type_ret == TxoutType::MULTISIG) {
-        assert(!extract_destination_ret);
-    }
-
-    TxoutType which_type;
-    bool is_standard_ret = IsStandard(script, which_type);
-    assert(type_ret == which_type);
-    if (!is_standard_ret) {
-        assert(which_type == TxoutType::NONSTANDARD ||
-               which_type == TxoutType::NULL_DATA ||
-               which_type == TxoutType::MULTISIG);
-    }
-    if (which_type == TxoutType::NONSTANDARD) {
-        assert(!is_standard_ret);
-    }
-    if (which_type == TxoutType::NULL_DATA) {
-        assert(script.IsUnspendable());
-    }
-    if (script.IsUnspendable()) {
-        assert(which_type == TxoutType::NULL_DATA ||
-               which_type == TxoutType::NONSTANDARD);
-    }
+    (void)ExtractDestinations(script, type_ret, addresses, required_ret);
 
     const FlatSigningProvider signing_provider;
     (void)InferDescriptor(script, signing_provider);
+
     (void)IsSegWitOutput(signing_provider, script);
+
     (void)IsSolvable(signing_provider, script);
+
+    TxoutType which_type;
+    (void)IsStandard(script, which_type);
 
     (void)RecursiveDynamicUsage(script);
 
@@ -124,6 +82,7 @@ FUZZ_TARGET_INIT(script, initialize_script)
     (void)script.IsPayToScriptHash();
     (void)script.IsPayToWitnessScriptHash();
     (void)script.IsPushOnly();
+    (void)script.IsUnspendable();
     (void)script.GetSigOpCount(/* fAccurate= */ false);
 
     (void)FormatScript(script);
@@ -131,11 +90,9 @@ FUZZ_TARGET_INIT(script, initialize_script)
     (void)ScriptToAsmStr(script, true);
 
     UniValue o1(UniValue::VOBJ);
-    ScriptPubKeyToUniv(script, o1, true, true);
-    ScriptPubKeyToUniv(script, o1, true, false);
+    ScriptPubKeyToUniv(script, o1, true);
     UniValue o2(UniValue::VOBJ);
-    ScriptPubKeyToUniv(script, o2, false, true);
-    ScriptPubKeyToUniv(script, o2, false, false);
+    ScriptPubKeyToUniv(script, o2, false);
     UniValue o3(UniValue::VOBJ);
     ScriptToUniv(script, o3, true);
     UniValue o4(UniValue::VOBJ);
@@ -143,12 +100,10 @@ FUZZ_TARGET_INIT(script, initialize_script)
 
     {
         const std::vector<uint8_t> bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);
-        CompressedScript compressed_script;
-        compressed_script.assign(bytes.begin(), bytes.end());
         // DecompressScript(..., ..., bytes) is not guaranteed to be defined if the bytes vector is too short
-        if (compressed_script.size() >= 32) {
+        if (bytes.size() >= 32) {
             CScript decompressed_script;
-            DecompressScript(decompressed_script, fuzzed_data_provider.ConsumeIntegral<unsigned int>(), compressed_script);
+            DecompressScript(decompressed_script, fuzzed_data_provider.ConsumeIntegral<unsigned int>(), bytes);
         }
     }
 
@@ -185,13 +140,13 @@ FUZZ_TARGET_INIT(script, initialize_script)
 
     {
         WitnessUnknown witness_unknown_1{};
-        witness_unknown_1.version = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
+        witness_unknown_1.version = fuzzed_data_provider.ConsumeIntegral<int>();
         const std::vector<uint8_t> witness_unknown_program_1 = fuzzed_data_provider.ConsumeBytes<uint8_t>(40);
         witness_unknown_1.length = witness_unknown_program_1.size();
         std::copy(witness_unknown_program_1.begin(), witness_unknown_program_1.end(), witness_unknown_1.program);
 
         WitnessUnknown witness_unknown_2{};
-        witness_unknown_2.version = fuzzed_data_provider.ConsumeIntegral<uint32_t>();
+        witness_unknown_2.version = fuzzed_data_provider.ConsumeIntegral<int>();
         const std::vector<uint8_t> witness_unknown_program_2 = fuzzed_data_provider.ConsumeBytes<uint8_t>(40);
         witness_unknown_2.length = witness_unknown_program_2.size();
         std::copy(witness_unknown_program_2.begin(), witness_unknown_program_2.end(), witness_unknown_2.program);

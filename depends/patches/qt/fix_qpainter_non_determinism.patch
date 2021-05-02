@@ -22,7 +22,7 @@ diff --git a/qtbase/src/gui/painting/qpaintengine_raster.cpp b/qtbase/src/gui/pa
 index 92ab6e8375..f018009e0b 100644
 --- a/qtbase/src/gui/painting/qpaintengine_raster.cpp
 +++ b/qtbase/src/gui/painting/qpaintengine_raster.cpp
-@@ -4128,22 +4128,23 @@ static const QSpan *qt_intersect_spans(const QClipData *clip, int *currentClip,
+@@ -3971,22 +3971,23 @@ static const QSpan *qt_intersect_spans(const QClipData *clip, int *currentClip,
      const QSpan *clipEnd = clip->m_spans + clip->count;
  
      while (available && spans < end ) {
@@ -51,7 +51,7 @@ index 92ab6e8375..f018009e0b 100644
  
          int sx1 = spans->x;
          int sx2 = sx1 + spans->len;
-@@ -4162,7 +4163,7 @@ static const QSpan *qt_intersect_spans(const QClipData *clip, int *currentClip,
+@@ -4005,7 +4006,7 @@ static const QSpan *qt_intersect_spans(const QClipData *clip, int *currentClip,
          if (len) {
              out->x = qMax(sx1, cx1);
              out->len = qMin(sx2, cx2) - out->x;

@@ -1,9 +1,9 @@
-// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Copyright (c) 2017-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_INDEX_BASE_H
-#define BITCOIN_INDEX_BASE_H
+#ifndef XBIT_INDEX_BASE_H
+#define XBIT_INDEX_BASE_H
 
 #include <dbwrapper.h>
 #include <primitives/block.h>
@@ -81,8 +81,6 @@ protected:
 
     void ChainStateFlushed(const CBlockLocator& locator) override;
 
-    const CBlockIndex* CurrentIndex() { return m_best_block_index.load(); };
-
     /// Initialize internal state from the database and block index.
     virtual bool Init();
 
@@ -111,7 +109,7 @@ public:
     /// sync once and only needs to process blocks in the ValidationInterface
     /// queue. If the index is catching up from far behind, this method does
     /// not block and immediately returns false.
-    bool BlockUntilSyncedToCurrentChain() const LOCKS_EXCLUDED(::cs_main);
+    bool BlockUntilSyncedToCurrentChain() const;
 
     void Interrupt();
 
@@ -126,4 +124,4 @@ public:
     IndexSummary GetSummary() const;
 };
 
-#endif // BITCOIN_INDEX_BASE_H
+#endif // XBIT_INDEX_BASE_H

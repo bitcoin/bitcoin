@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # Copyright (c) 2010 ArtForz -- public domain half-a-node
 # Copyright (c) 2012 Jeff Garzik
-# Copyright (c) 2010-2020 The Bitcoin Core developers
+# Copyright (c) 2010-2020 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Test objects for interacting with a bitcoind node over the p2p protocol.
+"""Test objects for interacting with a xbitd node over the p2p protocol.
 
-The P2PInterface objects interact with the bitcoind nodes under test using the
+The P2PInterface objects interact with the xbitd nodes under test using the
 node's p2p interface. They can be used to send messages to the node, and
 callbacks can be registered that execute when messages are received from the
 node. Messages are sent to/received from the node on an asyncio event loop.
@@ -31,6 +31,7 @@ import threading
 from test_framework.messages import (
     CBlockHeader,
     MAX_HEADERS_RESULTS,
+    MIN_VERSION_SUPPORTED,
     msg_addr,
     msg_addrv2,
     msg_block,
@@ -70,25 +71,9 @@ from test_framework.messages import (
     NODE_WITNESS,
     sha256,
 )
-from test_framework.util import (
-    MAX_NODES,
-    p2p_port,
-    wait_until_helper,
-)
+from test_framework.util import wait_until_helper
 
 logger = logging.getLogger("TestFramework.p2p")
-
-# The minimum P2P version that this test framework supports
-MIN_P2P_VERSION_SUPPORTED = 60001
-# The P2P version that this test framework implements and sends in its `version` message
-# Version 70016 supports wtxid relay
-P2P_VERSION = 70016
-# The services that this test framework offers in its `version` message
-P2P_SERVICES = NODE_NETWORK | NODE_WITNESS
-# The P2P user agent string that this test framework sends in its `version` message
-P2P_SUBVERSION = "/python-p2p-tester:0.0.3/"
-# Value for relay that this test framework sends in its `version` message
-P2P_VERSION_RELAY = 1
 
 MESSAGEMAP = {
     b"addr": msg_addr,
@@ -154,7 +139,7 @@ class P2PConnection(asyncio.Protocol):
     def is_connected(self):
         return self._transport is not None
 
-    def peer_connect_helper(self, dstaddr, dstport, net, timeout_factor):
+    def peer_connect(self, dstaddr, dstport, *, net, timeout_factor):
         assert not self.is_connected
         self.timeout_factor = timeout_factor
         self.dstaddr = dstaddr
@@ -163,20 +148,12 @@ class P2PConnection(asyncio.Protocol):
         self.on_connection_send_msg = None
         self.recvbuf = b""
         self.magic_bytes = MAGIC_BYTES[net]
-
-    def peer_connect(self, dstaddr, dstport, *, net, timeout_factor):
-        self.peer_connect_helper(dstaddr, dstport, net, timeout_factor)
+        logger.debug('Connecting to XBit Node: %s:%d' % (self.dstaddr, self.dstport))
 
         loop = NetworkThread.network_event_loop
-        logger.debug('Connecting to Bitcoin Node: %s:%d' % (self.dstaddr, self.dstport))
-        coroutine = loop.create_connection(lambda: self, host=self.dstaddr, port=self.dstport)
-        return lambda: loop.call_soon_threadsafe(loop.create_task, coroutine)
-
-    def peer_accept_connection(self, connect_id, connect_cb=lambda: None, *, net, timeout_factor):
-        self.peer_connect_helper('0', 0, net, timeout_factor)
-
-        logger.debug('Listening for Bitcoin Node with id: {}'.format(connect_id))
-        return lambda: NetworkThread.listen(self, connect_cb, idx=connect_id)
+        conn_gen_unsafe = loop.create_connection(lambda: self, host=self.dstaddr, port=self.dstport)
+        conn_gen = lambda: loop.call_soon_threadsafe(loop.create_task, conn_gen_unsafe)
+        return conn_gen
 
     def peer_disconnect(self):
         # Connection could have already been closed by other end.
@@ -304,7 +281,7 @@ class P2PConnection(asyncio.Protocol):
 
 
 class P2PInterface(P2PConnection):
-    """A high-level P2P interface class for communicating with a Bitcoin node.
+    """A high-level P2P interface class for communicating with a XBit node.
 
     This class provides high-level callbacks for processing P2P message
     payloads, as well as convenience methods for interacting with the
@@ -312,7 +289,7 @@ class P2PInterface(P2PConnection):
 
     Individual testcases should subclass this and override the on_* methods
     if they want to alter message handling behaviour."""
-    def __init__(self, support_addrv2=False, wtxidrelay=True):
+    def __init__(self, support_addrv2=False):
         super().__init__()
 
         # Track number of messages of each type received.
@@ -332,33 +309,18 @@ class P2PInterface(P2PConnection):
 
         self.support_addrv2 = support_addrv2
 
-        # If the peer supports wtxid-relay
-        self.wtxidrelay = wtxidrelay
-
-    def peer_connect_send_version(self, services):
-        # Send a version msg
-        vt = msg_version()
-        vt.nVersion = P2P_VERSION
-        vt.strSubVer = P2P_SUBVERSION
-        vt.relay = P2P_VERSION_RELAY
-        vt.nServices = services
-        vt.addrTo.ip = self.dstaddr
-        vt.addrTo.port = self.dstport
-        vt.addrFrom.ip = "0.0.0.0"
-        vt.addrFrom.port = 0
-        self.on_connection_send_msg = vt  # Will be sent in connection_made callback
-
-    def peer_connect(self, *args, services=P2P_SERVICES, send_version=True, **kwargs):
+    def peer_connect(self, *args, services=NODE_NETWORK|NODE_WITNESS, send_version=True, **kwargs):
         create_conn = super().peer_connect(*args, **kwargs)
 
         if send_version:
-            self.peer_connect_send_version(services)
-
-        return create_conn
-
-    def peer_accept_connection(self, *args, services=NODE_NETWORK | NODE_WITNESS, **kwargs):
-        create_conn = super().peer_accept_connection(*args, **kwargs)
-        self.peer_connect_send_version(services)
+            # Send a version msg
+            vt = msg_version()
+            vt.nServices = services
+            vt.addrTo.ip = self.dstaddr
+            vt.addrTo.port = self.dstport
+            vt.addrFrom.ip = "0.0.0.0"
+            vt.addrFrom.port = 0
+            self.on_connection_send_msg = vt  # Will be sent soon after connection_made
 
         return create_conn
 
@@ -431,8 +393,8 @@ class P2PInterface(P2PConnection):
         pass
 
     def on_version(self, message):
-        assert message.nVersion >= MIN_P2P_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_P2P_VERSION_SUPPORTED)
-        if message.nVersion >= 70016 and self.wtxidrelay:
+        assert message.nVersion >= MIN_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_VERSION_SUPPORTED)
+        if message.nVersion >= 70016:
             self.send_message(msg_wtxidrelay())
         if self.support_addrv2:
             self.send_message(msg_sendaddrv2())
@@ -448,10 +410,6 @@ class P2PInterface(P2PConnection):
             return test_function_in()
 
         wait_until_helper(test_function, timeout=timeout, lock=p2p_lock, timeout_factor=self.timeout_factor)
-
-    def wait_for_connect(self, timeout=60):
-        test_function = lambda: self.is_connected
-        wait_until_helper(test_function, timeout=timeout, lock=p2p_lock)
 
     def wait_for_disconnect(self, timeout=60):
         test_function = lambda: not self.is_connected
@@ -539,16 +497,8 @@ class P2PInterface(P2PConnection):
         self.send_message(message)
         self.sync_with_ping(timeout=timeout)
 
-    def sync_send_with_ping(self, timeout=60):
-        """Ensure SendMessages is called on this connection"""
-        # Calling sync_with_ping twice requires that the node calls
-        # `ProcessMessage` twice, and thus ensures `SendMessages` must have
-        # been called at least once
-        self.sync_with_ping()
-        self.sync_with_ping()
-
+    # Sync up with the node
     def sync_with_ping(self, timeout=60):
-        """Ensure ProcessMessages is called on this connection"""
         self.send_message(msg_ping(nonce=self.ping_counter))
 
         def test_function():
@@ -574,8 +524,6 @@ class NetworkThread(threading.Thread):
         # There is only one event loop and no more than one thread must be created
         assert not self.network_event_loop
 
-        NetworkThread.listeners = {}
-        NetworkThread.protos = {}
         NetworkThread.network_event_loop = asyncio.new_event_loop()
 
     def run(self):
@@ -590,48 +538,6 @@ class NetworkThread(threading.Thread):
         self.join(timeout)
         # Safe to remove event loop.
         NetworkThread.network_event_loop = None
-
-    @classmethod
-    def listen(cls, p2p, callback, port=None, addr=None, idx=1):
-        """ Ensure a listening server is running on the given port, and run the
-        protocol specified by `p2p` on the next connection to it. Once ready
-        for connections, call `callback`."""
-
-        if port is None:
-            assert 0 < idx <= MAX_NODES
-            port = p2p_port(MAX_NODES - idx)
-        if addr is None:
-            addr = '127.0.0.1'
-
-        coroutine = cls.create_listen_server(addr, port, callback, p2p)
-        cls.network_event_loop.call_soon_threadsafe(cls.network_event_loop.create_task, coroutine)
-
-    @classmethod
-    async def create_listen_server(cls, addr, port, callback, proto):
-        def peer_protocol():
-            """Returns a function that does the protocol handling for a new
-            connection. To allow different connections to have different
-            behaviors, the protocol function is first put in the cls.protos
-            dict. When the connection is made, the function removes the
-            protocol function from that dict, and returns it so the event loop
-            can start executing it."""
-            response = cls.protos.get((addr, port))
-            cls.protos[(addr, port)] = None
-            return response
-
-        if (addr, port) not in cls.listeners:
-            # When creating a listener on a given (addr, port) we only need to
-            # do it once. If we want different behaviors for different
-            # connections, we can accomplish this by providing different
-            # `proto` functions
-
-            listener = await cls.network_event_loop.create_server(peer_protocol, addr, port)
-            logger.debug("Listening server on %s:%d should be started" % (addr, port))
-            cls.listeners[(addr, port)] = listener
-
-        cls.protos[(addr, port)] = proto
-        callback(addr, port)
-
 
 class P2PDataStore(P2PInterface):
     """A P2P data store class.

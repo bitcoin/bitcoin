@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Copyright (c) 2017-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -111,7 +111,7 @@ static feebumper::Result CheckFeeRate(const CWallet& wallet, const CWalletTx& wt
     return feebumper::Result::OK;
 }
 
-static CFeeRate EstimateFeeRate(const CWallet& wallet, const CWalletTx& wtx, const CAmount old_fee, const CCoinControl& coin_control)
+static CFeeRate EstimateFeeRate(const CWallet& wallet, const CWalletTx& wtx, const CAmount old_fee, CCoinControl& coin_control)
 {
     // Get the fee rate of the original transaction. This is calculated from
     // the tx fee/vsize, so it may have been rounded down. Add 1 satoshi to the
@@ -190,7 +190,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     if (coin_control.m_feerate) {
         // The user provided a feeRate argument.
         // We calculate this here to avoid compiler warning on the cs_wallet lock
-        const int64_t maxTxSize = CalculateMaximumSignedTxSize(*wtx.tx, &wallet).first;
+        const int64_t maxTxSize = CalculateMaximumSignedTxSize(*wtx.tx, &wallet);
         Result res = CheckFeeRate(wallet, wtx, *new_coin_control.m_feerate, maxTxSize, errors);
         if (res != Result::OK) {
             return res;
@@ -215,7 +215,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     // We cannot source new unconfirmed inputs(bip125 rule 2)
     new_coin_control.m_min_depth = 1;
 
-    CTransactionRef tx_new;
+    CTransactionRef tx_new = MakeTransactionRef();
     CAmount fee_ret;
     int change_pos_in_out = -1; // No requested location for change
     bilingual_str fail_reason;
@@ -231,7 +231,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     // Write back transaction
     mtx = CMutableTransaction(*tx_new);
     // Mark new tx not replaceable, if requested.
-    if (!coin_control.m_signal_bip125_rbf.value_or(wallet.m_signal_rbf)) {
+    if (!coin_control.m_signal_bip125_rbf.get_value_or(wallet.m_signal_rbf)) {
         for (auto& input : mtx.vin) {
             if (input.nSequence < 0xfffffffe) input.nSequence = 0xfffffffe;
         }
@@ -256,7 +256,7 @@ Result CommitTransaction(CWallet& wallet, const uint256& txid, CMutableTransacti
         errors.push_back(Untranslated("Invalid or non-wallet transaction id"));
         return Result::MISC_ERROR;
     }
-    const CWalletTx& oldWtx = it->second;
+    CWalletTx& oldWtx = it->second;
 
     // make sure the transaction still has no descendants and hasn't been mined in the meantime
     Result result = PreconditionChecks(wallet, oldWtx, errors);

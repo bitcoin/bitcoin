@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,11 +7,9 @@
 #include <util/time.h>
 
 #include <boost/test/unit_test.hpp>
+#include <boost/thread/thread.hpp>
 
-#include <functional>
 #include <mutex>
-#include <thread>
-#include <vector>
 
 BOOST_AUTO_TEST_SUITE(scheduler_tests)
 
@@ -70,16 +68,16 @@ BOOST_AUTO_TEST_CASE(manythreads)
     BOOST_CHECK(last > now);
 
     // As soon as these are created they will start running and servicing the queue
-    std::vector<std::thread> microThreads;
+    boost::thread_group microThreads;
     for (int i = 0; i < 5; i++)
-        microThreads.emplace_back(std::bind(&CScheduler::serviceQueue, &microTasks));
+        microThreads.create_thread(std::bind(&CScheduler::serviceQueue, &microTasks));
 
     UninterruptibleSleep(std::chrono::microseconds{600});
     now = std::chrono::system_clock::now();
 
     // More threads and more tasks:
     for (int i = 0; i < 5; i++)
-        microThreads.emplace_back(std::bind(&CScheduler::serviceQueue, &microTasks));
+        microThreads.create_thread(std::bind(&CScheduler::serviceQueue, &microTasks));
     for (int i = 0; i < 100; i++) {
         std::chrono::system_clock::time_point t = now + std::chrono::microseconds(randomMsec(rng));
         std::chrono::system_clock::time_point tReschedule = now + std::chrono::microseconds(500 + randomMsec(rng));
@@ -92,10 +90,7 @@ BOOST_AUTO_TEST_CASE(manythreads)
 
     // Drain the task queue then exit threads
     microTasks.StopWhenDrained();
-    // wait until all the threads are done
-    for (auto& thread: microThreads) {
-        if (thread.joinable()) thread.join();
-    }
+    microThreads.join_all(); // ... wait until all the threads are done
 
     int counterSum = 0;
     for (int i = 0; i < 10; i++) {
@@ -135,9 +130,9 @@ BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
     // if the queues only permit execution of one task at once then
     // the extra threads should effectively be doing nothing
     // if they don't we'll get out of order behaviour
-    std::vector<std::thread> threads;
+    boost::thread_group threads;
     for (int i = 0; i < 5; ++i) {
-        threads.emplace_back(std::bind(&CScheduler::serviceQueue, &scheduler));
+        threads.create_thread(std::bind(&CScheduler::serviceQueue, &scheduler));
     }
 
     // these are not atomic, if SinglethreadedSchedulerClient prevents
@@ -161,9 +156,7 @@ BOOST_AUTO_TEST_CASE(singlethreadedscheduler_ordered)
 
     // finish up
     scheduler.StopWhenDrained();
-    for (auto& thread: threads) {
-        if (thread.joinable()) thread.join();
-    }
+    threads.join_all();
 
     BOOST_CHECK_EQUAL(counter1, 100);
     BOOST_CHECK_EQUAL(counter2, 100);

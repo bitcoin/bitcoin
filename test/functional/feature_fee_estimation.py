@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2020 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test fee estimation code."""
@@ -8,12 +8,11 @@ import random
 
 from test_framework.messages import CTransaction, CTxIn, CTxOut, COutPoint, ToHex, COIN
 from test_framework.script import CScript, OP_1, OP_DROP, OP_2, OP_HASH160, OP_EQUAL, hash160, OP_TRUE
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import XBitTestFramework
 from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
-    assert_raises_rpc_error,
     satoshi_round,
 )
 
@@ -139,7 +138,7 @@ def check_estimates(node, fees_seen):
     check_raw_estimates(node, fees_seen)
     check_smart_estimates(node, fees_seen)
 
-class EstimateFeeTest(BitcoinTestFramework):
+class EstimateFeeTest(XBitTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         # mine non-standard txs (e.g. txs with "dust" outputs)
@@ -262,11 +261,6 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.sync_blocks(self.nodes[0:3], wait=.1)
         self.log.info("Final estimates after emptying mempools")
         check_estimates(self.nodes[1], self.fees_per_kb)
-
-        self.log.info("Testing that fee estimation is disabled in blocksonly.")
-        self.restart_node(0, ["-blocksonly"])
-        assert_raises_rpc_error(-32603, "Fee estimation disabled",
-                                self.nodes[0].estimatesmartfee, 2)
 
 
 if __name__ == '__main__':

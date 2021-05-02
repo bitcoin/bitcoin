@@ -1,31 +1,19 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_COMPRESSOR_H
-#define BITCOIN_COMPRESSOR_H
+#ifndef XBIT_COMPRESSOR_H
+#define XBIT_COMPRESSOR_H
 
-#include <prevector.h>
 #include <primitives/transaction.h>
 #include <script/script.h>
 #include <serialize.h>
 #include <span.h>
 
-/**
- * This saves us from making many heap allocations when serializing
- * and deserializing compressed scripts.
- *
- * This prevector size is determined by the largest .resize() in the
- * CompressScript function. The largest compressed script format is a
- * compressed public key, which is 33 bytes.
- */
-using CompressedScript = prevector<33, unsigned char>;
-
-
-bool CompressScript(const CScript& script, CompressedScript& out);
+bool CompressScript(const CScript& script, std::vector<unsigned char> &out);
 unsigned int GetSpecialScriptSize(unsigned int nSize);
-bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScript& in);
+bool DecompressScript(CScript& script, unsigned int nSize, const std::vector<unsigned char> &out);
 
 /**
  * Compress amount.
@@ -63,7 +51,7 @@ struct ScriptCompression
 
     template<typename Stream>
     void Ser(Stream &s, const CScript& script) {
-        CompressedScript compr;
+        std::vector<unsigned char> compr;
         if (CompressScript(script, compr)) {
             s << MakeSpan(compr);
             return;
@@ -78,7 +66,7 @@ struct ScriptCompression
         unsigned int nSize = 0;
         s >> VARINT(nSize);
         if (nSize < nSpecialScripts) {
-            CompressedScript vch(GetSpecialScriptSize(nSize), 0x00);
+            std::vector<unsigned char> vch(GetSpecialScriptSize(nSize), 0x00);
             s >> MakeSpan(vch);
             DecompressScript(script, nSize, vch);
             return;
@@ -115,4 +103,4 @@ struct TxOutCompression
     FORMATTER_METHODS(CTxOut, obj) { READWRITE(Using<AmountCompression>(obj.nValue), Using<ScriptCompression>(obj.scriptPubKey)); }
 };
 
-#endif // BITCOIN_COMPRESSOR_H
+#endif // XBIT_COMPRESSOR_H

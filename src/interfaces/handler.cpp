@@ -1,9 +1,10 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <interfaces/handler.h>
 
+#include <util/memory.h>
 
 #include <boost/signals2/connection.hpp>
 #include <utility>
@@ -34,12 +35,12 @@ public:
 
 std::unique_ptr<Handler> MakeHandler(boost::signals2::connection connection)
 {
-    return std::make_unique<HandlerImpl>(std::move(connection));
+    return MakeUnique<HandlerImpl>(std::move(connection));
 }
 
 std::unique_ptr<Handler> MakeHandler(std::function<void()> cleanup)
 {
-    return std::make_unique<CleanupHandler>(std::move(cleanup));
+    return MakeUnique<CleanupHandler>(std::move(cleanup));
 }
 
 } // namespace interfaces

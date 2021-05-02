@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,8 +11,8 @@
  * - E-mail usually won't line-break if there's no punctuation to break at.
  * - Double-clicking selects the whole string as one word if it's all alphanumeric.
  */
-#ifndef BITCOIN_BASE58_H
-#define BITCOIN_BASE58_H
+#ifndef XBIT_BASE58_H
+#define XBIT_BASE58_H
 
 #include <attributes.h>
 #include <span.h>
@@ -29,7 +29,7 @@ std::string EncodeBase58(Span<const unsigned char> input);
  * Decode a base58-encoded string (str) into a byte vector (vchRet).
  * return true if decoding is successful.
  */
-[[nodiscard]] bool DecodeBase58(const std::string& str, std::vector<unsigned char>& vchRet, int max_ret_len);
+NODISCARD bool DecodeBase58(const std::string& str, std::vector<unsigned char>& vchRet, int max_ret_len);
 
 /**
  * Encode a byte span into a base58-encoded string, including checksum
@@ -40,6 +40,6 @@ std::string EncodeBase58Check(Span<const unsigned char> input);
  * Decode a base58-encoded string (str) that includes a checksum into a byte
  * vector (vchRet), return true if decoding is successful
  */
-[[nodiscard]] bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRet, int max_ret_len);
+NODISCARD bool DecodeBase58Check(const std::string& str, std::vector<unsigned char>& vchRet, int max_ret_len);
 
-#endif // BITCOIN_BASE58_H
+#endif // XBIT_BASE58_H

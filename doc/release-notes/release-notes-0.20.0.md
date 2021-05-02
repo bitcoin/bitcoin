@@ -1,44 +1,44 @@
 0.20.0 Release Notes
 ====================
 
-Bitcoin Core version 0.20.0 is now available from:
+XBit Core version 0.20.0 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.20.0/>
+  <https://xbitcore.org/bin/xbit-core-0.20.0/>
 
 This release includes new features, various bug fixes and performance
 improvements, as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/xbit/xbit/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+  <https://xbitcore.org/en/list/announcements/join/>
 
 How to Upgrade
 ==============
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes in some cases), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+installer (on Windows) or just copy over `/Applications/XBit-Qt` (on Mac)
+or `xbitd`/`xbit-qt` (on Linux).
 
-Upgrading directly from a version of Bitcoin Core that has reached its EOL is
+Upgrading directly from a version of XBit Core that has reached its EOL is
 possible, but it might take some time if the data directory needs to be migrated. Old
-wallet versions of Bitcoin Core are generally supported.
+wallet versions of XBit Core are generally supported.
 
 Compatibility
 ==============
 
-Bitcoin Core is supported and extensively tested on operating systems
-using the Linux kernel, macOS 10.12+, and Windows 7 and newer.  Bitcoin
+XBit Core is supported and extensively tested on operating systems
+using the Linux kernel, macOS 10.12+, and Windows 7 and newer.  XBit
 Core should also work on most other Unix-like systems but is not as
-frequently tested on them.  It is not recommended to use Bitcoin Core on
+frequently tested on them.  It is not recommended to use XBit Core on
 unsupported systems.
 
-From Bitcoin Core 0.20.0 onwards, macOS versions earlier than 10.12 are no
-longer supported. Additionally, Bitcoin Core does not yet change appearance
+From XBit Core 0.20.0 onwards, macOS versions earlier than 10.12 are no
+longer supported. Additionally, XBit Core does not yet change appearance
 when macOS "dark mode" is activated.
 
 Known Bugs
@@ -53,7 +53,7 @@ this release:
   `./configure`. This is the same as when checking out from git.
 
 - Instead of running `make` simply, you should instead run
-  `BITCOIN_GENBUILD_NO_GIT=1 make`.
+  `XBIT_GENBUILD_NO_GIT=1 make`.
 
 Notable changes
 ===============
@@ -61,20 +61,20 @@ Notable changes
 P2P and network changes
 -----------------------
 
-#### Removal of BIP61 reject network messages from Bitcoin Core
+#### Removal of BIP61 reject network messages from XBit Core
 
 The `-enablebip61` command line option to enable BIP61 has been removed.
 (#17004)
 
-This feature has been disabled by default since Bitcoin Core version 0.18.0.
+This feature has been disabled by default since XBit Core version 0.18.0.
 Nodes on the network can not generally be trusted to send valid messages
 (including reject messages), so this should only ever be used when
 connected to a trusted node.  Please use the alternatives recommended
 below if you rely on this removed feature:
 
-- Testing or debugging of implementations of the Bitcoin P2P network protocol
+- Testing or debugging of implementations of the XBit P2P network protocol
   should be done by inspecting the log messages that are produced by a recent
-  version of Bitcoin Core. Bitcoin Core logs debug messages
+  version of XBit Core. XBit Core logs debug messages
   (`-debug=<category>`) to a stream (`-printtoconsole`) or to a file
   (`-debuglogfile=<debug.log>`).
 
@@ -138,9 +138,9 @@ Updated RPCs
 Build System
 ------------
 
-- OpenSSL is no longer used by Bitcoin Core.  (#17265)
+- OpenSSL is no longer used by XBit Core.  (#17265)
 
-- BIP70 support has been fully removed from Bitcoin Core. The
+- BIP70 support has been fully removed from XBit Core. The
   `--enable-bip70` option remains, but it will throw an error during configure.
   (#17165)
 
@@ -163,16 +163,16 @@ New settings
 - A new `-asmap` configuration option has been added to diversify the
   node's network connections by mapping IP addresses Autonomous System
   Numbers (ASNs) and then limiting the number of connections made to any
-  single ASN.  See [issue #16599](https://github.com/bitcoin/bitcoin/issues/16599),
-  [PR #16702](https://github.com/bitcoin/bitcoin/pull/16702), and the
-  `bitcoind help` for more information.  This option is experimental and
+  single ASN.  See [issue #16599](https://github.com/xbit/xbit/issues/16599),
+  [PR #16702](https://github.com/xbit/xbit/pull/16702), and the
+  `xbitd help` for more information.  This option is experimental and
   subject to removal or breaking changes in future releases, so the
   legacy /16 prefix mapping of IP addresses remains the default.  (#16702)
 
 Updated settings
 ----------------
 
-- All custom settings configured when Bitcoin Core starts are now
+- All custom settings configured when XBit Core starts are now
   written to the `debug.log` file to assist troubleshooting.  (#16115)
 
 - Importing blocks upon startup via the `bootstrap.dat` file no longer
@@ -198,7 +198,7 @@ Removed settings
 GUI changes
 -----------
 
-- The "Start Bitcoin Core on system login" option has been removed on macOS.
+- The "Start XBit Core on system login" option has been removed on macOS.
   (#17567)
 
 - In the Peers window, the details for a peer now displays a `Mapped AS`
@@ -206,17 +206,17 @@ GUI changes
   peer selection. See the `-asmap` configuration option in _New
   Settings_, above.  (#18402)
 
-- A "known bug" [announced](https://bitcoincore.org/en/releases/0.18.0/#wallet-gui)
+- A "known bug" [announced](https://xbitcore.org/en/releases/0.18.0/#wallet-gui)
   in the release notes of version 0.18 has been fixed.  The issue
-  affected anyone who simultaneously used multiple Bitcoin Core wallets
+  affected anyone who simultaneously used multiple XBit Core wallets
   and the GUI coin control feature. (#18894)
 
 - For watch-only wallets, creating a new transaction in the Send screen
   or fee bumping an existing transaction in the Transactions screen will
-  automatically copy a Partially-Signed Bitcoin Transaction (PSBT) to
+  automatically copy a Partially-Signed XBit Transaction (PSBT) to
   the system clipboard.  This can then be pasted into an external
-  program such as [HWI](https://github.com/bitcoin-core/HWI) for
-  signing.  Future versions of Bitcoin Core should support a GUI option
+  program such as [HWI](https://github.com/xbit-core/HWI) for
+  signing.  Future versions of XBit Core should support a GUI option
   for finalizing and broadcasting PSBTs, but for now the debug console
   may be used with the `finalizepsbt` and `sendrawtransaction` RPCs.
   (#16944, #17492)
@@ -246,8 +246,8 @@ Wallet
 Documentation changes
 ---------------------
 
-- Bitcoin Core's automatically-generated source code documentation is
-  now available at https://doxygen.bitcoincore.org.  (#17596)
+- XBit Core's automatically-generated source code documentation is
+  now available at https://doxygen.xbitcore.org.  (#17596)
 
 Low-level changes
 =================
@@ -255,7 +255,7 @@ Low-level changes
 Utilities
 ---------
 
-- The `bitcoin-cli` utility used with the `-getinfo` parameter now
+- The `xbit-cli` utility used with the `-getinfo` parameter now
   returns a `headers` field with the number of downloaded block headers
   on the best headers chain (similar to the `blocks` field that is also
   returned) and a `verificationprogress` field that estimates how much
@@ -263,7 +263,7 @@ Utilities
   information returned no longer includes the `protocolversion`,
   `walletversion`, and `keypoololdest` fields.  (#17302, #17650)
 
-- The `bitcoin-cli` utility now accepts a `-stdinwalletpassphrase`
+- The `xbit-cli` utility now accepts a `-stdinwalletpassphrase`
   parameter that can be used when calling the `walletpassphrase` and
   `walletpassphrasechange` RPCs to read the passphrase from standard
   input without echoing it to the terminal, improving security against
@@ -450,7 +450,7 @@ Build system
 - #15756 Add shortcuts for tab tools (promag)
 - #16944 create PSBT with watch-only wallet (Sjors)
 - #16964 Change sendcoins dialogue Yes to Send (instagibbs)
-- #17068 Always generate `bitcoinstrings.cpp` on `make translate` (D4nte)
+- #17068 Always generate `xbitstrings.cpp` on `make translate` (D4nte)
 - #17096 Rename debug window (Zero-1729)
 - #17105 Make RPCConsole::TabTypes an enum class (promag)
 - #17125 Add toolTip and placeholderText to sign message fields (dannmat)
@@ -524,11 +524,11 @@ Build system
 - #17730 Remove Qt networking features (fanquake)
 - #17738 Remove linking librt for backwards compatibility (fanquake)
 - #17740 Remove configure checks for win libraries we don't link against (fanquake)
-- #17741 Included `test_bitcoin-qt` in msvc build (sipsorcery)
+- #17741 Included `test_xbit-qt` in msvc build (sipsorcery)
 - #17756 Remove `WINDOWS_BITS` from build system (fanquake)
 - #17769 Set `AC_PREREQ` to 2.69 (fanquake)
 - #17880 Add -Wdate-time to Werror flags (fanquake)
-- #17910 Remove double `LIBBITCOIN_SERVER` linking (fanquake)
+- #17910 Remove double `LIBXBIT_SERVER` linking (fanquake)
 - #17928 Consistent use of package variable (Bushstar)
 - #17933 guix: Pin Guix using `guix time-machine` (dongcarl)
 - #17948 pass -fno-ident in Windows gitian descriptor (fanquake)
@@ -544,9 +544,9 @@ Build system
 - #18290 Set minimum Automake version to 1.13 (hebasto)
 - #18320 guix: Remove now-unnecessary gcc make flag (dongcarl)
 - #18331 Use git archive as source tarball (hebasto)
-- #18397 Fix libevent linking for `bench_bitcoin` binary (hebasto)
+- #18397 Fix libevent linking for `bench_xbit` binary (hebasto)
 - #18426 scripts: `Previous_release`: improve behaviour on failed download (theStack)
-- #18429 Remove double `LIBBITCOIN_SERVER` from bench-Makefile (brakmic)
+- #18429 Remove double `LIBXBIT_SERVER` from bench-Makefile (brakmic)
 - #18528 Create `test_fuzz` library from src/test/fuzz/fuzz.cpp (brakmic)
 - #18558 Fix boost detection for arch armv7l (hebasto)
 - #18598 gitian: Add missing automake package to gitian-win-signer.yml (achow101)
@@ -580,7 +580,7 @@ Build system
 - #18395 scripts: Add pe dylib checking to symbol-check.py (fanquake)
 - #18415 scripts: Add macho tests to test-security-check.py (fanquake)
 - #18425 releases: Update with new Windows code signing certificate (achow101)
-- #18702 Fix ASLR for bitcoin-cli on Windows (fanquake)
+- #18702 Fix ASLR for xbit-cli on Windows (fanquake)
 
 ### Tests and QA
 - #12134 Build previous releases and run functional tests (Sjors)
@@ -608,7 +608,7 @@ Build system
 - #17140 Fix bug in `blockfilter_index_tests` (jimpo)
 - #17199 use default address type (bech32) for `wallet_bumpfee` tests (theStack)
 - #17205 ci: Enable address sanitizer (asan) stack-use-after-return checking (practicalswift)
-- #17206 Add testcase to simulate bitcoin schema in leveldb (adamjonas)
+- #17206 Add testcase to simulate xbit schema in leveldb (adamjonas)
 - #17209 Remove no longer needed UBSan suppressions (issues fixed). Add documentation (practicalswift)
 - #17220 Add unit testing for the CompressScript function (adamjonas)
 - #17225 Test serialisation as part of deserialisation fuzzing. Test round-trip equality where possible (practicalswift)
@@ -624,7 +624,7 @@ Build system
 - #17299 add reason checks for non-standard txs in `test_IsStandard` (theStack)
 - #17322 Fix input size assertion in `wallet_bumpfee.py` (instagibbs)
 - #17327 Add `rpc_fundrawtransaction` logging (jonatack)
-- #17330 Add `shrinkdebugfile=0` to regtest bitcoin.conf (sdaftuar)
+- #17330 Add `shrinkdebugfile=0` to regtest xbit.conf (sdaftuar)
 - #17340 Speed up fundrawtransaction test (jnewbery)
 - #17345 Do not instantiate CAddrDB for static call CAddrDB::Read() (hebasto)
 - #17362 Speed up `wallet_avoidreuse`, add logging (jonatack)
@@ -679,7 +679,7 @@ Build system
 - #18008 fix fuzzing using libFuzzer on macOS (fanquake)
 - #18013 bench: Fix benchmarks filters (elichai)
 - #18018 reset fIsBareMultisigStd after bare-multisig tests (fanquake)
-- #18022 Fix appveyor `test_bitcoin` build of `*.raw` (MarcoFalke)
+- #18022 Fix appveyor `test_xbit` build of `*.raw` (MarcoFalke)
 - #18037 util: Allow scheduler to be mocked (amitiuttarwar)
 - #18056 ci: Check for submodules (emilengler)
 - #18069 Replace 'regtest' leftovers by self.chain (theStack)
@@ -687,7 +687,7 @@ Build system
 - #18109 Avoid hitting some known minor tinyformat issues when fuzzing strprintf(…) (practicalswift)
 - #18155 Add harness which fuzzes EvalScript and VerifyScript using a fuzzed signature checker (practicalswift)
 - #18159 Add --valgrind option to `test/fuzz/test_runner.py` for running fuzzing test cases under valgrind (practicalswift)
-- #18166 ci: Run fuzz testing test cases (bitcoin-core/qa-assets) under valgrind to catch memory errors (practicalswift)
+- #18166 ci: Run fuzz testing test cases (xbit-core/qa-assets) under valgrind to catch memory errors (practicalswift)
 - #18172 Transaction expiry from mempool (0xB10C)
 - #18181 Remove incorrect assumptions in `validation_flush_tests` (MarcoFalke)
 - #18183 Set `catch_system_errors=no` on boost unit tests (MarcoFalke)
@@ -717,7 +717,7 @@ Build system
 - #18393 Don't assume presence of `__builtin_mul_overflow(…)` in `MultiplicationOverflow(…)` fuzzing harness (practicalswift)
 - #18406 add executable flag for `rpc_estimatefee.py` (theStack)
 - #18420 listsinceblock block height checks (jonatack)
-- #18430 ci: Only clone bitcoin-core/qa-assets when fuzzing (MarcoFalke)
+- #18430 ci: Only clone xbit-core/qa-assets when fuzzing (MarcoFalke)
 - #18438 ci: Use homebrew addon on native macos (hebasto)
 - #18447 Add coverage for script parse error in ParseScript (pierreN)
 - #18472 Remove unsafe `BOOST_TEST_MESSAGE` (MarcoFalke)
@@ -747,13 +747,13 @@ Build system
 
 ### Documentation
 - #16947 Doxygen-friendly script/descriptor.h comments (ch4ot1c)
-- #16983 Add detailed info about Bitcoin Core files (hebasto)
+- #16983 Add detailed info about XBit Core files (hebasto)
 - #16986 Doxygen-friendly CuckooCache comments (ch4ot1c)
 - #17022 move-only: Steps for "before major release branch-off" (MarcoFalke)
 - #17026 Update bips.md for default bech32 addresses in 0.20.0 (MarcoFalke)
 - #17081 Fix Makefile target in benchmarking.md (theStack)
 - #17102 Add missing indexes/blockfilter/basic to doc/files.md (MarcoFalke)
-- #17119 Fix broken bitcoin-cli examples (andrewtoth)
+- #17119 Fix broken xbit-cli examples (andrewtoth)
 - #17134 Add switch on enum example to developer notes (hebasto)
 - #17142 Update macdeploy README to include all files produced by `make deploy` (za-kk)
 - #17146 github: Add warning for bug reports (laanwj)
@@ -772,14 +772,14 @@ Build system
 - #17370 Update doc/bips.md with recent changes in master (MarcoFalke)
 - #17393 Added regtest config for linearize script (gr0kchain)
 - #17411 Add some better examples for scripted diff (laanwj)
-- #17503 Remove bitness from bitcoin-qt help message and manpage (laanwj)
+- #17503 Remove bitness from xbit-qt help message and manpage (laanwj)
 - #17539 Update and improve Developer Notes (hebasto)
 - #17561 Changed MiniUPnPc link to https in dependencies.md (sandakersmann)
-- #17596 Change doxygen URL to doxygen.bitcoincore.org (laanwj)
+- #17596 Change doxygen URL to doxygen.xbitcore.org (laanwj)
 - #17598 Update release process with latest changes (MarcoFalke)
 - #17617 Unify unix epoch time descriptions (jonatack)
 - #17637 script: Add keyserver to verify-commits readme (emilengler)
-- #17648 Rename wallet-tool references to bitcoin-wallet (hel-o)
+- #17648 Rename wallet-tool references to xbit-wallet (hel-o)
 - #17688 Add "ci" prefix to CONTRIBUTING.md (hebasto)
 - #17751 Use recommended shebang approach in documentation code block (hackerrdave)
 - #17752 Fix directory path for secp256k1 subtree in developer-notes (hackerrdave)
@@ -801,7 +801,7 @@ Build system
 - #18278 interfaces: Describe and follow some code conventions (ryanofsky)
 - #18283 Explain rebase policy in CONTRIBUTING.md (MarcoFalke)
 - #18340 Mention MAKE=gmake workaround when building on a BSD (fanquake)
-- #18341 Replace remaining literal BTC with `CURRENCY_UNIT` (domob1812)
+- #18341 Replace remaining literal XBT with `CURRENCY_UNIT` (domob1812)
 - #18342 Add fuzzing quickstart guides for libFuzzer and afl-fuzz (practicalswift)
 - #18344 Fix nit in getblockchaininfo (stevenroose)
 - #18379 Comment fix merkle.cpp (4d55397500)
@@ -817,7 +817,7 @@ Build system
 ### Miscellaneous
 - #15600 lockedpool: When possible, use madvise to avoid including sensitive information in core dumps (luke-jr)
 - #15934 Merge settings one place instead of five places (ryanofsky)
-- #16115 On bitcoind startup, write config args to debug.log (LarryRuane)
+- #16115 On xbitd startup, write config args to debug.log (LarryRuane)
 - #16117 util: Replace boost sleep with std sleep (MarcoFalke)
 - #16161 util: Fix compilation errors in support/lockedpool.cpp (jkczyz)
 - #16802 scripts: In linearize, search for next position of magic bytes rather than fail (takinbo)
@@ -840,7 +840,7 @@ Build system
 - #17507 random: mark RandAddPeriodic and SeedPeriodic as noexcept (fanquake)
 - #17527 Fix CPUID subleaf iteration (sipa)
 - #17604 util: Make schedulebatchpriority advisory only (fanquake)
-- #17650 util: Remove unwanted fields from bitcoin-cli -getinfo (malevolent)
+- #17650 util: Remove unwanted fields from xbit-cli -getinfo (malevolent)
 - #17671 script: Fixed wget call in gitian-build.py (willyko)
 - #17699 Make env data logging optional (sipa)
 - #17721 util: Don't allow base58 decoding of non-base58 strings. add base58 tests (practicalswift)
@@ -984,4 +984,4 @@ Thanks to everyone who directly contributed to this release:
 - Zero
 
 As well as to everyone that helped with translations on
-[Transifex](https://www.transifex.com/bitcoin/bitcoin/).
+[Transifex](https://www.transifex.com/xbit/xbit/).

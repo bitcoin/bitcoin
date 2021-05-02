@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_ISMINE_H
-#define BITCOIN_WALLET_ISMINE_H
+#ifndef XBIT_WALLET_ISMINE_H
+#define XBIT_WALLET_ISMINE_H
 
 #include <script/standard.h>
 
@@ -14,27 +14,7 @@
 class CWallet;
 class CScript;
 
-/**
- * IsMine() return codes, which depend on ScriptPubKeyMan implementation.
- * Not every ScriptPubKeyMan covers all types, please refer to
- * https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.21.0.md#ismine-semantics
- * for better understanding.
- *
- * For LegacyScriptPubKeyMan,
- * ISMINE_NO: the scriptPubKey is not in the wallet;
- * ISMINE_WATCH_ONLY: the scriptPubKey has been imported into the wallet;
- * ISMINE_SPENDABLE: the scriptPubKey corresponds to an address owned by the wallet user (can spend with the private key);
- * ISMINE_USED: the scriptPubKey corresponds to a used address owned by the wallet user;
- * ISMINE_ALL: all ISMINE flags except for USED;
- * ISMINE_ALL_USED: all ISMINE flags including USED;
- * ISMINE_ENUM_ELEMENTS: the number of isminetype enum elements.
- *
- * For DescriptorScriptPubKeyMan and future ScriptPubKeyMan,
- * ISMINE_NO: the scriptPubKey is not in the wallet;
- * ISMINE_SPENDABLE: the scriptPubKey matches a scriptPubKey in the wallet.
- * ISMINE_USED: the scriptPubKey corresponds to a used address owned by the wallet user.
- *
- */
+/** IsMine() return codes */
 enum isminetype : unsigned int
 {
     ISMINE_NO         = 0,
@@ -67,4 +47,4 @@ struct CachableAmount
     }
 };
 
-#endif // BITCOIN_WALLET_ISMINE_H
+#endif // XBIT_WALLET_ISMINE_H

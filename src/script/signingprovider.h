@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SCRIPT_SIGNINGPROVIDER_H
-#define BITCOIN_SCRIPT_SIGNINGPROVIDER_H
+#ifndef XBIT_SCRIPT_SIGNINGPROVIDER_H
+#define XBIT_SCRIPT_SIGNINGPROVIDER_H
 
 #include <key.h>
 #include <pubkey.h>
@@ -135,4 +135,4 @@ public:
 /** Return the CKeyID of the key involved in a script (if there is a unique one). */
 CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& dest);
 
-#endif // BITCOIN_SCRIPT_SIGNINGPROVIDER_H
+#endif // XBIT_SCRIPT_SIGNINGPROVIDER_H

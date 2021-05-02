@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,11 +11,7 @@
 #include <util/system.h>
 
 #include <cuckoocache.h>
-
-#include <algorithm>
-#include <mutex>
-#include <shared_mutex>
-#include <vector>
+#include <boost/thread/shared_mutex.hpp>
 
 namespace {
 /**
@@ -31,7 +27,7 @@ private:
     CSHA256 m_salted_hasher_schnorr;
     typedef CuckooCache::cache<uint256, SignatureCacheHasher> map_type;
     map_type setValid;
-    std::shared_mutex cs_sigcache;
+    boost::shared_mutex cs_sigcache;
 
 public:
     CSignatureCache()
@@ -66,13 +62,13 @@ public:
     bool
     Get(const uint256& entry, const bool erase)
     {
-        std::shared_lock<std::shared_mutex> lock(cs_sigcache);
+        boost::shared_lock<boost::shared_mutex> lock(cs_sigcache);
         return setValid.contains(entry, erase);
     }
 
-    void Set(const uint256& entry)
+    void Set(uint256& entry)
     {
-        std::unique_lock<std::shared_mutex> lock(cs_sigcache);
+        boost::unique_lock<boost::shared_mutex> lock(cs_sigcache);
         setValid.insert(entry);
     }
     uint32_t setup_bytes(size_t n)

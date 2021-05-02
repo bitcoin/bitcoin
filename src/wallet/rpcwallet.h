@@ -1,13 +1,12 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_RPCWALLET_H
-#define BITCOIN_WALLET_RPCWALLET_H
+#ifndef XBIT_WALLET_RPCWALLET_H
+#define XBIT_WALLET_RPCWALLET_H
 
 #include <span.h>
 
-#include <any>
 #include <memory>
 #include <string>
 #include <vector>
@@ -31,10 +30,10 @@ Span<const CRPCCommand> GetWalletRPCCommands();
  */
 std::shared_ptr<CWallet> GetWalletForJSONRPCRequest(const JSONRPCRequest& request);
 
-void EnsureWalletIsUnlocked(const CWallet&);
-WalletContext& EnsureWalletContext(const std::any& context);
+void EnsureWalletIsUnlocked(const CWallet*);
+WalletContext& EnsureWalletContext(const util::Ref& context);
 LegacyScriptPubKeyMan& EnsureLegacyScriptPubKeyMan(CWallet& wallet, bool also_create = false);
 
 RPCHelpMan getaddressinfo();
 RPCHelpMan signrawtransactionwithwallet();
-#endif //BITCOIN_WALLET_RPCWALLET_H
+#endif //XBIT_WALLET_RPCWALLET_H

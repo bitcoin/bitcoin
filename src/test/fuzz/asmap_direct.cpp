@@ -1,10 +1,9 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <netaddress.h>
-#include <util/asmap.h>
 #include <test/fuzz/fuzz.h>
+#include <util/asmap.h>
 
 #include <cstdint>
 #include <optional>
@@ -12,7 +11,7 @@
 
 #include <assert.h>
 
-FUZZ_TARGET(asmap_direct)
+void test_one_input(const std::vector<uint8_t>& buffer)
 {
     // Encoding: [asmap using 1 bit / byte] 0xFF [addr using 1 bit / byte]
     std::optional<size_t> sep_pos_opt;

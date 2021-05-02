@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -204,7 +204,7 @@ public:
 
 } // namespace
 
-FUZZ_TARGET(prevector)
+void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider prov(buffer.data(), buffer.size());
     prevector_tester<8, int> test;

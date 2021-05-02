@@ -1,9 +1,9 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TXREQUEST_H
-#define BITCOIN_TXREQUEST_H
+#ifndef XBIT_TXREQUEST_H
+#define XBIT_TXREQUEST_H
 
 #include <primitives/transaction.h>
 #include <net.h> // For NodeId
@@ -208,4 +208,4 @@ public:
     void PostGetRequestableSanityCheck(std::chrono::microseconds now) const;
 };
 
-#endif // BITCOIN_TXREQUEST_H
+#endif // XBIT_TXREQUEST_H

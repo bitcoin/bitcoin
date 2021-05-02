@@ -1,21 +1,21 @@
 Benchmarking
 ============
 
-Bitcoin Core has an internal benchmarking framework, with benchmarks
+XBit Core has an internal benchmarking framework, with benchmarks
 for cryptographic algorithms (e.g. SHA1, SHA256, SHA512, RIPEMD160, Poly1305, ChaCha20), rolling bloom filter, coins selection,
 thread queue, wallet balance.
 
 Running
 ---------------------
 
-For benchmarks purposes you only need to compile `bitcoin_bench`. Beware of configuring without `--enable-debug` as this would impact
+For benchmarks purposes you only need to compile `xbit_bench`. Beware of configuring without `--enable-debug` as this would impact
 benchmarking by unlatching log printers and lock analysis.
 
-    make -C src bitcoin_bench
+    make -C src xbit_bench
 
-After compiling bitcoin-core, the benchmarks can be run with:
+After compiling xbit-core, the benchmarks can be run with:
 
-    src/bench/bench_bitcoin
+    src/bench/bench_xbit
 
 The output will look similar to:
 ```
@@ -29,7 +29,7 @@ The output will look similar to:
 Help
 ---------------------
 
-    src/bench/bench_bitcoin --help
+    src/bench/bench_xbit --help
 
 To print options like scaling factor or per-benchmark filter.
 
@@ -45,6 +45,6 @@ More benchmarks are needed for, in no particular order:
 Going Further
 --------------------
 
-To monitor Bitcoin Core performance more in depth (like reindex or IBD): https://github.com/chaincodelabs/bitcoinperf
+To monitor XBit Core performance more in depth (like reindex or IBD): https://github.com/chaincodelabs/xbitperf
 
-To generate Flame Graphs for Bitcoin Core: https://github.com/eklitzke/bitcoin/blob/flamegraphs/doc/flamegraphs.md
+To generate Flame Graphs for XBit Core: https://github.com/eklitzke/xbit/blob/flamegraphs/doc/flamegraphs.md

@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The XBit Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -18,7 +18,7 @@ static secp256k1_context* secp256k1_context_sign = nullptr;
 
 /**
  * This parses a format loosely based on a DER encoding of the ECPrivateKey type from
- * section C.4 of SEC 1 <https://www.secg.org/sec1-v2.pdf>, with the following caveats:
+ * section C.4 of SEC 1 <http://www.secg.org/sec1-v2.pdf>, with the following caveats:
  *
  * * The octet-length of the SEQUENCE must be encoded as 1 or 2 octets. It is not
  *   required to be encoded as one octet if it is less than 256, as DER would require.
@@ -80,7 +80,7 @@ int ec_seckey_import_der(const secp256k1_context* ctx, unsigned char *out32, con
 
 /**
  * This serializes to a DER encoding of the ECPrivateKey type from section C.4 of SEC 1
- * <https://www.secg.org/sec1-v2.pdf>. The optional parameters and publicKey fields are
+ * <http://www.secg.org/sec1-v2.pdf>. The optional parameters and publicKey fields are
  * included.
  *
  * seckey must point to an output buffer of length at least CKey::SIZE bytes.
@@ -234,7 +234,7 @@ bool CKey::VerifyPubKey(const CPubKey& pubkey) const {
         return false;
     }
     unsigned char rnd[8];
-    std::string str = "Bitcoin key verification\n";
+    std::string str = "XBit key verification\n";
     GetRandBytes(rnd, sizeof(rnd));
     uint256 hash;
     CHash256().Write(MakeUCharSpan(str)).Write(rnd).Finalize(hash);

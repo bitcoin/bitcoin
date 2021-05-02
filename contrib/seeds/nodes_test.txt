@@ -1,11 +1,11 @@
 # List of fixed seed nodes for testnet
 
 # Onion nodes
-thfsmmn2jbitcoin.onion:18333
-it2pj4f7657g3rhi.onion:18333
-nkf5e6b7pl4jfd4a.onion:18333
-4zhkir2ofl7orfom.onion:18333
-t6xj6wilh4ytvcs7.onion:18333
-i6y6ivorwakd7nw3.onion:18333
-ubqj4rsu3nqtxmtp.onion:18333
+thfsmmn2jxbit.onion
+it2pj4f7657g3rhi.onion
+nkf5e6b7pl4jfd4a.onion
+4zhkir2ofl7orfom.onion
+t6xj6wilh4ytvcs7.onion
+i6y6ivorwakd7nw3.onion
+ubqj4rsu3nqtxmtp.onion
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,12 +13,12 @@
 #include <cstdint>
 #include <vector>
 
-void initialize_load_external_block_file()
+void initialize()
 {
-    static const auto testing_setup = MakeNoLogFileContext<const TestingSetup>();
+    InitializeFuzzingContext();
 }
 
-FUZZ_TARGET_INIT(load_external_block_file, initialize_load_external_block_file)
+void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     FuzzedFileProvider fuzzed_file_provider = ConsumeFile(fuzzed_data_provider);
@@ -27,5 +27,5 @@ FUZZ_TARGET_INIT(load_external_block_file, initialize_load_external_block_file)
         return;
     }
     FlatFilePos flat_file_pos;
-    ::ChainstateActive().LoadExternalBlockFile(Params(), fuzzed_block_file, fuzzed_data_provider.ConsumeBool() ? &flat_file_pos : nullptr);
+    LoadExternalBlockFile(Params(), fuzzed_block_file, fuzzed_data_provider.ConsumeBool() ? &flat_file_pos : nullptr);
 }

@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the getblockfilter RPC."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import XBitTestFramework
 from test_framework.util import (
     assert_equal, assert_is_hex_string, assert_raises_rpc_error,
     )
 
 FILTER_TYPES = ["basic"]
 
-class GetBlockFilterTest(BitcoinTestFramework):
+class GetBlockFilterTest(XBitTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 2
@@ -53,12 +53,6 @@ class GetBlockFilterTest(BitcoinTestFramework):
         # Test getblockfilter with undefined filter type
         genesis_hash = self.nodes[0].getblockhash(0)
         assert_raises_rpc_error(-5, "Unknown filtertype", self.nodes[0].getblockfilter, genesis_hash, "unknown")
-
-        # Test getblockfilter fails on node without compact block filter index
-        self.restart_node(0, extra_args=["-blockfilterindex=0"])
-        for filter_type in FILTER_TYPES:
-            assert_raises_rpc_error(-1, "Index is not enabled for filtertype {}".format(filter_type),
-                                    self.nodes[0].getblockfilter, genesis_hash, filter_type)
 
 if __name__ == '__main__':
     GetBlockFilterTest().main()

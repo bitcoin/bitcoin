@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_TRANSACTIONVIEW_H
-#define BITCOIN_QT_TRANSACTIONVIEW_H
+#ifndef XBIT_QT_TRANSACTIONVIEW_H
+#define XBIT_QT_TRANSACTIONVIEW_H
 
 #include <qt/guiutil.h>
 
@@ -35,7 +35,6 @@ class TransactionView : public QWidget
 
 public:
     explicit TransactionView(const PlatformStyle *platformStyle, QWidget *parent = nullptr);
-    ~TransactionView();
 
     void setModel(WalletModel *model);
 
@@ -83,6 +82,10 @@ private:
 
     QWidget *createDateRangeWidget();
 
+    GUIUtil::TableViewLastColumnResizingFixer *columnResizingFixer{nullptr};
+
+    virtual void resizeEvent(QResizeEvent* event) override;
+
     bool eventFilter(QObject *obj, QEvent *event) override;
 
 private Q_SLOTS:
@@ -99,7 +102,7 @@ private Q_SLOTS:
     void openThirdPartyTxUrl(QString url);
     void updateWatchOnlyColumn(bool fHaveWatchOnly);
     void abandonTx();
-    void bumpFee(bool checked);
+    void bumpFee();
 
 Q_SIGNALS:
     void doubleClicked(const QModelIndex&);
@@ -120,4 +123,4 @@ public Q_SLOTS:
     void focusTransaction(const uint256& txid);
 };
 
-#endif // BITCOIN_QT_TRANSACTIONVIEW_H
+#endif // XBIT_QT_TRANSACTIONVIEW_H

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2019 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test descendant package tracking carve-out allowing one final transaction in
@@ -9,13 +9,13 @@
 
 from decimal import Decimal
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import XBitTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, satoshi_round
 
 MAX_ANCESTORS = 25
 MAX_DESCENDANTS = 25
 
-class MempoolPackagesTest(BitcoinTestFramework):
+class MempoolPackagesTest(XBitTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [["-maxorphantx=1000"]]
@@ -80,7 +80,7 @@ class MempoolPackagesTest(BitcoinTestFramework):
         self.chain_transaction(self.nodes[0], [second_chain], [0], second_chain_value, fee, 1)
 
         # Make sure we can RBF the chain which used our carve-out rule
-        second_tx_outputs = {self.nodes[0].getrawtransaction(replacable_txid, True)["vout"][0]['scriptPubKey']['address']: replacable_orig_value - (Decimal(1) / Decimal(100))}
+        second_tx_outputs = {self.nodes[0].getrawtransaction(replacable_txid, True)["vout"][0]['scriptPubKey']['addresses'][0]: replacable_orig_value - (Decimal(1) / Decimal(100))}
         second_tx = self.nodes[0].createrawtransaction([{'txid': chain[0][0], 'vout': 1}], second_tx_outputs)
         signed_second_tx = self.nodes[0].signrawtransactionwithwallet(second_tx)
         self.nodes[0].sendrawtransaction(signed_second_tx['hex'])

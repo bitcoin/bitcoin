@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Bitcoin Core developers
+# Copyright (c) 2017-2020 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that the wallet resends transactions periodically."""
@@ -8,11 +8,11 @@ import time
 from test_framework.blocktools import create_block, create_coinbase
 from test_framework.messages import ToHex
 from test_framework.p2p import P2PTxInvStore
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import XBitTestFramework
 from test_framework.util import assert_equal
 
 
-class ResendWalletTransactionsTest(BitcoinTestFramework):
+class ResendWalletTransactionsTest(XBitTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
@@ -50,7 +50,6 @@ class ResendWalletTransactionsTest(BitcoinTestFramework):
         block.solve()
         node.submitblock(ToHex(block))
 
-        # Set correct m_best_block_time, which is used in ResendWalletTransactions
         node.syncwithvalidationinterfacequeue()
         now = int(time.time())
 

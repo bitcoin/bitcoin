@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -172,30 +172,20 @@ BOOST_AUTO_TEST_CASE(key_signature_tests)
     }
     BOOST_CHECK(found);
 
-    // When entropy is not specified, we should always see low R signatures that are less than or equal to 70 bytes in 256 tries
-    // The low R signatures should always have the value of their "length of R" byte less than or equal to 32
+    // When entropy is not specified, we should always see low R signatures that are less than 70 bytes in 256 tries
     // We should see at least one signature that is less than 70 bytes.
+    found = true;
     bool found_small = false;
-    bool found_big = false;
-    bool bad_sign = false;
     for (int i = 0; i < 256; ++i) {
         sig.clear();
         std::string msg = "A message to be signed" + ToString(i);
         msg_hash = Hash(msg);
-        if (!key.Sign(msg_hash, sig)) {
-            bad_sign = true;
-            break;
-        }
-        // sig.size() > 70 implies sig[3] > 32, because S is always low.
-        // But check both conditions anyway, just in case this implication is broken for some reason
-        if (sig[3] > 32 || sig.size() > 70) {
-            found_big = true;
-            break;
-        }
+        BOOST_CHECK(key.Sign(msg_hash, sig));
+        found = sig[3] == 0x20;
+        BOOST_CHECK(sig.size() <= 70);
         found_small |= sig.size() < 70;
     }
-    BOOST_CHECK(!bad_sign);
-    BOOST_CHECK(!found_big);
+    BOOST_CHECK(found);
     BOOST_CHECK(found_small);
 }
 
@@ -203,7 +193,7 @@ BOOST_AUTO_TEST_CASE(key_key_negation)
 {
     // create a dummy hash for signature comparison
     unsigned char rnd[8];
-    std::string str = "Bitcoin key verification\n";
+    std::string str = "XBit key verification\n";
     GetRandBytes(rnd, sizeof(rnd));
     uint256 hash;
     CHash256().Write(MakeUCharSpan(str)).Write(rnd).Finalize(hash);

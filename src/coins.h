@@ -1,26 +1,24 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_COINS_H
-#define BITCOIN_COINS_H
+#ifndef XBIT_COINS_H
+#define XBIT_COINS_H
 
 #include <compressor.h>
 #include <core_memusage.h>
+#include <crypto/siphash.h>
 #include <memusage.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
 #include <uint256.h>
-#include <util/hasher.h>
 
 #include <assert.h>
 #include <stdint.h>
 
 #include <functional>
 #include <unordered_map>
-
-class ChainstateManager;
 
 /**
  * A UTXO entry.
@@ -75,15 +73,39 @@ public:
         ::Unserialize(s, Using<TxOutCompression>(out));
     }
 
-    /** Either this coin never existed (see e.g. coinEmpty in coins.cpp), or it
-      * did exist and has been spent.
-      */
     bool IsSpent() const {
         return out.IsNull();
     }
 
     size_t DynamicMemoryUsage() const {
         return memusage::DynamicUsage(out.scriptPubKey);
+    }
+};
+
+class SaltedOutpointHasher
+{
+private:
+    /** Salt */
+    const uint64_t k0, k1;
+
+public:
+    SaltedOutpointHasher();
+
+    /**
+     * This *must* return size_t. With Boost 1.46 on 32-bit systems the
+     * unordered_map will behave unpredictably if the custom hasher returns a
+     * uint64_t, resulting in failures when syncing the chain (#4634).
+     *
+     * Having the hash noexcept allows libstdc++'s unordered_map to recalculate
+     * the hash during rehash, so it does not have to cache the value. This
+     * reduces node's memory by sizeof(size_t). The required recalculation has
+     * a slight performance penalty (around 1.6%), but this is compensated by
+     * memory savings of about 9% which allow for a larger dbcache setting.
+     *
+     * @see https://gcc.gnu.org/onlinedocs/gcc-9.2.0/libstdc++/manual/manual/unordered_associative.html
+     */
+    size_t operator()(const COutPoint& id) const noexcept {
+        return SipHashUint256Extra(k0, k1, id.hash, id.n);
     }
 };
 
@@ -130,7 +152,6 @@ struct CCoinsCacheEntry
 
     CCoinsCacheEntry() : flags(0) {}
     explicit CCoinsCacheEntry(Coin&& coin_) : coin(std::move(coin_)), flags(0) {}
-    CCoinsCacheEntry(Coin&& coin_, unsigned char flag) : coin(std::move(coin_)), flags(flag) {}
 };
 
 typedef std::unordered_map<COutPoint, CCoinsCacheEntry, SaltedOutpointHasher> CCoinsMap;
@@ -269,15 +290,6 @@ public:
     void AddCoin(const COutPoint& outpoint, Coin&& coin, bool possible_overwrite);
 
     /**
-     * Emplace a coin into cacheCoins without performing any checks, marking
-     * the emplaced coin as dirty.
-     *
-     * NOT FOR GENERAL USE. Used only when loading coins from a UTXO snapshot.
-     * @sa ChainstateManager::PopulateAndValidateSnapshot()
-     */
-    void EmplaceCoinInternalDANGER(COutPoint&& outpoint, Coin&& coin);
-
-    /**
      * Spend a coin. Pass moveto in order to get the deleted data.
      * If no unspent output exists for the passed outpoint, this call
      * has no effect.
@@ -338,7 +350,7 @@ const Coin& AccessByTxid(const CCoinsViewCache& cache, const uint256& txid);
 /**
  * This is a minimally invasive approach to shutdown on LevelDB read errors from the
  * chainstate, while keeping user interface out of the common library, which is shared
- * between bitcoind, and bitcoin-qt and non-server tools.
+ * between xbitd, and xbit-qt and non-server tools.
  *
  * Writes do not need similar protection, as failure to write is handled by the caller.
 */
@@ -359,4 +371,4 @@ private:
 
 };
 
-#endif // BITCOIN_COINS_H
+#endif // XBIT_COINS_H

@@ -12,10 +12,10 @@
     <ClCompile Include="testconsensus.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libbitcoinconsensus\libbitcoinconsensus.vcxproj">
+    <ProjectReference Include="..\libxbitconsensus\libxbitconsensus.vcxproj">
       <Project>{2B384FA8-9EE1-4544-93CB-0D733C25E8CE}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\libbitcoin_util\libbitcoin_util.vcxproj">
+    <ProjectReference Include="..\libxbit_util\libxbit_util.vcxproj">
       <Project>{B53A5535-EE9D-4C6F-9A26-F79EE3BC3754}</Project>
     </ProjectReference>
     <ProjectReference Include="..\libsecp256k1\libsecp256k1.vcxproj">

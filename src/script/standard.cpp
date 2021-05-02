@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -45,7 +45,8 @@ WitnessV0ScriptHash::WitnessV0ScriptHash(const CScript& in)
 
 std::string GetTxnOutputType(TxoutType t)
 {
-    switch (t) {
+    switch (t)
+    {
     case TxoutType::NONSTANDARD: return "nonstandard";
     case TxoutType::PUBKEY: return "pubkey";
     case TxoutType::PUBKEYHASH: return "pubkeyhash";
@@ -181,8 +182,7 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
     std::vector<valtype> vSolutions;
     TxoutType whichType = Solver(scriptPubKey, vSolutions);
 
-    switch (whichType) {
-    case TxoutType::PUBKEY: {
+    if (whichType == TxoutType::PUBKEY) {
         CPubKey pubKey(vSolutions[0]);
         if (!pubKey.IsValid())
             return false;
@@ -190,28 +190,26 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = PKHash(pubKey);
         return true;
     }
-    case TxoutType::PUBKEYHASH: {
+    else if (whichType == TxoutType::PUBKEYHASH)
+    {
         addressRet = PKHash(uint160(vSolutions[0]));
         return true;
     }
-    case TxoutType::SCRIPTHASH: {
+    else if (whichType == TxoutType::SCRIPTHASH)
+    {
         addressRet = ScriptHash(uint160(vSolutions[0]));
         return true;
-    }
-    case TxoutType::WITNESS_V0_KEYHASH: {
+    } else if (whichType == TxoutType::WITNESS_V0_KEYHASH) {
         WitnessV0KeyHash hash;
         std::copy(vSolutions[0].begin(), vSolutions[0].end(), hash.begin());
         addressRet = hash;
         return true;
-    }
-    case TxoutType::WITNESS_V0_SCRIPTHASH: {
+    } else if (whichType == TxoutType::WITNESS_V0_SCRIPTHASH) {
         WitnessV0ScriptHash hash;
         std::copy(vSolutions[0].begin(), vSolutions[0].end(), hash.begin());
         addressRet = hash;
         return true;
-    }
-    case TxoutType::WITNESS_UNKNOWN:
-    case TxoutType::WITNESS_V1_TAPROOT: {
+    } else if (whichType == TxoutType::WITNESS_UNKNOWN || whichType == TxoutType::WITNESS_V1_TAPROOT) {
         WitnessUnknown unk;
         unk.version = vSolutions[0][0];
         std::copy(vSolutions[1].begin(), vSolutions[1].end(), unk.program);
@@ -219,15 +217,10 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         addressRet = unk;
         return true;
     }
-    case TxoutType::MULTISIG:
-    case TxoutType::NULL_DATA:
-    case TxoutType::NONSTANDARD:
-        return false;
-    } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    // Multisig txns have more than one address...
+    return false;
 }
 
-// TODO: from v23 ("addresses" and "reqSigs" deprecated) "ExtractDestinations" should be removed
 bool ExtractDestinations(const CScript& scriptPubKey, TxoutType& typeRet, std::vector<CTxDestination>& addressRet, int& nRequiredRet)
 {
     addressRet.clear();
@@ -268,8 +261,9 @@ bool ExtractDestinations(const CScript& scriptPubKey, TxoutType& typeRet, std::v
     return true;
 }
 
-namespace {
-class CScriptVisitor
+namespace
+{
+class CScriptVisitor : public boost::static_visitor<CScript>
 {
 public:
     CScript operator()(const CNoDestination& dest) const
@@ -306,7 +300,7 @@ public:
 
 CScript GetScriptForDestination(const CTxDestination& dest)
 {
-    return std::visit(CScriptVisitor(), dest);
+    return boost::apply_visitor(CScriptVisitor(), dest);
 }
 
 CScript GetScriptForRawPubKey(const CPubKey& pubKey)
@@ -326,5 +320,5 @@ CScript GetScriptForMultisig(int nRequired, const std::vector<CPubKey>& keys)
 }
 
 bool IsValidDestination(const CTxDestination& dest) {
-    return dest.index() != 0;
+    return dest.which() != 0;
 }

@@ -1,15 +1,15 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SIGNET_H
-#define BITCOIN_SIGNET_H
+#ifndef XBIT_SIGNET_H
+#define XBIT_SIGNET_H
 
 #include <consensus/params.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
 
-#include <optional>
+#include <optional.h>
 
 /**
  * Extract signature and check whether a block has a valid solution
@@ -28,10 +28,10 @@ class SignetTxs {
     SignetTxs(const T1& to_spend, const T2& to_sign) : m_to_spend{to_spend}, m_to_sign{to_sign} { }
 
 public:
-    static std::optional<SignetTxs> Create(const CBlock& block, const CScript& challenge);
+    static Optional<SignetTxs> Create(const CBlock& block, const CScript& challenge);
 
     const CTransaction m_to_spend;
     const CTransaction m_to_sign;
 };
 
-#endif // BITCOIN_SIGNET_H
+#endif // XBIT_SIGNET_H

@@ -1,29 +1,28 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <policy/fees.h>
 
 #include <clientversion.h>
-#include <fs.h>
-#include <logging.h>
 #include <streams.h>
 #include <txmempool.h>
 #include <util/system.h>
 
-static const char* FEE_ESTIMATES_FILENAME = "fee_estimates.dat";
-
 static constexpr double INF_FEERATE = 1e99;
 
-std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon)
-{
-    switch (horizon) {
-    case FeeEstimateHorizon::SHORT_HALFLIFE: return "short";
-    case FeeEstimateHorizon::MED_HALFLIFE: return "medium";
-    case FeeEstimateHorizon::LONG_HALFLIFE: return "long";
-    } // no default case, so the compiler can warn about missing cases
-    assert(false);
+std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon) {
+    static const std::map<FeeEstimateHorizon, std::string> horizon_strings = {
+        {FeeEstimateHorizon::SHORT_HALFLIFE, "short"},
+        {FeeEstimateHorizon::MED_HALFLIFE, "medium"},
+        {FeeEstimateHorizon::LONG_HALFLIFE, "long"},
+    };
+    auto horizon_string = horizon_strings.find(horizon);
+
+    if (horizon_string == horizon_strings.end()) return "unknown";
+
+    return horizon_string->second;
 }
 
 /**
@@ -490,7 +489,6 @@ CBlockPolicyEstimator::CBlockPolicyEstimator()
 {
     static_assert(MIN_BUCKET_FEERATE > 0, "Min feerate must be nonzero");
     size_t bucketIndex = 0;
-
     for (double bucketBoundary = MIN_BUCKET_FEERATE; bucketBoundary <= MAX_BUCKET_FEERATE; bucketBoundary *= FEE_SPACING, bucketIndex++) {
         buckets.push_back(bucketBoundary);
         bucketMap[bucketBoundary] = bucketIndex;
@@ -502,13 +500,6 @@ CBlockPolicyEstimator::CBlockPolicyEstimator()
     feeStats = std::unique_ptr<TxConfirmStats>(new TxConfirmStats(buckets, bucketMap, MED_BLOCK_PERIODS, MED_DECAY, MED_SCALE));
     shortStats = std::unique_ptr<TxConfirmStats>(new TxConfirmStats(buckets, bucketMap, SHORT_BLOCK_PERIODS, SHORT_DECAY, SHORT_SCALE));
     longStats = std::unique_ptr<TxConfirmStats>(new TxConfirmStats(buckets, bucketMap, LONG_BLOCK_PERIODS, LONG_DECAY, LONG_SCALE));
-
-    // If the fee estimation file is present, read recorded estimations
-    fs::path est_filepath = GetDataDir() / FEE_ESTIMATES_FILENAME;
-    CAutoFile est_file(fsbridge::fopen(est_filepath, "rb"), SER_DISK, CLIENT_VERSION);
-    if (est_file.IsNull() || !Read(est_file)) {
-        LogPrintf("Failed to read fee estimates from %s. Continue anyway.\n", est_filepath.string());
-    }
 }
 
 CBlockPolicyEstimator::~CBlockPolicyEstimator()
@@ -542,7 +533,7 @@ void CBlockPolicyEstimator::processTransaction(const CTxMemPoolEntry& entry, boo
     }
     trackedTxs++;
 
-    // Feerates are stored and reported as BTC-per-kb:
+    // Feerates are stored and reported as XBT-per-kb:
     CFeeRate feeRate(entry.GetFee(), entry.GetTxSize());
 
     mapMemPoolTxs[hash].blockHeight = txHeight;
@@ -572,7 +563,7 @@ bool CBlockPolicyEstimator::processBlockTx(unsigned int nBlockHeight, const CTxM
         return false;
     }
 
-    // Feerates are stored and reported as BTC-per-kb:
+    // Feerates are stored and reported as XBT-per-kb:
     CFeeRate feeRate(entry->GetFee(), entry->GetTxSize());
 
     feeStats->Record(blocksToConfirm, (double)feeRate.GetFeePerK());
@@ -641,7 +632,7 @@ CFeeRate CBlockPolicyEstimator::estimateFee(int confTarget) const
 
 CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThreshold, FeeEstimateHorizon horizon, EstimationResult* result) const
 {
-    TxConfirmStats* stats = nullptr;
+    TxConfirmStats* stats;
     double sufficientTxs = SUFFICIENT_FEETXS;
     switch (horizon) {
     case FeeEstimateHorizon::SHORT_HALFLIFE: {
@@ -657,8 +648,10 @@ CFeeRate CBlockPolicyEstimator::estimateRawFee(int confTarget, double successThr
         stats = longStats.get();
         break;
     }
-    } // no default case, so the compiler can warn about missing cases
-    assert(stats);
+    default: {
+        throw std::out_of_range("CBlockPolicyEstimator::estimateRawFee unknown FeeEstimateHorizon");
+    }
+    }
 
     LOCK(m_cs_fee_estimator);
     // Return failure if trying to analyze a target we're not tracking
@@ -688,8 +681,10 @@ unsigned int CBlockPolicyEstimator::HighestTargetTracked(FeeEstimateHorizon hori
     case FeeEstimateHorizon::LONG_HALFLIFE: {
         return longStats->GetMaxConfirms();
     }
-    } // no default case, so the compiler can warn about missing cases
-    assert(false);
+    default: {
+        throw std::out_of_range("CBlockPolicyEstimator::HighestTargetTracked unknown FeeEstimateHorizon");
+    }
+    }
 }
 
 unsigned int CBlockPolicyEstimator::BlockSpan() const
@@ -861,15 +856,6 @@ CFeeRate CBlockPolicyEstimator::estimateSmartFee(int confTarget, FeeCalculation 
     return CFeeRate(llround(median));
 }
 
-void CBlockPolicyEstimator::Flush() {
-    FlushUnconfirmed();
-
-    fs::path est_filepath = GetDataDir() / FEE_ESTIMATES_FILENAME;
-    CAutoFile est_file(fsbridge::fopen(est_filepath, "wb"), SER_DISK, CLIENT_VERSION);
-    if (est_file.IsNull() || !Write(est_file)) {
-        LogPrintf("Failed to write fee estimates to %s. Continue anyway.\n", est_filepath.string());
-    }
-}
 
 bool CBlockPolicyEstimator::Write(CAutoFile& fileout) const
 {
@@ -902,9 +888,8 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
         LOCK(m_cs_fee_estimator);
         int nVersionRequired, nVersionThatWrote;
         filein >> nVersionRequired >> nVersionThatWrote;
-        if (nVersionRequired > CLIENT_VERSION) {
-            throw std::runtime_error(strprintf("up-version (%d) fee estimate file", nVersionRequired));
-        }
+        if (nVersionRequired > CLIENT_VERSION)
+            return error("CBlockPolicyEstimator::Read(): up-version (%d) fee estimate file", nVersionRequired);
 
         // Read fee estimates file into temporary variables so existing data
         // structures aren't corrupted if there is an exception.
@@ -922,9 +907,8 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
             std::vector<double> fileBuckets;
             filein >> fileBuckets;
             size_t numBuckets = fileBuckets.size();
-            if (numBuckets <= 1 || numBuckets > 1000) {
+            if (numBuckets <= 1 || numBuckets > 1000)
                 throw std::runtime_error("Corrupt estimates file. Must have between 2 and 1000 feerate buckets");
-            }
 
             std::unique_ptr<TxConfirmStats> fileFeeStats(new TxConfirmStats(buckets, bucketMap, MED_BLOCK_PERIODS, MED_DECAY, MED_SCALE));
             std::unique_ptr<TxConfirmStats> fileShortStats(new TxConfirmStats(buckets, bucketMap, SHORT_BLOCK_PERIODS, SHORT_DECAY, SHORT_SCALE));

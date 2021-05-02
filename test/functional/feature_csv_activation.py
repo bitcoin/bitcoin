@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2020 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test CSV soft fork activation.
@@ -9,8 +9,8 @@ BIP 68  - nSequence relative lock times
 BIP 112 - CHECKSEQUENCEVERIFY
 BIP 113 - MedianTimePast semantics for nLockTime
 
-mine 83 blocks whose coinbases will be used to generate inputs for our tests
-mine 344 blocks and seed block chain with the 83 inputs used for our tests at height 427
+mine 82 blocks whose coinbases will be used to generate inputs for our tests
+mine 345 blocks and seed block chain with the 82 inputs will use for our tests at height 427
 mine 2 blocks and verify soft fork not yet activated
 mine 1 block and test that soft fork is activated (rules enforced for next block)
 Test BIP 113 is enforced
@@ -50,7 +50,7 @@ from test_framework.script import (
     OP_CHECKSEQUENCEVERIFY,
     OP_DROP,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import XBitTestFramework
 from test_framework.util import (
     assert_equal,
     hex_str_to_bytes,
@@ -144,7 +144,7 @@ def create_bip112txs(node, bip112inputs, varyOP_CSV, txversion, address, locktim
         txs.append({'tx': signtx, 'sdf': sdf, 'stf': stf})
     return txs
 
-class BIP68_112_113Test(BitcoinTestFramework):
+class BIP68_112_113Test(XBitTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.setup_clean_chain = True

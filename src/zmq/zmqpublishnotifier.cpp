@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,11 +6,10 @@
 
 #include <chain.h>
 #include <chainparams.h>
-#include <node/blockstorage.h>
 #include <rpc/server.h>
 #include <streams.h>
 #include <util/system.h>
-#include <validation.h> // For cs_main
+#include <validation.h>
 #include <zmq/zmqutil.h>
 
 #include <zmq.h>
@@ -18,7 +17,6 @@
 #include <cstdarg>
 #include <cstddef>
 #include <map>
-#include <optional>
 #include <string>
 #include <utility>
 
@@ -229,43 +227,50 @@ bool CZMQPublishRawTransactionNotifier::NotifyTransaction(const CTransaction &tr
     return SendZmqMessage(MSG_RAWTX, &(*ss.begin()), ss.size());
 }
 
-// Helper function to send a 'sequence' topic message with the following structure:
-//    <32-byte hash> | <1-byte label> | <8-byte LE sequence> (optional)
-static bool SendSequenceMsg(CZMQAbstractPublishNotifier& notifier, uint256 hash, char label, std::optional<uint64_t> sequence = {})
-{
-    unsigned char data[sizeof(hash) + sizeof(label) + sizeof(uint64_t)];
-    for (unsigned int i = 0; i < sizeof(hash); ++i) {
-        data[sizeof(hash) - 1 - i] = hash.begin()[i];
-    }
-    data[sizeof(hash)] = label;
-    if (sequence) WriteLE64(data + sizeof(hash) + sizeof(label), *sequence);
-    return notifier.SendZmqMessage(MSG_SEQUENCE, data, sequence ? sizeof(data) : sizeof(hash) + sizeof(label));
-}
 
+// TODO: Dedup this code to take label char, log string
 bool CZMQPublishSequenceNotifier::NotifyBlockConnect(const CBlockIndex *pindex)
 {
     uint256 hash = pindex->GetBlockHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish sequence block connect %s to %s\n", hash.GetHex(), this->address);
-    return SendSequenceMsg(*this, hash, /* Block (C)onnect */ 'C');
+    char data[sizeof(uint256)+1];
+    for (unsigned int i = 0; i < sizeof(uint256); i++)
+        data[sizeof(uint256) - 1 - i] = hash.begin()[i];
+    data[sizeof(data) - 1] = 'C'; // Block (C)onnect
+    return SendZmqMessage(MSG_SEQUENCE, data, sizeof(data));
 }
 
 bool CZMQPublishSequenceNotifier::NotifyBlockDisconnect(const CBlockIndex *pindex)
 {
     uint256 hash = pindex->GetBlockHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish sequence block disconnect %s to %s\n", hash.GetHex(), this->address);
-    return SendSequenceMsg(*this, hash, /* Block (D)isconnect */ 'D');
+    char data[sizeof(uint256)+1];
+    for (unsigned int i = 0; i < sizeof(uint256); i++)
+        data[sizeof(uint256) - 1 - i] = hash.begin()[i];
+    data[sizeof(data) - 1] = 'D'; // Block (D)isconnect
+    return SendZmqMessage(MSG_SEQUENCE, data, sizeof(data));
 }
 
 bool CZMQPublishSequenceNotifier::NotifyTransactionAcceptance(const CTransaction &transaction, uint64_t mempool_sequence)
 {
     uint256 hash = transaction.GetHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish hashtx mempool acceptance %s to %s\n", hash.GetHex(), this->address);
-    return SendSequenceMsg(*this, hash, /* Mempool (A)cceptance */ 'A', mempool_sequence);
+    unsigned char data[sizeof(uint256)+sizeof(mempool_sequence)+1];
+    for (unsigned int i = 0; i < sizeof(uint256); i++)
+        data[sizeof(uint256) - 1 - i] = hash.begin()[i];
+    data[sizeof(uint256)] = 'A'; // Mempool (A)cceptance
+    WriteLE64(data+sizeof(uint256)+1, mempool_sequence);
+    return SendZmqMessage(MSG_SEQUENCE, data, sizeof(data));
 }
 
 bool CZMQPublishSequenceNotifier::NotifyTransactionRemoval(const CTransaction &transaction, uint64_t mempool_sequence)
 {
     uint256 hash = transaction.GetHash();
     LogPrint(BCLog::ZMQ, "zmq: Publish hashtx mempool removal %s to %s\n", hash.GetHex(), this->address);
-    return SendSequenceMsg(*this, hash, /* Mempool (R)emoval */ 'R', mempool_sequence);
+    unsigned char data[sizeof(uint256)+sizeof(mempool_sequence)+1];
+    for (unsigned int i = 0; i < sizeof(uint256); i++)
+        data[sizeof(uint256) - 1 - i] = hash.begin()[i];
+    data[sizeof(uint256)] = 'R'; // Mempool (R)emoval
+    WriteLE64(data+sizeof(uint256)+1, mempool_sequence);
+    return SendZmqMessage(MSG_SEQUENCE, data, sizeof(data));
 }

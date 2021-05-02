@@ -1,11 +1,9 @@
-// Copyright (c) 2015-2020 The Bitcoin Core developers
+// Copyright (c) 2015-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_BENCH_BENCH_H
-#define BITCOIN_BENCH_BENCH_H
-
-#include <util/macros.h>
+#ifndef XBIT_BENCH_BENCH_H
+#define XBIT_BENCH_BENCH_H
 
 #include <chrono>
 #include <functional>
@@ -14,6 +12,8 @@
 #include <vector>
 
 #include <bench/nanobench.h>
+#include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor/stringize.hpp>
 
 /*
  * Usage:
@@ -56,8 +56,8 @@ public:
     static void RunAll(const Args& args);
 };
 }
-// BENCHMARK(foo) expands to:  benchmark::BenchRunner bench_11foo("foo", foo);
+// BENCHMARK(foo) expands to:  benchmark::BenchRunner bench_11foo("foo");
 #define BENCHMARK(n) \
-    benchmark::BenchRunner PASTE2(bench_, PASTE2(__LINE__, n))(STRINGIZE(n), n);
+    benchmark::BenchRunner BOOST_PP_CAT(bench_, BOOST_PP_CAT(__LINE__, n))(BOOST_PP_STRINGIZE(n), n);
 
-#endif // BITCOIN_BENCH_BENCH_H
+#endif // XBIT_BENCH_BENCH_H

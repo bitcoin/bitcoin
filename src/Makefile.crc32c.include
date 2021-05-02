@@ -1,4 +1,4 @@
-# Copyright (c) 2019 The Bitcoin Core developers
+# Copyright (c) 2019 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -41,7 +41,7 @@ crc32c_libcrc32c_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crc32c_libcrc32c_a_SOURCES =
 crc32c_libcrc32c_a_SOURCES += crc32c/include/crc32c/crc32c.h
 crc32c_libcrc32c_a_SOURCES += crc32c/src/crc32c_arm64.h
-crc32c_libcrc32c_a_SOURCES += crc32c/src/crc32c_arm64_check.h
+crc32c_libcrc32c_a_SOURCES += crc32c/src/crc32c_arm64_linux_check.h
 crc32c_libcrc32c_a_SOURCES += crc32c/src/crc32c_internal.h
 crc32c_libcrc32c_a_SOURCES += crc32c/src/crc32c_prefetch.h
 crc32c_libcrc32c_a_SOURCES += crc32c/src/crc32c_read_le.h

@@ -1,10 +1,9 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 
 #include <bench/bench.h>
-#include <crypto/muhash.h>
 #include <crypto/ripemd160.h>
 #include <crypto/sha1.h>
 #include <crypto/sha256.h>
@@ -106,54 +105,6 @@ static void FastRandom_1bit(benchmark::Bench& bench)
     });
 }
 
-static void MuHash(benchmark::Bench& bench)
-{
-    MuHash3072 acc;
-    unsigned char key[32] = {0};
-    int i = 0;
-    bench.run([&] {
-        key[0] = ++i;
-        acc *= MuHash3072(key);
-    });
-}
-
-static void MuHashMul(benchmark::Bench& bench)
-{
-    MuHash3072 acc;
-    FastRandomContext rng(true);
-    MuHash3072 muhash{rng.randbytes(32)};
-
-    bench.run([&] {
-        acc *= muhash;
-    });
-}
-
-static void MuHashDiv(benchmark::Bench& bench)
-{
-    MuHash3072 acc;
-    FastRandomContext rng(true);
-    MuHash3072 muhash{rng.randbytes(32)};
-
-    for (size_t i = 0; i < bench.epochIterations(); ++i) {
-        acc *= muhash;
-    }
-
-    bench.run([&] {
-        acc /= muhash;
-    });
-}
-
-static void MuHashPrecompute(benchmark::Bench& bench)
-{
-    MuHash3072 acc;
-    FastRandomContext rng(true);
-    std::vector<unsigned char> key{rng.randbytes(32)};
-
-    bench.run([&] {
-        MuHash3072{key};
-    });
-}
-
 BENCHMARK(RIPEMD160);
 BENCHMARK(SHA1);
 BENCHMARK(SHA256);
@@ -165,8 +116,3 @@ BENCHMARK(SipHash_32b);
 BENCHMARK(SHA256D64_1024);
 BENCHMARK(FastRandom_32bit);
 BENCHMARK(FastRandom_1bit);
-
-BENCHMARK(MuHash);
-BENCHMARK(MuHashMul);
-BENCHMARK(MuHashDiv);
-BENCHMARK(MuHashPrecompute);

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2020 The Bitcoin Core developers
+# Copyright (c) 2014-2019 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test gettxoutproof and verifytxoutproof RPCs."""
 
 from test_framework.messages import CMerkleBlock, FromHex, ToHex
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import XBitTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 from test_framework.wallet import MiniWallet
 
 
-class MerkleBlockTest(BitcoinTestFramework):
+class MerkleBlockTest(XBitTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.setup_clean_chain = True
@@ -78,7 +78,7 @@ class MerkleBlockTest(BitcoinTestFramework):
         # We can't get a proof if we specify transactions from different blocks
         assert_raises_rpc_error(-5, "Not all transactions found in specified or retrieved block", self.nodes[0].gettxoutproof, [txid1, txid3])
         # Test empty list
-        assert_raises_rpc_error(-8, "Parameter 'txids' cannot be empty", self.nodes[0].gettxoutproof, [])
+        assert_raises_rpc_error(-5, "Transaction not yet in block", self.nodes[0].gettxoutproof, [])
         # Test duplicate txid
         assert_raises_rpc_error(-8, 'Invalid parameter, duplicated txid', self.nodes[0].gettxoutproof, [txid1, txid1])
 

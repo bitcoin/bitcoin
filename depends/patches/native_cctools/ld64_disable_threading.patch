@@ -8,7 +8,7 @@ Date:   Tue Aug 18 01:20:24 2020 +0000
     differently based on which files have already been parsed. This is more
     likely to occur on systems with more CPUs.
 
-    Just disable threading for now. There is no noticeable slowdown.
+    Just disable threading for now. There is no noticable slowdown.
 
     See #9891.
 

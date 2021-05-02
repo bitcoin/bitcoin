@@ -3,44 +3,27 @@
              (gnu packages autotools)
              (gnu packages base)
              (gnu packages bash)
-             (gnu packages bison)
-             (gnu packages cdrom)
              (gnu packages check)
-             (gnu packages cmake)
              (gnu packages commencement)
              (gnu packages compression)
              (gnu packages cross-base)
              (gnu packages file)
              (gnu packages gawk)
              (gnu packages gcc)
-             (gnu packages gnome)
-             (gnu packages image)
-             (gnu packages imagemagick)
              (gnu packages installers)
              (gnu packages linux)
-             (gnu packages llvm)
              (gnu packages mingw)
              (gnu packages perl)
              (gnu packages pkg-config)
              (gnu packages python)
              (gnu packages shells)
              (gnu packages version-control)
-             (guix build-system font)
              (guix build-system gnu)
              (guix build-system trivial)
-             (guix download)
              (guix gexp)
-             ((guix licenses) #:prefix license:)
              (guix packages)
              (guix profiles)
              (guix utils))
-
-(define-syntax-rule (search-our-patches file-name ...)
-  "Return the list of absolute file names corresponding to each
-FILE-NAME found in ./patches relative to the current file."
-  (parameterize
-      ((%patch-path (list (string-append (dirname (current-filename)) "/patches"))))
-    (list (search-patch file-name) ...)))
 
 (define (make-ssp-fixed-gcc xgcc)
   "Given a XGCC package, return a modified package that uses the SSP function
@@ -116,22 +99,21 @@ http://www.linuxfromscratch.org/hlfs/view/development/chapter05/gcc-pass1.html"
        `(("binutils" ,xbinutils)
          ("libc" ,xlibc)
          ("libc:static" ,xlibc "static")
-         ("gcc" ,xgcc)
-         ("gcc-lib" ,xgcc "lib")))
+         ("gcc" ,xgcc)))
       (synopsis (string-append "Complete GCC tool chain for " target))
       (description (string-append "This package provides a complete GCC tool
 chain for " target " development."))
       (home-page (package-home-page xgcc))
       (license (package-license xgcc)))))
 
-(define* (make-bitcoin-cross-toolchain target
+(define* (make-xbit-cross-toolchain target
                                   #:key
-                                  (base-gcc-for-libc gcc-7)
-                                  (base-kernel-headers linux-libre-headers-5.4)
-                                  (base-libc glibc)  ; glibc 2.31
+                                  (base-gcc-for-libc gcc-5)
+                                  (base-kernel-headers linux-libre-headers-4.19)
+                                  (base-libc glibc-2.27)
                                   (base-gcc (make-gcc-rpath-link gcc-9)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
-desirable for building Bitcoin Core release binaries."
+desirable for building XBit Core release binaries."
   (make-cross-toolchain target
                    base-gcc-for-libc
                    base-kernel-headers
@@ -161,41 +143,18 @@ desirable for building Bitcoin Core release binaries."
       (propagated-inputs
        `(("binutils" ,xbinutils)
          ("libc" ,pthreads-xlibc)
-         ("gcc" ,pthreads-xgcc)
-         ("gcc-lib" ,pthreads-xgcc "lib")))
+         ("gcc" ,pthreads-xgcc)))
       (synopsis (string-append "Complete GCC tool chain for " target))
       (description (string-append "This package provides a complete GCC tool
 chain for " target " development."))
       (home-page (package-home-page pthreads-xgcc))
       (license (package-license pthreads-xgcc)))))
 
-(define (make-nsis-with-sde-support base-nsis)
-  (package-with-extra-patches base-nsis
-    (search-our-patches "nsis-SConstruct-sde-support.patch")))
-
-(define-public font-tuffy
-  (package
-   (name "font-tuffy")
-   (version "20120614")
-   (source
-    (origin
-     (method url-fetch)
-     (uri (string-append "http://tulrich.com/fonts/tuffy-" version ".tar.gz"))
-     (file-name (string-append name "-" version ".tar.gz"))
-     (sha256
-      (base32
-       "02vf72bgrp30vrbfhxjw82s115z27dwfgnmmzfb0n9wfhxxfpyf6"))))
-   (build-system font-build-system)
-   (home-page "http://tulrich.com/fonts/")
-   (synopsis "The Tuffy Truetype Font Family")
-   (description
-    "Thatcher Ulrich's first outline font design. He started with the goal of producing a neutral, readable sans-serif text font. There are lots of \"expressive\" fonts out there, but he wanted to start with something very plain and clean, something he might want to actually use. ")
-   (license license:public-domain)))
 
 (packages->manifest
  (append
   (list ;; The Basics
-        bash
+        bash-minimal
         which
         coreutils
         util-linux
@@ -214,30 +173,26 @@ chain for " target " development."))
         gzip
         xz
         zlib
-        (list zlib "static")
         ;; Build tools
         gnu-make
         libtool
         autoconf
         automake
         pkg-config
-        bison
         ;; Scripting
         perl
-        python-3
+        python-3.7
         ;; Git
         git
-        ;; Native gcc 7 toolchain
-        gcc-toolchain-7
-        (list gcc-toolchain-7 "static"))
+        ;; Native gcc 9 toolchain targeting glibc 2.27
+        (make-gcc-toolchain gcc-9 glibc-2.27))
   (let ((target (getenv "HOST")))
     (cond ((string-suffix? "-mingw32" target)
            ;; Windows
-           (list zip
-                 (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32")
-                 (make-nsis-with-sde-support nsis-x86_64)))
+           (list zip (make-mingw-pthreads-cross-toolchain "x86_64-w64-mingw32") nsis-x86_64))
+          ((string-contains target "riscv64-linux-")
+           (list (make-xbit-cross-toolchain "riscv64-linux-gnu"
+                                               #:base-gcc-for-libc gcc-7)))
           ((string-contains target "-linux-")
-           (list (make-bitcoin-cross-toolchain target)))
-          ((string-contains target "darwin")
-           (list clang-toolchain-8 binutils imagemagick libtiff librsvg font-tuffy cmake xorriso))
+           (list (make-xbit-cross-toolchain target)))
           (else '())))))

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-2020 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the estimatefee RPCs.
@@ -9,11 +9,12 @@ Test the following RPCs:
    - estimaterawfee
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import XBitTestFramework
 from test_framework.util import assert_raises_rpc_error
 
-class EstimateFeeTest(BitcoinTestFramework):
+class EstimateFeeTest(XBitTestFramework):
     def set_test_params(self):
+        self.setup_clean_chain = False
         self.num_nodes = 1
 
     def run_test(self):
@@ -40,8 +41,6 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.nodes[0].estimatesmartfee(1)
         # self.nodes[0].estimatesmartfee(1, None)
         self.nodes[0].estimatesmartfee(1, 'ECONOMICAL')
-        self.nodes[0].estimatesmartfee(1, 'unset')
-        self.nodes[0].estimatesmartfee(1, 'conservative')
 
         self.nodes[0].estimaterawfee(1)
         self.nodes[0].estimaterawfee(1, None)

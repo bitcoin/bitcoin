@@ -1,40 +1,14 @@
-// Copyright (c) 2009-2021 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TEST_FUZZ_FUZZ_H
-#define BITCOIN_TEST_FUZZ_FUZZ_H
+#ifndef XBIT_TEST_FUZZ_FUZZ_H
+#define XBIT_TEST_FUZZ_FUZZ_H
 
-#include <span.h>
+#include <stdint.h>
+#include <vector>
 
-#include <cstdint>
-#include <functional>
-#include <string_view>
+void initialize();
+void test_one_input(const std::vector<uint8_t>& buffer);
 
-using FuzzBufferType = Span<const uint8_t>;
-
-using TypeTestOneInput = std::function<void(FuzzBufferType)>;
-using TypeInitialize = std::function<void()>;
-using TypeHidden = bool;
-
-void FuzzFrameworkRegisterTarget(std::string_view name, TypeTestOneInput target, TypeInitialize init, TypeHidden hidden);
-
-inline void FuzzFrameworkEmptyInitFun() {}
-
-#define FUZZ_TARGET(name) \
-    FUZZ_TARGET_INIT(name, FuzzFrameworkEmptyInitFun)
-
-#define FUZZ_TARGET_INIT(name, init_fun) \
-    FUZZ_TARGET_INIT_HIDDEN(name, init_fun, false)
-
-#define FUZZ_TARGET_INIT_HIDDEN(name, init_fun, hidden)                               \
-    void name##_fuzz_target(FuzzBufferType);                                          \
-    struct name##_Before_Main {                                                       \
-        name##_Before_Main()                                                          \
-        {                                                                             \
-            FuzzFrameworkRegisterTarget(#name, name##_fuzz_target, init_fun, hidden); \
-        }                                                                             \
-    } const static g_##name##_before_main;                                            \
-    void name##_fuzz_target(FuzzBufferType buffer)
-
-#endif // BITCOIN_TEST_FUZZ_FUZZ_H
+#endif // XBIT_TEST_FUZZ_FUZZ_H

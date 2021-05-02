@@ -1,6 +1,6 @@
 --- old/qtbase/src/plugins/platforms/android/androidjnimain.cpp
 +++ new/qtbase/src/plugins/platforms/android/androidjnimain.cpp
-@@ -897,6 +897,14 @@
+@@ -890,6 +890,14 @@
          __android_log_print(ANDROID_LOG_FATAL, "Qt", "registerNatives failed");
          return -1;
      }

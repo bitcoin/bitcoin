@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -62,7 +62,7 @@ bool VerifyWallets(interfaces::Chain& chain)
     std::set<fs::path> wallet_paths;
 
     for (const auto& wallet_file : gArgs.GetArgs("-wallet")) {
-        const fs::path path = fsbridge::AbsPathJoin(GetWalletDir(), wallet_file);
+        const fs::path path = fs::absolute(wallet_file, GetWalletDir());
 
         if (!wallet_paths.insert(path).second) {
             chain.initWarning(strprintf(_("Ignoring duplicate -wallet %s."), wallet_file));
@@ -76,7 +76,7 @@ bool VerifyWallets(interfaces::Chain& chain)
         bilingual_str error_string;
         if (!MakeWalletDatabase(wallet_file, options, status, error_string)) {
             if (status == DatabaseStatus::FAILED_NOT_FOUND) {
-                chain.initWarning(Untranslated(strprintf("Skipping -wallet path that doesn't exist. %s", error_string.original)));
+                chain.initWarning(Untranslated(strprintf("Skipping -wallet path that doesn't exist. %s\n", error_string.original)));
             } else {
                 chain.initError(error_string);
                 return false;
@@ -154,7 +154,7 @@ void UnloadWallets()
         auto wallet = wallets.back();
         wallets.pop_back();
         std::vector<bilingual_str> warnings;
-        RemoveWallet(wallet, std::nullopt, warnings);
+        RemoveWallet(wallet, nullopt, warnings);
         UnloadWallet(std::move(wallet));
     }
 }

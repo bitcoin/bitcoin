@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,17 +6,16 @@
 #include <script/interpreter.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
-#include <test/fuzz/util.h>
-#include <test/util/script.h>
+#include <util/memory.h>
 
 #include <cstdint>
 #include <limits>
 #include <string>
 #include <vector>
 
-void initialize_signature_checker()
+void initialize()
 {
-    static const auto verify_handle = std::make_unique<ECCVerifyHandle>();
+    static const auto verify_handle = MakeUnique<ECCVerifyHandle>();
 }
 
 namespace {
@@ -25,7 +24,7 @@ class FuzzedSignatureChecker : public BaseSignatureChecker
     FuzzedDataProvider& m_fuzzed_data_provider;
 
 public:
-    explicit FuzzedSignatureChecker(FuzzedDataProvider& fuzzed_data_provider) : m_fuzzed_data_provider(fuzzed_data_provider)
+    FuzzedSignatureChecker(FuzzedDataProvider& fuzzed_data_provider) : m_fuzzed_data_provider(fuzzed_data_provider)
     {
     }
 
@@ -53,17 +52,22 @@ public:
 };
 } // namespace
 
-FUZZ_TARGET_INIT(signature_checker, initialize_signature_checker)
+void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const unsigned int flags = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
     const SigVersion sig_version = fuzzed_data_provider.PickValueInArray({SigVersion::BASE, SigVersion::WITNESS_V0});
-    const auto script_1 = ConsumeScript(fuzzed_data_provider, 65536);
-    const auto script_2 = ConsumeScript(fuzzed_data_provider, 65536);
+    const std::string script_string_1 = fuzzed_data_provider.ConsumeRandomLengthString(65536);
+    const std::vector<uint8_t> script_bytes_1{script_string_1.begin(), script_string_1.end()};
+    const std::string script_string_2 = fuzzed_data_provider.ConsumeRandomLengthString(65536);
+    const std::vector<uint8_t> script_bytes_2{script_string_2.begin(), script_string_2.end()};
     std::vector<std::vector<unsigned char>> stack;
-    (void)EvalScript(stack, script_1, flags, FuzzedSignatureChecker(fuzzed_data_provider), sig_version, nullptr);
-    if (!IsValidFlagCombination(flags)) {
+    (void)EvalScript(stack, {script_bytes_1.begin(), script_bytes_1.end()}, flags, FuzzedSignatureChecker(fuzzed_data_provider), sig_version, nullptr);
+    if ((flags & SCRIPT_VERIFY_CLEANSTACK) != 0 && ((flags & SCRIPT_VERIFY_P2SH) == 0 || (flags & SCRIPT_VERIFY_WITNESS) == 0)) {
         return;
     }
-    (void)VerifyScript(script_1, script_2, nullptr, flags, FuzzedSignatureChecker(fuzzed_data_provider), nullptr);
+    if ((flags & SCRIPT_VERIFY_WITNESS) != 0 && (flags & SCRIPT_VERIFY_P2SH) == 0) {
+        return;
+    }
+    (void)VerifyScript({script_bytes_1.begin(), script_bytes_1.end()}, {script_bytes_2.begin(), script_bytes_2.end()}, nullptr, flags, FuzzedSignatureChecker(fuzzed_data_provider), nullptr);
 }

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -221,34 +221,25 @@ static void Checksum(Span<const uint8_t> addr_pubkey, uint8_t (&checksum)[CHECKS
 
 }; // namespace torv3
 
-bool CNetAddr::SetSpecial(const std::string& addr)
-{
-    if (!ValidAsCString(addr)) {
-        return false;
-    }
-
-    if (SetTor(addr)) {
-        return true;
-    }
-
-    if (SetI2P(addr)) {
-        return true;
-    }
-
-    return false;
-}
-
-bool CNetAddr::SetTor(const std::string& addr)
+/**
+ * Parse a TOR address and set this object to it.
+ *
+ * @returns Whether or not the operation was successful.
+ *
+ * @see CNetAddr::IsTor()
+ */
+bool CNetAddr::SetSpecial(const std::string& str)
 {
     static const char* suffix{".onion"};
     static constexpr size_t suffix_len{6};
 
-    if (addr.size() <= suffix_len || addr.substr(addr.size() - suffix_len) != suffix) {
+    if (!ValidAsCString(str) || str.size() <= suffix_len ||
+        str.substr(str.size() - suffix_len) != suffix) {
         return false;
     }
 
     bool invalid;
-    const auto& input = DecodeBase32(addr.substr(0, addr.size() - suffix_len).c_str(), &invalid);
+    const auto& input = DecodeBase32(str.substr(0, str.size() - suffix_len).c_str(), &invalid);
 
     if (invalid) {
         return false;
@@ -282,34 +273,6 @@ bool CNetAddr::SetTor(const std::string& addr)
     }
 
     return false;
-}
-
-bool CNetAddr::SetI2P(const std::string& addr)
-{
-    // I2P addresses that we support consist of 52 base32 characters + ".b32.i2p".
-    static constexpr size_t b32_len{52};
-    static const char* suffix{".b32.i2p"};
-    static constexpr size_t suffix_len{8};
-
-    if (addr.size() != b32_len + suffix_len || ToLower(addr.substr(b32_len)) != suffix) {
-        return false;
-    }
-
-    // Remove the ".b32.i2p" suffix and pad to a multiple of 8 chars, so DecodeBase32()
-    // can decode it.
-    const std::string b32_padded = addr.substr(0, b32_len) + "====";
-
-    bool invalid;
-    const auto& address_bytes = DecodeBase32(b32_padded.c_str(), &invalid);
-
-    if (invalid || address_bytes.size() != ADDR_I2P_SIZE) {
-        return false;
-    }
-
-    m_net = NET_I2P;
-    m_addr.assign(address_bytes.begin(), address_bytes.end());
-
-    return true;
 }
 
 CNetAddr::CNetAddr(const struct in_addr& ipv4Addr)
@@ -474,11 +437,6 @@ bool CNetAddr::IsValid() const
         return false;
     }
 
-    // CJDNS addresses always start with 0xfc
-    if (IsCJDNS() && (m_addr[0] != 0xFC)) {
-        return false;
-    }
-
     // documentation IPv6 address
     if (IsRFC3849())
         return false;
@@ -551,11 +509,6 @@ enum Network CNetAddr::GetNetwork() const
     return m_net;
 }
 
-static std::string IPv4ToString(Span<const uint8_t> a)
-{
-    return strprintf("%u.%u.%u.%u", a[0], a[1], a[2], a[3]);
-}
-
 static std::string IPv6ToString(Span<const uint8_t> a)
 {
     assert(a.size() == ADDR_IPV6_SIZE);
@@ -576,7 +529,6 @@ std::string CNetAddr::ToStringIP() const
 {
     switch (m_net) {
     case NET_IPV4:
-        return IPv4ToString(m_addr);
     case NET_IPV6: {
         CService serv(*this, 0);
         struct sockaddr_storage sockaddr;
@@ -586,6 +538,9 @@ std::string CNetAddr::ToStringIP() const
             if (!getnameinfo((const struct sockaddr*)&sockaddr, socklen, name,
                              sizeof(name), nullptr, 0, NI_NUMERICHOST))
                 return std::string(name);
+        }
+        if (m_net == NET_IPV4) {
+            return strprintf("%u.%u.%u.%u", m_addr[0], m_addr[1], m_addr[2], m_addr[3]);
         }
         return IPv6ToString(m_addr);
     }
@@ -881,11 +836,6 @@ int CNetAddr::GetReachabilityFrom(const CNetAddr *paddrPartner) const
         case NET_IPV4:   return REACH_IPV4; // Tor users can connect to IPv4 as well
         case NET_ONION:    return REACH_PRIVATE;
         }
-    case NET_I2P:
-        switch (ourNet) {
-        case NET_I2P: return REACH_PRIVATE;
-        default: return REACH_DEFAULT;
-        }
     case NET_TEREDO:
         switch(ourNet) {
         default:          return REACH_DEFAULT;
@@ -1113,23 +1063,14 @@ CSubNet::CSubNet(const CNetAddr& addr, const CNetAddr& mask) : CSubNet()
 
 CSubNet::CSubNet(const CNetAddr& addr) : CSubNet()
 {
-    switch (addr.m_net) {
-    case NET_IPV4:
-    case NET_IPV6:
-        valid = true;
-        assert(addr.m_addr.size() <= sizeof(netmask));
-        memset(netmask, 0xFF, addr.m_addr.size());
-        break;
-    case NET_ONION:
-    case NET_I2P:
-    case NET_CJDNS:
-        valid = true;
-        break;
-    case NET_INTERNAL:
-    case NET_UNROUTABLE:
-    case NET_MAX:
+    valid = addr.IsIPv4() || addr.IsIPv6();
+    if (!valid) {
         return;
     }
+
+    assert(addr.m_addr.size() <= sizeof(netmask));
+
+    memset(netmask, 0xFF, addr.m_addr.size());
 
     network = addr;
 }
@@ -1142,21 +1083,6 @@ bool CSubNet::Match(const CNetAddr &addr) const
 {
     if (!valid || !addr.IsValid() || network.m_net != addr.m_net)
         return false;
-
-    switch (network.m_net) {
-    case NET_IPV4:
-    case NET_IPV6:
-        break;
-    case NET_ONION:
-    case NET_I2P:
-    case NET_CJDNS:
-    case NET_INTERNAL:
-        return addr == network;
-    case NET_UNROUTABLE:
-    case NET_MAX:
-        return false;
-    }
-
     assert(network.m_addr.size() == addr.m_addr.size());
     for (size_t x = 0; x < addr.m_addr.size(); ++x) {
         if ((addr.m_addr[x] & netmask[x]) != network.m_addr[x]) {
@@ -1168,35 +1094,18 @@ bool CSubNet::Match(const CNetAddr &addr) const
 
 std::string CSubNet::ToString() const
 {
-    std::string suffix;
+    assert(network.m_addr.size() <= sizeof(netmask));
 
-    switch (network.m_net) {
-    case NET_IPV4:
-    case NET_IPV6: {
-        assert(network.m_addr.size() <= sizeof(netmask));
+    uint8_t cidr = 0;
 
-        uint8_t cidr = 0;
-
-        for (size_t i = 0; i < network.m_addr.size(); ++i) {
-            if (netmask[i] == 0x00) {
-                break;
-            }
-            cidr += NetmaskBits(netmask[i]);
+    for (size_t i = 0; i < network.m_addr.size(); ++i) {
+        if (netmask[i] == 0x00) {
+            break;
         }
-
-        suffix = strprintf("/%u", cidr);
-        break;
-    }
-    case NET_ONION:
-    case NET_I2P:
-    case NET_CJDNS:
-    case NET_INTERNAL:
-    case NET_UNROUTABLE:
-    case NET_MAX:
-        break;
+        cidr += NetmaskBits(netmask[i]);
     }
 
-    return network.ToString() + suffix;
+    return network.ToString() + strprintf("/%u", cidr);
 }
 
 bool CSubNet::IsValid() const
@@ -1206,19 +1115,7 @@ bool CSubNet::IsValid() const
 
 bool CSubNet::SanityCheck() const
 {
-    switch (network.m_net) {
-    case NET_IPV4:
-    case NET_IPV6:
-        break;
-    case NET_ONION:
-    case NET_I2P:
-    case NET_CJDNS:
-        return true;
-    case NET_INTERNAL:
-    case NET_UNROUTABLE:
-    case NET_MAX:
-        return false;
-    }
+    if (!(network.IsIPv4() || network.IsIPv6())) return false;
 
     for (size_t x = 0; x < network.m_addr.size(); ++x) {
         if (network.m_addr[x] & ~netmask[x]) return false;

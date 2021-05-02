@@ -1,8 +1,8 @@
 ---
-name: "bitcoin-win-signer"
+name: "xbit-win-signer"
 distro: "ubuntu"
 suites:
-- "focal"
+- "bionic"
 architectures:
 - "amd64"
 packages:
@@ -12,11 +12,11 @@ packages:
 - "libtool"
 - "pkg-config"
 remotes:
-- "url": "https://github.com/bitcoin-core/bitcoin-detached-sigs.git"
+- "url": "https://github.com/xbit-core/xbit-detached-sigs.git"
   "dir": "signature"
 files:
 - "osslsigncode-2.0.tar.gz"
-- "bitcoin-win-unsigned.tar.gz"
+- "xbit-win-unsigned.tar.gz"
 script: |
   set -e -o pipefail
 
@@ -27,7 +27,7 @@ script: |
   echo "5a60e0a4b3e0b4d655317b2f12a810211c50242138322b16e7e01c6fbb89d92f  osslsigncode-2.0.tar.gz" | sha256sum -c
 
   mkdir -p ${UNSIGNED_DIR}
-  tar -C ${UNSIGNED_DIR} -xf bitcoin-win-unsigned.tar.gz
+  tar -C ${UNSIGNED_DIR} -xf xbit-win-unsigned.tar.gz
 
   tar xf osslsigncode-2.0.tar.gz
   cd osslsigncode-2.0

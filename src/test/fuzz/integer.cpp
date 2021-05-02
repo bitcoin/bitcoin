@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -40,12 +40,12 @@
 #include <set>
 #include <vector>
 
-void initialize_integer()
+void initialize()
 {
     SelectParams(CBaseChainParams::REGTEST);
 }
 
-FUZZ_TARGET_INIT(integer, initialize_integer)
+void test_one_input(const std::vector<uint8_t>& buffer)
 {
     if (buffer.size() < sizeof(uint256) + sizeof(uint160)) {
         return;
@@ -84,7 +84,8 @@ FUZZ_TARGET_INIT(integer, initialize_integer)
     (void)DecompressAmount(u64);
     (void)FormatISO8601Date(i64);
     (void)FormatISO8601DateTime(i64);
-    {
+    // FormatMoney(i) not defined when i == std::numeric_limits<int64_t>::min()
+    if (i64 != std::numeric_limits<int64_t>::min()) {
         int64_t parsed_money;
         if (ParseMoney(FormatMoney(i64), parsed_money)) {
             assert(parsed_money == i64);
@@ -131,7 +132,8 @@ FUZZ_TARGET_INIT(integer, initialize_integer)
     (void)SipHashUint256Extra(u64, u64, u256, u32);
     (void)ToLower(ch);
     (void)ToUpper(ch);
-    {
+    // ValueFromAmount(i) not defined when i == std::numeric_limits<int64_t>::min()
+    if (i64 != std::numeric_limits<int64_t>::min()) {
         int64_t parsed_money;
         if (ParseMoney(ValueFromAmount(i64).getValStr(), parsed_money)) {
             assert(parsed_money == i64);

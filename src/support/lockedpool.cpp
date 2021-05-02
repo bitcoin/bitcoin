@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2020 The Bitcoin Core developers
+// Copyright (c) 2016-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,7 @@
 #include <support/cleanse.h>
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/xbit-config.h>
 #endif
 
 #ifdef WIN32
@@ -65,7 +65,7 @@ void* Arena::alloc(size_t size)
 
     // Pick a large enough free-chunk. Returns an iterator pointing to the first element that is not less than key.
     // This allocation strategy is best-fit. According to "Dynamic Storage Allocation: A Survey and Critical Review",
-    // Wilson et. al. 1995, https://www.scs.stanford.edu/14wi-cs140/sched/readings/wilson.pdf, best-fit and first-fit
+    // Wilson et. al. 1995, http://www.scs.stanford.edu/14wi-cs140/sched/readings/wilson.pdf, best-fit and first-fit
     // policies seem to work well in practice.
     auto size_ptr_it = size_to_free_chunk.lower_bound(size);
     if (size_ptr_it == size_to_free_chunk.end())

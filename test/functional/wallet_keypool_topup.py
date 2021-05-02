@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Bitcoin Core developers
+# Copyright (c) 2017-2019 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test HD Wallet keypool restore function.
@@ -13,13 +13,13 @@ Two nodes. Node1 is under test. Node0 is providing transactions and generating b
 import os
 import shutil
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import XBitTestFramework
 from test_framework.util import (
     assert_equal,
 )
 
 
-class KeypoolRestoreTest(BitcoinTestFramework):
+class KeypoolRestoreTest(XBitTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 4

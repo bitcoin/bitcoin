@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''Test generateblock rpc.
 '''
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import XBitTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
 
 
-class GenerateBlockTest(BitcoinTestFramework):
+class GenerateBlockTest(XBitTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 
@@ -27,13 +27,13 @@ class GenerateBlockTest(BitcoinTestFramework):
         hash = node.generateblock(output=address, transactions=[])['hash']
         block = node.getblock(blockhash=hash, verbose=2)
         assert_equal(len(block['tx']), 1)
-        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], address)
+        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['addresses'][0], address)
 
         self.log.info('Generate an empty block to a descriptor')
         hash = node.generateblock('addr(' + address + ')', [])['hash']
         block = node.getblock(blockhash=hash, verbosity=2)
         assert_equal(len(block['tx']), 1)
-        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], address)
+        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['addresses'][0], address)
 
         self.log.info('Generate an empty block to a combo descriptor with compressed pubkey')
         combo_key = '0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'
@@ -41,7 +41,7 @@ class GenerateBlockTest(BitcoinTestFramework):
         hash = node.generateblock('combo(' + combo_key + ')', [])['hash']
         block = node.getblock(hash, 2)
         assert_equal(len(block['tx']), 1)
-        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], combo_address)
+        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['addresses'][0], combo_address)
 
         self.log.info('Generate an empty block to a combo descriptor with uncompressed pubkey')
         combo_key = '0408ef68c46d20596cc3f6ddf7c8794f71913add807f1dc55949fa805d764d191c0b7ce6894c126fce0babc6663042f3dde9b0cf76467ea315514e5a6731149c67'
@@ -49,7 +49,7 @@ class GenerateBlockTest(BitcoinTestFramework):
         hash = node.generateblock('combo(' + combo_key + ')', [])['hash']
         block = node.getblock(hash, 2)
         assert_equal(len(block['tx']), 1)
-        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['address'], combo_address)
+        assert_equal(block['tx'][0]['vout'][0]['scriptPubKey']['addresses'][0], combo_address)
 
         # Generate 110 blocks to spend
         node.generatetoaddress(110, address)

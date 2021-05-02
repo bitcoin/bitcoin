@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,12 +8,12 @@
 #include <clientversion.h>
 #include <cstdint>
 #include <net.h>
-#include <netaddress.h>
 #include <netbase.h>
 #include <serialize.h>
 #include <span.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
+#include <util/memory.h>
 #include <util/strencodings.h>
 #include <util/string.h>
 #include <util/system.h>
@@ -21,13 +21,9 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <algorithm>
 #include <ios>
 #include <memory>
-#include <optional>
 #include <string>
-
-using namespace std::literals;
 
 class CAddrManSerializationMock : public CAddrMan
 {
@@ -77,7 +73,7 @@ public:
     }
 };
 
-static CDataStream AddrmanToStream(const CAddrManSerializationMock& _addrman)
+static CDataStream AddrmanToStream(CAddrManSerializationMock& _addrman)
 {
     CDataStream ssPeersIn(SER_DISK, CLIENT_VERSION);
     ssPeersIn << Params().MessageStart();
@@ -92,7 +88,7 @@ BOOST_FIXTURE_TEST_SUITE(net_tests, BasicTestingSetup)
 BOOST_AUTO_TEST_CASE(cnode_listen_port)
 {
     // test default
-    uint16_t port{GetListenPort()};
+    uint16_t port = GetListenPort();
     BOOST_CHECK(port == Params().GetDefaultPort());
     // test set port
     uint16_t altPort = 12345;
@@ -110,8 +106,8 @@ BOOST_AUTO_TEST_CASE(caddrdb_read)
     BOOST_CHECK(Lookup("250.7.1.1", addr1, 8333, false));
     BOOST_CHECK(Lookup("250.7.2.2", addr2, 9999, false));
     BOOST_CHECK(Lookup("250.7.3.3", addr3, 9999, false));
-    BOOST_CHECK(Lookup("250.7.3.3"s, addr3, 9999, false));
-    BOOST_CHECK(!Lookup("250.7.3.3\0example.com"s, addr3, 9999, false));
+    BOOST_CHECK(Lookup(std::string("250.7.3.3", 9), addr3, 9999, false));
+    BOOST_CHECK(!Lookup(std::string("250.7.3.3\0example.com", 21), addr3, 9999, false));
 
     // Add three addresses to new table.
     CService source;
@@ -181,6 +177,7 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
 {
     SOCKET hSocket = INVALID_SOCKET;
     NodeId id = 0;
+    int height = 0;
 
     in_addr ipv4Addr;
     ipv4Addr.s_addr = 0xa0b0c001;
@@ -188,23 +185,21 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     CAddress addr = CAddress(CService(ipv4Addr, 7777), NODE_NETWORK);
     std::string pszDest;
 
-    std::unique_ptr<CNode> pnode1 = std::make_unique<CNode>(
-        id++, NODE_NETWORK, hSocket, addr,
+    std::unique_ptr<CNode> pnode1 = MakeUnique<CNode>(
+        id++, NODE_NETWORK, height, hSocket, addr,
         /* nKeyedNetGroupIn = */ 0,
         /* nLocalHostNonceIn = */ 0,
-        CAddress(), pszDest, ConnectionType::OUTBOUND_FULL_RELAY,
-        /* inbound_onion = */ false);
+        CAddress(), pszDest, ConnectionType::OUTBOUND_FULL_RELAY);
     BOOST_CHECK(pnode1->IsFullOutboundConn() == true);
     BOOST_CHECK(pnode1->IsManualConn() == false);
     BOOST_CHECK(pnode1->IsBlockOnlyConn() == false);
     BOOST_CHECK(pnode1->IsFeelerConn() == false);
     BOOST_CHECK(pnode1->IsAddrFetchConn() == false);
     BOOST_CHECK(pnode1->IsInboundConn() == false);
-    BOOST_CHECK(pnode1->m_inbound_onion == false);
     BOOST_CHECK_EQUAL(pnode1->ConnectedThroughNetwork(), Network::NET_IPV4);
 
-    std::unique_ptr<CNode> pnode2 = std::make_unique<CNode>(
-        id++, NODE_NETWORK, hSocket, addr,
+    std::unique_ptr<CNode> pnode2 = MakeUnique<CNode>(
+        id++, NODE_NETWORK, height, hSocket, addr,
         /* nKeyedNetGroupIn = */ 1,
         /* nLocalHostNonceIn = */ 1,
         CAddress(), pszDest, ConnectionType::INBOUND,
@@ -215,26 +210,24 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK(pnode2->IsFeelerConn() == false);
     BOOST_CHECK(pnode2->IsAddrFetchConn() == false);
     BOOST_CHECK(pnode2->IsInboundConn() == true);
-    BOOST_CHECK(pnode2->m_inbound_onion == false);
     BOOST_CHECK_EQUAL(pnode2->ConnectedThroughNetwork(), Network::NET_IPV4);
 
-    std::unique_ptr<CNode> pnode3 = std::make_unique<CNode>(
-        id++, NODE_NETWORK, hSocket, addr,
+    std::unique_ptr<CNode> pnode3 = MakeUnique<CNode>(
+        id++, NODE_NETWORK, height, hSocket, addr,
         /* nKeyedNetGroupIn = */ 0,
         /* nLocalHostNonceIn = */ 0,
         CAddress(), pszDest, ConnectionType::OUTBOUND_FULL_RELAY,
-        /* inbound_onion = */ false);
+        /* inbound_onion = */ true);
     BOOST_CHECK(pnode3->IsFullOutboundConn() == true);
     BOOST_CHECK(pnode3->IsManualConn() == false);
     BOOST_CHECK(pnode3->IsBlockOnlyConn() == false);
     BOOST_CHECK(pnode3->IsFeelerConn() == false);
     BOOST_CHECK(pnode3->IsAddrFetchConn() == false);
     BOOST_CHECK(pnode3->IsInboundConn() == false);
-    BOOST_CHECK(pnode3->m_inbound_onion == false);
     BOOST_CHECK_EQUAL(pnode3->ConnectedThroughNetwork(), Network::NET_IPV4);
 
-    std::unique_ptr<CNode> pnode4 = std::make_unique<CNode>(
-        id++, NODE_NETWORK, hSocket, addr,
+    std::unique_ptr<CNode> pnode4 = MakeUnique<CNode>(
+        id++, NODE_NETWORK, height, hSocket, addr,
         /* nKeyedNetGroupIn = */ 1,
         /* nLocalHostNonceIn = */ 1,
         CAddress(), pszDest, ConnectionType::INBOUND,
@@ -245,7 +238,6 @@ BOOST_AUTO_TEST_CASE(cnode_simple_test)
     BOOST_CHECK(pnode4->IsFeelerConn() == false);
     BOOST_CHECK(pnode4->IsAddrFetchConn() == false);
     BOOST_CHECK(pnode4->IsInboundConn() == true);
-    BOOST_CHECK(pnode4->m_inbound_onion == true);
     BOOST_CHECK_EQUAL(pnode4->ConnectedThroughNetwork(), Network::NET_ONION);
 }
 
@@ -307,6 +299,9 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_REQUIRE(addr.IsValid());
     BOOST_REQUIRE(addr.IsIPv6());
     BOOST_CHECK(!addr.IsBindAny());
+    const std::string addr_str{addr.ToString()};
+    BOOST_CHECK(addr_str == scoped_addr || addr_str == "fe80:0:0:0:0:0:0:1");
+    // The fallback case "fe80:0:0:0:0:0:0:1" is needed for macOS 10.14/10.15 and (probably) later.
     // Test that the delimiter "%" and default zone id of 0 can be omitted for the default scope.
     BOOST_REQUIRE(LookupHost(link_local + "%0", addr, false));
     BOOST_REQUIRE(addr.IsValid());
@@ -319,7 +314,6 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_REQUIRE(addr.IsValid());
     BOOST_REQUIRE(addr.IsTor());
 
-    BOOST_CHECK(!addr.IsI2P());
     BOOST_CHECK(!addr.IsBindAny());
     BOOST_CHECK(addr.IsAddrV1Compatible());
     BOOST_CHECK_EQUAL(addr.ToString(), "6hzph5hv6337r6p2.onion");
@@ -330,7 +324,6 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_REQUIRE(addr.IsValid());
     BOOST_REQUIRE(addr.IsTor());
 
-    BOOST_CHECK(!addr.IsI2P());
     BOOST_CHECK(!addr.IsBindAny());
     BOOST_CHECK(!addr.IsAddrV1Compatible());
     BOOST_CHECK_EQUAL(addr.ToString(), torv3_addr);
@@ -351,35 +344,6 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     // TOR, invalid base32
     BOOST_CHECK(!addr.SetSpecial(std::string{"mf*g zak.onion"}));
 
-    // I2P
-    const char* i2p_addr = "UDHDrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna.b32.I2P";
-    BOOST_REQUIRE(addr.SetSpecial(i2p_addr));
-    BOOST_REQUIRE(addr.IsValid());
-    BOOST_REQUIRE(addr.IsI2P());
-
-    BOOST_CHECK(!addr.IsTor());
-    BOOST_CHECK(!addr.IsBindAny());
-    BOOST_CHECK(!addr.IsAddrV1Compatible());
-    BOOST_CHECK_EQUAL(addr.ToString(), ToLower(i2p_addr));
-
-    // I2P, correct length, but decodes to less than the expected number of bytes.
-    BOOST_CHECK(!addr.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jn=.b32.i2p"));
-
-    // I2P, extra unnecessary padding
-    BOOST_CHECK(!addr.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v4jna=.b32.i2p"));
-
-    // I2P, malicious
-    BOOST_CHECK(!addr.SetSpecial("udhdrtrcetjm5sxzskjyr5ztpeszydbh4dpl3pl4utgqqw2v\0wtf.b32.i2p"s));
-
-    // I2P, valid but unsupported (56 Base32 characters)
-    // See "Encrypted LS with Base 32 Addresses" in
-    // https://geti2p.net/spec/encryptedleaseset.txt
-    BOOST_CHECK(
-        !addr.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscsad.b32.i2p"));
-
-    // I2P, invalid base32
-    BOOST_CHECK(!addr.SetSpecial(std::string{"tp*szydbh4dp.b32.i2p"}));
-
     // Internal
     addr.SetInternal("esffpp");
     BOOST_REQUIRE(!addr.IsValid()); // "internal" is considered invalid
@@ -391,60 +355,6 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
 
     // Totally bogus
     BOOST_CHECK(!addr.SetSpecial("totally bogus"));
-}
-
-BOOST_AUTO_TEST_CASE(cnetaddr_tostring_canonical_ipv6)
-{
-    // Test that CNetAddr::ToString formats IPv6 addresses with zero compression as described in
-    // RFC 5952 ("A Recommendation for IPv6 Address Text Representation").
-    const std::map<std::string, std::string> canonical_representations_ipv6{
-        {"0000:0000:0000:0000:0000:0000:0000:0000", "::"},
-        {"000:0000:000:00:0:00:000:0000", "::"},
-        {"000:000:000:000:000:000:000:000", "::"},
-        {"00:00:00:00:00:00:00:00", "::"},
-        {"0:0:0:0:0:0:0:0", "::"},
-        {"0:0:0:0:0:0:0:1", "::1"},
-        {"2001:0:0:1:0:0:0:1", "2001:0:0:1::1"},
-        {"2001:0db8:0:0:1:0:0:1", "2001:db8::1:0:0:1"},
-        {"2001:0db8:85a3:0000:0000:8a2e:0370:7334", "2001:db8:85a3::8a2e:370:7334"},
-        {"2001:0db8::0001", "2001:db8::1"},
-        {"2001:0db8::0001:0000", "2001:db8::1:0"},
-        {"2001:0db8::1:0:0:1", "2001:db8::1:0:0:1"},
-        {"2001:db8:0000:0:1::1", "2001:db8::1:0:0:1"},
-        {"2001:db8:0000:1:1:1:1:1", "2001:db8:0:1:1:1:1:1"},
-        {"2001:db8:0:0:0:0:2:1", "2001:db8::2:1"},
-        {"2001:db8:0:0:0::1", "2001:db8::1"},
-        {"2001:db8:0:0:1:0:0:1", "2001:db8::1:0:0:1"},
-        {"2001:db8:0:0:1::1", "2001:db8::1:0:0:1"},
-        {"2001:DB8:0:0:1::1", "2001:db8::1:0:0:1"},
-        {"2001:db8:0:0::1", "2001:db8::1"},
-        {"2001:db8:0:0:aaaa::1", "2001:db8::aaaa:0:0:1"},
-        {"2001:db8:0:1:1:1:1:1", "2001:db8:0:1:1:1:1:1"},
-        {"2001:db8:0::1", "2001:db8::1"},
-        {"2001:db8:85a3:0:0:8a2e:370:7334", "2001:db8:85a3::8a2e:370:7334"},
-        {"2001:db8::0:1", "2001:db8::1"},
-        {"2001:db8::0:1:0:0:1", "2001:db8::1:0:0:1"},
-        {"2001:DB8::1", "2001:db8::1"},
-        {"2001:db8::1", "2001:db8::1"},
-        {"2001:db8::1:0:0:1", "2001:db8::1:0:0:1"},
-        {"2001:db8::1:1:1:1:1", "2001:db8:0:1:1:1:1:1"},
-        {"2001:db8::aaaa:0:0:1", "2001:db8::aaaa:0:0:1"},
-        {"2001:db8:aaaa:bbbb:cccc:dddd:0:1", "2001:db8:aaaa:bbbb:cccc:dddd:0:1"},
-        {"2001:db8:aaaa:bbbb:cccc:dddd::1", "2001:db8:aaaa:bbbb:cccc:dddd:0:1"},
-        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:0001", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:1"},
-        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:001", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:1"},
-        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:01", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:1"},
-        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:1", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:1"},
-        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:aaaa", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:aaaa"},
-        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:AAAA", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:aaaa"},
-        {"2001:db8:aaaa:bbbb:cccc:dddd:eeee:AaAa", "2001:db8:aaaa:bbbb:cccc:dddd:eeee:aaaa"},
-    };
-    for (const auto& [input_address, expected_canonical_representation_output] : canonical_representations_ipv6) {
-        CNetAddr net_addr;
-        BOOST_REQUIRE(LookupHost(input_address, net_addr, false));
-        BOOST_REQUIRE(net_addr.IsIPv6());
-        BOOST_CHECK_EQUAL(net_addr.ToString(), expected_canonical_representation_output);
-    }
 }
 
 BOOST_AUTO_TEST_CASE(cnetaddr_serialize_v1)
@@ -580,7 +490,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
     s << MakeSpan(ParseHex(
         "02"                                  // network type (IPv6)
         "10"                                  // address length
-        "fd6b88c08724ca978112ca1bbdcafac2")); // address: 0xfd + sha256("bitcoin")[0:5] +
+        "fd6b88c08724ca978112ca1bbdcafac2")); // address: 0xfd + sha256("xbit")[0:5] +
                                               // sha256(name)[0:10]
     s >> addr;
     BOOST_CHECK(addr.IsInternal());
@@ -692,16 +602,6 @@ BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
     BOOST_CHECK_EQUAL(addr.ToString(), "fc00:1:2:3:4:5:6:7");
     BOOST_REQUIRE(s.empty());
 
-    // Invalid CJDNS, wrong prefix.
-    s << MakeSpan(ParseHex("06"                               // network type (CJDNS)
-                           "10"                               // address length
-                           "aa000001000200030004000500060007" // address
-                           ));
-    s >> addr;
-    BOOST_CHECK(addr.IsCJDNS());
-    BOOST_CHECK(!addr.IsValid());
-    BOOST_REQUIRE(s.empty());
-
     // Invalid CJDNS, with bogus length.
     s << MakeSpan(ParseHex("06" // network type (CJDNS)
                            "01" // address length
@@ -762,7 +662,7 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     in_addr ipv4AddrPeer;
     ipv4AddrPeer.s_addr = 0xa0b0c001;
     CAddress addr = CAddress(CService(ipv4AddrPeer, 7777), NODE_NETWORK);
-    std::unique_ptr<CNode> pnode = std::make_unique<CNode>(0, NODE_NETWORK, INVALID_SOCKET, addr, /* nKeyedNetGroupIn */ 0, /* nLocalHostNonceIn */ 0, CAddress{}, /* pszDest */ std::string{}, ConnectionType::OUTBOUND_FULL_RELAY, /* inbound_onion */ false);
+    std::unique_ptr<CNode> pnode = MakeUnique<CNode>(0, NODE_NETWORK, 0, INVALID_SOCKET, addr, 0, 0, CAddress{}, std::string{}, ConnectionType::OUTBOUND_FULL_RELAY);
     pnode->fSuccessfullyConnected.store(true);
 
     // the peer claims to be reaching us via IPv6
@@ -773,7 +673,7 @@ BOOST_AUTO_TEST_CASE(ipv4_peer_with_ipv6_addrMe_test)
     pnode->SetAddrLocal(addrLocal);
 
     // before patch, this causes undefined behavior detectable with clang's -fsanitize=memory
-    GetLocalAddrForPeer(&*pnode);
+    AdvertiseLocal(&*pnode);
 
     // suppress no-checks-run warning; if this test fails, it's by triggering a sanitizer
     BOOST_CHECK(1);
@@ -852,6 +752,21 @@ BOOST_AUTO_TEST_CASE(LocalAddress_BasicLifecycle)
 
     RemoveLocal(addr);
     BOOST_CHECK_EQUAL(IsLocal(addr), false);
+}
+
+BOOST_AUTO_TEST_CASE(PoissonNextSend)
+{
+    g_mock_deterministic_tests = true;
+
+    int64_t now = 5000;
+    int average_interval_seconds = 600;
+
+    auto poisson = ::PoissonNextSend(now, average_interval_seconds);
+    std::chrono::microseconds poisson_chrono = ::PoissonNextSend(std::chrono::microseconds{now}, std::chrono::seconds{average_interval_seconds});
+
+    BOOST_CHECK_EQUAL(poisson, poisson_chrono.count());
+
+    g_mock_deterministic_tests = false;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

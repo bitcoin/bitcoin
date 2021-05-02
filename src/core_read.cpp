@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,15 +15,16 @@
 #include <version.h>
 
 #include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
 
 #include <algorithm>
 #include <string>
 
-namespace {
-
-opcodetype ParseOpCode(const std::string& s)
+CScript ParseScript(const std::string& s)
 {
+    CScript result;
+
     static std::map<std::string, opcodetype> mapOpNames;
 
     if (mapOpNames.empty())
@@ -39,22 +40,10 @@ opcodetype ParseOpCode(const std::string& s)
                 continue;
             mapOpNames[strName] = static_cast<opcodetype>(op);
             // Convenience: OP_ADD and just ADD are both recognized:
-            if (strName.compare(0, 3, "OP_") == 0) {  // strName starts with "OP_"
-                mapOpNames[strName.substr(3)] = static_cast<opcodetype>(op);
-            }
+            boost::algorithm::replace_first(strName, "OP_", "");
+            mapOpNames[strName] = static_cast<opcodetype>(op);
         }
     }
-
-    auto it = mapOpNames.find(s);
-    if (it == mapOpNames.end()) throw std::runtime_error("script parse error: unknown opcode");
-    return it->second;
-}
-
-} // namespace
-
-CScript ParseScript(const std::string& s)
-{
-    CScript result;
 
     std::vector<std::string> words;
     boost::algorithm::split(words, s, boost::algorithm::is_any_of(" \t\n"), boost::algorithm::token_compress_on);
@@ -93,10 +82,14 @@ CScript ParseScript(const std::string& s)
             std::vector<unsigned char> value(w->begin()+1, w->end()-1);
             result << value;
         }
-        else
+        else if (mapOpNames.count(*w))
         {
             // opcode, e.g. OP_ADD or ADD:
-            result << ParseOpCode(*w);
+            result << mapOpNames[*w];
+        }
+        else
+        {
+            throw std::runtime_error("script parse error");
         }
     }
 
@@ -128,7 +121,7 @@ static bool DecodeTx(CMutableTransaction& tx, const std::vector<unsigned char>& 
 {
     // General strategy:
     // - Decode both with extended serialization (which interprets the 0x0001 tag as a marker for
-    //   the presence of witnesses) and with legacy serialization (which interprets the tag as a
+    //   the presense of witnesses) and with legacy serialization (which interprets the tag as a
     //   0-input 1-output incomplete transaction).
     //   - Restricted by try_no_witness (which disables legacy if false) and try_witness (which
     //     disables extended if false).

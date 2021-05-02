@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,15 +31,12 @@ static void CHACHA20_POLY1305_AEAD(benchmark::Bench& bench, size_t buffersize, b
     uint32_t len = 0;
     bench.batch(buffersize).unit("byte").run([&] {
         // encrypt or decrypt the buffer with a static key
-        const bool crypt_ok_1 = aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, out.data(), out.size(), in.data(), buffersize, true);
-        assert(crypt_ok_1);
+        assert(aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, out.data(), out.size(), in.data(), buffersize, true));
 
         if (include_decryption) {
             // if we decrypt, include the GetLength
-            const bool get_length_ok = aead.GetLength(&len, seqnr_aad, aad_pos, in.data());
-            assert(get_length_ok);
-            const bool crypt_ok_2 = aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, out.data(), out.size(), in.data(), buffersize, true);
-            assert(crypt_ok_2);
+            assert(aead.GetLength(&len, seqnr_aad, aad_pos, in.data()));
+            assert(aead.Crypt(seqnr_payload, seqnr_aad, aad_pos, out.data(), out.size(), in.data(), buffersize, true));
         }
 
         // increase main sequence number

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2018 The Bitcoin Core developers
+# Copyright (c) 2014-2018 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test coinbase transactions return the correct categories.
@@ -7,12 +7,12 @@
 Tests listtransactions, listsinceblock, and gettransaction.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import XBitTestFramework
 from test_framework.util import (
     assert_array_result
 )
 
-class CoinbaseCategoryTest(BitcoinTestFramework):
+class CoinbaseCategoryTest(XBitTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

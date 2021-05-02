@@ -2,7 +2,7 @@ commit 7b6eb33ecd88768b28c67ce5d2d68a7eed5936b6
 Author: fanquake <fanquake@gmail.com>
 Date:   Tue Aug 25 14:34:53 2020 +0800
 
-    Remove rule that causes inadvertent header regeneration
+    Remove rule that causes inadvertant header regeneration
 
     Otherwise the makefile will needlessly attempt to re-generate the
     headers with gperf. This can be dropped once the upstream build is fixed.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019-2020 The Bitcoin Core developers
+# Copyright (c) 2019-2020 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 # Test Taproot softfork (BIPs 340-342)
@@ -76,7 +76,7 @@ from test_framework.script import (
     is_op_success,
     taproot_construct,
 )
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import XBitTestFramework
 from test_framework.util import assert_raises_rpc_error, assert_equal
 from test_framework.key import generate_privkey, compute_xonly_pubkey, sign_schnorr, tweak_add_privkey, ECKey
 from test_framework.address import (
@@ -177,17 +177,17 @@ def default_negflag(ctx):
     """Default expression for "negflag": tap.negflag."""
     return get(ctx, "tap").negflag
 
-def default_pubkey_internal(ctx):
-    """Default expression for "pubkey_internal": tap.internal_pubkey."""
-    return get(ctx, "tap").internal_pubkey
+def default_pubkey_inner(ctx):
+    """Default expression for "pubkey_inner": tap.inner_pubkey."""
+    return get(ctx, "tap").inner_pubkey
 
 def default_merklebranch(ctx):
     """Default expression for "merklebranch": tapleaf.merklebranch."""
     return get(ctx, "tapleaf").merklebranch
 
 def default_controlblock(ctx):
-    """Default expression for "controlblock": combine leafversion, negflag, pubkey_internal, merklebranch."""
-    return bytes([get(ctx, "leafversion") + get(ctx, "negflag")]) + get(ctx, "pubkey_internal") + get(ctx, "merklebranch")
+    """Default expression for "controlblock": combine leafversion, negflag, pubkey_inner, merklebranch."""
+    return bytes([get(ctx, "leafversion") + get(ctx, "negflag")]) + get(ctx, "pubkey_inner") + get(ctx, "merklebranch")
 
 def default_sighash(ctx):
     """Default expression for "sighash": depending on mode, compute BIP341, BIP143, or legacy sighash."""
@@ -341,9 +341,9 @@ DEFAULT_CONTEXT = {
     "tapleaf": default_tapleaf,
     # The script to push, and include in the sighash, for a taproot script path spend.
     "script_taproot": default_script_taproot,
-    # The internal pubkey for a taproot script path spend (32 bytes).
-    "pubkey_internal": default_pubkey_internal,
-    # The negation flag of the internal pubkey for a taproot script path spend.
+    # The inner pubkey for a taproot script path spend (32 bytes).
+    "pubkey_inner": default_pubkey_inner,
+    # The negation flag of the inner pubkey for a taproot script path spend.
     "negflag": default_negflag,
     # The leaf version to include in the sighash (this does not affect the one in the control block).
     "leafversion": default_leafversion,
@@ -444,8 +444,6 @@ def make_spender(comment, *, tap=None, witv0=False, script=None, pkh=None, p2sh=
     * standard: whether the (valid version of) spending is expected to be standard
     * err_msg: a string with an expected error message for failure (or None, if not cared about)
     * sigops_weight: the pre-taproot sigops weight consumed by a successful spend
-    * need_vin_vout_mismatch: whether this test requires being tested in a transaction input that has no corresponding
-                              transaction output.
     """
 
     conf = dict()
@@ -517,6 +515,7 @@ def add_spender(spenders, *args, **kwargs):
 
 def random_checksig_style(pubkey):
     """Creates a random CHECKSIG* tapscript that would succeed with only the valid signature on witness stack."""
+    return bytes(CScript([pubkey, OP_CHECKSIG]))
     opcode = random.choice([OP_CHECKSIG, OP_CHECKSIGVERIFY, OP_CHECKSIGADD])
     if (opcode == OP_CHECKSIGVERIFY):
         ret = CScript([pubkey, opcode, OP_1])
@@ -780,8 +779,8 @@ def spenders_taproot_active():
     add_spender(spenders, "spendpath/negflag", tap=tap, leaf="128deep", **SINGLE_SIG, key=secs[0], failure={"negflag": lambda ctx: 1 - default_negflag(ctx)}, **ERR_WITNESS_PROGRAM_MISMATCH)
     # Test that bitflips in the Merkle branch invalidate it.
     add_spender(spenders, "spendpath/bitflipmerkle", tap=tap, leaf="128deep", **SINGLE_SIG, key=secs[0], failure={"merklebranch": bitflipper(default_merklebranch)}, **ERR_WITNESS_PROGRAM_MISMATCH)
-    # Test that bitflips in the internal pubkey invalidate it.
-    add_spender(spenders, "spendpath/bitflippubkey", tap=tap, leaf="128deep", **SINGLE_SIG, key=secs[0], failure={"pubkey_internal": bitflipper(default_pubkey_internal)}, **ERR_WITNESS_PROGRAM_MISMATCH)
+    # Test that bitflips in the inner pubkey invalidate it.
+    add_spender(spenders, "spendpath/bitflippubkey", tap=tap, leaf="128deep", **SINGLE_SIG, key=secs[0], failure={"pubkey_inner": bitflipper(default_pubkey_inner)}, **ERR_WITNESS_PROGRAM_MISMATCH)
     # Test that empty witnesses are invalid.
     add_spender(spenders, "spendpath/emptywit", tap=tap, leaf="128deep", **SINGLE_SIG, key=secs[0], failure={"witness": []}, **ERR_EMPTY_WITNESS)
     # Test that adding garbage to the control block invalidates it.
@@ -1189,7 +1188,7 @@ def dump_json_test(tx, input_utxos, idx, success, failure):
 # Data type to keep track of UTXOs, where they were created, and how to spend them.
 UTXOData = namedtuple('UTXOData', 'outpoint,output,spender')
 
-class TaprootTest(BitcoinTestFramework):
+class TaprootTest(XBitTestFramework):
     def add_options(self, parser):
         parser.add_argument("--dumptests", dest="dump_tests", default=False, action="store_true",
                             help="Dump generated test cases to directory set by TEST_DUMP_DIR environment variable")
@@ -1442,10 +1441,6 @@ class TaprootTest(BitcoinTestFramework):
         self.log.info("Post-activation tests...")
         self.nodes[1].generate(101)
         self.test_spenders(self.nodes[1], spenders_taproot_active(), input_counts=[1, 2, 2, 2, 2, 3])
-
-        # Re-connect nodes in case they have been disconnected
-        self.disconnect_nodes(0, 1)
-        self.connect_nodes(0, 1)
 
         # Transfer value of the largest 500 coins to pre-taproot node.
         addr = self.nodes[0].getnewaddress()

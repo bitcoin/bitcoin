@@ -1,4 +1,4 @@
-// Copyright (c) 2020-2021 The Bitcoin Core developers
+// Copyright (c) 2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,12 +15,12 @@
 #include <string>
 #include <vector>
 
-void initialize_pow()
+void initialize()
 {
     SelectParams(CBaseChainParams::MAIN);
 }
 
-FUZZ_TARGET_INIT(pow, initialize_pow)
+void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const Consensus::Params& consensus_params = Params().GetConsensus();
@@ -34,7 +34,7 @@ FUZZ_TARGET_INIT(pow, initialize_pow)
         }
         CBlockIndex current_block{*block_header};
         {
-            CBlockIndex* previous_block = blocks.empty() ? nullptr : &PickValue(fuzzed_data_provider, blocks);
+            CBlockIndex* previous_block = !blocks.empty() ? &blocks[fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, blocks.size() - 1)] : nullptr;
             const int current_height = (previous_block != nullptr && previous_block->nHeight != std::numeric_limits<int>::max()) ? previous_block->nHeight + 1 : 0;
             if (fuzzed_data_provider.ConsumeBool()) {
                 current_block.pprev = previous_block;
@@ -43,10 +43,7 @@ FUZZ_TARGET_INIT(pow, initialize_pow)
                 current_block.nHeight = current_height;
             }
             if (fuzzed_data_provider.ConsumeBool()) {
-                const uint32_t seconds = current_height * consensus_params.nPowTargetSpacing;
-                if (!AdditionOverflow(fixed_time, seconds)) {
-                    current_block.nTime = fixed_time + seconds;
-                }
+                current_block.nTime = fixed_time + current_height * consensus_params.nPowTargetSpacing;
             }
             if (fuzzed_data_provider.ConsumeBool()) {
                 current_block.nBits = fixed_bits;
@@ -66,9 +63,9 @@ FUZZ_TARGET_INIT(pow, initialize_pow)
             }
         }
         {
-            const CBlockIndex* to = &PickValue(fuzzed_data_provider, blocks);
-            const CBlockIndex* from = &PickValue(fuzzed_data_provider, blocks);
-            const CBlockIndex* tip = &PickValue(fuzzed_data_provider, blocks);
+            const CBlockIndex* to = &blocks[fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, blocks.size() - 1)];
+            const CBlockIndex* from = &blocks[fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, blocks.size() - 1)];
+            const CBlockIndex* tip = &blocks[fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, blocks.size() - 1)];
             try {
                 (void)GetBlockProofEquivalentTime(*to, *from, *tip, consensus_params);
             } catch (const uint_error&) {

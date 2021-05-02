@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2017-2020 The Bitcoin Core developers
+# Copyright (c) 2017-2019 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -102,7 +102,7 @@ if ! PYTHONWARNINGS="ignore" flake8 --ignore=B,C,E,F,I,N,W --select=$(IFS=","; e
     EXIT_CODE=1
 fi
 
-if ! mypy --ignore-missing-imports $(git ls-files "test/functional/*.py" "contrib/devtools/*.py"); then
+if ! mypy --ignore-missing-imports $(git ls-files "test/functional/*.py"); then
     EXIT_CODE=1
 fi
 

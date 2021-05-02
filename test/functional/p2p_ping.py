@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Bitcoin Core developers
+# Copyright (c) 2020 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test ping message
@@ -9,7 +9,7 @@ import time
 
 from test_framework.messages import msg_pong
 from test_framework.p2p import P2PInterface
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import XBitTestFramework
 from test_framework.util import assert_equal
 
 PING_INTERVAL = 2 * 60
@@ -30,7 +30,7 @@ class NodeNoPong(P2PInterface):
         pass
 
 
-class PingPongTest(BitcoinTestFramework):
+class PingPongTest(XBitTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1

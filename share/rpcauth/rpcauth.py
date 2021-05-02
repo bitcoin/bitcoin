@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2018 The Bitcoin Core developers
+# Copyright (c) 2015-2018 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -38,7 +38,7 @@ def main():
     salt = generate_salt(16)
     password_hmac = password_to_hmac(salt, args.password)
 
-    print('String to be appended to bitcoin.conf:')
+    print('String to be appended to xbit.conf:')
     print('rpcauth={0}:{1}${2}'.format(args.username, salt, password_hmac))
     print('Your password:\n{0}'.format(args.password))
 

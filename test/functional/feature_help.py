@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Copyright (c) 2018-2019 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
-"""Verify that starting bitcoin with -h works as expected."""
+"""Verify that starting xbit with -h works as expected."""
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import XBitTestFramework
 from test_framework.util import assert_equal
 
-class HelpTest(BitcoinTestFramework):
+class HelpTest(XBitTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -35,14 +35,14 @@ class HelpTest(BitcoinTestFramework):
         return out, err
 
     def run_test(self):
-        self.log.info("Start bitcoin with -h for help text")
+        self.log.info("Start xbit with -h for help text")
         self.nodes[0].start(extra_args=['-h'])
         # Node should exit immediately and output help to stdout.
         output, _ = self.get_node_output(ret_code_expected=0)
         assert b'Options' in output
         self.log.info("Help text received: {} (...)".format(output[0:60]))
 
-        self.log.info("Start bitcoin with -version for version information")
+        self.log.info("Start xbit with -version for version information")
         self.nodes[0].start(extra_args=['-version'])
         # Node should exit immediately and output version to stdout.
         output, _ = self.get_node_output(ret_code_expected=0)
@@ -50,7 +50,7 @@ class HelpTest(BitcoinTestFramework):
         self.log.info("Version text received: {} (...)".format(output[0:60]))
 
         # Test that arguments not in the help results in an error
-        self.log.info("Start bitcoind with -fakearg to make sure it does not start")
+        self.log.info("Start xbitd with -fakearg to make sure it does not start")
         self.nodes[0].start(extra_args=['-fakearg'])
         # Node should exit immediately and output an error to stderr
         _, output = self.get_node_output(ret_code_expected=1)

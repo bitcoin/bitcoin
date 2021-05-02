@@ -1,9 +1,9 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_CREATEWALLETDIALOG_H
-#define BITCOIN_QT_CREATEWALLETDIALOG_H
+#ifndef XBIT_QT_CREATEWALLETDIALOG_H
+#define XBIT_QT_CREATEWALLETDIALOG_H
 
 #include <QDialog>
 
@@ -33,4 +33,4 @@ private:
     Ui::CreateWalletDialog *ui;
 };
 
-#endif // BITCOIN_QT_CREATEWALLETDIALOG_H
+#endif // XBIT_QT_CREATEWALLETDIALOG_H

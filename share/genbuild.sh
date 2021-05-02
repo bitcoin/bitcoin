@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (c) 2012-2020 The Bitcoin Core developers
+# Copyright (c) 2012-2019 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,7 +20,7 @@ fi
 
 GIT_TAG=""
 GIT_COMMIT=""
-if [ "${BITCOIN_GENBUILD_NO_GIT}" != "1" ] && [ -e "$(command -v git)" ] && [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
+if [ "${XBIT_GENBUILD_NO_GIT}" != "1" ] && [ -e "$(command -v git)" ] && [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = "true" ]; then
     # clean 'dirty' status of touched files that haven't been modified
     git diff >/dev/null 2>/dev/null
 
@@ -31,7 +31,7 @@ if [ "${BITCOIN_GENBUILD_NO_GIT}" != "1" ] && [ -e "$(command -v git)" ] && [ "$
     fi
 
     # otherwise generate suffix from git, i.e. string like "59887e8-dirty"
-    GIT_COMMIT=$(git rev-parse --short=12 HEAD)
+    GIT_COMMIT=$(git rev-parse --short HEAD)
     git diff-index --quiet HEAD -- || GIT_COMMIT="$GIT_COMMIT-dirty"
 fi
 

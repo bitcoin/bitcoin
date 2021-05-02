@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -179,18 +179,18 @@ CKeyID GetKeyForDestination(const SigningProvider& store, const CTxDestination& 
 {
     // Only supports destinations which map to single public keys, i.e. P2PKH,
     // P2WPKH, and P2SH-P2WPKH.
-    if (auto id = std::get_if<PKHash>(&dest)) {
+    if (auto id = boost::get<PKHash>(&dest)) {
         return ToKeyID(*id);
     }
-    if (auto witness_id = std::get_if<WitnessV0KeyHash>(&dest)) {
+    if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {
         return ToKeyID(*witness_id);
     }
-    if (auto script_hash = std::get_if<ScriptHash>(&dest)) {
+    if (auto script_hash = boost::get<ScriptHash>(&dest)) {
         CScript script;
         CScriptID script_id(*script_hash);
         CTxDestination inner_dest;
         if (store.GetCScript(script_id, script) && ExtractDestination(script, inner_dest)) {
-            if (auto inner_witness_id = std::get_if<WitnessV0KeyHash>(&inner_dest)) {
+            if (auto inner_witness_id = boost::get<WitnessV0KeyHash>(&inner_dest)) {
                 return ToKeyID(*inner_witness_id);
             }
         }

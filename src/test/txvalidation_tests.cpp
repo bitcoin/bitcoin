@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Copyright (c) 2017-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -30,21 +30,25 @@ BOOST_FIXTURE_TEST_CASE(tx_mempool_reject_coinbase, TestChain100Setup)
 
     BOOST_CHECK(CTransaction(coinbaseTx).IsCoinBase());
 
+    TxValidationState state;
+
     LOCK(cs_main);
 
     unsigned int initialPoolSize = m_node.mempool->size();
-    const MempoolAcceptResult result = AcceptToMemoryPool(::ChainstateActive(), *m_node.mempool, MakeTransactionRef(coinbaseTx),
-                true /* bypass_limits */);
 
-    BOOST_CHECK(result.m_result_type == MempoolAcceptResult::ResultType::INVALID);
+    BOOST_CHECK_EQUAL(
+            false,
+            AcceptToMemoryPool(*m_node.mempool, state, MakeTransactionRef(coinbaseTx),
+                nullptr /* plTxnReplaced */,
+                true /* bypass_limits */));
 
     // Check that the transaction hasn't been added to mempool.
     BOOST_CHECK_EQUAL(m_node.mempool->size(), initialPoolSize);
 
     // Check that the validation state reflects the unsuccessful attempt.
-    BOOST_CHECK(result.m_state.IsInvalid());
-    BOOST_CHECK_EQUAL(result.m_state.GetRejectReason(), "coinbase");
-    BOOST_CHECK(result.m_state.GetResult() == TxValidationResult::TX_CONSENSUS);
+    BOOST_CHECK(state.IsInvalid());
+    BOOST_CHECK_EQUAL(state.GetRejectReason(), "coinbase");
+    BOOST_CHECK(state.GetResult() == TxValidationResult::TX_CONSENSUS);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

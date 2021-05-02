@@ -2,7 +2,7 @@
 
 # Pattern rule to print variables, e.g. make print-top_srcdir
 print-%:
-	@echo '$*'='$($*)'
+	@echo $* = $($*)
 
 # When invoking a sub-make, keep only the command line variable definitions
 # matching the pattern in the filter function.
@@ -37,9 +37,8 @@ NO_QR ?=
 NO_WALLET ?=
 NO_ZMQ ?=
 NO_UPNP ?=
-NO_NATPMP ?=
 MULTIPROCESS ?=
-FALLBACK_DOWNLOAD_PATH ?= https://bitcoincore.org/depends-sources
+FALLBACK_DOWNLOAD_PATH ?= https://xbitcore.org/depends-sources
 
 BUILD = $(shell ./config.guess)
 HOST ?= $(BUILD)
@@ -112,37 +111,24 @@ include builders/$(build_os).mk
 include builders/default.mk
 include packages/packages.mk
 
-full_env=$(shell printenv)
-
 build_id_string:=$(BUILD_ID_SALT)
-
-# GCC only prints COLLECT_LTO_WRAPPER when invoked with just "-v", but we want
-# the information from "-v -E -" as well, so just include both.
-#
-# '3>&1 1>&2 2>&3 > /dev/null' is supposed to swap stdin and stdout and silence
-# stdin, since we only want the stderr output
-build_id_string+=$(shell $(build_CC) -v < /dev/null 3>&1 1>&2 2>&3 > /dev/null) $(shell $(build_CC) -v -E - < /dev/null 3>&1 1>&2 2>&3 > /dev/null)
-build_id_string+=$(shell $(build_AR) --version 2>/dev/null) $(filter AR_%,$(full_env)) ZERO_AR_DATE=$(ZERO_AR_DATE)
-build_id_string+=$(shell $(build_CXX) -v < /dev/null 3>&1 1>&2 2>&3 > /dev/null) $(shell $(build_CXX) -v -E - < /dev/null 3>&1 1>&2 2>&3 > /dev/null)
-build_id_string+=$(shell $(build_RANLIB) --version 2>/dev/null) $(filter RANLIB_%,$(full_env))
-build_id_string+=$(shell $(build_STRIP) --version 2>/dev/null) $(filter STRIP_%,$(full_env))
+build_id_string+=$(shell $(build_CC) --version 2>/dev/null)
+build_id_string+=$(shell $(build_AR) --version 2>/dev/null)
+build_id_string+=$(shell $(build_CXX) --version 2>/dev/null)
+build_id_string+=$(shell $(build_RANLIB) --version 2>/dev/null)
+build_id_string+=$(shell $(build_STRIP) --version 2>/dev/null)
 
 $(host_arch)_$(host_os)_id_string:=$(HOST_ID_SALT)
-$(host_arch)_$(host_os)_id_string+=$(shell $(host_CC) -v < /dev/null 3>&1 1>&2 2>&3 > /dev/null) $(shell $(host_CC) -v -E - < /dev/null 3>&1 1>&2 2>&3 > /dev/null)
-$(host_arch)_$(host_os)_id_string+=$(shell $(host_AR) --version 2>/dev/null) $(filter AR_%,$(full_env)) ZERO_AR_DATE=$(ZERO_AR_DATE)
-$(host_arch)_$(host_os)_id_string+=$(shell $(host_CXX) -v < /dev/null 3>&1 1>&2 2>&3 > /dev/null) $(shell $(host_CXX) -v -E - < /dev/null 3>&1 1>&2 2>&3 > /dev/null)
-$(host_arch)_$(host_os)_id_string+=$(shell $(host_RANLIB) --version 2>/dev/null) $(filter RANLIB_%,$(full_env))
-$(host_arch)_$(host_os)_id_string+=$(shell $(host_STRIP) --version 2>/dev/null) $(filter STRIP_%,$(full_env))
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_CC) --version 2>/dev/null)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_AR) --version 2>/dev/null)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_CXX) --version 2>/dev/null)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_RANLIB) --version 2>/dev/null)
+$(host_arch)_$(host_os)_id_string+=$(shell $(host_STRIP) --version 2>/dev/null)
 
 ifneq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
-# Make sure that cache is invalidated when switching between system and
-# depends-managed, pinned clang
 build_id_string+=system_clang
 $(host_arch)_$(host_os)_id_string+=system_clang
 endif
-
-build_id_string+=GUIX_ENVIRONMENT=$(realpath $(GUIX_ENVIRONMENT))
-$(host_arch)_$(host_os)_id_string+=GUIX_ENVIRONMENT=$(realpath $(GUIX_ENVIRONMENT))
 
 qrencode_packages_$(NO_QR) = $(qrencode_packages)
 
@@ -153,12 +139,10 @@ sqlite_packages_$(NO_SQLITE) = $(sqlite_packages)
 wallet_packages_$(NO_WALLET) = $(bdb_packages_) $(sqlite_packages_)
 
 upnp_packages_$(NO_UPNP) = $(upnp_packages)
-natpmp_packages_$(NO_NATPMP) = $(natpmp_packages)
-
 zmq_packages_$(NO_ZMQ) = $(zmq_packages)
 multiprocess_packages_$(MULTIPROCESS) = $(multiprocess_packages)
 
-packages += $($(host_arch)_$(host_os)_packages) $($(host_os)_packages) $(qt_packages_) $(wallet_packages_) $(upnp_packages_) $(natpmp_packages_)
+packages += $($(host_arch)_$(host_os)_packages) $($(host_os)_packages) $(qt_packages_) $(wallet_packages_) $(upnp_packages_)
 native_packages += $($(host_arch)_$(host_os)_native_packages) $($(host_os)_native_packages)
 
 ifneq ($(zmq_packages_),)
@@ -179,6 +163,12 @@ $(host_arch)_$(host_os)_native_toolchain?=$($(host_os)_native_toolchain)
 
 include funcs.mk
 
+binutils_path=$($($(host_arch)_$(host_os)_native_binutils)_prefixbin)
+ifeq ($(strip $(FORCE_USE_SYSTEM_CLANG)),)
+toolchain_path=$($($(host_arch)_$(host_os)_native_toolchain)_prefixbin)
+else
+toolchain_path=
+endif
 final_build_id_long+=$(shell $(build_SHA256SUM) config.site.in)
 final_build_id+=$(shell echo -n "$(final_build_id_long)" | $(build_SHA256SUM) | cut -c-$(HASH_LENGTH))
 $(host_prefix)/.stamp_$(final_build_id): $(native_packages) $(packages)
@@ -189,39 +179,15 @@ $(host_prefix)/.stamp_$(final_build_id): $(native_packages) $(packages)
 	$(AT)cd $(@D); $(foreach package,$^, tar xf $($(package)_cached); )
 	$(AT)touch $@
 
-# $PATH is not preserved between ./configure and make by convention. Its
-# modification and overriding at ./configure time is (as I understand it)
-# supposed to be captured by the AC_{PROG_{,OBJ}CXX,PATH_{PROG,TOOL}} macros,
-# which will expand the program names to their full absolute paths. The notable
-# exception is command line overriding: ./configure CC=clang, which skips the
-# program name expansion step, and works because the user implicitly indicates
-# with CC=clang that clang will be available in $PATH at all times, and is most
-# likely part of the user's system.
-#
-# Therefore, when we "seed the autoconf cache"/"override well-known program
-# vars" by setting AR=<blah> in our config.site, either one of two things needs
-# to be true for the build system to work correctly:
-#
-#   1. If we refer to the program by name (e.g. AR=riscv64-gnu-linux-ar), the
-#      tool needs to be available in $PATH at all times.
-#
-#   2. If the tool is _**not**_ expected to be available in $PATH at all times
-#      (such as is the case for our native_cctools binutils tools), it needs to
-#      be referred to by its absolute path, such as would be output by the
-#      AC_PATH_{PROG,TOOL} macros.
-#
-# Minor note: it is also okay to refer to tools by their absolute path even if
-# we expect them to be available in $PATH at all times, more specificity does
-# not hurt.
 $(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_build_id)
 	$(AT)@mkdir -p $(@D)
 	$(AT)sed -e 's|@HOST@|$(host)|' \
-            -e 's|@CC@|$(host_CC)|' \
-            -e 's|@CXX@|$(host_CXX)|' \
-            -e 's|@AR@|$(host_AR)|' \
-            -e 's|@RANLIB@|$(host_RANLIB)|' \
-            -e 's|@NM@|$(host_NM)|' \
-            -e 's|@STRIP@|$(host_STRIP)|' \
+            -e 's|@CC@|$(toolchain_path)$(host_CC)|' \
+            -e 's|@CXX@|$(toolchain_path)$(host_CXX)|' \
+            -e 's|@AR@|$(binutils_path)$(host_AR)|' \
+            -e 's|@RANLIB@|$(binutils_path)$(host_RANLIB)|' \
+            -e 's|@NM@|$(binutils_path)$(host_NM)|' \
+            -e 's|@STRIP@|$(binutils_path)$(host_STRIP)|' \
             -e 's|@build_os@|$(build_os)|' \
             -e 's|@host_os@|$(host_os)|' \
             -e 's|@CFLAGS@|$(strip $(host_CFLAGS) $(host_$(release_type)_CFLAGS))|' \
@@ -234,7 +200,6 @@ $(host_prefix)/share/config.site : config.site.in $(host_prefix)/.stamp_$(final_
             -e 's|@no_zmq@|$(NO_ZMQ)|' \
             -e 's|@no_wallet@|$(NO_WALLET)|' \
             -e 's|@no_upnp@|$(NO_UPNP)|' \
-            -e 's|@no_natpmp@|$(NO_NATPMP)|' \
             -e 's|@multiprocess@|$(MULTIPROCESS)|' \
             -e 's|@debug@|$(DEBUG)|' \
             $< > $@
@@ -276,7 +241,7 @@ install: check-packages $(host_prefix)/share/config.site
 download-one: check-sources $(all_sources)
 
 download-osx:
-	@$(MAKE) -s HOST=x86_64-apple-darwin download-one
+	@$(MAKE) -s HOST=x86_64-apple-darwin14 download-one
 download-linux:
 	@$(MAKE) -s HOST=x86_64-unknown-linux-gnu download-one
 download-win:

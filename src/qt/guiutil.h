@@ -1,31 +1,22 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_GUIUTIL_H
-#define BITCOIN_QT_GUIUTIL_H
+#ifndef XBIT_QT_GUIUTIL_H
+#define XBIT_QT_GUIUTIL_H
 
 #include <amount.h>
 #include <fs.h>
-#include <net.h>
-#include <netaddress.h>
-#include <util/check.h>
 
-#include <QApplication>
 #include <QEvent>
 #include <QHeaderView>
 #include <QItemDelegate>
-#include <QLabel>
 #include <QMessageBox>
-#include <QMetaObject>
 #include <QObject>
 #include <QProgressBar>
 #include <QString>
 #include <QTableView>
-
-#include <cassert>
-#include <chrono>
-#include <utility>
+#include <QLabel>
 
 class QValidatedLineEdit;
 class SendCoinsRecipient;
@@ -48,27 +39,24 @@ class QUrl;
 class QWidget;
 QT_END_NAMESPACE
 
-/** Utility functions used by the Bitcoin Qt UI.
+/** Utility functions used by the XBit Qt UI.
  */
 namespace GUIUtil
 {
-    // Use this flags to prevent a "What's This" button in the title bar of the dialog on Windows.
-    constexpr auto dialog_flags = Qt::WindowTitleHint | Qt::WindowSystemMenuHint | Qt::WindowCloseButtonHint;
-
     // Create human-readable string from date
     QString dateTimeStr(const QDateTime &datetime);
     QString dateTimeStr(qint64 nTime);
 
     // Return a monospace font
-    QFont fixedPitchFont(bool use_embedded_font = false);
+    QFont fixedPitchFont();
 
     // Set up widget for address
     void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent);
 
-    // Parse "bitcoin:" URI into recipient object, return true on successful parsing
-    bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out);
-    bool parseBitcoinURI(QString uri, SendCoinsRecipient *out);
-    QString formatBitcoinURI(const SendCoinsRecipient &info);
+    // Parse "xbit:" URI into recipient object, return true on successful parsing
+    bool parseXBitURI(const QUrl &uri, SendCoinsRecipient *out);
+    bool parseXBitURI(QString uri, SendCoinsRecipient *out);
+    QString formatXBitURI(const SendCoinsRecipient &info);
 
     // Returns true if given address+amount meets "dust" definition
     bool isDust(interfaces::Node& node, const QString& address, const CAmount& amount);
@@ -153,7 +141,7 @@ namespace GUIUtil
     void openDebugLogfile();
 
     // Open the config file
-    bool openBitcoinConf();
+    bool openXBitConf();
 
     /** Qt event filter that intercepts ToolTipChange events, and replaces the tooltip with a rich text
       representation if needed. This assures that Qt can word-wrap long tooltip messages.
@@ -188,31 +176,64 @@ namespace GUIUtil
         bool eventFilter(QObject* watched, QEvent* event) override;
     };
 
+    /**
+     * Makes a QTableView last column feel as if it was being resized from its left border.
+     * Also makes sure the column widths are never larger than the table's viewport.
+     * In Qt, all columns are resizable from the right, but it's not intuitive resizing the last column from the right.
+     * Usually our second to last columns behave as if stretched, and when on stretch mode, columns aren't resizable
+     * interactively or programmatically.
+     *
+     * This helper object takes care of this issue.
+     *
+     */
+    class TableViewLastColumnResizingFixer: public QObject
+    {
+        Q_OBJECT
+
+        public:
+            TableViewLastColumnResizingFixer(QTableView* table, int lastColMinimumWidth, int allColsMinimumWidth, QObject *parent);
+            void stretchColumnWidth(int column);
+
+        private:
+            QTableView* tableView;
+            int lastColumnMinimumWidth;
+            int allColumnsMinimumWidth;
+            int lastColumnIndex;
+            int columnCount;
+            int secondToLastColumnIndex;
+
+            void adjustTableColumnsWidth();
+            int getAvailableWidthForColumn(int column);
+            int getColumnsWidth();
+            void connectViewHeadersSignals();
+            void disconnectViewHeadersSignals();
+            void setViewHeaderResizeMode(int logicalIndex, QHeaderView::ResizeMode resizeMode);
+            void resizeColumn(int nColumnIndex, int width);
+
+        private Q_SLOTS:
+            void on_sectionResized(int logicalIndex, int oldSize, int newSize);
+            void on_geometriesChanged();
+    };
+
     bool GetStartOnSystemStartup();
     bool SetStartOnSystemStartup(bool fAutoStart);
 
-    /** Convert QString to OS specific boost path through UTF-8 */
+    /* Convert QString to OS specific boost path through UTF-8 */
     fs::path qstringToBoostPath(const QString &path);
 
-    /** Convert OS specific boost path to QString through UTF-8 */
+    /* Convert OS specific boost path to QString through UTF-8 */
     QString boostPathToQString(const fs::path &path);
 
-    /** Convert enum Network to QString */
-    QString NetworkToQString(Network net);
-
-    /** Convert enum ConnectionType to QString */
-    QString ConnectionTypeToQString(ConnectionType conn_type, bool prepend_direction);
-
-    /** Convert seconds into a QString with days, hours, mins, secs */
+    /* Convert seconds into a QString with days, hours, mins, secs */
     QString formatDurationStr(int secs);
 
-    /** Format CNodeStats.nServices bitmask into a user-readable string */
+    /* Format CNodeStats.nServices bitmask into a user-readable string */
     QString formatServicesStr(quint64 mask);
 
-    /** Format a CNodeStats.m_last_ping_time into a user-readable string or display N/A, if 0 */
-    QString formatPingTime(std::chrono::microseconds ping_time);
+    /* Format a CNodeStats.m_ping_usec into a user-readable string or display N/A, if 0*/
+    QString formatPingTime(int64_t ping_usec);
 
-    /** Format a CNodeCombinedStats.nTimeOffset into a user-readable string */
+    /* Format a CNodeCombinedStats.nTimeOffset into a user-readable string. */
     QString formatTimeOffset(int64_t nTimeOffset);
 
     QString formatNiceTimeOffset(qint64 secs);
@@ -268,7 +289,7 @@ namespace GUIUtil
     /**
      * Returns the distance in pixels appropriate for drawing a subsequent character after text.
      *
-     * In Qt 5.12 and before the QFontMetrics::width() is used and it is deprecated since Qt 5.13.
+     * In Qt 5.12 and before the QFontMetrics::width() is used and it is deprecated since Qt 13.0.
      * In Qt 5.11 the QFontMetrics::horizontalAdvance() was introduced.
      */
     int TextWidth(const QFontMetrics& fm, const QString& text);
@@ -282,108 +303,6 @@ namespace GUIUtil
      * Call QMenu::popup() only on supported QT_QPA_PLATFORM.
      */
     void PopupMenu(QMenu* menu, const QPoint& point, QAction* at_action = nullptr);
-
-    /**
-     * Returns the start-moment of the day in local time.
-     *
-     * QDateTime::QDateTime(const QDate& date) is deprecated since Qt 5.15.
-     * QDate::startOfDay() was introduced in Qt 5.14.
-     */
-    QDateTime StartOfDay(const QDate& date);
-
-    /**
-     * Returns true if pixmap has been set.
-     *
-     * QPixmap* QLabel::pixmap() is deprecated since Qt 5.15.
-     */
-    bool HasPixmap(const QLabel* label);
-    QImage GetImage(const QLabel* label);
-
-    /**
-     * Splits the string into substrings wherever separator occurs, and returns
-     * the list of those strings. Empty strings do not appear in the result.
-     *
-     * QString::split() signature differs in different Qt versions:
-     *  - QString::SplitBehavior is deprecated since Qt 5.15
-     *  - Qt::SplitBehavior was introduced in Qt 5.14
-     * If {QString|Qt}::SkipEmptyParts behavior is required, use this
-     * function instead of QString::split().
-     */
-    template <typename SeparatorType>
-    QStringList SplitSkipEmptyParts(const QString& string, const SeparatorType& separator)
-    {
-    #if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
-        return string.split(separator, Qt::SkipEmptyParts);
-    #else
-        return string.split(separator, QString::SkipEmptyParts);
-    #endif
-    }
-
-    /**
-     * Queue a function to run in an object's event loop. This can be
-     * replaced by a call to the QMetaObject::invokeMethod functor overload after Qt 5.10, but
-     * for now use a QObject::connect for compatibility with older Qt versions, based on
-     * https://stackoverflow.com/questions/21646467/how-to-execute-a-functor-or-a-lambda-in-a-given-thread-in-qt-gcd-style
-     */
-    template <typename Fn>
-    void ObjectInvoke(QObject* object, Fn&& function, Qt::ConnectionType connection = Qt::QueuedConnection)
-    {
-        QObject source;
-        QObject::connect(&source, &QObject::destroyed, object, std::forward<Fn>(function), connection);
-    }
-
-    /**
-     * Replaces a plain text link with an HTML tagged one.
-     */
-    QString MakeHtmlLink(const QString& source, const QString& link);
-
-    void PrintSlotException(
-        const std::exception* exception,
-        const QObject* sender,
-        const QObject* receiver);
-
-    /**
-     * A drop-in replacement of QObject::connect function
-     * (see: https://doc.qt.io/qt-5/qobject.html#connect-3), that
-     * guaranties that all exceptions are handled within the slot.
-     *
-     * NOTE: This function is incompatible with Qt private signals.
-     */
-    template <typename Sender, typename Signal, typename Receiver, typename Slot>
-    auto ExceptionSafeConnect(
-        Sender sender, Signal signal, Receiver receiver, Slot method,
-        Qt::ConnectionType type = Qt::AutoConnection)
-    {
-        return QObject::connect(
-            sender, signal, receiver,
-            [sender, receiver, method](auto&&... args) {
-                bool ok{true};
-                try {
-                    (receiver->*method)(std::forward<decltype(args)>(args)...);
-                } catch (const NonFatalCheckError& e) {
-                    PrintSlotException(&e, sender, receiver);
-                    ok = QMetaObject::invokeMethod(
-                        qApp, "handleNonFatalException",
-                        blockingGUIThreadConnection(),
-                        Q_ARG(QString, QString::fromStdString(e.what())));
-                } catch (const std::exception& e) {
-                    PrintSlotException(&e, sender, receiver);
-                    ok = QMetaObject::invokeMethod(
-                        qApp, "handleRunawayException",
-                        blockingGUIThreadConnection(),
-                        Q_ARG(QString, QString::fromStdString(e.what())));
-                } catch (...) {
-                    PrintSlotException(nullptr, sender, receiver);
-                    ok = QMetaObject::invokeMethod(
-                        qApp, "handleRunawayException",
-                        blockingGUIThreadConnection(),
-                        Q_ARG(QString, "Unknown failure occurred."));
-                }
-                assert(ok);
-            },
-            type);
-    }
-
 } // namespace GUIUtil
 
-#endif // BITCOIN_QT_GUIUTIL_H
+#endif // XBIT_QT_GUIUTIL_H

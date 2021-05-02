@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(insert_delete)
 
     ss.insert(ss.end(), c);
     BOOST_CHECK_EQUAL(ss.size(), 6U);
-    BOOST_CHECK_EQUAL(ss[4], 0xff);
+    BOOST_CHECK_EQUAL(ss[4], (char)0xff);
     BOOST_CHECK_EQUAL(ss[5], c);
 
     ss.insert(ss.begin()+2, c);
@@ -334,14 +334,19 @@ BOOST_AUTO_TEST_CASE(insert_delete)
 
     ss.erase(ss.begin()+ss.size()-1);
     BOOST_CHECK_EQUAL(ss.size(), 5U);
-    BOOST_CHECK_EQUAL(ss[4], 0xff);
+    BOOST_CHECK_EQUAL(ss[4], (char)0xff);
 
     ss.erase(ss.begin()+1);
     BOOST_CHECK_EQUAL(ss.size(), 4U);
     BOOST_CHECK_EQUAL(ss[0], 0);
     BOOST_CHECK_EQUAL(ss[1], 1);
     BOOST_CHECK_EQUAL(ss[2], 2);
-    BOOST_CHECK_EQUAL(ss[3], 0xff);
+    BOOST_CHECK_EQUAL(ss[3], (char)0xff);
+
+    // Make sure GetAndClear does the right thing:
+    CSerializeData d;
+    ss.GetAndClear(d);
+    BOOST_CHECK_EQUAL(ss.size(), 0U);
 }
 
 BOOST_AUTO_TEST_CASE(class_methods)

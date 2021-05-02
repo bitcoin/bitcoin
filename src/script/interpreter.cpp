@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -100,7 +100,7 @@ bool static IsCompressedPubKey(const valtype &vchPubKey) {
  * excessively padded (do not start with a 0 byte, unless an otherwise negative number follows,
  * in which case a single 0 byte is necessary and even required).
  *
- * See https://bitcointalk.org/index.php?topic=8392.msg127623#msg127623
+ * See https://xbittalk.org/index.php?topic=8392.msg127623#msg127623
  *
  * This function is consensus-critical since BIP66.
  */
@@ -173,7 +173,7 @@ bool static IsLowDERSignature(const valtype &vchSig, ScriptError* serror) {
     if (!IsValidSignatureEncoding(vchSig)) {
         return set_error(serror, SCRIPT_ERR_SIG_DER);
     }
-    // https://bitcoin.stackexchange.com/a/12556:
+    // https://xbit.stackexchange.com/a/12556:
     //     Also note that inside transaction signatures, an extra hashtype byte
     //     follows the actual signature data.
     std::vector<unsigned char> vchSigCopy(vchSig.begin(), vchSig.begin() + vchSig.size() - 1);
@@ -305,8 +305,8 @@ private:
     uint32_t m_first_false_pos = NO_FALSE;
 
 public:
-    bool empty() const { return m_stack_size == 0; }
-    bool all_true() const { return m_first_false_pos == NO_FALSE; }
+    bool empty() { return m_stack_size == 0; }
+    bool all_true() { return m_first_false_pos == NO_FALSE; }
     void push_back(bool f)
     {
         if (m_first_false_pos == NO_FALSE && !f) {
@@ -1488,20 +1488,8 @@ static const CHashWriter HASHER_TAPLEAF = TaggedHash("TapLeaf");
 static const CHashWriter HASHER_TAPBRANCH = TaggedHash("TapBranch");
 static const CHashWriter HASHER_TAPTWEAK = TaggedHash("TapTweak");
 
-static bool HandleMissingData(MissingDataBehavior mdb)
-{
-    switch (mdb) {
-    case MissingDataBehavior::ASSERT_FAIL:
-        assert(!"Missing data");
-        break;
-    case MissingDataBehavior::FAIL:
-        return false;
-    }
-    assert(!"Unknown MissingDataBehavior value");
-}
-
 template<typename T>
-bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata, const T& tx_to, uint32_t in_pos, uint8_t hash_type, SigVersion sigversion, const PrecomputedTransactionData& cache, MissingDataBehavior mdb)
+bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata, const T& tx_to, uint32_t in_pos, uint8_t hash_type, SigVersion sigversion, const PrecomputedTransactionData& cache)
 {
     uint8_t ext_flag, key_version;
     switch (sigversion) {
@@ -1521,9 +1509,7 @@ bool SignatureHashSchnorr(uint256& hash_out, const ScriptExecutionData& execdata
         assert(false);
     }
     assert(in_pos < tx_to.vin.size());
-    if (!(cache.m_bip341_taproot_ready && cache.m_spent_outputs_ready)) {
-        return HandleMissingData(mdb);
-    }
+    assert(cache.m_bip341_taproot_ready && cache.m_spent_outputs_ready);
 
     CHashWriter ss = HASHER_TAPSIGHASH;
 
@@ -1681,9 +1667,6 @@ bool GenericTransactionSignatureChecker<T>::CheckECDSASignature(const std::vecto
     int nHashType = vchSig.back();
     vchSig.pop_back();
 
-    // Witness sighashes need the amount.
-    if (sigversion == SigVersion::WITNESS_V0 && amount < 0) return HandleMissingData(m_mdb);
-
     uint256 sighash = SignatureHash(scriptCode, *txTo, nIn, nHashType, amount, sigversion, this->txdata);
 
     if (!VerifyECDSASignature(vchSig, pubkey, sighash))
@@ -1713,7 +1696,7 @@ bool GenericTransactionSignatureChecker<T>::CheckSchnorrSignature(Span<const uns
     }
     uint256 sighash;
     assert(this->txdata);
-    if (!SignatureHashSchnorr(sighash, execdata, *txTo, nIn, hashtype, sigversion, *this->txdata, m_mdb)) {
+    if (!SignatureHashSchnorr(sighash, execdata, *txTo, nIn, hashtype, sigversion, *this->txdata)) {
         return set_error(serror, SCRIPT_ERR_SCHNORR_SIG_HASHTYPE);
     }
     if (!VerifySchnorrSignature(sig, pubkey, sighash)) return set_error(serror, SCRIPT_ERR_SCHNORR_SIG);
@@ -1851,13 +1834,9 @@ static bool ExecuteWitnessScript(const Span<const valtype>& stack_span, const CS
 static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, const std::vector<unsigned char>& program, const CScript& script, uint256& tapleaf_hash)
 {
     const int path_len = (control.size() - TAPROOT_CONTROL_BASE_SIZE) / TAPROOT_CONTROL_NODE_SIZE;
-    //! The internal pubkey (x-only, so no Y coordinate parity).
     const XOnlyPubKey p{uint256(std::vector<unsigned char>(control.begin() + 1, control.begin() + TAPROOT_CONTROL_BASE_SIZE))};
-    //! The output pubkey (taken from the scriptPubKey).
     const XOnlyPubKey q{uint256(program)};
-    // Compute the tapleaf hash.
     tapleaf_hash = (CHashWriter(HASHER_TAPLEAF) << uint8_t(control[0] & TAPROOT_LEAF_MASK) << script).GetSHA256();
-    // Compute the Merkle root from the leaf and the provided path.
     uint256 k = tapleaf_hash;
     for (int i = 0; i < path_len; ++i) {
         CHashWriter ss_branch{HASHER_TAPBRANCH};
@@ -1869,9 +1848,7 @@ static bool VerifyTaprootCommitment(const std::vector<unsigned char>& control, c
         }
         k = ss_branch.GetSHA256();
     }
-    // Compute the tweak from the Merkle root and the internal pubkey.
     k = (CHashWriter(HASHER_TAPTWEAK) << MakeSpan(p) << k).GetSHA256();
-    // Verify that the output pubkey matches the tweaked internal pubkey, after correcting for parity.
     return q.CheckPayToContract(p, k, control[0] & 1);
 }
 

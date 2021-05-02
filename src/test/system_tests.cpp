@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
@@ -6,22 +6,22 @@
 #include <util/system.h>
 #include <univalue.h>
 
-#ifdef ENABLE_EXTERNAL_SIGNER
+#ifdef HAVE_BOOST_PROCESS
 #include <boost/process.hpp>
-#endif // ENABLE_EXTERNAL_SIGNER
+#endif // HAVE_BOOST_PROCESS
 
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(system_tests, BasicTestingSetup)
 
-// At least one test is required (in case ENABLE_EXTERNAL_SIGNER is not defined).
-// Workaround for https://github.com/bitcoin/bitcoin/issues/19128
+// At least one test is required (in case HAVE_BOOST_PROCESS is not defined).
+// Workaround for https://github.com/xbit/xbit/issues/19128
 BOOST_AUTO_TEST_CASE(dummy)
 {
     BOOST_CHECK(true);
 }
 
-#ifdef ENABLE_EXTERNAL_SIGNER
+#ifdef HAVE_BOOST_PROCESS
 
 bool checkMessage(const std::runtime_error& ex)
 {
@@ -90,6 +90,6 @@ BOOST_AUTO_TEST_CASE(run_command)
     }
 #endif
 }
-#endif // ENABLE_EXTERNAL_SIGNER
+#endif // HAVE_BOOST_PROCESS
 
 BOOST_AUTO_TEST_SUITE_END()

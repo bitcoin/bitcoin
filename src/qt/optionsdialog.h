@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2018 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_QT_OPTIONSDIALOG_H
-#define BITCOIN_QT_OPTIONSDIALOG_H
+#ifndef XBIT_QT_OPTIONSDIALOG_H
+#define XBIT_QT_OPTIONSDIALOG_H
 
 #include <QDialog>
 #include <QValidator>
@@ -53,11 +53,11 @@ private Q_SLOTS:
     /* set OK button state (enabled / disabled) */
     void setOkButtonState(bool fState);
     void on_resetButton_clicked();
-    void on_openBitcoinConfButton_clicked();
+    void on_openXBitConfButton_clicked();
     void on_okButton_clicked();
     void on_cancelButton_clicked();
 
-    void on_showTrayIcon_stateChanged(int state);
+    void on_hideTrayIcon_stateChanged(int fState);
 
     void togglePruneWarning(bool enabled);
     void showRestartWarning(bool fPersistent = false);
@@ -67,7 +67,7 @@ private Q_SLOTS:
     void updateDefaultProxyNets();
 
 Q_SIGNALS:
-    void proxyIpChecks(QValidatedLineEdit *pUiProxyIp, uint16_t nProxyPort);
+    void proxyIpChecks(QValidatedLineEdit *pUiProxyIp, int nProxyPort);
 
 private:
     Ui::OptionsDialog *ui;
@@ -75,4 +75,4 @@ private:
     QDataWidgetMapper *mapper;
 };
 
-#endif // BITCOIN_QT_OPTIONSDIALOG_H
+#endif // XBIT_QT_OPTIONSDIALOG_H

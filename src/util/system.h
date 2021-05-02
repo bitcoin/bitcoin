@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,11 +7,11 @@
  * Server/client environment: argument handling, config file parsing,
  * thread wrappers, startup time
  */
-#ifndef BITCOIN_UTIL_SYSTEM_H
-#define BITCOIN_UTIL_SYSTEM_H
+#ifndef XBIT_UTIL_SYSTEM_H
+#define XBIT_UTIL_SYSTEM_H
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/xbit-config.h>
 #endif
 
 #include <attributes.h>
@@ -19,29 +19,31 @@
 #include <compat/assumptions.h>
 #include <fs.h>
 #include <logging.h>
+#include <optional.h>
 #include <sync.h>
 #include <tinyformat.h>
+#include <util/memory.h>
 #include <util/settings.h>
 #include <util/threadnames.h>
 #include <util/time.h>
 
-#include <any>
 #include <exception>
 #include <map>
-#include <optional>
 #include <set>
 #include <stdint.h>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include <boost/thread/condition_variable.hpp> // for boost::thread_interrupted
+
 class UniValue;
 
 // Application startup time (used for uptime calculation)
 int64_t GetStartupTime();
 
-extern const char * const BITCOIN_CONF_FILENAME;
-extern const char * const BITCOIN_SETTINGS_FILENAME;
+extern const char * const XBIT_CONF_FILENAME;
+extern const char * const XBIT_SETTINGS_FILENAME;
 
 void SetupEnvironment();
 bool SetupNetworking();
@@ -54,23 +56,11 @@ bool error(const char* fmt, const Args&... args)
 }
 
 void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
-
-/**
- * Ensure file contents are fully committed to disk, using a platform-specific
- * feature analogous to fsync().
- */
 bool FileCommit(FILE *file);
-
-/**
- * Sync directory contents. This is required on some environments to ensure that
- * newly created files are committed to disk.
- */
-void DirectoryCommit(const fs::path &dirname);
-
 bool TruncateFile(FILE *file, unsigned int length);
 int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
-[[nodiscard]] bool RenameOver(fs::path src, fs::path dest);
+bool RenameOver(fs::path src, fs::path dest);
 bool LockDirectory(const fs::path& directory, const std::string lockfile_name, bool probe_only=false);
 void UnlockDirectory(const fs::path& directory, const std::string& lockfile_name);
 bool DirIsWritable(const fs::path& directory);
@@ -91,9 +81,13 @@ void ReleaseDirectoryLocks();
 
 bool TryCreateDirectories(const fs::path& p);
 fs::path GetDefaultDataDir();
+// The blocks directory is always net specific.
+const fs::path &GetBlocksDir();
 const fs::path &GetDataDir(bool fNetSpecific = true);
 // Return true if -datadir option points to a valid directory or is not specified.
 bool CheckDataDirOption();
+/** Tests only */
+void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
 #ifdef WIN32
 fs::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
@@ -104,7 +98,7 @@ std::string ShellEscape(const std::string& arg);
 #if HAVE_SYSTEM
 void runCommand(const std::string& strCommand);
 #endif
-#ifdef ENABLE_EXTERNAL_SIGNER
+#ifdef HAVE_BOOST_PROCESS
 /**
  * Execute a command which returns JSON, and parse the result.
  *
@@ -113,7 +107,7 @@ void runCommand(const std::string& strCommand);
  * @return parsed JSON
  */
 UniValue RunCommandParseJSON(const std::string& str_command, const std::string& str_std_in="");
-#endif // ENABLE_EXTERNAL_SIGNER
+#endif // HAVE_BOOST_PROCESS
 
 /**
  * Most paths passed as configuration arguments are treated as relative to
@@ -162,7 +156,7 @@ struct SectionInfo
 class ArgsManager
 {
 public:
-    enum Flags : uint32_t {
+    enum Flags {
         // Boolean options can accept negation syntax -noOPTION or -noOPTION=1
         ALLOW_BOOL = 0x01,
         ALLOW_INT = 0x02,
@@ -177,7 +171,6 @@ public:
         NETWORK_ONLY = 0x200,
         // This argument's value is sensitive (such as a password).
         SENSITIVE = 0x400,
-        COMMAND = 0x800,
     };
 
 protected:
@@ -190,17 +183,12 @@ protected:
 
     mutable RecursiveMutex cs_args;
     util::Settings m_settings GUARDED_BY(cs_args);
-    std::vector<std::string> m_command GUARDED_BY(cs_args);
     std::string m_network GUARDED_BY(cs_args);
     std::set<std::string> m_network_only_args GUARDED_BY(cs_args);
     std::map<OptionsCategory, std::map<std::string, Arg>> m_available_args GUARDED_BY(cs_args);
-    bool m_accept_any_command GUARDED_BY(cs_args){true};
     std::list<SectionInfo> m_config_sections GUARDED_BY(cs_args);
-    fs::path m_cached_blocks_path GUARDED_BY(cs_args);
-    mutable fs::path m_cached_datadir_path GUARDED_BY(cs_args);
-    mutable fs::path m_cached_network_datadir_path GUARDED_BY(cs_args);
 
-    [[nodiscard]] bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false);
+    NODISCARD bool ReadConfigStream(std::istream& stream, const std::string& filepath, std::string& error, bool ignore_invalid_keys = false);
 
     /**
      * Returns true if settings values from the default section should be used,
@@ -232,8 +220,8 @@ public:
      */
     void SelectConfigNetwork(const std::string& network);
 
-    [[nodiscard]] bool ParseParameters(int argc, const char* const argv[], std::string& error);
-    [[nodiscard]] bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
+    NODISCARD bool ParseParameters(int argc, const char* const argv[], std::string& error);
+    NODISCARD bool ReadConfigFiles(std::string& error, bool ignore_invalid_keys = false);
 
     /**
      * Log warnings for options in m_section_only_args when
@@ -247,41 +235,6 @@ public:
      * Log warnings for unrecognized section names in the config file.
      */
     const std::list<SectionInfo> GetUnrecognizedSections() const;
-
-    struct Command {
-        /** The command (if one has been registered with AddCommand), or empty */
-        std::string command;
-        /**
-         * If command is non-empty: Any args that followed it
-         * If command is empty: The unregistered command and any args that followed it
-         */
-        std::vector<std::string> args;
-    };
-    /**
-     * Get the command and command args (returns std::nullopt if no command provided)
-     */
-    std::optional<const Command> GetCommand() const;
-
-    /**
-     * Get blocks directory path
-     *
-     * @return Blocks path which is network specific
-     */
-    const fs::path& GetBlocksDirPath();
-
-    /**
-     * Get data directory path
-     *
-     * @param net_specific Append network identifier to the returned path
-     * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
-     * @post Returned directory path is created unless it is empty
-     */
-    const fs::path& GetDataDirPath(bool net_specific = true) const;
-
-    /**
-     * Clear cached directory paths
-     */
-    void ClearPathCache();
 
     /**
      * Return a vector of strings of the given argument
@@ -369,11 +322,6 @@ public:
     void AddArg(const std::string& name, const std::string& help, unsigned int flags, const OptionsCategory& cat);
 
     /**
-     * Add subcommand
-     */
-    void AddCommand(const std::string& cmd, const std::string& help, const OptionsCategory& cat);
-
-    /**
      * Add many hidden arguments
      */
     void AddHiddenArgs(const std::vector<std::string>& args);
@@ -396,7 +344,7 @@ public:
      * Return Flags for known arg.
      * Return nullopt for unknown arg.
      */
-    std::optional<unsigned int> GetArgFlags(const std::string& name) const;
+    Optional<unsigned int> GetArgFlags(const std::string& name) const;
 
     /**
      * Read and update settings file with saved settings. This needs to be
@@ -490,6 +438,11 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         func();
         LogPrintf("%s thread exit\n", name);
     }
+    catch (const boost::thread_interrupted&)
+    {
+        LogPrintf("%s thread interrupt\n", name);
+        throw;
+    }
     catch (const std::exception& e) {
         PrintExceptionContinue(&e, name);
         throw;
@@ -521,18 +474,6 @@ inline void insert(std::set<TsetT>& dst, const Tsrc& src) {
     dst.insert(src.begin(), src.end());
 }
 
-/**
- * Helper function to access the contained object of a std::any instance.
- * Returns a pointer to the object if passed instance has a value and the type
- * matches, nullptr otherwise.
- */
-template<typename T>
-T* AnyPtr(const std::any& any) noexcept
-{
-    T* const* ptr = std::any_cast<T*>(&any);
-    return ptr ? *ptr : nullptr;
-}
-
 #ifdef WIN32
 class WinCmdLineArgs
 {
@@ -550,4 +491,4 @@ private:
 
 } // namespace util
 
-#endif // BITCOIN_UTIL_SYSTEM_H
+#endif // XBIT_UTIL_SYSTEM_H

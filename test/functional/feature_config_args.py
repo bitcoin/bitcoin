@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Bitcoin Core developers
+# Copyright (c) 2017-2020 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test various command line arguments and configuration file parameters."""
 
 import os
-import time
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework import util
+from test_framework.test_framework import XBitTestFramework
 
 
-class ConfArgsTest(BitcoinTestFramework):
+class ConfArgsTest(XBitTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = True
         self.num_nodes = 1
@@ -19,10 +17,10 @@ class ConfArgsTest(BitcoinTestFramework):
         self.wallet_names = []
 
     def test_config_file_parser(self):
-        self.stop_node(0)
+        # Assume node is stopped
 
         inc_conf_file_path = os.path.join(self.nodes[0].datadir, 'include.conf')
-        with open(os.path.join(self.nodes[0].datadir, 'bitcoin.conf'), 'a', encoding='utf-8') as conf:
+        with open(os.path.join(self.nodes[0].datadir, 'xbit.conf'), 'a', encoding='utf-8') as conf:
             conf.write('includeconf={}\n'.format(inc_conf_file_path))
 
         self.nodes[0].assert_start_raises_init_error(
@@ -44,11 +42,10 @@ class ConfArgsTest(BitcoinTestFramework):
                 conf.write("wallet=foo\n")
             self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Config setting for -wallet only applied on %s network when in [%s] section.' % (self.chain, self.chain))
 
-        main_conf_file_path = os.path.join(self.options.tmpdir, 'node0', 'bitcoin_main.conf')
-        util.write_config(main_conf_file_path, n=0, chain='', extra_config='includeconf={}\n'.format(inc_conf_file_path))
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
+            conf.write('regtest=0\n') # mainnet
             conf.write('acceptnonstdtxn=1\n')
-        self.nodes[0].assert_start_raises_init_error(extra_args=["-conf={}".format(main_conf_file_path)], expected_msg='Error: acceptnonstdtxn is not currently supported for main chain')
+        self.nodes[0].assert_start_raises_init_error(expected_msg='Error: acceptnonstdtxn is not currently supported for main chain')
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
             conf.write('nono\n')
@@ -67,7 +64,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error(expected_msg='Error: Error reading configuration file: parse error on line 4, using # in rpcpassword can be ambiguous and should be avoided')
 
         inc_conf_file2_path = os.path.join(self.nodes[0].datadir, 'include2.conf')
-        with open(os.path.join(self.nodes[0].datadir, 'bitcoin.conf'), 'a', encoding='utf-8') as conf:
+        with open(os.path.join(self.nodes[0].datadir, 'xbit.conf'), 'a', encoding='utf-8') as conf:
             conf.write('includeconf={}\n'.format(inc_conf_file2_path))
 
         with open(inc_conf_file_path, 'w', encoding='utf-8') as conf:
@@ -89,12 +86,11 @@ class ConfArgsTest(BitcoinTestFramework):
         )
 
     def test_log_buffer(self):
-        self.stop_node(0)
         with self.nodes[0].assert_debug_log(expected_msgs=['Warning: parsed potentially confusing double-negative -connect=0\n']):
             self.start_node(0, extra_args=['-noconnect=0'])
+        self.stop_node(0)
 
     def test_args_log(self):
-        self.stop_node(0)
         self.log.info('Test config args logging')
         with self.nodes[0].assert_debug_log(
                 expected_msgs=[
@@ -121,102 +117,39 @@ class ConfArgsTest(BitcoinTestFramework):
                 '-rpcuser=secret-rpcuser',
                 '-torpassword=secret-torpassword',
             ])
+        self.stop_node(0)
 
     def test_networkactive(self):
         self.log.info('Test -networkactive option')
-        self.stop_node(0)
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: true\n']):
             self.start_node(0)
-
         self.stop_node(0)
+
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: true\n']):
             self.start_node(0, extra_args=['-networkactive'])
-
         self.stop_node(0)
+
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: true\n']):
             self.start_node(0, extra_args=['-networkactive=1'])
-
         self.stop_node(0)
+
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: false\n']):
             self.start_node(0, extra_args=['-networkactive=0'])
-
         self.stop_node(0)
+
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: false\n']):
             self.start_node(0, extra_args=['-nonetworkactive'])
-
         self.stop_node(0)
+
         with self.nodes[0].assert_debug_log(expected_msgs=['SetNetworkActive: false\n']):
             self.start_node(0, extra_args=['-nonetworkactive=1'])
-
-    def test_seed_peers(self):
-        self.log.info('Test seed peers')
-        default_data_dir = self.nodes[0].datadir
-        # Only regtest has no fixed seeds. To avoid connections to random
-        # nodes, regtest is the only network where it is safe to enable
-        # -fixedseeds in tests
-        util.assert_equal(self.nodes[0].getblockchaininfo()['chain'],'regtest')
         self.stop_node(0)
-
-        # No peers.dat exists and -dnsseed=1
-        # We expect the node will use DNS Seeds, but Regtest mode has 0 DNS seeds
-        # So after 60 seconds, the node should fallback to fixed seeds (this is a slow test)
-        assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
-        start = int(time.time())
-        with self.nodes[0].assert_debug_log(expected_msgs=[
-                "Loaded 0 addresses from peers.dat",
-                "0 addresses found from DNS seeds",
-        ]):
-            self.start_node(0, extra_args=['-dnsseed=1', '-fixedseeds=1', f'-mocktime={start}'])
-        with self.nodes[0].assert_debug_log(expected_msgs=[
-                "Adding fixed seeds as 60 seconds have passed and addrman is empty",
-        ]):
-            self.nodes[0].setmocktime(start + 65)
-        self.stop_node(0)
-
-        # No peers.dat exists and -dnsseed=0
-        # We expect the node will fallback immediately to fixed seeds
-        assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
-        start = time.time()
-        with self.nodes[0].assert_debug_log(expected_msgs=[
-                "Loaded 0 addresses from peers.dat",
-                "DNS seeding disabled",
-                "Adding fixed seeds as -dnsseed=0, -addnode is not provided and all -seednode(s) attempted\n",
-        ]):
-            self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=1'])
-        assert time.time() - start < 60
-        self.stop_node(0)
-
-        # No peers.dat exists and dns seeds are disabled.
-        # We expect the node will not add fixed seeds when explicitly disabled.
-        assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
-        start = time.time()
-        with self.nodes[0].assert_debug_log(expected_msgs=[
-                "Loaded 0 addresses from peers.dat",
-                "DNS seeding disabled",
-                "Fixed seeds are disabled",
-        ]):
-            self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=0'])
-        assert time.time() - start < 60
-        self.stop_node(0)
-
-        # No peers.dat exists and -dnsseed=0, but a -addnode is provided
-        # We expect the node will allow 60 seconds prior to using fixed seeds
-        assert not os.path.exists(os.path.join(default_data_dir, "peers.dat"))
-        start = int(time.time())
-        with self.nodes[0].assert_debug_log(expected_msgs=[
-                "Loaded 0 addresses from peers.dat",
-                "DNS seeding disabled",
-        ]):
-            self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=1', '-addnode=fakenodeaddr', f'-mocktime={start}'])
-        with self.nodes[0].assert_debug_log(expected_msgs=[
-                "Adding fixed seeds as 60 seconds have passed and addrman is empty",
-        ]):
-            self.nodes[0].setmocktime(start + 65)
 
     def run_test(self):
+        self.stop_node(0)
+
         self.test_log_buffer()
         self.test_args_log()
-        self.test_seed_peers()
         self.test_networkactive()
 
         self.test_config_file_parser()
@@ -234,7 +167,7 @@ class ConfArgsTest(BitcoinTestFramework):
         self.nodes[0].assert_start_raises_init_error(['-datadir=' + new_data_dir], 'Error: Specified data directory "' + new_data_dir + '" does not exist.')
 
         # Check that using non-existent datadir in conf file fails
-        conf_file = os.path.join(default_data_dir, "bitcoin.conf")
+        conf_file = os.path.join(default_data_dir, "xbit.conf")
 
         # datadir needs to be set before [chain] section
         conf_file_contents = open(conf_file, encoding='utf8').read()

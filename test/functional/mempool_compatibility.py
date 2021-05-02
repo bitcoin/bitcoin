@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2020 The Bitcoin Core developers
+# Copyright (c) 2017-2020 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that mempool.dat is both backward and forward compatible between versions
@@ -15,16 +15,16 @@ Only v0.15.2 is required by this test. The rest is used in other backwards compa
 
 import os
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.wallet import MiniWallet
+from test_framework.test_framework import XBitTestFramework
 
 
-class MempoolCompatibilityTest(BitcoinTestFramework):
+class MempoolCompatibilityTest(XBitTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
-        self.wallet_names = [None]
+        self.wallet_names = [None, self.default_wallet_name]
 
     def skip_test_if_missing_module(self):
+        self.skip_if_no_wallet()
         self.skip_if_no_previous_releases()
 
     def setup_network(self):
@@ -38,15 +38,8 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
     def run_test(self):
         self.log.info("Test that mempool.dat is compatible between versions")
 
-        old_node, new_node = self.nodes
-        new_wallet = MiniWallet(new_node)
-        new_wallet.generate(1)
-        new_node.generate(100)
-        # Sync the nodes to ensure old_node has the block that contains the coinbase that new_wallet will spend.
-        # Otherwise, because coinbases are only valid in a block and not as loose txns, if the nodes aren't synced
-        # unbroadcasted_tx won't pass old_node's `MemPoolAccept::PreChecks`.
-        self.connect_nodes(0, 1)
-        self.sync_blocks()
+        old_node = self.nodes[0]
+        new_node = self.nodes[1]
         recipient = old_node.getnewaddress()
         self.stop_node(1)
 
@@ -65,7 +58,7 @@ class MempoolCompatibilityTest(BitcoinTestFramework):
         assert old_tx_hash in new_node.getrawmempool()
 
         self.log.info("Add unbroadcasted tx to mempool on new node and shutdown")
-        unbroadcasted_tx_hash = new_wallet.send_self_transfer(from_node=new_node)['txid']
+        unbroadcasted_tx_hash = new_node.sendtoaddress(recipient, 0.0001)
         assert unbroadcasted_tx_hash in new_node.getrawmempool()
         mempool = new_node.getrawmempool(True)
         assert mempool[unbroadcasted_tx_hash]['unbroadcast']

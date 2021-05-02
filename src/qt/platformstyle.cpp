@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2019 The Bitcoin Core developers
+// Copyright (c) 2015-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -18,11 +18,12 @@ static const struct {
     /** Extra padding/spacing in transactionview */
     const bool useExtraSpacing;
 } platform_styles[] = {
-    {"macosx", false, true, true},
+    {"macosx", false, false, true},
     {"windows", true, false, false},
     /* Other: linux, unix, ... */
     {"other", true, true, false}
 };
+static const unsigned platform_styles_count = sizeof(platform_styles)/sizeof(*platform_styles);
 
 namespace {
 /* Local functions for colorizing single-color images */
@@ -120,13 +121,15 @@ QIcon PlatformStyle::TextColorIcon(const QIcon& icon) const
 
 const PlatformStyle *PlatformStyle::instantiate(const QString &platformId)
 {
-    for (const auto& platform_style : platform_styles) {
-        if (platformId == platform_style.platformId) {
+    for (unsigned x=0; x<platform_styles_count; ++x)
+    {
+        if (platformId == platform_styles[x].platformId)
+        {
             return new PlatformStyle(
-                    platform_style.platformId,
-                    platform_style.imagesOnButtons,
-                    platform_style.colorizeIcons,
-                    platform_style.useExtraSpacing);
+                    platform_styles[x].platformId,
+                    platform_styles[x].imagesOnButtons,
+                    platform_styles[x].colorizeIcons,
+                    platform_styles[x].useExtraSpacing);
         }
     }
     return nullptr;

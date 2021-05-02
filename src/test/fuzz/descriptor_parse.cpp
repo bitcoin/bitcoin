@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,15 +6,16 @@
 #include <pubkey.h>
 #include <script/descriptor.h>
 #include <test/fuzz/fuzz.h>
+#include <util/memory.h>
 
-void initialize_descriptor_parse()
+void initialize()
 {
     static const ECCVerifyHandle verify_handle;
     ECC_Start();
     SelectParams(CBaseChainParams::MAIN);
 }
 
-FUZZ_TARGET_INIT(descriptor_parse, initialize_descriptor_parse)
+void test_one_input(const std::vector<uint8_t>& buffer)
 {
     const std::string descriptor(buffer.begin(), buffer.end());
     FlatSigningProvider signing_provider;

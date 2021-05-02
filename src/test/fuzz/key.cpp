@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,6 +17,7 @@
 #include <script/standard.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
+#include <util/memory.h>
 #include <util/strencodings.h>
 
 #include <cassert>
@@ -25,14 +26,14 @@
 #include <string>
 #include <vector>
 
-void initialize_key()
+void initialize()
 {
     static const ECCVerifyHandle ecc_verify_handle;
     ECC_Start();
     SelectParams(CBaseChainParams::REGTEST);
 }
 
-FUZZ_TARGET_INIT(key, initialize_key)
+void test_one_input(const std::vector<uint8_t>& buffer)
 {
     const CKey key = [&] {
         CKey k;

@@ -1,5 +1,5 @@
 // Copyright (c) 2012 Pieter Wuille
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,8 +8,6 @@
 #include <hash.h>
 #include <logging.h>
 #include <serialize.h>
-
-#include <cmath>
 
 int CAddrInfo::GetTriedBucket(const uint256& nKey, const std::vector<bool> &asmap) const
 {
@@ -619,7 +617,7 @@ CAddrInfo CAddrMan::SelectTriedCollision_()
         return CAddrInfo();
     }
 
-    const CAddrInfo& newInfo = mapInfo[id_new];
+    CAddrInfo& newInfo = mapInfo[id_new];
 
     // which tried bucket to move the entry to
     int tried_bucket = newInfo.GetTriedBucket(nKey, m_asmap);

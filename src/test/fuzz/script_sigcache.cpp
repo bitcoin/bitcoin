@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Bitcoin Core developers
+// Copyright (c) 2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-void initialize_script_sigcache()
+void initialize()
 {
     static const ECCVerifyHandle ecc_verify_handle;
     ECC_Start();
@@ -24,12 +24,12 @@ void initialize_script_sigcache()
     InitSignatureCache();
 }
 
-FUZZ_TARGET_INIT(script_sigcache, initialize_script_sigcache)
+void test_one_input(const std::vector<uint8_t>& buffer)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
 
     const std::optional<CMutableTransaction> mutable_transaction = ConsumeDeserializable<CMutableTransaction>(fuzzed_data_provider);
-    const CTransaction tx{mutable_transaction ? *mutable_transaction : CMutableTransaction{}};
+    const CTransaction tx = mutable_transaction ? CTransaction{*mutable_transaction} : CTransaction{};
     const unsigned int n_in = fuzzed_data_provider.ConsumeIntegral<unsigned int>();
     const CAmount amount = ConsumeMoney(fuzzed_data_provider);
     const bool store = fuzzed_data_provider.ConsumeBool();

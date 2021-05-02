@@ -1,25 +1,25 @@
-Bitcoin Core version 0.16.1 is now available from:
+XBit Core version 0.16.1 is now available from:
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.16.1/>
+  <https://xbitcore.org/bin/xbit-core-0.16.1/>
 
 This is a new minor version release, with various bugfixes
 as well as updated translations.
 
 Please report bugs using the issue tracker at GitHub:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/xbit/xbit/issues>
 
 To receive security and update notifications, please subscribe to:
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+  <https://xbitcore.org/en/list/announcements/join/>
 
 How to Upgrade
 ==============
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+installer (on Windows) or just copy over `/Applications/XBit-Qt` (on Mac)
+or `xbitd`/`xbit-qt` (on Linux).
 
 The first time you run version 0.15.0 or newer, your chainstate database will be converted to a
 new format, which will take anywhere from a few minutes to half an hour,
@@ -40,10 +40,10 @@ wallets that were created with older versions are not affected by this.
 Compatibility
 ==============
 
-Bitcoin Core is extensively tested on multiple operating systems using
+XBit Core is extensively tested on multiple operating systems using
 the Linux kernel, macOS 10.8+, and Windows Vista and later. Windows XP is not supported.
 
-Bitcoin Core should also work on most other Unix-like systems but is not
+XBit Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
 Notable changes
@@ -97,11 +97,11 @@ weights.
 - #12804 `4bdb0ce` Fix intermittent rpc_net.py failure. (jnewbery)
 - #12553 `0e98f96` Prefer wait_until over polling with time.sleep (Empact)
 - #12486 `cfebd40` Round target fee to 8 decimals in assert_fee_amount (kallewoof)
-- #12843 `df38b13` Test starting bitcoind with -h and -version (jnewbery)
+- #12843 `df38b13` Test starting xbitd with -h and -version (jnewbery)
 - #12475 `41c29f6` Fix python TypeError in script.py (MarcoFalke)
 - #12638 `0a76ed2` Cache only chain and wallet for regtest datadir (MarcoFalke)
 - #12902 `7460945` Handle potential cookie race when starting node (sdaftuar)
-- #12904 `6c26df0` Ensure bitcoind processes are cleaned up when tests end (sdaftuar)
+- #12904 `6c26df0` Ensure xbitd processes are cleaned up when tests end (sdaftuar)
 - #13049 `9ea62a3` Backports (MarcoFalke)
 - #13201 `b8aacd6` Handle disconnect_node race (sdaftuar)
 
@@ -142,4 +142,4 @@ Thanks to everyone who directly contributed to this release:
 - Tamas Blummer
 - Wladimir J. van der Laan
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/xbit/).

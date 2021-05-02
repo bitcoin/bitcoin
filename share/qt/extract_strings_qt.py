@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2012-2019 The Bitcoin Core developers
+# Copyright (c) 2012-2019 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 '''
@@ -11,7 +11,7 @@ import operator
 import os
 import sys
 
-OUT_CPP="qt/bitcoinstrings.cpp"
+OUT_CPP="qt/xbitstrings.cpp"
 EMPTY=['""']
 
 def parse_po(text):
@@ -75,11 +75,11 @@ f.write("""
 #define UNUSED
 #endif
 """)
-f.write('static const char UNUSED *bitcoin_strings[] = {\n')
-f.write('QT_TRANSLATE_NOOP("bitcoin-core", "%s"),\n' % (os.getenv('COPYRIGHT_HOLDERS'),))
+f.write('static const char UNUSED *xbit_strings[] = {\n')
+f.write('QT_TRANSLATE_NOOP("xbit-core", "%s"),\n' % (os.getenv('COPYRIGHT_HOLDERS'),))
 messages.sort(key=operator.itemgetter(0))
 for (msgid, msgstr) in messages:
     if msgid != EMPTY:
-        f.write('QT_TRANSLATE_NOOP("bitcoin-core", %s),\n' % ('\n'.join(msgid)))
+        f.write('QT_TRANSLATE_NOOP("xbit-core", %s),\n' % ('\n'.join(msgid)))
 f.write('};\n')
 f.close()

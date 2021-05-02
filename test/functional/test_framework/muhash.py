@@ -66,7 +66,7 @@ def data_to_num3072(data):
 class MuHash3072:
     """Class representing the MuHash3072 computation of a set.
 
-    See https://cseweb.ucsd.edu/~mihir/papers/inchash.pdf and https://lists.linuxfoundation.org/pipermail/bitcoin-dev/2017-May/014337.html
+    See https://cseweb.ucsd.edu/~mihir/papers/inchash.pdf and https://lists.linuxfoundation.org/pipermail/xbit-dev/2017-May/014337.html
     """
 
     MODULUS = 2**3072 - 1103717
@@ -78,13 +78,11 @@ class MuHash3072:
 
     def insert(self, data):
         """Insert a byte array data in the set."""
-        data_hash = hashlib.sha256(data).digest()
-        self.numerator = (self.numerator * data_to_num3072(data_hash)) % self.MODULUS
+        self.numerator = (self.numerator * data_to_num3072(data)) % self.MODULUS
 
     def remove(self, data):
         """Remove a byte array from the set."""
-        data_hash = hashlib.sha256(data).digest()
-        self.denominator = (self.denominator * data_to_num3072(data_hash)) % self.MODULUS
+        self.denominator = (self.denominator * data_to_num3072(data)) % self.MODULUS
 
     def digest(self):
         """Extract the final hash. Does not modify this object."""
@@ -95,12 +93,12 @@ class MuHash3072:
 class TestFrameworkMuhash(unittest.TestCase):
     def test_muhash(self):
         muhash = MuHash3072()
-        muhash.insert(b'\x00' * 32)
-        muhash.insert((b'\x01' + b'\x00' * 31))
-        muhash.remove((b'\x02' + b'\x00' * 31))
+        muhash.insert([0]*32)
+        muhash.insert([1] + [0]*31)
+        muhash.remove([2] + [0]*31)
         finalized = muhash.digest()
         # This mirrors the result in the C++ MuHash3072 unit test
-        self.assertEqual(finalized[::-1].hex(), "10d312b100cbd32ada024a6646e40d3482fcff103668d2625f10002a607d5863")
+        self.assertEqual(finalized[::-1].hex(), "a44e16d5e34d259b349af21c06e65d653915d2e208e4e03f389af750dc0bfdc3")
 
     def test_chacha20(self):
         def chacha_check(key, result):

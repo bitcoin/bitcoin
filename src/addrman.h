@@ -1,13 +1,13 @@
 // Copyright (c) 2012 Pieter Wuille
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_ADDRMAN_H
-#define BITCOIN_ADDRMAN_H
+#ifndef XBIT_ADDRMAN_H
+#define XBIT_ADDRMAN_H
 
 #include <clientversion.h>
-#include <config/bitcoin-config.h>
+#include <config/xbit-config.h>
 #include <netaddress.h>
 #include <protocol.h>
 #include <random.h>
@@ -281,18 +281,8 @@ protected:
     //! Select several addresses at once.
     void GetAddr_(std::vector<CAddress> &vAddr, size_t max_addresses, size_t max_pct) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
-    /** We have successfully connected to this peer. Calling this function
-     *  updates the CAddress's nTime, which is used in our IsTerrible()
-     *  decisions and gossiped to peers. Callers should be careful that updating
-     *  this information doesn't leak topology information to network spies.
-     *
-     *  net_processing calls this function when it *disconnects* from a peer to
-     *  not leak information about currently connected peers.
-     *
-     * @param[in]   addr     The address of the peer we were connected to
-     * @param[in]   nTime    The time that we were last connected to this peer
-     */
-    void Connected_(const CService& addr, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    //! Mark an entry as currently-connected-to.
+    void Connected_(const CService &addr, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Update an entry's service bits.
     void SetServices_(const CService &addr, ServiceFlags nServices) EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -323,31 +313,33 @@ public:
      * * format version byte (@see `Format`)
      * * lowest compatible format version byte. This is used to help old software decide
      *   whether to parse the file. For example:
-     *   * Bitcoin Core version N knows how to parse up to format=3. If a new format=4 is
+     *   * XBit Core version N knows how to parse up to format=3. If a new format=4 is
      *     introduced in version N+1 that is compatible with format=3 and it is known that
      *     version N will be able to parse it, then version N+1 will write
      *     (format=4, lowest_compatible=3) in the first two bytes of the file, and so
      *     version N will still try to parse it.
-     *   * Bitcoin Core version N+2 introduces a new incompatible format=5. It will write
+     *   * XBit Core version N+2 introduces a new incompatible format=5. It will write
      *     (format=5, lowest_compatible=5) and so any versions that do not know how to parse
      *     format=5 will not try to read the file.
      * * nKey
      * * nNew
      * * nTried
      * * number of "new" buckets XOR 2**30
-     * * all new addresses (total count: nNew)
-     * * all tried addresses (total count: nTried)
-     * * for each new bucket:
+     * * all nNew addrinfos in vvNew
+     * * all nTried addrinfos in vvTried
+     * * for each bucket:
      *   * number of elements
-     *   * for each element: index in the serialized "all new addresses"
-     * * asmap checksum
+     *   * for each element: index
      *
      * 2**30 is xorred with the number of buckets to make addrman deserializer v0 detect it
      * as incompatible. This is necessary because it did not check the version number on
      * deserialization.
      *
-     * vvNew, vvTried, mapInfo, mapAddr and vRandom are never encoded explicitly;
+     * Notice that vvTried, mapAddr and vVector are never encoded explicitly;
      * they are instead reconstructed from the other information.
+     *
+     * vvNew is serialized, but only used if ADDRMAN_UNKNOWN_BUCKET_COUNT didn't change,
+     * otherwise it is reconstructed as well.
      *
      * This format is more complex, but significantly smaller (at most 1.5 MiB), and supports
      * changes to the ADDRMAN_ parameters without breaking the on-disk structure.
@@ -411,13 +403,13 @@ public:
                 }
             }
         }
-        // Store asmap checksum after bucket entries so that it
+        // Store asmap version after bucket entries so that it
         // can be ignored by older clients for backward compatibility.
-        uint256 asmap_checksum;
+        uint256 asmap_version;
         if (m_asmap.size() != 0) {
-            asmap_checksum = SerializeHash(m_asmap);
+            asmap_version = SerializeHash(m_asmap);
         }
-        s << asmap_checksum;
+        s << asmap_version;
     }
 
     template <typename Stream>
@@ -498,63 +490,47 @@ public:
         nTried -= nLost;
 
         // Store positions in the new table buckets to apply later (if possible).
-        // An entry may appear in up to ADDRMAN_NEW_BUCKETS_PER_ADDRESS buckets,
-        // so we store all bucket-entry_index pairs to iterate through later.
-        std::vector<std::pair<int, int>> bucket_entries;
+        std::map<int, int> entryToBucket; // Represents which entry belonged to which bucket when serializing
 
-        for (int bucket = 0; bucket < nUBuckets; ++bucket) {
-            int num_entries{0};
-            s >> num_entries;
-            for (int n = 0; n < num_entries; ++n) {
-                int entry_index{0};
-                s >> entry_index;
-                if (entry_index >= 0 && entry_index < nNew) {
-                    bucket_entries.emplace_back(bucket, entry_index);
+        for (int bucket = 0; bucket < nUBuckets; bucket++) {
+            int nSize = 0;
+            s >> nSize;
+            for (int n = 0; n < nSize; n++) {
+                int nIndex = 0;
+                s >> nIndex;
+                if (nIndex >= 0 && nIndex < nNew) {
+                    entryToBucket[nIndex] = bucket;
                 }
             }
         }
 
-        // If the bucket count and asmap checksum haven't changed, then attempt
-        // to restore the entries to the buckets/positions they were in before
-        // serialization.
-        uint256 supplied_asmap_checksum;
+        uint256 supplied_asmap_version;
         if (m_asmap.size() != 0) {
-            supplied_asmap_checksum = SerializeHash(m_asmap);
+            supplied_asmap_version = SerializeHash(m_asmap);
         }
-        uint256 serialized_asmap_checksum;
+        uint256 serialized_asmap_version;
         if (format >= Format::V2_ASMAP) {
-            s >> serialized_asmap_checksum;
-        }
-        const bool restore_bucketing{nUBuckets == ADDRMAN_NEW_BUCKET_COUNT &&
-                                     serialized_asmap_checksum == supplied_asmap_checksum};
-
-        if (!restore_bucketing) {
-            LogPrint(BCLog::ADDRMAN, "Bucketing method was updated, re-bucketing addrman entries from disk\n");
+            s >> serialized_asmap_version;
         }
 
-        for (auto bucket_entry : bucket_entries) {
-            int bucket{bucket_entry.first};
-            const int entry_index{bucket_entry.second};
-            CAddrInfo& info = mapInfo[entry_index];
-
-            // The entry shouldn't appear in more than
-            // ADDRMAN_NEW_BUCKETS_PER_ADDRESS. If it has already, just skip
-            // this bucket_entry.
-            if (info.nRefCount >= ADDRMAN_NEW_BUCKETS_PER_ADDRESS) continue;
-
-            int bucket_position = info.GetBucketPosition(nKey, true, bucket);
-            if (restore_bucketing && vvNew[bucket][bucket_position] == -1) {
+        for (int n = 0; n < nNew; n++) {
+            CAddrInfo &info = mapInfo[n];
+            int bucket = entryToBucket[n];
+            int nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
+            if (format >= Format::V2_ASMAP && nUBuckets == ADDRMAN_NEW_BUCKET_COUNT && vvNew[bucket][nUBucketPos] == -1 &&
+                info.nRefCount < ADDRMAN_NEW_BUCKETS_PER_ADDRESS && serialized_asmap_version == supplied_asmap_version) {
                 // Bucketing has not changed, using existing bucket positions for the new table
-                vvNew[bucket][bucket_position] = entry_index;
-                ++info.nRefCount;
+                vvNew[bucket][nUBucketPos] = n;
+                info.nRefCount++;
             } else {
-                // In case the new table data cannot be used (bucket count wrong or new asmap),
+                // In case the new table data cannot be used (format unknown, bucket count wrong or new asmap),
                 // try to give them a reference based on their primary source address.
+                LogPrint(BCLog::ADDRMAN, "Bucketing method was updated, re-bucketing addrman entries from disk\n");
                 bucket = info.GetNewBucket(nKey, m_asmap);
-                bucket_position = info.GetBucketPosition(nKey, true, bucket);
-                if (vvNew[bucket][bucket_position] == -1) {
-                    vvNew[bucket][bucket_position] = entry_index;
-                    ++info.nRefCount;
+                nUBucketPos = info.GetBucketPosition(nKey, true, bucket);
+                if (vvNew[bucket][nUBucketPos] == -1) {
+                    vvNew[bucket][nUBucketPos] = n;
+                    info.nRefCount++;
                 }
             }
         }
@@ -728,7 +704,7 @@ public:
         return vAddr;
     }
 
-    //! Outer function for Connected_()
+    //! Mark an entry as currently-connected-to.
     void Connected(const CService &addr, int64_t nTime = GetAdjustedTime())
     {
         LOCK(cs);
@@ -747,4 +723,4 @@ public:
 
 };
 
-#endif // BITCOIN_ADDRMAN_H
+#endif // XBIT_ADDRMAN_H

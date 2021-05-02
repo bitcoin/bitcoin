@@ -1,13 +1,11 @@
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NODE_PSBT_H
-#define BITCOIN_NODE_PSBT_H
+#ifndef XBIT_NODE_PSBT_H
+#define XBIT_NODE_PSBT_H
 
 #include <psbt.h>
-
-#include <optional>
 
 /**
  * Holds an analysis of one input from a PSBT
@@ -27,18 +25,18 @@ struct PSBTInputAnalysis {
  * Holds the results of AnalyzePSBT (miscellaneous information about a PSBT)
  */
 struct PSBTAnalysis {
-    std::optional<size_t> estimated_vsize;      //!< Estimated weight of the transaction
-    std::optional<CFeeRate> estimated_feerate;  //!< Estimated feerate (fee / weight) of the transaction
-    std::optional<CAmount> fee;                 //!< Amount of fee being paid by the transaction
-    std::vector<PSBTInputAnalysis> inputs;      //!< More information about the individual inputs of the transaction
-    PSBTRole next;                              //!< Which of the BIP 174 roles needs to handle the transaction next
-    std::string error;                          //!< Error message
+    Optional<size_t> estimated_vsize;      //!< Estimated weight of the transaction
+    Optional<CFeeRate> estimated_feerate;  //!< Estimated feerate (fee / weight) of the transaction
+    Optional<CAmount> fee;                 //!< Amount of fee being paid by the transaction
+    std::vector<PSBTInputAnalysis> inputs; //!< More information about the individual inputs of the transaction
+    PSBTRole next;                         //!< Which of the BIP 174 roles needs to handle the transaction next
+    std::string error;                     //!< Error message
 
     void SetInvalid(std::string err_msg)
     {
-        estimated_vsize = std::nullopt;
-        estimated_feerate = std::nullopt;
-        fee = std::nullopt;
+        estimated_vsize = nullopt;
+        estimated_feerate = nullopt;
+        fee = nullopt;
         inputs.clear();
         next = PSBTRole::CREATOR;
         error = err_msg;
@@ -53,4 +51,4 @@ struct PSBTAnalysis {
  */
 PSBTAnalysis AnalyzePSBT(PartiallySignedTransaction psbtx);
 
-#endif // BITCOIN_NODE_PSBT_H
+#endif // XBIT_NODE_PSBT_H

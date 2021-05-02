@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2015-2020 The Bitcoin Core developers
+# Copyright (c) 2015-2020 The XBit Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP66 (DER SIG).
@@ -11,7 +11,7 @@ from test_framework.blocktools import create_coinbase, create_block, create_tran
 from test_framework.messages import msg_block
 from test_framework.p2p import P2PInterface
 from test_framework.script import CScript
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import XBitTestFramework
 from test_framework.util import (
     assert_equal,
 )
@@ -36,7 +36,7 @@ def unDERify(tx):
     tx.vin[0].scriptSig = CScript(newscript)
 
 
-class BIP66Test(BitcoinTestFramework):
+class BIP66Test(XBitTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
         self.extra_args = [[
@@ -112,13 +112,8 @@ class BIP66Test(BitcoinTestFramework):
         # First we show that this tx is valid except for DERSIG by getting it
         # rejected from the mempool for exactly that reason.
         assert_equal(
-            [{
-                'txid': spendtx.hash,
-                'wtxid': spendtx.getwtxid(),
-                'allowed': False,
-                'reject-reason': 'non-mandatory-script-verify-flag (Non-canonical DER signature)',
-            }],
-            self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0),
+            [{'txid': spendtx.hash, 'allowed': False, 'reject-reason': 'non-mandatory-script-verify-flag (Non-canonical DER signature)'}],
+            self.nodes[0].testmempoolaccept(rawtxs=[spendtx.serialize().hex()], maxfeerate=0)
         )
 
         # Now we verify that a block with this transaction is also invalid.

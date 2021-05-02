@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 The Bitcoin Core developers
+// Copyright (c) 2018 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,8 +6,8 @@
 
 #include <dbwrapper.h>
 #include <index/blockfilterindex.h>
-#include <node/blockstorage.h>
 #include <util/system.h>
+#include <validation.h>
 
 /* The index database stores three items for each block: the disk location of the encoded filter,
  * its dSHA256 hash, and the header. Those belonging to blocks on the active chain are indexed by
@@ -51,6 +51,7 @@ struct DBVal {
 struct DBHeightKey {
     int height;
 
+    DBHeightKey() : height(0) {}
     explicit DBHeightKey(int height_in) : height(height_in) {}
 
     template<typename Stream>
@@ -102,8 +103,8 @@ BlockFilterIndex::BlockFilterIndex(BlockFilterType filter_type,
     fs::create_directories(path);
 
     m_name = filter_name + " block filter index";
-    m_db = std::make_unique<BaseIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe);
-    m_filter_fileseq = std::make_unique<FlatFileSeq>(std::move(path), "fltr", FLTR_FILE_CHUNK_SIZE);
+    m_db = MakeUnique<BaseIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe);
+    m_filter_fileseq = MakeUnique<FlatFileSeq>(std::move(path), "fltr", FLTR_FILE_CHUNK_SIZE);
 }
 
 bool BlockFilterIndex::Init()

@@ -20,10 +20,14 @@ def TaggedHash(tag, data):
     ss += data
     return hashlib.sha256(ss).digest()
 
+def xor_bytes(b0, b1):
+    assert len(b0) == len(b1)
+    return bytes(x ^ y for (x, y) in zip(b0, b1))
+
 def jacobi_symbol(n, k):
     """Compute the Jacobi symbol of n modulo k
 
-    See https://en.wikipedia.org/wiki/Jacobi_symbol
+    See http://en.wikipedia.org/wiki/Jacobi_symbol
 
     For our application k is always prime, so this is the same as the Legendre symbol."""
     assert k > 0 and k & 1, "jacobi symbol is only defined for positive odd k"
@@ -506,7 +510,7 @@ class TestFrameworkKey(unittest.TestCase):
             if pubkey is not None:
                 keys[privkey] = pubkey
         for msg in byte_arrays:  # test every combination of message, signing key, verification key
-            for sign_privkey, _ in keys.items():
+            for sign_privkey, sign_pubkey in keys.items():
                 sig = sign_schnorr(sign_privkey, msg)
                 for verify_privkey, verify_pubkey in keys.items():
                     if verify_privkey == sign_privkey:

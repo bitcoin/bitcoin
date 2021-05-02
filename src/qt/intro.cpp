@@ -1,9 +1,9 @@
-// Copyright (c) 2011-2020 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include <config/bitcoin-config.h>
+#include <config/xbit-config.h>
 #endif
 
 #include <chainparams.h>
@@ -17,7 +17,6 @@
 
 #include <interfaces/node.h>
 #include <util/system.h>
-#include <validation.h>
 
 #include <QFileDialog>
 #include <QSettings>
@@ -120,7 +119,7 @@ int GetPruneTargetGB()
 } // namespace
 
 Intro::Intro(QWidget *parent, int64_t blockchain_size_gb, int64_t chain_state_size_gb) :
-    QDialog(parent, GUIUtil::dialog_flags),
+    QDialog(parent),
     ui(new Ui::Intro),
     thread(nullptr),
     signalled(false),
@@ -136,28 +135,19 @@ Intro::Intro(QWidget *parent, int64_t blockchain_size_gb, int64_t chain_state_si
         .arg(PACKAGE_NAME)
         .arg(m_blockchain_size_gb)
         .arg(2009)
-        .arg(tr("Bitcoin"))
+        .arg(tr("XBit"))
     );
     ui->lblExplanation2->setText(ui->lblExplanation2->text().arg(PACKAGE_NAME));
 
-    const int min_prune_target_GB = std::ceil(MIN_DISK_SPACE_FOR_BLOCK_FILES / 1e9);
-    ui->pruneGB->setRange(min_prune_target_GB, std::numeric_limits<int>::max());
     if (gArgs.GetArg("-prune", 0) > 1) { // -prune=1 means enabled, above that it's a size in MiB
         ui->prune->setChecked(true);
         ui->prune->setEnabled(false);
     }
-    ui->pruneGB->setValue(m_prune_target_gb);
-    ui->pruneGB->setToolTip(ui->prune->toolTip());
-    ui->lblPruneSuffix->setToolTip(ui->prune->toolTip());
+    ui->prune->setText(tr("Discard blocks after verification, except most recent %1 GB (prune)").arg(m_prune_target_gb));
     UpdatePruneLabels(ui->prune->isChecked());
 
     connect(ui->prune, &QCheckBox::toggled, [this](bool prune_checked) {
         UpdatePruneLabels(prune_checked);
-        UpdateFreeSpaceLabel();
-    });
-    connect(ui->pruneGB, QOverload<int>::of(&QSpinBox::valueChanged), [this](int prune_GB) {
-        m_prune_target_gb = prune_GB;
-        UpdatePruneLabels(ui->prune->isChecked());
         UpdateFreeSpaceLabel();
     });
 
@@ -192,17 +182,7 @@ void Intro::setDataDirectory(const QString &dataDir)
     }
 }
 
-int64_t Intro::getPruneMiB() const
-{
-    switch (ui->prune->checkState()) {
-    case Qt::Checked:
-        return PruneGBtoMiB(m_prune_target_gb);
-    case Qt::Unchecked: default:
-        return 0;
-    }
-}
-
-bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
+bool Intro::showIfNeeded(bool& did_show_intro, bool& prune)
 {
     did_show_intro = false;
 
@@ -228,7 +208,7 @@ bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
         /* If current default data directory does not exist, let the user choose one */
         Intro intro(0, Params().AssumedBlockchainSize(), Params().AssumedChainStateSize());
         intro.setDataDirectory(dataDir);
-        intro.setWindowIcon(QIcon(":icons/bitcoin"));
+        intro.setWindowIcon(QIcon(":icons/xbit"));
         did_show_intro = true;
 
         while(true)
@@ -253,14 +233,14 @@ bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
         }
 
         // Additional preferences:
-        prune_MiB = intro.getPruneMiB();
+        prune = intro.ui->prune->isChecked();
 
         settings.setValue("strDataDir", dataDir);
         settings.setValue("fReset", false);
     }
     /* Only override -datadir if different from the default, to make it possible to
-     * override -datadir in the bitcoin.conf file in the default data directory
-     * (to be consistent with bitcoind behavior)
+     * override -datadir in the xbit.conf file in the default data directory
+     * (to be consistent with xbitd behavior)
      */
     if(dataDir != GUIUtil::getDefaultDataDirectory()) {
         gArgs.SoftSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
@@ -381,13 +361,8 @@ void Intro::UpdatePruneLabels(bool prune_checked)
         storageRequiresMsg = tr("Approximately %1 GB of data will be stored in this directory.");
     }
     ui->lblExplanation3->setVisible(prune_checked);
-    ui->pruneGB->setEnabled(prune_checked);
-    static constexpr uint64_t nPowTargetSpacing = 10 * 60;  // from chainparams, which we don't have at this stage
-    static constexpr uint32_t expected_block_data_size = 2250000;  // includes undo data
-    const uint64_t expected_backup_days = m_prune_target_gb * 1e9 / (uint64_t(expected_block_data_size) * 86400 / nPowTargetSpacing);
-    ui->lblPruneSuffix->setText(tr("(sufficient to restore backups %n day(s) old)", "block chain pruning", expected_backup_days));
     ui->sizeWarningLabel->setText(
-        tr("%1 will download and store a copy of the Bitcoin block chain.").arg(PACKAGE_NAME) + " " +
+        tr("%1 will download and store a copy of the XBit block chain.").arg(PACKAGE_NAME) + " " +
         storageRequiresMsg.arg(m_required_space_gb) + " " +
         tr("The wallet will also be stored in this directory.")
     );

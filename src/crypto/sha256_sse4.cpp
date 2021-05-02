@@ -1,4 +1,4 @@
-// Copyright (c) 2017 The Bitcoin Core developers
+// Copyright (c) 2017 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 //
@@ -1001,7 +1001,7 @@ void Transform(uint32_t* s, const unsigned char* chunk, size_t blocks)
 ; This code is described in an Intel White-Paper:
 ; "Fast SHA-256 Implementations on Intel Architecture Processors"
 ;
-; To find it, surf to https://www.intel.com/p/en_US/embedded
+; To find it, surf to http://www.intel.com/p/en_US/embedded 
 ; and search for that title.
 ; The paper is expected to be released roughly at the end of April, 2012
 ;

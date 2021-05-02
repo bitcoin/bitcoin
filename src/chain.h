@@ -1,10 +1,10 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_CHAIN_H
-#define BITCOIN_CHAIN_H
+#ifndef XBIT_CHAIN_H
+#define XBIT_CHAIN_H
 
 #include <arith_uint256.h>
 #include <consensus/params.h>
@@ -33,7 +33,7 @@ static constexpr int64_t TIMESTAMP_WINDOW = MAX_FUTURE_BLOCK_TIME;
  * Maximum gap between node time and block time used
  * for the "Catching up..." mode in GUI.
  *
- * Ref: https://github.com/bitcoin/bitcoin/pull/1026
+ * Ref: https://github.com/xbit/xbit/pull/1026
  */
 static constexpr int64_t MAX_BLOCK_TIME_GAP = 90 * 60;
 
@@ -163,27 +163,14 @@ public:
 
     //! Number of transactions in this block.
     //! Note: in a potential headers-first mode, this number cannot be relied upon
-    //! Note: this value is faked during UTXO snapshot load to ensure that
-    //! LoadBlockIndex() will load index entries for blocks that we lack data for.
-    //! @sa ActivateSnapshot
     unsigned int nTx{0};
 
     //! (memory only) Number of transactions in the chain up to and including this block.
     //! This value will be non-zero only if and only if transactions for this block and all its parents are available.
     //! Change to 64-bit type when necessary; won't happen before 2030
-    //!
-    //! Note: this value is faked during use of a UTXO snapshot because we don't
-    //! have the underlying block data available during snapshot load.
-    //! @sa AssumeutxoData
-    //! @sa ActivateSnapshot
     unsigned int nChainTx{0};
 
     //! Verification status of this block. See enum BlockStatus
-    //!
-    //! Note: this value is modified to show BLOCK_OPT_WITNESS during UTXO snapshot
-    //! load to avoid the block index being spuriously rewound.
-    //! @sa RewindBlockIndex
-    //! @sa ActivateSnapshot
     uint32_t nStatus{0};
 
     //! block header
@@ -442,4 +429,4 @@ public:
     CBlockIndex* FindEarliestAtLeast(int64_t nTime, int height) const;
 };
 
-#endif // BITCOIN_CHAIN_H
+#endif // XBIT_CHAIN_H

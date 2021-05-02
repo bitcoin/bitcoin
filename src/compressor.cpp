@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -52,7 +52,7 @@ static bool IsToPubKey(const CScript& script, CPubKey &pubkey)
     return false;
 }
 
-bool CompressScript(const CScript& script, CompressedScript& out)
+bool CompressScript(const CScript& script, std::vector<unsigned char> &out)
 {
     CKeyID keyID;
     if (IsToKeyID(script, keyID)) {
@@ -92,7 +92,7 @@ unsigned int GetSpecialScriptSize(unsigned int nSize)
     return 0;
 }
 
-bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScript& in)
+bool DecompressScript(CScript& script, unsigned int nSize, const std::vector<unsigned char> &in)
 {
     switch(nSize) {
     case 0x00:

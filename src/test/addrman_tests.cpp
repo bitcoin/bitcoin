@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2020 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include <addrman.h>
@@ -71,7 +71,7 @@ public:
     }
 
     // Simulates connection failure so that we can test eviction of offline nodes
-    void SimConnFail(const CService& addr)
+    void SimConnFail(CService& addr)
     {
          LOCK(cs);
          int64_t nLastSuccess = 1;
@@ -100,7 +100,7 @@ static CNetAddr ResolveIP(const std::string& ip)
     return addr;
 }
 
-static CService ResolveService(const std::string& ip, uint16_t port = 0)
+static CService ResolveService(const std::string& ip, const int port = 0)
 {
     CService serv;
     BOOST_CHECK_MESSAGE(Lookup(ip, serv, port, false), strprintf("failed to resolve: %s:%i", ip, port));

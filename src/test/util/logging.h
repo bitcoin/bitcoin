@@ -1,9 +1,9 @@
-// Copyright (c) 2019-2020 The Bitcoin Core developers
+// Copyright (c) 2019 The XBit Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_TEST_UTIL_LOGGING_H
-#define BITCOIN_TEST_UTIL_LOGGING_H
+#ifndef XBIT_TEST_UTIL_LOGGING_H
+#define XBIT_TEST_UTIL_LOGGING_H
 
 #include <util/macros.h>
 
@@ -32,10 +32,10 @@ class DebugLogHelper
     void check_found();
 
 public:
-    explicit DebugLogHelper(std::string message, MatchFn match = [](const std::string*){ return true; });
+    DebugLogHelper(std::string message, MatchFn match = [](const std::string*){ return true; });
     ~DebugLogHelper() { check_found(); }
 };
 
 #define ASSERT_DEBUG_LOG(message) DebugLogHelper PASTE2(debugloghelper, __COUNTER__)(message)
 
-#endif // BITCOIN_TEST_UTIL_LOGGING_H
+#endif // XBIT_TEST_UTIL_LOGGING_H
