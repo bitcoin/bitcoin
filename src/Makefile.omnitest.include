@@ -15,6 +15,7 @@ OMNICORE_TEST_CPP = \
   omnicore/test/lock_tests.cpp \
   omnicore/test/marker_tests.cpp \
   omnicore/test/mbstring_tests.cpp \
+  omnicore/test/nftdb_tests.cpp \
   omnicore/test/params_tests.cpp \
   omnicore/test/obfuscation_tests.cpp \
   omnicore/test/output_restriction_tests.cpp \

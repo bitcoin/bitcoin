@@ -49,6 +49,7 @@ EXPECTED_CIRCULAR_DEPENDENCIES=(
     "init -> txmempool -> omnicore/omnicore -> init"
     "omnicore/omnicore -> omnicore/pending -> txmempool -> omnicore/omnicore"
     "txdb -> validation -> txdb"
+    "omnicore/nftdb -> omnicore/omnicore -> omnicore/tx -> omnicore/nftdb"
 )
 
 EXIT_CODE=0

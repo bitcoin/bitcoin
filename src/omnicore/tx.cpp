@@ -12,10 +12,12 @@
 #include <omnicore/log.h>
 #include <omnicore/mdex.h>
 #include <omnicore/notifications.h>
+#include <omnicore/omnicore.h>
 #include <omnicore/parsing.h>
 #include <omnicore/rules.h>
 #include <omnicore/sp.h>
 #include <omnicore/sto.h>
+#include <omnicore/nftdb.h>
 #include <omnicore/utilsbitcoin.h>
 #include <omnicore/version.h>
 
@@ -48,6 +50,7 @@ std::string mastercore::strTransactionType(uint16_t txType)
         case MSC_TYPE_RESTRICTED_SEND: return "Restricted Send";
         case MSC_TYPE_SEND_TO_OWNERS: return "Send To Owners";
         case MSC_TYPE_SEND_ALL: return "Send All";
+        case MSC_TYPE_SEND_NONFUNGIBLE: return "Unique Send";
         case MSC_TYPE_SAVINGS_MARK: return "Savings";
         case MSC_TYPE_SAVINGS_COMPROMISED: return "Savings COMPROMISED";
         case MSC_TYPE_RATELIMITED_MARK: return "Rate-Limiting";
@@ -71,6 +74,7 @@ std::string mastercore::strTransactionType(uint16_t txType)
         case MSC_TYPE_FREEZE_PROPERTY_TOKENS: return "Freeze Property Tokens";
         case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS: return "Unfreeze Property Tokens";
         case MSC_TYPE_ANYDATA: return "Embed any data";
+        case MSC_TYPE_NONFUNGIBLE_DATA: return "Set Non-Fungible Token Data";
         case MSC_TYPE_NOTIFICATION: return "Notification";
         case OMNICORE_MESSAGE_TYPE_ALERT: return "ALERT";
         case OMNICORE_MESSAGE_TYPE_DEACTIVATION: return "Feature Deactivation";
@@ -121,6 +125,9 @@ bool CMPTransaction::interpret_Transaction()
 
         case MSC_TYPE_SEND_ALL:
             return interpret_SendAll();
+
+        case MSC_TYPE_SEND_NONFUNGIBLE:
+            return interpret_SendNonFungible();
 
         case MSC_TYPE_TRADE_OFFER:
             return interpret_TradeOffer();
@@ -178,6 +185,9 @@ bool CMPTransaction::interpret_Transaction()
             
         case MSC_TYPE_ANYDATA:
             return interpret_AnyData();
+
+        case MSC_TYPE_NONFUNGIBLE_DATA:
+            return interpret_NonFungibleData();
 
         case OMNICORE_MESSAGE_TYPE_ACTIVATION:
             return interpret_Activation();
@@ -283,6 +293,28 @@ bool CMPTransaction::interpret_SendAll()
 
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t       ecosystem: %d\n", (int)ecosystem);
+    }
+
+    return true;
+}
+
+/** Tx 5 */
+bool CMPTransaction::interpret_SendNonFungible()
+{
+    if (pkt_size < 24) {
+        return false;
+    }
+    memcpy(&property, &pkt[4], 4);
+    SwapByteOrder32(property);
+    memcpy(&nonfungible_token_start, &pkt[8], 8);
+    SwapByteOrder64(nonfungible_token_start);
+    memcpy(&nonfungible_token_end, &pkt[16], 8);
+    SwapByteOrder64(nonfungible_token_end);
+
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
+        PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
+        PrintToLog("\t      tokenstart: %d\n", nonfungible_token_start);
+        PrintToLog("\t        tokenend: %d\n", nonfungible_token_end);
     }
 
     return true;
@@ -624,6 +656,11 @@ bool CMPTransaction::interpret_GrantTokens()
     SwapByteOrder64(nValue);
     nNewValue = nValue;
 
+    // Get NFT data, was memo before and previously unused here.
+    const char* p = 16 + (char*) &pkt;
+    std::string spstr(p);
+    memcpy(nonfungible_data, spstr.c_str(), std::min(spstr.length(), sizeof(nonfungible_data)-1));
+
     // Special case: if can't find the receiver -- assume grant to self!
     if (receiver.empty()) {
         receiver = sender;
@@ -632,6 +669,7 @@ bool CMPTransaction::interpret_GrantTokens()
     if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
         PrintToLog("\t        property: %d (%s)\n", property, strMPProperty(property));
         PrintToLog("\t           value: %s\n", FormatMP(property, nValue));
+        PrintToLog("\t            data: %s\n", nonfungible_data);
     }
 
     return true;
@@ -798,6 +836,34 @@ bool CMPTransaction::interpret_AnyData()
     return true;
 }
 
+/** Tx 201 */
+bool CMPTransaction::interpret_NonFungibleData()
+{
+    if (pkt_size < 25) {
+        return false;
+    }
+    memcpy(&property, &pkt[4], 4);
+    SwapByteOrder32(property);
+    memcpy(&nonfungible_token_start, &pkt[8], 8);
+    SwapByteOrder64(nonfungible_token_start);
+    memcpy(&nonfungible_token_end, &pkt[16], 8);
+    SwapByteOrder64(nonfungible_token_end);
+    memcpy(&nonfungible_data_type, &pkt[24], 1);
+
+    const char* p = 25 + (char*) &pkt;
+    std::string spstr(p);
+    memcpy(nonfungible_data, spstr.c_str(), std::min(spstr.length(), sizeof(nonfungible_data)-1));
+
+    if ((!rpcOnly && msc_debug_packets) || msc_debug_packets_readonly) {
+        PrintToLog("\t                property: %d (%s)\n", property, strMPProperty(property));
+        PrintToLog("\t nonfungible_token_start: %d\n", nonfungible_token_start);
+        PrintToLog("\t   nonfungible_token_end: %d\n", nonfungible_token_end);
+        PrintToLog("\t                    data: %s\n", nonfungible_data);
+    }
+
+    return true;
+}
+
 /** Tx 65533 */
 bool CMPTransaction::interpret_Deactivation()
 {
@@ -911,6 +977,9 @@ int CMPTransaction::interpretPacket()
         case MSC_TYPE_SEND_ALL:
             return logicMath_SendAll();
 
+        case MSC_TYPE_SEND_NONFUNGIBLE:
+            return logicMath_SendNonFungible();
+
         case MSC_TYPE_TRADE_OFFER:
             return logicMath_TradeOffer();
 
@@ -964,6 +1033,9 @@ int CMPTransaction::interpretPacket()
 
         case MSC_TYPE_ANYDATA:
             return logicMath_AnyData();
+
+        case MSC_TYPE_NONFUNGIBLE_DATA:
+            return logicMath_NonFungibleData();
 
         case OMNICORE_MESSAGE_TYPE_DEACTIVATION:
             return logicMath_Deactivation();
@@ -1070,6 +1142,11 @@ int CMPTransaction::logicMath_SimpleSend(uint256& blockHash)
         return (PKT_ERROR_SEND -22);
     }
 
+    if (isPropertyNonFungible(property)) {
+        PrintToLog("%s(): rejected: property %d is of type non-fungible\n", __func__, property);
+        return (PKT_ERROR_TOKENS -27);
+    }
+
     if (nValue <= 0 || MAX_INT_8_BYTES < nValue) {
         PrintToLog("%s(): rejected: value out of range or zero: %d", __func__, nValue);
         return (PKT_ERROR_SEND -23);
@@ -1114,6 +1191,11 @@ int CMPTransaction::logicMath_SendToOwners()
                 property,
                 block);
         return (PKT_ERROR_STO -22);
+    }
+
+    if (isPropertyNonFungible(property)) {
+        PrintToLog("%s(): rejected: property %d is of type non-fungible\n", __func__, property);
+        return (PKT_ERROR_TOKENS -27);
     }
 
     if (nValue <= 0 || MAX_INT_8_BYTES < nValue) {
@@ -1243,6 +1325,11 @@ int CMPTransaction::logicMath_SendAll()
         return (PKT_ERROR_SEND_ALL -22);
     }
 
+    if (isPropertyNonFungible(property)) {
+        PrintToLog("%s(): rejected: property %d is of type non-fungible\n", __func__, property);
+        return (PKT_ERROR_TOKENS -27);
+    }
+
     // ------------------------------------------
 
     CMPTally* ptally = getTally(sender);
@@ -1288,6 +1375,87 @@ int CMPTransaction::logicMath_SendAll()
     return 0;
 }
 
+/** Tx 5 */
+int CMPTransaction::logicMath_SendNonFungible()
+{
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR_SEND -22);
+    }
+
+    if (!isPropertyNonFungible(property)) {
+        PrintToLog("%s(): rejected: property %d is not of type non-fungible\n", __func__, property);
+        return (PKT_ERROR_TOKENS -27);
+    }
+
+    if (nonfungible_token_start <= 0 || MAX_INT_8_BYTES < nonfungible_token_start) {
+        PrintToLog("%s(): rejected: non-fungible token range start value out of range or zero: %d", __func__, nonfungible_token_start);
+        return (PKT_ERROR_SEND -23);
+    }
+
+    if (nonfungible_token_end <= 0 || MAX_INT_8_BYTES < nonfungible_token_end) {
+        PrintToLog("%s(): rejected: non-fungible token range end value out of range or zero: %d", __func__, nonfungible_token_end);
+        return (PKT_ERROR_SEND -23);
+    }
+
+    if (nonfungible_token_start > nonfungible_token_end) {
+        PrintToLog("%s(): rejected: non-fungible token range start value: %d is less than or equal to range end value: %d", __func__, nonfungible_token_start, nonfungible_token_end);
+        return (PKT_ERROR_SEND -23);
+    }
+
+    int64_t amount = (nonfungible_token_end - nonfungible_token_start) + 1;
+    if (amount <= 0) {
+        PrintToLog("%s(): rejected: non-fungible token range amount out of range or zero: %d", __func__, amount);
+        return (PKT_ERROR_SEND -23);
+    }
+
+    if (!pDbSpInfo->hasSP(property)) {
+        PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
+        return (PKT_ERROR_SEND -24);
+    }
+
+    int64_t nBalance = GetAvailableTokenBalance(sender, property);
+    if (nBalance < amount) {
+        PrintToLog("%s(): rejected: sender %s has insufficient balance of property %d [%s < %s]\n",
+                __func__,
+                sender,
+                property,
+                FormatMP(property, nBalance),
+                FormatMP(property, amount));
+        return (PKT_ERROR_SEND -25);
+    }
+
+    std::string rangeStartOwner = pDbNFT->GetNonFungibleTokenOwner(property, nonfungible_token_start);
+    std::string rangeEndOwner = pDbNFT->GetNonFungibleTokenOwner(property, nonfungible_token_end);
+    bool contiguous = pDbNFT->IsRangeContiguous(property, nonfungible_token_start, nonfungible_token_end);
+    if (rangeStartOwner != sender || rangeEndOwner != sender || !contiguous) {
+        PrintToLog("%s(): rejected: sender %s does not own the range being sent\n",
+                __func__,
+                sender);
+        return (PKT_ERROR_SEND -26);
+    }
+
+    // ------------------------------------------
+
+    // Special case: if can't find the receiver -- assume send to self!
+    if (receiver.empty()) {
+        receiver = sender;
+    }
+
+    // Move the tokens
+    assert(update_tally_map(sender, property, -amount, BALANCE));
+    assert(update_tally_map(receiver, property, amount, BALANCE));
+    bool success = pDbNFT->MoveNonFungibleTokens(property,nonfungible_token_start,nonfungible_token_end,sender,receiver);
+    assert(success);
+
+    return 0;
+}
+
 /** Tx 20 */
 int CMPTransaction::logicMath_TradeOffer()
 {
@@ -1299,6 +1467,11 @@ int CMPTransaction::logicMath_TradeOffer()
                 property,
                 block);
         return (PKT_ERROR_TRADEOFFER -22);
+    }
+
+    if (isPropertyNonFungible(property)) {
+        PrintToLog("%s(): rejected: property %d is of type non-fungible\n", __func__, property);
+        return (PKT_ERROR_TOKENS -27);
     }
 
     if (MAX_INT_8_BYTES < nValue) {
@@ -1400,6 +1573,11 @@ int CMPTransaction::logicMath_AcceptOffer_BTC()
         return (DEX_ERROR_ACCEPT -22);
     }
 
+    if (isPropertyNonFungible(property)) {
+        PrintToLog("%s(): rejected: property %d is of type non-fungible\n", __func__, property);
+        return (PKT_ERROR_TOKENS -27);
+    }
+
     if (nValue <= 0 || MAX_INT_8_BYTES < nValue) {
         PrintToLog("%s(): rejected: value out of range or zero: %d\n", __func__, nValue);
         return (DEX_ERROR_ACCEPT -23);
@@ -1424,6 +1602,11 @@ int CMPTransaction::logicMath_MetaDExTrade()
                 property,
                 block);
         return (PKT_ERROR_METADEX -22);
+    }
+
+    if (isPropertyNonFungible(property) || isPropertyNonFungible(desired_property)) {
+        PrintToLog("%s(): rejected: property %d or %d is of type non-fungible\n", __func__, property, desired_property);
+        return (PKT_ERROR_TOKENS -27);
     }
 
     if (property == desired_property) {
@@ -1502,6 +1685,11 @@ int CMPTransaction::logicMath_MetaDExCancelPrice()
         return (PKT_ERROR_METADEX -22);
     }
 
+    if (isPropertyNonFungible(property) || isPropertyNonFungible(desired_property)) {
+        PrintToLog("%s(): rejected: property %d or %d is of type non-fungible\n", __func__, property, desired_property);
+        return (PKT_ERROR_TOKENS -27);
+    }
+
     if (property == desired_property) {
         PrintToLog("%s(): rejected: property for sale %d and desired property %d must not be equal\n",
                 __func__,
@@ -1556,6 +1744,11 @@ int CMPTransaction::logicMath_MetaDExCancelPair()
                 property,
                 block);
         return (PKT_ERROR_METADEX -22);
+    }
+
+    if (isPropertyNonFungible(property) || isPropertyNonFungible(desired_property)) {
+        PrintToLog("%s(): rejected: property %d or %d is of type non-fungible\n", __func__, property, desired_property);
+        return (PKT_ERROR_TOKENS -27);
     }
 
     if (property == desired_property) {
@@ -1795,6 +1988,11 @@ int CMPTransaction::logicMath_CloseCrowdsale(CBlockIndex* pindex)
         return (PKT_ERROR_SP -22);
     }
 
+    if (isPropertyNonFungible(property)) {
+        PrintToLog("%s(): rejected: property %d is of type non-fungible\n", __func__, property);
+        return (PKT_ERROR_TOKENS -27);
+    }
+
     if (!IsPropertyIdValid(property)) {
         PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
         return (PKT_ERROR_SP -24);
@@ -1861,9 +2059,14 @@ int CMPTransaction::logicMath_CreatePropertyManaged(CBlockIndex* pindex)
         return (PKT_ERROR_SP -22);
     }
 
-    if (MSC_PROPERTY_TYPE_INDIVISIBLE != prop_type && MSC_PROPERTY_TYPE_DIVISIBLE != prop_type) {
+    if (MSC_PROPERTY_TYPE_INDIVISIBLE != prop_type && MSC_PROPERTY_TYPE_DIVISIBLE != prop_type && MSC_PROPERTY_TYPE_NONFUNGIBLE != prop_type) {
         PrintToLog("%s(): rejected: invalid property type: %d\n", __func__, prop_type);
         return (PKT_ERROR_SP -36);
+    }
+
+    if (MSC_PROPERTY_TYPE_NONFUNGIBLE == prop_type && !IsFeatureActivated(FEATURE_NONFUNGIBLE, block)) {
+        PrintToLog("%s(): rejected: non-fungible tokens are not yet activated (property type: %d)\n", __func__, prop_type);
+        return (PKT_ERROR_SP -22);
     }
 
     if ('\0' == name[0]) {
@@ -1883,6 +2086,11 @@ int CMPTransaction::logicMath_CreatePropertyManaged(CBlockIndex* pindex)
     newSP.name.assign(name);
     newSP.url.assign(url);
     newSP.data.assign(data);
+    if (prop_type != MSC_PROPERTY_TYPE_NONFUNGIBLE) {
+        newSP.unique = false;
+    } else {
+        newSP.unique = true;
+    }
     newSP.fixed = false;
     newSP.manual = true;
     newSP.creation_block = blockHash;
@@ -1891,7 +2099,11 @@ int CMPTransaction::logicMath_CreatePropertyManaged(CBlockIndex* pindex)
     uint32_t propertyId = pDbSpInfo->putSP(ecosystem, newSP);
     assert(propertyId > 0);
 
-    PrintToLog("CREATED MANUAL PROPERTY id: %d admin: %s\n", propertyId, sender);
+    if (prop_type != MSC_PROPERTY_TYPE_NONFUNGIBLE) {
+        PrintToLog("CREATED MANUAL PROPERTY id: %d admin: %s\n", propertyId, sender);
+    } else {
+        PrintToLog("CREATED MANUAL PROPERTY WITH NON-FUNGIBLE TOKENS id: %d admin: %s\n", propertyId, sender);
+    }
 
     return 0;
 }
@@ -1961,6 +2173,14 @@ int CMPTransaction::logicMath_GrantTokens(CBlockIndex* pindex, uint256& blockHas
     assert(pDbSpInfo->updateSP(property, sp));
 
     // Move the tokens
+    if (sp.unique) {
+        std::pair<int64_t,int64_t> grantedRange = pDbNFT->CreateNonFungibleTokens(property, nValue, receiver, nonfungible_data);
+        assert(grantedRange.first > 0);
+        assert(grantedRange.second > 0);
+        assert(grantedRange.second >= grantedRange.first);
+        pDbTransactionList->RecordNonFungibleGrant(txid, grantedRange.first, grantedRange.second);
+        PrintToLog("%s(): non-fungible: granted range %d to %d of property %d to %s\n", __func__, grantedRange.first, grantedRange.second, property, receiver);
+    }
     assert(update_tally_map(receiver, property, nValue, BALANCE));
 
     /**
@@ -1994,6 +2214,11 @@ int CMPTransaction::logicMath_RevokeTokens(CBlockIndex* pindex)
                 property,
                 block);
         return (PKT_ERROR_TOKENS -22);
+    }
+
+    if (isPropertyNonFungible(property)) {
+        PrintToLog("%s(): rejected: property %d is of type non-fungible\n", __func__, property);
+        return (PKT_ERROR_TOKENS -27);
     }
 
     if (nValue <= 0 || MAX_INT_8_BYTES < nValue) {
@@ -2058,6 +2283,11 @@ int CMPTransaction::logicMath_ChangeIssuer(CBlockIndex* pindex)
                 property,
                 block);
         return (PKT_ERROR_TOKENS -22);
+    }
+
+    if (isPropertyNonFungible(property)) {
+        PrintToLog("%s(): rejected: property %d is of type non-fungible\n", __func__, property);
+        return (PKT_ERROR_TOKENS -27);
     }
 
     if (!IsPropertyIdValid(property)) {
@@ -2317,6 +2547,84 @@ int CMPTransaction::logicMath_AnyData()
 
     return 0;
 }
+
+/** Tx 201 */
+int CMPTransaction::logicMath_NonFungibleData()
+{
+    if (!IsTransactionTypeAllowed(block, property, type, version)) {
+        PrintToLog("%s(): rejected: type %d or version %d not permitted for property %d at block %d\n",
+                __func__,
+                type,
+                version,
+                property,
+                block);
+        return (PKT_ERROR_SEND -22);
+    }
+
+    if (!isPropertyNonFungible(property)) {
+        PrintToLog("%s(): rejected: property %d is not of type non-fungible\n", __func__, property);
+        return (PKT_ERROR_TOKENS -27);
+    }
+
+    if (nonfungible_token_start <= 0 || MAX_INT_8_BYTES < nonfungible_token_start) {
+        PrintToLog("%s(): rejected: non-fungible token range start value out of range or zero: %d", __func__, nonfungible_token_start);
+        return (PKT_ERROR_SEND -23);
+    }
+
+    if (nonfungible_token_end <= 0 || MAX_INT_8_BYTES < nonfungible_token_end) {
+        PrintToLog("%s(): rejected: non-fungible token range end value out of range or zero: %d", __func__, nonfungible_token_end);
+        return (PKT_ERROR_SEND -23);
+    }
+
+    if (nonfungible_token_start > nonfungible_token_end) {
+        PrintToLog("%s(): rejected: non-fungible token range start value: %d is less than or equal to range end value: %d", __func__, nonfungible_token_start, nonfungible_token_end);
+        return (PKT_ERROR_SEND -23);
+    }
+
+    int64_t amount = (nonfungible_token_end - nonfungible_token_start) + 1;
+    if (amount <= 0) {
+        PrintToLog("%s(): rejected: non-fungible token range amount out of range or zero: %d", __func__, amount);
+        return (PKT_ERROR_SEND -23);
+    }
+
+    if (!pDbSpInfo->hasSP(property)) {
+        PrintToLog("%s(): rejected: property %d does not exist\n", __func__, property);
+        return (PKT_ERROR_SEND -24);
+    }
+
+    NonFungibleStorage type = nonfungible_data_type ? NonFungibleStorage::IssuerData : NonFungibleStorage::HolderData;
+
+    if (type == NonFungibleStorage::HolderData)
+    {
+        std::string rangeStartOwner = pDbNFT->GetNonFungibleTokenOwner(property, nonfungible_token_start);
+        std::string rangeEndOwner = pDbNFT->GetNonFungibleTokenOwner(property, nonfungible_token_end);
+        bool contiguous = pDbNFT->IsRangeContiguous(property, nonfungible_token_start, nonfungible_token_end);
+        if (rangeStartOwner != sender || rangeEndOwner != sender || !contiguous) {
+            PrintToLog("%s(): rejected: sender %s does not own the range data is being set on\n",
+                    __func__,
+                    sender);
+            return (PKT_ERROR_SEND -26);
+        }
+    }
+    else
+    {
+        CMPSPInfo::Entry sp;
+        pDbSpInfo->getSP(property, sp);
+        if (sp.getIssuer(block) != sender) {
+            PrintToLog("%s(): rejected: sender %s is not the issuer of property %d\n",
+                    __func__,
+                    sender,
+                    property);
+        }
+    }
+
+    // ------------------------------------------
+
+    pDbNFT->ChangeNonFungibleTokenData(property, nonfungible_token_start, nonfungible_token_end, nonfungible_data, type);
+
+    return 0;
+}
+
 
 /** Tx 65533 */
 int CMPTransaction::logicMath_Deactivation()

@@ -120,6 +120,7 @@ void SendMPDialog::updatePropSelector()
 
     for (unsigned int propertyId = 1; propertyId < nextPropIdMainEco; propertyId++) {
         if ((global_balance_money[propertyId] > 0) || (global_balance_reserved[propertyId] > 0)) {
+            if (isPropertyNonFungible(propertyId)) continue;
             std::string spName = getPropertyName(propertyId);
             std::string spId = strprintf("%d", propertyId);
             if(spName.size()>23) spName=spName.substr(0,23) + "...";
@@ -130,6 +131,7 @@ void SendMPDialog::updatePropSelector()
     }
     for (unsigned int propertyId = 2147483647; propertyId < nextPropIdTestEco; propertyId++) {
         if ((global_balance_money[propertyId] > 0) || (global_balance_reserved[propertyId] > 0)) {
+            if (isPropertyNonFungible(propertyId)) continue;
             std::string spName = getPropertyName(propertyId);
             std::string spId = strprintf("%d", propertyId);
             if(spName.size()>23) spName=spName.substr(0,23)+"...";

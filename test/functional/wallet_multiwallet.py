@@ -20,8 +20,6 @@ from test_framework.util import (
     get_rpc_proxy,
 )
 
-FEATURE_LATEST = 169900
-
 got_loading_error = False
 def test_load_unload(node, name):
     global got_loading_error
@@ -360,19 +358,6 @@ class MultiWalletTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Error initializing wallet database environment", self.nodes[1].loadwallet, wallet)
         self.nodes[0].unloadwallet(wallet)
         self.nodes[1].loadwallet(wallet)
-
-        # Fail to load if wallet is downgraded
-        shutil.copytree(os.path.join(self.options.data_wallets_dir, 'high_minversion'), wallet_dir('high_minversion'))
-        self.restart_node(0, extra_args=['-upgradewallet={}'.format(FEATURE_LATEST)])
-        assert {'name': 'high_minversion'} in self.nodes[0].listwalletdir()['wallets']
-        self.log.info("Fail -upgradewallet that results in downgrade")
-        assert_raises_rpc_error(
-            -4,
-            'Wallet loading failed: Error loading {}: Wallet requires newer version of {}'.format(
-                wallet_dir('high_minversion', 'wallet.dat'), self.config['environment']['PACKAGE_NAME']),
-            lambda: self.nodes[0].loadwallet(filename='high_minversion'),
-        )
-
 
 if __name__ == '__main__':
     MultiWalletTest().main()

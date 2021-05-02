@@ -24,7 +24,7 @@ CMPSPInfo::Entry::Entry()
   : prop_type(0), prev_prop_id(0), num_tokens(0), property_desired(0),
     deadline(0), early_bird(0), percentage(0),
     close_early(false), max_tokens(false), missedTokens(0), timeclosed(0),
-    fixed(false), manual(false) {}
+    fixed(false), manual(false), unique(false) {}
 
 bool CMPSPInfo::Entry::isDivisible() const
 {
@@ -43,6 +43,8 @@ void CMPSPInfo::Entry::print() const
             issuer,
             name,
             fixed ? "Yes" : "No",
+            manual ? "Yes" : "No",
+            unique ? "Yes" : "No",
             isDivisible() ? "Yes" : "No",
             num_tokens,
             category, subcategory, url, data);

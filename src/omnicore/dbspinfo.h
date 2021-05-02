@@ -76,6 +76,7 @@ public:
         uint256 update_block;
         bool fixed;
         bool manual;
+        bool unique;
 
         // For crowdsale properties:
         //   txid -> amount invested, crowdsale deadline, user issued tokens, issuer issued tokens
@@ -116,6 +117,7 @@ public:
             READWRITE(update_block);
             READWRITE(fixed);
             READWRITE(manual);
+            READWRITE(unique);
             READWRITE(historicalData);
             READWRITE(historicalIssuers);
         }

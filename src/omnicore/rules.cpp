@@ -73,6 +73,9 @@ std::vector<TransactionRestriction> CConsensusParams::GetRestrictions() const
         { MSC_TYPE_ANYDATA,                   MP_TX_PKT_V0,  true,    MSC_ANYDATA_BLOCK },
 
         { MSC_TYPE_OFFER_ACCEPT_A_BET,        MP_TX_PKT_V0,  false,   MSC_BET_BLOCK      },
+
+        { MSC_TYPE_SEND_NONFUNGIBLE,          MP_TX_PKT_V0,  false,   MSC_NONFUNGIBLE_BLOCK  },
+        { MSC_TYPE_NONFUNGIBLE_DATA,          MP_TX_PKT_V0,  false,   MSC_NONFUNGIBLE_BLOCK  },
     };
 
     const size_t nSize = sizeof(vTxRestrictions) / sizeof(vTxRestrictions[0]);
@@ -247,6 +250,7 @@ CMainConsensusParams::CMainConsensusParams()
     MSC_BET_BLOCK = 999999;
     MSC_STOV1_BLOCK = 999999;
     MSC_ANYDATA_BLOCK = 0;
+    MSC_NONFUNGIBLE_BLOCK = 999999;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 394500;
     DEXMATH_FEATURE_BLOCK = 395000;
@@ -290,6 +294,7 @@ CTestNetConsensusParams::CTestNetConsensusParams()
     MSC_BET_BLOCK = 999999;
     MSC_STOV1_BLOCK = 0;
     MSC_ANYDATA_BLOCK = 0;
+    MSC_NONFUNGIBLE_BLOCK = 0;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 0;
     DEXMATH_FEATURE_BLOCK = 0;
@@ -333,6 +338,7 @@ CRegTestConsensusParams::CRegTestConsensusParams()
     MSC_BET_BLOCK = 999999;
     MSC_STOV1_BLOCK = 999999;
     MSC_ANYDATA_BLOCK = 0;
+    MSC_NONFUNGIBLE_BLOCK = 0;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
     DEXMATH_FEATURE_BLOCK = 999999;
@@ -509,6 +515,9 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
         case FEATURE_FREEDEX:
             MutableConsensusParams().FREEDEX_FEATURE_BLOCK = activationBlock;
         break;
+        case FEATURE_NONFUNGIBLE:
+            MutableConsensusParams().MSC_NONFUNGIBLE_BLOCK = activationBlock;
+        break;
         default:
             supported = false;
         break;
@@ -583,6 +592,9 @@ bool DeactivateFeature(uint16_t featureId, int transactionBlock)
         case FEATURE_FREEDEX:
             MutableConsensusParams().FREEDEX_FEATURE_BLOCK = 999999;
         break;
+        case FEATURE_NONFUNGIBLE:
+            MutableConsensusParams().MSC_NONFUNGIBLE_BLOCK = 999999;
+        break;
         default:
             return false;
         break;
@@ -615,6 +627,7 @@ std::string GetFeatureName(uint16_t featureId)
         case FEATURE_STOV1: return "Cross-property Send To Owners";
         case FEATURE_FREEZENOTICE: return "Activate the waiting period for enabling freezing";
         case FEATURE_FREEDEX: return "Activate trading of any token on the distributed exchange";
+        case FEATURE_NONFUNGIBLE: return "Uniquely identifiable tokens";
 
         default: return "Unknown feature";
     }
@@ -664,6 +677,9 @@ bool IsFeatureActivated(uint16_t featureId, int transactionBlock)
         break;
         case FEATURE_FREEDEX:
             activationBlock = params.FREEDEX_FEATURE_BLOCK;
+        break;
+        case FEATURE_NONFUNGIBLE:
+            activationBlock = params.MSC_NONFUNGIBLE_BLOCK;
         break;
         default:
             return false;

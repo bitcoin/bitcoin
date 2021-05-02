@@ -106,6 +106,9 @@ background.tiff*
 # Qt Creator
 Makefile.am.user
 
+# CLion
+.idea/
+
 # Unit-tests
 Makefile.test
 bitcoin-qt_test

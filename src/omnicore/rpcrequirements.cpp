@@ -4,6 +4,7 @@
 #include <omnicore/dex.h>
 #include <omnicore/omnicore.h>
 #include <omnicore/sp.h>
+#include <omnicore/nftdb.h>
 #include <omnicore/utilsbitcoin.h>
 
 #include <amount.h>
@@ -96,6 +97,18 @@ void RequireManagedProperty(uint32_t propertyId)
     }
 }
 
+void RequireNonFungibleProperty(uint32_t propertyId)
+{
+    LOCK(cs_tally);
+    CMPSPInfo::Entry sp;
+    if (!mastercore::pDbSpInfo->getSP(propertyId, sp)) {
+        throw JSONRPCError(RPC_DATABASE_ERROR, "Failed to retrieve property");
+    }
+    if (!sp.unique) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Property identifier does not refer to a non-fungible property");
+    }
+}
+
 void RequireTokenIssuer(const std::string& address, uint32_t propertyId)
 {
     LOCK(cs_tally);
@@ -163,9 +176,32 @@ void RequireSaneDExFee(const std::string& address, uint32_t propertyId)
     }
 }
 
+void RequireSaneNonFungibleRange(int64_t tokenStart, int64_t tokenEnd)
+{
+    if (tokenStart <= 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Unique range start value must not be zero or negative");
+    }
+    if (tokenEnd <= 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Unique range end value must not be zero or negative");
+    }
+    if (tokenStart > tokenEnd) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Unique range start value must be higher than non-fungible range end value");
+    }
+}
+
 void RequireHeightInChain(int blockHeight)
 {
     if (blockHeight < 0 || mastercore::GetHeight() < blockHeight) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height is out of range");
+    }
+}
+
+void RequireNonFungibleTokenOwner(const std::string& address, uint32_t propertyId, int64_t tokenStart, int64_t tokenEnd)
+{
+    std::string rangeStartOwner = mastercore::pDbNFT->GetNonFungibleTokenOwner(propertyId, tokenStart);
+    std::string rangeEndOwner = mastercore::pDbNFT->GetNonFungibleTokenOwner(propertyId, tokenEnd);
+    bool contiguous = mastercore::pDbNFT->IsRangeContiguous(propertyId, tokenStart, tokenEnd);
+    if (rangeStartOwner != address || rangeEndOwner != address || !contiguous) {
+        throw JSONRPCError(RPC_TYPE_ERROR, "Sender does not own the range");
     }
 }

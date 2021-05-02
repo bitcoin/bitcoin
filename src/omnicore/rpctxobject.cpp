@@ -247,6 +247,12 @@ void populateRPCTypeInfo(CMPTransaction& mp_obj, UniValue& txobj, uint32_t txTyp
         case MSC_TYPE_ANYDATA:
             populateRPCTypeAnyData(mp_obj, txobj);
             break;
+        case MSC_TYPE_SEND_NONFUNGIBLE:
+            populateRPCTypeSendNonFungible(mp_obj, txobj);
+            break;
+        case MSC_TYPE_NONFUNGIBLE_DATA:
+            populateRPCTypeSetNonFungibleData(mp_obj, txobj);
+            break;
         case OMNICORE_MESSAGE_TYPE_ACTIVATION:
             populateRPCTypeActivation(mp_obj, txobj);
             break;
@@ -279,6 +285,8 @@ bool showRefForTx(uint32_t txType)
         case MSC_TYPE_FREEZE_PROPERTY_TOKENS: return true;
         case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS: return true;
         case MSC_TYPE_ANYDATA: return true;
+        case MSC_TYPE_SEND_NONFUNGIBLE: return true;
+        case MSC_TYPE_NONFUNGIBLE_DATA: return true;
         case OMNICORE_MESSAGE_TYPE_ACTIVATION: return false;
     }
     return true; // default to true, shouldn't be needed but just in case
@@ -534,6 +542,16 @@ void populateRPCTypeGrant(CMPTransaction& omniObj, UniValue& txobj)
     txobj.pushKV("propertyid", (uint64_t)propertyId);
     txobj.pushKV("divisible", isPropertyDivisible(propertyId));
     txobj.pushKV("amount", FormatMP(propertyId, omniObj.getAmount()));
+    CMPSPInfo::Entry sp;
+    {
+        LOCK(cs_tally);
+        if (!pDbSpInfo->getSP(propertyId, sp)) {
+            return; // TODO : handle error
+        }
+    }
+    if (sp.unique) {
+        populateRPCExtendedTypeGrantNonFungible(omniObj, txobj);
+    }
 }
 
 void populateRPCTypeRevoke(CMPTransaction& omniObj, UniValue& txobj)
@@ -542,6 +560,25 @@ void populateRPCTypeRevoke(CMPTransaction& omniObj, UniValue& txobj)
     txobj.pushKV("propertyid", (uint64_t)propertyId);
     txobj.pushKV("divisible", isPropertyDivisible(propertyId));
     txobj.pushKV("amount", FormatMP(propertyId, omniObj.getAmount()));
+}
+
+void populateRPCTypeSendNonFungible(CMPTransaction& omniObj, UniValue& txobj)
+{
+    uint32_t propertyId = omniObj.getProperty();
+    txobj.pushKV("propertyid", (uint64_t)propertyId);
+    txobj.pushKV("tokenstart", omniObj.getNonFungibleTokenStart());
+    txobj.pushKV("tokenend", omniObj.getNonFungibleTokenEnd());
+    int64_t amount = (omniObj.getNonFungibleTokenEnd() - omniObj.getNonFungibleTokenStart()) + 1;
+    txobj.pushKV("amount", amount);
+}
+
+void populateRPCTypeSetNonFungibleData(CMPTransaction& omniObj, UniValue& txobj)
+{
+    uint32_t propertyId = omniObj.getProperty();
+    txobj.pushKV("propertyid", (uint64_t)propertyId);
+    txobj.pushKV("tokenid", omniObj.getNonFungibleTokenStart());
+    txobj.pushKV("issuer", omniObj.getNonFungibleDataType() == 1 ? "true" : "false");
+    txobj.pushKV("data", omniObj.getNonFungibleData());
 }
 
 void populateRPCTypeChangeIssuer(CMPTransaction& omniObj, UniValue& txobj)
@@ -595,6 +632,15 @@ void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extende
     }
     txobj.pushKV("totalstofee", FormatDivisibleMP(stoFee)); // fee always OMNI so always divisible
     txobj.pushKV("recipients", receiveArray);
+}
+
+void populateRPCExtendedTypeGrantNonFungible(CMPTransaction& omniObj, UniValue& txobj)
+{
+    LOCK(cs_tally);
+    std::pair<int64_t,int64_t> grantedRange = pDbTransactionList->GetNonFungibleGrant(omniObj.getHash());
+    txobj.pushKV("tokenstart", FormatIndivisibleMP(grantedRange.first));
+    txobj.pushKV("tokenend", FormatIndivisibleMP(grantedRange.second));
+    txobj.pushKV("grantdata", omniObj.getNonFungibleData());
 }
 
 void populateRPCExtendedTypeMetaDExTrade(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, UniValue& txobj)

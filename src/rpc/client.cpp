@@ -216,6 +216,11 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_getbalanceshash", 0, "propertyid" },
     { "omni_getwalletbalances", 0, "includewatchonly" },
     { "omni_getwalletaddressbalances", 0, "includewatchonly" },
+    { "omni_getnonfungibletokens", 1, "propertyid"},
+    { "omni_getnonfungibletokendata", 0, "propertyid"},
+    { "omni_getnonfungibletokendata", 2, "tokenidend"},
+    { "omni_getnonfungibletokenranges", 0, "propertyid"},
+    { "omni_getnonfungibletokenranges", 0, "propertyid"},
 
     /* Omni Core - transaction calls */
     { "omni_send", 2, "propertyid" },
@@ -269,6 +274,13 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_sendalert", 2, "expiryvalue" },
     { "omni_funded_send", 2, "propertyid" },
     { "omni_funded_sendall", 2, "ecosystem" },
+    { "omni_sendnonfungible", 2, "propertyid"},
+    { "omni_sendnonfungible", 3, "tokenstart"},
+    { "omni_sendnonfungible", 4, "tokenend"},
+    { "omni_setnonfungibledata", 0, "propertyid"},
+    { "omni_setnonfungibledata", 1, "tokenstart"},
+    { "omni_setnonfungibledata", 2, "tokenend"},
+    { "omni_setnonfungibledata", 3, "issuer"},
 
     /* Omni Core - raw transaction calls */
     { "omni_decodetransaction", 1, "prevtxs" },
@@ -315,6 +327,12 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "omni_createpayload_disablefreezing", 0, "propertyid" },
     { "omni_createpayload_freeze", 1, "propertyid" },
     { "omni_createpayload_unfreeze", 1, "propertyid" },
+    { "omni_createpayload_sendnonfungible", 0, "propertyid"},
+    { "omni_createpayload_sendnonfungible", 1, "tokenstart"},
+    { "omni_createpayload_sendnonfungible", 2, "tokenend"},
+    { "omni_createpayload_setnonfungibledata", 0, "propertyid"},
+    { "omni_createpayload_setnonfungibledata", 1, "tokenid"},
+    { "omni_createpayload_setnonfungibledata", 2, "issuer"},
 
     /* Omni Core - backwards compatibility */
     { "getcrowdsale_MP", 0, "propertyid" },

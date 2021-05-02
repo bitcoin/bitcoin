@@ -124,6 +124,8 @@ COmniTransactionDB* mastercore::pDbTransaction;
 COmniFeeCache* mastercore::pDbFeeCache;
 //! LevelDB based storage for the MetaDEx fee distributions
 COmniFeeHistory* mastercore::pDbFeeHistory;
+//! LevelDB based storage for UITs
+CMPNonFungibleTokensDB *mastercore::pDbNFT;
 
 //! In-memory collection of DEx offers
 OfferMap mastercore::my_offers;
@@ -1616,6 +1618,7 @@ void clear_all_state()
     pDbTransaction->Clear();
     pDbFeeCache->Clear();
     pDbFeeHistory->Clear();
+    pDbNFT->Clear();
     assert(pDbTransactionList->setDBVersion() == DB_VERSION); // new set of databases, set DB version
     exodus_prev = 0;
 }
@@ -1717,6 +1720,7 @@ int mastercore_init()
                 fs::path omniTXDBPath = GetDataDir() / "Omni_TXDB";
                 fs::path feesPath = GetDataDir() / "OMNI_feecache";
                 fs::path feeHistoryPath = GetDataDir() / "OMNI_feehistory";
+                fs::path nftdbPath = GetDataDir() / "OMNI_nftdb";
                 if (fs::exists(persistPath)) fs::remove_all(persistPath);
                 if (fs::exists(txlistPath)) fs::remove_all(txlistPath);
                 if (fs::exists(tradePath)) fs::remove_all(tradePath);
@@ -1725,6 +1729,7 @@ int mastercore_init()
                 if (fs::exists(omniTXDBPath)) fs::remove_all(omniTXDBPath);
                 if (fs::exists(feesPath)) fs::remove_all(feesPath);
                 if (fs::exists(feeHistoryPath)) fs::remove_all(feeHistoryPath);
+                if (fs::exists(nftdbPath)) fs::remove_all(nftdbPath);
                 PrintToLog("Success clearing persistence files in datadir %s\n", GetDataDir().string());
                 startClean = true;
             } catch (const fs::filesystem_error& e) {
@@ -1740,6 +1745,7 @@ int mastercore_init()
         pDbTransaction = new COmniTransactionDB(GetDataDir() / "Omni_TXDB", fReindex);
         pDbFeeCache = new COmniFeeCache(GetDataDir() / "OMNI_feecache", fReindex);
         pDbFeeHistory = new COmniFeeHistory(GetDataDir() / "OMNI_feehistory", fReindex);
+        pDbNFT = new CMPNonFungibleTokensDB(GetDataDir() / "OMNI_nftdb", fReindex);
 
         pathStateFiles = GetDataDir() / "MP_persist";
         TryCreateDirectories(pathStateFiles);
@@ -1898,6 +1904,10 @@ int mastercore_shutdown()
     if (pDbFeeHistory) {
         delete pDbFeeHistory;
         pDbFeeHistory = nullptr;
+    }
+    if (pDbNFT) {
+        delete pDbNFT;
+        pDbNFT = nullptr;
     }
 
     mastercoreInitialized = 0;
@@ -2096,6 +2106,9 @@ int mastercore_handler_block_end(int nBlockNow, CBlockIndex const * pBlockIndex,
             uint256 consensusHash = GetConsensusHash();
             PrintToLog("Consensus hash for block %d: %s\n", nBlockNow, consensusHash.GetHex());
         }
+
+        // request nftdb sanity check
+        pDbNFT->SanityCheck();
 
         // request checkpoint verification
         checkpointValid = VerifyCheckpoint(nBlockNow, pBlockIndex->GetBlockHash());

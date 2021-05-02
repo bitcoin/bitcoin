@@ -29,6 +29,7 @@
 #include <omnicore/sto.h>
 #include <omnicore/tally.h>
 #include <omnicore/tx.h>
+#include <omnicore/nftdb.h>
 #include <omnicore/utilsbitcoin.h>
 #include <omnicore/version.h>
 #include <omnicore/walletfetchtxs.h>
@@ -108,6 +109,7 @@ void PropertyToJSON(const CMPSPInfo::Entry& sProperty, UniValue& property_obj)
     property_obj.pushKV("creationtxid", sProperty.txid.GetHex());
     property_obj.pushKV("fixedissuance", sProperty.fixed);
     property_obj.pushKV("managedissuance", sProperty.manual);
+    property_obj.pushKV("non-fungibletoken", sProperty.unique);
 }
 
 void MetaDexObjectToJSON(const CMPMetaDEx& obj, UniValue& metadex_obj)
@@ -164,6 +166,199 @@ bool BalanceToJSON(const std::string& address, uint32_t property, UniValue& bala
     }
 
     return (nAvailable || nReserved || nFrozen);
+}
+
+// display the non-fungible tokens owned by an address for a property
+UniValue omni_getnonfungibletokens(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"omni_getnonfungibletokens",
+       "\nReturns the non-fungible tokens for a given address and property.\n",
+       {
+           {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "the address"},
+           {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the property identifier"},
+       },
+       RPCResult{
+           RPCResult::Type::ARR, "", "",
+           {
+               {RPCResult::Type::OBJ, "", "",
+               {
+                   {RPCResult::Type::NUM, "tokenstart", "the first token in this range"},
+                   {RPCResult::Type::NUM, "tokenend", "the last token in this range"},
+                   {RPCResult::Type::NUM, "amount", "the amount of tokens in the range"},
+               }},
+           }
+       },
+       RPCExamples{
+           HelpExampleCli("omni_getnonfungibletokens", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\" 1")
+           + HelpExampleRpc("omni_getnonfungibletokens", "\"1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P\", 1")
+       }
+    }.Check(request);
+
+    std::string address = ParseAddress(request.params[0]);
+    uint32_t propertyId = ParsePropertyId(request.params[1]);
+
+    RequireExistingProperty(propertyId);
+    RequireNonFungibleProperty(propertyId);
+
+    UniValue response(UniValue::VARR);
+
+    std::vector<std::pair<int64_t,int64_t> > uniqueRanges = pDbNFT->GetAddressNonFungibleTokens(propertyId, address);
+
+    for (std::vector<std::pair<int64_t,int64_t> >::iterator it = uniqueRanges.begin(); it != uniqueRanges.end(); ++it) {
+        std::pair<int64_t,int64_t> range = *it;
+        int64_t amount = (range.second - range.first) + 1;
+        UniValue uniqueRangeObj(UniValue::VOBJ);
+        uniqueRangeObj.pushKV("tokenstart", range.first);
+        uniqueRangeObj.pushKV("tokenend", range.second);
+        uniqueRangeObj.pushKV("amount", amount);
+        response.push_back(uniqueRangeObj);
+    }
+
+    return response;
+}
+
+// provides all data for a specific token
+UniValue omni_getnonfungibletokendata(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"omni_getnonfungibletokendata",
+       "\nReturns owner and all data set in a non-fungible token. If looking\n"
+       "up a single token on tokenidstart can be specified only.\n",
+       {
+           {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the property identifier"},
+           {"tokenidstart", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "the first non-fungible token in range"},
+           {"tokenidend", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "the last non-fungible token in range"},
+       },
+       RPCResult
+           {RPCResult::Type::ARR, "", "",
+           {
+               {RPCResult::Type::OBJ, "", "",
+               {
+                   {RPCResult::Type::STR, "owner", "the Bitcoin address of the owner"},
+                   {RPCResult::Type::STR, "grantdata", "contents of the grant data field"},
+                   {RPCResult::Type::STR, "issuerdata", "contents of the issuer data field"},
+                   {RPCResult::Type::STR, "holderdata", "contents of the holder data field"},
+               }},
+           }
+       },
+       RPCExamples{
+           HelpExampleCli("omni_getnonfungibletokendata", "1 10 20")
+           + HelpExampleRpc("omni_getnonfungibletokendata", "1, 10, 20")
+       }
+    }.Check(request);
+
+    uint32_t propertyId = ParsePropertyId(request.params[0]);
+
+    RequireExistingProperty(propertyId);
+    RequireNonFungibleProperty(propertyId);
+
+    // Range empty, return null.
+    auto range = pDbNFT->GetNonFungibleTokenRanges(propertyId);
+    if (range.begin() == range.end()) {
+        return NullUniValue;
+    }
+
+    // Get token range
+    int64_t start{1};
+    int64_t end = std::prev(range.end())->second.second;
+
+    if (!request.params[1].isNull()) {
+        start = request.params[1].get_int();
+
+        // Make sure start sane.
+        if (start < 1) {
+            start = 1;
+        } else if (start > end) {
+            start = end;
+        }
+
+        // Allow token start to return single token if end not provided
+        if (request.params[2].isNull()) {
+            end = start;
+        }
+    }
+
+    if (!request.params[2].isNull()) {
+        end = request.params[2].get_int();
+
+        // Make sure end sane.
+        if (end < start) {
+            end = start;
+        } else if (end > std::prev(range.end())->second.second) {
+            end = std::prev(range.end())->second.second;
+        }
+    }
+
+    UniValue result(UniValue::VARR);
+    for (; start <= end; ++start)
+    {
+        auto owner = pDbNFT->GetNonFungibleTokenOwner(propertyId, start);
+        auto grantData = pDbNFT->GetNonFungibleTokenData(propertyId, start, NonFungibleStorage::GrantData);
+        auto issuerData = pDbNFT->GetNonFungibleTokenData(propertyId, start, NonFungibleStorage::IssuerData);
+        auto holderData = pDbNFT->GetNonFungibleTokenData(propertyId, start, NonFungibleStorage::HolderData);
+
+        UniValue rpcObj(UniValue::VOBJ);
+        rpcObj.pushKV("index", start);
+        rpcObj.pushKV("owner", owner);
+        rpcObj.pushKV("grantdata", grantData);
+        rpcObj.pushKV("issuerdata", issuerData);
+        rpcObj.pushKV("holderdata", holderData);
+        result.push_back(rpcObj);
+    }
+
+    return result;
+}
+
+// displays all the ranges and their addresses for a property
+UniValue omni_getnonfungibletokenranges(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"omni_getnonfungibletokenranges",
+       "\nReturns the ranges and their addresses for a non-fungible token property.\n",
+       {
+           {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the property identifier"},
+       },
+       RPCResult{
+           RPCResult::Type::ARR, "", "",
+           {
+               {RPCResult::Type::OBJ, "", "",
+               {
+                   {RPCResult::Type::STR, "address", "the address"},
+                   {RPCResult::Type::NUM, "tokenstart", "the first token in this range"},
+                   {RPCResult::Type::NUM, "tokenend", "the last token in this range"},
+                   {RPCResult::Type::NUM, "amount", "the amount of tokens in the range"},
+               }},
+           }
+       },
+       RPCExamples{
+           HelpExampleCli("omni_getnonfungibletokenranges", "1")
+           + HelpExampleRpc("omni_getnonfungibletokenranges", "1")
+       }
+    }.Check(request);
+
+    uint32_t propertyId = ParsePropertyId(request.params[0]);
+
+    RequireExistingProperty(propertyId);
+    RequireNonFungibleProperty(propertyId);
+
+    UniValue response(UniValue::VARR);
+
+    std::vector<std::pair<std::string,std::pair<int64_t,int64_t> > > rangeMap = pDbNFT->GetNonFungibleTokenRanges(propertyId);
+
+    for (std::vector<std::pair<std::string,std::pair<int64_t,int64_t> > >::iterator it = rangeMap.begin(); it!= rangeMap.end(); ++it) {
+        std::pair<std::string,std::pair<int64_t,int64_t> > entry = *it;
+        std::string address = entry.first;
+        std::pair<int64_t,int64_t> range = entry.second;
+        int64_t amount = (range.second - range.first) + 1;
+
+        UniValue uniqueRangeObj(UniValue::VOBJ);
+        uniqueRangeObj.pushKV("address", address);
+        uniqueRangeObj.pushKV("tokenstart", range.first);
+        uniqueRangeObj.pushKV("tokenend", range.second);
+        uniqueRangeObj.pushKV("amount", amount);
+
+        response.push_back(uniqueRangeObj);
+    }
+
+    return response;
 }
 
 // Obtains details of a fee distribution
@@ -763,6 +958,13 @@ static UniValue mscrpc(const JSONRPCRequest& request)
             break;
         }
 #endif
+        case 13:
+        {
+            // dump the non-fungible tokens database
+            pDbNFT->printAll();
+            pDbNFT->printStats();
+            break;
+        }
         case 14:
         {
             LOCK(cs_tally);
@@ -1201,6 +1403,7 @@ static UniValue omni_getproperty(const JSONRPCRequest& request)
                {RPCResult::Type::STR_HEX, "creationtxid", "the hex-encoded creation transaction hash"},
                {RPCResult::Type::BOOL, "fixedissuance", "whether the token supply is fixed"},
                {RPCResult::Type::BOOL, "managedissuance", "whether the token supply is managed"},
+               {RPCResult::Type::BOOL, "non-fungibletoken", "whether the property contains non-fungible tokens"},
                {RPCResult::Type::BOOL, "freezingenabled", "whether freezing is enabled for the property (managed properties only)"},
                {RPCResult::Type::STR_AMOUNT, "totaltokens", "the total number of tokens in existence"},
            },
@@ -2685,6 +2888,9 @@ static const CRPCCommand commands[] =
     { "omni layer (data retrieval)", "omni_getfeedistribution",        &omni_getfeedistribution,         {"distributionid"} },
     { "omni layer (data retrieval)", "omni_getfeedistributions",       &omni_getfeedistributions,        {"propertyid"} },
     { "omni layer (data retrieval)", "omni_getbalanceshash",           &omni_getbalanceshash,            {"propertyid"} },
+    { "omni layer (data retrieval)", "omni_getnonfungibletokens",      &omni_getnonfungibletokens,       {"address", "propertyid"} },
+    { "omni layer (data retrieval)", "omni_getnonfungibletokendata",   &omni_getnonfungibletokendata,    {"propertyid", "tokenidstart", "tokenidend"} },
+    { "omni layer (data retrieval)", "omni_getnonfungibletokenranges", &omni_getnonfungibletokenranges,  {"propertyid"} },
 #ifdef ENABLE_WALLET
     { "omni layer (data retrieval)", "omni_listtransactions",          &omni_listtransactions,           {"address", "count", "skip", "startblock", "endblock"} },
     { "omni layer (data retrieval)", "omni_getfeeshare",               &omni_getfeeshare,                {"address", "ecosystem"} },

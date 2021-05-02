@@ -16,6 +16,7 @@ OMNICORE_H = \
   omnicore/errors.h \
   omnicore/log.h \
   omnicore/mdex.h \
+  omnicore/nftdb.h \
   omnicore/notifications.h \
   omnicore/omnicore.h \
   omnicore/parse_string.h \
@@ -60,6 +61,7 @@ OMNICORE_CPP = \
   omnicore/encoding.cpp \
   omnicore/log.cpp \
   omnicore/mdex.cpp \
+  omnicore/nftdb.cpp \
   omnicore/notifications.cpp \
   omnicore/omnicore.cpp \
   omnicore/parse_string.cpp \

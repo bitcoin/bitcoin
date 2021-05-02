@@ -398,6 +398,32 @@ int CMPTxList::setDBVersion()
     return getDBVersion();
 }
 
+std::pair<int64_t,int64_t> CMPTxList::GetNonFungibleGrant(const uint256& txid)
+{
+    std::string strKey = strprintf("%s-UG", txid.ToString());
+    std::string strValue;
+    leveldb::Status status = pdb->Get(readoptions, strKey, &strValue);
+    if (status.ok()) {
+        std::vector<std::string> vstr;
+        boost::split(vstr, strValue, boost::is_any_of("-"), boost::token_compress_on);
+        if (2 == vstr.size()) {
+            return std::make_pair(boost::lexical_cast<int64_t>(vstr[0]), boost::lexical_cast<int64_t>(vstr[1]));
+        }
+    }
+    return std::make_pair(0,0);
+}
+
+void CMPTxList::RecordNonFungibleGrant(const uint256& txid, int64_t start, int64_t end)
+{
+    assert(pdb);
+
+    const std::string key = txid.ToString() + "-UG";
+    const std::string value = strprintf("%d-%d", start, end);
+
+    leveldb::Status status = pdb->Put(writeoptions, key, value);
+    PrintToLog("%s(): Writing Non-Fungible Grant range %s:%d-%d (%s), line %d, file: %s\n", __FUNCTION__, key, start, end, status.ToString(), __LINE__, __FILE__);
+}
+
 bool CMPTxList::exists(const uint256 &txid)
 {
     if (!pdb) return false;

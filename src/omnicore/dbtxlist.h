@@ -2,6 +2,7 @@
 #define BITCOIN_OMNICORE_DBTXLIST_H
 
 #include <omnicore/dbbase.h>
+#include <omnicore/nftdb.h>
 
 #include <fs.h>
 #include <uint256.h>
@@ -24,6 +25,8 @@ public:
     void recordMetaDExCancelTX(const uint256 &txidMaster, const uint256& txidSub, bool fValid, int nBlock, unsigned int propertyId, uint64_t nValue);
     /** Records a "send all" sub record. */
     void recordSendAllSubRecord(const uint256& txid, int subRecordNumber, uint32_t propertyId, int64_t nvalue);
+    /** Records the range awarded in a grant applied to a non-fungible property. */
+    void RecordNonFungibleGrant(const uint256 &txid, int64_t start, int64_t end);
 
     std::string getKeyValue(std::string key);
     uint256 findMetaDExCancel(const uint256 txid);
@@ -33,6 +36,9 @@ public:
     bool getPurchaseDetails(const uint256 txid, int purchaseNumber, std::string* buyer, std::string* seller, uint64_t* vout, uint64_t *propertyId, uint64_t* nValue);
     /** Retrieves details about a "send all" record. */
     bool getSendAllDetails(const uint256& txid, int subSend, uint32_t& propertyId, int64_t& amount);
+    /** Retrieves details about the range awarded in a grant to a non-fungible property. */
+    std::pair<int64_t,int64_t> GetNonFungibleGrant(const uint256& txid);
+
     int getMPTransactionCountTotal();
     int getMPTransactionCountBlock(int block);
     /** Returns a list of all Omni transactions in the given block range. */

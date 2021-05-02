@@ -33,6 +33,8 @@ void populateRPCTypeCreatePropertyManual(CMPTransaction& omniObj, UniValue& txob
 void populateRPCTypeCloseCrowdsale(CMPTransaction& omniObj, UniValue& txobj);
 void populateRPCTypeGrant(CMPTransaction& omniObj, UniValue& txobj);
 void populateRPCTypeRevoke(CMPTransaction& omniOobj, UniValue& txobj);
+void populateRPCTypeSendNonFungible(CMPTransaction& omniObj, UniValue& txobj);
+void populateRPCTypeSetNonFungibleData(CMPTransaction& omniObj, UniValue& txobj);
 void populateRPCTypeChangeIssuer(CMPTransaction& omniObj, UniValue& txobj);
 void populateRPCTypeActivation(CMPTransaction& omniObj, UniValue& txobj);
 void populateRPCTypeEnableFreezing(CMPTransaction& omniObj, UniValue& txobj);
@@ -42,6 +44,7 @@ void populateRPCTypeUnfreezeTokens(CMPTransaction& omniObj, UniValue& txobj);
 void populateRPCTypeAnyData(CMPTransaction& omniObj, UniValue& txobj);
 
 void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extendedDetailsFilter, UniValue& txobj, uint16_t version, interfaces::Wallet* iWallet = nullptr);
+void populateRPCExtendedTypeGrantNonFungible(CMPTransaction& omniObj, UniValue& txobj);
 void populateRPCExtendedTypeMetaDExTrade(const uint256& txid, uint32_t propertyIdForSale, int64_t amountForSale, UniValue& txobj);
 void populateRPCExtendedTypeMetaDExCancel(const uint256& txid, UniValue& txobj);
 
