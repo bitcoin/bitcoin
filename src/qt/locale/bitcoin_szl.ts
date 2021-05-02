@@ -1934,10 +1934,6 @@
         <translation>Imyntnŏ dugość kety wersyje (%i) przekrŏczŏ maksymalnõ dopuszczalnõ dugość (%i). Zmyńsz wielość abo miara parametra uacomment.</translation>
     </message>
     <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Feler w czasie wgrŏwaniŏ portmanyja %s. Podanŏ tuplowane miano zbioru w -wallet.</translation>
-    </message>
-    <message>
         <source>Starting network threads...</source>
         <translation>Sztartowanie wōntkōw necowych...</translation>
     </message>

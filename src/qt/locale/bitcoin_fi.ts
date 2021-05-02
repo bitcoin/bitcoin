@@ -183,7 +183,7 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
     </message>
     <message>
         <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Syötä uusi salasanalause lompakolle &lt;br/&gt;Ole hyvä ja käytä salasanalausetta, jossa on &lt;b&gt;kymmenen tai enemmän sattumanvaraisia merkkjä tai &lt;b&gt;kahdeksan tai enemmän sanoja&lt;/b&gt; .</translation>
+        <translation>Syötä uusi salasanalause lompakolle &lt;br/&gt;Käytä salasanalausetta, jossa on &lt;b&gt;vähintään kymmenen sattumanvaraista merkkiä tai &lt;b&gt;vähintään kahdeksan sanaa&lt;/b&gt; .</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
@@ -884,6 +884,10 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
         <source>Create</source>
         <translation>Luo</translation>
     </message>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>Koostettu ilman sqlite-tukea (vaaditaan descriptor-lompakoille)</translation>
+    </message>
 </context>
 <context>
     <name>EditAddressDialog</name>
@@ -1206,7 +1210,7 @@ Allekirjoitus on mahdollista vain 'legacy'-tyyppisillä osoitteilla.</translatio
     </message>
     <message>
         <source>Open Configuration File</source>
-        <translation>Avaa asetustiedosto.</translation>
+        <translation>Avaa asetustiedosto</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -3692,6 +3696,10 @@ Siirry osioon Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
         <translation>Tietokannan todennus epäonnistui</translation>
     </message>
     <message>
+        <source>Ignoring duplicate -wallet %s.</source>
+        <translation>Ohitetaan kaksois -lompakko %s.</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>Tuodaan...</translation>
     </message>
@@ -3996,10 +4004,6 @@ Siirry osioon Tiedosto &gt; Avaa lompakko ladataksesi lompakon.
     <message>
         <source>%s is set very high!</source>
         <translation>%s on asetettu todella korkeaksi!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Virhe ladattaessa lompakkoa %s. -wallet -tiedostonimi esiintyy useaan kertaan.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

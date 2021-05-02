@@ -75,7 +75,7 @@
     </message>
     <message>
         <source>&amp;Edit</source>
-        <translation> &amp;ቀይር</translation>
+        <translation> &amp;አርም</translation>
     </message>
     <message>
         <source>Export Address List</source>
@@ -269,9 +269,151 @@
         <source>&amp;Options...</source>
         <translation>&amp;አማራጮች...</translation>
     </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>ዋሌት ፍጠር</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>አዲስ ዋሌት ፍጠር</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>ዋሌት</translation>
+    </message>
+    <message>
+        <source>&amp;Send</source>
+        <translation>&amp;ላክ</translation>
+    </message>
+    <message>
+        <source>&amp;Receive</source>
+        <translation>&amp;ተቀበል</translation>
+    </message>
+    <message>
+        <source>&amp;Show / Hide</source>
+        <translation>&amp;አሳይ/ ደብቅ</translation>
+    </message>
+    <message>
+        <source>&amp;File</source>
+        <translation>&amp;ፋይል</translation>
+    </message>
+    <message>
+        <source>&amp;Settings</source>
+        <translation>&amp;ቅንብሮች</translation>
+    </message>
+    <message>
+        <source>&amp;Help</source>
+        <translation>&amp;እርዳታ</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>ስህተት</translation>
+    </message>
+    <message>
+        <source>Warning</source>
+        <translation>ማሳስቢያ</translation>
+    </message>
+    <message>
+        <source>Information</source>
+        <translation>መረጃ</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>ዋሌት ክፈት</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>ዋሌት ክፈት</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>ዋሌት ዝጋ</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>ዋሌት ዝጋ</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>መደበኛ ዋሌት</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>አሳንስ</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>እሳድግ</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>ስህተት፥ %1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>ማሳሰቢያ፥ %1</translation>
+    </message>
+    <message>
+        <source>Date: %1
+</source>
+        <translation>ቀን፥ %1
+</translation>
+    </message>
+    <message>
+        <source>Amount: %1
+</source>
+        <translation>መጠን፥ %1
+</translation>
+    </message>
+    <message>
+        <source>Address: %1
+</source>
+        <translation>አድራሻ፥ %1
+</translation>
+    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>ብዛት፥</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>መጠን፥</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation>ክፍያ፥</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>መጠን</translation>
+    </message>
+    <message>
+        <source>Date</source>
+        <translation>ቀን</translation>
+    </message>
+    <message>
+        <source>Copy address</source>
+        <translation>አድራሻ ቅዳ</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>መጠኑ ገልብጥ</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>ክፍያው ቅዳ</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>አዎ</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>አይ</translation>
+    </message>
     <message>
         <source>(no label)</source>
         <translation>(መለያ ስም የለም)</translation>
@@ -282,33 +424,93 @@
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Wallet Name</source>
+        <translation>ዋሌት ስም</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>ፍጠር</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
     </context>
 <context>
     <name>FreespaceChecker</name>
+    <message>
+        <source>name</source>
+        <translation>ስም</translation>
+    </message>
     </context>
 <context>
     <name>HelpMessageDialog</name>
+    <message>
+        <source>version</source>
+        <translation>ስሪት</translation>
+    </message>
+    <message>
+        <source>About %1</source>
+        <translation>ስለ እኛ %1</translation>
+    </message>
     </context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation>እንኳን ደህና መጣህ</translation>
+    </message>
+    <message>
+        <source>Welcome to %1.</source>
+        <translation>እንኳን  ወድ %1 በደህና መጣህ።</translation>
+    </message>
+    <message>
+        <source>Bitcoin</source>
+        <translation>ቢትኮይን</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>ስህተት</translation>
+    </message>
     </context>
 <context>
     <name>ModalOverlay</name>
+    <message>
+        <source>Form</source>
+        <translation>ከ</translation>
+    </message>
+    <message>
+        <source>Unknown...</source>
+        <translation>የማይታወቅ...</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>ደብቅ</translation>
+    </message>
     </context>
 <context>
     <name>OpenURIDialog</name>
     </context>
 <context>
     <name>OpenWalletActivity</name>
+    <message>
+        <source>default wallet</source>
+        <translation>መደበኛ ዋሌት</translation>
+    </message>
     </context>
 <context>
     <name>OptionsDialog</name>
+    <message>
+        <source>Error</source>
+        <translation>ስህተት</translation>
+    </message>
     </context>
 <context>
     <name>OverviewPage</name>
+    <message>
+        <source>Form</source>
+        <translation>ከ</translation>
+    </message>
     </context>
 <context>
     <name>PSBTOperationsDialog</name>
@@ -321,6 +523,14 @@
     </context>
 <context>
     <name>QObject</name>
+    <message>
+        <source>Amount</source>
+        <translation>መጠን</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>ስህተት፥ %1</translation>
+    </message>
     </context>
 <context>
     <name>QRImageWidget</name>
@@ -330,12 +540,28 @@
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
+    <message>
+        <source>Copy amount</source>
+        <translation>መጠኑ ገልብጥ</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Amount:</source>
+        <translation>መጠን፥</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>ዋሌት</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>ቀን</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation>መለያ ስም</translation>
@@ -347,6 +573,30 @@
     </context>
 <context>
     <name>SendCoinsDialog</name>
+    <message>
+        <source>Quantity:</source>
+        <translation>ብዛት፥</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>መጠን፥</translation>
+    </message>
+    <message>
+        <source>Fee:</source>
+        <translation>ክፍያ፥</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>ደብቅ</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>መጠኑ ገልብጥ</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>ክፍያው ቅዳ</translation>
+    </message>
     <message>
         <source>(no label)</source>
         <translation>(መለያ ስም የለም)</translation>
@@ -366,12 +616,24 @@
     </context>
 <context>
     <name>TransactionDesc</name>
+    <message>
+        <source>Date</source>
+        <translation>ቀን</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>መጠን</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
     </context>
 <context>
     <name>TransactionTableModel</name>
+    <message>
+        <source>Date</source>
+        <translation>ቀን</translation>
+    </message>
     <message>
         <source>Label</source>
         <translation>መለያ ስም</translation>
@@ -384,12 +646,24 @@
 <context>
     <name>TransactionView</name>
     <message>
+        <source>Copy address</source>
+        <translation>አድራሻ ቅዳ</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>መጠኑ ገልብጥ</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>ኮማ ሴፓሬትድ ፋይል (*.csv)</translation>
     </message>
     <message>
+        <source>Date</source>
+        <translation>ቀን</translation>
+    </message>
+    <message>
         <source>Label</source>
-        <translation>መለያ ስም</translation>
+        <translation>መለዮ</translation>
     </message>
     <message>
         <source>Address</source>
@@ -397,7 +671,7 @@
     </message>
     <message>
         <source>Exporting Failed</source>
-        <translation>ወደ ውጪ መላክ አልተሳካም</translation>
+        <translation>መላክ አልተሳካም</translation>
     </message>
     </context>
 <context>
@@ -405,13 +679,25 @@
     </context>
 <context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>ዋሌት ዝጋ</translation>
+    </message>
     </context>
 <context>
     <name>WalletFrame</name>
-    </context>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>አዲስ ዋሌት ፍጠር</translation>
+    </message>
+</context>
 <context>
     <name>WalletModel</name>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>መደበኛ ዋሌት</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>
@@ -421,6 +707,10 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>በአሁኑ ማውጫ ውስጥ ያለውን መረጃ ወደ አንድ ፋይል ላክ</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>ስህተት</translation>
     </message>
     </context>
 <context>

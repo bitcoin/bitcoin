@@ -7,7 +7,7 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Utwórz nowy adres</translation>
+        <translation>Stwórz nowy portfel</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -329,11 +329,11 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
     </message>
     <message>
         <source>Create Wallet...</source>
-        <translation>Stwórz portfel...</translation>
+        <translation>Utwórz portfel...</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
-        <translation>Stwórz nowy portfel</translation>
+        <translation>Utwórz nowy portfel</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -449,7 +449,7 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
     </message>
     <message>
         <source>Processing blocks on disk...</source>
-        <translation>Przetwarzanie blocks on disk...</translation>
+        <translation>Przetwarzanie bloków na dysku...</translation>
     </message>
     <message numerus="yes">
         <source>Processed %n block(s) of transaction history.</source>
@@ -546,6 +546,14 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Pokaż pomoc %1 aby zobaczyć listę wszystkich opcji lnii poleceń.</translation>
+    </message>
+    <message>
+        <source>&amp;Mask values</source>
+        <translation>&amp;Schowaj wartości</translation>
+    </message>
+    <message>
+        <source>Mask the values in the Overview tab</source>
+        <translation>Schowaj wartości w zakładce Podsumowanie</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -659,7 +667,11 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
         <source>Original message:</source>
         <translation>Wiadomość oryginalna:</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation>Wystąpił fatalny błąd. %1 nie może być kontynuowany i zostanie zakończony.</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -861,12 +873,20 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
         <translation>Stwórz czysty portfel</translation>
     </message>
     <message>
+        <source>Use descriptors for scriptPubKey management</source>
+        <translation>Użyj deskryptorów do zarządzania scriptPubKey</translation>
+    </message>
+    <message>
         <source>Descriptor Wallet</source>
         <translation>Portfel deskryptora</translation>
     </message>
     <message>
         <source>Create</source>
         <translation>Stwórz</translation>
+    </message>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>Skompilowano bez wsparcia sqlite (wymaganego dla deskryptorów potfeli)</translation>
     </message>
 </context>
 <context>
@@ -1341,6 +1361,14 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
         <translation>Wybierz pokazywanie lub nie funkcji kontroli monet.</translation>
     </message>
     <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation>Połącz się z siecią Bitcoin przy pomocy oddzielnego SOCKS5 proxy dla sieci TOR.</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
+        <translation>Użyj oddzielnego proxy SOCKS&amp;5 aby osiągnąć węzły w ukrytych usługach Tor:</translation>
+    </message>
+    <message>
         <source>&amp;Third party transaction URLs</source>
         <translation>&amp;Zewnętrzny URL podglądu transakcji</translation>
     </message>
@@ -1475,12 +1503,24 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
         <source>Current total balance in watch-only addresses</source>
         <translation>Łączna kwota na podglądanych adresach</translation>
     </message>
-    </context>
+    <message>
+        <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
+        <translation>Tryb Prywatny został włączony dla zakłądki Podgląd. By odkryć wartości, odznacz Ustawienia-&gt;Ukrywaj wartości.</translation>
+    </message>
+</context>
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
         <source>Dialog</source>
         <translation>Dialog</translation>
+    </message>
+    <message>
+        <source>Sign Tx</source>
+        <translation>Podpisz transakcję (Tx)</translation>
+    </message>
+    <message>
+        <source>Broadcast Tx</source>
+        <translation>Rozgłoś transakcję (Tx)</translation>
     </message>
     <message>
         <source>Copy to Clipboard</source>
@@ -1503,6 +1543,14 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
         <translation>Nie udało się podpisać transakcji: %1</translation>
     </message>
     <message>
+        <source>Could not sign any more inputs.</source>
+        <translation>Nie udało się podpisać więcej wejść.</translation>
+    </message>
+    <message>
+        <source>Signed %1 inputs, but more signatures are still required.</source>
+        <translation>Podpisano %1 wejść, ale potrzebnych jest więcej podpisów.</translation>
+    </message>
+    <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
         <translation>transakcja</translation>
     </message>
@@ -1511,12 +1559,20 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
         <translation>Nieznany błąd podczas przetwarzania transakcji.</translation>
     </message>
     <message>
+        <source>Transaction broadcast failed: %1</source>
+        <translation>Nie udało się rozgłosić transakscji: %1</translation>
+    </message>
+    <message>
         <source>PSBT copied to clipboard.</source>
         <translation>PSBT skopiowane do schowka</translation>
     </message>
     <message>
         <source>Save Transaction Data</source>
         <translation>Zapisz dane transakcji</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>Częściowo Podpisana Transakcja (*.psbt)</translation>
     </message>
     <message>
         <source>PSBT saved to disk.</source>
@@ -1543,10 +1599,34 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
         <translation>lub</translation>
     </message>
     <message>
+        <source>Transaction has %1 unsigned inputs.</source>
+        <translation>Transakcja ma %1 niepodpisane wejścia.</translation>
+    </message>
+    <message>
+        <source>Transaction is missing some information about inputs.</source>
+        <translation>Transakcja ma niekompletne informacje o niektórych wejściach.</translation>
+    </message>
+    <message>
         <source>Transaction still needs signature(s).</source>
         <translation>Transakcja ciągle oczekuje na podpis(y).</translation>
     </message>
-    </context>
+    <message>
+        <source>(But this wallet cannot sign transactions.)</source>
+        <translation>(Ale ten portfel nie może podipisać transakcji.)</translation>
+    </message>
+    <message>
+        <source>(But this wallet does not have the right keys.)</source>
+        <translation>(Ale ten portfel nie posiada wlaściwych kluczy.)</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation>Transakcja jest w pełni podpisana i gotowa do rozgłoszenia.</translation>
+    </message>
+    <message>
+        <source>Transaction status is unknown.</source>
+        <translation>Status transakcji nie jest znany.</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1710,6 +1790,10 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
     <message>
         <source>Error: %1</source>
         <translation>Błąd: %1</translation>
+    </message>
+    <message>
+        <source>Error initializing settings: %1</source>
+        <translation>Błąd inicjowania ustawień: %1</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
@@ -1888,6 +1972,10 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
     <message>
         <source>Node window</source>
         <translation>Okno węzła</translation>
+    </message>
+    <message>
+        <source>Current block height</source>
+        <translation>Obecna ilość bloków</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2160,7 +2248,11 @@ Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
         <source>Could not unlock wallet.</source>
         <translation>Nie można było odblokować portfela.</translation>
     </message>
-    </context>
+    <message>
+        <source>Could not generate new %1 address</source>
+        <translation>Nie udało się wygenerować nowego adresu %1</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -2463,6 +2555,10 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
         <translation>Zapisz dane transakcji</translation>
     </message>
     <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>Częściowo Podpisana Transakcja (*.psbt)</translation>
+    </message>
+    <message>
         <source>PSBT saved</source>
         <translation>Zapisano PSBT</translation>
     </message>
@@ -2473,6 +2569,10 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
         <translation>Możesz później zwiększyć opłatę (sygnalizuje podmień-przez-opłatę (RBF), BIP 125).</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>Proszę przejrzeć propozycję transakcji. Zostanie utworzona częściowo podpisana transakcja (ang. PSBT), którą można skopiować, a następnie podpisać np. offline z portfelem %1 lub z innym portfelem zgodnym z PSBT.</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -3301,6 +3401,14 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
 <context>
     <name>WalletFrame</name>
     <message>
+        <source>No wallet has been loaded.
+Go to File &gt; Open Wallet to load a wallet.
+- OR -</source>
+        <translation>Portfel nie został wybrany.
+Przejdź do Plik &gt; Otwórz Portfel aby wgrać portfel.
+</translation>
+    </message>
+    <message>
         <source>Create a new wallet</source>
         <translation>Stwórz nowy portfel</translation>
     </message>
@@ -3379,8 +3487,16 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Błąd</translation>
     </message>
     <message>
+        <source>Unable to decode PSBT from clipboard (invalid base64)</source>
+        <translation>Nie udało się załadować częściowo podpisanej transakcji (nieważny base64)</translation>
+    </message>
+    <message>
         <source>Load Transaction Data</source>
         <translation>Wczytaj dane transakcji</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (*.psbt)</source>
+        <translation>Częściowo Podpisana Transakcja (*.psbt)</translation>
     </message>
     <message>
         <source>PSBT file must be smaller than 100 MiB</source>
@@ -3574,6 +3690,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Nie udało się zweryfikować bazy danych</translation>
     </message>
     <message>
+        <source>Ignoring duplicate -wallet %s.</source>
+        <translation>Ignorowanie duplikatu -wallet %s</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>Importowanie…</translation>
     </message>
@@ -3719,8 +3839,20 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Zbyt niska kwota transakcji do wysłania po odjęciu opłaty</translation>
     </message>
     <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation>Ten błąd mógł wystąpić jeżeli portfel nie został poprawnie zamknięty oraz był ostatnio załadowany przy użyciu buildu z nowszą wersją Berkley DB. Jeżeli tak, proszę użyć oprogramowania które ostatnio załadowało ten portfel</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Musisz przebudować bazę używając parametru -reindex aby wrócić do trybu pełnego. To spowoduje ponowne pobranie całego łańcucha bloków</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation>Błąd: Wystąpił fatalny błąd wewnętrzny, sprawdź szczegóły w debug.log</translation>
+    </message>
+    <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation>Nie można ustawić -peerblockfilters bez -blockfilterindex.</translation>
     </message>
     <message>
         <source>Disk space is too low!</source>
@@ -3743,6 +3875,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Błąd: Pula kluczy jest pusta, odwołaj się do puli kluczy.</translation>
     </message>
     <message>
+        <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
+        <translation>Wartość opłaty (%s) jest mniejsza niż wartość minimalna w ustawieniach (%s)</translation>
+    </message>
+    <message>
         <source>Invalid -onion address or hostname: '%s'</source>
         <translation>Niewłaściwy adres -onion lub nazwa hosta: '%s'</translation>
     </message>
@@ -3761,6 +3897,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>Musisz określić port z -whitebind: '%s'</translation>
+    </message>
+    <message>
+        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
+        <translation>Żaden serwer proxy nie jest ustawiony. Użyj -proxy=&lt;ip&gt; lub -proxy=&lt;ip:port&gt;.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -blockfilterindex.</source>
@@ -3851,10 +3991,6 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>%s is set very high!</source>
         <translation>%s jest ustawione bardzo wysoko!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Błąd wczytywania portfela %s. Podana powtórnie ta sama nazwa pliku w -wallet</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

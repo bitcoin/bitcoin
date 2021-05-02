@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Click derecho para editar tu dirección o etiqueta</translation>
+        <translation>Haga clic derecho para editar la dirección o la etiqueta</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -286,10 +286,6 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
     <message>
         <source>Quit application</source>
         <translation>Salir de la aplicación</translation>
-    </message>
-    <message>
-        <source>&amp;About %1</source>
-        <translation>%Acerca de%1</translation>
     </message>
     <message>
         <source>Show information about %1</source>
@@ -886,6 +882,10 @@ Solicitar pagos (genera códigos QR y bitcoin: URI)
     <message>
         <source>Create</source>
         <translation>Crear</translation>
+    </message>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>Compiled without sqlite support (required for descriptor wallets)</translation>
     </message>
 </context>
 <context>
@@ -3575,12 +3575,28 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</translation>
     </message>
     <message>
+        <source>More than one onion bind address is provided. Using %s for the automatically created Tor onion service.</source>
+        <translation>More than one onion bind address is provided. Using %s for the automatically created Tor onion service.</translation>
+    </message>
+    <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
         <translation>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</translation>
     </message>
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation>Please contribute if you find %s useful. Visit %s for further information about the software.</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare the statement to fetch sqlite wallet schema version: %s</source>
+        <translation>SQLiteDatabase: Failed to prepare the statement to fetch sqlite wallet schema version: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare the statement to fetch the application id: %s</source>
+        <translation>SQLiteDatabase: Failed to prepare the statement to fetch the application id: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
+        <translation>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
@@ -3687,6 +3703,14 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>Falló al volver a escanear la cartera durante la inicialización</translation>
     </message>
     <message>
+        <source>Failed to verify database</source>
+        <translation>No se pudo verificar la base de datos</translation>
+    </message>
+    <message>
+        <source>Ignoring duplicate -wallet %s.</source>
+        <translation>Ignoring duplicate -wallet %s.</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>Importando...</translation>
     </message>
@@ -3713,6 +3737,26 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</source>
         <translation>Invalid amount for -fallbackfee=&lt;amount&gt;: '%s'</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to execute statement to verify database: %s</source>
+        <translation>SQLiteDatabase: Failed to execute statement to verify database: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to fetch sqlite wallet schema version: %s</source>
+        <translation>SQLiteDatabase: Failed to fetch sqlite wallet schema version: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to fetch the application id: %s</source>
+        <translation>SQLiteDatabase: Failed to fetch the application id: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare statement to verify database: %s</source>
+        <translation>SQLiteDatabase: Failed to prepare statement to verify database: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to read database verification error: %s</source>
+        <translation>SQLiteDatabase: Failed to read database verification error: %s</translation>
     </message>
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
@@ -3975,10 +4019,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>%s is set very high!</source>
         <translation>%s is set very high!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Error loading wallet %s. Duplicate -wallet filename specified.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

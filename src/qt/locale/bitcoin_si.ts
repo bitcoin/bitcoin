@@ -42,6 +42,10 @@
         <translation>කාසි ලැබිය යුතු ලිපිනය තෝරන්න</translation>
     </message>
     <message>
+        <source>C&amp;hoose</source>
+        <translation>තෝරන්න</translation>
+    </message>
+    <message>
         <source>Sending addresses</source>
         <translation>යවන ලිපින</translation>
     </message>
@@ -209,6 +213,10 @@
     </context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>ජාලය සමග සමමුහුර්ත ව‌ෙමින්...</translation>
+    </message>
     <message>
         <source>Browse transaction history</source>
         <translation>ගනුදෙනු ඉතිහාසය පිරික්සන්න</translation>

@@ -830,7 +830,7 @@
         <source>Create</source>
         <translation>Crea</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1440,6 +1440,14 @@
     </context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Save...</source>
+        <translation>Gardar...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Pechar</translation>
+    </message>
     <message>
         <source>Total Amount</source>
         <translation>Total Amount</translation>
@@ -3666,10 +3674,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>%s is set very high!</source>
         <translation>%s is set very high!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Error loading wallet %s. Duplicate -wallet filename specified.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

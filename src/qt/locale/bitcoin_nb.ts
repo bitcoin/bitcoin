@@ -70,6 +70,11 @@
         <translation>Dette er dine Bitcoin adresser for å sende  å sende betalinger. Husk å sjekke beløp og mottager adresser før du sender mynter.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation>Dette er dine Bitcoin adresser for å motta betalinger. Bruk 'Lag ny mottaksadresse' knappen i motta tabben for å lage nye adresser. Signering er bare mulig for adresser av typen 'legacy'.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>&amp;Kopier adresse</translation>
     </message>
@@ -478,6 +483,22 @@
         <translation>Oppdatert</translation>
     </message>
     <message>
+        <source>&amp;Load PSBT from file...</source>
+        <translation>&amp;Last PSBT fra fil...</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction</source>
+        <translation>Last delvis signert Bitcoin transaksjon</translation>
+    </message>
+    <message>
+        <source>Load PSBT from clipboard...</source>
+        <translation>Last PSBT fra utklippstavlen...</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <translation>Last Delvis Signert Bitcoin Transaksjon fra utklippstavle</translation>
+    </message>
+    <message>
         <source>Node window</source>
         <translation>Nodevindu</translation>
     </message>
@@ -514,8 +535,24 @@
         <translation>Lukk lommebok</translation>
     </message>
     <message>
+        <source>Close All Wallets...</source>
+        <translation>Lukk alle lommebøker...</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Lukk alle lommebøker</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Vis %1-hjelpemeldingen for å få en liste over mulige Bitcoin-kommandolinjealternativer</translation>
+    </message>
+    <message>
+        <source>&amp;Mask values</source>
+        <translation>&amp;Masker verdier</translation>
+    </message>
+    <message>
+        <source>Mask the values in the Overview tab</source>
+        <translation>Masker verdiene i oversiktstabben</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -625,7 +662,15 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Lommeboken er &lt;b&gt;kryptert&lt;/b&gt; og for tiden &lt;b&gt;låst&lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>Original message:</source>
+        <translation>Opprinnelig melding</translation>
+    </message>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation>En fatal feil har skjedd. %1 kan ikke lenger trygt fortsette og kommer til å avslutte.</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -827,8 +872,20 @@
         <translation>Lag Tom Lommebok</translation>
     </message>
     <message>
+        <source>Use descriptors for scriptPubKey management</source>
+        <translation>Bruk deskriptorer for scriptPubKey styring</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation>Deskriptor lommebok</translation>
+    </message>
+    <message>
         <source>Create</source>
         <translation>Opprett</translation>
+    </message>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>Kompilert uten sqlite støtte (kreves for deskriptor lommebok)</translation>
     </message>
 </context>
 <context>
@@ -1299,6 +1356,14 @@
         <translation>Skal myntkontroll funksjoner vises eller ikke.</translation>
     </message>
     <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation>Kobl til Bitcoin nettverket gjennom en separat SOCKS5 proxy for Tor onion tjenester. </translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
+        <translation>Bruk separate SOCKS&amp;5 proxy for å nå peers via Tor onion tjenester:</translation>
+    </message>
+    <message>
         <source>&amp;Third party transaction URLs</source>
         <translation>Tredjepart transaksjon URLer</translation>
     </message>
@@ -1433,12 +1498,96 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Nåværende totale balanse i kun observerbare adresser</translation>
     </message>
-    </context>
+    <message>
+        <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
+        <translation>Privat mode er aktivert for oversiktstabben. For å se verdier, uncheck innstillinger-&gt;Masker verdier</translation>
+    </message>
+</context>
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
         <source>Dialog</source>
         <translation>Dialog</translation>
+    </message>
+    <message>
+        <source>Sign Tx</source>
+        <translation>Signer Tx</translation>
+    </message>
+    <message>
+        <source>Broadcast Tx</source>
+        <translation>Kringkast Tx</translation>
+    </message>
+    <message>
+        <source>Copy to Clipboard</source>
+        <translation>Kopier til utklippstavle</translation>
+    </message>
+    <message>
+        <source>Save...</source>
+        <translation>Lagre...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Lukk</translation>
+    </message>
+    <message>
+        <source>Failed to load transaction: %1</source>
+        <translation>Lasting av transaksjon: %1 feilet</translation>
+    </message>
+    <message>
+        <source>Failed to sign transaction: %1</source>
+        <translation>Signering av transaksjon: %1 feilet</translation>
+    </message>
+    <message>
+        <source>Could not sign any more inputs.</source>
+        <translation>Kunne ikke signere flere inputs.</translation>
+    </message>
+    <message>
+        <source>Signed %1 inputs, but more signatures are still required.</source>
+        <translation>Signerte %1 inputs, men flere signaturer kreves.</translation>
+    </message>
+    <message>
+        <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
+        <translation>Signering av transaksjon var vellykket. Transaksjon er klar til å kringkastes.</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation>Ukjent feil når den prossesserte transaksjonen.</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast successfully! Transaction ID: %1</source>
+        <translation>Kringkasting av transaksjon var vellykket! Transaksjon ID: %1</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast failed: %1</source>
+        <translation>Kringkasting av transaksjon feilet: %1</translation>
+    </message>
+    <message>
+        <source>PSBT copied to clipboard.</source>
+        <translation>PSBT kopiert til utklippstavle.</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Lagre Transaksjonsdata</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>Delvis Signert Transaksjon (Binær) (*.psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk.</source>
+        <translation>PSBT lagret til disk.</translation>
+    </message>
+    <message>
+        <source> * Sends %1 to %2</source>
+        <translation>* Sender %1 til %2</translation>
+    </message>
+    <message>
+        <source>Unable to calculate transaction fee or total transaction amount.</source>
+        <translation>Klarte ikke å kalkulere transaksjonsavgift eller totalt transaksjonsbeløp.</translation>
+    </message>
+    <message>
+        <source>Pays transaction fee: </source>
+        <translation>Betaler transasjonsavgift:</translation>
     </message>
     <message>
         <source>Total Amount</source>
@@ -1448,7 +1597,35 @@
         <source>or</source>
         <translation>eller</translation>
     </message>
-    </context>
+    <message>
+        <source>Transaction has %1 unsigned inputs.</source>
+        <translation>Transaksjon har %1 usignert inputs.</translation>
+    </message>
+    <message>
+        <source>Transaction is missing some information about inputs.</source>
+        <translation>Transaksjonen mangler noe informasjon om inputs.</translation>
+    </message>
+    <message>
+        <source>Transaction still needs signature(s).</source>
+        <translation>Transaksjonen trenger signatur(er).</translation>
+    </message>
+    <message>
+        <source>(But this wallet cannot sign transactions.)</source>
+        <translation>(Men denne lommeboken kan ikke signere transaksjoner.)</translation>
+    </message>
+    <message>
+        <source>(But this wallet does not have the right keys.)</source>
+        <translation>(Men denne lommeboken har ikke de rette nøkklene.)</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation>Transaksjonen er signert og klar til kringkasting.</translation>
+    </message>
+    <message>
+        <source>Transaction status is unknown.</source>
+        <translation>Transaksjonsstatus er ukjent.</translation>
+    </message>
+</context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1608,6 +1785,10 @@
     <message>
         <source>Error: %1</source>
         <translation>Feil: %1</translation>
+    </message>
+    <message>
+        <source>Error initializing settings: %1</source>
+        <translation>Initialisering av innstillinger feilet: %1</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
@@ -1780,6 +1961,10 @@
         <translation>Nodevindu</translation>
     </message>
     <message>
+        <source>Current block height</source>
+        <translation>Nåværende blokkhøyde</translation>
+    </message>
+    <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Åpne %1-feilrettingsloggfila fra gjeldende datamappe. Dette kan ta et par sekunder for store loggfiler.</translation>
     </message>
@@ -1790,6 +1975,10 @@
     <message>
         <source>Increase font size</source>
         <translation>Forstørr font størrelse</translation>
+    </message>
+    <message>
+        <source>Permissions</source>
+        <translation>Rettigheter</translation>
     </message>
     <message>
         <source>Services</source>
@@ -2046,9 +2235,21 @@
         <source>Could not unlock wallet.</source>
         <translation>Kunne ikke låse opp lommebok.</translation>
     </message>
-    </context>
+    <message>
+        <source>Could not generate new %1 address</source>
+        <translation>Kunne ikke generere ny %1 adresse </translation>
+    </message>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Request payment to ...</source>
+        <translation>Be om betaling til...</translation>
+    </message>
+    <message>
+        <source>Address:</source>
+        <translation>Adresse:</translation>
+    </message>
     <message>
         <source>Amount:</source>
         <translation>Beløp:</translation>
@@ -2320,12 +2521,32 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
         <translation>Er du sikker på at du vil sende?</translation>
     </message>
     <message>
+        <source>Create Unsigned</source>
+        <translation>Lag usignert</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Lagre Transaksjonsdata</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (Binary) (*.psbt)</source>
+        <translation>Delvis Signert Transaksjon (Binær) (*.psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT saved</source>
+        <translation>PSBT lagret</translation>
+    </message>
+    <message>
         <source>or</source>
         <translation>eller</translation>
     </message>
     <message>
         <source>You can increase the fee later (signals Replace-By-Fee, BIP-125).</source>
         <translation>Du kan øke gebyret senere (signaliserer Replace-By-Fee, BIP-125).</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can save or copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>Se over ditt transaksjonsforslag. Dette kommer til å produsere en Delvis Signert Bitcoin Transaksjon (PSBT) som du kan lagre eller kopiere og så signere med f.eks. en offline %1 lommebok, eller en PSBT kompatibel hardware lommebok.</translation>
     </message>
     <message>
         <source>Please, review your transaction.</source>
@@ -3137,9 +3358,25 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Å lukke lommeboken for lenge kan føre til at du må synkronisere hele kjeden hvis beskjæring er aktivert.</translation>
     </message>
-    </context>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Lukk alle lommebøker</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close all wallets?</source>
+        <translation>Er du sikker på at du vil lukke alle lommebøker?</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
+    <message>
+        <source>No wallet has been loaded.
+Go to File &gt; Open Wallet to load a wallet.
+- OR -</source>
+        <translation>Ingen lommebok har blitt lastet.
+Gå til Fil &gt; Åpne lommebok for å laste en lommebok.
+- ELLER -</translation>
+    </message>
     <message>
         <source>Create a new wallet</source>
         <translation>Lag en ny lommebok</translation>
@@ -3219,6 +3456,26 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
         <translation>Feilmelding</translation>
     </message>
     <message>
+        <source>Unable to decode PSBT from clipboard (invalid base64)</source>
+        <translation>Klarte ikke å dekode PSBT fra utklippstavle (ugyldig base64)</translation>
+    </message>
+    <message>
+        <source>Load Transaction Data</source>
+        <translation>Last transaksjonsdata</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (*.psbt)</source>
+        <translation>Delvis signert transaksjon (*.psbt)</translation>
+    </message>
+    <message>
+        <source>PSBT file must be smaller than 100 MiB</source>
+        <translation>PSBT-fil må være mindre enn 100 MiB</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT</source>
+        <translation>Klarte ikke å dekode PSBT</translation>
+    </message>
+    <message>
         <source>Backup Wallet</source>
         <translation>Sikkerhetskopier lommebok</translation>
     </message>
@@ -3284,6 +3541,10 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
     <message>
         <source>Error reading %s! All keys read correctly, but transaction data or address book entries might be missing or incorrect.</source>
         <translation>Feil under lesing av %s! Alle nøkler har blitt lest rett, men transaksjonsdata eller adressebokoppføringer kan mangle eller være uriktige.</translation>
+    </message>
+    <message>
+        <source>More than one onion bind address is provided. Using %s for the automatically created Tor onion service.</source>
+        <translation>Mer enn en onion adresse har blitt gitt. Bruker %s for den automatisk lagde Tor onion tjenesten.</translation>
     </message>
     <message>
         <source>Please check that your computer's date and time are correct! If your clock is wrong, %s will not work properly.</source>
@@ -3390,6 +3651,14 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
         <translation>Klarte ikke gå igjennom lommeboken under oppstart</translation>
     </message>
     <message>
+        <source>Failed to verify database</source>
+        <translation>Verifisering av database feilet</translation>
+    </message>
+    <message>
+        <source>Ignoring duplicate -wallet %s.</source>
+        <translation>Ignorerer dupliserte -wallet %s.</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>Importerer...</translation>
     </message>
@@ -3486,6 +3755,10 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
         <translation>Feil: Lytting etter innkommende tilkoblinger feilet (lytting returnerte feil %s)</translation>
     </message>
     <message>
+        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
+        <translation>%s korrupt. Prøv å bruk lommebokverktøyet bitcoin-wallet til å fikse det eller laste en backup.</translation>
+    </message>
+    <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>Ugyldig beløp for -maxtxfee=&lt;amount&gt;: '%s' (må være minst minimum relé gebyr på %s for å hindre fastlåste transaksjoner)</translation>
     </message>
@@ -3494,8 +3767,32 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
         <translation>Transaksjonsbeløpet er for lite til å sendes etter at gebyret er fratrukket</translation>
     </message>
     <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation>Denne feilen kan oppstå hvis denne lommeboken ikke ble avsluttet skikkelig og var sist lastet med en build som hadde en nyere versjon av Berkeley DB. Hvis det har skjedd, vær så snill å bruk softwaren som sist lastet denne lommeboken.</translation>
+    </message>
+    <message>
+        <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
+        <translation>Dette er maksimum transaksjonsavgift du betaler (i tillegg til den normale avgiften) for å prioritere delvis betaling unngåelse over normal mynt seleksjon.</translation>
+    </message>
+    <message>
+        <source>Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.</source>
+        <translation>Transaksjon trenger en veksel adresse, men vi kan ikke generere den. Kall keypoolrefill først.</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Du må gjenoppbygge databasen ved hjelp av -reindex for å gå tilbake til ubeskåret modus. Dette vil laste ned hele blokkjeden på nytt.</translation>
+    </message>
+    <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation>En fatal intern feil oppstod, se debug.log for detaljer.</translation>
+    </message>
+    <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation>Kan ikke sette -peerblockfilters uten -blockfilterindex</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation>For lite diskplass!</translation>
     </message>
     <message>
         <source>Error reading from database, shutting down.</source>
@@ -3508,6 +3805,14 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
     <message>
         <source>Error: Disk space is low for %s</source>
         <translation>Feil: Ikke nok ledig diskplass for %s</translation>
+    </message>
+    <message>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>Feil: Keypool gikk tom, kall keypoolrefill først.</translation>
+    </message>
+    <message>
+        <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
+        <translation>Avgiftsrate (%s) er lavere enn den minimume avgiftsrate innstillingen (%s)</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>
@@ -3528,6 +3833,10 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>Må oppgi en port med -whitebind: '%s'</translation>
+    </message>
+    <message>
+        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
+        <translation>Ingen proxyserver er spesifisert. Bruk -proxy=&lt;ip&gt; eller -proxy=&lt;ip:port&gt;.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -blockfilterindex.</source>
@@ -3606,10 +3915,6 @@ Merk: Siden avgiften er beregnet per byte-basis, vil et gebyr på "100 satoshis 
     <message>
         <source>%s is set very high!</source>
         <translation>%s er satt veldig høyt!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Feil ved innlasting av lommeboka %s. Duplisert -wallet -filnavn angitt.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

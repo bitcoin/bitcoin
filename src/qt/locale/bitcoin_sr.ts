@@ -73,7 +73,7 @@
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
 Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Ово су твоје Биткоин адресе за приманје уплата. Користи дугме „Направи нову адресу за примање” у картици за примање за креирање нових адреса.
-Потписивање је могуђе само за адресе типа 'legacy'.</translation>
+Потписивање је могуће само за адресе типа 'legacy'.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -329,7 +329,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Create Wallet...</source>
-        <translation>Направи Новчаник...</translation>
+        <translation>Направи новчаник...</translation>
     </message>
     <message>
         <source>Create a new wallet</source>
@@ -393,7 +393,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Show or hide the main Window</source>
-        <translation>Прикажи или сакрији главни прозор</translation>
+        <translation>Прикажи или сакриј главни прозор</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -536,6 +536,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>Нема доступних новчаника</translation>
     </message>
     <message>
+        <source>&amp;Window</source>
+        <translation>&amp;Прозор</translation>
+    </message>
+    <message>
         <source>Minimize</source>
         <translation>Умањи</translation>
     </message>
@@ -652,7 +656,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Fee:</source>
-        <translation>Накнада:</translation>
+        <translation>Провизија:</translation>
     </message>
     <message>
         <source>Dust:</source>
@@ -836,7 +840,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Create</source>
         <translation>Направи</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -923,7 +927,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>About %1</source>
-        <translation>Приближно %1</translation>
+        <translation>О %1</translation>
     </message>
     <message>
         <source>Command-line options</source>
@@ -1021,15 +1025,15 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the bitcoin network, as detailed below.</source>
-        <translation>Недавне трансакције можда не буду видљиве, зато салдо твог новчаника можда буде нетачан. Ова информација биђе тачна када новчаник заврши са синхронизацијом биткоин мреже, приказаној испод.</translation>
+        <translation>Недавне трансакције можда не буду видљиве, зато салдо твог новчаника може бити нетачан. Ова информација биће тачна када новчаник заврши са синхронизацијом биткоин мреже, приказаном испод.</translation>
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>Покушај слања биткоина који су под утицајем још не приказаних трансакција неће бити прихваћен од стране мреже.</translation>
+        <translation>Покушај трошења биткоина на које утичу још увек неприказане трансакције мрежа неће прихватити.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
-        <translation>Преостала количина блокова</translation>
+        <translation>Број преосталих блокова</translation>
     </message>
     <message>
         <source>Unknown...</source>
@@ -1045,7 +1049,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Progress increase per hour</source>
-        <translation>Пораст напретка по часу</translation>
+        <translation>Повећање напретка по часу</translation>
     </message>
     <message>
         <source>calculating...</source>
@@ -1883,7 +1887,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Network Traffic</source>
-        <translation>&amp; Саобраћај Мреже</translation>
+        <translation>&amp;Мрежни саобраћај</translation>
     </message>
     <message>
         <source>Totals</source>
@@ -2199,7 +2203,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Fee:</source>
-        <translation>Накнада:</translation>
+        <translation>Провизија:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -2259,7 +2263,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>(Smart fee not initialized yet. This usually takes a few blocks...)</source>
-        <translation>(Паметна накнада још није покренута. Ово уобичајено траје неколико блокова...)</translation>
+        <translation>(Паметна провизија још није покренута. Ово уобичајено траје неколико блокова...)</translation>
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
@@ -2287,7 +2291,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>A too low fee might result in a never confirming transaction (read the tooltip)</source>
-        <translation>Сувише ниска накнада може резултовати у трансакцији која никад неће бити потврђена (прочитајте опис)</translation>
+        <translation>Сувише ниска провизија може резултовати да трансакција никада не  буде потврђена (прочитајте опис)</translation>
     </message>
     <message>
         <source>Confirmation time target:</source>
@@ -2347,7 +2351,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>%1 (%2 blocks)</source>
-        <translation>%1 (%2 блокови)</translation>
+        <translation>%1 (%2 блокова)</translation>
     </message>
     <message>
         <source>Cr&amp;eate Unsigned</source>
@@ -3243,7 +3247,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>Current fee:</source>
-        <translation>Тренутна накнада:</translation>
+        <translation>Тренутна провизија:</translation>
     </message>
     <message>
         <source>Increase:</source>
@@ -3251,7 +3255,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>New fee:</source>
-        <translation>Нова накнада:</translation>
+        <translation>Нова провизија:</translation>
     </message>
     <message>
         <source>Confirm fee bump</source>
@@ -3397,7 +3401,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     </message>
     <message>
         <source>This is the transaction fee you may discard if change is smaller than dust at this level</source>
-        <translation>Ово је накнада за трансакцију коју можете одбацити уколико је мања од нивоа прашине</translation>
+        <translation>Ову провизију можете обрисати уколико је кусур мањи од нивоа прашине</translation>
     </message>
     <message>
         <source>Unable to replay blocks. You will need to rebuild the database using -reindex-chainstate.</source>
@@ -3740,10 +3744,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>%s is set very high!</source>
         <translation>%s је постављен врло високо!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Грешка приликом учитавања новчаника %s. Наведено је дуплирано име датотеке -wallet.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

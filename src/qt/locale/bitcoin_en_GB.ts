@@ -884,7 +884,7 @@ Signing is only possible with addresses of the type 'legacy'.</translation>
         <source>Create</source>
         <translation>Create</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -3972,10 +3972,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>%s is set very high!</source>
         <translation>%s is set very high!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Error loading wallet %s. Duplicate -wallet filename specified.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

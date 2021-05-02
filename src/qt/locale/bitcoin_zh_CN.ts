@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>右键单击以编辑地址或标签</translation>
+        <translation>22000631@qq.com guanlonghuang</translation>
     </message>
     <message>
         <source>Create a new address</source>
@@ -549,7 +549,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>&amp;Mask values</source>
-        <translation>不明文显示数值(&amp;M)</translation>
+        <translation>遮住数值(&amp;M)</translation>
     </message>
     <message>
         <source>Mask the values in the Overview tab</source>
@@ -883,6 +883,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Create</source>
         <translation>创建</translation>
+    </message>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>编译时未启用SQLite支持（输出描述符钱包需要它）</translation>
     </message>
 </context>
 <context>
@@ -3585,15 +3589,15 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>SQLiteDatabase: Failed to prepare the statement to fetch sqlite wallet schema version: %s</source>
-        <translation>SQLiteDatabase：无法获取sqlit钱包版本：%s</translation>
+        <translation>SQLiteDatabase: 预处理用于获取SQLite钱包schema版本的语句时失败: %s</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Failed to prepare the statement to fetch the application id: %s</source>
-        <translation>SQLiteDatabase：无法获取应用ID：%s</translation>
+        <translation>SQLiteDatabase: 预处理用于获取应用ID的语句时失败: %s</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
-        <translation>SQLiteDatabase：未知sqlite钱包版本%d。只支持%d版本</translation>
+        <translation>SQLiteDatabase: SQLite钱包schema版本%d未知。只支持%d版本</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>
@@ -3704,6 +3708,10 @@ Go to File &gt; Open Wallet to load a wallet.
         <translation>校验数据库失败</translation>
     </message>
     <message>
+        <source>Ignoring duplicate -wallet %s.</source>
+        <translation>忽略重复的 -wallet %s。</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>导入中...</translation>
     </message>
@@ -3733,23 +3741,23 @@ Go to File &gt; Open Wallet to load a wallet.
     </message>
     <message>
         <source>SQLiteDatabase: Failed to execute statement to verify database: %s</source>
-        <translation>SQLiteDatabase：校验数据库执行语句失败：%s</translation>
+        <translation>SQLiteDatabase: 执行校验数据库语句时失败: %s</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Failed to fetch sqlite wallet schema version: %s</source>
-        <translation>SQLiteDatabase：无法获取sqlite钱包版本：%s</translation>
+        <translation>SQLiteDatabase: 获取SQLite钱包schema版本时失败: %s</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Failed to prepare statement to verify database: %s</source>
-        <translation>SQLiteDatabase：无法准备语句来校验数据库：%s</translation>
+        <translation>SQLiteDatabase: 预处理用于校验数据库的语句时失败: %s</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Failed to read database verification error: %s</source>
-        <translation>SQLiteDatabase：无法读取数据库校验错误：%s</translation>
+        <translation>SQLiteDatabase: 读取数据库失败，校验错误: %s</translation>
     </message>
     <message>
         <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
-        <translation>SQLiteDatabase：异常应用ID。异常%u，实际%u</translation>
+        <translation>SQLiteDatabase: 意料之外的应用ID。预期为%u，实际为%u</translation>
     </message>
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
@@ -4012,10 +4020,6 @@ Go to File &gt; Open Wallet to load a wallet.
     <message>
         <source>%s is set very high!</source>
         <translation>%s非常高！</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>加载钱包 %s 出错。 重复指定了 -wallet 文件名。</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

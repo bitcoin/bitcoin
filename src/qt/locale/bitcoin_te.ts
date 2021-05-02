@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>చిరునామా లేదా లేబుల్ సవరించడానికి రైట్-క్లిక్ చేయండి</translation>
+        <translation>చిరునామా లేదా లేబుల్ సవరించు -క్లిక్ చేయండి</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>క్రొత్త చిరునామా సృష్టించండి</translation>
+        <translation>క్రొత్త చిరునామా సృష్టించు</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -196,8 +196,24 @@
         <translation>మీ వాలెట్ గుప్తీకరించబోతోంది.</translation>
     </message>
     <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>cheraveyu chirunama</translation>
+    </message>
+    <message>
+        <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
+        <translation>ముఖ్యమైనది: మీరు మీ వాలెట్ ఫైల్‌తో చేసిన మునుపటి బ్యాకప్‌లను కొత్తగా రూపొందించిన, గుప్తీకరించిన వాలెట్ ఫైల్‌తో భర్తీ చేయాలి. భద్రతా కారణాల దృష్ట్యా, మీరు క్రొత్త, గుప్తీకరించిన వాలెట్ ఉపయోగించడం ప్రారంభించిన వెంటనే గుప్తీకరించని వాలెట్ ఫైల్ యొక్క మునుపటి బ్యాకప్‌లు నిరుపయోగంగా మారతాయి.</translation>
+    </message>
+    <message>
         <source>Wallet encryption failed</source>
         <translation>జోలె సంకేతపరచడం విఫలమయ్యింది</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed due to an internal error. Your wallet was not encrypted.</source>
+        <translation>lopali tappidam valla mee yokka wallet encryption samapthamu avaledu</translation>
+    </message>
+    <message>
+        <source>The supplied passphrases do not match.</source>
+        <translation>సరఫరా చేసిన పాస్‌ఫ్రేజ్‌లు సరిపోలడం లేదు.</translation>
     </message>
     </context>
 <context>
@@ -206,8 +222,28 @@
 <context>
     <name>BitcoinGUI</name>
     <message>
+        <source>Sign &amp;message...</source>
+        <translation>సంతకము మరియు సమాచారం</translation>
+    </message>
+    <message>
+        <source>Synchronizing with network...</source>
+        <translation>సమూహము తో సమకాలీకరణ చేయబడినది</translation>
+    </message>
+    <message>
+        <source>&amp;Overview</source>
+        <translation>&amp;అవలోకనం</translation>
+    </message>
+    <message>
         <source>E&amp;xit</source>
         <translation>నిష్క్రమించు</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>&lt;div&gt;&lt;/div&gt;</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>ధనమును తీసుకొనిపోవు సంచి</translation>
     </message>
     <message>
         <source>&amp;Send</source>
@@ -243,6 +279,10 @@
     <message>
         <source>Quantity:</source>
         <translation>పరిమాణం</translation>
+    </message>
+    <message>
+        <source>Amount</source>
+        <translation>మొత్తం</translation>
     </message>
     <message>
         <source>Date</source>
@@ -310,6 +350,10 @@
 <context>
     <name>QObject</name>
     <message>
+        <source>Amount</source>
+        <translation>మొత్తం</translation>
+    </message>
+    <message>
         <source>unknown</source>
         <translation>తెలియదు</translation>
     </message>
@@ -325,6 +369,10 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Wallet:</source>
+        <translation>ధనమును తీసుకొనిపోవు సంచి</translation>
+    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -398,6 +446,10 @@
         <source>Merchant</source>
         <translation>వర్తకుడు</translation>
     </message>
+    <message>
+        <source>Amount</source>
+        <translation>మొత్తం</translation>
+    </message>
     </context>
 <context>
     <name>TransactionDescDialog</name>
@@ -452,7 +504,11 @@
     </context>
 <context>
     <name>WalletFrame</name>
-    </context>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>&lt;div&gt;&lt;/div&gt;</translation>
+    </message>
+</context>
 <context>
     <name>WalletModel</name>
     </context>

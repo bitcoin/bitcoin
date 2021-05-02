@@ -410,6 +410,10 @@
         <translation>Akatsa</translation>
     </message>
     <message>
+        <source>Warning</source>
+        <translation>Abisua</translation>
+    </message>
+    <message>
         <source>Information</source>
         <translation>Informazioa</translation>
     </message>
@@ -440,6 +444,14 @@
     <message>
         <source>Close wallet</source>
         <translation>Diruzorroa itxi</translation>
+    </message>
+    <message>
+        <source>Close All Wallets...</source>
+        <translation>Diruzorro guztiak itxi...</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Diruzorro guztiak itxi</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -616,7 +628,7 @@
         <source>Create</source>
         <translation>Sortu</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1214,6 +1226,10 @@
     <message>
         <source>Close wallet</source>
         <translation>Diruzorroa itxi</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Diruzorro guztiak itxi</translation>
     </message>
     </context>
 <context>

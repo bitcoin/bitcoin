@@ -30,6 +30,10 @@
         <translation>把目前選擇的位址從列表中刪除</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>輸入位址或標記以作搜尋</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>把目前分頁的資料匯出至檔案</translation>
     </message>

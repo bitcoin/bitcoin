@@ -830,7 +830,7 @@
         <source>Create</source>
         <translation>Vytvoriť</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -3679,10 +3679,6 @@ Poznámka: Keďže poplatok je počítaný za bajt, poplatok o hodnote "100 sato
     <message>
         <source>%s is set very high!</source>
         <translation>Hodnota %s je nastavená veľmi vysoko!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Chyba pri načítaní peňaženky %s. Zadaný duplicitný názov súboru -wallet.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

@@ -884,6 +884,10 @@ Podpisovanje je možno le s podedovanimi ("legacy") naslovi.</translation>
         <source>Create</source>
         <translation>Ustvari</translation>
     </message>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>Prevedeno brez podpore za SQLite (potrebna za deskriptorske denarnice)</translation>
+    </message>
 </context>
 <context>
     <name>EditAddressDialog</name>
@@ -3852,6 +3856,10 @@ Za odpiranje denarnice kliknite Datoteka &gt; Odpri denarnico
         <translation>Ta napaka se lahko pojavi, če denarnica ni bila pravilno zaprta in je bila nazadnje naložena s programsko opremo z novejšo verzijo Berkely DB. Če je temu tako, prosimo uporabite programsko opremo, s katero je bila ta denarnica nazadnje naložena.</translation>
     </message>
     <message>
+        <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
+        <translation>To je najvišja transakcijska provizija, ki jo plačate (poleg običajne provizije) za prednostno izogibanje delni porabi pred rednim izbiranjem kovancev.</translation>
+    </message>
+    <message>
         <source>Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.</source>
         <translation>Transakcija potrebuje naslov za vračilo, ki pa ga ni moč ustvariti. Prosimo, najprej pokličite keypoolrefill.</translation>
     </message>
@@ -4000,10 +4008,6 @@ Za odpiranje denarnice kliknite Datoteka &gt; Odpri denarnico
     <message>
         <source>%s is set very high!</source>
         <translation>%s je postavljen zelo visoko!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Napaka pri nalaganju denarnice %s. Ime denarnice (parameter -wallet) je podvojeno.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

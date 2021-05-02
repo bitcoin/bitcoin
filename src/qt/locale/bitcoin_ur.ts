@@ -30,6 +30,10 @@
         <translation>سلیکٹڈ پتے کو مٹائیں</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>پتہ یا لیبل تلاشی کے لئے درج کریں</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>موجودہ ڈیٹا کو فائیل میں محفوظ کریں</translation>
     </message>
@@ -136,6 +140,10 @@
         <translation>بٹوے کو خفیہ کریں</translation>
     </message>
     <message>
+        <source>Unlock wallet</source>
+        <translation>بستہ کھولیں</translation>
+    </message>
+    <message>
         <source>Decrypt wallet</source>
         <translation>ڈکرپٹ والیٹ</translation>
     </message>
@@ -153,6 +161,14 @@
     </context>
 <context>
     <name>BitcoinGUI</name>
+    <message>
+        <source>&amp;About %1</source>
+        <translation>&amp;معلومات%1</translation>
+    </message>
+    <message>
+        <source>Show information about %1</source>
+        <translation>%1 کے بارے میں معلومات دکھایں</translation>
+    </message>
     <message>
         <source>Error</source>
         <translation>نقص</translation>

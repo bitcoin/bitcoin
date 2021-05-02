@@ -478,6 +478,14 @@
         <translation>Đã cập nhật</translation>
     </message>
     <message>
+        <source>&amp;Load PSBT from file...</source>
+        <translation>&amp;Tải dữ liệu PSBT từ tệp...</translation>
+    </message>
+    <message>
+        <source>Load PSBT from clipboard...</source>
+        <translation>Tải dữ liệu PSBT từ bộ nhớ tạm...</translation>
+    </message>
+    <message>
         <source>Node window</source>
         <translation>Cửa sổ node</translation>
     </message>
@@ -512,6 +520,14 @@
     <message>
         <source>Close wallet</source>
         <translation>Đông ví</translation>
+    </message>
+    <message>
+        <source>Close All Wallets...</source>
+        <translation>Đóng tất cả các ví</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Đóng tất cả ví</translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
@@ -625,7 +641,11 @@
         <source>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</source>
         <translation>Ví thì &lt;b&gt;encrypted&lt;/b&gt; và hiện tại &lt;b&gt;locked&lt;/b&gt;</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation>Lỗi nghiêm trong. %1 không thể tiếp tục và sẽ thoát ra</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -830,7 +850,7 @@
         <source>Create</source>
         <translation>Tạo</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1437,12 +1457,68 @@
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
+        <source>Dialog</source>
+        <translation>Bảng thoại</translation>
+    </message>
+    <message>
+        <source>Sign Tx</source>
+        <translation>Đăng ký Tx</translation>
+    </message>
+    <message>
+        <source>Copy to Clipboard</source>
+        <translation>Lưu vào bảng tạm</translation>
+    </message>
+    <message>
+        <source>Save...</source>
+        <translation>Sao lưu</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Đóng</translation>
+    </message>
+    <message>
+        <source>Failed to sign transaction: %1</source>
+        <translation>Đăng ký giao dịch thất bại :%1</translation>
+    </message>
+    <message>
+        <source>PSBT copied to clipboard.</source>
+        <translation>Dữ liệu PSBT được sao chép vào bộ nhớ tạm.</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Lưu trữ giao dịch</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk.</source>
+        <translation>Dữ liệu PSBT được lưu vào ổ đĩa.</translation>
+    </message>
+    <message>
+        <source> * Sends %1 to %2</source>
+        <translation>*Gửi %1 tới %2</translation>
+    </message>
+    <message>
+        <source>Pays transaction fee: </source>
+        <translation>Trả phí giao dịch</translation>
+    </message>
+    <message>
         <source>Total Amount</source>
         <translation>Tổng số</translation>
     </message>
     <message>
         <source>or</source>
         <translation>hoặc</translation>
+    </message>
+    <message>
+        <source>Transaction still needs signature(s).</source>
+        <translation>Giao dịch cần chữ ký</translation>
+    </message>
+    <message>
+        <source>(But this wallet cannot sign transactions.)</source>
+        <translation>(Nhưng ví này không thể đăng ký giao dịch.)</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation>Giao dịch đã được đăng ký và chuẩn bị để phát lên</translation>
     </message>
     </context>
 <context>
@@ -1788,6 +1864,10 @@
         <translation>Cửa sổ node</translation>
     </message>
     <message>
+        <source>Current block height</source>
+        <translation>Kích thước khối hiện tại</translation>
+    </message>
+    <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
         <translation>Mở cái %1 debug log file từ danh mục dữ liệu hiện tại. Điều này cần vài giây cho large log files.</translation>
     </message>
@@ -1798,6 +1878,10 @@
     <message>
         <source>Increase font size</source>
         <translation>Tăng font size</translation>
+    </message>
+    <message>
+        <source>Permissions</source>
+        <translation>Cho phép</translation>
     </message>
     <message>
         <source>Services</source>
@@ -2054,12 +2138,24 @@
         <source>Could not unlock wallet.</source>
         <translation>Không thể unlock wallet.</translation>
     </message>
-    </context>
+    <message>
+        <source>Could not generate new %1 address</source>
+        <translation>Không thể tạo ra %1 địa chỉ mới</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
+        <source>Address:</source>
+        <translation>Địa chỉ</translation>
+    </message>
+    <message>
         <source>Amount:</source>
         <translation>Số lượng:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Nhãn</translation>
     </message>
     <message>
         <source>Message:</source>
@@ -2334,6 +2430,14 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
     <message>
         <source>Are you sure you want to send?</source>
         <translation>Bạn chắc chắn muốn gửi chứ?</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Lưu trữ giao dịch</translation>
+    </message>
+    <message>
+        <source>PSBT saved</source>
+        <translation>PSBT đã lưu</translation>
     </message>
     <message>
         <source>or</source>
@@ -3157,7 +3261,15 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>Đóng ví thời gian dài sẽ dẫn đến phải đồng bộ hóa lại cả chuỗi nếu cắt tỉa pruning được kích hoạt</translation>
     </message>
-    </context>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Đóng tất cả ví</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close all wallets?</source>
+        <translation>Bạn có chắc chắn muốn đóng tất cả ví không?</translation>
+    </message>
+</context>
 <context>
     <name>WalletFrame</name>
     <message>
@@ -3237,6 +3349,14 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
     <message>
         <source>Error</source>
         <translation>Lỗi</translation>
+    </message>
+    <message>
+        <source>Load Transaction Data</source>
+        <translation>Tải thông tin giao dịch</translation>
+    </message>
+    <message>
+        <source>Partially Signed Transaction (*.psbt)</source>
+        <translation>Giao dịch được đăng ký một phần (*.psbt)</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
@@ -3418,6 +3538,10 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <translation>Lỗi quét lại ví trong xuất quá trình khởi tạo</translation>
     </message>
     <message>
+        <source>Failed to verify database</source>
+        <translation>Lỗi xác nhận dữ liệu</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>Importing...</translation>
     </message>
@@ -3542,6 +3666,14 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
         <translation>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</translation>
     </message>
     <message>
+        <source>A fatal internal error occurred, see debug.log for details</source>
+        <translation>Lỗi nghiêm trọng xảy ra, xem debug.log để biết chi tiết</translation>
+    </message>
+    <message>
+        <source>Disk space is too low!</source>
+        <translation>Ổ đĩa còn quá ít</translation>
+    </message>
+    <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Error reading from database, shutting down.</translation>
     </message>
@@ -3662,10 +3794,6 @@ Lưu ý: Vì phí được tính trên cơ sở mỗi byte, nên phí "100 satos
     <message>
         <source>%s is set very high!</source>
         <translation>%s is set very high!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Error loading wallet %s. Duplicate -wallet filename specified.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>

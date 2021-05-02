@@ -847,6 +847,14 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <source>Original message:</source>
         <translation type="unfinished"></translation>
     </message>
+<<<<<<< HEAD
+=======
+    <message>
+        <location filename="../bitcoin.cpp" line="+419"/>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation type="unfinished"></translation>
+    </message>
+>>>>>>> 194b9b8792d9b0798fdb570b79fa51f1d1f5ebaf
 </context>
 <context>
     <name>CoinControlDialog</name>
@@ -1064,17 +1072,30 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location line="+11"/>
+=======
+        <location line="+24"/>
+        <source>Wallet</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location line="-13"/>
+>>>>>>> 194b9b8792d9b0798fdb570b79fa51f1d1f5ebaf
         <source>Wallet Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location line="+13"/>
         <source>Wallet</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <location line="+9"/>
+=======
+        <location line="+22"/>
+>>>>>>> 194b9b8792d9b0798fdb570b79fa51f1d1f5ebaf
         <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1124,7 +1145,11 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location line="+42"/>
+=======
+        <location line="+36"/>
+>>>>>>> 194b9b8792d9b0798fdb570b79fa51f1d1f5ebaf
         <source>Compiled without sqlite support (required for descriptor wallets)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -2368,7 +2393,11 @@ If you are receiving this error you should request the merchant provide a BIP21 
         <translation type="unfinished"></translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../bitcoin.cpp" line="+111"/>
+=======
+        <location filename="../bitcoin.cpp" line="+112"/>
+>>>>>>> 194b9b8792d9b0798fdb570b79fa51f1d1f5ebaf
         <source>Error: Specified data directory &quot;%1&quot; does not exist.</source>
         <translation type="unfinished"></translation>
     </message>

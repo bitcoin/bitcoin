@@ -7,11 +7,11 @@
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Create a new address</translation>
+        <translation>নতুন একটি ঠিকানা তৈরি করুন</translation>
     </message>
     <message>
         <source>&amp;New</source>
-        <translation>&amp;New</translation>
+        <translation>নতুন</translation>
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
@@ -19,7 +19,7 @@
     </message>
     <message>
         <source>&amp;Copy</source>
-        <translation>&amp;Copy</translation>
+        <translation>&amp;কপি</translation>
     </message>
     <message>
         <source>C&amp;lose</source>
@@ -27,7 +27,7 @@
     </message>
     <message>
         <source>Delete the currently selected address from the list</source>
-        <translation>Delete the currently selected address from the list</translation>
+        <translation>বাছাইকৃত ঠিকানাটি লিস্ট থেকে মুছুন</translation>
     </message>
     <message>
         <source>Enter address or label to search</source>
@@ -35,19 +35,19 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>Export the data in the current tab to a file</translation>
+        <translation>বর্তমান ট্যাবের ডেটা একটি ফাইলে এক্সপোর্ট করুন</translation>
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Export</translation>
+        <translation>&amp;এক্সপোর্ট</translation>
     </message>
     <message>
         <source>&amp;Delete</source>
-        <translation>&amp;Delete</translation>
+        <translation>&amp;মুছুন</translation>
     </message>
     <message>
         <source>Choose the address to send coins to</source>
-        <translation>Choose the address to send coins to</translation>
+        <translation>কয়েন পাঠানোর ঠিকানা বাছাই করুন</translation>
     </message>
     <message>
         <source>Choose the address to receive coins with</source>
@@ -68,6 +68,11 @@
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
         <translation>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</translation>
+    </message>
+    <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation>পেমেন্ট পাওয়ার জন্য এটি আপনার বিটকয়েন ঠিকানা। নতুন ঠিকানা তৈরী করতে "নতুন গ্রহণের ঠিকানা তৈরী করুন" বোতাম ব্যবহার করুন। সাইন ইন করা শুধুমাত্র "উত্তরাধিকার" ঠিকানার মাধ্যমেই সম্ভব।</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -478,6 +483,22 @@
         <translation>Up to date</translation>
     </message>
     <message>
+        <source>&amp;Load PSBT from file...</source>
+        <translation>ফাইল থেকে পিএসবিটি লোড করুন ...</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction</source>
+        <translation>আংশিক স্বাক্ষরিত বিটকয়েন লেনদেন লোড করুন</translation>
+    </message>
+    <message>
+        <source>Load PSBT from clipboard...</source>
+        <translation>ক্লিপবোর্ড থেকে পিএসবিটি লোড করুন ...</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <translation>ক্লিপবোর্ড থেকে আংশিক স্বাক্ষরিত বিটকয়েন লেনদেন লোড করুন</translation>
+    </message>
+    <message>
         <source>Node window</source>
         <translation>Node window</translation>
     </message>
@@ -830,7 +851,7 @@
         <source>Create</source>
         <translation>Create</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -3666,10 +3687,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>%s is set very high!</source>
         <translation>%s is set very high!</translation>
-    </message>
-    <message>
-        <source>Error loading wallet %s. Duplicate -wallet filename specified.</source>
-        <translation>Error loading wallet %s. Duplicate -wallet filename specified.</translation>
     </message>
     <message>
         <source>Starting network threads...</source>
