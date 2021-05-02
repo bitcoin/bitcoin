@@ -3,7 +3,7 @@ Building Syscoin Core with Visual Studio
 
 Introduction
 ---------------------
-Solution and project files to build the Syscoin Core applications `msbuild` or Visual Studio can be found in the `build_msvc` directory. The build has been tested with Visual Studio 2017 and 2019.
+Solution and project files to build the Syscoin Core applications `msbuild` or Visual Studio can be found in the `build_msvc` directory. The build has been tested with Visual Studio 2019 (building with earlier versions of Visual Studio should not be expected to work).
 
 Building with Visual Studio is an alternative to the Linux based [cross-compiler build](https://github.com/syscoin/syscoin/blob/master/doc/build-windows.md).
 
@@ -35,7 +35,7 @@ vcpkg integrate install
 
 Qt
 ---------------------
-In order to build the Syscoin Core a static build of Qt is required. The runtime library version (e.g. v141, v142) and platform type (x86 or x64) must also match.
+In order to build Syscoin Core a static build of Qt is required. The runtime library version (e.g. v142) and platform type (x86 or x64) must also match.
 
 Some prebuilt x64 versions of Qt can be downloaded from [here](https://github.com/syscoin/syscoin/releases). Please be aware these downloads are NOT officially sanctioned by Syscoin Core and are provided for developer convenience only. They should NOT be used for builds that will be used in a production environment or with real funds.
 
@@ -56,19 +56,13 @@ PS >py -3 msvc-autogen.py
 
 - An optional step is to adjust the settings in the `build_msvc` directory and the `common.init.vcxproj` file. This project file contains settings that are common to all projects such as the runtime library version and target Windows SDK version. The Qt directories can also be set.
 
-- To build from the command line with the Visual Studio 2017 toolchain use:
-
-```
-msbuild /m syscoin.sln /p:Platform=x64 /p:Configuration=Release /p:PlatformToolset=v141 /t:build
-```
-
 - To build from the command line with the Visual Studio 2019 toolchain use:
 
 ```
 msbuild /m syscoin.sln /p:Platform=x64 /p:Configuration=Release /t:build
 ```
 
-- Alternatively open the `build_msvc/bitcoin.sln` file in Visual Studio.
+- Alternatively, open the `build_msvc/syscoin.sln` file in Visual Studio 2019.
 
 AppVeyor
 ---------------------
