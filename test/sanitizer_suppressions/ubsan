@@ -85,6 +85,7 @@ implicit-signed-integer-truncation:chain.h
 implicit-signed-integer-truncation:crypto/
 implicit-signed-integer-truncation:cuckoocache.h
 implicit-signed-integer-truncation:leveldb/
+implicit-signed-integer-truncation:miner.cpp
 implicit-signed-integer-truncation:net.cpp
 implicit-signed-integer-truncation:net_processing.cpp
 implicit-signed-integer-truncation:streams.h
