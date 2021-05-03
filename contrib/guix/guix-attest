@@ -146,6 +146,10 @@ echo ""
 # MAIN LOGIC: Loop through each output for VERSION and attest to output in
 #             GUIX_SIGS_REPO as SIGNER, if attestation does not exist
 for outdir in "${OUTDIRS[@]}"; do
+    if [ -e "${outdir}/SKIPATTEST.TAG" ]; then
+        echo "${outname}: SKIPPING: Output directory marked with SKIPATTEST.TAG file"
+        continue
+    fi
     outname="$(out_name "$outdir")"
     outsigdir="$(out_sig_dir "$outdir")"
     if [ -e "$outsigdir" ]; then
