@@ -580,6 +580,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             shutil.rmtree(cache_path('OMNI_feecache'))
             shutil.rmtree(cache_path('OMNI_feehistory'))
             shutil.rmtree(cache_path('Omni_TXDB'))
+            shutil.rmtree(cache_path('OMNI_nftdb'))
             shutil.rmtree(cache_path('MP_persist'))
             shutil.rmtree(cache_path('MP_spinfo'))
             shutil.rmtree(cache_path('MP_stolist'))

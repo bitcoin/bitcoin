@@ -120,6 +120,15 @@ bool mastercore::IsPropertyIdValid(uint32_t propertyId)
     return false;
 }
 
+bool mastercore::isPropertyNonFungible(uint32_t propertyId)
+{
+    CMPSPInfo::Entry sp;
+
+    if (pDbSpInfo->getSP(propertyId, sp)) return sp.unique;
+
+    return false;
+}
+
 bool mastercore::isPropertyDivisible(uint32_t propertyId)
 {
     // TODO: is a lock here needed
@@ -419,6 +428,7 @@ std::string mastercore::strPropertyType(uint16_t propertyType)
     switch (propertyType) {
         case MSC_PROPERTY_TYPE_DIVISIBLE: return "divisible";
         case MSC_PROPERTY_TYPE_INDIVISIBLE: return "indivisible";
+        case MSC_PROPERTY_TYPE_NONFUNGIBLE: return "non-fungible";
     }
 
     return "unknown";

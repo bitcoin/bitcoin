@@ -1,4 +1,5 @@
 #include <omnicore/createpayload.h>
+#include <omnicore/nftdb.h>
 #include <omnicore/rpcvalues.h>
 #include <omnicore/rpcrequirements.h>
 #include <omnicore/omnicore.h>
@@ -58,6 +59,70 @@ static UniValue omni_createpayload_sendall(const JSONRPCRequest& request)
     uint8_t ecosystem = ParseEcosystem(request.params[0]);
 
     std::vector<unsigned char> payload = CreatePayload_SendAll(ecosystem);
+
+    return HexStr(payload.begin(), payload.end());
+}
+
+UniValue omni_createpayload_sendnonfungible(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"omni_createpayload_sendnonfungible",
+       "\nCreate the payload for a non-fungible send transaction.\n",
+       {
+           {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to send"},
+           {"tokenstart", RPCArg::Type::NUM, RPCArg::Optional::NO, "the first token in the range to send"},
+           {"tokenend", RPCArg::Type::NUM, RPCArg::Optional::NO, "the last token in the range to send"},
+       },
+       RPCResult{
+           RPCResult::Type::STR_HEX, "payload", "the hex-encoded payload",
+       },
+       RPCExamples{
+           HelpExampleCli("omni_createpayload_sendnonfungible", "70 1 1000")
+           + HelpExampleRpc("omni_createpayload_sendnonfungible", "70, 1, 1000")
+       }
+    }.Check(request);
+
+    uint32_t propertyId = ParsePropertyId(request.params[0]);
+    int64_t tokenStart = request.params[1].get_int64(); // non-fungible tokens are indivisible only
+    int64_t tokenEnd =  request.params[2].get_int64();
+
+    RequireSaneNonFungibleRange(tokenStart, tokenEnd);
+
+    std::vector<unsigned char> payload = CreatePayload_SendNonFungible(propertyId, tokenStart, tokenEnd);
+
+    return HexStr(payload.begin(), payload.end());
+}
+
+
+// sets data for a specific token
+static UniValue omni_createpayload_setnonfungibledata(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"omni_createpayload_setnonfungibledata",
+        "Create the payload for a non-fungible token set data transaction\n",
+        {
+            {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the property identifier"},
+            {"tokenstart", RPCArg::Type::NUM, RPCArg::Optional::NO, "the first token in the range to set data on"},
+            {"tokenend", RPCArg::Type::NUM, RPCArg::Optional::NO, "the last token in the range to set data on"},
+            {"issuer", RPCArg::Type::BOOL, RPCArg::Optional::NO, "if true issuer data set, otherwise holder data set"},
+            {"data", RPCArg::Type::STR, RPCArg::Optional::NO, "data set as in either issuer or holder fields"},
+        },
+        RPCResult{
+            RPCResult::Type::STR_HEX, "payload", "the hex-encoded payload",
+        },
+        RPCExamples{
+            HelpExampleCli("omni_createpayload_setnonfungibledata", "70 50 60 true \"string data\"")
+            + HelpExampleRpc("omni_createpayload_setnonfungibledata", "70, 50, 60, true, \"string data\"")
+        }
+    }.Check(request);
+
+    uint32_t propertyId = ParsePropertyId(request.params[0]);
+    uint64_t tokenStart = request.params[1].get_int64();
+    int64_t tokenEnd =  request.params[2].get_int64();
+    bool issuer = request.params[3].isNum() ? (request.params[3].get_int() != 0) : request.params[3].get_bool();
+    std::string data = ParseText(request.params[4]);
+
+    RequireSaneNonFungibleRange(tokenStart, tokenEnd);
+
+    std::vector<unsigned char> payload = CreatePayload_SetNonFungibleData(propertyId,  tokenStart, tokenEnd, issuer, data);
 
     return HexStr(payload.begin(), payload.end());
 }
@@ -254,7 +319,7 @@ static UniValue omni_createpayload_issuancemanaged(const JSONRPCRequest& request
        "\nCreates the payload for a new tokens issuance with manageable supply.\n",
        {
            {"ecosystem", RPCArg::Type::NUM, RPCArg::Optional::NO, "the ecosystem to create the tokens in (1 for main ecosystem, 2 for test ecosystem)\n"},
-           {"type", RPCArg::Type::NUM, RPCArg::Optional::NO, "the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens)\n"},
+           {"type", RPCArg::Type::NUM, RPCArg::Optional::NO, "the type of the tokens to create: (1 for indivisible tokens, 2 for divisible tokens, 5 for non-fungible tokens)\n"},
            {"previousid", RPCArg::Type::NUM, RPCArg::Optional::NO, "an identifier of a predecessor token (use 0 for new tokens)\n"},
            {"category", RPCArg::Type::STR, RPCArg::Optional::NO, "a category for the new tokens (can be \"\")\n"},
            {"subcategory", RPCArg::Type::STR, RPCArg::Optional::NO, "a subcategory for the new tokens  (can be \"\")\n"},
@@ -272,7 +337,7 @@ static UniValue omni_createpayload_issuancemanaged(const JSONRPCRequest& request
     }.Check(request);
 
     uint8_t ecosystem = ParseEcosystem(request.params[0]);
-    uint16_t type = ParsePropertyType(request.params[1]);
+    uint16_t type = ParseManagedPropertyType(request.params[1]);
     uint32_t previousId = ParsePreviousPropertyId(request.params[2]);
     std::string category = ParseText(request.params[3]);
     std::string subcategory = ParseText(request.params[4]);
@@ -318,7 +383,7 @@ static UniValue omni_createpayload_grant(const JSONRPCRequest& request)
        {
            {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens to grant\n"},
            {"amount", RPCArg::Type::STR, RPCArg::Optional::NO, "the amount of tokens to create\n"},
-           {"memo", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "a text note attached to this transaction\n"},
+           {"grantdata", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "NFT only: data set in all NFTs created in this grant (default: empty)\n"},
        },
        RPCResult{
            RPCResult::Type::STR_HEX, "payload", "the hex-encoded payload",
@@ -331,9 +396,9 @@ static UniValue omni_createpayload_grant(const JSONRPCRequest& request)
 
     uint32_t propertyId = ParsePropertyId(request.params[0]);
     int64_t amount = ParseAmount(request.params[1], isPropertyDivisible(propertyId));
-    std::string memo = (request.params.size() > 2) ? ParseText(request.params[2]): "";
+    std::string info = (request.params.size() > 2) ? ParseText(request.params[2]): "";
 
-    std::vector<unsigned char> payload = CreatePayload_Grant(propertyId, amount, memo);
+    std::vector<unsigned char> payload = CreatePayload_Grant(propertyId, amount, info);
 
     return HexStr(payload.begin(), payload.end());
 }
@@ -654,6 +719,8 @@ static const CRPCCommand commands[] =
     { "omni layer (payload creation)", "omni_createpayload_freeze",              &omni_createpayload_freeze,              {"toaddress", "propertyid", "amount"} },
     { "omni layer (payload creation)", "omni_createpayload_unfreeze",            &omni_createpayload_unfreeze,            {"toaddress", "propertyid", "amount"} },
     { "omni layer (payload creation)", "omni_createpayload_anydata",             &omni_createpayload_anydata,             {"data"} },
+    { "omni layer (payload creation)", "omni_createpayload_sendnonfungible",     &omni_createpayload_sendnonfungible,     {"propertyid", "tokenstart", "tokenend"} },
+    { "omni layer (payload creation)", "omni_createpayload_setnonfungibledata",  &omni_createpayload_setnonfungibledata,  {"propertyid", "tokenid", "issuer", "data"} },
 };
 
 void RegisterOmniPayloadCreationRPCCommands(CRPCTable &tableRPC)

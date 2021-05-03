@@ -235,6 +235,7 @@ BASE_SCRIPTS = [
     'omni_freedexspec.py',
     'omni_dexversionsspec.py',
     'omni_feecache.py',
+    'omni_nonfungibletokens.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
 ]

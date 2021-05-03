@@ -13,6 +13,7 @@ export DEP_OPTS="NO_QT=1 NO_UPNP=1"
 export RUN_UNIT_TESTS_SEQUENTIAL="false"
 export RUN_UNIT_TESTS="false"
 export RUN_OMNIJ_TESTS="true"
+export RUN_FUNCTIONAL_TESTS="true"
 export GOAL="install"
 export TEST_PREVIOUS_RELEASES=true
 export BITCOIN_CONFIG="--with-gui=no"

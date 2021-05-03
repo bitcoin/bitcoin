@@ -28,6 +28,7 @@ int64_t ParseDExFee(const UniValue& value);
 uint8_t ParseDExAction(const UniValue& value);
 uint8_t ParseEcosystem(const UniValue& value);
 uint16_t ParsePropertyType(const UniValue& value);
+uint16_t ParseManagedPropertyType(const UniValue& value);
 uint32_t ParsePreviousPropertyId(const UniValue& value);
 std::string ParseText(const UniValue& value);
 int64_t ParseDeadline(const UniValue& value);

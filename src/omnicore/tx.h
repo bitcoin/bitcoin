@@ -83,6 +83,12 @@ private:
     uint64_t min_fee;
     unsigned char subaction;
 
+    // Unique Send
+    uint64_t nonfungible_token_start;
+    uint64_t nonfungible_token_end;
+    uint8_t nonfungible_data_type; // Issuer (1) or holder (0)
+    char nonfungible_data[SP_STRING_FIELD_LEN]; // GrantData, IssuerData or HolderData
+
     // Alert
     uint16_t alert_type;
     uint32_t alert_expiry;
@@ -106,6 +112,7 @@ private:
     bool interpret_SimpleSend();
     bool interpret_SendToOwners();
     bool interpret_SendAll();
+    bool interpret_SendNonFungible();
     bool interpret_TradeOffer();
     bool interpret_MetaDExTrade();
     bool interpret_MetaDExCancelPrice();
@@ -124,6 +131,7 @@ private:
     bool interpret_FreezeTokens();
     bool interpret_UnfreezeTokens();
     bool interpret_AnyData();
+    bool interpret_NonFungibleData();
     bool interpret_Activation();
     bool interpret_Deactivation();
     bool interpret_Alert();
@@ -134,6 +142,7 @@ private:
     int logicMath_SimpleSend(uint256& blockHash);
     int logicMath_SendToOwners();
     int logicMath_SendAll();
+    int logicMath_SendNonFungible();
     int logicMath_TradeOffer();
     int logicMath_AcceptOffer_BTC();
     int logicMath_MetaDExTrade();
@@ -152,6 +161,7 @@ private:
     int logicMath_FreezeTokens(CBlockIndex *pindex);
     int logicMath_UnfreezeTokens(CBlockIndex *pindex);
     int logicMath_AnyData();
+    int logicMath_NonFungibleData();
     int logicMath_Activation();
     int logicMath_Deactivation();
     int logicMath_Alert();
@@ -213,6 +223,10 @@ public:
     uint32_t getMinClientVersion() const { return min_client_version; }
     unsigned int getIndexInBlock() const { return tx_idx; }
     uint32_t getDistributionProperty() const { return distribution_property; }
+    uint64_t getNonFungibleTokenStart() const { return nonfungible_token_start; }
+    uint64_t getNonFungibleTokenEnd() const { return nonfungible_token_end; }
+    uint64_t getNonFungibleDataType() const { return nonfungible_data_type; }
+    std::string getNonFungibleData() const { return nonfungible_data; }
 
     /** Creates a new CMPTransaction object. */
     CMPTransaction()
@@ -264,6 +278,9 @@ public:
         activation_block = 0;
         min_client_version = 0;
         distribution_property = 0;
+        nonfungible_token_start = 0;
+        nonfungible_token_end = 0;
+        memset(&nonfungible_data, 0, sizeof(nonfungible_data));
     }
 
     /** Sets the given values. */

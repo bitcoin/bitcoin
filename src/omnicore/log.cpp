@@ -64,6 +64,8 @@ bool msc_debug_alerts             = 1;
 bool msc_debug_consensus_hash_every_transaction = 0;
 //! Debug fees
 bool msc_debug_fees               = 1;
+//! Debug the non-fungible tokens database
+bool msc_debug_nftdb              = 0;
 
 /**
  * LogPrintf() has been broken a couple of times now
@@ -264,6 +266,7 @@ void InitDebugLogLevels()
         if (*it == "alerts") msc_debug_alerts = true;
         if (*it == "consensus_hash_every_transaction") msc_debug_consensus_hash_every_transaction = true;
         if (*it == "fees") msc_debug_fees = true;
+        if (*it == "nftdb") msc_debug_nftdb = true;
         if (*it == "none" || *it == "all") {
             bool allDebugState = false;
             if (*it == "all") allDebugState = true;
@@ -300,6 +303,7 @@ void InitDebugLogLevels()
             msc_debug_alerts = allDebugState;
             msc_debug_consensus_hash_every_transaction = allDebugState;
             msc_debug_fees = allDebugState;
+            msc_debug_nftdb = allDebugState;
         }
     }
 }

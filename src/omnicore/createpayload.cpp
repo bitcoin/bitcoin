@@ -77,6 +77,50 @@ std::vector<unsigned char> CreatePayload_SendAll(uint8_t ecosystem)
     return payload;
 }
 
+std::vector<unsigned char> CreatePayload_SendNonFungible(uint32_t propertyId, uint64_t tokenStart, uint64_t tokenEnd)
+{
+    std::vector<unsigned char> payload;
+    uint16_t messageType = 5;
+    uint16_t messageVer = 0;
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder32(propertyId);
+    SwapByteOrder64(tokenStart);
+    SwapByteOrder64(tokenEnd);
+
+    PUSH_BACK_BYTES(payload, messageVer);
+    PUSH_BACK_BYTES(payload, messageType);
+    PUSH_BACK_BYTES(payload, propertyId);
+    PUSH_BACK_BYTES(payload, tokenStart);
+    PUSH_BACK_BYTES(payload, tokenEnd);
+
+    return payload;
+}
+
+std::vector<unsigned char> CreatePayload_SetNonFungibleData(uint32_t propertyId, uint64_t tokenStart, uint64_t tokenEnd, uint8_t issuer, std::string& data)
+{
+    std::vector<unsigned char> payload;
+    uint16_t messageType = 201;
+    uint16_t messageVer = 0;
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder32(propertyId);
+    SwapByteOrder64(tokenStart);
+    SwapByteOrder64(tokenEnd);
+    if (data.size() > 255) data = data.substr(0,255);
+
+    PUSH_BACK_BYTES(payload, messageVer);
+    PUSH_BACK_BYTES(payload, messageType);
+    PUSH_BACK_BYTES(payload, propertyId);
+    PUSH_BACK_BYTES(payload, tokenStart);
+    PUSH_BACK_BYTES(payload, tokenEnd);
+    PUSH_BACK_BYTES(payload, issuer);
+    payload.insert(payload.end(), data.begin(), data.end());
+    payload.push_back('\0');
+
+    return payload;
+}
+
 std::vector<unsigned char> CreatePayload_DExSell(uint32_t propertyId, uint64_t amountForSale, uint64_t amountDesired, uint8_t timeLimit, uint64_t minFee, uint8_t subAction)
 {
     std::vector<unsigned char> payload;
@@ -276,7 +320,7 @@ std::vector<unsigned char> CreatePayload_CloseCrowdsale(uint32_t propertyId)
     return payload;
 }
 
-std::vector<unsigned char> CreatePayload_Grant(uint32_t propertyId, uint64_t amount, std::string memo)
+std::vector<unsigned char> CreatePayload_Grant(uint32_t propertyId, uint64_t amount, std::string info)
 {
     std::vector<unsigned char> payload;
     uint16_t messageType = 55;
@@ -285,13 +329,13 @@ std::vector<unsigned char> CreatePayload_Grant(uint32_t propertyId, uint64_t amo
     SwapByteOrder16(messageVer);
     SwapByteOrder32(propertyId);
     SwapByteOrder64(amount);
-    if (memo.size() > 255) memo = memo.substr(0,255);
+    if (info.size() > 255) info = info.substr(0,255);
 
     PUSH_BACK_BYTES(payload, messageVer);
     PUSH_BACK_BYTES(payload, messageType);
     PUSH_BACK_BYTES(payload, propertyId);
     PUSH_BACK_BYTES(payload, amount);
-    payload.insert(payload.end(), memo.begin(), memo.end());
+    payload.insert(payload.end(), info.begin(), info.end());
     payload.push_back('\0');
 
     return payload;

@@ -29,10 +29,10 @@ echo "Omni Core RPC test dir: "$TESTDIR
 echo "Last OmniJ commit: "$(git log -n 1 --format="%H Author: %cn <%ce>")
 if [ "$1" = "true" ]; then
     echo "Debug logging level: maximum"
-    $OMNICORED -datadir="$DATADIR" -regtest -txindex -server -daemon -rpcuser=bitcoinrpc -rpcpassword=pass -debug=1 -omnidebug=all -omnialertallowsender=any -omniactivationallowsender=any -paytxfee=0.0001 -minrelaytxfee=0.00001 -limitancestorcount=750 -limitdescendantcount=750 -rpcserialversion=0 -discover=0 -listen=0 -acceptnonstdtxn=1 &
+    $OMNICORED -datadir="$DATADIR" -regtest -txindex -server -daemon -rpcuser=bitcoinrpc -rpcpassword=pass -debug=1 -omnidebug=all -omnialertallowsender=any -omniactivationallowsender=any -paytxfee=0.0001 -minrelaytxfee=0.00001 -limitancestorcount=750 -limitdescendantcount=750 -rpcserialversion=0 -discover=0 -listen=0 -acceptnonstdtxn=1 -deprecatedrpc=label -deprecatedrpc=labelspurpose &
 else
     echo "Debug logging level: minimum"
-    $OMNICORED -datadir="$DATADIR" -regtest -txindex -server -daemon -rpcuser=bitcoinrpc -rpcpassword=pass -debug=0 -omnidebug=none -omnialertallowsender=any -omniactivationallowsender=any -paytxfee=0.0001 -minrelaytxfee=0.00001 -limitancestorcount=750 -limitdescendantcount=750 -rpcserialversion=0 -discover=0 -listen=0 -acceptnonstdtxn=1 &
+    $OMNICORED -datadir="$DATADIR" -regtest -txindex -server -daemon -rpcuser=bitcoinrpc -rpcpassword=pass -debug=0 -omnidebug=none -omnialertallowsender=any -omniactivationallowsender=any -paytxfee=0.0001 -minrelaytxfee=0.00001 -limitancestorcount=750 -limitdescendantcount=750 -rpcserialversion=0 -discover=0 -listen=0 -acceptnonstdtxn=1 -deprecatedrpc=label -deprecatedrpc=labelspurpose &
 fi
 $OMNICORECLI -datadir="$DATADIR" -regtest -rpcuser=bitcoinrpc -rpcpassword=pass -rpcwait getblockchaininfo
 $OMNICORECLI -datadir="$DATADIR" -regtest -rpcuser=bitcoinrpc -rpcpassword=pass -rpcwait omni_getinfo

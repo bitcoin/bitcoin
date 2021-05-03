@@ -116,6 +116,15 @@ uint16_t ParsePropertyType(const UniValue& value)
     return static_cast<uint16_t>(propertyType);
 }
 
+uint16_t ParseManagedPropertyType(const UniValue& value)
+{
+    int64_t propertyType = value.get_int64();
+    if (propertyType != 1 && propertyType != 2 && propertyType != 5) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid property type (1 = indivisible, 2 = divisible, 5 = non-fungible only)");
+    }
+    return static_cast<uint16_t>(propertyType);
+}
+
 uint32_t ParsePreviousPropertyId(const UniValue& value)
 {
     int64_t previousId = value.get_int64();

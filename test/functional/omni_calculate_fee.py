@@ -26,6 +26,17 @@ class OmniFeeCalculation(BitcoinTestFramework):
         # Obtaining a master address to work with
         address = node1.getnewaddress()
 
+        # Create and fund new address
+        omni_address = node0.getnewaddress()
+        node0.sendtoaddress(omni_address, 20)
+        node0.generatetoaddress(1, coinbase_address)
+
+        # Participating in the Exodus crowdsale to obtain some OMNI
+        txid = node0.sendmany("", {"moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP": 10, omni_address: 4})
+        node0.generatetoaddress(10, coinbase_address)
+
+        self.sync_blocks()
+
         # Send lots of small dust inputs to create a large TX
         for _ in range(3):
             for _ in range(50):
@@ -38,7 +49,6 @@ class OmniFeeCalculation(BitcoinTestFramework):
 
         # Checking the transaction was valid...
         result = node1.omni_gettransaction(txid)
-        print(result)
         assert_equal(result['valid'], True)
 
         # Minimum fee is 1KB and 3Sats/byte rate vins to cover 3,000 Sats will be selected.
@@ -55,16 +65,11 @@ class OmniFeeCalculation(BitcoinTestFramework):
         result = node1.omni_gettransaction(txid)
         assert_equal(result['valid'], True)
 
+        self.sync_blocks()
+
         # Test DEx calls
-
-        # Create and fund new address
-        omni_address = node0.getnewaddress()
-        node0.sendtoaddress(omni_address, 20)
+        node0.sendtoaddress(omni_address, 1)
         node0.generatetoaddress(1, coinbase_address)
-
-        # Participating in the Exodus crowdsale to obtain some OMNI
-        txid = node0.sendmany("", {"moneyqMan7uh8FqdCA2BV5yZ8qVrc9ikLP": 10, omni_address: 4})
-        node0.generatetoaddress(10, coinbase_address)
 
         # Create Offer
         txid = node0.omni_senddexsell(omni_address, 1, "1", "1", 10, "0.0001", 1)
@@ -74,18 +79,23 @@ class OmniFeeCalculation(BitcoinTestFramework):
         result = node0.omni_gettransaction(txid)
         assert_equal(result['valid'], True)
 
+        self.sync_blocks()
+
         # Accept the DEx offer
         txid = node1.omni_senddexaccept(address, omni_address, 1, "1")
         node1.generatetoaddress(1, coinbase_address)
 
         # Checking the transaction was valid...
         result = node1.omni_gettransaction(txid)
-        print(result)
         assert_equal(result['valid'], True)
+
+        self.sync_blocks()
 
         # Give buyer bitcoin to pay with, only fee left to pay
         node0.sendtoaddress(address, 1)
         node0.generatetoaddress(1, coinbase_address)
+
+        self.sync_blocks()
 
         # Pay for the DEx offer, tests min fee arg to WalletTxBuilder
         txid = node1.omni_senddexpay(address, omni_address, 1, "1")

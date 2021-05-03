@@ -40,6 +40,8 @@ All available commands can be listed with `"help"`, and information about a spec
   - [omni_sendrawtx](#omni_sendrawtx)
   - [omni_funded_send](#omni_funded_send)
   - [omni_funded_sendall](#omni_funded_sendall)
+  - [omni_sendnonfungible](#omni_sendnonfungible)
+  - [omni_setnonfungibledata](#omni_setnonfungibledata)
 - [Data retrieval](#data-retrieval)
   - [omni_getinfo](#omni_getinfo)
   - [omni_getbalance](#omni_getbalance)
@@ -67,6 +69,9 @@ All available commands can be listed with `"help"`, and information about a spec
   - [omni_getpayload](#omni_getpayload)
   - [omni_getseedblocks](#omni_getseedblocks)
   - [omni_getcurrentconsensushash](#omni_getcurrentconsensushash)
+  - [omni_getnonfungibletokens](#omni_getnonfungibletokens)
+  - [omni_getnonfungibletokendata](#omni_getnonfungibletokendata)
+  - [omni_getnonfungibletokenranges](#omni_getnonfungibletokenranges)
 - [Data retrieval (address index)](#data-retrieval-address-index)
   - [getaddresstxids](#getaddresstxids)
   - [getaddressdeltas](#getaddressdeltas)
@@ -103,6 +108,8 @@ All available commands can be listed with `"help"`, and information about a spec
   - [omni_createpayload_freeze](#omni_createpayload_freeze)
   - [omni_createpayload_unfreeze](#omni_createpayload_unfreeze)
   - [omni_createpayload_anydata](#omni_createpayload_anydata)
+  - [omni_createpayload_sendnonfungible](#omni_createpayload_sendnonfungible)
+  - [omni_createpayload_setnonfungibledata](#omni_createpayload_setnonfungibledata)
 - [Fee system](#fee-system)
   - [omni_getfeecache](#omni_getfeecache)
   - [omni_getfeetrigger](#omni_getfeetrigger)
@@ -465,7 +472,7 @@ Issue or grant new units of managed tokens.
 | `toaddress`         | string  | required | the receiver of the tokens (sender by default, can be `""`)                                  |
 | `propertyid`        | number  | required | the identifier of the tokens to grant                                                        |
 | `amount`            | string  | required | the amount of tokens to create                                                               |
-| `memo`              | string  | optional | a text note attached to this transaction (none by default)                                   |
+| `grantdata`         | string  | optional | NFT only: data set in all NFTs created in this grant (default: empty)                        |
 
 **Result:**
 ```js
@@ -908,6 +915,63 @@ All bitcoins from the sender are consumed and if there are bitcoins missing, the
 ```bash
 $ omnicore-cli "omni_funded_sendall" "1DFa5bT6KMEr6ta29QJouainsjaNBsJQhH" \
     "15cWrfuvMxyxGst2FisrQcvcpF48x6sXoH" 1 "15Jhzz4omEXEyFKbdcccJwuVPea5LqsKM1"
+```
+
+---
+
+### omni_sendnonfungible
+
+Create and broadcast a non-fungible send transaction.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `address`           | string  | required | the address to send from                                                                     |
+| `toaddress`         | string  | required | the address of the receiver                                                                  |
+| `propertyid`        | number  | required | the identifier of the tokens to send                                                         |
+| `tokenstart`        | number  | required | the first token in the range to send                                                         |
+| `tokenend`          | number  | required | the last token in the range to send                                                          |
+| `redeemaddress`     | string  | optional | an address that can spend the transaction dust (sender by default)                           |
+| `referenceamount`   | string  | optional | a bitcoin amount that is sent to the receiver (minimal by default)                           |
+
+**Result:**
+```js
+"hash"  // (string) the hex-encoded transaction hash
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_sendnonfungible" "3M9qvHKtgARhqcMtM5cRT9VaiDJ5PSfQGY" "37FaKponF7zqoMLUjEiko25pDiuVH5YLEa" 70 1 1000
+```
+
+---
+
+### omni_setnonfungibledata
+
+Sets either the issuer or holder data field in a non-fungible tokem. Holder data can only be
+updated by the token owner and issuer data can only be updated by address that created the tokens.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the property identifier                                                                      |
+| `tokenstart`        | number  | required | the first token in the range to set data on                                                  |
+| `tokenend`          | number  | required | the last token in the range to set data on                                                   |
+| `issuer`            | boolean | required | if true issuer data set, otherwise holder data set                                           |
+| `data`              | string  | required | data set as in either issuer or holder fields                                                |
+
+**Result:**
+```js
+"hash"  // (string) the hex-encoded transaction hash
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_setnonfungibledata" 70 50 60 true "string data"
 ```
 
 ---
@@ -1901,6 +1965,93 @@ $ omnicore-cli "omni_getcurrentconsensushash"
 
 ---
 
+### omni_getnonfungibletokens
+
+Returns the non-fungible tokens for a given address and property.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `address`           | string  | required | the address                                                                                  |
+| `propertyid`        | number  | required | the property identifier                                                                      |
+
+**Result:**
+```js
+{
+  "tokenstart" : n,            // (number) the first token in this range
+  "tokenend" : n,              // (number) the last token in this range
+  "amount" : n.nnnnnnnn,       // (number) the amount of tokens in the range
+}
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_getnonfungibletokens 1EXoDusjGwvnjZUyKkxZ4UHEf77z6A5S4P 1"
+```
+
+---
+
+### omni_getnonfungibletokendata
+
+Returns owner and all data set in a non-fungible token.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the property identifier                                                                      |
+| `tokenidstart`      | number  | required | the first non-fungible token in range                                                        |
+| `tokenidend`        | number  | required | the last non-fungible token in range                                                         |
+
+**Result:**
+```js
+{
+  "index" : n,                  // (number) the unique index of the token
+  "owner" : "owner",            // (string) the Bitcoin address of the owner
+  "grantdata" : "grantdata",    // (string) contents of the grant data field
+  "issuerdata" : "issuerdata",  // (string) contents of the issuer data field
+  "holderdata" : "holderdata",  // (string) contents of the holder data field
+}
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_getnonfungibletokendata 1 10 20"
+```
+
+---
+
+### omni_getnonfungibletokenranges
+
+Returns the ranges and their addresses for a non-fungible token property.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the property identifier                                                                      |
+
+**Result:**
+```js
+{
+  "address" : "address",        // (string) the address
+  "tokenstart" : n,            // (number) the first token in this range
+  "tokenend" : n,              // (number) the last token in this range
+  "amount" : n.nnnnnnnn,       // (number) the amount of tokens in the range
+}
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_getnonfungibletokenranges 1"
+```
+
+---
+
 ## Data retrieval (address index)
 
 The following RPCs can be used to obtain information about non-wallet balances and transactions. The address index must be enabled to use them.
@@ -2649,7 +2800,7 @@ Note: if the server is not synchronized, amounts are considered as divisible, ev
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `propertyid`        | number  | required | the identifier of the tokens to grant                                                        |
 | `amount`            | string  | required | the amount of tokens to create                                                               |
-| `memo`              | string  | optional | a text note attached to this transaction (none by default)                                   |
+| `grantdata`         | string  | optional | NFT only: data set in all NFTs created in this grant (default: empty)                        |
 
 **Result:**
 ```js
@@ -2938,6 +3089,58 @@ Creates the payload to embed arbitrary data.
 
 ```bash
 $ omnicore-cli "omni_createpayload_anydata" "646578782032303230"
+```
+
+---
+
+### omni_createpayload_sendnonfungible
+
+Create the payload for a non-fungible send transaction.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the identifier of the tokens to send                                                         |
+| `tokenstart`        | number  | required | the first token in the range to send                                                         |
+| `tokenend`          | number  | required | the last token in the range to send                                                          |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_sendnonfungible" 70 1 1000
+```
+
+---
+
+### omni_createpayload_setnonfungibledata
+
+Create the payload for a non-fungible token set data transaction.
+
+**Arguments:**
+
+| Name                | Type    | Presence | Description                                                                                  |
+|---------------------|---------|----------|----------------------------------------------------------------------------------------------|
+| `propertyid`        | number  | required | the identifier of the tokens to send                                                         |
+| `tokenstart`        | number  | required | the first token in the range to set data on                                                  |
+| `tokenend`          | number  | required | the last token in the range to set data on                                                   |
+| `issuer`            | boolean | required | if true issuer data set, otherwise holder data set                                           |
+| `data`              | string  | required | data set as in either issuer or holder fields                                                |
+
+**Result:**
+```js
+"payload"  // (string) the hex-encoded payload
+```
+
+**Example:**
+
+```bash
+$ omnicore-cli "omni_createpayload_setnonfungibledata" 70 50 60 true "string data"
 ```
 
 ---

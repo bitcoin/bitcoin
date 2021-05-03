@@ -38,7 +38,7 @@ int const DONT_STORE_MAINNET_STATE_UNTIL = 622000;
 #define TEST_ECO_PROPERTY_1 (0x80000003UL)
 
 // increment this value to force a refresh of the state (similar to --startclean)
-#define DB_VERSION 8
+#define DB_VERSION 9
 
 // could probably also use: int64_t maxInt64 = std::numeric_limits<int64_t>::max();
 // maximum numeric values from the spec:
@@ -58,6 +58,7 @@ enum TransactionType {
   MSC_TYPE_RESTRICTED_SEND            =  2,
   MSC_TYPE_SEND_TO_OWNERS             =  3,
   MSC_TYPE_SEND_ALL                   =  4,
+  MSC_TYPE_SEND_NONFUNGIBLE           =  5,
   MSC_TYPE_SAVINGS_MARK               = 10,
   MSC_TYPE_SAVINGS_COMPROMISED        = 11,
   MSC_TYPE_RATELIMITED_MARK           = 12,
@@ -83,6 +84,7 @@ enum TransactionType {
   MSC_TYPE_FREEZE_PROPERTY_TOKENS     = 185,
   MSC_TYPE_UNFREEZE_PROPERTY_TOKENS   = 186,
   MSC_TYPE_ANYDATA                    = 200,
+  MSC_TYPE_NONFUNGIBLE_DATA           = 201,
   OMNICORE_MESSAGE_TYPE_DEACTIVATION  = 65533,
   OMNICORE_MESSAGE_TYPE_ACTIVATION    = 65534,
   OMNICORE_MESSAGE_TYPE_ALERT         = 65535
@@ -90,6 +92,7 @@ enum TransactionType {
 
 #define MSC_PROPERTY_TYPE_INDIVISIBLE             1
 #define MSC_PROPERTY_TYPE_DIVISIBLE               2
+#define MSC_PROPERTY_TYPE_NONFUNGIBLE             5
 #define MSC_PROPERTY_TYPE_INDIVISIBLE_REPLACING   65
 #define MSC_PROPERTY_TYPE_DIVISIBLE_REPLACING     66
 #define MSC_PROPERTY_TYPE_INDIVISIBLE_APPENDING   129
