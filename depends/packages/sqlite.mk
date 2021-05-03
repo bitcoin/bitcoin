@@ -10,6 +10,10 @@ $(package)_config_opts_linux=--with-pic
 $(package)_cppflags_linux = -DSQLITE_DISABLE_LFS
 endef
 
+define $(package)_preprocess_cmds
+  cp -f $(BASEDIR)/config.guess $(BASEDIR)/config.sub .
+endef
+
 define $(package)_config_cmds
   $($(package)_autoconf)
 endef
