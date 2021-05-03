@@ -3,9 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <base58.h>
-#include <chainparamsbase.h>
 #include <core_io.h>
-#include <interfaces/chain.h>
 #include <key.h>
 #include <key_io.h>
 #include <node/context.h>
@@ -70,18 +68,15 @@ const std::vector<std::string> RPC_COMMANDS_NOT_SAFE_FOR_FUZZING{
     "addpeeraddress", // avoid DNS lookups
     "analyzepsbt",    // avoid signed integer overflow in CFeeRate::GetFee(unsigned long) (https://github.com/bitcoin/bitcoin/issues/20607)
     "dumptxoutset",   // avoid writing to disk
-#ifdef ENABLE_WALLET
     "dumpwallet", // avoid writing to disk
-#endif
-    "echoipc",           // avoid assertion failure (Assertion `"EnsureAnyNodeContext(request.context).init" && check' failed.)
-    "generatetoaddress", // avoid timeout
-    "gettxoutproof",     // avoid slow execution
-#ifdef ENABLE_WALLET
+    "echoipc",              // avoid assertion failure (Assertion `"EnsureAnyNodeContext(request.context).init" && check' failed.)
+    "generatetoaddress",    // avoid prohibitively slow execution (when `num_blocks` is large)
+    "generatetodescriptor", // avoid prohibitively slow execution (when `nblocks` is large)
+    "gettxoutproof",        // avoid prohibitively slow execution
     "importwallet", // avoid reading from disk
     "loadwallet",   // avoid reading from disk
-#endif
-    "mockscheduler",         // avoid assertion failure (Assertion `delta_seconds.count() > 0 && delta_seconds < std::chrono::hours{1}' failed.)
     "prioritisetransaction", // avoid signed integer overflow in CTxMemPool::PrioritiseTransaction(uint256 const&, long const&) (https://github.com/bitcoin/bitcoin/issues/20626)
+    "savemempool",           // disabled as a precautionary measure: may take a file path argument in the future
     "setban",                // avoid DNS lookups
     "stop",                  // avoid shutdown state
 };
@@ -164,7 +159,6 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "finalizepsbt",
     "generate",
     "generateblock",
-    "generatetodescriptor",
     "getaddednodeinfo",
     "getbestblockhash",
     "getblock",
@@ -202,11 +196,11 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
     "joinpsbts",
     "listbanned",
     "logging",
+    "mockscheduler",
     "ping",
     "preciousblock",
     "pruneblockchain",
     "reconsiderblock",
-    "savemempool",
     "scantxoutset",
     "sendrawtransaction",
     "setmocktime",
@@ -388,20 +382,6 @@ void initialize_rpc()
         }
         if (safe_for_fuzzing && not_safe_for_fuzzing) {
             std::cerr << "Error: RPC command \"" << rpc_command << "\" found in *both* RPC_COMMANDS_SAFE_FOR_FUZZING and RPC_COMMANDS_NOT_SAFE_FOR_FUZZING. Please update " << __FILE__ << ".\n";
-            std::terminate();
-        }
-    }
-    for (const std::string& rpc_command : RPC_COMMANDS_SAFE_FOR_FUZZING) {
-        const bool supported_rpc_command = std::find(supported_rpc_commands.begin(), supported_rpc_commands.end(), rpc_command) != supported_rpc_commands.end();
-        if (!supported_rpc_command) {
-            std::cerr << "Error: Unknown RPC command \"" << rpc_command << "\" found in RPC_COMMANDS_SAFE_FOR_FUZZING. Please update " << __FILE__ << ".\n";
-            std::terminate();
-        }
-    }
-    for (const std::string& rpc_command : RPC_COMMANDS_NOT_SAFE_FOR_FUZZING) {
-        const bool supported_rpc_command = std::find(supported_rpc_commands.begin(), supported_rpc_commands.end(), rpc_command) != supported_rpc_commands.end();
-        if (!supported_rpc_command) {
-            std::cerr << "Error: Unknown RPC command \"" << rpc_command << "\" found in RPC_COMMANDS_NOT_SAFE_FOR_FUZZING. Please update " << __FILE__ << ".\n";
             std::terminate();
         }
     }
