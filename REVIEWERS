@@ -105,8 +105,7 @@
 /src/txdb.*                                 @jamesob
 /src/dbwrapper.*                            @jamesob
 
-# Scripts/Linter
-*.sh                                        @practicalswift
+# Linter
 /test/lint/                                 @practicalswift
 /test/lint/lint-shell.sh                    @hebasto
 
