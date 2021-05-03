@@ -4850,8 +4850,9 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 }
             }
             peer->m_blocks_for_inv_relay.clear();
+        }
 
-            if (pto->m_tx_relay != nullptr) {
+        if (pto->m_tx_relay != nullptr) {
                 // SYSCOIN avoid deadlock because mempool is used inside, should be locked outside of cs_tx_inventory, invalidateblock will lock mempool first and then cs_tx_inventory
                 LOCK2(m_mempool.cs, pto->m_tx_relay->cs_tx_inventory);
                 // Check whether periodic sends should happen
@@ -5019,7 +5020,6 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         }
                     }
                 }
-            }
         }
 
         if (!vInv.empty()) {
