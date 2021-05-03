@@ -4449,8 +4449,9 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                 }
             }
             peer->m_blocks_for_inv_relay.clear();
+        }
 
-            if (pto->m_tx_relay != nullptr) {
+        if (pto->m_tx_relay != nullptr) {
                 LOCK(pto->m_tx_relay->cs_tx_inventory);
                 // Check whether periodic sends should happen
                 bool fSendTrickle = pto->HasPermission(PF_NOBAN);
@@ -4578,7 +4579,6 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
                         }
                     }
                 }
-            }
         }
         if (!vInv.empty())
             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::INV, vInv));
