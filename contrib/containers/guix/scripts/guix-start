@@ -13,8 +13,8 @@ if [[ ! -d "$WORKSPACE_PATH" ]]; then
     exit 1
 fi
 
-XCODE_VERSION="12.1"
-XCODE_RELEASE="12A7403"
+XCODE_VERSION="12.2"
+XCODE_RELEASE="12B45b"
 XCODE_ARCHIVE="Xcode-${XCODE_VERSION}-${XCODE_RELEASE}-extracted-SDK-with-libcxx-headers"
 
 # Check if macOS SDK is present, if not, download it

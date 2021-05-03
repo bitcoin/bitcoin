@@ -59,5 +59,5 @@ RUN mkdir base_cache sources SDKs
 WORKDIR /dash
 
 RUN mkdir -p depends/SDKs && \
-    curl -L https://bitcoincore.org/depends-sources/sdks/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz | tar -xz -C depends/SDKs
+    curl -L https://bitcoincore.org/depends-sources/sdks/Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers.tar.gz | tar -xz -C depends/SDKs
 

@@ -605,7 +605,7 @@ parse, modify and abstract ELF, PE and MachO formats.")
         ;; Build tools
         gnu-make
         libtool
-        autoconf
+        autoconf-2.71
         automake
         pkg-config
         bison
