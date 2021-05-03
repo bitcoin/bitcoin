@@ -316,6 +316,8 @@ bool VerifyScript(const CScript& scriptSig, const CScript& scriptPubKey, const C
 
 size_t CountWitnessSigOps(const CScript& scriptSig, const CScript& scriptPubKey, const CScriptWitness* witness, unsigned int flags);
 
+bool CheckMinimalPush(const std::vector<unsigned char>& data, opcodetype opcode);
+
 int FindAndDelete(CScript& script, const CScript& b);
 
 #endif // SYSCOIN_SCRIPT_INTERPRETER_H
