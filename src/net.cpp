@@ -1566,21 +1566,11 @@ void CConnman::DisconnectNodes()
         for (auto it = m_nodes_disconnected.begin(); it != m_nodes_disconnected.end(); )
         {
             CNode* pnode = *it;
-            // wait until threads are done using it
-            bool fDelete = false;
+            // Destroy the object only after other threads have stopped using it.
             if (pnode->GetRefCount() <= 0) {
-                {
-                    TRY_LOCK(pnode->cs_vSend, lockSend);
-                    if (lockSend) {
-                        fDelete = true;
-                    }
-                }
-                if (fDelete) {
-                    it = m_nodes_disconnected.erase(it);
-                    DeleteNode(pnode);
-                }
-            }
-            if (!fDelete) {
+                it = m_nodes_disconnected.erase(it);
+                DeleteNode(pnode);
+            } else {
                 ++it;
             }
         }
