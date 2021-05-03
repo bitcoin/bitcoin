@@ -55,7 +55,6 @@
 #include <QShortcut>
 #include <QSize>
 #include <QString>
-#include <QStringBuilder>
 #include <QTextDocument> // for Qt::mightBeRichText
 #include <QThread>
 #include <QUrlQuery>
@@ -902,7 +901,7 @@ QString MakeHtmlLink(const QString& source, const QString& link)
 {
     return QString(source).replace(
         link,
-        QLatin1String("<a href=\"") % link % QLatin1String("\">") % link % QLatin1String("</a>"));
+        QLatin1String("<a href=\"") + link + QLatin1String("\">") + link + QLatin1String("</a>"));
 }
 
 void PrintSlotException(
