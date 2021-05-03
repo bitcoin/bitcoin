@@ -156,6 +156,9 @@ for outdir in "${OUTDIRS[@]}"; do
         echo "${outname}: SKIPPING: Signature directory already exists in the specified guix.sigs repository"
         outdirs_already_attested_to+=("$outdir")
     else
+        # Clean up incomplete sigdir if something fails (likely gpg)
+        trap 'rm -rf "$outsigdir"' ERR
+
         mkdir -p "$outsigdir"
 
         (
@@ -182,6 +185,8 @@ for outdir in "${OUTDIRS[@]}"; do
             echo "${outname}: Not signing SHA256SUMS as \$NO_SIGN is not empty"
         fi
         echo ""
+
+        trap - ERR  # Reset ERR trap
     fi
 done
 
