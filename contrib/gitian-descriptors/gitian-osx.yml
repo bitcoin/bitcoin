@@ -30,7 +30,7 @@ remotes:
 - "url": "https://github.com/syscoin/syscoin.git"
   "dir": "syscoin"
 files:
-- "Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz"
+- "Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz"
 script: |
   set -e -o pipefail
 
@@ -87,7 +87,7 @@ script: |
   BASEPREFIX="${PWD}/depends"
 
   mkdir -p ${BASEPREFIX}/SDKs
-  tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/Xcode-11.3.1-11C505-extracted-SDK-with-libcxx-headers.tar.gz
+  tar -C ${BASEPREFIX}/SDKs -xf ${BUILD_DIR}/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz
 
   # Build dependencies for each host
   for i in $HOSTS; do
