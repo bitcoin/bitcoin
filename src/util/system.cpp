@@ -802,11 +802,6 @@ fs::path GetDefaultDataDir()
 #endif
 }
 
-const fs::path &GetDataDir(bool fNetSpecific)
-{
-    return fNetSpecific ? gArgs.GetDataDirNet() : gArgs.GetDataDirBase();
-}
-
 bool CheckDataDirOption()
 {
     std::string datadir = gArgs.GetArg("-datadir", "");
