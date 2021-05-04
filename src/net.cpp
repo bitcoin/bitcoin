@@ -1395,13 +1395,12 @@ bool CConnman::InactivityCheck(const CNode& node) const
     return false;
 }
 
-bool CConnman::GenerateSelectSet(const std::vector<CNode*>& nodes,
-                                 std::set<SOCKET>& recv_set,
-                                 std::set<SOCKET>& send_set,
-                                 std::set<SOCKET>& error_set)
+Sock::EventsPerSock CConnman::GenerateWaitSockets(Span<CNode* const> nodes)
 {
+    Sock::EventsPerSock events_per_sock;
+
     for (const ListenSocket& hListenSocket : vhListenSocket) {
-        recv_set.insert(hListenSocket.sock->Get());
+        events_per_sock.emplace(hListenSocket.sock, Sock::Events{Sock::RECV});
     }
 
     for (CNode* pnode : nodes) {
@@ -1428,172 +1427,49 @@ bool CConnman::GenerateSelectSet(const std::vector<CNode*>& nodes,
             continue;
         }
 
-        error_set.insert(pnode->m_sock->Get());
+        Sock::Event requested{0};
         if (select_send) {
-            send_set.insert(pnode->m_sock->Get());
-            continue;
+            requested = Sock::SEND;
+        } else if (select_recv) {
+            requested = Sock::RECV;
         }
-        if (select_recv) {
-            recv_set.insert(pnode->m_sock->Get());
-        }
+
+        events_per_sock.emplace(pnode->m_sock, Sock::Events{requested});
     }
 
-    return !recv_set.empty() || !send_set.empty() || !error_set.empty();
+    return events_per_sock;
 }
-
-#ifdef USE_POLL
-void CConnman::SocketEvents(const std::vector<CNode*>& nodes,
-                            std::set<SOCKET>& recv_set,
-                            std::set<SOCKET>& send_set,
-                            std::set<SOCKET>& error_set)
-{
-    std::set<SOCKET> recv_select_set, send_select_set, error_select_set;
-    if (!GenerateSelectSet(nodes, recv_select_set, send_select_set, error_select_set)) {
-        interruptNet.sleep_for(std::chrono::milliseconds(SELECT_TIMEOUT_MILLISECONDS));
-        return;
-    }
-
-    std::unordered_map<SOCKET, struct pollfd> pollfds;
-    for (SOCKET socket_id : recv_select_set) {
-        pollfds[socket_id].fd = socket_id;
-        pollfds[socket_id].events |= POLLIN;
-    }
-
-    for (SOCKET socket_id : send_select_set) {
-        pollfds[socket_id].fd = socket_id;
-        pollfds[socket_id].events |= POLLOUT;
-    }
-
-    for (SOCKET socket_id : error_select_set) {
-        pollfds[socket_id].fd = socket_id;
-        // These flags are ignored, but we set them for clarity
-        pollfds[socket_id].events |= POLLERR|POLLHUP;
-    }
-
-    std::vector<struct pollfd> vpollfds;
-    vpollfds.reserve(pollfds.size());
-    for (auto it : pollfds) {
-        vpollfds.push_back(std::move(it.second));
-    }
-
-    if (poll(vpollfds.data(), vpollfds.size(), SELECT_TIMEOUT_MILLISECONDS) < 0) return;
-
-    if (interruptNet) return;
-
-    for (struct pollfd pollfd_entry : vpollfds) {
-        if (pollfd_entry.revents & POLLIN)            recv_set.insert(pollfd_entry.fd);
-        if (pollfd_entry.revents & POLLOUT)           send_set.insert(pollfd_entry.fd);
-        if (pollfd_entry.revents & (POLLERR|POLLHUP)) error_set.insert(pollfd_entry.fd);
-    }
-}
-#else
-void CConnman::SocketEvents(const std::vector<CNode*>& nodes,
-                            std::set<SOCKET>& recv_set,
-                            std::set<SOCKET>& send_set,
-                            std::set<SOCKET>& error_set)
-{
-    std::set<SOCKET> recv_select_set, send_select_set, error_select_set;
-    if (!GenerateSelectSet(nodes, recv_select_set, send_select_set, error_select_set)) {
-        interruptNet.sleep_for(std::chrono::milliseconds(SELECT_TIMEOUT_MILLISECONDS));
-        return;
-    }
-
-    //
-    // Find which sockets have data to receive
-    //
-    struct timeval timeout;
-    timeout.tv_sec  = 0;
-    timeout.tv_usec = SELECT_TIMEOUT_MILLISECONDS * 1000; // frequency to poll pnode->vSend
-
-    fd_set fdsetRecv;
-    fd_set fdsetSend;
-    fd_set fdsetError;
-    FD_ZERO(&fdsetRecv);
-    FD_ZERO(&fdsetSend);
-    FD_ZERO(&fdsetError);
-    SOCKET hSocketMax = 0;
-
-    for (SOCKET hSocket : recv_select_set) {
-        FD_SET(hSocket, &fdsetRecv);
-        hSocketMax = std::max(hSocketMax, hSocket);
-    }
-
-    for (SOCKET hSocket : send_select_set) {
-        FD_SET(hSocket, &fdsetSend);
-        hSocketMax = std::max(hSocketMax, hSocket);
-    }
-
-    for (SOCKET hSocket : error_select_set) {
-        FD_SET(hSocket, &fdsetError);
-        hSocketMax = std::max(hSocketMax, hSocket);
-    }
-
-    int nSelect = select(hSocketMax + 1, &fdsetRecv, &fdsetSend, &fdsetError, &timeout);
-
-    if (interruptNet)
-        return;
-
-    if (nSelect == SOCKET_ERROR)
-    {
-        int nErr = WSAGetLastError();
-        LogPrintf("socket select error %s\n", NetworkErrorString(nErr));
-        for (unsigned int i = 0; i <= hSocketMax; i++)
-            FD_SET(i, &fdsetRecv);
-        FD_ZERO(&fdsetSend);
-        FD_ZERO(&fdsetError);
-        if (!interruptNet.sleep_for(std::chrono::milliseconds(SELECT_TIMEOUT_MILLISECONDS)))
-            return;
-    }
-
-    for (SOCKET hSocket : recv_select_set) {
-        if (FD_ISSET(hSocket, &fdsetRecv)) {
-            recv_set.insert(hSocket);
-        }
-    }
-
-    for (SOCKET hSocket : send_select_set) {
-        if (FD_ISSET(hSocket, &fdsetSend)) {
-            send_set.insert(hSocket);
-        }
-    }
-
-    for (SOCKET hSocket : error_select_set) {
-        if (FD_ISSET(hSocket, &fdsetError)) {
-            error_set.insert(hSocket);
-        }
-    }
-}
-#endif
 
 void CConnman::SocketHandler()
 {
     AssertLockNotHeld(m_total_bytes_sent_mutex);
 
-    std::set<SOCKET> recv_set;
-    std::set<SOCKET> send_set;
-    std::set<SOCKET> error_set;
+    Sock::EventsPerSock events_per_sock;
 
     {
         const NodesSnapshot snap{*this, /*shuffle=*/false};
+
+        const auto timeout = std::chrono::milliseconds(SELECT_TIMEOUT_MILLISECONDS);
 
         // Check for the readiness of the already connected sockets and the
         // listening sockets in one call ("readiness" as in poll(2) or
         // select(2)). If none are ready, wait for a short while and return
         // empty sets.
-        SocketEvents(snap.Nodes(), recv_set, send_set, error_set);
+        events_per_sock = GenerateWaitSockets(snap.Nodes());
+        if (events_per_sock.empty() || !events_per_sock.begin()->first->WaitMany(timeout, events_per_sock)) {
+            interruptNet.sleep_for(timeout);
+        }
 
         // Service (send/receive) each of the already connected nodes.
-        SocketHandlerConnected(snap.Nodes(), recv_set, send_set, error_set);
+        SocketHandlerConnected(snap.Nodes(), events_per_sock);
     }
 
     // Accept new connections from listening sockets.
-    SocketHandlerListening(recv_set);
+    SocketHandlerListening(events_per_sock);
 }
 
 void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
-                                      const std::set<SOCKET>& recv_set,
-                                      const std::set<SOCKET>& send_set,
-                                      const std::set<SOCKET>& error_set)
+                                      const Sock::EventsPerSock& events_per_sock)
 {
     AssertLockNotHeld(m_total_bytes_sent_mutex);
 
@@ -1612,9 +1488,12 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
             if (!pnode->m_sock) {
                 continue;
             }
-            recvSet = recv_set.count(pnode->m_sock->Get()) > 0;
-            sendSet = send_set.count(pnode->m_sock->Get()) > 0;
-            errorSet = error_set.count(pnode->m_sock->Get()) > 0;
+            const auto it = events_per_sock.find(pnode->m_sock);
+            if (it != events_per_sock.end()) {
+                recvSet = it->second.occurred & Sock::RECV;
+                sendSet = it->second.occurred & Sock::SEND;
+                errorSet = it->second.occurred & Sock::ERR;
+            }
         }
         if (recvSet || errorSet)
         {
@@ -1684,13 +1563,14 @@ void CConnman::SocketHandlerConnected(const std::vector<CNode*>& nodes,
     }
 }
 
-void CConnman::SocketHandlerListening(const std::set<SOCKET>& recv_set)
+void CConnman::SocketHandlerListening(const Sock::EventsPerSock& events_per_sock)
 {
     for (const ListenSocket& listen_socket : vhListenSocket) {
         if (interruptNet) {
             return;
         }
-        if (recv_set.count(listen_socket.sock->Get()) > 0) {
+        const auto it = events_per_sock.find(listen_socket.sock);
+        if (it != events_per_sock.end() && it->second.occurred & Sock::RECV) {
             AcceptConnection(listen_socket);
         }
     }
