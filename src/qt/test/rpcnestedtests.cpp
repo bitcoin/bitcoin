@@ -11,8 +11,6 @@
 #include <univalue.h>
 #include <util/system.h>
 
-#include <llmq/context.h>
-
 #include <QTest>
 
 #include <string>
@@ -37,14 +35,16 @@ static RPCHelpMan rpcNestedTest_rpc()
 }
 
 static const CRPCCommand vRPCCommands[] = {
-    {"test", &rpcNestedTest_rpc},
+    {"rpcNestedTest", &rpcNestedTest_rpc},
 };
 
 void RPCNestedTests::rpcNestedTests()
 {
     // do some test setup
     // could be moved to a more generic place when we add more tests on QT level
-    tableRPC.appendCommand("rpcNestedTest", &vRPCCommands[0]);
+    for (const auto& c : vRPCCommands) {
+        tableRPC.appendCommand(c.name, &c);
+    }
 
     TestingSetup test;
     m_node.setContext(&test.m_node);
