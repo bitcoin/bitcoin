@@ -151,7 +151,7 @@ bool Session::Accept(Connection& conn)
                 throw std::runtime_error("wait on socket failed");
             }
 
-            if ((occurred & Sock::RECV) == 0) {
+            if (occurred == 0) {
                 // Timeout, no incoming connections within MAX_WAIT_FOR_IO.
                 continue;
             }
