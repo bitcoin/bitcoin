@@ -92,7 +92,7 @@ if [[ ${USE_MEMORY_SANITIZER} == "true" ]]; then
   DOCKER_EXEC "update-alternatives --install /usr/bin/clang++ clang++ \$(which clang++-9) 100"
   DOCKER_EXEC "update-alternatives --install /usr/bin/clang clang \$(which clang-9) 100"
   DOCKER_EXEC "mkdir -p ${BASE_SCRATCH_DIR}/msan/build/"
-  DOCKER_EXEC "git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-10.0.0 ${BASE_SCRATCH_DIR}/msan/llvm-project"
+  DOCKER_EXEC "git clone --depth=1 https://github.com/llvm/llvm-project -b llvmorg-12.0.0 ${BASE_SCRATCH_DIR}/msan/llvm-project"
   DOCKER_EXEC "cd ${BASE_SCRATCH_DIR}/msan/build/ && cmake -DLLVM_ENABLE_PROJECTS='libcxx;libcxxabi' -DCMAKE_BUILD_TYPE=Release -DLLVM_USE_SANITIZER=Memory -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DLLVM_TARGETS_TO_BUILD=X86 ../llvm-project/llvm/"
   DOCKER_EXEC "cd ${BASE_SCRATCH_DIR}/msan/build/ && make $MAKEJOBS cxx"
 fi

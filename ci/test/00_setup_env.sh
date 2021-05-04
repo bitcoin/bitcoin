@@ -14,6 +14,9 @@ export BASE_ROOT_DIR
 # The depends dir.
 # This folder exists on the ci host and ci guest. Changes are propagated back and forth.
 export DEPENDS_DIR=${DEPENDS_DIR:-$BASE_ROOT_DIR/depends}
+# A folder for the ci system to put temporary files (ccache, datadirs for tests, ...)
+# This folder only exists on the ci host.
+export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch}
 
 echo "Setting specific values in env"
 if [ -n "${FILE_ENV}" ]; then
@@ -25,9 +28,6 @@ fi
 echo "Fallback to default values in env (if not yet set)"
 # The number of parallel jobs to pass down to make and test_runner.py
 export MAKEJOBS=${MAKEJOBS:--j4}
-# A folder for the ci system to put temporary files (ccache, datadirs for tests, ...)
-# This folder only exists on the ci host.
-export BASE_SCRATCH_DIR=${BASE_SCRATCH_DIR:-$BASE_ROOT_DIR/ci/scratch}
 # What host to compile for. See also ./depends/README.md
 # Tests that need cross-compilation export the appropriate HOST.
 # Tests that run natively guess the host
