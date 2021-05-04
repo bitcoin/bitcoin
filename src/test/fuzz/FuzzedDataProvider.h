@@ -69,7 +69,7 @@ class FuzzedDataProvider {
   bool ConsumeBool();
 
   // Returns a value chosen from the given enum.
-  template <typename T> T ConsumeEnum();
+  template <typename T> T ConsumeEnum(T max_value);
 
   // Returns a value from the given array.
   template <typename T, size_t size> T PickValueInArray(const T (&array)[size]);
@@ -289,13 +289,12 @@ inline bool FuzzedDataProvider::ConsumeBool() {
   return 1 & ConsumeIntegral<uint8_t>();
 }
 
-// Returns an enum value. The enum must start at 0 and be contiguous. It must
-// also contain |kMaxValue| aliased to its largest (inclusive) value. Such as:
-// enum class Foo { SomeValue, OtherValue, kMaxValue = OtherValue };
-template <typename T> T FuzzedDataProvider::ConsumeEnum() {
+// Returns an enum value. The enum must start at 0 and be contiguous up to
+// max_value.
+template <typename T> T FuzzedDataProvider::ConsumeEnum(T max_value) {
   static_assert(std::is_enum<T>::value, "|T| must be an enum type.");
   return static_cast<T>(
-      ConsumeIntegralInRange<uint32_t>(0, static_cast<uint32_t>(T::kMaxValue)));
+      ConsumeIntegralInRange<uint32_t>(0, static_cast<uint32_t>(max_value)));
 }
 
 // Returns a copy of the value selected from the given fixed-size |array|.
