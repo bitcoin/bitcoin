@@ -229,9 +229,10 @@ public:
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
 
-        vSeeds.emplace_back("192.168.1.87");
-        vSeeds.emplace_back("192.168.1.33");
-        vSeeds.emplace_back("192.168.1.62");
+
+
+        vSeeds.emplace_back("testnet1.dynamocoin.org");
+        vSeeds.emplace_back("testnet2.dynamocoin.org");
 
 
 
