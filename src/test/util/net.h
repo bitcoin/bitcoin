@@ -153,6 +153,15 @@ public:
         return true;
     }
 
+    bool WaitMany(std::chrono::milliseconds timeout, WaitData& what) const override
+    {
+        for (auto& [sock, events] : what) {
+            (void)sock;
+            events.occurred = events.requested;
+        }
+        return true;
+    }
+
 private:
     const std::string m_contents;
     mutable size_t m_consumed;

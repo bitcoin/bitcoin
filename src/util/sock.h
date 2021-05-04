@@ -12,6 +12,7 @@
 #include <chrono>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 /**
  * Maximum time to wait for I/O readiness.
@@ -146,6 +147,56 @@ public:
     [[nodiscard]] virtual bool Wait(std::chrono::milliseconds timeout,
                                     Event requested,
                                     Event* occurred = nullptr) const;
+
+    /**
+     * Auxiliary requested/occurred events to wait for in `WaitMany()`.
+     */
+    struct WaitEvents {
+        Event requested;
+        Event occurred;
+    };
+
+    struct Hash {
+        size_t operator()(const std::shared_ptr<const Sock>& s) const
+        {
+            return s ? s->m_socket : std::numeric_limits<SOCKET>::max();
+        }
+    };
+
+    struct Equal {
+        bool operator()(const std::shared_ptr<const Sock>& lhs,
+                        const std::shared_ptr<const Sock>& rhs) const
+        {
+            if (lhs && rhs) {
+                return lhs->m_socket == rhs->m_socket;
+            }
+            if (!lhs && !rhs) {
+                return true;
+            }
+            return false;
+        }
+    };
+
+    /**
+     * On which socket to wait for what events in `WaitMany()`.
+     * The `shared_ptr` is copied into the map to ensure that the `Sock` object
+     * is not destroyed and the underlying socket closed. If this happens
+     * shortly before or after we call `poll(2)` and a new socket gets created
+     * under the same file descriptor number then the report from `WaitMany()`
+     * will be bogus.
+     */
+    using WaitData = std::unordered_map<std::shared_ptr<const Sock>, WaitEvents, Hash, Equal>;
+
+    /**
+     * Same as `Wait()`, but wait on many sockets within the same timeout.
+     * @param[in] timeout Wait this much for at least one of the requested events to occur.
+     * @param[in,out] what Wait for the requested events on these sockets and set `occurred`
+     * to the events that actually occur.
+     * A timeout is indicated by return value of `true` and all `what[].occurred`
+     * being set to 0.
+     * @return true on success and false otherwise
+     */
+    [[nodiscard]] virtual bool WaitMany(std::chrono::milliseconds timeout, WaitData& what) const;
 
     /* Higher level, convenience, methods. These may throw. */
 

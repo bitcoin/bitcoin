@@ -68,6 +68,8 @@ public:
 
     bool Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred = nullptr) const override;
 
+    bool WaitMany(std::chrono::milliseconds timeout, WaitData& what) const override;
+
     bool IsConnected(std::string& errmsg) const override;
 };
 

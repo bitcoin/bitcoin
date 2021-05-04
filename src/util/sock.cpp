@@ -93,73 +93,103 @@ int Sock::GetSockOpt(int level, int opt_name, void* opt_val, socklen_t* opt_len)
 
 bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occurred) const
 {
-#ifdef USE_POLL
-    pollfd fd;
-    fd.fd = m_socket;
-    fd.events = 0;
-    if (requested & RECV) {
-        fd.events |= POLLIN;
-    }
-    if (requested & SEND) {
-        fd.events |= POLLOUT;
-    }
+    // We need a `shared_ptr` owning `this` for `WaitMany()`, but don't want
+    // `this` to be destroyed when the `shared_ptr` goes out of scope at the
+    // end of this function. Create it with a custom noop deleter.
+    std::shared_ptr<const Sock> shared{this, [](const Sock*) {}};
 
-    if (poll(&fd, 1, count_milliseconds(timeout)) == SOCKET_ERROR) {
+    WaitData what{std::make_pair(shared, WaitEvents{requested, 0})};
+
+    if (!WaitMany(timeout, what)) {
         return false;
     }
 
     if (occurred != nullptr) {
-        *occurred = 0;
-        if (fd.revents & POLLIN) {
-            *occurred |= RECV;
+        *occurred = what.begin()->second.occurred;
+    }
+
+    return true;
+}
+
+bool Sock::WaitMany(std::chrono::milliseconds timeout, WaitData& what) const
+{
+#ifdef USE_POLL
+    std::vector<pollfd> pfds;
+    for (const auto& [sock, events] : what) {
+        pfds.emplace_back();
+        auto& pfd = pfds.back();
+        pfd.fd = sock->m_socket;
+        if (events.requested & RECV) {
+            pfd.events |= POLLIN;
         }
-        if (fd.revents & POLLOUT) {
-            *occurred |= SEND;
+        if (events.requested & SEND) {
+            pfd.events |= POLLOUT;
         }
-        if (fd.revents & (POLLERR | POLLHUP)) {
-            *occurred |= ERR;
+    }
+
+    if (poll(pfds.data(), pfds.size(), count_milliseconds(timeout)) == SOCKET_ERROR) {
+        return false;
+    }
+
+    assert(pfds.size() == what.size());
+    size_t i{0};
+    for (auto& [sock, events] : what) {
+        assert(sock->m_socket == static_cast<SOCKET>(pfds[i].fd));
+        events.occurred = 0;
+        if (pfds[i].revents & POLLIN) {
+            events.occurred |= RECV;
         }
+        if (pfds[i].revents & POLLOUT) {
+            events.occurred |= SEND;
+        }
+        if (pfds[i].revents & (POLLERR | POLLHUP)) {
+            events.occurred |= ERR;
+        }
+        ++i;
     }
 
     return true;
 #else
-    if (!IsSelectableSocket(m_socket)) {
+    fd_set recv;
+    fd_set send;
+    fd_set err;
+    FD_ZERO(&recv);
+    FD_ZERO(&send);
+    FD_ZERO(&err);
+    SOCKET socket_max{0};
+
+    for (const auto& [sock, events] : what) {
+        const auto& s = sock->m_socket;
+        if (!IsSelectableSocket(s)) {
+            return false;
+        }
+        if (events.requested & RECV) {
+            FD_SET(s, &recv);
+        }
+        if (events.requested & SEND) {
+            FD_SET(s, &send);
+        }
+        FD_SET(s, &err);
+        socket_max = std::max(socket_max, s);
+    }
+
+    timeval tv = MillisToTimeval(timeout);
+
+    if (select(socket_max + 1, &recv, &send, &err, &tv) == SOCKET_ERROR) {
         return false;
     }
 
-    fd_set fdset_recv;
-    fd_set fdset_send;
-    fd_set fdset_err;
-    FD_ZERO(&fdset_recv);
-    FD_ZERO(&fdset_send);
-    FD_ZERO(&fdset_err);
-
-    if (requested & RECV) {
-        FD_SET(m_socket, &fdset_recv);
-    }
-
-    if (requested & SEND) {
-        FD_SET(m_socket, &fdset_send);
-    }
-
-    FD_SET(m_socket, &fdset_err);
-
-    timeval timeout_struct = MillisToTimeval(timeout);
-
-    if (select(m_socket + 1, &fdset_recv, &fdset_send, &fdset_err, &timeout_struct) == SOCKET_ERROR) {
-        return false;
-    }
-
-    if (occurred != nullptr) {
-        *occurred = 0;
-        if (FD_ISSET(m_socket, &fdset_recv)) {
-            *occurred |= RECV;
+    for (auto& [sock, events] : what) {
+        const auto& s = sock->m_socket;
+        events.occurred = 0;
+        if (FD_ISSET(s, &recv)) {
+            events.occurred |= RECV;
         }
-        if (FD_ISSET(m_socket, &fdset_send)) {
-            *occurred |= SEND;
+        if (FD_ISSET(s, &send)) {
+            events.occurred |= SEND;
         }
-        if (FD_ISSET(m_socket, &fdset_err)) {
-            *occurred |= ERR;
+        if (FD_ISSET(s, &err)) {
+            events.occurred |= ERR;
         }
     }
 
