@@ -133,8 +133,7 @@ unsigned int ParseScriptFlags(const std::string& str)
     std::vector<std::string> words;
     boost::algorithm::split(words, str, boost::algorithm::is_any_of(","));
 
-    for (const std::string& word : words)
-    {
+    for (const std::string& word : words) {
         auto it = FLAG_NAMES.find(word);
         if (it == FLAG_NAMES.end()) throw std::runtime_error("Unknown verification flag " + word);
         flags |= it->second;
@@ -186,15 +185,19 @@ void Test(const std::string& str)
     }
 }
 
-ECCVerifyHandle handle;
+void test_init()
+{
+    static ECCVerifyHandle handle;
+}
 
-} // namespace
-
-FUZZ_TARGET_INIT_HIDDEN(script_assets_test_minimizer, FuzzFrameworkEmptyInitFun, /* hidden */ true)
+FUZZ_TARGET_INIT_HIDDEN(script_assets_test_minimizer, test_init, /* hidden */ true)
 {
     if (buffer.size() < 2 || buffer.back() != '\n' || buffer[buffer.size() - 2] != ',') return;
     const std::string str((const char*)buffer.data(), buffer.size() - 2);
     try {
         Test(str);
-    } catch (const std::runtime_error&) {}
+    } catch (const std::runtime_error&) {
+    }
 }
+
+} // namespace
