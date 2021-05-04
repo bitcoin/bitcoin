@@ -136,6 +136,9 @@ bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occur
         if (fd.revents & POLLOUT) {
             *occurred |= SEND;
         }
+        if (fd.revents & (POLLERR | POLLHUP)) {
+            *occurred |= ERR;
+        }
     }
 
     return true;
@@ -146,8 +149,10 @@ bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occur
 
     fd_set fdset_recv;
     fd_set fdset_send;
+    fd_set fdset_err;
     FD_ZERO(&fdset_recv);
     FD_ZERO(&fdset_send);
+    FD_ZERO(&fdset_err);
 
     if (requested & RECV) {
         FD_SET(m_socket, &fdset_recv);
@@ -157,9 +162,11 @@ bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occur
         FD_SET(m_socket, &fdset_send);
     }
 
+    FD_SET(m_socket, &fdset_err);
+
     timeval timeout_struct = MillisToTimeval(timeout);
 
-    if (select(m_socket + 1, &fdset_recv, &fdset_send, nullptr, &timeout_struct) == SOCKET_ERROR) {
+    if (select(m_socket + 1, &fdset_recv, &fdset_send, &fdset_err, &timeout_struct) == SOCKET_ERROR) {
         return false;
     }
 
@@ -170,6 +177,9 @@ bool Sock::Wait(std::chrono::milliseconds timeout, Event requested, Event* occur
         }
         if (FD_ISSET(m_socket, &fdset_send)) {
             *occurred |= SEND;
+        }
+        if (FD_ISSET(m_socket, &fdset_err)) {
+            *occurred |= ERR;
         }
     }
 
