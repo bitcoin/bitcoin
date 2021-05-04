@@ -83,9 +83,11 @@ void CSporkManager::CheckAndRemove()
     while (itActive != mapSporksActive.end()) {
         auto itSignerPair = itActive->second.begin();
         while (itSignerPair != itActive->second.end()) {
-            bool fHasValidSig = setSporkPubKeyIDs.find(itSignerPair->first) != setSporkPubKeyIDs.end() &&
-                                itSignerPair->second.CheckSignature(itSignerPair->first);
-            if (!fHasValidSig) {
+            if (setSporkPubKeyIDs.find(itSignerPair->first) == setSporkPubKeyIDs.end()) {
+                mapSporksByHash.erase(itSignerPair->second.GetHash());
+                continue;
+            }
+            if (!itSignerPair->second.CheckSignature(itSignerPair->first)) {
                 mapSporksByHash.erase(itSignerPair->second.GetHash());
                 itActive->second.erase(itSignerPair++);
                 continue;
