@@ -389,7 +389,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
                         LOCK(pnode->m_tx_relay->cs_filter);
                         fSPV = pnode->m_tx_relay->pfilter != nullptr;
                     }
-                    if (!fSPV && !pnode->IsMasternodeConnection()) {
+                    if (!fSPV && pnode->CanRelay()) {
                         pnode->PushOtherInventory(clsigInv);
                     }
                 });
@@ -644,7 +644,7 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
             mapSignedRequestIds.try_emplace(requestId, std::make_pair(pindex->nHeight, pindex->GetBlockHash()));
         }
         quorumSigningManager->AsyncSignIfMember(llmqType, requestId, pindex->GetBlockHash(), quorum->qc->quorumHash);
-        if (!fMemberOfSomeQuorum || attempt >= quorums_scanned.size()) {
+        if (!fMemberOfSomeQuorum || attempt >= (int)quorums_scanned.size()) {
             // not a member or tried too many times, nothing to do
             attempt = attempt_start;
         } else {
