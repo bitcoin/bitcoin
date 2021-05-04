@@ -688,7 +688,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>Dust:</source>
-        <translation>പൊടി:</translation>
+        <translation>ഡസ്ട്:</translation>
     </message>
     <message>
         <source>After Fee:</source>
@@ -700,7 +700,7 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </message>
     <message>
         <source>(un)select all</source>
-        <translation>(അൺ) എല്ലാം തിരഞ്ഞെടുക്കുക</translation>
+        <translation>എല്ലാം തിരഞ്ഞു (എടുക്കുക /എടുക്കാതിരിക്കുക)</translation>
     </message>
     <message>
         <source>Tree mode</source>
@@ -755,25 +755,153 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>ചെലവഴിക്കാത്തത് പൂട്ടുക</translation>
     </message>
     <message>
+        <source>Unlock unspent</source>
+        <translation>അൺസ്പെന്റുകൾ അൺലോക്ക് ചെയ്യുക </translation>
+    </message>
+    <message>
+        <source>Copy quantity</source>
+        <translation>നിര്‍ദ്ധിഷ്‌ടസംഖ്യ / അളവ് പകർത്തുക</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>പകർത്തു ഫീസ്</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>ശേഷമുള്ള ഫീ പകർത്തു</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>ബൈറ്റ്സ് പകർത്തു</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>ഡസ്ട് പകർത്തു</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>ചേഞ്ച് പകർത്തു</translation>
+    </message>
+    <message>
+        <source>(%1 locked)</source>
+        <translation>(%1 ലോക്ക് ആക്കിയിരിക്കുന്നു)</translation>
+    </message>
+    <message>
+        <source>yes</source>
+        <translation>അതെ / ശരി</translation>
+    </message>
+    <message>
+        <source>no</source>
+        <translation>ഇല്ല</translation>
+    </message>
+    <message>
+        <source>This label turns red if any recipient receives an amount smaller than the current dust threshold.</source>
+        <translation>ഏതെങ്കിലും സ്വീകർത്താവിന് നിലവിലെ ഡസ്ട് പരിധിയേക്കാൾ ചെറിയ തുക ലഭിക്കുകയാണെങ്കിൽ ഈ ലേബൽ ചുവപ്പായി മാറുന്നു.</translation>
+    </message>
+    <message>
+        <source>Can vary +/- %1 satoshi(s) per input.</source>
+        <translation>ഒരു ഇൻപുട്ടിന് +/-%1 സതോഷി(കൾ) വ്യത്യാസം ഉണ്ടാകാം.</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(ലേബൽ ഇല്ല)</translation>
     </message>
-    </context>
+    <message>
+        <source>change from %1 (%2)</source>
+        <translation>%1 (%2) ൽ നിന്ന് മാറ്റുക</translation>
+    </message>
+    <message>
+        <source>(change)</source>
+        <translation>(മാറ്റം)</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletActivity</name>
-    </context>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>വാലറ്റ് രൂപീകരിക്കുന്നു &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>വാലറ്റ് രൂപീകരണം പരാജയപ്പെട്ടു </translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>വാലറ്റ് രൂപീകരണത്തിലെ മുന്നറിയിപ്പ് </translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
     <message>
         <source>Create Wallet</source>
         <translation>വാലറ്റ് / പണസഞ്ചി സൃഷ്ടിക്കുക :</translation>
     </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>വാലറ്റ് പേര്</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>എൻ‌ക്രിപ്റ്റ് വാലറ്റ്</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>എൻ‌ക്രിപ്റ്റ് വാലറ്റ്</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation> സ്വകാര്യ കീകൾ പ്രവർത്തനരഹിതമാക്കുക </translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>ശൂന്യമായ വാലറ്റ് നിർമ്മിക്കുക</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>സൃഷ്ടിക്കുക</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
-    </context>
+    <message>
+        <source>Edit Address</source>
+        <translation>വിലാസം എഡിറ്റുചെയ്യുക</translation>
+    </message>
+    <message>
+        <source>&amp;Label</source>
+        <translation>&amp;ലേബൽ</translation>
+    </message>
+    <message>
+        <source>&amp;Address</source>
+        <translation>&amp; വിലാസം</translation>
+    </message>
+    <message>
+        <source>New sending address</source>
+        <translation>പുതിയ അയയ്‌ക്കുന്ന വിലാസം</translation>
+    </message>
+    <message>
+        <source>Edit receiving address</source>
+        <translation>സ്വീകരിക്കുന്ന വിലാസം എഡിറ്റുചെയ്യുക</translation>
+    </message>
+    <message>
+        <source>Edit sending address</source>
+        <translation>അയയ്‌ക്കുന്ന വിലാസം എഡിറ്റുചെയ്യുക</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>വാലറ്റ് അൺലോക്കുചെയ്യാനായില്ല.</translation>
+    </message>
+    <message>
+        <source>New key generation failed.</source>
+        <translation>പുതിയ കീ ജനറേഷൻ പരാജയപ്പെട്ടു</translation>
+    </message>
+</context>
 <context>
     <name>FreespaceChecker</name>
+    <message>
+        <source>A new data directory will be created.</source>
+        <translation>ഒരു പുതിയ ഡാറ്റ ഡയറക്ടറി സൃഷ്ടിക്കും.</translation>
+    </message>
     <message>
         <source>name</source>
         <translation>നാമധേയം / പേര് </translation>
@@ -781,9 +909,25 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>HelpMessageDialog</name>
-    </context>
+    <message>
+        <source>version</source>
+        <translation>പതിപ്പ്</translation>
+    </message>
+    <message>
+        <source>Command-line options</source>
+        <translation>കമാൻഡ്-ലൈൻ ഓപ്ഷനുകൾ</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
+    <message>
+        <source>Welcome</source>
+        <translation>സ്വാഗതം</translation>
+    </message>
+    <message>
+        <source>Bitcoin</source>
+        <translation>ബിറ്റ്കോയിൻ</translation>
+    </message>
     <message>
         <source>Error</source>
         <translation>പിശക് </translation>
@@ -792,8 +936,20 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>ModalOverlay</name>
     <message>
+        <source>Form</source>
+        <translation>ഫോം </translation>
+    </message>
+    <message>
+        <source>Number of blocks left</source>
+        <translation>അവശേഷിക്കുന്ന ബ്ലോക്കുകൾ </translation>
+    </message>
+    <message>
         <source>Unknown...</source>
         <translation>അജ്ഞാതമായ </translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>അവസാന ബ്ലോക്കിന്റെ സമയം </translation>
     </message>
     <message>
         <source>Progress</source>
@@ -828,6 +984,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>OverviewPage</name>
     <message>
+        <source>Form</source>
+        <translation>ഫോം </translation>
+    </message>
+    <message>
         <source>Available:</source>
         <translation>ലഭ്യമായ</translation>
     </message>
@@ -845,15 +1005,75 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>PaymentServer</name>
-    </context>
+    <message>
+        <source>URI handling</source>
+        <translation>യു‌ആർ‌ഐ കൈകാര്യം ചെയ്യൽ</translation>
+    </message>
+    <message>
+        <source>'bitcoin://' is not a valid URI. Use 'bitcoin:' instead.</source>
+        <translation>'bitcoin://' എന്നത് ശരിയായ ഒരു URI അല്ല .പകരം 'bitcoin:' ഉപയോഗിക്കൂ </translation>
+    </message>
+    <message>
+        <source>Cannot process payment request because BIP70 is not supported.</source>
+        <translation>BIP70 പിന്തുണയ്‌ക്കാത്തതിനാൽ പേയ്‌മെന്റ് അഭ്യർത്ഥന പ്രോസസ്സ് ചെയ്യാൻ കഴിയില്ല.</translation>
+    </message>
+    <message>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>BIP70 ലെ വ്യാപകമായ സുരക്ഷാ പോരായ്മകൾ കാരണം, വാലറ്റുകൾ സ്വിച്ചുചെയ്യാനുള്ള ഏതെങ്കിലും വ്യാപാര നിർദ്ദേശങ്ങൾ അവഗണിക്കണമെന്ന് ശക്തമായി ശുപാർശ ചെയ്യുന്നു.</translation>
+    </message>
+    <message>
+        <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation>നിങ്ങൾക്ക് ഈ പിശക് ലഭിക്കുകയാണെങ്കിൽ, വ്യാപാരിയോട് ഒരു BIP21 അനുയോജ്യമായ URI നൽകാൻ അഭ്യർത്ഥിക്കണം.</translation>
+    </message>
+    <message>
+        <source>Invalid payment address %1</source>
+        <translation>പേയ്‌മെന്റ് വിലാസം അസാധുവാണ് %1</translation>
+    </message>
+    <message>
+        <source>URI cannot be parsed! This can be caused by an invalid Bitcoin address or malformed URI parameters.</source>
+        <translation>യു‌ആർ‌ഐ പാഴ്‌സുചെയ്യാൻ‌ കഴിയില്ല! അസാധുവായ ബിറ്റ്കോയിൻ വിലാസം അല്ലെങ്കിൽ കേടായ യു‌ആർ‌ഐ പാരാമീറ്ററുകൾ കാരണം ഇത് സംഭവിക്കാം.</translation>
+    </message>
+    <message>
+        <source>Payment request file handling</source>
+        <translation>പേയ്‌മെന്റ് അഭ്യർത്ഥന ഫയൽ കൈകാര്യം ചെയ്യൽ</translation>
+    </message>
+</context>
 <context>
     <name>PeerTableModel</name>
-    </context>
+    <message>
+        <source>User Agent</source>
+        <translation>ഉപയോക്തൃ ഏജൻറ്</translation>
+    </message>
+    <message>
+        <source>Node/Service</source>
+        <translation>നോഡ് /സേവനങ്ങൾ </translation>
+    </message>
+    <message>
+        <source>NodeId</source>
+        <translation>നോഡ്ഐഡി</translation>
+    </message>
+    <message>
+        <source>Ping</source>
+        <translation>പിംഗ് </translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>അയക്കുക </translation>
+    </message>
+    <message>
+        <source>Received</source>
+        <translation>ലഭിച്ചവ </translation>
+    </message>
+</context>
 <context>
     <name>QObject</name>
     <message>
         <source>Amount</source>
         <translation>തുക </translation>
+    </message>
+    <message>
+        <source>Enter a Bitcoin address (e.g. %1)</source>
+        <translation>ഒരു ബിറ്റ്കോയിൻ വിലാസം നൽകുക(e.g. %1)</translation>
     </message>
     <message>
         <source>Error: %1</source>
@@ -866,8 +1086,24 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 <context>
     <name>RPCConsole</name>
     <message>
+        <source>Received</source>
+        <translation>ലഭിച്ചവ </translation>
+    </message>
+    <message>
+        <source>Sent</source>
+        <translation>അയക്കുക </translation>
+    </message>
+    <message>
+        <source>User Agent</source>
+        <translation>ഉപയോക്തൃ ഏജൻറ്</translation>
+    </message>
+    <message>
         <source>Node window</source>
         <translation>നോഡ് വിൻഡോ</translation>
+    </message>
+    <message>
+        <source>Last block time</source>
+        <translation>അവസാന ബ്ലോക്കിന്റെ സമയം </translation>
     </message>
     </context>
 <context>
@@ -879,6 +1115,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Copy amount</source>
         <translation>തുക പകർത്തുക</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>വാലറ്റ് അൺലോക്കുചെയ്യാനായില്ല.</translation>
     </message>
     </context>
 <context>
@@ -938,8 +1178,32 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>പൊടി:</translation>
     </message>
     <message>
+        <source>Copy quantity</source>
+        <translation>നിര്‍ദ്ധിഷ്‌ടസംഖ്യ / അളവ് പകർത്തുക</translation>
+    </message>
+    <message>
         <source>Copy amount</source>
         <translation>തുക പകർത്തുക</translation>
+    </message>
+    <message>
+        <source>Copy fee</source>
+        <translation>പകർത്തു ഫീസ്</translation>
+    </message>
+    <message>
+        <source>Copy after fee</source>
+        <translation>ശേഷമുള്ള ഫീ പകർത്തു</translation>
+    </message>
+    <message>
+        <source>Copy bytes</source>
+        <translation>ബൈറ്റ്സ് പകർത്തു</translation>
+    </message>
+    <message>
+        <source>Copy dust</source>
+        <translation>ഡസ്ട് പകർത്തു</translation>
+    </message>
+    <message>
+        <source>Copy change</source>
+        <translation>ചേഞ്ച് പകർത്തു</translation>
     </message>
     <message>
         <source>Payment request expired.</source>
@@ -952,12 +1216,32 @@ Signing is only possible with addresses of the type 'legacy'.</source>
 </context>
 <context>
     <name>SendCoinsEntry</name>
+    <message>
+        <source>Choose previously used address</source>
+        <translation>മുൻപ്‌ ഉപയോഗിച്ച അഡ്രസ് തെരഞ്ഞെടുക്കുക</translation>
+    </message>
+    <message>
+        <source>The Bitcoin address to send the payment to</source>
+        <translation>പേയ്മെന്റ് അയക്കേണ്ട ബിറ്കോയിൻ അഡ്രസ് </translation>
+    </message>
+    <message>
+        <source>Alt+A</source>
+        <translation>Alt+A</translation>
+    </message>
     </context>
 <context>
     <name>ShutdownWindow</name>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
+    <message>
+        <source>Choose previously used address</source>
+        <translation>മുൻപ്‌ ഉപയോഗിച്ച അഡ്രസ് തെരഞ്ഞെടുക്കുക</translation>
+    </message>
+    <message>
+        <source>Alt+A</source>
+        <translation>Alt+A</translation>
+    </message>
     </context>
 <context>
     <name>TrafficGraphWidget</name>
@@ -1079,5 +1363,119 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     </context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Error reading from database, shutting down.</source>
+        <translation>ഡാറ്റാബേസിൽ നിന്നും വായിച്ചെടുക്കുന്നതിനു തടസം നേരിട്ടു, പ്രവർത്തനം അവസാനിപ്പിക്കുന്നു.</translation>
+    </message>
+    <message>
+        <source>Error upgrading chainstate database</source>
+        <translation>ചെയിൻസ്റ്റേറ്റ് ഡാറ്റാബേസ് അപ്ഗ്രേഡ് ചെയ്യുന്നതിൽ തടസം നേരിട്ടു</translation>
+    </message>
+    <message>
+        <source>Error: Disk space is low for %s</source>
+        <translation>Error: %s ൽ ഡിസ്ക് സ്പേസ് വളരെ കുറവാണ്</translation>
+    </message>
+    <message>
+        <source>Invalid -onion address or hostname: '%s'</source>
+        <translation>തെറ്റായ ഒണിയൻ അഡ്രസ് അല്ലെങ്കിൽ ഹോസ്റ്റ്നെയിം: '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid -proxy address or hostname: '%s'</source>
+        <translation>തെറ്റായ -പ്രോക്സി അഡ്രസ് അല്ലെങ്കിൽ ഹോസ്റ്റ് നെയിം : '%s'</translation>
+    </message>
+    <message>
+        <source>Invalid amount for -paytxfee=&lt;amount&gt;: '%s' (must be at least %s)</source>
+        <translation>തെറ്റായ തുക  -paytxfee=&lt;amount&gt; :'%s' (ഏറ്റവും കുറഞ്ഞത് %s എങ്കിലും ആയിരിക്കണം )</translation>
+    </message>
+    <message>
+        <source>Invalid netmask specified in -whitelist: '%s'</source>
+        <translation>-whitelist: '%s' ൽ രേഖപ്പെടുത്തിയിരിക്കുന്ന netmask തെറ്റാണ് </translation>
+    </message>
+    <message>
+        <source>Need to specify a port with -whitebind: '%s'</source>
+        <translation>-whitebind: '%s' നൊടൊപ്പം ഒരു പോർട്ട് കൂടി നിർദ്ദേശിക്കേണ്ടതുണ്ട് </translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>-blockfilterindex നൊടൊപ്പം പൃണ് മോഡ് സാധ്യമല്ല .</translation>
+    </message>
+    <message>
+        <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
+        <translation>സിസ്റ്റത്തിന്റെ പരിമിധികളാൽ -maxconnections ന്റെ മൂല്യം %d ൽ  നിന്നും %d യിലേക്ക് കുറക്കുന്നു.</translation>
+    </message>
+    <message>
+        <source>Section [%s] is not recognized.</source>
+        <translation>Section [%s]  തിരിച്ചറിഞ്ഞില്ല.</translation>
+    </message>
+    <message>
+        <source>Signing transaction failed</source>
+        <translation>ഇടപാട് സൈൻ ചെയ്യുന്നത് പരാജയപ്പെട്ടു.</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" does not exist</source>
+        <translation>നിർദേശിച്ച -walletdir "%s" നിലവിൽ ഇല്ല</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is a relative path</source>
+        <translation>നിർദേശിച്ച -walletdir "%s" ഒരു റിലേറ്റീവ് പാത്ത് ആണ്</translation>
+    </message>
+    <message>
+        <source>Specified -walletdir "%s" is not a directory</source>
+        <translation>നിർദേശിച്ച  -walletdir "%s" ഒരു ഡയറക്ടറി അല്ല </translation>
+    </message>
+    <message>
+        <source>The specified config file %s does not exist
+</source>
+        <translation>നിർദേശിച്ച കോൺഫിഗുറേഷൻ ഫയൽ  %s നിലവിലില്ല 
+</translation>
+    </message>
+    <message>
+        <source>The transaction amount is too small to pay the fee</source>
+        <translation>ഇടപാട് മൂല്യം തീരെ കുറവായതിനാൽ പ്രതിഫലം നൽകാൻ കഴിയില്ല.</translation>
+    </message>
+    <message>
+        <source>This is experimental software.</source>
+        <translation>ഇത് പരീക്ഷിച്ചുകൊണ്ടിരിക്കുന്ന ഒരു സോഫ്റ്റ്‌വെയർ ആണ്.</translation>
+    </message>
+    <message>
+        <source>Transaction amount too small</source>
+        <translation>ഇടപാട് മൂല്യം വളരെ കുറവാണ്</translation>
+    </message>
+    <message>
+        <source>Transaction too large</source>
+        <translation>ഇടപാട് വളരെ വലുതാണ് </translation>
+    </message>
+    <message>
+        <source>Unable to bind to %s on this computer (bind returned error %s)</source>
+        <translation>ഈ കംപ്യൂട്ടറിലെ %s ൽ ബൈൻഡ് ചെയ്യാൻ സാധിക്കുന്നില്ല ( ബൈൻഡ് തിരികെ തന്ന പിശക് %s )</translation>
+    </message>
+    <message>
+        <source>Unable to create the PID file '%s': %s</source>
+        <translation>PID ഫയൽ '%s': %s നിർമിക്കാൻ സാധിക്കുന്നില്ല </translation>
+    </message>
+    <message>
+        <source>Unable to generate initial keys</source>
+        <translation>പ്രാഥമിക കീ നിർമ്മിക്കാൻ സാധിക്കുന്നില്ല</translation>
+    </message>
+    <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>-blockfilterindex ന്റെ മൂല്യം %s മനസിലാക്കാൻ കഴിയുന്നില്ല.</translation>
+    </message>
+    <message>
+        <source>Verifying wallet(s)...</source>
+        <translation>വാലറ്റ്(കൾ) പരിശോധിക്കുന്നു...</translation>
+    </message>
+    <message>
+        <source>Warning: unknown new rules activated (versionbit %i)</source>
+        <translation>മുന്നറിയിപ്പ്: പുതിയ ഒരു നിയമം ആക്ടിവേറ്റ് ചെയ്തിരിക്കുന്നു (versionbit %i)</translation>
+    </message>
+    <message>
+        <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
+        <translation>-maxtxfee യുടെ മൂല്യം വളരെ വലുതാണ്! ഇത്രയും ഉയര്ന്ന പ്രതിഫലം ഒരൊറ്റ ഇടപാടിൽ നൽകാൻ സാധ്യതയുണ്ട്.</translation>
+    </message>
+    <message>
+        <source>This is the transaction fee you may pay when fee estimates are not available.</source>
+        <translation>പ്രതിഫലം മൂല്യനിർണയം ലഭ്യമാകാത്ത പക്ഷം നിങ്ങൾ നല്കേണ്ടിവരുന്ന ഇടപാട് പ്രതിഫലം ഇതാണ്.</translation>
+    </message>
     </context>
 </TS>

@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>右键单击以编辑地址或标签</translation>
+        <translation>22000631@qq.com guanlonghuang</translation>
     </message>
     <message>
         <source>Create a new address</source>

@@ -651,7 +651,7 @@
     </message>
     <message>
         <source>Amount:</source>
-        <translation>விலை:</translation>
+        <translation>தொகை:</translation>
     </message>
     <message>
         <source>Fee:</source>
@@ -683,7 +683,7 @@
     </message>
     <message>
         <source>Amount</source>
-        <translation>விலை</translation>
+        <translation>தொகை</translation>
     </message>
     <message>
         <source>Received with label</source>
@@ -1433,6 +1433,10 @@
     </context>
 <context>
     <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Close</source>
+        <translation>நெருக்கமான</translation>
+    </message>
     <message>
         <source>Total Amount</source>
         <translation>முழு தொகை</translation>

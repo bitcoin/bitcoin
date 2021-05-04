@@ -1441,6 +1441,14 @@
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
+        <source>Save...</source>
+        <translation>Gardar...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Pechar</translation>
+    </message>
+    <message>
         <source>Total Amount</source>
         <translation>Total Amount</translation>
     </message>

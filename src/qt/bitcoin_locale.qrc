@@ -50,7 +50,6 @@
         <file alias="ml">locale/bitcoin_ml.qm</file>
         <file alias="mn">locale/bitcoin_mn.qm</file>
         <file alias="mr_IN">locale/bitcoin_mr_IN.qm</file>
-        <file alias="ms">locale/bitcoin_ms.qm</file>
         <file alias="my">locale/bitcoin_my.qm</file>
         <file alias="nb">locale/bitcoin_nb.qm</file>
         <file alias="ne">locale/bitcoin_ne.qm</file>

@@ -478,6 +478,14 @@
         <translation>Đã cập nhật</translation>
     </message>
     <message>
+        <source>&amp;Load PSBT from file...</source>
+        <translation>&amp;Tải dữ liệu PSBT từ tệp...</translation>
+    </message>
+    <message>
+        <source>Load PSBT from clipboard...</source>
+        <translation>Tải dữ liệu PSBT từ bộ nhớ tạm...</translation>
+    </message>
+    <message>
         <source>Node window</source>
         <translation>Cửa sổ node</translation>
     </message>
@@ -1473,8 +1481,16 @@
         <translation>Đăng ký giao dịch thất bại :%1</translation>
     </message>
     <message>
+        <source>PSBT copied to clipboard.</source>
+        <translation>Dữ liệu PSBT được sao chép vào bộ nhớ tạm.</translation>
+    </message>
+    <message>
         <source>Save Transaction Data</source>
         <translation>Lưu trữ giao dịch</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk.</source>
+        <translation>Dữ liệu PSBT được lưu vào ổ đĩa.</translation>
     </message>
     <message>
         <source> * Sends %1 to %2</source>
@@ -1846,6 +1862,10 @@
     <message>
         <source>Node window</source>
         <translation>Cửa sổ node</translation>
+    </message>
+    <message>
+        <source>Current block height</source>
+        <translation>Kích thước khối hiện tại</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>

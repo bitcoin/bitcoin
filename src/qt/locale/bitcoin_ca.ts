@@ -3585,6 +3585,14 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
         <translation>Contribueix si trobes %s útil. Visita %s per obtenir més informació sobre el programari.</translation>
     </message>
     <message>
+        <source>SQLiteDatabase: Failed to prepare the statement to fetch sqlite wallet schema version: %s</source>
+        <translation>SQLiteDatabase: No s'ha pogut preparar la sentència per obtenir la versió de l'esquema de la cartera sqlite: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare the statement to fetch the application id: %s</source>
+        <translation>SQLiteDatabase: No s'ha pogut preparar la sentència per obtenir l'identificador de l'aplicació: %s</translation>
+    </message>
+    <message>
         <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
         <translation>SQLiteDatabase: esquema de cartera sqlite de versió %d desconegut. Només és compatible la versió %d</translation>
     </message>
@@ -3697,6 +3705,10 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
         <translation>Ha fallat la verificació de la base de dades</translation>
     </message>
     <message>
+        <source>Ignoring duplicate -wallet %s.</source>
+        <translation>Ignorant -cartera duplicada %s.</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>S'està important...</translation>
     </message>
@@ -3725,8 +3737,28 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
         <translation>Import invàlid per -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
+        <source>SQLiteDatabase: Failed to execute statement to verify database: %s</source>
+        <translation>SQLiteDatabase: No s'ha pogut executar la sentència per verificar la base de dades: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to fetch sqlite wallet schema version: %s</source>
+        <translation>SQLiteDatabase: No s'ha pogut obtenir la versió d'esquema de cartera sqlite: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to fetch the application id: %s</source>
+        <translation>SQLiteDatabase: No s'ha pogut obtenir l'identificador de l'aplicació: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare statement to verify database: %s</source>
+        <translation>SQLiteDatabase: No s'ha pogut preparar la sentència per verificar la base de dades: %s</translation>
+    </message>
+    <message>
         <source>SQLiteDatabase: Failed to read database verification error: %s</source>
         <translation>SQLiteDatabase: ha fallat la lectura de la base de dades. Error de verificació: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
+        <translation>SQLiteDatabase: Identificador d’aplicació inesperat. S'esperava %u, s'ha obtingut  %u</translation>
     </message>
     <message>
         <source>Specified blocks directory "%s" does not exist.</source>
@@ -3813,6 +3845,14 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
         <translation>Error: ha fallat escoltar les connexions entrants (l'escoltament ha retornat l'error %s)</translation>
     </message>
     <message>
+        <source>%s corrupt. Try using the wallet tool bitcoin-wallet to salvage or restoring a backup.</source>
+        <translation>%s està malmès. Proveu d’utilitzar l’eina bitcoin-wallet per recuperar o restaurar una còpia de seguretat.</translation>
+    </message>
+    <message>
+        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use version 169900 or no version specified.</source>
+        <translation>No es pot actualitzar una cartera dividida que no sigui HD sense actualitzar-la per donar suport al grup de claus previ a la divisió. Utilitzeu la versió 169900 o no especificar-ne cap.</translation>
+    </message>
+    <message>
         <source>Invalid amount for -maxtxfee=&lt;amount&gt;: '%s' (must be at least the minrelay fee of %s to prevent stuck transactions)</source>
         <translation>Import no vàlid per a -maxtxfee=&lt;amount&gt;: '%s' (cal que sigui com a mínim la comissió de minrelay de %s per evitar que les comissions s'encallin)</translation>
     </message>
@@ -3821,12 +3861,28 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
         <translation>L'import de la transacció és massa petit per enviar-la després que se'n dedueixi la comissió</translation>
     </message>
     <message>
+        <source>This error could occur if this wallet was not shutdown cleanly and was last loaded using a build with a newer version of Berkeley DB. If so, please use the software that last loaded this wallet</source>
+        <translation>Aquest error es podria produir si la cartera no es va tancar netament i es va carregar per última vegada mitjançant una més nova de Berkeley DB. Si és així, utilitzeu el programari que va carregar aquesta cartera per última vegada</translation>
+    </message>
+    <message>
+        <source>This is the maximum transaction fee you pay (in addition to the normal fee) to prioritize partial spend avoidance over regular coin selection.</source>
+        <translation>Aquesta és la comissió màxima de transacció que pagueu (a més de la tarifa normal) per prioritzar l'evitació parcial de la despesa per sobre de la selecció regular de monedes.</translation>
+    </message>
+    <message>
+        <source>Transaction needs a change address, but we can't generate it. Please call keypoolrefill first.</source>
+        <translation>La transacció necessita una adreça de canvi, però no la podem generar. Si us plau, visiteu primer a keypoolrefill.</translation>
+    </message>
+    <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Cal que torneu a construir la base de dades fent servir -reindex per tornar al mode no podat. Això tornarà a baixar la cadena de blocs sencera</translation>
     </message>
     <message>
         <source>A fatal internal error occurred, see debug.log for details</source>
         <translation>S'ha produït un error intern fatal. Consulteu debug.log per a més detalls</translation>
+    </message>
+    <message>
+        <source>Cannot set -peerblockfilters without -blockfilterindex.</source>
+        <translation>No es poden configurar -peerblockfilters sense -blockfilterindex.</translation>
     </message>
     <message>
         <source>Disk space is too low!</source>
@@ -3843,6 +3899,14 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
     <message>
         <source>Error: Disk space is low for %s</source>
         <translation>Error: l'espai del disc és insuficient per a %s</translation>
+    </message>
+    <message>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>Error: Keypool s’ha esgotat. Visiteu primer keypoolrefill</translation>
+    </message>
+    <message>
+        <source>Fee rate (%s) is lower than the minimum fee rate setting (%s)</source>
+        <translation>La taxa de tarifa (%s) és inferior a la configuració de la tarifa mínima (%s)</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>
@@ -3863,6 +3927,10 @@ Ves a Arxiu &gt; Obrir Cartera per a carregar cartera.
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>Cal especificar un port amb -whitebind: «%s»</translation>
+    </message>
+    <message>
+        <source>No proxy server specified. Use -proxy=&lt;ip&gt; or -proxy=&lt;ip:port&gt;.</source>
+        <translation>No s'ha especificat cap servidor intermediari. Utilitzeu -proxy =&lt;ip&gt; o -proxy =&lt;ip:port&gt;.</translation>
     </message>
     <message>
         <source>Prune mode is incompatible with -blockfilterindex.</source>

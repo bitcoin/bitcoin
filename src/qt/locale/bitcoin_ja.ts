@@ -488,6 +488,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>PSBTをファイルから読込 (&amp;L)</translation>
     </message>
     <message>
+        <source>Load Partially Signed Bitcoin Transaction</source>
+        <translation>部分的に署名されたビットコインのトランザクションを読み込み</translation>
+    </message>
+    <message>
         <source>Load PSBT from clipboard...</source>
         <translation>PSBTをクリップボードから読み込み</translation>
     </message>
@@ -542,6 +546,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>%1 のヘルプ メッセージを表示し、使用可能な Bitcoin のコマンドラインオプション一覧を見る。</translation>
+    </message>
+    <message>
+        <source>&amp;Mask values</source>
+        <translation>&amp;値を隠す</translation>
+    </message>
+    <message>
+        <source>Mask the values in the Overview tab</source>
+        <translation>概要タブにある値を隠す</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -655,7 +667,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Original message:</source>
         <translation>オリジナルメッセージ：</translation>
     </message>
-    </context>
+    <message>
+        <source>A fatal error occurred. %1 can no longer continue safely and will quit.</source>
+        <translation>致命的なエラーが発生しました。%1 は安全に継続することができず終了するでしょう。</translation>
+    </message>
+</context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -857,10 +873,22 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>空ウォレットを作成</translation>
     </message>
     <message>
+        <source>Use descriptors for scriptPubKey management</source>
+        <translation>scriptPubKeyの管理にDescriptorを使用します。</translation>
+    </message>
+    <message>
+        <source>Descriptor Wallet</source>
+        <translation>Descriptorウォレット</translation>
+    </message>
+    <message>
         <source>Create</source>
         <translation>作成</translation>
     </message>
-    </context>
+    <message>
+        <source>Compiled without sqlite support (required for descriptor wallets)</source>
+        <translation>（Descriptorウォレットに必要な）sqliteサポート無しでコンパイル</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -1333,6 +1361,14 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>コインコントロール機能を表示するかどうか。</translation>
     </message>
     <message>
+        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor onion services.</source>
+        <translation>Tor onion service用の別のSOCKS5プロキシを介してBitcoinネットワークに接続します。</translation>
+    </message>
+    <message>
+        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor onion services:</source>
+        <translation>Tor onion serviceを介してピアに到達するために別のSOCKS&amp;5プロキシを使用します:</translation>
+    </message>
+    <message>
         <source>&amp;Third party transaction URLs</source>
         <translation>サードパーティの取引確認URL(&amp;T)</translation>
     </message>
@@ -1467,7 +1503,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Current total balance in watch-only addresses</source>
         <translation>ウォッチ限定アドレスの現在の残高の総計</translation>
     </message>
-    </context>
+    <message>
+        <source>Privacy mode activated for the Overview tab. To unmask the values, uncheck Settings-&gt;Mask values.</source>
+        <translation>概要タブでプライバシーモードが有効になっています。値のマスクを解除するには、設定-&gt;マスクの値のチェックを外してください。</translation>
+    </message>
+</context>
 <context>
     <name>PSBTOperationsDialog</name>
     <message>
@@ -1477,6 +1517,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Sign Tx</source>
         <translation>署名されたトランザクション</translation>
+    </message>
+    <message>
+        <source>Broadcast Tx</source>
+        <translation>Txをブロードキャスト</translation>
     </message>
     <message>
         <source>Copy to Clipboard</source>
@@ -1499,8 +1543,28 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation>%1 : トランザクション署名失敗</translation>
     </message>
     <message>
+        <source>Could not sign any more inputs.</source>
+        <translation>これ以上インプットに署名できませんでした。</translation>
+    </message>
+    <message>
+        <source>Signed %1 inputs, but more signatures are still required.</source>
+        <translation>%1個のインプットに署名しましたが、さらに多くの署名が必要です。</translation>
+    </message>
+    <message>
         <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
         <translation>トランザクションへの署名が成功しました。トランザクションのブロードキャストの準備ができています。</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation>トランザクション処理中の不明なエラー</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast successfully! Transaction ID: %1</source>
+        <translation>トランザクションのブロードキャストに成功しました！トランザクションID: %1</translation>
+    </message>
+    <message>
+        <source>Transaction broadcast failed: %1</source>
+        <translation>トランザクションのブロードキャストが失敗しました: %1</translation>
     </message>
     <message>
         <source>PSBT copied to clipboard.</source>
@@ -1523,6 +1587,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <translation> *  %1 から %2 へ送信</translation>
     </message>
     <message>
+        <source>Unable to calculate transaction fee or total transaction amount.</source>
+        <translation>取引手数料または合計取引金額を計算できません。</translation>
+    </message>
+    <message>
         <source>Pays transaction fee: </source>
         <translation>トランザクション手数料: </translation>
     </message>
@@ -1533,6 +1601,30 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>or</source>
         <translation>または</translation>
+    </message>
+    <message>
+        <source>Transaction has %1 unsigned inputs.</source>
+        <translation>トランザクションには %1 個の未署名インプットがあります。</translation>
+    </message>
+    <message>
+        <source>Transaction is missing some information about inputs.</source>
+        <translation>トランザクションにインプットに関する情報がありません。</translation>
+    </message>
+    <message>
+        <source>Transaction still needs signature(s).</source>
+        <translation>トランザクションにはまだ署名が必要です。</translation>
+    </message>
+    <message>
+        <source>(But this wallet cannot sign transactions.)</source>
+        <translation>（しかしこのウォレットはトランザクションに署名できません。）</translation>
+    </message>
+    <message>
+        <source>(But this wallet does not have the right keys.)</source>
+        <translation>（しかし、このウォレットは正しい鍵を持っていません。）</translation>
+    </message>
+    <message>
+        <source>Transaction is fully signed and ready for broadcast.</source>
+        <translation>トランザクションは完全に署名され、ブロードキャストの準備ができています。</translation>
     </message>
     <message>
         <source>Transaction status is unknown.</source>
@@ -1702,6 +1794,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Error: %1</source>
         <translation>エラー: %1</translation>
+    </message>
+    <message>
+        <source>Error initializing settings: %1</source>
+        <translation>設定の初期化エラー: %1</translation>
     </message>
     <message>
         <source>%1 didn't yet exit safely...</source>
@@ -1880,6 +1976,10 @@ Signing is only possible with addresses of the type 'legacy'.</source>
     <message>
         <source>Node window</source>
         <translation>ノードウィンドウ</translation>
+    </message>
+    <message>
+        <source>Current block height</source>
+        <translation>現在のブロック高</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -2152,7 +2252,11 @@ Signing is only possible with addresses of the type 'legacy'.</source>
         <source>Could not unlock wallet.</source>
         <translation>ウォレットをアンロックできませんでした。</translation>
     </message>
-    </context>
+    <message>
+        <source>Could not generate new %1 address</source>
+        <translation>新しい %1 アドレスを生成できませんでした</translation>
+    </message>
+</context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
@@ -3291,6 +3395,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
 <context>
     <name>WalletFrame</name>
     <message>
+        <source>No wallet has been loaded.
+Go to File &gt; Open Wallet to load a wallet.
+- OR -</source>
+        <translation>ウォレットがロードされていません。
+ファイル &gt; ウォレットを開くを実行しウォレットをロードしてください。
+- もしくは -</translation>
+    </message>
+    <message>
         <source>Create a new wallet</source>
         <translation>新しいウォレットを作成</translation>
     </message>
@@ -3367,6 +3479,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Error</source>
         <translation>エラー</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT from clipboard (invalid base64)</source>
+        <translation>クリップボードのPSBTをデコードできません（無効なbase64）</translation>
     </message>
     <message>
         <source>Load Transaction Data</source>
@@ -3458,6 +3574,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Please contribute if you find %s useful. Visit %s for further information about the software.</source>
         <translation>%s が有用だと感じられた方はぜひプロジェクトへの貢献をお願いします。ソフトウェアのより詳細な情報については %s をご覧ください。</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported</source>
+        <translation>SQLiteDatabase: 未知のsqliteウォレットスキーマバージョン %d 。バージョン %d のみがサポートされています。</translation>
     </message>
     <message>
         <source>The block database contains a block which appears to be from the future. This may be due to your computer's date and time being set incorrectly. Only rebuild the block database if you are sure that your computer's date and time are correct</source>

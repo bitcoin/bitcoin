@@ -3678,6 +3678,10 @@ A Fájl &gt; Megnyitás menüben lehet megnyitni.
         <translation>Inicializálás közben nem sikerült feltérképezni a tárcát</translation>
     </message>
     <message>
+        <source>Failed to verify database</source>
+        <translation>Nem sikerült ellenőrizni az adatbázist</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>Importálás</translation>
     </message>

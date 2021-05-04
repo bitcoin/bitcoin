@@ -3813,7 +3813,7 @@ Vaya a Archivo&gt; Abrir monedero para cargar un monedero.
     </message>
     <message>
         <source>Unsupported logging category %s=%s.</source>
-        <translation>Categoría de registro no soportada %s=%s.</translation>
+        <translation>Categoría de registro no soportada %s=%s. </translation>
     </message>
     <message>
         <source>Upgrading UTXO database</source>

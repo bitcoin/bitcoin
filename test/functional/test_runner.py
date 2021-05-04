@@ -281,6 +281,7 @@ BASE_SCRIPTS = [
     'rpc_getdescriptorinfo.py',
     'rpc_getpeerinfo_deprecation.py',
     'rpc_help.py',
+    'rpc_invalid_address_message.py',
     'feature_help.py',
     'feature_shutdown.py',
     'p2p_ibd_txrelay.py',
