@@ -102,7 +102,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_win64.sh"
 
 task:
-  name: '[previous releases, uses qt5 dev package and some depends packages] [unsigned char] [bionic]'
+  name: '[previous releases, uses qt5 dev package and some depends packages, DEBUG] [unsigned char] [bionic]'
   # For faster CI feedback, immediately schedule a task that compiles most modules
   << : *CREDITS_TEMPLATE
   << : *GLOBAL_TASK_TEMPLATE
@@ -159,7 +159,7 @@ task:
     FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
 
 task:
-  name: '[multiprocess] [focal]'
+  name: '[multiprocess, DEBUG] [focal]'
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
