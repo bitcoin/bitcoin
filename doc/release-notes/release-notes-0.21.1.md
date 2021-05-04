@@ -57,15 +57,15 @@ fungibility of all bitcoins. Spenders will enjoy lower fees and the
 ability to resolve many multisig scripts and complex contracts with the
 same efficiency, low fees, and large anonymity set as single-sig users.
 Taproot and schnorr also include efficiency improvements for full nodes
-such as the ability to batch signature verification.  Together, the
+such as the ability for batch signature verification. Together, the
 improvements lay the groundwork for future potential
-upgrades that may improve efficiency, privacy, and fungibility further.
+upgrades that may further improve efficiency, privacy and fungibility.
 
 Activation for taproot is being managed using a variation of BIP9
-versionbits called Speedy Trial (described in BIP341). Taproot's
+versionbits called "Speedy Trial" (described in BIP341). Taproot's
 versionbit is bit 2, and nodes will begin tracking which blocks signal
 support for taproot at the beginning of the first retarget period after
-taproot’s start date of 24 April 2021.  If 90% of blocks within a
+taproot’s start date of 24 April 2021.  If 90% of the blocks within a
 2,016-block retarget period (about two weeks) signal support for taproot
 prior to the first retarget period beginning after the time of 11 August
 2021, the soft fork will be locked in, and taproot will then be active
