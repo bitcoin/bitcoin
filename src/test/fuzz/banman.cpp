@@ -34,7 +34,7 @@ FUZZ_TARGET_INIT(banman, initialize_banman)
 {
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
     SetMockTime(ConsumeTime(fuzzed_data_provider));
-    const fs::path banlist_file = GetDataDir() / "fuzzed_banlist.dat";
+    const fs::path banlist_file = gArgs.GetDataDirNet() / "fuzzed_banlist.dat";
     fs::remove(banlist_file);
     {
         BanMan ban_man{banlist_file, nullptr, ConsumeBanTimeOffset(fuzzed_data_provider)};

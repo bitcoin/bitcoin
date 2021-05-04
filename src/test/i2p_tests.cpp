@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(unlimited_recv)
     };
 
     CThreadInterrupt interrupt;
-    i2p::sam::Session session(GetDataDir() / "test_i2p_private_key", CService{}, &interrupt);
+    i2p::sam::Session session(gArgs.GetDataDirNet() / "test_i2p_private_key", CService{}, &interrupt);
 
     {
         ASSERT_DEBUG_LOG("Creating SAM session");
