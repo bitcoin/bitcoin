@@ -583,87 +583,20 @@ void CChainLocksHandler::TrySignChainTip()
 
     std::vector<CQuorumCPtr> quorums_scanned;
     llmq::quorumManager->ScanQuorums(llmqType, pindex, signingActiveQuorumCount, quorums_scanned);
-    std::map<CQuorumCPtr, CChainLockSigCPtr> mapSharesAtTip;
-    {
-        LOCK(cs);
-        const auto it = bestChainLockShares.find(pindex->nHeight);
-        if (it != bestChainLockShares.end()) {
-            mapSharesAtTip = it->second;
-        }
-    }
-    const static int attempt_start{-2}; // let a couple of extra attempts to wait for busy/slow quorums
-    static int attempt{attempt_start};
-    bool fMemberOfSomeQuorum{false};
-    ++attempt;
+    // Use multiple ChainLocks quorums
     for (size_t i = 0; i < quorums_scanned.size(); ++i) {
-        int nQuorumIndex = (pindex->nHeight + i) % quorums_scanned.size();
-        const CQuorumCPtr& quorum = quorums_scanned[nQuorumIndex];
+        const CQuorumCPtr& quorum = quorums_scanned[i];
         if (quorum == nullptr) {
             return;
         }
-        if (!quorum->IsValidMember(activeMasternodeInfo.proTxHash)) {
-                continue;
-            }
-        fMemberOfSomeQuorum = true;
-        if (i > 0) {
-            int nQuorumIndexPrev = (nQuorumIndex + 1) % quorums_scanned.size();
-            auto it2 = mapSharesAtTip.find(quorums_scanned[nQuorumIndexPrev]);
-            if (it2 == mapSharesAtTip.end() && attempt > (int)i) {
-                // look deeper after 'i' attempts
-                while (nQuorumIndexPrev != nQuorumIndex) {
-                    nQuorumIndexPrev = (nQuorumIndexPrev + 1) % quorums_scanned.size();
-                    it2 = mapSharesAtTip.find(quorums_scanned[nQuorumIndexPrev]);
-                    if (it2 != mapSharesAtTip.end()) {
-                        break;
-                    }
-                    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum (%d, %s) didn't sign a chainlock at height %d yet\n",
-                            __func__, nQuorumIndexPrev, quorums_scanned[nQuorumIndexPrev]->qc->quorumHash.ToString(), pindex->nHeight);
-                }
-            }
-            if (it2 == mapSharesAtTip.end()) {
-                if (attempt <= (int)i) {
-                    // previous quorum did not sign a chainlock, bail out for now
-                    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum did not sign a chainlock at height %d yet\n", __func__, pindex->nHeight);
-                    return;
-                }
-                // else
-                // waiting for previous quorum(s) to sign anything for too long already,
-                // just sign whatever we think is a good tip
-            } else if (it2->second->blockHash != pindex->GetBlockHash()) {
-                LOCK(cs_main);
-                auto shareBlockIndex = g_chainman.m_blockman.LookupBlockIndex(it2->second->blockHash);
-                if (shareBlockIndex != nullptr && shareBlockIndex->nHeight == pindex->nHeight) {
-                    // previous quorum signed an alternative chain tip, sign it too instead
-                    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum (%d, %s) signed an alternative chaintip (%s != %s) at height %d, join it\n",
-                            __func__, nQuorumIndexPrev, quorums_scanned[nQuorumIndexPrev]->qc->quorumHash.ToString(), it2->second->blockHash.ToString(), pindex->GetBlockHash().ToString(), pindex->nHeight);
-                    pindex = shareBlockIndex;
-                } else if (attempt <= (int)i) {
-                    // previous quorum signed some different hash we have no idea about, bail out for now
-                    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- previous quorum (%d, %s) signed an unknown or an invalid blockHash (%s != %s) at height %d\n",
-                            __func__, nQuorumIndexPrev, quorums_scanned[nQuorumIndexPrev]->qc->quorumHash.ToString(), it2->second->blockHash.ToString(), pindex->GetBlockHash().ToString(), pindex->nHeight);
-                    return;
-                }
-                // else
-                // waiting the unknown/invalid hash for too long already,
-                // just sign whatever we think is a good tip
-            }
-        }
-        LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- use quorum (%d, %s) and try to sign %s at height %d\n",
-                __func__, nQuorumIndex, quorums_scanned[nQuorumIndex]->qc->quorumHash.ToString(), pindex->GetBlockHash().ToString(), pindex->nHeight);
         uint256 requestId = ::SerializeHash(std::make_tuple(CLSIG_REQUESTID_PREFIX, pindex->nHeight, quorum->qc->quorumHash));
-        {
+        if(quorumSigningManager->AsyncSignIfMember(llmqType, requestId, pindex->GetBlockHash(), quorum->qc->quorumHash)) {
             LOCK(cs);
             if (bestChainLockWithKnownBlock.nHeight >= pindex->nHeight) {
                 // might have happened while we didn't hold cs
                 return;
             }
             mapSignedRequestIds.try_emplace(requestId, std::make_pair(pindex->nHeight, pindex->GetBlockHash()));
-        }
-        quorumSigningManager->AsyncSignIfMember(llmqType, requestId, pindex->GetBlockHash(), quorum->qc->quorumHash);
-        if (!fMemberOfSomeQuorum && attempt < (int)quorums_scanned.size()) {
-            // not a member or tried too many times, nothing to do
-            attempt = attempt_start;
-        } else {
             lastSignedHeight = pindex->nHeight;
         }
     }
