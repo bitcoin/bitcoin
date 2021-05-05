@@ -15,6 +15,7 @@
 class CBlockIndex;
 class CConnman;
 class PeerManager;
+class CScheduler;
 namespace llmq
 {
 
@@ -58,6 +59,8 @@ class CChainLocksHandler : public CRecoveredSigsListener
 
 
 private:
+    CScheduler* scheduler;
+    std::thread* scheduler_thread;
     mutable RecursiveMutex cs;
     bool isEnabled GUARDED_BY(cs) {false};
     bool isEnforced GUARDED_BY(cs) {false};

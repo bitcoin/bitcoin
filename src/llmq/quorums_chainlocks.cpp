@@ -14,6 +14,7 @@
 #include <spork.h>
 #include <txmempool.h>
 #include <validation.h>
+#include <scheduler.h>
 namespace llmq
 {
 
@@ -37,19 +38,47 @@ CChainLocksHandler::CChainLocksHandler(CConnman& _connman, PeerManager& _peerman
     connman(_connman),
     peerman(_peerman)
 {
+    scheduler = new CScheduler();
+    CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, scheduler);
+    scheduler_thread = new std::thread(std::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));
 }
 
 CChainLocksHandler::~CChainLocksHandler()
 {
+    if(scheduler)
+        scheduler->stop();
+    if (scheduler_thread->joinable())
+        scheduler_thread->join();
+    delete scheduler_thread;
+    delete scheduler;
 }
 
 void CChainLocksHandler::Start()
 {
     quorumSigningManager->RegisterRecoveredSigsListener(this);
+    scheduler->scheduleEvery([&]() {
+        CheckActiveState();
+        bool enforced = false;
+        const CBlockIndex* pindex;
+        {       
+            LOCK(cs);
+            pindex = bestChainLockBlockIndex;
+            enforced = isEnforced;
+        }
+        if(enforced) {
+            AssertLockNotHeld(cs);
+            ::ChainstateActive().EnforceBestChainLock(pindex);
+        }
+        TrySignChainTip(pindex);
+    }, std::chrono::seconds{5});
 }
 
 void CChainLocksHandler::Stop()
 {
+    if(scheduler)
+        scheduler->stop();
+    if(scheduler_thread)
+        scheduler_thread->join();
     quorumSigningManager->UnregisterRecoveredSigsListener(this);
 }
 
@@ -71,6 +100,13 @@ bool CChainLocksHandler::GetChainLockByHash(const uint256& hash, llmq::CChainLoc
     if (::SerializeHash(bestChainLockWithKnownBlock) == hash) {
         ret = bestChainLockWithKnownBlock;
         return true;
+    }
+
+    for (const auto& pair : bestChainLockCandidates) {
+        if (::SerializeHash(*pair.second) == hash) {
+            ret = *pair.second;
+            return true;
+        }
     }
 
     for (const auto& pair : bestChainLockShares) {
@@ -462,6 +498,7 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
 {
     if(fInitialDownload)
         return;
+
     CheckActiveState();
     bool enforced;
     const CBlockIndex* pindex;
@@ -510,7 +547,6 @@ void CChainLocksHandler::CheckActiveState()
 void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
 {
     static int lastSignedHeight{-1};
-
     Cleanup();
 
     if (!fMasternodeMode) {
@@ -520,7 +556,7 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
     if (!masternodeSync.IsBlockchainSynced()) {
         return;
     }
-    if (!pindex->pprev) {
+    if (!pindex || !pindex->pprev) {
         return;
     }
     const uint256 msgHash = pindex->GetBlockHash();
@@ -644,7 +680,7 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
             mapSignedRequestIds.try_emplace(requestId, std::make_pair(pindex->nHeight, pindex->GetBlockHash()));
         }
         quorumSigningManager->AsyncSignIfMember(llmqType, requestId, pindex->GetBlockHash(), quorum->qc->quorumHash);
-        if (!fMemberOfSomeQuorum || attempt >= (int)quorums_scanned.size()) {
+        if (!fMemberOfSomeQuorum && attempt < (int)quorums_scanned.size()) {
             // not a member or tried too many times, nothing to do
             attempt = attempt_start;
         } else {

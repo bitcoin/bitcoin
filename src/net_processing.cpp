@@ -970,7 +970,7 @@ std::chrono::microseconds GetAdditionalTxRequestDelay(uint32_t invType)
         case MSG_QUORUM_RECOVERED_SIG:
             return GETDATA_OTHER_INTERVAL;
         case MSG_CLSIG:
-            return std::chrono::seconds{5};
+            return std::chrono::seconds{0};
         default:
             return GETDATA_TX_INTERVAL;
     }
