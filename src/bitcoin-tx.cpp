@@ -29,7 +29,7 @@
 #include <memory>
 #include <stdio.h>
 
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string.hpp> // boost::split
 
 static bool fCreateBlank;
 static std::map<std::string,UniValue> registers;
@@ -770,9 +770,7 @@ static std::string readStdin()
     if (ferror(stdin))
         throw std::runtime_error("error reading stdin");
 
-    boost::algorithm::trim_right(ret);
-
-    return ret;
+    return TrimString(ret);
 }
 
 static int CommandLineRawTx(int argc, char* argv[])
