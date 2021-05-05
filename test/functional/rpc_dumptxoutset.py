@@ -43,7 +43,7 @@ class DumptxoutsetTest(SyscoinTestFramework):
             # UTXO snapshot hash should be deterministic based on mocked time.
             # SYSCOIN
             assert_equal(
-                digest, '8ff350ec4526b110bcb2caf989e1c89f0716030f326b21f02566d6f65d0cc565')
+                digest, 'e771b160b690e002464f61bed07af483e2d54dd02fd344db6943886697e6463c')
 
         # Specifying a path to an existing file will fail.
         assert_raises_rpc_error(
