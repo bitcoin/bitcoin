@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(script_standard_Solver_success)
 
     // TxoutType::WITNESS_V0_SCRIPTHASH
     uint256 scriptHash;
-    CSHA256().Write(&redeemScript[0], redeemScript.size())
+    CSHA256().Write(redeemScript.data(), redeemScript.size())
         .Finalize(scriptHash.begin());
 
     s.clear();
@@ -370,7 +370,7 @@ BOOST_AUTO_TEST_CASE(script_standard_GetScriptFor_)
     witnessScript << OP_1 << ToByteVector(pubkeys[0]) << OP_1 << OP_CHECKMULTISIG;
 
     uint256 scriptHash;
-    CSHA256().Write(&witnessScript[0], witnessScript.size())
+    CSHA256().Write(witnessScript.data(), witnessScript.size())
         .Finalize(scriptHash.begin());
 
     expected.clear();

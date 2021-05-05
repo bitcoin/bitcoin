@@ -1098,7 +1098,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
     TxoutType txntype = Solver(script, data);
 
     if (txntype == TxoutType::PUBKEY) {
-        CPubKey pubkey(data[0].begin(), data[0].end());
+        CPubKey pubkey(data[0]);
         if (pubkey.IsValid()) {
             return std::make_unique<PKDescriptor>(InferPubkey(pubkey, ctx, provider));
         }
@@ -1122,7 +1122,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
     if (txntype == TxoutType::MULTISIG) {
         std::vector<std::unique_ptr<PubkeyProvider>> providers;
         for (size_t i = 1; i + 1 < data.size(); ++i) {
-            CPubKey pubkey(data[i].begin(), data[i].end());
+            CPubKey pubkey(data[i]);
             providers.push_back(InferPubkey(pubkey, ctx, provider));
         }
         return std::make_unique<MultisigDescriptor>((int)data[0][0], std::move(providers));
