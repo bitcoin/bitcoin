@@ -14,7 +14,6 @@
 #include <spork.h>
 #include <txmempool.h>
 #include <validation.h>
-#include <scheduler.h>
 namespace llmq
 {
 
@@ -38,47 +37,19 @@ CChainLocksHandler::CChainLocksHandler(CConnman& _connman, PeerManager& _peerman
     connman(_connman),
     peerman(_peerman)
 {
-    scheduler = new CScheduler();
-    CScheduler::Function serviceLoop = std::bind(&CScheduler::serviceQueue, scheduler);
-    scheduler_thread = new std::thread(std::bind(&TraceThread<CScheduler::Function>, "cl-schdlr", serviceLoop));
 }
 
 CChainLocksHandler::~CChainLocksHandler()
 {
-    if(scheduler)
-        scheduler->stop();
-    if (scheduler_thread->joinable())
-        scheduler_thread->join();
-    delete scheduler_thread;
-    delete scheduler;
 }
 
 void CChainLocksHandler::Start()
 {
     quorumSigningManager->RegisterRecoveredSigsListener(this);
-    scheduler->scheduleEvery([&]() {
-        CheckActiveState();
-        bool enforced = false;
-        const CBlockIndex* pindex;
-        {       
-            LOCK(cs);
-            pindex = bestChainLockBlockIndex;
-            enforced = isEnforced;
-        }
-        if(enforced) {
-            AssertLockNotHeld(cs);
-            ::ChainstateActive().EnforceBestChainLock(pindex);
-        }
-        TrySignChainTip(pindex);
-    }, std::chrono::seconds{5});
 }
 
 void CChainLocksHandler::Stop()
 {
-    if(scheduler)
-        scheduler->stop();
-    if(scheduler_thread)
-        scheduler_thread->join();
     quorumSigningManager->UnregisterRecoveredSigsListener(this);
 }
 
@@ -430,7 +401,7 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
                     }
                 });
                 // Try signing the tip ourselves
-                TrySignChainTip(pindexSig);
+                TrySignChainTip();
             }
         } else {
             // An aggregated CLSIG
@@ -518,7 +489,7 @@ void CChainLocksHandler::UpdatedBlockTip(const CBlockIndex* pindexNew, bool fIni
         AssertLockNotHeld(cs);
         ::ChainstateActive().EnforceBestChainLock(pindex);
     }
-    TrySignChainTip(pindexNew);
+    TrySignChainTip();
     {       
         LOCK(cs);
         tryLockChainTipScheduled = false;
@@ -546,7 +517,7 @@ void CChainLocksHandler::CheckActiveState()
     }
 }
 
-void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
+void CChainLocksHandler::TrySignChainTip()
 {
     static int lastSignedHeight{-1};
     Cleanup();
@@ -558,6 +529,13 @@ void CChainLocksHandler::TrySignChainTip(const CBlockIndex* pindex)
     if (!masternodeSync.IsBlockchainSynced()) {
         return;
     }
+
+    const CBlockIndex* pindex;
+    {
+        LOCK(cs_main);
+        pindex = ::ChainActive().Tip();
+    }
+
     if (!pindex || !pindex->pprev) {
         return;
     }

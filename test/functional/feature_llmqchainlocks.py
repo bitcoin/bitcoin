@@ -41,7 +41,7 @@ class TestP2PConn(P2PInterface):
 
 class LLMQChainLocksTest(DashTestFramework):
     def set_test_params(self):
-        self.set_dash_test_params(4, 3, [["-whitelist=noban@127.0.0.1"]] * 4, fast_dip3_enforcement=True)
+        self.set_dash_test_params(4, 3, fast_dip3_enforcement=True)
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
