@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(compress_script_to_ckey_id)
     // Check compressed script
     BOOST_CHECK_EQUAL(out.size(), 21U);
     BOOST_CHECK_EQUAL(out[0], 0x00);
-    BOOST_CHECK_EQUAL(memcmp(&out[1], &script[3], 20), 0); // compare the 20 relevant chars of the CKeyId in the script
+    BOOST_CHECK_EQUAL(memcmp(out.data() + 1, script.data() + 3, 20), 0); // compare the 20 relevant chars of the CKeyId in the script
 }
 
 BOOST_AUTO_TEST_CASE(compress_script_to_cscript_id)
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(compress_script_to_cscript_id)
     // Check compressed script
     BOOST_CHECK_EQUAL(out.size(), 21U);
     BOOST_CHECK_EQUAL(out[0], 0x01);
-    BOOST_CHECK_EQUAL(memcmp(&out[1], &script[2], 20), 0); // compare the 20 relevant chars of the CScriptId in the script
+    BOOST_CHECK_EQUAL(memcmp(out.data() + 1, script.data() + 2, 20), 0); // compare the 20 relevant chars of the CScriptId in the script
 }
 
 BOOST_AUTO_TEST_CASE(compress_script_to_compressed_pubkey_id)
@@ -118,8 +118,8 @@ BOOST_AUTO_TEST_CASE(compress_script_to_compressed_pubkey_id)
 
     // Check compressed script
     BOOST_CHECK_EQUAL(out.size(), 33U);
-    BOOST_CHECK_EQUAL(memcmp(&out[0], &script[1], 1), 0);
-    BOOST_CHECK_EQUAL(memcmp(&out[1], &script[2], 32), 0); // compare the 32 chars of the compressed CPubKey
+    BOOST_CHECK_EQUAL(memcmp(out.data(), script.data() + 1, 1), 0);
+    BOOST_CHECK_EQUAL(memcmp(out.data() + 1, script.data() + 2, 32), 0); // compare the 32 chars of the compressed CPubKey
 }
 
 BOOST_AUTO_TEST_CASE(compress_script_to_uncompressed_pubkey_id)
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(compress_script_to_uncompressed_pubkey_id)
 
     // Check compressed script
     BOOST_CHECK_EQUAL(out.size(), 33U);
-    BOOST_CHECK_EQUAL(memcmp(&out[1], &script[2], 32), 0); // first 32 chars of CPubKey are copied into out[1:]
+    BOOST_CHECK_EQUAL(memcmp(out.data() + 1, script.data() + 2, 32), 0); // first 32 chars of CPubKey are copied into out[1:]
     BOOST_CHECK_EQUAL(out[0], 0x04 | (script[65] & 0x01)); // least significant bit (lsb) of last char of pubkey is mapped into out[0]
 }
 

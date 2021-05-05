@@ -639,7 +639,7 @@ std::vector<unsigned char> FastRandomContext::randbytes(size_t len)
     if (requires_seed) RandomSeed();
     std::vector<unsigned char> ret(len);
     if (len > 0) {
-        rng.Keystream(&ret[0], len);
+        rng.Keystream(ret.data(), len);
     }
     return ret;
 }

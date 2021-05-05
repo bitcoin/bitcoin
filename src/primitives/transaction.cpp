@@ -228,7 +228,7 @@ unsigned int GetSpecialScriptSize(unsigned int nSize)
     return 0;
 }
 
-bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScript &in)
+bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScript& in)
 {
     switch(nSize) {
     case 0x00:
@@ -260,7 +260,7 @@ bool DecompressScript(CScript& script, unsigned int nSize, const CompressedScrip
         unsigned char vch[33] = {};
         vch[0] = nSize - 2;
         memcpy(&vch[1], in.data(), 32);
-        CPubKey pubkey(&vch[0], &vch[33]);
+        CPubKey pubkey{vch};
         if (!pubkey.Decompress())
             return false;
         assert(pubkey.size() == 65);

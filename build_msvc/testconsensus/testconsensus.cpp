@@ -45,7 +45,7 @@ int main()
     stream << vanillaSpendTx;
 
     syscoinconsensus_error err;
-    auto op0Result = syscoinconsensus_verify_script_with_amount(pubKeyScript.data(), pubKeyScript.size(), amount, (const unsigned char*)&stream[0], stream.size(), 0, syscoinconsensus_SCRIPT_FLAGS_VERIFY_ALL, &err);
+    auto op0Result = syscoinconsensus_verify_script_with_amount(pubKeyScript.data(), pubKeyScript.size(), amount, stream.data(), stream.size(), 0, syscoinconsensus_SCRIPT_FLAGS_VERIFY_ALL, &err);
     std::cout << "Op0 result: " << op0Result << ", error code " << err << std::endl;
 
     getchar();
