@@ -273,7 +273,7 @@ Please be aware that on Linux distributions all dependencies are usually availab
 Individual tests can be run by directly calling the test script, e.g.:
 
 ```
-test/lint/lint-filenames.sh
+test/lint/lint-files.sh
 ```
 
 You can run all the shell-based lint tests by running:
