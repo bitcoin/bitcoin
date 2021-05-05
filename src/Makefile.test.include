@@ -102,6 +102,7 @@ BITCOIN_TESTS =\
   test/mempool_tests.cpp \
   test/merkle_tests.cpp \
   test/merkleblock_tests.cpp \
+  test/minisketch_tests.cpp \
   test/miner_tests.cpp \
   test/multisig_tests.cpp \
   test/net_peer_eviction_tests.cpp \
