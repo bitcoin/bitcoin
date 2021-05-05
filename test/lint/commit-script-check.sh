@@ -12,7 +12,7 @@
 # one. Any remaining diff signals an error.
 
 export LC_ALL=C
-if test "x$1" = "x"; then
+if test -z "$1"; then
     echo "Usage: $0 <commit>..."
     exit 1
 fi
@@ -24,7 +24,7 @@ for i in `git rev-list --reverse $1`; do
     if git rev-list -n 1 --pretty="%s" $i | grep -q "^scripted-diff:"; then
         git checkout --quiet $i^ || exit
         SCRIPT="`git rev-list --format=%b -n1 $i | sed '/^-BEGIN VERIFY SCRIPT-$/,/^-END VERIFY SCRIPT-$/{//!b};d'`"
-        if test "x$SCRIPT" = "x"; then
+        if test -z "$SCRIPT"; then
             echo "Error: missing script for: $i"
             echo "Failed"
             RET=1
