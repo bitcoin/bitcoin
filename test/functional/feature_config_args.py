@@ -165,6 +165,7 @@ class ConfArgsTest(SyscoinTestFramework):
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Loaded 0 addresses from peers.dat",
                 "0 addresses found from DNS seeds",
+                "opencon thread start",  # Ensure ThreadOpenConnections::start time is properly set
         ]):
             self.start_node(0, extra_args=['-dnsseed=1', '-fixedseeds=1', f'-mocktime={start}'])
         with self.nodes[0].assert_debug_log(expected_msgs=[
@@ -206,6 +207,7 @@ class ConfArgsTest(SyscoinTestFramework):
         with self.nodes[0].assert_debug_log(expected_msgs=[
                 "Loaded 0 addresses from peers.dat",
                 "DNS seeding disabled",
+                "opencon thread start",  # Ensure ThreadOpenConnections::start time is properly set
         ]):
             self.start_node(0, extra_args=['-dnsseed=0', '-fixedseeds=1', '-addnode=fakenodeaddr', f'-mocktime={start}'])
         with self.nodes[0].assert_debug_log(expected_msgs=[
