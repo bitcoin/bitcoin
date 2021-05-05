@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <minisketch.h>
+#include <minisketchwrapper.h>
 #include <random.h>
 #include <test/util/setup_common.h>
 
@@ -24,13 +25,13 @@ BOOST_AUTO_TEST_CASE(minisketch_test)
         uint32_t start_b = start_a + a_not_b;
         uint32_t end_b = start_b + both + b_not_a;
 
-        Minisketch sketch_a(32, 0, 10);
+        Minisketch sketch_a = MakeMinisketch32(10);
         for (uint32_t a = start_a; a < end_a; ++a) sketch_a.Add(a);
-        Minisketch sketch_b(32, 0, 10);
+        Minisketch sketch_b = MakeMinisketch32(10);
         for (uint32_t b = start_b; b < end_b; ++b) sketch_b.Add(b);
 
-        Minisketch sketch_ar(32, 0, 10);
-        Minisketch sketch_br(32, 0, 10);
+        Minisketch sketch_ar = MakeMinisketch32(10);
+        Minisketch sketch_br = MakeMinisketch32(10);
         sketch_ar.Deserialize(sketch_a.Serialize());
         sketch_br.Deserialize(sketch_b.Serialize());
 
