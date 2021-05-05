@@ -129,7 +129,7 @@ chain for " target " development."))
                                   (base-gcc-for-libc gcc-7)
                                   (base-kernel-headers linux-libre-headers-5.4)
                                   (base-libc glibc)  ; glibc 2.31
-                                  (base-gcc (make-gcc-rpath-link gcc-9)))
+                                  (base-gcc (make-gcc-rpath-link gcc-8)))
   "Convenience wrapper around MAKE-CROSS-TOOLCHAIN with default values
 desirable for building Bitcoin Core release binaries."
   (make-cross-toolchain target
@@ -147,7 +147,7 @@ desirable for building Bitcoin Core release binaries."
          (pthreads-xlibc mingw-w64-x86_64-winpthreads)
          (pthreads-xgcc (make-gcc-with-pthreads
                          (cross-gcc target
-                                    #:xgcc (make-ssp-fixed-gcc gcc-9)
+                                    #:xgcc (make-ssp-fixed-gcc gcc-8)
                                     #:xbinutils xbinutils
                                     #:libc pthreads-xlibc))))
     ;; Define a meta-package that propagates the resulting XBINUTILS, XLIBC, and
