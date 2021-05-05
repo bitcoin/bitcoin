@@ -17,6 +17,7 @@ from test_framework.messages import (
 from test_framework.script import (
     CScript,
     OP_TRUE,
+    OP_NOP,
 )
 from test_framework.util import (
     assert_equal,
@@ -26,11 +27,15 @@ from test_framework.util import (
 
 
 class MiniWallet:
-    def __init__(self, test_node):
+    def __init__(self, test_node, *, raw_script=False):
         self._test_node = test_node
         self._utxos = []
-        self._address = ADDRESS_BCRT1_P2WSH_OP_TRUE
-        self._scriptPubKey = hex_str_to_bytes(self._test_node.validateaddress(self._address)['scriptPubKey'])
+        if raw_script:
+            self._address = None
+            self._scriptPubKey = bytes(CScript([OP_TRUE]))
+        else:
+            self._address = ADDRESS_BCRT1_P2WSH_OP_TRUE
+            self._scriptPubKey = hex_str_to_bytes(self._test_node.validateaddress(self._address)['scriptPubKey'])
 
     def scan_blocks(self, *, start=1, num):
         """Scan the blocks for self._address outputs and add them to self._utxos"""
@@ -47,7 +52,7 @@ class MiniWallet:
 
     def generate(self, num_blocks):
         """Generate blocks with coinbase outputs to the internal address, and append the outputs to the internal list"""
-        blocks = self._test_node.generatetoaddress(num_blocks, self._address)
+        blocks = self._test_node.generatetodescriptor(num_blocks, f'raw({self._scriptPubKey.hex()})')
         for b in blocks:
             cb_tx = self._test_node.getblock(blockhash=b, verbosity=2)['tx'][0]
             self._utxos.append({'txid': cb_tx['txid'], 'vout': 0, 'value': cb_tx['vout'][0]['value']})
@@ -89,8 +94,12 @@ class MiniWallet:
         tx = CTransaction()
         tx.vin = [CTxIn(COutPoint(int(utxo_to_spend['txid'], 16), utxo_to_spend['vout']))]
         tx.vout = [CTxOut(int(send_value * COIN), self._scriptPubKey)]
-        tx.wit.vtxinwit = [CTxInWitness()]
-        tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
+        if not self._address:
+            # raw script
+            tx.vin[0].scriptSig = CScript([OP_NOP] * 35)  # pad to identical size
+        else:
+            tx.wit.vtxinwit = [CTxInWitness()]
+            tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
         tx_hex = tx.serialize().hex()
 
         tx_info = from_node.testmempoolaccept([tx_hex])[0]
@@ -98,7 +107,7 @@ class MiniWallet:
         if mempool_valid:
             assert_equal(tx_info['vsize'], vsize)
             assert_equal(tx_info['fees']['base'], fee)
-        return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex}
+        return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex, 'tx': tx}
 
     def sendrawtransaction(self, *, from_node, tx_hex):
         from_node.sendrawtransaction(tx_hex)
