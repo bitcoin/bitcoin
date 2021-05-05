@@ -208,9 +208,11 @@ class LLMQChainLocksTest(DashTestFramework):
         self.bump_mocktime(5, nodes=self.nodes)
         time.sleep(5)
         for node in self.nodes:
-            self.wait_for_most_recent_chainlock(node, fake_block_hash1, timeout=15)
+            self.wait_for_most_recent_chainlock(node, fake_block_hash1, timeout=5)
         tip = self.nodes[0].generate(1)[-1]
-        self.wait_for_chainlocked_block_all_nodes(tip, timeout=5)
+        self.sync_blocks()
+        self.bump_mocktime(5, nodes=self.nodes)
+        self.wait_for_chainlocked_block_all_nodes(tip, timeout=15)
         self.log.info("Shouldn't accept fake clsig for 'tip + SIGN_HEIGHT_OFFSET + 1' block height")
         fake_clsig2, fake_block_hash2 = self.create_fake_clsig(SIGN_HEIGHT_OFFSET + 1)
         p2p_node.send_clsig(fake_clsig2)
