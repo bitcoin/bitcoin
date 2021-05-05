@@ -227,6 +227,14 @@ def check_PE_libraries(filename) -> bool:
             ok = False
     return ok
 
+def check_PE_subsystem_version(filename) -> bool:
+    binary = lief.parse(filename)
+    major: int = binary.optional_header.major_subsystem_version
+    minor: int = binary.optional_header.minor_subsystem_version
+    if major == 6 and minor == 1:
+        return True
+    return False
+
 CHECKS = {
 'ELF': [
     ('IMPORTED_SYMBOLS', check_imported_symbols),
@@ -238,7 +246,8 @@ CHECKS = {
     ('MIN_OS', check_MACHO_min_os),
 ],
 'PE' : [
-    ('DYNAMIC_LIBRARIES', check_PE_libraries)
+    ('DYNAMIC_LIBRARIES', check_PE_libraries),
+    ('SUBSYSTEM_VERSION', check_PE_subsystem_version),
 ]
 }
 
