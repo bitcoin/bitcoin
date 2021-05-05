@@ -5,6 +5,7 @@
 
 #include <amount.h>
 #include <core_io.h>
+#include <crypto/ripemd160.h>
 #include <interfaces/chain.h>
 #include <key_io.h>
 #include <node/context.h>
@@ -3012,8 +3013,7 @@ static RPCHelpMan listunspent()
                             CHECK_NONFATAL(extracted);
                             // Also return the witness script
                             const WitnessV0ScriptHash& whash = std::get<WitnessV0ScriptHash>(witness_destination);
-                            CScriptID id;
-                            CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
+                            CScriptID id{RipeMd160(whash.begin(), whash.size())};
                             CScript witnessScript;
                             if (provider->GetCScript(id, witnessScript)) {
                                 entry.pushKV("witnessScript", HexStr(witnessScript));
@@ -3022,8 +3022,7 @@ static RPCHelpMan listunspent()
                     }
                 } else if (scriptPubKey.IsPayToWitnessScriptHash()) {
                     const WitnessV0ScriptHash& whash = std::get<WitnessV0ScriptHash>(address);
-                    CScriptID id;
-                    CRIPEMD160().Write(whash.begin(), whash.size()).Finalize(id.begin());
+                    CScriptID id{RipeMd160(whash.begin(), whash.size())};
                     CScript witnessScript;
                     if (provider->GetCScript(id, witnessScript)) {
                         entry.pushKV("witnessScript", HexStr(witnessScript));
@@ -3718,10 +3717,8 @@ public:
     {
         UniValue obj(UniValue::VOBJ);
         CScript subscript;
-        CRIPEMD160 hasher;
-        uint160 hash;
-        hasher.Write(id.begin(), 32).Finalize(hash.begin());
-        if (provider && provider->GetCScript(CScriptID(hash), subscript)) {
+        CScriptID scriptid{RipeMd160(id.begin(), 32)};
+        if (provider && provider->GetCScript(scriptid, subscript)) {
             ProcessSubScript(subscript, obj);
         }
         return obj;

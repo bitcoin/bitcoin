@@ -4,6 +4,7 @@
 
 #include <script/descriptor.h>
 
+#include <crypto/ripemd160.h>
 #include <key_io.h>
 #include <pubkey.h>
 #include <script/script.h>
@@ -1137,8 +1138,7 @@ std::unique_ptr<DescriptorImpl> InferScript(const CScript& script, ParseScriptCo
         }
     }
     if (txntype == TxoutType::WITNESS_V0_SCRIPTHASH && ctx != ParseScriptContext::P2WSH) {
-        CScriptID scriptid;
-        CRIPEMD160().Write(data[0].data(), data[0].size()).Finalize(scriptid.begin());
+        CScriptID scriptid{RipeMd160(data[0])};
         CScript subscript;
         if (provider.GetCScript(scriptid, subscript)) {
             auto sub = InferScript(subscript, ParseScriptContext::P2WSH, provider);
