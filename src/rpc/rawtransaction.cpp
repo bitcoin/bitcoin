@@ -188,7 +188,7 @@ static RPCHelpMan getrawtransaction()
     // SYSCOIN
     } else {
         uint32_t nBlockHeight;
-        if(pblockindexdb->ReadBlockHeight(hash, nBlockHeight)){	    
+        if(pblockindexdb && pblockindexdb->ReadBlockHeight(hash, nBlockHeight)){	    
             LOCK(cs_main);
             blockindex = chainman.ActiveChain()[nBlockHeight];
         } 
