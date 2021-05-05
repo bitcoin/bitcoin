@@ -24,9 +24,9 @@
  * as big-endian so that sequential reads of filters by height are fast.
  * Keys for the hash index have the type [DB_BLOCK_HASH, uint256].
  */
-constexpr char DB_BLOCK_HASH = 's';
-constexpr char DB_BLOCK_HEIGHT = 't';
-constexpr char DB_FILTER_POS = 'P';
+constexpr uint8_t DB_BLOCK_HASH{'s'};
+constexpr uint8_t DB_BLOCK_HEIGHT{'t'};
+constexpr uint8_t DB_FILTER_POS{'P'};
 
 constexpr unsigned int MAX_FLTR_FILE_SIZE = 0x1000000; // 16 MiB
 /** The pre-allocation chunk size for fltr?????.dat files */
@@ -63,7 +63,7 @@ struct DBHeightKey {
     template<typename Stream>
     void Unserialize(Stream& s)
     {
-        char prefix = ser_readdata8(s);
+        const uint8_t prefix{ser_readdata8(s)};
         if (prefix != DB_BLOCK_HEIGHT) {
             throw std::ios_base::failure("Invalid format for block filter index DB height key");
         }
@@ -77,7 +77,7 @@ struct DBHashKey {
     explicit DBHashKey(const uint256& hash_in) : hash(hash_in) {}
 
     SERIALIZE_METHODS(DBHashKey, obj) {
-        char prefix = DB_BLOCK_HASH;
+        uint8_t prefix{DB_BLOCK_HASH};
         READWRITE(prefix);
         if (prefix != DB_BLOCK_HASH) {
             throw std::ios_base::failure("Invalid format for block filter index DB hash key");
@@ -149,7 +149,7 @@ bool BlockFilterIndex::ReadFilterFromDisk(const FlatFilePos& pos, BlockFilter& f
     }
 
     uint256 block_hash;
-    std::vector<unsigned char> encoded_filter;
+    std::vector<uint8_t> encoded_filter;
     try {
         filein >> block_hash >> encoded_filter;
         filter = BlockFilter(GetFilterType(), block_hash, std::move(encoded_filter));

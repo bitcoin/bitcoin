@@ -10,12 +10,11 @@
 #include <util/translation.h>
 #include <validation.h>
 
-constexpr char DB_BEST_BLOCK = 'B';
-constexpr char DB_TXINDEX = 't';
-constexpr char DB_TXINDEX_BLOCK = 'T';
+constexpr uint8_t DB_BEST_BLOCK{'B'};
+constexpr uint8_t DB_TXINDEX{'t'};
+constexpr uint8_t DB_TXINDEX_BLOCK{'T'};
 
 std::unique_ptr<TxIndex> g_txindex;
-
 
 
 /** Access to the txindex database (indexes/txindex/) */
@@ -60,8 +59,8 @@ bool TxIndex::DB::WriteTxs(const std::vector<std::pair<uint256, CDiskTxPos>>& v_
  */
 static void WriteTxIndexMigrationBatches(CDBWrapper& newdb, CDBWrapper& olddb,
                                          CDBBatch& batch_newdb, CDBBatch& batch_olddb,
-                                         const std::pair<unsigned char, uint256>& begin_key,
-                                         const std::pair<unsigned char, uint256>& end_key)
+                                         const std::pair<uint8_t, uint256>& begin_key,
+                                         const std::pair<uint8_t, uint256>& end_key)
 {
     // Sync new DB changes to disk before deleting from old DB.
     newdb.WriteBatch(batch_newdb, /*fSync=*/ true);
@@ -113,9 +112,9 @@ bool TxIndex::DB::MigrateData(CBlockTreeDB& block_tree_db, const CBlockLocator& 
     CDBBatch batch_newdb(*this);
     CDBBatch batch_olddb(block_tree_db);
 
-    std::pair<unsigned char, uint256> key;
-    std::pair<unsigned char, uint256> begin_key{DB_TXINDEX, uint256()};
-    std::pair<unsigned char, uint256> prev_key = begin_key;
+    std::pair<uint8_t, uint256> key;
+    std::pair<uint8_t, uint256> begin_key{DB_TXINDEX, uint256()};
+    std::pair<uint8_t, uint256> prev_key = begin_key;
 
     bool interrupted = false;
     std::unique_ptr<CDBIterator> cursor(block_tree_db.NewIterator());
