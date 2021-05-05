@@ -1326,9 +1326,11 @@ fi
 
 if test x$enable_wallet != xno; then
     dnl Check for libdb_cxx only if wallet enabled
-    BITCOIN_FIND_BDB48
-    if test x$suppress_external_warnings != xno ; then
+    if test "x$use_bdb" != "xno"; then
+      BITCOIN_FIND_BDB48
+      if test x$suppress_external_warnings != xno ; then
         BDB_CPPFLAGS=SUPPRESS_WARNINGS($BDB_CPPFLAGS)
+      fi
     fi
 
     dnl Check for sqlite3
