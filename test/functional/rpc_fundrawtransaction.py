@@ -728,10 +728,10 @@ class RawTransactionsTest(SyscoinTestFramework):
         result6 = self.nodes[3].fundrawtransaction(rawtx, {"feeRate": 0})
 
         result_fee_rate = result['fee'] * 1000 / count_bytes(result['hex'])
-        assert_fee_amount(result1['fee'], count_bytes(result2['hex']), 2 * result_fee_rate)
+        assert_fee_amount(result1['fee'], count_bytes(result1['hex']), 2 * result_fee_rate)
         assert_fee_amount(result2['fee'], count_bytes(result2['hex']), 2 * result_fee_rate)
         assert_fee_amount(result3['fee'], count_bytes(result3['hex']), 10 * result_fee_rate)
-        assert_fee_amount(result4['fee'], count_bytes(result3['hex']), 10 * result_fee_rate)
+        assert_fee_amount(result4['fee'], count_bytes(result4['hex']), 10 * result_fee_rate)
         assert_fee_amount(result5['fee'], count_bytes(result5['hex']), 0)
         assert_fee_amount(result6['fee'], count_bytes(result6['hex']), 0)
 
