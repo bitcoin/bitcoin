@@ -27,9 +27,11 @@
              (gnu packages version-control)
              (guix build-system font)
              (guix build-system gnu)
+             (guix build-system python)
              (guix build-system trivial)
              (guix download)
              (guix gexp)
+             (guix git-download)
              ((guix licenses) #:prefix license:)
              (guix packages)
              (guix profiles)
@@ -192,6 +194,29 @@ chain for " target " development."))
     "Thatcher Ulrich's first outline font design. He started with the goal of producing a neutral, readable sans-serif text font. There are lots of \"expressive\" fonts out there, but he wanted to start with something very plain and clean, something he might want to actually use. ")
    (license license:public-domain)))
 
+(define-public lief
+  (package
+   (name "python-lief")
+   (version "0.11.4")
+   (source
+    (origin
+     (method git-fetch)
+     (uri (git-reference
+           (url "https://github.com/lief-project/LIEF.git")
+           (commit version)))
+     (file-name (git-file-name name version))
+     (sha256
+      (base32
+       "0h4kcwr9z478almjqhmils8imfpflzk0r7d05g4xbkdyknn162qf"))))
+   (build-system python-build-system)
+   (native-inputs
+    `(("cmake" ,cmake)))
+   (home-page "https://github.com/lief-project/LIEF")
+   (synopsis "Library to Instrument Executable Formats")
+   (description "Python library to to provide a cross platform library which can
+parse, modify and abstract ELF, PE and MachO formats.")
+   (license license:asl2.0)))
+
 (packages->manifest
  (append
   (list ;; The Basics
@@ -227,6 +252,8 @@ chain for " target " development."))
         python-3
         ;; Git
         git
+        ;; Tests
+        lief
         ;; Native gcc 7 toolchain
         gcc-toolchain-7
         (list gcc-toolchain-7 "static"))

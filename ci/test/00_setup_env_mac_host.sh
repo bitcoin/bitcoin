@@ -7,7 +7,7 @@
 export LC_ALL=C.UTF-8
 
 export HOST=x86_64-apple-darwin18
-export PIP_PACKAGES="zmq"
+export PIP_PACKAGES="zmq lief"
 export GOAL="install"
 export SYSCOIN_CONFIG="--with-gui --enable-reduce-exports --enable-external-signer"
 export CI_OS_NAME="macos"

@@ -23,6 +23,7 @@ packages:
 - "python3"
 # SYSCOIN
 - "cmake"
+- "python3-pip"
 # Cross compilation HOSTS:
 #  - arm-linux-gnueabihf
 - "binutils-arm-linux-gnueabihf"
@@ -96,6 +97,8 @@ script: |
     done
   done
   }
+
+  pip3 install lief==0.11.4
 
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}
