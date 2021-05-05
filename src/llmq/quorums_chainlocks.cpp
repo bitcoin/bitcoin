@@ -429,6 +429,8 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
                         pnode->PushOtherInventory(clsigInv);
                     }
                 });
+                // Try signing the tip ourselves
+                TrySignChainTip(pindexSig);
             }
         } else {
             // An aggregated CLSIG
