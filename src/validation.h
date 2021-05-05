@@ -1043,7 +1043,12 @@ bool StopRelayerNode(pid_t &pid);
 void KillProcess(const pid_t& pid);
 
 extern VersionBitsCache versionbitscache;
-
+// SYSCOIN
+/**
+ * Return true if hash can be found in chainActive at nBlockHeight height.
+ * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.
+ */
+bool GetBlockHash(uint256& hashRet, int nBlockHeight = -1);
 /**
  * Determine what nVersion a new block should use.
  */

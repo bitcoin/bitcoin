@@ -18,6 +18,7 @@
 #include <net_processing.h>
 #include <primitives/block.h>
 #include <primitives/transaction.h>
+#include <node/blockstorage.h>
 #include <validation.h>
 #include <saltedhasher.h>
 #include <sync.h>
