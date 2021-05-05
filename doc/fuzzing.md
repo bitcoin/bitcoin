@@ -351,3 +351,15 @@ $ honggfuzz/honggfuzz --exit_upon_crash --quiet --timeout 4 -n 1 -Q \
                        -nodebuglogfile -bind=127.0.0.1:18444 -logthreadnames \
                        -debug
 ```
+
+# OSS-Fuzz
+
+Bitcoin Core participates in Google's [OSS-Fuzz](https://github.com/google/oss-fuzz/tree/master/projects/bitcoin-core)
+program, which includes a dashboard of [publicly disclosed vulnerabilities](https://bugs.chromium.org/p/oss-fuzz/issues/list).
+Generally, we try to disclose vulnerabilities as soon as possible after they
+are fixed to give users the knowledge they need to be protected. However,
+because Bitcoin is a live P2P network, and not just standalone local software,
+we might not fully disclose every issue within Google's standard
+[90-day disclosure window](https://google.github.io/oss-fuzz/getting-started/bug-disclosure-guidelines/)
+if a partial or delayed disclosure is important to protect users or the
+function of the network.
