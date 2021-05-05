@@ -4,6 +4,7 @@
 
 #include <index/disktxpos.h>
 #include <index/txindex.h>
+#include <node/blockstorage.h>
 #include <node/ui_interface.h>
 #include <shutdown.h>
 #include <util/system.h>

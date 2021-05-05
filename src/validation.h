@@ -27,6 +27,7 @@
 #include <serialize.h>
 #include <util/check.h>
 #include <util/hasher.h>
+#include <util/translation.h>
 
 #include <atomic>
 #include <map>
@@ -74,8 +75,6 @@ static const unsigned int DEFAULT_DESCENDANT_LIMIT = 25;
 static const unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT = 101;
 /** Default for -mempoolexpiry, expiration time for mempool transactions in hours */
 static const unsigned int DEFAULT_MEMPOOL_EXPIRY = 336;
-/** The maximum size of a blk?????.dat file (since 0.8) */
-static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB
 /** Maximum number of dedicated script-checking threads allowed */
 static const int MAX_SCRIPTCHECK_THREADS = 15;
 /** -par default (number of script-checking threads, 0 = auto) */
@@ -121,8 +120,6 @@ typedef std::unordered_multimap<uint256, CBlockIndex*, BlockHasher> PrevBlockMap
 extern Mutex g_best_block_mutex;
 extern std::condition_variable g_best_block_cv;
 extern uint256 g_best_block;
-extern std::atomic_bool fImporting;
-extern std::atomic_bool fReindex;
 // SYSCOIN
 extern std::atomic_bool fReindexGeth;
 /** Whether there are dedicated script-checking threads running.
@@ -145,20 +142,9 @@ extern arith_uint256 nMinimumChainWork;
 /** Best header we've seen so far (used for getheaders queries' starting points). */
 extern CBlockIndex *pindexBestHeader;
 
-/** Pruning-related variables and constants */
-/** True if any block files have ever been pruned. */
-extern bool fHavePruned;
-/** True if we're running in -prune mode. */
-extern bool fPruneMode;
-/** Number of MiB of block files that we're trying to stay below. */
-extern uint64_t nPruneTarget;
 /** Documentation for argument 'checklevel'. */
 extern const std::vector<std::string> CHECKLEVEL_DOC;
 
-/** Open a block file (blk?????.dat) */
-FILE* OpenBlockFile(const FlatFilePos &pos, bool fReadOnly = false);
-/** Translation to a filesystem path */
-fs::path GetBlockPosFilename(const FlatFilePos &pos);
 /** Unload database information */
 void UnloadBlockIndex(CTxMemPool* mempool, ChainstateManager& chainman);
 /** Run instances of script checking worker threads */
@@ -180,16 +166,10 @@ void StopScriptCheckWorkerThreads();
 CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock);
 CAmount GetBlockSubsidy(unsigned int nHeight, const CChainParams& chainparams, bool fSuperblockPartOnly = false);
 
+bool AbortNode(BlockValidationState& state, const std::string& strMessage, const bilingual_str& userMessage = bilingual_str{});
+
 /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
 double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex* pindex);
-
-/** Calculate the amount of disk space the block & undo files currently use */
-uint64_t CalculateCurrentUsage();
-
-/**
- *  Actually unlink the specified files
- */
-void UnlinkPrunedFiles(const std::set<int>& setFilesToPrune);
 
 /** Prune block files up to a given height */
 void PruneBlockFilesManual(CChainState& active_chainstate, int nManualPruneHeight);
@@ -1069,15 +1049,6 @@ extern VersionBitsCache versionbitscache;
  */
 int32_t ComputeBlockVersion(const CBlockIndex* pindexPrev, const Consensus::Params& params);
 
-/**
- * Return true if hash can be found in chainActive at nBlockHeight height.
- * Fills hashRet with found hash, if no nBlockHeight is specified - ::ChainActive().Height() is used.
- */
-bool GetBlockHash(uint256& hashRet, int nBlockHeight = -1);
-
-/** Get block file info entry for one block file */
-CBlockFileInfo* GetBlockFileInfo(size_t n);
-
 using FopenFn = std::function<FILE*(const fs::path&, const char*)>;
 
 /** Dump the mempool to disk. */
@@ -1085,12 +1056,6 @@ bool DumpMempool(const CTxMemPool& pool, FopenFn mockable_fopen_function = fsbri
 
 /** Load the mempool from disk. */
 bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mockable_fopen_function = fsbridge::fopen);
-
-//! Check whether the block associated with this index entry is pruned or not.
-inline bool IsBlockPruned(const CBlockIndex* pblockindex)
-{
-    return (fHavePruned && !(pblockindex->nStatus & BLOCK_HAVE_DATA) && pblockindex->nTx > 0);
-}
 
 /**
  * Return the expected assumeutxo value for a given height, if one exists.

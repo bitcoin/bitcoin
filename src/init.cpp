@@ -724,47 +724,6 @@ static void BlockNotifyGenesisWait(const CBlockIndex* pBlockIndex)
     }
 }
 
-// If we're using -prune with -reindex, then delete block files that will be ignored by the
-// reindex.  Since reindexing works by starting at block file 0 and looping until a blockfile
-// is missing, do the same here to delete any later block files after a gap.  Also delete all
-// rev files since they'll be rewritten by the reindex anyway.  This ensures that vinfoBlockFile
-// is in sync with what's actually on disk by the time we start downloading, so that pruning
-// works correctly.
-static void CleanupBlockRevFiles()
-{
-    std::map<std::string, fs::path> mapBlockFiles;
-
-    // Glob all blk?????.dat and rev?????.dat files from the blocks directory.
-    // Remove the rev files immediately and insert the blk file paths into an
-    // ordered map keyed by block file index.
-    LogPrintf("Removing unusable blk?????.dat and rev?????.dat files for -reindex with -prune\n");
-    fs::path blocksdir = gArgs.GetBlocksDirPath();
-    for (fs::directory_iterator it(blocksdir); it != fs::directory_iterator(); it++) {
-        if (fs::is_regular_file(*it) &&
-            it->path().filename().string().length() == 12 &&
-            it->path().filename().string().substr(8,4) == ".dat")
-        {
-            if (it->path().filename().string().substr(0,3) == "blk")
-                mapBlockFiles[it->path().filename().string().substr(3,5)] = it->path();
-            else if (it->path().filename().string().substr(0,3) == "rev")
-                remove(it->path());
-        }
-    }
-
-    // Remove all block files that aren't part of a contiguous set starting at
-    // zero by walking the ordered map (keys are block file indices) by
-    // keeping a separate counter.  Once we hit a gap (or if 0 doesn't exist)
-    // start removing block files.
-    int nContigCounter = 0;
-    for (const std::pair<const std::string, fs::path>& item : mapBlockFiles) {
-        if (atoi(item.first) == nContigCounter) {
-            nContigCounter++;
-            continue;
-        }
-        remove(item.second);
-    }
-}
-
 #if HAVE_SYSTEM
 static void StartupNotify(const ArgsManager& args)
 {
