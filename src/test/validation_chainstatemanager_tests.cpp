@@ -233,6 +233,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
 
     // Mine 10 more blocks, putting at us height 110 where a valid assumeutxo value can
     // be found.
+    constexpr int snapshot_height = 110;
     mineBlocks(10);
     initial_size += 10;
     initial_total_coins += 10;
@@ -272,6 +273,11 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
     BOOST_CHECK_EQUAL(
         chainman.ActiveChainstate().m_from_snapshot_blockhash,
         *chainman.SnapshotBlockhash());
+
+    const AssumeutxoData& au_data = *ExpectedAssumeutxo(snapshot_height, ::Params());
+    const CBlockIndex* tip = chainman.ActiveTip();
+
+    BOOST_CHECK_EQUAL(tip->nChainTx, au_data.nChainTx);
 
     // To be checked against later when we try loading a subsequent snapshot.
     uint256 loaded_snapshot_blockhash{*chainman.SnapshotBlockhash()};
