@@ -49,7 +49,7 @@ private:
     int64_t nTimeLastUpdateBlockTip GUARDED_BY(cs) {0};
 
 public:
-    CMasternodeSync() = default;
+    CMasternodeSync();
 
     static void SendGovernanceSyncRequest(CNode* pnode, CConnman& connman);
 
