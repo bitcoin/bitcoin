@@ -128,11 +128,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.log.info("Restart it so that it forgets all the chainlock messages from the past")
         self.stop_node(0)
         self.start_node(0)
-        node1_num_peers_before = self.nodes[1].getconnectioncount()
         self.connect_nodes(0, 1)
-        # We need to wait for nodes to exchange headers first because
-        # node1 won't recognize node0 as a good peer to send new blocks to otherwise.
-        wait_until_helper(wait_for_headers, sleep=1, timeout=5)
         assert(self.nodes[0].getbestblockhash() == good_tip)
         self.nodes[0].invalidateblock(good_tip)
         self.log.info("Now try to reorg the chain")
