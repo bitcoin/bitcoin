@@ -27,7 +27,7 @@ CDBWrapper* llmqDb;
 
 void InitLLMQSystem(CEvoDB& evoDb, bool unitTests, bool fWipe)
 {
-    llmqDb = new CDBWrapper(unitTests ? "" : (GetDataDir() / "llmq"), 1 << 20, unitTests, fWipe);
+    llmqDb = new CDBWrapper(unitTests ? "" : (GetDataDir() / "llmq"), 8 << 20, unitTests, fWipe);
     blsWorker = new CBLSWorker();
 
     quorumDKGDebugManager = new CDKGDebugManager();
