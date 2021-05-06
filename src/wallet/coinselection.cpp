@@ -70,7 +70,7 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_v
 
     std::vector<bool> curr_selection; // select the utxo at this index
     curr_selection.reserve(utxo_pool.size());
-    CAmount actual_target = not_input_fees + target_value;
+    CAmount selection_target = not_input_fees + target_value;
 
     // Calculate curr_available_value
     CAmount curr_available_value = 0;
@@ -79,7 +79,7 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_v
         assert(utxo.effective_value > 0);
         curr_available_value += utxo.effective_value;
     }
-    if (curr_available_value < actual_target) {
+    if (curr_available_value < selection_target) {
         return false;
     }
 
@@ -94,12 +94,12 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_v
     for (size_t i = 0; i < TOTAL_TRIES; ++i) {
         // Conditions for starting a backtrack
         bool backtrack = false;
-        if (curr_value + curr_available_value < actual_target ||                // Cannot possibly reach target with the amount remaining in the curr_available_value.
-            curr_value > actual_target + cost_of_change ||    // Selected value is out of range, go back and try other branch
+        if (curr_value + curr_available_value < selection_target ||                // Cannot possibly reach target with the amount remaining in the curr_available_value.
+            curr_value > selection_target + cost_of_change ||    // Selected value is out of range, go back and try other branch
             (curr_waste > best_waste && (utxo_pool.at(0).fee - utxo_pool.at(0).long_term_fee) > 0)) { // Don't select things which we know will be more wasteful if the waste is increasing
             backtrack = true;
-        } else if (curr_value >= actual_target) {       // Selected value is within range
-            curr_waste += (curr_value - actual_target); // This is the excess value which is added to the waste for the below comparison
+        } else if (curr_value >= selection_target) {       // Selected value is within range
+            curr_waste += (curr_value - selection_target); // This is the excess value which is added to the waste for the below comparison
             // Adding another UTXO after this check could bring the waste down if the long term fee is higher than the current fee.
             // However we are not going to explore that because this optimization for the waste is only done when we have hit our target
             // value. Adding any more UTXOs will be just burning the UTXO; it will go entirely to fees. Thus we aren't going to
@@ -112,7 +112,7 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& target_v
                     break;
                 }
             }
-            curr_waste -= (curr_value - actual_target); // Remove the excess value as we will be selecting different coins now
+            curr_waste -= (curr_value - selection_target); // Remove the excess value as we will be selecting different coins now
             backtrack = true;
         }
 

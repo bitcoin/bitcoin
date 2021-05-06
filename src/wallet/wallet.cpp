@@ -2990,19 +2990,19 @@ bool CWallet::CreateTransactionInternal(
                     bnb_used = false;
                 }
 
-                const CAmount nChange = nValueIn - nValueToSelect;
-                if (nChange > 0)
+                const CAmount change_and_fee = nValueIn - nValueToSelect;
+                if (change_and_fee > 0)
                 {
                     // Fill a vout to ourself
-                    CTxOut newTxOut(nChange, scriptChange);
+                    CTxOut newTxOut(change_and_fee, scriptChange);
 
                     // Never create dust outputs; if we would, just
                     // add the dust to the fee.
-                    // The nChange when BnB is used is always going to go to fees.
+                    // The change_and_fee when BnB is used is always going to go to fees.
                     if (IsDust(newTxOut, coin_selection_params.m_discard_feerate) || bnb_used)
                     {
                         nChangePosInOut = -1;
-                        nFeeRet += nChange;
+                        nFeeRet += change_and_fee;
                     }
                     else
                     {
