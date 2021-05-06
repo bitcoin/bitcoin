@@ -113,7 +113,6 @@ QModelIndex FindTx(const QAbstractItemModel& model, const uint256& txid)
 //     src/qt/test/test_dash-qt -platform cocoa    # macOS
 void TestGUI()
 {
-    GUIUtil::loadFonts();
     // Set up wallet and chain with 105 blocks (5 mature blocks for spending).
     TestChain100Setup test;
     for (int i = 0; i < 5; ++i) {
