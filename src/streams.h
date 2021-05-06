@@ -643,6 +643,11 @@ public:
             throw std::ios_base::failure("CAutoFile::write: write failed");
     }
 
+    void write(const std::string& s)
+    {
+        write(s.c_str(), s.size());
+    }
+
     template<typename T>
     CAutoFile& operator<<(const T& obj)
     {
