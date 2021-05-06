@@ -2413,13 +2413,11 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
         return SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change, setCoinsRet, nValueRet);
     } else {
         // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
-        // The knapsack solver currently does not use effective values, so we give GroupOutputs feerates of 0 so it sets the effective values to be the same as the real value.
-        std::vector<OutputGroup> groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, CFeeRate(0), CFeeRate(0), eligibility_filter, false /* positive_only */);
-
+        std::vector<OutputGroup> all_groups = GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, effective_feerate, coin_selection_params.m_long_term_feerate, eligibility_filter, false /* positive_only */);
         bnb_used = false;
         // While nTargetValue includes the transaction fees for non-input things, it does not include the fee for creating a change output.
         // So we need to include that for KnapsackSolver as well, as we are expecting to create a change output.
-        return KnapsackSolver(nTargetValue + coin_selection_params.m_change_fee, groups, setCoinsRet, nValueRet);
+        return KnapsackSolver(nTargetValue + coin_selection_params.m_change_fee, all_groups, setCoinsRet, nValueRet);
     }
 }
 
@@ -2467,10 +2465,10 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
                 return false; // Not solvable, can't estimate size for fee
             }
             coin.effective_value = coin.txout.nValue - coin_selection_params.m_effective_feerate.GetFee(coin.m_input_bytes);
-            if (coin_selection_params.use_bnb) {
-                value_to_select -= coin.effective_value;
-            } else {
+            if (coin_selection_params.m_subtract_fee_outputs) {
                 value_to_select -= coin.txout.nValue;
+            } else {
+                value_to_select -= coin.effective_value;
             }
             setPresetCoins.insert(coin);
         } else {
@@ -2955,12 +2953,6 @@ bool CWallet::CreateTransactionInternal(
                 // Include the fees for things that aren't inputs, excluding the change output
                 const CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.tx_noinputs_size);
                 CAmount nValueToSelect = nValue + not_input_fees;
-
-                // For KnapsackSolver, when we are not subtracting the fee from the recipients, we also want to include the fees for the
-                // inputs that we found in the previous iteration.
-                if (!coin_selection_params.use_bnb && nSubtractFeeFromAmount == 0) {
-                    nValueToSelect += std::max(CAmount(0), nFeeRet - not_input_fees);
-                }
 
                 // Choose coins to use
                 bool bnb_used = false;
