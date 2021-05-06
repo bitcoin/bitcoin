@@ -717,6 +717,16 @@ void OptionsModel::checkAndMigrate()
         if (settingsVersion < 130000 && settings.contains("nDatabaseCache") && settings.value("nDatabaseCache").toLongLong() == 100)
             settings.setValue("nDatabaseCache", (qint64)nDefaultDbCache);
 
+        if (settingsVersion < 170000) {
+            settings.remove("nWindowPos");
+            settings.remove("nWindowSize");
+            settings.remove("fMigrationDone121");
+            settings.remove("bUseInstantX");
+            settings.remove("bUseInstantSend");
+            settings.remove("bUseDarkSend");
+            settings.remove("bUsePrivateSend");
+        }
+
         settings.setValue(strSettingsVersionKey, CLIENT_VERSION);
     }
 
