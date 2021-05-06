@@ -85,21 +85,59 @@ void OptionsModel::Init(bool resetSettings)
 
     if (!settings.contains("fontFamily"))
         settings.setValue("fontFamily", GUIUtil::fontFamilyToString(GUIUtil::getFontFamilyDefault()));
+    if (m_node.softSetArg("-font-family", settings.value("fontFamily").toString().toStdString())) {
+        if (GUIUtil::fontsLoaded()) {
+            GUIUtil::setFontFamily(GUIUtil::fontFamilyFromString(settings.value("fontFamily").toString()));
+        }
+    } else {
+        addOverriddenOption("-font-family");
+    }
 
     if (!settings.contains("fontScale"))
         settings.setValue("fontScale", GUIUtil::getFontScaleDefault());
-    if (!m_node.softSetArg("-font-scale", settings.value("fontScale").toString().toStdString()))
+    if (m_node.softSetArg("-font-scale", settings.value("fontScale").toString().toStdString())) {
+        if (GUIUtil::fontsLoaded()) {
+            GUIUtil::setFontScale(settings.value("fontScale").toInt());
+        }
+    } else {
         addOverriddenOption("-font-scale");
+    }
 
     if (!settings.contains("fontWeightNormal"))
         settings.setValue("fontWeightNormal", GUIUtil::weightToArg(GUIUtil::getFontWeightNormalDefault()));
-    if (!m_node.softSetArg("-font-weight-normal", settings.value("fontWeightNormal").toString().toStdString()))
+    if (m_node.softSetArg("-font-weight-normal", settings.value("fontWeightNormal").toString().toStdString())) {
+        if (GUIUtil::fontsLoaded()) {
+            QFont::Weight weight;
+            GUIUtil::weightFromArg(settings.value("fontWeightNormal").toInt(), weight);
+            if (!GUIUtil::isSupportedWeight(weight)) {
+                // If the currently selected weight is not supported fallback to the lightest weight for normal font.
+                weight = GUIUtil::getSupportedWeights().front();
+                settings.setValue("fontWeightNormal", GUIUtil::weightToArg(weight));
+            }
+            GUIUtil::setFontWeightNormal(weight);
+        }
+    } else {
         addOverriddenOption("-font-weight-normal");
+    }
 
     if (!settings.contains("fontWeightBold"))
         settings.setValue("fontWeightBold", GUIUtil::weightToArg(GUIUtil::getFontWeightBoldDefault()));
-    if (!m_node.softSetArg("-font-weight-bold", settings.value("fontWeightBold").toString().toStdString()))
+    if (m_node.softSetArg("-font-weight-bold", settings.value("fontWeightBold").toString().toStdString())) {
+        if (GUIUtil::fontsLoaded()) {
+            QFont::Weight weight;
+            GUIUtil::weightFromArg(settings.value("fontWeightBold").toInt(), weight);
+            if (!GUIUtil::isSupportedWeight(weight)) {
+                // If the currently selected weight is not supported fallback to the second lightest weight for bold font
+                // or the lightest if there is only one.
+                auto vecSupported = GUIUtil::getSupportedWeights();
+                weight = vecSupported[vecSupported.size() > 1 ? 1 : 0];
+                settings.setValue("fontWeightBold", GUIUtil::weightToArg(weight));
+            }
+            GUIUtil::setFontWeightBold(weight);
+        }
+    } else {
         addOverriddenOption("-font-weight-bold");
+    }
 
 #ifdef ENABLE_WALLET
     if (!settings.contains("fCoinControlFeatures"))
@@ -366,12 +404,16 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
         case FontWeightNormal: {
             QFont::Weight weight;
             GUIUtil::weightFromArg(settings.value("fontWeightNormal").toInt(), weight);
-            return GUIUtil::supportedWeightToIndex(weight);
+            int nIndex = GUIUtil::supportedWeightToIndex(weight);
+            assert(nIndex != -1);
+            return nIndex;
         }
         case FontWeightBold: {
             QFont::Weight weight;
             GUIUtil::weightFromArg(settings.value("fontWeightBold").toInt(), weight);
-            return GUIUtil::supportedWeightToIndex(weight);
+            int nIndex = GUIUtil::supportedWeightToIndex(weight);
+            assert(nIndex != -1);
+            return nIndex;
         }
         case Language:
             return settings.value("language");
