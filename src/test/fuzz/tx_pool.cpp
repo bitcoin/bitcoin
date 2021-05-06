@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/validation.h>
+#include <miner.h>
 #include <test/fuzz/FuzzedDataProvider.h>
 #include <test/fuzz/fuzz.h>
 #include <test/fuzz/util.h>
@@ -77,13 +78,44 @@ void SetMempoolConstraints(ArgsManager& args, FuzzedDataProvider& fuzzed_data_pr
                      ToString(fuzzed_data_provider.ConsumeIntegralInRange<unsigned>(0, 999)));
 }
 
+void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, CChainState& chainstate)
+{
+    WITH_LOCK(::cs_main, tx_pool.check(chainstate));
+    {
+        BlockAssembler::Options options;
+        options.nBlockMaxWeight = fuzzed_data_provider.ConsumeIntegralInRange(0U, MAX_BLOCK_WEIGHT);
+        options.blockMinFeeRate = CFeeRate{ConsumeMoney(fuzzed_data_provider)};
+        auto assembler = BlockAssembler{chainstate, *static_cast<CTxMemPool*>(&tx_pool), ::Params(), options};
+        auto block_template = assembler.CreateNewBlock(CScript{} << OP_TRUE);
+        Assert(block_template->block.vtx.size() >= 1);
+    }
+    const auto info_all = tx_pool.infoAll();
+    if (!info_all.empty()) {
+        const auto& tx_to_remove = *PickValue(fuzzed_data_provider, info_all).tx;
+        WITH_LOCK(tx_pool.cs, tx_pool.removeRecursive(tx_to_remove, /* dummy */ MemPoolRemovalReason::BLOCK));
+        std::vector<uint256> all_txids;
+        tx_pool.queryHashes(all_txids);
+        assert(all_txids.size() < info_all.size());
+        WITH_LOCK(::cs_main, tx_pool.check(chainstate));
+    }
+    SyncWithValidationInterfaceQueue();
+}
+
+void MockTime(FuzzedDataProvider& fuzzed_data_provider, const CChainState& chainstate)
+{
+    const auto time = ConsumeTime(fuzzed_data_provider,
+                                  chainstate.m_chain.Tip()->GetMedianTimePast() + 1,
+                                  std::numeric_limits<decltype(chainstate.m_chain.Tip()->nTime)>::max());
+    SetMockTime(time);
+}
+
 FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const auto& node = g_setup->m_node;
     auto& chainstate = node.chainman->ActiveChainstate();
 
-    SetMockTime(ConsumeTime(fuzzed_data_provider));
+    MockTime(fuzzed_data_provider, chainstate);
     SetMempoolConstraints(*node.args, fuzzed_data_provider);
 
     // All RBF-spendable outpoints
@@ -163,7 +195,7 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
         }();
 
         if (fuzzed_data_provider.ConsumeBool()) {
-            SetMockTime(ConsumeTime(fuzzed_data_provider));
+            MockTime(fuzzed_data_provider, chainstate);
         }
         if (fuzzed_data_provider.ConsumeBool()) {
             SetMempoolConstraints(*node.args, fuzzed_data_provider);
@@ -237,23 +269,17 @@ FUZZ_TARGET_INIT(tx_pool_standard, initialize_tx_pool)
             }
         }
     }
-    WITH_LOCK(::cs_main, tx_pool.check(chainstate));
-    const auto info_all = tx_pool.infoAll();
-    if (!info_all.empty()) {
-        const auto& tx_to_remove = *PickValue(fuzzed_data_provider, info_all).tx;
-        WITH_LOCK(tx_pool.cs, tx_pool.removeRecursive(tx_to_remove, /* dummy */ MemPoolRemovalReason::BLOCK));
-        std::vector<uint256> all_txids;
-        tx_pool.queryHashes(all_txids);
-        assert(all_txids.size() < info_all.size());
-        WITH_LOCK(::cs_main, tx_pool.check(chainstate));
-    }
-    SyncWithValidationInterfaceQueue();
+    Finish(fuzzed_data_provider, tx_pool, chainstate);
 }
 
 FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
 {
     FuzzedDataProvider fuzzed_data_provider(buffer.data(), buffer.size());
     const auto& node = g_setup->m_node;
+    auto& chainstate = node.chainman->ActiveChainstate();
+
+    MockTime(fuzzed_data_provider, chainstate);
+    SetMempoolConstraints(*node.args, fuzzed_data_provider);
 
     std::vector<uint256> txids;
     for (const auto& outpoint : g_outpoints_coinbase_init_mature) {
@@ -265,10 +291,28 @@ FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
         txids.push_back(ConsumeUInt256(fuzzed_data_provider));
     }
 
-    CTxMemPool tx_pool{/* estimator */ nullptr, /* check_ratio */ 1};
+    CTxMemPool tx_pool_{/* estimator */ nullptr, /* check_ratio */ 1};
+    MockedTxPool& tx_pool = *static_cast<MockedTxPool*>(&tx_pool_);
 
     while (fuzzed_data_provider.ConsumeBool()) {
         const auto mut_tx = ConsumeTransaction(fuzzed_data_provider, txids);
+
+        if (fuzzed_data_provider.ConsumeBool()) {
+            MockTime(fuzzed_data_provider, chainstate);
+        }
+        if (fuzzed_data_provider.ConsumeBool()) {
+            SetMempoolConstraints(*node.args, fuzzed_data_provider);
+        }
+        if (fuzzed_data_provider.ConsumeBool()) {
+            tx_pool.RollingFeeUpdate();
+        }
+        if (fuzzed_data_provider.ConsumeBool()) {
+            const auto& txid = fuzzed_data_provider.ConsumeBool() ?
+                                   mut_tx.GetHash() :
+                                   PickValue(fuzzed_data_provider, txids);
+            const auto delta = fuzzed_data_provider.ConsumeIntegralInRange<CAmount>(-50 * COIN, +50 * COIN);
+            tx_pool.PrioritiseTransaction(txid, delta);
+        }
 
         const auto tx = MakeTransactionRef(mut_tx);
         const bool bypass_limits = fuzzed_data_provider.ConsumeBool();
@@ -278,8 +322,7 @@ FUZZ_TARGET_INIT(tx_pool, initialize_tx_pool)
         if (accepted) {
             txids.push_back(tx->GetHash());
         }
-
-        SyncWithValidationInterfaceQueue();
     }
+    Finish(fuzzed_data_provider, tx_pool, chainstate);
 }
 } // namespace
