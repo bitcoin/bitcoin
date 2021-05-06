@@ -86,9 +86,7 @@ class LLMQChainLocksTest(DashTestFramework):
         self.nodes[1].generatetoaddress(5, node0_mining_addr)
         self.wait_for_chainlocked_block(self.nodes[1], self.nodes[1].getbestblockhash())
         assert(self.nodes[0].getbestblockhash() == node0_tip)
-        self.nodes[0].setnetworkactive(True)
-        for i in range(self.num_nodes - 1):
-            self.connect_nodes(0, i + 1)
+        self.reconnect_isolated_node(self.nodes[0], 1)
         self.nodes[1].generatetoaddress(1, node0_mining_addr)
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[1].getbestblockhash())
 
@@ -99,9 +97,7 @@ class LLMQChainLocksTest(DashTestFramework):
         good_tip = self.nodes[1].getbestblockhash()
         self.wait_for_chainlocked_block(self.nodes[1], good_tip)
         assert(not self.nodes[0].getblock(self.nodes[0].getbestblockhash())["chainlock"])
-        self.nodes[0].setnetworkactive(True)
-        for i in range(self.num_nodes - 1):
-            self.connect_nodes(0, i + 1)
+        self.reconnect_isolated_node(self.nodes[0], 1)
         self.nodes[1].generatetoaddress(1, node0_mining_addr)
         self.wait_for_chainlocked_block(self.nodes[0], self.nodes[1].getbestblockhash())
         assert(self.nodes[0].getblock(self.nodes[0].getbestblockhash())["previousblockhash"] == good_tip)
@@ -115,13 +111,6 @@ class LLMQChainLocksTest(DashTestFramework):
                 found = True
                 break
         assert(found)
-
-        def wait_for_headers():
-            if self.nodes[1].getconnectioncount() == node1_num_peers_before:
-                return False
-            if self.nodes[1].getpeerinfo()[-1]["synced_headers"] < self.nodes[0].getblockcount():
-                return False
-            return True
 
         self.log.info("Keep node connected and let it try to reorg the chain")
         good_tip = self.nodes[0].getbestblockhash()
@@ -186,9 +175,7 @@ class LLMQChainLocksTest(DashTestFramework):
         # Enable network on first node again, which will cause the blocks to propagate
         # for the mined TXs, which will then allow the network to create a CLSIG
         self.log.info("Re-enable network on first node and wait for chainlock")
-        self.nodes[0].setnetworkactive(True)
-        for i in range(self.num_nodes - 1):
-            self.connect_nodes(0, i + 1)
+        self.reconnect_isolated_node(self.nodes[0], 1)
 
         self.log.info("Send fake future clsigs and see if this breaks ChainLocks")
         for i in range(len(self.nodes)):
