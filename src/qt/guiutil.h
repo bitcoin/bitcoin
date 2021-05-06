@@ -253,9 +253,6 @@ namespace GUIUtil
     bool GetStartOnSystemStartup();
     bool SetStartOnSystemStartup(bool fAutoStart);
 
-    /** Modify Qt network specific settings on migration */
-    void migrateQtSettings();
-
     /** Change the stylesheet directory. This is used by
         the parameter -custom-css-dir.*/
     void setStyleSheetDirectory(const QString& path);

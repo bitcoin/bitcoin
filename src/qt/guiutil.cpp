@@ -1013,18 +1013,6 @@ bool SetStartOnSystemStartup(bool fAutoStart) { return false; }
 
 #endif
 
-void migrateQtSettings()
-{
-    // Migration (12.1)
-    QSettings settings;
-    if(!settings.value("fMigrationDone121", false).toBool()) {
-        settings.remove("theme");
-        settings.remove("nWindowPos");
-        settings.remove("nWindowSize");
-        settings.setValue("fMigrationDone121", true);
-    }
-}
-
 void setStyleSheetDirectory(const QString& path)
 {
     stylesheetDirectory = path;

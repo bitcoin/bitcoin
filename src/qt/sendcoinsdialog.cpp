@@ -94,24 +94,6 @@ SendCoinsDialog::SendCoinsDialog(bool _fCoinJoin, QWidget* parent) :
     connect(ui->checkBoxCoinControlChange, SIGNAL(stateChanged(int)), this, SLOT(coinControlChangeChecked(int)));
     connect(ui->lineEditCoinControlChange, SIGNAL(textEdited(const QString &)), this, SLOT(coinControlChangeEdited(const QString &)));
 
-    // Dash specific
-    QSettings settings;
-    //TODO remove Darksend sometime after 0.14.1
-    if (settings.contains("bUseDarkSend")) {
-        settings.setValue("bUseCoinJoin", settings.value("bUseDarkSend").toBool());
-        settings.remove("bUseDarkSend");
-    }
-    if (!settings.contains("bUseCoinJoin"))
-        settings.setValue("bUseCoinJoin", false);
-
-    //TODO remove InstantX sometime after 0.14.1
-    if (settings.contains("bUseInstantX")) {
-        settings.remove("bUseInstantX");
-    }
-    if (settings.contains("bUseInstantSend")) {
-        settings.remove("bUseInstantSend");
-    }
-
     // Coin Control: clipboard actions
     QAction *clipboardQuantityAction = new QAction(tr("Copy quantity"), this);
     QAction *clipboardAmountAction = new QAction(tr("Copy amount"), this);
@@ -136,6 +118,7 @@ SendCoinsDialog::SendCoinsDialog(bool _fCoinJoin, QWidget* parent) :
     ui->labelCoinControlChange->addAction(clipboardChangeAction);
 
     // init transaction fee section
+    QSettings settings;
     if (!settings.contains("fFeeSectionMinimized"))
         settings.setValue("fFeeSectionMinimized", true);
     if (!settings.contains("nFeeRadio") && settings.contains("nTransactionFee") && settings.value("nTransactionFee").toLongLong() > 0) // compatibility
