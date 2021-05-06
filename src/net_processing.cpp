@@ -1533,6 +1533,8 @@ void static ProcessGetBlockData(CNode* pfrom, const CChainParams& chainparams, c
                     typedef std::pair<unsigned int, uint256> PairType;
                     for (PairType &pair : merkleBlock.vMatchedTxn) {
                         connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::TX, *pblock->vtx[pair.first]));
+                    }
+                    for (PairType &pair : merkleBlock.vMatchedTxn) {
                         auto islock = llmq::quorumInstantSendManager->GetInstantSendLockByTxid(pair.second);
                         if (islock != nullptr) {
                             connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::ISLOCK, *islock));
