@@ -7,7 +7,7 @@ import time
 import struct
 from test_framework.test_framework import DashTestFramework
 from test_framework.messages import CInv, hash256, msg_clsig, msg_inv, ser_string, uint256_from_str
-from test_framework.util import hex_str_to_bytes, wait_until_helper
+from test_framework.util import hex_str_to_bytes
 from test_framework.p2p import (
   P2PInterface,
 )
