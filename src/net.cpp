@@ -687,13 +687,13 @@ int V1TransportDeserializer::readHeader(Span<const uint8_t> msg_bytes)
 
     // Check start string, network magic
     if (memcmp(hdr.pchMessageStart, m_chain_params.MessageStart(), CMessageHeader::MESSAGE_START_SIZE) != 0) {
-        LogPrint(BCLog::NET, "HEADER ERROR - MESSAGESTART (%s, %u bytes), received %s, peer=%d\n", hdr.GetCommand(), hdr.nMessageSize, HexStr(hdr.pchMessageStart), m_node_id);
+        LogPrint(BCLog::NET, "HEADER ERROR - MESSAGESTART received %s, peer=%d\n", HexStr(hdr.pchMessageStart), m_node_id);
         return -1;
     }
 
     // reject messages larger than MAX_SIZE or MAX_PROTOCOL_MESSAGE_LENGTH
     if (hdr.nMessageSize > MAX_SIZE || hdr.nMessageSize > MAX_PROTOCOL_MESSAGE_LENGTH) {
-        LogPrint(BCLog::NET, "HEADER ERROR - SIZE (%s, %u bytes), peer=%d\n", hdr.GetCommand(), hdr.nMessageSize, m_node_id);
+        LogPrint(BCLog::NET, "HEADER ERROR - SIZE (%s, %u bytes), peer=%d\n", SanitizeString(hdr.GetCommand()), hdr.nMessageSize, m_node_id);
         return -1;
     }
 
@@ -755,7 +755,7 @@ std::optional<CNetMessage> V1TransportDeserializer::GetMessage(const std::chrono
         msg = std::nullopt;
     } else if (!hdr.IsCommandValid()) {
         LogPrint(BCLog::NET, "HEADER ERROR - COMMAND (%s, %u bytes), peer=%d\n",
-                 hdr.GetCommand(), msg->m_message_size, m_node_id);
+                 SanitizeString(hdr.GetCommand()), msg->m_message_size, m_node_id);
         out_err_raw_size = msg->m_raw_message_size;
         msg.reset();
     }
