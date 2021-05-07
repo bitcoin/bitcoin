@@ -13,8 +13,8 @@ import sys
 from subprocess import check_output
 from typing import Optional, NoReturn
 
-CMD_ALL_FILES = "git ls-files --full-name"
-CMD_SOURCE_FILES = 'git ls-files --full-name -- "*.[cC][pP][pP]" "*.[hH]" "*.[pP][yY]" "*.[sS][hH]"'
+CMD_ALL_FILES = "git ls-files -z --full-name"
+CMD_SOURCE_FILES = 'git ls-files -z --full-name -- "*.[cC][pP][pP]" "*.[hH]" "*.[pP][yY]" "*.[sS][hH]"'
 CMD_SHEBANG_FILES = "git grep --full-name --line-number -I '^#!'"
 ALLOWED_FILENAME_REGEXP = "^[a-zA-Z0-9/_.@][a-zA-Z0-9/_.@-]*$"
 ALLOWED_SOURCE_FILENAME_REGEXP = "^[a-z0-9_./-]+$"
@@ -72,16 +72,13 @@ def check_all_filenames() -> int:
     Checks every file in the repository against an allowed regexp to make sure only lowercase or uppercase
     alphanumerics (a-zA-Z0-9), underscores (_), hyphens (-), at (@) and dots (.) are used in repository filenames.
     """
-    # We avoid using rstrip() to ensure we catch filenames which accidentally include trailing whitespace
-    filenames = check_output(CMD_ALL_FILES, shell=True).decode("utf8").split("\n")
-    filenames = [filename for filename in filenames if filename != ""]  # removes the trailing empty list element
-
+    filenames = check_output(CMD_ALL_FILES, shell=True).decode("utf8").rstrip("\0").split("\0")
     filename_regex = re.compile(ALLOWED_FILENAME_REGEXP)
     failed_tests = 0
     for filename in filenames:
         if not filename_regex.match(filename):
             print(
-                f"""File "{filename}" does not not match the allowed filename regexp ('{ALLOWED_FILENAME_REGEXP}')."""
+                f"""File {repr(filename)} does not not match the allowed filename regexp ('{ALLOWED_FILENAME_REGEXP}')."""
             )
             failed_tests += 1
     return failed_tests
@@ -94,17 +91,14 @@ def check_source_filenames() -> int:
 
     Additionally there is an exception regexp for directories or files which are excepted from matching this regexp.
     """
-    # We avoid using rstrip() to ensure we catch filenames which accidentally include trailing whitespace
-    filenames = check_output(CMD_SOURCE_FILES, shell=True).decode("utf8").split("\n")
-    filenames = [filename for filename in filenames if filename != ""]  # removes the trailing empty list element
-
+    filenames = check_output(CMD_SOURCE_FILES, shell=True).decode("utf8").rstrip("\0").split("\0")
     filename_regex = re.compile(ALLOWED_SOURCE_FILENAME_REGEXP)
     filename_exception_regex = re.compile(ALLOWED_SOURCE_FILENAME_EXCEPTION_REGEXP)
     failed_tests = 0
     for filename in filenames:
         if not filename_regex.match(filename) and not filename_exception_regex.match(filename):
             print(
-                f"""File "{filename}" does not not match the allowed source filename regexp ('{ALLOWED_SOURCE_FILENAME_REGEXP}'), or the exception regexp ({ALLOWED_SOURCE_FILENAME_EXCEPTION_REGEXP})."""
+                f"""File {repr(filename)} does not not match the allowed source filename regexp ('{ALLOWED_SOURCE_FILENAME_REGEXP}'), or the exception regexp ({ALLOWED_SOURCE_FILENAME_EXCEPTION_REGEXP})."""
             )
             failed_tests += 1
     return failed_tests
@@ -116,15 +110,16 @@ def check_all_file_permissions() -> int:
 
     Additionally checks that for executable files, the file contains a shebang line
     """
-    filenames = check_output(CMD_ALL_FILES, shell=True).decode("utf8").strip().split("\n")
+    filenames = check_output(CMD_ALL_FILES, shell=True).decode("utf8").rstrip("\0").split("\0")
     failed_tests = 0
     for filename in filenames:
         file_meta = FileMeta(filename)
         if file_meta.permissions == ALLOWED_PERMISSION_EXECUTABLES:
-            shebang = open(filename, "rb").readline().rstrip(b"\n")
+            with open(filename, "rb") as f:
+                shebang = f.readline().rstrip(b"\n")
 
             # For any file with executable permissions the first line must contain a shebang
-            if shebang[:2] != b"#!":
+            if not shebang.startswith(b"#!"):
                 print(
                     f"""File "{filename}" has permission {ALLOWED_PERMISSION_EXECUTABLES} (executable) and is thus expected to contain a shebang '#!'. Add shebang or do "chmod {ALLOWED_PERMISSION_NON_EXECUTABLES} {filename}" to make it non-executable."""
                 )
@@ -176,7 +171,8 @@ def check_shebang_file_permissions() -> int:
 
             # *.py files which don't contain an `if __name__ == '__main__'` are not expected to be executed directly
             if file_meta.extension == "py":
-                file_data = open(filename, "r", encoding="utf8").read()
+                with open(filename, "r", encoding="utf8") as f:
+                    file_data = f.read()
                 if not re.search("""if __name__ == ['"]__main__['"]:""", file_data):
                     continue
 
