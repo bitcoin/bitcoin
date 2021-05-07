@@ -4678,15 +4678,20 @@ ScriptPubKeyMan* CWallet::AddWalletDescriptor(WalletDescriptor& desc, const Flat
 
         // Remove from maps of active spkMans
         auto old_spk_man_id = old_spk_man->GetID();
-        for (bool internal : {false, true}) {
-            for (OutputType t : OUTPUT_TYPES) {
-                auto active_spk_man = GetScriptPubKeyMan(t, internal);
-                if (active_spk_man && active_spk_man->GetID() == old_spk_man_id) {
-                    if (internal) {
-                        m_internal_spk_managers.erase(t);
-                    } else {
-                        m_external_spk_managers.erase(t);
-                    }
+
+        // Search through m_internal_spk_managers and m_external_spk_managers to find and erase old_spk_man
+        bool is_old_spk_man_removed = false;
+        for (std::pair<OutputType, ScriptPubKeyMan*> out_type_spk_manager : m_internal_spk_managers) {
+            if (out_type_spk_manager.second->GetID() == old_spk_man_id) {
+                m_internal_spk_managers.erase(out_type_spk_manager.first);
+                is_old_spk_man_removed = true;
+                break;
+            }
+        }
+        if (!is_old_spk_man_removed) {
+            for (std::pair<OutputType, ScriptPubKeyMan*> out_type_spk_manager : m_external_spk_managers) {
+                if (out_type_spk_manager.second->GetID() == old_spk_man_id) {
+                    m_external_spk_managers.erase(out_type_spk_manager.first);
                     break;
                 }
             }
