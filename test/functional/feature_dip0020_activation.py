@@ -52,12 +52,12 @@ class DIP0020ActivationTest(BitcoinTestFramework):
         tx0_hex = ToHex(tx0)
 
         # This tx isn't valid yet
-        assert_equal(get_bip9_status(self.nodes[0], 'v17')['status'], 'locked_in')
+        assert_equal(get_bip9_status(self.nodes[0], 'dip0020')['status'], 'locked_in')
         assert_raises_rpc_error(-26, DISABLED_OPCODE_ERROR, self.node.sendrawtransaction, tx0_hex)
 
         # Generate enough blocks to activate DIP0020 opcodes
         self.node.generate(98)
-        assert_equal(get_bip9_status(self.nodes[0], 'v17')['status'], 'active')
+        assert_equal(get_bip9_status(self.nodes[0], 'dip0020')['status'], 'active')
 
         # Still need 1 more block for mempool to accept new opcodes
         assert_raises_rpc_error(-26, DISABLED_OPCODE_ERROR, self.node.sendrawtransaction, tx0_hex)

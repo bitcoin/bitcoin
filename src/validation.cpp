@@ -2015,7 +2015,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
         flags |= SCRIPT_VERIFY_NULLDUMMY;
     }
 
-    if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_V17, versionbitscache) == ThresholdState::ACTIVE) {
+    if (VersionBitsState(pindex->pprev, consensusparams, Consensus::DEPLOYMENT_DIP0020, versionbitscache) == ThresholdState::ACTIVE) {
         flags |= SCRIPT_ENABLE_DIP0020_OPCODES;
     }
 
