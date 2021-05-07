@@ -24,7 +24,7 @@ llmq_type_strings = {llmq_test: 'llmq_test', llmq_test_v17: 'llmq_test_v17'}
 
 class QuorumDataRecoveryTest(DashTestFramework):
     def set_test_params(self):
-        extra_args = [["-vbparams=v17:0:999999999999:10:8:6:5"] for _ in range(9)]
+        extra_args = [["-vbparams=dip0020:0:999999999999:10:8:6:5"] for _ in range(9)]
         self.set_dash_test_params(9, 7, fast_dip3_enforcement=True, extra_args=extra_args)
         self.set_dash_llmq_test_params(4, 3)
 
