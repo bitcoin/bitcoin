@@ -217,7 +217,7 @@ class AvoidReuseTest(BitcoinTestFramework):
         '''
         Test the simple case where [1] generates a new address A, then
         [0] sends 10 BTC to A.
-        [1] spends 5 BTC from A. (leaving roughly 5 BTC useable)
+        [1] spends 5 BTC from A. (leaving roughly 5 BTC usable)
         [0] sends 10 BTC to A again.
         [1] tries to spend 10 BTC (fails; dirty).
         [1] tries to spend 4 BTC (succeeds; change address sufficient)

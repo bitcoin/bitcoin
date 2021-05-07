@@ -420,7 +420,7 @@
     "args":
     ["-json", "-create", "outpubkey=0:047d1368ba7ae01c94bc32293efd70bd7e3be7aa7912d07d0b1c659c1008d179b8642f5fb90f47580feb29f045e216ff5a4716d3a0fed36da414d332046303c44a:WS", "nversion=1"],
     "return_code": 1,
-    "error_txt": "error: Uncompressed pubkeys are not useable for SegWit outputs",
+    "error_txt": "error: Uncompressed pubkeys are not usable for SegWit outputs",
     "description": "Creates a new transaction with a single pay-to-pub-key output, wrapped in P2SH (output as json)"
   },
   { "exec": "./bitcoin-tx",
@@ -559,7 +559,7 @@
   { "exec": "./bitcoin-tx",
     "args": ["-json", "-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:047d1368ba7ae01c94bc32293efd70bd7e3be7aa7912d07d0b1c659c1008d179b8642f5fb90f47580feb29f045e216ff5a4716d3a0fed36da414d332046303c44a:WS"],
     "return_code": 1,
-    "error_txt": "error: Uncompressed pubkeys are not useable for SegWit outputs",
+    "error_txt": "error: Uncompressed pubkeys are not usable for SegWit outputs",
     "description": "Ensure adding witness outputs with uncompressed pubkeys fails"
   }
 ]

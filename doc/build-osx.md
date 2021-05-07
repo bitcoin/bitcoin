@@ -115,7 +115,7 @@ brew install berkeley-db@4
 
 ###### Descriptor Wallet Support
 
-Note: Apple has included a useable `sqlite` package since macOS 10.14.
+Note: Apple has included a usable `sqlite` package since macOS 10.14.
 You may not need to install this package.
 
 `sqlite` is required to enable support for descriptor wallets.
