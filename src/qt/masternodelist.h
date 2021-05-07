@@ -73,6 +73,11 @@ private Q_SLOTS:
     void extraInfoDIP3_clicked();
     void copyProTxHash_clicked();
     void copyCollateralOutpoint_clicked();
+    void copyService_clicked();
+    void copyPayout_clicked();
+    void copyCollateral_clicked();
+    void copyOwner_clicked();
+    void copyVoting_clicked();
 
     void handleMasternodeListChanged();
     void updateDIP3ListScheduled();

@@ -76,13 +76,29 @@ MasternodeList::MasternodeList(const PlatformStyle* platformStyle, QWidget* pare
 
     QAction* copyProTxHashAction = new QAction(tr("Copy ProTx Hash"), this);
     QAction* copyCollateralOutpointAction = new QAction(tr("Copy Collateral Outpoint"), this);
+    QAction* copyServiceAction = new QAction(tr("Copy Service"), this);
+    QAction* copyPayoutAction = new QAction(tr("Copy Payout Address"), this);
+    QAction* copyCollateralAction = new QAction(tr("Copy Collateral Address"), this);
+    QAction* copyOwnerAction = new QAction(tr("Copy Owner Address"), this);
+    QAction* copyVotingAction = new QAction(tr("Copy Voting Address"), this);
     contextMenuDIP3 = new QMenu();
+    contextMenuDIP3->addAction(copyServiceAction);
+    contextMenuDIP3->addAction(copyPayoutAction);
+    contextMenuDIP3->addAction(copyCollateralAction);
+    contextMenuDIP3->addAction(copyOwnerAction);
+    contextMenuDIP3->addAction(copyVotingAction);
+    contextMenuDIP3->addSeparator();
     contextMenuDIP3->addAction(copyProTxHashAction);
     contextMenuDIP3->addAction(copyCollateralOutpointAction);
     connect(ui->tableWidgetMasternodesDIP3, &QWidget::customContextMenuRequested, this, &MasternodeList::showContextMenuDIP3);
     connect(ui->tableWidgetMasternodesDIP3, &QTableView::doubleClicked, this, &MasternodeList::extraInfoDIP3_clicked);
     connect(copyProTxHashAction, &QAction::triggered, this, &MasternodeList::copyProTxHash_clicked);
     connect(copyCollateralOutpointAction, &QAction::triggered, this, &MasternodeList::copyCollateralOutpoint_clicked);
+    connect(copyServiceAction, &QAction::triggered, this, &MasternodeList::copyService_clicked);
+    connect(copyPayoutAction, &QAction::triggered, this, &MasternodeList::copyPayout_clicked);
+    connect(copyCollateralAction, &QAction::triggered, this, &MasternodeList::copyCollateral_clicked);
+    connect(copyOwnerAction, &QAction::triggered, this, &MasternodeList::copyOwner_clicked);
+    connect(copyVotingAction, &QAction::triggered, this, &MasternodeList::copyVoting_clicked);
 
     timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &MasternodeList::updateDIP3ListScheduled);
@@ -367,4 +383,61 @@ void MasternodeList::copyCollateralOutpoint_clicked()
     }
 
     QApplication::clipboard()->setText(QString::fromStdString(dmn->collateralOutpoint.ToStringShort()));
+}
+
+void MasternodeList::copyService_clicked()
+{
+    auto dmn = GetSelectedDIP3MN();
+    if (!dmn) {
+        return;
+    }
+    QApplication::clipboard()->setText(QString::fromStdString(dmn->pdmnState->addr.ToString()));
+}
+void MasternodeList::copyPayout_clicked()
+{
+    auto dmn = GetSelectedDIP3MN();
+    if (!dmn) {
+        return;
+    }
+    QString operatorStr;
+    CTxDestination operatorDest;
+    if (ExtractDestination(dmn->pdmnState->scriptOperatorPayout, operatorDest)) {
+        operatorStr = QString::fromStdString(EncodeDestination(operatorDest));
+    } 
+    
+    QApplication::clipboard()->setText(operatorStr);
+}
+void MasternodeList::copyCollateral_clicked()
+{
+    auto dmn = GetSelectedDIP3MN();
+    if (!dmn) {
+        return;
+    }
+    auto mnList = clientModel->getMasternodeList();
+    
+    QString collateralStr;
+    CTxDestination collateralDest;
+    Coin coin;
+    if (GetUTXOCoin(dmn->collateralOutpoint, coin) && ExtractDestination(coin.out.scriptPubKey, collateralDest)) {
+        collateralStr = QString::fromStdString(EncodeDestination(collateralDest));
+    }
+    QApplication::clipboard()->setText(collateralStr);
+}
+void MasternodeList::copyOwner_clicked()
+{
+    auto dmn = GetSelectedDIP3MN();
+    if (!dmn) {
+        return;
+    }
+    QString ownerStr = QString::fromStdString(EncodeDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDOwner)));
+    QApplication::clipboard()->setText(ownerStr);
+}
+void MasternodeList::copyVoting_clicked()
+{
+    auto dmn = GetSelectedDIP3MN();
+    if (!dmn) {
+        return;
+    }
+    QString votingStr = QString::fromStdString(EncodeDestination(WitnessV0KeyHash(dmn->pdmnState->keyIDVoting)));
+    QApplication::clipboard()->setText(votingStr);
 }
