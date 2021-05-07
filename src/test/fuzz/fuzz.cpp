@@ -29,13 +29,24 @@ static TypeTestOneInput* g_test_one_input{nullptr};
 
 void initialize()
 {
+    bool should_abort{false};
     if (std::getenv("PRINT_ALL_FUZZ_TARGETS_AND_ABORT")) {
         for (const auto& t : FuzzTargets()) {
             if (std::get<2>(t.second)) continue;
             std::cout << t.first << std::endl;
         }
-        Assert(false);
+        should_abort = true;
     }
+    if (const char* out_path = std::getenv("WRITE_ALL_FUZZ_TARGETS_AND_ABORT")) {
+        std::cout << "Writing all fuzz target names to '" << out_path << "'." << std::endl;
+        std::ofstream out_stream(out_path, std::ios::binary);
+        for (const auto& t : FuzzTargets()) {
+            if (std::get<2>(t.second)) continue;
+            out_stream << t.first << std::endl;
+        }
+        should_abort = true;
+    }
+    Assert(!should_abort);
     std::string_view fuzz_target{Assert(std::getenv("FUZZ"))};
     const auto it = FuzzTargets().find(fuzz_target);
     Assert(it != FuzzTargets().end());
