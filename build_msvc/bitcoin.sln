@@ -50,6 +50,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtest_util", "libtest_uti
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "test_bitcoin-qt", "test_bitcoin-qt\test_bitcoin-qt.vcxproj", "{51201D5E-D939-4854-AE9D-008F03FF518E}"
 EndProject
+Project("{542007E3-BE0D-4B0D-A6B0-AA8813E2558D}") = "libminisketch", "libminisketch\libminisketch.vcxproj", "{542007E3-BE0D-4B0D-A6B0-AA8813E2558D}"
+EndProject
 Global
     GlobalSection(SolutionConfigurationPlatforms) = preSolution
         Debug|x64 = Debug|x64
@@ -152,13 +154,15 @@ Global
         {51201D5E-D939-4854-AE9D-008F03FF518E}.Debug|x64.Build.0 = Debug|x64
         {51201D5E-D939-4854-AE9D-008F03FF518E}.Release|x64.ActiveCfg = Release|x64
         {51201D5E-D939-4854-AE9D-008F03FF518E}.Release|x64.Build.0 = Release|x64
+        {542007E3-BE0D-4B0D-A6B0-AA8813E2558D}.Debug|x64.ActiveCfg = Debug|x64
+        {542007E3-BE0D-4B0D-A6B0-AA8813E2558D}.Debug|x64.Build.0 = Debug|x64
+        {542007E3-BE0D-4B0D-A6B0-AA8813E2558D}.Release|x64.ActiveCfg = Release|x64
+        {542007E3-BE0D-4B0D-A6B0-AA8813E2558D}.Release|x64.Build.0 = Release|x64
     EndGlobalSection
     GlobalSection(SolutionProperties) = preSolution
         HideSolutionNode = FALSE
     EndGlobalSection
     GlobalSection(ExtensibilityGlobals) = postSolution
-                        SolutionGuid = {8AA72EDA-2CD4-4564-B1E4-688B760EEEE9}
-                SolutionGuid = {8607C0F4-F33D-41B8-8D51-18E366A0F8DF}
         SolutionGuid = {58AAB032-7274-49BD-845E-5EF4DBB69B70}
     EndGlobalSection
 EndGlobal
