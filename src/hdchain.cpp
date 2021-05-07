@@ -11,7 +11,7 @@
 
 bool CHDChain::SetNull()
 {
-    LOCK(cs_accounts);
+    LOCK(cs);
     nVersion = CURRENT_VERSION;
     id = uint256();
     fCrypted = false;
@@ -19,29 +19,31 @@ bool CHDChain::SetNull()
     vchMnemonic.clear();
     vchMnemonicPassphrase.clear();
     mapAccounts.clear();
-    // default blank account
-    mapAccounts.insert(std::pair<uint32_t, CHDAccount>(0, CHDAccount()));
     return IsNull();
 }
 
 bool CHDChain::IsNull() const
 {
+    LOCK(cs);
     return vchSeed.empty() || id == uint256();
 }
 
 void CHDChain::SetCrypted(bool fCryptedIn)
 {
+    LOCK(cs);
     fCrypted = fCryptedIn;
 }
 
 bool CHDChain::IsCrypted() const
 {
+    LOCK(cs);
     return fCrypted;
 }
 
 void CHDChain::Debug(const std::string& strName) const
 {
     DBG(
+        LOCK(cs);
         std::cout << __func__ << ": ---" << strName << "---" << std::endl;
         if (fCrypted) {
             std::cout << "mnemonic: ***CRYPTED***" << std::endl;
@@ -72,6 +74,7 @@ bool CHDChain::SetMnemonic(const SecureVector& vchMnemonic, const SecureVector& 
 
 bool CHDChain::SetMnemonic(const SecureString& ssMnemonic, const SecureString& ssMnemonicPassphrase, bool fUpdateID)
 {
+    LOCK(cs);
     SecureString ssMnemonicTmp = ssMnemonic;
 
     if (fUpdateID) {
@@ -106,6 +109,7 @@ bool CHDChain::SetMnemonic(const SecureString& ssMnemonic, const SecureString& s
 
 bool CHDChain::GetMnemonic(SecureVector& vchMnemonicRet, SecureVector& vchMnemonicPassphraseRet) const
 {
+    LOCK(cs);
     // mnemonic was not set, fail
     if (vchMnemonic.empty())
         return false;
@@ -117,6 +121,7 @@ bool CHDChain::GetMnemonic(SecureVector& vchMnemonicRet, SecureVector& vchMnemon
 
 bool CHDChain::GetMnemonic(SecureString& ssMnemonicRet, SecureString& ssMnemonicPassphraseRet) const
 {
+    LOCK(cs);
     // mnemonic was not set, fail
     if (vchMnemonic.empty())
         return false;
@@ -129,6 +134,7 @@ bool CHDChain::GetMnemonic(SecureString& ssMnemonicRet, SecureString& ssMnemonic
 
 bool CHDChain::SetSeed(const SecureVector& vchSeedIn, bool fUpdateID)
 {
+    LOCK(cs);
     vchSeed = vchSeedIn;
 
     if (fUpdateID) {
@@ -140,16 +146,19 @@ bool CHDChain::SetSeed(const SecureVector& vchSeedIn, bool fUpdateID)
 
 SecureVector CHDChain::GetSeed() const
 {
+    LOCK(cs);
     return vchSeed;
 }
 
 uint256 CHDChain::GetSeedHash()
 {
+    LOCK(cs);
     return Hash(vchSeed.begin(), vchSeed.end());
 }
 
 void CHDChain::DeriveChildExtKey(uint32_t nAccountIndex, bool fInternal, uint32_t nChildIndex, CExtKey& extKeyRet)
 {
+    LOCK(cs);
     // Use BIP44 keypath scheme i.e. m / purpose' / coin_type' / account' / change / address_index
     CExtKey masterKey;              //hd master key
     CExtKey purposeKey;             //key at m/purpose'
@@ -177,13 +186,13 @@ void CHDChain::DeriveChildExtKey(uint32_t nAccountIndex, bool fInternal, uint32_
 
 void CHDChain::AddAccount()
 {
-    LOCK(cs_accounts);
+    LOCK(cs);
     mapAccounts.insert(std::pair<uint32_t, CHDAccount>(mapAccounts.size(), CHDAccount()));
 }
 
 bool CHDChain::GetAccount(uint32_t nAccountIndex, CHDAccount& hdAccountRet)
 {
-    LOCK(cs_accounts);
+    LOCK(cs);
     if (nAccountIndex > mapAccounts.size() - 1)
         return false;
     hdAccountRet = mapAccounts[nAccountIndex];
@@ -192,7 +201,7 @@ bool CHDChain::GetAccount(uint32_t nAccountIndex, CHDAccount& hdAccountRet)
 
 bool CHDChain::SetAccount(uint32_t nAccountIndex, const CHDAccount& hdAccount)
 {
-    LOCK(cs_accounts);
+    LOCK(cs);
     // can only replace existing accounts
     if (nAccountIndex > mapAccounts.size() - 1)
         return false;
@@ -202,7 +211,7 @@ bool CHDChain::SetAccount(uint32_t nAccountIndex, const CHDAccount& hdAccount)
 
 size_t CHDChain::CountAccounts()
 {
-    LOCK(cs_accounts);
+    LOCK(cs);
     return mapAccounts.size();
 }
 

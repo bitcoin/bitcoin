@@ -28,24 +28,24 @@ public:
 class CHDChain
 {
 private:
+    mutable CCriticalSection cs;
+
     static const int CURRENT_VERSION = 1;
-    int nVersion;
+    int nVersion GUARDED_BY(cs) {CURRENT_VERSION};
 
-    uint256 id;
+    uint256 id GUARDED_BY(cs);
 
-    bool fCrypted;
+    bool fCrypted GUARDED_BY(cs) {false};
 
-    SecureVector vchSeed;
-    SecureVector vchMnemonic;
-    SecureVector vchMnemonicPassphrase;
+    SecureVector vchSeed GUARDED_BY(cs);
+    SecureVector vchMnemonic GUARDED_BY(cs);
+    SecureVector vchMnemonicPassphrase GUARDED_BY(cs);
 
-    std::map<uint32_t, CHDAccount> mapAccounts;
-    // critical section to protect mapAccounts
-    mutable CCriticalSection cs_accounts;
+    std::map<uint32_t, CHDAccount> GUARDED_BY(cs) mapAccounts;
 
 public:
 
-    CHDChain() { SetNull(); }
+    CHDChain() = default;
     CHDChain(const CHDChain& other) :
         nVersion(other.nVersion),
         id(other.id),
@@ -60,7 +60,7 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action)
     {
-        LOCK(cs_accounts);
+        LOCK(cs);
         READWRITE(this->nVersion);
         READWRITE(id);
         READWRITE(fCrypted);
@@ -107,7 +107,7 @@ public:
     bool SetSeed(const SecureVector& vchSeedIn, bool fUpdateID);
     SecureVector GetSeed() const;
 
-    uint256 GetID() const { return id; }
+    uint256 GetID() const { LOCK(cs); return id; }
 
     uint256 GetSeedHash();
     void DeriveChildExtKey(uint32_t nAccountIndex, bool fInternal, uint32_t nChildIndex, CExtKey& extKeyRet);
