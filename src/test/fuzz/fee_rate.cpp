@@ -21,7 +21,7 @@ FUZZ_TARGET(fee_rate)
 
     (void)fee_rate.GetFeePerK();
     const size_t bytes = fuzzed_data_provider.ConsumeIntegral<size_t>();
-    if (!MultiplicationOverflow(static_cast<int64_t>(bytes), satoshis_per_k) && bytes <= static_cast<uint64_t>(std::numeric_limits<int64_t>::max())) {
+    if (!MultiplicationOverflow(static_cast<int64_t>(bytes), satoshis_per_k) && (sizeof(size_t) < 8 || bytes <= static_cast<uint64_t>(std::numeric_limits<int64_t>::max()))) {
         (void)fee_rate.GetFee(bytes);
     }
     (void)fee_rate.ToString();
