@@ -211,10 +211,13 @@ bool Intro::showIfNeeded(bool& did_show_intro, int64_t& prune_MiB)
        or show a picking dialog */
     if(!gArgs.GetArg("-datadir", "").empty())
         return true;
+    // SYSCOIN
     /* 1) Default data directory for operating system */
-    QString dataDir = GUIUtil::getDefaultDataDirectory();
-    /* 2) Allow QSettings to override default dir */
-    dataDir = settings.value("strDataDir", dataDir).toString();
+    QString defaultDir = GUIUtil::getDefaultDataDirectory();
+    /* 2) Allow QSettings to override default dir only if not syscoincore which was used in v3 */
+    QString dataDir = settings.value("strDataDir", defaultDir).toString();
+    if(QString::compare(dataDir, "syscoincore", Qt::CaseInsensitive) == 0)
+        dataDir = defaultDir;
 
     if(!fs::exists(GUIUtil::qstringToBoostPath(dataDir)) || gArgs.GetBoolArg("-choosedatadir", DEFAULT_CHOOSE_DATADIR) || settings.value("fReset", false).toBool() || gArgs.GetBoolArg("-resetguisettings", false))
     {
