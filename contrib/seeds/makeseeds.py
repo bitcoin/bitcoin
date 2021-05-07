@@ -29,7 +29,7 @@ PATTERN_ONION = re.compile(r"^([abcdefghijklmnopqrstuvwxyz234567]{16}\.onion):(\
 PATTERN_AGENT = re.compile(
     r"^/Satoshi:("
     r"4.1.(0|1|2|3)|"
-    r"4.2.0"
+    r"4.2.(0|1)|"
     r")")
 
 def parseline(line):

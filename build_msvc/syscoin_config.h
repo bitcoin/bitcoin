@@ -254,7 +254,7 @@
 #define PACKAGE_NAME "Syscoin Core"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Syscoin Core 4.2.0"
+#define PACKAGE_STRING "Syscoin Core 4.2.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "syscoin"
@@ -263,7 +263,7 @@
 #define PACKAGE_URL "https://syscoin.org/"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "4.2.0"
+#define PACKAGE_VERSION "4.2.1"
 
 /* Define to necessary symbol if this constant uses a non-standard name on
    your system. */
