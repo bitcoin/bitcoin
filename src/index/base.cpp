@@ -60,12 +60,12 @@ bool BaseIndex::Init()
     }
 
     LOCK(cs_main);
+    CChain& active_chain = m_chainstate->m_chain;
     if (locator.IsNull()) {
         m_best_block_index = nullptr;
     } else {
-        m_best_block_index = m_chainstate->m_blockman.FindForkInGlobalIndex(m_chainstate->m_chain, locator);
+        m_best_block_index = m_chainstate->m_blockman.FindForkInGlobalIndex(active_chain, locator);
     }
-    CChain& active_chain = m_chainstate->m_chain;
     m_synced = m_best_block_index.load() == active_chain.Tip();
     if (!m_synced) {
         bool prune_violation = false;
