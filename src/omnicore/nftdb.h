@@ -66,7 +66,7 @@ public:
     // Adds a range of non-fungible tokens
     void AddRange(const uint32_t &propertyId, const int64_t &tokenIdStart, const int64_t &tokenIdEnd, const std::string &owner, const NonFungibleStorage type);
     // Gets the non-fungible token ranges for a property ID and address
-    std::vector<std::pair<int64_t,int64_t> > GetAddressNonFungibleTokens(const uint32_t &propertyId, const std::string &address);
+    std::map<uint32_t, std::vector<std::pair<int64_t, int64_t>>> GetAddressNonFungibleTokens(const uint32_t &propertyId, const std::string &address);
     // Gets the non-fungible token ranges for a property ID
     std::vector<std::pair<std::string,std::pair<int64_t,int64_t> > > GetNonFungibleTokenRanges(const uint32_t &propertyId);
     // Sanity checks the token counts

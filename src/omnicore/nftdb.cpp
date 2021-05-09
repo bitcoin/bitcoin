@@ -355,22 +355,23 @@ std::string CMPNonFungibleTokensDB::GetNonFungibleTokenData(const uint32_t &prop
 
 /* Gets the ranges of non-fungible tokens owned by an address
  */
-std::vector<std::pair<int64_t,int64_t> > CMPNonFungibleTokensDB::GetAddressNonFungibleTokens(const uint32_t &propertyId, const std::string &address)
+std::map<uint32_t, std::vector<std::pair<int64_t, int64_t>>> CMPNonFungibleTokensDB::GetAddressNonFungibleTokens(const uint32_t &propertyId, const std::string &address)
 {
-    std::vector<std::pair<int64_t,int64_t> > uniqueMap;
+    std::map<uint32_t, std::vector<std::pair<int64_t, int64_t>>> uniqueMap;
     assert(pdb);
     leveldb::Iterator* it = NewIterator();
     for (it->SeekToFirst(); it->Valid(); it->Next()) {
         std::string value = it->value().ToString();
         if (value != address) continue;
 
-        if (propertyId != GetPropertyIdFromKey(it->key().ToString()) ||
-                GetTypeFromKey(it->key().ToString()) != NonFungibleStorage::RangeIndex) continue;
+        const auto id = GetPropertyIdFromKey(it->key().ToString());
+        if ((propertyId != 0 && propertyId != id) ||
+            GetTypeFromKey(it->key().ToString()) != NonFungibleStorage::RangeIndex) continue;
 
         int64_t start, end;
         GetRangeFromKey(it->key().ToString(), &start, &end);
 
-        uniqueMap.push_back(std::make_pair(start, end));
+        uniqueMap[id].emplace_back(start, end);
     }
     delete it;
     return uniqueMap;

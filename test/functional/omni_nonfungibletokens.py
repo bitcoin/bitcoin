@@ -68,9 +68,10 @@ class OmniNonFungibleTokensTest(BitcoinTestFramework):
         assert_equal(result['grantdata'], "")
 
         result = self.nodes[0].omni_getnonfungibletokens(token_address, property_id)
-        assert_equal(result[0]['tokenstart'], 1)
-        assert_equal(result[0]['tokenend'], 100)
-        assert_equal(result[0]['amount'], 100)
+        assert_equal(result[0]['propertyid'], property_id)
+        assert_equal(result[0]['tokens'][0]['tokenstart'], 1)
+        assert_equal(result[0]['tokens'][0]['tokenend'], 100)
+        assert_equal(result[0]['tokens'][0]['amount'], 100)
 
         result = self.nodes[0].omni_getnonfungibletokenranges(property_id)
         assert_equal(result[0]['address'], token_address)
@@ -97,9 +98,9 @@ class OmniNonFungibleTokensTest(BitcoinTestFramework):
         assert_equal(result['grantdata'], "Test grantdata")
 
         result = self.nodes[0].omni_getnonfungibletokens(token_address, property_id)
-        assert_equal(result[0]['tokenstart'], 1)
-        assert_equal(result[0]['tokenend'], 101)
-        assert_equal(result[0]['amount'], 101)
+        assert_equal(result[0]['tokens'][0]['tokenstart'], 1)
+        assert_equal(result[0]['tokens'][0]['tokenend'], 101)
+        assert_equal(result[0]['tokens'][0]['amount'], 101)
 
         result = self.nodes[0].omni_getnonfungibletokenranges(property_id)
         assert_equal(result[0]['address'], token_address)
@@ -129,9 +130,9 @@ class OmniNonFungibleTokensTest(BitcoinTestFramework):
         assert_equal(result['grantdata'], "Different grantdata")
 
         result = self.nodes[0].omni_getnonfungibletokens(token_address, property_id)
-        assert_equal(result[0]['tokenstart'], 1)
-        assert_equal(result[0]['tokenend'], 200)
-        assert_equal(result[0]['amount'], 200)
+        assert_equal(result[0]['tokens'][0]['tokenstart'], 1)
+        assert_equal(result[0]['tokens'][0]['tokenend'], 200)
+        assert_equal(result[0]['tokens'][0]['amount'], 200)
 
         result = self.nodes[0].omni_getnonfungibletokenranges(property_id)
         assert_equal(result[0]['address'], token_address)
@@ -172,15 +173,15 @@ class OmniNonFungibleTokensTest(BitcoinTestFramework):
 
         # No change here
         result = self.nodes[0].omni_getnonfungibletokens(token_address, property_id)
-        assert_equal(result[0]['tokenstart'], 1)
-        assert_equal(result[0]['tokenend'], 200)
-        assert_equal(result[0]['amount'], 200)
+        assert_equal(result[0]['tokens'][0]['tokenstart'], 1)
+        assert_equal(result[0]['tokens'][0]['tokenend'], 200)
+        assert_equal(result[0]['tokens'][0]['amount'], 200)
 
         # New tokens appear on this address
         result = self.nodes[0].omni_getnonfungibletokens(grant_address, property_id)
-        assert_equal(result[0]['tokenstart'], 201)
-        assert_equal(result[0]['tokenend'], 300)
-        assert_equal(result[0]['amount'], 100)
+        assert_equal(result[0]['tokens'][0]['tokenstart'], 201)
+        assert_equal(result[0]['tokens'][0]['tokenend'], 300)
+        assert_equal(result[0]['tokens'][0]['amount'], 100)
 
         # Two addresses now show for holding this token
         result = self.nodes[0].omni_getnonfungibletokenranges(property_id)
@@ -225,30 +226,30 @@ class OmniNonFungibleTokensTest(BitcoinTestFramework):
 
         # Check range has changed with gap in the middle
         result = self.nodes[0].omni_getnonfungibletokens(token_address, property_id)
-        assert_equal(result[0]['tokenstart'], 11)
-        assert_equal(result[0]['tokenend'], 100)
-        assert_equal(result[0]['amount'], 90)
-        assert_equal(result[1]['tokenstart'], 102)
-        assert_equal(result[1]['tokenend'], 200)
-        assert_equal(result[1]['amount'], 99)
+        assert_equal(result[0]['tokens'][0]['tokenstart'], 11)
+        assert_equal(result[0]['tokens'][0]['tokenend'], 100)
+        assert_equal(result[0]['tokens'][0]['amount'], 90)
+        assert_equal(result[0]['tokens'][1]['tokenstart'], 102)
+        assert_equal(result[0]['tokens'][1]['tokenend'], 200)
+        assert_equal(result[0]['tokens'][1]['amount'], 99)
 
         # Check range has changed
         result = self.nodes[0].omni_getnonfungibletokens(grant_address, property_id)
-        assert_equal(result[0]['tokenstart'], 211)
-        assert_equal(result[0]['tokenend'], 300)
-        assert_equal(result[0]['amount'], 90)
+        assert_equal(result[0]['tokens'][0]['tokenstart'], 211)
+        assert_equal(result[0]['tokens'][0]['tokenend'], 300)
+        assert_equal(result[0]['tokens'][0]['amount'], 90)
 
         # New tokens should be present in dest address
         result = self.nodes[0].omni_getnonfungibletokens(destination_address, property_id)
-        assert_equal(result[0]['tokenstart'], 1)
-        assert_equal(result[0]['tokenend'], 10)
-        assert_equal(result[0]['amount'], 10)
-        assert_equal(result[1]['tokenstart'], 101)
-        assert_equal(result[1]['tokenend'], 101)
-        assert_equal(result[1]['amount'], 1)
-        assert_equal(result[2]['tokenstart'], 201)
-        assert_equal(result[2]['tokenend'], 210)
-        assert_equal(result[2]['amount'], 10)
+        assert_equal(result[0]['tokens'][0]['tokenstart'], 1)
+        assert_equal(result[0]['tokens'][0]['tokenend'], 10)
+        assert_equal(result[0]['tokens'][0]['amount'], 10)
+        assert_equal(result[0]['tokens'][1]['tokenstart'], 101)
+        assert_equal(result[0]['tokens'][1]['tokenend'], 101)
+        assert_equal(result[0]['tokens'][1]['amount'], 1)
+        assert_equal(result[0]['tokens'][2]['tokenstart'], 201)
+        assert_equal(result[0]['tokens'][2]['tokenend'], 210)
+        assert_equal(result[0]['tokens'][2]['amount'], 10)
 
         # Three addresses now show for holding this token
         result = self.nodes[0].omni_getnonfungibletokenranges(property_id)
@@ -601,6 +602,53 @@ class OmniNonFungibleTokensTest(BitcoinTestFramework):
         assert_equal(result[99]['grantdata'], 'Different grantdata')
         assert_equal(result[99]['issuerdata'], '')
         assert_equal(result[99]['holderdata'], '')
+
+        # Test omni_getnonfungibletokendata with multiple tokens on an address
+        txid = self.nodes[0].omni_sendissuancemanaged(token_address, 2, 5, 0, "", "", "TESTTOKEN2", "", "")
+        self.nodes[0].generatetoaddress(1, token_address)
+
+        # Checking the transaction was valid...
+        result = self.nodes[0].omni_gettransaction(txid)
+        assert_equal(result['valid'], True)
+        second_property_id = result["propertyid"]
+
+        # Grant tokens to creator
+        txid = self.nodes[0].omni_sendgrant(token_address, "", second_property_id, "100", "")
+        self.nodes[0].generatetoaddress(1, token_address)
+
+        # Check multiple properties returned
+        result = self.nodes[0].omni_getnonfungibletokens(token_address)
+        assert_equal(len(result), 2)
+        assert_equal(result[0]['propertyid'], property_id)
+        assert_equal(result[0]['tokens'][0]['tokenstart'], 11)
+        assert_equal(result[0]['tokens'][0]['tokenend'], 100)
+        assert_equal(result[0]['tokens'][0]['amount'], 90)
+        assert_equal(result[0]['tokens'][1]['tokenstart'], 112)
+        assert_equal(result[0]['tokens'][1]['tokenend'], 200)
+        assert_equal(result[0]['tokens'][1]['amount'], 89)
+        assert_equal(result[1]['propertyid'], second_property_id)
+        assert_equal(result[1]['tokens'][0]['tokenstart'], 1)
+        assert_equal(result[1]['tokens'][0]['tokenend'], 100)
+        assert_equal(result[1]['tokens'][0]['amount'], 100)
+
+        # Filter on first property ID
+        result = self.nodes[0].omni_getnonfungibletokens(token_address, property_id)
+        assert_equal(len(result), 1)
+        assert_equal(result[0]['propertyid'], property_id)
+        assert_equal(result[0]['tokens'][0]['tokenstart'], 11)
+        assert_equal(result[0]['tokens'][0]['tokenend'], 100)
+        assert_equal(result[0]['tokens'][0]['amount'], 90)
+        assert_equal(result[0]['tokens'][1]['tokenstart'], 112)
+        assert_equal(result[0]['tokens'][1]['tokenend'], 200)
+        assert_equal(result[0]['tokens'][1]['amount'], 89)
+
+        # Filter on second property ID
+        result = self.nodes[0].omni_getnonfungibletokens(token_address, second_property_id)
+        assert_equal(len(result), 1)
+        assert_equal(result[0]['propertyid'], second_property_id)
+        assert_equal(result[0]['tokens'][0]['tokenstart'], 1)
+        assert_equal(result[0]['tokens'][0]['tokenend'], 100)
+        assert_equal(result[0]['tokens'][0]['amount'], 100)
 
 if __name__ == '__main__':
     OmniNonFungibleTokensTest().main()
