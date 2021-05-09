@@ -83,61 +83,6 @@ def relative_locktime(sdf, srhb, stf, srlb):
 def all_rlt_txs(txs):
     return [tx['tx'] for tx in txs]
 
-def create_self_transfer_from_utxo(node, input_tx):
-    utxo = miniwallet.get_utxo(txid=input_tx.rehash(), mark_as_spent=False)
-    tx = miniwallet.create_self_transfer(from_node=node, utxo_to_spend=utxo)['tx']
-    return tx
-
-def create_bip112special(node, input, txversion):
-    tx = create_self_transfer_from_utxo(node, input)
-    tx.nVersion = txversion
-    tx.vin[0].scriptSig = CScript([-1, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
-    return tx
-
-def create_bip112emptystack(node, input, txversion):
-    tx = create_self_transfer_from_utxo(node, input)
-    tx.nVersion = txversion
-    tx.vin[0].scriptSig = CScript([OP_CHECKSEQUENCEVERIFY] + list(CScript(tx.vin[0].scriptSig)))
-    return tx
-
-def send_generic_input_tx(node, coinbases):
-    input_txid = node.getblock(coinbases.pop(), 2)['tx'][0]['txid']
-    utxo_to_spend = miniwallet.get_utxo(txid=input_txid)
-    return miniwallet.send_self_transfer(from_node=node, utxo_to_spend=utxo_to_spend)['tx']
-
-def create_bip68txs(node, bip68inputs, txversion, locktime_delta=0):
-    """Returns a list of bip68 transactions with different bits set."""
-    txs = []
-    assert len(bip68inputs) >= 16
-    for i, (sdf, srhb, stf, srlb) in enumerate(product(*[[True, False]] * 4)):
-        locktime = relative_locktime(sdf, srhb, stf, srlb)
-        tx = create_self_transfer_from_utxo(node, bip68inputs[i])
-        tx.nVersion = txversion
-        tx.vin[0].nSequence = locktime + locktime_delta
-        tx.rehash()
-        txs.append({'tx': tx, 'sdf': sdf, 'stf': stf})
-
-    return txs
-
-def create_bip112txs(node, bip112inputs, varyOP_CSV, txversion, locktime_delta=0):
-    """Returns a list of bip68 transactions with different bits set."""
-    txs = []
-    assert len(bip112inputs) >= 16
-    for i, (sdf, srhb, stf, srlb) in enumerate(product(*[[True, False]] * 4)):
-        locktime = relative_locktime(sdf, srhb, stf, srlb)
-        tx = create_self_transfer_from_utxo(node, bip112inputs[i])
-        if (varyOP_CSV):  # if varying OP_CSV, nSequence is fixed
-            tx.vin[0].nSequence = BASE_RELATIVE_LOCKTIME + locktime_delta
-        else:  # vary nSequence instead, OP_CSV is fixed
-            tx.vin[0].nSequence = locktime + locktime_delta
-        tx.nVersion = txversion
-        if (varyOP_CSV):
-            tx.vin[0].scriptSig = CScript([locktime, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
-        else:
-            tx.vin[0].scriptSig = CScript([BASE_RELATIVE_LOCKTIME, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
-        tx.rehash()
-        txs.append({'tx': tx, 'sdf': sdf, 'stf': stf})
-    return txs
 
 class BIP68_112_113Test(BitcoinTestFramework):
     def set_test_params(self):
@@ -149,6 +94,62 @@ class BIP68_112_113Test(BitcoinTestFramework):
             '-par=1',  # Use only one script thread to get the exact reject reason for testing
         ]]
         self.supports_cli = False
+
+    def create_self_transfer_from_utxo(self, input_tx):
+        utxo = self.miniwallet.get_utxo(txid=input_tx.rehash(), mark_as_spent=False)
+        tx = self.miniwallet.create_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo)['tx']
+        return tx
+
+    def create_bip112special(self, input, txversion):
+        tx = self.create_self_transfer_from_utxo(input)
+        tx.nVersion = txversion
+        tx.vin[0].scriptSig = CScript([-1, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
+        return tx
+
+    def create_bip112emptystack(self, input, txversion):
+        tx = self.create_self_transfer_from_utxo(input)
+        tx.nVersion = txversion
+        tx.vin[0].scriptSig = CScript([OP_CHECKSEQUENCEVERIFY] + list(CScript(tx.vin[0].scriptSig)))
+        return tx
+
+    def send_generic_input_tx(self, coinbases):
+        input_txid = self.nodes[0].getblock(coinbases.pop(), 2)['tx'][0]['txid']
+        utxo_to_spend = self.miniwallet.get_utxo(txid=input_txid)
+        return self.miniwallet.send_self_transfer(from_node=self.nodes[0], utxo_to_spend=utxo_to_spend)['tx']
+
+    def create_bip68txs(self, bip68inputs, txversion, locktime_delta=0):
+        """Returns a list of bip68 transactions with different bits set."""
+        txs = []
+        assert len(bip68inputs) >= 16
+        for i, (sdf, srhb, stf, srlb) in enumerate(product(*[[True, False]] * 4)):
+            locktime = relative_locktime(sdf, srhb, stf, srlb)
+            tx = self.create_self_transfer_from_utxo(bip68inputs[i])
+            tx.nVersion = txversion
+            tx.vin[0].nSequence = locktime + locktime_delta
+            tx.rehash()
+            txs.append({'tx': tx, 'sdf': sdf, 'stf': stf})
+
+        return txs
+
+    def create_bip112txs(self, bip112inputs, varyOP_CSV, txversion, locktime_delta=0):
+        """Returns a list of bip68 transactions with different bits set."""
+        txs = []
+        assert len(bip112inputs) >= 16
+        for i, (sdf, srhb, stf, srlb) in enumerate(product(*[[True, False]] * 4)):
+            locktime = relative_locktime(sdf, srhb, stf, srlb)
+            tx = self.create_self_transfer_from_utxo(bip112inputs[i])
+            if (varyOP_CSV):  # if varying OP_CSV, nSequence is fixed
+                tx.vin[0].nSequence = BASE_RELATIVE_LOCKTIME + locktime_delta
+            else:  # vary nSequence instead, OP_CSV is fixed
+                tx.vin[0].nSequence = locktime + locktime_delta
+            tx.nVersion = txversion
+            if (varyOP_CSV):
+                tx.vin[0].scriptSig = CScript([locktime, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
+            else:
+                tx.vin[0].scriptSig = CScript([BASE_RELATIVE_LOCKTIME, OP_CHECKSEQUENCEVERIFY, OP_DROP] + list(CScript(tx.vin[0].scriptSig)))
+            tx.rehash()
+            txs.append({'tx': tx, 'sdf': sdf, 'stf': stf})
+        return txs
 
     def generate_blocks(self, number):
         test_blocks = []
@@ -177,14 +178,12 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
     def run_test(self):
         self.helper_peer = self.nodes[0].add_p2p_connection(P2PDataStore())
-        # TODO: store as class member to get rid of global variable
-        global miniwallet
-        miniwallet = MiniWallet(self.nodes[0], raw_script=True)
+        self.miniwallet = MiniWallet(self.nodes[0], raw_script=True)
 
         self.log.info("Generate blocks in the past for coinbase outputs.")
         long_past_time = int(time.time()) - 600 * 1000  # enough to build up to 1000 blocks 10 minutes apart without worrying about getting into the future
         self.nodes[0].setmocktime(long_past_time - 100)  # enough so that the generated blocks will still all be before long_past_time
-        self.coinbase_blocks = miniwallet.generate(COINBASE_BLOCK_COUNT)  # blocks generated for inputs
+        self.coinbase_blocks = self.miniwallet.generate(COINBASE_BLOCK_COUNT)  # blocks generated for inputs
         self.nodes[0].setmocktime(0)  # set time back to present so yielded blocks aren't in the future as we advance last_block_time
         self.tipheight = COINBASE_BLOCK_COUNT  # height of the next block to build
         self.last_block_time = long_past_time
@@ -203,14 +202,14 @@ class BIP68_112_113Test(BitcoinTestFramework):
         # 16 normal inputs
         bip68inputs = []
         for _ in range(16):
-            bip68inputs.append(send_generic_input_tx(self.nodes[0], self.coinbase_blocks))
+            bip68inputs.append(self.send_generic_input_tx(self.coinbase_blocks))
 
         # 2 sets of 16 inputs with 10 OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
         bip112basicinputs = []
         for _ in range(2):
             inputs = []
             for _ in range(16):
-                inputs.append(send_generic_input_tx(self.nodes[0], self.coinbase_blocks))
+                inputs.append(self.send_generic_input_tx(self.coinbase_blocks))
             bip112basicinputs.append(inputs)
 
         # 2 sets of 16 varied inputs with (relative_lock_time) OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
@@ -218,16 +217,16 @@ class BIP68_112_113Test(BitcoinTestFramework):
         for _ in range(2):
             inputs = []
             for _ in range(16):
-                inputs.append(send_generic_input_tx(self.nodes[0], self.coinbase_blocks))
+                inputs.append(self.send_generic_input_tx(self.coinbase_blocks))
             bip112diverseinputs.append(inputs)
 
         # 1 special input with -1 OP_CSV OP_DROP (actually will be prepended to spending scriptSig)
-        bip112specialinput = send_generic_input_tx(self.nodes[0], self.coinbase_blocks)
+        bip112specialinput = self.send_generic_input_tx(self.coinbase_blocks)
         # 1 special input with (empty stack) OP_CSV (actually will be prepended to spending scriptSig)
-        bip112emptystackinput = send_generic_input_tx(self.nodes[0], self.coinbase_blocks)
+        bip112emptystackinput = self.send_generic_input_tx(self.coinbase_blocks)
 
         # 1 normal input
-        bip113input = send_generic_input_tx(self.nodes[0], self.coinbase_blocks)
+        bip113input = self.send_generic_input_tx(self.coinbase_blocks)
 
         self.nodes[0].setmocktime(self.last_block_time + 600)
         inputblockhash = self.nodes[0].generate(1)[0]  # 1 block generated for inputs to be in chain at height 431
@@ -247,36 +246,36 @@ class BIP68_112_113Test(BitcoinTestFramework):
 
         # Test both version 1 and version 2 transactions for all tests
         # BIP113 test transaction will be modified before each use to put in appropriate block time
-        bip113tx_v1 = create_self_transfer_from_utxo(self.nodes[0], bip113input)
+        bip113tx_v1 = self.create_self_transfer_from_utxo(bip113input)
         bip113tx_v1.vin[0].nSequence = 0xFFFFFFFE
         bip113tx_v1.nVersion = 1
-        bip113tx_v2 = create_self_transfer_from_utxo(self.nodes[0], bip113input)
+        bip113tx_v2 = self.create_self_transfer_from_utxo(bip113input)
         bip113tx_v2.vin[0].nSequence = 0xFFFFFFFE
         bip113tx_v2.nVersion = 2
 
         # For BIP68 test all 16 relative sequence locktimes
-        bip68txs_v1 = create_bip68txs(self.nodes[0], bip68inputs, 1)
-        bip68txs_v2 = create_bip68txs(self.nodes[0], bip68inputs, 2)
+        bip68txs_v1 = self.create_bip68txs(bip68inputs, 1)
+        bip68txs_v2 = self.create_bip68txs(bip68inputs, 2)
 
         # For BIP112 test:
         # 16 relative sequence locktimes of 10 against 10 OP_CSV OP_DROP inputs
-        bip112txs_vary_nSequence_v1 = create_bip112txs(self.nodes[0], bip112basicinputs[0], False, 1)
-        bip112txs_vary_nSequence_v2 = create_bip112txs(self.nodes[0], bip112basicinputs[0], False, 2)
+        bip112txs_vary_nSequence_v1 = self.create_bip112txs(bip112basicinputs[0], False, 1)
+        bip112txs_vary_nSequence_v2 = self.create_bip112txs(bip112basicinputs[0], False, 2)
         # 16 relative sequence locktimes of 9 against 10 OP_CSV OP_DROP inputs
-        bip112txs_vary_nSequence_9_v1 = create_bip112txs(self.nodes[0], bip112basicinputs[1], False, 1, -1)
-        bip112txs_vary_nSequence_9_v2 = create_bip112txs(self.nodes[0], bip112basicinputs[1], False, 2, -1)
+        bip112txs_vary_nSequence_9_v1 = self.create_bip112txs(bip112basicinputs[1], False, 1, -1)
+        bip112txs_vary_nSequence_9_v2 = self.create_bip112txs(bip112basicinputs[1], False, 2, -1)
         # sequence lock time of 10 against 16 (relative_lock_time) OP_CSV OP_DROP inputs
-        bip112txs_vary_OP_CSV_v1 = create_bip112txs(self.nodes[0], bip112diverseinputs[0], True, 1)
-        bip112txs_vary_OP_CSV_v2 = create_bip112txs(self.nodes[0], bip112diverseinputs[0], True, 2)
+        bip112txs_vary_OP_CSV_v1 = self.create_bip112txs(bip112diverseinputs[0], True, 1)
+        bip112txs_vary_OP_CSV_v2 = self.create_bip112txs(bip112diverseinputs[0], True, 2)
         # sequence lock time of 9 against 16 (relative_lock_time) OP_CSV OP_DROP inputs
-        bip112txs_vary_OP_CSV_9_v1 = create_bip112txs(self.nodes[0], bip112diverseinputs[1], True, 1, -1)
-        bip112txs_vary_OP_CSV_9_v2 = create_bip112txs(self.nodes[0], bip112diverseinputs[1], True, 2, -1)
+        bip112txs_vary_OP_CSV_9_v1 = self.create_bip112txs(bip112diverseinputs[1], True, 1, -1)
+        bip112txs_vary_OP_CSV_9_v2 = self.create_bip112txs(bip112diverseinputs[1], True, 2, -1)
         # -1 OP_CSV OP_DROP input
-        bip112tx_special_v1 = create_bip112special(self.nodes[0], bip112specialinput, 1)
-        bip112tx_special_v2 = create_bip112special(self.nodes[0], bip112specialinput, 2)
+        bip112tx_special_v1 = self.create_bip112special(bip112specialinput, 1)
+        bip112tx_special_v2 = self.create_bip112special(bip112specialinput, 2)
         # (empty stack) OP_CSV input
-        bip112tx_emptystack_v1 = create_bip112emptystack(self.nodes[0], bip112emptystackinput, 1)
-        bip112tx_emptystack_v2 = create_bip112emptystack(self.nodes[0], bip112emptystackinput, 2)
+        bip112tx_emptystack_v1 = self.create_bip112emptystack(bip112emptystackinput, 1)
+        bip112tx_emptystack_v2 = self.create_bip112emptystack(bip112emptystackinput, 2)
 
         self.log.info("TESTING")
 
