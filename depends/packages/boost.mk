@@ -26,6 +26,7 @@ $(package)_config_libraries=filesystem,system,test
 $(package)_cxxflags=-std=c++17 -fvisibility=hidden
 $(package)_cxxflags_linux=-fPIC
 $(package)_cxxflags_android=-fPIC
+$(package)_cxxflags_darwin=-fcf-protection=full
 endef
 
 define $(package)_preprocess_cmds
