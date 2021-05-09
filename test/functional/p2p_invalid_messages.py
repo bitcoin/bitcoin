@@ -38,7 +38,7 @@ VALID_DATA_LIMIT = MAX_PROTOCOL_MESSAGE_LENGTH - 5  # Account for the 5-byte len
 class msg_unrecognized:
     """Nonsensical message. Modeled after similar types in test_framework.messages."""
 
-    msgtype = b'badmsg'
+    msgtype = b'badmsg\x01'
 
     def __init__(self, *, str_data):
         self.str_data = str_data.encode() if not isinstance(str_data, bytes) else str_data
@@ -108,7 +108,7 @@ class InvalidMessagesTest(SyscoinTestFramework):
     def test_magic_bytes(self):
         self.log.info("Test message with invalid magic bytes disconnects peer")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
-        with self.nodes[0].assert_debug_log(['HEADER ERROR - MESSAGESTART (badmsg, 2 bytes), received ffffffff']):
+        with self.nodes[0].assert_debug_log(['Header error: Wrong MessageStart ffffffff received']):
             msg = conn.build_message(msg_unrecognized(str_data="d"))
             # modify magic bytes
             msg = b'\xff' * 4 + msg[4:]
@@ -119,7 +119,7 @@ class InvalidMessagesTest(SyscoinTestFramework):
     def test_checksum(self):
         self.log.info("Test message with invalid checksum logs an error")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
-        with self.nodes[0].assert_debug_log(['CHECKSUM ERROR (badmsg, 2 bytes), expected 78df0a04 was ffffffff']):
+        with self.nodes[0].assert_debug_log(['Header error: Wrong checksum (badmsg, 2 bytes), expected 78df0a04 was ffffffff']):
             msg = conn.build_message(msg_unrecognized(str_data="d"))
             # Checksum is after start bytes (4B), message type (12B), len (4B)
             cut_len = 4 + 12 + 4
@@ -135,7 +135,7 @@ class InvalidMessagesTest(SyscoinTestFramework):
         self.log.info("Test message with oversized payload disconnects peer")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
         # SYSCOIN 32MB
-        with self.nodes[0].assert_debug_log(['HEADER ERROR - SIZE (badmsg, 33554433 bytes)']):
+        with self.nodes[0].assert_debug_log(['Header error: Size too large (badmsg, 33554433 bytes)']):
             msg = msg_unrecognized(str_data="d" * (VALID_DATA_LIMIT + 1))
             msg = conn.build_message(msg)
             conn.send_raw_message(msg)
@@ -145,7 +145,7 @@ class InvalidMessagesTest(SyscoinTestFramework):
     def test_msgtype(self):
         self.log.info("Test message with invalid message type logs an error")
         conn = self.nodes[0].add_p2p_connection(P2PDataStore())
-        with self.nodes[0].assert_debug_log(['HEADER ERROR - COMMAND']):
+        with self.nodes[0].assert_debug_log(['Header error: Invalid message type']):
             msg = msg_unrecognized(str_data="d")
             msg = conn.build_message(msg)
             # Modify msgtype
