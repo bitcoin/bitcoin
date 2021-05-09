@@ -188,6 +188,19 @@ def check_NX(executable) -> bool:
     binary = lief.parse(executable)
     return binary.has_nx
 
+def check_control_flow(executable) -> bool:
+    '''
+    Check for control flow instrumentation
+    '''
+    binary = lief.parse(executable)
+
+    content = binary.get_content_from_virtual_address(binary.entrypoint, 4, lief.Binary.VA_TYPES.AUTO)
+
+    if content == [243, 15, 30, 250]: # endbr64
+        return True
+    return False
+
+
 CHECKS = {
 'ELF': [
     ('PIE', check_ELF_PIE),
@@ -208,7 +221,8 @@ CHECKS = {
     ('NOUNDEFS', check_MACHO_NOUNDEFS),
     ('NX', check_NX),
     ('LAZY_BINDINGS', check_MACHO_LAZY_BINDINGS),
-    ('Canary', check_MACHO_Canary)
+    ('Canary', check_MACHO_Canary),
+    ('CONTROL_FLOW', check_control_flow),
 ]
 }
 
