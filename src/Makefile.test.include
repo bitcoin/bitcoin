@@ -398,11 +398,6 @@ univalue_test_object_CPPFLAGS = -I$(srcdir)/$(UNIVALUE_INCLUDE_DIR_INT)
 univalue_test_object_LDFLAGS = -static $(LIBTOOL_APP_LDFLAGS)
 endif
 
-if ENABLE_FUZZ_LINK_ALL
-all-local: $(FUZZ_BINARY)
-	bash ./test/fuzz/danger_link_all.sh
-endif
-
 %.cpp.test: %.cpp
 	@echo Running tests: $$(\
 	  cat $< | \
