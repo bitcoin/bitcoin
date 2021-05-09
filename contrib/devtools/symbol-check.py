@@ -218,6 +218,12 @@ def check_MACHO_min_os(filename) -> bool:
         return True
     return False
 
+def check_MACHO_sdk(filename) -> bool:
+    binary = lief.parse(filename)
+    if binary.build_version.sdk == [10, 15, 6]:
+        return True
+    return False
+
 def check_PE_libraries(filename) -> bool:
     ok: bool = True
     binary = lief.parse(filename)
@@ -244,6 +250,7 @@ CHECKS = {
 'MACHO': [
     ('DYNAMIC_LIBRARIES', check_MACHO_libraries),
     ('MIN_OS', check_MACHO_min_os),
+    ('SDK', check_MACHO_sdk),
 ],
 'PE' : [
     ('DYNAMIC_LIBRARIES', check_PE_libraries),
