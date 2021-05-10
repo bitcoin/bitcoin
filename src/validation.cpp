@@ -1273,7 +1273,7 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
 
-    return 10 * COIN;
+    return COIN;
 
     /*
     int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
