@@ -19,6 +19,10 @@
 const std::function<std::string(const char*)> G_TRANSLATION_FUN = nullptr;
 UrlDecodeFn* const URL_DECODE = nullptr;
 
+CDynHash* g_hashFunction;
+CDynEngine* g_dynEngine;
+CContractManager* g_contractMgr;
+
 static void SetupWalletToolArgs(ArgsManager& argsman)
 {
     SetupHelpOptions(argsman);
