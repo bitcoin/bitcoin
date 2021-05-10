@@ -1759,6 +1759,15 @@ BOOST_AUTO_TEST_CASE(test_ParseFixedPoint)
     BOOST_CHECK(!ParseFixedPoint("1.1e", 8, &amount));
     BOOST_CHECK(!ParseFixedPoint("1.1e-", 8, &amount));
     BOOST_CHECK(!ParseFixedPoint("1.", 8, &amount));
+
+    // Test with 3 decimal places for fee rates in sat/vB.
+    BOOST_CHECK(ParseFixedPoint("0.001", 3, &amount));
+    BOOST_CHECK_EQUAL(amount, CAmount{1});
+    BOOST_CHECK(!ParseFixedPoint("0.0009", 3, &amount));
+    BOOST_CHECK(!ParseFixedPoint("31.00100001", 3, &amount));
+    BOOST_CHECK(!ParseFixedPoint("31.0011", 3, &amount));
+    BOOST_CHECK(!ParseFixedPoint("31.99999999", 3, &amount));
+    BOOST_CHECK(!ParseFixedPoint("31.999999999999999999999", 3, &amount));
 }
 
 static void TestOtherThread(fs::path dirname, std::string lockname, bool *result)
