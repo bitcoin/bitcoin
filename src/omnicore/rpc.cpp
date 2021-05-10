@@ -172,20 +172,27 @@ bool BalanceToJSON(const std::string& address, uint32_t property, UniValue& bala
 UniValue omni_getnonfungibletokens(const JSONRPCRequest& request)
 {
     RPCHelpMan{"omni_getnonfungibletokens",
-       "\nReturns the non-fungible tokens for a given address and property.\n",
+       "\nReturns the non-fungible tokens for a given address. Optional property ID filter.\n",
        {
            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "the address"},
-           {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the property identifier"},
+           {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "the property identifier"},
        },
        RPCResult{
            RPCResult::Type::ARR, "", "",
            {
                {RPCResult::Type::OBJ, "", "",
                {
-                   {RPCResult::Type::NUM, "tokenstart", "the first token in this range"},
-                   {RPCResult::Type::NUM, "tokenend", "the last token in this range"},
-                   {RPCResult::Type::NUM, "amount", "the amount of tokens in the range"},
-               }},
+                   {RPCResult::Type::NUM, "propertyid", "property ID tokens belong to"},
+                   {RPCResult::Type::ARR, "tokens", "",
+                   {
+                       {RPCResult::Type::OBJ, "", "",
+                       {
+                           {RPCResult::Type::NUM, "tokenstart", "the first token in this range"},
+                           {RPCResult::Type::NUM, "tokenend", "the last token in this range"},
+                           {RPCResult::Type::NUM, "amount", "the amount of tokens in the range"},
+                       }}
+                   }}
+               }}
            }
        },
        RPCExamples{
@@ -195,26 +202,36 @@ UniValue omni_getnonfungibletokens(const JSONRPCRequest& request)
     }.Check(request);
 
     std::string address = ParseAddress(request.params[0]);
-    uint32_t propertyId = ParsePropertyId(request.params[1]);
-
-    RequireExistingProperty(propertyId);
-    RequireNonFungibleProperty(propertyId);
-
-    UniValue response(UniValue::VARR);
-
-    std::vector<std::pair<int64_t,int64_t> > uniqueRanges = pDbNFT->GetAddressNonFungibleTokens(propertyId, address);
-
-    for (std::vector<std::pair<int64_t,int64_t> >::iterator it = uniqueRanges.begin(); it != uniqueRanges.end(); ++it) {
-        std::pair<int64_t,int64_t> range = *it;
-        int64_t amount = (range.second - range.first) + 1;
-        UniValue uniqueRangeObj(UniValue::VOBJ);
-        uniqueRangeObj.pushKV("tokenstart", range.first);
-        uniqueRangeObj.pushKV("tokenend", range.second);
-        uniqueRangeObj.pushKV("amount", amount);
-        response.push_back(uniqueRangeObj);
+    uint32_t propertyId{0};
+    if (!request.params[1].isNull()) {
+        propertyId = ParsePropertyId(request.params[1]);
+        RequireExistingProperty(propertyId);
+        RequireNonFungibleProperty(propertyId);
     }
 
-    return response;
+    UniValue propertyRanges(UniValue::VARR);
+
+    const auto uniqueRanges = pDbNFT->GetAddressNonFungibleTokens(propertyId, address);
+
+    for (const auto& range : uniqueRanges) {
+        UniValue property(UniValue::VOBJ);
+        property.pushKV("propertyid", static_cast<uint64_t>(range.first));
+        UniValue tokenRanges(UniValue::VARR);
+
+        for (const auto& subRange : range.second) {
+            UniValue tokenRange(UniValue::VOBJ);
+            tokenRange.pushKV("tokenstart", subRange.first);
+            tokenRange.pushKV("tokenend", subRange.second);
+            int64_t amount = (subRange.second - subRange.first) + 1;
+            tokenRange.pushKV("amount", amount);
+            tokenRanges.push_back(tokenRange);
+        }
+
+        property.pushKV("tokens", tokenRanges);
+        propertyRanges.push_back(property);
+    }
+
+    return propertyRanges;
 }
 
 // provides all data for a specific token

@@ -1967,22 +1967,29 @@ $ omnicore-cli "omni_getcurrentconsensushash"
 
 ### omni_getnonfungibletokens
 
-Returns the non-fungible tokens for a given address and property.
+Returns the non-fungible tokens for a given address. Optional property ID filter.
 
 **Arguments:**
 
 | Name                | Type    | Presence | Description                                                                                  |
 |---------------------|---------|----------|----------------------------------------------------------------------------------------------|
 | `address`           | string  | required | the address                                                                                  |
-| `propertyid`        | number  | required | the property identifier                                                                      |
+| `propertyid`        | number  | optional | the property identifier                                                                      |
 
 **Result:**
 ```js
-{
-  "tokenstart" : n,            // (number) the first token in this range
-  "tokenend" : n,              // (number) the last token in this range
-  "amount" : n.nnnnnnnn,       // (number) the amount of tokens in the range
-}
+[
+  {
+    "propertyid" : n,
+    "tokens" : [
+      {
+        "tokenstart" : n,            // (number) the first token in this range
+        "tokenend" : n,              // (number) the last token in this range
+        "amount" : n,                // (number) the amount of tokens in the range
+      }...
+    ]
+  }...
+]
 ```
 
 **Example:**
