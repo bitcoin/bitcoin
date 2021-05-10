@@ -31,7 +31,7 @@
 #include <univalue.h>
 
 // In script_tests.cpp
-extern UniValue read_json(const std::string& jsondata);
+UniValue read_json(const std::string& jsondata);
 
 static std::map<std::string, unsigned int> mapFlagNames = {
     {std::string("NONE"), (unsigned int) SCRIPT_VERIFY_NONE},

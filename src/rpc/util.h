@@ -74,23 +74,23 @@ void RPCTypeCheckObj(const UniValue& o,
  * Utilities: convert hex-encoded Values
  * (throws error if not hex).
  */
-extern uint256 ParseHashV(const UniValue& v, std::string strName);
-extern uint256 ParseHashO(const UniValue& o, std::string strKey);
-extern std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName);
-extern std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey);
+uint256 ParseHashV(const UniValue& v, std::string strName);
+uint256 ParseHashO(const UniValue& o, std::string strKey);
+std::vector<unsigned char> ParseHexV(const UniValue& v, std::string strName);
+std::vector<unsigned char> ParseHexO(const UniValue& o, std::string strKey);
 
-extern int32_t ParseInt32V(const UniValue& v, const std::string &strName);
-extern int64_t ParseInt64V(const UniValue& v, const std::string &strName);
-extern double ParseDoubleV(const UniValue& v, const std::string &strName);
-extern bool ParseBoolV(const UniValue& v, const std::string &strName);
+int32_t ParseInt32V(const UniValue& v, const std::string &strName);
+int64_t ParseInt64V(const UniValue& v, const std::string &strName);
+double ParseDoubleV(const UniValue& v, const std::string &strName);
+bool ParseBoolV(const UniValue& v, const std::string &strName);
 
-extern CAmount AmountFromValue(const UniValue& value);
+CAmount AmountFromValue(const UniValue& value);
 
 using RPCArgList = std::vector<std::pair<std::string, UniValue>>;
-extern std::string HelpExampleCli(const std::string& methodname, const std::string& args);
-extern std::string HelpExampleCliNamed(const std::string& methodname, const RPCArgList& args);
-extern std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
-extern std::string HelpExampleRpcNamed(const std::string& methodname, const RPCArgList& args);
+std::string HelpExampleCli(const std::string& methodname, const std::string& args);
+std::string HelpExampleCliNamed(const std::string& methodname, const RPCArgList& args);
+std::string HelpExampleRpc(const std::string& methodname, const std::string& args);
+std::string HelpExampleRpcNamed(const std::string& methodname, const RPCArgList& args);
 
 CPubKey HexToPubKey(const std::string& hex_in);
 CPubKey AddrToPubKey(const FillableSigningProvider& keystore, const std::string& addr_in);
