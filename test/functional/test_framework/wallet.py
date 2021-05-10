@@ -61,7 +61,7 @@ class MiniWallet:
     def get_address(self):
         return self._address
 
-    def get_utxo(self, *, txid=''):
+    def get_utxo(self, *, txid='', mark_as_spent=True):
         """
         Returns a utxo and marks it as spent (pops it from the internal list)
 
@@ -74,7 +74,10 @@ class MiniWallet:
         if txid:
             utxo = next(filter(lambda utxo: txid == utxo['txid'], self._utxos))
             index = self._utxos.index(utxo)
-        return self._utxos.pop(index)
+        if mark_as_spent:
+            return self._utxos.pop(index)
+        else:
+            return self._utxos[index]
 
     def send_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None):
         """Create and send a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
