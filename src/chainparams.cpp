@@ -120,12 +120,22 @@ static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits
 /**
  * Main network
  */
+
+
+
+
+
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
 
-        #define genesisHash "0x0000cfc2be1db1e4be048ada6f45a014d419db62d204420edea5903eff9a14ab"
-        #define genesisMerkleRoot "0x961dcac635d4bf3ecb71f93fd2c65855c0aa4619a52cbe2155a2fe46b204231e"
+        std::string genesisHash;
+        std::string genesisMerkleRoot;
+
+        if (IS_TESTNET) {
+            genesisHash = "0x0000670c817fca7323f46417741faff011e4d7a6e44f1c00468385e0fa2decad";
+            genesisMerkleRoot = "0x794ea2a523f66d5dbeb531c5af496263ef37cdb9574ac15b4438f5c16cdb6132";
+        }
 
         strNetworkID = CBaseChainParams::MAIN;
         consensus.signet_blocks = false;
@@ -140,7 +150,7 @@ public:
         consensus.SegwitHeight = 1; // 0000000000000000001c8018d9cb3b742ef25114f27563e3fc4a1902167f9893
         consensus.MinBIP9WarningHeight = 1; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nPowTargetTimespan = 60; // one minute
+        consensus.nPowTargetTimespan = 120; // two minute
         consensus.nPowTargetSpacing = 15;  //fifteen seconds
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
@@ -158,7 +168,8 @@ public:
         consensus.nMinimumChainWork = uint256S("0000000000000000000000000000000000000000000000000000000000000001");
         consensus.defaultAssumeValid = uint256S(genesisHash); 
 
-        devFeePerBlock = COIN;
+        devFeePerBlock = 5000000;
+        charityPerBlock = 5000000;
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 0);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 5);
@@ -199,25 +210,41 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        pchMessageStart[0] = 0xf1;
-        pchMessageStart[1] = 0xfe;
-        pchMessageStart[2] = 0xfe;
-        pchMessageStart[3] = 0xd0;
-        nDefaultPort = 6432;
-        nPruneAfterHeight = 100000;
-        m_assumed_blockchain_size = 350;
-        m_assumed_chain_state_size = 6;
+
+        if (IS_TESTNET) {
+            pchMessageStart[0] = 0xf9;
+            pchMessageStart[1] = 0xf9;
+            pchMessageStart[2] = 0xf9;
+            pchMessageStart[3] = 0xd9;
+            nDefaultPort = 16432;
+            nPruneAfterHeight = 100000;
+            m_assumed_blockchain_size = 350;
+            m_assumed_chain_state_size = 6;
+        } else {
+            pchMessageStart[0] = 0xf1;
+            pchMessageStart[1] = 0xfe;
+            pchMessageStart[2] = 0xfe;
+            pchMessageStart[3] = 0xd0;
+            nDefaultPort = 6432;
+            nPruneAfterHeight = 100000;
+            m_assumed_blockchain_size = 350;
+            m_assumed_chain_state_size = 6;
+        }
 
 
         /*
         time_t t;
         time(&t);
-        genesis = CreateGenesisBlock(t, 0, 0x1f00ffff, 1, 10, devFeePerBlock);
+        genesis = CreateGenesisBlock(t, 0, 0x1f00ffff, 1, 1, devFeePerBlock);
         MineGenesis(genesis, consensus.powLimit, true);
         */
                   
 
-        genesis = CreateGenesisBlock(1619294907, 38220, 0x1f00ffff, 1, 10, devFeePerBlock);
+        if (IS_TESTNET) {
+            genesis = CreateGenesisBlock(1620434096, 8338, 0x1f00ffff, 1, 1, devFeePerBlock);
+        } else {
+
+        }
 
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S(genesisHash));
@@ -230,9 +257,12 @@ public:
         // release ASAP to avoid it where possible.
 
 
-
-        vSeeds.emplace_back("testnet1.dynamocoin.org");
-        vSeeds.emplace_back("testnet2.dynamocoin.org");
+        if (IS_TESTNET) {
+            vSeeds.emplace_back("3.132.163.214");
+            vSeeds.emplace_back("3.140.139.43");
+        } else {
+            vSeeds.emplace_back("dnsseed.dynamocoin.org");
+        }
 
 
 

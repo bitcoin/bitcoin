@@ -16,6 +16,7 @@
 CDynHash* g_hashFunction;
 CDynEngine* g_dynEngine;
 CContractManager* g_contractMgr;
+bool IS_TESTNET;
 
 /** Translate string to current locale using Qt. */
 extern const std::function<std::string(const char*)> G_TRANSLATION_FUN = [](const char* psz) {
@@ -23,4 +24,9 @@ extern const std::function<std::string(const char*)> G_TRANSLATION_FUN = [](cons
 };
 UrlDecodeFn* const URL_DECODE = urlDecode;
 
-int main(int argc, char* argv[]) { return GuiMain(argc, argv); }
+int main(int argc, char* argv[]) {
+
+    IS_TESTNET = true;
+
+    return GuiMain(argc, argv);
+}
