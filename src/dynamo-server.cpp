@@ -36,6 +36,7 @@ UrlDecodeFn* const URL_DECODE = urlDecode;
 CDynHash* g_hashFunction;
 CDynEngine* g_dynEngine;
 CContractManager* g_contractMgr;
+bool IS_TESTNET;
 
 #if HAVE_DECL_FORK
 
@@ -256,6 +257,9 @@ static bool AppInit(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
+
+    IS_TESTNET = true;
+
 #ifdef WIN32
     util::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();

@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+
+
 #if defined(HAVE_CONFIG_H)
 #include <config/bitcoin-config.h>
 #endif
@@ -514,6 +516,11 @@ int GuiMain(int argc, char* argv[])
 
     // Install global event filter that makes sure that long tooltips can be word-wrapped
     app.installEventFilter(new GUIUtil::ToolTipToRichTextFilter(TOOLTIP_WRAP_THRESHOLD, &app));
+
+
+    if (IS_TESTNET)
+        QMessageBox::critical(nullptr, PACKAGE_NAME, QObject::tr("IMPORTANT: This client is connected to testnet.  Any coins created or transferred are subject to deletion at any time.  This is not production software."));
+
 
     /// 5. Now that settings and translations are available, ask user for data directory
     // User language is set up: pick a data directory
