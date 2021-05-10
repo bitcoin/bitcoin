@@ -12,7 +12,7 @@
 #include <span.h>
 #include <uint256.h>
 
-#include <stdexcept>
+#include <cstring>
 #include <vector>
 
 const unsigned int BIP32_EXTKEY_SIZE = 74;
