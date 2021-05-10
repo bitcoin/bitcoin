@@ -113,9 +113,7 @@ FUZZ_TARGET_INIT(script, initialize_script)
     UniValue o2(UniValue::VOBJ);
     ScriptPubKeyToUniv(script, o2, false);
     UniValue o3(UniValue::VOBJ);
-    ScriptToUniv(script, o3, true);
-    UniValue o4(UniValue::VOBJ);
-    ScriptToUniv(script, o4, false);
+    ScriptToUniv(script, o3);
 
     {
         const std::vector<uint8_t> bytes = ConsumeRandomLengthByteVector(fuzzed_data_provider);

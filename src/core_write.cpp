@@ -141,22 +141,12 @@ std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags)
     return HexStr(ssTx);
 }
 
-void ScriptToUniv(const CScript& script, UniValue& out, bool include_address)
+void ScriptToUniv(const CScript& script, UniValue& out)
 {
-    out.pushKV("asm", ScriptToAsmStr(script));
-    out.pushKV("hex", HexStr(script));
-
-    std::vector<std::vector<unsigned char>> solns;
-    TxoutType type = Solver(script, solns);
-    out.pushKV("type", GetTxnOutputType(type));
-
-    CTxDestination address;
-    if (include_address && ExtractDestination(script, address) && type != TxoutType::PUBKEY) {
-        out.pushKV("address", EncodeDestination(address));
-    }
+    ScriptPubKeyToUniv(script, out, /* fIncludeHex */ true, /* include_address */ false);
 }
 
-void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex)
+void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex, bool include_address)
 {
     CTxDestination address;
 
@@ -165,9 +155,9 @@ void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fInclud
         out.pushKV("hex", HexStr(scriptPubKey));
 
     std::vector<std::vector<unsigned char>> solns;
-    TxoutType type = Solver(scriptPubKey, solns);
+    const TxoutType type{Solver(scriptPubKey, solns)};
 
-    if (ExtractDestination(scriptPubKey, address) && type != TxoutType::PUBKEY) {
+    if (include_address && ExtractDestination(scriptPubKey, address) && type != TxoutType::PUBKEY) {
         out.pushKV("address", EncodeDestination(address));
     }
     out.pushKV("type", GetTxnOutputType(type));
