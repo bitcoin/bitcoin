@@ -152,6 +152,11 @@ Wallet
 - The `bumpfee` RPC is not available with wallets that have private keys
   disabled. `psbtbumpfee` can be used instead. (#20891)
 
+- The `fundrawtransaction`, `send` and `walletcreatefundedpsbt` RPCs now support an `include_unsafe` option
+  that when `true` allows using unsafe inputs to fund the transaction.
+  Note that the resulting transaction may become invalid if one of the unsafe inputs disappears.
+  If that happens, the transaction must be funded with different inputs and republished. (#21359)
+
 GUI changes
 -----------
 

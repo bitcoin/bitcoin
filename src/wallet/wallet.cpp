@@ -2636,8 +2636,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         if (SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(1, 1, 0), vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used, nVersion)) return true;
 
         // Fall back to using zero confirmation change (but with as few ancestors in the mempool as
-        // possible) if we cannot fund the transaction otherwise. We never spend unconfirmed
-        // outputs received from other wallets.
+        // possible) if we cannot fund the transaction otherwise.
         if (m_spend_zero_conf_change) {
             if (SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, min_conf_theirs, 2), vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used, nVersion)) return true;
             if (SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, min_conf_theirs, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)),
@@ -2653,6 +2652,14 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
             // in their entirety.
             if (SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, min_conf_theirs, max_ancestors-1, max_descendants-1, true /* include_partial_groups */),
                                    vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used, nVersion)) {
+                return true;
+            }
+            // Try with unsafe inputs if they are allowed. This may spend unconfirmed outputs
+            // received from other wallets.
+            if (coin_control.m_include_unsafe_inputs
+                && SelectCoinsMinConf(value_to_select,
+                    CoinEligibilityFilter(0 /* conf_mine */, 0 /* conf_theirs */, max_ancestors-1, max_descendants-1, true /* include_partial_groups */),
+                    vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) {
                 return true;
             }
             // Try with unlimited ancestors/descendants. The transaction will still need to meet
@@ -3302,7 +3309,7 @@ bool CWallet::CreateTransactionInternal(
         {
             std::vector<COutput> vAvailableCoins;
             // SYSCOIN
-            AvailableCoins(vAvailableCoins, true, &coin_control, 1, MAX_MONEY, MAX_MONEY, 1, MAX_ASSET, MAX_ASSET, 0, false, nValueToSelectAsset, nVersion);
+            AvailableCoins(vAvailableCoins, !coin_control.m_include_unsafe_inputs, &coin_control, 1, MAX_MONEY, MAX_MONEY, 1, MAX_ASSET, MAX_ASSET, 0, false, nValueToSelectAsset, nVersion);
             CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
             coin_selection_params.m_avoid_partial_spends = coin_control.m_avoid_partial_spends;
 

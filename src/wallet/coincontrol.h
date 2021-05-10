@@ -28,6 +28,8 @@ public:
     std::optional<OutputType> m_change_type;
     //! If false, only selected inputs are used
     bool m_add_inputs = true;
+    //! If false, only safe inputs will be used
+    bool m_include_unsafe_inputs = false;
     //! If false, allows unselected inputs, but requires all selected inputs be used
     bool fAllowOtherInputs = false;
     //! Includes watch only addresses which are solvable
