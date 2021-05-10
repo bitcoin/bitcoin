@@ -2618,11 +2618,6 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         // explicitly shuffling the outputs before processing
         Shuffle(vCoins.begin(), vCoins.end(), FastRandomContext());
     }
-    // SYSCOIN
-    int min_conf_theirs = 1;
-    // if spending asset allow to spend with 0 conf
-    if(value_to_select_asset.nValue > 0)
-        min_conf_theirs = 0;
     // Coin Selection attempts to select inputs from a pool of eligible UTXOs to fund the
     // transaction at a target feerate. If an attempt fails, more attempts may be made using a more
     // permissive CoinEligibilityFilter.
@@ -2638,35 +2633,35 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         // Fall back to using zero confirmation change (but with as few ancestors in the mempool as
         // possible) if we cannot fund the transaction otherwise.
         if (m_spend_zero_conf_change) {
-            if (SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, min_conf_theirs, 2), vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used, nVersion)) return true;
-            if (SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, min_conf_theirs, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)),
+            if (SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, 1, 2), vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used, nVersion)) return true;
+            if (SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, 1, std::min((size_t)4, max_ancestors/3), std::min((size_t)4, max_descendants/3)),
                                    vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used, nVersion)) {
                 return true;
             }
-            if (SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, min_conf_theirs, max_ancestors/2, max_descendants/2),
+            if (SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, 1, max_ancestors/2, max_descendants/2),
                                    vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used, nVersion)) {
                 return true;
             }
             // If partial groups are allowed, relax the requirement of spending OutputGroups (groups
             // of UTXOs sent to the same address, which are obviously controlled by a single wallet)
             // in their entirety.
-            if (SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, min_conf_theirs, max_ancestors-1, max_descendants-1, true /* include_partial_groups */),
+            if (SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(0, 1, max_ancestors-1, max_descendants-1, true /* include_partial_groups */),
                                    vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used, nVersion)) {
                 return true;
             }
             // Try with unsafe inputs if they are allowed. This may spend unconfirmed outputs
             // received from other wallets.
             if (coin_control.m_include_unsafe_inputs
-                && SelectCoinsMinConf(value_to_select,
+                && SelectCoinsMinConf(value_to_select, value_to_select_asset,
                     CoinEligibilityFilter(0 /* conf_mine */, 0 /* conf_theirs */, max_ancestors-1, max_descendants-1, true /* include_partial_groups */),
-                    vCoins, setCoinsRet, nValueRet, coin_selection_params, bnb_used)) {
+                    vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used, nVersion)) {
                 return true;
             }
             // Try with unlimited ancestors/descendants. The transaction will still need to meet
             // mempool ancestor/descendant policy to be accepted to mempool and broadcasted, but
             // OutputGroups use heuristics that may overestimate ancestor/descendant counts.
             if (!fRejectLongChains && SelectCoinsMinConf(value_to_select, value_to_select_asset,
-                                      CoinEligibilityFilter(0, min_conf_theirs, std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max(), true /* include_partial_groups */),
+                                      CoinEligibilityFilter(0, 1, std::numeric_limits<uint64_t>::max(), std::numeric_limits<uint64_t>::max(), true /* include_partial_groups */),
                                       vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used, nVersion)) {
                 return true;
             }

@@ -364,6 +364,7 @@ static RPCHelpMan syscoinburntoassetallocation()
     vecSend.push_back(burn);
     vecSend.push_back(recp);
     CCoinControl coin_control;
+    coin_control.m_include_unsafe_inputs = true;
     coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
     int nChangePosRet = -1;
     bilingual_str error;
@@ -1248,6 +1249,7 @@ static RPCHelpMan assetallocationsendmany()
     LOCK(pwallet->cs_wallet);
     EnsureWalletIsUnlocked(*pwallet);
     CCoinControl coin_control;
+    coin_control.m_include_unsafe_inputs = true;
 	// gather & validate inputs
 	UniValue valueTo = params[0];
 	if (!valueTo.isArray())
@@ -1584,6 +1586,7 @@ static RPCHelpMan assetallocationburn()
     bilingual_str error;
     mtx.nVersion = nVersionIn;
     CCoinControl coin_control;
+    coin_control.m_include_unsafe_inputs = true;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
     coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
@@ -1774,6 +1777,7 @@ static RPCHelpMan assetallocationmint()
     bilingual_str error;
     int nChangePosRet = -1;
     CCoinControl coin_control;
+    coin_control.m_include_unsafe_inputs = true;
     coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
     bool lockUnspents = false;
     std::set<int> setSubtractFeeFromOutputs;
