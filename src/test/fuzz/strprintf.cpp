@@ -49,67 +49,6 @@ FUZZ_TARGET(str_printf)
     // Upstream bug report: https://github.com/c42f/tinyformat/issues/70
 
     try {
-        (void)strprintf(format_string, (signed char*)nullptr);
-        (void)tinyformat::format(bilingual_string, (signed char*)nullptr);
-    } catch (const tinyformat::format_error&) {
-    }
-    try {
-        (void)strprintf(format_string, (unsigned char*)nullptr);
-        (void)tinyformat::format(bilingual_string, (unsigned char*)nullptr);
-    } catch (const tinyformat::format_error&) {
-    }
-    try {
-        (void)strprintf(format_string, (void*)nullptr);
-        (void)tinyformat::format(bilingual_string, (void*)nullptr);
-    } catch (const tinyformat::format_error&) {
-    }
-    try {
-        (void)strprintf(format_string, (bool*)nullptr);
-        (void)tinyformat::format(bilingual_string, (bool*)nullptr);
-    } catch (const tinyformat::format_error&) {
-    }
-    try {
-        (void)strprintf(format_string, (float*)nullptr);
-        (void)tinyformat::format(bilingual_string, (float*)nullptr);
-    } catch (const tinyformat::format_error&) {
-    }
-    try {
-        (void)strprintf(format_string, (double*)nullptr);
-        (void)tinyformat::format(bilingual_string, (double*)nullptr);
-    } catch (const tinyformat::format_error&) {
-    }
-    try {
-        (void)strprintf(format_string, (int16_t*)nullptr);
-        (void)tinyformat::format(bilingual_string, (int16_t*)nullptr);
-    } catch (const tinyformat::format_error&) {
-    }
-    try {
-        (void)strprintf(format_string, (uint16_t*)nullptr);
-        (void)tinyformat::format(bilingual_string, (uint16_t*)nullptr);
-    } catch (const tinyformat::format_error&) {
-    }
-    try {
-        (void)strprintf(format_string, (int32_t*)nullptr);
-        (void)tinyformat::format(bilingual_string, (int32_t*)nullptr);
-    } catch (const tinyformat::format_error&) {
-    }
-    try {
-        (void)strprintf(format_string, (uint32_t*)nullptr);
-        (void)tinyformat::format(bilingual_string, (uint32_t*)nullptr);
-    } catch (const tinyformat::format_error&) {
-    }
-    try {
-        (void)strprintf(format_string, (int64_t*)nullptr);
-        (void)tinyformat::format(bilingual_string, (int64_t*)nullptr);
-    } catch (const tinyformat::format_error&) {
-    }
-    try {
-        (void)strprintf(format_string, (uint64_t*)nullptr);
-        (void)tinyformat::format(bilingual_string, (uint64_t*)nullptr);
-    } catch (const tinyformat::format_error&) {
-    }
-
-    try {
         CallOneOf(
             fuzzed_data_provider,
             [&] {
