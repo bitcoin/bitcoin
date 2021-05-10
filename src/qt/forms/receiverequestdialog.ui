@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Request payment to ...</string>
+   <string>Request payment to …</string>
   </property>
   <layout class="QGridLayout" name="gridLayout" columnstretch="0,1">
    <property name="sizeConstraint">
@@ -65,7 +65,7 @@
    <item row="2" column="1" alignment="Qt::AlignTop">
     <widget class="QLabel" name="uri_content">
      <property name="text">
-      <string notr="true">syscoin:SYS1...</string>
+      <string notr="true">syscoin:SYS1…</string>
      </property>
      <property name="textFormat">
       <enum>Qt::RichText</enum>
@@ -97,7 +97,7 @@
    <item row="3" column="1" alignment="Qt::AlignTop">
     <widget class="QLabel" name="address_content">
      <property name="text">
-      <string notr="true">bc1...</string>
+      <string notr="true">bc1…</string>
      </property>
      <property name="textFormat">
       <enum>Qt::PlainText</enum>
@@ -257,7 +257,7 @@
      <item>
       <widget class="QPushButton" name="btnSaveAs">
        <property name="text">
-        <string>&amp;Save Image...</string>
+        <string>&amp;Save Image…</string>
        </property>
        <property name="autoDefault">
         <bool>false</bool>

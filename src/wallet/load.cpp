@@ -39,7 +39,7 @@ bool VerifyWallets(interfaces::Chain& chain)
 
     LogPrintf("Using wallet directory %s\n", GetWalletDir().string());
 
-    chain.initMessage(_("Verifying wallet(s)...").translated);
+    chain.initMessage(_("Verifying wallet(s)…").translated);
 
     // For backwards compatibility if an unnamed top level wallet exists in the
     // wallets directory, include it in the default list of wallets to load.

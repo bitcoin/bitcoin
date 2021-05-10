@@ -4401,7 +4401,7 @@ bool CChainState::LoadChainTip(const CChainParams& chainparams)
 
 CVerifyDB::CVerifyDB()
 {
-    uiInterface.ShowProgress(_("Verifying blocks...").translated, 0, false);
+    uiInterface.ShowProgress(_("Verifying blocks…").translated, 0, false);
 }
 
 CVerifyDB::~CVerifyDB()
@@ -4447,7 +4447,7 @@ bool CVerifyDB::VerifyDB(
             LogPrintf("[%d%%]...", percentageDone); /* Continued */
             reportDone = percentageDone/10;
         }
-        uiInterface.ShowProgress(_("Verifying blocks...").translated, percentageDone, false);
+        uiInterface.ShowProgress(_("Verifying blocks…").translated, percentageDone, false);
         if (pindex->nHeight <= chainstate.m_chain.Height()-nCheckDepth)
             break;
         if ((fPruneMode || is_snapshot_cs) && !(pindex->nStatus & BLOCK_HAVE_DATA)) {
@@ -4507,7 +4507,7 @@ bool CVerifyDB::VerifyDB(
                 LogPrintf("[%d%%]...", percentageDone); /* Continued */
                 reportDone = percentageDone/10;
             }
-            uiInterface.ShowProgress(_("Verifying blocks...").translated, percentageDone, false);
+            uiInterface.ShowProgress(_("Verifying blocks…").translated, percentageDone, false);
             pindex = chainstate.m_chain.Next(pindex);
             CBlock block;
             if (!ReadBlockFromDisk(block, pindex, chainparams.GetConsensus()))
@@ -4583,7 +4583,7 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     if (hashHeads.empty()) return true; // We're already in a consistent state.
     if (hashHeads.size() != 2) return error("ReplayBlocks(): unknown inconsistent state");
 
-    uiInterface.ShowProgress(_("Replaying blocks...").translated, 0, false);
+    uiInterface.ShowProgress(_("Replaying blocks…").translated, 0, false);
     LogPrintf("Replaying blocks\n");
 
     const CBlockIndex* pindexOld = nullptr;  // Old tip during the interrupted flush.
@@ -4639,7 +4639,8 @@ bool CChainState::ReplayBlocks(const CChainParams& params)
     for (int nHeight = nForkHeight + 1; nHeight <= pindexNew->nHeight; ++nHeight) {
         const CBlockIndex* pindex = pindexNew->GetAncestor(nHeight);
         LogPrintf("Rolling forward %s (%i)\n", pindex->GetBlockHash().ToString(), nHeight);
-        uiInterface.ShowProgress(_("Replaying blocks...").translated, (int) ((nHeight - nForkHeight) * 100.0 / (pindexNew->nHeight - nForkHeight)) , false);
+        // SYSCOIN
+        uiInterface.ShowProgress(_("Replaying blocks…").translated, (int) ((nHeight - nForkHeight) * 100.0 / (pindexNew->nHeight - nForkHeight)) , false);
         if (!RollforwardBlock(pindex, cache, params, mapAssets, mapMintKeys, vecTXIDPairs)) return false;
     }
 
