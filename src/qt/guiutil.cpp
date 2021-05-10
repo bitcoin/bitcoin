@@ -1752,7 +1752,7 @@ QString formatServicesStr(quint64 mask)
     }
 
     if (strList.size())
-        return strList.join(" & ");
+        return strList.join(", ");
     else
         return QObject::tr("None");
 }
