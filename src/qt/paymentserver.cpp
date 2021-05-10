@@ -232,7 +232,10 @@ void PaymentServer::handleURIOrFile(const QString& s)
             SendCoinsRecipient recipient;
             if (GUIUtil::parseSyscoinURI(s, &recipient))
             {
-                if (!IsValidDestinationString(recipient.address.toStdString())) {
+                std::string error_msg;
+                const CTxDestination dest = DecodeDestination(recipient.address.toStdString(), error_msg);
+
+                if (!IsValidDestination(dest)) {
                     if (uri.hasQueryItem("r")) {  // payment request
                         Q_EMIT message(tr("URI handling"),
                             tr("Cannot process payment request because BIP70 is not supported.\n"
@@ -240,7 +243,7 @@ void PaymentServer::handleURIOrFile(const QString& s)
                                "If you are receiving this error you should request the merchant provide a BIP21 compatible URI."),
                             CClientUIInterface::ICON_WARNING);
                     }
-                    Q_EMIT message(tr("URI handling"), tr("Invalid payment address %1").arg(recipient.address),
+                    Q_EMIT message(tr("URI handling"), QString::fromStdString(error_msg),
                         CClientUIInterface::MSG_ERROR);
                 }
                 else
