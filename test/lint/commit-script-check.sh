@@ -12,7 +12,7 @@
 # one. Any remaining diff signals an error.
 
 export LC_ALL=C
-if test -z "$1"; then
+if test -z $1; then
     echo "Usage: $0 <commit>..."
     exit 1
 fi
