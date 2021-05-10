@@ -600,7 +600,7 @@ void SyscoinGUI::createToolBars()
 
         m_wallet_selector = new QComboBox();
         m_wallet_selector->setSizeAdjustPolicy(QComboBox::AdjustToContents);
-        connect(m_wallet_selector, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, &SyscoinGUI::setCurrentWalletBySelectorIndex);
+        connect(m_wallet_selector, qOverload<int>(&QComboBox::currentIndexChanged), this, &SyscoinGUI::setCurrentWalletBySelectorIndex);
 
         m_wallet_selector_label = new QLabel();
         m_wallet_selector_label->setText(tr("Wallet:") + " ");
