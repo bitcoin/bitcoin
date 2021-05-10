@@ -70,7 +70,7 @@ if test -z "$enable_zmq" && test -n "@no_zmq@"; then
   enable_zmq=no
 fi
 
-if test "x@host_os@" = xdarwin; then
+if test "@host_os@" = darwin; then
   BREW=no
   PORT=no
 fi
