@@ -143,16 +143,15 @@ std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags)
 
 void ScriptToUniv(const CScript& script, UniValue& out)
 {
-    ScriptPubKeyToUniv(script, out, /* fIncludeHex */ true, /* include_address */ false);
+    ScriptPubKeyToUniv(script, out, /* include_hex */ true, /* include_address */ false);
 }
 
-void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex, bool include_address)
+void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool include_hex, bool include_address)
 {
     CTxDestination address;
 
     out.pushKV("asm", ScriptToAsmStr(scriptPubKey));
-    if (fIncludeHex)
-        out.pushKV("hex", HexStr(scriptPubKey));
+    if (include_hex) out.pushKV("hex", HexStr(scriptPubKey));
 
     std::vector<std::vector<unsigned char>> solns;
     const TxoutType type{Solver(scriptPubKey, solns)};

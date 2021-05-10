@@ -44,7 +44,7 @@ UniValue ValueFromAmount(const CAmount amount);
 std::string FormatScript(const CScript& script);
 std::string EncodeHexTx(const CTransaction& tx, const int serializeFlags = 0);
 std::string SighashToStr(unsigned char sighash_type);
-void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool fIncludeHex, bool include_address = true);
+void ScriptPubKeyToUniv(const CScript& scriptPubKey, UniValue& out, bool include_hex, bool include_address = true);
 void ScriptToUniv(const CScript& script, UniValue& out);
 void TxToUniv(const CTransaction& tx, const uint256& hashBlock, UniValue& entry, bool include_hex = true, int serialize_flags = 0, const CTxUndo* txundo = nullptr);
 

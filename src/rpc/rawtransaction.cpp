@@ -572,7 +572,7 @@ static RPCHelpMan decodescript()
     } else {
         // Empty scripts are valid
     }
-    ScriptPubKeyToUniv(script, r, /* fIncludeHex */ false);
+    ScriptPubKeyToUniv(script, r, /* include_hex */ false);
 
     UniValue type;
     type = find_value(r, "type");
@@ -606,7 +606,7 @@ static RPCHelpMan decodescript()
                 // Newer segwit program versions should be considered when then become available.
                 segwitScr = GetScriptForDestination(WitnessV0ScriptHash(script));
             }
-            ScriptPubKeyToUniv(segwitScr, sr, /* fIncludeHex */ true);
+            ScriptPubKeyToUniv(segwitScr, sr, /* include_hex */ true);
             sr.pushKV("p2sh-segwit", EncodeDestination(ScriptHash(segwitScr)));
             r.pushKV("segwit", sr);
         }
@@ -1161,7 +1161,7 @@ static RPCHelpMan decodepsbt()
             txout = input.witness_utxo;
 
             UniValue o(UniValue::VOBJ);
-            ScriptPubKeyToUniv(txout.scriptPubKey, o, /* fIncludeHex */ true);
+            ScriptPubKeyToUniv(txout.scriptPubKey, o, /* include_hex */ true);
 
             UniValue out(UniValue::VOBJ);
             out.pushKV("amount", ValueFromAmount(txout.nValue));
