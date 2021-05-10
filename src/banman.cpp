@@ -15,7 +15,7 @@
 BanMan::BanMan(fs::path ban_file, CClientUIInterface* client_interface, int64_t default_ban_time)
     : m_client_interface(client_interface), m_ban_db(std::move(ban_file)), m_default_ban_time(default_ban_time)
 {
-    if (m_client_interface) m_client_interface->InitMessage(_("Loading banlist...").translated);
+    if (m_client_interface) m_client_interface->InitMessage(_("Loading banlist…").translated);
 
     int64_t n_start = GetTimeMillis();
     m_is_dirty = false;
