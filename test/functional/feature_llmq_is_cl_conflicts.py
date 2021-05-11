@@ -69,7 +69,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         self.test_chainlock_overrides_islock(False)
         self.test_chainlock_overrides_islock(True, False)
         self.test_chainlock_overrides_islock(True, True)
-        self.test_islock_overrides_nonchainlock()
+        self.test_chainlock_overrides_islock_overrides_nonchainlock()
 
     def test_chainlock_overrides_islock(self, test_block_conflict, mine_confllicting=False):
         if not test_block_conflict:
@@ -189,7 +189,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
                 assert rawtx['instantlock']
                 assert not rawtx['instantlock_internal']
 
-    def test_islock_overrides_nonchainlock(self):
+    def test_chainlock_overrides_islock_overrides_nonchainlock(self):
         # create two raw TXs, they will conflict with each other
         rawtx1 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)['hex']
         rawtx2 = self.create_raw_tx(self.nodes[0], self.nodes[0], 1, 1, 100)['hex']
@@ -200,11 +200,8 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         # Create an ISLOCK but don't broadcast it yet
         islock = self.create_islock(rawtx2)
 
-        # Stop enough MNs so that ChainLocks don't work anymore
-        for i in range(2):
-            self.stop_node(len(self.nodes) - 1)
-            self.nodes.pop(len(self.nodes) - 1)
-            self.mninfo.pop(len(self.mninfo) - 1)
+        # Disable ChainLocks to avoid accidential locking
+        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 4070908800)
 
         # Send tx1, which will later conflict with the ISLOCK
         self.nodes[0].sendrawtransaction(rawtx1)
@@ -220,6 +217,13 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         # Assert that the conflicting tx got mined and the locked TX is not valid
         assert(self.nodes[0].getrawtransaction(rawtx1_txid, True)['confirmations'] > 0)
         assert_raises_rpc_error(-25, "Missing inputs", self.nodes[0].sendrawtransaction, rawtx2)
+
+        # Create the block and the corresponding clsig but do not relay clsig yet
+        cl_block = self.create_block(self.nodes[0])
+        cl = self.create_chainlock(self.nodes[0].getblockcount() + 1, cl_block)
+        self.nodes[0].submitblock(ToHex(cl_block))
+        self.sync_all()
+        assert self.nodes[0].getbestblockhash() == cl_block.hash
 
         # Send the ISLOCK, which should result in the last 2 blocks to be invalidated, even though the nodes don't know
         # the locked transaction yet
@@ -240,6 +244,13 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
         assert(self.nodes[1].getrawtransaction(rawtx2_txid, True)['instantlock'])
         assert(self.nodes[0].getbestblockhash() != good_tip)
         assert(self.nodes[1].getbestblockhash() != good_tip)
+
+        # Check that the CL-ed block overrides the one with islocks
+        self.nodes[0].spork("SPORK_19_CHAINLOCKS_ENABLED", 0)  # Re-enable ChainLocks to accept clsig
+        self.test_node.send_clsig(cl)  # relay clsig ASAP to prevent nodes from locking islock-ed tip
+        self.wait_for_sporks_same()
+        for node in self.nodes:
+            self.wait_for_chainlocked_block(node, cl_block.hash)
 
     def create_block(self, node, vtx=[]):
         bt = node.getblocktemplate()
