@@ -185,13 +185,14 @@ void SyncWithValidationInterfaceQueue()
 #define LOG_EVENT(fmt, ...) \
     LogPrint(BCLog::VALIDATION, fmt "\n", __VA_ARGS__)
 
-void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
+void CMainSignals::UpdatedBlockTip(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
+{
     // Dependencies exist that require UpdatedBlockTip events to be delivered in the order in which
     // the chain actually updates. One way to ensure this is for the caller to invoke this signal
     // in the same critical section where the chain is updated
 
-    auto event = [pindexNew, pindexFork, fInitialDownload, this] {
-        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload); });
+    auto event = [block, pindexNew, pindexFork, fInitialDownload, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.UpdatedBlockTip(block, pindexNew, pindexFork, fInitialDownload); });
     };
     ENQUEUE_AND_LOG_EVENT(event, "%s: new block hash=%s fork block hash=%s (in IBD=%s)", __func__,
                           pindexNew->GetBlockHash().ToString(),

@@ -235,7 +235,7 @@ public:
     /** Overridden from CValidationInterface. */
     void BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindexConnected) override;
     void BlockDisconnected(const std::shared_ptr<const CBlock> &block, const CBlockIndex* pindex) override;
-    void UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) override;
+    void UpdatedBlockTip(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload) override;
     void BlockChecked(const CBlock& block, const BlockValidationState& state) override;
     void NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock>& pblock) override;
 
@@ -1403,7 +1403,7 @@ void PeerManagerImpl::NewPoWValidBlock(const CBlockIndex *pindex, const std::sha
  * Update our best height and announce any block hashes which weren't previously
  * in m_chainman.ActiveChain() to our peers.
  */
-void PeerManagerImpl::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
+void PeerManagerImpl::UpdatedBlockTip(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload)
 {
     SetBestHeight(pindexNew->nHeight);
     SetServiceFlagsIBDCache(!fInitialDownload);

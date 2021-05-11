@@ -360,7 +360,7 @@ public:
     {
         m_notifications->blockDisconnected(*block, index->nHeight);
     }
-    void UpdatedBlockTip(const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
+    void UpdatedBlockTip(const std::shared_ptr<const CBlock>& block, const CBlockIndex* index, const CBlockIndex* fork_index, bool is_ibd) override
     {
         m_notifications->updatedBlockTip();
     }
