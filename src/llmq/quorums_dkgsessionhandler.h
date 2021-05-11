@@ -112,7 +112,6 @@ private:
 
     QuorumPhase phase GUARDED_BY(cs) {QuorumPhase_Idle};
     int currentHeight GUARDED_BY(cs) {-1};
-    int quorumHeight GUARDED_BY(cs) {-1};
     uint256 quorumHash GUARDED_BY(cs);
 
     std::shared_ptr<CDKGSession> curSession;
