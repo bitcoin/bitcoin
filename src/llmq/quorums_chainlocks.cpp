@@ -340,7 +340,6 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
     if(bReturn) {
         return;
     }
-    CInv clsigInv(MSG_CLSIG, hash);
     CBlockIndex* pindexSig{nullptr};
     CBlockIndex* pindexScan{nullptr};
     {
@@ -375,82 +374,84 @@ void CChainLocksHandler::ProcessNewChainLock(const NodeId from, llmq::CChainLock
     const auto& llmqType = consensus.llmqTypeChainLocks;
     const auto& llmqParams = consensus.llmqs.at(llmqType);
     const auto& signingActiveQuorumCount = llmqParams.signingActiveQuorumCount;
-        size_t signers_count = std::count(clsig.signers.begin(), clsig.signers.end(), true);
-        if (from != -1 && (clsig.signers.empty() || signers_count == 0)) {
-            LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid signers count (%d) for CLSIG (%s), peer=%d\n", __func__, signers_count, clsig.ToString(), from);
-            peerman.Misbehaving(from, 10, "invalid CLSIG");
+    size_t signers_count = std::count(clsig.signers.begin(), clsig.signers.end(), true);
+    if (from != -1 && (clsig.signers.empty() || signers_count == 0)) {
+        LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid signers count (%d) for CLSIG (%s), peer=%d\n", __func__, signers_count, clsig.ToString(), from);
+        peerman.Misbehaving(from, 10, "invalid CLSIG");
+        return;
+    }
+    if (from == -1 || signers_count == 1) {
+        // A part of a multi-quorum CLSIG signed by a single quorum
+        std::pair<int, CQuorumCPtr> ret;
+        clsig.signers.resize(signingActiveQuorumCount, false);
+        if (!VerifyChainLockShare(clsig, pindexScan, idIn, ret)) {
+            LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
+            if (from != -1) {
+                peerman.Misbehaving(from, 10, "invalid CLSIG");
+            }
             return;
         }
-        if (from == -1 || signers_count == 1) {
-            // A part of a multi-quorum CLSIG signed by a single quorum
-            std::pair<int, CQuorumCPtr> ret;
-            clsig.signers.resize(signingActiveQuorumCount, false);
-            if (!VerifyChainLockShare(clsig, pindexScan, idIn, ret)) {
-                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
-                if (from != -1) {
-                    peerman.Misbehaving(from, 10, "invalid CLSIG");
-                }
+        CInv clsigAggInv;
+        {
+            LOCK(cs);
+            clsig.signers[ret.first] = true;
+            if (std::count(clsig.signers.begin(), clsig.signers.end(), true) > 1) {
+                // this should never happen
+                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- ERROR in VerifyChainLockShare, CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
                 return;
             }
-            CInv clsigAggInv;
-            {
-                LOCK(cs);
-                clsig.signers[ret.first] = true;
-                if (std::count(clsig.signers.begin(), clsig.signers.end(), true) > 1) {
-                    // this should never happen
-                    LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- ERROR in VerifyChainLockShare, CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
-                    return;
-                }
-                auto it = bestChainLockShares.find(clsig.nHeight);
-                if (it == bestChainLockShares.end()) {
-                    bestChainLockShares[clsig.nHeight].try_emplace(ret.second, std::make_shared<const CChainLockSig>(clsig));
-                } else {
-                    it->second.try_emplace(ret.second, std::make_shared<const CChainLockSig>(clsig));
-                }
-                mostRecentChainLockShare = clsig;
-                if (TryUpdateBestChainLock(pindexSig)) {
-                    clsigAggInv = CInv(MSG_CLSIG, ::SerializeHash(bestChainLockWithKnownBlock));
-                }
-            }
-            // Note: do not hold cs while calling RelayInv
-            AssertLockNotHeld(cs);
-            if (clsigAggInv.type == MSG_CLSIG) {
-                // We just created an aggregated CLSIG, relay it
-                connman.RelayOtherInv(clsigAggInv);
+            auto it = bestChainLockShares.find(clsig.nHeight);
+            if (it == bestChainLockShares.end()) {
+                bestChainLockShares[clsig.nHeight].try_emplace(ret.second, std::make_shared<const CChainLockSig>(clsig));
             } else {
-                // Relay partial CLSIGs to full nodes only, SPV wallets should wait for the aggregated CLSIG.
-                connman.ForEachNode([&](CNode* pnode) {
-                    bool fSPV{false};
-                    if(pnode->m_tx_relay != nullptr) {
-                        LOCK(pnode->m_tx_relay->cs_filter);
-                        fSPV = pnode->m_tx_relay->pfilter != nullptr;
-                    }
-                    if (!fSPV && pnode->CanRelay()) {
-                        pnode->PushOtherInventory(clsigInv);
-                    }
-                });
-                // Try signing the tip ourselves
-                TrySignChainTip();
+                it->second.try_emplace(ret.second, std::make_shared<const CChainLockSig>(clsig));
             }
-        } else {
-            // An aggregated CLSIG
-            if (!VerifyAggregatedChainLock(clsig, pindexScan)) {
-                LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
-                if (from != -1) {
-                    peerman.Misbehaving(from, 10, "invalid CLSIG");
-                }
-                return;
+            mostRecentChainLockShare = clsig;
+            if (TryUpdateBestChainLock(pindexSig)) {
+                clsigAggInv = CInv(MSG_CLSIG, ::SerializeHash(bestChainLockWithKnownBlock));
             }
-            {
-                LOCK(cs);
-                bestChainLockCandidates[clsig.nHeight] = std::make_shared<const CChainLockSig>(clsig);
-                mostRecentChainLockShare = clsig;
-                TryUpdateBestChainLock(pindexSig);
-            }
-            // Note: do not hold cs while calling RelayInv
-            AssertLockNotHeld(cs);
-            connman.RelayOtherInv(clsigInv);
         }
+        // Note: do not hold cs while calling RelayInv
+        AssertLockNotHeld(cs);
+        if (clsigAggInv.type == MSG_CLSIG) {
+            // We just created an aggregated CLSIG, relay it
+            connman.RelayOtherInv(clsigAggInv);
+        } else {
+            CInv clsigInv(MSG_CLSIG, ::SerializeHash(clsig));
+            // Relay partial CLSIGs to full nodes only, SPV wallets should wait for the aggregated CLSIG.
+            connman.ForEachNode([&](CNode* pnode) {
+                bool fSPV{false};
+                if(pnode->m_tx_relay != nullptr) {
+                    LOCK(pnode->m_tx_relay->cs_filter);
+                    fSPV = pnode->m_tx_relay->pfilter != nullptr;
+                }
+                if (!fSPV && pnode->CanRelay()) {
+                    pnode->PushOtherInventory(clsigInv);
+                }
+            });
+            // Try signing the tip ourselves
+            TrySignChainTip();
+        }
+    } else {
+        CInv clsigInv(MSG_CLSIG, hash);
+        // An aggregated CLSIG
+        if (!VerifyAggregatedChainLock(clsig, pindexScan)) {
+            LogPrint(BCLog::CHAINLOCKS, "CChainLocksHandler::%s -- invalid CLSIG (%s), peer=%d\n", __func__, clsig.ToString(), from);
+            if (from != -1) {
+                peerman.Misbehaving(from, 10, "invalid CLSIG");
+            }
+            return;
+        }
+        {
+            LOCK(cs);
+            bestChainLockCandidates[clsig.nHeight] = std::make_shared<const CChainLockSig>(clsig);
+            mostRecentChainLockShare = clsig;
+            TryUpdateBestChainLock(pindexSig);
+        }
+        // Note: do not hold cs while calling RelayInv
+        AssertLockNotHeld(cs);
+        connman.RelayOtherInv(clsigInv);
+    }
     
     if (pindexSig == nullptr) {
         // we don't know the block/header for this CLSIG yet, so bail out for now
