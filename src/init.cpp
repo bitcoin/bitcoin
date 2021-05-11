@@ -20,6 +20,7 @@
 #include <compat/sanity.h>
 #include <consensus/validation.h>
 #include <fs.h>
+#include <hash.h>
 #include <httpserver.h>
 #include <httprpc.h>
 #include <key.h>
@@ -43,6 +44,7 @@
 #include <torcontrol.h>
 #include <ui_interface.h>
 #include <util.h>
+#include <utilasmap.h>
 #include <utilmoneystr.h>
 #include <validationinterface.h>
 
@@ -136,6 +138,8 @@ static CDSNotificationInterface* pdsNotificationInterface = nullptr;
 #endif
 
 static const char* FEE_ESTIMATES_FILENAME="fee_estimates.dat";
+
+static const char* DEFAULT_ASMAP_FILENAME="ip_asn.map";
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -539,6 +543,7 @@ void SetupServerArgs()
     gArgs.AddArg("-timeout=<n>", strprintf("Specify connection timeout in milliseconds (minimum: 1, default: %d)", DEFAULT_CONNECT_TIMEOUT), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-torcontrol=<ip>:<port>", strprintf("Tor control port to use if onion listening enabled (default: %s)", DEFAULT_TOR_CONTROL), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-torpassword=<pass>", "Tor control port password (default: empty)", false, OptionsCategory::CONNECTION);
+    gArgs.AddArg("-asmap=<file>", "Specify asn mapping used for bucketing of the peers. Path should be relative to the -datadir path.", false, OptionsCategory::CONNECTION);
 #ifdef USE_UPNP
 #if USE_UPNP
     gArgs.AddArg("-upnp", "Use UPnP to map the listening port (default: 1 when listening and no -proxy)", false, OptionsCategory::CONNECTION);
@@ -2451,6 +2456,25 @@ bool AppInitMain()
 
     if (!connman.Start(scheduler, connOptions)) {
         return false;
+    }
+
+    // Read asmap file if configured
+    if (gArgs.IsArgSet("-asmap")) {
+        std::string asmap_file = gArgs.GetArg("-asmap", "");
+        if (asmap_file.empty()) {
+            asmap_file = DEFAULT_ASMAP_FILENAME;
+        }
+        const fs::path asmap_path = GetDataDir() / asmap_file;
+        std::vector<bool> asmap = CAddrMan::DecodeAsmap(asmap_path);
+        if (asmap.size() == 0) {
+            InitError(strprintf(_("Could not find or parse specified asmap: '%s'"), asmap_path));
+            return false;
+        }
+        g_connman->SetAsmap(asmap);
+        const uint256 asmap_version = SerializeHash(asmap);
+        LogPrintf("Using asmap version %s for IP bucketing.\n", asmap_version.ToString());
+    } else {
+        LogPrintf("Using /16 prefix for IP bucketing.\n");
     }
 
     // ********************************************************* Step 13: finished
