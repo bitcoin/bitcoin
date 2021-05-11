@@ -84,7 +84,7 @@ void Finish(FuzzedDataProvider& fuzzed_data_provider, MockedTxPool& tx_pool, con
     {
         BlockAssembler::Options options;
         options.nBlockMaxSize = fuzzed_data_provider.ConsumeIntegralInRange(0U, MaxBlockSize(true));
-        options.blockMinFeeRate = CFeeRate{ConsumeMoney(fuzzed_data_provider)};
+        options.blockMinFeeRate = CFeeRate{ConsumeMoney(fuzzed_data_provider, /* max */ COIN)};
 
         auto assembler = BlockAssembler{chainstate, node, *static_cast<CTxMemPool*>(&tx_pool), ::Params(), options};
         auto block_template = assembler.CreateNewBlock(CScript{} << OP_TRUE);
