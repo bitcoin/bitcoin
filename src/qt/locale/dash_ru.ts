@@ -247,8 +247,8 @@
         <translation>Кошелёк зашифрован</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>Сейчас %1 закроется для завершения процесса шифрования. Помните, что шифрование вашего кошелька не может полностью защитить ваши средства от кражи с помощью инфицирования вашего компьютера вредоносным ПО.</translation>
+        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
+        <translation>Ваш кошелек теперь зашифрован. Помните, что шифрование вашего кошелька не может полностью защитить ваши средства от кражи с помощью инфицирования вашего компьютера вредоносным ПО.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
@@ -550,6 +550,10 @@
     <message>
         <source>Show the %1 help message to get a list with possible Dash command-line options</source>
         <translation>Показать справку по %1 со списком возможных параметров командной строки</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>кошелек по умолчанию</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -1341,6 +1345,22 @@
     <message>
         <source>&amp;Appearance</source>
         <translation>&amp;Внешний вид</translation>
+    </message>
+    <message>
+        <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
+        <translation>Отключает некоторые продвинутые функции, но блоки все еще будут проверяться. Отмена этой настройки потребует скачивания всех блоков заново. Реальное использование диска может быть несколько выше.</translation>
+    </message>
+    <message>
+        <source>Prune &amp;block storage to</source>
+        <translation>Ограничить &amp;хранение блоков до</translation>
+    </message>
+    <message>
+        <source>GB</source>
+        <translation>ГБ</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>Отмена этой настройки потребует скачивания всех блоков заново.</translation>
     </message>
     <message>
         <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
@@ -2518,6 +2538,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Unban</source>
         <translation>&amp;Разблокировать</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>кошелек по умолчанию</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
@@ -4301,6 +4325,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>Вам необходимо пересоздать базы данных, запустив клиент с ключом -reindex, чтобы вернуться в полный режим. Это приведет к повторному скачиванию всей цепи блоков.</translation>
     </message>
     <message>
+        <source>%s failed</source>
+        <translation>%s завершилось неудачно</translation>
+    </message>
+    <message>
         <source>-litemode is deprecated.</source>
         <translation>Опция -litemode устарела.</translation>
     </message>
@@ -4446,7 +4474,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>Pruning blockstore...</source>
-        <translation>Урезание хранилища блоков...</translation>
+        <translation>Удаление старых блоков...</translation>
     </message>
     <message>
         <source>Specified -walletdir "%s" does not exist</source>

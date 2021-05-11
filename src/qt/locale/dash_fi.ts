@@ -247,8 +247,8 @@
         <translation>Lompakko salattu</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>%1 sulkeutuu nyt salauksen viimeistelyä varten. Muista että salaus pelkästään ei voi estää varojesi varastamista jos koneesi saastuu haittaohjelmilla tai viruksilla.</translation>
+        <source>Your wallet is now encrypted. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
+        <translation>Lompakkosi on nyt salattu. Muista että salaus ei voi täysin suojata varojasi jo tietokoneesi saastuu haittaohjelmalla.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
@@ -550,6 +550,10 @@
     <message>
         <source>Show the %1 help message to get a list with possible Dash command-line options</source>
         <translation>Näytä %1 ohjelista komentorivin valinnoista</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>oletuslompakko</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -1341,6 +1345,22 @@
     <message>
         <source>&amp;Appearance</source>
         <translation>&amp;Ulkoasu</translation>
+    </message>
+    <message>
+        <source>Disables some advanced features but all blocks will still be fully validated. Reverting this setting requires re-downloading the entire blockchain. Actual disk usage may be somewhat higher.</source>
+        <translation>Poistaa käytöstä joitakin laajempia ominaisuuksia mutta silti kaikki lohkot vahvistetaan. Tämän asetuksen takaisin käyttöönottaminen edellyttää koko lohkoketjun uudelleen latausta. Levytilan tarve voi olla korkeampi.</translation>
+    </message>
+    <message>
+        <source>Prune &amp;block storage to</source>
+        <translation>Karsi &amp;lohko levytila</translation>
+    </message>
+    <message>
+        <source>GB</source>
+        <translation>GB</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain.</source>
+        <translation>Tämän asetuksen takaisin käyttöönottaminen edellyttää koko lohkoketjun uudelleen latausta.</translation>
     </message>
     <message>
         <source>Show additional tab listing all your masternodes in first sub-tab&lt;br/&gt;and all masternodes on the network in second sub-tab.</source>
@@ -2522,6 +2542,10 @@ Näillä toiminnoilla voit korjata korruptoituneen lohkoketjun tai puuttuvat/van
     <message>
         <source>&amp;Unban</source>
         <translation>&amp;Poista estolistalta</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>oletuslompakko</translation>
     </message>
     <message>
         <source>Welcome to the %1 RPC console.</source>
@@ -4304,6 +4328,10 @@ Vähennä uakommenttien määrää tai kokoa.</translation>
     <message>
         <source>You need to rebuild the database using -reindex to go back to unpruned mode.  This will redownload the entire blockchain</source>
         <translation>Sinun tulee uudelleen rakentaa tietokanta käyttäen -reindex palataksesi takaisin 'ei karsita' tilaan. Tämä aiheuttaa koko lohkoketjun uudelleen lataamisen</translation>
+    </message>
+    <message>
+        <source>%s failed</source>
+        <translation>%s epäonnistui</translation>
     </message>
     <message>
         <source>-litemode is deprecated.</source>

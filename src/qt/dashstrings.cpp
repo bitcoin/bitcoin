@@ -131,6 +131,7 @@ QT_TRANSLATE_NOOP("dash-core", ""
 QT_TRANSLATE_NOOP("dash-core", "%d of last 100 blocks have unexpected version"),
 QT_TRANSLATE_NOOP("dash-core", "%s can't be lower than %s"),
 QT_TRANSLATE_NOOP("dash-core", "%s corrupt, salvage failed"),
+QT_TRANSLATE_NOOP("dash-core", "%s failed"),
 QT_TRANSLATE_NOOP("dash-core", "%s is idle."),
 QT_TRANSLATE_NOOP("dash-core", "%s is not a valid backup folder!"),
 QT_TRANSLATE_NOOP("dash-core", "%s is set very high!"),
