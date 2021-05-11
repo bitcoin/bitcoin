@@ -111,7 +111,6 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
     const CBlockIndex* pindexQuorum = pindexNew->GetAncestor(pindexNew->nHeight - quorumStageInt);
 
     currentHeight = pindexNew->nHeight;
-    quorumHeight = pindexQuorum->nHeight;
     quorumHash = pindexQuorum->GetBlockHash();
 
     bool fNewPhase = (quorumStageInt % params.dkgPhaseBlocks) == 0;
@@ -121,8 +120,8 @@ void CDKGSessionHandler::UpdatedBlockTip(const CBlockIndex* pindexNew)
         phase = static_cast<QuorumPhase>(phaseInt);
     }
 
-    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionHandler::%s -- %s - currentHeight=%d, quorumHeight=%d, oldPhase=%d, newPhase=%d\n", __func__,
-            params.name, currentHeight, quorumHeight, oldPhase, phase);
+    LogPrint(BCLog::LLMQ_DKG, "CDKGSessionHandler::%s -- %s - currentHeight=%d, pindexQuorum->nHeight=%d, oldPhase=%d, newPhase=%d\n", __func__,
+            params.name, currentHeight, pindexQuorum->nHeight, oldPhase, phase);
 }
 
 void CDKGSessionHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv)
