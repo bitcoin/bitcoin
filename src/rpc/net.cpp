@@ -603,8 +603,8 @@ static RPCHelpMan getnetworkinfo()
                                 {RPCResult::Type::BOOL, "proxy_randomize_credentials", "Whether randomized credentials are used"},
                             }},
                         }},
-                        {RPCResult::Type::NUM, "relayfee", "minimum relay fee for transactions in " + CURRENCY_UNIT + "/kB"},
-                        {RPCResult::Type::NUM, "incrementalfee", "minimum fee increment for mempool limiting or BIP 125 replacement in " + CURRENCY_UNIT + "/kB"},
+                        {RPCResult::Type::NUM, "relayfee", "minimum relay fee rate for transactions in " + CURRENCY_UNIT + "/kvB"},
+                        {RPCResult::Type::NUM, "incrementalfee", "minimum fee rate increment for mempool limiting or BIP 125 replacement in " + CURRENCY_UNIT + "/kvB"},
                         {RPCResult::Type::ARR, "localaddresses", "list of local addresses",
                         {
                             {RPCResult::Type::OBJ, "", "",
