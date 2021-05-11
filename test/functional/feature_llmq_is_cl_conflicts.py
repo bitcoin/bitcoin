@@ -142,8 +142,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
             # The block should get accepted now, and at the same time prune the conflicting ISLOCKs
             assert(submit_result is None)
 
-        for node in self.nodes:
-            self.wait_for_chainlocked_block(node, block.hash)
+        self.wait_for_chainlocked_block_all_nodes(block.hash)
 
         # Create a chained TX on top of tx2
         inputs = []

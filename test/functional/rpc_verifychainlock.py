@@ -40,6 +40,7 @@ class RPCVerifyChainLockTest(DashTestFramework):
         assert node0.verifychainlock(block_hash, chainlock_signature, height)
         # Invalid "blockHash"
         assert not node0.verifychainlock(node0.getblockhash(0), chainlock_signature, height)
+        self.wait_for_chainlocked_block_all_nodes(block_hash)
         # Isolate node1, mine a block on node0 and wait for its ChainLock
         node1.setnetworkactive(False)
         node0.generate(1)
