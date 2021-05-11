@@ -159,7 +159,7 @@ static RPCHelpMan getpeerinfo()
                                                               "When a message type is not listed in this json object, the bytes sent are 0.\n"
                                                               "Only known message types can appear as keys in the object."}
                             }},
-                            {RPCResult::Type::OBJ, "bytesrecv_per_msg", "",
+                            {RPCResult::Type::OBJ_DYN, "bytesrecv_per_msg", "",
                             {
                                 {RPCResult::Type::NUM, "msg", "The total bytes received aggregated by message type\n"
                                                               "When a message type is not listed in this json object, the bytes received are 0.\n"
