@@ -51,8 +51,14 @@ public:
     {
         flags = static_cast<NetPermissionFlags>(flags | f);
     }
+    //! ClearFlag is only called with `f` == NetPermissionFlags::PF_ISIMPLICIT.
+    //! If that should change in the future, be aware that ClearFlag should not
+    //! be called with a subflag of a multiflag, e.g. NetPermissionFlags::PF_RELAY
+    //! or NetPermissionFlags::PF_DOWNLOAD, as that would leave `flags` in an
+    //! invalid state corresponding to none of the existing flags.
     static inline void ClearFlag(NetPermissionFlags& flags, NetPermissionFlags f)
     {
+        assert(f == NetPermissionFlags::PF_ISIMPLICIT);
         flags = static_cast<NetPermissionFlags>(flags & ~f);
     }
 };
