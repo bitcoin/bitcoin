@@ -18,6 +18,7 @@
 
 #include <cxxtimer.hpp>
 #include <banman.h>
+#include <util/thread.h>
 namespace llmq
 {
 
@@ -197,10 +198,8 @@ void CSigSharesManager::StartWorkerThread()
     if (workThread.joinable()) {
         assert(false);
     }
-
-    workThread = std::thread(&TraceThread<std::function<void()> >,
-        "sigshares",
-        std::function<void()>(std::bind(&CSigSharesManager::WorkThreadMain, this)));
+     
+    workThread = std::thread(&util::TraceThread, "sigshares", [this] { CSigSharesManager::WorkThreadMain(); });
 }
 
 void CSigSharesManager::StopWorkerThread()

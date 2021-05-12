@@ -16,6 +16,7 @@
 #include <spork.h>
 #include <validation.h>
 #include <shutdown.h>
+#include <util/thread.h>
 namespace llmq
 {
 
@@ -144,8 +145,7 @@ void CDKGSessionHandler::StartThread()
     if (phaseHandlerThread.joinable()) {
         throw std::runtime_error("Tried to start an already started CDKGSessionHandler thread.");
     }
-    
-    phaseHandlerThread = std::thread(&TraceThread<std::function<void()> >, GetName(), std::function<void()>(std::bind(&CDKGSessionHandler::PhaseHandlerThread, this)));
+    phaseHandlerThread = std::thread(&util::TraceThread, GetName(), [this] { CDKGSessionHandler::PhaseHandlerThread(); });
 }
 
 void CDKGSessionHandler::StopThread()
