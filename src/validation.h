@@ -579,7 +579,7 @@ public:
 
     //! The current chain of blockheaders we consult and build on.
     //! @see CChain, CBlockIndex.
-    CChain m_chain;
+    CChain m_chain GUARDED_BY(::cs_main);
 
     /**
      * The blockhash which is the base of the snapshot this chainstate was created from.
@@ -705,7 +705,7 @@ public:
     /** Ensures we have a genesis block in the block tree, possibly writing one to disk. */
     bool LoadGenesisBlock(const CChainParams& chainparams);
 
-    void PruneBlockIndexCandidates();
+    void PruneBlockIndexCandidates() EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     void UnloadBlockIndex();
 
@@ -792,6 +792,12 @@ private:
 class ChainstateManager
 {
 private:
+    //! Serializes access to the references of all chainstates being
+    //! managed by this object (m_ibd_chainstate, m_snapshot_chainstate).
+    //! Note that this does not manage m_active_chainstate, which is has
+    //! no need for a mutex due to its use of std::atomic.
+    mutable RecursiveMutex m_cs_chainstates;
+
     //! The chainstate used under normal operation (i.e. "regular" IBD) or, if
     //! a snapshot is in use, for background validation.
     //!
@@ -803,33 +809,18 @@ private:
     //!
     //! Once this pointer is set to a corresponding chainstate, it will not
     //! be reset until init.cpp:Shutdown().
-    //!
-    //! This is especially important when, e.g., calling ActivateBestChain()
-    //! on all chainstates because we are not able to hold ::cs_main going into
-    //! that call.
-    std::unique_ptr<CChainState> m_ibd_chainstate GUARDED_BY(::cs_main);
+    std::unique_ptr<CChainState> m_ibd_chainstate GUARDED_BY(m_cs_chainstates);
 
     //! A chainstate initialized on the basis of a UTXO snapshot. If this is
     //! non-null, it is always our active chainstate.
     //!
     //! Once this pointer is set to a corresponding chainstate, it will not
     //! be reset until init.cpp:Shutdown().
-    //!
-    //! This is especially important when, e.g., calling ActivateBestChain()
-    //! on all chainstates because we are not able to hold ::cs_main going into
-    //! that call.
-    std::unique_ptr<CChainState> m_snapshot_chainstate GUARDED_BY(::cs_main);
+    std::unique_ptr<CChainState> m_snapshot_chainstate GUARDED_BY(m_cs_chainstates);
 
     //! Points to either the ibd or snapshot chainstate; indicates our
     //! most-work chain.
-    //!
-    //! Once this pointer is set to a corresponding chainstate, it will not
-    //! be reset until init.cpp:Shutdown().
-    //!
-    //! This is especially important when, e.g., calling ActivateBestChain()
-    //! on all chainstates because we are not able to hold ::cs_main going into
-    //! that call.
-    CChainState* m_active_chainstate GUARDED_BY(::cs_main) {nullptr};
+    std::atomic<CChainState*> m_active_chainstate {nullptr};
 
     //! If true, the assumed-valid chainstate has been fully validated
     //! by the background validation chainstate.
@@ -861,6 +852,8 @@ public:
 
     //! Instantiate a new chainstate and assign it based upon whether it is
     //! from a snapshot.
+    //!
+    //! cs_main only required for access to m_blockman.
     //!
     //! @param[in] mempool              The mempool to pass to the chainstate
     //                                  constructor
@@ -971,7 +964,7 @@ public:
 };
 
 /** DEPRECATED! Please use node.chainman instead. May only be used in validation.cpp internally */
-extern ChainstateManager g_chainman GUARDED_BY(::cs_main);
+extern ChainstateManager g_chainman;
 
 /** Please prefer the identical ChainstateManager::ActiveChainstate */
 CChainState& ChainstateActive();

@@ -103,7 +103,6 @@ ChainstateManager g_chainman;
 
 CChainState& ChainstateActive()
 {
-    LOCK(::cs_main);
     assert(g_chainman.m_active_chainstate);
     return *g_chainman.m_active_chainstate;
 }
@@ -4663,18 +4662,17 @@ double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex *pin
 }
 
 std::optional<uint256> ChainstateManager::SnapshotBlockhash() const {
-    LOCK(::cs_main);
-    if (m_active_chainstate != nullptr &&
-            !m_active_chainstate->m_from_snapshot_blockhash.IsNull()) {
+    CChainState* active_cs = m_active_chainstate.load();
+    if (active_cs != nullptr && !active_cs->m_from_snapshot_blockhash.IsNull()) {
         // If a snapshot chainstate exists, it will always be our active.
-        return m_active_chainstate->m_from_snapshot_blockhash;
+        return active_cs->m_from_snapshot_blockhash;
     }
     return std::nullopt;
 }
 
 std::vector<CChainState*> ChainstateManager::GetAll()
 {
-    LOCK(::cs_main);
+    LOCK(m_cs_chainstates);
     std::vector<CChainState*> out;
 
     if (!IsSnapshotValidated() && m_ibd_chainstate) {
@@ -4690,6 +4688,7 @@ std::vector<CChainState*> ChainstateManager::GetAll()
 
 CChainState& ChainstateManager::InitializeChainstate(CTxMemPool& mempool, const uint256& snapshot_blockhash)
 {
+    LOCK(m_cs_chainstates);
     bool is_snapshot = !snapshot_blockhash.IsNull();
     std::unique_ptr<CChainState>& to_modify =
         is_snapshot ? m_snapshot_chainstate : m_ibd_chainstate;
@@ -4700,9 +4699,9 @@ CChainState& ChainstateManager::InitializeChainstate(CTxMemPool& mempool, const 
     to_modify.reset(new CChainState(mempool, m_blockman, snapshot_blockhash));
 
     // Snapshot chainstates and initial IBD chaintates always become active.
-    if (is_snapshot || (!is_snapshot && !m_active_chainstate)) {
+    if (is_snapshot || (!is_snapshot && !m_active_chainstate.load())) {
         LogPrintf("Switching active chainstate to %s\n", to_modify->ToString());
-        m_active_chainstate = to_modify.get();
+        m_active_chainstate.store(to_modify.get());
     } else {
         throw std::logic_error("unexpected chainstate activation");
     }
@@ -4787,13 +4786,14 @@ bool ChainstateManager::ActivateSnapshot(
     }
 
     {
-        LOCK(::cs_main);
+        LOCK2(::cs_main, m_cs_chainstates);
         assert(!m_snapshot_chainstate);
         m_snapshot_chainstate.swap(snapshot_chainstate);
+
         const bool chaintip_loaded = m_snapshot_chainstate->LoadChainTip(::Params());
         assert(chaintip_loaded);
 
-        m_active_chainstate = m_snapshot_chainstate.get();
+        m_active_chainstate.store(m_snapshot_chainstate.get());
 
         LogPrintf("[snapshot] successfully activated snapshot %s\n", base_blockhash.ToString());
         LogPrintf("[snapshot] (%.2f MB)\n",
@@ -4945,10 +4945,10 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
         return false;
     }
 
-    snapshot_chainstate.m_chain.SetTip(snapshot_start_block);
-
     // The remainder of this function requires modifying data protected by cs_main.
     LOCK(::cs_main);
+
+    snapshot_chainstate.m_chain.SetTip(snapshot_start_block);
 
     // Fake various pieces of CBlockIndex state:
     //
@@ -4985,20 +4985,20 @@ bool ChainstateManager::PopulateAndValidateSnapshot(
 
 CChainState& ChainstateManager::ActiveChainstate() const
 {
-    LOCK(::cs_main);
-    assert(m_active_chainstate);
-    return *m_active_chainstate;
+    CChainState* active_cs = m_active_chainstate.load();
+    assert(active_cs);
+    return *active_cs;
 }
 
 bool ChainstateManager::IsSnapshotActive() const
 {
-    LOCK(::cs_main);
-    return m_snapshot_chainstate && m_active_chainstate == m_snapshot_chainstate.get();
+    LOCK(m_cs_chainstates);
+    return m_snapshot_chainstate && m_active_chainstate.load() == m_snapshot_chainstate.get();
 }
 
 CChainState& ChainstateManager::ValidatedChainstate() const
 {
-    LOCK(::cs_main);
+    LOCK(m_cs_chainstates);
     if (m_snapshot_chainstate && IsSnapshotValidated()) {
         return *m_snapshot_chainstate.get();
     }
@@ -5008,7 +5008,7 @@ CChainState& ChainstateManager::ValidatedChainstate() const
 
 bool ChainstateManager::IsBackgroundIBD(CChainState* chainstate) const
 {
-    LOCK(::cs_main);
+    LOCK(m_cs_chainstates);
     return (m_snapshot_chainstate && chainstate == m_ibd_chainstate.get());
 }
 
@@ -5024,15 +5024,16 @@ void ChainstateManager::Unload()
 
 void ChainstateManager::Reset()
 {
-    LOCK(::cs_main);
+    LOCK2(::cs_main, m_cs_chainstates);
     m_ibd_chainstate.reset();
     m_snapshot_chainstate.reset();
-    m_active_chainstate = nullptr;
+    m_active_chainstate.store(nullptr);
     m_snapshot_validated = false;
 }
 
 void ChainstateManager::MaybeRebalanceCaches()
 {
+    LOCK(m_cs_chainstates);
     if (m_ibd_chainstate && !m_snapshot_chainstate) {
         LogPrintf("[snapshot] allocating all cache to the IBD chainstate\n");
         // Allocate everything to the IBD chainstate.
