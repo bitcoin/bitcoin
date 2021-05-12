@@ -152,10 +152,11 @@ task:
   << : *GLOBAL_TASK_TEMPLATE
   container:
     image: ubuntu:focal
-    cpu: 4  # Double CPU and Memory to avoid timeout
+    cpu: 4  # Increase CPU and memory to avoid timeout
     memory: 16G
   env:
     << : *CIRRUS_EPHEMERAL_WORKER_TEMPLATE_ENV
+    MAKEJOBS: "-j8"
     FILE_ENV: "./ci/test/00_setup_env_native_fuzz.sh"
 
 task:
