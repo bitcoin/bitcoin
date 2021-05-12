@@ -61,7 +61,7 @@ src/qt/bitcoin-qt.includes
 .dirstamp
 .libs
 .*.swp
-*.*~*
+*~
 *.bak
 *.rej
 *.orig
