@@ -553,7 +553,7 @@ public:
     //! CChainState instances.
     BlockManager& m_blockman;
 
-    explicit CChainState(CTxMemPool& mempool, BlockManager& blockman, uint256 from_snapshot_blockhash = uint256());
+    explicit CChainState(CTxMemPool& mempool, BlockManager& blockman, std::optional<uint256> from_snapshot_blockhash = std::nullopt);
 
     /**
      * Initialize the CoinsViews UTXO set database management data structures. The in-memory
@@ -584,9 +584,9 @@ public:
     /**
      * The blockhash which is the base of the snapshot this chainstate was created from.
      *
-     * IsNull() if this chainstate was not created from a snapshot.
+     * std::nullopt if this chainstate was not created from a snapshot.
      */
-    const uint256 m_from_snapshot_blockhash{};
+    const std::optional<uint256> m_from_snapshot_blockhash;
 
     /**
      * The set of all CBlockIndex entries with BLOCK_VALID_TRANSACTIONS (for itself and all ancestors) and
@@ -866,7 +866,7 @@ public:
     //                                  constructor
     //! @param[in] snapshot_blockhash   If given, signify that this chainstate
     //!                                 is based on a snapshot.
-    CChainState& InitializeChainstate(CTxMemPool& mempool, const uint256& snapshot_blockhash = uint256())
+    CChainState& InitializeChainstate(CTxMemPool& mempool, const std::optional<uint256>& snapshot_blockhash = std::nullopt)
         EXCLUSIVE_LOCKS_REQUIRED(::cs_main);
 
     //! Get all chainstates currently being used.
