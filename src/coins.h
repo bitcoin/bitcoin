@@ -19,8 +19,6 @@
 #include <functional>
 #include <unordered_map>
 
-class ChainstateManager;
-
 /**
  * A UTXO entry.
  *

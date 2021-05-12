@@ -226,10 +226,8 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
 
     // Snapshot should refuse to load at this height.
     BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(m_node, m_path_root));
-    BOOST_CHECK(chainman.ActiveChainstate().m_from_snapshot_blockhash.IsNull());
-    BOOST_CHECK_EQUAL(
-        chainman.ActiveChainstate().m_from_snapshot_blockhash,
-        chainman.SnapshotBlockhash().value_or(uint256()));
+    BOOST_CHECK(!chainman.ActiveChainstate().m_from_snapshot_blockhash);
+    BOOST_CHECK(!chainman.SnapshotBlockhash());
 
     // Mine 10 more blocks, putting at us height 110 where a valid assumeutxo value can
     // be found.
@@ -263,15 +261,20 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
     BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
         m_node, m_path_root, [](CAutoFile& auto_infile, SnapshotMetadata& metadata) {
             // Wrong hash
+            metadata.m_base_blockhash = uint256::ZEROV;
+    }));
+    BOOST_REQUIRE(!CreateAndActivateUTXOSnapshot(
+        m_node, m_path_root, [](CAutoFile& auto_infile, SnapshotMetadata& metadata) {
+            // Wrong hash
             metadata.m_base_blockhash = uint256::ONEV;
     }));
 
     BOOST_REQUIRE(CreateAndActivateUTXOSnapshot(m_node, m_path_root));
 
     // Ensure our active chain is the snapshot chainstate.
-    BOOST_CHECK(!chainman.ActiveChainstate().m_from_snapshot_blockhash.IsNull());
+    BOOST_CHECK(!chainman.ActiveChainstate().m_from_snapshot_blockhash->IsNull());
     BOOST_CHECK_EQUAL(
-        chainman.ActiveChainstate().m_from_snapshot_blockhash,
+        *chainman.ActiveChainstate().m_from_snapshot_blockhash,
         *chainman.SnapshotBlockhash());
 
     const AssumeutxoData& au_data = *ExpectedAssumeutxo(snapshot_height, ::Params());
@@ -347,7 +350,7 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_activate_snapshot, TestChain100Setup)
 
     // Snapshot blockhash should be unchanged.
     BOOST_CHECK_EQUAL(
-        chainman.ActiveChainstate().m_from_snapshot_blockhash,
+        *chainman.ActiveChainstate().m_from_snapshot_blockhash,
         loaded_snapshot_blockhash);
 }
 
