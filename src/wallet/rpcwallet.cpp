@@ -2670,6 +2670,16 @@ static RPCHelpMan setwalletflag()
 
     auto flag = WALLET_FLAG_MAP.at(flag_str);
 
+    if (flag == WALLET_FLAG_EXTERNAL_SIGNER) {
+#ifdef ENABLE_EXTERNAL_SIGNER
+        if (!pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS) || !pwallet->IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS)) {
+            throw JSONRPCError(RPC_WALLET_ERROR, "This flag can only be set on a watch-only descriptor wallet");
+        }
+#else
+        throw JSONRPCError(RPC_WALLET_ERROR, "Compiled without external signing support (required for external signing)");
+#endif
+    }
+
     if (!(flag & MUTABLE_WALLET_FLAGS)) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("Wallet flag is immutable: %s", flag_str));
     }
