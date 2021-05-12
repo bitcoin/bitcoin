@@ -73,6 +73,7 @@ class WalletSignerTest(BitcoinTestFramework):
         # self.clear_mock_result(self.nodes[1])
 
         assert_equal(hww.getwalletinfo()["keypoolsize"], 30)
+        assert_equal(hww.getwalletinfo()["external_signer"], True)
 
         address1 = hww.getnewaddress(address_type="bech32")
         assert_equal(address1, "bcrt1qm90ugl4d48jv8n6e5t9ln6t9zlpm5th68x4f8g")
