@@ -43,7 +43,7 @@ class NetPermissions
 public:
     NetPermissionFlags m_flags;
     static std::vector<std::string> ToStrings(NetPermissionFlags flags);
-    static inline bool HasFlag(const NetPermissionFlags& flags, NetPermissionFlags f)
+    static inline bool HasFlag(NetPermissionFlags flags, NetPermissionFlags f)
     {
         return (flags & f) == f;
     }
