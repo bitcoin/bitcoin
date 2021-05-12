@@ -66,7 +66,6 @@ implicit-integer-sign-change:key.cpp
 implicit-integer-sign-change:noui.cpp
 implicit-integer-sign-change:policy/fees.cpp
 implicit-integer-sign-change:prevector.h
-implicit-integer-sign-change:protocol.cpp
 implicit-integer-sign-change:script/syscoinconsensus.cpp
 implicit-integer-sign-change:script/interpreter.cpp
 implicit-integer-sign-change:serialize.h

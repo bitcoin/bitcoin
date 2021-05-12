@@ -140,7 +140,6 @@ CMessageHeader::CMessageHeader()
 {
     memset(pchMessageStart, 0, MESSAGE_START_SIZE);
     memset(pchCommand, 0, sizeof(pchCommand));
-    nMessageSize = -1;
     memset(pchChecksum, 0, CHECKSUM_SIZE);
 }
 
