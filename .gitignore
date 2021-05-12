@@ -58,7 +58,7 @@ libconftest.dylib*
 .dirstamp
 .libs
 .*.swp
-*.*~*
+*~
 *.bak
 *.rej
 *.orig
