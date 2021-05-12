@@ -55,6 +55,9 @@ const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS{
         "destinations in the past. Until this is done, some destinations may "
         "be considered unused, even if the opposite is the case."
     },
+    {WALLET_FLAG_EXTERNAL_SIGNER,
+        "The ability to toggle this flag may be removed in a future update."
+    },
 };
 
 bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name)
