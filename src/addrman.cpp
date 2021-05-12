@@ -494,6 +494,7 @@ void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr, size_t max_addresses, size
     }
 
     // gather a list of random nodes, skipping those of low quality
+    const int64_t now{GetAdjustedTime()};
     for (unsigned int n = 0; n < vRandom.size(); n++) {
         if (vAddr.size() >= nNodes)
             break;
@@ -508,7 +509,7 @@ void CAddrMan::GetAddr_(std::vector<CAddress>& vAddr, size_t max_addresses, size
         if (network != std::nullopt && ai.GetNetClass() != network) continue;
 
         // Filter for quality
-        if (ai.IsTerrible()) continue;
+        if (ai.IsTerrible(now)) continue;
 
         vAddr.push_back(ai);
     }
