@@ -16,6 +16,7 @@
 #include <uint256.h>
 #include <version.h>
 
+#include <limits>
 #include <stdint.h>
 #include <string>
 
@@ -51,7 +52,7 @@ public:
 
     char pchMessageStart[MESSAGE_START_SIZE];
     char pchCommand[COMMAND_SIZE];
-    uint32_t nMessageSize;
+    uint32_t nMessageSize{std::numeric_limits<uint32_t>::max()};
     uint8_t pchChecksum[CHECKSUM_SIZE];
 };
 
