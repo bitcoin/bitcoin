@@ -43,16 +43,18 @@
 #include <QDateTime>
 #include <QKeyEvent>
 #include <QKeySequence>
+#include <QLatin1String>
+#include <QLocale>
 #include <QMenu>
 #include <QMessageBox>
 #include <QScreen>
 #include <QScrollBar>
 #include <QSettings>
-#include <QTime>
-#include <QTimer>
 #include <QStringList>
 #include <QStyledItemDelegate>
-
+#include <QTime>
+#include <QTimer>
+#include <QVariant>
 
 const int CONSOLE_HISTORY = 50;
 const QSize FONT_RANGE(4, 40);
@@ -130,6 +132,20 @@ public:
     }
 };
 
+class PeerIdViewDelegate : public QStyledItemDelegate
+{
+    Q_OBJECT
+public:
+    explicit PeerIdViewDelegate(QObject* parent = nullptr)
+        : QStyledItemDelegate(parent) {}
+
+    QString displayText(const QVariant& value, const QLocale& locale) const override
+    {
+        // Additional spaces should visually separate right-aligned content
+        // from the next column to the right.
+        return value.toString() + QLatin1String("   ");
+    }
+};
 
 #include <qt/rpcconsole.moc>
 
@@ -666,6 +682,7 @@ void RPCConsole::setClientModel(ClientModel *model, int bestblock_height, int64_
         ui->peerWidget->setColumnWidth(PeerTableModel::Subversion, SUBVERSION_COLUMN_WIDTH);
         ui->peerWidget->setColumnWidth(PeerTableModel::Ping, PING_COLUMN_WIDTH);
         ui->peerWidget->horizontalHeader()->setStretchLastSection(true);
+        ui->peerWidget->setItemDelegateForColumn(PeerTableModel::NetNodeId, new PeerIdViewDelegate(this));
 
         // create peer table context menu actions
         QAction* disconnectAction = new QAction(tr("&Disconnect"), this);
