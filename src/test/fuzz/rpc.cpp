@@ -225,6 +225,7 @@ const std::vector<std::string> RPC_COMMANDS_SAFE_FOR_FUZZING{
 std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider)
 {
     const size_t max_string_length = 4096;
+    const size_t max_base58_bytes_length{64};
     std::string r;
     CallOneOf(
         fuzzed_data_provider,
@@ -278,11 +279,11 @@ std::string ConsumeScalarRPCArgument(FuzzedDataProvider& fuzzed_data_provider)
         },
         [&] {
             // base58 argument
-            r = EncodeBase58(MakeUCharSpan(fuzzed_data_provider.ConsumeRandomLengthString(max_string_length)));
+            r = EncodeBase58(MakeUCharSpan(fuzzed_data_provider.ConsumeRandomLengthString(max_base58_bytes_length)));
         },
         [&] {
             // base58 argument with checksum
-            r = EncodeBase58Check(MakeUCharSpan(fuzzed_data_provider.ConsumeRandomLengthString(max_string_length)));
+            r = EncodeBase58Check(MakeUCharSpan(fuzzed_data_provider.ConsumeRandomLengthString(max_base58_bytes_length)));
         },
         [&] {
             // hex encoded block
