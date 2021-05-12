@@ -33,6 +33,9 @@ Required environment variables as seen inside the container:
     OUTDIR: ${OUTDIR:?not set}
 EOF
 
+ACTUAL_OUTDIR="${OUTDIR}"
+OUTDIR="${DISTSRC}/output"
+
 #####################
 # Environment Setup #
 #####################
@@ -224,8 +227,24 @@ GIT_ARCHIVE="${DIST_ARCHIVE_BASE}/${DISTNAME}.tar.gz"
 # Create the source tarball if not already there
 if [ ! -e "$GIT_ARCHIVE" ]; then
     mkdir -p "$(dirname "$GIT_ARCHIVE")"
+    touch "${DIST_ARCHIVE_BASE}"/SKIPATTEST.TAG
     git archive --prefix="${DISTNAME}/" --output="$GIT_ARCHIVE" HEAD
 fi
+
+# tmpdir="$(mktemp -d)"
+# (
+#     cd "$tmpdir"
+#     mkdir -p inputs
+#     ln -sf --target-directory=inputs "$GIT_ARCHIVE"
+
+#     mkdir -p "$OUTDIR"
+#     find -L inputs -type f -print0 | xargs -0 sha256sum > "${OUTDIR}/inputs.SHA256SUMS"
+# )
+
+mkdir -p "$OUTDIR"
+cat << EOF > "$OUTDIR"/inputs.SHA256SUMS
+$(sha256sum "$GIT_ARCHIVE" | cut -d' ' -f1)  inputs/$(basename "$GIT_ARCHIVE")
+EOF
 
 ###########################
 # Binary Tarball Building #
@@ -292,7 +311,8 @@ mkdir -p "$DISTSRC"
     # version symbols for Linux distro back-compatibility.
     make -C src --jobs=1 check-symbols  ${V:+V=1}
 
-    mkdir -p ${OUTDIR}
+    mkdir -p "$OUTDIR"
+
     # Make the os-specific installers
     case "$HOST" in
         *mingw*)
@@ -427,3 +447,5 @@ mkdir -p "$DISTSRC"
             ;;
     esac
 )  # $DISTSRC
+
+mv --no-target-directory "$OUTDIR" "$ACTUAL_OUTDIR"

@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+export LC_ALL=C
+set -e -o pipefail
+
+# Source the common prelude, which:
+#   1. Checks if we're at the top directory of the Bitcoin Core repository
+#   2. Defines a few common functions and variables
+#
+# shellcheck source=libexec/prelude.bash
+source "$(dirname "${BASH_SOURCE[0]}")/libexec/prelude.bash"
+
+
+###################
+## Sanity Checks ##
+###################
+
+################
+# Required non-builtin commands should be invokable
+################
+
+check_tools cat env basename mkdir xargs find
+if [ -z "$NO_SIGN" ]; then
+    check_tools gpg
+fi
+
+################
+# Required env vars should be non-empty
+################
+
+cmd_usage() {
+cat <<EOF
+Synopsis:
+
+    env GUIX_SIGS_REPO=<path/to/guix.sigs> \\
+        SIGNER=GPG_KEY_NAME[=SIGNER_NAME] \\
+        [ NO_SIGN=1 ]
+      ./contrib/guix/guix-attest
+
+Example w/o overriding signing name:
+
+    env GUIX_SIGS_REPO=/home/achow101/guix.sigs \\
+        SIGNER=achow101 \\
+      ./contrib/guix/guix-attest
+
+Example overriding signing name:
+
+    env GUIX_SIGS_REPO=/home/dongcarl/guix.sigs \\
+        SIGNER=0x96AB007F1A7ED999=dongcarl \\
+      ./contrib/guix/guix-attest
+
+Example w/o signing, just creating SHA256SUMS:
+
+    env GUIX_SIGS_REPO=/home/achow101/guix.sigs \\
+        SIGNER=achow101 \\
+        NO_SIGN=1 \\
+      ./contrib/guix/guix-attest
+
+EOF
+}
+
+if [ -z "$GUIX_SIGS_REPO" ] || [ -z "$SIGNER" ]; then
+    cmd_usage
+    exit 1
+fi
+
+################
+# GUIX_SIGS_REPO should exist as a directory
+################
+
+if [ ! -d "$GUIX_SIGS_REPO" ]; then
+cat << EOF
+ERR: The specified GUIX_SIGS_REPO is not an existent directory:
+
+    '$GUIX_SIGS_REPO'
+
+Hint: Please clone the guix.sigs repository and point to it with the
+      GUIX_SIGS_REPO environment variable.
+
+EOF
+cmd_usage
+exit 1
+fi
+
+################
+# The key specified in SIGNER should be usable
+################
+
+IFS='=' read -r gpg_key_name signer_name <<< "$SIGNER"
+if [ -z "${signer_name}" ]; then
+    signer_name="$gpg_key_name"
+fi
+
+if [ -z "$NO_SIGN" ] && ! gpg --dry-run --list-secret-keys "${gpg_key_name}" >/dev/null 2>&1; then
+    echo "ERR: GPG can't seem to find any key named '${gpg_key_name}'"
+    exit 1
+fi
+
+################
+# We should be able to find at least one output
+################
+
+echo "Looking for build output directories in ${OUTDIR_BASE}"
+
+shopt -s nullglob
+OUTDIRS=( "${OUTDIR_BASE}"/* ) # This expands to an array of directories...
+shopt -u nullglob
+
+if (( ${#OUTDIRS[@]} )); then
+    echo "Found build output directories:"
+    for outdir in "${OUTDIRS[@]}"; do
+        echo "    '$outdir'"
+    done
+    echo
+else
+    echo "ERR: Could not find any build output directories in ${OUTDIR_BASE}"
+    exit 1
+fi
+
+
+##############
+##  Attest  ##
+##############
+
+# Usage: out_name $outdir
+#
+#   HOST: The output directory being attested
+#
+out_name() {
+    basename "$1"
+}
+
+# Usage: out_sig_dir $outdir
+#
+#   outdir: The output directory being attested
+#
+out_sig_dir() {
+    echo "$GUIX_SIGS_REPO/$VERSION/$(out_name "$1")/$signer_name"
+}
+
+# Accumulate a list of signature directories that already exist...
+outdirs_already_attested_to=()
+
+echo "Attesting to build outputs for version: '${VERSION}'"
+echo ""
+
+# MAIN LOGIC: Loop through each output for VERSION and attest to output in
+#             GUIX_SIGS_REPO as SIGNER, if attestation does not exist
+for outdir in "${OUTDIRS[@]}"; do
+    if [ -e "${outdir}/SKIPATTEST.TAG" ]; then
+        echo "${outname}: SKIPPING: Output directory marked with SKIPATTEST.TAG file"
+        continue
+    fi
+    outname="$(out_name "$outdir")"
+    outsigdir="$(out_sig_dir "$outdir")"
+    if [ -e "$outsigdir" ]; then
+        echo "${outname}: SKIPPING: Signature directory already exists in the specified guix.sigs repository"
+        outdirs_already_attested_to+=("$outdir")
+    else
+        # Clean up incomplete sigdir if something fails (likely gpg)
+        trap 'rm -rf "$outsigdir"' ERR
+
+        mkdir -p "$outsigdir"
+
+        (
+            cd "$outdir"
+
+            if [ -e inputs.SHA256SUMS ]; then
+                echo "${outname}: Including existent input SHA256SUMS"
+                cat inputs.SHA256SUMS >> "$outsigdir"/SHA256SUMS
+            fi
+
+            echo "${outname}: Hashing build outputs to produce SHA256SUMS"
+            files="$(find -L . -type f ! -iname '*.SHA256SUMS')"
+            if [ -n "$files" ]; then
+                cut -c3- <<< "$files" | env LC_ALL=C sort | xargs sha256sum >> "$outsigdir"/SHA256SUMS
+            else
+                echo "ERR: ${outname}: No outputs found in '${outdir}'"
+                exit 1
+            fi
+        )
+        if [ -z "$NO_SIGN" ]; then
+            echo "${outname}: Signing SHA256SUMS to produce SHA256SUMS.asc"
+            gpg --detach-sign --local-user "$gpg_key_name" --armor --output "$outsigdir"/SHA256SUMS.asc "$outsigdir"/SHA256SUMS
+        else
+            echo "${outname}: Not signing SHA256SUMS as \$NO_SIGN is not empty"
+        fi
+        echo ""
+
+        trap - ERR  # Reset ERR trap
+    fi
+done
+
+if (( ${#outdirs_already_attested_to[@]} )); then
+# ...so that we can print them out nicely in a warning message
+cat << EOF
+
+WARN: Signature directories from '$signer_name' already exist in the specified
+      guix.sigs repository for the following output directories and were
+      skipped:
+
+EOF
+for outdir in "${outdirs_already_attested_to[@]}"; do
+    echo "    '${outdir}'"
+    echo "    Corresponds to: '$(out_sig_dir "$outdir")'"
+    echo ""
+done
+fi
