@@ -710,22 +710,24 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     CAmount nMinimumAmountAsset = 0;
     CAmount nMaximumAmountAsset = 0;
     CAmount nMinimumSumAmountAsset = 0;
+    coin_control.m_include_unsafe_inputs = false;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nMaximumAmountAsset);
     coin_control.m_min_depth = 1;
     std::vector<COutput> vecOutputs;
-    pwallet.AvailableCoins(vecOutputs, true, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, 0, false, *coin_control.assetInfo, nVersionIn);
+    pwallet.AvailableCoins(vecOutputs, !coin_control.m_include_unsafe_inputs, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, 0, false, *coin_control.assetInfo, nVersionIn);
     int nNumOutputsFound = 0;
     int nFoundOutput = -1;
     for(unsigned int i = 0; i < vecOutputs.size(); i++) {
-        if(!vecOutputs[i].fSpendable || !vecOutputs[i].fSolvable)
+        // Spendable = anything other than p2wpkh/p2pkh and fSolvable = p2wsh/p2sh with key in wallet (script address imported)
+        if(!vecOutputs[i].fSpendable && !vecOutputs[i].fSolvable)
             continue;
         nNumOutputsFound++;
         nFoundOutput = i;
     }
-    if(nNumOutputsFound > 1) {
+    if (nNumOutputsFound > 1) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Too many inputs found for this asset, should only have exactly one input");
     }
-    if(nNumOutputsFound <= 0) {
+    if (nNumOutputsFound <= 0) {
         throw JSONRPCError(RPC_WALLET_ERROR, "No inputs found for this asset");
     }
     
@@ -774,9 +776,25 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     coin_control.fAllowOtherInputs = recp.nAmount <= 0 || !recp.fSubtractFeeFromAmount; // select asset + sys utxo's
     CTransactionRef tx;
     FeeCalculation fee_calc_out;
-    if (!pwallet.CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, true /* sign*/, nVersionIn)) {
+    if (!pwallet.CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, false /* sign*/, nVersionIn)) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
     }
+    // Script verification errors
+    std::map<int, std::string> input_errors;
+    // Fetch previous transactions (inputs):
+    std::map<COutPoint, Coin> coins;
+    for (const CTxIn& txin : tx->vin) {
+        coins[txin.prevout]; // Create empty map entry keyed by prevout.
+    }
+    pwallet.chain().findCoins(coins);
+    CMutableTransaction mtx(*tx);
+    bool complete = pwallet.SignTransaction(mtx, coins, SIGHASH_ALL, input_errors);
+    if(!complete) {
+        UniValue result(UniValue::VOBJ);
+        SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
+        return result;
+    }
+    tx = MakeTransactionRef(mtx);
     std::string err_string;
     AssertLockNotHeld(cs_main);
     NodeContext& node = EnsureAnyNodeContext(context);
