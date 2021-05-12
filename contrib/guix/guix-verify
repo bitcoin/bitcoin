@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+export LC_ALL=C
+set -e -o pipefail
+
+# Source the common prelude, which:
+#   1. Checks if we're at the top directory of the Bitcoin Core repository
+#   2. Defines a few common functions and variables
+#
+# shellcheck source=libexec/prelude.bash
+source "$(dirname "${BASH_SOURCE[0]}")/libexec/prelude.bash"
+
+
+###################
+## Sanity Checks ##
+###################
+
+################
+# Required non-builtin commands should be invokable
+################
+
+check_tools cat diff gpg
+
+################
+# Required env vars should be non-empty
+################
+
+cmd_usage() {
+cat <<EOF
+Synopsis:
+
+    env GUIX_SIGS_REPO=<path/to/guix.sigs> ./contrib/guix/guix-verify
+
+EOF
+}
+
+if [ -z "$GUIX_SIGS_REPO" ]; then
+    cmd_usage
+    exit 1
+fi
+
+################
+# GUIX_SIGS_REPO should exist as a directory
+################
+
+if [ ! -d "$GUIX_SIGS_REPO" ]; then
+cat << EOF
+ERR: The specified GUIX_SIGS_REPO is not an existent directory:
+
+    '$GUIX_SIGS_REPO'
+
+Hint: Please clone the guix.sigs repository and point to it with the
+      GUIX_SIGS_REPO environment variable.
+
+EOF
+cmd_usage
+exit 1
+fi
+
+################
+# We should be able to find at least one output
+################
+
+OUTSIGDIR_BASE="${GUIX_SIGS_REPO}/${VERSION}"
+echo "Looking for output signature directories in '${OUTSIGDIR_BASE}'"
+
+shopt -s nullglob
+OUTSIGDIRS=( "$OUTSIGDIR_BASE"/* ) # This expands to an array of directories...
+shopt -u nullglob
+
+if (( ${#OUTSIGDIRS[@]} )); then
+    echo "Found output signature directories:"
+    for outsigdir in "${OUTSIGDIRS[@]}"; do
+        echo "    '$outsigdir'"
+    done
+    echo
+else
+    echo "ERR: Could not find any output signature directories in ${OUTSIGDIR_BASE}"
+    exit 1
+fi
+
+
+##############
+##  Verify  ##
+##############
+
+# MAIN LOGIC: Loop through each output for VERSION and check that the SHA256SUMS
+#             and SHA256SUMS.asc file match between signers, using the first
+#             available signer as the arbitrary comparison base.
+for outsigdir in "${OUTSIGDIRS[@]}"; do
+    echo "BEGIN: Checking output signatures for $(basename "$outsigdir")"
+    echo ""
+    signer_dirs=( "$outsigdir"/* ) # This expands to an array of directories...
+    compare_signer_dir="${signer_dirs[0]}" # ...we just want the first one
+    for current_signer_dir in "${signer_dirs[@]}"; do
+        if ! gpg --quiet --batch --verify "$current_signer_dir"/SHA256SUMS.asc "$current_signer_dir"/SHA256SUMS; then
+            echo "ERR: Failed to verify GPG signature in '${current_signer_dir}/SHA256SUMS.asc'"
+            echo ""
+            echo "Hint: Either the signature is invalid or the public key is missing"
+            echo ""
+        elif ! diff --report-identical "$compare_signer_dir"/SHA256SUMS "$current_signer_dir"/SHA256SUMS; then
+            echo "ERR: The SHA256SUMS attestation in these two directories differ:"
+            echo "    '${compare_signer_dir}'"
+            echo "    '${current_signer_dir}'"
+            echo ""
+        else
+            echo "Verified: '${current_signer_dir}'"
+            echo ""
+        fi
+    done
+    echo "DONE: Checking output signatures for $(basename "$outsigdir")"
+    echo ""
+    echo ""
+done
