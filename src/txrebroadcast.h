@@ -23,7 +23,18 @@ public:
           m_chainman(chainman),
           m_chainparams(chainparams){};
 
-    std::vector<TxIds> GetRebroadcastTransactions();
+    /**
+     * Identify transaction candidates to be rebroadcast.
+     * Calculates the top of the mempool by fee rate, limits the size based on
+     * recent block information passed in, rate limits candidates and enforces
+     * a maximum number of rebroadcast attempts per transaction.
+     *
+     * @param[in]  recent_block        Optionally provide a reference to skip a disk read
+     * @param[in]  recent_block_index  An index to the recent block, used to
+     *                                 calculate weight of rebroadcast candidates
+     * @return     std::vector<TxIds>  Returns transaction ids of rebroadcast candidates
+     * */
+    std::vector<TxIds> GetRebroadcastTransactions(const std::shared_ptr<const CBlock>& recent_block, const CBlockIndex& recent_block_index);
 
 private:
     const CTxMemPool& m_mempool;

@@ -13,10 +13,27 @@
  * circumstances such as miners mining priority transactions. */
 static constexpr float REBROADCAST_WEIGHT_RATIO{0.75};
 
-std::vector<TxIds> TxRebroadcastHandler::GetRebroadcastTransactions()
+std::vector<TxIds> TxRebroadcastHandler::GetRebroadcastTransactions(const std::shared_ptr<const CBlock>& recent_block, const CBlockIndex& recent_block_index)
 {
+
+    // Calculate how many transactions to rebroadcast based on the size of the
+    // incoming block.
+    float rebroadcast_block_weight = REBROADCAST_WEIGHT_RATIO * MAX_BLOCK_WEIGHT;
+    if (recent_block) {
+        // If the passed in block is populated, use to avoid a disk read.
+        rebroadcast_block_weight = REBROADCAST_WEIGHT_RATIO * GetBlockWeight(*recent_block.get());
+    } else {
+        // Otherwise, use the block index to retrieve the relevant block.
+        const Consensus::Params& consensus_params = m_chainparams.GetConsensus();
+        CBlock block;
+
+        if (ReadBlockFromDisk(block, &recent_block_index, consensus_params)) {
+            rebroadcast_block_weight = REBROADCAST_WEIGHT_RATIO * GetBlockWeight(block);
+        }
+    }
+
     BlockAssembler::Options options;
-    options.nBlockMaxWeight = REBROADCAST_WEIGHT_RATIO * MAX_BLOCK_WEIGHT;
+    options.nBlockMaxWeight = rebroadcast_block_weight;
 
     // Use CreateNewBlock to identify rebroadcast candidates
     std::vector<TxIds> rebroadcast_txs;
