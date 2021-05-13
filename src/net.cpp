@@ -2866,7 +2866,7 @@ void CConnman::ThreadI2PAcceptIncoming()
         }
 
         if (!advertising_listen_addr) {
-            AddLocal(conn.me, LOCAL_BIND);
+            AddLocal(conn.me, LOCAL_MANUAL);
             advertising_listen_addr = true;
         }
 
