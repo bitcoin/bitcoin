@@ -57,15 +57,6 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
                 (void)addr_man.SelectTriedCollision();
             },
             [&] {
-                (void)addr_man.Select(fuzzed_data_provider.ConsumeBool());
-            },
-            [&] {
-                (void)addr_man.GetAddr(
-                    /* max_addresses */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
-                    /* max_pct */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
-                    /* network */ std::nullopt);
-            },
-            [&] {
                 const std::optional<CAddress> opt_address = ConsumeDeserializable<CAddress>(fuzzed_data_provider);
                 const std::optional<CNetAddr> opt_net_addr = ConsumeDeserializable<CNetAddr>(fuzzed_data_provider);
                 if (opt_address && opt_net_addr) {
@@ -109,12 +100,16 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
                 if (opt_service) {
                     addr_man.SetServices(*opt_service, ConsumeWeakEnum(fuzzed_data_provider, ALL_SERVICE_FLAGS));
                 }
-            },
-            [&] {
-                (void)addr_man.Check();
             });
     }
-    (void)addr_man.size();
+    const CAddrMan& const_addr_man{addr_man};
+    (void)/*const_*/addr_man.GetAddr(
+        /* max_addresses */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
+        /* max_pct */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
+        /* network */ std::nullopt);
+    (void)/*const_*/addr_man.Check();
+    (void)/*const_*/addr_man.Select(fuzzed_data_provider.ConsumeBool());
+    (void)const_addr_man.size();
     CDataStream data_stream(SER_NETWORK, PROTOCOL_VERSION);
-    data_stream << addr_man;
+    data_stream << const_addr_man;
 }
