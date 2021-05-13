@@ -2170,6 +2170,8 @@ bool CChainState::FlushStateToDisk(
                last_prune = std::max(1, std::min(last_prune, index.GetSummary().best_block_height));
             });
 
+            m_blockman.GetLastPruneBlockerHeight(last_prune);
+
             if (nManualPruneHeight > 0) {
                 LOG_TIME_MILLIS_WITH_CATEGORY("find files to prune (manual)", BCLog::BENCH);
 
@@ -3790,6 +3792,21 @@ void BlockManager::FindFilesToPrune(std::set<int>& setFilesToPrune, uint64_t nPr
            nPruneTarget/1024/1024, nCurrentUsage/1024/1024,
            ((int64_t)nPruneTarget - (int64_t)nCurrentUsage)/1024/1024,
            nLastBlockWeCanPrune, count);
+}
+
+void BlockManager::UpdatePruneBlocker(const std::string& name, const CBlockIndex* block) {
+    AssertLockHeld(::cs_main);
+    m_prune_blockers[name] = block;
+}
+
+void BlockManager::GetLastPruneBlockerHeight(int& last_prune) {
+    for (auto const& blocker : m_prune_blockers) {
+        const int blocker_height = blocker.second->nHeight + PRUNE_BLOCKER_BUFFER;
+        last_prune = std::max(1, std::min(last_prune, blocker_height));
+        if (last_prune == blocker_height) {
+            LogPrintf("%s limited pruning to height %d\n", blocker.first, blocker_height);
+        }
+    }
 }
 
 CBlockIndex * BlockManager::InsertBlockIndex(const uint256& hash)
