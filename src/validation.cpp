@@ -3408,6 +3408,7 @@ bool CChainState::AcceptBlock(const std::shared_ptr<const CBlock>& pblock, Block
     // This requires some new chain data structure to efficiently look up if a
     // block is in a chain leading to a candidate for best tip, despite not
     // being such a candidate itself.
+    // Note that this would break the getblockfrompeer RPC
 
     // TODO: deal better with return value and error conditions for duplicate
     // and unrequested blocks.

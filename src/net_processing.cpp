@@ -312,6 +312,7 @@ public:
     /** Implement PeerManager */
     void StartScheduledTasks(CScheduler& scheduler) override;
     void CheckForStaleTipAndEvictPeers() override;
+    bool FetchBlock(NodeId id, const uint256& hash, const CBlockIndex& index) override;
     bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const override;
     bool IgnoresIncomingTxs() override { return m_ignore_incoming_txs; }
     void SendPings() override;
@@ -1425,6 +1426,41 @@ bool PeerManagerImpl::BlockRequestAllowed(const CBlockIndex* pindex)
     return pindex->IsValid(BLOCK_VALID_SCRIPTS) && (pindexBestHeader != nullptr) &&
            (pindexBestHeader->GetBlockTime() - pindex->GetBlockTime() < STALE_RELAY_AGE_LIMIT) &&
            (GetBlockProofEquivalentTime(*pindexBestHeader, *pindex, *pindexBestHeader, m_chainparams.GetConsensus()) < STALE_RELAY_AGE_LIMIT);
+}
+
+bool PeerManagerImpl::FetchBlock(NodeId id, const uint256& hash, const CBlockIndex& index)
+{
+    if (fImporting || fReindex) return false;
+
+    LOCK(cs_main);
+    // Ensure this peer exists and hasn't been disconnected
+    CNodeState* state = State(id);
+    if (state == nullptr) return false;
+    // Ignore pre-segwit peers
+    if (!state->fHaveWitness) return false;
+
+    // Mark block as in-flight unless it already is
+    if (!BlockRequested(id, index)) return false;
+
+    // Construct message to request the block
+    std::vector<CInv> invs{CInv(MSG_BLOCK | MSG_WITNESS_FLAG, hash)};
+
+    // Send block request message to the peer
+    bool success = m_connman.ForNode(id, [this, &invs](CNode* node) {
+        const CNetMsgMaker msgMaker(node->GetCommonVersion());
+        this->m_connman.PushMessage(node, msgMaker.Make(NetMsgType::GETDATA, invs));
+        return true;
+    });
+
+    if (success) {
+        LogPrint(BCLog::NET, "Requesting block %s from peer=%d\n",
+                 hash.ToString(), id);
+    } else {
+        RemoveBlockRequest(hash);
+        LogPrint(BCLog::NET, "Failed to request block %s from peer=%d\n",
+                 hash.ToString(), id);
+    }
+    return success;
 }
 
 std::unique_ptr<PeerManager> PeerManager::make(const CChainParams& chainparams, CConnman& connman, AddrMan& addrman,
