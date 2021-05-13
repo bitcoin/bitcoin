@@ -623,6 +623,8 @@ RPCHelpMan assetnew()
     coin_control.m_signal_bip125_rbf = false;
     coin_control.m_min_depth = 1;
     coin_control.fAllowWatchOnly = fAllowWatchOnly;
+    if(!fChangeAddress.empty())
+        coin_control.destChange = dest;
     bool lockUnspents = false;   
     mtx.nVersion = SYSCOIN_TX_VERSION_ASSET_ACTIVATE;
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
@@ -782,17 +784,20 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     if(recpIn) {
         vecSend.push_back(*recpIn);
     }
+    CTxDestination dest;
+    if(!fChangeAddress.empty()) {
+        dest = DecodeDestination(fChangeAddress);
+        coin_control.destChange = dest;
+        if (!IsValidDestination(dest)) {
+            throw std::runtime_error("invalid change address");
+        }   
+    }
+
     if(!recpIn || nGas > (MIN_CHANGE + pwallet.m_default_max_tx_fee)) {
-        CTxDestination dest;
         std::string errorStr;
         if (fChangeAddress.empty() && !pwallet.GetNewChangeDestination(pwallet.m_default_address_type, dest, errorStr)) {
             throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr);
-        }
-        if(!fChangeAddress.empty())
-            dest = DecodeDestination(fChangeAddress);
-        if (!IsValidDestination(dest)) {
-            throw std::runtime_error("invalid change address");
-        }         
+        }      
         recp = { GetScriptForDestination(dest), nGas, false};  
     }
     // if enough for change + max fee, we try to take fee from this output
@@ -1681,7 +1686,7 @@ static RPCHelpMan assetallocationburn()
     
     CTxDestination dest;
     std::string errorStr;
-    if (!pwallet->GetNewChangeDestination(pwallet->m_default_address_type, dest, errorStr)) {
+    if (fChangeAddress.empty() && !pwallet->GetNewChangeDestination(pwallet->m_default_address_type, dest, errorStr)) {
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr);
     }
 
