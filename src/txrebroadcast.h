@@ -5,6 +5,7 @@
 #ifndef BITCOIN_TXREBROADCAST_H
 #define BITCOIN_TXREBROADCAST_H
 
+#include <bloom.h>
 #include <policy/feerate.h>
 #include <txmempool.h>
 #include <validation.h>
@@ -83,6 +84,14 @@ private:
      *  of times we will attempt to rebroadcast a transaction.
      * */
     std::unique_ptr<indexed_rebroadcast_set> m_attempt_tracker GUARDED_BY(m_rebroadcast_mutex);
+
+    /** Keep track of transactions we have rebroadcasted a maximum number of times.
+     *
+     *  Once a transaction hits the MAX_REBROADCAST_COUNT on the
+     *  m_attempt_tracker, add it to this bloom filter so we can prevent
+     *  further rebroadcasts until this filter rolls over.
+     * */
+    CRollingBloomFilter m_max_filter GUARDED_BY(m_rebroadcast_mutex);
 };
 
 #endif // BITCOIN_TXREBROADCAST_H

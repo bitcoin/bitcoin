@@ -66,7 +66,8 @@ TxRebroadcastHandler::TxRebroadcastHandler(const CTxMemPool& mempool, const Chai
     : m_mempool{mempool},
       m_chainman{chainman},
       m_chainparams(chainparams),
-      m_attempt_tracker{std::make_unique<indexed_rebroadcast_set>()}{}
+      m_attempt_tracker{std::make_unique<indexed_rebroadcast_set>()},
+      m_max_filter(1500, 0.0001){}
 
 std::vector<TxIds> TxRebroadcastHandler::GetRebroadcastTransactions(const std::shared_ptr<const CBlock>& recent_block, const CBlockIndex& recent_block_index)
 {
@@ -127,6 +128,10 @@ std::vector<TxIds> TxRebroadcastHandler::GetRebroadcastTransactions(const std::s
         const uint256& txid = tx->GetHash();
         const uint256& wtxid = tx->GetWitnessHash();
 
+        // Check if we have kinda recently rebroadcasted this transaction the
+        // maximum number of times.
+        if (m_max_filter.contains(wtxid)) continue;
+
         // Check if we have previously rebroadcasted, decide if we will this
         // round, and if so, record the attempt.
         auto entry_it = m_attempt_tracker->find(wtxid);
@@ -137,7 +142,12 @@ std::vector<TxIds> TxRebroadcastHandler::GetRebroadcastTransactions(const std::s
             m_attempt_tracker->insert(entry);
         } else if (entry_it->m_count >= MAX_REBROADCAST_COUNT) {
             // We have already rebroadcast this transaction the maximum number
-            // of times permitted, so skip rebroadcasting.
+            // of times permitted. Record in the max filter, remove from
+            // attempt tracker, and skip rebroadcasting.
+            LogPrint(BCLog::NET, "Max number of rebroadcasts hit for tx %s.\n", wtxid.ToString());
+            m_max_filter.insert(wtxid);
+            const auto it = m_attempt_tracker->find(tx->GetWitnessHash());
+            if (it != m_attempt_tracker->end()) m_attempt_tracker->erase(it);
             continue;
         } else if (entry_it->m_last_attempt > start_time - MIN_REATTEMPT_INTERVAL) {
             // We already rebroadcasted this in the past 4 hours. Even if we
