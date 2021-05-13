@@ -579,7 +579,7 @@ public:
     /**
      * Choose an address to connect to.
      */
-    CAddrInfo Select(bool newOnly = false)
+    CAddrInfo Select(bool newOnly = false) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
@@ -631,7 +631,7 @@ protected:
     uint256 nKey;
 
     //! Source of random numbers for randomization in inner loops
-    FastRandomContext insecure_rand;
+    mutable FastRandomContext insecure_rand;
 
 private:
     //! A mutex to protect the inner data structures.
@@ -718,7 +718,7 @@ private:
     void Attempt_(const CService &addr, bool fCountFailure, int64_t nTime) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Select an address to connect to, if newOnly is set to true, only the new table is selected from.
-    CAddrInfo Select_(bool newOnly) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    CAddrInfo Select_(bool newOnly) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! See if any to-be-evicted tried table entries have been tested and if so resolve the collisions.
     void ResolveCollisions_() EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -727,7 +727,7 @@ private:
     CAddrInfo SelectTriedCollision_() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Consistency check
-    void Check()
+    void Check() const
         EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
 #ifdef DEBUG_ADDRMAN
@@ -741,7 +741,7 @@ private:
 
 #ifdef DEBUG_ADDRMAN
     //! Perform consistency check. Returns an error code or zero.
-    int Check_() EXCLUSIVE_LOCKS_REQUIRED(cs);
+    int Check_() const EXCLUSIVE_LOCKS_REQUIRED(cs);
 #endif
 
     /**
