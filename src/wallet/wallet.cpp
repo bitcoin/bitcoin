@@ -2475,6 +2475,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, CAssetCoinInfo nTa
         const bool bAsset = !nTargetValueAsset.IsNull();
         std::vector<OutputGroup> groups, groupAssets;
         GroupOutputs(coins, !coin_selection_params.m_avoid_partial_spends, CFeeRate(0), CFeeRate(0), eligibility_filter, false /* positive_only */, groups, nTargetValueAsset, &groupAssets);
+        
         // SYSCOIN
         bool bAssetSolver = true;
         CAmount nTarget = nTargetValue;
@@ -2539,7 +2540,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     {
         for (const COutput& out : vCoins)
         {
-            if (!out.fSpendable && !out.fSolvable)
+            if (!out.fSpendable)
                 continue;
             nValueRet += out.tx->tx->vout[out.i].nValue;
             // SYSCOIN
@@ -2623,6 +2624,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     const bool res = [&] {
         // Pre-selected inputs already cover the target amount.
         if (value_to_select <= 0 && value_to_select_asset.nValue <= 0) return true;
+
         // If possible, fund the transaction with confirmed UTXOs only. Prefer at least six
         // confirmations on outputs received from other wallets and only spend confirmed change.
         if (SelectCoinsMinConf(value_to_select, value_to_select_asset, CoinEligibilityFilter(1, 6, 0), vCoins, setCoinsRet, nValueRet, nValueRetAsset, coin_selection_params, bnb_used, nVersion)) return true;
@@ -2667,6 +2669,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
         // Coin Selection failed.
         return false;
     }();
+
     // SelectCoinsMinConf clears setCoinsRet, so add the preset inputs from coin_control to the coinset
     util::insert(setCoinsRet, setPresetCoins);
 
@@ -4888,7 +4891,7 @@ void CWallet::GroupOutputs(const std::vector<COutput>& outputs, bool separate_co
         // Single coin means no grouping. Each COutput gets its own OutputGroup.
         for (const COutput& output : outputs) {
             // Skip outputs we cannot spend
-            if (!output.fSpendable && !output.fSolvable) continue;
+            if (!output.fSpendable) continue;
 
             size_t ancestors, descendants;
             chain().getTransactionAncestry(output.tx->GetHash(), ancestors, descendants);
@@ -4932,7 +4935,7 @@ void CWallet::GroupOutputs(const std::vector<COutput>& outputs, bool separate_co
     std::map<CScript, std::vector<OutputGroup>> spk_to_groups_map;
     for (const auto& output : outputs) {
         // Skip outputs we cannot spend
-        if (!output.fSpendable && !output.fSolvable) continue;
+        if (!output.fSpendable) continue;
 
         size_t ancestors, descendants;
         chain().getTransactionAncestry(output.tx->GetHash(), ancestors, descendants);
