@@ -27,7 +27,7 @@ static RPCHelpMan masternode_outputs()
     std::vector<COutput> vPossibleCoins;
     {
         LOCK(pwallet->cs_wallet);
-        pwallet->AvailableCoins(vPossibleCoins, true, nullptr, nMNCollateralRequired, nMNCollateralRequired, MAX_MONEY, 0, MAX_ASSET, MAX_ASSET, 0, true);
+        pwallet->AvailableCoins(vPossibleCoins, nullptr, nMNCollateralRequired, nMNCollateralRequired, MAX_MONEY, 0, MAX_ASSET, MAX_ASSET, 0, true);
     }
 
     UniValue objArr(UniValue::VARR);

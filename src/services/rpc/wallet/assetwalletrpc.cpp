@@ -757,7 +757,7 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     coin_control.m_min_depth = 1;
     coin_control.fAllowWatchOnly = fAllowWatchOnly;
     std::vector<COutput> vecOutputs;
-    pwallet.AvailableCoins(vecOutputs, !coin_control.m_include_unsafe_inputs, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, 0, false, *coin_control.assetInfo, nVersionIn);
+    pwallet.AvailableCoins(vecOutputs, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, 0, false, *coin_control.assetInfo, nVersionIn);
     int nNumOutputsFound = 0;
     int nFoundOutput = -1;
     for(unsigned int i = 0; i < vecOutputs.size(); i++) {
