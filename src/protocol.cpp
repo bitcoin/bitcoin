@@ -136,25 +136,16 @@ const static std::string allNetMessageTypes[] = {
 };
 const static std::vector<std::string> allNetMessageTypesVec(std::begin(allNetMessageTypes), std::end(allNetMessageTypes));
 
-CMessageHeader::CMessageHeader()
-{
-    memset(pchMessageStart, 0, MESSAGE_START_SIZE);
-    memset(pchCommand, 0, sizeof(pchCommand));
-    memset(pchChecksum, 0, CHECKSUM_SIZE);
-}
-
 CMessageHeader::CMessageHeader(const MessageStartChars& pchMessageStartIn, const char* pszCommand, unsigned int nMessageSizeIn)
 {
     memcpy(pchMessageStart, pchMessageStartIn, MESSAGE_START_SIZE);
 
-    // Copy the command name, zero-padding to COMMAND_SIZE bytes
+    // Copy the command name
     size_t i = 0;
     for (; i < COMMAND_SIZE && pszCommand[i] != 0; ++i) pchCommand[i] = pszCommand[i];
     assert(pszCommand[i] == 0); // Assert that the command name passed in is not longer than COMMAND_SIZE
-    for (; i < COMMAND_SIZE; ++i) pchCommand[i] = 0;
 
     nMessageSize = nMessageSizeIn;
-    memset(pchChecksum, 0, CHECKSUM_SIZE);
 }
 
 std::string CMessageHeader::GetCommand() const
