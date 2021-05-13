@@ -295,6 +295,10 @@ static RPCHelpMan syscoinburntoassetallocation()
         {
             {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset guid of SYSX"},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of SYS to burn."},
+            {"change_address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The change address to send to."},
+            {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
+                        "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
+                        "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -325,13 +329,21 @@ static RPCHelpMan syscoinburntoassetallocation()
 	if (!GetAsset(GetBaseAssetID(nAsset), theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
 
-    if (!pwallet->CanGetAddresses()) {
+    std::string fChangeAddress = "";
+    if(!params[2].isNull()) {
+        fChangeAddress = params[2].get_str();
+    }
+    bool fAllowWatchOnly = false;
+    if(!params[3].isNull()) {
+        fAllowWatchOnly = params[3].get_bool();
+    }
+    if (fChangeAddress.empty() && !pwallet->CanGetAddresses()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
     }
 
     CTxDestination dest;
     std::string errorStr;
-    if (!pwallet->GetNewChangeDestination(pwallet->m_default_address_type, dest, errorStr)) {
+    if (fChangeAddress.empty() && !pwallet->GetNewChangeDestination(pwallet->m_default_address_type, dest, errorStr)) {
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr);
     }
 
@@ -340,7 +352,6 @@ static RPCHelpMan syscoinburntoassetallocation()
     CRecipient recp = {scriptPubKey, GetDustThreshold(change_prototype_txout, GetDiscardRate(*pwallet)), false };
 
 
-    CMutableTransaction mtx;
     CAmount nAmount;
     try{
         nAmount = AssetAmountFromValue(params[1], theAsset.nPrecision);
@@ -366,14 +377,33 @@ static RPCHelpMan syscoinburntoassetallocation()
     CCoinControl coin_control;
     coin_control.m_include_unsafe_inputs = true;
     coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
+    coin_control.fAllowWatchOnly = fAllowWatchOnly;
     int nChangePosRet = -1;
     bilingual_str error;
     CAmount nFeeRequired = 0;
     CTransactionRef tx;
     FeeCalculation fee_calc_out;
-    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, true /* sign*/, SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION)) {
+    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, false /* sign*/, SYSCOIN_TX_VERSION_SYSCOIN_BURN_TO_ALLOCATION)) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
     }
+    CMutableTransaction mtx(*tx);
+    // Script verification errors
+    std::map<int, std::string> input_errors;
+    // Fetch previous transactions (inputs):
+    std::map<COutPoint, Coin> coins;
+    for (const CTxIn& txin : mtx.vin) {
+        coins[txin.prevout]; // Create empty map entry keyed by prevout.
+    }
+    pwallet->chain().findCoins(coins);
+    bool complete = pwallet->SignTransaction(mtx, coins, SIGHASH_ALL, input_errors);
+    if(!complete) {
+        UniValue result(UniValue::VOBJ);
+        SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
+        return result;
+    }
+    // need to reload asset as notary signature may have gotten added and this is needed in voutAssets so consensus validation passes for notary check
+    mtx.LoadAssets();
+    tx = (MakeTransactionRef(std::move(mtx)));
     std::string err_string;
     AssertLockNotHeld(cs_main);
     NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -381,6 +411,7 @@ static RPCHelpMan syscoinburntoassetallocation()
     if (TransactionError::OK != err) {
         throw JSONRPCTransactionError(err, err_string);
     }
+
     UniValue res(UniValue::VOBJ);
     res.__pushKV("txid", tx->GetHash().GetHex());
     return res;
@@ -420,7 +451,11 @@ RPCHelpMan assetnew()
                     },
                 }
             }
-        }
+        },
+        {"change_address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The change address to send to."},
+        {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
+            "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
+            "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
 
     },
     RPCResult{
@@ -497,6 +532,14 @@ RPCHelpMan assetnew()
     }
     CNotaryDetails notaryDetails(params[8]);
     CAuxFeeDetails auxFeeDetails(params[9], precision);
+    std::string fChangeAddress = "";
+    if(!params[10].isNull()) {
+        fChangeAddress = params[10].get_str();
+    }
+    bool fAllowWatchOnly = false;
+    if(!params[11].isNull()) {
+        fAllowWatchOnly = params[11].get_bool();
+    }
     // calculate net
     // build asset object
     CAsset newAsset;
@@ -541,14 +584,18 @@ RPCHelpMan assetnew()
     newAsset.SerializeData(data);
     // use the script pub key to create the vecsend which sendmoney takes and puts it into vout
     std::vector<CRecipient> vecSend;
-
-    if (!pwallet->CanGetAddresses()) {
+    if (fChangeAddress.empty() && !pwallet->CanGetAddresses()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
     }
     CTxDestination dest;
     std::string errorStr;
-    if (!pwallet->GetNewChangeDestination(pwallet->m_default_address_type, dest, errorStr)) {
+    if (fChangeAddress.empty() && !pwallet->GetNewChangeDestination(pwallet->m_default_address_type, dest, errorStr)) {
         throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr);
+    }
+    if(!fChangeAddress.empty())
+        dest = DecodeDestination(fChangeAddress);
+    if (!IsValidDestination(dest)) {
+        throw std::runtime_error("invalid change address");
     }
     CMutableTransaction mtx;
     std::set<int> setSubtractFeeFromOutputs;
@@ -575,6 +622,7 @@ RPCHelpMan assetnew()
     // assetnew must not be replaceable
     coin_control.m_signal_bip125_rbf = false;
     coin_control.m_min_depth = 1;
+    coin_control.fAllowWatchOnly = fAllowWatchOnly;
     bool lockUnspents = false;   
     mtx.nVersion = SYSCOIN_TX_VERSION_ASSET_ACTIVATE;
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
@@ -598,18 +646,6 @@ RPCHelpMan assetnew()
     nChangePosRet = -1;
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
-    }
-    if(pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        UniValue result(UniValue::VOBJ);
-        PartiallySignedTransaction psbtx(mtx);
-        bool complete = false;
-        const TransactionError err = pwallet->FillPSBT(psbtx, complete, SIGHASH_ALL, false /* sign */, true /* bip32derivs */);
-        CHECK_NONFATAL(err == TransactionError::OK);
-        CHECK_NONFATAL(!complete);
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << psbtx;
-        result.pushKV("psbt", EncodeBase64(ssTx.str()));
-        return result;
     }
     // Script verification errors
     std::map<int, std::string> input_errors;
@@ -675,7 +711,11 @@ static RPCHelpMan assetnewtest()
                     },
                 }
             }
-        }
+        },
+        {"change_address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The change address to send to."},
+        {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
+            "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
+            "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
 
     },
     RPCResult{
@@ -694,7 +734,7 @@ static RPCHelpMan assetnewtest()
     UniValue paramsFund(UniValue::VARR);
     if(!ParseUInt64(params[0].get_str(), &nCustomAssetGuid))
         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");    
-    for(int i = 1;i<=10;i++)
+    for(int i = 1;i<=12;i++)
         paramsFund.push_back(params[i]);
     JSONRPCRequest assetNewRequest;
     assetNewRequest.context = request.context;
@@ -704,7 +744,7 @@ static RPCHelpMan assetnewtest()
 },
     };
 }
-UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn, const uint64_t &nAsset, CWallet& pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient,const CRecipient* recpIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet.cs_wallet) {
+UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn, const uint64_t &nAsset, CWallet& pwallet, std::vector<CRecipient>& vecSend, const CRecipient& opreturnRecipient, const std::string &fChangeAddress, const bool fAllowWatchOnly, const CRecipient* recpIn = nullptr) EXCLUSIVE_LOCKS_REQUIRED(pwallet.cs_wallet) {
     AssertLockHeld(pwallet.cs_wallet);
     CCoinControl coin_control;
     CAmount nMinimumAmountAsset = 0;
@@ -713,6 +753,7 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     coin_control.m_include_unsafe_inputs = false;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nMaximumAmountAsset);
     coin_control.m_min_depth = 1;
+    coin_control.fAllowWatchOnly = fAllowWatchOnly;
     std::vector<COutput> vecOutputs;
     pwallet.AvailableCoins(vecOutputs, !coin_control.m_include_unsafe_inputs, &coin_control, 0, MAX_MONEY, 0, nMinimumAmountAsset, nMaximumAmountAsset, nMinimumSumAmountAsset, 0, false, *coin_control.assetInfo, nVersionIn);
     int nNumOutputsFound = 0;
@@ -731,7 +772,7 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
         throw JSONRPCError(RPC_WALLET_ERROR, "No inputs found for this asset");
     }
     
-    if (!pwallet.CanGetAddresses()) {
+    if (fChangeAddress.empty() && !pwallet.CanGetAddresses()) {
         throw JSONRPCError(RPC_WALLET_ERROR, "Error: This wallet has no available keys");
     }
     const CInputCoin &inputCoin = vecOutputs[nFoundOutput].GetInputCoin();
@@ -744,9 +785,14 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     if(!recpIn || nGas > (MIN_CHANGE + pwallet.m_default_max_tx_fee)) {
         CTxDestination dest;
         std::string errorStr;
-        if (!pwallet.GetNewChangeDestination(pwallet.m_default_address_type, dest, errorStr)) {
+        if (fChangeAddress.empty() && !pwallet.GetNewChangeDestination(pwallet.m_default_address_type, dest, errorStr)) {
             throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, errorStr);
         }
+        if(!fChangeAddress.empty())
+            dest = DecodeDestination(fChangeAddress);
+        if (!IsValidDestination(dest)) {
+            throw std::runtime_error("invalid change address");
+        }         
         recp = { GetScriptForDestination(dest), nGas, false};  
     }
     // if enough for change + max fee, we try to take fee from this output
@@ -779,6 +825,8 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
     if (!pwallet.CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, false /* sign*/, nVersionIn)) {
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
     }
+    
+    CMutableTransaction mtx(*tx);
     // Script verification errors
     std::map<int, std::string> input_errors;
     // Fetch previous transactions (inputs):
@@ -787,13 +835,14 @@ UniValue CreateAssetUpdateTx(const std::any& context, const int32_t& nVersionIn,
         coins[txin.prevout]; // Create empty map entry keyed by prevout.
     }
     pwallet.chain().findCoins(coins);
-    CMutableTransaction mtx(*tx);
     bool complete = pwallet.SignTransaction(mtx, coins, SIGHASH_ALL, input_errors);
     if(!complete) {
         UniValue result(UniValue::VOBJ);
         SignTransactionResultToJSON(mtx, complete, coins, input_errors, result);
         return result;
     }
+    // need to reload asset as notary signature may have gotten added and this is needed in voutAssets so consensus validation passes for notary check
+    mtx.LoadAssets();
     tx = MakeTransactionRef(mtx);
     std::string err_string;
     AssertLockNotHeld(cs_main);
@@ -835,7 +884,11 @@ static RPCHelpMan assetupdate()
                         },
                     }
                 }
-            }
+            },
+            {"change_address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The change address to send to."},
+            {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
+                "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
+                "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},           
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -914,6 +967,14 @@ static RPCHelpMan assetupdate()
     uint8_t nUpdateMask = 0;
     CNotaryDetails notaryDetails(params[5]);
     CAuxFeeDetails auxFeeDetails(params[6], theAsset.nPrecision);
+    std::string fChangeAddress = "";
+    if(!params[7].isNull()) {
+        fChangeAddress = params[7].get_str();
+    }
+    bool fAllowWatchOnly = false;
+    if(!params[8].isNull()) {
+        fAllowWatchOnly = params[8].get_bool();
+    }
     strPubData = publicData.write();
     if(strPubData != oldData) {
         nUpdateMask |= ASSET_UPDATE_DATA;
@@ -959,7 +1020,7 @@ static RPCHelpMan assetupdate()
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
     std::vector<CRecipient> vecSend;
-    return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_UPDATE, (uint64_t)nBaseAsset, *pwallet, vecSend, opreturnRecipient);
+    return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_UPDATE, (uint64_t)nBaseAsset, *pwallet, vecSend, opreturnRecipient, fChangeAddress, fAllowWatchOnly);
 },
     };
 } 
@@ -971,6 +1032,10 @@ static RPCHelpMan assettransfer()
         {
             {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset guid"},
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "New owner of asset."},
+            {"change_address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The change address to send to."},
+            {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
+                "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
+                "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -1000,7 +1065,14 @@ static RPCHelpMan assettransfer()
         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");
     const uint32_t &nBaseAsset = GetBaseAssetID(nAsset);
     std::string strAddress = params[1].get_str();
-   
+    std::string fChangeAddress = "";
+    if(!params[2].isNull()) {
+        fChangeAddress = params[2].get_str();
+    }
+    bool fAllowWatchOnly = false;
+    if(!params[3].isNull()) {
+        fAllowWatchOnly = params[3].get_bool();
+    }
     CAsset theAsset;
 
     if (!GetAsset( nBaseAsset, theAsset)) {
@@ -1020,7 +1092,7 @@ static RPCHelpMan assettransfer()
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
     std::vector<CRecipient> vecSend;
-    return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_UPDATE, (uint64_t)nBaseAsset, *pwallet, vecSend, opreturnRecipient, &recp);
+    return CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_UPDATE, (uint64_t)nBaseAsset, *pwallet, vecSend, opreturnRecipient, fChangeAddress, fAllowWatchOnly, &recp);
 },
     };
 }
@@ -1043,7 +1115,11 @@ static RPCHelpMan assetsendmany()
                 }
             },
             "[assetsendobjects,...]"
-        }
+        },
+        {"change_address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The change address to send to."},
+        {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
+            "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
+            "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
     },
     RPCResult{
         RPCResult::Type::OBJ, "", "",
@@ -1078,7 +1154,14 @@ static RPCHelpMan assetsendmany()
     UniValue valueTo = params[1];
     if (!valueTo.isArray())
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Array of receivers not found");
-
+    std::string fChangeAddress = "";
+    if(!params[2].isNull()) {
+        fChangeAddress = params[2].get_str();
+    }
+    bool fAllowWatchOnly = false;
+    if(!params[3].isNull()) {
+        fAllowWatchOnly = params[3].get_bool();
+    }
     CAsset theAsset;
     if (!GetAsset(nBaseAsset, theAsset))
         throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
@@ -1148,7 +1231,7 @@ static RPCHelpMan assetsendmany()
     scriptData << OP_RETURN << data;
     CRecipient opreturnRecipient;
     CreateFeeRecipient(scriptData, opreturnRecipient);
-    UniValue ret = CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_SEND, nBaseAsset, *pwallet, vecSend, opreturnRecipient);
+    UniValue ret = CreateAssetUpdateTx(request.context, SYSCOIN_TX_VERSION_ASSET_SEND, nBaseAsset, *pwallet, vecSend, opreturnRecipient, fChangeAddress, fAllowWatchOnly);
     ret.__pushKV("assets_issued_count", (int)mapAssets.size());
     UniValue assetsArr(UniValue::VARR);
     for(auto itAsset: mapAssets) {
@@ -1182,6 +1265,10 @@ static RPCHelpMan assetsend()
         {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send."},
         {"sys_amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "Amount of syscoin to send."},
         {"NFTID", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Optional NFT ID to send"},
+        {"change_address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The change address to send to."},
+        {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
+            "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
+            "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},       
     },
     RPCResult{
         RPCResult::Type::OBJ, "", "",
@@ -1208,6 +1295,8 @@ static RPCHelpMan assetsend()
     UniValue paramsFund(UniValue::VARR);
     paramsFund.push_back(params[0]);
     paramsFund.push_back(output);
+    paramsFund.push_back(params[5]);
+    paramsFund.push_back(params[6]);
     JSONRPCRequest requestMany;
     requestMany.context = request.context;
     requestMany.params = paramsFund;
@@ -1240,6 +1329,10 @@ static RPCHelpMan assetallocationsendmany()
             {"conf_target", RPCArg::Type::NUM, RPCArg::DefaultHint{"wallet default"}, "Confirmation target (in blocks)"},
             {"estimate_mode", RPCArg::Type::STR, RPCArg::Default{"unset"}, std::string() + "The fee estimate mode, must be one of (case insensitive):\n"
             "       \"" + FeeModes("\"\n\"") + "\""},
+            {"change_address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The change address to send to."},
+            {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
+                "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
+                "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},            
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -1287,6 +1380,15 @@ static RPCHelpMan assetallocationsendmany()
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid estimate_mode parameter");
         }
     }
+    std::string fChangeAddress = "";
+    if(!request.params[5].isNull()) {
+        fChangeAddress = request.params[5].get_str();
+    }
+    bool fAllowWatchOnly = false;
+    if(!request.params[6].isNull()) {
+        fAllowWatchOnly = request.params[6].get_bool();
+    }
+    coin_control.fAllowWatchOnly = fAllowWatchOnly;
     CAssetAllocation theAssetAllocation;
     CMutableTransaction mtx;
 	UniValue receivers = valueTo.get_array();
@@ -1436,18 +1538,6 @@ static RPCHelpMan assetallocationsendmany()
             throw JSONRPCError(RPC_WALLET_ERROR, error.original);
         }
     }
-    if(pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        UniValue result(UniValue::VOBJ);
-        PartiallySignedTransaction psbtx(mtx);
-        bool complete = false;
-        const TransactionError err = pwallet->FillPSBT(psbtx, complete, SIGHASH_ALL, false /* sign */, true /* bip32derivs */);
-        CHECK_NONFATAL(err == TransactionError::OK);
-        CHECK_NONFATAL(!complete);
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << psbtx;
-        result.pushKV("psbt", EncodeBase64(ssTx.str()));
-        return result;
-    }
     // Script verification errors
     std::map<int, std::string> input_errors;
     // Fetch previous transactions (inputs):
@@ -1507,7 +1597,11 @@ static RPCHelpMan assetallocationburn()
         {
             {"asset_guid", RPCArg::Type::STR, RPCArg::Optional::NO, "Asset guid"},
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to burn to SYSX"},
-            {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The 20 byte (40 character) hex string of the ethereum destination address. Omit or leave empty to burn to Syscoin."}
+            {"ethereum_destination_address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The 20 byte (40 character) hex string of the ethereum destination address. Omit or leave empty to burn to Syscoin."},
+            {"change_address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The change address to send to."},
+            {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
+                "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
+                "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -1549,6 +1643,14 @@ static RPCHelpMan assetallocationburn()
 	std::string ethAddress = "";
     if(params[2].isStr())
         ethAddress = params[2].get_str();
+    std::string fChangeAddress = "";
+    if(!params[3].isNull()) {
+        fChangeAddress = params[3].get_str();
+    } 
+    bool fAllowWatchOnly = false;
+    if(!params[4].isNull()) {
+        fAllowWatchOnly = params[4].get_bool();
+    }       
     boost::erase_all(ethAddress, "0x");  // strip 0x if exist
     CScript scriptData;
     int32_t nVersionIn = 0;
@@ -1605,22 +1707,11 @@ static RPCHelpMan assetallocationburn()
     mtx.nVersion = nVersionIn;
     CCoinControl coin_control;
     coin_control.m_include_unsafe_inputs = true;
+    coin_control.fAllowWatchOnly = fAllowWatchOnly;
     coin_control.assetInfo = CAssetCoinInfo(nAsset, nAmount);
     coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
     if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
         throw JSONRPCError(RPC_WALLET_ERROR, error.original);
-    }
-    if(pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        UniValue result(UniValue::VOBJ);
-        PartiallySignedTransaction psbtx(mtx);
-        bool complete = false;
-        const TransactionError err = pwallet->FillPSBT(psbtx, complete, SIGHASH_ALL, false /* sign */, true /* bip32derivs */);
-        CHECK_NONFATAL(err == TransactionError::OK);
-        CHECK_NONFATAL(!complete);
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << psbtx;
-        result.pushKV("psbt", EncodeBase64(ssTx.str()));
-        return result;
     }
     // Script verification errors
     std::map<int, std::string> input_errors;
@@ -1797,22 +1888,10 @@ static RPCHelpMan assetallocationmint()
     CCoinControl coin_control;
     coin_control.m_include_unsafe_inputs = true;
     coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
-    bool lockUnspents = false;
-    std::set<int> setSubtractFeeFromOutputs;
-    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
-        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
-    }
-    if(pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
-        UniValue result(UniValue::VOBJ);
-        PartiallySignedTransaction psbtx(mtx);
-        bool complete = false;
-        const TransactionError err = pwallet->FillPSBT(psbtx, complete, SIGHASH_ALL, false /* sign */, true /* bip32derivs */);
-        CHECK_NONFATAL(err == TransactionError::OK);
-        CHECK_NONFATAL(!complete);
-        CDataStream ssTx(SER_NETWORK, PROTOCOL_VERSION);
-        ssTx << psbtx;
-        result.pushKV("psbt", EncodeBase64(ssTx.str()));
-        return result;
+    CTransactionRef tx;
+    FeeCalculation fee_calc_out;
+    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, false /* sign*/)) {
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
     }
     // Script verification errors
     std::map<int, std::string> input_errors;
@@ -1830,7 +1909,7 @@ static RPCHelpMan assetallocationmint()
     }
     // need to reload asset as notary signature may have gotten added and this is needed in voutAssets so consensus validation passes for notary check
     mtx.LoadAssets();
-    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
+    tx = MakeTransactionRef(std::move(mtx));
     std::string err_string;
     AssertLockNotHeld(cs_main);
     NodeContext& node = EnsureAnyNodeContext(request.context);
@@ -1854,6 +1933,10 @@ static RPCHelpMan assetallocationsend()
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "Amount of asset to send"},
             {"sys_amount", RPCArg::Type::AMOUNT, RPCArg::Optional::OMITTED, "Amount of syscoin to send"},
             {"replaceable", RPCArg::Type::BOOL, RPCArg::DefaultHint{"wallet default"}, "Allow this transaction to be replaced by a transaction with higher fees via BIP 125. ZDAG is only possible if RBF is disabled."},
+            {"change_address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The change address to send to."},
+            {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
+                "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
+                "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -1875,7 +1958,7 @@ static RPCHelpMan assetallocationsend()
     bool m_signal_bip125_rbf = pwallet->m_signal_rbf;
     if (!params[4].isNull()) {
         m_signal_bip125_rbf = params[4].get_bool();
-    }  
+    }          
     UniValue replaceableObj(UniValue::VBOOL);
     UniValue commentObj(UniValue::VSTR);
     UniValue confObj(UniValue::VNUM);
@@ -1897,6 +1980,8 @@ static RPCHelpMan assetallocationsend()
     paramsFund.push_back(commentObj); // comment
     paramsFund.push_back(confObj); // conf_target
     paramsFund.push_back(feeObj); // estimate_mode
+    paramsFund.push_back(params[5]);
+    paramsFund.push_back(params[6]);
     JSONRPCRequest requestMany;
     requestMany.context = request.context;
     requestMany.params = paramsFund;
@@ -2238,6 +2323,10 @@ static RPCHelpMan sendfrom() {
             {"amount", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The amount in " + CURRENCY_UNIT + " to send. eg 0.1"},
             {"minconf", RPCArg::Type::NUM, RPCArg::Default{1}, "The minimum confirmations to filter"},
             {"maxconf", RPCArg::Type::NUM, RPCArg::Default{9999999}, "The maximum confirmations to filter"},
+            {"change_address", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "The change address to send to. Will use funding_address if empty."},
+            {"include_watching", RPCArg::Type::BOOL, RPCArg::DefaultHint{"true for watch-only wallets, otherwise false"}, "Also select inputs which are watch only.\n"
+                "Only solvable inputs can be used. Watch-only destinations are solvable if the public key and/or output script was imported,\n"
+                "e.g. with 'importpubkey' or 'importmulti' with the 'pubkeys' or 'desc' field."},
         },
         RPCResult{
             RPCResult::Type::OBJ, "", "",
@@ -2267,6 +2356,14 @@ static RPCHelpMan sendfrom() {
     if (!request.params[4].isNull()) {
         nMaxDepth = request.params[4].get_int();
     }
+    std::string fChangeAddress = "";
+    if(!request.params[5].isNull()) {
+        fChangeAddress = request.params[5].get_str();
+    } 
+    bool fAllowWatchOnly = false;
+    if(!request.params[6].isNull()) {
+        fAllowWatchOnly = request.params[6].get_bool();
+    } 
     const std::string& strFromAddress = request.params[0].get_str();
     const CTxDestination &from = DecodeDestination(strFromAddress);
     if (!IsValidDestination(from)) {
@@ -2285,6 +2382,7 @@ static RPCHelpMan sendfrom() {
     const UniValue &resUTXOs = listunspent().HandleRequest(requestSpent);
     const UniValue &resUTXOArr = resUTXOs.get_array();
     CCoinControl coin_control;
+    coin_control.fAllowWatchOnly = fAllowWatchOnly;
     if(!resUTXOArr.isNull()) {
         for(size_t i =0;i<resUTXOArr.size();i++) {
             const UniValue& utxoObj = resUTXOArr[i].get_obj();
@@ -2309,7 +2407,14 @@ static RPCHelpMan sendfrom() {
     if(!coin_control.HasSelected())
         throw JSONRPCError(RPC_TYPE_ERROR, "Could not find inputs to select");
     coin_control.fAllowOtherInputs = false;
-    coin_control.destChange = from;
+    if(fChangeAddress.empty())
+        coin_control.destChange = from;
+    else {
+        coin_control.destChange = DecodeDestination(fChangeAddress);
+        if (!IsValidDestination(coin_control.destChange)) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid change address");
+        }
+    }
     EnsureWalletIsUnlocked(*pwallet);
     mapValue_t mapValue;
     const CRecipient & recipient = {GetScriptForDestination(dest), nAmount, false};
