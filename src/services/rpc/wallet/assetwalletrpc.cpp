@@ -1893,10 +1893,10 @@ static RPCHelpMan assetallocationmint()
     CCoinControl coin_control;
     coin_control.m_include_unsafe_inputs = true;
     coin_control.m_signal_bip125_rbf = pwallet->m_signal_rbf;
-    CTransactionRef tx;
-    FeeCalculation fee_calc_out;
-    if (!pwallet->CreateTransaction(vecSend, tx, nFeeRequired, nChangePosRet, error, coin_control, fee_calc_out, false /* sign*/)) {
-        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, error.original);
+    bool lockUnspents = false;
+    std::set<int> setSubtractFeeFromOutputs;
+    if (!pwallet->FundTransaction(mtx, nFeeRequired, nChangePosRet, error, lockUnspents, setSubtractFeeFromOutputs, coin_control)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, error.original);
     }
     // Script verification errors
     std::map<int, std::string> input_errors;
@@ -1914,7 +1914,7 @@ static RPCHelpMan assetallocationmint()
     }
     // need to reload asset as notary signature may have gotten added and this is needed in voutAssets so consensus validation passes for notary check
     mtx.LoadAssets();
-    tx = MakeTransactionRef(std::move(mtx));
+    CTransactionRef tx(MakeTransactionRef(std::move(mtx)));
     std::string err_string;
     AssertLockNotHeld(cs_main);
     NodeContext& node = EnsureAnyNodeContext(request.context);
