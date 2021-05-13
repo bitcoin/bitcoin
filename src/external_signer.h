@@ -11,8 +11,6 @@
 #include <string>
 #include <vector>
 
-#ifdef ENABLE_EXTERNAL_SIGNER
-
 struct PartiallySignedTransaction;
 
 //! Enables interaction with an external signing device or service, such as
@@ -64,7 +62,5 @@ public:
     //! @param[in,out] psbt  PartiallySignedTransaction to be signed
     bool SignTransaction(PartiallySignedTransaction& psbt, std::string& error);
 };
-
-#endif // ENABLE_EXTERNAL_SIGNER
 
 #endif // BITCOIN_EXTERNAL_SIGNER_H

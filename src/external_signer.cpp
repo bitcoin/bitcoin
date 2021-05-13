@@ -13,8 +13,6 @@
 #include <string>
 #include <vector>
 
-#ifdef ENABLE_EXTERNAL_SIGNER
-
 ExternalSigner::ExternalSigner(const std::string& command, const std::string& fingerprint, const std::string chain, const std::string name): m_command(command), m_fingerprint(fingerprint), m_chain(chain), m_name(name) {}
 
 const std::string ExternalSigner::NetworkArg() const
@@ -116,5 +114,3 @@ bool ExternalSigner::SignTransaction(PartiallySignedTransaction& psbtx, std::str
 
     return true;
 }
-
-#endif // ENABLE_EXTERNAL_SIGNER
