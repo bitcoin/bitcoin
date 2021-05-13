@@ -47,7 +47,7 @@ protected:
 
     const char* GetName() const override { return "coinstatsindex"; }
 
-    bool AllowPrune() const override { return false; }
+    bool AllowPrune() const override { return true; }
 
 public:
     // Constructs the index, which becomes available to be queried.
