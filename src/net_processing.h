@@ -41,6 +41,16 @@ public:
                                              CTxMemPool& pool, bool ignore_incoming_txs);
     virtual ~PeerManager() { }
 
+    /**
+     * Attempt to manually fetch block from a given peer. We must already have the header.
+     *
+     * @param[in]  id       The peer id
+     * @param[in]  hash     The block hash
+     * @param[in]  pindex   The blockindex
+     * @returns             Whether a request was successfully made
+     */
+    virtual bool FetchBlock(NodeId id, const uint256& hash, const CBlockIndex& pindex) = 0;
+
     /** Get statistics from node state */
     virtual bool GetNodeStateStats(NodeId nodeid, CNodeStateStats& stats) const = 0;
 
