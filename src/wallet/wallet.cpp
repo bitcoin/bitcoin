@@ -8,6 +8,7 @@
 #include <chain.h>
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
+#include <external_signer.h>
 #include <fs.h>
 #include <interfaces/chain.h>
 #include <interfaces/wallet.h>

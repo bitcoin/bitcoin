@@ -6,6 +6,7 @@
 #include <banman.h>
 #include <chain.h>
 #include <chainparams.h>
+#include <external_signer.h>
 #include <init.h>
 #include <interfaces/chain.h>
 #include <interfaces/handler.h>
