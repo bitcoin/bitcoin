@@ -49,5 +49,11 @@ BIPs that are implemented by Syscoin Core (up-to-date up to **4.2**):
 * [`BIP 176`](https://github.com/bitcoin/bips/blob/master/bip-0176.mediawiki): Bits Denomination [QT only] is supported as of **v0.16.0** ([PR 12035](https://github.com/bitcoin/bitcoin/pull/12035)).
 * [`BIP 325`](https://github.com/bitcoin/bips/blob/master/bip-0325.mediawiki): Signet test network is supported as of **v0.21.0** ([PR 18267](https://github.com/bitcoin/bitcoin/pull/18267)).
 * [`BIP 339`](https://github.com/bitcoin/bips/blob/master/bip-0339.mediawiki): Relay of transactions by wtxid is supported as of **v0.21.0** ([PR 18044](https://github.com/bitcoin/bitcoin/pull/18044)).
-* [`BIP 340`](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki) [`341`](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki) [`342`](https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki): Validation rules for Taproot (including Schnorr signatures and Tapscript leaves) are implemented as of **v0.21.0** ([PR 19953](https://github.com/bitcoin/bitcoin/pull/19953)), without mainnet activation.
+* [`BIP 340`](https://github.com/bitcoin/bips/blob/master/bip-0340.mediawiki)
+  [`341`](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki)
+  [`342`](https://github.com/bitcoin/bips/blob/master/bip-0342.mediawiki):
+  Validation rules for Taproot (including Schnorr signatures and Tapscript
+  leaves) are implemented as of **v0.21.0** ([PR 19953](https://github.com/bitcoin/bitcoin/pull/19953)),
+  with mainnet activation as of **v0.21.1** ([PR 21377](https://github.com/bitcoin/bitcoin/pull/21377),
+  [PR 21686](https://github.com/bitcoin/bitcoin/pull/21686)).
 * [`BIP 350`](https://github.com/bitcoin/bips/blob/master/bip-0350.mediawiki): Addresses for native v1+ segregated Witness outputs use Bech32m instead of Bech32 as of **v22.0** ([PR 20861](https://github.com/bitcoin/bitcoin/pull/20861)).
