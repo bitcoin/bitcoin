@@ -55,7 +55,7 @@ private:
     bool fInTried{false};
 
     //! position in vRandom
-    int nRandomPos{-1};
+    mutable int nRandomPos{-1};
 
     friend class CAddrMan;
 
@@ -596,7 +596,7 @@ public:
      * @param[in] max_pct        Maximum percentage of addresses to return (0 = all).
      * @param[in] network        Select only addresses of this network (nullopt = all).
      */
-    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network)
+    std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network) const
         EXCLUSIVE_LOCKS_REQUIRED(!cs)
     {
         LOCK(cs);
@@ -669,7 +669,9 @@ private:
     std::unordered_map<CNetAddr, int, CNetAddrHash> mapAddr GUARDED_BY(cs);
 
     //! randomly-ordered vector of all nIds
-    std::vector<int> vRandom GUARDED_BY(cs);
+    //! This is mutable because it is unobservable outside the class, so any
+    //! changes to it (even in const methods) are also unobservable.
+    mutable std::vector<int> vRandom GUARDED_BY(cs);
 
     // number of "tried" entries
     int nTried GUARDED_BY(cs);
@@ -697,7 +699,7 @@ private:
     CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = nullptr) EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Swap two elements in vRandom.
-    void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     //! Move an entry from the "new" table(s) to the "tried" table
     void MakeTried(CAddrInfo& info, int nId) EXCLUSIVE_LOCKS_REQUIRED(cs);
@@ -752,7 +754,7 @@ private:
      * @param[in] max_pct        Maximum percentage of addresses to return (0 = all).
      * @param[in] network        Select only addresses of this network (nullopt = all).
      */
-    void GetAddr_(std::vector<CAddress>& vAddr, size_t max_addresses, size_t max_pct, std::optional<Network> network) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    void GetAddr_(std::vector<CAddress>& vAddr, size_t max_addresses, size_t max_pct, std::optional<Network> network) const EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     /** We have successfully connected to this peer. Calling this function
      *  updates the CAddress's nTime, which is used in our IsTerrible()
