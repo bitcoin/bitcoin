@@ -95,10 +95,6 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     const unsigned char uch = static_cast<unsigned char>(u8);
     (void)memusage::DynamicUsage(uch);
     (void)MillisToTimeval(i64);
-    const double d = ser_uint64_to_double(u64);
-    assert(ser_double_to_uint64(d) == u64);
-    const float f = ser_uint32_to_float(u32);
-    assert(ser_float_to_uint32(f) == u32);
     (void)SighashToStr(uch);
     (void)SipHashUint256(u64, u64, u256);
     (void)SipHashUint256Extra(u64, u64, u256, u32);
