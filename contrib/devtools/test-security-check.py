@@ -77,16 +77,18 @@ class TestSecurityChecks(unittest.TestCase):
         write_testcode(source)
 
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-Wl,-allow_stack_execute','-fno-stack-protector']),
-            (1, executable+': failed PIE NOUNDEFS NX LAZY_BINDINGS Canary'))
+            (1, executable+': failed PIE NOUNDEFS NX LAZY_BINDINGS Canary CONTROL_FLOW'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-Wl,-allow_stack_execute','-fstack-protector-all']),
-            (1, executable+': failed PIE NOUNDEFS NX LAZY_BINDINGS'))
+            (1, executable+': failed PIE NOUNDEFS NX LAZY_BINDINGS CONTROL_FLOW'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-flat_namespace','-fstack-protector-all']),
-            (1, executable+': failed PIE NOUNDEFS LAZY_BINDINGS'))
+            (1, executable+': failed PIE NOUNDEFS LAZY_BINDINGS CONTROL_FLOW'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-fstack-protector-all']),
-            (1, executable+': failed PIE LAZY_BINDINGS'))
+            (1, executable+': failed PIE LAZY_BINDINGS CONTROL_FLOW'))
         self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-bind_at_load','-fstack-protector-all']),
+            (1, executable+': failed PIE CONTROL_FLOW'))
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-no_pie','-Wl,-bind_at_load','-fstack-protector-all', '-fcf-protection=full']),
             (1, executable+': failed PIE'))
-        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-pie','-Wl,-bind_at_load','-fstack-protector-all']),
+        self.assertEqual(call_security_check(cc, source, executable, ['-Wl,-pie','-Wl,-bind_at_load','-fstack-protector-all', '-fcf-protection=full']),
             (0, ''))
 
         clean_files(source, executable)
