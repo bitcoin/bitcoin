@@ -270,7 +270,7 @@ After configuration, you are ready to compile.
 Run the following in your terminal to compile Syscoin Core:
 
 ``` bash
-make -jx    # use -jX here for parallelism
+make        # use "-j N" here for N parallel jobs
 make check  # Run tests if Python 3 is available
 ```
 
