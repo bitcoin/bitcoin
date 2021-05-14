@@ -44,6 +44,7 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
                 for (int i = 0; i < loop_counter; i++) {
                     if (tokens[0] == "SHA2") {
                         unsigned char output[32];
+                        ctx.Reset();
                         ctx.Write((unsigned char*)iResult, 32);
                         ctx.Finalize(output);
                         memcpy(iResult, output, 32);
@@ -54,6 +55,7 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
             else {                         //just a single run
                 if (tokens[0] == "SHA2") {
                     unsigned char output[32];
+                    ctx.Reset();
                     ctx.Write((unsigned char*)iResult, 32);
                     ctx.Finalize(output);
                     memcpy(iResult, output, 32);
@@ -70,6 +72,7 @@ std::string CDynProgram::execute(unsigned char* blockHeader, std::string prevBlo
             for (int i = 0; i < memory_size; i++) {
                 if (tokens[1] == "SHA2") {
                     unsigned char output[32];
+                    ctx.Reset();
                     ctx.Write((unsigned char*)iResult, 32);
                     ctx.Finalize(output);
                     memcpy(iResult, output, 32);
