@@ -1493,8 +1493,16 @@ void CConnman::SocketHandler()
 
     if (interruptNet) return;
 
+    const NodesSnapshot snap{*this, false};
+
     //
-    // Accept new connections
+    // Accept new connections. Done after taking a snapshot of the nodes because
+    // `AcceptConnection()` will add new entries to `vNodes` which are unwanted
+    // in the loop below because:
+    // - all of `recvSet`, `sendSet` and `errorSet` will be `false` for them
+    // - `InactivityCheck()` will either be a noop or will wrongly command to
+    //   disconnect the node before we have tried sending or receiving anything
+    //   to it.
     //
     for (const ListenSocket& hListenSocket : vhListenSocket)
     {
@@ -1502,8 +1510,6 @@ void CConnman::SocketHandler()
             AcceptConnection(hListenSocket);
         }
     }
-
-    const NodesSnapshot snap{*this, false};
 
     //
     // Service each socket
