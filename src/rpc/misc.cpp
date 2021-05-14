@@ -424,7 +424,7 @@ static RPCHelpMan mockscheduler()
     // check params are valid values
     RPCTypeCheck(request.params, {UniValue::VNUM});
     int64_t delta_seconds = request.params[0].get_int64();
-    if ((delta_seconds <= 0) || (delta_seconds > 3600)) {
+    if (delta_seconds <= 0 || delta_seconds > 3600) {
         throw std::runtime_error("delta_time must be between 1 and 3600 seconds (1 hr)");
     }
 
