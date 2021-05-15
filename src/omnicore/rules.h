@@ -40,6 +40,8 @@ const uint16_t FEATURE_FREEZENOTICE = 14;
 const uint16_t FEATURE_FREEDEX = 15;
 //! Feature identifier to enable non-fungible token support
 const uint16_t FEATURE_NONFUNGIBLE = 16;
+//! Feature identifier to enable delegated issuance support
+const uint16_t FEATURE_DELEGATEDISSUANCE = 17;
 
 //! When (propertyTotalTokens / OMNI_FEE_THRESHOLD) is reached fee distribution will occur
 const int64_t OMNI_FEE_THRESHOLD = 100000; // 0.001%
@@ -136,6 +138,8 @@ public:
     int MSC_ANYDATA_BLOCK;
     //! Block to enable non-fungible tokens
     int MSC_NONFUNGIBLE_BLOCK;
+    //! Block to enable delegation of token issuance
+    int MSC_DELEGATED_ISSUANCE_BLOCK;
 
     //! Block to deactivate crowdsale participations when "granting tokens"
     int GRANTEFFECTS_FEATURE_BLOCK;

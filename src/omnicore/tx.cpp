@@ -73,6 +73,8 @@ std::string mastercore::strTransactionType(uint16_t txType)
         case MSC_TYPE_DISABLE_FREEZING: return "Disable Freezing";
         case MSC_TYPE_FREEZE_PROPERTY_TOKENS: return "Freeze Property Tokens";
         case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS: return "Unfreeze Property Tokens";
+        case MSC_TYPE_ADD_DELEGATE: return "Add Delegate";
+        case MSC_TYPE_REMOVE_DELEGATE: return "Remove Delegate";
         case MSC_TYPE_ANYDATA: return "Embed any data";
         case MSC_TYPE_NONFUNGIBLE_DATA: return "Set Non-Fungible Token Data";
         case MSC_TYPE_NOTIFICATION: return "Notification";
