@@ -57,6 +57,15 @@ static std::optional<int> ReadPragmaInteger(sqlite3* db, const std::string& key,
     return result;
 }
 
+static void SetPragma(sqlite3* db, const std::string& key, const std::string& value, const std::string& err_msg)
+{
+    std::string stmt_text = strprintf("PRAGMA %s = %s", key, value);
+    int ret = sqlite3_exec(db, stmt_text.c_str(), nullptr, nullptr, nullptr);
+    if (ret != SQLITE_OK) {
+        throw std::runtime_error(strprintf("SQLiteDatabase: %s: %s\n", err_msg, sqlite3_errstr(ret)));
+    }
+}
+
 SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, bool mock)
     : WalletDatabase(), m_mock(mock), m_dir_path(dir_path.string()), m_file_path(file_path.string())
 {
@@ -211,12 +220,9 @@ void SQLiteDatabase::Open()
 
     // Acquire an exclusive lock on the database
     // First change the locking mode to exclusive
-    int ret = sqlite3_exec(m_db, "PRAGMA locking_mode = exclusive", nullptr, nullptr, nullptr);
-    if (ret != SQLITE_OK) {
-        throw std::runtime_error(strprintf("SQLiteDatabase: Unable to change database locking mode to exclusive: %s\n", sqlite3_errstr(ret)));
-    }
+    SetPragma(m_db, "locking_mode", "exclusive", "Unable to change database locking mode to exclusive");
     // Now begin a transaction to acquire the exclusive lock. This lock won't be released until we close because of the exclusive locking mode.
-    ret = sqlite3_exec(m_db, "BEGIN EXCLUSIVE TRANSACTION", nullptr, nullptr, nullptr);
+    int ret = sqlite3_exec(m_db, "BEGIN EXCLUSIVE TRANSACTION", nullptr, nullptr, nullptr);
     if (ret != SQLITE_OK) {
         throw std::runtime_error("SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another bitcoind?\n");
     }
@@ -226,18 +232,12 @@ void SQLiteDatabase::Open()
     }
 
     // Enable fullfsync for the platforms that use it
-    ret = sqlite3_exec(m_db, "PRAGMA fullfsync = true", nullptr, nullptr, nullptr);
-    if (ret != SQLITE_OK) {
-        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to enable fullfsync: %s\n", sqlite3_errstr(ret)));
-    }
+    SetPragma(m_db, "fullfsync", "true", "Failed to enable fullfsync");
 
     if (gArgs.GetBoolArg("-unsafesqlitesync", false)) {
         // Use normal synchronous mode for the journal
         LogPrintf("WARNING SQLite is configured to not wait for data to be flushed to disk. Data loss and corruption may occur.\n");
-        ret = sqlite3_exec(m_db, "PRAGMA synchronous = OFF", nullptr, nullptr, nullptr);
-        if (ret != SQLITE_OK) {
-            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to set synchronous mode to OFF: %s\n", sqlite3_errstr(ret)));
-        }
+        SetPragma(m_db, "synchronous", "OFF", "Failed to set synchronous mode to OFF");
     }
 
     // Make the table for our key-value pairs
@@ -269,18 +269,12 @@ void SQLiteDatabase::Open()
 
         // Set the application id
         uint32_t app_id = ReadBE32(Params().MessageStart());
-        std::string set_app_id = strprintf("PRAGMA application_id = %d", static_cast<int32_t>(app_id));
-        ret = sqlite3_exec(m_db, set_app_id.c_str(), nullptr, nullptr, nullptr);
-        if (ret != SQLITE_OK) {
-            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to set the application id: %s\n", sqlite3_errstr(ret)));
-        }
+        SetPragma(m_db, "application_id", strprintf("%d", static_cast<int32_t>(app_id)),
+                  "Failed to set the application id");
 
         // Set the user version
-        std::string set_user_ver = strprintf("PRAGMA user_version = %d", WALLET_SCHEMA_VERSION);
-        ret = sqlite3_exec(m_db, set_user_ver.c_str(), nullptr, nullptr, nullptr);
-        if (ret != SQLITE_OK) {
-            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to set the wallet schema version: %s\n", sqlite3_errstr(ret)));
-        }
+        SetPragma(m_db, "user_version", strprintf("%d", WALLET_SCHEMA_VERSION),
+                  "Failed to set the wallet schema version");
     }
 }
 
