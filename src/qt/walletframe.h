@@ -8,7 +8,6 @@
 #include <QFrame>
 #include <QMap>
 
-class BitcoinGUI;
 class ClientModel;
 class PlatformStyle;
 class SendCoinsRecipient;
@@ -31,7 +30,7 @@ class WalletFrame : public QFrame
     Q_OBJECT
 
 public:
-    explicit WalletFrame(const PlatformStyle *platformStyle, BitcoinGUI *_gui = nullptr);
+    explicit WalletFrame(const PlatformStyle* platformStyle, QWidget* parent);
     ~WalletFrame();
 
     void setClientModel(ClientModel *clientModel);
@@ -55,7 +54,6 @@ Q_SIGNALS:
 
 private:
     QStackedWidget *walletStack;
-    BitcoinGUI *gui;
     ClientModel *clientModel;
     QMap<WalletModel*, WalletView*> mapWalletViews;
 

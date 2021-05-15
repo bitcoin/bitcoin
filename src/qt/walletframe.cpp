@@ -4,7 +4,6 @@
 
 #include <qt/walletframe.h>
 
-#include <qt/bitcoingui.h>
 #include <qt/overviewpage.h>
 #include <qt/walletmodel.h>
 #include <qt/walletview.h>
@@ -17,9 +16,8 @@
 #include <QPushButton>
 #include <QVBoxLayout>
 
-WalletFrame::WalletFrame(const PlatformStyle* _platformStyle, BitcoinGUI* _gui)
-    : QFrame(_gui),
-      gui(_gui),
+WalletFrame::WalletFrame(const PlatformStyle* _platformStyle, QWidget* parent)
+    : QFrame(parent),
       platformStyle(_platformStyle),
       m_size_hint(OverviewPage{platformStyle, nullptr}.sizeHint())
 {
@@ -62,7 +60,7 @@ void WalletFrame::setClientModel(ClientModel *_clientModel)
 
 bool WalletFrame::addWallet(WalletModel* walletModel, WalletView* walletView)
 {
-    if (!gui || !clientModel || !walletModel) return false;
+    if (!clientModel || !walletModel) return false;
 
     if (mapWalletViews.count(walletModel) > 0) return false;
 
