@@ -211,11 +211,6 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const PlatformStyle *_platformSty
 
     connect(labelBlocksIcon, &GUIUtil::ClickableLabel::clicked, this, &BitcoinGUI::showModalOverlay);
     connect(progressBar, &GUIUtil::ClickableProgressBar::clicked, this, &BitcoinGUI::showModalOverlay);
-#ifdef ENABLE_WALLET
-    if(enableWallet) {
-        connect(walletFrame, &WalletFrame::requestedSyncWarningInfo, this, &BitcoinGUI::showModalOverlay);
-    }
-#endif
 
 #ifdef Q_OS_MAC
     m_app_nap_inhibitor = new CAppNapInhibitor;
@@ -690,7 +685,7 @@ void BitcoinGUI::addWallet(WalletModel* walletModel)
     const QString display_name = walletModel->getDisplayName();
     m_wallet_selector->addItem(display_name, QVariant::fromValue(walletModel));
 
-    connect(wallet_view, &WalletView::outOfSyncWarningClicked, walletFrame, &WalletFrame::outOfSyncWarningClicked);
+    connect(wallet_view, &WalletView::outOfSyncWarningClicked, this, &BitcoinGUI::showModalOverlay);
     connect(wallet_view, &WalletView::transactionClicked, this, &BitcoinGUI::gotoHistoryPage);
     connect(wallet_view, &WalletView::coinsSent, this, &BitcoinGUI::gotoHistoryPage);
     connect(wallet_view, &WalletView::message, [this](const QString& title, const QString& message, unsigned int style) {
