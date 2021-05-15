@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (c) 2020 The Dash Core developers
+# Copyright (c) 2020-2021 The Dash Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.messages import CTransaction, FromHex, hash256, ser_compact_size, ser_string
 from test_framework.test_framework import DashTestFramework
-from test_framework.util import bytes_to_hex_str, satoshi_round, wait_until
+from test_framework.util import assert_raises_rpc_error, bytes_to_hex_str, satoshi_round, wait_until
 
 '''
 rpc_verifyislock.py
@@ -83,9 +83,14 @@ class RPCVerifyISLockTest(DashTestFramework):
         assert selected_hash == oldest_quorum_hash
         # Create the ISLOCK, then mine a quorum to move the signing quorum out of the active set
         islock = self.create_islock(rawtx)
+        # Mine one block to trigger the "signHeight + dkgInterval" verification for the ISLOCK
         self.mine_quorum()
-        # Send the tx and verify the ISLOCK. This triggers the "signHeight + dkgInterval" verification
-        rawtx_txid = node.sendrawtransaction(rawtx)
+        # Verify the ISLOCK for a transaction that is not yet known by the node
+        rawtx_txid = node.decoderawtransaction(rawtx)["txid"]
+        assert_raises_rpc_error(-5, "No such mempool or blockchain transaction", node.getrawtransaction, rawtx_txid)
+        assert node.verifyislock(request_id, rawtx_txid, bytes_to_hex_str(islock.sig), node.getblockcount())
+        # Send the tx and verify the ISLOCK for a now known transaction
+        assert rawtx_txid == node.sendrawtransaction(rawtx)
         assert node.verifyislock(request_id, rawtx_txid, bytes_to_hex_str(islock.sig), node.getblockcount())
 
 

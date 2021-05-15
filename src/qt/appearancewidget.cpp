@@ -1,4 +1,4 @@
-// Copyright (c) 2020 The Dash Core developers
+// Copyright (c) 2020-2021 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -47,7 +47,7 @@ AppearanceWidget::AppearanceWidget(QWidget* parent) :
     mapper->setOrientation(Qt::Vertical);
 
     connect(ui->theme, SIGNAL(currentTextChanged(const QString&)), this, SLOT(updateTheme(const QString&)));
-    connect(ui->fontFamily, SIGNAL(activated(int)), this, SLOT(updateFontFamily(int)));
+    connect(ui->fontFamily, SIGNAL(currentIndexChanged(int)), this, SLOT(updateFontFamily(int)));
     connect(ui->fontScaleSlider, SIGNAL(valueChanged(int)), this, SLOT(updateFontScale(int)));
     connect(ui->fontWeightNormalSlider, SIGNAL(valueChanged(int)), this, SLOT(updateFontWeightNormal(int)));
     connect(ui->fontWeightBoldSlider, SIGNAL(valueChanged(int)), this, SLOT(updateFontWeightBold(int)));
@@ -118,7 +118,7 @@ void AppearanceWidget::updateTheme(const QString& theme)
 void AppearanceWidget::updateFontFamily(int index)
 {
     GUIUtil::setFontFamily(static_cast<GUIUtil::FontFamily>(ui->fontFamily->itemData(index).toInt()));
-    updateWeightSlider();
+    updateWeightSlider(true);
 }
 
 void AppearanceWidget::updateFontScale(int nScale)
@@ -148,7 +148,7 @@ void AppearanceWidget::updateFontWeightBold(int nValue, bool fForce)
     GUIUtil::setFontWeightBold(GUIUtil::supportedWeightFromIndex(ui->fontWeightBoldSlider->value()));
 }
 
-void AppearanceWidget::updateWeightSlider()
+void AppearanceWidget::updateWeightSlider(const bool fForce)
 {
     int nMaximum = GUIUtil::getSupportedWeights().size() - 1;
 
@@ -158,11 +158,11 @@ void AppearanceWidget::updateWeightSlider()
     ui->fontWeightBoldSlider->setMinimum(0);
     ui->fontWeightBoldSlider->setMaximum(nMaximum);
 
-    if (nMaximum < 4) {
-        updateFontWeightNormal(0, true);
-        updateFontWeightBold(nMaximum, true);
-    } else {
-        updateFontWeightNormal(1, true);
-        updateFontWeightBold(4, true);
+    if (fForce || !GUIUtil::isSupportedWeight(prevWeightNormal) || !GUIUtil::isSupportedWeight(prevWeightBold)) {
+        int nIndexNormal = GUIUtil::supportedWeightToIndex(GUIUtil::getSupportedFontWeightNormalDefault());
+        int nIndexBold = GUIUtil::supportedWeightToIndex(GUIUtil::getSupportedFontWeightBoldDefault());
+        assert(nIndexNormal != -1 && nIndexBold != -1);
+        updateFontWeightNormal(nIndexNormal, true);
+        updateFontWeightBold(nIndexBold, true);
     }
 }

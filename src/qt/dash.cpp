@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2014-2021 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -714,14 +714,14 @@ int main(int argc, char *argv[])
     qInstallMessageHandler(DebugMessageHandler);
     // Allow parameter interaction before we create the options model
     app.parameterSetup();
-    // Load GUI settings from QSettings
-    app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
     // Load custom application fonts and setup font management
     if (!GUIUtil::loadFonts()) {
         QMessageBox::critical(0, QObject::tr(PACKAGE_NAME),
                               QObject::tr("Error: Failed to load application fonts."));
         return EXIT_FAILURE;
     }
+    // Load GUI settings from QSettings
+    app.createOptionsModel(gArgs.GetBoolArg("-resetguisettings", false));
     // Validate/set font family
     if (gArgs.IsArgSet("-font-family")) {
         GUIUtil::FontFamily family;

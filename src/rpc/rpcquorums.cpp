@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 The Dash Core developers
+// Copyright (c) 2017-2021 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,6 +14,10 @@
 #include <llmq/quorums_dkgsession.h>
 #include <llmq/quorums_signing.h>
 #include <llmq/quorums_signing_shares.h>
+
+namespace llmq {
+extern const std::string CLSIG_REQUESTID_PREFIX;
+}
 
 void quorum_list_help()
 {
@@ -652,6 +656,48 @@ UniValue quorum(const JSONRPCRequest& request)
     }
 }
 
+void verifychainlock_help()
+{
+    throw std::runtime_error(
+            "verifychainlock \"blockHash\" \"signature\" ( blockHeight )\n"
+            "Test if a quorum signature is valid for a ChainLock.\n"
+            "\nArguments:\n"
+            "1. \"blockHash\"           (string, required) The block hash of the ChainLock.\n"
+            "2. \"signature\"           (string, required) The signature of the ChainLock.\n"
+            "3. blockHeight           (integer, optional) The height of the ChainLock. There will be an internal lookup of \"blockHash\" if this is not provided.\n"
+    );
+}
+
+UniValue verifychainlock(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() < 2 || request.params.size() > 3) {
+        verifychainlock_help();
+    }
+
+    const uint256 nBlockHash = ParseHashV(request.params[0], "blockHash");
+
+    CBLSSignature chainLockSig;
+    if (!chainLockSig.SetHexStr(request.params[1].get_str())) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
+    }
+
+    int nBlockHeight;
+    if (request.params[2].isNull()) {
+        LOCK(cs_main);
+        const CBlockIndex* pIndex = LookupBlockIndex(nBlockHash);
+        if (pIndex == nullptr) {
+            throw JSONRPCError(RPC_INTERNAL_ERROR, "blockHash not found");
+        }
+        nBlockHeight = pIndex->nHeight;
+    } else {
+        nBlockHeight = ParseInt32V(request.params[2], "blockHeight");
+    }
+
+    const auto llmqType = Params().GetConsensus().llmqTypeChainLocks;
+    const uint256 nRequestId = ::SerializeHash(std::make_pair(llmq::CLSIG_REQUESTID_PREFIX, nBlockHeight));
+    return llmq::CSigningManager::VerifyRecoveredSig(llmqType, nBlockHeight, nRequestId, nBlockHash, chainLockSig);
+}
+
 void verifyislock_help()
 {
     throw std::runtime_error(
@@ -684,13 +730,7 @@ UniValue verifyislock(const JSONRPCRequest& request)
         LOCK(cs_main);
         CTransactionRef tx;
         uint256 hash_block;
-        if (!GetTransaction(txid, tx, Params().GetConsensus(), hash_block, true)) {
-            std::string errmsg = fTxIndex
-                  ? "No such mempool or blockchain transaction"
-                  : "No such mempool transaction. Use -txindex to enable blockchain transaction queries";
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, errmsg);
-        }
-        if (!hash_block.IsNull()) {
+        if (GetTransaction(txid, tx, Params().GetConsensus(), hash_block, true) && !hash_block.IsNull()) {
             pindexMined = LookupBlockIndex(hash_block);
         }
     }
@@ -719,6 +759,7 @@ static const CRPCCommand commands[] =
 { //  category              name                      actor (function)
   //  --------------------- ------------------------  -----------------------
     { "evo",                "quorum",                 &quorum,                 {}  },
+    { "evo",                "verifychainlock",        &verifychainlock,        {"blockHash", "signature", "blockHeight"} },
     { "evo",                "verifyislock",           &verifyislock,           {"id", "txid", "signature", "maxHeight"}  },
 };
 

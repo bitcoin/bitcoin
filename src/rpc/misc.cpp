@@ -1,11 +1,12 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2014-2021 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chain.h>
 #include <clientversion.h>
+#include <consensus/consensus.h>
 #include <core_io.h>
 #include <evo/mnauth.h>
 #include <init.h>
@@ -770,8 +771,10 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
             "}\n"
             "\nResult:\n"
             "{\n"
-            "  \"balance\"  (string) The current balance in duffs\n"
-            "  \"received\"  (string) The total number of duffs received (including change)\n"
+            "  \"balance\": xxxxx,              (numeric) The current total balance in duffs\n"
+            "  \"balance_immature\": xxxxx,     (numeric) The current immature balance in duffs\n"
+            "  \"balance_spendable\": xxxxx,    (numeric) The current spendable balance in duffs\n"
+            "  \"received\": xxxxx              (numeric) The total number of duffs received (including change)\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("getaddressbalance", "'{\"addresses\": [\"XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg\"]}'")
@@ -792,18 +795,33 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
         }
     }
 
+    int nHeight;
+    {
+        LOCK(cs_main);
+        nHeight = chainActive.Height();
+    }
+
     CAmount balance = 0;
+    CAmount balance_spendable = 0;
+    CAmount balance_immature = 0;
     CAmount received = 0;
 
     for (std::vector<std::pair<CAddressIndexKey, CAmount> >::const_iterator it=addressIndex.begin(); it!=addressIndex.end(); it++) {
         if (it->second > 0) {
             received += it->second;
         }
+        if (it->first.txindex == 0 && nHeight - it->first.blockHeight < COINBASE_MATURITY) {
+            balance_immature += it->second;
+        } else {
+            balance_spendable += it->second;
+        }
         balance += it->second;
     }
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("balance", balance);
+    result.pushKV("balance_immature", balance_immature);
+    result.pushKV("balance_spendable", balance_spendable);
     result.pushKV("received", received);
 
     return result;

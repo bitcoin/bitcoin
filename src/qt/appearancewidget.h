@@ -53,7 +53,7 @@ private:
     QFont::Weight prevWeightNormal;
     QFont::Weight prevWeightBold;
 
-    void updateWeightSlider();
+    void updateWeightSlider(bool fForce = false);
 };
 
 #endif // BITCOIN_QT_APPEARANCEWIDGET_H

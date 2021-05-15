@@ -1,4 +1,4 @@
-// Copyright (c) 2019-2020 The Dash Core developers
+// Copyright (c) 2019-2021 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,6 +31,10 @@ static const std::string DB_MINED_BY_HEIGHT_AND_HASH = "is_m";
 static const std::string DB_ARCHIVED_BY_HEIGHT_AND_HASH = "is_a1";
 static const std::string DB_ARCHIVED_BY_HASH = "is_a2";
 
+static const std::string DB_VERSION = "is_v";
+
+const int CInstantSendDb::CURRENT_VERSION;
+
 CInstantSendManager* quorumInstantSendManager;
 
 uint256 CInstantSendLock::GetRequestId() const
@@ -42,6 +46,46 @@ uint256 CInstantSendLock::GetRequestId() const
 }
 
 ////////////////
+
+CInstantSendDb::CInstantSendDb(CDBWrapper& _db) : db(_db)
+{
+    Upgrade();
+}
+
+void CInstantSendDb::Upgrade()
+{
+    int v{0};
+    if (!db.Read(DB_VERSION, v) || v < CInstantSendDb::CURRENT_VERSION) {
+        CDBBatch batch(db);
+        CInstantSendLock islock;
+        CTransactionRef tx;
+        uint256 hashBlock;
+
+        auto it = std::unique_ptr<CDBIterator>(db.NewIterator());
+        auto firstKey = std::make_tuple(DB_ISLOCK_BY_HASH, uint256());
+        it->Seek(firstKey);
+        decltype(firstKey) curKey;
+
+        while (it->Valid()) {
+            if (!it->GetKey(curKey) || std::get<0>(curKey) != DB_ISLOCK_BY_HASH) {
+                break;
+            }
+            if (it->GetValue(islock)) {
+                if (!GetTransaction(islock.txid, tx, Params().GetConsensus(), hashBlock)) {
+                    // Drop locks for unknown txes
+                    batch.Erase(std::make_tuple(DB_HASH_BY_TXID, islock.txid));
+                    for (auto& in : islock.inputs) {
+                        batch.Erase(std::make_tuple(DB_HASH_BY_OUTPOINT, in));
+                    }
+                    batch.Erase(curKey);
+                }
+            }
+            it->Next();
+        }
+        batch.Write(DB_VERSION, CInstantSendDb::CURRENT_VERSION);
+        db.WriteBatch(batch);
+    }
+}
 
 void CInstantSendDb::WriteNewInstantSendLock(const uint256& hash, const CInstantSendLock& islock)
 {
@@ -982,8 +1026,8 @@ void CInstantSendManager::ProcessInstantSendLock(NodeId from, const uint256& has
         g_connman->RelayInvFiltered(inv, islock->txid, LLMQS_PROTO_VERSION);
     }
 
-    RemoveMempoolConflictsForLock(hash, *islock);
     ResolveBlockConflicts(hash, *islock);
+    RemoveMempoolConflictsForLock(hash, *islock);
 
     if (tx != nullptr) {
         LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- notify about an in-time lock for tx %s\n", __func__, tx->GetHash().ToString());
@@ -1021,6 +1065,23 @@ void CInstantSendManager::TransactionAddedToMempool(const CTransactionRef& tx)
         LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- notify about an earlier received lock for tx %s\n", __func__, tx->GetHash().ToString());
         GetMainSignals().NotifyTransactionLock(tx, islock);
     }
+}
+
+void CInstantSendManager::TransactionRemovedFromMempool(const CTransactionRef& tx)
+{
+    if (tx->vin.empty()) {
+        return;
+    }
+
+    LOCK(cs);
+    CInstantSendLockPtr islock = db.GetInstantSendLockByTxid(tx->GetHash());
+
+    if (islock == nullptr) {
+        return;
+    }
+
+    LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- transaction %s was removed from mempool\n", __func__, tx->GetHash().ToString());
+    RemoveConflictingLock(::SerializeHash(*islock), *islock);
 }
 
 void CInstantSendManager::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
@@ -1291,7 +1352,9 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
     // when large parts of the masternode network are controlled by an attacker. In this case we must still find consensus
     // and its better to sacrifice individual ISLOCKs then to sacrifice whole ChainLocks.
     if (hasChainLockedConflict) {
-        RemoveChainLockConflictingLock(islockHash, islock);
+        LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: at least one conflicted TX already got a ChainLock\n", __func__,
+                  islock.txid.ToString(), islockHash.ToString());
+        RemoveConflictingLock(islockHash, islock);
         return;
     }
 
@@ -1312,8 +1375,8 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
         CValidationState state;
         // need non-const pointer
         auto pindex2 = LookupBlockIndex(pindex->GetBlockHash());
-        if (!MarkConflictingBlock(state, Params(), pindex2)) {
-            LogPrintf("CInstantSendManager::%s -- MarkConflictingBlock failed: %s\n", __func__, FormatStateMessage(state));
+        if (!InvalidateBlock(state, Params(), pindex2)) {
+            LogPrintf("CInstantSendManager::%s -- InvalidateBlock failed: %s\n", __func__, FormatStateMessage(state));
             // This should not have happened and we are in a state were it's not safe to continue anymore
             assert(false);
         }
@@ -1330,9 +1393,9 @@ void CInstantSendManager::ResolveBlockConflicts(const uint256& islockHash, const
     }
 }
 
-void CInstantSendManager::RemoveChainLockConflictingLock(const uint256& islockHash, const llmq::CInstantSendLock& islock)
+void CInstantSendManager::RemoveConflictingLock(const uint256& islockHash, const llmq::CInstantSendLock& islock)
 {
-    LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: at least one conflicted TX already got a ChainLock. Removing ISLOCK and its chained children.\n", __func__,
+    LogPrintf("CInstantSendManager::%s -- txid=%s, islock=%s: Removing ISLOCK and its chained children\n", __func__,
               islock.txid.ToString(), islockHash.ToString());
     int tipHeight;
     {

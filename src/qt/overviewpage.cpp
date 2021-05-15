@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2020 The Dash Core developers
+// Copyright (c) 2014-2021 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -425,7 +425,7 @@ void OverviewPage::updateCoinJoinProgress()
 
 void OverviewPage::updateAdvancedCJUI(bool fShowAdvancedCJUI)
 {
-    if (!walletModel || !clientModel || !clientModel->coinJoinOptions().isEnabled()) return;
+    if (!walletModel || !clientModel) return;
 
     this->fShowAdvancedCJUI = fShowAdvancedCJUI;
     coinJoinStatus(true);
