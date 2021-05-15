@@ -672,6 +672,53 @@ static UniValue omni_createpayload_unfreeze(const JSONRPCRequest& request)
     return HexStr(payload.begin(), payload.end());
 }
 
+static UniValue omni_createpayload_adddelegate(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"omni_createpayload_adddelegate",
+       "\nCreates the payload to add a delegate for the issuance of tokens of a managed property.\n",
+       {
+           {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens\n"},
+       },
+       RPCResult{
+           RPCResult::Type::STR_HEX, "payload", "the hex-encoded payload",
+       },
+       RPCExamples{
+           HelpExampleCli("omni_createpayload_adddelegate", "21")
+           + HelpExampleRpc("omni_createpayload_adddelegate", "21")
+       }
+    }.Check(request);
+
+    uint32_t propertyId = ParsePropertyId(request.params[0]);
+
+    std::vector<unsigned char> payload = CreatePayload_AddDelegate(propertyId);
+
+    return HexStr(payload.begin(), payload.end());
+}
+
+
+static UniValue omni_createpayload_removedelegate(const JSONRPCRequest& request)
+{
+    RPCHelpMan{"omni_createpayload_removedelegate",
+       "\nCreates the payload to remove a delegate for the issuance of tokens of a managed property.\n",
+       {
+           {"propertyid", RPCArg::Type::NUM, RPCArg::Optional::NO, "the identifier of the tokens\n"},
+       },
+       RPCResult{
+           RPCResult::Type::STR_HEX, "payload", "the hex-encoded payload",
+       },
+       RPCExamples{
+           HelpExampleCli("omni_createpayload_removedelegate", "21")
+           + HelpExampleRpc("omni_createpayload_removedelegate", "21")
+       }
+    }.Check(request);
+
+    uint32_t propertyId = ParsePropertyId(request.params[0]);
+
+    std::vector<unsigned char> payload = CreatePayload_RemoveDelegate(propertyId);
+
+    return HexStr(payload.begin(), payload.end());
+}
+
 static UniValue omni_createpayload_anydata(const JSONRPCRequest& request)
 {
     RPCHelpMan{"omni_createpayload_anydata",
@@ -718,6 +765,8 @@ static const CRPCCommand commands[] =
     { "omni layer (payload creation)", "omni_createpayload_disablefreezing",     &omni_createpayload_disablefreezing,     {"propertyid"} },
     { "omni layer (payload creation)", "omni_createpayload_freeze",              &omni_createpayload_freeze,              {"toaddress", "propertyid", "amount"} },
     { "omni layer (payload creation)", "omni_createpayload_unfreeze",            &omni_createpayload_unfreeze,            {"toaddress", "propertyid", "amount"} },
+    { "omni layer (payload creation)", "omni_createpayload_adddelegate",         &omni_createpayload_adddelegate,         {"propertyid"} },
+    { "omni layer (payload creation)", "omni_createpayload_removedelegate",      &omni_createpayload_removedelegate,      {"propertyid"} },
     { "omni layer (payload creation)", "omni_createpayload_anydata",             &omni_createpayload_anydata,             {"data"} },
     { "omni layer (payload creation)", "omni_createpayload_sendnonfungible",     &omni_createpayload_sendnonfungible,     {"propertyid", "tokenstart", "tokenend"} },
     { "omni layer (payload creation)", "omni_createpayload_setnonfungibledata",  &omni_createpayload_setnonfungibledata,  {"propertyid", "tokenid", "issuer", "data"} },

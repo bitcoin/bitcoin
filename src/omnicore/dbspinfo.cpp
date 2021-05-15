@@ -24,7 +24,7 @@ CMPSPInfo::Entry::Entry()
   : prop_type(0), prev_prop_id(0), num_tokens(0), property_desired(0),
     deadline(0), early_bird(0), percentage(0),
     close_early(false), max_tokens(false), missedTokens(0), timeclosed(0),
-    fixed(false), manual(false), unique(false) {}
+    fixed(false), manual(false), unique(false), delegate("") {}
 
 bool CMPSPInfo::Entry::isDivisible() const
 {
@@ -85,6 +85,55 @@ std::string CMPSPInfo::Entry::getIssuer(int block) const
 
     return _issuer;
 }
+
+/**
+ * Stores a new delegate in the DB.
+ *
+ * @param block  The block of the update
+ * @param idx    The position within the block of the update
+ * @param newIssuer  The new delegate
+ */
+void CMPSPInfo::Entry::addDelegate(int block, int idx, const std::string& newIssuer)
+{
+    historicalDelegates[std::make_pair(block, idx)] = newIssuer;
+}
+   
+/**
+ * Clears the delegate in the DB.
+ *
+ * @param block  The block of the update
+ * @param idx    The position within the block of the update
+ */
+void CMPSPInfo::Entry::removeDelegate(int block, int idx)
+{
+    historicalDelegates[std::make_pair(block, idx)] = "";
+}
+
+/**
+ * Returns the delegate for the given block, if there is one.
+ * If not, return an emptry string.
+ *
+ * @param block  The block to check
+ * @return The issuer of that block
+ */
+std::string CMPSPInfo::Entry::getDelegate(int block) const
+{
+    std::string _delegate = delegate;
+
+    for (auto const& entry : historicalDelegates) {
+        int currentBlock = entry.first.first;
+        std::string currentDelegate = entry.second;
+
+        if (currentBlock > block) {
+            break;
+        }
+
+        _delegate = currentDelegate;
+    }
+
+    return _delegate;
+}
+
 
 CMPSPInfo::CMPSPInfo(const fs::path& path, bool fWipe)
 {

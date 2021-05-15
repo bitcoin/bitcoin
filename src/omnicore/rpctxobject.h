@@ -41,6 +41,8 @@ void populateRPCTypeEnableFreezing(CMPTransaction& omniObj, UniValue& txobj);
 void populateRPCTypeDisableFreezing(CMPTransaction& omniObj, UniValue& txobj);
 void populateRPCTypeFreezeTokens(CMPTransaction& omniObj, UniValue& txobj);
 void populateRPCTypeUnfreezeTokens(CMPTransaction& omniObj, UniValue& txobj);
+void populateRPCTypeAddDelegate(CMPTransaction& omniObj, UniValue& txobj);
+void populateRPCTypeRemoveDelegate(CMPTransaction& omniObj, UniValue& txobj);
 void populateRPCTypeAnyData(CMPTransaction& omniObj, UniValue& txobj);
 
 void populateRPCExtendedTypeSendToOwners(const uint256 txid, std::string extendedDetailsFilter, UniValue& txobj, uint16_t version, interfaces::Wallet* iWallet = nullptr);

@@ -51,6 +51,31 @@ void RequireExistingProperty(uint32_t propertyId)
     }
 }
 
+void RequireExistingDelegate(uint32_t propertyId)
+{
+    LOCK(cs_tally);
+    if (!mastercore::HasDelegate(propertyId)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Property does not have a delegate");
+    }
+}
+
+void RequireEmptyDelegate(uint32_t propertyId)
+{
+    LOCK(cs_tally);
+    PrintToConsole("has delegate: %d\n", mastercore::HasDelegate(propertyId));
+    if (mastercore::HasDelegate(propertyId)) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Property already has a delegate " + mastercore::GetDelegate(propertyId));
+    }
+}
+
+void RequireSimilarDelegate(uint32_t propertyId, const std::string& delegate)
+{
+    LOCK(cs_tally);
+    if (mastercore::GetDelegate(propertyId).compare(delegate) != 0) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Delegate does not match with current delegate");
+    }
+}
+
 void RequireSameEcosystem(uint32_t propertyId, uint32_t otherId)
 {
     if (mastercore::isTestEcosystemProperty(propertyId) != mastercore::isTestEcosystemProperty(otherId)) {

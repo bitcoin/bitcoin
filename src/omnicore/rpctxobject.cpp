@@ -244,6 +244,12 @@ void populateRPCTypeInfo(CMPTransaction& mp_obj, UniValue& txobj, uint32_t txTyp
         case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS:
             populateRPCTypeUnfreezeTokens(mp_obj, txobj);
             break;
+        case MSC_TYPE_ADD_DELEGATE :
+            populateRPCTypeAddDelegate(mp_obj, txobj);
+            break;
+        case MSC_TYPE_REMOVE_DELEGATE:
+            populateRPCTypeRemoveDelegate(mp_obj, txobj);
+            break;
         case MSC_TYPE_ANYDATA:
             populateRPCTypeAnyData(mp_obj, txobj);
             break;
@@ -284,6 +290,8 @@ bool showRefForTx(uint32_t txType)
         case MSC_TYPE_DISABLE_FREEZING: return false;
         case MSC_TYPE_FREEZE_PROPERTY_TOKENS: return true;
         case MSC_TYPE_UNFREEZE_PROPERTY_TOKENS: return true;
+        case MSC_TYPE_REMOVE_DELEGATE: return true;
+        case MSC_TYPE_ADD_DELEGATE: return true;
         case MSC_TYPE_ANYDATA: return true;
         case MSC_TYPE_SEND_NONFUNGIBLE: return true;
         case MSC_TYPE_NONFUNGIBLE_DATA: return true;
@@ -610,6 +618,16 @@ void populateRPCTypeFreezeTokens(CMPTransaction& omniObj, UniValue& txobj)
 }
 
 void populateRPCTypeUnfreezeTokens(CMPTransaction& omniObj, UniValue& txobj)
+{
+    txobj.pushKV("propertyid", (uint64_t) omniObj.getProperty());
+}
+
+void populateRPCTypeAddDelegate(CMPTransaction& omniObj, UniValue& txobj)
+{
+    txobj.pushKV("propertyid", (uint64_t) omniObj.getProperty());
+}
+
+void populateRPCTypeRemoveDelegate(CMPTransaction& omniObj, UniValue& txobj)
 {
     txobj.pushKV("propertyid", (uint64_t) omniObj.getProperty());
 }

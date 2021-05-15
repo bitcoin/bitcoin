@@ -344,7 +344,7 @@ CRegTestConsensusParams::CRegTestConsensusParams()
     MSC_STOV1_BLOCK = 999999;
     MSC_ANYDATA_BLOCK = 0;
     MSC_NONFUNGIBLE_BLOCK = 0;
-    MSC_DELEGATED_ISSUANCE_BLOCK = 999999;
+    MSC_DELEGATED_ISSUANCE_BLOCK = 0;
     // Other feature activations:
     GRANTEFFECTS_FEATURE_BLOCK = 999999;
     DEXMATH_FEATURE_BLOCK = 999999;
@@ -523,6 +523,7 @@ bool ActivateFeature(uint16_t featureId, int activationBlock, uint32_t minClient
         break;
         case FEATURE_NONFUNGIBLE:
             MutableConsensusParams().MSC_NONFUNGIBLE_BLOCK = activationBlock;
+        break;
         case FEATURE_DELEGATEDISSUANCE:
             MutableConsensusParams().MSC_DELEGATED_ISSUANCE_BLOCK = activationBlock;
         break;

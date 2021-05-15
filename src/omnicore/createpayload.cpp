@@ -451,6 +451,38 @@ std::vector<unsigned char> CreatePayload_UnfreezeTokens(uint32_t propertyId, uin
     return payload;
 }
 
+std::vector<unsigned char> CreatePayload_AddDelegate(uint32_t propertyId)
+{
+    std::vector<unsigned char> payload;
+    uint16_t messageType = 73;
+    uint16_t messageVer = 0;
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder32(propertyId);
+
+    PUSH_BACK_BYTES(payload, messageVer);
+    PUSH_BACK_BYTES(payload, messageType);
+    PUSH_BACK_BYTES(payload, propertyId);
+
+    return payload;
+}
+
+std::vector<unsigned char> CreatePayload_RemoveDelegate(uint32_t propertyId)
+{
+    std::vector<unsigned char> payload;
+    uint16_t messageType = 74;
+    uint16_t messageVer = 0;
+    SwapByteOrder16(messageType);
+    SwapByteOrder16(messageVer);
+    SwapByteOrder32(propertyId);
+
+    PUSH_BACK_BYTES(payload, messageVer);
+    PUSH_BACK_BYTES(payload, messageType);
+    PUSH_BACK_BYTES(payload, propertyId);
+
+    return payload;
+}
+
 std::vector<unsigned char> CreatePayload_MetaDExTrade(uint32_t propertyIdForSale, uint64_t amountForSale, uint32_t propertyIdDesired, uint64_t amountDesired)
 {
     std::vector<unsigned char> payload;
