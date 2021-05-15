@@ -116,7 +116,7 @@ bool CheckTxScripts(const CTransaction& tx, const std::map<COutPoint, CScript>& 
     const PrecomputedTransactionData& txdata, const std::string& strTest, bool expect_valid)
 {
     bool tx_valid = true;
-    ScriptError err = expect_valid ? SCRIPT_ERR_UNKNOWN_ERROR : SCRIPT_ERR_OK;
+    ScriptError err = expect_valid ? SCRIPT_ERR_OK : SCRIPT_ERR_UNKNOWN_ERROR;
     for (unsigned int i = 0; i < tx.vin.size() && tx_valid; ++i) {
         const CTxIn input = tx.vin[i];
         const CAmount amount = map_prevout_values.count(input.prevout) ? map_prevout_values.at(input.prevout) : 0;
