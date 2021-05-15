@@ -83,6 +83,11 @@ void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& 
     CCoinJoin::TransactionAddedToMempool(ptx);
 }
 
+void CDSNotificationInterface::TransactionRemovedFromMempool(const CTransactionRef& ptx)
+{
+    llmq::quorumInstantSendManager->TransactionRemovedFromMempool(ptx);
+}
+
 void CDSNotificationInterface::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex, const std::vector<CTransactionRef>& vtxConflicted)
 {
     // TODO: Tempoarily ensure that mempool removals are notified before
