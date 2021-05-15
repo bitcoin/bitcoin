@@ -118,7 +118,9 @@ void QRImageWidget::saveImage()
         return;
     QString fn = GUIUtil::getSaveFileName(
         this, tr("Save QR Code"), QString(),
-        tr("PNG Image", "Name of PNG file format") + QLatin1String(" (*.png)"), nullptr);
+        /*: Expanded name of the PNG file format.
+            See https://en.wikipedia.org/wiki/Portable_Network_Graphics */
+        tr("PNG Image") + QLatin1String(" (*.png)"), nullptr);
     if (!fn.isEmpty())
     {
         exportImage().save(fn);
