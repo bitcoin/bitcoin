@@ -323,7 +323,7 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
  * @param params Consensus parameters.
  * @return True iff the PoW is correct.
  */
-bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params);
+bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params, bool fCheckPOW = true);
 
 /** RAII wrapper for VerifyDB: Verify consistency of the block and coin databases */
 class CVerifyDB {
