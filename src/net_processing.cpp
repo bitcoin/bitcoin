@@ -2783,7 +2783,8 @@ void PeerManagerImpl::ProcessMessage(CNode& pfrom, const std::string& msg_type, 
                     LogPrint(BCLog::NET, "transaction (%s) inv sent in violation of protocol, disconnecting peer=%d\n", inv.hash.ToString(), pfrom.GetId());
                     pfrom.fDisconnect = true;
                     return;
-                } else if (!fAlreadyHave && !fIBD) {
+                }
+                if (!fAlreadyHave && !fIBD) {
                     AddTxAnnouncement(pfrom, gtxid, current_time);
                 }
             } else {
