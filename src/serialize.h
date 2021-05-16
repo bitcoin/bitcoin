@@ -122,6 +122,11 @@ template<typename Stream> inline uint64_t ser_readdata64(Stream &s)
     s.read((char*)&obj, 8);
     return le64toh(obj);
 }
+
+// Note that ser_double_to_uint64 is NOT guaranteed to be the inverse of ser_uint64_to_double. In
+// other words, do not assume that ser_double_to_uint64(ser_uint64_to_double(u64)) == u64.
+//
+// The only supported round-trip is: floating-point -> integral -> floating-point.
 inline uint64_t ser_double_to_uint64(double x)
 {
     uint64_t tmp;
@@ -129,6 +134,11 @@ inline uint64_t ser_double_to_uint64(double x)
     static_assert(sizeof(tmp) == sizeof(x), "double and uint64_t assumed to have the same size");
     return tmp;
 }
+
+// Note that ser_float_to_uint32 is NOT guaranteed to be the inverse of ser_uint32_to_float. In
+// other words, do not assume that ser_float_to_uint32(ser_uint32_to_float(u32)) == u32.
+//
+// The only supported round-trip is: floating-point -> integral -> floating-point.
 inline uint32_t ser_float_to_uint32(float x)
 {
     uint32_t tmp;
@@ -136,6 +146,7 @@ inline uint32_t ser_float_to_uint32(float x)
     static_assert(sizeof(tmp) == sizeof(x), "float and uint32_t assumed to have the same size");
     return tmp;
 }
+
 inline double ser_uint64_to_double(uint64_t y)
 {
     double tmp;
@@ -143,6 +154,7 @@ inline double ser_uint64_to_double(uint64_t y)
     static_assert(sizeof(tmp) == sizeof(y), "double and uint64_t assumed to have the same size");
     return tmp;
 }
+
 inline float ser_uint32_to_float(uint32_t y)
 {
     float tmp;
