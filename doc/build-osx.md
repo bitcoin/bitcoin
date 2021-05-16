@@ -71,7 +71,8 @@ While several package managers are available for macOS, this guide will focus on
 Since the examples in this guide which walk through the installation of a package will use Homebrew, it is recommended that you install it to follow along.
 Otherwise, you can adapt the commands to your package manager of choice.
 
-To install the Homebrew package manager, see: https://brew.sh
+To install the Homebrew package manager run this command in terminal (Mac OS 11.2): /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+or visit brew.sh.
 
 Note: If you run into issues while installing Homebrew or pulling packages, refer to [Homebrew's troubleshooting page](https://docs.brew.sh/Troubleshooting).
 
