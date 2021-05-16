@@ -486,7 +486,6 @@ protected:
     uint64_t cachedInnerUsage GUARDED_BY(cs); //!< sum of dynamic memory usage of all the map elements (NOT the maps themselves)
 
     mutable int64_t lastRollingFeeUpdate;
-    mutable bool blockSinceLastRollingFeeBump;
     mutable double rollingMinimumFeeRate; //!< minimum fee to get into the pool, decreases exponentially
     mutable Epoch m_epoch GUARDED_BY(cs);
 
