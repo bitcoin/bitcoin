@@ -300,7 +300,6 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
 
     // IPv6, scoped/link-local. See https://tools.ietf.org/html/rfc4007
     // We support non-negative decimal integers (uint32_t) as zone id indices.
-    // Test with a fairly-high value, e.g. 32, to avoid locally reserved ids.
     const std::string link_local{"fe80::1"};
     const std::string scoped_addr{link_local + "%32"};
     BOOST_REQUIRE(LookupHost(scoped_addr, addr, false));
