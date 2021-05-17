@@ -121,6 +121,7 @@ BITCOIN_TESTS =\
   test/script_tests.cpp \
   test/script_standard_tests.cpp \
   test/scriptnum_tests.cpp \
+  test/serfloat_tests.cpp \
   test/serialize_tests.cpp \
   test/settings_tests.cpp \
   test/sighash_tests.cpp \
