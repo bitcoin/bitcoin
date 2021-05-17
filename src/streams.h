@@ -49,12 +49,12 @@ public:
         return (*this);
     }
 
-    void write(const char* pch, size_t nSize)
+    void write(const uint8_t* pch, size_t nSize)
     {
         stream->write(pch, nSize);
     }
 
-    void read(char* pch, size_t nSize)
+    void read(uint8_t* pch, size_t nSize)
     {
         stream->read(pch, nSize);
     }
@@ -94,15 +94,15 @@ class CVectorWriter
     {
         ::SerializeMany(*this, std::forward<Args>(args)...);
     }
-    void write(const char* pch, size_t nSize)
+    void write(const uint8_t* pch, size_t nSize)
     {
         assert(nPos <= vchData.size());
         size_t nOverwrite = std::min(nSize, vchData.size() - nPos);
         if (nOverwrite) {
-            memcpy(vchData.data() + nPos, reinterpret_cast<const unsigned char*>(pch), nOverwrite);
+            memcpy(vchData.data() + nPos, pch, nOverwrite);
         }
         if (nOverwrite < nSize) {
-            vchData.insert(vchData.end(), reinterpret_cast<const unsigned char*>(pch) + nOverwrite, reinterpret_cast<const unsigned char*>(pch) + nSize);
+            vchData.insert(vchData.end(), pch + nOverwrite, pch + nSize);
         }
         nPos += nSize;
     }
@@ -180,7 +180,7 @@ public:
     size_t size() const { return m_data.size() - m_pos; }
     bool empty() const { return m_data.size() == m_pos; }
 
-    void read(char* dst, size_t n)
+    void read(uint8_t* dst, size_t n)
     {
         if (n == 0) {
             return;
@@ -278,7 +278,7 @@ public:
             vch.insert(it, first, last);
     }
 
-    void insert(iterator it, const char* first, const char* last)
+    void insert(iterator it, const uint8_t* first, const uint8_t* last)
     {
         if (last == first) return;
         assert(last - first > 0);
@@ -362,7 +362,7 @@ public:
     void SetVersion(int n)       { nVersion = n; }
     int GetVersion() const       { return nVersion; }
 
-    void read(char* pch, size_t nSize)
+    void read(uint8_t* pch, size_t nSize)
     {
         if (nSize == 0) return;
 
@@ -399,7 +399,7 @@ public:
         nReadPos = nReadPosNext;
     }
 
-    void write(const char* pch, size_t nSize)
+    void write(const uint8_t* pch, size_t nSize)
     {
         // Write to the end of the buffer
         vch.insert(vch.end(), pch, pch + nSize);
@@ -410,7 +410,7 @@ public:
     {
         // Special case: stream << stream concatenates like stream += stream
         if (!vch.empty())
-            s.write((char*)vch.data(), vch.size() * sizeof(value_type));
+            s.write(vch.data(), vch.size() * sizeof(value_type));
     }
 
     template<typename T>
@@ -614,7 +614,7 @@ public:
     int GetType() const          { return nType; }
     int GetVersion() const       { return nVersion; }
 
-    void read(char* pch, size_t nSize)
+    void read(uint8_t* pch, size_t nSize)
     {
         if (!file)
             throw std::ios_base::failure("CAutoFile::read: file handle is nullptr");
@@ -635,7 +635,7 @@ public:
         }
     }
 
-    void write(const char* pch, size_t nSize)
+    void write(const uint8_t* pch, size_t nSize)
     {
         if (!file)
             throw std::ios_base::failure("CAutoFile::write: file handle is nullptr");
@@ -681,7 +681,7 @@ private:
     uint64_t nReadPos;    //!< how many bytes have been read from this
     uint64_t nReadLimit;  //!< up to which position we're allowed to read
     uint64_t nRewind;     //!< how many bytes we guarantee to rewind
-    std::vector<char> vchBuf; //!< the buffer
+    std::vector<uint8_t> vchBuf; //!< the buffer
 
 protected:
     //! read data from the source to fill the buffer
@@ -736,7 +736,8 @@ public:
     }
 
     //! read a number of bytes
-    void read(char *pch, size_t nSize) {
+    void read(uint8_t* pch, size_t nSize)
+    {
         if (nSize + nReadPos > nReadLimit)
             throw std::ios_base::failure("Read attempted past buffer limit");
         while (nSize > 0) {
@@ -794,7 +795,8 @@ public:
     }
 
     //! search for a given byte in the stream, and remain positioned on it
-    void FindByte(char ch) {
+    void FindByte(uint8_t ch)
+    {
         while (true) {
             if (nReadPos == nSrcPos)
                 Fill();

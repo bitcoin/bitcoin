@@ -394,7 +394,7 @@ bool SQLiteBatch::ReadKey(CDataStream&& key, CDataStream& value)
         return false;
     }
     // Leftmost column in result is index 0
-    const char* data = reinterpret_cast<const char*>(sqlite3_column_blob(m_read_stmt, 0));
+    const uint8_t* data{Uint8Ptr(sqlite3_column_blob(m_read_stmt, 0))};
     int data_size = sqlite3_column_bytes(m_read_stmt, 0);
     value.write(data, data_size);
 
@@ -511,10 +511,10 @@ bool SQLiteBatch::ReadAtCursor(CDataStream& key, CDataStream& value, bool& compl
     }
 
     // Leftmost column in result is index 0
-    const char* key_data = reinterpret_cast<const char*>(sqlite3_column_blob(m_cursor_stmt, 0));
+    const uint8_t* key_data{Uint8Ptr(sqlite3_column_blob(m_cursor_stmt, 0))};
     int key_data_size = sqlite3_column_bytes(m_cursor_stmt, 0);
     key.write(key_data, key_data_size);
-    const char* value_data = reinterpret_cast<const char*>(sqlite3_column_blob(m_cursor_stmt, 1));
+    const uint8_t* value_data{Uint8Ptr(sqlite3_column_blob(m_cursor_stmt, 1))};
     int value_data_size = sqlite3_column_bytes(m_cursor_stmt, 1);
     value.write(value_data, value_data_size);
     return true;
