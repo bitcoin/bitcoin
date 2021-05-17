@@ -590,12 +590,13 @@ bool CWallet::CreateTransactionInternal(
     const OutputType change_type = TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : m_default_change_type, vecSend);
     ReserveDestination reservedest(this, change_type);
     unsigned int outputs_to_subtract_fee_from = 0; // The number of outputs which we are subtracting the fee from
-    for (const auto& recipient : vecSend)
-    {
+    for (const auto& recipient : vecSend) {
         recipients_sum += recipient.nAmount;
 
-        if (recipient.fSubtractFeeFromAmount)
+        if (recipient.fSubtractFeeFromAmount) {
             outputs_to_subtract_fee_from++;
+            coin_selection_params.m_subtract_fee_outputs = true;
+        }
     }
 
     // Create change script that will be used if we need change
@@ -669,8 +670,6 @@ bool CWallet::CreateTransactionInternal(
     // So cost of change = (change output size * effective feerate) + (size of spending change output * discard feerate)
     coin_selection_params.m_change_fee = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.change_output_size);
     coin_selection_params.m_cost_of_change = coin_selection_params.m_discard_feerate.GetFee(coin_selection_params.change_spend_size) + coin_selection_params.m_change_fee;
-
-    coin_selection_params.m_subtract_fee_outputs = outputs_to_subtract_fee_from != 0; // If we are doing subtract fee from recipient, don't use effective values
 
     // vouts to the payees
     if (!coin_selection_params.m_subtract_fee_outputs) {
@@ -747,7 +746,7 @@ bool CWallet::CreateTransactionInternal(
 
     // Subtract fee from the change output if not subtracting it from recipient outputs
     CAmount fee_needed = nFeeRet;
-    if (outputs_to_subtract_fee_from == 0) {
+    if (!coin_selection_params.m_subtract_fee_outputs) {
         change_position->nValue -= fee_needed;
     }
 
@@ -773,7 +772,7 @@ bool CWallet::CreateTransactionInternal(
     }
 
     // Reduce output values for subtractFeeFromAmount
-    if (outputs_to_subtract_fee_from != 0) {
+    if (coin_selection_params.m_subtract_fee_outputs) {
         CAmount to_reduce = fee_needed + change_amount - change_and_fee;
         int i = 0;
         bool fFirst = true;
