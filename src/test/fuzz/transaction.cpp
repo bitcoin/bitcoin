@@ -60,8 +60,11 @@ FUZZ_TARGET_INIT(transaction, initialize_transaction)
         return;
     }
 
-    TxValidationState state_with_dupe_check;
-    (void)CheckTransaction(tx, state_with_dupe_check);
+    {
+        TxValidationState state_with_dupe_check;
+        const bool res{CheckTransaction(tx, state_with_dupe_check)};
+        Assert(res == state_with_dupe_check.IsValid());
+    }
 
     std::string reason;
     const bool is_standard_with_permit_bare_multisig = IsStandardTx(tx, reason);
