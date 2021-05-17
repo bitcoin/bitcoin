@@ -580,18 +580,18 @@ bool CWallet::CreateTransactionInternal(
 {
     AssertLockHeld(cs_wallet);
 
-    CAmount nValue = 0;
+    CAmount recipients_sum = 0;
     const OutputType change_type = TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : m_default_change_type, vecSend);
     ReserveDestination reservedest(this, change_type);
     unsigned int nSubtractFeeFromAmount = 0;
     for (const auto& recipient : vecSend)
     {
-        if (nValue < 0 || recipient.nAmount < 0)
+        if (recipients_sum < 0 || recipient.nAmount < 0)
         {
             error = _("Transaction amounts must not be negative");
             return false;
         }
-        nValue += recipient.nAmount;
+        recipients_sum += recipient.nAmount;
 
         if (recipient.fSubtractFeeFromAmount)
             nSubtractFeeFromAmount++;
@@ -709,12 +709,12 @@ bool CWallet::CreateTransactionInternal(
 
     // Include the fees for things that aren't inputs, excluding the change output
     const CAmount not_input_fees = coin_selection_params.m_effective_feerate.GetFee(coin_selection_params.tx_noinputs_size);
-    CAmount nValueToSelect = nValue + not_input_fees;
+    CAmount selection_target = recipients_sum + not_input_fees;
 
     // Choose coins to use
     CAmount inputs_sum = 0;
     setCoins.clear();
-    if (!SelectCoins(vAvailableCoins, /* nTargetValue */ nValueToSelect, setCoins, inputs_sum, coin_control, coin_selection_params))
+    if (!SelectCoins(vAvailableCoins, /* nTargetValue */ selection_target, setCoins, inputs_sum, coin_control, coin_selection_params))
     {
         error = _("Insufficient funds");
         return false;
@@ -722,7 +722,7 @@ bool CWallet::CreateTransactionInternal(
 
     // Always make a change output
     // We will reduce the fee from this change output later, and remove the output if it is too small.
-    const CAmount change_and_fee = inputs_sum - nValue;
+    const CAmount change_and_fee = inputs_sum - recipients_sum;
     assert(change_and_fee >= 0);
     CTxOut newTxOut(change_and_fee, scriptChange);
 
