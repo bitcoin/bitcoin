@@ -729,10 +729,21 @@ bool CWallet::CreateTransactionInternal(
     assert(nChangePosInOut != -1);
     auto change_position = txNew.vout.insert(txNew.vout.begin() + nChangePosInOut, newTxOut);
 
-    // Dummy fill vin for maximum size estimation
+    // Shuffle selected coins and fill in final vin
+    std::vector<CInputCoin> selected_coins(setCoins.begin(), setCoins.end());
+    Shuffle(selected_coins.begin(), selected_coins.end(), FastRandomContext());
+
+    // Note how the sequence number is set to non-maxint so that
+    // the nLockTime set above actually works.
     //
-    for (const auto& coin : setCoins) {
-        txNew.vin.push_back(CTxIn(coin.outpoint,CScript()));
+    // BIP125 defines opt-in RBF as any nSequence < maxint-1, so
+    // we use the highest possible value in that range (maxint-2)
+    // to avoid conflicting with other possible uses of nSequence,
+    // and in the spirit of "smallest possible change from prior
+    // behavior."
+    const uint32_t nSequence = coin_control.m_signal_bip125_rbf.value_or(m_signal_rbf) ? MAX_BIP125_RBF_SEQUENCE : (CTxIn::SEQUENCE_FINAL - 1);
+    for (const auto& coin : selected_coins) {
+        txNew.vin.push_back(CTxIn(coin.outpoint, CScript(), nSequence));
     }
 
     // Calculate the transaction fee
@@ -811,24 +822,6 @@ bool CWallet::CreateTransactionInternal(
     // Give up if change keypool ran out and change is required
     if (scriptChange.empty() && nChangePosInOut != -1) {
         return false;
-    }
-
-    // Shuffle selected coins and fill in final vin
-    txNew.vin.clear();
-    std::vector<CInputCoin> selected_coins(setCoins.begin(), setCoins.end());
-    Shuffle(selected_coins.begin(), selected_coins.end(), FastRandomContext());
-
-    // Note how the sequence number is set to non-maxint so that
-    // the nLockTime set above actually works.
-    //
-    // BIP125 defines opt-in RBF as any nSequence < maxint-1, so
-    // we use the highest possible value in that range (maxint-2)
-    // to avoid conflicting with other possible uses of nSequence,
-    // and in the spirit of "smallest possible change from prior
-    // behavior."
-    const uint32_t nSequence = coin_control.m_signal_bip125_rbf.value_or(m_signal_rbf) ? MAX_BIP125_RBF_SEQUENCE : (CTxIn::SEQUENCE_FINAL - 1);
-    for (const auto& coin : selected_coins) {
-        txNew.vin.push_back(CTxIn(coin.outpoint, CScript(), nSequence));
     }
 
     if (sign && !SignTransaction(txNew)) {
