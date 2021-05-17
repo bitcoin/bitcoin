@@ -2,8 +2,11 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <hash.h>
 #include <test/util/setup_common.h>
 #include <util/serfloat.h>
+#include <serialize.h>
+#include <streams.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -37,8 +40,14 @@ BOOST_AUTO_TEST_CASE(double_serfloat_tests) {
     BOOST_CHECK_EQUAL(TestDouble(-0.0), 0x8000000000000000);
     BOOST_CHECK_EQUAL(TestDouble(std::numeric_limits<double>::infinity()), 0x7ff0000000000000);
     BOOST_CHECK_EQUAL(TestDouble(-std::numeric_limits<double>::infinity()), 0xfff0000000000000);
+    BOOST_CHECK_EQUAL(TestDouble(0.5), 0x3fe0000000000000ULL);
+    BOOST_CHECK_EQUAL(TestDouble(1.0), 0x3ff0000000000000ULL);
+    BOOST_CHECK_EQUAL(TestDouble(2.0), 0x4000000000000000ULL);
+    BOOST_CHECK_EQUAL(TestDouble(4.0), 0x4010000000000000ULL);
+    BOOST_CHECK_EQUAL(TestDouble(785.066650390625), 0x4088888880000000ULL);
 
-    if (std::numeric_limits<float>::is_iec559) {
+    // Roundtrip test on IEC559-compatible systems
+    if (std::numeric_limits<double>::is_iec559) {
         BOOST_CHECK_EQUAL(sizeof(double), 8);
         BOOST_CHECK_EQUAL(sizeof(uint64_t), 8);
         // Test extreme values
@@ -86,6 +95,34 @@ BOOST_AUTO_TEST_CASE(double_serfloat_tests) {
                 if (!std::isnan(f)) BOOST_CHECK_EQUAL(v, v2);
             }
         }
+    }
+}
+
+/*
+Python code to generate the below hashes:
+
+    def reversed_hex(x):
+        return binascii.hexlify(''.join(reversed(x)))
+    def dsha256(x):
+        return hashlib.sha256(hashlib.sha256(x).digest()).digest()
+
+    reversed_hex(dsha256(''.join(struct.pack('<d', x) for x in range(0,1000)))) == '43d0c82591953c4eafe114590d392676a01585d25b25d433557f0d7878b23f96'
+*/
+BOOST_AUTO_TEST_CASE(doubles)
+{
+    CDataStream ss(SER_DISK, 0);
+    // encode
+    for (int i = 0; i < 1000; i++) {
+        ss << EncodeDouble(i);
+    }
+    BOOST_CHECK(Hash(ss) == uint256S("43d0c82591953c4eafe114590d392676a01585d25b25d433557f0d7878b23f96"));
+
+    // decode
+    for (int i = 0; i < 1000; i++) {
+        uint64_t val;
+        ss >> val;
+        double j = DecodeDouble(val);
+        BOOST_CHECK_MESSAGE(i == j, "decoded:" << j << " expected:" << i);
     }
 }
 

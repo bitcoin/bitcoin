@@ -88,51 +88,6 @@ BOOST_AUTO_TEST_CASE(sizes)
     BOOST_CHECK_EQUAL(GetSerializeSize(bool(0), 0), 1U);
 }
 
-BOOST_AUTO_TEST_CASE(doubles_conversion)
-{
-    // Choose values that map unambiguously to binary floating point to avoid
-    // rounding issues at the compiler side.
-    BOOST_CHECK_EQUAL(ser_uint64_to_double(0x0000000000000000ULL), 0.0);
-    BOOST_CHECK_EQUAL(ser_uint64_to_double(0x3fe0000000000000ULL), 0.5);
-    BOOST_CHECK_EQUAL(ser_uint64_to_double(0x3ff0000000000000ULL), 1.0);
-    BOOST_CHECK_EQUAL(ser_uint64_to_double(0x4000000000000000ULL), 2.0);
-    BOOST_CHECK_EQUAL(ser_uint64_to_double(0x4010000000000000ULL), 4.0);
-    BOOST_CHECK_EQUAL(ser_uint64_to_double(0x4088888880000000ULL), 785.066650390625);
-
-    BOOST_CHECK_EQUAL(ser_double_to_uint64(0.0), 0x0000000000000000ULL);
-    BOOST_CHECK_EQUAL(ser_double_to_uint64(0.5), 0x3fe0000000000000ULL);
-    BOOST_CHECK_EQUAL(ser_double_to_uint64(1.0), 0x3ff0000000000000ULL);
-    BOOST_CHECK_EQUAL(ser_double_to_uint64(2.0), 0x4000000000000000ULL);
-    BOOST_CHECK_EQUAL(ser_double_to_uint64(4.0), 0x4010000000000000ULL);
-    BOOST_CHECK_EQUAL(ser_double_to_uint64(785.066650390625), 0x4088888880000000ULL);
-}
-/*
-Python code to generate the below hashes:
-
-    def reversed_hex(x):
-        return binascii.hexlify(''.join(reversed(x)))
-    def dsha256(x):
-        return hashlib.sha256(hashlib.sha256(x).digest()).digest()
-
-    reversed_hex(dsha256(''.join(struct.pack('<d', x) for x in range(0,1000)))) == '43d0c82591953c4eafe114590d392676a01585d25b25d433557f0d7878b23f96'
-*/
-BOOST_AUTO_TEST_CASE(doubles)
-{
-    CDataStream ss(SER_DISK, 0);
-    // encode
-    for (int i = 0; i < 1000; i++) {
-        ss << double(i);
-    }
-    BOOST_CHECK(Hash(ss) == uint256S("43d0c82591953c4eafe114590d392676a01585d25b25d433557f0d7878b23f96"));
-
-    // decode
-    for (int i = 0; i < 1000; i++) {
-        double j;
-        ss >> j;
-        BOOST_CHECK_MESSAGE(i == j, "decoded:" << j << " expected:" << i);
-    }
-}
-
 BOOST_AUTO_TEST_CASE(varints)
 {
     // encode
