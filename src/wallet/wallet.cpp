@@ -5069,10 +5069,10 @@ std::shared_ptr<CWallet> CWallet::CreateWalletFromFile(const WalletLocation& loc
                 CHDChain newHdChain;
                 std::vector<unsigned char> vchSeed = ParseHex(strSeed);
                 if (!newHdChain.SetSeed(SecureVector(vchSeed.begin(), vchSeed.end()), true)) {
-                    return error(_("SetSeed failed"));
+                    return error(strprintf(_("%s failed"), "SetSeed"));
                 }
                 if (!walletInstance->SetHDChainSingle(newHdChain, false)) {
-                    return error(_("SetHDChainSingle failed"));
+                    return error(strprintf(_("%s failed"), "SetHDChainSingle"));
                 }
                 newHdChain.Debug(__func__);
             } else {
