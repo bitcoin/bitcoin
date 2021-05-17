@@ -14,13 +14,18 @@ Generate COINBASE_MATURITY (CB) more blocks to ensure the coinbases are mature.
 """
 import time
 
-from test_framework.blocktools import NORMAL_GBT_REQUEST_PARAMS, create_block, create_transaction, add_witness_commitment
+from test_framework.blocktools import (
+    COINBASE_MATURITY,
+    NORMAL_GBT_REQUEST_PARAMS,
+    add_witness_commitment,
+    create_block,
+    create_transaction,
+)
 from test_framework.messages import CTransaction
 from test_framework.script import CScript
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
-COINBASE_MATURITY = 100
 NULLDUMMY_ERROR = "non-mandatory-script-verify-flag (Dummy CHECKMULTISIG argument must be zero)"
 
 def trueDummy(tx):
