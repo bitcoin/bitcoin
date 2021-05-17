@@ -27,16 +27,4 @@ FUZZ_TARGET(float)
         stream >> d_deserialized;
         assert(d == d_deserialized);
     }
-
-    {
-        const float f = fuzzed_data_provider.ConsumeFloatingPoint<float>();
-        (void)memusage::DynamicUsage(f);
-        assert(ser_uint32_to_float(ser_float_to_uint32(f)) == f);
-
-        CDataStream stream(SER_NETWORK, INIT_PROTO_VERSION);
-        stream << f;
-        float f_deserialized;
-        stream >> f_deserialized;
-        assert(f == f_deserialized);
-    }
 }
