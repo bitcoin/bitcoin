@@ -35,6 +35,7 @@ import os
 from random import randint
 import shutil
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
@@ -123,7 +124,7 @@ class WalletBackupTest(BitcoinTestFramework):
         self.sync_blocks()
         self.nodes[2].generate(1)
         self.sync_blocks()
-        self.nodes[3].generate(100)
+        self.nodes[3].generate(COINBASE_MATURITY)
         self.sync_blocks()
 
         assert_equal(self.nodes[0].getbalance(), 50)
@@ -152,7 +153,7 @@ class WalletBackupTest(BitcoinTestFramework):
             self.do_one_round()
 
         # Generate 101 more blocks, so any fees paid mature
-        self.nodes[3].generate(101)
+        self.nodes[3].generate(COINBASE_MATURITY + 1)
         self.sync_all()
 
         balance0 = self.nodes[0].getbalance()

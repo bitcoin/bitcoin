@@ -11,6 +11,7 @@ from decimal import Decimal
 from itertools import product
 import time
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.p2p import P2PInterface
 import test_framework.messages
 from test_framework.messages import (
@@ -53,7 +54,7 @@ class NetTest(BitcoinTestFramework):
         self.wallet = MiniWallet(self.nodes[0])
         self.wallet.generate(1)
         # Get out of IBD for the minfeefilter and getpeerinfo tests.
-        self.nodes[0].generate(101)
+        self.nodes[0].generate(COINBASE_MATURITY + 1)
 
         # By default, the test framework sets up an addnode connection from
         # node 1 --> node0. By connecting node0 --> node 1, we're left with
