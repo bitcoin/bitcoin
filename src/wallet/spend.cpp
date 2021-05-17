@@ -586,20 +586,10 @@ bool CWallet::CreateTransactionInternal(
     unsigned int outputs_to_subtract_fee_from = 0; // The number of outputs which we are subtracting the fee from
     for (const auto& recipient : vecSend)
     {
-        if (recipients_sum < 0 || recipient.nAmount < 0)
-        {
-            error = _("Transaction amounts must not be negative");
-            return false;
-        }
         recipients_sum += recipient.nAmount;
 
         if (recipient.fSubtractFeeFromAmount)
             outputs_to_subtract_fee_from++;
-    }
-    if (vecSend.empty())
-    {
-        error = _("Transaction must have at least one recipient");
-        return false;
     }
 
     CMutableTransaction txNew;
@@ -897,6 +887,16 @@ bool CWallet::CreateTransaction(
         FeeCalculation& fee_calc_out,
         bool sign)
 {
+    if (vecSend.empty()) {
+        error = _("Transaction must have at least one recipient");
+        return false;
+    }
+
+    if (std::any_of(vecSend.cbegin(), vecSend.cend(), [](const auto& recipient){ return recipient.nAmount < 0; })) {
+        error = _("Transaction amounts must not be negative");
+        return false;
+    }
+
     LOCK(cs_wallet);
 
     int nChangePosIn = nChangePosInOut;
