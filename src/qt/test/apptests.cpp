@@ -21,6 +21,7 @@
 
 #include <QAction>
 #include <QLineEdit>
+#include <QRegularExpression>
 #include <QScopedPointer>
 #include <QSignalSpy>
 #include <QTest>
@@ -30,6 +31,13 @@
 #include <QtTest/QtTestGui>
 
 namespace {
+//! Regex find a string group inside of the console output
+QString FindInConsole(const QString& output, const QString& pattern)
+{
+    const QRegularExpression re(pattern);
+    return re.match(output).captured(1);
+}
+
 //! Call getblockchaininfo RPC and check first field of JSON output.
 void TestRpcCommand(RPCConsole* console)
 {
