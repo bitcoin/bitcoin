@@ -323,8 +323,9 @@ static RPCHelpMan syscoinburntoassetallocation()
     EnsureWalletIsUnlocked(*pwallet);
     uint64_t nAsset;
     if(!ParseUInt64(params[0].get_str(), &nAsset))
-        throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");        	
-	CAssetAllocation theAssetAllocation;
+        throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");     
+   	
+    CAssetAllocation theAssetAllocation;
 	CAsset theAsset;
 	if (!GetAsset(GetBaseAssetID(nAsset), theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
@@ -1634,7 +1635,7 @@ static RPCHelpMan assetallocationburn()
     uint64_t nAsset;
     if(!ParseUInt64(params[0].get_str(), &nAsset))
         throw JSONRPCError(RPC_INVALID_PARAMS, "Could not parse asset_guid");   	
-	CAsset theAsset;
+    CAsset theAsset;
 	if (!GetAsset(GetBaseAssetID(nAsset), theAsset))
 		throw JSONRPCError(RPC_DATABASE_ERROR, "Could not find a asset with this key");
         
