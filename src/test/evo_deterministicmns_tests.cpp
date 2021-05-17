@@ -515,7 +515,6 @@ BOOST_FIXTURE_TEST_CASE(dip3_protx, TestChainDIP3Setup)
 
 BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_reorg, TestChainDIP3Setup)
 {
-    LOCK(cs_main);
     int nHeight = ::ChainActive().Height();
     auto utxos = BuildSimpleUTXOVec(m_coinbase_txns);
 
@@ -589,7 +588,6 @@ BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_reorg, TestChainDIP3Setup)
 
 BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_dual_proregtx, TestChainDIP3Setup)
 {
-    LOCK(cs_main);
     auto utxos = BuildSimpleUTXOVec(m_coinbase_txns);
 
     // Create a MN
@@ -644,7 +642,6 @@ BOOST_FIXTURE_TEST_CASE(dip3_test_mempool_dual_proregtx, TestChainDIP3Setup)
 
 BOOST_FIXTURE_TEST_CASE(dip3_verify_db, TestChainDIP3Setup)
 {
-    LOCK(cs_main);
     int nHeight = ::ChainActive().Height();
     auto utxos = BuildSimpleUTXOVec(m_coinbase_txns);
 
