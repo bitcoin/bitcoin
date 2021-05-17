@@ -40,16 +40,11 @@ class CCoinsViewTest : public CCoinsView
 public:
     [[nodiscard]] bool GetCoin(const COutPoint& outpoint, Coin& coin) const override
     {
-        std::map<COutPoint, Coin>::const_iterator it = map_.find(outpoint);
-        if (it == map_.end()) {
-            return false;
-        }
+        auto it = map_.find(outpoint);
+        if (it == map_.end()) return false;
+
         coin = it->second;
-        if (coin.IsSpent() && InsecureRandBool() == 0) {
-            // Randomly return false in case of an empty entry.
-            return false;
-        }
-        return true;
+        return !(coin.IsSpent());
     }
 
     uint256 GetBestBlock() const override { return hashBestBlock_; }
