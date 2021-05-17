@@ -883,6 +883,26 @@ static bool CompareNodeBlockRelayOnlyTime(const NodeEvictionCandidate &a, const 
     return a.nTimeConnected > b.nTimeConnected;
 }
 
+/**
+ * Sort eviction candidates by network/localhost and connection uptime.
+ * Candidates near the beginning are more likely to be evicted, and those
+ * near the end are more likely to be protected, e.g. less likely to be evicted.
+ * - First, nodes that are not `is_local` and that do not belong to `network`,
+ *   sorted by increasing uptime (from most recently connected to connected longer).
+ * - Then, nodes that are `is_local` or belong to `network`, sorted by increasing uptime.
+ */
+struct CompareNodeNetworkTime {
+    const bool m_is_local;
+    const Network m_network;
+    CompareNodeNetworkTime(bool is_local, Network network) : m_is_local(is_local), m_network(network) {}
+    bool operator()(const NodeEvictionCandidate& a, const NodeEvictionCandidate& b) const
+    {
+        if (m_is_local && a.m_is_local != b.m_is_local) return b.m_is_local;
+        if ((a.m_network == m_network) != (b.m_network == m_network)) return b.m_network == m_network;
+        return a.nTimeConnected > b.nTimeConnected;
+    };
+};
+
 //! Sort an array by the specified comparator, then erase the last K elements where predicate is true.
 template <typename T, typename Comparator>
 static void EraseLastKElements(
