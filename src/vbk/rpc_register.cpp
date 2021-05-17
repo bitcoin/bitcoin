@@ -32,8 +32,7 @@ void EnsurePopEnabled()
         throw JSONRPCError(RPC_MISC_ERROR,
             strprintf("POP protocol is not enabled. Current=%d, bootstrap height=%d",
                 ChainActive().Height(),
-                VeriBlock::GetPop().getConfig().getAltParams().getBootstrapBlock().getHeight())
-        );
+                VeriBlock::GetPop().getConfig().getAltParams().getBootstrapBlock().getHeight()));
     }
 }
 
@@ -111,6 +110,12 @@ UniValue getpopdata(const CBlockIndex* index)
         univalueLastBTCBlocks.push_back(HexStr(b));
     }
     result.pushKV("last_known_bitcoin_blocks", univalueLastBTCBlocks);
+
+    UniValue univalueMissingBtcBlocks(UniValue::VARR);
+    for (const auto& b : VeriBlock::GetPop().getMemPool().getMissingBtcBlocks()) {
+        univalueMissingBtcBlocks.push_back(HexStr(b.begin(), b.end()));
+    }
+    result.pushKV("missing_bitcoin_blocks", univalueMissingBtcBlocks);
 
     return result;
 }

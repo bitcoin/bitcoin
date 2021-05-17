@@ -26,7 +26,7 @@ def getFirstPreviousKeystoneHeight(height: int):
     if height <= 1:
         return 0
 
-    ret = getHighestKeystoneAtOrBefore(height - 1)
+    ret = getHighestKeystoneAtOrBefore((height - 2) if ((height - 1) % KEYSTONE_INTERVAL) == 0 else (height - 1))
     return 0 if ret < 0 else ret
 
 
