@@ -23,6 +23,7 @@
 
 #include <prevector.h>
 #include <span.h>
+#include <util/types.h>
 
 /**
  * The maximum size of a serialized object in bytes or number of elements
@@ -129,25 +130,11 @@ inline uint64_t ser_double_to_uint64(double x)
     static_assert(sizeof(tmp) == sizeof(x), "double and uint64_t assumed to have the same size");
     return tmp;
 }
-inline uint32_t ser_float_to_uint32(float x)
-{
-    uint32_t tmp;
-    std::memcpy(&tmp, &x, sizeof(x));
-    static_assert(sizeof(tmp) == sizeof(x), "float and uint32_t assumed to have the same size");
-    return tmp;
-}
 inline double ser_uint64_to_double(uint64_t y)
 {
     double tmp;
     std::memcpy(&tmp, &y, sizeof(y));
     static_assert(sizeof(tmp) == sizeof(y), "double and uint64_t assumed to have the same size");
-    return tmp;
-}
-inline float ser_uint32_to_float(uint32_t y)
-{
-    float tmp;
-    std::memcpy(&tmp, &y, sizeof(y));
-    static_assert(sizeof(tmp) == sizeof(y), "float and uint32_t assumed to have the same size");
     return tmp;
 }
 
@@ -234,7 +221,7 @@ template<typename Stream> inline void Serialize(Stream& s, int32_t a ) { ser_wri
 template<typename Stream> inline void Serialize(Stream& s, uint32_t a) { ser_writedata32(s, a); }
 template<typename Stream> inline void Serialize(Stream& s, int64_t a ) { ser_writedata64(s, a); }
 template<typename Stream> inline void Serialize(Stream& s, uint64_t a) { ser_writedata64(s, a); }
-template<typename Stream> inline void Serialize(Stream& s, float a   ) { ser_writedata32(s, ser_float_to_uint32(a)); }
+template<typename Stream> inline void Serialize(Stream& s, float a   ) { static_assert(ALWAYS_FALSE<Stream>, "Not implemented"); }
 template<typename Stream> inline void Serialize(Stream& s, double a  ) { ser_writedata64(s, ser_double_to_uint64(a)); }
 template<typename Stream, int N> inline void Serialize(Stream& s, const char (&a)[N]) { s.write(a, N); }
 template<typename Stream, int N> inline void Serialize(Stream& s, const unsigned char (&a)[N]) { s.write(CharCast(a), N); }
@@ -252,7 +239,7 @@ template<typename Stream> inline void Unserialize(Stream& s, int32_t& a ) { a = 
 template<typename Stream> inline void Unserialize(Stream& s, uint32_t& a) { a = ser_readdata32(s); }
 template<typename Stream> inline void Unserialize(Stream& s, int64_t& a ) { a = ser_readdata64(s); }
 template<typename Stream> inline void Unserialize(Stream& s, uint64_t& a) { a = ser_readdata64(s); }
-template<typename Stream> inline void Unserialize(Stream& s, float& a   ) { a = ser_uint32_to_float(ser_readdata32(s)); }
+template<typename Stream> inline void Unserialize(Stream& s, float& a   ) { static_assert(ALWAYS_FALSE<Stream>, "Not implemented"); }
 template<typename Stream> inline void Unserialize(Stream& s, double& a  ) { a = ser_uint64_to_double(ser_readdata64(s)); }
 template<typename Stream, int N> inline void Unserialize(Stream& s, char (&a)[N]) { s.read(a, N); }
 template<typename Stream, int N> inline void Unserialize(Stream& s, unsigned char (&a)[N]) { s.read(CharCast(a), N); }

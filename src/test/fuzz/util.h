@@ -513,7 +513,6 @@ void WriteToStream(FuzzedDataProvider& fuzzed_data_provider, Stream& stream) noe
                 WRITE_TO_STREAM_CASE(uint32_t, fuzzed_data_provider.ConsumeIntegral<uint32_t>()),
                 WRITE_TO_STREAM_CASE(int64_t, fuzzed_data_provider.ConsumeIntegral<int64_t>()),
                 WRITE_TO_STREAM_CASE(uint64_t, fuzzed_data_provider.ConsumeIntegral<uint64_t>()),
-                WRITE_TO_STREAM_CASE(float, fuzzed_data_provider.ConsumeFloatingPoint<float>()),
                 WRITE_TO_STREAM_CASE(double, fuzzed_data_provider.ConsumeFloatingPoint<double>()),
                 WRITE_TO_STREAM_CASE(std::string, fuzzed_data_provider.ConsumeRandomLengthString(32)),
                 WRITE_TO_STREAM_CASE(std::vector<char>, ConsumeRandomLengthIntegralVector<char>(fuzzed_data_provider)));
@@ -545,7 +544,6 @@ void ReadFromStream(FuzzedDataProvider& fuzzed_data_provider, Stream& stream) no
                 READ_FROM_STREAM_CASE(uint32_t),
                 READ_FROM_STREAM_CASE(int64_t),
                 READ_FROM_STREAM_CASE(uint64_t),
-                READ_FROM_STREAM_CASE(float),
                 READ_FROM_STREAM_CASE(double),
                 READ_FROM_STREAM_CASE(std::string),
                 READ_FROM_STREAM_CASE(std::vector<char>));
