@@ -511,6 +511,7 @@ void SetupServerArgs()
     gArgs.AddArg("-timestampindex", strprintf("Maintain a timestamp index for block hashes, used to query blocks hashes by a range of timestamps (default: %u)", DEFAULT_TIMESTAMPINDEX), false, OptionsCategory::INDEXING);
     gArgs.AddArg("-txindex", strprintf("Maintain a full transaction index, used by the getrawtransaction rpc call (default: %u)", DEFAULT_TXINDEX), false, OptionsCategory::INDEXING);
 
+    gArgs.AddArg("-asmap=<file>", strprintf("Specify asn mapping used for bucketing of the peers (default: %s). Relative paths will be prefixed by the net-specific datadir location.", DEFAULT_ASMAP_FILENAME), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-addnode=<ip>", "Add a node to connect to and attempt to keep the connection open (see the `addnode` RPC command help for more info). This option can be specified multiple times to add multiple nodes.", false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-allowprivatenet", strprintf("Allow RFC1918 addresses to be relayed and connected to (default: %u)", DEFAULT_ALLOWPRIVATENET), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-banscore=<n>", strprintf("Threshold for disconnecting misbehaving peers (default: %u)", DEFAULT_BANSCORE_THRESHOLD), false, OptionsCategory::CONNECTION);
@@ -543,7 +544,6 @@ void SetupServerArgs()
     gArgs.AddArg("-timeout=<n>", strprintf("Specify connection timeout in milliseconds (minimum: 1, default: %d)", DEFAULT_CONNECT_TIMEOUT), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-torcontrol=<ip>:<port>", strprintf("Tor control port to use if onion listening enabled (default: %s)", DEFAULT_TOR_CONTROL), false, OptionsCategory::CONNECTION);
     gArgs.AddArg("-torpassword=<pass>", "Tor control port password (default: empty)", false, OptionsCategory::CONNECTION);
-    gArgs.AddArg("-asmap=<file>", "Specify asn mapping used for bucketing of the peers. Path should be relative to the -datadir path.", false, OptionsCategory::CONNECTION);
 #ifdef USE_UPNP
 #if USE_UPNP
     gArgs.AddArg("-upnp", "Use UPnP to map the listening port (default: 1 when listening and no -proxy)", false, OptionsCategory::CONNECTION);
@@ -1901,6 +1901,31 @@ bool AppInitMain()
             return InitError(ResolveErrMsg("externalip", strAddr));
     }
 
+    // Read asmap file if configured
+    if (gArgs.IsArgSet("-asmap")) {
+        fs::path asmap_path = fs::path(gArgs.GetArg("-asmap", ""));
+        if (asmap_path.empty()) {
+            asmap_path = DEFAULT_ASMAP_FILENAME;
+        }
+        if (!asmap_path.is_absolute()) {
+            asmap_path = GetDataDir() / asmap_path;
+        }
+        if (!fs::exists(asmap_path)) {
+            InitError(strprintf(_("Could not find asmap file %s"), asmap_path));
+            return false;
+        }
+        std::vector<bool> asmap = CAddrMan::DecodeAsmap(asmap_path);
+        if (asmap.size() == 0) {
+            InitError(strprintf(_("Could not parse asmap file %s"), asmap_path));
+            return false;
+        }
+        const uint256 asmap_version = SerializeHash(asmap);
+        g_connman->SetAsmap(asmap);
+        LogPrintf("Using asmap version %s for IP bucketing\n", asmap_version.ToString());
+    } else {
+        LogPrintf("Using /16 prefix for IP bucketing\n");
+    }
+
 #if ENABLE_ZMQ
     g_zmq_notification_interface = CZMQNotificationInterface::Create();
 
@@ -2456,25 +2481,6 @@ bool AppInitMain()
 
     if (!connman.Start(scheduler, connOptions)) {
         return false;
-    }
-
-    // Read asmap file if configured
-    if (gArgs.IsArgSet("-asmap")) {
-        std::string asmap_file = gArgs.GetArg("-asmap", "");
-        if (asmap_file.empty()) {
-            asmap_file = DEFAULT_ASMAP_FILENAME;
-        }
-        const fs::path asmap_path = GetDataDir() / asmap_file;
-        std::vector<bool> asmap = CAddrMan::DecodeAsmap(asmap_path);
-        if (asmap.size() == 0) {
-            InitError(strprintf(_("Could not find or parse specified asmap: '%s'"), asmap_path));
-            return false;
-        }
-        g_connman->SetAsmap(asmap);
-        const uint256 asmap_version = SerializeHash(asmap);
-        LogPrintf("Using asmap version %s for IP bucketing.\n", asmap_version.ToString());
-    } else {
-        LogPrintf("Using /16 prefix for IP bucketing.\n");
     }
 
     // ********************************************************* Step 13: finished
