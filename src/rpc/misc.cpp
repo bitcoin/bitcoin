@@ -234,7 +234,7 @@ UniValue validateaddress(const JSONRPCRequest& request)
             ret.pushKV("address", currentAddress);
 
             CScript scriptPubKey = GetScriptForDestination(dest);
-            ret.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));;
+            ret.pushKV("scriptPubKey", HexStr(scriptPubKey));;
 
             UniValue detail = DescribeAddress(dest);
             ret.pushKVs(detail);
@@ -296,7 +296,7 @@ UniValue createmultisig(const JSONRPCRequest& request)
 
     UniValue result(UniValue::VOBJ);
     result.pushKV("address", EncodeDestination(innerID));
-    result.pushKV("redeemScript", HexStr(inner.begin(), inner.end()));
+    result.pushKV("redeemScript", HexStr(inner));
 
     return result;
 }
@@ -658,7 +658,7 @@ UniValue getaddressutxos(const JSONRPCRequest& request)
         output.pushKV("address", address);
         output.pushKV("txid", it->first.txhash.GetHex());
         output.pushKV("outputIndex", (int)it->first.index);
-        output.pushKV("script", HexStr(it->second.script.begin(), it->second.script.end()));
+        output.pushKV("script", HexStr(it->second.script));
         output.pushKV("satoshis", it->second.satoshis);
         output.pushKV("height", it->second.blockHeight);
         result.push_back(output);
