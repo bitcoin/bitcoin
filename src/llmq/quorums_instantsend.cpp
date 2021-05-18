@@ -52,7 +52,6 @@ uint256 CInstantSendLock::GetRequestId() const
 
 CInstantSendDb::CInstantSendDb(CDBWrapper& _db) : db(_db)
 {
-    Upgrade();
 }
 
 void CInstantSendDb::Upgrade()
@@ -1072,7 +1071,7 @@ void CInstantSendManager::TransactionAddedToMempool(const CTransactionRef& tx)
 
 void CInstantSendManager::TransactionRemovedFromMempool(const CTransactionRef& tx)
 {
-    if (tx->vin.empty()) {
+    if (tx->vin.empty() || !fUpgradedDB) {
         return;
     }
 
@@ -1217,6 +1216,14 @@ void CInstantSendManager::NotifyChainLock(const CBlockIndex* pindexChainLock)
 
 void CInstantSendManager::UpdatedBlockTip(const CBlockIndex* pindexNew)
 {
+    if (!fUpgradedDB) {
+        LOCK(cs_main);
+        if (VersionBitsState(pindexNew, Params().GetConsensus(), Consensus::DEPLOYMENT_DIP0020, versionbitscache) == ThresholdState::ACTIVE) {
+            db.Upgrade();
+            fUpgradedDB = true;
+        }
+    }
+
     bool fDIP0008Active = pindexNew->pprev && pindexNew->pprev->nHeight >= Params().GetConsensus().DIP0008Height;
 
     if (AreChainLocksEnabled() && fDIP0008Active) {
