@@ -82,7 +82,7 @@ void CDSNotificationInterface::TransactionAddedToMempool(const CTransactionRef& 
     CCoinJoin::TransactionAddedToMempool(ptx);
 }
 
-void CDSNotificationInterface::TransactionRemovedFromMempool(const CTransactionRef& ptx)
+void CDSNotificationInterface::TransactionRemovedFromMempool(const CTransactionRef& ptx, MemPoolRemovalReason reason)
 {
     llmq::quorumInstantSendManager->TransactionRemovedFromMempool(ptx);
 }

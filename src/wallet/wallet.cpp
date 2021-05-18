@@ -1476,11 +1476,13 @@ void CWallet::TransactionAddedToMempool(const CTransactionRef& ptx, int64_t nAcc
     }
 }
 
-void CWallet::TransactionRemovedFromMempool(const CTransactionRef &ptx) {
-    LOCK(cs_wallet);
-    auto it = mapWallet.find(ptx->GetHash());
-    if (it != mapWallet.end()) {
-        it->second.fInMempool = false;
+void CWallet::TransactionRemovedFromMempool(const CTransactionRef &ptx, MemPoolRemovalReason reason) {
+    if (reason != MemPoolRemovalReason::CONFLICT) {
+        LOCK(cs_wallet);
+        auto it = mapWallet.find(ptx->GetHash());
+        if (it != mapWallet.end()) {
+            it->second.fInMempool = false;
+        }
     }
 }
 
@@ -1496,11 +1498,13 @@ void CWallet::BlockConnected(const std::shared_ptr<const CBlock>& pblock, const 
 
     for (const CTransactionRef& ptx : vtxConflicted) {
         SyncTransaction(ptx);
-        TransactionRemovedFromMempool(ptx);
+        // UNKNOWN because it's a manual removal, not using mempool logic
+        TransactionRemovedFromMempool(ptx, MemPoolRemovalReason::UNKNOWN);
     }
     for (size_t i = 0; i < pblock->vtx.size(); i++) {
         SyncTransaction(pblock->vtx[i], pindex, i);
-        TransactionRemovedFromMempool(pblock->vtx[i]);
+        // UNKNOWN because it's a manual removal, not using mempool logic
+        TransactionRemovedFromMempool(pblock->vtx[i], MemPoolRemovalReason::UNKNOWN);
     }
 
     m_last_block_processed = pindex;

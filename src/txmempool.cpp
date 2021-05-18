@@ -623,9 +623,6 @@ bool CTxMemPool::removeSpentIndex(const uint256 txhash)
 void CTxMemPool::removeUnchecked(txiter it, MemPoolRemovalReason reason)
 {
     NotifyEntryRemoved(it->GetSharedTx(), reason);
-    if (reason != MemPoolRemovalReason::BLOCK) {
-        llmq::quorumInstantSendManager->TransactionRemovedFromMempool(it->GetSharedTx());
-    }
     const uint256 hash = it->GetTx().GetHash();
     for (const CTxIn& txin : it->GetTx().vin)
         mapNextTx.erase(txin.prevout);
