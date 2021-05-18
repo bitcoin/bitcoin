@@ -82,8 +82,6 @@ static constexpr bool DEFAULT_COINSTATSINDEX{false};
 static const char* const DEFAULT_BLOCKFILTERINDEX = "0";
 /** Default for -persistmempool */
 static const bool DEFAULT_PERSIST_MEMPOOL = true;
-/** Default for using fee filter */
-static const bool DEFAULT_FEEFILTER = true;
 /** Default for -stopatheight */
 static const int DEFAULT_STOPATHEIGHT = 0;
 /** Block files containing a block-height within MIN_BLOCKS_TO_KEEP of ::ChainActive().Tip() will not be pruned. */
