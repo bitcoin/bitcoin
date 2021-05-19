@@ -6,6 +6,7 @@
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <coins.h>
+#include <consensus/tx_check.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
 #include <key.h>
@@ -228,6 +229,11 @@ FUZZ_TARGET_INIT(coins_view, initialize_coins_view)
                 if (ContainsSpentInput(transaction, coins_view_cache)) {
                     // Avoid:
                     // consensus/tx_verify.cpp:171: bool Consensus::CheckTxInputs(const CTransaction &, TxValidationState &, const CCoinsViewCache &, int, CAmount &): Assertion `!coin.IsSpent()' failed.
+                    return;
+                }
+                TxValidationState dummy;
+                if (!CheckTransaction(transaction, dummy)) {
+                    // It is not allowed to call CheckTxInputs if CheckTransaction failed
                     return;
                 }
                 (void)Consensus::CheckTxInputs(transaction, state, coins_view_cache, fuzzed_data_provider.ConsumeIntegralInRange<int>(0, std::numeric_limits<int>::max()), tx_fee_out);

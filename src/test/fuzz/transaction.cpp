@@ -61,8 +61,11 @@ FUZZ_TARGET_INIT(transaction, initialize_transaction)
         return;
     }
 
-    TxValidationState state_with_dupe_check;
-    (void)CheckTransaction(tx, state_with_dupe_check);
+    {
+        TxValidationState state_with_dupe_check;
+        const bool res{CheckTransaction(tx, state_with_dupe_check)};
+        Assert(res == state_with_dupe_check.IsValid());
+    }
 
     const CFeeRate dust_relay_fee{DUST_RELAY_TX_FEE};
     std::string reason;
