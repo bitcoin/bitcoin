@@ -16,6 +16,7 @@
 #include <sqlite3.h>
 #include <stdint.h>
 
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -33,6 +34,36 @@ static void ErrorLogCallback(void* arg, int code, const char* msg)
     // Assert that this is the case:
     assert(arg == nullptr);
     LogPrintf("SQLite Error. Code: %d. Message: %s\n", code, msg);
+}
+
+static std::optional<int> ReadPragmaInteger(sqlite3* db, const std::string& key, const std::string& description, bilingual_str& error)
+{
+    std::string stmt_text = strprintf("PRAGMA %s", key);
+    sqlite3_stmt* pragma_read_stmt{nullptr};
+    int ret = sqlite3_prepare_v2(db, stmt_text.c_str(), -1, &pragma_read_stmt, nullptr);
+    if (ret != SQLITE_OK) {
+        sqlite3_finalize(pragma_read_stmt);
+        error = Untranslated(strprintf("SQLiteDatabase: Failed to prepare the statement to fetch %s: %s", description, sqlite3_errstr(ret)));
+        return std::nullopt;
+    }
+    ret = sqlite3_step(pragma_read_stmt);
+    if (ret != SQLITE_ROW) {
+        sqlite3_finalize(pragma_read_stmt);
+        error = Untranslated(strprintf("SQLiteDatabase: Failed to fetch %s: %s", description, sqlite3_errstr(ret)));
+        return std::nullopt;
+    }
+    int result = sqlite3_column_int(pragma_read_stmt, 0);
+    sqlite3_finalize(pragma_read_stmt);
+    return result;
+}
+
+static void SetPragma(sqlite3* db, const std::string& key, const std::string& value, const std::string& err_msg)
+{
+    std::string stmt_text = strprintf("PRAGMA %s = %s", key, value);
+    int ret = sqlite3_exec(db, stmt_text.c_str(), nullptr, nullptr, nullptr);
+    if (ret != SQLITE_OK) {
+        throw std::runtime_error(strprintf("SQLiteDatabase: %s: %s\n", err_msg, sqlite3_errstr(ret)));
+    }
 }
 
 SQLiteDatabase::SQLiteDatabase(const fs::path& dir_path, const fs::path& file_path, bool mock)
@@ -114,21 +145,9 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
     assert(m_db);
 
     // Check the application ID matches our network magic
-    sqlite3_stmt* app_id_stmt{nullptr};
-    int ret = sqlite3_prepare_v2(m_db, "PRAGMA application_id", -1, &app_id_stmt, nullptr);
-    if (ret != SQLITE_OK) {
-        sqlite3_finalize(app_id_stmt);
-        error = strprintf(_("SQLiteDatabase: Failed to prepare the statement to fetch the application id: %s"), sqlite3_errstr(ret));
-        return false;
-    }
-    ret = sqlite3_step(app_id_stmt);
-    if (ret != SQLITE_ROW) {
-        sqlite3_finalize(app_id_stmt);
-        error = strprintf(_("SQLiteDatabase: Failed to fetch the application id: %s"), sqlite3_errstr(ret));
-        return false;
-    }
-    uint32_t app_id = static_cast<uint32_t>(sqlite3_column_int(app_id_stmt, 0));
-    sqlite3_finalize(app_id_stmt);
+    auto read_result = ReadPragmaInteger(m_db, "application_id", "the application id", error);
+    if (!read_result.has_value()) return false;
+    uint32_t app_id = static_cast<uint32_t>(read_result.value());
     uint32_t net_magic = ReadBE32(Params().MessageStart());
     if (app_id != net_magic) {
         error = strprintf(_("SQLiteDatabase: Unexpected application id. Expected %u, got %u"), net_magic, app_id);
@@ -136,28 +155,16 @@ bool SQLiteDatabase::Verify(bilingual_str& error)
     }
 
     // Check our schema version
-    sqlite3_stmt* user_ver_stmt{nullptr};
-    ret = sqlite3_prepare_v2(m_db, "PRAGMA user_version", -1, &user_ver_stmt, nullptr);
-    if (ret != SQLITE_OK) {
-        sqlite3_finalize(user_ver_stmt);
-        error = strprintf(_("SQLiteDatabase: Failed to prepare the statement to fetch sqlite wallet schema version: %s"), sqlite3_errstr(ret));
-        return false;
-    }
-    ret = sqlite3_step(user_ver_stmt);
-    if (ret != SQLITE_ROW) {
-        sqlite3_finalize(user_ver_stmt);
-        error = strprintf(_("SQLiteDatabase: Failed to fetch sqlite wallet schema version: %s"), sqlite3_errstr(ret));
-        return false;
-    }
-    int32_t user_ver = sqlite3_column_int(user_ver_stmt, 0);
-    sqlite3_finalize(user_ver_stmt);
+    read_result = ReadPragmaInteger(m_db, "user_version", "sqlite wallet schema version", error);
+    if (!read_result.has_value()) return false;
+    int32_t user_ver = read_result.value();
     if (user_ver != WALLET_SCHEMA_VERSION) {
         error = strprintf(_("SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is supported"), user_ver, WALLET_SCHEMA_VERSION);
         return false;
     }
 
     sqlite3_stmt* stmt{nullptr};
-    ret = sqlite3_prepare_v2(m_db, "PRAGMA integrity_check", -1, &stmt, nullptr);
+    int ret = sqlite3_prepare_v2(m_db, "PRAGMA integrity_check", -1, &stmt, nullptr);
     if (ret != SQLITE_OK) {
         sqlite3_finalize(stmt);
         error = strprintf(_("SQLiteDatabase: Failed to prepare statement to verify database: %s"), sqlite3_errstr(ret));
@@ -213,12 +220,9 @@ void SQLiteDatabase::Open()
 
     // Acquire an exclusive lock on the database
     // First change the locking mode to exclusive
-    int ret = sqlite3_exec(m_db, "PRAGMA locking_mode = exclusive", nullptr, nullptr, nullptr);
-    if (ret != SQLITE_OK) {
-        throw std::runtime_error(strprintf("SQLiteDatabase: Unable to change database locking mode to exclusive: %s\n", sqlite3_errstr(ret)));
-    }
+    SetPragma(m_db, "locking_mode", "exclusive", "Unable to change database locking mode to exclusive");
     // Now begin a transaction to acquire the exclusive lock. This lock won't be released until we close because of the exclusive locking mode.
-    ret = sqlite3_exec(m_db, "BEGIN EXCLUSIVE TRANSACTION", nullptr, nullptr, nullptr);
+    int ret = sqlite3_exec(m_db, "BEGIN EXCLUSIVE TRANSACTION", nullptr, nullptr, nullptr);
     if (ret != SQLITE_OK) {
         throw std::runtime_error("SQLiteDatabase: Unable to obtain an exclusive lock on the database, is it being used by another syscoind?\n");
     }
@@ -228,18 +232,12 @@ void SQLiteDatabase::Open()
     }
 
     // Enable fullfsync for the platforms that use it
-    ret = sqlite3_exec(m_db, "PRAGMA fullfsync = true", nullptr, nullptr, nullptr);
-    if (ret != SQLITE_OK) {
-        throw std::runtime_error(strprintf("SQLiteDatabase: Failed to enable fullfsync: %s\n", sqlite3_errstr(ret)));
-    }
+    SetPragma(m_db, "fullfsync", "true", "Failed to enable fullfsync");
 
     if (gArgs.GetBoolArg("-unsafesqlitesync", false)) {
         // Use normal synchronous mode for the journal
         LogPrintf("WARNING SQLite is configured to not wait for data to be flushed to disk. Data loss and corruption may occur.\n");
-        ret = sqlite3_exec(m_db, "PRAGMA synchronous = OFF", nullptr, nullptr, nullptr);
-        if (ret != SQLITE_OK) {
-            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to set synchronous mode to OFF: %s\n", sqlite3_errstr(ret)));
-        }
+        SetPragma(m_db, "synchronous", "OFF", "Failed to set synchronous mode to OFF");
     }
 
     // Make the table for our key-value pairs
@@ -271,18 +269,12 @@ void SQLiteDatabase::Open()
 
         // Set the application id
         uint32_t app_id = ReadBE32(Params().MessageStart());
-        std::string set_app_id = strprintf("PRAGMA application_id = %d", static_cast<int32_t>(app_id));
-        ret = sqlite3_exec(m_db, set_app_id.c_str(), nullptr, nullptr, nullptr);
-        if (ret != SQLITE_OK) {
-            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to set the application id: %s\n", sqlite3_errstr(ret)));
-        }
+        SetPragma(m_db, "application_id", strprintf("%d", static_cast<int32_t>(app_id)),
+                  "Failed to set the application id");
 
         // Set the user version
-        std::string set_user_ver = strprintf("PRAGMA user_version = %d", WALLET_SCHEMA_VERSION);
-        ret = sqlite3_exec(m_db, set_user_ver.c_str(), nullptr, nullptr, nullptr);
-        if (ret != SQLITE_OK) {
-            throw std::runtime_error(strprintf("SQLiteDatabase: Failed to set the wallet schema version: %s\n", sqlite3_errstr(ret)));
-        }
+        SetPragma(m_db, "user_version", strprintf("%d", WALLET_SCHEMA_VERSION),
+                  "Failed to set the wallet schema version");
     }
 }
 
