@@ -1,10 +1,10 @@
 package=bls-dash
-$(package)_version=1.0.1
+$(package)_version=1.1.0
 $(package)_download_path=https://github.com/dashpay/bls-signatures/archive
 $(package)_download_file=$($(package)_version).tar.gz
 $(package)_file_name=$(package)-$($(package)_download_file)
 $(package)_build_subdir=build
-$(package)_sha256_hash=cff7552d8ebd6d29141f1acfa65b7d956c803b575baaaf076d4aea3c32178116
+$(package)_sha256_hash=276c8573104e5f18bb5b9fd3ffd49585dda5ba5f6de2de74759dda8ca5a9deac
 $(package)_dependencies=gmp cmake
 
 $(package)_relic_version=3a23142be0a5510a3aa93cd6c76fc59d3fc732a5
