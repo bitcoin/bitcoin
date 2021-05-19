@@ -110,7 +110,8 @@ bool LoadWallets(interfaces::Chain& chain, interfaces::CoinJoin::Loader& coinjoi
             if (!database && status == DatabaseStatus::FAILED_NOT_FOUND) {
                 continue;
             }
-            std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(chain, coinjoin_loader, name, std::move(database), options.create_flags, error_string, warnings) : nullptr;
+            chain.initMessage(_("Loading wallet...").translated);
+            std::shared_ptr<CWallet> pwallet = database ? CWallet::Create(&chain, coinjoin_loader, name, std::move(database), options.create_flags, error_string, warnings) : nullptr;
             if (!warnings.empty()) chain.initWarning(Join(warnings, Untranslated("\n")));
             if (!pwallet) {
                 chain.initError(error_string);
