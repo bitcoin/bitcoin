@@ -402,7 +402,7 @@ public:
     std::unique_ptr<TransportDeserializer> m_deserializer;
     std::unique_ptr<TransportSerializer> m_serializer;
 
-    NetPermissionFlags m_permissionFlags{PF_NONE};
+    NetPermissionFlags m_permissionFlags{NetPermissionFlags::None};
     std::atomic<ServiceFlags> nServices{NODE_NONE};
     SOCKET hSocket GUARDED_BY(cs_hSocket);
     /** Total size of all vSendMsg entries */
