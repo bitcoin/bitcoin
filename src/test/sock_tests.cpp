@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(wait)
     Sock sock0(s[0]);
     Sock sock1(s[1]);
 
-    std::thread waiter([&sock0]() { sock0.Wait(24h, Sock::RECV); });
+    std::thread waiter([&sock0]() { (void)sock0.Wait(24h, Sock::RECV); });
 
     BOOST_REQUIRE_EQUAL(sock1.Send("a", 1, 0), 1);
 
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(recv_until_terminator_limit)
         // BOOST_CHECK_EXCEPTION() writes to some variables shared with the main thread which
         // creates a data race. So mimic it manually.
         try {
-            sock_recv.RecvUntilTerminator('\n', timeout, interrupt, max_data);
+            (void)sock_recv.RecvUntilTerminator('\n', timeout, interrupt, max_data);
         } catch (const std::runtime_error& e) {
             threw_as_expected = HasReason("too many bytes without a terminator")(e);
         }
