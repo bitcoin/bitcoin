@@ -179,4 +179,16 @@ T& SpanPopBack(Span<T>& span)
     return back;
 }
 
+// Helper functions to safely cast to unsigned char pointers.
+inline unsigned char* UCharCast(char* c) { return (unsigned char*)c; }
+inline unsigned char* UCharCast(unsigned char* c) { return c; }
+inline const unsigned char* UCharCast(const char* c) { return (unsigned char*)c; }
+inline const unsigned char* UCharCast(const unsigned char* c) { return c; }
+
+// Helper function to safely convert a Span to a Span<[const] unsigned char>.
+template <typename T> constexpr auto UCharSpanCast(Span<T> s) -> Span<typename std::remove_pointer<decltype(UCharCast(s.data()))>::type> { return {UCharCast(s.data()), s.size()}; }
+
+/** Like MakeSpan, but for (const) unsigned char member types only. Only works for (un)signed char containers. */
+template <typename V> constexpr auto MakeUCharSpan(V&& v) -> decltype(UCharSpanCast(MakeSpan(std::forward<V>(v)))) { return UCharSpanCast(MakeSpan(std::forward<V>(v))); }
+
 #endif

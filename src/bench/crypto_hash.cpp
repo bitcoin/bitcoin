@@ -58,14 +58,14 @@ static void HASH_DSHA256(benchmark::State& state)
     uint8_t hash[CSHA256::OUTPUT_SIZE];
     std::vector<uint8_t> in(BUFFER_SIZE,0);
     while (state.KeepRunning())
-        CHash256().Write(in.data(), in.size()).Finalize(hash);
+        CHash256().Write(in).Finalize(hash);
 }
 
 static void HASH_DSHA256_0032b(benchmark::State& state)
 {
     std::vector<uint8_t> in(32,0);
     while (state.KeepRunning()) {
-        CHash256().Write(in.data(), in.size()).Finalize(in.data());
+        CHash256().Write(in).Finalize(in);
     }
 }
 
@@ -116,42 +116,42 @@ static void HASH_DSHA256_0032b_single(benchmark::State& state)
 {
     std::vector<uint8_t> in(32,0);
     while (state.KeepRunning())
-        CHash256().Write(in.data(), in.size()).Finalize(in.data());
+        CHash256().Write(in).Finalize(in);
 }
 
 static void HASH_DSHA256_0080b_single(benchmark::State& state)
 {
     std::vector<uint8_t> in(80,0);
     while (state.KeepRunning())
-        CHash256().Write(in.data(), in.size()).Finalize(in.data());
+        CHash256().Write(in).Finalize(in);
 }
 
 static void HASH_DSHA256_0128b_single(benchmark::State& state)
 {
     std::vector<uint8_t> in(128,0);
     while (state.KeepRunning())
-        CHash256().Write(in.data(), in.size()).Finalize(in.data());
+        CHash256().Write(in).Finalize(in);
 }
 
 static void HASH_DSHA256_0512b_single(benchmark::State& state)
 {
     std::vector<uint8_t> in(512,0);
     while (state.KeepRunning())
-        CHash256().Write(in.data(), in.size()).Finalize(in.data());
+        CHash256().Write(in).Finalize(in);
 }
 
 static void HASH_DSHA256_1024b_single(benchmark::State& state)
 {
     std::vector<uint8_t> in(1024,0);
     while (state.KeepRunning())
-        CHash256().Write(in.data(), in.size()).Finalize(in.data());
+        CHash256().Write(in).Finalize(in);
 }
 
 static void HASH_DSHA256_2048b_single(benchmark::State& state)
 {
     std::vector<uint8_t> in(2048,0);
     while (state.KeepRunning())
-        CHash256().Write(in.data(), in.size()).Finalize(in.data());
+        CHash256().Write(in).Finalize(in);
 }
 
 static void HASH_X11(benchmark::State& state)
