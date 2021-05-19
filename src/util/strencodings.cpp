@@ -605,13 +605,14 @@ bool ParseHDKeypath(const std::string& keypath_str, std::vector<uint32_t>& keypa
 
 std::string HexStr(const Span<const uint8_t> s)
 {
-    std::string rv;
+    std::string rv(s.size() * 2, '\0');
     static constexpr char hexmap[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
                                          '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
-    rv.reserve(s.size() * 2);
-    for (uint8_t v: s) {
-        rv.push_back(hexmap[v >> 4]);
-        rv.push_back(hexmap[v & 15]);
+    auto it = rv.begin();
+    for (uint8_t v : s) {
+        *it++ = hexmap[v >> 4];
+        *it++ = hexmap[v & 15];
     }
+    assert(it == rv.end());
     return rv;
 }
