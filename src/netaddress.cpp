@@ -544,7 +544,7 @@ static std::string IPv4ToString(Span<const uint8_t> a)
 
 // Return an IPv6 address text representation with zero compression as described in RFC 5952
 // ("A Recommendation for IPv6 Address Text Representation").
-static std::string IPv6ToString(Span<const uint8_t> a)
+static std::string IPv6ToString(Span<const uint8_t> a, uint32_t scope_id)
 {
     assert(a.size() == ADDR_IPV6_SIZE);
     const std::array groups{
@@ -592,6 +592,10 @@ static std::string IPv6ToString(Span<const uint8_t> a)
         r += strprintf("%s%x", ((!r.empty() && r.back() != ':') ? ":" : ""), groups[i]);
     }
 
+    if (scope_id != 0) {
+        r += strprintf("%%%u", scope_id);
+    }
+
     return r;
 }
 
@@ -612,14 +616,14 @@ std::string CNetAddr::ToStringIP() const
     case NET_IPV4:
         return IPv4ToString(m_addr);
     case NET_IPV6: {
-        return IPv6ToString(m_addr);
+        return IPv6ToString(m_addr, m_scope_id);
     }
     case NET_ONION:
         return OnionToString(m_addr);
     case NET_I2P:
         return EncodeBase32(m_addr, false /* don't pad with = */) + ".b32.i2p";
     case NET_CJDNS:
-        return IPv6ToString(m_addr);
+        return IPv6ToString(m_addr, 0);
     case NET_INTERNAL:
         return EncodeBase32(m_addr) + ".internal";
     case NET_UNROUTABLE: // m_net is never and should not be set to NET_UNROUTABLE
