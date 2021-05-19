@@ -1,4 +1,4 @@
-Dash Core version 0.17.0.0
+Dash Core version 0.17.0.1
 ==========================
 
 Release is now available from:
@@ -43,7 +43,7 @@ Downgrading to a version older than 0.14.0.3 is no longer supported due to
 changes in the "evodb" database format. If you need to use an older version,
 you must either reindex or re-sync the whole chain.
 
-### Downgrade of masternodes to < 0.17.0.0
+### Downgrade of masternodes to < 0.17.0.1
 
 Starting with the 0.16 release, masternodes verify the protocol version of other
 masternodes. This results in PoSe punishment/banning for outdated masternodes,
@@ -264,10 +264,10 @@ Miscellaneous
 -------------
 A lot of refactoring, code cleanups and other small fixes were done in this release.
 
-0.17.0.0 Change log
+0.17.0.1 Change log
 ===================
 
-See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.16.1.1...dashpay:v0.17.0.0).
+See detailed [set of changes](https://github.com/dashpay/dash/compare/v0.16.1.1...dashpay:v0.17.0.1).
 
 Credits
 =======
