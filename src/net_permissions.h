@@ -74,14 +74,14 @@ public:
 class NetWhitebindPermissions : public NetPermissions
 {
 public:
-    static bool TryParse(const std::string str, NetWhitebindPermissions& output, bilingual_str& error);
+    static bool TryParse(const std::string& str, NetWhitebindPermissions& output, bilingual_str& error);
     CService m_service;
 };
 
 class NetWhitelistPermissions : public NetPermissions
 {
 public:
-    static bool TryParse(const std::string str, NetWhitelistPermissions& output, bilingual_str& error);
+    static bool TryParse(const std::string& str, NetWhitelistPermissions& output, bilingual_str& error);
     CSubNet m_subnet;
 };
 
