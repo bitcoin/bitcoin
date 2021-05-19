@@ -46,16 +46,16 @@ constexpr ServiceFlags ALL_SERVICE_FLAGS[]{
 };
 
 constexpr NetPermissionFlags ALL_NET_PERMISSION_FLAGS[]{
-    NetPermissionFlags::PF_NONE,
-    NetPermissionFlags::PF_BLOOMFILTER,
-    NetPermissionFlags::PF_RELAY,
-    NetPermissionFlags::PF_FORCERELAY,
-    NetPermissionFlags::PF_NOBAN,
-    NetPermissionFlags::PF_MEMPOOL,
-    NetPermissionFlags::PF_ADDR,
-    NetPermissionFlags::PF_DOWNLOAD,
-    NetPermissionFlags::PF_ISIMPLICIT,
-    NetPermissionFlags::PF_ALL,
+    NetPermissionFlags::None,
+    NetPermissionFlags::BloomFilter,
+    NetPermissionFlags::Relay,
+    NetPermissionFlags::ForceRelay,
+    NetPermissionFlags::NoBan,
+    NetPermissionFlags::Mempool,
+    NetPermissionFlags::Addr,
+    NetPermissionFlags::Download,
+    NetPermissionFlags::Implicit,
+    NetPermissionFlags::All,
 };
 
 constexpr ConnectionType ALL_CONNECTION_TYPES[]{

@@ -1110,7 +1110,7 @@ void RPCConsole::updateDetailWidget()
     ui->peerSubversion->setText(QString::fromStdString(stats->nodeStats.cleanSubVer));
     ui->peerConnectionType->setText(GUIUtil::ConnectionTypeToQString(stats->nodeStats.m_conn_type, /* prepend_direction */ true));
     ui->peerNetwork->setText(GUIUtil::NetworkToQString(stats->nodeStats.m_network));
-    if (stats->nodeStats.m_permissionFlags == PF_NONE) {
+    if (stats->nodeStats.m_permissionFlags == NetPermissionFlags::None) {
         ui->peerPermissions->setText(ts.na);
     } else {
         QStringList permissions;

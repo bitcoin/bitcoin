@@ -175,7 +175,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman, const PeerManager& peerman)
 
         // NORMAL NETWORK MODE - TESTNET/MAINNET
         {
-            if ((pnode->HasPermission(PF_NOBAN) || pnode->IsManualConn()) && !netfulfilledman.HasFulfilledRequest(pnode->addr, strAllow)) {
+            if ((pnode->HasPermission(NetPermissionFlags::NoBan) || pnode->IsManualConn()) && !netfulfilledman.HasFulfilledRequest(pnode->addr, strAllow)) {
                 netfulfilledman.RemoveAllFulfilledRequests(pnode->addr);
                 netfulfilledman.AddFulfilledRequest(pnode->addr, strAllow);
                 LogPrintf("CMasternodeSync::ProcessTick -- skipping mnsync restrictions for peer=%d\n", pnode->GetId());
