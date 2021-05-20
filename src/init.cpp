@@ -922,6 +922,9 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // and the amount the mempool min fee increases above the feerate of txs evicted due to mempool limiting.
     if (args.IsArgSet("-incrementalrelayfee")) {
         if (std::optional<CAmount> inc_relay_fee = ParseMoney(args.GetArg("-incrementalrelayfee", ""))) {
+            // High fee check
+            if (inc_relay_fee > MAX_FEE_PER_KVB)
+                return InitError(AmountHighWarn("-incrementalrelayfee"));
             ::incrementalRelayFee = CFeeRate{inc_relay_fee.value()};
         } else {
             return InitError(AmountErrMsg("incrementalrelayfee", args.GetArg("-incrementalrelayfee", "")));
@@ -958,7 +961,9 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     if (args.IsArgSet("-minrelaytxfee")) {
         if (std::optional<CAmount> min_relay_fee = ParseMoney(args.GetArg("-minrelaytxfee", ""))) {
-            // High fee check is done afterward in CWallet::Create()
+            // High fee check
+            if (min_relay_fee > MAX_FEE_PER_KVB)
+                return InitError(AmountHighWarn("-minrelaytxfee"));
             ::minRelayTxFee = CFeeRate{min_relay_fee.value()};
         } else {
             return InitError(AmountErrMsg("minrelaytxfee", args.GetArg("-minrelaytxfee", "")));
@@ -972,7 +977,11 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // Sanity check argument for min fee for including tx in block
     // TODO: Harmonize which arguments need sanity checking and where that happens
     if (args.IsArgSet("-blockmintxfee")) {
-        if (!ParseMoney(args.GetArg("-blockmintxfee", ""))) {
+        if (std::optional<CAmount> block_min_tx_fee = ParseMoney(args.GetArg("-blockmintxfee", ""))) {
+            // High fee check
+            if (block_min_tx_fee > MAX_FEE_PER_KVB)
+                return InitError(AmountHighWarn("-blockmintxfee"));
+        }else{
             return InitError(AmountErrMsg("blockmintxfee", args.GetArg("-blockmintxfee", "")));
         }
     }
@@ -981,6 +990,9 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     // implementations may inadvertently create non-standard transactions
     if (args.IsArgSet("-dustrelayfee")) {
         if (std::optional<CAmount> parsed = ParseMoney(args.GetArg("-dustrelayfee", ""))) {
+            // High fee check
+            if (parsed > MAX_FEE_PER_KVB)
+                return InitError(AmountHighWarn("-dustrelayfee"));
             dustRelayFee = CFeeRate{parsed.value()};
         } else {
             return InitError(AmountErrMsg("dustrelayfee", args.GetArg("-dustrelayfee", "")));
