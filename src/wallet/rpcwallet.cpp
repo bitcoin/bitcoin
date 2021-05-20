@@ -857,7 +857,7 @@ static RPCHelpMan sendmany()
         HELP_REQUIRING_PASSPHRASE,
                 {
                     {"dummy", RPCArg::Type::STR, RPCArg::Optional::NO, "Must be set to \"\" for backwards compatibility.", "\"\""},
-                    {"amounts", RPCArg::Type::OBJ, RPCArg::Optional::NO, "The addresses and amounts",
+                    {"amounts", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::NO, "The addresses and amounts",
                         {
                             {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "The syscoin address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value"},
                         },
@@ -2589,7 +2589,7 @@ static RPCHelpMan loadwallet()
                 "\napplied to the new wallet (eg -rescan, etc).\n",
                 {
                     {"filename", RPCArg::Type::STR, RPCArg::Optional::NO, "The wallet directory or .dat file."},
-                    {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Default{UniValue::VNULL}, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
+                    {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED_NAMED_ARG, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -2717,10 +2717,10 @@ static RPCHelpMan createwallet()
             {"wallet_name", RPCArg::Type::STR, RPCArg::Optional::NO, "The name for the new wallet. If this is a path, the wallet will be created at the path location."},
             {"disable_private_keys", RPCArg::Type::BOOL, RPCArg::Default{false}, "Disable the possibility of private keys (only watchonlys are possible in this mode)."},
             {"blank", RPCArg::Type::BOOL, RPCArg::Default{false}, "Create a blank wallet. A blank wallet has no keys or HD seed. One can be set using sethdseed."},
-            {"passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED, "Encrypt the wallet with this passphrase."},
+            {"passphrase", RPCArg::Type::STR, RPCArg::Optional::OMITTED_NAMED_ARG, "Encrypt the wallet with this passphrase."},
             {"avoid_reuse", RPCArg::Type::BOOL, RPCArg::Default{false}, "Keep track of coin reuse, and treat dirty and clean coins differently with privacy considerations in mind."},
             {"descriptors", RPCArg::Type::BOOL, RPCArg::Default{false}, "Create a native descriptor wallet. The wallet will use descriptors internally to handle address creation"},
-            {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Default{UniValue::VNULL}, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
+            {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED_NAMED_ARG, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
             {"external_signer", RPCArg::Type::BOOL, RPCArg::Default{false}, "Use an external signer such as a hardware wallet. Requires -signer to be configured. Wallet creation will fail if keys cannot be fetched. Requires disable_private_keys and descriptors set to true."},
         },
         RPCResult{
@@ -2811,7 +2811,7 @@ static RPCHelpMan unloadwallet()
                 "Specifying the wallet name on a wallet endpoint is invalid.",
                 {
                     {"wallet_name", RPCArg::Type::STR, RPCArg::DefaultHint{"the wallet name from the RPC endpoint"}, "The name of the wallet to unload. If provided both here and in the RPC endpoint, the two must be identical."},
-                    {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Default{UniValue::VNULL}, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
+                    {"load_on_startup", RPCArg::Type::BOOL, RPCArg::Optional::OMITTED_NAMED_ARG, "Save wallet name to persistent settings and load on startup. True to add wallet to startup list, false to remove, null to leave unchanged."},
                 },
                 RPCResult{RPCResult::Type::OBJ, "", "", {
                     {RPCResult::Type::STR, "warning", "Warning message if wallet was not unloaded cleanly."},
@@ -4076,7 +4076,7 @@ static RPCHelpMan send()
                     "That is, each address can only appear once and there can only be one 'data' object.\n"
                     "For convenience, a dictionary, which holds the key-value pairs directly, is also accepted.",
                 {
-                    {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                    {"", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::OMITTED, "",
                         {
                             {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the syscoin address, the value (float or string) is the amount in " + CURRENCY_UNIT + ""},
                         },
@@ -4425,7 +4425,7 @@ static RPCHelpMan walletcreatefundedpsbt()
                             "For compatibility reasons, a dictionary, which holds the key-value pairs directly, is also\n"
                             "accepted as second parameter.",
                         {
-                            {"", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED, "",
+                            {"", RPCArg::Type::OBJ_USER_KEYS, RPCArg::Optional::OMITTED, "",
                                 {
                                     {"address", RPCArg::Type::AMOUNT, RPCArg::Optional::NO, "A key-value pair. The key (string) is the syscoin address, the value (float or string) is the amount in " + CURRENCY_UNIT + ""},
                                 },
