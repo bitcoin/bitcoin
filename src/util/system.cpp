@@ -337,14 +337,12 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
     }
 
     // we do not allow -includeconf from command line
-    bool success = true;
     if (auto* includes = util::FindKey(m_settings.command_line_options, "includeconf")) {
-        for (const auto& include : util::SettingsSpan(*includes)) {
-            error += "-includeconf cannot be used from commandline; -includeconf=" + include.write() + "\n";
-            success = false;
-        }
+        const auto& include{*util::SettingsSpan(*includes).begin()}; // pick first value as example
+        error = "-includeconf cannot be used from commandline; -includeconf=" + include.write();
+        return false;
     }
-    return success;
+    return true;
 }
 
 Optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) const

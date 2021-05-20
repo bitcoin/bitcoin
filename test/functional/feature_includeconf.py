@@ -48,7 +48,7 @@ class IncludeConfTest(BitcoinTestFramework):
             expected_msg='Error: Error parsing command line arguments: -includeconf cannot be used from commandline; -includeconf=true',
         )
         self.nodes[0].assert_start_raises_init_error(
-            extra_args=['-includeconf=relative2.conf'],
+            extra_args=['-includeconf=relative2.conf', '-includeconf=no_warn.conf'],
             expected_msg='Error: Error parsing command line arguments: -includeconf cannot be used from commandline; -includeconf="relative2.conf"',
         )
 
