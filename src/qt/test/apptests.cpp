@@ -20,10 +20,10 @@
 #endif
 
 #include <QAction>
-#include <QEventLoop>
 #include <QLineEdit>
 #include <QScopedPointer>
 #include <QSettings>
+#include <QSignalSpy>
 #include <QTest>
 #include <QTextEdit>
 #include <QtGlobal>
@@ -34,13 +34,14 @@ namespace {
 //! Call getblockchaininfo RPC and check first field of JSON output.
 void TestRpcCommand(RPCConsole* console)
 {
-    QEventLoop loop;
     QTextEdit* messagesWidget = console->findChild<QTextEdit*>("messagesWidget");
-    QObject::connect(messagesWidget, &QTextEdit::textChanged, &loop, &QEventLoop::quit);
     QLineEdit* lineEdit = console->findChild<QLineEdit*>("lineEdit");
+    QSignalSpy mw_spy(messagesWidget, &QTextEdit::textChanged);
+    QVERIFY(mw_spy.isValid());
     QTest::keyClicks(lineEdit, "getblockchaininfo");
     QTest::keyClick(lineEdit, Qt::Key_Return);
-    loop.exec();
+    QVERIFY(mw_spy.wait(1000));
+    QCOMPARE(mw_spy.count(), 2);
     QString output = messagesWidget->toPlainText();
     UniValue value;
     value.read(output.right(output.size() - output.indexOf("{")).toStdString());
