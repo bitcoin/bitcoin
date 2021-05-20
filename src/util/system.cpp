@@ -388,7 +388,7 @@ std::optional<unsigned int> ArgsManager::GetArgFlags(const std::string& name) co
     return std::nullopt;
 }
 
-const fs::path& ArgsManager::GetBlocksDirPath()
+const fs::path& ArgsManager::GetBlocksDirPath() const
 {
     LOCK(cs_args);
     fs::path& path = m_cached_blocks_path;
