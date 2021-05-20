@@ -53,6 +53,46 @@ be found in [contrib/tracing].
 
 The currently available tracepoints are listed here.
 
+### Context `net`
+
+#### Tracepoint `net:inbound_message`
+
+Is called when a message is received from a peer over the P2P network. Passes
+information about our peer, the connection and the message as arguments.
+
+Arguments passed:
+1. Peer ID as `int64`
+2. Peer Address and Port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (max. length 68 characters)
+3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+4. Message Type (inv, ping, getdata, addrv2, ...) as `pointer to C-style String` (max. length 20 characters)
+5. Message Size in bytes as `uint64`
+6. Message Bytes as `pointer to unsigned chars` (i.e. bytes)
+
+Note: The message is passed to the tracepoint in full, however, due to space
+limitations in the eBPF kernel VM it might not be possible to pass the message
+to user-space in full. Messages longer than a 32kb might be cut off. This can
+be detected in tracing scripts by comparing the message size to the length of
+the passed message.
+
+#### Tracepoint `net:outbound_message`
+
+Is called when a message is send to a peer over the P2P network. Passes
+information about our peer, the connection and the message as arguments.
+
+Arguments passed:
+1. Peer ID as `int64`
+2. Peer Address and Port (IPv4, IPv6, Tor v3, I2P, ...) as `pointer to C-style String` (max. length 68 characters)
+3. Connection Type (inbound, feeler, outbound-full-relay, ...) as `pointer to C-style String` (max. length 20 characters)
+4. Message Type (inv, ping, getdata, addrv2, ...) as `pointer to C-style String` (max. length 20 characters)
+5. Message Size in bytes as `uint64`
+6. Message Bytes as `pointer to unsigned chars` (i.e. bytes)
+
+Note: The message is passed to the tracepoint in full, however, due to space
+limitations in the eBPF kernel VM it might not be possible to pass the message
+to user-space in full. Messages longer than a 32kb might be cut off. This can
+be detected in tracing scripts by comparing the message size to the length of
+the passed message.
+
 ## Adding tracepoints to Bitcoin Core
 
 To add a new tracepoint, `#include <util/trace.h>` in the compilation unit where
