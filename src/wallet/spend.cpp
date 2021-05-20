@@ -586,6 +586,9 @@ bool CWallet::CreateTransactionInternal(
     CoinSelectionParams coin_selection_params; // Parameters for coin selection, init with dummy
     coin_selection_params.m_avoid_partial_spends = coin_control.m_avoid_partial_spends;
 
+    // Set the long term feerate estimate to the wallet's consolidate feerate
+    coin_selection_params.m_long_term_feerate = m_consolidate_feerate;
+
     CAmount recipients_sum = 0;
     const OutputType change_type = TransactionChangeType(coin_control.m_change_type ? *coin_control.m_change_type : m_default_change_type, vecSend);
     ReserveDestination reservedest(this, change_type);
@@ -658,11 +661,6 @@ bool CWallet::CreateTransactionInternal(
         error = _("Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.");
         return false;
     }
-
-    // Get long term estimate
-    CCoinControl cc_temp;
-    cc_temp.m_confirm_target = chain().estimateMaxBlocks();
-    coin_selection_params.m_long_term_feerate = GetMinimumFeeRate(*this, cc_temp, nullptr);
 
     // Calculate the cost of change
     // Cost of change is the cost of creating the change output + cost of spending the change output in the future.
