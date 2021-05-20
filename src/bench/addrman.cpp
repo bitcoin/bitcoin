@@ -7,6 +7,7 @@
 #include <random.h>
 #include <util/time.h>
 
+#include <optional>
 #include <vector>
 
 /* A "source" is a source address from which we have received a bunch of other addresses. */
@@ -98,7 +99,7 @@ static void AddrManGetAddr(benchmark::Bench& bench)
     FillAddrMan(addrman);
 
     bench.run([&] {
-        const auto& addresses = addrman.GetAddr(2500, 23);
+        const auto& addresses = addrman.GetAddr(/* max_addresses */ 2500, /* max_pct */ 23, /* network */ std::nullopt);
         assert(addresses.size() > 0);
     });
 }
