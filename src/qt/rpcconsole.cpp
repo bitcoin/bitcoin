@@ -936,20 +936,23 @@ void RPCConsole::clear(bool keep_prompt)
             ).arg(consoleFontSize)
         );
 
-#ifdef Q_OS_MAC
-    QString clsKey = "(⌘)-L";
-#else
-    QString clsKey = "Ctrl-L";
-#endif
-
-    message(CMD_REPLY, (tr("Welcome to the %1 RPC console.").arg(PACKAGE_NAME) + "<br>" +
-                        tr("Use up and down arrows to navigate history, and %1 to clear screen.").arg("<b>"+clsKey+"</b>") + "<br>" +
-                        tr("Type %1 for an overview of available commands.").arg("<b>help</b>") + "<br>" +
-                        tr("For more information on using this console type %1.").arg("<b>help-console</b>") +
-                        "<br><span class=\"secwarning\"><br>" +
-                        tr("WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.") +
-                        "</span>"),
-                        true);
+    message(CMD_REPLY,
+            tr("Welcome to the %1 RPC console.").arg(PACKAGE_NAME) +
+                "<br>" +
+                tr("Use up and down arrows to navigate history, and %1 to clear screen.")
+                    .arg("<b>" + ui->clearButton->shortcut().toString(QKeySequence::NativeText) + "</b>") +
+                "<br>" +
+                tr("Use %1 and %2 to increase or decrease the font size.")
+                    .arg("<b>" + ui->fontBiggerButton->shortcut().toString(QKeySequence::NativeText) + "</b>")
+                    .arg("<b>" + ui->fontSmallerButton->shortcut().toString(QKeySequence::NativeText) + "</b>") +
+                "<br>" +
+                tr("Type %1 for an overview of available commands.").arg("<b>help</b>") +
+                "<br>" +
+                tr("For more information on using this console type %1.").arg("<b>help-console</b>") +
+                "<br><span class=\"secwarning\"><br>" +
+                tr("WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.") +
+                "</span>",
+            true);
 }
 
 void RPCConsole::keyPressEvent(QKeyEvent *event)
@@ -1285,8 +1288,18 @@ void RPCConsole::setButtonIcons()
 {
     const QSize consoleButtonsSize(BUTTON_ICONSIZE * 0.8, BUTTON_ICONSIZE * 0.8);
     GUIUtil::setIcon(ui->clearButton, "remove", GUIUtil::ThemedColor::RED, consoleButtonsSize);
+
     GUIUtil::setIcon(ui->fontBiggerButton, "fontbigger", GUIUtil::ThemedColor::BLUE, consoleButtonsSize);
+    //: Main shortcut to increase the RPC console font size.
+    ui->fontBiggerButton->setShortcut(tr("Ctrl++"));
+    //: Secondary shortcut to increase the RPC console font size.
+    GUIUtil::AddButtonShortcut(ui->fontBiggerButton, tr("Ctrl+="));
+
     GUIUtil::setIcon(ui->fontSmallerButton, "fontsmaller", GUIUtil::ThemedColor::BLUE, consoleButtonsSize);
+    //: Main shortcut to decrease the RPC console font size.
+    ui->fontSmallerButton->setShortcut(tr("Ctrl+-"));
+    //: Secondary shortcut to decrease the RPC console font size.
+    GUIUtil::AddButtonShortcut(ui->fontSmallerButton, tr("Ctrl+_"));
 }
 
 void RPCConsole::reloadThemedWidgets()
