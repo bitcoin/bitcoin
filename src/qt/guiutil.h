@@ -36,10 +36,12 @@ namespace interfaces
 }
 
 QT_BEGIN_NAMESPACE
+class QAbstractButton;
 class QAbstractItemView;
 class QAction;
 class QDateTime;
 class QFont;
+class QKeySequence;
 class QLineEdit;
 class QMenu;
 class QPoint;
@@ -64,6 +66,14 @@ namespace GUIUtil
 
     // Set up widget for address
     void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent);
+
+    /**
+     * Connects an additional shortcut to a QAbstractButton. Works around the
+     * one shortcut limitation of the button's shortcut property.
+     * @param[in] button    QAbstractButton to assign shortcut to
+     * @param[in] shortcut  QKeySequence to use as shortcut
+     */
+    void AddButtonShortcut(QAbstractButton* button, const QKeySequence& shortcut);
 
     // Parse "syscoin:" URI into recipient object, return true on successful parsing
     bool parseSyscoinURI(const QUrl &uri, SendCoinsRecipient *out);
