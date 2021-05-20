@@ -103,9 +103,6 @@ FUZZ_TARGET_INIT(transaction, initialize_transaction)
     (void)IsWitnessStandard(tx, coins_view_cache);
 
     UniValue u(UniValue::VOBJ);
-    TxToUniv(tx, /* hashBlock */ {}, /* include_addresses */ true, u);
-    TxToUniv(tx, /* hashBlock */ {}, /* include_addresses */ false, u);
-    static const uint256 u256_max(uint256S("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"));
-    TxToUniv(tx, u256_max, /* include_addresses */ true, u);
-    TxToUniv(tx, u256_max, /* include_addresses */ false, u);
+    TxToUniv(tx, /* hashBlock */ uint256::ZERO, /* include_addresses */ true, u);
+    TxToUniv(tx, /* hashBlock */ uint256::ONE, /* include_addresses */ false, u);
 }
