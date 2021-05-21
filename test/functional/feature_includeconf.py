@@ -42,7 +42,14 @@ class IncludeConfTest(BitcoinTestFramework):
 
         self.log.info("-includeconf cannot be used as command-line arg")
         self.stop_node(0)
-        self.nodes[0].assert_start_raises_init_error(extra_args=["-includeconf=relative2.conf"], expected_msg="Error: Error parsing command line arguments: -includeconf cannot be used from commandline; -includeconf=relative2.conf")
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=['-noincludeconf=0'],
+            expected_msg='Error: Error parsing command line arguments: -includeconf cannot be used from commandline; -includeconf=true',
+        )
+        self.nodes[0].assert_start_raises_init_error(
+            extra_args=['-includeconf=relative2.conf'],
+            expected_msg='Error: Error parsing command line arguments: -includeconf cannot be used from commandline; -includeconf="relative2.conf"',
+        )
 
         self.log.info("-includeconf cannot be used recursively. subversion should end with 'main; relative)/'")
         with open(os.path.join(self.options.tmpdir, "node0", "relative.conf"), "a", encoding="utf8") as f:
