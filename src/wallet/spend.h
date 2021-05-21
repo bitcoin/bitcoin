@@ -101,18 +101,20 @@ std::map<CTxDestination, std::vector<COutput>> ListCoins(const CWallet& wallet) 
 std::vector<OutputGroup> GroupOutputs(const CWallet& wallet, const std::vector<COutput>& outputs, const CoinSelectionParams& coin_sel_params, const CoinEligibilityFilter& filter, bool positive_only);
 
 /**
- * Shuffle and select coins until nTargetValue is reached while avoiding
- * small change; This method is stochastic for some inputs and upon
- * completion the coin set and corresponding actual target value is
- * assembled
- * param@[in]   coins           Set of UTXOs to consider. These will be categorized into
- *                              OutputGroups and filtered using eligibility_filter before
- *                              selecting coins.
- * param@[out]  setCoinsRet     Populated with the coins selected if successful.
- * param@[out]  nValueRet       Used to return the total value of selected coins.
+ * Attempt to find a valid input set that meets the provided eligibility filter and target.
+ * Multiple coin selection algorithms will be run and the input set that produces the least waste
+ * (according to the waste metric) will be chosen.
+ *
+ * param@[in]  wallet                 The wallet which provides solving data for the coins
+ * param@[in]  nTargetValue           The target value
+ * param@[in]  eligilibity_filter     A filter containing rules for which coins are allowed to be included in this selection
+ * param@[in]  coins                  The vector of coins available for selection prior to filtering
+ * param@[in]  coin_selection_params  Parameters for the coin selection
+ * returns                            If successful, a SelectionResult containing the input set
+ *                                    If failed, a nullopt
  */
-bool AttemptSelection(const CWallet& wallet, const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<COutput> coins,
-                        std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params);
+std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<COutput> coins,
+                        const CoinSelectionParams& coin_selection_params);
 
 /**
  * Select a set of coins such that nValueRet >= nTargetValue and at least
