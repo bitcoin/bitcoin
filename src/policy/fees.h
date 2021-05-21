@@ -238,7 +238,7 @@ public:
         EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
 private:
-    mutable RecursiveMutex m_cs_fee_estimator;
+    mutable Mutex m_cs_fee_estimator;
 
     unsigned int nBestSeenHeight GUARDED_BY(m_cs_fee_estimator);
     unsigned int firstRecordedHeight GUARDED_BY(m_cs_fee_estimator);
