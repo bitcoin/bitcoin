@@ -340,7 +340,7 @@ bool ArgsManager::ParseParameters(int argc, const char* const argv[], std::strin
     bool success = true;
     if (auto* includes = util::FindKey(m_settings.command_line_options, "includeconf")) {
         for (const auto& include : util::SettingsSpan(*includes)) {
-            error += "-includeconf cannot be used from commandline; -includeconf=" + include.get_str() + "\n";
+            error += "-includeconf cannot be used from commandline; -includeconf=" + include.write() + "\n";
             success = false;
         }
     }
