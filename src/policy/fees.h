@@ -186,44 +186,55 @@ public:
 
     /** Process all the transactions that have been included in a block */
     void processBlock(unsigned int nBlockHeight,
-                      std::vector<const CTxMemPoolEntry*>& entries);
+                      std::vector<const CTxMemPoolEntry*>& entries)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Process a transaction accepted to the mempool*/
-    void processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate);
+    void processTransaction(const CTxMemPoolEntry& entry, bool validFeeEstimate)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Remove a transaction from the mempool tracking stats*/
     bool removeTx(uint256 hash, bool inBlock);
 
     /** DEPRECATED. Return a feerate estimate */
-    CFeeRate estimateFee(int confTarget) const;
+    CFeeRate estimateFee(int confTarget) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Estimate feerate needed to get be included in a block within confTarget
      *  blocks. If no answer can be given at confTarget, return an estimate at
      *  the closest target where one can be given.  'conservative' estimates are
      *  valid over longer time horizons also.
      */
-    CFeeRate estimateSmartFee(int confTarget, FeeCalculation *feeCalc, bool conservative) const;
+    CFeeRate estimateSmartFee(int confTarget, FeeCalculation *feeCalc, bool conservative) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Return a specific fee estimate calculation with a given success
      * threshold and time horizon, and optionally return detailed data about
      * calculation
      */
-    CFeeRate estimateRawFee(int confTarget, double successThreshold, FeeEstimateHorizon horizon, EstimationResult *result = nullptr) const;
+    CFeeRate estimateRawFee(int confTarget, double successThreshold, FeeEstimateHorizon horizon,
+                            EstimationResult* result = nullptr) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Write estimation data to a file */
-    bool Write(CAutoFile& fileout) const;
+    bool Write(CAutoFile& fileout) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Read estimation data from a file */
-    bool Read(CAutoFile& filein);
+    bool Read(CAutoFile& filein)
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Empty mempool transactions on shutdown to record failure to confirm for txs still in mempool */
-    void FlushUnconfirmed();
+    void FlushUnconfirmed()
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Calculation of highest target that estimates are tracked for */
-    unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const;
+    unsigned int HighestTargetTracked(FeeEstimateHorizon horizon) const
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
     /** Drop still unconfirmed transactions and record current estimations, if the fee estimation file is present. */
-    void Flush();
+    void Flush()
+        EXCLUSIVE_LOCKS_REQUIRED(!m_cs_fee_estimator);
 
 private:
     mutable RecursiveMutex m_cs_fee_estimator;
