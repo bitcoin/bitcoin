@@ -187,7 +187,7 @@ public:
     inline std::string ToString() const
     {
         std::vector<uint8_t> buf = ToByteVector();
-        return HexStr(buf.begin(), buf.end());
+        return HexStr(buf);
     }
 };
 

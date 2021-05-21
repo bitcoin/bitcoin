@@ -136,10 +136,10 @@ std::string EncodeBase64(const unsigned char* pch, size_t len)
 
 std::string EncodeBase64(const std::string& str)
 {
-    return EncodeBase64((const unsigned char*)str.c_str(), str.size());
+    return EncodeBase64((const unsigned char*)str.data(), str.size());
 }
 
-std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid)
+std::vector<unsigned char> DecodeBase64(const char* p, bool* pf_invalid)
 {
     static const int decode64_table[256] =
     {
@@ -181,14 +181,14 @@ std::vector<unsigned char> DecodeBase64(const char* p, bool* pfInvalid)
         ++p;
     }
     valid = valid && (p - e) % 4 == 0 && p - q < 4;
-    if (pfInvalid) *pfInvalid = !valid;
+    if (pf_invalid) *pf_invalid = !valid;
 
     return ret;
 }
 
-std::string DecodeBase64(const std::string& str)
+std::string DecodeBase64(const std::string& str, bool* pf_invalid)
 {
-    std::vector<unsigned char> vchRet = DecodeBase64(str.c_str());
+    std::vector<unsigned char> vchRet = DecodeBase64(str.c_str(), pf_invalid);
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
 
@@ -205,10 +205,10 @@ std::string EncodeBase32(const unsigned char* pch, size_t len)
 
 std::string EncodeBase32(const std::string& str)
 {
-    return EncodeBase32((const unsigned char*)str.c_str(), str.size());
+    return EncodeBase32((const unsigned char*)str.data(), str.size());
 }
 
-std::vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid)
+std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid)
 {
     static const int decode32_table[256] =
     {
@@ -250,14 +250,14 @@ std::vector<unsigned char> DecodeBase32(const char* p, bool* pfInvalid)
         ++p;
     }
     valid = valid && (p - e) % 8 == 0 && p - q < 8;
-    if (pfInvalid) *pfInvalid = !valid;
+    if (pf_invalid) *pf_invalid = !valid;
 
     return ret;
 }
 
-std::string DecodeBase32(const std::string& str)
+std::string DecodeBase32(const std::string& str, bool* pf_invalid)
 {
-    std::vector<unsigned char> vchRet = DecodeBase32(str.c_str());
+    std::vector<unsigned char> vchRet = DecodeBase32(str.c_str(), pf_invalid);
     return std::string((const char*)vchRet.data(), vchRet.size());
 }
 
@@ -542,4 +542,17 @@ bool ParseFixedPoint(const std::string &val, int decimals, int64_t *amount_out)
         *amount_out = mantissa;
 
     return true;
+}
+
+std::string HexStr(const Span<const uint8_t> s)
+{
+    std::string rv;
+    static constexpr char hexmap[16] = { '0', '1', '2', '3', '4', '5', '6', '7',
+                                         '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    rv.reserve(s.size() * 2);
+    for (uint8_t v: s) {
+        rv.push_back(hexmap[v >> 4]);
+        rv.push_back(hexmap[v & 15]);
+    }
+    return rv;
 }

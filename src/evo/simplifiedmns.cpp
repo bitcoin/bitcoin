@@ -141,7 +141,7 @@ void CSimplifiedMNListDiff::ToJson(UniValue& obj) const
 
     CDataStream ssCbTxMerkleTree(SER_NETWORK, PROTOCOL_VERSION);
     ssCbTxMerkleTree << cbTxMerkleTree;
-    obj.pushKV("cbTxMerkleTree", HexStr(ssCbTxMerkleTree.begin(), ssCbTxMerkleTree.end()));
+    obj.pushKV("cbTxMerkleTree", HexStr(ssCbTxMerkleTree));
 
     obj.pushKV("cbTx", EncodeHexTx(*cbTx));
 
