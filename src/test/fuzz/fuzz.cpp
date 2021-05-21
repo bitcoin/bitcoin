@@ -4,10 +4,15 @@
 
 #include <test/fuzz/fuzz.h>
 
+#include <netaddress.h>
+#include <netbase.h>
 #include <test/util/setup_common.h>
 #include <util/check.h>
+#include <util/sock.h>
 
 #include <cstdint>
+#include <exception>
+#include <memory>
 #include <unistd.h>
 #include <vector>
 
@@ -29,6 +34,9 @@ static TypeTestOneInput* g_test_one_input{nullptr};
 
 void initialize()
 {
+    // Terminate immediately if a fuzzing harness ever tries to create a TCP socket.
+    CreateSock = [](const CService&) -> std::unique_ptr<Sock> { std::terminate(); };
+
     bool should_abort{false};
     if (std::getenv("PRINT_ALL_FUZZ_TARGETS_AND_ABORT")) {
         for (const auto& t : FuzzTargets()) {
