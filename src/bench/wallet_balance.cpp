@@ -2,16 +2,16 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <bench/bench.h>
-#include <interfaces/chain.h>
-#include <node/context.h>
-#include <test/util/mining.h>
-#include <test/util/setup_common.h>
-#include <test/util/wallet.h>
-#include <validationinterface.h>
-#include <wallet/wallet.h>
+ <bench/bench.h>
+ <interfaces/chain.h>
+ <node/context.h>
+ <test/util/mining.h>
+ <test/util/setup_common.h>
+ <test/util/wallet.h>
+ <validationinterface.h>
+ <wallet/wallet.h>
 
-#include <optional>
+ <optional>
 
 static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const bool add_watchonly, const bool add_mine)
 {
@@ -45,10 +45,10 @@ static void WalletBalance(benchmark::Bench& bench, const bool set_dirty, const b
     });
 }
 
-static void WalletBalanceDirty(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ true, /* add_watchonly */ true, /* add_mine */ true); }
-static void WalletBalanceClean(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ true, /* add_mine */ true); }
-static void WalletBalanceMine(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ false, /* add_mine */ true); }
-static void WalletBalanceWatch(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ true, /* add_mine */ false); }
+WalletBalanceDirty(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ true, /* add_watchonly */ true, /* add_mine */ true); }
+WalletBalanceClean(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ true, /* add_mine */ true); }
+WalletBalanceMine(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ false, /* add_mine */ true); }
+WalletBalanceWatch(benchmark::Bench& bench) { WalletBalance(bench, /* set_dirty */ false, /* add_watchonly */ true, /* add_mine */ false); }
 
 BENCHMARK(WalletBalanceDirty);
 BENCHMARK(WalletBalanceClean);
