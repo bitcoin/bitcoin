@@ -117,15 +117,18 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
                         const CoinSelectionParams& coin_selection_params);
 
 /**
- * Select a set of coins such that nValueRet >= nTargetValue and at least
+ * Select a set of coins such that nTargetValue is met and at least
  * all coins from coin_control are selected; never select unconfirmed coins if they are not ours
- * param@[out]  setCoinsRet         Populated with inputs including pre-selected inputs from
- *                                  coin_control and Coin Selection if successful.
- * param@[out]  nValueRet           Total value of selected coins including pre-selected ones
- *                                  from coin_control and Coin Selection if successful.
+ * param@[in]   wallet                 The wallet which provides data necessary to spend the selected coins
+ * param@[in]   vAvailableCoins        The vector of coins available to be spent
+ * param@[in]   nTargetValue           The target value
+ * param@[in]   coin_selection_params  Parameters for this coin selection such as feerates, whether to avoid partial spends,
+ *                                     and whether to subtract the fee from the outputs.
+ * returns                             If successful, a SelectionResult containing the selected coins
+ *                                     If failed, a nullopt.
  */
-bool SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet,
-                 const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
+std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, const CCoinControl& coin_control,
+                 const CoinSelectionParams& coin_selection_params) EXCLUSIVE_LOCKS_REQUIRED(wallet.cs_wallet);
 
 /**
  * Create a new transaction paying the recipients with a set of coins

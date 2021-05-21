@@ -330,8 +330,6 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         wallet->SetupDescriptorScriptPubKeyMans();
 
         std::vector<COutput> coins;
-        CoinSet setCoinsRet;
-        CAmount nValueRet;
 
         add_coin(coins, *wallet, 5 * CENT, 6 * 24, false, 0, true);
         add_coin(coins, *wallet, 3 * CENT, 6 * 24, false, 0, true);
@@ -340,7 +338,8 @@ BOOST_AUTO_TEST_CASE(bnb_search_test)
         coin_control.fAllowOtherInputs = true;
         coin_control.Select(COutPoint(coins.at(0).tx->GetHash(), coins.at(0).i));
         coin_selection_params_bnb.m_effective_feerate = CFeeRate(0);
-        BOOST_CHECK(SelectCoins(*wallet, coins, 10 * CENT, setCoinsRet, nValueRet, coin_control, coin_selection_params_bnb));
+        const auto result10 = SelectCoins(*wallet, coins, 10 * CENT, coin_control, coin_selection_params_bnb);
+        BOOST_CHECK(result10);
     }
 }
 
@@ -713,11 +712,10 @@ BOOST_AUTO_TEST_CASE(SelectCoins_test)
                                       /* change_spend_size= */ 148, /* effective_feerate= */ CFeeRate(0),
                                       /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
                                       /* tx_noinputs_size= */ 0, /* avoid_partial= */ false);
-        CoinSet out_set;
-        CAmount out_value = 0;
         CCoinControl cc;
-        BOOST_CHECK(SelectCoins(*wallet, coins, target, out_set, out_value, cc, cs_params));
-        BOOST_CHECK_GE(out_value, target);
+        const auto result = SelectCoins(*wallet, coins, target, cc, cs_params);
+        BOOST_CHECK(result);
+        BOOST_CHECK_GE(result->GetSelectedValue(), target);
     }
 }
 

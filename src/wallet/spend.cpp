@@ -414,27 +414,31 @@ std::optional<SelectionResult> AttemptSelection(const CWallet& wallet, const CAm
     return best_result;
 }
 
-bool SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params)
+std::optional<SelectionResult> SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, const CCoinControl& coin_control, const CoinSelectionParams& coin_selection_params)
 {
     std::vector<COutput> vCoins(vAvailableCoins);
     CAmount value_to_select = nTargetValue;
 
+    OutputGroup preset_inputs(coin_selection_params);
+
     // coin control -> return all selected outputs (we want all selected to go into the transaction for sure)
     if (coin_control.HasSelected() && !coin_control.fAllowOtherInputs)
     {
-        for (const COutput& out : vCoins)
-        {
-            if (!out.fSpendable)
-                 continue;
-            nValueRet += out.tx->tx->vout[out.i].nValue;
-            setCoinsRet.insert(out.GetInputCoin());
+        for (const COutput& out : vCoins) {
+            if (!out.fSpendable) continue;
+            /* Set depth, from_me, ancestors, and descendants to 0 or false as these don't matter for preset inputs as no actual selection is being done.
+             * positive_only is set to false because we want to include all preset inputs, even if they are dust.
+             */
+            preset_inputs.Insert(out.GetInputCoin(), 0, false, 0, 0, false);
         }
-        return (nValueRet >= nTargetValue);
+        SelectionResult result(nTargetValue);
+        result.AddInput(preset_inputs);
+        if (result.GetSelectedValue() < nTargetValue) return std::nullopt;
+        return result;
     }
 
     // calculate value from preset inputs and store them
     std::set<CInputCoin> setPresetCoins;
-    OutputGroup preset_inputs(coin_selection_params);
 
     std::vector<COutPoint> vPresetInputs;
     coin_control.ListSelected(vPresetInputs);
@@ -446,7 +450,7 @@ bool SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCo
             const CWalletTx& wtx = it->second;
             // Clearly invalid input, fail
             if (wtx.tx->vout.size() <= outpoint.n) {
-                return false;
+                return std::nullopt;
             }
             input_bytes = GetTxSpendSize(wallet, wtx, outpoint.n, false);
             txout = wtx.tx->vout.at(outpoint.n);
@@ -455,14 +459,14 @@ bool SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCo
             // The input is external. We either did not find the tx in mapWallet, or we did but couldn't compute the input size with wallet data
             if (!coin_control.GetExternalOutput(outpoint, txout)) {
                 // Not ours, and we don't have solving data.
-                return false;
+                return std::nullopt;
             }
             input_bytes = CalculateMaximumSignedInputSize(txout, &coin_control.m_external_provider, /* use_max_sig */ true);
         }
 
         CInputCoin coin(outpoint, txout, input_bytes);
         if (coin.m_input_bytes == -1) {
-            return false; // Not solvable, can't estimate size for fee
+            return std::nullopt; // Not solvable, can't estimate size for fee
         }
         coin.effective_value = coin.txout.nValue - coin_selection_params.m_effective_feerate.GetFee(coin.m_input_bytes);
         if (coin_selection_params.m_subtract_fee_outputs) {
@@ -557,15 +561,12 @@ bool SelectCoins(const CWallet& wallet, const std::vector<COutput>& vAvailableCo
         return std::optional<SelectionResult>();
     }();
 
-    if (!res) return false;
+    if (!res) return std::nullopt;
 
     // Add preset inputs to result
     res->AddInput(preset_inputs);
 
-    setCoinsRet = res->GetInputSet();
-    nValueRet = res->GetSelectedValue();
-
-    return true;
+    return res;
 }
 
 static bool IsCurrentForAntiFeeSniping(interfaces::Chain& chain, const uint256& block_hash)
@@ -761,17 +762,15 @@ static bool CreateTransactionInternal(
     AvailableCoins(wallet, vAvailableCoins, &coin_control, 1, MAX_MONEY, MAX_MONEY, 0);
 
     // Choose coins to use
-    CAmount inputs_sum = 0;
-    std::set<CInputCoin> setCoins;
-    if (!SelectCoins(wallet, vAvailableCoins, /* nTargetValue */ selection_target, setCoins, inputs_sum, coin_control, coin_selection_params))
-    {
+    std::optional<SelectionResult> result = SelectCoins(wallet, vAvailableCoins, /* nTargetValue */ selection_target, coin_control, coin_selection_params);
+    if (!result) {
         error = _("Insufficient funds");
         return false;
     }
 
     // Always make a change output
     // We will reduce the fee from this change output later, and remove the output if it is too small.
-    const CAmount change_and_fee = inputs_sum - recipients_sum;
+    const CAmount change_and_fee = result->GetSelectedValue() - recipients_sum;
     assert(change_and_fee >= 0);
     CTxOut newTxOut(change_and_fee, scriptChange);
 
@@ -790,8 +789,7 @@ static bool CreateTransactionInternal(
     auto change_position = txNew.vout.insert(txNew.vout.begin() + nChangePosInOut, newTxOut);
 
     // Shuffle selected coins and fill in final vin
-    std::vector<CInputCoin> selected_coins(setCoins.begin(), setCoins.end());
-    Shuffle(selected_coins.begin(), selected_coins.end(), FastRandomContext());
+    std::vector<CInputCoin> selected_coins = result->GetShuffledInputVector();
 
     // Note how the sequence number is set to non-maxint so that
     // the nLockTime set above actually works.
