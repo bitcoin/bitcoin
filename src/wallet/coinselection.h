@@ -187,6 +187,8 @@ struct OutputGroup
  * where excess = selected_effective_value - target
  * change_cost = effective_feerate * change_output_size + long_term_feerate * change_spend_size
  *
+ * Note this function is separate from SelectionResult for the tests.
+ *
  * @param[in] inputs The selected inputs
  * @param[in] change_cost The cost of creating change and spending it in the future.
  *                        Only used if there is change, in which case it must be positive.
