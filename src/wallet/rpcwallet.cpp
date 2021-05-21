@@ -3430,12 +3430,10 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
                 "options"},
         },
         RPCResult{
-            RPCResult::Type::OBJ, "", "", Cat(Cat<std::vector<RPCResult>>(
-            {
-                {RPCResult::Type::STR, "psbt", "The base64-encoded unsigned PSBT of the new transaction."},
-            },
-            want_psbt ? std::vector<RPCResult>{} : std::vector<RPCResult>{{RPCResult::Type::STR_HEX, "txid", "The id of the new transaction. Only returned when wallet private keys are enabled."}}
-            ),
+            RPCResult::Type::OBJ, "", "", Cat(
+                want_psbt ?
+                std::vector<RPCResult>{{RPCResult::Type::STR, "psbt", "The base64-encoded unsigned PSBT of the new transaction."}} :
+                std::vector<RPCResult>{{RPCResult::Type::STR_HEX, "txid", "The id of the new transaction."}},
             {
                 {RPCResult::Type::STR_AMOUNT, "origfee", "The fee of the replaced transaction."},
                 {RPCResult::Type::STR_AMOUNT, "fee", "The fee of the new transaction."},
@@ -3446,7 +3444,7 @@ static RPCHelpMan bumpfee_helper(std::string method_name)
             })
         },
         RPCExamples{
-    "\nBump the fee, get the new transaction\'s" + std::string(want_psbt ? "psbt" : "txid") + "\n" +
+    "\nBump the fee, get the new transaction\'s " + std::string(want_psbt ? "psbt" : "txid") + "\n" +
             HelpExampleCli(method_name, "<txid>")
         },
         [want_psbt](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
