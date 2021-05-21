@@ -804,6 +804,7 @@ libsyscoin_cli_a_SOURCES = \
 
 if GLIBC_BACK_COMPAT
 libsyscoin_cli_a_SOURCES += compat/glibc_compat.cpp
+AM_LDFLAGS += $(COMPAT_LDFLAGS)
 endif
 
 nodist_libsyscoin_util_a_SOURCES = $(srcdir)/obj/build.h
