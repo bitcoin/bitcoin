@@ -8,6 +8,7 @@
 #include <util/check.h>
 
 #include <cstdint>
+#include <signal.h>
 #include <unistd.h>
 #include <vector>
 
@@ -67,6 +68,35 @@ static bool read_stdin(std::vector<uint8_t>& data)
 }
 #endif
 
+#if defined(PROVIDE_FUZZ_MAIN_FUNCTION) && !defined(__AFL_LOOP)
+static bool read_file(fs::path p, std::vector<uint8_t>& data)
+{
+    uint8_t buffer[1024];
+    FILE* f = fsbridge::fopen(p.string(), "rb");
+    if (f == nullptr) return false;
+    do {
+        const size_t length = fread(buffer, sizeof(uint8_t), sizeof(buffer), f);
+        if (ferror(f)) return false;
+        data.insert(data.end(), buffer, buffer + length);
+    } while (!feof(f));
+    fclose(f);
+    return true;
+}
+#endif
+
+#if defined(PROVIDE_FUZZ_MAIN_FUNCTION) && !defined(__AFL_LOOP)
+fs::path g_seed_path;
+void signal_handler(int signal)
+{
+    if (signal == SIGABRT) {
+        std::cerr << "Error processing seed " << g_seed_path << std::endl;
+    } else {
+        std::cerr << "Unexpected signal " << signal << " received\n";
+    }
+    std::_Exit(EXIT_FAILURE);
+}
+#endif
+
 // This function is used by libFuzzer
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
@@ -105,10 +135,35 @@ int main(int argc, char** argv)
     }
 #else
     std::vector<uint8_t> buffer;
-    if (!read_stdin(buffer)) {
+    if (argc <= 1) {
+        if (!read_stdin(buffer)) {
+            return 0;
+        }
+        test_one_input(buffer);
         return 0;
     }
-    test_one_input(buffer);
+    signal(SIGABRT, signal_handler);
+    int tested = 0;
+    for (int i = 1; i < argc; ++i) {
+        fs::path seed_path(*(argv + i));
+        if (fs::is_directory(seed_path)) {
+            for (fs::directory_iterator it(seed_path); it != fs::directory_iterator(); ++it) {
+                if (!fs::is_regular_file(it->path())) continue;
+                g_seed_path = it->path();
+                Assert(read_file(it->path(), buffer));
+                test_one_input(buffer);
+                ++tested;
+                buffer.clear();
+            }
+        } else {
+            g_seed_path = seed_path;
+            Assert(read_file(seed_path, buffer));
+            test_one_input(buffer);
+            ++tested;
+            buffer.clear();
+        }
+    }
+    std::cout << "tested " << tested << " files\n";
 #endif
     return 0;
 }
