@@ -191,6 +191,7 @@ WalletControllerActivity::WalletControllerActivity(WalletController* wallet_cont
     , m_wallet_controller(wallet_controller)
     , m_parent_widget(parent_widget)
 {
+    connect(this, &WalletControllerActivity::finished, this, &QObject::deleteLater);
 }
 
 void WalletControllerActivity::showProgressDialog(const QString& label_text)
