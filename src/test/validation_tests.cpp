@@ -138,11 +138,11 @@ BOOST_AUTO_TEST_CASE(test_assumeutxo)
     const auto out110 = *ExpectedAssumeutxo(110, *params);
     // SYSCOIN
     BOOST_CHECK_EQUAL(out110.hash_serialized.ToString(), "70b3b480f5476ad86dfd98db1f12bda867a90b6cf1b37644332eb52c2ba74ac9");
-    BOOST_CHECK_EQUAL(out110.nChainTx, (unsigned int)110);
+    BOOST_CHECK_EQUAL(out110.nChainTx, 110U);
 
-    const auto out210 = *ExpectedAssumeutxo(210, *params);
-    BOOST_CHECK_EQUAL(out210.hash_serialized.ToString(), "9c5ed99ef98544b34f8920b6d1802f72ac28ae6e2bd2bd4c316ff10c230df3f2");
-    BOOST_CHECK_EQUAL(out210.nChainTx, (unsigned int)210);
+    const auto out210 = *ExpectedAssumeutxo(200, *params);
+    BOOST_CHECK_EQUAL(out210.hash_serialized.ToString(), "51c8d11d8b5c1de51543c579736e786aa2736206d1e11e627568029ce092cf62");
+    BOOST_CHECK_EQUAL(out210.nChainTx, 200U);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
