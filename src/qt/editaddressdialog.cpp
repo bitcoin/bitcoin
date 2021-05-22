@@ -114,7 +114,7 @@ void EditAddressDialog::accept()
             break;
         case AddressTableModel::DUPLICATE_ADDRESS:
             QMessageBox::warning(this, windowTitle(),
-                tr("The entered address \"%1\" is already in the address book.").arg(ui->addressEdit->text()),
+                getDuplicateAddressWarning(),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
         case AddressTableModel::WALLET_UNLOCK_FAILURE:
@@ -132,6 +132,25 @@ void EditAddressDialog::accept()
         return;
     }
     QDialog::accept();
+}
+
+QString EditAddressDialog::getDuplicateAddressWarning() const
+{
+    QString dup_address = ui->addressEdit->text();
+    QString existing_label = model->labelForAddress(dup_address);
+    QString existing_purpose = model->purposeForAddress(dup_address);
+
+    if (existing_purpose == "receive" &&
+            (mode == NewSendingAddress || mode == EditSendingAddress)) {
+        return tr(
+            "Address \"%1\" already exists as a receiving address with label "
+            "\"%2\" and so cannot be added as a sending address."
+            ).arg(dup_address).arg(existing_label);
+    }
+    return tr(
+        "The entered address \"%1\" is already in the address book with "
+        "label \"%2\"."
+        ).arg(dup_address).arg(existing_label);
 }
 
 QString EditAddressDialog::getAddress() const

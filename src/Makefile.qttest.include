@@ -14,14 +14,17 @@ TEST_QT_MOC_CPP = \
 
 if ENABLE_WALLET
 TEST_QT_MOC_CPP += \
+  qt/test/moc_addressbooktests.cpp \
   qt/test/moc_paymentservertests.cpp \
   qt/test/moc_wallettests.cpp
 endif
 
 TEST_QT_H = \
+  qt/test/addressbooktests.h \
   qt/test/compattests.h \
   qt/test/rpcnestedtests.h \
   qt/test/uritests.h \
+  qt/test/util.h \
   qt/test/paymentrequestdata.h \
   qt/test/paymentservertests.h \
   qt/test/trafficgraphdatatests.h \
@@ -39,13 +42,15 @@ qt_test_test_dash_qt_SOURCES = \
   qt/test/compattests.cpp \
   qt/test/rpcnestedtests.cpp \
   qt/test/test_main.cpp \
-  qt/test/uritests.cpp \
   qt/test/trafficgraphdatatests.cpp \
+  qt/test/uritests.cpp \
+  qt/test/util.cpp \
   $(TEST_QT_H) \
   $(TEST_BITCOIN_CPP) \
   $(TEST_BITCOIN_H)
 if ENABLE_WALLET
 qt_test_test_dash_qt_SOURCES += \
+  qt/test/addressbooktests.cpp \
   qt/test/paymentservertests.cpp \
   qt/test/wallettests.cpp \
   wallet/test/wallet_test_fixture.cpp
