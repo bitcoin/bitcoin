@@ -71,6 +71,24 @@ case $host in
   ;;
 esac
 
+AC_ARG_WITH([syscall-sandbox],
+  [AS_HELP_STRING([--with-syscall-sandbox=yes|no|kill-without-debug],
+  [enable filtering of system calls using seccomp-bpf: allow only allowlisted (expected) syscalls to be called from bitcoind. The default behaviour of the syscall sandbox in case of syscall policy violation is for the kernel to disallow the syscall and force a SIGSYS to trigger the application's syscall debug reporter. The application's syscall debug reporter will print an error message and terminate the process. The mode "kill-without-debug" (--with-syscall-sandbox=kill-without-debug) can be used to make the kernel kill the process immediately in case of a syscall policy violation. This mode of operation is more secure in the sense that the kernel guarantees that the offending process is killed. This mode is harder to debug since no debug information is printed in case of a syscall violation.])],
+  [use_syscall_sandbox=$withval],
+  [use_syscall_sandbox=no])
+if test "x$use_syscall_sandbox" != "xno"; then
+  AC_DEFINE(USE_SYSCALL_SANDBOX, 1, [Define this symbol to build with syscall sandbox support.])
+  if test "x$use_syscall_sandbox" = "xyes"; then
+    true
+  elif test "x$use_syscall_sandbox" = "xkill-without-debug"; then
+    AC_DEFINE(USE_SYSCALL_SANDBOX_MODE_KILL_WITHOUT_DEBUG, 1, [Define this symbol to have the kernel kill the process immediately without any debug information in case of a syscall sandbox violation.])
+  else
+    AC_MSG_ERROR([Unknown --with-syscall-sandbox option. Valid options are "yes", "no" and "kill-without-debug".])
+  fi
+fi
+AM_CONDITIONAL([ENABLE_SYSCALL_SANDBOX], [test "x$use_syscall_sandbox" != "xno"])
+AM_CONDITIONAL([ENABLE_SYSCALL_SANDBOX_MODE_KILL_WITHOUT_DEBUG], [test "x$use_syscall_sandbox" = "xkill-without-debug"])
+
 dnl Require C++17 compiler (no GNU extensions)
 AX_CXX_COMPILE_STDCXX([17], [noext], [mandatory])
 
@@ -1241,7 +1259,7 @@ AC_LINK_IFELSE(
     [ AC_MSG_RESULT(no) ]
 )
 
-AC_DEFINE([HAVE_SYSTEM], [HAVE_STD__SYSTEM || HAVE_WSYSTEM], [std::system or ::wsystem])
+AC_DEFINE([HAVE_SYSTEM], [(HAVE_STD__SYSTEM || HAVE_WSYSTEM) && !USE_SYSCALL_SANDBOX], [std::system or ::wsystem, and no syscall sandbox])
 
 LEVELDB_CPPFLAGS=
 LIBLEVELDB=
@@ -1443,6 +1461,27 @@ if test x$use_boost = xyes; then
 fi
 
 AM_CONDITIONAL([ENABLE_EXTERNAL_SIGNER], [test "x$use_external_signer" = "xyes"])
+
+if test "x$use_syscall_sandbox" != "xno"; then
+  AC_MSG_CHECKING([for working syscall sandbox])
+  AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
+      @%:@include <linux/seccomp.h>
+    ]], [[
+      #if !defined(__x86_64__)
+      #  error Syscall sandbox is an experimental feature currently available only under Linux x86-64.
+      #endif
+    ]])],[
+      AC_MSG_RESULT(yes)
+    ],[
+    AC_MSG_ERROR([Syscall sandbox is an experimental feature currently available only under Linux x86-64. Use --without-syscall-sandbox.])
+  ])
+  if test "x$use_external_signer" = "xyes"; then
+    AC_MSG_ERROR(The options --with-syscall-sandbox (which does not allow execve) and --enable-external-signer (which uses execve) are currently incompatible.)
+  fi
+  if test "x$build_multiprocess" = "xyes"; then
+    AC_MSG_ERROR(The options --with-syscall-sandbox (which does not allow execve) and --enable-multiprocess (which uses execve) are currently incompatible.)
+  fi
+fi
 
 dnl Check for reduced exports
 if test x$use_reduce_exports = xyes; then
@@ -1954,6 +1993,7 @@ echo "  with upnp       = $use_upnp"
 echo "  with natpmp     = $use_natpmp"
 echo "  use asm         = $use_asm"
 echo "  ebpf tracing    = $have_sdt"
+echo "  use syscall sandbox = $use_syscall_sandbox"
 echo "  sanitizers      = $use_sanitizers"
 echo "  debug enabled   = $enable_debug"
 echo "  gprof enabled   = $enable_gprof"

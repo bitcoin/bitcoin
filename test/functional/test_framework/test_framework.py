@@ -787,6 +787,11 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
         if not self.is_zmq_compiled():
             raise SkipTest("bitcoind has not been built with zmq enabled.")
 
+    def skip_if_bitcoind_syscall_sandbox(self):
+        """Skip the running test if bitcoind has been compiled with syscall sandbox support."""
+        if self.is_syscall_sandbox_compiled():
+            raise SkipTest("bitcoind has been built with syscall sandbox enabled.")
+
     def skip_if_no_wallet(self):
         """Skip the running test if wallet has not been compiled."""
         self.requires_wallet = True
@@ -862,3 +867,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
     def is_bdb_compiled(self):
         """Checks whether the wallet module was compiled with BDB support."""
         return self.config["components"].getboolean("USE_BDB")
+
+    def is_syscall_sandbox_compiled(self):
+        """Checks whether the syscall sandbox was compiled."""
+        return self.config["components"].getboolean("ENABLE_SYSCALL_SANDBOX")

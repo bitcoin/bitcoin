@@ -74,6 +74,7 @@ const std::vector<std::string> RPC_COMMANDS_NOT_SAFE_FOR_FUZZING{
     "generatetodescriptor", // avoid prohibitively slow execution (when `nblocks` is large)
     "gettxoutproof",        // avoid prohibitively slow execution
     "importwallet", // avoid reading from disk
+    "invokedisallowedsyscall", // avoid syscall sandbox violaion
     "loadwallet",   // avoid reading from disk
     "prioritisetransaction", // avoid signed integer overflow in CTxMemPool::PrioritiseTransaction(uint256 const&, long const&) (https://github.com/bitcoin/bitcoin/issues/20626)
     "savemempool",           // disabled as a precautionary measure: may take a file path argument in the future

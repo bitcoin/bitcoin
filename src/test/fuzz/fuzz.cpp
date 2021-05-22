@@ -9,6 +9,7 @@
 #include <test/util/setup_common.h>
 #include <util/check.h>
 #include <util/sock.h>
+#include <util/syscall_sandbox.h>
 
 #include <cstdint>
 #include <exception>
@@ -86,6 +87,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 // This function is used by libFuzzer
 extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
 {
+    DisableFurtherSyscallSandboxRestrictions();
     initialize();
     return 0;
 }

@@ -19,6 +19,7 @@
 #include <shutdown.h>
 #include <util/check.h>
 #include <util/strencodings.h>
+#include <util/syscall_sandbox.h>
 #include <util/system.h>
 #include <util/threadnames.h>
 #include <util/tokenpipe.h>
@@ -238,6 +239,7 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
         daemon_ep.Close();
     }
 #endif
+    EnableSyscallSandbox(SyscallSandboxPolicy::SHUTOFF);
     if (fRet) {
         WaitForShutdown();
     }
@@ -249,6 +251,7 @@ static bool AppInit(NodeContext& node, int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
+    EnableSyscallSandbox(SyscallSandboxPolicy::INITIALIZATION);
 #ifdef WIN32
     util::WinCmdLineArgs winArgs;
     std::tie(argc, argv) = winArgs.get();

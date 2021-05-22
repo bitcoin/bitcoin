@@ -28,6 +28,7 @@
 #include <txdb.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/syscall_sandbox.h>
 #include <util/thread.h>
 #include <util/threadnames.h>
 #include <util/time.h>
@@ -88,6 +89,8 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName, const std::ve
             "-debugexclude=leveldb",
         },
         extra_args);
+    EnableSyscallSandbox(SyscallSandboxPolicy::INITIALIZATION);
+    DisableFurtherSyscallSandboxRestrictions();
     util::ThreadRename("test");
     fs::create_directories(m_path_root);
     m_args.ForceSetArg("-datadir", m_path_root.string());

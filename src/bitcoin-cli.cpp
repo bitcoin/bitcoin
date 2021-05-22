@@ -15,6 +15,7 @@
 #include <rpc/request.h>
 #include <tinyformat.h>
 #include <util/strencodings.h>
+#include <util/syscall_sandbox.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <util/url.h>
@@ -1024,6 +1025,8 @@ __declspec(dllexport) int main(int argc, char* argv[])
 int main(int argc, char* argv[])
 {
 #endif
+    EnableSyscallSandbox(SyscallSandboxPolicy::INITIALIZATION);
+    DisableFurtherSyscallSandboxRestrictions();
     SetupEnvironment();
     if (!SetupNetworking()) {
         tfm::format(std::cerr, "Error: Initializing networking failed\n");

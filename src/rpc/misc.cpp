@@ -30,6 +30,12 @@
 #include <malloc.h>
 #endif
 
+#if defined(USE_SYSCALL_SANDBOX)
+#include <array>
+#include <sys/types.h>
+#include <unistd.h>
+#endif
+
 #include <univalue.h>
 
 static RPCHelpMan validateaddress()
@@ -406,6 +412,30 @@ static RPCHelpMan setmocktime()
     };
 }
 
+#if defined(USE_SYSCALL_SANDBOX)
+static RPCHelpMan invokedisallowedsyscall()
+{
+    return RPCHelpMan{
+        "invokedisallowedsyscall",
+        "\nInvoke a disallowed syscall to trigger a syscall sandbox violation. Used for testing purposes.\n",
+        {},
+        RPCResult{RPCResult::Type::NONE, "", ""},
+        RPCExamples{
+            HelpExampleCli("invokedisallowedsyscall", "") + HelpExampleRpc("invokedisallowedsyscall", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+            if (!Params().IsTestChain()) {
+                throw std::runtime_error("invokedisallowedsyscall is used for testing only.");
+            }
+
+            // The getgroups syscall is assumed NOT to be allowed by the syscall sandbox policy.
+            std::array<gid_t, 1> groups;
+            [[maybe_unused]] int ignored = getgroups(groups.size(), groups.data());
+            return NullUniValue;
+        },
+    };
+}
+#endif
+
 static RPCHelpMan mockscheduler()
 {
     return RPCHelpMan{"mockscheduler",
@@ -765,6 +795,9 @@ static const CRPCCommand commands[] =
     { "hidden",             &echo,                    },
     { "hidden",             &echojson,                },
     { "hidden",             &echoipc,                 },
+#if defined(USE_SYSCALL_SANDBOX)
+    { "hidden",             &invokedisallowedsyscall, },
+#endif
 };
 // clang-format on
     for (const auto& c : commands) {

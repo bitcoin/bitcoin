@@ -8,6 +8,8 @@
 #include <node/ui_interface.h>
 #include <shutdown.h>
 #include <tinyformat.h>
+#include <util/syscall_sandbox.h>
+#include <util/system.h>
 #include <util/thread.h>
 #include <util/translation.h>
 #include <validation.h> // For g_chainman
@@ -122,6 +124,7 @@ static const CBlockIndex* NextSyncBlock(const CBlockIndex* pindex_prev) EXCLUSIV
 
 void BaseIndex::ThreadSync()
 {
+    EnableSyscallSandbox(SyscallSandboxPolicy::TX_INDEX);
     const CBlockIndex* pindex = m_best_block_index.load();
     if (!m_synced) {
         auto& consensus_params = Params().GetConsensus();

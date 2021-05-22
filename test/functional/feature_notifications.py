@@ -28,6 +28,9 @@ class NotificationsTest(BitcoinTestFramework):
         self.num_nodes = 2
         self.setup_clean_chain = True
 
+    def skip_test_if_missing_module(self):
+        self.skip_if_bitcoind_syscall_sandbox()
+
     def setup_network(self):
         self.wallet = ''.join(chr(i) for i in range(FILE_CHAR_START, FILE_CHAR_END) if chr(i) not in FILE_CHARS_DISALLOWED)
         self.alertnotify_dir = os.path.join(self.options.tmpdir, "alertnotify")

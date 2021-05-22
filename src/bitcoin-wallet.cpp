@@ -9,6 +9,7 @@
 #include <chainparams.h>
 #include <chainparamsbase.h>
 #include <logging.h>
+#include <util/syscall_sandbox.h>
 #include <util/system.h>
 #include <util/translation.h>
 #include <util/url.h>
@@ -78,6 +79,8 @@ static bool WalletAppInit(ArgsManager& args, int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
+    EnableSyscallSandbox(SyscallSandboxPolicy::INITIALIZATION);
+    DisableFurtherSyscallSandboxRestrictions();
     ArgsManager& args = gArgs;
 #ifdef WIN32
     util::WinCmdLineArgs winArgs;

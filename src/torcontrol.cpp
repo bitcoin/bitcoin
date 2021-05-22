@@ -14,6 +14,7 @@
 #include <netbase.h>
 #include <util/readwritefile.h>
 #include <util/strencodings.h>
+#include <util/syscall_sandbox.h>
 #include <util/system.h>
 #include <util/thread.h>
 #include <util/time.h>
@@ -578,6 +579,7 @@ static std::thread torControlThread;
 
 static void TorControlThread(CService onion_service_target)
 {
+    EnableSyscallSandbox(SyscallSandboxPolicy::INITIALIZATION_TOR_CONTROL);
     TorController ctrl(gBase, gArgs.GetArg("-torcontrol", DEFAULT_TOR_CONTROL), onion_service_target);
 
     event_base_dispatch(gBase);

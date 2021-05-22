@@ -22,6 +22,7 @@
 #include <util/rbf.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/syscall_sandbox.h>
 #include <util/system.h>
 #include <util/translation.h>
 
@@ -193,6 +194,8 @@ __declspec(dllexport) int main(int argc, char* argv[])
 int main(int argc, char* argv[])
 #endif
 {
+    EnableSyscallSandbox(SyscallSandboxPolicy::INITIALIZATION);
+    DisableFurtherSyscallSandboxRestrictions();
     SetupEnvironment();
 
     try {

@@ -6,6 +6,7 @@
 
 #include <crypto/sha256.h>
 #include <util/strencodings.h>
+#include <util/syscall_sandbox.h>
 #include <util/system.h>
 
 #include <memory>
@@ -38,6 +39,9 @@ static std::vector<double> parseAsymptote(const std::string& str) {
 
 int main(int argc, char** argv)
 {
+    // bench_bitcoin uses performance measurement related syscalls such as perf_event_open which
+    // are not allowed by the bitcoind syscall sandbox policy. Disable syscall sandbox.
+    DisableFurtherSyscallSandboxRestrictions();
     ArgsManager argsman;
     SetupBenchArgs(argsman);
     SHA256AutoDetect();

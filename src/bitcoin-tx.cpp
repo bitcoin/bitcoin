@@ -22,6 +22,7 @@
 #include <util/rbf.h>
 #include <util/strencodings.h>
 #include <util/string.h>
+#include <util/syscall_sandbox.h>
 #include <util/system.h>
 #include <util/translation.h>
 
@@ -840,6 +841,8 @@ static int CommandLineRawTx(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
+    EnableSyscallSandbox(SyscallSandboxPolicy::INITIALIZATION);
+    DisableFurtherSyscallSandboxRestrictions();
     SetupEnvironment();
 
     try {
