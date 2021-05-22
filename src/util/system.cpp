@@ -414,7 +414,7 @@ const fs::path& ArgsManager::GetBlocksDirPath() const
     return path;
 }
 
-const fs::path& ArgsManager::GetDataDirPath(bool net_specific) const
+const fs::path& ArgsManager::GetDataDir(bool net_specific) const
 {
     LOCK(cs_args);
     fs::path& path = net_specific ? m_cached_network_datadir_path : m_cached_datadir_path;

@@ -274,7 +274,7 @@ public:
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      * @post Returned directory path is created unless it is empty
      */
-    const fs::path& GetDataDirBase() const { return GetDataDirPath(false); }
+    const fs::path& GetDataDirBase() const { return GetDataDir(false); }
 
     /**
      * Get data directory path with appended network identifier
@@ -282,16 +282,7 @@ public:
      * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
      * @post Returned directory path is created unless it is empty
      */
-    const fs::path& GetDataDirNet() const { return GetDataDirPath(true); }
-
-    /**
-     * Get data directory path
-     *
-     * @param net_specific Append network identifier to the returned path
-     * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
-     * @post Returned directory path is created unless it is empty
-     */
-    const fs::path& GetDataDirPath(bool net_specific = true) const;
+    const fs::path& GetDataDirNet() const { return GetDataDir(true); }
 
     /**
      * Clear cached directory paths
@@ -453,6 +444,15 @@ public:
     void LogArgs() const;
 
 private:
+    /**
+     * Get data directory path
+     *
+     * @param net_specific Append network identifier to the returned path
+     * @return Absolute path on success, otherwise an empty path when a non-directory path would be returned
+     * @post Returned directory path is created unless it is empty
+     */
+    const fs::path& GetDataDir(bool net_specific) const;
+
     // Helper function for LogArgs().
     void logArgsPrefix(
         const std::string& prefix,
