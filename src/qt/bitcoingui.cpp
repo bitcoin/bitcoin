@@ -1375,7 +1375,6 @@ void BitcoinGUI::showProgress(const QString &title, int nProgress)
         progressDialog = new QProgressDialog(title, QString(), 0, 100);
         GUIUtil::PolishProgressDialog(progressDialog);
         progressDialog->setWindowModality(Qt::ApplicationModal);
-        progressDialog->setMinimumDuration(0);
         progressDialog->setAutoClose(false);
         progressDialog->setValue(0);
     } else if (nProgress == 100) {
