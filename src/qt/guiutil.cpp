@@ -818,7 +818,6 @@ void PolishProgressDialog(QProgressDialog* dialog)
     // Workaround for macOS-only Qt bug; see: QTBUG-65750, QTBUG-70357.
     const int margin = TextWidth(dialog->fontMetrics(), ("X"));
     dialog->resize(dialog->width() + 2 * margin, dialog->height());
-    dialog->show();
 #else
     Q_UNUSED(dialog);
 #endif
