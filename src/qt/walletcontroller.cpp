@@ -41,10 +41,6 @@ WalletController::WalletController(ClientModel& client_model, const PlatformStyl
         getOrCreateWallet(std::move(wallet));
     });
 
-    for (std::unique_ptr<interfaces::Wallet>& wallet : m_node.walletClient().getWallets()) {
-        getOrCreateWallet(std::move(wallet));
-    }
-
     m_activity_worker->moveToThread(m_activity_thread);
     m_activity_thread->start();
     QTimer::singleShot(0, m_activity_worker, []() {
@@ -340,5 +336,23 @@ void OpenWalletActivity::open(const std::string& path)
         if (wallet) m_wallet_model = m_wallet_controller->getOrCreateWallet(std::move(wallet));
 
         QTimer::singleShot(0, this, &OpenWalletActivity::finish);
+    });
+}
+
+LoadWalletsActivity::LoadWalletsActivity(WalletController* wallet_controller, QWidget* parent_widget)
+    : WalletControllerActivity(wallet_controller, parent_widget)
+{
+}
+
+void LoadWalletsActivity::load()
+{
+    showProgressDialog(tr("Loading wallets…"));
+
+    QTimer::singleShot(0, worker(), [this] {
+        for (auto& wallet : node().walletClient().getWallets()) {
+            m_wallet_controller->getOrCreateWallet(std::move(wallet));
+        }
+
+        QTimer::singleShot(0, this, [this] { Q_EMIT finished(); });
     });
 }
