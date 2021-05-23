@@ -143,10 +143,10 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
                 continue;
             }
 
-            for (size_t j = 0; j < tx->vout.size(); ++j) {
+            for (uint32_t j = 0; j < tx->vout.size(); ++j) {
                 const CTxOut& out{tx->vout[j]};
                 Coin coin{out, pindex->nHeight, tx->IsCoinBase()};
-                COutPoint outpoint{tx->GetHash(), static_cast<uint32_t>(j)};
+                COutPoint outpoint{tx->GetHash(), j};
 
                 // Skip unspendable coins
                 if (coin.out.scriptPubKey.IsUnspendable()) {
@@ -402,9 +402,9 @@ bool CoinStatsIndex::ReverseBlock(const CBlock& block, const CBlockIndex* pindex
     for (size_t i = 0; i < block.vtx.size(); ++i) {
         const auto& tx{block.vtx.at(i)};
 
-        for (size_t j = 0; j < tx->vout.size(); ++j) {
+        for (uint32_t j = 0; j < tx->vout.size(); ++j) {
             const CTxOut& out{tx->vout[j]};
-            COutPoint outpoint{tx->GetHash(), static_cast<uint32_t>(j)};
+            COutPoint outpoint{tx->GetHash(), j};
             Coin coin{out, pindex->nHeight, tx->IsCoinBase()};
 
             // Skip unspendable coins
