@@ -299,7 +299,7 @@ public:
     {
         LOCK(cs);
 
-        Clear();
+        assert(vRandom.empty());
 
         Format format;
         s_ >> Using<CustomUintFormatter<1>>(format);
