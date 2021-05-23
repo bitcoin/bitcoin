@@ -26,6 +26,10 @@ enum class SyscallSandboxPolicy {
 
     // 3. Shutdown
     SHUTOFF,
+
+    // Others (non-bitcoind)
+    LIBFUZZER,
+    LIBFUZZER_MERGE_MODE,
 };
 
 //! Force the current thread (and threads created from the current thread) into

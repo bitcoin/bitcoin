@@ -260,6 +260,20 @@ public:
         allowed_syscalls.insert(__NR_restart_syscall); // restart a system call after interruption by a stop signal
     }
 
+    void AllowLibFuzzer()
+    {
+        allowed_syscalls.insert(__NR_execve);          // execute program
+        allowed_syscalls.insert(__NR_ptrace);          // process trace
+        allowed_syscalls.insert(__NR_set_tid_address); // set pointer to thread ID
+        allowed_syscalls.insert(__NR_setitimer);       // set value of an interval timer
+    }
+
+    void AllowLibFuzzerMergeMode()
+    {
+        allowed_syscalls.insert(__NR_bind);   // bind a name to a socket
+        allowed_syscalls.insert(__NR_socket); // create an endpoint for communication
+    }
+
     void AllowNetwork()
     {
         allowed_syscalls.insert(__NR_accept);     // accept a connection on a socket
@@ -448,6 +462,15 @@ void EnableSyscallSandbox(const SyscallSandboxPolicy syscall_policy)
         break;
     case SyscallSandboxPolicy::SHUTOFF: // Thread: main thread (state: shutoff)
         seccomp_policy_builder.AllowFileSystem();
+        break;
+    case SyscallSandboxPolicy::LIBFUZZER: // Fuzzing mode: Allow syscalls needed by libFuzzer and don't allow networking.
+        seccomp_policy_builder.AllowFileSystem();
+        seccomp_policy_builder.AllowLibFuzzer();
+        break;
+    case SyscallSandboxPolicy::LIBFUZZER_MERGE_MODE: // Fuzzing mode: As SyscallSandboxPolicy::LIBFUZZER, but allow also for syscalls needed by libFuzzer's merge mode (-merge=1).
+        seccomp_policy_builder.AllowFileSystem();
+        seccomp_policy_builder.AllowLibFuzzer();
+        seccomp_policy_builder.AllowLibFuzzerMergeMode();
         break;
     }
 

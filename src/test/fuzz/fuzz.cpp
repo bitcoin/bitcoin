@@ -11,9 +11,11 @@
 #include <util/sock.h>
 #include <util/syscall_sandbox.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <exception>
 #include <memory>
+#include <string>
 #include <unistd.h>
 #include <vector>
 
@@ -87,6 +89,9 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 // This function is used by libFuzzer
 extern "C" int LLVMFuzzerInitialize(int* argc, char*** argv)
 {
+    const std::vector<std::string> arguments{*argv, *argv + *argc};
+    const bool merge_mode = std::find(arguments.begin(), arguments.end(), "-merge=1") != arguments.end();
+    EnableSyscallSandbox(merge_mode ? SyscallSandboxPolicy::LIBFUZZER_MERGE_MODE : SyscallSandboxPolicy::LIBFUZZER);
     DisableFurtherSyscallSandboxRestrictions();
     initialize();
     return 0;
