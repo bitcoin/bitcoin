@@ -4,6 +4,7 @@
 
 #include <chainparams.h>
 #include <net.h>
+#include <netmessagemaker.h>
 #include <protocol.h>
 #include <test/fuzz/fuzz.h>
 
@@ -13,15 +14,16 @@
 #include <optional>
 #include <vector>
 
-void initialize_p2p_transport_deserializer()
+void initialize_p2p_transport_serialization()
 {
     SelectParams(CBaseChainParams::REGTEST);
 }
 
-FUZZ_TARGET_INIT(p2p_transport_deserializer, initialize_p2p_transport_deserializer)
+FUZZ_TARGET_INIT(p2p_transport_serialization, initialize_p2p_transport_serialization)
 {
     // Construct deserializer, with a dummy NodeId
     V1TransportDeserializer deserializer{Params(), (NodeId)0, SER_NETWORK, INIT_PROTO_VERSION};
+    V1TransportSerializer serializer{};
     Span<const uint8_t> msg_bytes{buffer};
     while (msg_bytes.size() > 0) {
         const int handled = deserializer.Read(msg_bytes);
@@ -37,6 +39,10 @@ FUZZ_TARGET_INIT(p2p_transport_deserializer, initialize_p2p_transport_deserializ
                 assert(result->m_raw_message_size <= buffer.size());
                 assert(result->m_raw_message_size == CMessageHeader::HEADER_SIZE + result->m_message_size);
                 assert(result->m_time == m_time);
+
+                std::vector<unsigned char> header;
+                auto msg = CNetMsgMaker{result->m_recv.GetVersion()}.Make(result->m_command, MakeUCharSpan(result->m_recv));
+                serializer.prepareForTransport(msg, header);
             }
         }
     }

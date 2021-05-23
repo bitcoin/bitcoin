@@ -257,7 +257,7 @@ test_fuzz_fuzz_SOURCES = \
  test/fuzz/netaddress.cpp \
  test/fuzz/netbase_dns_lookup.cpp \
  test/fuzz/node_eviction.cpp \
- test/fuzz/p2p_transport_deserializer.cpp \
+ test/fuzz/p2p_transport_serialization.cpp \
  test/fuzz/parse_hd_keypath.cpp \
  test/fuzz/parse_iso8601.cpp \
  test/fuzz/parse_numbers.cpp \
