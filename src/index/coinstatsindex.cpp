@@ -219,7 +219,10 @@ bool CoinStatsIndex::WriteBlock(const CBlock& block, const CBlockIndex* pindex)
     m_muhash.Finalize(out);
     value.second.muhash = out;
 
-    return m_db->Write(DBHeightKey(pindex->nHeight), value) && m_db->Write(DB_MUHASH, m_muhash);
+    CDBBatch batch(*m_db);
+    batch.Write(DBHeightKey(pindex->nHeight), value);
+    batch.Write(DB_MUHASH, m_muhash);
+    return m_db->WriteBatch(batch);
 }
 
 static bool CopyHeightIndexToHashIndex(CDBIterator& db_it, CDBBatch& batch,
