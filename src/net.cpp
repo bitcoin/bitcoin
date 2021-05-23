@@ -1679,6 +1679,11 @@ void CConnman::ThreadDNSAddressSeed()
             if (!resolveSource.SetInternal(host)) {
                 continue;
             }
+
+            //don't use service bits
+            AddAddrFetch(seed);
+
+            /*
             unsigned int nMaxIPs = 256; // Limits number of IPs learned from a DNS seed
             if (LookupHost(host, vIPs, nMaxIPs, true)) {
                 for (const CNetAddr& ip : vIPs) {
@@ -1694,6 +1699,7 @@ void CConnman::ThreadDNSAddressSeed()
                 // instead using them as a addrfetch to get nodes with our desired service bits.
                 AddAddrFetch(seed);
             }
+            */
         }
         --seeds_right_now;
     }

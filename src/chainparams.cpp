@@ -275,7 +275,6 @@ public:
             vSeeds.emplace_back("prod3.dynamocoin.org");
             vSeeds.emplace_back("prod4.dynamocoin.org");
             vSeeds.emplace_back("prod5.dynamocoin.org");
-            vSeeds.emplace_back("192.168.1.87");
         }
 
 
