@@ -362,7 +362,7 @@ void CAddrMan::Attempt_(const CService& addr, bool fCountFailure, int64_t nTime)
 
 CAddrInfo CAddrMan::Select_(bool newOnly)
 {
-    if (size() == 0)
+    if (vRandom.empty())
         return CAddrInfo();
 
     if (newOnly && nNew == 0)
