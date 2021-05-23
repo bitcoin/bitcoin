@@ -585,12 +585,10 @@ public:
      */
     std::vector<CAddress> GetAddr(size_t max_addresses, size_t max_pct, std::optional<Network> network)
     {
+        LOCK(cs);
         Check();
         std::vector<CAddress> vAddr;
-        {
-            LOCK(cs);
-            GetAddr_(vAddr, max_addresses, max_pct, network);
-        }
+        GetAddr_(vAddr, max_addresses, max_pct, network);
         Check();
         return vAddr;
     }
@@ -714,9 +712,10 @@ private:
 
     //! Consistency check
     void Check()
+        EXCLUSIVE_LOCKS_REQUIRED(cs)
     {
 #ifdef DEBUG_ADDRMAN
-        LOCK(cs);
+        AssertLockHeld(cs);
         const int err = Check_();
         if (err) {
             LogPrintf("ADDRMAN CONSISTENCY CHECK FAILED!!! err=%i\n", err);
