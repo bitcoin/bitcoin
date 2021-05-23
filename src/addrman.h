@@ -551,13 +551,10 @@ public:
     //! Randomly select an address in tried that another address is attempting to evict.
     CAddrInfo SelectTriedCollision()
     {
-        CAddrInfo ret;
-        {
-            LOCK(cs);
-            Check();
-            ret = SelectTriedCollision_();
-            Check();
-        }
+        LOCK(cs);
+        Check();
+        const CAddrInfo ret = SelectTriedCollision_();
+        Check();
         return ret;
     }
 
@@ -566,13 +563,10 @@ public:
      */
     CAddrInfo Select(bool newOnly = false)
     {
-        CAddrInfo addrRet;
-        {
-            LOCK(cs);
-            Check();
-            addrRet = Select_(newOnly);
-            Check();
-        }
+        LOCK(cs);
+        Check();
+        const CAddrInfo addrRet = Select_(newOnly);
+        Check();
         return addrRet;
     }
 
