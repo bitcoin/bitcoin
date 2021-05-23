@@ -26,7 +26,7 @@ UrlDecodeFn* const URL_DECODE = urlDecode;
 
 int main(int argc, char* argv[]) {
 
-    IS_TESTNET = true;
+    IS_TESTNET = false;
 
     return GuiMain(argc, argv);
 }

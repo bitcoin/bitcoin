@@ -68,14 +68,14 @@ static void MineGenesis(CBlockHeader& genesisBlock, const uint256& powLimit, boo
 }
 
 
-static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward, CScript devFeeScript, CAmount devFeeAmt)
+static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward, CScript devFeeScript, CAmount devFeeAmt, CScript charityFeeScript, CAmount charityFeeAmt)
 {
     CMutableTransaction txNew;
     txNew.nVersion = 1;
     txNew.vin.resize(1);
 
     //two outputs for coinbase - miner and devfee, third is placeholder for segwit (not used in genesis)
-    txNew.vout.resize(3);
+    txNew.vout.resize(4);
     txNew.vin[0].scriptSig = CScript() << 486604799 << CScriptNum(4) << std::vector<unsigned char>((const unsigned char*)pszTimestamp, (const unsigned char*)pszTimestamp + strlen(pszTimestamp));
 
     txNew.vout[0].nValue = genesisReward;
@@ -84,8 +84,11 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
     txNew.vout[1].nValue = devFeeAmt;
     txNew.vout[1].scriptPubKey = devFeeScript;
 
-    txNew.vout[2].nValue = 0;
-    txNew.vout[2].scriptPubKey = CScript();
+    txNew.vout[2].nValue = charityFeeAmt;
+    txNew.vout[2].scriptPubKey = charityFeeScript;
+
+    txNew.vout[3].nValue = 0;
+    txNew.vout[3].scriptPubKey = CScript();
 
 
     CBlock genesis;
@@ -110,11 +113,11 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  *     CTxOut(nValue=50.00000000, scriptPubKey=0x5F1DF16B2B704C8A578D0B)
  *   vMerkleTree: 4a5e1e
  */
-static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward,  CAmount devFeeAmt)
+static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward, CAmount devFeeAmt, CAmount charityFeeAmt)
 {
     const char* pszTimestamp = "A coin for all";
     const CScript genesisOutputScript = CScript() << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f") << OP_CHECKSIG;
-    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward, genesisOutputScript, devFeeAmt);
+    return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward, genesisOutputScript, devFeeAmt, genesisOutputScript, charityFeeAmt);
 }
 
 /**
@@ -133,8 +136,11 @@ public:
         std::string genesisMerkleRoot;
 
         if (IS_TESTNET) {
-            genesisHash = "0x0000670c817fca7323f46417741faff011e4d7a6e44f1c00468385e0fa2decad";
+            genesisHash = "0x000075d0b9c03b4800620538d2e512a742effe138768ed5a66f90f082e2c8690";
             genesisMerkleRoot = "0x794ea2a523f66d5dbeb531c5af496263ef37cdb9574ac15b4438f5c16cdb6132";
+        } else {
+            genesisHash = "0x0000bced5a01a0914d7ca7e3ea5a37063d690d90b18de3bc0629e76a894715a0";
+            genesisMerkleRoot = "0xbb76c63e66f6d6f9a6f45d05a4ef802732241b08765d6cc58738faebec5c913b";
         }
 
         strNetworkID = CBaseChainParams::MAIN;
@@ -183,18 +189,21 @@ public:
         developerFeeScript = GetScriptForDestination(DecodeDestinationExtended(strDevFeeAddress, Base58Prefix(CChainParams::PUBKEY_ADDRESS),
            Base58Prefix(CChainParams::SCRIPT_ADDRESS), bech32_hrp, errMsg));
 
+        charityFeeScript = GetScriptForDestination(DecodeDestinationExtended(strCharityFeeAddress, Base58Prefix(CChainParams::PUBKEY_ADDRESS),
+                                                                               Base58Prefix(CChainParams::SCRIPT_ADDRESS), bech32_hrp, errMsg));
+
         g_hashFunction = new CDynHash();
         g_hashFunction->load("1\n"
-                             "SHA2 10\n"
+                             "SHA2 5\n"
                              "ADD db4e52bbc9a1d2a02106ae30821f4992ab9d56f7b6142889377ea15f707bbe22\n"
                              "XOR 58434e1209c715064b4317845ebcddd417cde333a9b0fe1752a38fca7f2e503a\n"
                              "SHA2 2\n"
                              "ADD db4e52bbc9a1d2a02106ae3082199992ab9d56f7b6142889377ea15f707bbe22\n"
                              "XOR 58434e1209c715064b4317845ebc999417cde333a9b0fe1752a38fca7f2e503a\n"
-                             "MEMGEN SHA2 512\n"
+                             "MEMGEN SHA2 64\n"
                              "MEMXOR 5fb73fa6c2dc424ac733da866b20c14d179d073dd648206358e41e44ba04e60a\n"
                              "READMEM MERKLE\n"
-                             "MEMGEN SHA2 1024\n"
+                             "MEMGEN SHA2 32\n"
                              "MEMADD 5fb73fa6c2dc424ac733da866b20c14d179d073dd648206358e41e44ba04e60a\n"
                              "READMEM HASHPREV\n"
                              "XOR 5fb73fa6c2dc424ac733da866b20c14d179d073dd648206358e41e44ba04e60a\n"
@@ -235,15 +244,15 @@ public:
         /*
         time_t t;
         time(&t);
-        genesis = CreateGenesisBlock(t, 0, 0x1f00ffff, 1, 1, devFeePerBlock);
+        genesis = CreateGenesisBlock(t, 0, 0x1f00ffff, 1, 1, devFeePerBlock, charityPerBlock);
         MineGenesis(genesis, consensus.powLimit, true);
         */
                   
 
         if (IS_TESTNET) {
-            genesis = CreateGenesisBlock(1620434096, 8338, 0x1f00ffff, 1, 1, devFeePerBlock);
+            genesis = CreateGenesisBlock(1621525586, 67081, 0x1f00ffff, 1, 1, devFeePerBlock, charityPerBlock);
         } else {
-
+            genesis = CreateGenesisBlock(1621740839, 128271, 0x1f00ffff, 1, 1, devFeePerBlock, charityPerBlock);
         }
 
         consensus.hashGenesisBlock = genesis.GetHash();
@@ -261,7 +270,11 @@ public:
             vSeeds.emplace_back("3.132.163.214");
             vSeeds.emplace_back("3.140.139.43");
         } else {
-            vSeeds.emplace_back("dnsseed.dynamocoin.org");
+            vSeeds.emplace_back("prod1.dynamocoin.org");
+            vSeeds.emplace_back("prod2.dynamocoin.org");
+            vSeeds.emplace_back("prod3.dynamocoin.org");
+            vSeeds.emplace_back("prod4.dynamocoin.org");
+            vSeeds.emplace_back("prod5.dynamocoin.org");
         }
 
 

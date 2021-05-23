@@ -3372,7 +3372,7 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     if (block.vtx.empty() || !block.vtx[0]->IsCoinBase())
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "first tx is not coinbase");
 
-    if (block.vtx.empty() || (block.vtx[0]->vout.size() != 3))      //2 txout + segwit
+    if (block.vtx.empty() || (block.vtx[0]->vout.size() != 4))      //3 txout + segwit - miner, dev fee, charity
         return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "coinbase must have two outputs");
 
 
@@ -3386,9 +3386,10 @@ bool CheckBlock(const CBlock& block, BlockValidationState& state, const Consensu
     //the genesis block should not be check for dev fee, so it doesnt get accidentally spent
     if (block.hashMerkleRoot != chainparams.GenesisBlock().hashMerkleRoot)
         if (!block.vtx.empty())
-            if (block.vtx[0]->vout.size() == 3)
+            if (block.vtx[0]->vout.size() == 4)
                 if ((block.vtx[0]->vout[1].nValue != chainparams.devFeePerBlock) || (block.vtx[0]->vout[1].scriptPubKey != chainparams.developerFeeScript))
-                    return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "dev fee incorrect amount or bad pubkey");
+                    if ((block.vtx[0]->vout[2].nValue != chainparams.charityPerBlock) || (block.vtx[0]->vout[2].scriptPubKey != chainparams.charityFeeScript))
+                        return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-missing", "dev/charity fee incorrect amount or bad pubkey");
 
 
     for (unsigned int i = 1; i < block.vtx.size(); i++)
@@ -3671,6 +3672,7 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
         // Get prev block index
         CBlockIndex* pindexPrev = nullptr;
 
+        /*
         for (const auto& [key, value] : m_block_index) {
             printf ("\n\n%s\n%s\n",
                 key.GetHex().c_str(),
@@ -3678,7 +3680,7 @@ bool BlockManager::AcceptBlockHeader(const CBlockHeader& block, BlockValidationS
                 );
 
         }
-
+        */
 
         BlockMap::iterator mi = m_block_index.find(block.hashPrevBlock);
         if (mi == m_block_index.end()) {

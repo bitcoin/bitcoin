@@ -1098,7 +1098,9 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 
     LogInstance().EnableCategory("net");
     LogInstance().EnableCategory("validation");
-    LogInstance().EnableCategory("all");
+
+    if (IS_TESTNET)
+        LogInstance().EnableCategory("all");
 
 
 
