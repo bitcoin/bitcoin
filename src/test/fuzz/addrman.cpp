@@ -107,7 +107,6 @@ FUZZ_TARGET_INIT(addrman, initialize_addrman)
         /* max_addresses */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
         /* max_pct */ fuzzed_data_provider.ConsumeIntegralInRange<size_t>(0, 4096),
         /* network */ std::nullopt);
-    (void)/*const_*/addr_man.Check();
     (void)/*const_*/addr_man.Select(fuzzed_data_provider.ConsumeBool());
     (void)const_addr_man.size();
     CDataStream data_stream(SER_NETWORK, PROTOCOL_VERSION);
