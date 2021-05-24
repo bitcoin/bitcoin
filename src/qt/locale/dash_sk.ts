@@ -247,10 +247,6 @@
         <translation>Peňaženka zašifrovaná</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>%1 sa teraz ukončí, aby dokončil proces šifrovania. Nezabudnite, že zašifrovanie vašej peňaženky nemôže plne chrániť vaše finančné prostriedky pred krádežou škodlivým softvérom, ktorý napadol váš počítač.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
         <translation>DÔLEŽITÉ: Všetky doterajšie záložné kópie peňaženky ktoré ste zhotovili by mali byť nahradené novým zašifrovaným súborom s peňaženkou. Predchádzajúce zálohy súboru nezašifrovanej peňaženky obsahujú rovnakú HD frázu a stále majú plný prístup k všetkým vašim finančným prostriedkom rovnako ako nová zašifrovaná peňaženka.</translation>
     </message>

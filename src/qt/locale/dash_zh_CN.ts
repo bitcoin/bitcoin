@@ -247,10 +247,6 @@
         <translation>钱包已加密</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>%1 将要关闭，以完成加密过程。请注意，加密钱包不能完全防止恶意软件入侵您的电脑盗取您的资金。</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
         <translation>重要提示：请用新生成的加密钱包文件替换旧的钱包备份文件。先前未加密的旧钱包备份文件含有同样的HD种子，能够像新加密的钱包一样获取您的资金，而无需输入密码。</translation>
     </message>
@@ -394,6 +390,10 @@
     <message>
         <source>&amp;About %1</source>
         <translation>关于 %1</translation>
+    </message>
+    <message>
+        <source>Send %1 funds to a Dash address</source>
+        <translation>发送%1资金至一个Dash地址</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -552,12 +552,26 @@
         <translation>%1 客戶</translation>
     </message>
     <message>
+        <source>Wallet: %1
+</source>
+        <translation>钱包: %1
+</translation>
+    </message>
+    <message>
         <source>Wallet is &lt;b&gt;unencrypted&lt;/b&gt;</source>
         <translation>钱包 &lt;b&gt;未加密&lt;/b&gt;</translation>
     </message>
     <message>
         <source>&amp;File</source>
         <translation>文件(&amp;F)</translation>
+    </message>
+    <message>
+        <source>%1 &amp;information</source>
+        <translation>%1 &amp;信息</translation>
+    </message>
+    <message>
+        <source>Show the %1 basic information</source>
+        <translation>显示%1基础信息</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
@@ -893,6 +907,14 @@
         <translation>显示所有币</translation>
     </message>
     <message>
+        <source>Hide %1 coins</source>
+        <translation>隐藏 %1 的币</translation>
+    </message>
+    <message>
+        <source>Show all %1 coins</source>
+        <translation>显示所有%1的币</translation>
+    </message>
+    <message>
         <source>Show spendable coins only</source>
         <translation>只显示可使用的币</translation>
     </message>
@@ -1005,7 +1027,15 @@
         <source>Command-line options</source>
         <translation>命令行选项</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 information</source>
+        <translation>%1信息</translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;%1 Basics&lt;/h3&gt; %1 gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; %1 uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The %1 process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;%1 begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of %1 makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have %1 disabled. &lt;hr&gt;For more information, see the &lt;a style="%2" href="%3"&gt;%1 documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;%1基础知识&lt;/h3&gt;%1通过隐藏您的资金来源为您提供真正的财务隐私。您的钱包中所有的Dash都由不同的“输入”组成，您可以将其视为分开的离散硬币。&lt;br&gt;%1使用创新的方法将您的输入与其他两个人的输入相结合，而过程中不会让您的Dash离开您的钱包。每时每刻，您仍然控制着您的钱。&lt;hr&gt;&lt;b&gt;%1的运作原理如下：&lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt;%1首先将您的交易分柝成多个标准面额的交易。这些标准面额分别为0.001 DASH，0.01 DASH，0.1 DASH，1 DASH和10 DASH --有点像您每天使用的纸币。&lt;/li&gt;&lt;li&gt;您的钱包然后发送请求到网络上有专门配置的软件节点，称为“主节点”。这些主节点会收到您希望混合一些资金的通知。没有可识别的信息发送到主节点，所以他们永远不会知道您是“谁”。&lt;li&gt;当另外两个人发送类似的消息时，表示希望混合相同的面额的话，混合会话就会开始。相关的主节点会混合这些输入，并指示所有三个用户的钱包将已经转换了输入的交易支付给自己。您的钱包直接支付给自己，但是付给不同的位址（称之为找零地址）。&lt;/li&gt;&lt;li&gt;为了完全掩盖您的资金来源，您的钱包必须以每个面额来重复此过程数次。每次这个过程完成后，都称之为一个“循环”。每个循环的%1都会令确定您的资金来源的工作倍加困难。&lt;/li&gt;&lt;li&gt;这种混合过程发生在后台，而不需要您进行任何操作。当您想进行交易时，您的资金将已被混币处理。不需再花额外的时间等待。&lt;/li&gt;&lt;/ol&gt;&lt;hr&gt;重要：&lt;b&gt;您的钱包只能拥有1000个“找零地址”。每次混合事件发生时，最多会使用9个找零地址。这意味着这1000个地址可以容许100次的混合事件。当其的中900个已经被使用后，您的钱包必须创建更多的地址。如果您启用了自动备份，则只能够这样做。&lt;br&gt;因此，禁用备份的用户也将禁用%1。&lt;hr&gt;如欲了解更多信息请参阅&lt;a style="%2" href="%3"&gt;%1文档&lt;/a&gt;。</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -1321,8 +1351,52 @@
         <translation>如果您禁用还未确认的零钱，那么交易中找零的零钱&lt;br/&gt;至少需要1个确认才能使用。&lt;br/&gt;这也会影响余额的计算。</translation>
     </message>
     <message>
+        <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
+        <translation>在概览屏幕上显示混币界面，并显示一个仅允许使用完全混币资金的界面。&lt;br/&gt;该对话框中还将出现一个具有更多设置的标签，请确保在混币前检查这些设置。</translation>
+    </message>
+    <message>
+        <source>Show additional information and buttons on overview screen.</source>
+        <translation>在概况页面上显示额外信息和按钮。</translation>
+    </message>
+    <message>
+        <source>Enable advanced interface</source>
+        <translation>启用高级界面</translation>
+    </message>
+    <message>
+        <source>Show system popups for mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
+        <translation>显示混币交易的系统弹出窗口 &lt;br/&gt; 如同其他所有交易类型一样。</translation>
+    </message>
+    <message>
+        <source>Show popups for mixing transactions</source>
+        <translation>显示混币交易的弹出窗口</translation>
+    </message>
+    <message>
+        <source>Show warning dialog when the wallet has very low number of keys left.</source>
+        <translation>当钱包公钥所剩无几时，显示警告对话框。</translation>
+    </message>
+    <message>
+        <source>Warn if the wallet is running out of keys</source>
+        <translation>钱包公钥将用完时提示警告</translation>
+    </message>
+    <message>
+        <source>Whether to use experimental mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
+        <translation>是否使用实验性质的模式，当中每个内存块都会有多个混合会话。&lt;br/&gt;注意：您必须小心使用此功能。&lt;br/&gt;确保您总是有最近的钱包（自动）备份在一个安全的地方！</translation>
+    </message>
+    <message>
+        <source>Enable &amp;multi-session</source>
+        <translation>启动&amp;多轮</translation>
+    </message>
+    <message>
         <source>Mixing rounds</source>
         <translation>混币循环数</translation>
+    </message>
+    <message>
+        <source>This amount acts as a threshold to turn off mixing once it's reached.</source>
+        <translation>此金额作为关闭混币的阈值。</translation>
+    </message>
+    <message>
+        <source>Target balance</source>
+        <translation>目标余额</translation>
     </message>
     <message>
         <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1472,7 +1546,7 @@ https://www.transifex.com/projects/p/dash/</translation>
     </message>
     <message>
         <source>&amp;Unit to show amounts in:</source>
-        <translation>达世币金额单位(&amp;U)：</translation>
+        <translation>显示金额的单位:</translation>
     </message>
     <message>
         <source>Choose the default subdivision unit to show in the interface and when sending coins.</source>
@@ -1501,6 +1575,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Cancel</source>
         <translation>取消(&amp;C)</translation>
+    </message>
+    <message>
+        <source>Enable %1 features</source>
+        <translation>启动 %1特性</translation>
     </message>
     <message>
         <source>default</source>
@@ -1649,6 +1727,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>No inputs detected</source>
         <translation>未检测到输入</translation>
     </message>
+    <message>
+        <source>%1 Balance</source>
+        <translation>%1 余额</translation>
+    </message>
     <message numerus="yes">
         <source>%n Rounds</source>
         <translation><numerusform>%n 次循环</numerusform></translation>
@@ -1684,6 +1766,26 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>keys left: %1</source>
         <translation>剩余密匙：%1</translation>
+    </message>
+    <message>
+        <source>Start %1</source>
+        <translation>开始%1</translation>
+    </message>
+    <message>
+        <source>If you don't want to see internal %1 fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
+        <translation>如果你不希望看到内部%1费用/交易，请在“交易”选项卡上选择“最常用”。</translation>
+    </message>
+    <message>
+        <source>%1 requires at least %2 to use.</source>
+        <translation>%1 要求至少 %2 以使用.</translation>
+    </message>
+    <message>
+        <source>Wallet is locked and user declined to unlock. Disabling %1.</source>
+        <translation>钱包已锁定需要用户解锁。 正在关闭%1。</translation>
+    </message>
+    <message>
+        <source>Stop %1</source>
+        <translation>停止 %1</translation>
     </message>
     <message>
         <source>Disabled</source>
@@ -1739,6 +1841,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>URI handling</source>
         <translation>URI 处理</translation>
+    </message>
+    <message>
+        <source>'dash://' is not a valid URI. Use 'dash:' instead.</source>
+        <translation>'dash://' 不是一个有效链接. 请使用'dash:'</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -2234,6 +2340,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>重新扫描区块链文件 2</translation>
     </message>
     <message>
+        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>-rescan=1: 从钱包创建时开始重新扫描区块链以查找遗漏的钱包交易。</translation>
+    </message>
+    <message>
+        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
+        <translation>-rescan=2: 从初始块开始重新扫描区块链以查找遗漏的钱包交易。</translation>
+    </message>
+    <message>
         <source>Wallet Path</source>
         <translation>钱包路径</translation>
     </message>
@@ -2272,6 +2386,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Reset</source>
         <translation>&amp;重置</translation>
+    </message>
+    <message>
+        <source>Node Type</source>
+        <translation>节点类型</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -2434,6 +2552,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>总计: %1 (已激活的: %2)</translation>
     </message>
     <message>
+        <source>Executing command without any wallet</source>
+        <translation>不通过任何钱包执行命令</translation>
+    </message>
+    <message>
+        <source>Executing command using "%1" wallet</source>
+        <translation>使用 "%1" 钱包执行命令</translation>
+    </message>
+    <message>
         <source>(node id: %1)</source>
         <translation>(节点ID：%1)</translation>
     </message>
@@ -2462,8 +2588,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>否</translation>
     </message>
     <message>
+        <source>Regular</source>
+        <translation>常规</translation>
+    </message>
+    <message>
         <source>Masternode</source>
         <translation>主节点</translation>
+    </message>
+    <message>
+        <source>Verified Masternode</source>
+        <translation>已验证的主节点</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -2826,6 +2960,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%1 (%2 区块)</translation>
     </message>
     <message>
+        <source>from wallet %1</source>
+        <translation>来自%1钱包</translation>
+    </message>
+    <message>
         <source>using</source>
         <translation>使用</translation>
     </message>
@@ -2850,8 +2988,24 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&lt;b&gt;（在%2中%1个项目显示出来）&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>S&amp;end mixed funds</source>
+        <translation>S&amp;end 混币资金</translation>
+    </message>
+    <message>
+        <source>Confirm the %1 send action</source>
+        <translation>确认%1发送行为</translation>
+    </message>
+    <message>
+        <source>%1 funds only</source>
+        <translation>仅支持%1资金</translation>
+    </message>
+    <message>
         <source>any available funds</source>
         <translation>全部有效金额</translation>
+    </message>
+    <message>
+        <source>(%1 transactions have higher fees usually due to no change output being allowed)</source>
+        <translation>(%1交易的手续费更高通常由于输出不允许更改)</translation>
     </message>
     <message>
         <source>Transaction size: %1</source>
@@ -2864,6 +3018,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message numerus="yes">
         <source>This transaction will consume %n input(s)</source>
         <translation><numerusform>此交易将消耗 %n 个输入</numerusform></translation>
+    </message>
+    <message>
+        <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
+        <translation>提醒: 使用 %1与%2或更多输入不利于您的隐私保护，并不推荐</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3204,6 +3362,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>KB/s</translation>
     </message>
     <message>
+        <source>Total</source>
+        <translation>总额</translation>
+    </message>
+    <message>
         <source>Received</source>
         <translation>已接收</translation>
     </message>
@@ -3461,6 +3623,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>收款来自</translation>
     </message>
     <message>
+        <source>Received via %1</source>
+        <translation>已通过%1接收</translation>
+    </message>
+    <message>
         <source>Sent to</source>
         <translation>发送给</translation>
     </message>
@@ -3471,6 +3637,26 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Mined</source>
         <translation>挖矿所得</translation>
+    </message>
+    <message>
+        <source>%1 Mixing</source>
+        <translation>%1 混币</translation>
+    </message>
+    <message>
+        <source>%1 Collateral Payment</source>
+        <translation>%1抵押付款</translation>
+    </message>
+    <message>
+        <source>%1 Make Collateral Inputs</source>
+        <translation>%1进行抵押输入</translation>
+    </message>
+    <message>
+        <source>%1 Create Denominations</source>
+        <translation>%1 创建面额</translation>
+    </message>
+    <message>
+        <source>%1 Send</source>
+        <translation>%1 发送</translation>
     </message>
     <message>
         <source>watch-only</source>
@@ -3550,6 +3736,26 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Sent to</source>
         <translation>发送给</translation>
+    </message>
+    <message>
+        <source>%1 Send</source>
+        <translation>%1 发送</translation>
+    </message>
+    <message>
+        <source>%1 Make Collateral Inputs</source>
+        <translation>%1进行抵押输入</translation>
+    </message>
+    <message>
+        <source>%1 Create Denominations</source>
+        <translation>%1 创建面额</translation>
+    </message>
+    <message>
+        <source>%1 Mixing</source>
+        <translation>%1 混币</translation>
+    </message>
+    <message>
+        <source>%1 Collateral Payment</source>
+        <translation>%1抵押付款</translation>
     </message>
     <message>
         <source>To yourself</source>
@@ -3735,7 +3941,11 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>The wallet data was successfully saved to %1.</source>
         <translation>钱包数据成功保存至 %1 。</translation>
     </message>
-    </context>
+    <message>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+</context>
 <context>
     <name>dash-core</name>
     <message>
@@ -3993,6 +4203,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Can't find random Masternode.</source>
         <translation>无法找到随机主节点。</translation>
+    </message>
+    <message>
+        <source>%s can't be lower than %s</source>
+        <translation>%s不能低于%s</translation>
+    </message>
+    <message>
+        <source>%s is idle.</source>
+        <translation>%s处于空闲状态.</translation>
+    </message>
+    <message>
+        <source>%s request incomplete: %s</source>
+        <translation>%s 请求未完成: %s</translation>
     </message>
     <message>
         <source>Can't mix while sync in progress.</source>
@@ -4335,6 +4557,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%s 开发人员</translation>
     </message>
     <message>
+        <source>%s uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation>%s要求使用准确的已面额化资金来发送，您可能需要再混币处理一些资金。</translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>无法锁定数据目录 %s。%s 可能已经在运行。</translation>
     </message>
@@ -4415,6 +4641,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>无法解析 - %s 地址： '%s'</translation>
     </message>
     <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation>无法写入数据目录 '%s'; 请检查权限.</translation>
+    </message>
+    <message>
         <source>Change index out of range</source>
         <translation>修改索引超过范围</translation>
     </message>
@@ -4447,12 +4677,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>升级链状态数据库出错</translation>
     </message>
     <message>
+        <source>Error: failed to add socket to kqueuefd (kevent returned error %s)</source>
+        <translation>错误: 无法添加socket到kqueuefd (kevent 返回错误 %s)</translation>
+    </message>
+    <message>
         <source>Failed to find mixing queue to join</source>
         <translation>无法找到混币队列并加入</translation>
     </message>
     <message>
         <source>Failed to start a new mixing queue</source>
         <translation>无法开始一个新的混币队列</translation>
+    </message>
+    <message>
+        <source>Incorrect -rescan mode, falling back to default value</source>
+        <translation>错误的-rescan模式，恢复到默认值</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
@@ -4507,6 +4745,18 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>交易签名失败</translation>
     </message>
     <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>指定的区块目录“%s”不存在。</translation>
+    </message>
+    <message>
+        <source>Last queue was created too recently.</source>
+        <translation>上一次队列才被创建.</translation>
+    </message>
+    <message>
+        <source>Last successful action was too recent.</source>
+        <translation>上一次成功操作才完成。</translation>
+    </message>
+    <message>
         <source>Starting network threads...</source>
         <translation>正在启动网络线程...</translation>
     </message>
@@ -4551,6 +4801,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>无法绑定此计算机上的%s (绑定返回错误 %s)</translation>
     </message>
     <message>
+        <source>Unable to locate enough mixed funds for this transaction.</source>
+        <translation>无法找到足够的混币资金来完成本次交易.</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough non-denominated funds for this transaction.</source>
+        <translation>无法找到足够的未面额化资金来完成本次交易.</translation>
+    </message>
+    <message>
         <source>Unable to sign spork message, wrong key?</source>
         <translation>无法签署交叉信息，错误的密钥？</translation>
     </message>
@@ -4581,6 +4839,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Warning</source>
         <translation>警告</translation>
+    </message>
+    <message>
+        <source>Warning: %s is deprecated, please use %s instead</source>
+        <translation>警告: %s 已过时, 请使用 %s</translation>
+    </message>
+    <message>
+        <source>Warning: can't use %s and %s together, will prefer %s</source>
+        <translation>警告: 无法同时使用%s和%s, 将优先使用%s</translation>
+    </message>
+    <message>
+        <source>Warning: incorrect parameter %s, path must exist! Using default path.</source>
+        <translation>警告：不正确的参数 %s，路径必须存在！请使用预设路径。</translation>
     </message>
     <message>
         <source>You are starting with governance validation disabled.</source>

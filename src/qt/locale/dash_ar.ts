@@ -247,10 +247,6 @@
         <translation>محفظة مشفرة</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>%1 سوف يغلق الآن لإنهاء عملية التشفير. تذكر أن تشفير محفظتك لا يمكنه حماية أموالك بالكامل من التعرض للسرقة بسبب البرامج الضارة التي تصيب جهاز الكمبيوتر الخاص بك.</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
         <translation>مهم:يجب استبدال أي نسخ احتياطية سابقة قمت بها من ملف المحفظة ملف المحفظة المشفر حديثًا. تحتوي النسخ الاحتياطية السابقة ملف المحفظة غير المشفرة على نفس البذرة عالية الدقة ، ولا تزال تتمتع بالوصول الكامل إلى جميع أموالك مثل المحفظة الجديدة المشفرة.</translation>
     </message>
@@ -566,6 +562,10 @@
         <translation>ملف</translation>
     </message>
     <message>
+        <source>%1 &amp;information</source>
+        <translation>%1 معلومات</translation>
+    </message>
+    <message>
         <source>&amp;Settings</source>
         <translation>الإعدادات</translation>
     </message>
@@ -799,6 +799,10 @@
         <translation>تلقى مع عنوان</translation>
     </message>
     <message>
+        <source>Mixing Rounds</source>
+        <translation>جولات الخلط</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>تاريخ</translation>
     </message>
@@ -889,6 +893,14 @@
     <message>
         <source>Some coins were unselected because they do not have enough mixing rounds.</source>
         <translation>لم يتم تحديد بعض العملات المعدنية لأنها لا تحتوي على دورات خلط كافية.</translation>
+    </message>
+    <message>
+        <source>Show all coins</source>
+        <translation>اظهار جميع العملات</translation>
+    </message>
+    <message>
+        <source>Show spendable coins only</source>
+        <translation>اظهار العملات التي يمكن صرفها فقط</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -1315,6 +1327,50 @@
         <translation>إذا قمت بتعطيل الإنفاق من التغيير غير المؤكد ، فإن التغيير من معاملة&lt;br/&gt; لا يمكن استخدامه حتى يكون لهذه المعاملة تأكيد واحد على الأقل. &lt;br/&gt; يؤثر هذا أيضًا على كيفية حساب رصيدك.</translation>
     </message>
     <message>
+        <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
+        <translation>أظهر واجهة المزج على شاشة النظرة العامة واكشف عن شاشة إضافية تسمح بإنفاق عملات مختلطة بالكامل فقط. &lt;br/&gt; ستظهر أيضًا علامة تبويب جديدة بها المزيد من الإعدادات في مربع الحوار هذا ، يرجى التأكد من التحقق منها قبل خلط عملاتك المعدنية.</translation>
+    </message>
+    <message>
+        <source>Show additional information and buttons on overview screen.</source>
+        <translation>إظهار معلومات وأزرار إضافية على شاشة النظرة العامة.</translation>
+    </message>
+    <message>
+        <source>Enable advanced interface</source>
+        <translation>تفعيل الواجهة المتقدمة</translation>
+    </message>
+    <message>
+        <source>Show system popups for mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
+        <translation>عرض النوافذ المنبثقة للنظام لخلط المعاملات&lt;br/&gt; تمامًا مثل جميع أنواع المعاملات الأخرى.</translation>
+    </message>
+    <message>
+        <source>Show popups for mixing transactions</source>
+        <translation>عرض النوافذ المنبثقة لخلط المعاملات</translation>
+    </message>
+    <message>
+        <source>Show warning dialog when the wallet has very low number of keys left.</source>
+        <translation>إظهار مربع حوار التحذير عندما يكون هناك عدد قليل جدًا من المفاتيح المتبقية في المحفظة.</translation>
+    </message>
+    <message>
+        <source>Warn if the wallet is running out of keys</source>
+        <translation>تحذير إذا كانت المحفظة تنفد من المفاتيح</translation>
+    </message>
+    <message>
+        <source>Whether to use experimental mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
+        <translation>لتحديد ما إذا كنت تريد استخدام وضع الإرسال التجريبي مع جلسات خلط متعددة لكل مقطع.&lt;br/&gt;ملاحظة: يجب عليك استخدام هذه الميزة بعناية. &lt;br/&gt;تأكد من أن لديك دائمًا احتياطي محفظة (تلقائي) حديث في مكان آمن!</translation>
+    </message>
+    <message>
+        <source>Enable &amp;multi-session</source>
+        <translation>تمكين الإرسال متعدد الجلسات</translation>
+    </message>
+    <message>
+        <source>Mixing rounds</source>
+        <translation>جولات الخلط</translation>
+    </message>
+    <message>
+        <source>This amount acts as a threshold to turn off mixing once it's reached.</source>
+        <translation>يعمل هذا المقدار كعتبة لإيقاف تشغيل الخلط بمجرد الوصول إليه.</translation>
+    </message>
+    <message>
         <source>Target balance</source>
         <translation>الهدف رصيد</translation>
     </message>
@@ -1643,6 +1699,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>No inputs detected</source>
         <translation>لم يتم اكتشاف أي مدخلات</translation>
     </message>
+    <message>
+        <source>%1 Balance</source>
+        <translation>%1 الرصيد</translation>
+    </message>
     <message numerus="yes">
         <source>%n Rounds</source>
         <translation><numerusform>%n جولات</numerusform><numerusform>%n جولات</numerusform><numerusform>%n جولات</numerusform><numerusform>%n جولات</numerusform><numerusform>%n جولات</numerusform><numerusform>%n جولات</numerusform></translation>
@@ -1733,6 +1793,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>URI handling</source>
         <translation>التعامل مع العنوان</translation>
+    </message>
+    <message>
+        <source>'dash://' is not a valid URI. Use 'dash:' instead.</source>
+        <translation>'dash: //' ليس URI صالحًا. استخدم "شرطة:" بدلاً من ذلك.</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -2224,6 +2288,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>إعادة فحص ملفات بلوكشين2</translation>
     </message>
     <message>
+        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>-rescan = 1: إعادة فحص سلسلة الكتل بحثًا عن معاملات المحفظة المفقودة بدءًا من وقت إنشاء المحفظة.</translation>
+    </message>
+    <message>
+        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
+        <translation>-rescan = 2: إعادة فحص سلسلة الكتل بحثًا عن معاملات المحفظة المفقودة بدءًا من كتلة التكوين.</translation>
+    </message>
+    <message>
         <source>Wallet Path</source>
         <translation>محفظة path</translation>
     </message>
@@ -2262,6 +2334,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Reset</source>
         <translation>&amp;إعادة تعيين</translation>
+    </message>
+    <message>
+        <source>Node Type</source>
+        <translation>نوع العقدة</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -2460,8 +2536,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>لا</translation>
     </message>
     <message>
+        <source>Regular</source>
+        <translation>عادي</translation>
+    </message>
+    <message>
         <source>Masternode</source>
         <translation>ماسترنود</translation>
+    </message>
+    <message>
+        <source>Verified Masternode</source>
+        <translation>التحقق من Masternode</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -2884,10 +2968,6 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>القيمة تتجاوز رصيدك</translation>
     </message>
     <message>
-        <source>The total exceeds your balance when the %1 transaction fee is included.</source>
-        <translation>المجموع يتجاوز رصيدك عندما يتم اضافة %1 رسوم العملية</translation>
-    </message>
-    <message>
         <source>Duplicate address found: addresses should only be used once each.</source>
         <translation>تم العثور على عنوان مكرر: يجب استخدام العناوين مرة واحدة فقط.</translation>
     </message>
@@ -3257,6 +3337,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>تأكيد %1</translation>
     </message>
     <message>
+        <source>locked via ChainLocks</source>
+        <translation>مغلق عبر ChainLocks</translation>
+    </message>
+    <message>
         <source>verified via InstantSend</source>
         <translation>محقق من فبل الإرسال الفوري</translation>
     </message>
@@ -3449,6 +3533,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>verified via InstantSend</source>
         <translation>محقق من فبل الإرسال الفوري</translation>
+    </message>
+    <message>
+        <source>locked via ChainLocks</source>
+        <translation>مغلق عبر ChainLocks</translation>
     </message>
     <message>
         <source>Received with</source>
@@ -4457,6 +4545,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>فشل في بدء صف مختلط جديد</translation>
     </message>
     <message>
+        <source>Incorrect -rescan mode, falling back to default value</source>
+        <translation>وضع المسح غير الصحيح ، والعودة إلى القيمة الافتراضية</translation>
+    </message>
+    <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
         <translation>فشل بالتحقق في اختبار التعقل. تم إيقاف %s.</translation>
     </message>
@@ -4509,6 +4601,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>فشل توقيع المعاملة</translation>
     </message>
     <message>
+        <source>Last queue was created too recently.</source>
+        <translation>تم إنشاء قائمة الانتظار الأخيرة مؤخرًا.</translation>
+    </message>
+    <message>
+        <source>Last successful action was too recent.</source>
+        <translation>آخر إجراء ناجح كان حديثًا جدًا.</translation>
+    </message>
+    <message>
         <source>Starting network threads...</source>
         <translation>بدء مؤشرات شبكة الاتصال...</translation>
     </message>
@@ -4551,6 +4651,14 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Unable to bind to %s on this computer (bind returned error %s)</source>
         <translation>يتعذر الربط مع %s على هذا الكمبيوتر (الربط انتج خطأ %s)</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough mixed funds for this transaction.</source>
+        <translation>تعذر تحديد موقع أموال مختلطة كافية لهذه المعاملة.</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough non-denominated funds for this transaction.</source>
+        <translation>غير قادر على تحديد موقع أموال كافية غير مقومة لهذه المعاملة.</translation>
     </message>
     <message>
         <source>Unable to sign spork message, wrong key?</source>

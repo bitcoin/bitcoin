@@ -247,10 +247,6 @@
         <translation>지갑 암호화 완료</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>암호화 진행을 완료하기 위하여 %1 이/가 종료됩니다. 사용자 지갑 암호화를 진행한다고 하더라도 컴퓨터에 영향을 끼치는 맬웨어로부터 자금을 완전히 보호하지 못한다는 점을 기억하세요. </translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
         <translation>중요: 당신의 지갑 파일에서 생성된 이전 백업은 새로 생성된 암호화 지갑 파일로 교체되어야 합니다.암호화되지 않은 이전 지갑 파일의 백업은 동일한 HD 시드를 가지며, 새로운 암호화 지갑과 마찬가지로 당신의 자금에 완전한 접근성을 제공합니다.</translation>
     </message>
@@ -394,6 +390,10 @@
     <message>
         <source>&amp;About %1</source>
         <translation>%1 정보(&amp;A)</translation>
+    </message>
+    <message>
+        <source>Send %1 funds to a Dash address</source>
+        <translation>%1 금액을 대시 주소로 전송</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -564,6 +564,14 @@
     <message>
         <source>&amp;File</source>
         <translation>파일(&amp;F)</translation>
+    </message>
+    <message>
+        <source>%1 &amp;information</source>
+        <translation>%1 정보</translation>
+    </message>
+    <message>
+        <source>Show the %1 basic information</source>
+        <translation>%1 기본 정보를 보여줍니다</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
@@ -799,6 +807,10 @@
         <translation>함께 수신된 주소</translation>
     </message>
     <message>
+        <source>Mixing Rounds</source>
+        <translation>믹싱 라운드</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>날짜</translation>
     </message>
@@ -889,6 +901,22 @@
     <message>
         <source>Some coins were unselected because they do not have enough mixing rounds.</source>
         <translation>일부 코인은 믹싱 라운드가 충분하지 않아 선택되지 않았습니다.</translation>
+    </message>
+    <message>
+        <source>Show all coins</source>
+        <translation>모든 코인을 보여줍니다</translation>
+    </message>
+    <message>
+        <source>Hide %1 coins</source>
+        <translation>%1 코인을 숨깁니다</translation>
+    </message>
+    <message>
+        <source>Show all %1 coins</source>
+        <translation>모든 %1 코인을 보여줍니다</translation>
+    </message>
+    <message>
+        <source>Show spendable coins only</source>
+        <translation>사용할 수 있는 코인만을 보여줍니다</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -999,7 +1027,15 @@
         <source>Command-line options</source>
         <translation>명령줄 옵션</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 information</source>
+        <translation>%1 정보</translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;%1 Basics&lt;/h3&gt; %1 gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; %1 uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The %1 process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;%1 begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of %1 makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have %1 disabled. &lt;hr&gt;For more information, see the &lt;a style="%2" href="%3"&gt;%1 documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;%1 기본 정보&lt;/h3&gt; %1은 당신의 자금 출처를 가려 진정한 재정적 프라이버시를 보장합니다. 당신의 지갑에 보관된 모든 대시는 각기 다른 "입력값"으로 구성되어 있습니다. 쉽게 생각하면 별도의 분리된 동전으로 구성되어 있다고 볼 수 있습니다.&lt;br&gt;  %1은 당신의 코인이 지갑을 떠나지 않고도 그 입력값을 다른 두 사람의 입력값과 섞는 혁신적인 방식을 사용합니다. 이로써 당신의 자금은 언제나 당신의 통제 하에 있습니다.&lt;hr&gt;&lt;b&gt; %1은 다음과 같은 방식으로 작동합니다.&lt;/b&gt;&lt;ol type="1"&gt;&lt;li&gt; %1은 당신의 거래 입력값을 표준 단위로 쪼개는 것으로 시작합니다. 이렇게 분할하는 단위는 0.001대시, 0.01대시, 0.1대시, 1대시 혹은 10대시 입니다 - 귀하가 일상적으로 사용하는 지폐와 비슷하다고 생각하셔도 좋습니다. &lt;/li&gt;&lt;li&gt;이후 당신의 지갑은 "마스터노드"라고 불리는 네트워크의 특수 구성 소프트웨어 노드에 요청을 전송합니다. 이로써 이들 마스터노드는 당신이 특정 금액을 믹싱하고자 한다는 정보를 수신합니다. 마스터노드에는 당신의 개인 정보를 식별할 수 있는 어떤 내용도 전송되지 않습니다. 즉 당신이 "누구"인지 알 수 있는 방법은 없습니다.&lt;/li&gt;&lt;li&gt; 두 명의 다른 사람이 비슷한 메시지를 보내어 그들 역시 같은 단위의 금액을 믹싱하고 싶다는 정보를 나타내면 믹싱 세션이 시작됩니다. 마스터노드는 이들 입력값을 믹싱하여 세 사용자의 지갑에 변환된 입력을 지불하도록 지시합니다. 당신의 지갑은 해당 입력값을 곧바로 스스로에게 지불하지만, 지불되는 주소는 '변경 주소'라고 불리는 다른 주소로 보내집니다.&lt;/li&gt;&lt;li&gt; 당신의 자금을 완전히 가리기 위해서, 당신의 지갑은 이 과정을 각 대시 분할 단위만큼 여러번 반복합니다. 이러한 반복을 ‘라운드’라고 부릅니다. 프라이빗샌드의 각 라운드가 진행됨에 따라 당신이 송금하고자 하는 자금의 출처는 기하급수적으로 높은 수준으로 가려집니다.&lt;/li&gt;&lt;li&gt; 이 믹싱 과정은 당신이 개입할 필요 없이 백그라운드에서 진행됩니다. 당신이 거래를 원하는 경우, 당신의 자금은 이미 믹싱을 거친 것입니다. 추가적으로 대기할 필요 역시 없습니다. &lt;/li&gt;&lt;/ol&gt;&lt;hr&gt;&lt;b&gt;중요:&lt;/b&gt; 당신의 지갑은 1,000개의 ‘변경 주소’만을 가지고 있습니다. 믹싱을 실행할 때마다 최대 9개의 주소가 사용됩니다. 이는 곧 이들 1000개의 주소가 약 100개의 믹싱 작업을 위해 사용될 수 있다는 것을 의미합니다. 전체 1,000개의 주소 중 900개가 사용된 경우 당신의 지갑은 더 많은 주소를 만들어야 합니다. 그러나 이 작업은 당신이 자동 백업을 설정한 경우에만 수행됩니다. &lt;br&gt;따라서 백업이 비활성화된 사용자는 %1 역시 비활성화 됩니다. &lt;hr&gt;더 많은 정보를 위해서는 &lt;a style="%2" href="%3"&gt;%1 문서&lt;/a&gt;를 참조하세요.</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -1315,6 +1351,54 @@
         <translation>확인되지 않은 잔액 사용을 중지하는 경우, 거래로부터 발생하는 잔액은 &lt;br/&gt;최소 한 번의 거래 확인이 발생할 때 까지 사용할 수 없습니다.&lt;br/&gt;이는 또한 당신의 잔고가 계산되는 방식에 영향을 미칠 수 있습니다.</translation>
     </message>
     <message>
+        <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
+        <translation>개요 화면의 믹싱 인터페이스를 보여주고, 완전히 믹싱된 코인만을 지불에 사용할 수 있도록 하는 추가적 스크린을 나타냅니다. &lt;br/&gt;더 많은 설정을 담은 새로운 탭이 이 대화창에 나타나게 되니, 코인을 믹싱하기 전 해당 내용을 확인하십시오.</translation>
+    </message>
+    <message>
+        <source>Show additional information and buttons on overview screen.</source>
+        <translation>개요 화면에 추가적 정보와 버튼을 보여줍니다.</translation>
+    </message>
+    <message>
+        <source>Enable advanced interface</source>
+        <translation>향상된 인터페이스를 활성화합니다</translation>
+    </message>
+    <message>
+        <source>Show system popups for mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
+        <translation>모든 다른 유형의 거래와 마찬가지로&lt;br/&gt;믹싱 거래를 위한 시스템 팝업을 보여줍니다</translation>
+    </message>
+    <message>
+        <source>Show popups for mixing transactions</source>
+        <translation>믹싱 거래를 위한 팝업을 보여줍니다</translation>
+    </message>
+    <message>
+        <source>Show warning dialog when the wallet has very low number of keys left.</source>
+        <translation>지갑에 적은 수의 키가 남아있는 경우 경고 대화창을 보여줍니다</translation>
+    </message>
+    <message>
+        <source>Warn if the wallet is running out of keys</source>
+        <translation>지갑에 키가 부족한 경우 경고합니다</translation>
+    </message>
+    <message>
+        <source>Whether to use experimental mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
+        <translation>블록당 다양한 믹싱 세션이 있는 실험 모드를 사용할 지 여부를 결정합니다. &lt;br/&gt;참고: 이 기능을 사용할 때는 주의해야 합니다.&lt;br/&gt;언제나 안전한 장소에 최신 지갑 (자동) 백업이 되어 있는 지 확인하세요!</translation>
+    </message>
+    <message>
+        <source>Enable &amp;multi-session</source>
+        <translation>멀티 세션 활성화(&amp;m)</translation>
+    </message>
+    <message>
+        <source>Mixing rounds</source>
+        <translation>믹싱 라운드</translation>
+    </message>
+    <message>
+        <source>This amount acts as a threshold to turn off mixing once it's reached.</source>
+        <translation>이 금액은 도달 시 믹싱을 종료하기 위한 한계점으로 작동합니다.</translation>
+    </message>
+    <message>
+        <source>Target balance</source>
+        <translation>타깃 잔고</translation>
+    </message>
+    <message>
         <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>라우터에서 대시 코어 클라이언트를 자동으로 엽니다. 이 기능은 당신의 라우터가 UPnP를 지원하고 해당 기능이 작동하는 경우에만 가능합니다.</translation>
     </message>
@@ -1493,6 +1577,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>취소(&amp;C)</translation>
     </message>
     <message>
+        <source>Enable %1 features</source>
+        <translation>%1 기능 활성화</translation>
+    </message>
+    <message>
         <source>default</source>
         <translation>기본값</translation>
     </message>
@@ -1639,6 +1727,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>No inputs detected</source>
         <translation>입력이 감지되지 않습니다.</translation>
     </message>
+    <message>
+        <source>%1 Balance</source>
+        <translation>%1 잔고</translation>
+    </message>
     <message numerus="yes">
         <source>%n Rounds</source>
         <translation><numerusform>&amp;n 라운드</numerusform></translation>
@@ -1674,6 +1766,26 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>keys left: %1</source>
         <translation>남은 키의 수: %1</translation>
+    </message>
+    <message>
+        <source>Start %1</source>
+        <translation>%1 시작</translation>
+    </message>
+    <message>
+        <source>If you don't want to see internal %1 fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
+        <translation>내부 %1 수수료/거래를 보지 않으려면 "거래" 탭의 유형에서 "자주 사용된 항목"을 선택하세요. </translation>
+    </message>
+    <message>
+        <source>%1 requires at least %2 to use.</source>
+        <translation>%1 를 사용하기 위해서는 최소한 %2가 필요합니다.</translation>
+    </message>
+    <message>
+        <source>Wallet is locked and user declined to unlock. Disabling %1.</source>
+        <translation>지갑이 잠겨있으며 사용자가 잠금 해제를 거으며 사용자가 잠금 해제를 거절했습니다. %1를 비활성화 합니다.</translation>
+    </message>
+    <message>
+        <source>Stop %1</source>
+        <translation>%1 정지</translation>
     </message>
     <message>
         <source>Disabled</source>
@@ -1729,6 +1841,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>URI handling</source>
         <translation>URI 처리</translation>
+    </message>
+    <message>
+        <source>'dash://' is not a valid URI. Use 'dash:' instead.</source>
+        <translation>'dash://' 는 유효하지 않은 URI 입니다. 'dash:' 를 사용하세요.</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -1891,6 +2007,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Appearance Setup</source>
         <translation>외관 설정</translation>
+    </message>
+    <message>
+        <source>Please choose your preferred settings for the appearance of %1</source>
+        <translation>%1의 외관을 위해 원하는 설정을 선택하세요.</translation>
     </message>
     <message>
         <source>This can also be adjusted later in the "Appearance" tab of the preferences.</source>
@@ -2212,6 +2332,22 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>동기화 된 블록</translation>
     </message>
     <message>
+        <source>Rescan blockchain files 1</source>
+        <translation>블록체인 파일 1 재스캔</translation>
+    </message>
+    <message>
+        <source>Rescan blockchain files 2</source>
+        <translation>블록체인 파일 2 재스캔</translation>
+    </message>
+    <message>
+        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>-rescan=1: 지갑 생성시부터 누락된 지갑 거래를 위해 블록체인을 다시 스캔합니다.</translation>
+    </message>
+    <message>
+        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
+        <translation>-rescan=2: 제네시스 블록에서부터 누락된 지갑 거래를 위해 블록체인을 다시 스캔합니다.</translation>
+    </message>
+    <message>
         <source>Wallet Path</source>
         <translation>지갑 경로</translation>
     </message>
@@ -2250,6 +2386,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Reset</source>
         <translation>&amp;재설정(&amp;R)</translation>
+    </message>
+    <message>
+        <source>Node Type</source>
+        <translation>노드 유형</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -2448,8 +2588,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>아니오</translation>
     </message>
     <message>
+        <source>Regular</source>
+        <translation>일반</translation>
+    </message>
+    <message>
         <source>Masternode</source>
         <translation>마스터노드</translation>
+    </message>
+    <message>
+        <source>Verified Masternode</source>
+        <translation>인증된 마스터노드</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -2840,8 +2988,24 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&lt;b&gt;(%2 중 %1 입력값 표시됨)&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>S&amp;end mixed funds</source>
+        <translation>믹싱된 자금 보내기(&amp;e)</translation>
+    </message>
+    <message>
+        <source>Confirm the %1 send action</source>
+        <translation>%1 전송 액션 확인</translation>
+    </message>
+    <message>
+        <source>%1 funds only</source>
+        <translation>%1 자금만</translation>
+    </message>
+    <message>
         <source>any available funds</source>
         <translation>이용이 가능한 모든 자금</translation>
+    </message>
+    <message>
+        <source>(%1 transactions have higher fees usually due to no change output being allowed)</source>
+        <translation>(%1 거래는 잔돈 아웃풋이 허용되지 않아 보다 높은 수수료가 책정됩니다)</translation>
     </message>
     <message>
         <source>Transaction size: %1</source>
@@ -2854,6 +3018,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message numerus="yes">
         <source>This transaction will consume %n input(s)</source>
         <translation><numerusform>이 거래는 %n 입력값을 소모합니다</numerusform></translation>
+    </message>
+    <message>
+        <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
+        <translation>경고: %1를 %2 혹은 그 이상의 인풋으로 이용하게 되면 당신의 프라이버시가 침해될 수 있어 권장하지 않습니다.</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3245,6 +3413,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%1 확인</translation>
     </message>
     <message>
+        <source>locked via ChainLocks</source>
+        <translation>체인락스로 잠김</translation>
+    </message>
+    <message>
         <source>verified via InstantSend</source>
         <translation>인스턴트샌드를 통해 검증됨</translation>
     </message>
@@ -3439,12 +3611,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>인스턴트샌드를 통해 검증됨</translation>
     </message>
     <message>
+        <source>locked via ChainLocks</source>
+        <translation>체인락스로 잠김</translation>
+    </message>
+    <message>
         <source>Received with</source>
         <translation>받은 주소</translation>
     </message>
     <message>
         <source>Received from</source>
         <translation>보낸 주소</translation>
+    </message>
+    <message>
+        <source>Received via %1</source>
+        <translation>%1을 통해 받음</translation>
     </message>
     <message>
         <source>Sent to</source>
@@ -3457,6 +3637,26 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Mined</source>
         <translation>채굴</translation>
+    </message>
+    <message>
+        <source>%1 Mixing</source>
+        <translation>%1 믹싱</translation>
+    </message>
+    <message>
+        <source>%1 Collateral Payment</source>
+        <translation>%1 콜래트럴 지불</translation>
+    </message>
+    <message>
+        <source>%1 Make Collateral Inputs</source>
+        <translation>%1 콜래트럴 입력값 생성</translation>
+    </message>
+    <message>
+        <source>%1 Create Denominations</source>
+        <translation>%1 분할 단위 생성</translation>
+    </message>
+    <message>
+        <source>%1 Send</source>
+        <translation>%1 전송</translation>
     </message>
     <message>
         <source>watch-only</source>
@@ -3536,6 +3736,26 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Sent to</source>
         <translation>보낸 주소</translation>
+    </message>
+    <message>
+        <source>%1 Send</source>
+        <translation>%1 전송</translation>
+    </message>
+    <message>
+        <source>%1 Make Collateral Inputs</source>
+        <translation>%1 콜래트럴 입력값 생성</translation>
+    </message>
+    <message>
+        <source>%1 Create Denominations</source>
+        <translation>%1 분할 단위 생성</translation>
+    </message>
+    <message>
+        <source>%1 Mixing</source>
+        <translation>%1 믹싱</translation>
+    </message>
+    <message>
+        <source>%1 Collateral Payment</source>
+        <translation>%1 콜래트럴 지불</translation>
     </message>
     <message>
         <source>To yourself</source>
@@ -3985,6 +4205,18 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>임의의 마스터노드를 찾을 수 없습니다.</translation>
     </message>
     <message>
+        <source>%s can't be lower than %s</source>
+        <translation>%s는 %s보다 작을 수 없습니다</translation>
+    </message>
+    <message>
+        <source>%s is idle.</source>
+        <translation>%s를 사용되지 않고 있습니다.</translation>
+    </message>
+    <message>
+        <source>%s request incomplete: %s</source>
+        <translation>%s 요청이 완료되지 않았습니다: %s</translation>
+    </message>
+    <message>
         <source>Can't mix while sync in progress.</source>
         <translation>동기화가 진행되는 동안 믹싱할 수 없습니다.</translation>
     </message>
@@ -4325,6 +4557,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%s 개발자</translation>
     </message>
     <message>
+        <source>%s uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation>%s는 송금을 위하여 정확한 분할 단위 금액을 사용합니다. 단순히 더 많은 코인을 믹싱함으로써 문제를 해결할 수 있을 지도 모릅니다.</translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>%s 데이터 디렉토리에 잠금을 설정 할 수 없습니다. %s가 이미 실행 중인 것으로 보입니다.</translation>
     </message>
@@ -4405,6 +4641,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%s주소: '%s'를 확인할 수 없습니다.</translation>
     </message>
     <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation>'%s' 데이터 디렉토리를 생성할 수 없습니다: 허용 내역을 확인하십시오.</translation>
+    </message>
+    <message>
         <source>Change index out of range</source>
         <translation>범위 밖의 인덱스 변경</translation>
     </message>
@@ -4437,12 +4677,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>체인 상태 데이터베이스 업그레이드 중 오류가 발생했습니다.</translation>
     </message>
     <message>
+        <source>Error: failed to add socket to kqueuefd (kevent returned error %s)</source>
+        <translation>오류: kqeuefd에 소켓을 추가하는 데 실패하였습니다 (kevent 반환 오류 %s)</translation>
+    </message>
+    <message>
         <source>Failed to find mixing queue to join</source>
         <translation>참여할 수 있는 믹싱 대기열을 찾는 데 실패하였습니다.</translation>
     </message>
     <message>
         <source>Failed to start a new mixing queue</source>
         <translation>새로운 믹싱 대기열을 시작하는 데 실패하였습니다.</translation>
+    </message>
+    <message>
+        <source>Incorrect -rescan mode, falling back to default value</source>
+        <translation>잘못된 -rescan 모드, 기본 값으로 돌아갑니다</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
@@ -4497,6 +4745,18 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>거래에 서명하는 데 실패하였습니다.</translation>
     </message>
     <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>지정한 데이터 디렉토리 "%s"가 존재하지 않습니다.</translation>
+    </message>
+    <message>
+        <source>Last queue was created too recently.</source>
+        <translation>지난 큐가 너무 최근 생성되었습니다.</translation>
+    </message>
+    <message>
+        <source>Last successful action was too recent.</source>
+        <translation>지난 성공적 액션이 너무 최신입니다.</translation>
+    </message>
+    <message>
         <source>Starting network threads...</source>
         <translation>네트워크 스레드 시작중...</translation>
     </message>
@@ -4541,6 +4801,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>이 컴퓨터의 %s에 바인딩할 수 없습니다 (바인딩 과정에 %s 오류 발생)</translation>
     </message>
     <message>
+        <source>Unable to locate enough mixed funds for this transaction.</source>
+        <translation>이 거래에 필요한 믹싱 자금을 찾을 수 없습니다.</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough non-denominated funds for this transaction.</source>
+        <translation>이 거래에 필요한 비 분할단위 자금을 찾을 수 없습니다.</translation>
+    </message>
+    <message>
         <source>Unable to sign spork message, wrong key?</source>
         <translation>스포크 메시지에 사인할 수 없습니다. 키가 잘못된 것일 수 있습니다.</translation>
     </message>
@@ -4571,6 +4839,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Warning</source>
         <translation>경고</translation>
+    </message>
+    <message>
+        <source>Warning: %s is deprecated, please use %s instead</source>
+        <translation>경고: %s는 더 이상 사용되지 않습니다. %s를 이용하십시오.</translation>
+    </message>
+    <message>
+        <source>Warning: can't use %s and %s together, will prefer %s</source>
+        <translation>경고: %s와 %s를 함께 사용할 수 ㅇ벗습니다. %s를 우선 사용합니다.</translation>
+    </message>
+    <message>
+        <source>Warning: incorrect parameter %s, path must exist! Using default path.</source>
+        <translation>경고: 잘못된 %s 파라미터입니다. 경로가 필요합니다! 디폴트 경로를 이용합니다.</translation>
     </message>
     <message>
         <source>You are starting with governance validation disabled.</source>

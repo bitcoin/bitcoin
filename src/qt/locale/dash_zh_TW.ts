@@ -247,10 +247,6 @@
         <translation>錢包已加密</translation>
     </message>
     <message>
-        <source>%1 will close now to finish the encryption process. Remember that encrypting your wallet cannot fully protect your funds from being stolen by malware infecting your computer.</source>
-        <translation>%1 現在要關閉，好完成加密程序。請注意，加密錢包不能完全防止入侵你的電腦的惡意程式偷取達世幣。</translation>
-    </message>
-    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. Previous backups of the unencrypted wallet file contain the same HD seed and still have full access to all your funds just like the new, encrypted wallet.</source>
         <translation>重要: 請改用新產生有加密的錢包檔，來取代舊錢包檔的備份。先前未加密錢包文件包含相同的HD種子，並且仍然可以像新的加密錢包一樣動用所有資金。</translation>
     </message>
@@ -394,6 +390,10 @@
     <message>
         <source>&amp;About %1</source>
         <translation>關於%1(&amp;A)</translation>
+    </message>
+    <message>
+        <source>Send %1 funds to a Dash address</source>
+        <translation>發送 %1 的款項到一個達世幣位址</translation>
     </message>
     <message>
         <source>Modify configuration options for %1</source>
@@ -564,6 +564,14 @@
     <message>
         <source>&amp;File</source>
         <translation>檔案(&amp;F)</translation>
+    </message>
+    <message>
+        <source>%1 &amp;information</source>
+        <translation>%1 (&amp;I)資訊</translation>
+    </message>
+    <message>
+        <source>Show the %1 basic information</source>
+        <translation>顯示 %1 的基本信息</translation>
     </message>
     <message>
         <source>&amp;Settings</source>
@@ -799,6 +807,10 @@
         <translation>收款位址</translation>
     </message>
     <message>
+        <source>Mixing Rounds</source>
+        <translation>混合循環次數</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>日期</translation>
     </message>
@@ -889,6 +901,22 @@
     <message>
         <source>Some coins were unselected because they do not have enough mixing rounds.</source>
         <translation>某些資金被取消選取，因為它們沒有足夠的混合次數。</translation>
+    </message>
+    <message>
+        <source>Show all coins</source>
+        <translation>顯示所有資金</translation>
+    </message>
+    <message>
+        <source>Hide %1 coins</source>
+        <translation>隱藏 %1 的資金</translation>
+    </message>
+    <message>
+        <source>Show all %1 coins</source>
+        <translation>顯示所有 %1 的資金</translation>
+    </message>
+    <message>
+        <source>Show spendable coins only</source>
+        <translation>只顯示可花費的資金</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -999,7 +1027,15 @@
         <source>Command-line options</source>
         <translation>命令列選項</translation>
     </message>
-    </context>
+    <message>
+        <source>%1 information</source>
+        <translation>%1 資訊</translation>
+    </message>
+    <message>
+        <source>&lt;h3&gt;%1 Basics&lt;/h3&gt; %1 gives you true financial privacy by obscuring the origins of your funds. All the Dash in your wallet is comprised of different "inputs" which you can think of as separate, discrete coins.&lt;br&gt; %1 uses an innovative process to mix your inputs with the inputs of two or more other people, without having your coins ever leave your wallet. You retain control of your money at all times.&lt;hr&gt; &lt;b&gt;The %1 process works like this:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;%1 begins by breaking your transaction inputs down into standard denominations. These denominations are 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH and 10 DASH -- sort of like the paper money you use every day.&lt;/li&gt; &lt;li&gt;Your wallet then sends requests to specially configured software nodes on the network, called "masternodes." These masternodes are informed then that you are interested in mixing a certain denomination. No identifiable information is sent to the masternodes, so they never know "who" you are.&lt;/li&gt; &lt;li&gt;When two or more other people send similar messages, indicating that they wish to mix the same denomination, a mixing session begins. The masternode mixes up the inputs and instructs all three users' wallets to pay the now-transformed input back to themselves. Your wallet pays that denomination directly to itself, but in a different address (called a change address).&lt;/li&gt; &lt;li&gt;In order to fully obscure your funds, your wallet must repeat this process a number of times with each denomination. Each time the process is completed, it's called a "round." Each round of %1 makes it exponentially more difficult to determine where your funds originated.&lt;/li&gt; &lt;li&gt;This mixing process happens in the background without any intervention on your part. When you wish to make a transaction, your funds will already be mixed. No additional waiting is required.&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;&lt;b&gt;IMPORTANT:&lt;/b&gt; Your wallet only contains 1000 of these "change addresses." Every time a mixing event happens, up to 9 of your addresses are used up. This means those 1000 addresses last for about 100 mixing events. When 900 of them are used, your wallet must create more addresses. It can only do this, however, if you have automatic backups enabled.&lt;br&gt; Consequently, users who have backups disabled will also have %1 disabled. &lt;hr&gt;For more information, see the &lt;a style="%2" href="%3"&gt;%1 documentation&lt;/a&gt;.</source>
+        <translation>&lt;h3&gt;%1 基礎知識&lt;/h3&gt; %1 通過隱藏您的資金來源為您提供真正的財務隱私。您的錢包中所有的達世幣都由不同的“輸入”組成，您可以將其視為分開的離散硬幣。&lt;br&gt; %1 使用創新的方法將您的輸入與其他兩個人的輸入相結合，而過程中不會讓您的達世幣離開您的錢包。每時每刻，您仍然控制著您的錢。&lt;hr&gt; &lt;b&gt; %1 的運作原理如下:&lt;/b&gt;&lt;ol type="1"&gt; &lt;li&gt;%1 首先將您的交易分柝成多個標準面額的交易。這些標準面額分別為 0.001 DASH, 0.01 DASH, 0.1 DASH, 1 DASH 和 10 DASH -- 有點像您每天使用的紙幣。&lt;/li&gt; &lt;li&gt;您的錢包然後發送請求到網絡上有專門配置的軟件節點，稱為“主節點”。這些主節點會收到您希望混合一些資金的通知。沒有可識別的信息發送到主節點，所以他們永遠不會知道你是"誰"。&lt;/li&gt; &lt;li&gt;當另外兩個人發送類似的消息時，表示希望混合相同的面額的話，混合會話就會開始。相關的主節點會混合這些輸入，並指示所有三個用戶的錢包將已經轉換了輸入的交易支付給自己。你的錢包直接支付給自己，但是付給不同的位址 (稱之為找零位址)。&lt;/li&gt; &lt;li&gt;為了完全掩蓋您的資金來源，您的錢包必須以每個面額來重複此過程數次。每次這個過程完成後，都稱之為一個 "循環"。每個循環的 %1 都會令確定您的資金來源的工作倍加困難。&lt;/li&gt; &lt;li&gt;這種混合過程在後台進行，而不需要您進行任何操作。當您想進行交易時，您的資金將已被匿名處理。不需再花額外的時間等待。&lt;/li&gt; &lt;/ol&gt; &lt;hr&gt;重要:&lt;/b&gt; 您的錢包只能擁有1000個"找零位址。" 每次混合事件發生時，最多會使用9個找零位址。這意味著這1000個位址可以容許100次的混合事件。當其的中900個已經被使用後，您的錢包必須創建更多的位址。如果您啟用了自動備份，則只能夠這樣做。&lt;br&gt; 因此，禁用備份的用戶也將禁用 %1。&lt;hr&gt;如欲了解更多信息，請參閱 &lt;a style="%2" href="%3"&gt;%1 的文檔&lt;/a&gt;.</translation>
+    </message>
+</context>
 <context>
     <name>Intro</name>
     <message>
@@ -1315,6 +1351,54 @@
         <translation>如果你關掉「可以花還沒確認的零錢」，那麼交易中找零的零錢&lt;br/&gt;就必須要等交易至少有一次確認後，才能夠使用。&lt;br/&gt;這也會影響餘額的計算方式。</translation>
     </message>
     <message>
+        <source>Show mixing interface on Overview screen and reveal an additional screen which allows to spend fully mixed coins only.&lt;br/&gt;A new tab with more settings will also appear in this dialog, please make sure to check them before mixing your coins.</source>
+        <translation>在概覽屏幕上顯示混合界面，並顯示一個僅允許使用完全混合了的資金的屏幕。&lt;br/&gt;該對話框中還將出現一個具有更多設定的新標籤，請確保在混合資金之前檢查這些設定。</translation>
+    </message>
+    <message>
+        <source>Show additional information and buttons on overview screen.</source>
+        <translation>在概述屏幕上顯示其他信息和按鈕。</translation>
+    </message>
+    <message>
+        <source>Enable advanced interface</source>
+        <translation>啟用進階界面</translation>
+    </message>
+    <message>
+        <source>Show system popups for mixing transactions&lt;br/&gt;just like for all other transaction types.</source>
+        <translation>顯示混合交易的系統彈出窗口&lt;br/&gt;就像所有其他交易類型一樣。</translation>
+    </message>
+    <message>
+        <source>Show popups for mixing transactions</source>
+        <translation>顯示混合交易的彈出式窗口</translation>
+    </message>
+    <message>
+        <source>Show warning dialog when the wallet has very low number of keys left.</source>
+        <translation>當檢測到錢包尚餘非常少的公鑰時，就顯示警告對話框。</translation>
+    </message>
+    <message>
+        <source>Warn if the wallet is running out of keys</source>
+        <translation>如果錢包快要用完公鑰就發出警告</translation>
+    </message>
+    <message>
+        <source>Whether to use experimental mode with multiple mixing sessions per block.&lt;br/&gt;Note: You must use this feature carefully.&lt;br/&gt;Make sure you always have recent wallet (auto)backup in a safe place!</source>
+        <translation>是否使用實驗性質的模式，當中每個區塊都會有多個混合會話。注意 : 您必須小心使用此功能。&lt;br/&gt;確保你總是有最近的錢包 (自動) 備份在一個安全的地方！</translation>
+    </message>
+    <message>
+        <source>Enable &amp;multi-session</source>
+        <translation>啟用多重會話的發送</translation>
+    </message>
+    <message>
+        <source>Mixing rounds</source>
+        <translation>混合循環次數</translation>
+    </message>
+    <message>
+        <source>This amount acts as a threshold to turn off mixing once it's reached.</source>
+        <translation>此金額為關閉混合交易的門檻。</translation>
+    </message>
+    <message>
+        <source>Target balance</source>
+        <translation>目標結餘</translation>
+    </message>
+    <message>
         <source>Automatically open the Dash Core client port on the router. This only works when your router supports UPnP and it is enabled.</source>
         <translation>自動在路由器上開放達世幣核心客戶端的通訊埠。只有在你的路由器支援且開啓「通用即插即用」協定(UPnP)時才有作用。</translation>
     </message>
@@ -1493,6 +1577,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>取消(&amp;C)</translation>
     </message>
     <message>
+        <source>Enable %1 features</source>
+        <translation>啟用 %1 功能</translation>
+    </message>
+    <message>
         <source>default</source>
         <translation>預設值</translation>
     </message>
@@ -1639,6 +1727,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <source>No inputs detected</source>
         <translation>沒有檢測到任何輸入</translation>
     </message>
+    <message>
+        <source>%1 Balance</source>
+        <translation>%1 結餘</translation>
+    </message>
     <message numerus="yes">
         <source>%n Rounds</source>
         <translation><numerusform>%n 次循環</numerusform></translation>
@@ -1674,6 +1766,26 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>keys left: %1</source>
         <translation>餘下鑰: %1</translation>
+    </message>
+    <message>
+        <source>Start %1</source>
+        <translation>啟動 %1</translation>
+    </message>
+    <message>
+        <source>If you don't want to see internal %1 fees/transactions select "Most Common" as Type on the "Transactions" tab.</source>
+        <translation>如果你不希望看到內部 %1 手續費/交易，請在"交易"種類標籤中選擇 "最常用的" 標籤。</translation>
+    </message>
+    <message>
+        <source>%1 requires at least %2 to use.</source>
+        <translation>%1 要求至少有 %2 才能使用。</translation>
+    </message>
+    <message>
+        <source>Wallet is locked and user declined to unlock. Disabling %1.</source>
+        <translation>錢包被鎖定，用戶拒絕解鎖。正在停用 %1。</translation>
+    </message>
+    <message>
+        <source>Stop %1</source>
+        <translation>停用 %1</translation>
     </message>
     <message>
         <source>Disabled</source>
@@ -1729,6 +1841,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>URI handling</source>
         <translation>URI 處理</translation>
+    </message>
+    <message>
+        <source>'dash://' is not a valid URI. Use 'dash:' instead.</source>
+        <translation>'dash://' 不是有效的URI。請用'dash:' 來代替。</translation>
     </message>
     <message>
         <source>Payment request fetch URL is invalid: %1</source>
@@ -2216,6 +2332,22 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>己同步的區塊</translation>
     </message>
     <message>
+        <source>Rescan blockchain files 1</source>
+        <translation>重新掃描區塊鏈文件 1</translation>
+    </message>
+    <message>
+        <source>Rescan blockchain files 2</source>
+        <translation>重新掃描區塊鏈文件 2</translation>
+    </message>
+    <message>
+        <source>-rescan=1: Rescan the block chain for missing wallet transactions starting from wallet creation time.</source>
+        <translation>-rescan=1: 從錢包創建時間開始，重新掃描區塊鏈以尋找漏掉的錢包交易。</translation>
+    </message>
+    <message>
+        <source>-rescan=2: Rescan the block chain for missing wallet transactions starting from genesis block.</source>
+        <translation>-rescan=2: 從創世區塊開始重新掃描區塊鏈以尋找漏掉的錢包交易。</translation>
+    </message>
+    <message>
         <source>Wallet Path</source>
         <translation>錢包路徑</translation>
     </message>
@@ -2254,6 +2386,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>&amp;Reset</source>
         <translation>重置(&amp;R)</translation>
+    </message>
+    <message>
+        <source>Node Type</source>
+        <translation>節點種類</translation>
     </message>
     <message>
         <source>PoSe Score</source>
@@ -2452,8 +2588,16 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>不是</translation>
     </message>
     <message>
+        <source>Regular</source>
+        <translation>正常</translation>
+    </message>
+    <message>
         <source>Masternode</source>
         <translation>主節點</translation>
+    </message>
+    <message>
+        <source>Verified Masternode</source>
+        <translation>已驗證的主節點</translation>
     </message>
     <message>
         <source>Unknown</source>
@@ -2844,8 +2988,24 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>&lt;b&gt;(在 %2 中 %1 個項目顯示出來)&lt;/b&gt;</translation>
     </message>
     <message>
+        <source>S&amp;end mixed funds</source>
+        <translation>(&amp;e) 發送已經混合的資金</translation>
+    </message>
+    <message>
+        <source>Confirm the %1 send action</source>
+        <translation>確認 %1 的發送動作</translation>
+    </message>
+    <message>
+        <source>%1 funds only</source>
+        <translation>只限 %1 的資金</translation>
+    </message>
+    <message>
         <source>any available funds</source>
         <translation>任何可用資金</translation>
+    </message>
+    <message>
+        <source>(%1 transactions have higher fees usually due to no change output being allowed)</source>
+        <translation>(由於不允許更改輸出的關係，%1 的交易手續費用會較高)</translation>
     </message>
     <message>
         <source>Transaction size: %1</source>
@@ -2858,6 +3018,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message numerus="yes">
         <source>This transaction will consume %n input(s)</source>
         <translation><numerusform>此交易將消耗 %n 個輸入</numerusform></translation>
+    </message>
+    <message>
+        <source>Warning: Using %1 with %2 or more inputs can harm your privacy and is not recommended</source>
+        <translation>警告: 在 %1 中使用 %2 或更多的輸入會損害您的隱私，因此不建議使用</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -3249,6 +3413,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>確認 %1 次</translation>
     </message>
     <message>
+        <source>locked via ChainLocks</source>
+        <translation>通過 ChainLocks 鎖定的</translation>
+    </message>
+    <message>
         <source>verified via InstantSend</source>
         <translation>經即時到帳系統核實</translation>
     </message>
@@ -3443,12 +3611,20 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>經即時到帳系統核實</translation>
     </message>
     <message>
+        <source>locked via ChainLocks</source>
+        <translation>通過 ChainLocks 鎖定的</translation>
+    </message>
+    <message>
         <source>Received with</source>
         <translation>收款</translation>
     </message>
     <message>
         <source>Received from</source>
         <translation>收款來自</translation>
+    </message>
+    <message>
+        <source>Received via %1</source>
+        <translation>經由 %1 收到的</translation>
     </message>
     <message>
         <source>Sent to</source>
@@ -3461,6 +3637,26 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Mined</source>
         <translation>開採所得</translation>
+    </message>
+    <message>
+        <source>%1 Mixing</source>
+        <translation>%1 混合中</translation>
+    </message>
+    <message>
+        <source>%1 Collateral Payment</source>
+        <translation>%1 抵押品付款</translation>
+    </message>
+    <message>
+        <source>%1 Make Collateral Inputs</source>
+        <translation>用作 %1 抵押品的輸入</translation>
+    </message>
+    <message>
+        <source>%1 Create Denominations</source>
+        <translation>%1 所產生的除名資金</translation>
+    </message>
+    <message>
+        <source>%1 Send</source>
+        <translation>%1 發送</translation>
     </message>
     <message>
         <source>watch-only</source>
@@ -3540,6 +3736,26 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Sent to</source>
         <translation>付款給</translation>
+    </message>
+    <message>
+        <source>%1 Send</source>
+        <translation>%1 發送</translation>
+    </message>
+    <message>
+        <source>%1 Make Collateral Inputs</source>
+        <translation>用作 %1 抵押品的輸入</translation>
+    </message>
+    <message>
+        <source>%1 Create Denominations</source>
+        <translation>%1 所產生的除名資金</translation>
+    </message>
+    <message>
+        <source>%1 Mixing</source>
+        <translation>%1 混合中</translation>
+    </message>
+    <message>
+        <source>%1 Collateral Payment</source>
+        <translation>%1 抵押品付款</translation>
     </message>
     <message>
         <source>To yourself</source>
@@ -3989,6 +4205,18 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>找不到隨機主節點。</translation>
     </message>
     <message>
+        <source>%s can't be lower than %s</source>
+        <translation>%s 付款額不能低於 %s</translation>
+    </message>
+    <message>
+        <source>%s is idle.</source>
+        <translation>%s 處於閒置狀態。</translation>
+    </message>
+    <message>
+        <source>%s request incomplete: %s</source>
+        <translation>%s 的相關請求未完成: %s</translation>
+    </message>
+    <message>
         <source>Can't mix while sync in progress.</source>
         <translation>在同步進行中時不能進行混合。</translation>
     </message>
@@ -4329,6 +4557,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>%s 開發人員</translation>
     </message>
     <message>
+        <source>%s uses exact denominated amounts to send funds, you might simply need to mix some more coins.</source>
+        <translation>%s 需要使用準確的已除名資金來發送，你可能需要再混合一資金來達到所需要求。</translation>
+    </message>
+    <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
         <translation>沒辦法鎖定資料目錄 %s。%s 可能已經在執行了。</translation>
     </message>
@@ -4409,6 +4641,10 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>沒辦法解析 -%s 參數指定的位址: '%s'</translation>
     </message>
     <message>
+        <source>Cannot write to data directory '%s'; check permissions.</source>
+        <translation>無法寫入數據到目錄 '%s'; 請檢查相關權限。</translation>
+    </message>
+    <message>
         <source>Change index out of range</source>
         <translation>找零的索引值超出範圍</translation>
     </message>
@@ -4451,6 +4687,10 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Failed to start a new mixing queue</source>
         <translation>無法開始一個新的混合隊列</translation>
+    </message>
+    <message>
+        <source>Incorrect -rescan mode, falling back to default value</source>
+        <translation>不正確的 -rescan 模式，恢復到預設值</translation>
     </message>
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
@@ -4505,6 +4745,18 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>簽署交易失敗</translation>
     </message>
     <message>
+        <source>Specified blocks directory "%s" does not exist.</source>
+        <translation>指定的區塊目錄 "%s" 不存在。</translation>
+    </message>
+    <message>
+        <source>Last queue was created too recently.</source>
+        <translation>距離上一個隊列的時間過短。</translation>
+    </message>
+    <message>
+        <source>Last successful action was too recent.</source>
+        <translation>距離上一次成功執行的時間過短。</translation>
+    </message>
+    <message>
         <source>Starting network threads...</source>
         <translation>正在啟動網路執行緒...</translation>
     </message>
@@ -4549,6 +4801,14 @@ https://www.transifex.com/projects/p/dash/</translation>
         <translation>無法和這台電腦上的 %s 繫結(回傳錯誤 %s)</translation>
     </message>
     <message>
+        <source>Unable to locate enough mixed funds for this transaction.</source>
+        <translation>無法為此交易找到足夠的已混合資金。</translation>
+    </message>
+    <message>
+        <source>Unable to locate enough non-denominated funds for this transaction.</source>
+        <translation>無法為此交易找到足夠的未除名資金。</translation>
+    </message>
+    <message>
         <source>Unable to sign spork message, wrong key?</source>
         <translation>無法簽署叉勺訊息訊息，錯誤的密鑰？</translation>
     </message>
@@ -4579,6 +4839,18 @@ https://www.transifex.com/projects/p/dash/</translation>
     <message>
         <source>Warning</source>
         <translation>警告</translation>
+    </message>
+    <message>
+        <source>Warning: %s is deprecated, please use %s instead</source>
+        <translation>警告: %s 已被淘汰，請改用 %s </translation>
+    </message>
+    <message>
+        <source>Warning: can't use %s and %s together, will prefer %s</source>
+        <translation>警告: 不能同時使用 %s 和 %s，將會把 %s 作為首選</translation>
+    </message>
+    <message>
+        <source>Warning: incorrect parameter %s, path must exist! Using default path.</source>
+        <translation>警告 : 不正確的參數 %s，路徑必須存在!  請使用預設路徑。</translation>
     </message>
     <message>
         <source>You are starting with governance validation disabled.</source>
