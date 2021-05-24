@@ -13,6 +13,7 @@
 #include <uint256.h>
 
 #include <cstring>
+#include <optional>
 #include <vector>
 
 const unsigned int BIP32_EXTKEY_SIZE = 74;
@@ -250,6 +251,9 @@ public:
     /** Verify that this is a Taproot tweaked output point, against a specified internal key,
      *  Merkle root, and parity. */
     bool CheckTapTweak(const XOnlyPubKey& internal, const uint256& merkle_root, bool parity) const;
+
+    /** Construct a Taproot tweaked output point with this point as internal key. */
+    std::optional<std::pair<XOnlyPubKey, bool>> CreateTapTweak(const uint256* merkle_root) const;
 
     const unsigned char& operator[](int pos) const { return *(m_keydata.begin() + pos); }
     const unsigned char* data() const { return m_keydata.begin(); }
