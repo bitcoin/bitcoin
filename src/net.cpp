@@ -1702,7 +1702,7 @@ void CConnman::ThreadDNSAddressSeed()
                         LOCK(cs_vNodes);
                         for (const CNode* pnode : vNodes) {
                             // SYSCOIN
-                            if (pnode->fSuccessfullyConnected && !pnode->m_masternode_probe_connection && pnode->IsOutboundOrBlockRelayConn()) ++nRelevant;
+                            if (pnode->fSuccessfullyConnected && !pnode->m_masternode_probe_connection && pnode->IsFullOutboundConn()) ++nRelevant;
                         }
                     }
                     if (nRelevant >= 2) {
