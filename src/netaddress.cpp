@@ -522,7 +522,6 @@ bool CNetAddr::IsAddrV1Compatible() const
     case NET_INTERNAL:
         return true;
     case NET_ONION:
-        return m_addr.size() == ADDR_TORV2_SIZE;
     case NET_I2P:
     case NET_CJDNS:
         return false;

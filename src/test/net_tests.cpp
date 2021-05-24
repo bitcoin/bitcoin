@@ -613,7 +613,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
     s >> addr;
     BOOST_CHECK(addr.IsValid());
     BOOST_CHECK(addr.IsTor());
-    BOOST_CHECK(addr.IsAddrV1Compatible());
+    BOOST_CHECK(!addr.IsAddrV1Compatible());
     BOOST_CHECK_EQUAL(addr.ToString(), "6hzph5hv6337r6p2.onion");
     BOOST_REQUIRE(s.empty());
 
