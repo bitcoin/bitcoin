@@ -606,25 +606,13 @@ BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
     BOOST_CHECK(!addr.IsValid());
     BOOST_REQUIRE(s.empty());
 
-    // Valid TORv2.
+    // TORv2, no longer supported.
     s << MakeSpan(ParseHex("03"                      // network type (TORv2)
                            "0a"                      // address length
                            "f1f2f3f4f5f6f7f8f9fa")); // address
     s >> addr;
-    BOOST_CHECK(addr.IsValid());
-    BOOST_CHECK(addr.IsTor());
-    BOOST_CHECK(!addr.IsAddrV1Compatible());
-    BOOST_CHECK_EQUAL(addr.ToString(), "6hzph5hv6337r6p2.onion");
+    BOOST_CHECK(!addr.IsValid());
     BOOST_REQUIRE(s.empty());
-
-    // Invalid TORv2, with bogus length.
-    s << MakeSpan(ParseHex("03"    // network type (TORv2)
-                           "07"    // address length
-                           "00")); // address
-    BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure,
-                          HasReason("BIP155 TORv2 address with length 7 (should be 10)"));
-    BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
-    s.clear();
 
     // Valid TORv3.
     s << MakeSpan(ParseHex("04"                               // network type (TORv3)

@@ -72,14 +72,6 @@ bool CNetAddr::SetNetFromBIP155Network(uint8_t possible_bip155_net, size_t addre
         throw std::ios_base::failure(
             strprintf("BIP155 IPv6 address with length %u (should be %u)", address_size,
                       ADDR_IPV6_SIZE));
-    case BIP155Network::TORV2:
-        if (address_size == ADDR_TORV2_SIZE) {
-            m_net = NET_ONION;
-            return true;
-        }
-        throw std::ios_base::failure(
-            strprintf("BIP155 TORv2 address with length %u (should be %u)", address_size,
-                      ADDR_TORV2_SIZE));
     case BIP155Network::TORV3:
         if (address_size == ADDR_TORV3_SIZE) {
             m_net = NET_ONION;
