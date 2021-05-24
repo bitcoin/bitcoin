@@ -99,6 +99,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_subtract_fee_with_presets()
         self.test_transaction_too_large()
         self.test_include_unsafe()
+        self.test_inputs_min_chain_depth()
 
     def test_change_position(self):
         """Ensure setting changePosition in fundraw with an exact match is handled properly."""
@@ -968,6 +969,53 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert any([txin['txid'] == txid2 and txin['vout'] == vout2 for txin in tx_dec['vin']])
         signedtx = wallet.signrawtransactionwithwallet(fundedtx['hex'])
         wallet.sendrawtransaction(signedtx['hex'])
+
+    def test_inputs_min_chain_depth(self):
+        unconfirmedAddress = self.nodes[0].getnewaddress()
+        targetAddress = self.nodes[2].getnewaddress()
+        unconfirmedTxid = self.nodes[0].sendtoaddress(unconfirmedAddress, 1)
+
+        utxo1 = self.nodes[0].listunspent(0, 1, [unconfirmedAddress])[0]
+        assert unconfirmedTxid == utxo1['txid']
+
+        self.log.info("Crafting PSBT using an unconfirmed input")
+        raw_tx1 = self.nodes[0].createrawtransaction([{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {targetAddress: 0.1}, 0, True)
+        funded_tx1 = self.nodes[0].fundrawtransaction(raw_tx1, {'fee_rate': 1})['hex']
+
+        # Make sure we only had the one input
+        assert_equal(len(self.nodes[0].decoderawtransaction(funded_tx1)['vin']), 1)
+
+        final_tx1 = self.nodes[0].signrawtransactionwithwallet(funded_tx1)['hex']
+        txid1 = self.nodes[0].sendrawtransaction(final_tx1)
+
+        mempool = self.nodes[0].getrawmempool()
+        assert txid1 in mempool
+
+        self.log.info("Fail to craft a new PSBT that sends more funds with add_inputs = False")
+        raw_tx2 = self.nodes[0].createrawtransaction([{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {targetAddress: 1})
+        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[0].fundrawtransaction, raw_tx2, {'fee_rate': 1, 'add_inputs': False})
+
+        highest_confs = 0
+        for utxo in self.nodes[0].listunspent():
+            highest_confs = max(highest_confs, utxo['confirmations'])
+
+        self.log.info("Fail to craft a new PSBT with min depth above highest one")
+        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[0].fundrawtransaction, raw_tx2, {'add_inputs': True, 'inputs_min_depth': highest_confs + 1, 'fee_rate': 10})
+
+        self.log.info("Craft a replacement adding inputs with highest depth possible")
+        funded_tx2 = self.nodes[0].fundrawtransaction(raw_tx2, {'add_inputs': True, 'inputs_min_depth': highest_confs, 'fee_rate': 10})['hex']
+        tx2_inputs = self.nodes[0].decoderawtransaction(funded_tx2)['vin']
+        assert_greater_than_or_equal(len(tx2_inputs), 2)
+        for vin in tx2_inputs:
+            if vin['txid'] != unconfirmedTxid:
+                assert_greater_than_or_equal(self.nodes[0].gettxout(vin['txid'], vin['vout'])['confirmations'], highest_confs)
+
+        final_tx2 = self.nodes[0].signrawtransactionwithwallet(funded_tx2)['hex']
+        txid2 = self.nodes[0].sendrawtransaction(final_tx2)
+
+        mempool = self.nodes[0].getrawmempool()
+        assert txid1 not in mempool
+        assert txid2 in mempool
 
 
 if __name__ == '__main__':

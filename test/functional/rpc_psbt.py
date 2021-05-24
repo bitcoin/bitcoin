@@ -13,6 +13,7 @@ from test_framework.util import (
     assert_approx,
     assert_equal,
     assert_greater_than,
+    assert_greater_than_or_equal,
     assert_raises_rpc_error,
     find_output,
 )
@@ -81,6 +82,53 @@ class PSBTTest(BitcoinTestFramework):
         # Reconnect
         self.connect_nodes(0, 1)
         self.connect_nodes(0, 2)
+
+    def test_inputs_min_chain_depth(self):
+        unconfirmedAddress = self.nodes[0].getnewaddress()
+        targetAddress = self.nodes[2].getnewaddress()
+        unconfirmedTxid = self.nodes[0].sendtoaddress(unconfirmedAddress, 1)
+
+        utxo1 = self.nodes[0].listunspent(0, 1, [unconfirmedAddress])[0]
+        assert unconfirmedTxid == utxo1['txid']
+
+        self.log.info("Crafting PSBT using an unconfirmed input")
+        psbtx1 = self.nodes[0].walletcreatefundedpsbt([{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {targetAddress: 0.1}, 0, {'fee_rate': 1})['psbt']
+
+        # Make sure we only had the one input
+        assert_equal(len(self.nodes[0].decodepsbt(psbtx1)['tx']['vin']), 1)
+
+        signed_tx1 = self.nodes[0].walletprocesspsbt(psbtx1)['psbt']
+        final_tx1 = self.nodes[0].finalizepsbt(signed_tx1)['hex']
+        txid1 = self.nodes[0].sendrawtransaction(final_tx1)
+
+        mempool = self.nodes[0].getrawmempool()
+        assert txid1 in mempool
+
+        self.log.info("Fail to craft a new PSBT that sends more funds with add_inputs = False")
+        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[0].walletcreatefundedpsbt, [{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {targetAddress: 1}, 0, {'add_inputs': False})
+
+        highest_confs = 0
+        for utxo in self.nodes[0].listunspent():
+            highest_confs = max(highest_confs, utxo['confirmations'])
+
+        self.log.info("Fail to craft a new PSBT with min depth above highest one")
+        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[0].walletcreatefundedpsbt, [{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {targetAddress: 1}, 0, {'add_inputs': True, 'inputs_min_depth': highest_confs + 1, 'fee_rate': 10})
+
+        self.log.info("Craft a replacement adding inputs with highest depth possible")
+        psbtx2 = self.nodes[0].walletcreatefundedpsbt([{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {targetAddress: 1}, 0, {'add_inputs': True, 'inputs_min_depth': highest_confs, 'fee_rate': 10})['psbt']
+        tx2_inputs = self.nodes[0].decodepsbt(psbtx2)['tx']['vin']
+        assert_greater_than_or_equal(len(tx2_inputs), 2)
+        for vin in tx2_inputs:
+            if vin['txid'] != unconfirmedTxid:
+                assert_greater_than_or_equal(self.nodes[0].gettxout(vin['txid'], vin['vout'])['confirmations'], highest_confs)
+
+        signed_tx2 = self.nodes[0].walletprocesspsbt(psbtx2)['psbt']
+        final_tx2 = self.nodes[0].finalizepsbt(signed_tx2)['hex']
+        txid2 = self.nodes[0].sendrawtransaction(final_tx2)
+
+        mempool = self.nodes[0].getrawmempool()
+        assert txid1 not in mempool
+        assert txid2 in mempool
 
     def assert_change_type(self, psbtx, expected_type):
         """Assert that the given PSBT has a change output with the given type."""
@@ -597,6 +645,8 @@ class PSBTTest(BitcoinTestFramework):
         assert_equal(analysis['error'], 'PSBT is not valid. Input 0 specifies invalid prevout')
 
         assert_raises_rpc_error(-25, 'Inputs missing or spent', self.nodes[0].walletprocesspsbt, 'cHNidP8BAJoCAAAAAkvEW8NnDtdNtDpsmze+Ht2LH35IJcKv00jKAlUs21RrAwAAAAD/////S8Rbw2cO1020OmybN74e3Ysffkglwq/TSMoCVSzbVGsBAAAAAP7///8CwLYClQAAAAAWABSNJKzjaUb3uOxixsvh1GGE3fW7zQD5ApUAAAAAFgAUKNw0x8HRctAgmvoevm4u1SbN7XIAAAAAAAEAnQIAAAACczMa321tVHuN4GKWKRncycI22aX3uXgwSFUKM2orjRsBAAAAAP7///9zMxrfbW1Ue43gYpYpGdzJwjbZpfe5eDBIVQozaiuNGwAAAAAA/v///wIA+QKVAAAAABl2qRT9zXUVA8Ls5iVqynLHe5/vSe1XyYisQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAAAAAQEfQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAA==')
+
+        self.test_inputs_min_chain_depth()
 
 if __name__ == '__main__':
     PSBTTest().main()
