@@ -1015,7 +1015,7 @@ bool AppInitParameterInteraction(const ArgsManager& args)
 static bool LockDataDirectory(bool probeOnly)
 {
     // Make sure only a single Bitcoin process is using the data directory.
-    fs::path datadir = GetDataDir();
+    fs::path datadir = gArgs.GetDataDirNet();
     if (!DirIsWritable(datadir)) {
         return InitError(strprintf(_("Cannot write to data directory '%s'; check permissions."), datadir.string()));
     }
@@ -1166,7 +1166,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     assert(!node.addrman);
     node.addrman = std::make_unique<CAddrMan>();
     assert(!node.banman);
-    node.banman = std::make_unique<BanMan>(GetDataDir() / "banlist.dat", &uiInterface, args.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
+    node.banman = std::make_unique<BanMan>(gArgs.GetDataDirNet() / "banlist.dat", &uiInterface, args.GetArg("-bantime", DEFAULT_MISBEHAVING_BANTIME));
     assert(!node.connman);
     node.connman = std::make_unique<CConnman>(GetRand(std::numeric_limits<uint64_t>::max()), GetRand(std::numeric_limits<uint64_t>::max()), *node.addrman, args.GetBoolArg("-networkactive", true));
 
@@ -1276,7 +1276,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
             asmap_path = DEFAULT_ASMAP_FILENAME;
         }
         if (!asmap_path.is_absolute()) {
-            asmap_path = GetDataDir() / asmap_path;
+            asmap_path = gArgs.GetDataDirNet() / asmap_path;
         }
         if (!fs::exists(asmap_path)) {
             InitError(strprintf(_("Could not find asmap file %s"), asmap_path));
@@ -1600,8 +1600,8 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
 
     // ********************************************************* Step 11: import blocks
 
-    if (!CheckDiskSpace(GetDataDir())) {
-        InitError(strprintf(_("Error: Disk space is low for %s"), GetDataDir()));
+    if (!CheckDiskSpace(gArgs.GetDataDirNet())) {
+        InitError(strprintf(_("Error: Disk space is low for %s"), gArgs.GetDataDirNet()));
         return false;
     }
     if (!CheckDiskSpace(gArgs.GetBlocksDirPath())) {

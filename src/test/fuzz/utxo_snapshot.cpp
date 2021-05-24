@@ -30,7 +30,7 @@ FUZZ_TARGET_INIT(utxo_snapshot, initialize_chain)
     const auto& node = setup->m_node;
     auto& chainman{*node.chainman};
 
-    const auto snapshot_path = GetDataDir() / "fuzzed_snapshot.dat";
+    const auto snapshot_path = gArgs.GetDataDirNet() / "fuzzed_snapshot.dat";
 
     Assert(!chainman.SnapshotBlockhash());
 

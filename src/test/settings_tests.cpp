@@ -45,7 +45,7 @@ BOOST_FIXTURE_TEST_SUITE(settings_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(ReadWrite)
 {
-    fs::path path = m_args.GetDataDirPath() / "settings.json";
+    fs::path path = m_args.GetDataDirBase() / "settings.json";
 
     WriteText(path, R"({
         "string": "string",

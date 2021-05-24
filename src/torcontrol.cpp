@@ -563,7 +563,7 @@ void TorController::Reconnect()
 
 fs::path TorController::GetPrivateKeyFile()
 {
-    return GetDataDir() / "onion_v3_private_key";
+    return gArgs.GetDataDirNet() / "onion_v3_private_key";
 }
 
 void TorController::reconnect_cb(evutil_socket_t fd, short what, void *arg)

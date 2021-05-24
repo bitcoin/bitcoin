@@ -1150,7 +1150,7 @@ CoinsViews::CoinsViews(
     size_t cache_size_bytes,
     bool in_memory,
     bool should_wipe) : m_dbview(
-                            GetDataDir() / ldb_name, cache_size_bytes, in_memory, should_wipe),
+                            gArgs.GetDataDirNet() / ldb_name, cache_size_bytes, in_memory, should_wipe),
                         m_catcherview(&m_dbview) {}
 
 void CoinsViews::InitCache()
@@ -2128,7 +2128,7 @@ bool CChainState::FlushStateToDisk(
             // twice (once in the log, and once in the tables). This is already
             // an overestimation, as most will delete an existing entry or
             // overwrite one. Still, use a conservative safety factor of 2.
-            if (!CheckDiskSpace(GetDataDir(), 48 * 2 * 2 * CoinsTip().GetCacheSize())) {
+            if (!CheckDiskSpace(gArgs.GetDataDirNet(), 48 * 2 * 2 * CoinsTip().GetCacheSize())) {
                 return AbortNode(state, "Disk space is too low!", _("Disk space is too low!"));
             }
             // Flush the chainstate (which may refer to block index entries).
@@ -4501,7 +4501,7 @@ bool LoadMempool(CTxMemPool& pool, CChainState& active_chainstate, FopenFn mocka
 {
     const CChainParams& chainparams = Params();
     int64_t nExpiryTimeout = gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60;
-    FILE* filestr{mockable_fopen_function(GetDataDir() / "mempool.dat", "rb")};
+    FILE* filestr{mockable_fopen_function(gArgs.GetDataDirNet() / "mempool.dat", "rb")};
     CAutoFile file(filestr, SER_DISK, CLIENT_VERSION);
     if (file.IsNull()) {
         LogPrintf("Failed to open mempool file from disk. Continuing anyway.\n");
@@ -4605,7 +4605,7 @@ bool DumpMempool(const CTxMemPool& pool, FopenFn mockable_fopen_function, bool s
     int64_t mid = GetTimeMicros();
 
     try {
-        FILE* filestr{mockable_fopen_function(GetDataDir() / "mempool.dat.new", "wb")};
+        FILE* filestr{mockable_fopen_function(gArgs.GetDataDirNet() / "mempool.dat.new", "wb")};
         if (!filestr) {
             return false;
         }
@@ -4631,7 +4631,7 @@ bool DumpMempool(const CTxMemPool& pool, FopenFn mockable_fopen_function, bool s
         if (!skip_file_commit && !FileCommit(file.Get()))
             throw std::runtime_error("FileCommit failed");
         file.fclose();
-        if (!RenameOver(GetDataDir() / "mempool.dat.new", GetDataDir() / "mempool.dat")) {
+        if (!RenameOver(gArgs.GetDataDirNet() / "mempool.dat.new", gArgs.GetDataDirNet() / "mempool.dat")) {
             throw std::runtime_error("Rename failed");
         }
         int64_t last = GetTimeMicros();

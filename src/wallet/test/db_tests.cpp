@@ -23,7 +23,7 @@ static std::shared_ptr<BerkeleyEnvironment> GetWalletEnv(const fs::path& path, s
 BOOST_AUTO_TEST_CASE(getwalletenv_file)
 {
     std::string test_name = "test_name.dat";
-    const fs::path datadir = GetDataDir();
+    const fs::path datadir = gArgs.GetDataDirNet();
     fs::path file_path = datadir / test_name;
     std::ofstream f(file_path.BOOST_FILESYSTEM_C_STR);
     f.close();
@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(getwalletenv_file)
 BOOST_AUTO_TEST_CASE(getwalletenv_directory)
 {
     std::string expected_name = "wallet.dat";
-    const fs::path datadir = GetDataDir();
+    const fs::path datadir = gArgs.GetDataDirNet();
 
     std::string filename;
     std::shared_ptr<BerkeleyEnvironment> env = GetWalletEnv(datadir, filename);
@@ -47,8 +47,8 @@ BOOST_AUTO_TEST_CASE(getwalletenv_directory)
 
 BOOST_AUTO_TEST_CASE(getwalletenv_g_dbenvs_multiple)
 {
-    fs::path datadir = GetDataDir() / "1";
-    fs::path datadir_2 = GetDataDir() / "2";
+    fs::path datadir = gArgs.GetDataDirNet() / "1";
+    fs::path datadir_2 = gArgs.GetDataDirNet() / "2";
     std::string filename;
 
     std::shared_ptr<BerkeleyEnvironment> env_1 = GetWalletEnv(datadir, filename);
@@ -61,8 +61,8 @@ BOOST_AUTO_TEST_CASE(getwalletenv_g_dbenvs_multiple)
 
 BOOST_AUTO_TEST_CASE(getwalletenv_g_dbenvs_free_instance)
 {
-    fs::path datadir = GetDataDir() / "1";
-    fs::path datadir_2 = GetDataDir() / "2";
+    fs::path datadir = gArgs.GetDataDirNet() / "1";
+    fs::path datadir_2 = gArgs.GetDataDirNet() / "2";
     std::string filename;
 
     std::shared_ptr <BerkeleyEnvironment> env_1_a = GetWalletEnv(datadir, filename);
