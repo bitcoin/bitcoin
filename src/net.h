@@ -1386,29 +1386,6 @@ public:
         ForEachNode(FullyConnectedOnly, fn);
     }
 
-    template<typename Callable, typename CallableAfter>
-    void ForEachNodeThen(Callable&& pre, CallableAfter&& post) EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex)
-    {
-        ForEachNodeThen(FullyConnectedOnly, pre, post);
-    }
-
-    template<typename Condition, typename Callable, typename CallableAfter>
-    void ForEachNodeThen(const Condition& cond, Callable&& pre, CallableAfter&& post) const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex)
-    {
-        READ_LOCK(m_nodes_mutex);
-        for (auto&& node : m_nodes) {
-            if (cond(node))
-                pre(node);
-        }
-        post();
-    };
-
-    template<typename Callable, typename CallableAfter>
-    void ForEachNodeThen(Callable&& pre, CallableAfter&& post) const EXCLUSIVE_LOCKS_REQUIRED(!m_nodes_mutex)
-    {
-        ForEachNodeThen(FullyConnectedOnly, pre, post);
-    }
-
     // Addrman functions
     /**
      * Return all or many randomly selected addresses, optionally by network.
