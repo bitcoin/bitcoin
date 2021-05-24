@@ -242,13 +242,9 @@ bool ExtractDestination(const CScript& scriptPubKey, CTxDestination& addressRet)
         return true;
     }
     case TxoutType::WITNESS_V1_TAPROOT: {
-        /* For now, no WitnessV1Taproot variant in CTxDestination exists, so map
-         * this to WitnessUnknown. */
-        WitnessUnknown unk;
-        unk.version = 1;
-        std::copy(vSolutions[0].begin(), vSolutions[0].end(), unk.program);
-        unk.length = vSolutions[0].size();
-        addressRet = unk;
+        WitnessV1Taproot tap;
+        std::copy(vSolutions[0].begin(), vSolutions[0].end(), tap.begin());
+        addressRet = tap;
         return true;
     }
     case TxoutType::WITNESS_UNKNOWN: {
@@ -335,6 +331,11 @@ public:
     CScript operator()(const WitnessV0ScriptHash& id) const
     {
         return CScript() << OP_0 << ToByteVector(id);
+    }
+
+    CScript operator()(const WitnessV1Taproot& tap) const
+    {
+        return CScript() << OP_1 << ToByteVector(tap);
     }
 
     CScript operator()(const WitnessUnknown& id) const
