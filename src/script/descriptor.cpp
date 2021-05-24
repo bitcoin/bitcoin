@@ -638,6 +638,19 @@ public:
     std::optional<OutputType> GetOutputType() const override { return std::nullopt; }
 };
 
+static std::optional<OutputType> OutputTypeFromDestination(const CTxDestination& dest) {
+    if (std::holds_alternative<PKHash>(dest) ||
+        std::holds_alternative<ScriptHash>(dest)) {
+        return OutputType::LEGACY;
+    }
+    if (std::holds_alternative<WitnessV0KeyHash>(dest) ||
+        std::holds_alternative<WitnessV0ScriptHash>(dest) ||
+        std::holds_alternative<WitnessUnknown>(dest)) {
+        return OutputType::BECH32;
+    }
+    return std::nullopt;
+}
+
 /** A parsed addr(A) descriptor. */
 class AddressDescriptor final : public DescriptorImpl
 {
@@ -651,15 +664,7 @@ public:
 
     std::optional<OutputType> GetOutputType() const override
     {
-        switch (m_destination.index()) {
-            case 1 /* PKHash */:
-            case 2 /* ScriptHash */: return OutputType::LEGACY;
-            case 3 /* WitnessV0ScriptHash */:
-            case 4 /* WitnessV0KeyHash */:
-            case 5 /* WitnessUnknown */: return OutputType::BECH32;
-            case 0 /* CNoDestination */:
-            default: return std::nullopt;
-        }
+        return OutputTypeFromDestination(m_destination);
     }
     bool IsSingleType() const final { return true; }
 };
@@ -679,15 +684,7 @@ public:
     {
         CTxDestination dest;
         ExtractDestination(m_script, dest);
-        switch (dest.index()) {
-            case 1 /* PKHash */:
-            case 2 /* ScriptHash */: return OutputType::LEGACY;
-            case 3 /* WitnessV0ScriptHash */:
-            case 4 /* WitnessV0KeyHash */:
-            case 5 /* WitnessUnknown */: return OutputType::BECH32;
-            case 0 /* CNoDestination */:
-            default: return std::nullopt;
-        }
+        return OutputTypeFromDestination(dest);
     }
     bool IsSingleType() const final { return true; }
 };
