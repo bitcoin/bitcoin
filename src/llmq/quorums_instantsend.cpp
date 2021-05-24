@@ -460,18 +460,6 @@ void CInstantSendManager::ProcessTx(const CTransaction& tx, bool fRetroactive, c
         return;
     }
 
-    // In case the islock was received before the TX, filtered announcement might have missed this islock because
-    // we were unable to check for filter matches deep inside the TX. Now we have the TX, so we should retry.
-    uint256 islockHash;
-    {
-        LOCK(cs);
-        islockHash = db.GetInstantSendLockHashByTxid(tx.GetHash());
-    }
-    if (!islockHash.IsNull()) {
-        CInv inv(MSG_ISLOCK, islockHash);
-        g_connman->RelayInvFiltered(inv, tx, LLMQS_PROTO_VERSION);
-    }
-
     if (!CheckCanLock(tx, true, params)) {
         LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- txid=%s: CheckCanLock returned false\n", __func__,
                   tx.GetHash().ToString());
@@ -1062,6 +1050,10 @@ void CInstantSendManager::TransactionAddedToMempool(const CTransactionRef& tx)
             LOCK(cs);
             RemoveNonLockedTx(tx->GetHash(), true);
         }
+        // In case the islock was received before the TX, filtered announcement might have missed this islock because
+        // we were unable to check for filter matches deep inside the TX. Now we have the TX, so we should retry.
+        CInv inv(MSG_ISLOCK, ::SerializeHash(*islock));
+        g_connman->RelayInvFiltered(inv, *tx, LLMQS_PROTO_VERSION);
         // If the islock was received before the TX, we know we were not able to send
         // the notification at that time, we need to do it now.
         LogPrint(BCLog::INSTANTSEND, "CInstantSendManager::%s -- notify about an earlier received lock for tx %s\n", __func__, tx->GetHash().ToString());
