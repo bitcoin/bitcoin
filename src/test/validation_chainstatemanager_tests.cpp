@@ -183,7 +183,7 @@ CreateAndActivateUTXOSnapshot(NodeContext& node, const fs::path root, F malleati
     FILE* outfile{fsbridge::fopen(snapshot_path, "wb")};
     CAutoFile auto_outfile{outfile, SER_DISK, CLIENT_VERSION};
 
-    UniValue result = CreateUTXOSnapshot(node, node.chainman->ActiveChainstate(), auto_outfile);
+    UniValue result = CreateUTXOSnapshot(false, false, "", node, node.chainman->ActiveChainstate(), auto_outfile, {});
     BOOST_TEST_MESSAGE(
         "Wrote UTXO snapshot to " << snapshot_path.make_preferred().string() << ": " << result.write());
 

@@ -9,6 +9,7 @@
 #include <core_io.h>
 #include <streams.h>
 #include <sync.h>
+#include <coins.h>
 
 #include <any>
 #include <stdint.h>
@@ -26,6 +27,7 @@ class UniValue;
 struct NodeContext;
 
 static constexpr int NUM_GETBLOCKSTATS_PERCENTILES = 5;
+using coinascii_cb_t = std::function<std::string(const COutPoint&, const Coin&)>;
 
 /**
  * Get the difficulty of the net wrt to the given block index.
@@ -68,6 +70,6 @@ CBlockPolicyEstimator& EnsureAnyFeeEstimator(const std::any& context);
  * Helper to create UTXO snapshots given a chainstate and a file handle.
  * @return a UniValue map containing metadata about the snapshot.
  */
-UniValue CreateUTXOSnapshot(NodeContext& node, CChainState& chainstate, CAutoFile& afile);
+UniValue CreateUTXOSnapshot(const bool is_compact, const bool show_header, const std::string& separator, NodeContext& node, CChainState& chainstate, CAutoFile& afile, const std::vector<std::pair<std::string, coinascii_cb_t>>& requested);
 
 #endif
