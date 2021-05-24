@@ -146,9 +146,12 @@ void CNetAddr::SetLegacyIPv6(Span<const uint8_t> ipv6)
         m_net = NET_IPV4;
         skip = sizeof(IPV4_IN_IPV6_PREFIX);
     } else if (HasPrefix(ipv6, TORV2_IN_IPV6_PREFIX)) {
-        // TORv2-in-IPv6
-        m_net = NET_ONION;
-        skip = sizeof(TORV2_IN_IPV6_PREFIX);
+        // TORv2-in-IPv6 (unsupported). Unserialize as !IsValid(), thus ignoring them.
+        // Mimic a default-constructed CNetAddr object which is !IsValid() and thus
+        // will not be gossiped, but continue reading next addresses from the stream.
+        m_net = NET_IPV6;
+        m_addr.assign(ADDR_IPV6_SIZE, 0x0);
+        return;
     } else if (HasPrefix(ipv6, INTERNAL_IN_IPV6_PREFIX)) {
         // Internal-in-IPv6
         m_net = NET_INTERNAL;
