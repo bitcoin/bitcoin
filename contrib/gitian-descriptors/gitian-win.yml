@@ -86,7 +86,7 @@ script: |
   done
   }
 
-  pip3 install lief==0.11.4
+  pip3 install lief==0.11.5
 
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}
