@@ -333,23 +333,14 @@ class CNetAddr
                 memcpy(arr, IPV4_IN_IPV6_PREFIX.data(), prefix_size);
                 memcpy(arr + prefix_size, m_addr.data(), m_addr.size());
                 return;
-            case NET_ONION:
-                if (m_addr.size() == ADDR_TORV3_SIZE) {
-                    break;
-                }
-                prefix_size = sizeof(TORV2_IN_IPV6_PREFIX);
-                assert(prefix_size + m_addr.size() == sizeof(arr));
-                memcpy(arr, TORV2_IN_IPV6_PREFIX.data(), prefix_size);
-                memcpy(arr + prefix_size, m_addr.data(), m_addr.size());
-                return;
             case NET_INTERNAL:
                 prefix_size = sizeof(INTERNAL_IN_IPV6_PREFIX);
                 assert(prefix_size + m_addr.size() == sizeof(arr));
                 memcpy(arr, INTERNAL_IN_IPV6_PREFIX.data(), prefix_size);
                 memcpy(arr + prefix_size, m_addr.data(), m_addr.size());
                 return;
+            case NET_ONION:
             case NET_I2P:
-                break;
             case NET_CJDNS:
                 break;
             case NET_UNROUTABLE:
@@ -357,7 +348,7 @@ class CNetAddr
                 assert(false);
             } // no default case, so the compiler can warn about missing cases
 
-            // Serialize TORv3, I2P and CJDNS as all-zeros.
+            // Serialize ONION, I2P and CJDNS as all-zeros.
             memset(arr, 0x0, V1_SERIALIZATION_SIZE);
         }
 
