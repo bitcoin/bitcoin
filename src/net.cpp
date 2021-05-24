@@ -2169,7 +2169,7 @@ void CConnman::ThreadDNSAddressSeed()
                     {
                         LOCK(cs_vNodes);
                         for (const CNode* pnode : vNodes) {
-                            if (pnode->fSuccessfullyConnected && !pnode->IsOutboundOrBlockRelayConn() && !pnode->m_masternode_probe_connection) ++nRelevant;
+                            if (pnode->fSuccessfullyConnected && !pnode->IsFullOutboundConn() && !pnode->m_masternode_probe_connection) ++nRelevant;
                         }
                     }
                     if (nRelevant >= 2) {
