@@ -1175,6 +1175,18 @@ static RPCHelpMan gettxoutsetinfo()
         pindex = ParseHashOrHeight(request.params[1], chainman);
     }
 
+    if (stats.index_requested && g_coin_stats_index) {
+        if (!g_coin_stats_index->BlockUntilSyncedToCurrentChain()) {
+            const IndexSummary summary{g_coin_stats_index->GetSummary()};
+
+            // If a specific block was requested and the index has already synced past that height, we can return the
+            // data already even though the index is not fully synced yet.
+            if (pindex->nHeight > summary.best_block_height) {
+                throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to get data because coinstatsindex is still syncing. Current height: %d", summary.best_block_height));
+            }
+        }
+    }
+
     if (GetUTXOStats(coins_view, *blockman, stats, node.rpc_interruption_point, pindex)) {
         ret.pushKV("height", (int64_t)stats.nHeight);
         ret.pushKV("bestblock", stats.hashBlock.GetHex());
@@ -1215,13 +1227,6 @@ static RPCHelpMan gettxoutsetinfo()
             ret.pushKV("block_info", block_info);
         }
     } else {
-        if (g_coin_stats_index) {
-            const IndexSummary summary{g_coin_stats_index->GetSummary()};
-
-            if (!summary.synced) {
-                throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Unable to read UTXO set because coinstatsindex is still syncing. Current height: %d", summary.best_block_height));
-            }
-        }
         throw JSONRPCError(RPC_INTERNAL_ERROR, "Unable to read UTXO set");
     }
     return ret;
