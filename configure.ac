@@ -1801,6 +1801,7 @@ AM_CONDITIONAL([USE_ASM],[test x$use_asm = xyes])
 AM_CONDITIONAL([WORDS_BIGENDIAN],[test x$ac_cv_c_bigendian = xyes])
 AM_CONDITIONAL([USE_NATPMP],[test x$use_natpmp = xyes])
 AM_CONDITIONAL([USE_UPNP],[test x$use_upnp = xyes])
+AM_CONDITIONAL([SUPPRESS_EXTERNAL_WARNINGS], [test x$suppress_external_warnings = xyes])
 
 AC_DEFINE(CLIENT_VERSION_MAJOR, _CLIENT_VERSION_MAJOR, [Major version])
 AC_DEFINE(CLIENT_VERSION_MINOR, _CLIENT_VERSION_MINOR, [Minor version])
