@@ -54,8 +54,6 @@ static const int TIMEOUT_INTERVAL = 20 * 60;
 static constexpr auto FEELER_INTERVAL = 2min;
 /** Run the extra block-relay-only connection loop once every 5 minutes. **/
 static constexpr auto EXTRA_BLOCK_RELAY_ONLY_PEER_INTERVAL = 5min;
-/** The maximum number of addresses from our addrman to return in response to a getaddr message. */
-static constexpr size_t MAX_ADDR_TO_SEND = 1000;
 /** Maximum length of incoming protocol messages (no message over 4 MB is currently acceptable). */
 static const unsigned int MAX_PROTOCOL_MESSAGE_LENGTH = 4 * 1000 * 1000;
 /** Maximum length of the user agent string in `version` message */
@@ -447,17 +445,11 @@ public:
     }
     bool fClient{false}; // set by version message
     bool m_limited_node{false}; //after BIP159, set by version message
-    /**
-     * Whether the peer has signaled support for receiving ADDRv2 (BIP155)
-     * messages, implying a preference to receive ADDRv2 instead of ADDR ones.
-     */
-    std::atomic_bool m_wants_addrv2{false};
     /** fSuccessfullyConnected is set to true on receiving VERACK from the peer. */
     std::atomic_bool fSuccessfullyConnected{false};
     // Setting fDisconnect to true will cause the node to be disconnected the
     // next time DisconnectNodes() runs
     std::atomic_bool fDisconnect{false};
-    bool fSentAddr{false};
     CSemaphoreGrant grantOutbound;
     std::atomic<int> nRefCount{0};
 
@@ -504,15 +496,6 @@ public:
         return m_conn_type == ConnectionType::INBOUND;
     }
 
-    /* Whether we send addr messages over this connection */
-    bool RelayAddrsWithConn() const
-    {
-        // Don't relay addr messages to peers that we connect to as block-relay-only
-        // peers (to prevent adversaries from inferring these links from addr
-        // traffic).
-        return m_conn_type != ConnectionType::BLOCK_RELAY;
-    }
-
     bool ExpectServicesFromConn() const {
         switch (m_conn_type) {
             case ConnectionType::INBOUND:
@@ -544,14 +527,6 @@ public:
     std::atomic<bool> m_bip152_highbandwidth_to{false};
     // Peer selected us as (compact blocks) high-bandwidth peer (BIP152)
     std::atomic<bool> m_bip152_highbandwidth_from{false};
-
-    // flood relay
-    std::vector<CAddress> vAddrToSend;
-    std::unique_ptr<CRollingBloomFilter> m_addr_known{nullptr};
-    bool fGetAddr{false};
-    Mutex m_addr_send_times_mutex;
-    std::chrono::microseconds m_next_addr_send GUARDED_BY(m_addr_send_times_mutex){0};
-    std::chrono::microseconds m_next_local_addr_send GUARDED_BY(m_addr_send_times_mutex){0};
 
     struct TxRelay {
         mutable RecursiveMutex cs_filter;
@@ -655,37 +630,6 @@ public:
     void Release()
     {
         nRefCount--;
-    }
-
-    void AddAddressKnown(const CAddress& _addr)
-    {
-        assert(m_addr_known);
-        m_addr_known->insert(_addr.GetKey());
-    }
-
-    /**
-     * Whether the peer supports the address. For example, a peer that does not
-     * implement BIP155 cannot receive Tor v3 addresses because it requires
-     * ADDRv2 (BIP155) encoding.
-     */
-    bool IsAddrCompatible(const CAddress& addr) const
-    {
-        return m_wants_addrv2 || addr.IsAddrV1Compatible();
-    }
-
-    void PushAddress(const CAddress& _addr, FastRandomContext &insecure_rand)
-    {
-        // Known checking here is only to save space from duplicates.
-        // SendMessages will filter it again for knowns that were added
-        // after addresses were pushed.
-        assert(m_addr_known);
-        if (_addr.IsValid() && !m_addr_known->contains(_addr.GetKey()) && IsAddrCompatible(_addr)) {
-            if (vAddrToSend.size() >= MAX_ADDR_TO_SEND) {
-                vAddrToSend[insecure_rand.randrange(vAddrToSend.size())] = _addr;
-            } else {
-                vAddrToSend.push_back(_addr);
-            }
-        }
     }
 
     void AddKnownTx(const uint256& hash)
@@ -898,28 +842,6 @@ public:
             if (NodeFullyConnected(node))
                 func(node);
         }
-    };
-
-    template<typename Callable, typename CallableAfter>
-    void ForEachNodeThen(Callable&& pre, CallableAfter&& post)
-    {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                pre(node);
-        }
-        post();
-    };
-
-    template<typename Callable, typename CallableAfter>
-    void ForEachNodeThen(Callable&& pre, CallableAfter&& post) const
-    {
-        LOCK(cs_vNodes);
-        for (auto&& node : vNodes) {
-            if (NodeFullyConnected(node))
-                pre(node);
-        }
-        post();
     };
 
     // Addrman functions
