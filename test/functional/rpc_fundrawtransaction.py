@@ -99,7 +99,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.test_subtract_fee_with_presets()
         self.test_transaction_too_large()
         self.test_include_unsafe()
-        self.test_inputs_min_chain_depth()
+        self.test_minconfs()
 
     def test_change_position(self):
         """Ensure setting changePosition in fundraw with an exact match is handled properly."""
@@ -970,9 +970,9 @@ class RawTransactionsTest(BitcoinTestFramework):
         signedtx = wallet.signrawtransactionwithwallet(fundedtx['hex'])
         wallet.sendrawtransaction(signedtx['hex'])
 
-    def test_inputs_min_chain_depth(self):
-        self.nodes[0].createwallet("inputs_min_chain_depth")
-        wallet = self.nodes[0].get_wallet_rpc("inputs_min_chain_depth")
+    def test_minconfs(self):
+        self.nodes[0].createwallet("minconfs")
+        wallet = self.nodes[0].get_wallet_rpc("minconfs")
 
         # Fund the wallet with different chain heights
         self.nodes[2].sendtoaddress(wallet.getnewaddress(), 1)
@@ -1009,10 +1009,10 @@ class RawTransactionsTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, raw_tx2, {'fee_rate': 1, 'add_inputs': False})
 
         self.log.info("Fail to craft a new TX with min depth above highest one")
-        assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, raw_tx2, {'add_inputs': True, 'inputs_min_depth': 3, 'fee_rate': 10})
+        assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, raw_tx2, {'add_inputs': True, 'minconfs': 3, 'fee_rate': 10})
 
         self.log.info("Craft a replacement adding inputs with highest depth possible")
-        funded_tx2 = wallet.fundrawtransaction(raw_tx2, {'add_inputs': True, 'inputs_min_depth': 2, 'fee_rate': 10})['hex']
+        funded_tx2 = wallet.fundrawtransaction(raw_tx2, {'add_inputs': True, 'minconfs': 2, 'fee_rate': 10})['hex']
         tx2_inputs = self.nodes[0].decoderawtransaction(funded_tx2)['vin']
         assert_greater_than_or_equal(len(tx2_inputs), 2)
         for vin in tx2_inputs:

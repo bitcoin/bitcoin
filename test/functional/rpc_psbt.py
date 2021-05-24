@@ -83,9 +83,9 @@ class PSBTTest(BitcoinTestFramework):
         self.connect_nodes(0, 1)
         self.connect_nodes(0, 2)
 
-    def test_inputs_min_chain_depth(self):
-        self.nodes[0].createwallet("inputs_min_chain_depth")
-        wallet = self.nodes[0].get_wallet_rpc("inputs_min_chain_depth")
+    def test_minconfs(self):
+        self.nodes[0].createwallet("minconfs")
+        wallet = self.nodes[0].get_wallet_rpc("minconfs")
 
         # Fund the wallet with different chain heights
         self.nodes[1].sendtoaddress(wallet.getnewaddress(), 1)
@@ -121,10 +121,10 @@ class PSBTTest(BitcoinTestFramework):
         assert_raises_rpc_error(-4, "Insufficient funds", wallet.walletcreatefundedpsbt, [{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {targetAddress: 1}, 0, {'add_inputs': False})
 
         self.log.info("Fail to craft a new PSBT with min depth above highest one")
-        assert_raises_rpc_error(-4, "Insufficient funds", wallet.walletcreatefundedpsbt, [{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {targetAddress: 1}, 0, {'add_inputs': True, 'inputs_min_depth': 3, 'fee_rate': 10})
+        assert_raises_rpc_error(-4, "Insufficient funds", wallet.walletcreatefundedpsbt, [{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {targetAddress: 1}, 0, {'add_inputs': True, 'minconfs': 3, 'fee_rate': 10})
 
         self.log.info("Craft a replacement adding inputs with highest depth possible")
-        psbtx2 = wallet.walletcreatefundedpsbt([{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {targetAddress: 1}, 0, {'add_inputs': True, 'inputs_min_depth': 2, 'fee_rate': 10})['psbt']
+        psbtx2 = wallet.walletcreatefundedpsbt([{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {targetAddress: 1}, 0, {'add_inputs': True, 'minconfs': 2, 'fee_rate': 10})['psbt']
         tx2_inputs = self.nodes[0].decodepsbt(psbtx2)['tx']['vin']
         assert_greater_than_or_equal(len(tx2_inputs), 2)
         for vin in tx2_inputs:
@@ -657,7 +657,7 @@ class PSBTTest(BitcoinTestFramework):
 
         assert_raises_rpc_error(-25, 'Inputs missing or spent', self.nodes[0].walletprocesspsbt, 'cHNidP8BAJoCAAAAAkvEW8NnDtdNtDpsmze+Ht2LH35IJcKv00jKAlUs21RrAwAAAAD/////S8Rbw2cO1020OmybN74e3Ysffkglwq/TSMoCVSzbVGsBAAAAAP7///8CwLYClQAAAAAWABSNJKzjaUb3uOxixsvh1GGE3fW7zQD5ApUAAAAAFgAUKNw0x8HRctAgmvoevm4u1SbN7XIAAAAAAAEAnQIAAAACczMa321tVHuN4GKWKRncycI22aX3uXgwSFUKM2orjRsBAAAAAP7///9zMxrfbW1Ue43gYpYpGdzJwjbZpfe5eDBIVQozaiuNGwAAAAAA/v///wIA+QKVAAAAABl2qRT9zXUVA8Ls5iVqynLHe5/vSe1XyYisQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAAAAAQEfQM0ClQAAAAAWABRmWQUcjSjghQ8/uH4Bn/zkakwLtAAAAA==')
 
-        self.test_inputs_min_chain_depth()
+        self.test_minconfs()
 
 if __name__ == '__main__':
     PSBTTest().main()

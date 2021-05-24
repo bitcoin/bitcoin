@@ -3098,7 +3098,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
                 {"replaceable", UniValueType(UniValue::VBOOL)},
                 {"conf_target", UniValueType(UniValue::VNUM)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
-                {"inputs_min_depth", UniValueType(UniValue::VNUM)},
+                {"minconfs", UniValueType(UniValue::VNUM)},
             },
             true, true);
 
@@ -3164,12 +3164,12 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
             coinControl.m_signal_bip125_rbf = options["replaceable"].get_bool();
         }
 
-        if (options.exists("inputs_min_depth")) {
-            if (options["inputs_min_depth"].get_int() < 0) {
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative inputs_min_depth");
+        if (options.exists("minconfs")) {
+            if (options["minconfs"].get_int() < 0) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Negative minconfs");
             }
 
-            coinControl.m_min_depth = options["inputs_min_depth"].get_int();
+            coinControl.m_min_depth = options["minconfs"].get_int();
         }
         SetFeeEstimateMode(wallet, coinControl, options["conf_target"], options["estimate_mode"], options["fee_rate"], override_min_fee);
       }
@@ -3224,7 +3224,7 @@ static RPCHelpMan fundrawtransaction()
                             {"include_unsafe", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include inputs that are not safe to spend (unconfirmed transactions from outside keys and unconfirmed replacement transactions).\n"
                                                           "Warning: the resulting transaction may become invalid if one of the unsafe inputs disappears.\n"
                                                           "If that happens, you will need to fund the transaction with different inputs and republish it."},
-                            {"inputs_min_depth", RPCArg::Type::NUM, RPCArg::Default{0}, "If add_inputs is specified, require inputs with at least this chain depth."},
+                            {"minconfs", RPCArg::Type::NUM, RPCArg::Default{0}, "If add_inputs is specified, require inputs with at least this confirmations."},
                             {"changeAddress", RPCArg::Type::STR, RPCArg::DefaultHint{"pool address"}, "The bitcoin address to receive the change"},
                             {"changePosition", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
                             {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
@@ -4053,7 +4053,7 @@ static RPCHelpMan send()
                     {"include_unsafe", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include inputs that are not safe to spend (unconfirmed transactions from outside keys and unconfirmed replacement transactions).\n"
                                                           "Warning: the resulting transaction may become invalid if one of the unsafe inputs disappears.\n"
                                                           "If that happens, you will need to fund the transaction with different inputs and republish it."},
-                    {"inputs_min_depth", RPCArg::Type::NUM, RPCArg::Default{0}, "If add_inputs is specified, require inputs with at least this chain depth."},
+                    {"minconfs", RPCArg::Type::NUM, RPCArg::Default{0}, "If add_inputs is specified, require inputs with at least this confirmations."},
                     {"add_to_wallet", RPCArg::Type::BOOL, RPCArg::Default{true}, "When false, returns a serialized transaction which will not be added to the wallet or broadcast"},
                     {"change_address", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"pool address"}, "The bitcoin address to receive the change"},
                     {"change_position", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
@@ -4400,7 +4400,7 @@ static RPCHelpMan walletcreatefundedpsbt()
                             {"include_unsafe", RPCArg::Type::BOOL, RPCArg::Default{false}, "Include inputs that are not safe to spend (unconfirmed transactions from outside keys and unconfirmed replacement transactions).\n"
                                                           "Warning: the resulting transaction may become invalid if one of the unsafe inputs disappears.\n"
                                                           "If that happens, you will need to fund the transaction with different inputs and republish it."},
-                            {"inputs_min_depth", RPCArg::Type::NUM, RPCArg::Default{0}, "If add_inputs is specified, require inputs with at least this chain depth."},
+                            {"minconfs", RPCArg::Type::NUM, RPCArg::Default{0}, "If add_inputs is specified, require inputs with at least this confirmations."},
                             {"changeAddress", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"pool address"}, "The bitcoin address to receive the change"},
                             {"changePosition", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
                             {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
