@@ -1627,15 +1627,14 @@ bool CWallet::ImportScriptPubKeys(const std::string& label, const std::set<CScri
     return true;
 }
 
-// Returns pair of vsize and weight
-std::pair<int64_t, int64_t> CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, bool use_max_sig)
+TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, bool use_max_sig)
 {
     std::vector<CTxOut> txouts;
     for (const CTxIn& input : tx.vin) {
         const auto mi = wallet->mapWallet.find(input.prevout.hash);
         // Can not estimate size without knowing the input details
         if (mi == wallet->mapWallet.end()) {
-            return std::make_pair(-1, -1);
+            return TxSize{-1, -1};
         }
         assert(input.prevout.n < mi->second.tx->vout.size());
         txouts.emplace_back(mi->second.tx->vout[input.prevout.n]);
@@ -1644,16 +1643,16 @@ std::pair<int64_t, int64_t> CalculateMaximumSignedTxSize(const CTransaction &tx,
 }
 
 // txouts needs to be in the order of tx.vin
-std::pair<int64_t, int64_t> CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, bool use_max_sig)
+TxSize CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, bool use_max_sig)
 {
     CMutableTransaction txNew(tx);
     if (!wallet->DummySignTx(txNew, txouts, use_max_sig)) {
-        return std::make_pair(-1, -1);
+        return TxSize{-1, -1};
     }
     CTransaction ctx(txNew);
     int64_t vsize = GetVirtualTransactionSize(ctx);
     int64_t weight = GetTransactionWeight(ctx);
-    return std::make_pair(vsize, weight);
+    return TxSize{vsize, weight};
 }
 
 int CalculateMaximumSignedInputSize(const CTxOut& txout, const CWallet* wallet, bool use_max_sig)
@@ -2820,7 +2819,7 @@ bool CWallet::CreateTransactionInternal(
 
     CMutableTransaction txNew;
     FeeCalculation feeCalc;
-    std::pair<int64_t, int64_t> tx_sizes;
+    TxSize tx_sizes;
     int nBytes;
     {
         std::set<CInputCoin> setCoins;
@@ -2967,7 +2966,7 @@ bool CWallet::CreateTransactionInternal(
 
             // Calculate the transaction fee
             tx_sizes = CalculateMaximumSignedTxSize(CTransaction(txNew), this, coin_control.fAllowWatchOnly);
-            nBytes = tx_sizes.first;
+            nBytes = tx_sizes.vsize;
             if (nBytes < 0) {
                 error = _("Signing transaction failed");
                 return false;
@@ -2992,7 +2991,7 @@ bool CWallet::CreateTransactionInternal(
 
                 // Because we have dropped this change, the tx size and required fee will be different, so let's recalculate those
                 tx_sizes = CalculateMaximumSignedTxSize(CTransaction(txNew), this, coin_control.fAllowWatchOnly);
-                nBytes = tx_sizes.first;
+                nBytes = tx_sizes.vsize;
                 fee_needed = coin_selection_params.m_effective_feerate.GetFee(nBytes);
             }
 
@@ -3072,7 +3071,7 @@ bool CWallet::CreateTransactionInternal(
 
         // Limit size
         if ((sign && GetTransactionWeight(*tx) > MAX_STANDARD_TX_WEIGHT) ||
-            (!sign && tx_sizes.second > MAX_STANDARD_TX_WEIGHT))
+            (!sign && tx_sizes.weight > MAX_STANDARD_TX_WEIGHT))
         {
             error = _("Transaction too large");
             return false;

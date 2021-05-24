@@ -1346,12 +1346,17 @@ public:
     }
 };
 
+struct TxSize {
+    int64_t vsize{-1};
+    int64_t weight{-1};
+};
+
 /** Calculate the size of the transaction assuming all signatures are max size
 * Use DummySignatureCreator, which inserts 71 byte signatures everywhere.
 * NOTE: this requires that all inputs must be in mapWallet (eg the tx should
 * be IsAllFromMe). */
-std::pair<int64_t, int64_t> CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, bool use_max_sig = false) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
-std::pair<int64_t, int64_t> CalculateMaximumSignedTxSize(const CTransaction &tx, const CWallet *wallet, const std::vector<CTxOut>& txouts, bool use_max_sig = false);
+TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* wallet, bool use_max_sig = false) EXCLUSIVE_LOCKS_REQUIRED(wallet->cs_wallet);
+TxSize CalculateMaximumSignedTxSize(const CTransaction& tx, const CWallet* wallet, const std::vector<CTxOut>& txouts, bool use_max_sig = false);
 
 //! Add wallet name to persistent configuration so it will be loaded on startup.
 bool AddWalletSetting(interfaces::Chain& chain, const std::string& wallet_name);
