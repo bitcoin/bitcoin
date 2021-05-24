@@ -15,8 +15,21 @@ class P2PDNSSeeds(BitcoinTestFramework):
         self.extra_args = [["-dnsseed=1"]]
 
     def run_test(self):
+        self.init_arg_tests()
         self.existing_outbound_connections_test()
         self.existing_block_relay_connections_test()
+
+    def init_arg_tests(self):
+        fakeaddr = "fakenodeaddr.fakedomain.invalid."
+
+        self.log.info("Check that setting -connect disables -dnsseed by default")
+        self.nodes[0].stop_node()
+        with self.nodes[0].assert_debug_log(expected_msgs=["DNS seeding disabled"]):
+            self.start_node(0, [f"-connect={fakeaddr}"])
+
+        self.log.info("Check that running -connect and -dnsseed means DNS logic runs.")
+        with self.nodes[0].assert_debug_log(expected_msgs=["Loading addresses from DNS seed"], timeout=12):
+            self.restart_node(0, [f"-connect={fakeaddr}", "-dnsseed=1"])
 
     def existing_outbound_connections_test(self):
         # Make sure addrman is populated to enter the conditional where we
