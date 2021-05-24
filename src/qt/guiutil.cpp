@@ -1383,6 +1383,9 @@ bool loadFonts()
             }
             prevWeight = *weight;
         }
+        if (vecSupported.empty()) {
+            vecSupported.push_back(QFont::Normal);
+        }
         return vecSupported;
     };
 
