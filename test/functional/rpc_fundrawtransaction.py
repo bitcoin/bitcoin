@@ -971,52 +971,62 @@ class RawTransactionsTest(BitcoinTestFramework):
         wallet.sendrawtransaction(signedtx['hex'])
 
     def test_inputs_min_chain_depth(self):
-        unconfirmedAddress = self.nodes[0].getnewaddress()
-        targetAddress = self.nodes[2].getnewaddress()
-        unconfirmedTxid = self.nodes[0].sendtoaddress(unconfirmedAddress, 1)
+        self.nodes[0].createwallet("inputs_min_chain_depth")
+        wallet = self.nodes[0].get_wallet_rpc("inputs_min_chain_depth")
 
-        utxo1 = self.nodes[0].listunspent(0, 1, [unconfirmedAddress])[0]
+        # Fund the wallet with different chain heights
+        self.nodes[2].sendtoaddress(wallet.getnewaddress(), 1)
+        self.nodes[2].sendtoaddress(wallet.getnewaddress(), 1)
+        self.nodes[2].generate(1)
+        self.nodes[2].sendtoaddress(wallet.getnewaddress(), 1)
+        self.nodes[2].sendtoaddress(wallet.getnewaddress(), 1)
+        self.nodes[2].generate(1)
+
+        self.sync_blocks()
+
+        unconfirmedAddress = wallet.getnewaddress()
+        unconfirmedTxid = wallet.sendtoaddress(unconfirmedAddress, 1)
+
+        utxo1 = wallet.listunspent(0, 1, [unconfirmedAddress])[0]
         assert unconfirmedTxid == utxo1['txid']
 
-        self.log.info("Crafting PSBT using an unconfirmed input")
-        raw_tx1 = self.nodes[0].createrawtransaction([{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {targetAddress: 0.1}, 0, True)
-        funded_tx1 = self.nodes[0].fundrawtransaction(raw_tx1, {'fee_rate': 1})['hex']
+        self.log.info("Crafting TX using an unconfirmed input")
+        targetAddress = self.nodes[2].getnewaddress()
+        raw_tx1 = wallet.createrawtransaction([{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {targetAddress: 0.1}, 0, True)
+        funded_tx1 = wallet.fundrawtransaction(raw_tx1, {'fee_rate': 1})['hex']
 
         # Make sure we only had the one input
         assert_equal(len(self.nodes[0].decoderawtransaction(funded_tx1)['vin']), 1)
 
-        final_tx1 = self.nodes[0].signrawtransactionwithwallet(funded_tx1)['hex']
+        final_tx1 = wallet.signrawtransactionwithwallet(funded_tx1)['hex']
         txid1 = self.nodes[0].sendrawtransaction(final_tx1)
 
         mempool = self.nodes[0].getrawmempool()
         assert txid1 in mempool
 
-        self.log.info("Fail to craft a new PSBT that sends more funds with add_inputs = False")
-        raw_tx2 = self.nodes[0].createrawtransaction([{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {targetAddress: 1})
-        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[0].fundrawtransaction, raw_tx2, {'fee_rate': 1, 'add_inputs': False})
+        self.log.info("Fail to craft a new TX that sends more funds with add_inputs = False")
+        raw_tx2 = wallet.createrawtransaction([{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {targetAddress: 1})
+        assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, raw_tx2, {'fee_rate': 1, 'add_inputs': False})
 
-        highest_confs = 0
-        for utxo in self.nodes[0].listunspent():
-            highest_confs = max(highest_confs, utxo['confirmations'])
-
-        self.log.info("Fail to craft a new PSBT with min depth above highest one")
-        assert_raises_rpc_error(-4, "Insufficient funds", self.nodes[0].fundrawtransaction, raw_tx2, {'add_inputs': True, 'inputs_min_depth': highest_confs + 1, 'fee_rate': 10})
+        self.log.info("Fail to craft a new TX with min depth above highest one")
+        assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, raw_tx2, {'add_inputs': True, 'inputs_min_depth': 3, 'fee_rate': 10})
 
         self.log.info("Craft a replacement adding inputs with highest depth possible")
-        funded_tx2 = self.nodes[0].fundrawtransaction(raw_tx2, {'add_inputs': True, 'inputs_min_depth': highest_confs, 'fee_rate': 10})['hex']
+        funded_tx2 = wallet.fundrawtransaction(raw_tx2, {'add_inputs': True, 'inputs_min_depth': 2, 'fee_rate': 10})['hex']
         tx2_inputs = self.nodes[0].decoderawtransaction(funded_tx2)['vin']
         assert_greater_than_or_equal(len(tx2_inputs), 2)
         for vin in tx2_inputs:
             if vin['txid'] != unconfirmedTxid:
-                assert_greater_than_or_equal(self.nodes[0].gettxout(vin['txid'], vin['vout'])['confirmations'], highest_confs)
+                assert_greater_than_or_equal(self.nodes[0].gettxout(vin['txid'], vin['vout'])['confirmations'], 2)
 
-        final_tx2 = self.nodes[0].signrawtransactionwithwallet(funded_tx2)['hex']
+        final_tx2 = wallet.signrawtransactionwithwallet(funded_tx2)['hex']
         txid2 = self.nodes[0].sendrawtransaction(final_tx2)
 
         mempool = self.nodes[0].getrawmempool()
         assert txid1 not in mempool
         assert txid2 in mempool
 
+        wallet.unloadwallet()
 
 if __name__ == '__main__':
     RawTransactionsTest().main()
