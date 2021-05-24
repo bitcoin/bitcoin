@@ -3099,6 +3099,7 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
                 {"conf_target", UniValueType(UniValue::VNUM)},
                 {"estimate_mode", UniValueType(UniValue::VSTR)},
                 {"minconfs", UniValueType(UniValue::VNUM)},
+                {"maxconfs", UniValueType(UniValue::VNUM)},
             },
             true, true);
 
@@ -3171,6 +3172,14 @@ void FundTransaction(CWallet& wallet, CMutableTransaction& tx, CAmount& fee_out,
 
             coinControl.m_min_depth = options["minconfs"].get_int();
         }
+
+        if (options.exists("maxconfs")) {
+            if (options["maxconfs"].get_int() < coinControl.m_min_depth) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("maxconfs can't be lower than minconfs: %d < %d", options["maxconfs"].get_int(), coinControl.m_min_depth));
+            }
+
+            coinControl.m_max_depth = options["maxconfs"].get_int();
+        }
         SetFeeEstimateMode(wallet, coinControl, options["conf_target"], options["estimate_mode"], options["fee_rate"], override_min_fee);
       }
     } else {
@@ -3225,6 +3234,7 @@ static RPCHelpMan fundrawtransaction()
                                                           "Warning: the resulting transaction may become invalid if one of the unsafe inputs disappears.\n"
                                                           "If that happens, you will need to fund the transaction with different inputs and republish it."},
                             {"minconfs", RPCArg::Type::NUM, RPCArg::Default{0}, "If add_inputs is specified, require inputs with at least this confirmations."},
+                            {"maxconfs", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "If add_inputs is specified, require inputs with at most this confirmations."},
                             {"changeAddress", RPCArg::Type::STR, RPCArg::DefaultHint{"pool address"}, "The bitcoin address to receive the change"},
                             {"changePosition", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
                             {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
@@ -4054,6 +4064,7 @@ static RPCHelpMan send()
                                                           "Warning: the resulting transaction may become invalid if one of the unsafe inputs disappears.\n"
                                                           "If that happens, you will need to fund the transaction with different inputs and republish it."},
                     {"minconfs", RPCArg::Type::NUM, RPCArg::Default{0}, "If add_inputs is specified, require inputs with at least this confirmations."},
+                    {"maxconfs", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "If add_inputs is specified, require inputs with at most this confirmations."},
                     {"add_to_wallet", RPCArg::Type::BOOL, RPCArg::Default{true}, "When false, returns a serialized transaction which will not be added to the wallet or broadcast"},
                     {"change_address", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"pool address"}, "The bitcoin address to receive the change"},
                     {"change_position", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
@@ -4401,6 +4412,7 @@ static RPCHelpMan walletcreatefundedpsbt()
                                                           "Warning: the resulting transaction may become invalid if one of the unsafe inputs disappears.\n"
                                                           "If that happens, you will need to fund the transaction with different inputs and republish it."},
                             {"minconfs", RPCArg::Type::NUM, RPCArg::Default{0}, "If add_inputs is specified, require inputs with at least this confirmations."},
+                            {"maxconfs", RPCArg::Type::NUM, RPCArg::Optional::OMITTED, "If add_inputs is specified, require inputs with at most this confirmations."},
                             {"changeAddress", RPCArg::Type::STR_HEX, RPCArg::DefaultHint{"pool address"}, "The bitcoin address to receive the change"},
                             {"changePosition", RPCArg::Type::NUM, RPCArg::DefaultHint{"random"}, "The index of the change output"},
                             {"change_type", RPCArg::Type::STR, RPCArg::DefaultHint{"set by -changetype"}, "The output type to use. Only valid if changeAddress is not specified. Options are \"legacy\", \"p2sh-segwit\", and \"bech32\"."},
