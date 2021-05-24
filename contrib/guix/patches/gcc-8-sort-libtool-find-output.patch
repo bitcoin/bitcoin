@@ -1,0 +1,392 @@
+diff --git a/gcc/configure b/gcc/configure
+index 97ba7d7d69c..e37a96f0c0c 100755
+--- a/gcc/configure
++++ b/gcc/configure
+@@ -19720,20 +19720,20 @@ if test -z "$aix_libpath"; then aix_libpath="/usr/lib:/lib"; fi
+ 	      prelink_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $objs $libobjs $compile_deplibs~
+-		compile_command="$compile_command `find $tpldir -name \*.o | $NL2SP`"'
++		compile_command="$compile_command `find $tpldir -name \*.o | sort | $NL2SP`"'
+ 	      old_archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $oldobjs$old_deplibs~
+-		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | $NL2SP`~
++		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | sort | $NL2SP`~
+ 		$RANLIB $oldlib'
+ 	      archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+ 	      archive_expsym_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
+ 	      ;;
+ 	    *) # Version 6 and above use weak symbols
+ 	      archive_cmds_CXX='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+diff --git a/libcc1/configure b/libcc1/configure
+index f53a121611c..5740ca90cab 100755
+--- a/libcc1/configure
++++ b/libcc1/configure
+@@ -12221,20 +12221,20 @@ if test -z "$aix_libpath"; then aix_libpath="/usr/lib:/lib"; fi
+ 	      prelink_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $objs $libobjs $compile_deplibs~
+-		compile_command="$compile_command `find $tpldir -name \*.o | $NL2SP`"'
++		compile_command="$compile_command `find $tpldir -name \*.o | sort | $NL2SP`"'
+ 	      old_archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $oldobjs$old_deplibs~
+-		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | $NL2SP`~
++		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | sort | $NL2SP`~
+ 		$RANLIB $oldlib'
+ 	      archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+ 	      archive_expsym_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
+ 	      ;;
+ 	    *) # Version 6 and above use weak symbols
+ 	      archive_cmds_CXX='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+diff --git a/libffi/configure b/libffi/configure
+index 790a291011f..54b1ac18306 100755
+--- a/libffi/configure
++++ b/libffi/configure
+@@ -12661,20 +12661,20 @@ if test -z "$aix_libpath"; then aix_libpath="/usr/lib:/lib"; fi
+ 	      prelink_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $objs $libobjs $compile_deplibs~
+-		compile_command="$compile_command `find $tpldir -name \*.o | $NL2SP`"'
++		compile_command="$compile_command `find $tpldir -name \*.o | sort | $NL2SP`"'
+ 	      old_archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $oldobjs$old_deplibs~
+-		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | $NL2SP`~
++		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | sort | $NL2SP`~
+ 		$RANLIB $oldlib'
+ 	      archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+ 	      archive_expsym_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
+ 	      ;;
+ 	    *) # Version 6 and above use weak symbols
+ 	      archive_cmds_CXX='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+diff --git a/libgo/config/libtool.m4 b/libgo/config/libtool.m4
+index f7005947454..8a84417b828 100644
+--- a/libgo/config/libtool.m4
++++ b/libgo/config/libtool.m4
+@@ -6010,20 +6010,20 @@ if test "$_lt_caught_CXX_error" != yes; then
+ 	      _LT_TAGVAR(prelink_cmds, $1)='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $objs $libobjs $compile_deplibs~
+-		compile_command="$compile_command `find $tpldir -name \*.o | $NL2SP`"'
++		compile_command="$compile_command `find $tpldir -name \*.o | sort | $NL2SP`"'
+ 	      _LT_TAGVAR(old_archive_cmds, $1)='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $oldobjs$old_deplibs~
+-		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | $NL2SP`~
++		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | sort | $NL2SP`~
+ 		$RANLIB $oldlib'
+ 	      _LT_TAGVAR(archive_cmds, $1)='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+ 	      _LT_TAGVAR(archive_expsym_cmds, $1)='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
+ 	      ;;
+ 	    *) # Version 6 and above use weak symbols
+ 	      _LT_TAGVAR(archive_cmds, $1)='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+diff --git a/libgo/config/ltmain.sh b/libgo/config/ltmain.sh
+index ce66b44906a..0f81c401407 100644
+--- a/libgo/config/ltmain.sh
++++ b/libgo/config/ltmain.sh
+@@ -2917,7 +2917,7 @@ func_extract_archives ()
+ 	    darwin_file=
+ 	    darwin_files=
+ 	    for darwin_file in $darwin_filelist; do
+-	      darwin_files=`find unfat-$$ -name $darwin_file -print | $NL2SP`
++	      darwin_files=`find unfat-$$ -name $darwin_file -print | sort | $NL2SP`
+ 	      $LIPO -create -output "$darwin_file" $darwin_files
+ 	    done # $darwin_filelist
+ 	    $RM -rf unfat-$$
+@@ -2932,7 +2932,7 @@ func_extract_archives ()
+         func_extract_an_archive "$my_xdir" "$my_xabs"
+ 	;;
+       esac
+-      my_oldobjs="$my_oldobjs "`find $my_xdir -name \*.$objext -print -o -name \*.lo -print | $NL2SP`
++      my_oldobjs="$my_oldobjs "`find $my_xdir -name \*.$objext -print -o -name \*.lo -print | sort | $NL2SP`
+     done
+ 
+     func_extract_archives_result="$my_oldobjs"
+diff --git a/libhsail-rt/configure b/libhsail-rt/configure
+index a4fcc10c1f9..8e671229fcd 100755
+--- a/libhsail-rt/configure
++++ b/libhsail-rt/configure
+@@ -12244,20 +12244,20 @@ if test -z "$aix_libpath"; then aix_libpath="/usr/lib:/lib"; fi
+ 	      prelink_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $objs $libobjs $compile_deplibs~
+-		compile_command="$compile_command `find $tpldir -name \*.o | $NL2SP`"'
++		compile_command="$compile_command `find $tpldir -name \*.o | sort | $NL2SP`"'
+ 	      old_archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $oldobjs$old_deplibs~
+-		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | $NL2SP`~
++		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | sort | $NL2SP`~
+ 		$RANLIB $oldlib'
+ 	      archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+ 	      archive_expsym_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
+ 	      ;;
+ 	    *) # Version 6 and above use weak symbols
+ 	      archive_cmds_CXX='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+diff --git a/libitm/configure b/libitm/configure
+index dbf386db434..29d4f10611f 100644
+--- a/libitm/configure
++++ b/libitm/configure
+@@ -13067,20 +13067,20 @@ if test -z "$aix_libpath"; then aix_libpath="/usr/lib:/lib"; fi
+ 	      prelink_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $objs $libobjs $compile_deplibs~
+-		compile_command="$compile_command `find $tpldir -name \*.o | $NL2SP`"'
++		compile_command="$compile_command `find $tpldir -name \*.o | sort | $NL2SP`"'
+ 	      old_archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $oldobjs$old_deplibs~
+-		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | $NL2SP`~
++		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | sort | $NL2SP`~
+ 		$RANLIB $oldlib'
+ 	      archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+ 	      archive_expsym_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
+ 	      ;;
+ 	    *) # Version 6 and above use weak symbols
+ 	      archive_cmds_CXX='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+diff --git a/liboffloadmic/configure b/liboffloadmic/configure
+index f873716991b..7aa9186b10e 100644
+--- a/liboffloadmic/configure
++++ b/liboffloadmic/configure
+@@ -12379,20 +12379,20 @@ if test -z "$aix_libpath"; then aix_libpath="/usr/lib:/lib"; fi
+ 	      prelink_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $objs $libobjs $compile_deplibs~
+-		compile_command="$compile_command `find $tpldir -name \*.o | $NL2SP`"'
++		compile_command="$compile_command `find $tpldir -name \*.o | sort | $NL2SP`"'
+ 	      old_archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $oldobjs$old_deplibs~
+-		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | $NL2SP`~
++		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | sort | $NL2SP`~
+ 		$RANLIB $oldlib'
+ 	      archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+ 	      archive_expsym_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
+ 	      ;;
+ 	    *) # Version 6 and above use weak symbols
+ 	      archive_cmds_CXX='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+diff --git a/liboffloadmic/plugin/configure b/liboffloadmic/plugin/configure
+index c031eb3e7fa..67fc7368f21 100644
+--- a/liboffloadmic/plugin/configure
++++ b/liboffloadmic/plugin/configure
+@@ -12086,20 +12086,20 @@ if test -z "$aix_libpath"; then aix_libpath="/usr/lib:/lib"; fi
+ 	      prelink_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $objs $libobjs $compile_deplibs~
+-		compile_command="$compile_command `find $tpldir -name \*.o | $NL2SP`"'
++		compile_command="$compile_command `find $tpldir -name \*.o | sort | $NL2SP`"'
+ 	      old_archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $oldobjs$old_deplibs~
+-		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | $NL2SP`~
++		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | sort | $NL2SP`~
+ 		$RANLIB $oldlib'
+ 	      archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+ 	      archive_expsym_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
+ 	      ;;
+ 	    *) # Version 6 and above use weak symbols
+ 	      archive_cmds_CXX='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+diff --git a/libsanitizer/configure b/libsanitizer/configure
+index 4695bc7d4f7..cb7d25c07e6 100755
+--- a/libsanitizer/configure
++++ b/libsanitizer/configure
+@@ -13308,20 +13308,20 @@ if test -z "$aix_libpath"; then aix_libpath="/usr/lib:/lib"; fi
+ 	      prelink_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $objs $libobjs $compile_deplibs~
+-		compile_command="$compile_command `find $tpldir -name \*.o | $NL2SP`"'
++		compile_command="$compile_command `find $tpldir -name \*.o | sort | $NL2SP`"'
+ 	      old_archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $oldobjs$old_deplibs~
+-		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | $NL2SP`~
++		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | sort | $NL2SP`~
+ 		$RANLIB $oldlib'
+ 	      archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+ 	      archive_expsym_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
+ 	      ;;
+ 	    *) # Version 6 and above use weak symbols
+ 	      archive_cmds_CXX='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
+index 61457e940ec..21ef1f61e41 100755
+--- a/libstdc++-v3/configure
++++ b/libstdc++-v3/configure
+@@ -13087,20 +13087,20 @@ if test -z "$aix_libpath"; then aix_libpath="/usr/lib:/lib"; fi
+ 	      prelink_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $objs $libobjs $compile_deplibs~
+-		compile_command="$compile_command `find $tpldir -name \*.o | $NL2SP`"'
++		compile_command="$compile_command `find $tpldir -name \*.o | sort | $NL2SP`"'
+ 	      old_archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $oldobjs$old_deplibs~
+-		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | $NL2SP`~
++		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | sort | $NL2SP`~
+ 		$RANLIB $oldlib'
+ 	      archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+ 	      archive_expsym_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
+ 	      ;;
+ 	    *) # Version 6 and above use weak symbols
+ 	      archive_cmds_CXX='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+diff --git a/libtool.m4 b/libtool.m4
+index 24d13f34409..940faaa161d 100644
+--- a/libtool.m4
++++ b/libtool.m4
+@@ -6005,20 +6005,20 @@ if test "$_lt_caught_CXX_error" != yes; then
+ 	      _LT_TAGVAR(prelink_cmds, $1)='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $objs $libobjs $compile_deplibs~
+-		compile_command="$compile_command `find $tpldir -name \*.o | $NL2SP`"'
++		compile_command="$compile_command `find $tpldir -name \*.o | sort | $NL2SP`"'
+ 	      _LT_TAGVAR(old_archive_cmds, $1)='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $oldobjs$old_deplibs~
+-		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | $NL2SP`~
++		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | sort | $NL2SP`~
+ 		$RANLIB $oldlib'
+ 	      _LT_TAGVAR(archive_cmds, $1)='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+ 	      _LT_TAGVAR(archive_expsym_cmds, $1)='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
+ 	      ;;
+ 	    *) # Version 6 and above use weak symbols
+ 	      _LT_TAGVAR(archive_cmds, $1)='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+diff --git a/libvtv/configure b/libvtv/configure
+index a197f750453..31ab3a0637b 100755
+--- a/libvtv/configure
++++ b/libvtv/configure
+@@ -13339,20 +13339,20 @@ if test -z "$aix_libpath"; then aix_libpath="/usr/lib:/lib"; fi
+ 	      prelink_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $objs $libobjs $compile_deplibs~
+-		compile_command="$compile_command `find $tpldir -name \*.o | $NL2SP`"'
++		compile_command="$compile_command `find $tpldir -name \*.o | sort | $NL2SP`"'
+ 	      old_archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $oldobjs$old_deplibs~
+-		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | $NL2SP`~
++		$AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | sort | $NL2SP`~
+ 		$RANLIB $oldlib'
+ 	      archive_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+ 	      archive_expsym_cmds_CXX='tpldir=Template.dir~
+ 		rm -rf $tpldir~
+ 		$CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
+-		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
++		$CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
+ 	      ;;
+ 	    *) # Version 6 and above use weak symbols
+ 	      archive_cmds_CXX='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
+diff --git a/ltmain.sh b/ltmain.sh
+index 9503ec85d70..79f9ba89af5 100644
+--- a/ltmain.sh
++++ b/ltmain.sh
+@@ -2917,7 +2917,7 @@ func_extract_archives ()
+ 	    darwin_file=
+ 	    darwin_files=
+ 	    for darwin_file in $darwin_filelist; do
+-	      darwin_files=`find unfat-$$ -name $darwin_file -print | $NL2SP`
++	      darwin_files=`find unfat-$$ -name $darwin_file -print | sort | $NL2SP`
+ 	      $LIPO -create -output "$darwin_file" $darwin_files
+ 	    done # $darwin_filelist
+ 	    $RM -rf unfat-$$
+@@ -2932,7 +2932,7 @@ func_extract_archives ()
+         func_extract_an_archive "$my_xdir" "$my_xabs"
+ 	;;
+       esac
+-      my_oldobjs="$my_oldobjs "`find $my_xdir -name \*.$objext -print -o -name \*.lo -print | $NL2SP`
++      my_oldobjs="$my_oldobjs "`find $my_xdir -name \*.$objext -print -o -name \*.lo -print | sort | $NL2SP`
+     done
+ 
+     func_extract_archives_result="$my_oldobjs"

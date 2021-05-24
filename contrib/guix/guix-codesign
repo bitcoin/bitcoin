@@ -18,7 +18,26 @@ source "$(dirname "${BASH_SOURCE[0]}")/libexec/prelude.bash"
 # Required non-builtin commands should be invocable
 ################
 
-check_tools cat mkdir make git guix
+check_tools cat mkdir git guix
+
+################
+# Required env vars should be non-empty
+################
+
+cmd_usage() {
+    cat <<EOF
+Synopsis:
+
+    env DETACHED_SIGS_REPO=<path/to/bitcoin-detached-sigs> \\
+      ./contrib/guix/guix-codesign
+
+EOF
+}
+
+if [ -z "$DETACHED_SIGS_REPO" ]; then
+    cmd_usage
+    exit 1
+fi
 
 ################
 # GUIX_BUILD_OPTIONS should be empty
@@ -49,12 +68,12 @@ exit 1
 fi
 
 ################
-# The git worktree should not be dirty
+# The codesignature git worktree should not be dirty
 ################
 
-if ! git diff-index --quiet HEAD -- && [ -z "$FORCE_DIRTY_WORKTREE" ]; then
-cat << EOF
-ERR: The current git worktree is dirty, which may lead to broken builds.
+if ! git -C "$DETACHED_SIGS_REPO" diff-index --quiet HEAD -- && [ -z "$FORCE_DIRTY_WORKTREE" ]; then
+    cat << EOF
+ERR: The DETACHED CODESIGNATURE git worktree is dirty, which may lead to broken builds.
 
      Aborting...
 
@@ -64,26 +83,22 @@ Hint: To make your git worktree clean, You may want to:
       3. Set the 'FORCE_DIRTY_WORKTREE' environment variable if you insist on
          using a dirty worktree
 EOF
-exit 1
+    exit 1
 fi
-
-mkdir -p "$VERSION_BASE"
 
 ################
 # Build directories should not exist
 ################
 
 # Default to building for all supported HOSTs (overridable by environment)
-export HOSTS="${HOSTS:-x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu powerpc64-linux-gnu powerpc64le-linux-gnu
-                       x86_64-w64-mingw32
-                       x86_64-apple-darwin18}"
+export HOSTS="${HOSTS:-x86_64-w64-mingw32 x86_64-apple-darwin18}"
 
 # Usage: distsrc_for_host HOST
 #
 #   HOST: The current platform triple we're building for
 #
 distsrc_for_host() {
-    echo "${DISTSRC_BASE}/distsrc-${VERSION}-${1}"
+    echo "${DISTSRC_BASE}/distsrc-${VERSION}-${1}-codesigned"
 }
 
 # Accumulate a list of build directories that already exist...
@@ -120,23 +135,54 @@ else
     mkdir -p "$DISTSRC_BASE"
 fi
 
+
 ################
-# When building for darwin, the macOS SDK should exists
+# Unsigned tarballs SHOULD exist
 ################
 
-for host in $HOSTS; do
-    case "$host" in
+# Usage: outdir_for_host HOST SUFFIX
+#
+#   HOST: The current platform triple we're building for
+#
+outdir_for_host() {
+    echo "${OUTDIR_BASE}/${1}${2:+-${2}}"
+}
+
+
+unsigned_tarball_for_host() {
+    case "$1" in
+        *mingw*)
+            echo "$(outdir_for_host "$1")/${DISTNAME}-win-unsigned.tar.gz"
+            ;;
         *darwin*)
-            OSX_SDK="$(make -C "${PWD}/depends" --no-print-directory HOST="$host" print-OSX_SDK | sed 's@^[^=]\+=@@g')"
-            if [ -e "$OSX_SDK" ]; then
-                echo "Found macOS SDK at '${OSX_SDK}', using..."
-            else
-                echo "macOS SDK does not exist at '${OSX_SDK}', please place the extracted, untarred SDK there to perform darwin builds, exiting..."
-                exit 1
-            fi
+            echo "$(outdir_for_host "$1")/${DISTNAME}-osx-unsigned.tar.gz"
+            ;;
+        *)
+            exit 1
             ;;
     esac
+}
+
+# Accumulate a list of build directories that already exist...
+hosts_unsigned_tarball_missing=""
+for host in $HOSTS; do
+    if [ ! -e "$(unsigned_tarball_for_host "$host")" ]; then
+        hosts_unsigned_tarball_missing+=" ${host}"
+    fi
 done
+
+if [ -n "$hosts_unsigned_tarball_missing" ]; then
+    # ...so that we can print them out nicely in an error message
+    cat << EOF
+ERR: Unsigned tarballs do not exist
+...
+
+EOF
+for host in $hosts_unsigned_tarball_missing; do
+    echo "     ${host} '$(unsigned_tarball_for_host "$host")'"
+done
+exit 1
+fi
 
 ################
 # Check that we can connect to the guix-daemon
@@ -150,12 +196,12 @@ Hint: If this hangs, you may want to try turning your guix-daemon off and on
 
 EOF
 if ! guix gc --list-failures > /dev/null; then
-cat << EOF
+    cat << EOF
 
 ERR: Failed to connect to the guix-daemon, please ensure that one is running and
      reachable.
 EOF
-exit 1
+    exit 1
 fi
 
 # Developer note: we could use `guix repl` for this check and run:
@@ -173,19 +219,6 @@ fi
 # environment)
 JOBS="${JOBS:-$(nproc)}"
 
-# Usage: host_to_commonname HOST
-#
-#   HOST: The current platform triple we're building for
-#
-host_to_commonname() {
-    case "$1" in
-        *darwin*) echo osx ;;
-        *mingw*)  echo win ;;
-        *linux*)  echo linux ;;
-        *)        exit 1 ;;
-    esac
-}
-
 # Determine the reference time used for determinism (overridable by environment)
 SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
 
@@ -194,86 +227,18 @@ SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:-$(git log --format=%at -1)}"
 time-machine() {
     # shellcheck disable=SC2086
     guix time-machine --url=https://github.com/dongcarl/guix.git \
-                      --commit=490e39ff303f4f6873a04bfb8253755bdae1b29c \
-                      --cores="$JOBS" \
-                      --keep-failed \
-                      --fallback \
-                      ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
-                      ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_TIMEMACHINE_FLAGS} \
-                      -- "$@"
+         --commit=490e39ff303f4f6873a04bfb8253755bdae1b29c \
+         --cores="$JOBS" \
+         --keep-failed \
+         --fallback \
+         ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
+         ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_TIMEMACHINE_FLAGS} \
+         -- "$@"
 }
-
-
-# Precious directories are those which should not be cleaned between successive
-# guix builds
-depends_precious_dir_names='SOURCES_PATH BASE_CACHE SDK_PATH'
-precious_dir_names="${depends_precious_dir_names} OUTDIR_BASE PROFILES_BASE"
-
-# Usage: contains IFS-SEPARATED-LIST ITEM
-contains() {
-    for i in ${1}; do
-        if [ "$i" = "${2}" ]; then
-            return 0  # Found!
-        fi
-    done
-    return 1
-}
-
-# If the user explicitly specified a precious directory, create it so we
-# can map it into the container
-for precious_dir_name in $precious_dir_names; do
-    precious_dir_path="${!precious_dir_name}"
-    if [ -n "$precious_dir_path" ]; then
-        if [ ! -e "$precious_dir_path" ]; then
-            mkdir -p "$precious_dir_path"
-        elif [ -L "$precious_dir_path" ]; then
-            echo "ERR: ${precious_dir_name} cannot be a symbolic link"
-            exit 1
-        elif [ ! -d "$precious_dir_path" ]; then
-            echo "ERR: ${precious_dir_name} must be a directory"
-            exit 1
-        fi
-    fi
-done
-
-mkdir -p "$VAR_BASE"
-
-# Record the _effective_ values of precious directories such that guix-clean can
-# avoid clobbering them if appropriate.
-#
-# shellcheck disable=SC2046,SC2086
-{
-    # Get depends precious dir definitions from depends
-    make -C "${PWD}/depends" \
-         --no-print-directory \
-         -- $(printf "print-%s\n" $depends_precious_dir_names)
-
-    # Get remaining precious dir definitions from the environment
-    for precious_dir_name in $precious_dir_names; do
-        precious_dir_path="${!precious_dir_name}"
-        if ! contains "$depends_precious_dir_names" "$precious_dir_name"; then
-            echo "${precious_dir_name}=${precious_dir_path}"
-        fi
-    done
-} > "${VAR_BASE}/precious_dirs"
 
 # Make sure an output directory exists for our builds
 OUTDIR_BASE="${OUTDIR_BASE:-${VERSION_BASE}/output}"
 mkdir -p "$OUTDIR_BASE"
-
-# Download the depends sources now as we won't have internet access in the build
-# container
-for host in $HOSTS; do
-    make -C "${PWD}/depends" -j"$JOBS" download-"$(host_to_commonname "$host")" ${V:+V=1} ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"}
-done
-
-# Usage: outdir_for_host HOST SUFFIX
-#
-#   HOST: The current platform triple we're building for
-#
-outdir_for_host() {
-    echo "${OUTDIR_BASE}/${1}${2:+-${2}}"
-}
 
 # Usage: profiledir_for_host HOST SUFFIX
 #
@@ -283,17 +248,16 @@ profiledir_for_host() {
     echo "${PROFILES_BASE}/${1}${2:+-${2}}"
 }
 
-
 #########
 # BUILD #
 #########
 
-# Function to be called when building for host ${1} and the user interrupts the
-# build
+# Function to be called when codesigning for host ${1} and the user interrupts
+# the codesign
 int_trap() {
 cat << EOF
-** INT received while building ${1}, you may want to clean up the relevant
-   work directories (e.g. distsrc-*) before rebuilding
+** INT received while codesigning ${1}, you may want to clean up the relevant
+   work directories (e.g. distsrc-*) before recodesigning
 
 Hint: To blow everything away, you may want to use:
 
@@ -320,16 +284,18 @@ for host in $HOSTS; do
 
         # shellcheck disable=SC2030
 cat << EOF
-INFO: Building ${VERSION:?not set} for platform triple ${HOST:?not set}:
+INFO: Codesigning ${VERSION:?not set} for platform triple ${HOST:?not set}:
       ...using reference timestamp: ${SOURCE_DATE_EPOCH:?not set}
-      ...running at most ${JOBS:?not set} jobs
       ...from worktree directory: '${PWD}'
           ...bind-mounted in container to: '/bitcoin'
       ...in build directory: '$(distsrc_for_host "$HOST")'
           ...bind-mounted in container to: '$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")'
-      ...outputting in: '$(outdir_for_host "$HOST")'
-          ...bind-mounted in container to: '$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST")'
+      ...outputting in: '$(outdir_for_host "$HOST" codesigned)'
+          ...bind-mounted in container to: '$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST" codesigned)'
+      ...using detached signatures in: '${DETACHED_SIGS_REPO:?not set}'
+          ...bind-mounted in container to: '/detached-sigs'
 EOF
+
 
         # Run the build script 'contrib/guix/libexec/build.sh' in the build
         # container specified by 'contrib/guix/manifest.scm'.
@@ -380,12 +346,6 @@ EOF
         #     make the downloaded depends sources available to it. The sources
         #     should have been downloaded prior to this invocation.
         #
-        #   --keep-failed     keep build tree of failed builds
-        #
-        #     When builds of the Guix environment itself (not Bitcoin Core)
-        #     fail, it is useful for the build tree to be kept for debugging
-        #     purposes.
-        #
         #  ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"}
         #
         #                     fetch substitute from SUBSTITUTE_URLS if they are
@@ -404,15 +364,15 @@ EOF
                                  --share="$PWD"=/bitcoin \
                                  --share="$DISTSRC_BASE"=/distsrc-base \
                                  --share="$OUTDIR_BASE"=/outdir-base \
+                                 --share="$DETACHED_SIGS_REPO"=/detached-sigs \
                                  --expose="$(git rev-parse --git-common-dir)" \
+                                 --expose="$(git -C "$DETACHED_SIGS_REPO" rev-parse --git-common-dir)" \
                                  ${SOURCES_PATH:+--share="$SOURCES_PATH"} \
-                                 ${BASE_CACHE:+--share="$BASE_CACHE"} \
-                                 ${SDK_PATH:+--share="$SDK_PATH"} \
                                  --cores="$JOBS" \
                                  --keep-failed \
                                  --fallback \
                                  --link-profile \
-                                 --root="$(profiledir_for_host "${HOST}")" \
+                                 --root="$(profiledir_for_host "${HOST}" codesigned)" \
                                  ${SUBSTITUTE_URLS:+--substitute-urls="$SUBSTITUTE_URLS"} \
                                  ${ADDITIONAL_GUIX_COMMON_FLAGS} ${ADDITIONAL_GUIX_ENVIRONMENT_FLAGS} \
                                  -- env HOST="$host" \
@@ -421,12 +381,12 @@ EOF
                                         SOURCE_DATE_EPOCH="${SOURCE_DATE_EPOCH:?unable to determine value}" \
                                         ${V:+V=1} \
                                         ${SOURCES_PATH:+SOURCES_PATH="$SOURCES_PATH"} \
-                                        ${BASE_CACHE:+BASE_CACHE="$BASE_CACHE"} \
-                                        ${SDK_PATH:+SDK_PATH="$SDK_PATH"} \
                                         DISTSRC="$(DISTSRC_BASE=/distsrc-base && distsrc_for_host "$HOST")" \
-                                        OUTDIR="$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST")" \
+                                        OUTDIR="$(OUTDIR_BASE=/outdir-base && outdir_for_host "$HOST" codesigned)" \
                                         DIST_ARCHIVE_BASE=/outdir-base/dist-archive \
-                                      bash -c "cd /bitcoin && bash contrib/guix/libexec/build.sh"
+                                        DETACHED_SIGS_REPO=/detached-sigs \
+                                        UNSIGNED_TARBALL="$(OUTDIR_BASE=/outdir-base && unsigned_tarball_for_host "$HOST")" \
+                                      bash -c "cd /bitcoin && bash contrib/guix/libexec/codesign.sh"
     )
 
 done
