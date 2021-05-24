@@ -165,7 +165,7 @@ private:
 public:
     CFlatDB(std::string strFilenameIn, std::string strMagicMessageIn)
     {
-        pathDB = GetDataDir() / strFilenameIn;
+        pathDB = gArgs.GetDataDirNet() / strFilenameIn;
         strFilename = strFilenameIn;
         strMagicMessage = strMagicMessageIn;
     }

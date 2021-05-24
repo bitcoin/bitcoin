@@ -1203,15 +1203,15 @@ bool CAssetDB::Flush(const AssetMap &mapAssets) {
     return WriteBatch(batch);
 }
 
-CEthereumTxRootsDB::CEthereumTxRootsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "ethereumtxroots", nCacheSize, fMemory, fWipe) {
+CEthereumTxRootsDB::CEthereumTxRootsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "ethereumtxroots", nCacheSize, fMemory, fWipe) {
     Init();
 }
 
-CEthereumMintedTxDB::CEthereumMintedTxDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "ethereumminttx", nCacheSize, fMemory, fWipe) {
+CEthereumMintedTxDB::CEthereumMintedTxDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "ethereumminttx", nCacheSize, fMemory, fWipe) {
 }
 
-CAssetDB::CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "asset", nCacheSize, fMemory, fWipe) {
+CAssetDB::CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "asset", nCacheSize, fMemory, fWipe) {
 }
 
-CAssetOldDB::CAssetOldDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "assets", nCacheSize, fMemory, fWipe) {
+CAssetOldDB::CAssetOldDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "assets", nCacheSize, fMemory, fWipe) {
 }

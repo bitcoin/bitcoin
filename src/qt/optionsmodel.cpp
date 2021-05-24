@@ -193,7 +193,7 @@ void OptionsModel::Reset()
     QSettings settings;
 
     // Backup old settings to chain-specific datadir for troubleshooting
-    BackupSettings(GetDataDir(true) / "guisettings.ini.bak", settings);
+    BackupSettings(gArgs.GetDataDirNet() / "guisettings.ini.bak", settings);
 
     // Save the strDataDir setting
     QString dataDir = GUIUtil::getDefaultDataDirectory();

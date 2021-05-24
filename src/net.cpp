@@ -2739,7 +2739,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
 
     proxyType i2p_sam;
     if (GetProxy(NET_I2P, i2p_sam)) {
-        m_i2p_sam_session = std::make_unique<i2p::sam::Session>(GetDataDir() / "i2p_private_key",
+        m_i2p_sam_session = std::make_unique<i2p::sam::Session>(gArgs.GetDataDirNet() / "i2p_private_key",
                                                                 i2p_sam.proxy, &interruptNet);
     }
 
@@ -2765,7 +2765,7 @@ bool CConnman::Start(CScheduler& scheduler, const Options& connOptions)
 
     if (m_use_addrman_outgoing) {
         // Load addresses from anchors.dat
-        m_anchors = ReadAnchors(GetDataDir() / ANCHORS_DATABASE_FILENAME);
+        m_anchors = ReadAnchors(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME);
         if (m_anchors.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
             m_anchors.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
         }
@@ -2915,7 +2915,7 @@ void CConnman::StopNodes()
             if (anchors_to_dump.size() > MAX_BLOCK_RELAY_ONLY_ANCHORS) {
                 anchors_to_dump.resize(MAX_BLOCK_RELAY_ONLY_ANCHORS);
             }
-            DumpAnchors(GetDataDir() / ANCHORS_DATABASE_FILENAME, anchors_to_dump);
+            DumpAnchors(gArgs.GetDataDirNet() / ANCHORS_DATABASE_FILENAME, anchors_to_dump);
         }
     }
 
@@ -3549,7 +3549,7 @@ void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Spa
     std::string clean_addr = addr.ToString();
     std::replace(clean_addr.begin(), clean_addr.end(), ':', '_');
 
-    fs::path base_path = GetDataDir() / "message_capture" / clean_addr;
+    fs::path base_path = gArgs.GetDataDirNet() / "message_capture" / clean_addr;
     fs::create_directories(base_path);
 
     fs::path path = base_path / (is_incoming ? "msgs_recv.dat" : "msgs_sent.dat");

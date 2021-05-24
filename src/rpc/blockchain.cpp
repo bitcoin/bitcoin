@@ -2699,14 +2699,14 @@ static RPCHelpMan dumptxoutset()
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
-    const fs::path path = fsbridge::AbsPathJoin(GetDataDir(), request.params[0].get_str());
+    const fs::path path = fsbridge::AbsPathJoin(gArgs.GetDataDirNet(), request.params[0].get_str());
     // SYSCOIN
-    const fs::path pathjson = fsbridge::AbsPathJoin(GetDataDir(), request.params[0].get_str()+".json");
+    const fs::path pathjson = fsbridge::AbsPathJoin(gArgs.GetDataDirNet(), request.params[0].get_str()+".json");
     // Write to a temporary path and then move into `path` on completion
     // to avoid confusion due to an interruption.
-    const fs::path temppath = fsbridge::AbsPathJoin(GetDataDir(), request.params[0].get_str() + ".incomplete");
+    const fs::path temppath = fsbridge::AbsPathJoin(gArgs.GetDataDirNet(), request.params[0].get_str() + ".incomplete");
     // SYSCOIN
-    const fs::path temppathjson = fsbridge::AbsPathJoin(GetDataDir(), request.params[0].get_str() + ".incomplete.json");
+    const fs::path temppathjson = fsbridge::AbsPathJoin(gArgs.GetDataDirNet(), request.params[0].get_str() + ".incomplete.json");
 
     if (fs::exists(path)) {
         throw JSONRPCError(

@@ -98,7 +98,7 @@ BlockFilterIndex::BlockFilterIndex(BlockFilterType filter_type,
     const std::string& filter_name = BlockFilterTypeName(filter_type);
     if (filter_name.empty()) throw std::invalid_argument("unknown filter_type");
 
-    fs::path path = GetDataDir() / "indexes" / "blockfilter" / filter_name;
+    fs::path path = gArgs.GetDataDirNet() / "indexes" / "blockfilter" / filter_name;
     fs::create_directories(path);
 
     m_name = filter_name + " block filter index";

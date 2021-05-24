@@ -24,7 +24,7 @@ CDBWrapper* llmqDb;
 
 void InitLLMQSystem(bool unitTests, CConnman& connman, BanMan& banman, PeerManager& peerman, bool fWipe)
 {
-    llmqDb = new CDBWrapper(unitTests ? "" : (GetDataDir() / "llmq"), 1 << 20, unitTests, fWipe);
+    llmqDb = new CDBWrapper(unitTests ? "" : (gArgs.GetDataDirNet() / "llmq"), 1 << 20, unitTests, fWipe);
     blsWorker = new CBLSWorker();
 
     quorumDKGDebugManager = new CDKGDebugManager();

@@ -53,23 +53,23 @@ BOOST_AUTO_TEST_CASE(util_datadir)
     ArgsManager args;
     args.ForceSetArg("-datadir", m_path_root.string());
 
-    const fs::path dd_norm = args.GetDataDirPath();
+    const fs::path dd_norm = args.GetDataDirBase();
 
     args.ForceSetArg("-datadir", dd_norm.string() + "/");
     args.ClearPathCache();
-    BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirPath());
+    BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
 
     args.ForceSetArg("-datadir", dd_norm.string() + "/.");
     args.ClearPathCache();
-    BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirPath());
+    BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
 
     args.ForceSetArg("-datadir", dd_norm.string() + "/./");
     args.ClearPathCache();
-    BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirPath());
+    BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
 
     args.ForceSetArg("-datadir", dd_norm.string() + "/.//");
     args.ClearPathCache();
-    BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirPath());
+    BOOST_CHECK_EQUAL(dd_norm, args.GetDataDirBase());
 }
 
 BOOST_AUTO_TEST_CASE(util_check)
@@ -1159,10 +1159,10 @@ BOOST_AUTO_TEST_CASE(util_ReadWriteSettings)
     // Test error logging, and remove previously written setting.
     {
         ASSERT_DEBUG_LOG("Failed renaming settings file");
-        fs::remove(args1.GetDataDirPath() / "settings.json");
-        fs::create_directory(args1.GetDataDirPath() / "settings.json");
+        fs::remove(args1.GetDataDirBase() / "settings.json");
+        fs::create_directory(args1.GetDataDirBase() / "settings.json");
         args2.WriteSettingsFile();
-        fs::remove(args1.GetDataDirPath() / "settings.json");
+        fs::remove(args1.GetDataDirBase() / "settings.json");
     }
 }
 
@@ -1810,7 +1810,7 @@ static constexpr char ExitCommand = 'X';
 
 BOOST_AUTO_TEST_CASE(test_LockDirectory)
 {
-    fs::path dirname = m_args.GetDataDirPath() / "lock_dir";
+    fs::path dirname = m_args.GetDataDirBase() / "lock_dir";
     const std::string lockname = ".lock";
 #ifndef WIN32
     // Revert SIGCHLD to default, otherwise boost.test will catch and fail on
@@ -1899,7 +1899,7 @@ BOOST_AUTO_TEST_CASE(test_LockDirectory)
 BOOST_AUTO_TEST_CASE(test_DirIsWritable)
 {
     // Should be able to write to the data dir.
-    fs::path tmpdirname = m_args.GetDataDirPath();
+    fs::path tmpdirname = m_args.GetDataDirBase();
     BOOST_CHECK_EQUAL(DirIsWritable(tmpdirname), true);
 
     // Should not be able to write to a non-existent dir.
