@@ -133,18 +133,6 @@ BOOST_AUTO_TEST_CASE(netbase_lookupnumeric)
     BOOST_CHECK(TestParse("[fd6c:88c0:8724:1:2:3:4:5]", "[fd6c:88c0:8724:1:2:3:4:5]:65535"));
 }
 
-BOOST_AUTO_TEST_CASE(onioncat_test)
-{
-    // values from https://web.archive.org/web/20121122003543/http://www.cypherpunk.at/onioncat/wiki/OnionCat
-    CNetAddr addr1(ResolveIP("5wyqrzbvrdsumnok.onion"));
-    CNetAddr addr2(ResolveIP("FD87:D87E:EB43:edb1:8e4:3588:e546:35ca"));
-    BOOST_CHECK(addr1 == addr2);
-    BOOST_CHECK(addr1.IsTor());
-    BOOST_CHECK(addr1.ToStringIP() == "5wyqrzbvrdsumnok.onion");
-    BOOST_CHECK(addr1.IsRoutable());
-
-}
-
 BOOST_AUTO_TEST_CASE(embedded_test)
 {
     CNetAddr addr1(ResolveIP("1.2.3.4"));
@@ -481,10 +469,10 @@ BOOST_AUTO_TEST_CASE(netbase_dont_resolve_strings_with_embedded_nul_characters)
     BOOST_CHECK(!LookupSubNet("1.2.3.0/24\0"s, ret));
     BOOST_CHECK(!LookupSubNet("1.2.3.0/24\0example.com"s, ret));
     BOOST_CHECK(!LookupSubNet("1.2.3.0/24\0example.com\0"s, ret));
-    BOOST_CHECK(LookupSubNet("5wyqrzbvrdsumnok.onion"s, ret));
-    BOOST_CHECK(!LookupSubNet("5wyqrzbvrdsumnok.onion\0"s, ret));
-    BOOST_CHECK(!LookupSubNet("5wyqrzbvrdsumnok.onion\0example.com"s, ret));
-    BOOST_CHECK(!LookupSubNet("5wyqrzbvrdsumnok.onion\0example.com\0"s, ret));
+    BOOST_CHECK(LookupSubNet("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"s, ret));
+    BOOST_CHECK(!LookupSubNet("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion\0"s, ret));
+    BOOST_CHECK(!LookupSubNet("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion\0example.com"s, ret));
+    BOOST_CHECK(!LookupSubNet("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion\0example.com\0"s, ret));
 }
 
 // Since CNetAddr (un)ser is tested separately in net_tests.cpp here we only

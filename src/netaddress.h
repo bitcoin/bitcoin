@@ -260,8 +260,7 @@ class CNetAddr
         /**
          * Parse a Tor address and set this object to it.
          * @param[in] addr Address to parse, must be a valid C string, for example
-         * pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion or
-         * 6hzph5hv6337r6p2.onion.
+         * pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion.
          * @returns Whether the operation was successful.
          * @see CNetAddr::IsTor()
          */

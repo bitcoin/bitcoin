@@ -318,15 +318,8 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_CHECK(!addr.IsBindAny());
     BOOST_CHECK_EQUAL(addr.ToString(), link_local);
 
-    // TORv2
-    BOOST_REQUIRE(addr.SetSpecial("6hzph5hv6337r6p2.onion"));
-    BOOST_REQUIRE(addr.IsValid());
-    BOOST_REQUIRE(addr.IsTor());
-
-    BOOST_CHECK(!addr.IsI2P());
-    BOOST_CHECK(!addr.IsBindAny());
-    BOOST_CHECK(addr.IsAddrV1Compatible());
-    BOOST_CHECK_EQUAL(addr.ToString(), "6hzph5hv6337r6p2.onion");
+    // TORv2, no longer supported
+    BOOST_CHECK(!addr.SetSpecial("6hzph5hv6337r6p2.onion"));
 
     // TORv3
     const char* torv3_addr = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion";
@@ -470,10 +463,8 @@ BOOST_AUTO_TEST_CASE(cnetaddr_serialize_v1)
     BOOST_CHECK_EQUAL(HexStr(s), "1a1b2a2b3a3b4a4b5a5b6a6b7a7b8a8b");
     s.clear();
 
-    BOOST_REQUIRE(addr.SetSpecial("6hzph5hv6337r6p2.onion"));
-    s << addr;
-    BOOST_CHECK_EQUAL(HexStr(s), "fd87d87eeb43f1f2f3f4f5f6f7f8f9fa");
-    s.clear();
+    // TORv2, no longer supported
+    BOOST_CHECK(!addr.SetSpecial("6hzph5hv6337r6p2.onion"));
 
     BOOST_REQUIRE(addr.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"));
     s << addr;
@@ -508,10 +499,8 @@ BOOST_AUTO_TEST_CASE(cnetaddr_serialize_v2)
     BOOST_CHECK_EQUAL(HexStr(s), "02101a1b2a2b3a3b4a4b5a5b6a6b7a7b8a8b");
     s.clear();
 
-    BOOST_REQUIRE(addr.SetSpecial("6hzph5hv6337r6p2.onion"));
-    s << addr;
-    BOOST_CHECK_EQUAL(HexStr(s), "030af1f2f3f4f5f6f7f8f9fa");
-    s.clear();
+    // TORv2, no longer supported
+    BOOST_CHECK(!addr.SetSpecial("6hzph5hv6337r6p2.onion"));
 
     BOOST_REQUIRE(addr.SetSpecial("kpgvmscirrdqpekbqjsvw5teanhatztpp2gl6eee4zkowvwfxwenqaid.onion"));
     s << addr;

@@ -254,12 +254,7 @@ bool CNetAddr::SetTor(const std::string& addr)
         return false;
     }
 
-    switch (input.size()) {
-    case ADDR_TORV2_SIZE:
-        m_net = NET_ONION;
-        m_addr.assign(input.begin(), input.end());
-        return true;
-    case torv3::TOTAL_LEN: {
+    if (input.size() == torv3::TOTAL_LEN) {
         Span<const uint8_t> input_pubkey{input.data(), ADDR_TORV3_SIZE};
         Span<const uint8_t> input_checksum{input.data() + ADDR_TORV3_SIZE, torv3::CHECKSUM_LEN};
         Span<const uint8_t> input_version{input.data() + ADDR_TORV3_SIZE + torv3::CHECKSUM_LEN, sizeof(torv3::VERSION)};
@@ -278,7 +273,6 @@ bool CNetAddr::SetTor(const std::string& addr)
         m_net = NET_ONION;
         m_addr.assign(input_pubkey.begin(), input_pubkey.end());
         return true;
-    }
     }
 
     return false;
