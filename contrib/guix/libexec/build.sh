@@ -448,4 +448,6 @@ mkdir -p "$DISTSRC"
     esac
 )  # $DISTSRC
 
-mv --no-target-directory "$OUTDIR" "$ACTUAL_OUTDIR"
+rm -rf "$ACTUAL_OUTDIR"
+mv --no-target-directory "$OUTDIR" "$ACTUAL_OUTDIR" \
+    || ( rm -rf "$ACTUAL_OUTDIR" && exit 1 )
