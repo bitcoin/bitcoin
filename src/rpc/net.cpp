@@ -948,26 +948,22 @@ static RPCHelpMan addpeeraddress()
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Address manager functionality missing or disabled");
     }
 
+    const std::string& addr_string{request.params[0].get_str()};
+    const uint16_t port{static_cast<uint16_t>(request.params[1].get_int())};
+
     UniValue obj(UniValue::VOBJ);
-
-    std::string addr_string = request.params[0].get_str();
-    uint16_t port{static_cast<uint16_t>(request.params[1].get_int())};
-
     CNetAddr net_addr;
-    if (!LookupHost(addr_string, net_addr, false)) {
-        obj.pushKV("success", false);
-        return obj;
-    }
-    CAddress address = CAddress({net_addr, port}, ServiceFlags(NODE_NETWORK|NODE_WITNESS));
-    address.nTime = GetAdjustedTime();
-    // The source address is set equal to the address. This is equivalent to the peer
-    // announcing itself.
-    if (!node.addrman->Add(address, address)) {
-        obj.pushKV("success", false);
-        return obj;
+    bool success{false};
+
+    if (LookupHost(addr_string, net_addr, false)) {
+        CAddress address{CAddress({net_addr, port}, ServiceFlags(NODE_NETWORK | NODE_WITNESS))};
+        address.nTime = GetAdjustedTime();
+        // The source address is set equal to the address. This is equivalent to the peer
+        // announcing itself.
+        if (node.addrman->Add(address, address)) success = true;
     }
 
-    obj.pushKV("success", true);
+    obj.pushKV("success", success);
     return obj;
 },
     };

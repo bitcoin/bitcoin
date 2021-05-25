@@ -69,6 +69,7 @@ class NetTest(SyscoinTestFramework):
         self.test_getaddednodeinfo()
         self.test_service_flags()
         self.test_getnodeaddresses()
+        self.test_addpeeraddress()
 
     def test_connection_count(self):
         self.log.info("Test getconnectioncount")
@@ -236,6 +237,30 @@ class NetTest(SyscoinTestFramework):
         # Test invalid arguments.
         assert_raises_rpc_error(-8, "Address count out of range", self.nodes[0].getnodeaddresses, -1)
         assert_raises_rpc_error(-8, "Network not recognized: Foo", self.nodes[0].getnodeaddresses, 1, "Foo")
+
+    def test_addpeeraddress(self):
+        self.log.info("Test addpeeraddress")
+        node = self.nodes[1]
+
+        self.log.debug("Test that addpeerinfo is a hidden RPC")
+        # It is hidden from general help, but its detailed help may be called directly.
+        assert "addpeerinfo" not in node.help()
+        assert "addpeerinfo" in node.help("addpeerinfo")
+
+        self.log.debug("Test that adding an empty address fails")
+        assert_equal(node.addpeeraddress(address="", port=8333), {"success": False})
+        assert_equal(node.getnodeaddresses(count=0), [])
+
+        self.log.debug("Test that adding a valid address succeeds")
+        assert_equal(node.addpeeraddress(address="1.2.3.4", port=8333), {"success": True})
+        addrs = node.getnodeaddresses(count=0)
+        assert_equal(len(addrs), 1)
+        assert_equal(addrs[0]["address"], "1.2.3.4")
+        assert_equal(addrs[0]["port"], 8333)
+
+        self.log.debug("Test that adding the same address again when already present fails")
+        assert_equal(node.addpeeraddress(address="1.2.3.4", port=8333), {"success": False})
+        assert_equal(len(node.getnodeaddresses(count=0)), 1)
 
 
 if __name__ == '__main__':
