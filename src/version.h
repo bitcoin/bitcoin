@@ -48,4 +48,6 @@ static const int MNAUTH_NODE_VER_VERSION = 70218;
 //! introduction of QGETDATA/QDATA messages
 static const int LLMQ_DATA_MESSAGES_VERSION = 70219;
 
+// Make sure that none of the values above collide with `ADDRV2_FORMAT`.
+
 #endif // BITCOIN_VERSION_H

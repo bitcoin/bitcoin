@@ -55,8 +55,20 @@ std::string EncodeBase64(const std::string& str);
 
 std::vector<unsigned char> DecodeBase32(const char* p, bool* pf_invalid = nullptr);
 std::string DecodeBase32(const std::string& str, bool* pf_invalid = nullptr);
-std::string EncodeBase32(Span<const unsigned char> input);
-std::string EncodeBase32(const std::string& str);
+
+/**
+ * Base32 encode.
+ * If `pad` is true, then the output will be padded with '=' so that its length
+ * is a multiple of 8.
+ */
+std::string EncodeBase32(Span<const unsigned char> input, bool pad = true);
+
+/**
+ * Base32 encode.
+ * If `pad` is true, then the output will be padded with '=' so that its length
+ * is a multiple of 8.
+ */
+std::string EncodeBase32(const std::string& str, bool pad = true);
 
 void SplitHostPort(std::string in, int &portOut, std::string &hostOut);
 std::string i64tostr(int64_t n);
