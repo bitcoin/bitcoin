@@ -49,15 +49,14 @@ static void CoinSelection(benchmark::Bench& bench)
     }
 
     const CoinEligibilityFilter filter_standard(1, 6, 0);
-    const CoinSelectionParams coin_selection_params(/* use_bnb= */ true, /* change_output_size= */ 34,
+    const CoinSelectionParams coin_selection_params(/* change_output_size= */ 34,
                                                     /* change_spend_size= */ 148, /* effective_feerate= */ CFeeRate(0),
                                                     /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
                                                     /* tx_no_inputs_size= */ 0, /* avoid_partial= */ false);
     bench.run([&] {
         std::set<CInputCoin> setCoinsRet;
         CAmount nValueRet;
-        bool bnb_used;
-        bool success = wallet.SelectCoinsMinConf(1003 * COIN, filter_standard, coins, setCoinsRet, nValueRet, coin_selection_params, bnb_used);
+        bool success = wallet.SelectCoinsMinConf(1003 * COIN, filter_standard, coins, setCoinsRet, nValueRet, coin_selection_params);
         assert(success);
         assert(nValueRet == 1003 * COIN);
         assert(setCoinsRet.size() == 2);
@@ -101,12 +100,11 @@ static void BnBExhaustion(benchmark::Bench& bench)
     std::vector<OutputGroup> utxo_pool;
     CoinSet selection;
     CAmount value_ret = 0;
-    CAmount not_input_fees = 0;
 
     bench.run([&] {
         // Benchmark
         CAmount target = make_hard_case(17, utxo_pool);
-        SelectCoinsBnB(utxo_pool, target, 0, selection, value_ret, not_input_fees); // Should exhaust
+        SelectCoinsBnB(utxo_pool, target, 0, selection, value_ret); // Should exhaust
 
         // Cleanup
         utxo_pool.clear();
