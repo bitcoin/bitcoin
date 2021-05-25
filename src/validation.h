@@ -319,10 +319,10 @@ void PruneBlockFilesManual(int nManualPruneHeight);
 /** (try to) add transaction to memory pool */
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx,
                         bool* pfMissingInputs, bool bypass_limits,
-                        const CAmount nAbsurdFee, bool fDryRun=false);
+                        const CAmount nAbsurdFee, bool test_accept=false);
 static bool AcceptToMemoryPoolWithTime(const CChainParams& chainparams, CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx,
                                        bool* pfMissingInputs, int64_t nAcceptTime, bool bypass_limits,
-                                       const CAmount nAbsurdFee, bool fDryRun = false);
+                                       const CAmount nAbsurdFee, bool test_accept = false);
 
 bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin);
 int GetUTXOHeight(const COutPoint& outpoint);

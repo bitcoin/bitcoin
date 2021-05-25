@@ -337,7 +337,7 @@ void TransactionRecord::updateLabel(interfaces::Wallet& wallet)
 {
     if (IsValidDestination(txDest)) {
         std::string name;
-        if (wallet.getAddress(txDest, &name)) {
+        if (wallet.getAddress(txDest, &name, /* is_mine= */ nullptr, /* purpose= */ nullptr)) {
             label = QString::fromStdString(name);
         } else {
             label = "";

@@ -37,7 +37,7 @@ class NotificationsTest(BitcoinTestFramework):
 
         # file content should equal the generated blocks hashes
         with open(self.block_filename, 'r', encoding="utf-8") as f:
-            assert_equal(sorted(blocks), sorted(f.read().splitlines()))
+            assert_equal(sorted(blocks), sorted(l.strip() for l in f.read().splitlines()))
 
         self.log.info("test -walletnotify")
         # wait at most 10 seconds for expected file size before reading the content
@@ -46,7 +46,7 @@ class NotificationsTest(BitcoinTestFramework):
         # file content should equal the generated transaction hashes
         txids_rpc = list(map(lambda t: t['txid'], self.nodes[1].listtransactions("*", block_count)))
         with open(self.tx_filename, 'r', encoding="ascii") as f:
-            assert_equal(sorted(txids_rpc), sorted(f.read().splitlines()))
+            assert_equal(sorted(txids_rpc), sorted(l.strip() for l in f.read().splitlines()))
         os.remove(self.tx_filename)
 
         self.log.info("test -walletnotify after rescan")
@@ -59,7 +59,7 @@ class NotificationsTest(BitcoinTestFramework):
         # file content should equal the generated transaction hashes
         txids_rpc = list(map(lambda t: t['txid'], self.nodes[1].listtransactions("*", block_count)))
         with open(self.tx_filename, 'r', encoding="ascii") as f:
-            assert_equal(sorted(txids_rpc), sorted(f.read().splitlines()))
+            assert_equal(sorted(txids_rpc), sorted(l.strip() for l in f.read().splitlines()))
 
         # Mine another 41 up-version blocks. -alertnotify should trigger on the 51st.
         self.log.info("test -alertnotify")

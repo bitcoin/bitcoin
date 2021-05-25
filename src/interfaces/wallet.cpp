@@ -10,6 +10,8 @@
 #include <consensus/validation.h>
 #include <interfaces/handler.h>
 #include <net.h>
+#include <policy/feerate.h>
+#include <policy/fees.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
 #include <script/ismine.h>
@@ -21,6 +23,7 @@
 #include <ui_interface.h>
 #include <uint256.h>
 #include <validation.h>
+#include <wallet/fees.h>
 #include <wallet/wallet.h>
 
 #include <memory>
@@ -219,7 +222,10 @@ public:
     {
         return m_wallet.DelAddressBook(dest);
     }
-    bool getAddress(const CTxDestination& dest, std::string* name, isminetype* is_mine) override
+    bool getAddress(const CTxDestination& dest,
+        std::string* name,
+        isminetype* is_mine,
+        std::string* purpose) override
     {
         LOCK(m_wallet.cs_wallet);
         auto it = m_wallet.mapAddressBook.find(dest);
@@ -231,6 +237,9 @@ public:
         }
         if (is_mine) {
             *is_mine = IsMine(m_wallet, dest);
+        }
+        if (purpose) {
+            *purpose = it->second.purpose;
         }
         return true;
     }
@@ -482,6 +491,20 @@ public:
         }
         return result;
     }
+    CAmount getRequiredFee(unsigned int tx_bytes) override { return GetRequiredFee(m_wallet, tx_bytes); }
+    CAmount getMinimumFee(unsigned int tx_bytes,
+        const CCoinControl& coin_control,
+        int* returned_target,
+        FeeReason* reason) override
+    {
+        FeeCalculation fee_calc;
+        CAmount result;
+        result = GetMinimumFee(m_wallet, tx_bytes, coin_control, ::mempool, ::feeEstimator, &fee_calc);
+        if (returned_target) *returned_target = fee_calc.returnedTarget;
+        if (reason) *reason = fee_calc.reason;
+        return result;
+    }
+    unsigned int getConfirmTarget() override { return m_wallet.m_confirm_target; }
     bool hdEnabled() override { return m_wallet.IsHDEnabled(); }
     CoinJoin::Client& coinJoin() override { return m_coinjoin; }
     std::unique_ptr<Handler> handleUnload(UnloadFn fn) override

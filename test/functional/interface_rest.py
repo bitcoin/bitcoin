@@ -4,351 +4,297 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the REST API."""
 
-from test_framework.test_framework import BitcoinTestFramework
-from test_framework.util import *
-from struct import *
+import binascii
+from decimal import Decimal
+from enum import Enum
 from io import BytesIO
-from codecs import encode
+import json
+from struct import pack, unpack
 
 import http.client
 import urllib.parse
 
-def deser_uint256(f):
-    r = 0
-    for i in range(8):
-        t = unpack(b"<I", f.read(4))[0]
-        r += t << (i * 32)
-    return r
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import (
+    assert_equal,
+    assert_greater_than,
+    assert_greater_than_or_equal,
+    hex_str_to_bytes,
+)
 
-#allows simple http get calls
-def http_get_call(host, port, path, response_object = 0):
-    conn = http.client.HTTPConnection(host, port)
-    conn.request('GET', path)
+class ReqType(Enum):
+    JSON = 1
+    BIN = 2
+    HEX = 3
 
-    if response_object:
-        return conn.getresponse()
+class RetType(Enum):
+    OBJ = 1
+    BYTES = 2
+    JSON = 3
 
-    return conn.getresponse().read().decode('utf-8')
-
-#allows simple http post calls with a request body
-def http_post_call(host, port, path, requestdata = '', response_object = 0):
-    conn = http.client.HTTPConnection(host, port)
-    conn.request('POST', path, requestdata)
-
-    if response_object:
-        return conn.getresponse()
-
-    return conn.getresponse().read()
+def filter_output_indices_by_value(vouts, value):
+    for vout in vouts:
+        if vout['value'] == value:
+            yield vout['n']
 
 class RESTTest (BitcoinTestFramework):
-    FORMAT_SEPARATOR = "."
-
     def set_test_params(self):
         self.setup_clean_chain = True
-        self.num_nodes = 3
-        self.extra_args = [["-rest"]] * self.num_nodes
+        self.num_nodes = 2
+        self.extra_args = [["-rest"], []]
 
-    def setup_network(self, split=False):
-        super().setup_network()
-        connect_nodes_bi(self.nodes, 0, 2)
+    def test_rest_request(self, uri, http_method='GET', req_type=ReqType.JSON, body='', status=200, ret_type=RetType.JSON):
+        rest_uri = '/rest' + uri
+        if req_type == ReqType.JSON:
+            rest_uri += '.json'
+        elif req_type == ReqType.BIN:
+            rest_uri += '.bin'
+        elif req_type == ReqType.HEX:
+            rest_uri += '.hex'
+
+        conn = http.client.HTTPConnection(self.url.hostname, self.url.port)
+        self.log.debug('%s %s %s', http_method, rest_uri, body)
+        if http_method == 'GET':
+            conn.request('GET', rest_uri)
+        elif http_method == 'POST':
+            conn.request('POST', rest_uri, body)
+        resp = conn.getresponse()
+
+        assert_equal(resp.status, status)
+
+        if ret_type == RetType.OBJ:
+            return resp
+        elif ret_type == RetType.BYTES:
+            return resp.read()
+        elif ret_type == RetType.JSON:
+            return json.loads(resp.read().decode('utf-8'), parse_float=Decimal)
 
     def run_test(self):
-        url = urllib.parse.urlparse(self.nodes[0].url)
-        self.log.info("Mining blocks...")
+        self.url = urllib.parse.urlparse(self.nodes[0].url)
+        self.log.info("Mine blocks and send Dash to node 1")
+
+        # Random address so node1's balance doesn't increase
+        not_related_address = "yj949n1UH6fDhw6HtVE5VMj2iSTaSWBMcW"
 
         self.nodes[0].generate(1)
         self.sync_all()
-        self.nodes[2].generate(100)
+        self.nodes[1].generatetoaddress(100, not_related_address)
         self.sync_all()
 
         assert_equal(self.nodes[0].getbalance(), 500)
 
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
         self.sync_all()
-        self.nodes[2].generate(1)
+        self.nodes[1].generatetoaddress(1, not_related_address)
         self.sync_all()
         bb_hash = self.nodes[0].getbestblockhash()
 
-        assert_equal(self.nodes[1].getbalance(), Decimal("0.1")) #balance now should be 0.1 on node 1
+        assert_equal(self.nodes[1].getbalance(), Decimal("0.1"))
 
-        # load the latest 0.1 tx over the REST API
-        json_string = http_get_call(url.hostname, url.port, '/rest/tx/'+txid+self.FORMAT_SEPARATOR+"json")
-        json_obj = json.loads(json_string)
-        vintx = json_obj['vin'][0]['txid'] # get the vin to later check for utxo (should be spent by then)
+        self.log.info("Load the transaction using the /tx URI")
+
+        json_obj = self.test_rest_request("/tx/{}".format(txid))
+        spent = (json_obj['vin'][0]['txid'], json_obj['vin'][0]['vout'])  # get the vin to later check for utxo (should be spent by then)
         # get n of 0.1 outpoint
-        n = 0
-        for vout in json_obj['vout']:
-            if vout['value'] == 0.1:
-                n = vout['n']
+        n, = filter_output_indices_by_value(json_obj['vout'], Decimal('0.1'))
+        spending = (txid, n)
 
+        self.log.info("Query an unspent TXO using the /getutxos URI")
 
-        #######################################
-        # GETUTXOS: query an unspent outpoint #
-        #######################################
-        json_request = '/'+txid+'-'+str(n)
-        json_string = http_get_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json')
-        json_obj = json.loads(json_string)
+        json_obj = self.test_rest_request("/getutxos/{}-{}".format(*spending))
 
-        #check chainTip response
+        # Check chainTip response
         assert_equal(json_obj['chaintipHash'], bb_hash)
 
-        #make sure there is one utxo
+        # Make sure there is one utxo
         assert_equal(len(json_obj['utxos']), 1)
-        assert_equal(json_obj['utxos'][0]['value'], 0.1)
+        assert_equal(json_obj['utxos'][0]['value'], Decimal('0.1'))
 
+        self.log.info("Query a spent TXO using the /getutxos URI")
 
-        #################################################
-        # GETUTXOS: now query an already spent outpoint #
-        #################################################
-        json_request = '/'+vintx+'-0'
-        json_string = http_get_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json')
-        json_obj = json.loads(json_string)
+        json_obj = self.test_rest_request("/getutxos/{}-{}".format(*spent))
 
-        #check chainTip response
+        # Check chainTip response
         assert_equal(json_obj['chaintipHash'], bb_hash)
 
-        #make sure there is no utxo in the response because this oupoint has been spent
+        # Make sure there is no utxo in the response because this outpoint has been spent
         assert_equal(len(json_obj['utxos']), 0)
 
-        #check bitmap
+        # Check bitmap
         assert_equal(json_obj['bitmap'], "0")
 
+        self.log.info("Query two TXOs using the /getutxos URI")
 
-        ##################################################
-        # GETUTXOS: now check both with the same request #
-        ##################################################
-        json_request = '/'+txid+'-'+str(n)+'/'+vintx+'-0'
-        json_string = http_get_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json')
-        json_obj = json.loads(json_string)
+        json_obj = self.test_rest_request("/getutxos/{}-{}/{}-{}".format(*(spending + spent)))
+
         assert_equal(len(json_obj['utxos']), 1)
         assert_equal(json_obj['bitmap'], "10")
 
-        #test binary response
-        bb_hash = self.nodes[0].getbestblockhash()
+        self.log.info("Query the TXOs using the /getutxos URI with a binary response")
 
-        binaryRequest = b'\x01\x02'
-        binaryRequest += hex_str_to_bytes(txid)
-        binaryRequest += pack("i", n)
-        binaryRequest += hex_str_to_bytes(vintx)
-        binaryRequest += pack("i", 0)
+        bin_request = b'\x01\x02'
+        for txid, n in [spending, spent]:
+            bin_request += hex_str_to_bytes(txid)
+            bin_request += pack("i", n)
 
-        bin_response = http_post_call(url.hostname, url.port, '/rest/getutxos'+self.FORMAT_SEPARATOR+'bin', binaryRequest)
-        output = BytesIO()
-        output.write(bin_response)
-        output.seek(0)
-        chainHeight = unpack("i", output.read(4))[0]
-        hashFromBinResponse = hex(deser_uint256(output))[2:].zfill(64)
+        bin_response = self.test_rest_request("/getutxos", http_method='POST', req_type=ReqType.BIN, body=bin_request, ret_type=RetType.BYTES)
+        output = BytesIO(bin_response)
+        chain_height, = unpack("i", output.read(4))
+        response_hash = binascii.hexlify(output.read(32)[::-1]).decode('ascii')
 
-        assert_equal(bb_hash, hashFromBinResponse) #check if getutxo's chaintip during calculation was fine
-        assert_equal(chainHeight, 102) #chain height must be 102
+        assert_equal(bb_hash, response_hash)  # check if getutxo's chaintip during calculation was fine
+        assert_equal(chain_height, 102)  # chain height must be 102
 
-
-        ############################
-        # GETUTXOS: mempool checks #
-        ############################
+        self.log.info("Test the /getutxos URI with and without /checkmempool")
+        # Create a transaction, check that it's found with /checkmempool, but
+        # not found without. Then confirm the transaction and check that it's
+        # found with or without /checkmempool.
 
         # do a tx and don't sync
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
-        json_string = http_get_call(url.hostname, url.port, '/rest/tx/'+txid+self.FORMAT_SEPARATOR+"json")
-        json_obj = json.loads(json_string)
+        json_obj = self.test_rest_request("/tx/{}".format(txid))
         # get the spent output to later check for utxo (should be spent by then)
-        spent = '{}-{}'.format(json_obj['vin'][0]['txid'], json_obj['vin'][0]['vout'])
+        spent = (json_obj['vin'][0]['txid'], json_obj['vin'][0]['vout'])
         # get n of 0.1 outpoint
-        n = 0
-        for vout in json_obj['vout']:
-            if vout['value'] == 0.1:
-                n = vout['n']
-        spending = '{}-{}'.format(txid, n)
+        n, = filter_output_indices_by_value(json_obj['vout'], Decimal('0.1'))
+        spending = (txid, n)
 
-        json_request = '/'+spending
-        json_string = http_get_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json')
-        json_obj = json.loads(json_string)
-        assert_equal(len(json_obj['utxos']), 0) #there should be no outpoint because it has just added to the mempool
+        json_obj = self.test_rest_request("/getutxos/{}-{}".format(*spending))
+        assert_equal(len(json_obj['utxos']), 0)
 
-        json_request = '/checkmempool/'+spending
-        json_string = http_get_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json')
-        json_obj = json.loads(json_string)
-        assert_equal(len(json_obj['utxos']), 1) #there should be an outpoint because it has just added to the mempool
+        json_obj = self.test_rest_request("/getutxos/checkmempool/{}-{}".format(*spending))
+        assert_equal(len(json_obj['utxos']), 1)
 
-        json_request = '/'+spent
-        json_string = http_get_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json')
-        json_obj = json.loads(json_string)
-        assert_equal(len(json_obj['utxos']), 1) #there should be an outpoint because its spending tx is not confirmed
+        json_obj = self.test_rest_request("/getutxos/{}-{}".format(*spent))
+        assert_equal(len(json_obj['utxos']), 1)
 
-        json_request = '/checkmempool/'+spent
-        json_string = http_get_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json')
-        json_obj = json.loads(json_string)
-        assert_equal(len(json_obj['utxos']), 0) #there should be no outpoint because it has just spent (by mempool tx)
+        json_obj = self.test_rest_request("/getutxos/checkmempool/{}-{}".format(*spent))
+        assert_equal(len(json_obj['utxos']), 0)
 
         self.nodes[0].generate(1)
         self.sync_all()
 
-        json_request = '/'+spending
-        json_string = http_get_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json')
-        json_obj = json.loads(json_string)
-        assert_equal(len(json_obj['utxos']), 1) #there should be an outpoint because it was mined
+        json_obj = self.test_rest_request("/getutxos/{}-{}".format(*spending))
+        assert_equal(len(json_obj['utxos']), 1)
 
-        json_request = '/checkmempool/'+spending
-        json_string = http_get_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json')
-        json_obj = json.loads(json_string)
-        assert_equal(len(json_obj['utxos']), 1) #there should be an outpoint because it was mined
+        json_obj = self.test_rest_request("/getutxos/checkmempool/{}-{}".format(*spending))
+        assert_equal(len(json_obj['utxos']), 1)
 
-        #do some invalid requests
-        json_request = '{"checkmempool'
-        response = http_post_call(url.hostname, url.port, '/rest/getutxos'+self.FORMAT_SEPARATOR+'json', json_request, True)
-        assert_equal(response.status, 400) #must be a 400 because we send an invalid json request
+        # Do some invalid requests
+        self.test_rest_request("/getutxos", http_method='POST', req_type=ReqType.JSON, body='{"checkmempool', status=400, ret_type=RetType.OBJ)
+        self.test_rest_request("/getutxos", http_method='POST', req_type=ReqType.BIN, body='{"checkmempool', status=400, ret_type=RetType.OBJ)
+        self.test_rest_request("/getutxos/checkmempool", http_method='POST', req_type=ReqType.JSON, status=400, ret_type=RetType.OBJ)
 
-        json_request = '{"checkmempool'
-        response = http_post_call(url.hostname, url.port, '/rest/getutxos'+self.FORMAT_SEPARATOR+'bin', json_request, True)
-        assert_equal(response.status, 400) #must be a 400 because we send an invalid bin request
+        # Test limits
+        long_uri = '/'.join(["{}-{}".format(txid, n) for n in range(20)])
+        self.test_rest_request("/getutxos/checkmempool/{}".format(long_uri), http_method='POST', status=400, ret_type=RetType.OBJ)
 
-        response = http_post_call(url.hostname, url.port, '/rest/getutxos/checkmempool'+self.FORMAT_SEPARATOR+'bin', '', True)
-        assert_equal(response.status, 400) #must be a 400 because we send an invalid bin request
+        long_uri = '/'.join(['{}-{}'.format(txid, n) for n in range(15)])
+        self.test_rest_request("/getutxos/checkmempool/{}".format(long_uri), http_method='POST', status=200)
 
-        #test limits
-        json_request = '/checkmempool/'
-        for x in range(0, 20):
-            json_request += txid+'-'+str(n)+'/'
-        json_request = json_request.rstrip("/")
-        response = http_post_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json', '', True)
-        assert_equal(response.status, 400) #must be a 400 because we exceeding the limits
-
-        json_request = '/checkmempool/'
-        for x in range(0, 15):
-            json_request += txid+'-'+str(n)+'/'
-        json_request = json_request.rstrip("/")
-        response = http_post_call(url.hostname, url.port, '/rest/getutxos'+json_request+self.FORMAT_SEPARATOR+'json', '', True)
-        assert_equal(response.status, 200) #must be a 200 because we are within the limits
-
-        self.nodes[0].generate(1) #generate block to not affect upcoming tests
+        self.nodes[0].generate(1)  # generate block to not affect upcoming tests
         self.sync_all()
 
-        ################
-        # /rest/block/ #
-        ################
+        self.log.info("Test the /block and /headers URIs")
+        bb_hash = self.nodes[0].getbestblockhash()
 
-        # check binary format
-        response = http_get_call(url.hostname, url.port, '/rest/block/'+bb_hash+self.FORMAT_SEPARATOR+"bin", True)
-        assert_equal(response.status, 200)
+        # Check binary format
+        response = self.test_rest_request("/block/{}".format(bb_hash), req_type=ReqType.BIN, ret_type=RetType.OBJ)
         assert_greater_than(int(response.getheader('content-length')), 80)
-        response_str = response.read()
+        response_bytes = response.read()
 
-        # compare with block header
-        response_header = http_get_call(url.hostname, url.port, '/rest/headers/1/'+bb_hash+self.FORMAT_SEPARATOR+"bin", True)
-        assert_equal(response_header.status, 200)
+        # Compare with block header
+        response_header = self.test_rest_request("/headers/1/{}".format(bb_hash), req_type=ReqType.BIN, ret_type=RetType.OBJ)
         assert_equal(int(response_header.getheader('content-length')), 80)
-        response_header_str = response_header.read()
-        assert_equal(response_str[0:80], response_header_str)
+        response_header_bytes = response_header.read()
+        assert_equal(response_bytes[:80], response_header_bytes)
 
-        # check block hex format
-        response_hex = http_get_call(url.hostname, url.port, '/rest/block/'+bb_hash+self.FORMAT_SEPARATOR+"hex", True)
-        assert_equal(response_hex.status, 200)
+        # Check block hex format
+        response_hex = self.test_rest_request("/block/{}".format(bb_hash), req_type=ReqType.HEX, ret_type=RetType.OBJ)
         assert_greater_than(int(response_hex.getheader('content-length')), 160)
-        response_hex_str = response_hex.read()
-        assert_equal(encode(response_str, "hex_codec")[0:160], response_hex_str[0:160])
+        response_hex_bytes = response_hex.read().strip(b'\n')
+        assert_equal(binascii.hexlify(response_bytes), response_hex_bytes)
 
-        # compare with hex block header
-        response_header_hex = http_get_call(url.hostname, url.port, '/rest/headers/1/'+bb_hash+self.FORMAT_SEPARATOR+"hex", True)
-        assert_equal(response_header_hex.status, 200)
+        # Compare with hex block header
+        response_header_hex = self.test_rest_request("/headers/1/{}".format(bb_hash), req_type=ReqType.HEX, ret_type=RetType.OBJ)
         assert_greater_than(int(response_header_hex.getheader('content-length')), 160)
-        response_header_hex_str = response_header_hex.read()
-        assert_equal(response_hex_str[0:160], response_header_hex_str[0:160])
-        assert_equal(encode(response_header_str, "hex_codec")[0:160], response_header_hex_str[0:160])
+        response_header_hex_bytes = response_header_hex.read(160)
+        assert_equal(binascii.hexlify(response_bytes[:80]), response_header_hex_bytes)
 
-        # check json format
-        block_json_string = http_get_call(url.hostname, url.port, '/rest/block/'+bb_hash+self.FORMAT_SEPARATOR+'json')
-        block_json_obj = json.loads(block_json_string)
+        # Check json format
+        block_json_obj = self.test_rest_request("/block/{}".format(bb_hash))
         assert_equal(block_json_obj['hash'], bb_hash)
 
-        # compare with json block header
-        response_header_json = http_get_call(url.hostname, url.port, '/rest/headers/1/'+bb_hash+self.FORMAT_SEPARATOR+"json", True)
-        assert_equal(response_header_json.status, 200)
-        response_header_json_str = response_header_json.read().decode('utf-8')
-        json_obj = json.loads(response_header_json_str, parse_float=Decimal)
-        assert_equal(len(json_obj), 1) #ensure that there is one header in the json response
-        assert_equal(json_obj[0]['hash'], bb_hash) #request/response hash should be the same
+        # Compare with json block header
+        json_obj = self.test_rest_request("/headers/1/{}".format(bb_hash))
+        assert_equal(len(json_obj), 1)  # ensure that there is one header in the json response
+        assert_equal(json_obj[0]['hash'], bb_hash)  # request/response hash should be the same
 
-        #compare with normal RPC block response
+        # Compare with normal RPC block response
         rpc_block_json = self.nodes[0].getblock(bb_hash)
-        assert_equal(json_obj[0]['hash'],               rpc_block_json['hash'])
-        assert_equal(json_obj[0]['confirmations'],      rpc_block_json['confirmations'])
-        assert_equal(json_obj[0]['height'],             rpc_block_json['height'])
-        assert_equal(json_obj[0]['version'],            rpc_block_json['version'])
-        assert_equal(json_obj[0]['merkleroot'],         rpc_block_json['merkleroot'])
-        assert_equal(json_obj[0]['time'],               rpc_block_json['time'])
-        assert_equal(json_obj[0]['nonce'],              rpc_block_json['nonce'])
-        assert_equal(json_obj[0]['bits'],               rpc_block_json['bits'])
-        assert_equal(json_obj[0]['difficulty'],         rpc_block_json['difficulty'])
-        assert_equal(json_obj[0]['chainwork'],          rpc_block_json['chainwork'])
-        assert_equal(json_obj[0]['previousblockhash'],  rpc_block_json['previousblockhash'])
+        for key in ['hash', 'confirmations', 'height', 'version', 'merkleroot', 'time', 'nonce', 'bits', 'difficulty', 'chainwork', 'previousblockhash']:
+            assert_equal(json_obj[0][key], rpc_block_json[key])
 
-        #see if we can get 5 headers in one response
+        # See if we can get 5 headers in one response
         self.nodes[1].generate(5)
         self.sync_all()
-        response_header_json = http_get_call(url.hostname, url.port, '/rest/headers/5/'+bb_hash+self.FORMAT_SEPARATOR+"json", True)
-        assert_equal(response_header_json.status, 200)
-        response_header_json_str = response_header_json.read().decode('utf-8')
-        json_obj = json.loads(response_header_json_str)
-        assert_equal(len(json_obj), 5) #now we should have 5 header objects
+        json_obj = self.test_rest_request("/headers/5/{}".format(bb_hash))
+        assert_equal(len(json_obj), 5)  # now we should have 5 header objects
 
-        # do tx test
+        self.log.info("Test the /tx URI")
+
         tx_hash = block_json_obj['tx'][0]['txid']
-        json_string = http_get_call(url.hostname, url.port, '/rest/tx/'+tx_hash+self.FORMAT_SEPARATOR+"json")
-        json_obj = json.loads(json_string)
+        json_obj = self.test_rest_request("/tx/{}".format(tx_hash))
         assert_equal(json_obj['txid'], tx_hash)
 
-        # check hex format response
-        hex_string = http_get_call(url.hostname, url.port, '/rest/tx/'+tx_hash+self.FORMAT_SEPARATOR+"hex", True)
-        assert_equal(hex_string.status, 200)
-        assert_greater_than(int(response.getheader('content-length')), 10)
+        # Check hex format response
+        hex_response = self.test_rest_request("/tx/{}".format(tx_hash), req_type=ReqType.HEX, ret_type=RetType.OBJ)
+        assert_greater_than_or_equal(int(hex_response.getheader('content-length')),
+                                     json_obj['size']*2)
 
+        self.log.info("Test tx inclusion in the /mempool and /block URIs")
 
-        # check block tx details
-        # let's make 3 tx and mine them on node 1
+        # Make 3 tx and mine them on node 1
         txs = []
-        txs.append(self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11))
-        txs.append(self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11))
-        txs.append(self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11))
+        txs.append(self.nodes[0].sendtoaddress(not_related_address, 11))
+        txs.append(self.nodes[0].sendtoaddress(not_related_address, 11))
+        txs.append(self.nodes[0].sendtoaddress(not_related_address, 11))
         self.sync_all()
 
-        # check that there are exactly 3 transactions in the TX memory pool before generating the block
-        json_string = http_get_call(url.hostname, url.port, '/rest/mempool/info'+self.FORMAT_SEPARATOR+'json')
-        json_obj = json.loads(json_string)
+        # Check that there are exactly 3 transactions in the TX memory pool before generating the block
+        json_obj = self.test_rest_request("/mempool/info")
         assert_equal(json_obj['size'], 3)
         # the size of the memory pool should be greater than 3x ~100 bytes
         assert_greater_than(json_obj['bytes'], 300)
 
-        # check that there are our submitted transactions in the TX memory pool
-        json_string = http_get_call(url.hostname, url.port, '/rest/mempool/contents'+self.FORMAT_SEPARATOR+'json')
-        json_obj = json.loads(json_string)
+        # Check that there are our submitted transactions in the TX memory pool
+        json_obj = self.test_rest_request("/mempool/contents")
         for i, tx in enumerate(txs):
-            assert_equal(tx in json_obj, True)
-            assert_equal(json_obj[tx]['spentby'], txs[i+1:i+2])
-            assert_equal(json_obj[tx]['depends'], txs[i-1:i])
+            assert tx in json_obj
+            assert_equal(json_obj[tx]['spentby'], txs[i + 1:i + 2])
+            assert_equal(json_obj[tx]['depends'], txs[i - 1:i])
 
-        # now mine the transactions
+        # Now mine the transactions
         newblockhash = self.nodes[1].generate(1)
         self.sync_all()
 
-        #check if the 3 tx show up in the new block
-        json_string = http_get_call(url.hostname, url.port, '/rest/block/'+newblockhash[0]+self.FORMAT_SEPARATOR+'json')
-        json_obj = json.loads(json_string)
-        for tx in json_obj['tx']:
-            if not 'coinbase' in tx['vin'][0]: #exclude coinbase
-                assert_equal(tx['txid'] in txs, True)
+        # Check if the 3 tx show up in the new block
+        json_obj = self.test_rest_request("/block/{}".format(newblockhash[0]))
+        non_coinbase_txs = {tx['txid'] for tx in json_obj['tx']
+                            if 'coinbase' not in tx['vin'][0]}
+        assert_equal(non_coinbase_txs, set(txs))
 
-        #check the same but without tx details
-        json_string = http_get_call(url.hostname, url.port, '/rest/block/notxdetails/'+newblockhash[0]+self.FORMAT_SEPARATOR+'json')
-        json_obj = json.loads(json_string)
+        # Check the same but without tx details
+        json_obj = self.test_rest_request("/block/notxdetails/{}".format(newblockhash[0]))
         for tx in txs:
-            assert_equal(tx in json_obj['tx'], True)
+            assert tx in json_obj['tx']
 
-        #test rest bestblock
+        self.log.info("Test the /chaininfo URI")
+
         bb_hash = self.nodes[0].getbestblockhash()
 
-        json_string = http_get_call(url.hostname, url.port, '/rest/chaininfo.json')
-        json_obj = json.loads(json_string)
+        json_obj = self.test_rest_request("/chaininfo")
         assert_equal(json_obj['bestblockhash'], bb_hash)
 
 if __name__ == '__main__':
-    RESTTest ().main ()
+    RESTTest().main()

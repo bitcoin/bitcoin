@@ -55,7 +55,7 @@ int main(int argc, char** argv)
     SetupBenchArgs();
     gArgs.ParseParameters(argc, argv);
 
-    if (gArgs.IsArgSet("-?") || gArgs.IsArgSet("-h") || gArgs.IsArgSet("-help")) {
+    if (HelpRequested(gArgs)) {
         std::cout << gArgs.GetHelpMessage();
 
         return 0;

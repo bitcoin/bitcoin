@@ -67,10 +67,11 @@ public:
      */
     QString addRow(const QString &type, const QString &label, const QString &address);
 
-    /* Look up label for address in address book, if not found return empty string.
-     */
+    /** Look up label for address in address book, if not found return empty string. */
     QString labelForAddress(const QString &address) const;
-    QString labelForDestination(const CTxDestination &dest) const;
+
+    /** Look up purpose for address in address book, if not found return empty string. */
+    QString purposeForAddress(const QString &address) const;
 
     /* Look up row index of an address in the model.
        Return -1 if not found.
@@ -84,6 +85,9 @@ private:
     AddressTablePriv *priv;
     QStringList columns;
     EditStatus editStatus;
+
+    /** Look up address book data given an address string. */
+    bool getAddressData(const QString &address, std::string* name, std::string* purpose) const;
 
     /** Notify listeners that data changed. */
     void emitDataChanged(int index);

@@ -37,7 +37,7 @@ public:
         ForEditing  /**< Open address book for editing */
     };
 
-    explicit AddressBookPage(Mode mode, Tabs tab, QWidget* parent);
+    explicit AddressBookPage(Mode mode, Tabs tab, QWidget* parent = 0);
     ~AddressBookPage();
 
     void setModel(AddressTableModel *model);

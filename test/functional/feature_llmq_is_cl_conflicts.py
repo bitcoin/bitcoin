@@ -304,7 +304,7 @@ class LLMQ_IS_CL_Conflicts(DashTestFramework):
 
         coinbase.calc_sha256()
 
-        block = create_block(int(tip_hash, 16), coinbase, nTime=bt['curtime'])
+        block = create_block(int(tip_hash, 16), coinbase, ntime=bt['curtime'])
         block.vtx += vtx
 
         # Add quorum commitments from template

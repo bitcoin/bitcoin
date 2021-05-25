@@ -7,6 +7,7 @@
 import contextlib
 import decimal
 import errno
+from enum import Enum
 import http.client
 import json
 import logging
@@ -37,6 +38,12 @@ BITCOIND_PROC_WAIT_TIMEOUT = 60
 
 class FailedToStartError(Exception):
     """Raised when a node fails to start correctly."""
+
+
+class ErrorMatch(Enum):
+    FULL_TEXT = 1
+    FULL_REGEX = 2
+    PARTIAL_REGEX = 3
 
 
 class TestNode():
@@ -236,7 +243,7 @@ class TestNode():
                 if re.search(re.escape(expected_msg), log, flags=re.MULTILINE) is None:
                     self._raise_assertion_error('Expected message "{}" does not partially match log:\n\n{}\n\n'.format(expected_msg, print_log))
 
-    def assert_start_raises_init_error(self, extra_args=None, expected_msg=None, partial_match=False, *args, **kwargs):
+    def assert_start_raises_init_error(self, extra_args=None, expected_msg=None, match=ErrorMatch.FULL_TEXT, *args, **kwargs):
         """Attempt to start the node and expect it to raise an error.
 
         extra_args: extra arguments to pass through to dashd
@@ -258,12 +265,16 @@ class TestNode():
                 if expected_msg is not None:
                     log_stderr.seek(0)
                     stderr = log_stderr.read().decode('utf-8').strip()
-                    if partial_match:
+                    if match == ErrorMatch.PARTIAL_REGEX:
                         if re.search(expected_msg, stderr, flags=re.MULTILINE) is None:
                             self._raise_assertion_error(
                                 'Expected message "{}" does not partially match stderr:\n"{}"'.format(expected_msg, stderr))
-                    else:
+                    elif match == ErrorMatch.FULL_REGEX:
                         if re.fullmatch(expected_msg, stderr) is None:
+                            self._raise_assertion_error(
+                                'Expected message "{}" does not fully match stderr:\n"{}"'.format(expected_msg, stderr))
+                    elif match == ErrorMatch.FULL_TEXT:
+                        if expected_msg != stderr:
                             self._raise_assertion_error(
                                 'Expected message "{}" does not fully match stderr:\n"{}"'.format(expected_msg, stderr))
             else:
