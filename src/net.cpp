@@ -1390,7 +1390,7 @@ void CConnman::SocketHandler()
     //
     for (const ListenSocket& hListenSocket : vhListenSocket)
     {
-        if (hListenSocket.sock->Get() != INVALID_SOCKET && what[hListenSocket.sock].occurred & Sock::RECV) {
+        if (what[hListenSocket.sock].occurred & Sock::RECV) {
             AcceptConnection(hListenSocket);
         }
     }
