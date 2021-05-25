@@ -4,6 +4,8 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test ThreadDNSAddressSeed logic for querying DNS seeds."""
 
+import itertools
+
 from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 
@@ -19,6 +21,7 @@ class P2PDNSSeeds(BitcoinTestFramework):
         self.existing_outbound_connections_test()
         self.existing_block_relay_connections_test()
         self.force_dns_test()
+        self.wait_time_tests()
 
     def init_arg_tests(self):
         fakeaddr = "fakenodeaddr.fakedomain.invalid."
@@ -89,6 +92,37 @@ class P2PDNSSeeds(BitcoinTestFramework):
 
         # Restore default for subsequent tests
         self.restart_node(0)
+
+    def wait_time_tests(self):
+        self.log.info("Check the delay before querying DNS seeds")
+
+        # Populate addrman with < 1000 addresses
+        for i in range(5):
+            a = f"192.0.0.{i}"
+            self.nodes[0].addpeeraddress(a, 8333)
+
+        # The delay should be 11 seconds
+        with self.nodes[0].assert_debug_log(expected_msgs=["Waiting 11 seconds before querying DNS seeds.\n"]):
+            self.restart_node(0)
+
+        # Populate addrman with > 1000 addresses
+        for i in itertools.count():
+            first_octet = i % 2 + 1
+            second_octet = i % 256
+            third_octet = i % 100
+            a = f"{first_octet}.{second_octet}.{third_octet}.1"
+            self.nodes[0].addpeeraddress(a, 8333)
+            if (i > 1000 and i % 100 == 0):
+                # The addrman size is non-deterministic because new addresses
+                # are sorted into buckets, potentially displacing existing
+                # addresses. Periodically check if we have met the desired
+                # threshold.
+                if len(self.nodes[0].getnodeaddresses(0)) > 1000:
+                    break
+
+        # The delay should be 5 mins
+        with self.nodes[0].assert_debug_log(expected_msgs=["Waiting 300 seconds before querying DNS seeds.\n"]):
+            self.restart_node(0)
 
 
 if __name__ == '__main__':
