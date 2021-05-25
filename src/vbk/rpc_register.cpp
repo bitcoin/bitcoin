@@ -111,12 +111,6 @@ UniValue getpopdata(const CBlockIndex* index)
     }
     result.pushKV("last_known_bitcoin_blocks", univalueLastBTCBlocks);
 
-    UniValue univalueMissingBtcBlocks(UniValue::VARR);
-    for (const auto& b : VeriBlock::GetPop().getMemPool().getMissingBtcBlocks()) {
-        univalueMissingBtcBlocks.push_back(HexStr(b.begin(), b.end()));
-    }
-    result.pushKV("missing_bitcoin_blocks", univalueMissingBtcBlocks);
-
     return result;
 }
 
@@ -415,6 +409,20 @@ UniValue getbtcbestblockhash(const JSONRPCRequest& request)
 {
     return getbestblockhash(request, btc(), "btc");
 }
+
+UniValue getmissingbtcblockhashes(const JSONRPCRequest& request)
+{
+    EnsurePopEnabled();
+
+    LOCK(cs_main);
+
+    UniValue univalueMissingBtcBlocks(UniValue::VARR);
+    for (const auto& b : VeriBlock::GetPop().getMemPool().getMissingBtcBlocks()) {
+        univalueMissingBtcBlocks.push_back(HexStr(b.begin(), b.end()));
+    }
+    return univalueMissingBtcBlocks;
+}
+
 } // namespace
 
 // getblockhash
@@ -756,6 +764,7 @@ const CRPCCommand commands[] = {
     {"pop_mining", "getbtcblock", &getbtcblock, {"hash"}},
     {"pop_mining", "getvbkbestblockhash", &getvbkbestblockhash, {}},
     {"pop_mining", "getbtcbestblockhash", &getbtcbestblockhash, {}},
+    {"pop_mining", "getmissingbtcblockhashes", &getmissingbtcblockhashes, {}},
     {"pop_mining", "getvbkblockhash", &getvbkblockhash, {"height"}},
     {"pop_mining", "getbtcblockhash", &getbtcblockhash, {"height"}},
     {"pop_mining", "getrawatv", &getrawatv, {"id"}},

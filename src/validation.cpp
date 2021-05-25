@@ -2149,12 +2149,11 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     nTimeConnect += nTime3 - nTime2;
     LogPrint(BCLog::BENCH, "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs (%.2fms/blk)]\n", (unsigned)block.vtx.size(), MILLI * (nTime3 - nTime2), MILLI * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : MILLI * (nTime3 - nTime2) / (nInputs - 1), nTimeConnect * MICRO, nTimeConnect * MILLI / nBlocksTotal);
 
+    assert(pindex->pprev && "previous block ptr is nullptr");
+    if (!VeriBlock::checkCoinbaseTxWithPopRewards(*block.vtx[0], nFees, *pindex, chainparams, state)) {
+        return false;
+    }
     if (VeriBlock::isPopEnabled()) {
-        assert(pindex->pprev && "previous block ptr is nullptr");
-        if (!VeriBlock::checkCoinbaseTxWithPopRewards(*block.vtx[0], nFees, *pindex, chainparams, state)) {
-            return false;
-        }
-
         altintegration::ValidationState _state;
         if (!VeriBlock::setState(pindex->GetBlockHash(), _state)) {
             return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS, "bad-block-pop",
