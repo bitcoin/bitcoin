@@ -48,6 +48,8 @@ define $(package)_set_vars
     $(package)_config_opts_darwin+= -DCMAKE_AR="$(host_prefix)/native/bin/$($(package)_ar)"
     $(package)_config_opts_darwin+= -DCMAKE_RANLIB="$(host_prefix)/native/bin/$($(package)_ranlib)"
   endif
+
+  $(package)_cppflags+=-UBLSALLOC_SODIUM
 endef
 
 define $(package)_preprocess_cmds
