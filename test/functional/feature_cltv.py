@@ -26,7 +26,10 @@ from test_framework.script import (
 )
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal
-from test_framework.wallet import MiniWallet
+from test_framework.wallet import (
+    MiniWallet,
+    MiniWalletMode,
+)
 
 CLTV_HEIGHT = 1351
 
@@ -97,7 +100,7 @@ class BIP65Test(SyscoinTestFramework):
 
     def run_test(self):
         peer = self.nodes[0].add_p2p_connection(P2PInterface())
-        wallet = MiniWallet(self.nodes[0], raw_script=True)
+        wallet = MiniWallet(self.nodes[0], mode=MiniWalletMode.RAW_OP_TRUE)
 
         self.test_cltv_info(is_active=False)
 
