@@ -971,8 +971,8 @@ class RawTransactionsTest(BitcoinTestFramework):
         wallet.sendrawtransaction(signedtx['hex'])
 
     def test_input_confs_control(self):
-        self.nodes[0].createwallet("minconfs")
-        wallet = self.nodes[0].get_wallet_rpc("minconfs")
+        self.nodes[0].createwallet("minconf")
+        wallet = self.nodes[0].get_wallet_rpc("minconf")
 
         # Fund the wallet with different chain heights
         self.nodes[2].sendtoaddress(wallet.getnewaddress(), 1)
@@ -989,7 +989,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         self.log.info("Crafting TX using an unconfirmed input")
         target_address = self.nodes[2].getnewaddress()
         raw_tx1 = wallet.createrawtransaction([], {target_address: 0.1}, 0, True)
-        funded_tx1 = wallet.fundrawtransaction(raw_tx1, {'fee_rate': 1, 'maxconfs': 0})['hex']
+        funded_tx1 = wallet.fundrawtransaction(raw_tx1, {'fee_rate': 1, 'maxconf': 0})['hex']
 
         # Make sure we only had the one input
         tx1_inputs = self.nodes[0].decoderawtransaction(funded_tx1)['vin']
@@ -1008,16 +1008,16 @@ class RawTransactionsTest(BitcoinTestFramework):
         raw_tx2 = wallet.createrawtransaction([{'txid': utxo1['txid'], 'vout': utxo1['vout']}], {target_address: 1})
         assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, raw_tx2, {'fee_rate': 1, 'add_inputs': False})
 
-        self.log.info("Fail to craft a new TX with minconfs above highest one")
-        assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, raw_tx2, {'add_inputs': True, 'minconfs': 3, 'fee_rate': 10})
+        self.log.info("Fail to craft a new TX with minconf above highest one")
+        assert_raises_rpc_error(-4, "Insufficient funds", wallet.fundrawtransaction, raw_tx2, {'add_inputs': True, 'minconf': 3, 'fee_rate': 10})
 
-        self.log.info("Fail to broadcast a new TX with maxconfs 0 due to BIP125 rules to verify it actually chose unconfirmed outputs")
-        funded_invalid = wallet.fundrawtransaction(raw_tx2, {'add_inputs': True, 'maxconfs': 0, 'fee_rate': 10})['hex']
+        self.log.info("Fail to broadcast a new TX with maxconf 0 due to BIP125 rules to verify it actually chose unconfirmed outputs")
+        funded_invalid = wallet.fundrawtransaction(raw_tx2, {'add_inputs': True, 'maxconf': 0, 'fee_rate': 10})['hex']
         final_invalid = wallet.signrawtransactionwithwallet(funded_invalid)['hex']
         assert_raises_rpc_error(-26, "bad-txns-spends-conflicting-tx", self.nodes[0].sendrawtransaction, final_invalid)
 
         self.log.info("Craft a replacement adding inputs with highest depth possible")
-        funded_tx2 = wallet.fundrawtransaction(raw_tx2, {'add_inputs': True, 'minconfs': 2, 'fee_rate': 10})['hex']
+        funded_tx2 = wallet.fundrawtransaction(raw_tx2, {'add_inputs': True, 'minconf': 2, 'fee_rate': 10})['hex']
         tx2_inputs = self.nodes[0].decoderawtransaction(funded_tx2)['vin']
         assert_greater_than_or_equal(len(tx2_inputs), 2)
         for vin in tx2_inputs:
