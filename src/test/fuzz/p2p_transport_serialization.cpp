@@ -29,8 +29,24 @@ FUZZ_TARGET_INIT(p2p_transport_serialization, initialize_p2p_transport_serializa
     FuzzedDataProvider fuzzed_data_provider{buffer.data(), buffer.size()};
 
     auto checksum_assist = fuzzed_data_provider.ConsumeBool();
-    int header_random_bytes_count = checksum_assist ? CMessageHeader::CHECKSUM_OFFSET : CMessageHeader :: HEADER_SIZE;
-    auto mutable_msg_bytes = fuzzed_data_provider.ConsumeBytes<uint8_t>(header_random_bytes_count);
+    auto magic_bytes_assist = fuzzed_data_provider.ConsumeBool();
+    std::vector<uint8_t> mutable_msg_bytes;
+
+    auto header_bytes_remaining = CMessageHeader::HEADER_SIZE;
+    if (magic_bytes_assist) {
+        auto msg_start = Params().MessageStart();
+        for (size_t i = 0; i < CMessageHeader::MESSAGE_SIZE_SIZE; ++i) {
+            mutable_msg_bytes.push_back(msg_start[i]);
+        }
+        header_bytes_remaining -= CMessageHeader::MESSAGE_SIZE_SIZE;
+    }
+
+    if (checksum_assist) {
+        header_bytes_remaining -= CMessageHeader::CHECKSUM_SIZE;
+    }
+
+    auto header_random_bytes = fuzzed_data_provider.ConsumeBytes<uint8_t>(header_bytes_remaining);
+    mutable_msg_bytes.insert(mutable_msg_bytes.end(), header_random_bytes.begin(), header_random_bytes.end());
     auto payload_bytes = fuzzed_data_provider.ConsumeRemainingBytes<uint8_t>();
 
     if (checksum_assist && mutable_msg_bytes.size() == CMessageHeader::CHECKSUM_OFFSET) {
