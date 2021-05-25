@@ -163,7 +163,6 @@ extern uint256 g_best_block;
 extern std::atomic_bool fImporting;
 extern std::atomic_bool fReindex;
 extern int nScriptCheckThreads;
-extern bool fTxIndex;
 extern bool fAddressIndex;
 extern bool fTimestampIndex;
 extern bool fSpentIndex;

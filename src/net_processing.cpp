@@ -24,6 +24,7 @@
 #include <scheduler.h>
 #include <tinyformat.h>
 #include <txdb.h>
+#include <index/txindex.h>
 #include <txmempool.h>
 #include <ui_interface.h>
 #include <util.h>
@@ -1351,7 +1352,7 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
                    mempool.exists(inv.hash) ||
                    pcoinsTip->HaveCoinInCache(COutPoint(inv.hash, 0)) || // Best effort: only try output 0 and 1
                    pcoinsTip->HaveCoinInCache(COutPoint(inv.hash, 1)) ||
-                   (fTxIndex && pblocktree->HasTxIndex(inv.hash));
+                   (g_txindex != nullptr && g_txindex->HasTx(inv.hash));
         }
 
     case MSG_BLOCK:

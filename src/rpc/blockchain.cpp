@@ -14,7 +14,7 @@
 #include <core_io.h>
 #include <consensus/validation.h>
 #include <validation.h>
-// #include <rpc/index/txindex.h>
+#include <index/txindex.h>
 #include <policy/feerate.h>
 #include <policy/policy.h>
 #include <primitives/transaction.h>
@@ -1922,6 +1922,10 @@ static UniValue getblockstats(const JSONRPCRequest& request)
         );
     }
 
+    if (g_txindex) {
+        g_txindex->BlockUntilSyncedToCurrentChain();
+    }
+
     LOCK(cs_main);
 
     CBlockIndex* pindex;
@@ -2021,7 +2025,7 @@ static UniValue getblockstats(const JSONRPCRequest& request)
 
         if (loop_inputs) {
 
-            if (!fTxIndex) {
+            if (g_txindex == nullptr) {
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "One or more of the selected stats requires -txindex enabled");
             }
             CAmount tx_total_in = 0;

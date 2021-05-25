@@ -4,6 +4,7 @@
 
 #include <evo/deterministicmns.h>
 #include <governance/governance-classes.h>
+#include <index/txindex.h>
 #include <masternode/activemasternode.h>
 #include <masternode/masternode-payments.h>
 #include <net.h>
@@ -384,6 +385,10 @@ UniValue masternode_payments(const JSONRPCRequest& request)
     }
 
     CBlockIndex* pindex{nullptr};
+
+    if (g_txindex) {
+        g_txindex->BlockUntilSyncedToCurrentChain();
+    }
 
     if (request.params[1].isNull()) {
         LOCK(cs_main);

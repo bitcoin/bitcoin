@@ -16,6 +16,7 @@ FALSE_POSITIVES = [
     ("src/batchedlogger.h", "strprintf(fmt, args...)"),
     ("src/dbwrapper.cpp", "vsnprintf(p, limit - p, format, backup_ap)"),
     ("src/index/base.cpp", "FatalError(const char* fmt, const Args&... args)"),
+    ("src/index/txindex.cpp", "FatalError(const char* fmt, const Args&... args)"),
     ("src/netbase.cpp", "LogConnectFailure(bool manual_connection, const char* fmt, const Args&... args)"),
     ("src/qt/networkstyle.cpp", "strprintf(appName, gArgs.GetDevNetName())"),
     ("src/qt/networkstyle.cpp", "strprintf(titleAddText, gArgs.GetDevNetName())"),

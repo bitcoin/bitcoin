@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
+#include <index/txindex.h>
 #include <rpc/server.h>
 #include <validation.h>
 
@@ -737,6 +738,10 @@ UniValue verifyislock(const JSONRPCRequest& request)
     CBLSSignature sig;
     if (!sig.SetHexStr(request.params[2].get_str())) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "invalid signature format");
+    }
+
+    if (g_txindex) {
+        g_txindex->BlockUntilSyncedToCurrentChain();
     }
 
     CBlockIndex* pindexMined{nullptr};

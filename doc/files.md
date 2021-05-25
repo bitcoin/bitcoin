@@ -12,6 +12,7 @@
 * evodb/*: special txes and quorums database
 * fee_estimates.dat: stores statistics used to estimate minimum transaction fees and priorities required for confirmation
 * governance.dat: stores data for governance obgects
+* indexes/txindex/*: optional transaction index database (LevelDB); since 0.17.0
 * llmq/*: quorum signatures database
 * mempool.dat: dump of the mempool's transactions
 * mncache.dat: stores data for masternode list
