@@ -116,8 +116,7 @@ namespace sam {
 Session::Session(const fs::path& private_key_file,
                  const CService& control_host,
                  CThreadInterrupt* interrupt)
-    : m_private_key_file(private_key_file), m_control_host(control_host), m_interrupt(interrupt),
-      m_control_sock(std::make_unique<Sock>(INVALID_SOCKET))
+    : m_private_key_file(private_key_file), m_control_host(control_host), m_interrupt(interrupt)
 {
 }
 
@@ -297,7 +296,7 @@ void Session::CheckControlSock()
     LOCK(m_mutex);
 
     std::string errmsg;
-    if (!m_control_sock->IsConnected(errmsg)) {
+    if (m_control_sock && !m_control_sock->IsConnected(errmsg)) {
         Log("Control socket error: %s", errmsg);
         Disconnect();
     }
@@ -345,7 +344,7 @@ Binary Session::MyDestination() const
 void Session::CreateIfNotCreatedAlready()
 {
     std::string errmsg;
-    if (m_control_sock->IsConnected(errmsg)) {
+    if (m_control_sock && m_control_sock->IsConnected(errmsg)) {
         return;
     }
 
@@ -397,14 +396,14 @@ std::unique_ptr<Sock> Session::StreamAccept()
 
 void Session::Disconnect()
 {
-    if (m_control_sock->Get() != INVALID_SOCKET) {
+    if (m_control_sock) {
         if (m_session_id.empty()) {
             Log("Destroying incomplete session");
         } else {
             Log("Destroying session %s", m_session_id);
         }
+        m_control_sock.reset();
     }
-    m_control_sock->Reset();
     m_session_id.clear();
 }
 } // namespace sam
