@@ -18,6 +18,7 @@ class P2PDNSSeeds(BitcoinTestFramework):
         self.init_arg_tests()
         self.existing_outbound_connections_test()
         self.existing_block_relay_connections_test()
+        self.force_dns_test()
 
     def init_arg_tests(self):
         fakeaddr = "fakenodeaddr.fakedomain.invalid."
@@ -59,6 +60,17 @@ class P2PDNSSeeds(BitcoinTestFramework):
             # we still want to query the DNS seeds.
             for i in range(2):
                 self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=i, connection_type="block-relay-only")
+
+    def force_dns_test(self):
+        self.log.info("Check that we query DNS seeds if -forcednsseed param is set")
+
+        with self.nodes[0].assert_debug_log(expected_msgs=["Loading addresses from DNS seed"], timeout=12):
+            # -dnsseed defaults to 1 in bitcoind, but 0 in the test framework,
+            # so pass it explicitly here
+            self.restart_node(0, ["-forcednsseed", "-dnsseed=1"])
+
+        # Restore default for subsequent tests
+        self.restart_node(0)
 
 
 if __name__ == '__main__':
