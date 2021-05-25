@@ -5,6 +5,7 @@
 """A limited-functionality wallet, which may replace a real wallet in tests"""
 
 from decimal import Decimal
+from enum import Enum
 from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
 from test_framework.key import ECKey
 from test_framework.messages import (
@@ -30,22 +31,46 @@ from test_framework.util import (
 )
 
 
+class MiniWalletMode(Enum):
+    """Determines the transaction type the MiniWallet is creating and spending.
+
+    For most purposes, the default mode ADDRESS_OP_TRUE should be sufficient;
+    it simply uses a fixed bech32 P2WSH address whose coins are spent with a
+    witness stack of OP_TRUE, i.e. following an anyone-can-spend policy.
+    However, if the transactions need to be modified by the user (e.g. prepending
+    scriptSig for testing opcodes that are activated by a soft-fork), or the txs
+    should contain an actual signature, the raw modes RAW_OP_TRUE and RAW_P2PK
+    can be useful. Summary of modes:
+
+                    |      output       |           |  tx is   | can modify |  needs
+         mode       |    description    |  address  | standard | scriptSig  | signing
+    ----------------+-------------------+-----------+----------+------------+----------
+    ADDRESS_OP_TRUE | anyone-can-spend  |  bech32   |   yes    |    no      |   no
+    RAW_OP_TRUE     | anyone-can-spend  |  - (raw)  |   no     |    yes     |   no
+    RAW_P2PK        | pay-to-public-key |  - (raw)  |   yes    |    yes     |   yes
+    """
+    ADDRESS_OP_TRUE = 1
+    RAW_OP_TRUE = 2
+    RAW_P2PK = 3
+
+
 class MiniWallet:
-    def __init__(self, test_node, *, raw_script=False, use_p2pk=False):
+    def __init__(self, test_node, *, mode=MiniWalletMode.ADDRESS_OP_TRUE):
         self._test_node = test_node
         self._utxos = []
         self._priv_key = None
         self._address = None
 
-        if raw_script:
+        assert isinstance(mode, MiniWalletMode)
+        if mode == MiniWalletMode.RAW_OP_TRUE:
             self._scriptPubKey = bytes(CScript([OP_TRUE]))
-        elif use_p2pk:
+        elif mode == MiniWalletMode.RAW_P2PK:
             # use simple deterministic private key (k=1)
             self._priv_key = ECKey()
             self._priv_key.set((1).to_bytes(32, 'big'), True)
             pub_key = self._priv_key.get_pubkey()
             self._scriptPubKey = bytes(CScript([pub_key.get_bytes(), OP_CHECKSIG]))
-        else:
+        elif mode == MiniWalletMode.ADDRESS_OP_TRUE:
             self._address = ADDRESS_BCRT1_P2WSH_OP_TRUE
             self._scriptPubKey = hex_str_to_bytes(self._test_node.validateaddress(self._address)['scriptPubKey'])
 
