@@ -427,12 +427,10 @@ static CAddress GetBindAddress(const Sock& sock)
     CAddress addr_bind;
     struct sockaddr_storage sockaddr_bind;
     socklen_t sockaddr_bind_len = sizeof(sockaddr_bind);
-    if (sock.Get() != INVALID_SOCKET) {
-        if (!sock.GetSockName((struct sockaddr*)&sockaddr_bind, &sockaddr_bind_len)) {
-            addr_bind.SetSockAddr((const struct sockaddr*)&sockaddr_bind);
-        } else {
-            LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "getsockname failed\n");
-        }
+    if (!sock.GetSockName((struct sockaddr*)&sockaddr_bind, &sockaddr_bind_len)) {
+        addr_bind.SetSockAddr((const struct sockaddr*)&sockaddr_bind);
+    } else {
+        LogPrintLevel(BCLog::NET, BCLog::Level::Warning, "getsockname failed\n");
     }
     return addr_bind;
 }
