@@ -5960,8 +5960,8 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websock
     StopGethNode(pid);
 
     LogPrintf("%s: Downloading Geth descriptor from %s\n", __func__, gethDescriptorURL);
-    fs::path descriptorPath = GetDataDir(false) / "gethdescriptor.json";
-    fs::path binaryURL = GetDataDir(false) / GetGethFilename();
+    fs::path descriptorPath = gArgs.GetDataDirBase() / "gethdescriptor.json";
+    fs::path binaryURL = gArgs.GetDataDirBase() / GetGethFilename();
     // if either bin or descriptor not existing remove both files to download from scratch
     if (!fs::exists(binaryURL.string()) || !fs::exists(descriptorPath.string())) {
         if(fs::exists(binaryURL.string()))
@@ -5984,7 +5984,7 @@ bool StartGethNode(const std::string &gethDescriptorURL, pid_t &pid, int websock
     fs::path attempt1 = binaryURL.string();
     attempt1 = attempt1.make_preferred();
 
-    fs::path dataDir = GetDataDir(true) / "geth";
+    fs::path dataDir = gArgs.GetDataDirNet() / "geth";
     #ifndef WIN32
     // Prevent killed child-processes remaining as "defunct"
     struct sigaction sa;
@@ -6162,8 +6162,8 @@ bool StartRelayerNode(const std::string &relayerDescriptorURL, pid_t &pid, int r
     }
 
     LogPrintf("%s: Downloading Relayer descriptor from %s\n", __func__, relayerDescriptorURL);
-    fs::path descriptorPath = GetDataDir(false) / "relayerdescriptor.json";
-    fs::path binaryURL = GetDataDir(false) / GetRelayerFilename();
+    fs::path descriptorPath = gArgs.GetDataDirBase() / "relayerdescriptor.json";
+    fs::path binaryURL = gArgs.GetDataDirBase() / GetRelayerFilename();
     if (!fs::exists(binaryURL.string()) || !fs::exists(descriptorPath.string())) {
         if(fs::exists(binaryURL.string()))
             fs::remove(binaryURL.string());
@@ -6186,7 +6186,7 @@ bool StartRelayerNode(const std::string &relayerDescriptorURL, pid_t &pid, int r
 
     fs::path attempt1 = binaryURL.string();
     attempt1 = attempt1.make_preferred();
-    fs::path dataDir = GetDataDir(true) / "geth";
+    fs::path dataDir = gArgs.GetDataDirNet() / "geth";
 
     #ifndef WIN32
         // Prevent killed child-processes remaining as "defunct"
@@ -6282,7 +6282,7 @@ void DoGethMaintenance() {
             StopGethNode(gethPID);
             StopRelayerNode(relayerPID);
             // copy wallet dir if exists
-            fs::path dataDir = GetDataDir(true);
+            fs::path dataDir = gArgs.GetDataDirNet();
             fs::path gethDir = dataDir / "geth";
             fs::path gethKeyStoreDir = gethDir / "keystore";
             fs::path keyStoreTmpDir = dataDir / "keystoretmp";
