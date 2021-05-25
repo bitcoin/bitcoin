@@ -8,6 +8,7 @@
 #include <primitives/transaction.h>
 #include <sync.h>
 #include <utilstrencodings.h>
+#include <utilstring.h>
 #include <utilmoneystr.h>
 #include <test/test_dash.h>
 
@@ -95,6 +96,13 @@ BOOST_AUTO_TEST_CASE(util_HexStr)
     );
 }
 
+BOOST_AUTO_TEST_CASE(util_Join)
+{
+    // Normal version
+    BOOST_CHECK_EQUAL(Join({}, ", "), "");
+    BOOST_CHECK_EQUAL(Join({"foo"}, ", "), "foo");
+    BOOST_CHECK_EQUAL(Join({"foo", "bar"}, ", "), "foo, bar");
+}
 
 BOOST_AUTO_TEST_CASE(util_FormatISO8601DateTime)
 {
