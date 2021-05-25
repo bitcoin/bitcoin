@@ -426,7 +426,7 @@ private:
     void RelayAddress(NodeId originator, const CAddress& addr, bool fReachable);
 
     /** Send `feefilter` message. */
-    void MaybeSendFeefilter(CNode& node, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+    void MaybeSendFeefilter(CNode& node, std::chrono::microseconds current_time) EXCLUSIVE_LOCKS_REQUIRED(m_mutex_message_handling);
 
     const CChainParams& m_chainparams;
     CConnman& m_connman;
@@ -4521,7 +4521,15 @@ void PeerManagerImpl::MaybeSendAddr(CNode& node, Peer& peer, std::chrono::micros
 
 void PeerManagerImpl::MaybeSendFeefilter(CNode& pto, std::chrono::microseconds current_time)
 {
-    AssertLockHeld(cs_main);
+    // g_filter_rounder::round, lastSentFeeFilter and m_next_send_feefilter are
+    // not thread-safe. Moreover, concurrent calls to this function are not
+    // allowed, since all previously mentioned symbols need to be read or
+    // written atomically as a group.
+    //
+    // This is was previously achieved by holding cs_main, now it is achieved
+    // by holding m_mutex_message_handling. If there is need, a dedicated Mutex
+    // for feefilter sending can be added in the future.
+    AssertLockHeld(m_mutex_message_handling);
 
     if (m_ignore_incoming_txs) return;
     if (!pto.m_tx_relay) return;
@@ -5071,8 +5079,8 @@ bool PeerManagerImpl::SendMessages(CNode* pto)
 
         if (!vGetData.empty())
             m_connman.PushMessage(pto, msgMaker.Make(NetMsgType::GETDATA, vGetData));
-
-        MaybeSendFeefilter(*pto, current_time);
     } // release cs_main
+
+    MaybeSendFeefilter(*pto, current_time);
     return true;
 }
