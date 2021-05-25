@@ -25,6 +25,10 @@ usdt_linux_packages=systemtap
 
 darwin_native_packages = native_ds_store native_mac_alias
 
+ifneq ($(USE_MUSL_LIBC),)
+linux_native_packages = native_musl_cross_make
+endif
+
 ifneq ($(build_os),darwin)
 darwin_native_packages += native_cctools native_libtapi
 

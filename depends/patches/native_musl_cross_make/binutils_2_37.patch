@@ -1,0 +1,15 @@
+commit 18c6929bda38ae1ee32d1b957720153e20055f9c
+Author: fanquake <fanquake@gmail.com>
+Date:   Thu Oct 14 13:59:56 2021 +0800
+
+    binutils 2.37
+
+    No patches. Looks like 0004 from binutils 2.33.1 is already in the tree.
+
+diff --git a/hashes/binutils-2.37.tar.xz.sha1 b/hashes/binutils-2.37.tar.xz.sha1
+new file mode 100644
+index 0000000..ed5fabc
+--- /dev/null
++++ b/hashes/binutils-2.37.tar.xz.sha1
+@@ -0,0 +1 @@
++e9cf391b000010d6c752771974b394c9c743c928  binutils-2.37.tar.xz
