@@ -67,7 +67,7 @@ bool BaseIndex::Init()
         SetBestBlockIndex(m_chainstate->m_blockman.FindForkInGlobalIndex(active_chain, locator));
     }
     m_synced = m_best_block_index.load() == active_chain.Tip();
-    if (!m_synced) {
+    if (!m_synced && (fPruneMode || fHavePruned) && !fReindex) {
         bool prune_violation = false;
         if (!m_best_block_index) {
             // index is not built yet
@@ -369,7 +369,7 @@ IndexSummary BaseIndex::GetSummary() const
 
 void BaseIndex::SetBestBlockIndex(const CBlockIndex* block) {
     m_best_block_index = block;
-    if (AllowPrune()) {
+    if (AllowPrune() && (fPruneMode || fHavePruned) && !fReindex) {
         LOCK(::cs_main);
         g_chainman.m_blockman.UpdatePruneBlocker(GetName(), block ? block : ::ChainActive().Genesis());
     }
