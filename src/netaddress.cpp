@@ -32,14 +32,7 @@ CNetAddr::BIP155Network CNetAddr::GetBIP155Network() const
     case NET_IPV6:
         return BIP155Network::IPV6;
     case NET_ONION:
-        switch (m_addr.size()) {
-        case ADDR_TORV2_SIZE:
-            return BIP155Network::TORV2;
-        case ADDR_TORV3_SIZE:
-            return BIP155Network::TORV3;
-        default:
-            assert(false);
-        }
+        return BIP155Network::TORV3;
     case NET_I2P:
         return BIP155Network::I2P;
     case NET_CJDNS:

@@ -302,7 +302,7 @@ class CNetAddr
         /**
          * Get the BIP155 network id of this address.
          * Must not be called for IsInternal() objects.
-         * @returns BIP155 network id
+         * @returns BIP155 network id, except TORV2 which is no longer supported.
          */
         BIP155Network GetBIP155Network() const;
 
