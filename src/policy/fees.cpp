@@ -10,6 +10,7 @@
 #include <logging.h>
 #include <streams.h>
 #include <txmempool.h>
+#include <util/serfloat.h>
 #include <util/system.h>
 
 static const char* FEE_ESTIMATES_FILENAME = "fee_estimates.dat";
@@ -25,6 +26,25 @@ std::string StringForFeeEstimateHorizon(FeeEstimateHorizon horizon)
     } // no default case, so the compiler can warn about missing cases
     assert(false);
 }
+
+namespace {
+
+struct EncodedDoubleFormatter
+{
+    template<typename Stream> void Ser(Stream &s, double v)
+    {
+        s << EncodeDouble(v);
+    }
+
+    template<typename Stream> void Unser(Stream& s, double& v)
+    {
+        uint64_t encoded;
+        s >> encoded;
+        v = DecodeDouble(encoded);
+    }
+};
+
+} // namespace
 
 /**
  * We will instantiate an instance of this class to track transactions that were
@@ -356,12 +376,12 @@ double TxConfirmStats::EstimateMedianVal(int confTarget, double sufficientTxVal,
 
 void TxConfirmStats::Write(CAutoFile& fileout) const
 {
-    fileout << decay;
+    fileout << Using<EncodedDoubleFormatter>(decay);
     fileout << scale;
-    fileout << m_feerate_avg;
-    fileout << txCtAvg;
-    fileout << confAvg;
-    fileout << failAvg;
+    fileout << Using<VectorFormatter<EncodedDoubleFormatter>>(m_feerate_avg);
+    fileout << Using<VectorFormatter<EncodedDoubleFormatter>>(txCtAvg);
+    fileout << Using<VectorFormatter<VectorFormatter<EncodedDoubleFormatter>>>(confAvg);
+    fileout << Using<VectorFormatter<VectorFormatter<EncodedDoubleFormatter>>>(failAvg);
 }
 
 void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets)
@@ -372,7 +392,7 @@ void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets
     size_t maxConfirms, maxPeriods;
 
     // The current version will store the decay with each individual TxConfirmStats and also keep a scale factor
-    filein >> decay;
+    filein >> Using<EncodedDoubleFormatter>(decay);
     if (decay <= 0 || decay >= 1) {
         throw std::runtime_error("Corrupt estimates file. Decay must be between 0 and 1 (non-inclusive)");
     }
@@ -381,15 +401,15 @@ void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets
         throw std::runtime_error("Corrupt estimates file. Scale must be non-zero");
     }
 
-    filein >> m_feerate_avg;
+    filein >> Using<VectorFormatter<EncodedDoubleFormatter>>(m_feerate_avg);
     if (m_feerate_avg.size() != numBuckets) {
         throw std::runtime_error("Corrupt estimates file. Mismatch in feerate average bucket count");
     }
-    filein >> txCtAvg;
+    filein >> Using<VectorFormatter<EncodedDoubleFormatter>>(txCtAvg);
     if (txCtAvg.size() != numBuckets) {
         throw std::runtime_error("Corrupt estimates file. Mismatch in tx count bucket count");
     }
-    filein >> confAvg;
+    filein >> Using<VectorFormatter<VectorFormatter<EncodedDoubleFormatter>>>(confAvg);
     maxPeriods = confAvg.size();
     maxConfirms = scale * maxPeriods;
 
@@ -402,7 +422,7 @@ void TxConfirmStats::Read(CAutoFile& filein, int nFileVersion, size_t numBuckets
         }
     }
 
-    filein >> failAvg;
+    filein >> Using<VectorFormatter<VectorFormatter<EncodedDoubleFormatter>>>(failAvg);
     if (maxPeriods != failAvg.size()) {
         throw std::runtime_error("Corrupt estimates file. Mismatch in confirms tracked for failures");
     }
@@ -884,7 +904,7 @@ bool CBlockPolicyEstimator::Write(CAutoFile& fileout) const
         else {
             fileout << historicalFirst << historicalBest;
         }
-        fileout << buckets;
+        fileout << Using<VectorFormatter<EncodedDoubleFormatter>>(buckets);
         feeStats->Write(fileout);
         shortStats->Write(fileout);
         longStats->Write(fileout);
@@ -920,7 +940,7 @@ bool CBlockPolicyEstimator::Read(CAutoFile& filein)
                 throw std::runtime_error("Corrupt estimates file. Historical block range for estimates is invalid");
             }
             std::vector<double> fileBuckets;
-            filein >> fileBuckets;
+            filein >> Using<VectorFormatter<EncodedDoubleFormatter>>(fileBuckets);
             size_t numBuckets = fileBuckets.size();
             if (numBuckets <= 1 || numBuckets > 1000) {
                 throw std::runtime_error("Corrupt estimates file. Must have between 2 and 1000 feerate buckets");

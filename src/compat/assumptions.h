@@ -36,11 +36,6 @@ static_assert(std::numeric_limits<double>::is_iec559, "IEEE 754 double assumed")
 // Example(s): Everywhere :-)
 static_assert(std::numeric_limits<unsigned char>::digits == 8, "8-bit byte assumed");
 
-// Assumption: We assume floating-point widths.
-// Example(s): Type punning in serialization code (ser_{float,double}_to_uint{32,64}).
-static_assert(sizeof(float) == 4, "32-bit float assumed");
-static_assert(sizeof(double) == 8, "64-bit double assumed");
-
 // Assumption: We assume integer widths.
 // Example(s): GetSizeOfCompactSize and WriteCompactSize in the serialization
 //             code.
