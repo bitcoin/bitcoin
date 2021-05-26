@@ -951,6 +951,7 @@ static RPCHelpMan testmempoolaccept()
                                              CFeeRate(AmountFromValue(request.params[1]));
 
     std::vector<CTransactionRef> txns;
+    txns.reserve(raw_transactions.size());
     for (const auto& rawtx : raw_transactions.getValues()) {
         CMutableTransaction mtx;
         if (!DecodeHexTx(mtx, rawtx.get_str())) {
