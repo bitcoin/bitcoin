@@ -6,6 +6,7 @@
 #define BITCOIN_POLICY_PACKAGES_H
 
 #include <consensus/validation.h>
+#include <policy/policy.h>
 #include <primitives/transaction.h>
 
 #include <vector>
@@ -14,6 +15,7 @@
 static constexpr uint32_t MAX_PACKAGE_COUNT{25};
 /** Default maximum total virtual size of transactions in a package in KvB. */
 static constexpr uint32_t MAX_PACKAGE_SIZE{101};
+static_assert(MAX_PACKAGE_SIZE * WITNESS_SCALE_FACTOR * 1000 >= MAX_STANDARD_TX_WEIGHT);
 
 /** A "reason" why a package was invalid. It may be that one or more of the included
  * transactions is invalid or the package itself violates our rules.
