@@ -13,6 +13,7 @@ from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
+from test_framework.netutil import test_ipv6_local
 from io import BytesIO
 from time import sleep
 
@@ -108,6 +109,7 @@ class ZMQTest (BitcoinTestFramework):
             self.test_mempool_sync()
             self.test_reorg()
             self.test_multiple_interfaces()
+            self.test_ipv6()
         finally:
             # Destroy the ZMQ context.
             self.log.debug("Destroying ZMQ context")
@@ -115,10 +117,12 @@ class ZMQTest (BitcoinTestFramework):
 
     # Restart node with the specified zmq notifications enabled, subscribe to
     # all of them and return the corresponding ZMQSubscriber objects.
-    def setup_zmq_test(self, services, *, recv_timeout=60, sync_blocks=True):
+    def setup_zmq_test(self, services, *, recv_timeout=60, sync_blocks=True, ipv6=False):
         subscribers = []
         for topic, address in services:
             socket = self.ctx.socket(zmq.SUB)
+            if ipv6:
+                socket.setsockopt(zmq.IPV6, 1)
             subscribers.append(ZMQSubscriber(socket, topic.encode()))
 
         self.restart_node(0, ["-zmqpub%s=%s" % (topic, address) for topic, address in services] +
@@ -556,6 +560,23 @@ class ZMQTest (BitcoinTestFramework):
         # Should receive the same block hash on both subscribers
         assert_equal(self.nodes[0].getbestblockhash(), subscribers[0].receive().hex())
         assert_equal(self.nodes[0].getbestblockhash(), subscribers[1].receive().hex())
+
+    def test_ipv6(self):
+        if not test_ipv6_local():
+            self.log.info("Skipping IPv6 test, because IPv6 is not supported.")
+            return
+        self.log.info("Testing IPv6")
+        # Set up subscriber using IPv6 loopback address
+        subscribers = self.setup_zmq_test([
+            ("hashblock", "tcp://[::1]:28332")
+        ], ipv6=True)
+
+        # Generate 1 block in nodes[0]
+        self.nodes[0].generatetoaddress(1, ADDRESS_BCRT1_UNSPENDABLE)
+
+        # Should receive the same block hash
+        assert_equal(self.nodes[0].getbestblockhash(), subscribers[0].receive().hex())
+
 
 if __name__ == '__main__':
     ZMQTest().main()
