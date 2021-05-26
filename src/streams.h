@@ -37,7 +37,7 @@ public:
     OverrideStream<Stream>& operator<<(const T& obj)
     {
         // Serialize to this stream
-        ::Serialize(*this->stream, obj);
+        ::Serialize(*this, obj);
         return (*this);
     }
 
@@ -45,9 +45,22 @@ public:
     OverrideStream<Stream>& operator>>(T& obj)
     {
         // Unserialize from this stream
-        ::Unserialize(*this->stream, obj);
+        ::Unserialize(*this, obj);
         return (*this);
     }
+
+    void write(const char* pch, size_t nSize)
+    {
+        stream->write(pch, nSize);
+    }
+
+    void read(char* pch, size_t nSize)
+    {
+        stream->read(pch, nSize);
+    }
+
+    int GetVersion() const { return nVersion; }
+    int GetType() const { return nType; }
 };
 
 /* Minimal stream for overwriting and/or appending to an existing byte vector
