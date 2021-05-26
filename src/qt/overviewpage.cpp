@@ -469,7 +469,7 @@ void OverviewPage::updateCoinJoinProgress()
 
     ui->coinJoinProgress->setValue(progress);
 
-    QString strToolPip = ("<b>" + tr("Overall progress") + ": %1%</b><br/>" +
+    QString strToolPip = QString("<b>" + tr("Overall progress") + ": %1%</b><br/>" +
                           tr("Denominated") + ": %2%<br/>" +
                           tr("Partially mixed") + ": %3%<br/>" +
                           tr("Mixed") + ": %4%<br/>" +
