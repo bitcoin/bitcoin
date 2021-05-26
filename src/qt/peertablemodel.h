@@ -74,7 +74,31 @@ public Q_SLOTS:
 
 private:
     interfaces::Node& m_node;
-    const QStringList columns{tr("Peer Id"), tr("Address"), tr("Type"), tr("Network"), tr("Ping"), tr("Sent"), tr("Received"), tr("User Agent")};
+    const QStringList columns{
+        /*: Title of Peers Table column which contains a
+            unique number used to identify a connection. */
+        tr("Peer"),
+        /*: Title of Peers Table column which contains the
+            IP/Onion/I2P address of the connected peer. */
+        tr("Address"),
+        /*: Title of Peers Table column which describes the type of
+            peer connection. The "type" describes why the connection exists. */
+        tr("Type"),
+        /*: Title of Peers Table column which states the network the peer
+            connected through. */
+        tr("Network"),
+        /*: Title of Peers Table column which indicates the current latency
+            of the connection with the peer. */
+        tr("Ping"),
+        /*: Title of Peers Table column which indicates the total amount of
+            network information we have sent to the peer. */
+        tr("Sent"),
+        /*: Title of Peers Table column which indicates the total amount of
+            network information we have received from the peer. */
+        tr("Received"),
+        /*: Title of Peers Table column which contains the peer's
+            User Agent string. */
+        tr("User Agent")};
     std::unique_ptr<PeerTablePriv> priv;
     QTimer *timer;
 };
