@@ -384,7 +384,7 @@ public:
             [&] {
                 mode = "a+";
             });
-#ifdef _GNU_SOURCE
+#if defined _GNU_SOURCE && !defined __ANDROID__
         const cookie_io_functions_t io_hooks = {
             FuzzedFileProvider::read,
             FuzzedFileProvider::write,
