@@ -208,7 +208,7 @@ Result CreateRateBumpTransaction(CWallet& wallet, const uint256& txid, const CCo
     if (coin_control.m_feerate) {
         // The user provided a feeRate argument.
         // We calculate this here to avoid compiler warning on the cs_wallet lock
-        const int64_t maxTxSize = CalculateMaximumSignedTxSize(*wtx.tx, &wallet).first;
+        const int64_t maxTxSize{CalculateMaximumSignedTxSize(*wtx.tx, &wallet).vsize};
         Result res = CheckFeeRate(wallet, wtx, *new_coin_control.m_feerate, maxTxSize, errors);
         if (res != Result::OK) {
             return res;
