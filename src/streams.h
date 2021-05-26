@@ -26,10 +26,11 @@ template<typename Stream>
 class OverrideStream
 {
     Stream* stream;
-public:
+
     const int nType;
     const int nVersion;
 
+public:
     OverrideStream(Stream* stream_, int nType_, int nVersion_) : stream(stream_), nType(nType_), nVersion(nVersion_) {}
 
     template<typename T>
