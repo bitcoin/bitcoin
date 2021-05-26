@@ -84,6 +84,7 @@ For instance:
 
     $ bitcoind -zmqpubhashtx=tcp://127.0.0.1:28332 \
                -zmqpubhashtx=tcp://192.168.1.2:28332 \
+               -zmqpubhashblock="tcp://[::1]:28333" \
                -zmqpubrawtx=ipc:///tmp/bitcoind.tx.raw \
                -zmqpubhashtxhwm=10000
 
@@ -124,6 +125,9 @@ sudo sysctl -w net.ipv4.tcp_keepalive_time=600
 Setting the keepalive values appropriately for your operating environment may
 improve connectivity in situations where long-lived connections are silently
 dropped by network middle boxes.
+
+Also, the socket's ZMQ_IPV6 option is enabled to accept connections from IPv6
+hosts as well. If needed, this option has to be set on the client side too.
 
 ## Remarks
 
