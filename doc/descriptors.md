@@ -162,6 +162,11 @@ The basic steps are:
      then the resulting transaction is broadcasted to the network
   8. Checks that balances are correct after the transaction has been included in a block
 
+You may prefer a daisy chained signing flow where each participant signs the PSBT one after another until
+the PSBT has been signed `M` times and is "complete." For the most part, the steps above remain the same, except (6, 7)
+change slightly from signing the original PSBT in parallel to signing it in series. `combinepsbt` is not necessary with
+this signing flow and the last (`m`th) signer can just broadcast the PSBT after signing. Note that a parallel signing flow may be
+preferable in cases where there are more signers. This signing flow is also included in the test / Python example.
 [The test](/test/functional/wallet_multisig_descriptor_psbt.py) is meant to be documentation as much as it is a functional test, so
 it is kept as simple and readable as possible.
 

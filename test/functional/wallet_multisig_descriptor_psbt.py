@@ -139,5 +139,21 @@ class WalletMultisigDescriptorPSBTTest(BitcoinTestFramework):
         assert_approx(self.nodes[0].get_wallet_rpc(f"{self.name}_{0}").getbalance(), deposit_amount - value, vspan=0.001)
         assert_equal(self.nodes[self.N - 1].get_wallet_rpc(f"participant_{self.N - 1}").getbalance(), value)
 
+        self.log.info("Send another transaction from the multisig, this time with a daisy chained signing flow (one after another in series)!")
+        psbt = self.make_sending_transaction(to, value)
+        for m in range(self.M):
+            signing_wallet = self.nodes[m].get_wallet_rpc(f"participant_{m}")
+            psbt = signing_wallet.walletprocesspsbt(psbt["psbt"])
+            assert_equal(psbt["complete"], m == self.M - 1)
+        finalized = coordinator_wallet.finalizepsbt(psbt["psbt"])
+        coordinator_wallet.sendrawtransaction(finalized["hex"])
+
+        self.log.info("Check that balances are correct after the transaction has been included in a block.")
+        self.nodes[0].generate(1)
+        self.sync_all()
+        assert_approx(self.nodes[0].get_wallet_rpc(f"{self.name}_{0}").getbalance(), deposit_amount - (value * 2), vspan=0.001)
+        assert_equal(self.nodes[self.N - 1].get_wallet_rpc(f"participant_{self.N - 1}").getbalance(), value * 2)
+
+
 if __name__ == "__main__":
     WalletMultisigDescriptorPSBTTest().main()
