@@ -139,6 +139,32 @@ Key order does not matter for `sortedmulti()`. `sortedmulti()` behaves in the sa
 as `multi()` does but the keys are reordered in the resulting script such that they
 are lexicographically ordered as described in BIP67.
 
+#### Basic multisig example
+
+For a good example of a basic M-of-N multisig between multiple participants using descriptor
+wallets and PSBTs, as well as a signing flow, see [this functional test](/test/functional/wallet_multisig_descriptor_psbt.py).
+The basic steps are:
+
+  1. Every participant generates an xpub. The most straightforward way is to create a new descriptor wallet.
+     Avoid reusing this wallet for any other purpose. Hint: extract the wallet's xpubs using `listdescriptors`
+     and pick the one from the `pkh` descriptor since it's least likely to be accidentally reused (legacy addresses)
+  2. Create a watch-only descriptor wallet (blank, private keys disabled). Now the multisig is created by importing the two descriptors:
+     `wsh(sortedmulti(<M>,XPUB1/0/*,XPUB2/0/*,…,XPUBN/0/*))` and `wsh(sortedmulti(<M>,XPUB1/1/*,XPUB2/1/*,…,XPUBN/1/*))`
+     (one descriptor w/ `0` for receiving addresses and another w/ `1` for change). Every participant does this
+  3. A receiving address is generated for the multisig. As a check to ensure step 2 was done correctly, every participant
+     should verify they get the same addresses
+  4. Funds are sent to the resulting address
+  5. A sending transaction is created using `walletcreatefundedpsbt` (anyone can initiate this). It is simple to do this in
+     the GUI by going to the `Send` tab in the multisig wallet and creating an unsigned transaction (PSBT)
+  6. At least `M` users check the PSBT with `decodepsbt` and (if OK) signs it with `walletprocesspsbt`. It is simple to do
+     this in the GUI by Loading the PSBT from file and signing it
+  7. The signed PSBTs are collected with `combinepsbt`, finalized w/ `finalizepsbt`, and
+     then the resulting transaction is broadcasted to the network
+  8. Checks that balances are correct after the transaction has been included in a block
+
+[The test](/test/functional/wallet_multisig_descriptor_psbt.py) is meant to be documentation as much as it is a functional test, so
+it is kept as simple and readable as possible.
+
 ### BIP32 derived keys and chains
 
 Most modern wallet software and hardware uses keys that are derived using
