@@ -53,7 +53,7 @@ const std::map<uint64_t,std::string> WALLET_FLAG_CAVEATS{
     },
 };
 
-static const size_t OUTPUT_GROUP_MAX_ENTRIES = 10;
+static constexpr size_t OUTPUT_GROUP_MAX_ENTRIES{100};
 
 RecursiveMutex cs_wallets;
 static std::vector<std::shared_ptr<CWallet>> vpwallets GUARDED_BY(cs_wallets);
@@ -2483,7 +2483,7 @@ bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAm
     // form groups from remaining coins; note that preset coins will not
     // automatically have their associated (same address) coins included
     if (coin_control.m_avoid_partial_spends && vCoins.size() > OUTPUT_GROUP_MAX_ENTRIES) {
-        // Cases where we have 11+ outputs all pointing to the same destination may result in
+        // Cases where we have 101+ outputs all pointing to the same destination may result in
         // privacy leaks as they will potentially be deterministically sorted. We solve that by
         // explicitly shuffling the outputs before processing
         Shuffle(vCoins.begin(), vCoins.end(), FastRandomContext());
