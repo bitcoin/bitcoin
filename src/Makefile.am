@@ -193,6 +193,7 @@ BITCOIN_CORE_H = \
   outputtype.h \
   policy/feerate.h \
   policy/fees.h \
+  policy/packages.h \
   policy/policy.h \
   policy/rbf.h \
   policy/settings.h \
