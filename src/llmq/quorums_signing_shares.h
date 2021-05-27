@@ -98,16 +98,13 @@ public:
     std::vector<bool> inv;
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CSigSharesInv, obj)
     {
-        uint64_t invSize = inv.size();
-
-        READWRITE(VARINT(sessionId));
-        READWRITE(COMPACTSIZE(invSize));
-        READWRITE(AUTOBITSET(inv, (size_t)invSize));
+        uint64_t invSize = obj.inv.size();
+        READWRITE(VARINT(obj.sessionId), COMPACTSIZE(invSize));
+        autobitset_t bitset = std::make_pair(obj.inv, (size_t)invSize);
+        READWRITE(AUTOBITSET(bitset));
+        SER_READ(obj, obj.inv = bitset.first);
     }
 
     void Init(size_t size);
