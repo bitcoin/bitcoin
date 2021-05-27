@@ -75,12 +75,6 @@ QT_TRANSLATE_NOOP("syscoin-core", ""
 "Prune: last wallet synchronisation goes beyond pruned data. You need to -"
 "reindex (download the whole blockchain again in case of pruned node)"),
 QT_TRANSLATE_NOOP("syscoin-core", ""
-"SQLiteDatabase: Failed to prepare the statement to fetch sqlite wallet "
-"schema version: %s"),
-QT_TRANSLATE_NOOP("syscoin-core", ""
-"SQLiteDatabase: Failed to prepare the statement to fetch the application id: "
-"%s"),
-QT_TRANSLATE_NOOP("syscoin-core", ""
 "SQLiteDatabase: Unknown sqlite wallet schema version %d. Only version %d is "
 "supported"),
 QT_TRANSLATE_NOOP("syscoin-core", ""
@@ -201,8 +195,6 @@ QT_TRANSLATE_NOOP("syscoin-core", "Reducing -maxconnections from %d to %d, becau
 QT_TRANSLATE_NOOP("syscoin-core", "Replaying blocks…"),
 QT_TRANSLATE_NOOP("syscoin-core", "Rescanning…"),
 QT_TRANSLATE_NOOP("syscoin-core", "SQLiteDatabase: Failed to execute statement to verify database: %s"),
-QT_TRANSLATE_NOOP("syscoin-core", "SQLiteDatabase: Failed to fetch sqlite wallet schema version: %s"),
-QT_TRANSLATE_NOOP("syscoin-core", "SQLiteDatabase: Failed to fetch the application id: %s"),
 QT_TRANSLATE_NOOP("syscoin-core", "SQLiteDatabase: Failed to prepare statement to verify database: %s"),
 QT_TRANSLATE_NOOP("syscoin-core", "SQLiteDatabase: Failed to read database verification error: %s"),
 QT_TRANSLATE_NOOP("syscoin-core", "SQLiteDatabase: Unexpected application id. Expected %u, got %u"),
@@ -222,7 +214,6 @@ QT_TRANSLATE_NOOP("syscoin-core", "This is the minimum transaction fee you pay o
 QT_TRANSLATE_NOOP("syscoin-core", "This is the transaction fee you will pay if you send a transaction."),
 QT_TRANSLATE_NOOP("syscoin-core", "Transaction amount too small"),
 QT_TRANSLATE_NOOP("syscoin-core", "Transaction amounts must not be negative"),
-QT_TRANSLATE_NOOP("syscoin-core", "Transaction fee and change calculation failed"),
 QT_TRANSLATE_NOOP("syscoin-core", "Transaction has too long of a mempool chain"),
 QT_TRANSLATE_NOOP("syscoin-core", "Transaction must have at least one recipient"),
 QT_TRANSLATE_NOOP("syscoin-core", "Transaction too large"),
