@@ -115,7 +115,7 @@ void CNetAddr::SetIP(const CNetAddr& ipIn)
         assert(ipIn.m_addr.size() == ADDR_IPV6_SIZE);
         break;
     case NET_ONION:
-        assert(ipIn.m_addr.size() == ADDR_TORV2_SIZE || ipIn.m_addr.size() == ADDR_TORV3_SIZE);
+        assert(ipIn.m_addr.size() == ADDR_TORV3_SIZE);
         break;
     case NET_I2P:
         assert(ipIn.m_addr.size() == ADDR_I2P_SIZE);

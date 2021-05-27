@@ -97,9 +97,6 @@ static constexpr size_t ADDR_IPV4_SIZE = 4;
 /// Size of IPv6 address (in bytes).
 static constexpr size_t ADDR_IPV6_SIZE = 16;
 
-/// Size of TORv2 address (in bytes).
-static constexpr size_t ADDR_TORV2_SIZE = 10;
-
 /// Size of TORv3 address (in bytes). This is the length of just the address
 /// as used in BIP155, without the checksum and the version byte.
 static constexpr size_t ADDR_TORV3_SIZE = 32;
