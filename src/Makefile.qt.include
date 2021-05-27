@@ -382,7 +382,8 @@ bitcoin_qt_clean: FORCE
 bitcoin_qt : qt/bitcoin-qt$(EXEEXT)
 
 APK_LIB_DIR = qt/android/libs/$(ANDROID_ARCH)
-QT_BASE_PATH = $(shell find ../depends/sources/ -maxdepth 1 -type f -regex ".*qtbase.*\.tar.xz")
+QT_BASE_VERSION = $(lastword $(shell $(MOC) --version))
+QT_BASE_PATH = $(shell find ../depends/sources/ -maxdepth 1 -type f -regex ".*qtbase.*$(QT_BASE_VERSION)\.tar.xz")
 QT_BASE_TLD = $(shell tar tf $(QT_BASE_PATH) --exclude='*/*')
 
 bitcoin_qt_apk: FORCE
