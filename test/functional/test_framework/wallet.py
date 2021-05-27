@@ -142,7 +142,10 @@ class MiniWallet:
         """Create and return a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
         self._utxos = sorted(self._utxos, key=lambda k: k['value'])
         utxo_to_spend = utxo_to_spend or self._utxos.pop()  # Pick the largest utxo (if none provided) and hope it covers the fee
-        vsize = Decimal(96)
+        if self._priv_key is None:
+            vsize = Decimal(96)  # anyone-can-spend
+        else:
+            vsize = Decimal(168)  # P2PK (73 bytes scriptSig + 35 bytes scriptPubKey + 60 bytes other)
         send_value = satoshi_round(utxo_to_spend['value'] - fee_rate * (vsize / 1000))
         fee = utxo_to_spend['value'] - send_value
         assert send_value > 0
@@ -167,10 +170,7 @@ class MiniWallet:
         tx_info = from_node.testmempoolaccept([tx_hex])[0]
         assert_equal(mempool_valid, tx_info['allowed'])
         if mempool_valid:
-            # TODO: for P2PK, vsize is not constant due to varying scriptSig length,
-            # so only check this for anyone-can-spend outputs right now
-            if self._priv_key is None:
-                assert_equal(tx_info['vsize'], vsize)
+            assert_equal(tx_info['vsize'], vsize)
             assert_equal(tx_info['fees']['base'], fee)
         return {'txid': tx_info['txid'], 'wtxid': tx_info['wtxid'], 'hex': tx_hex, 'tx': tx}
 
