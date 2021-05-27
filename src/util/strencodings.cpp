@@ -137,6 +137,15 @@ void SplitHostPort(std::string in, uint16_t& portOut, std::string& hostOut)
         portOut = n;
 }
 
+bool HasInvalidPort(std::string in)
+{
+    std::string host, port;
+    SplitHostPort(in, port, host);
+    if (!port.empty() && !ParseUInt16(port, 0))
+        return true;
+    return false;
+}
+
 std::string EncodeBase64(Span<const unsigned char> input)
 {
     static const char *pbase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

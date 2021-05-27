@@ -151,6 +151,37 @@ BOOST_AUTO_TEST_CASE(netbase_splithost_string)
     BOOST_CHECK(TestSplitHost("www.bitcoincore.org:65536", "www.bitcoincore.org", "65536"));
 }
 
+bool static TestHasInvalidPort(const std::string& test, bool invalid)
+{
+    return HasInvalidPort(test) == invalid;
+}
+
+BOOST_AUTO_TEST_CASE(netbase_hasinvalidport)
+{
+    BOOST_CHECK(TestHasInvalidPort("www.bitcoincore.org", false));
+    BOOST_CHECK(TestHasInvalidPort("[www.bitcoincore.org]", false));
+    BOOST_CHECK(TestHasInvalidPort("www.bitcoincore.org:80", false));
+    BOOST_CHECK(TestHasInvalidPort("[www.bitcoincore.org]:80", false));
+    BOOST_CHECK(TestHasInvalidPort("127.0.0.1", false));
+    BOOST_CHECK(TestHasInvalidPort("127.0.0.1:8333", false));
+    BOOST_CHECK(TestHasInvalidPort("[127.0.0.1]", false));
+    BOOST_CHECK(TestHasInvalidPort("[127.0.0.1]:8333", false));
+    BOOST_CHECK(TestHasInvalidPort("::ffff:127.0.0.1", false));
+    BOOST_CHECK(TestHasInvalidPort("[::ffff:127.0.0.1]:8333", false));
+    BOOST_CHECK(TestHasInvalidPort("[::]:8333", false));
+    BOOST_CHECK(TestHasInvalidPort("::8333", false));
+    BOOST_CHECK(TestHasInvalidPort(":8333", false));
+    BOOST_CHECK(TestHasInvalidPort("[]:8333", false));
+    BOOST_CHECK(TestHasInvalidPort("", false));
+    BOOST_CHECK(TestHasInvalidPort(":65535", false));
+    BOOST_CHECK(TestHasInvalidPort(":65536", true));
+    BOOST_CHECK(TestHasInvalidPort(":-1", true));
+    BOOST_CHECK(TestHasInvalidPort("[]:70001", true));
+    BOOST_CHECK(TestHasInvalidPort("[]:-1", true));
+    BOOST_CHECK(TestHasInvalidPort("127.0.0.1:65536", true));
+    BOOST_CHECK(TestHasInvalidPort("www.bitcoincore.org:65536", true));
+}
+
 bool static TestParse(std::string src, std::string canon)
 {
     CService addr(LookupNumeric(src, 65535));

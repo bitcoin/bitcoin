@@ -83,6 +83,14 @@ void SplitHostPort(std::string in, std::string& portOut, std::string& hostOut);
  * @param[out] hostOut  Host-portion of the input, if found.
  */
 void SplitHostPort(std::string in, uint16_t& portOut, std::string& hostOut);
+/**
+ * Checks whether socket address string has an invalid port portion.
+ *
+ * @param[in] in        Socket address to test.
+ * @return              true if port portion is defined but outside its allowed range;
+ *                      false otherwise;
+ */
+bool HasInvalidPort(std::string in);
 int64_t atoi64(const std::string& str);
 int atoi(const std::string& str);
 
