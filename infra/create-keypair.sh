@@ -51,6 +51,21 @@ checkPrerequisites() {
     fi
 }
 
+# Starts an ephemeral bitcoind daemon on the regtest network. Creates and opens
+# a temporary wallet.
+#
+# Assumes that PATH_TO_BINARIES has been given a value, and that the global
+# variable TMPDIR points to an empty temporary directory.
+startEphemeralDaemon() {
+    "${PATH_TO_BINARIES}"/bitcoind -daemon -datadir="${TMPDIR}" -regtest >/dev/null
+
+    errecho "create-keypair: waiting (at most 10 seconds) for itcoin daemon to warmup"
+    timeout 10 "${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest -rpcwait -rpcclienttimeout=3 uptime >/dev/null
+    errecho "create-keypair: warmed up"
+
+    "${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest createwallet mywallet >/dev/null
+} # startEphemeralDaemon()
+
 # Automatically stop the container (wich will also self-remove at script exit
 # or if an error occours
 trap cleanup EXIT
@@ -73,13 +88,7 @@ PATH_TO_BINARIES=$(realpath --quiet --canonicalize-existing "${MYDIR}/../target/
 
 TMPDIR=$(mktemp --tmpdir --directory itcoin-temp-XXXX)
 
-"${PATH_TO_BINARIES}"/bitcoind -daemon -datadir="${TMPDIR}" -regtest >/dev/null
-
-errecho "create-keypair: waiting (at most 10 seconds) for itcoin daemon to warmup"
-timeout 10 "${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest -rpcwait -rpcclienttimeout=3 uptime >/dev/null
-errecho "create-keypair: warmed up"
-
-"${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest createwallet mywallet >/dev/null
+startEphemeralDaemon
 
 TMPADDR=$("${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest getnewaddress)
 PRIVKEY=$("${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest dumpprivkey "${TMPADDR}")
