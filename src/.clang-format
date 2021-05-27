@@ -1,9 +1,9 @@
 Language:        Cpp
 AccessModifierOffset: -4
-AlignAfterOpenBracket: false
+AlignAfterOpenBracket: true
 AlignEscapedNewlinesLeft: true
 AlignTrailingComments: true
-AllowAllParametersOfDeclarationOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortBlocksOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: All
@@ -11,7 +11,8 @@ AllowShortIfStatementsOnASingleLine: true
 AllowShortLoopsOnASingleLine: false
 AlwaysBreakBeforeMultilineStrings: false
 AlwaysBreakTemplateDeclarations: true
-BinPackParameters: false
+BinPackArguments: true
+BinPackParameters: true
 BreakBeforeBinaryOperators: false
 BreakBeforeBraces: Custom
 BraceWrapping:

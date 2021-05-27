@@ -1,7 +1,8 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <chainparams.h>
 #include <coins.h>
 #include <consensus/tx_check.h>
 #include <consensus/tx_verify.h>
@@ -13,41 +14,57 @@
 #include <primitives/transaction.h>
 #include <streams.h>
 #include <test/fuzz/fuzz.h>
+#include <univalue.h>
 #include <util/rbf.h>
 #include <validation.h>
 #include <version.h>
 
 #include <cassert>
 
-void test_one_input(const std::vector<uint8_t>& buffer)
+void initialize_transaction()
+{
+    SelectParams(CBaseChainParams::REGTEST);
+}
+
+FUZZ_TARGET_INIT(transaction, initialize_transaction)
 {
     CDataStream ds(buffer, SER_NETWORK, INIT_PROTO_VERSION);
     try {
         int nVersion;
         ds >> nVersion;
         ds.SetVersion(nVersion);
-    } catch (const std::ios_base::failure& e) {
+    } catch (const std::ios_base::failure&) {
         return;
     }
-    bool valid = true;
+    bool valid_tx = true;
     const CTransaction tx = [&] {
         try {
             return CTransaction(deserialize, ds);
-        } catch (const std::ios_base::failure& e) {
-            valid = false;
-            return CTransaction();
+        } catch (const std::ios_base::failure&) {
+            valid_tx = false;
+            return CTransaction{CMutableTransaction{}};
         }
     }();
-    if (!valid) {
+    bool valid_mutable_tx = true;
+    CDataStream ds_mtx(buffer, SER_NETWORK, INIT_PROTO_VERSION);
+    CMutableTransaction mutable_tx;
+    try {
+        int nVersion;
+        ds_mtx >> nVersion;
+        ds_mtx.SetVersion(nVersion);
+        ds_mtx >> mutable_tx;
+    } catch (const std::ios_base::failure&) {
+        valid_mutable_tx = false;
+    }
+    assert(valid_tx == valid_mutable_tx);
+    if (!valid_tx) {
         return;
     }
 
-    CValidationState state_with_dupe_check;
-    const bool valid_with_dupe_check = CheckTransaction(tx, state_with_dupe_check, /* fCheckDuplicateInputs= */ true);
-    CValidationState state_without_dupe_check;
-    const bool valid_without_dupe_check = CheckTransaction(tx, state_without_dupe_check, /* fCheckDuplicateInputs= */ false);
-    if (valid_with_dupe_check) {
-        assert(valid_without_dupe_check);
+    {
+        TxValidationState state_with_dupe_check;
+        const bool res{CheckTransaction(tx, state_with_dupe_check)};
+        Assert(res == state_with_dupe_check.IsValid());
     }
 
     const CFeeRate dust_relay_fee{DUST_RELAY_TX_FEE};
@@ -78,4 +95,14 @@ void test_one_input(const std::vector<uint8_t>& buffer)
     (void)IsStandardTx(tx, reason);
     (void)RecursiveDynamicUsage(tx);
     (void)SignalsOptInRBF(tx);
+
+    CCoinsView coins_view;
+    const CCoinsViewCache coins_view_cache(&coins_view);
+    (void)AreInputsStandard(tx, coins_view_cache, false);
+    (void)AreInputsStandard(tx, coins_view_cache, true);
+    (void)IsWitnessStandard(tx, coins_view_cache);
+
+    UniValue u(UniValue::VOBJ);
+    TxToUniv(tx, /* hashBlock */ uint256::ZERO, /* include_addresses */ true, u);
+    TxToUniv(tx, /* hashBlock */ uint256::ONE, /* include_addresses */ false, u);
 }

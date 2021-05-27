@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,7 +8,9 @@
 #include <addrman.h>
 #include <chainparams.h>
 #include <clientversion.h>
+#include <cstdint>
 #include <hash.h>
+#include <logging/timer.h>
 #include <random.h>
 #include <streams.h>
 #include <tinyformat.h>
@@ -36,12 +38,12 @@ template <typename Data>
 bool SerializeFileDB(const std::string& prefix, const fs::path& path, const Data& data)
 {
     // Generate random temporary filename
-    unsigned short randv = 0;
+    uint16_t randv = 0;
     GetRandBytes((unsigned char*)&randv, sizeof(randv));
     std::string tmpfn = strprintf("%s.%04x", prefix, randv);
 
     // open temp output file, and associate with CAutoFile
-    fs::path pathTmp = GetDataDir() / tmpfn;
+    fs::path pathTmp = gArgs.GetDataDirNet() / tmpfn;
     FILE *file = fsbridge::fopen(pathTmp, "wb");
     CAutoFile fileout(file, SER_DISK, CLIENT_VERSION);
     if (fileout.IsNull()) {
@@ -107,15 +109,15 @@ template <typename Data>
 bool DeserializeFileDB(const fs::path& path, Data& data)
 {
     // open input file, and associate with CAutoFile
-    FILE *file = fsbridge::fopen(path, "rb");
+    FILE* file = fsbridge::fopen(path, "rb");
     CAutoFile filein(file, SER_DISK, CLIENT_VERSION);
-    if (filein.IsNull())
-        return error("%s: Failed to open file %s", __func__, path.string());
-
+    if (filein.IsNull()) {
+        LogPrintf("Missing or invalid file %s\n", path.string());
+        return false;
+    }
     return DeserializeDB(filein, data);
 }
-
-}
+} // namespace
 
 CBanDB::CBanDB(fs::path ban_list_path) : m_ban_list_path(std::move(ban_list_path))
 {
@@ -133,7 +135,7 @@ bool CBanDB::Read(banmap_t& banSet)
 
 CAddrDB::CAddrDB()
 {
-    pathAddr = GetDataDir() / "peers.dat";
+    pathAddr = gArgs.GetDataDirNet() / "peers.dat";
 }
 
 bool CAddrDB::Write(const CAddrMan& addr)
@@ -154,4 +156,23 @@ bool CAddrDB::Read(CAddrMan& addr, CDataStream& ssPeers)
         addr.Clear();
     }
     return ret;
+}
+
+void DumpAnchors(const fs::path& anchors_db_path, const std::vector<CAddress>& anchors)
+{
+    LOG_TIME_SECONDS(strprintf("Flush %d outbound block-relay-only peer addresses to anchors.dat", anchors.size()));
+    SerializeFileDB("anchors", anchors_db_path, anchors);
+}
+
+std::vector<CAddress> ReadAnchors(const fs::path& anchors_db_path)
+{
+    std::vector<CAddress> anchors;
+    if (DeserializeFileDB(anchors_db_path, anchors)) {
+        LogPrintf("Loaded %i addresses from %s\n", anchors.size(), anchors_db_path.filename());
+    } else {
+        anchors.clear();
+    }
+
+    fs::remove(anchors_db_path);
+    return anchors;
 }

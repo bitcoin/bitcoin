@@ -1,5 +1,5 @@
 #!/bin/sh
-# Copyright (c) 2017 The Bitcoin Core developers
+# Copyright (c) 2017-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,7 +12,7 @@
 # one. Any remaining diff signals an error.
 
 export LC_ALL=C
-if test "x$1" = "x"; then
+if test -z $1; then
     echo "Usage: $0 <commit>..."
     exit 1
 fi
@@ -24,7 +24,7 @@ for commit in $(git rev-list --reverse $1); do
     if git rev-list -n 1 --pretty="%s" $commit | grep -q "^scripted-diff:"; then
         git checkout --quiet $commit^ || exit
         SCRIPT="$(git rev-list --format=%b -n1 $commit | sed '/^-BEGIN VERIFY SCRIPT-$/,/^-END VERIFY SCRIPT-$/{//!b};d')"
-        if test "x$SCRIPT" = "x"; then
+        if test -z "$SCRIPT"; then
             echo "Error: missing script for: $commit"
             echo "Failed"
             RET=1
@@ -37,7 +37,7 @@ for commit in $(git rev-list --reverse $1); do
         git reset --quiet --hard HEAD
      else
         if git rev-list "--format=%b" -n1 $commit | grep -q '^-\(BEGIN\|END\)[ a-zA-Z]*-$'; then
-            echo "Error: script block marker but no scripted-diff in title"
+            echo "Error: script block marker but no scripted-diff in title of commit $commit"
             echo "Failed"
             RET=1
         fi

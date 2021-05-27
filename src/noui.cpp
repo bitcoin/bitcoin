@@ -1,12 +1,13 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <noui.h>
 
-#include <ui_interface.h>
-#include <util/system.h>
+#include <logging.h>
+#include <node/ui_interface.h>
+#include <util/translation.h>
 
 #include <string>
 
@@ -18,40 +19,36 @@ boost::signals2::connection noui_ThreadSafeMessageBoxConn;
 boost::signals2::connection noui_ThreadSafeQuestionConn;
 boost::signals2::connection noui_InitMessageConn;
 
-bool noui_ThreadSafeMessageBox(const std::string& message, const std::string& caption, unsigned int style)
+bool noui_ThreadSafeMessageBox(const bilingual_str& message, const std::string& caption, unsigned int style)
 {
     bool fSecure = style & CClientUIInterface::SECURE;
     style &= ~CClientUIInterface::SECURE;
-    bool prefix = !(style & CClientUIInterface::MSG_NOPREFIX);
-    style &= ~CClientUIInterface::MSG_NOPREFIX;
 
     std::string strCaption;
-    if (prefix) {
-        switch (style) {
-        case CClientUIInterface::MSG_ERROR:
-            strCaption = "Error: ";
-            break;
-        case CClientUIInterface::MSG_WARNING:
-            strCaption = "Warning: ";
-            break;
-        case CClientUIInterface::MSG_INFORMATION:
-            strCaption = "Information: ";
-            break;
-        default:
-            strCaption = caption + ": "; // Use supplied caption (can be empty)
-        }
+    switch (style) {
+    case CClientUIInterface::MSG_ERROR:
+        strCaption = "Error: ";
+        break;
+    case CClientUIInterface::MSG_WARNING:
+        strCaption = "Warning: ";
+        break;
+    case CClientUIInterface::MSG_INFORMATION:
+        strCaption = "Information: ";
+        break;
+    default:
+        strCaption = caption + ": "; // Use supplied caption (can be empty)
     }
 
     if (!fSecure) {
-        LogPrintf("%s%s\n", strCaption, message);
+        LogPrintf("%s%s\n", strCaption, message.original);
     }
-    tfm::format(std::cerr, "%s%s\n", strCaption.c_str(), message.c_str());
+    tfm::format(std::cerr, "%s%s\n", strCaption, message.original);
     return false;
 }
 
-bool noui_ThreadSafeQuestion(const std::string& /* ignored interactive message */, const std::string& message, const std::string& caption, unsigned int style)
+bool noui_ThreadSafeQuestion(const bilingual_str& /* ignored interactive message */, const std::string& message, const std::string& caption, unsigned int style)
 {
-    return noui_ThreadSafeMessageBox(message, caption, style);
+    return noui_ThreadSafeMessageBox(Untranslated(message), caption, style);
 }
 
 void noui_InitMessage(const std::string& message)
@@ -66,28 +63,31 @@ void noui_connect()
     noui_InitMessageConn = uiInterface.InitMessage_connect(noui_InitMessage);
 }
 
-bool noui_ThreadSafeMessageBoxSuppressed(const std::string& message, const std::string& caption, unsigned int style)
+bool noui_ThreadSafeMessageBoxRedirect(const bilingual_str& message, const std::string& caption, unsigned int style)
 {
+    LogPrintf("%s: %s\n", caption, message.original);
     return false;
 }
 
-bool noui_ThreadSafeQuestionSuppressed(const std::string& /* ignored interactive message */, const std::string& message, const std::string& caption, unsigned int style)
+bool noui_ThreadSafeQuestionRedirect(const bilingual_str& /* ignored interactive message */, const std::string& message, const std::string& caption, unsigned int style)
 {
+    LogPrintf("%s: %s\n", caption, message);
     return false;
 }
 
-void noui_InitMessageSuppressed(const std::string& message)
+void noui_InitMessageRedirect(const std::string& message)
 {
+    LogPrintf("init message: %s\n", message);
 }
 
-void noui_suppress()
+void noui_test_redirect()
 {
     noui_ThreadSafeMessageBoxConn.disconnect();
     noui_ThreadSafeQuestionConn.disconnect();
     noui_InitMessageConn.disconnect();
-    noui_ThreadSafeMessageBoxConn = uiInterface.ThreadSafeMessageBox_connect(noui_ThreadSafeMessageBoxSuppressed);
-    noui_ThreadSafeQuestionConn = uiInterface.ThreadSafeQuestion_connect(noui_ThreadSafeQuestionSuppressed);
-    noui_InitMessageConn = uiInterface.InitMessage_connect(noui_InitMessageSuppressed);
+    noui_ThreadSafeMessageBoxConn = uiInterface.ThreadSafeMessageBox_connect(noui_ThreadSafeMessageBoxRedirect);
+    noui_ThreadSafeQuestionConn = uiInterface.ThreadSafeQuestion_connect(noui_ThreadSafeQuestionRedirect);
+    noui_InitMessageConn = uiInterface.InitMessage_connect(noui_InitMessageRedirect);
 }
 
 void noui_reconnect()

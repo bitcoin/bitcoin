@@ -30,6 +30,10 @@
         <translation>ลบที่อยู่ที่เลือกไว้ออกจากรายการ</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>ป้อนที่อยู่หรือฉลากเพื่อค้นหา</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>ส่งออกข้อมูลที่อยู่ในแถบนี้ไปในไฟล์</translation>
     </message>
@@ -128,6 +132,10 @@
         <translation>ทำซ้ำข้อความรหัสใหม่</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>ดูวลี</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>กระเป๋าสตางค์ เข้ารหัส</translation>
     </message>
@@ -150,6 +158,14 @@
     <message>
         <source>Change passphrase</source>
         <translation>เปลี่ยน ข้อความรหัสผ่าน</translation>
+    </message>
+    <message>
+        <source>Confirm wallet encryption</source>
+        <translation>ยืนยันการเข้ารหัสกระเป๋าเงิน</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to encrypt your wallet?</source>
+        <translation>คุณแน่ใจหรือว่าต้องการเข้ารหัสกระเป๋าเงินของคุณ?</translation>
     </message>
     </context>
 <context>
@@ -238,6 +254,10 @@
         <translation>เปิด &amp;URI</translation>
     </message>
     <message>
+        <source>Create Wallet...</source>
+        <translation>สร้าง Wallet</translation>
+    </message>
+    <message>
         <source>Reindexing blocks on disk...</source>
         <translation>กำลังทำดัชนี ที่เก็บบล็อก ใหม่ ในดิสก์...</translation>
     </message>
@@ -252,14 +272,6 @@
     <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>เปลี่ยนรหัสผ่านที่ใช้สำหรับการเข้ารหัสกระเป๋าเงิน</translation>
-    </message>
-    <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;หน้าต่าง Debug</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>เปิด แผลงควบคุม debugging และ diagnostic</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
@@ -320,10 +332,6 @@
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>แสดงรายการ ที่เก็บเงินที่จะรับ bitcoin เข้า และป้ายชื่อ ที่ใช้ไปแล้ว</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>เปิด bitcoin: URI หรือ การเรียกเก็บเงิน (การเรียกให้ชำระเงิน)</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -507,6 +515,22 @@
         <translation>ยืนยันแล้ว</translation>
     </message>
     <message>
+        <source>Copy address</source>
+        <translation>คัดลอกที่อยู่</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>คัดลอกป้ายกำกับ</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>คัดลอกจำนวนเงิน</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>คัดลอก ID ธุรกรรม</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(ไม่มีฉลาก)</translation>
     </message>
@@ -516,7 +540,19 @@
     </context>
 <context>
     <name>CreateWalletDialog</name>
-    </context>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>เข้ารหัสกระเป๋าเงิน</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>ทำกระเป๋าเงินเปล่า</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>สร้าง</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -570,10 +606,6 @@
         <translation>เวอร์ชั่น</translation>
     </message>
     <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-บิท)</translation>
-    </message>
-    <message>
         <source>About %1</source>
         <translation>เกี่ยวกับ %1</translation>
     </message>
@@ -609,6 +641,14 @@
         <translation>Bitcoin</translation>
     </message>
     <message>
+        <source>Approximately %1 GB of data will be stored in this directory.</source>
+        <translation>ประมาณ %1 GB ของข้อมูลจะเก็บในไดเร็กทอรี่</translation>
+    </message>
+    <message>
+        <source>The wallet will also be stored in this directory.</source>
+        <translation>The wallet เก็บใว้ในไดเร็กทอรี่</translation>
+    </message>
+    <message>
         <source>Error: Specified data directory "%1" cannot be created.</source>
         <translation>ข้อผิดพลาด: ไดเร็กทอรี่ข้อมูลที่ต้องการ "%1" ไม่สามารถสร้างได้</translation>
     </message>
@@ -635,22 +675,10 @@
 <context>
     <name>OpenURIDialog</name>
     <message>
-        <source>Open URI</source>
-        <translation>เปิด URI</translation>
-    </message>
-    <message>
-        <source>Open payment request from URI or file</source>
-        <translation>เปิด การเรียกการชำระเงิน จาก URI หรือ ไฟล์</translation>
-    </message>
-    <message>
         <source>URI:</source>
         <translation>URI:</translation>
     </message>
-    <message>
-        <source>Select payment request file</source>
-        <translation>เลือก ไฟล์การเรียกการชำระเงิน</translation>
-    </message>
-    </context>
+</context>
 <context>
     <name>OpenWalletActivity</name>
     </context>
@@ -773,10 +801,6 @@
         <translation>Tor</translation>
     </message>
     <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>เชื่อมต่อกับ เครือข่าย Bitcoin ผ่านทาง พร้อกซี่ SOCKS5 แยกต่างหาก สำหรับ Tor เซอร์วิส</translation>
-    </message>
-    <message>
         <source>&amp;Window</source>
         <translation>&amp;วันโดว์</translation>
     </message>
@@ -795,6 +819,9 @@
         <source>Form</source>
         <translation>รูป</translation>
     </message>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
     </context>
 <context>
     <name>PaymentServer</name>
@@ -825,26 +852,22 @@
         <source>&amp;Label:</source>
         <translation>&amp;ชื่อ:</translation>
     </message>
+    <message>
+        <source>Copy label</source>
+        <translation>คัดลอกป้ายกำกับ</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>คัดลอกจำนวนเงิน</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>Address</source>
-        <translation>ที่อยู่</translation>
+        <source>Amount:</source>
+        <translation>จำนวน:</translation>
     </message>
-    <message>
-        <source>Amount</source>
-        <translation>จำนวน</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>ฉลาก, ป้าย,</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>กระเป๋าเงิน</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -895,6 +918,10 @@
         <translation>เศษ:</translation>
     </message>
     <message>
+        <source>Copy amount</source>
+        <translation>คัดลอกจำนวนเงิน</translation>
+    </message>
+    <message>
         <source>(no label)</source>
         <translation>(ไม่มีฉลาก)</translation>
     </message>
@@ -905,9 +932,6 @@
         <source>&amp;Label:</source>
         <translation>&amp;ชื่อ:</translation>
     </message>
-    </context>
-<context>
-    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -949,6 +973,22 @@
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>Copy address</source>
+        <translation>คัดลอกที่อยู่</translation>
+    </message>
+    <message>
+        <source>Copy label</source>
+        <translation>คัดลอกป้ายกำกับ</translation>
+    </message>
+    <message>
+        <source>Copy amount</source>
+        <translation>คัดลอกจำนวนเงิน</translation>
+    </message>
+    <message>
+        <source>Copy transaction ID</source>
+        <translation>คัดลอก ID ธุรกรรม</translation>
+    </message>
     <message>
         <source>Comma separated file (*.csv)</source>
         <translation>ไฟล์ที่คั่นด้วยจุลภาค (* .csv)</translation>
@@ -999,6 +1039,10 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>ส่งออกข้อมูลที่อยู่ในแถบนี้ไปในไฟล์</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>ข้อผิดพลาด</translation>
     </message>
     </context>
 <context>

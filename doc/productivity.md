@@ -12,7 +12,7 @@ Table of Contents
    * [Multiple working directories with `git worktrees`](#multiple-working-directories-with-git-worktrees)
    * [Interactive "dummy rebases" for fixups and execs with `git merge-base`](#interactive-dummy-rebases-for-fixups-and-execs-with-git-merge-base)
 * [Writing code](#writing-code)
-   * [Format C/C++/Protobuf diffs with `clang-format-diff.py`](#format-ccprotobuf-diffs-with-clang-format-diffpy)
+   * [Format C/C++ diffs with `clang-format-diff.py`](#format-cc-diffs-with-clang-format-diffpy)
    * [Format Python diffs with `yapf-diff.py`](#format-python-diffs-with-yapf-diffpy)
 * [Rebasing/Merging code](#rebasingmerging-code)
    * [More conflict context with `merge.conflictstyle diff3`](#more-conflict-context-with-mergeconflictstyle-diff3)
@@ -51,6 +51,7 @@ After running `./autogen.sh`, which generates the `./configure` file, use `./con
 
 ```sh
 --without-miniupnpc
+--without-natpmp
 --disable-bench
 --disable-wallet
 --without-gui
@@ -118,13 +119,13 @@ You can also set up [upstream refspecs](#reference-prs-easily-with-refspecs) to 
 Writing code
 ------------
 
-### Format C/C++/Protobuf diffs with `clang-format-diff.py`
+### Format C/C++ diffs with `clang-format-diff.py`
 
 See [contrib/devtools/README.md](/contrib/devtools/README.md#clang-format-diff.py).
 
 ### Format Python diffs with `yapf-diff.py`
 
-Usage is exactly the same as [`clang-format-diff.py`](#format-ccprotobuf-diffs-with-clang-format-diffpy). You can get it [here](https://github.com/MarcoFalke/yapf-diff).
+Usage is exactly the same as [`clang-format-diff.py`](#format-cc-diffs-with-clang-format-diffpy). You can get it [here](https://github.com/MarcoFalke/yapf-diff).
 
 Rebasing/Merging code
 -------------
@@ -172,11 +173,11 @@ When looking at other's pull requests, it may make sense to add the following se
 
 ```
 [remote "upstream-pull"]
-        fetch = +refs/pull/*:refs/remotes/upstream-pull/*
+        fetch = +refs/pull/*/head:refs/remotes/upstream-pull/*
         url = git@github.com:bitcoin/bitcoin.git
 ```
 
-This will add an `upstream-pull` remote to your git repository, which can be fetched using `git fetch --all` or `git fetch upstream-pull`. Afterwards, you can use `upstream-pull/NUMBER/head` in arguments to `git show`, `git checkout` and anywhere a commit id would be acceptable to see the changes from pull request NUMBER.
+This will add an `upstream-pull` remote to your git repository, which can be fetched using `git fetch --all` or `git fetch upstream-pull`. It will download and store on disk quite a lot of data (all PRs, including merged and closed ones). Afterwards, you can use `upstream-pull/NUMBER/head` in arguments to `git show`, `git checkout` and anywhere a commit id would be acceptable to see the changes from pull request NUMBER.
 
 ### Diff the diffs with `git range-diff`
 

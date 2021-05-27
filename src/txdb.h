@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,8 +20,6 @@ class CBlockIndex;
 class CCoinsViewDBCursor;
 class uint256;
 
-//! No need to periodic flush if at least this much space still available.
-static constexpr int MAX_BLOCK_COINSDB_USAGE = 10;
 //! -dbcache default (MiB)
 static const int64_t nDefaultDbCache = 450;
 //! -dbbatchsize default (bytes)
@@ -41,11 +39,16 @@ static const int64_t max_filter_index_cache = 1024;
 //! Max memory allocated to coin DB specific cache (MiB)
 static const int64_t nMaxCoinsDBCache = 8;
 
+// Actually declared in validation.cpp; can't include because of circular dependency.
+extern RecursiveMutex cs_main;
+
 /** CCoinsView backed by the coin database (chainstate/) */
 class CCoinsViewDB final : public CCoinsView
 {
 protected:
-    CDBWrapper db;
+    std::unique_ptr<CDBWrapper> m_db;
+    fs::path m_ldb_path;
+    bool m_is_memory;
 public:
     /**
      * @param[in] ldb_path    Location in the filesystem where leveldb data will be stored.
@@ -62,6 +65,9 @@ public:
     //! Attempt to update from an older database format. Returns whether an error occurred.
     bool Upgrade();
     size_t EstimateSize() const override;
+
+    //! Dynamically alter the underlying leveldb cache size.
+    void ResizeCache(size_t new_cache_size) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 };
 
 /** Specialization of CCoinsViewCursor to iterate over a CCoinsViewDB */

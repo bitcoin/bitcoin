@@ -67,11 +67,13 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>Tutaj znajdują się adresy Bitcoin na które wysyłasz płatności. Zawsze sprawdzaj ilość i adres odbiorcy przed wysyłką monet.</translation>
+        <translation>To są twoje adresy Bitcoin do wysyłania płatności. Zawsze sprawdź kwotę i adres odbiorcy przed wysłaniem monet.</translation>
     </message>
     <message>
-        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>To są Twoje adresy Bitcoin do otrzymywania płatności. Użyj przycisku "Stwórz nowy adres odbiorczy" w zakładce odbioru żeby stworzyć nowy adres.</translation>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.
+Signing is only possible with addresses of the type 'legacy'.</source>
+        <translation>To są twoje adresy Bitcoin do otrzymywania płatności. Użyj przycisku „Utwórz nowy adres odbiorcy” na karcie odbioru, aby utworzyć nowe adresy.
+Podpisywanie jest możliwe tylko z adresami typu „legacy”.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -323,7 +325,7 @@
     </message>
     <message>
         <source>Open &amp;URI...</source>
-        <translation>Otwórz URI...</translation>
+        <translation>Otwórz &amp;URI...</translation>
     </message>
     <message>
         <source>Create Wallet...</source>
@@ -372,14 +374,6 @@
     <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Zmień hasło użyte do szyfrowania portfela</translation>
-    </message>
-    <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Okno debugowania</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Otwórz konsolę debugowania i diagnostyki</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
@@ -442,10 +436,6 @@
         <translation>Pokaż listę adresów i etykiet użytych do odbierania</translation>
     </message>
     <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>Otwórz URI bitcoin: lub żądanie zapłaty</translation>
-    </message>
-    <message>
         <source>&amp;Command-line options</source>
         <translation>&amp;Opcje linii komend</translation>
     </message>
@@ -494,12 +484,40 @@
         <translation>Aktualny</translation>
     </message>
     <message>
+        <source>&amp;Load PSBT from file...</source>
+        <translation>Wczytaj PSBT z p&amp;liku ..</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction</source>
+        <translation>Załaduj częściowo podpisaną transakcję Bitcoin</translation>
+    </message>
+    <message>
+        <source>Load PSBT from clipboard...</source>
+        <translation>Wczytaj PSBT do schowka</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <translation>Załaduj częściowo podpisaną transakcję Bitcoin ze schowka</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>Okno węzła</translation>
+    </message>
+    <message>
+        <source>Open node debugging and diagnostic console</source>
+        <translation>Otwórz konsolę diagnostyczną i debugowanie węzłów</translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation>&amp;Adresy wysyłania</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
         <translation>&amp;Adresy odbioru</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI</source>
+        <translation>Otwórz URI</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -516,6 +534,14 @@
     <message>
         <source>Close wallet</source>
         <translation>Zamknij portfel</translation>
+    </message>
+    <message>
+        <source>Close All Wallets...</source>
+        <translation>Zamknij wszystkie portfele ...</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Zamknij wszystkie portfele</translation>
     </message>
     <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
@@ -630,10 +656,10 @@
         <translation>Portfel jest &lt;b&gt;zaszyfrowany&lt;/b&gt; i obecnie &lt;b&gt;zablokowany&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>Wystąpił krytyczny błąd. Bitcoin nie jest w stanie kontynuować bezpiecznie i zostanie zamknięty.</translation>
+        <source>Original message:</source>
+        <translation>Wiadomość oryginalna:</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -835,6 +861,10 @@
         <translation>Stwórz czysty portfel</translation>
     </message>
     <message>
+        <source>Descriptor Wallet</source>
+        <translation>Portfel deskryptora</translation>
+    </message>
+    <message>
         <source>Create</source>
         <translation>Stwórz</translation>
     </message>
@@ -924,10 +954,6 @@
         <translation>wersja</translation>
     </message>
     <message>
-        <source>(%1-bit)</source>
-        <translation>(%1-bit)</translation>
-    </message>
-    <message>
         <source>About %1</source>
         <translation>Informacje o %1</translation>
     </message>
@@ -952,7 +978,7 @@
     </message>
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation>Gdy naciśniesz OK, %1 zacznie się pobieranie i przetwarzanie całego %4 łańcucha bloków (%2GB) zaczynając od najwcześniejszych transakcji w %3 gdy %4 został uruchomiony. </translation>
+        <translation>Gdy naciśniesz OK, %1 zacznie się pobieranie i przetwarzanie całego %4 łańcucha bloków (%2GB) zaczynając od najwcześniejszych transakcji w %3 gdy %4 został uruchomiony.</translation>
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
@@ -1031,7 +1057,7 @@
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>Próba wydania bitcoinów które nie są jeszcze wyświetlone jako transakcja zostanie odrzucona przez sieć. </translation>
+        <translation>Próba wydania bitcoinów które nie są jeszcze wyświetlone jako transakcja zostanie odrzucona przez sieć.</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -1039,7 +1065,7 @@
     </message>
     <message>
         <source>Unknown...</source>
-        <translation>Nienznane...</translation>
+        <translation>Nieznany...</translation>
     </message>
     <message>
         <source>Last block time</source>
@@ -1066,6 +1092,14 @@
         <translation>Ukryj</translation>
     </message>
     <message>
+        <source>Esc</source>
+        <translation>Wyjdź</translation>
+    </message>
+    <message>
+        <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
+        <translation>%1 jest w trakcie synchronizacji. Trwa pobieranie i weryfikacja nagłówków oraz bloków z sieci w celu uzyskania aktualnego stanu łańcucha.</translation>
+    </message>
+    <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
         <translation>Nieznane. Synchronizowanie nagłówków (%1, %2%)...</translation>
     </message>
@@ -1073,24 +1107,12 @@
 <context>
     <name>OpenURIDialog</name>
     <message>
-        <source>Open URI</source>
+        <source>Open bitcoin URI</source>
         <translation>Otwórz URI</translation>
-    </message>
-    <message>
-        <source>Open payment request from URI or file</source>
-        <translation>Otwórz żądanie zapłaty z URI lub pliku</translation>
     </message>
     <message>
         <source>URI:</source>
         <translation>URI:</translation>
-    </message>
-    <message>
-        <source>Select payment request file</source>
-        <translation>Otwórz żądanie zapłaty z pliku</translation>
-    </message>
-    <message>
-        <source>Select payment request file to open</source>
-        <translation>Wybierz plik żądania zapłaty do otwarcia</translation>
     </message>
 </context>
 <context>
@@ -1145,10 +1167,6 @@
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
         <translation>Pakazuje czy dostarczone domyślne SOCKS5 proxy jest użyte do połączenia z węzłami przez sieć tego typu.</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Użyj oddzielnego proxy SOCKS&amp;5 aby osiągnąć węzły w ukrytych usługach Tor:</translation>
     </message>
     <message>
         <source>Hide the icon from the system tray.</source>
@@ -1256,7 +1274,7 @@
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
-        <translation>&amp;IP proxy: </translation>
+        <translation>&amp;IP proxy:</translation>
     </message>
     <message>
         <source>&amp;Port:</source>
@@ -1281,10 +1299,6 @@
     <message>
         <source>Tor</source>
         <translation>Tor</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Połącz się z siecią Bitcoin przy pomocy oddzielnego SOCKS5 proxy dla sieci TOR</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1419,7 +1433,7 @@
     </message>
     <message>
         <source>Immature:</source>
-        <translation>Niedojrzały: </translation>
+        <translation>Niedojrzały:</translation>
     </message>
     <message>
         <source>Mined balance that has not yet matured</source>
@@ -1439,7 +1453,7 @@
     </message>
     <message>
         <source>Your current balance in watch-only addresses</source>
-        <translation>Twoje obecne saldo na podglądanym adresie </translation>
+        <translation>Twoje obecne saldo na podglądanym adresie</translation>
     </message>
     <message>
         <source>Spendable:</source>
@@ -1461,7 +1475,78 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>Łączna kwota na podglądanych adresach</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation>Dialog</translation>
+    </message>
+    <message>
+        <source>Copy to Clipboard</source>
+        <translation>Kopiuj do schowka</translation>
+    </message>
+    <message>
+        <source>Save...</source>
+        <translation>Zapisz ...</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>Zamknij</translation>
+    </message>
+    <message>
+        <source>Failed to load transaction: %1</source>
+        <translation>Nie udało się wczytać transakcji: %1</translation>
+    </message>
+    <message>
+        <source>Failed to sign transaction: %1</source>
+        <translation>Nie udało się podpisać transakcji: %1</translation>
+    </message>
+    <message>
+        <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
+        <translation>transakcja</translation>
+    </message>
+    <message>
+        <source>Unknown error processing transaction.</source>
+        <translation>Nieznany błąd podczas przetwarzania transakcji.</translation>
+    </message>
+    <message>
+        <source>PSBT copied to clipboard.</source>
+        <translation>PSBT skopiowane do schowka</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Zapisz dane transakcji</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk.</source>
+        <translation>PSBT zapisane na dysk.</translation>
+    </message>
+    <message>
+        <source> * Sends %1 to %2</source>
+        <translation>Wysyłanie %1 do %2</translation>
+    </message>
+    <message>
+        <source>Unable to calculate transaction fee or total transaction amount.</source>
+        <translation>Nie można obliczyć opłaty za transakcję lub łącznej kwoty transakcji.</translation>
+    </message>
+    <message>
+        <source>Pays transaction fee: </source>
+        <translation>Opłata transakcyjna:</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Łączna wartość</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>lub</translation>
+    </message>
+    <message>
+        <source>Transaction still needs signature(s).</source>
+        <translation>Transakcja ciągle oczekuje na podpis(y).</translation>
+    </message>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1481,16 +1566,8 @@
         <translation>'bitcoin://' nie jest poprawnym URI. Użyj 'bitcoin:'.</translation>
     </message>
     <message>
-        <source>You are using a BIP70 URL which will be unsupported in the future.</source>
-        <translation>Używasz URL w formacie BIP70, który wkrótce nie będzie wspierany.</translation>
-    </message>
-    <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation>URL pobrania żądania zapłaty jest nieprawidłowy: %1</translation>
-    </message>
-    <message>
-        <source>Cannot process payment request because BIP70 support was not compiled in.</source>
-        <translation>Nie mogę obsłużyć żądania zapłaty ponieważ wsparcie dla BIP70 nie zostało skompilowane. </translation>
+        <source>Cannot process payment request because BIP70 is not supported.</source>
+        <translation>Nie można przetworzyć żądania zapłaty z powodu braku wsparcia BIP70.</translation>
     </message>
     <message>
         <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
@@ -1511,66 +1588,6 @@
     <message>
         <source>Payment request file handling</source>
         <translation>Przechwytywanie plików żądania płatności</translation>
-    </message>
-    <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>Plik z żądaniem płatności nie mógł zostać otwarty. Może być to spowodowane nieprawidłowym plikiem.</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>Żądanie płatności odrzucone</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>Sieć żądania zapłaty nie odpowiada sieci klienta.</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>Żądanie płatności upłynęło.</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>Żądanie płatności nie jest zainicjowane.</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>Niezweryfikowane żądania płatności do własnych skryptów płatności są niewspierane.</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>Nieprawidłowe żądanie płatności</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>Żądana kwota %1 jest za niska (uznano za kurz).</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>Zwrot z %1</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>Żądanie płatności %1 jest zbyt duże (%2 bajtów, dozwolone %3 bajtów).</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>Błąd komunikacji z %1 : %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>Żądanie płatności nie może zostać przetworzone.</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>Błędna odpowiedź z serwera %1</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>Błąd żądania sieci</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>Płatność potwierdzona</translation>
     </message>
 </context>
 <context>
@@ -1749,16 +1766,12 @@
         <translation>&amp;Informacje</translation>
     </message>
     <message>
-        <source>Debug window</source>
-        <translation>Okno debugowania</translation>
-    </message>
-    <message>
         <source>General</source>
         <translation>Ogólne</translation>
     </message>
     <message>
         <source>Using BerkeleyDB version</source>
-        <translation>Używana wersja BerkeleyDB </translation>
+        <translation>Używana wersja BerkeleyDB</translation>
     </message>
     <message>
         <source>Datadir</source>
@@ -1795,10 +1808,6 @@
     <message>
         <source>Block chain</source>
         <translation>Łańcuch bloków</translation>
-    </message>
-    <message>
-        <source>Current number of blocks</source>
-        <translation>Aktualna liczba bloków</translation>
     </message>
     <message>
         <source>Memory Pool</source>
@@ -1845,10 +1854,6 @@
         <translation>Wybierz węzeł żeby zobaczyć szczegóły.</translation>
     </message>
     <message>
-        <source>Whitelisted</source>
-        <translation>Biała lista</translation>
-    </message>
-    <message>
         <source>Direction</source>
         <translation>Kierunek</translation>
     </message>
@@ -1869,8 +1874,20 @@
         <translation>Zsynchronizowane bloki</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>Zmapowany autonomiczny system (ang. asmap) używany do dywersyfikacji wyboru węzłów.</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>Zmapowany autonomiczny system (ang. asmap)</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>Aplikacja kliencka</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>Okno węzła</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -1885,12 +1902,12 @@
         <translation>Zwiększ rozmiar czcionki</translation>
     </message>
     <message>
-        <source>Services</source>
-        <translation>Usługi</translation>
+        <source>Permissions</source>
+        <translation>Uprawnienia</translation>
     </message>
     <message>
-        <source>Ban Score</source>
-        <translation>Punkty karne</translation>
+        <source>Services</source>
+        <translation>Usługi</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -2041,14 +2058,6 @@
         <translation>Wyjściowy</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>Tak</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>Nie</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>Nieznany</translation>
     </message>
@@ -2082,6 +2091,14 @@
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>Opcjonalna kwota by zażądać. Zostaw puste lub zero by nie zażądać konkretnej kwoty.</translation>
+    </message>
+    <message>
+        <source>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</source>
+        <translation>Dodatkowa etykieta powiązana z nowym adresem do odbierania płatności (używanym w celu odnalezienia faktury). Jest również powiązana z żądaniem płatności.</translation>
+    </message>
+    <message>
+        <source>An optional message that is attached to the payment request and may be displayed to the sender.</source>
+        <translation>Dodatkowa wiadomość dołączana do żądania zapłaty, która może być odczytana przez płacącego.</translation>
     </message>
     <message>
         <source>&amp;Create new receiving address</source>
@@ -2139,12 +2156,36 @@
         <source>Copy amount</source>
         <translation>Kopiuj kwotę</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>Nie można było odblokować portfela.</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>Kod QR</translation>
+        <source>Request payment to ...</source>
+        <translation>Żądaj płatności od ...</translation>
+    </message>
+    <message>
+        <source>Address:</source>
+        <translation>Adres:</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>Kwota:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>Etykieta:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>Wiadomość:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>Portfel:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2165,30 +2206,6 @@
     <message>
         <source>Payment information</source>
         <translation>Informacje o płatności</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>Adres</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>Kwota</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>Etykieta</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>Wiadomość</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Portfel</translation>
     </message>
 </context>
 <context>
@@ -2270,7 +2287,7 @@
     </message>
     <message>
         <source>If this is activated, but the change address is empty or invalid, change will be sent to a newly generated address.</source>
-        <translation>Kiedy ta opcja jest wybrana, to jeżeli adres reszty jest pusty lub nieprawidłowy, to reszta będzie wysyłana na nowo wygenerowany adres, </translation>
+        <translation>Kiedy ta opcja jest wybrana, to jeżeli adres reszty jest pusty lub nieprawidłowy, to reszta będzie wysyłana na nowo wygenerowany adres,</translation>
     </message>
     <message>
         <source>Custom change address</source>
@@ -2292,10 +2309,6 @@ Korzystanie z opłaty domyślnej może skutkować wysłaniem transakcji, która 
     <message>
         <source>Warning: Fee estimation is currently not possible.</source>
         <translation>Uwaga: Oszacowanie opłaty za transakcje jest aktualnie niemożliwe.</translation>
-    </message>
-    <message>
-        <source>collapse fee-settings</source>
-        <translation>zwiń opcje opłaty</translation>
     </message>
     <message>
         <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
@@ -2340,6 +2353,10 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     <message>
         <source>Dust:</source>
         <translation>Pył:</translation>
+    </message>
+    <message>
+        <source>Hide transaction fee settings</source>
+        <translation>Ukryj ustawienia opłat transakcyjnych</translation>
     </message>
     <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
@@ -2410,6 +2427,14 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
         <translation>%1 (%2 bloków)</translation>
     </message>
     <message>
+        <source>Cr&amp;eate Unsigned</source>
+        <translation>&amp;Utwórz niepodpisaną transakcję</translation>
+    </message>
+    <message>
+        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>Tworzy częściowo podpisaną transakcję (ang. PSBT) używaną np. offline z portfelem %1 lub z innym portfelem zgodnym z PSBT.</translation>
+    </message>
+    <message>
         <source> from wallet '%1'</source>
         <translation>z portfela '%1'</translation>
     </message>
@@ -2422,8 +2447,24 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
         <translation>%1 do %2</translation>
     </message>
     <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>Czy chcesz zapisać szkic tej transakcji?</translation>
+    </message>
+    <message>
         <source>Are you sure you want to send?</source>
         <translation>Czy na pewno chcesz wysłać?</translation>
+    </message>
+    <message>
+        <source>Create Unsigned</source>
+        <translation>Utwórz niepodpisaną transakcję</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>Zapisz dane transakcji</translation>
+    </message>
+    <message>
+        <source>PSBT saved</source>
+        <translation>Zapisano PSBT</translation>
     </message>
     <message>
         <source>or</source>
@@ -2458,6 +2499,18 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
         <translation>Potwierdź wysyłanie monet</translation>
     </message>
     <message>
+        <source>Confirm transaction proposal</source>
+        <translation>Potwierdź propozycję transakcji</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>Wyślij</translation>
+    </message>
+    <message>
+        <source>Watch-only balance:</source>
+        <translation>Kwota na obserwowanych kontach:</translation>
+    </message>
+    <message>
         <source>The recipient address is not valid. Please recheck.</source>
         <translation>Adres odbiorcy jest nieprawidłowy, proszę sprawić ponownie.</translation>
     </message>
@@ -2480,10 +2533,6 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     <message>
         <source>Transaction creation failed!</source>
         <translation>Utworzenie transakcji nie powiodło się!</translation>
-    </message>
-    <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>Transakcja została odrzucona z następującym powodem: %1</translation>
     </message>
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
@@ -2537,10 +2586,6 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
         <translation>Wybierz wcześniej użyty adres</translation>
     </message>
     <message>
-        <source>This is a normal payment.</source>
-        <translation>To jest standardowa płatność</translation>
-    </message>
-    <message>
         <source>The Bitcoin address to send the payment to</source>
         <translation>Adres Bitcoin gdzie wysłać płatność</translation>
     </message>
@@ -2559,6 +2604,10 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     <message>
         <source>Remove this entry</source>
         <translation>Usuń ten wpis</translation>
+    </message>
+    <message>
+        <source>The amount to send in the selected unit</source>
+        <translation>Kwota do wysłania w wybranej jednostce</translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
@@ -2599,17 +2648,6 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     <message>
         <source>Memo:</source>
         <translation>Notatka:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>Wprowadź etykietę dla tego adresu by dodać go do książki adresowej</translation>
-    </message>
-</context>
-<context>
-    <name>SendConfirmationDialog</name>
-    <message>
-        <source>Yes</source>
-        <translation>Tak</translation>
     </message>
 </context>
 <context>
@@ -2692,11 +2730,19 @@ Uwaga: Ponieważ opłata jest naliczana za każdy bajt, opłata "100 satoshi za 
     <message>
         <source>Enter the receiver's address, message (ensure you copy line breaks, spaces, tabs, etc. exactly) and signature below to verify the message. Be careful not to read more into the signature than what is in the signed message itself, to avoid being tricked by a man-in-the-middle attack. Note that this only proves the signing party receives with the address, it cannot prove sendership of any transaction!</source>
         <translation>Wpisz adres, wiadomość oraz sygnaturę (podpis) odbiorcy (upewnij się, że dokładnie skopiujesz wszystkie zakończenia linii, spacje, tabulacje itp.).  Uważaj by nie dodać więcej do podpisu niż do samej podpisywanej wiadomości by uniknąć ataku man-in-the-middle. 
-Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadawca posiada klucz do adresu, natomiast nie potwierdza to, że poprawne wysłanie jakiejkolwiek transakcji! </translation>
+Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadawca posiada klucz do adresu, natomiast nie potwierdza to, że poprawne wysłanie jakiejkolwiek transakcji!</translation>
     </message>
     <message>
         <source>The Bitcoin address the message was signed with</source>
         <translation>Adres Bitcoin, którym została podpisana wiadomość</translation>
+    </message>
+    <message>
+        <source>The signed message to verify</source>
+        <translation>Podpisana wiadomość do weryfikacji</translation>
+    </message>
+    <message>
+        <source>The signature given when the message was signed</source>
+        <translation>Sygnatura podawana przy podpisywaniu wiadomości</translation>
     </message>
     <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
@@ -2729,6 +2775,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Wallet unlock was cancelled.</source>
         <translation>Odblokowanie portfela zostało anulowane.</translation>
+    </message>
+    <message>
+        <source>No error</source>
+        <translation>Brak błędów</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
@@ -2903,6 +2953,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Output index</source>
         <translation>Indeks wyjściowy</translation>
+    </message>
+    <message>
+        <source> (Certificate was not verified)</source>
+        <translation>(Certyfikat nie został zweryfikowany)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -3233,14 +3287,22 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
-        <translation>Zamknięcie portfela na zbyt długo może skutkować konieczność ponownego załadowania całego łańcucha, jeżeli jest włączony pruning.</translation>
+        <translation>Zamknięcie portfela na zbyt długo może skutkować koniecznością ponownego załadowania całego łańcucha, jeżeli jest włączony pruning.</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>Zamknij wszystkie portfele</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close all wallets?</source>
+        <translation>Na pewno zamknąć wszystkie portfe?</translation>
     </message>
 </context>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>Nie załadowano żadnego portfela.</translation>
+        <source>Create a new wallet</source>
+        <translation>Stwórz nowy portfel</translation>
     </message>
 </context>
 <context>
@@ -3262,6 +3324,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Czy chcesz zwiększyć prowizję?</translation>
     </message>
     <message>
+        <source>Do you want to draft a transaction with fee increase?</source>
+        <translation>Czy chcesz zapisać szkic transakcji ze zwiększoną opłatą transakcyjną?</translation>
+    </message>
+    <message>
         <source>Current fee:</source>
         <translation>Aktualna opłata:</translation>
     </message>
@@ -3276,6 +3342,14 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Confirm fee bump</source>
         <translation>Potwierdź zwiększenie opłaty</translation>
+    </message>
+    <message>
+        <source>Can't draft transaction.</source>
+        <translation>Nie można zapisać szkicu transakcji.</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>Skopiowano PSBT</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>
@@ -3299,6 +3373,22 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Eksportuj dane z aktywnej karty do pliku</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Błąd</translation>
+    </message>
+    <message>
+        <source>Load Transaction Data</source>
+        <translation>Wczytaj dane transakcji</translation>
+    </message>
+    <message>
+        <source>PSBT file must be smaller than 100 MiB</source>
+        <translation>PSBT musi być mniejsze niż 100MB</translation>
+    </message>
+    <message>
+        <source>Unable to decode PSBT</source>
+        <translation>Nie można odczytać PSBT</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
@@ -3344,14 +3434,6 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Prune: ostatnia synchronizacja portfela jest za danymi. Muszisz -reindexować (pobrać cały ciąg bloków ponownie w przypadku przyciętego węzła)</translation>
     </message>
     <message>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>Ponowne skanowanie nie jest możliwe w trybie przycinania. Będzie trzeba użyć -reindex, co pobierze ponownie cały łańcuch bloków.</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>Błąd: Wystąpił fatalny błąd wewnętrzny, sprawdź szczegóły w debug.log</translation>
-    </message>
-    <message>
         <source>Pruning blockstore...</source>
         <translation>Przycinanie zapisu bloków...</translation>
     </message>
@@ -3362,10 +3444,6 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>The %s developers</source>
         <translation>Deweloperzy %s</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>Nie mogę wygenerować adresu reszty. Brak kluczy w wewnętrznym magazynie kluczy i nie można wygenerować żadnych kluczy.</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3416,14 +3494,6 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Uwaga: Wygląda na to, że nie ma pełnej zgodności z naszymi węzłami! Możliwe, że potrzebujesz aktualizacji bądź inne węzły jej potrzebują</translation>
     </message>
     <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>%d z ostatnich 100 bloków ma nieoczekiwaną wersję</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s uszkodzony, odtworzenie się nie powiodło</translation>
-    </message>
-    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempool musi być przynajmniej %d MB</translation>
     </message>
@@ -3446,6 +3516,14 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Corrupted block database detected</source>
         <translation>Wykryto uszkodzoną bazę bloków</translation>
+    </message>
+    <message>
+        <source>Could not find asmap file %s</source>
+        <translation>Nie można odnaleźć pliku asmap %s</translation>
+    </message>
+    <message>
+        <source>Could not parse asmap file %s</source>
+        <translation>Nie można przetworzyć pliku asmap %s</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -3492,6 +3570,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Nie udało się ponownie przeskanować portfela podczas inicjalizacji.</translation>
     </message>
     <message>
+        <source>Failed to verify database</source>
+        <translation>Nie udało się zweryfikować bazy danych</translation>
+    </message>
+    <message>
         <source>Importing...</source>
         <translation>Importowanie…</translation>
     </message>
@@ -3520,6 +3602,30 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Nieprawidłowa kwota dla -fallbackfee=&lt;amount&gt;: '%s'</translation>
     </message>
     <message>
+        <source>SQLiteDatabase: Failed to execute statement to verify database: %s</source>
+        <translation>SQLiteDatabase: nie powiodło się wykonanie instrukcji weryfikującej bazę danych: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to fetch sqlite wallet schema version: %s</source>
+        <translation>SQLiteDatabase: nie udało się pobrać wersji schematu portfela sqlite: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to fetch the application id: %s</source>
+        <translation>SQLiteDatabase: nie udało się pobrać identyfikatora aplikacji: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to prepare statement to verify database: %s</source>
+        <translation>SQLiteDatabase: nie udało się przygotować instrukcji do weryfikacji bazy danych: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Failed to read database verification error: %s</source>
+        <translation>SQLiteDatabase: nie udało się odczytać błędu weryfikacji bazy danych: %s</translation>
+    </message>
+    <message>
+        <source>SQLiteDatabase: Unexpected application id. Expected %u, got %u</source>
+        <translation>SQLiteDatabase: nieoczekiwany identyfikator aplikacji. Oczekiwano %u, otrzymano %u</translation>
+    </message>
+    <message>
         <source>Specified blocks directory "%s" does not exist.</source>
         <translation>Podany folder bloków "%s" nie istnieje.
 </translation>
@@ -3541,16 +3647,12 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Wczytywanie adresów P2P...</translation>
     </message>
     <message>
-        <source>Error: Disk space is too low!</source>
-        <translation>Błąd: Zbyt mało miejsca na dysku!</translation>
-    </message>
-    <message>
         <source>Loading banlist...</source>
         <translation>Ładowanie listy zablokowanych...</translation>
     </message>
     <message>
         <source>Not enough file descriptors available.</source>
-        <translation>Brak wystarczającej liczby deskryptorów plików. </translation>
+        <translation>Brak wystarczającej liczby deskryptorów plików.</translation>
     </message>
     <message>
         <source>Prune cannot be configured with a negative value.</source>
@@ -3621,6 +3723,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Musisz przebudować bazę używając parametru -reindex aby wrócić do trybu pełnego. To spowoduje ponowne pobranie całego łańcucha bloków</translation>
     </message>
     <message>
+        <source>Disk space is too low!</source>
+        <translation>Zbyt mało miejsca na dysku!</translation>
+    </message>
+    <message>
         <source>Error reading from database, shutting down.</source>
         <translation>Błąd odczytu z bazy danych, wyłączam się.</translation>
     </message>
@@ -3631,6 +3737,10 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Error: Disk space is low for %s</source>
         <translation>Błąd: zbyt mało miejsca na dysku dla %s</translation>
+    </message>
+    <message>
+        <source>Error: Keypool ran out, please call keypoolrefill first</source>
+        <translation>Błąd: Pula kluczy jest pusta, odwołaj się do puli kluczy.</translation>
     </message>
     <message>
         <source>Invalid -onion address or hostname: '%s'</source>
@@ -3696,7 +3806,7 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>Transaction amount too small</source>
-        <translation>Zbyt niska kwota transakcji </translation>
+        <translation>Zbyt niska kwota transakcji</translation>
     </message>
     <message>
         <source>Transaction too large</source>
@@ -3727,10 +3837,6 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>Ostrzeżenie: aktywowano nieznane nowe reguły (versionbit %i)</translation>
     </message>
     <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>Usuwam wszystkie transakcje z portfela...</translation>
-    </message>
-    <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
         <translation>-maxtxfee ma ustawioną badzo dużą wartość! Tak wysokie opłaty mogą być zapłacone w jednej transakcji.</translation>
     </message>
@@ -3739,16 +3845,8 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
         <translation>To jest opłata transakcyjna którą zapłacisz, gdy mechanizmy estymacji opłaty nie są dostępne.</translation>
     </message>
     <message>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>Produkt zawiera oprogramowanie stworzone przez OpenSSL Project do użycia w OpensSSL Toolkit %s, oprogramowanie kryptograficzne napisane przez Eric Young oraz oprogramowanie UPnP napisane przez Thomas Bernard.</translation>
-    </message>
-    <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>Całkowita długość łańcucha wersji (%i) przekracza maksymalną dopuszczalną długość (%i). Zmniejsz ilość lub rozmiar parametru uacomment.</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>Ostrzeżenie: Odtworzono dane z uszkodzonego pliku portfela! Oryginalny %s został zapisany jako %s w %s; jeśli twoje saldo lub transakcje są niepoprawne powinieneś odtworzyć kopię zapasową.</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -3772,7 +3870,7 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     </message>
     <message>
         <source>This is the transaction fee you will pay if you send a transaction.</source>
-        <translation>To jest opłata transakcyjna którą zapłacisz jeśli wyślesz transakcję. </translation>
+        <translation>To jest opłata transakcyjna którą zapłacisz jeśli wyślesz transakcję.</translation>
     </message>
     <message>
         <source>Transaction amounts must not be negative</source>
@@ -3793,10 +3891,6 @@ Zwróć uwagę, że poprawnie zweryfikowana wiadomość potwierdza to, że nadaw
     <message>
         <source>Insufficient funds</source>
         <translation>Niewystarczające środki</translation>
-    </message>
-    <message>
-        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
-        <translation>Nie można zaktualizować portfela rozdzielnego bez HD, bez aktualizacji obsługi podzielonej bazy kluczy. Użyj -upgradewallet = 169900 lub -upgradewallet bez określonej wersji.</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>

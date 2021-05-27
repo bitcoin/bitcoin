@@ -1,13 +1,15 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_RECEIVEREQUESTDIALOG_H
 #define BITCOIN_QT_RECEIVEREQUESTDIALOG_H
 
-#include <qt/walletmodel.h>
+#include <qt/sendcoinsrecipient.h>
 
 #include <QDialog>
+
+class WalletModel;
 
 namespace Ui {
     class ReceiveRequestDialog;
@@ -27,8 +29,7 @@ public:
 private Q_SLOTS:
     void on_btnCopyURI_clicked();
     void on_btnCopyAddress_clicked();
-
-    void update();
+    void updateDisplayUnit();
 
 private:
     Ui::ReceiveRequestDialog *ui;

@@ -7,6 +7,7 @@
 
 [environment]
 PACKAGE_NAME=@PACKAGE_NAME@
+PACKAGE_BUGREPORT=@PACKAGE_BUGREPORT@
 SRCDIR=@abs_top_srcdir@
 BUILDDIR=@abs_top_builddir@
 EXEEXT=@EXEEXT@
@@ -15,7 +16,11 @@ RPCAUTH=@abs_top_srcdir@/share/rpcauth/rpcauth.py
 [components]
 # Which components are enabled. These are commented out by `configure` if they were disabled when running config.
 @ENABLE_WALLET_TRUE@ENABLE_WALLET=true
+@USE_SQLITE_TRUE@USE_SQLITE=true
+@USE_BDB_TRUE@USE_BDB=true
 @BUILD_BITCOIN_CLI_TRUE@ENABLE_CLI=true
+@BUILD_BITCOIN_WALLET_TRUE@ENABLE_WALLET_TOOL=true
 @BUILD_BITCOIND_TRUE@ENABLE_BITCOIND=true
 @ENABLE_FUZZ_TRUE@ENABLE_FUZZ=true
 @ENABLE_ZMQ_TRUE@ENABLE_ZMQ=true
+@ENABLE_EXTERNAL_SIGNER_TRUE@ENABLE_EXTERNAL_SIGNER=true

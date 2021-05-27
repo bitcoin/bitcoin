@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019 The Bitcoin Core developers
+# Copyright (c) 2019-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,8 +20,6 @@ import shutil
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
         assert_equal,
-        connect_nodes,
-        disconnect_nodes,
 )
 
 class ReorgsRestoreTest(BitcoinTestFramework):
@@ -38,9 +36,9 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         self.sync_blocks()
 
         # Disconnect node1 from others to reorg its chain later
-        disconnect_nodes(self.nodes[0], 1)
-        disconnect_nodes(self.nodes[1], 2)
-        connect_nodes(self.nodes[0], 2)
+        self.disconnect_nodes(0, 1)
+        self.disconnect_nodes(1, 2)
+        self.connect_nodes(0, 2)
 
         # Send a tx to be unconfirmed later
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), Decimal("10"))
@@ -50,7 +48,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         assert_equal(tx_before_reorg["confirmations"], 4)
 
         # Disconnect node0 from node2 to broadcast a conflict on their respective chains
-        disconnect_nodes(self.nodes[0], 2)
+        self.disconnect_nodes(0, 2)
         nA = next(tx_out["vout"] for tx_out in self.nodes[0].gettransaction(txid_conflict_from)["details"] if tx_out["amount"] == Decimal("10"))
         inputs = []
         inputs.append({"txid": txid_conflict_from, "vout": nA})
@@ -69,7 +67,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         self.nodes[2].generate(9)
 
         # Reconnect node0 and node2 and check that conflicted_txid is effectively conflicted
-        connect_nodes(self.nodes[0], 2)
+        self.connect_nodes(0, 2)
         self.sync_blocks([self.nodes[0], self.nodes[2]])
         conflicted = self.nodes[0].gettransaction(conflicted_txid)
         conflicting = self.nodes[0].gettransaction(conflicting_txid)
@@ -77,8 +75,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         assert_equal(conflicted["walletconflicts"][0], conflicting["txid"])
 
         # Node0 wallet is shutdown
-        self.stop_node(0)
-        self.start_node(0)
+        self.restart_node(0)
 
         # The block chain re-orgs and the tx is included in a different block
         self.nodes[1].generate(9)
@@ -90,7 +87,7 @@ class ReorgsRestoreTest(BitcoinTestFramework):
         # Node0 wallet file is loaded on longest sync'ed node1
         self.stop_node(1)
         self.nodes[0].backupwallet(os.path.join(self.nodes[0].datadir, 'wallet.bak'))
-        shutil.copyfile(os.path.join(self.nodes[0].datadir, 'wallet.bak'), os.path.join(self.nodes[1].datadir, 'regtest', 'wallet.dat'))
+        shutil.copyfile(os.path.join(self.nodes[0].datadir, 'wallet.bak'), os.path.join(self.nodes[1].datadir, self.chain, self.default_wallet_name, self.wallet_data_filename))
         self.start_node(1)
         tx_after_reorg = self.nodes[1].gettransaction(txid)
         # Check that normal confirmed tx is confirmed again but with different blockhash

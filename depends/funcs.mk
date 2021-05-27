@@ -1,17 +1,23 @@
 define int_vars
 #Set defaults for vars which may be overridden per-package
-$(1)_cc=$($($(1)_type)_CC)
-$(1)_cxx=$($($(1)_type)_CXX)
-$(1)_objc=$($($(1)_type)_OBJC)
-$(1)_objcxx=$($($(1)_type)_OBJCXX)
-$(1)_ar=$($($(1)_type)_AR)
-$(1)_ranlib=$($($(1)_type)_RANLIB)
-$(1)_libtool=$($($(1)_type)_LIBTOOL)
-$(1)_nm=$($($(1)_type)_NM)
-$(1)_cflags=$($($(1)_type)_CFLAGS) $($($(1)_type)_$(release_type)_CFLAGS)
-$(1)_cxxflags=$($($(1)_type)_CXXFLAGS) $($($(1)_type)_$(release_type)_CXXFLAGS)
-$(1)_ldflags=$($($(1)_type)_LDFLAGS) $($($(1)_type)_$(release_type)_LDFLAGS) -L$($($(1)_type)_prefix)/lib
-$(1)_cppflags=$($($(1)_type)_CPPFLAGS) $($($(1)_type)_$(release_type)_CPPFLAGS) -I$($($(1)_type)_prefix)/include
+$(1)_cc=$$($$($(1)_type)_CC)
+$(1)_cxx=$$($$($(1)_type)_CXX)
+$(1)_objc=$$($$($(1)_type)_OBJC)
+$(1)_objcxx=$$($$($(1)_type)_OBJCXX)
+$(1)_ar=$$($$($(1)_type)_AR)
+$(1)_ranlib=$$($$($(1)_type)_RANLIB)
+$(1)_libtool=$$($$($(1)_type)_LIBTOOL)
+$(1)_nm=$$($$($(1)_type)_NM)
+$(1)_cflags=$$($$($(1)_type)_CFLAGS) \
+            $$($$($(1)_type)_$$(release_type)_CFLAGS)
+$(1)_cxxflags=$$($$($(1)_type)_CXXFLAGS) \
+              $$($$($(1)_type)_$$(release_type)_CXXFLAGS)
+$(1)_ldflags=$$($$($(1)_type)_LDFLAGS) \
+             $$($$($(1)_type)_$$(release_type)_LDFLAGS) \
+             -L$$($($(1)_type)_prefix)/lib
+$(1)_cppflags=$$($$($(1)_type)_CPPFLAGS) \
+              $$($$($(1)_type)_$$(release_type)_CPPFLAGS) \
+              -I$$($$($(1)_type)_prefix)/include
 $(1)_recipe_hash:=
 endef
 
@@ -41,9 +47,9 @@ endef
 
 define int_get_build_id
 $(eval $(1)_dependencies += $($(1)_$(host_arch)_$(host_os)_dependencies) $($(1)_$(host_os)_dependencies))
-$(eval $(1)_all_dependencies:=$(call int_get_all_dependencies,$(1),$($($(1)_type)_native_toolchain) $($(1)_dependencies)))
+$(eval $(1)_all_dependencies:=$(call int_get_all_dependencies,$(1),$($($(1)_type)_native_toolchain) $($($(1)_type)_native_binutils) $($(1)_dependencies)))
 $(foreach dep,$($(1)_all_dependencies),$(eval $(1)_build_id_deps+=$(dep)-$($(dep)_version)-$($(dep)_recipe_hash)))
-$(eval $(1)_build_id_long:=$(1)-$($(1)_version)-$($(1)_recipe_hash)-$(release_type) $($(1)_build_id_deps) $($($(1)_type)_id_string))
+$(eval $(1)_build_id_long:=$(1)-$($(1)_version)-$($(1)_recipe_hash)-$(release_type) $($(1)_build_id_deps) $($($(1)_type)_id))
 $(eval $(1)_build_id:=$(shell echo -n "$($(1)_build_id_long)" | $(build_SHA256SUM) | cut -c-$(HASH_LENGTH)))
 final_build_id_long+=$($(package)_build_id_long)
 
@@ -130,11 +136,17 @@ $(1)_config_env+=$($(1)_config_env_$(host_arch)_$(host_os)) $($(1)_config_env_$(
 
 $(1)_config_env+=PKG_CONFIG_LIBDIR=$($($(1)_type)_prefix)/lib/pkgconfig
 $(1)_config_env+=PKG_CONFIG_PATH=$($($(1)_type)_prefix)/share/pkgconfig
+$(1)_config_env+=CMAKE_MODULE_PATH=$($($(1)_type)_prefix)/lib/cmake
 $(1)_config_env+=PATH=$(build_prefix)/bin:$(PATH)
 $(1)_build_env+=PATH=$(build_prefix)/bin:$(PATH)
 $(1)_stage_env+=PATH=$(build_prefix)/bin:$(PATH)
-$(1)_autoconf=./configure --host=$($($(1)_type)_host) --prefix=$($($(1)_type)_prefix) $$($(1)_config_opts) CC="$$($(1)_cc)" CXX="$$($(1)_cxx)"
 
+# Setting a --build type that differs from --host will explicitly enable
+# cross-compilation mode. Note that --build defaults to the output of
+# config.guess, which is what we set it too here. This also quells autoconf
+# warnings, "If you wanted to set the --build type, don't use --host.",
+# when using versions older than 2.70.
+$(1)_autoconf=./configure --build=$(BUILD) --host=$($($(1)_type)_host) --prefix=$($($(1)_type)_prefix) $$($(1)_config_opts) CC="$$($(1)_cc)" CXX="$$($(1)_cxx)"
 ifneq ($($(1)_nm),)
 $(1)_autoconf += NM="$$($(1)_nm)"
 endif
@@ -155,6 +167,22 @@ $(1)_autoconf += CPPFLAGS="$$($(1)_cppflags)"
 endif
 ifneq ($($(1)_ldflags),)
 $(1)_autoconf += LDFLAGS="$$($(1)_ldflags)"
+endif
+
+$(1)_cmake=env CC="$$($(1)_cc)" \
+               CFLAGS="$$($(1)_cppflags) $$($(1)_cflags)" \
+               CXX="$$($(1)_cxx)" \
+               CXXFLAGS="$$($(1)_cppflags) $$($(1)_cxxflags)" \
+               LDFLAGS="$$($(1)_ldflags)" \
+             cmake -DCMAKE_INSTALL_PREFIX:PATH="$$($($(1)_type)_prefix)"
+ifeq ($($(1)_type),build)
+$(1)_cmake += -DCMAKE_INSTALL_RPATH:PATH="$$($($(1)_type)_prefix)/lib"
+else
+ifneq ($(host),$(build))
+$(1)_cmake += -DCMAKE_SYSTEM_NAME=$($(host_os)_cmake_system)
+$(1)_cmake += -DCMAKE_C_COMPILER_TARGET=$(host)
+$(1)_cmake += -DCMAKE_CXX_COMPILER_TARGET=$(host)
+endif
 endif
 endef
 
@@ -251,4 +279,4 @@ $(foreach package,$(all_packages),$(eval $(call int_config_attach_build_config,$
 $(foreach package,$(all_packages),$(eval $(call int_add_cmds,$(package))))
 
 #special exception: if a toolchain package exists, all non-native packages depend on it
-$(foreach package,$(packages),$(eval $($(package)_unpacked): |$($($(host_arch)_$(host_os)_native_toolchain)_cached) ))
+$(foreach package,$(packages),$(eval $($(package)_extracted): |$($($(host_arch)_$(host_os)_native_toolchain)_cached) $($($(host_arch)_$(host_os)_native_binutils)_cached) ))

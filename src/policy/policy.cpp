@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +9,7 @@
 
 #include <consensus/validation.h>
 #include <coins.h>
-
+#include <span.h>
 
 CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 {
@@ -21,12 +21,12 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     // need a CTxIn of at least 148 bytes to spend:
     // so dust is a spendable txout less than
     // 182*dustRelayFee/1000 (in satoshis).
-    // 546 satoshis at the default rate of 3000 sat/kB.
+    // 546 satoshis at the default rate of 3000 sat/kvB.
     // A typical spendable segwit txout is 31 bytes big, and will
     // need a CTxIn of at least 67 bytes to spend:
     // so dust is a spendable txout less than
     // 98*dustRelayFee/1000 (in satoshis).
-    // 294 satoshis at the default rate of 3000 sat/kB.
+    // 294 satoshis at the default rate of 3000 sat/kvB.
     if (txout.scriptPubKey.IsUnspendable())
         return 0;
 
@@ -50,14 +50,14 @@ bool IsDust(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     return (txout.nValue < GetDustThreshold(txout, dustRelayFeeIn));
 }
 
-bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
+bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType)
 {
     std::vector<std::vector<unsigned char> > vSolutions;
     whichType = Solver(scriptPubKey, vSolutions);
 
-    if (whichType == TX_NONSTANDARD) {
+    if (whichType == TxoutType::NONSTANDARD) {
         return false;
-    } else if (whichType == TX_MULTISIG) {
+    } else if (whichType == TxoutType::MULTISIG) {
         unsigned char m = vSolutions.front()[0];
         unsigned char n = vSolutions.back()[0];
         // Support up to x-of-3 multisig txns as standard
@@ -65,7 +65,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
             return false;
         if (m < 1 || m > n)
             return false;
-    } else if (whichType == TX_NULL_DATA &&
+    } else if (whichType == TxoutType::NULL_DATA &&
                (!fAcceptDatacarrier || scriptPubKey.size() > nMaxDatacarrierBytes)) {
           return false;
     }
@@ -75,7 +75,7 @@ bool IsStandard(const CScript& scriptPubKey, txnouttype& whichType)
 
 bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
 {
-    if (tx.nVersion > CTransaction::MAX_STANDARD_VERSION || tx.nVersion < 1) {
+    if (tx.nVersion > TX_MAX_STANDARD_VERSION || tx.nVersion < 1) {
         reason = "version";
         return false;
     }
@@ -92,14 +92,15 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
 
     for (const CTxIn& txin : tx.vin)
     {
-        // Biggest 'standard' txin is a 15-of-15 P2SH multisig with compressed
-        // keys (remember the 520 byte limit on redeemScript size). That works
-        // out to a (15*(33+1))+3=513 byte redeemScript, 513+1+15*(73+1)+3=1627
-        // bytes of scriptSig, which we round off to 1650 bytes for some minor
-        // future-proofing. That's also enough to spend a 20-of-20
-        // CHECKMULTISIG scriptPubKey, though such a scriptPubKey is not
-        // considered standard.
-        if (txin.scriptSig.size() > 1650) {
+        // Biggest 'standard' txin involving only keys is a 15-of-15 P2SH
+        // multisig with compressed keys (remember the 520 byte limit on
+        // redeemScript size). That works out to a (15*(33+1))+3=513 byte
+        // redeemScript, 513+1+15*(73+1)+3=1627 bytes of scriptSig, which
+        // we round off to 1650(MAX_STANDARD_SCRIPTSIG_SIZE) bytes for
+        // some minor future-proofing. That's also enough to spend a
+        // 20-of-20 CHECKMULTISIG scriptPubKey, though such a scriptPubKey
+        // is not considered standard.
+        if (txin.scriptSig.size() > MAX_STANDARD_SCRIPTSIG_SIZE) {
             reason = "scriptsig-size";
             return false;
         }
@@ -110,16 +111,16 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
     }
 
     unsigned int nDataOut = 0;
-    txnouttype whichType;
+    TxoutType whichType;
     for (const CTxOut& txout : tx.vout) {
         if (!::IsStandard(txout.scriptPubKey, whichType)) {
             reason = "scriptpubkey";
             return false;
         }
 
-        if (whichType == TX_NULL_DATA)
+        if (whichType == TxoutType::NULL_DATA)
             nDataOut++;
-        else if ((whichType == TX_MULTISIG) && (!permit_bare_multisig)) {
+        else if ((whichType == TxoutType::MULTISIG) && (!permit_bare_multisig)) {
             reason = "bare-multisig";
             return false;
         } else if (IsDust(txout, dust_relay_fee)) {
@@ -152,8 +153,10 @@ bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeR
  * script can be anything; an attacker could use a very
  * expensive-to-check-upon-redemption script like:
  *   DUP CHECKSIG DROP ... repeated 100 times... OP_1
+ *
+ * Note that only the non-witness portion of the transaction is checked here.
  */
-bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
+bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs, bool taproot_active)
 {
     if (tx.IsCoinBase())
         return true; // Coinbases don't use vin normally
@@ -163,10 +166,14 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         const CTxOut& prev = mapInputs.AccessCoin(tx.vin[i].prevout).out;
 
         std::vector<std::vector<unsigned char> > vSolutions;
-        txnouttype whichType = Solver(prev.scriptPubKey, vSolutions);
-        if (whichType == TX_NONSTANDARD) {
+        TxoutType whichType = Solver(prev.scriptPubKey, vSolutions);
+        if (whichType == TxoutType::NONSTANDARD || whichType == TxoutType::WITNESS_UNKNOWN) {
+            // WITNESS_UNKNOWN failures are typically also caught with a policy
+            // flag in the script interpreter, but it can be helpful to catch
+            // this type of NONSTANDARD transaction earlier in transaction
+            // validation.
             return false;
-        } else if (whichType == TX_SCRIPTHASH) {
+        } else if (whichType == TxoutType::SCRIPTHASH) {
             std::vector<std::vector<unsigned char> > stack;
             // convert the scriptSig into a stack, so we can inspect the redeemScript
             if (!EvalScript(stack, tx.vin[i].scriptSig, SCRIPT_VERIFY_NONE, BaseSignatureChecker(), SigVersion::BASE))
@@ -177,6 +184,9 @@ bool AreInputsStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             if (subscript.GetSigOpCount(true) > MAX_P2SH_SIGOPS) {
                 return false;
             }
+        } else if (whichType == TxoutType::WITNESS_V1_TAPROOT) {
+            // Don't allow Taproot spends unless Taproot is active.
+            if (!taproot_active) return false;
         }
     }
 
@@ -200,6 +210,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
         // get the scriptPubKey corresponding to this input:
         CScript prevScript = prev.scriptPubKey;
 
+        bool p2sh = false;
         if (prevScript.IsPayToScriptHash()) {
             std::vector <std::vector<unsigned char> > stack;
             // If the scriptPubKey is P2SH, we try to extract the redeemScript casually by converting the scriptSig
@@ -210,6 +221,7 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             if (stack.empty())
                 return false;
             prevScript = CScript(stack.back().begin(), stack.back().end());
+            p2sh = true;
         }
 
         int witnessversion = 0;
@@ -229,6 +241,36 @@ bool IsWitnessStandard(const CTransaction& tx, const CCoinsViewCache& mapInputs)
             for (unsigned int j = 0; j < sizeWitnessStack; j++) {
                 if (tx.vin[i].scriptWitness.stack[j].size() > MAX_STANDARD_P2WSH_STACK_ITEM_SIZE)
                     return false;
+            }
+        }
+
+        // Check policy limits for Taproot spends:
+        // - MAX_STANDARD_TAPSCRIPT_STACK_ITEM_SIZE limit for stack item size
+        // - No annexes
+        if (witnessversion == 1 && witnessprogram.size() == WITNESS_V1_TAPROOT_SIZE && !p2sh) {
+            // Taproot spend (non-P2SH-wrapped, version 1, witness program size 32; see BIP 341)
+            auto stack = MakeSpan(tx.vin[i].scriptWitness.stack);
+            if (stack.size() >= 2 && !stack.back().empty() && stack.back()[0] == ANNEX_TAG) {
+                // Annexes are nonstandard as long as no semantics are defined for them.
+                return false;
+            }
+            if (stack.size() >= 2) {
+                // Script path spend (2 or more stack elements after removing optional annex)
+                const auto& control_block = SpanPopBack(stack);
+                SpanPopBack(stack); // Ignore script
+                if (control_block.empty()) return false; // Empty control block is invalid
+                if ((control_block[0] & TAPROOT_LEAF_MASK) == TAPROOT_LEAF_TAPSCRIPT) {
+                    // Leaf version 0xc0 (aka Tapscript, see BIP 342)
+                    for (const auto& item : stack) {
+                        if (item.size() > MAX_STANDARD_TAPSCRIPT_STACK_ITEM_SIZE) return false;
+                    }
+                }
+            } else if (stack.size() == 1) {
+                // Key path spend (1 stack element after removing optional annex)
+                // (no policy rules apply)
+            } else {
+                // 0 stack elements; this is already invalid by consensus rules
+                return false;
             }
         }
     }

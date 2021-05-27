@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,8 +31,6 @@ CBloomFilter::CBloomFilter(const unsigned int nElements, const double nFPRate, c
      * Again, we ignore filter parameters which will create a bloom filter with more hash functions than the protocol limits
      * See https://en.wikipedia.org/wiki/Bloom_filter for an explanation of these formulas
      */
-    isFull(false),
-    isEmpty(true),
     nHashFuncs(std::min((unsigned int)(vData.size() * 8 / nElements * LN2), MAX_HASH_FUNCS)),
     nTweak(nTweakIn),
     nFlags(nFlagsIn)
@@ -47,7 +45,7 @@ inline unsigned int CBloomFilter::Hash(unsigned int nHashNum, const std::vector<
 
 void CBloomFilter::insert(const std::vector<unsigned char>& vKey)
 {
-    if (isFull)
+    if (vData.empty()) // Avoid divide-by-zero (CVE-2013-5700)
         return;
     for (unsigned int i = 0; i < nHashFuncs; i++)
     {
@@ -55,7 +53,6 @@ void CBloomFilter::insert(const std::vector<unsigned char>& vKey)
         // Sets bit nIndex of vData
         vData[nIndex >> 3] |= (1 << (7 & nIndex));
     }
-    isEmpty = false;
 }
 
 void CBloomFilter::insert(const COutPoint& outpoint)
@@ -74,10 +71,8 @@ void CBloomFilter::insert(const uint256& hash)
 
 bool CBloomFilter::contains(const std::vector<unsigned char>& vKey) const
 {
-    if (isFull)
+    if (vData.empty()) // Avoid divide-by-zero (CVE-2013-5700)
         return true;
-    if (isEmpty)
-        return false;
     for (unsigned int i = 0; i < nHashFuncs; i++)
     {
         unsigned int nIndex = Hash(i, vKey);
@@ -102,19 +97,6 @@ bool CBloomFilter::contains(const uint256& hash) const
     return contains(data);
 }
 
-void CBloomFilter::clear()
-{
-    vData.assign(vData.size(),0);
-    isFull = false;
-    isEmpty = true;
-}
-
-void CBloomFilter::reset(const unsigned int nNewTweak)
-{
-    clear();
-    nTweak = nNewTweak;
-}
-
 bool CBloomFilter::IsWithinSizeConstraints() const
 {
     return vData.size() <= MAX_BLOOM_FILTER_SIZE && nHashFuncs <= MAX_HASH_FUNCS;
@@ -125,10 +107,8 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
     bool fFound = false;
     // Match if the filter contains the hash of tx
     //  for finding tx when they appear in a block
-    if (isFull)
+    if (vData.empty()) // zero-size = "match-all" filter
         return true;
-    if (isEmpty)
-        return false;
     const uint256& hash = tx.GetHash();
     if (contains(hash))
         fFound = true;
@@ -155,8 +135,8 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
                 else if ((nFlags & BLOOM_UPDATE_MASK) == BLOOM_UPDATE_P2PUBKEY_ONLY)
                 {
                     std::vector<std::vector<unsigned char> > vSolutions;
-                    txnouttype type = Solver(txout.scriptPubKey, vSolutions);
-                    if (type == TX_PUBKEY || type == TX_MULTISIG) {
+                    TxoutType type = Solver(txout.scriptPubKey, vSolutions);
+                    if (type == TxoutType::PUBKEY || type == TxoutType::MULTISIG) {
                         insert(COutPoint(hash, i));
                     }
                 }
@@ -188,19 +168,6 @@ bool CBloomFilter::IsRelevantAndUpdate(const CTransaction& tx)
     }
 
     return false;
-}
-
-void CBloomFilter::UpdateEmptyFull()
-{
-    bool full = true;
-    bool empty = true;
-    for (unsigned int i = 0; i < vData.size(); i++)
-    {
-        full &= vData[i] == 0xff;
-        empty &= vData[i] == 0;
-    }
-    isFull = full;
-    isEmpty = empty;
 }
 
 CRollingBloomFilter::CRollingBloomFilter(const unsigned int nElements, const double fpRate)

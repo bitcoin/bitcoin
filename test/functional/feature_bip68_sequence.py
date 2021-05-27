@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test BIP68 implementation."""
 
 import time
 
-from test_framework.blocktools import create_block, create_coinbase, add_witness_commitment
+from test_framework.blocktools import create_block, NORMAL_GBT_REQUEST_PARAMS, add_witness_commitment
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut, FromHex, ToHex
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
@@ -24,13 +24,16 @@ SEQUENCE_LOCKTIME_GRANULARITY = 9 # this is a bit-shift
 SEQUENCE_LOCKTIME_MASK = 0x0000ffff
 
 # RPC error for non-BIP68 final transactions
-NOT_FINAL_ERROR = "non-BIP68-final (code 64)"
+NOT_FINAL_ERROR = "non-BIP68-final"
 
 class BIP68Test(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 2
         self.extra_args = [
-            ["-acceptnonstdtxn=1"],
+            [
+                "-acceptnonstdtxn=1",
+                "-peertimeout=9999",  # bump because mocktime might cause a disconnect otherwise
+            ],
             ["-acceptnonstdtxn=0"],
         ]
 
@@ -138,7 +141,7 @@ class BIP68Test(BitcoinTestFramework):
         # some of those inputs to be sequence locked (and randomly choose
         # between height/time locking). Small random chance of making the locks
         # all pass.
-        for i in range(400):
+        for _ in range(400):
             # Randomly choose up to 10 inputs
             num_inputs = random.randint(1, 10)
             random.shuffle(utxos)
@@ -257,7 +260,7 @@ class BIP68Test(BitcoinTestFramework):
         # Use prioritisetransaction to lower the effective feerate to 0
         self.nodes[0].prioritisetransaction(txid=tx2.hash, fee_delta=int(-self.relayfee*COIN))
         cur_time = int(time.time())
-        for i in range(10):
+        for _ in range(10):
             self.nodes[0].setmocktime(cur_time + 600)
             self.nodes[0].generate(1)
             cur_time += 600
@@ -272,6 +275,8 @@ class BIP68Test(BitcoinTestFramework):
 
         # Advance the time on the node so that we can test timelocks
         self.nodes[0].setmocktime(cur_time+600)
+        # Save block template now to use for the reorg later
+        tmpl = self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
         self.nodes[0].generate(1)
         assert tx2.hash not in self.nodes[0].getrawmempool()
 
@@ -315,16 +320,15 @@ class BIP68Test(BitcoinTestFramework):
         # diagram above).
         # This would cause tx2 to be added back to the mempool, which in turn causes
         # tx3 to be removed.
-        tip = int(self.nodes[0].getblockhash(self.nodes[0].getblockcount()-1), 16)
-        height = self.nodes[0].getblockcount()
         for i in range(2):
-            block = create_block(tip, create_coinbase(height), cur_time)
-            block.nVersion = 3
+            block = create_block(tmpl=tmpl, ntime=cur_time)
             block.rehash()
             block.solve()
             tip = block.sha256
-            height += 1
-            self.nodes[0].submitblock(ToHex(block))
+            assert_equal(None if i == 1 else 'inconclusive', self.nodes[0].submitblock(ToHex(block)))
+            tmpl = self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS)
+            tmpl['previousblockhash'] = '%x' % tip
+            tmpl['transactions'] = []
             cur_time += 1
 
         mempool = self.nodes[0].getrawmempool()
@@ -372,16 +376,14 @@ class BIP68Test(BitcoinTestFramework):
         assert_raises_rpc_error(-26, NOT_FINAL_ERROR, self.nodes[0].sendrawtransaction, ToHex(tx3))
 
         # make a block that violates bip68; ensure that the tip updates
-        tip = int(self.nodes[0].getbestblockhash(), 16)
-        block = create_block(tip, create_coinbase(self.nodes[0].getblockcount()+1))
-        block.nVersion = 3
+        block = create_block(tmpl=self.nodes[0].getblocktemplate(NORMAL_GBT_REQUEST_PARAMS))
         block.vtx.extend([tx1, tx2, tx3])
         block.hashMerkleRoot = block.calc_merkle_root()
         block.rehash()
         add_witness_commitment(block)
         block.solve()
 
-        self.nodes[0].submitblock(block.serialize().hex())
+        assert_equal(None, self.nodes[0].submitblock(block.serialize().hex()))
         assert_equal(self.nodes[0].getbestblockhash(), block.hash)
 
     def activateCSV(self):

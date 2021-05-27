@@ -3,26 +3,14 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <bech32.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
+#include <test/util/str.h>
 
 #include <boost/test/unit_test.hpp>
 
 BOOST_FIXTURE_TEST_SUITE(bech32_tests, BasicTestingSetup)
 
-static bool CaseInsensitiveEqual(const std::string &s1, const std::string &s2)
-{
-    if (s1.size() != s2.size()) return false;
-    for (size_t i = 0; i < s1.size(); ++i) {
-        char c1 = s1[i];
-        if (c1 >= 'A' && c1 <= 'Z') c1 -= ('A' - 'a');
-        char c2 = s2[i];
-        if (c2 >= 'A' && c2 <= 'Z') c2 -= ('A' - 'a');
-        if (c1 != c2) return false;
-    }
-    return true;
-}
-
-BOOST_AUTO_TEST_CASE(bip173_testvectors_valid)
+BOOST_AUTO_TEST_CASE(bech32_testvectors_valid)
 {
     static const std::string CASES[] = {
         "A12UEL5L",
@@ -34,15 +22,35 @@ BOOST_AUTO_TEST_CASE(bip173_testvectors_valid)
         "?1ezyfcl",
     };
     for (const std::string& str : CASES) {
-        auto ret = bech32::Decode(str);
-        BOOST_CHECK(!ret.first.empty());
-        std::string recode = bech32::Encode(ret.first, ret.second);
+        const auto dec = bech32::Decode(str);
+        BOOST_CHECK(dec.encoding == bech32::Encoding::BECH32);
+        std::string recode = bech32::Encode(bech32::Encoding::BECH32, dec.hrp, dec.data);
         BOOST_CHECK(!recode.empty());
         BOOST_CHECK(CaseInsensitiveEqual(str, recode));
     }
 }
 
-BOOST_AUTO_TEST_CASE(bip173_testvectors_invalid)
+BOOST_AUTO_TEST_CASE(bech32m_testvectors_valid)
+{
+    static const std::string CASES[] = {
+        "A1LQFN3A",
+        "a1lqfn3a",
+        "an83characterlonghumanreadablepartthatcontainsthetheexcludedcharactersbioandnumber11sg7hg6",
+        "abcdef1l7aum6echk45nj3s0wdvt2fg8x9yrzpqzd3ryx",
+        "11llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllludsr8",
+        "split1checkupstagehandshakeupstreamerranterredcaperredlc445v",
+        "?1v759aa"
+    };
+    for (const std::string& str : CASES) {
+        const auto dec = bech32::Decode(str);
+        BOOST_CHECK(dec.encoding == bech32::Encoding::BECH32M);
+        std::string recode = bech32::Encode(bech32::Encoding::BECH32M, dec.hrp, dec.data);
+        BOOST_CHECK(!recode.empty());
+        BOOST_CHECK(CaseInsensitiveEqual(str, recode));
+    }
+}
+
+BOOST_AUTO_TEST_CASE(bech32_testvectors_invalid)
 {
     static const std::string CASES[] = {
         " 1nwldj5",
@@ -61,8 +69,32 @@ BOOST_AUTO_TEST_CASE(bip173_testvectors_invalid)
         "A12uEL5L",
     };
     for (const std::string& str : CASES) {
-        auto ret = bech32::Decode(str);
-        BOOST_CHECK(ret.first.empty());
+        const auto dec = bech32::Decode(str);
+        BOOST_CHECK(dec.encoding == bech32::Encoding::INVALID);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(bech32m_testvectors_invalid)
+{
+    static const std::string CASES[] = {
+        " 1xj0phk",
+        "\x7f""1g6xzxy",
+        "\x80""1vctc34",
+        "an84characterslonghumanreadablepartthatcontainsthetheexcludedcharactersbioandnumber11d6pts4",
+        "qyrz8wqd2c9m",
+        "1qyrz8wqd2c9m",
+        "y1b0jsk6g",
+        "lt1igcx5c0",
+        "in1muywd",
+        "mm1crxm3i",
+        "au1s5cgom",
+        "M1VUXWEZ",
+        "16plkw9",
+        "1p2gdwpf"
+    };
+    for (const std::string& str : CASES) {
+        const auto dec = bech32::Decode(str);
+        BOOST_CHECK(dec.encoding == bech32::Encoding::INVALID);
     }
 }
 

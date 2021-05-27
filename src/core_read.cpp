@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,15 +15,15 @@
 #include <version.h>
 
 #include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/replace.hpp>
 #include <boost/algorithm/string/split.hpp>
 
 #include <algorithm>
+#include <string>
 
-CScript ParseScript(const std::string& s)
+namespace {
+
+opcodetype ParseOpCode(const std::string& s)
 {
-    CScript result;
-
     static std::map<std::string, opcodetype> mapOpNames;
 
     if (mapOpNames.empty())
@@ -34,16 +34,27 @@ CScript ParseScript(const std::string& s)
             if (op < OP_NOP && op != OP_RESERVED)
                 continue;
 
-            const char* name = GetOpName(static_cast<opcodetype>(op));
-            if (strcmp(name, "OP_UNKNOWN") == 0)
+            std::string strName = GetOpName(static_cast<opcodetype>(op));
+            if (strName == "OP_UNKNOWN")
                 continue;
-            std::string strName(name);
             mapOpNames[strName] = static_cast<opcodetype>(op);
             // Convenience: OP_ADD and just ADD are both recognized:
-            boost::algorithm::replace_first(strName, "OP_", "");
-            mapOpNames[strName] = static_cast<opcodetype>(op);
+            if (strName.compare(0, 3, "OP_") == 0) {  // strName starts with "OP_"
+                mapOpNames[strName.substr(3)] = static_cast<opcodetype>(op);
+            }
         }
     }
+
+    auto it = mapOpNames.find(s);
+    if (it == mapOpNames.end()) throw std::runtime_error("script parse error: unknown opcode");
+    return it->second;
+}
+
+} // namespace
+
+CScript ParseScript(const std::string& s)
+{
+    CScript result;
 
     std::vector<std::string> words;
     boost::algorithm::split(words, s, boost::algorithm::is_any_of(" \t\n"), boost::algorithm::token_compress_on);
@@ -59,6 +70,14 @@ CScript ParseScript(const std::string& s)
         {
             // Number
             int64_t n = atoi64(*w);
+
+            //limit the range of numbers ParseScript accepts in decimal
+            //since numbers outside -0xFFFFFFFF...0xFFFFFFFF are illegal in scripts
+            if (n > int64_t{0xffffffff} || n < -1 * int64_t{0xffffffff}) {
+                throw std::runtime_error("script parse error: decimal numeric value only allowed in the "
+                                         "range -0xFFFFFFFF...0xFFFFFFFF");
+            }
+
             result << n;
         }
         else if (w->substr(0,2) == "0x" && w->size() > 2 && IsHex(std::string(w->begin()+2, w->end())))
@@ -74,14 +93,10 @@ CScript ParseScript(const std::string& s)
             std::vector<unsigned char> value(w->begin()+1, w->end()-1);
             result << value;
         }
-        else if (mapOpNames.count(*w))
-        {
-            // opcode, e.g. OP_ADD or ADD:
-            result << mapOpNames[*w];
-        }
         else
         {
-            throw std::runtime_error("script parse error");
+            // opcode, e.g. OP_ADD or ADD:
+            result << ParseOpCode(*w);
         }
     }
 
@@ -109,6 +124,77 @@ static bool CheckTxScriptsSanity(const CMutableTransaction& tx)
     return true;
 }
 
+static bool DecodeTx(CMutableTransaction& tx, const std::vector<unsigned char>& tx_data, bool try_no_witness, bool try_witness)
+{
+    // General strategy:
+    // - Decode both with extended serialization (which interprets the 0x0001 tag as a marker for
+    //   the presence of witnesses) and with legacy serialization (which interprets the tag as a
+    //   0-input 1-output incomplete transaction).
+    //   - Restricted by try_no_witness (which disables legacy if false) and try_witness (which
+    //     disables extended if false).
+    //   - Ignore serializations that do not fully consume the hex string.
+    // - If neither succeeds, fail.
+    // - If only one succeeds, return that one.
+    // - If both decode attempts succeed:
+    //   - If only one passes the CheckTxScriptsSanity check, return that one.
+    //   - If neither or both pass CheckTxScriptsSanity, return the extended one.
+
+    CMutableTransaction tx_extended, tx_legacy;
+    bool ok_extended = false, ok_legacy = false;
+
+    // Try decoding with extended serialization support, and remember if the result successfully
+    // consumes the entire input.
+    if (try_witness) {
+        CDataStream ssData(tx_data, SER_NETWORK, PROTOCOL_VERSION);
+        try {
+            ssData >> tx_extended;
+            if (ssData.empty()) ok_extended = true;
+        } catch (const std::exception&) {
+            // Fall through.
+        }
+    }
+
+    // Optimization: if extended decoding succeeded and the result passes CheckTxScriptsSanity,
+    // don't bother decoding the other way.
+    if (ok_extended && CheckTxScriptsSanity(tx_extended)) {
+        tx = std::move(tx_extended);
+        return true;
+    }
+
+    // Try decoding with legacy serialization, and remember if the result successfully consumes the entire input.
+    if (try_no_witness) {
+        CDataStream ssData(tx_data, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
+        try {
+            ssData >> tx_legacy;
+            if (ssData.empty()) ok_legacy = true;
+        } catch (const std::exception&) {
+            // Fall through.
+        }
+    }
+
+    // If legacy decoding succeeded and passes CheckTxScriptsSanity, that's our answer, as we know
+    // at this point that extended decoding either failed or doesn't pass the sanity check.
+    if (ok_legacy && CheckTxScriptsSanity(tx_legacy)) {
+        tx = std::move(tx_legacy);
+        return true;
+    }
+
+    // If extended decoding succeeded, and neither decoding passes sanity, return the extended one.
+    if (ok_extended) {
+        tx = std::move(tx_extended);
+        return true;
+    }
+
+    // If legacy decoding succeeded and extended didn't, return the legacy one.
+    if (ok_legacy) {
+        tx = std::move(tx_legacy);
+        return true;
+    }
+
+    // If none succeeded, we failed.
+    return false;
+}
+
 bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no_witness, bool try_witness)
 {
     if (!IsHex(hex_tx)) {
@@ -116,32 +202,7 @@ bool DecodeHexTx(CMutableTransaction& tx, const std::string& hex_tx, bool try_no
     }
 
     std::vector<unsigned char> txData(ParseHex(hex_tx));
-
-    if (try_no_witness) {
-        CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION | SERIALIZE_TRANSACTION_NO_WITNESS);
-        try {
-            ssData >> tx;
-            if (ssData.eof() && (!try_witness || CheckTxScriptsSanity(tx))) {
-                return true;
-            }
-        } catch (const std::exception&) {
-            // Fall through.
-        }
-    }
-
-    if (try_witness) {
-        CDataStream ssData(txData, SER_NETWORK, PROTOCOL_VERSION);
-        try {
-            ssData >> tx;
-            if (ssData.empty()) {
-                return true;
-            }
-        } catch (const std::exception&) {
-            // Fall through.
-        }
-    }
-
-    return false;
+    return DecodeTx(tx, txData, try_no_witness, try_witness);
 }
 
 bool DecodeHexBlockHeader(CBlockHeader& header, const std::string& hex_header)

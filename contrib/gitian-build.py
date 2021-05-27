@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# Copyright (c) 2018-2020 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import argparse
 import os
@@ -10,15 +13,16 @@ def setup():
     programs = ['ruby', 'git', 'make', 'wget', 'curl']
     if args.kvm:
         programs += ['apt-cacher-ng', 'python-vm-builder', 'qemu-kvm', 'qemu-utils']
-    elif args.docker and not os.path.isfile('/lib/systemd/system/docker.service'):
-        dockers = ['docker.io', 'docker-ce']
-        for i in dockers:
-            return_code = subprocess.call(['sudo', 'apt-get', 'install', '-qq', i])
-            if return_code == 0:
-                break
-        if return_code != 0:
-            print('Cannot find any way to install Docker.', file=sys.stderr)
-            sys.exit(1)
+    elif args.docker:
+        if not os.path.isfile('/lib/systemd/system/docker.service'):
+            dockers = ['docker.io', 'docker-ce']
+            for i in dockers:
+                return_code = subprocess.call(['sudo', 'apt-get', 'install', '-qq', i])
+                if return_code == 0:
+                    break
+            if return_code != 0:
+                print('Cannot find any way to install Docker.', file=sys.stderr)
+                sys.exit(1)
     else:
         programs += ['apt-cacher-ng', 'lxc', 'debootstrap']
     subprocess.check_call(['sudo', 'apt-get', 'install', '-qq'] + programs)
@@ -31,14 +35,14 @@ def setup():
     if not os.path.isdir('bitcoin'):
         subprocess.check_call(['git', 'clone', 'https://github.com/bitcoin/bitcoin.git'])
     os.chdir('gitian-builder')
-    make_image_prog = ['bin/make-base-vm', '--suite', 'bionic', '--arch', 'amd64']
+    make_image_prog = ['bin/make-base-vm', '--suite', 'focal', '--arch', 'amd64']
     if args.docker:
         make_image_prog += ['--docker']
     elif not args.kvm:
-        make_image_prog += ['--lxc']
+        make_image_prog += ['--lxc', '--disksize', '13000']
     subprocess.check_call(make_image_prog)
     os.chdir(workdir)
-    if args.is_bionic and not args.kvm and not args.docker:
+    if args.is_focal and not args.kvm and not args.docker:
         subprocess.check_call(['sudo', 'sed', '-i', 's/lxcbr0/br0/', '/etc/default/lxc-net'])
         print('Reboot is required')
         sys.exit(0)
@@ -51,10 +55,8 @@ def build():
     os.chdir('gitian-builder')
     os.makedirs('inputs', exist_ok=True)
 
-    subprocess.check_call(['wget', '-N', '-P', 'inputs', 'https://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz'])
-    subprocess.check_call(['wget', '-N', '-P', 'inputs', 'https://bitcoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch'])
-    subprocess.check_call(["echo 'a8c4e9cafba922f89de0df1f2152e7be286aba73f78505169bc351a7938dd911 inputs/osslsigncode-Backports-to-1.7.1.patch' | sha256sum -c"], shell=True)
-    subprocess.check_call(["echo 'f9a8cdb38b9c309326764ebc937cba1523a3a751a7ab05df3ecc99d18ae466c9 inputs/osslsigncode-1.7.1.tar.gz' | sha256sum -c"], shell=True)
+    subprocess.check_call(['wget', '-O', 'inputs/osslsigncode-2.0.tar.gz', 'https://github.com/mtrojnar/osslsigncode/archive/2.0.tar.gz'])
+    subprocess.check_call(["echo '5a60e0a4b3e0b4d655317b2f12a810211c50242138322b16e7e01c6fbb89d92f inputs/osslsigncode-2.0.tar.gz' | sha256sum -c"], shell=True)
     subprocess.check_call(['make', '-C', '../bitcoin/depends', 'download', 'SOURCES_PATH=' + os.getcwd() + '/cache/common'])
 
     if args.linux:
@@ -174,7 +176,7 @@ def main():
     args = parser.parse_args()
     workdir = os.getcwd()
 
-    args.is_bionic = b'bionic' in subprocess.check_output(['lsb_release', '-cs'])
+    args.is_focal = b'focal' in subprocess.check_output(['lsb_release', '-cs'])
 
     if args.kvm and args.docker:
         raise Exception('Error: cannot have both kvm and docker')
@@ -208,7 +210,7 @@ def main():
     args.macos = 'm' in args.os
 
     # Disable for MacOS if no SDK found
-    if args.macos and not os.path.isfile('gitian-builder/inputs/MacOSX10.11.sdk.tar.gz'):
+    if args.macos and not os.path.isfile('gitian-builder/inputs/Xcode-12.1-12A7403-extracted-SDK-with-libcxx-headers.tar.gz'):
         print('Cannot build for MacOS, SDK does not exist. Will build for other OSes')
         args.macos = False
 

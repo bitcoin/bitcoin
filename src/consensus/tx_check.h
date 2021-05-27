@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018 The Bitcoin Core developers
+// Copyright (c) 2017-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -13,8 +13,8 @@
  */
 
 class CTransaction;
-class CValidationState;
+class TxValidationState;
 
-bool CheckTransaction(const CTransaction& tx, CValidationState& state, bool fCheckDuplicateInputs=true);
+bool CheckTransaction(const CTransaction& tx, TxValidationState& state);
 
 #endif // BITCOIN_CONSENSUS_TX_CHECK_H

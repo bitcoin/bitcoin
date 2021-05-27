@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2018 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -30,8 +30,6 @@ void CCoinsViewBacked::SetBackend(CCoinsView &viewIn) { base = &viewIn; }
 bool CCoinsViewBacked::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlock) { return base->BatchWrite(mapCoins, hashBlock); }
 CCoinsViewCursor *CCoinsViewBacked::Cursor() const { return base->Cursor(); }
 size_t CCoinsViewBacked::EstimateSize() const { return base->EstimateSize(); }
-
-SaltedOutpointHasher::SaltedOutpointHasher() : k0(GetRand(std::numeric_limits<uint64_t>::max())), k1(GetRand(std::numeric_limits<uint64_t>::max())) {}
 
 CCoinsViewCache::CCoinsViewCache(CCoinsView *baseIn) : CCoinsViewBacked(baseIn), cachedCoinsUsage(0) {}
 
@@ -77,8 +75,21 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
     }
     if (!possible_overwrite) {
         if (!it->second.coin.IsSpent()) {
-            throw std::logic_error("Adding new coin that replaces non-pruned entry");
+            throw std::logic_error("Attempted to overwrite an unspent coin (when possible_overwrite is false)");
         }
+        // If the coin exists in this cache as a spent coin and is DIRTY, then
+        // its spentness hasn't been flushed to the parent cache. We're
+        // re-adding the coin to this cache now but we can't mark it as FRESH.
+        // If we mark it FRESH and then spend it before the cache is flushed
+        // we would remove it from this cache and would never flush spentness
+        // to the parent cache.
+        //
+        // Re-adding a spent coin can happen in the case of a re-org (the coin
+        // is 'spent' when the block adding it is disconnected and then
+        // re-added when it is also added in a newly connected block).
+        //
+        // If the coin doesn't exist in the current cache, or is spent but not
+        // DIRTY, then it can be marked FRESH.
         fresh = !(it->second.flags & CCoinsCacheEntry::DIRTY);
     }
     it->second.coin = std::move(coin);
@@ -86,12 +97,20 @@ void CCoinsViewCache::AddCoin(const COutPoint &outpoint, Coin&& coin, bool possi
     cachedCoinsUsage += it->second.coin.DynamicMemoryUsage();
 }
 
-void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check) {
+void CCoinsViewCache::EmplaceCoinInternalDANGER(COutPoint&& outpoint, Coin&& coin) {
+    cachedCoinsUsage += coin.DynamicMemoryUsage();
+    cacheCoins.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(std::move(outpoint)),
+        std::forward_as_tuple(std::move(coin), CCoinsCacheEntry::DIRTY));
+}
+
+void AddCoins(CCoinsViewCache& cache, const CTransaction &tx, int nHeight, bool check_for_overwrite) {
     bool fCoinbase = tx.IsCoinBase();
     const uint256& txid = tx.GetHash();
     for (size_t i = 0; i < tx.vout.size(); ++i) {
-        bool overwrite = check ? cache.HaveCoin(COutPoint(txid, i)) : fCoinbase;
-        // Always set the possible_overwrite flag to AddCoin for coinbase txn, in order to correctly
+        bool overwrite = check_for_overwrite ? cache.HaveCoin(COutPoint(txid, i)) : fCoinbase;
+        // Coinbase transactions can always be overwritten, in order to correctly
         // deal with the pre-BIP30 occurrences of duplicate coinbase transactions.
         cache.AddCoin(COutPoint(txid, i), Coin(tx.vout[i], nHeight, fCoinbase), overwrite);
     }
@@ -152,11 +171,11 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
         }
         CCoinsMap::iterator itUs = cacheCoins.find(it->first);
         if (itUs == cacheCoins.end()) {
-            // The parent cache does not have an entry, while the child does
-            // We can ignore it if it's both FRESH and pruned in the child
+            // The parent cache does not have an entry, while the child cache does.
+            // We can ignore it if it's both spent and FRESH in the child
             if (!(it->second.flags & CCoinsCacheEntry::FRESH && it->second.coin.IsSpent())) {
-                // Otherwise we will need to create it in the parent
-                // and move the data up and mark it as dirty
+                // Create the coin in the parent cache, move the data up
+                // and mark it as dirty.
                 CCoinsCacheEntry& entry = cacheCoins[it->first];
                 entry.coin = std::move(it->second.coin);
                 cachedCoinsUsage += entry.coin.DynamicMemoryUsage();
@@ -169,19 +188,18 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
                 }
             }
         } else {
-            // Assert that the child cache entry was not marked FRESH if the
-            // parent cache entry has unspent outputs. If this ever happens,
-            // it means the FRESH flag was misapplied and there is a logic
-            // error in the calling code.
+            // Found the entry in the parent cache
             if ((it->second.flags & CCoinsCacheEntry::FRESH) && !itUs->second.coin.IsSpent()) {
-                throw std::logic_error("FRESH flag misapplied to cache entry for base transaction with spendable outputs");
+                // The coin was marked FRESH in the child cache, but the coin
+                // exists in the parent cache. If this ever happens, it means
+                // the FRESH flag was misapplied and there is a logic error in
+                // the calling code.
+                throw std::logic_error("FRESH flag misapplied to coin that exists in parent cache");
             }
 
-            // Found the entry in the parent cache
             if ((itUs->second.flags & CCoinsCacheEntry::FRESH) && it->second.coin.IsSpent()) {
-                // The grandparent does not have an entry, and the child is
-                // modified and being pruned. This means we can just delete
-                // it from the parent.
+                // The grandparent cache does not have an entry, and the coin
+                // has been spent. We can just delete it from the parent cache.
                 cachedCoinsUsage -= itUs->second.coin.DynamicMemoryUsage();
                 cacheCoins.erase(itUs);
             } else {
@@ -190,11 +208,10 @@ bool CCoinsViewCache::BatchWrite(CCoinsMap &mapCoins, const uint256 &hashBlockIn
                 itUs->second.coin = std::move(it->second.coin);
                 cachedCoinsUsage += itUs->second.coin.DynamicMemoryUsage();
                 itUs->second.flags |= CCoinsCacheEntry::DIRTY;
-                // NOTE: It is possible the child has a FRESH flag here in
-                // the event the entry we found in the parent is pruned. But
-                // we must not copy that FRESH flag to the parent as that
-                // pruned state likely still needs to be communicated to the
-                // grandparent.
+                // NOTE: It isn't safe to mark the coin as FRESH in the parent
+                // cache. If it already existed and was spent in the parent
+                // cache then marking it FRESH would prevent that spentness
+                // from being flushed to the grandparent.
             }
         }
     }
@@ -222,18 +239,6 @@ unsigned int CCoinsViewCache::GetCacheSize() const {
     return cacheCoins.size();
 }
 
-CAmount CCoinsViewCache::GetValueIn(const CTransaction& tx) const
-{
-    if (tx.IsCoinBase())
-        return 0;
-
-    CAmount nResult = 0;
-    for (unsigned int i = 0; i < tx.vin.size(); i++)
-        nResult += AccessCoin(tx.vin[i].prevout).out.nValue;
-
-    return nResult;
-}
-
 bool CCoinsViewCache::HaveInputs(const CTransaction& tx) const
 {
     if (!tx.IsCoinBase()) {
@@ -244,6 +249,14 @@ bool CCoinsViewCache::HaveInputs(const CTransaction& tx) const
         }
     }
     return true;
+}
+
+void CCoinsViewCache::ReallocateCache()
+{
+    // Cache should be empty when we're calling this.
+    assert(cacheCoins.size() == 0);
+    cacheCoins.~CCoinsMap();
+    ::new (&cacheCoins) CCoinsMap();
 }
 
 static const size_t MIN_TRANSACTION_OUTPUT_WEIGHT = WITNESS_SCALE_FACTOR * ::GetSerializeSize(CTxOut(), PROTOCOL_VERSION);

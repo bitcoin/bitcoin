@@ -3,7 +3,7 @@
     <name>AddressBookPage</name>
     <message>
         <source>&amp;New</source>
-        <translation>ati tuntun </translation>
+        <translation>&amp;ati tuntun</translation>
     </message>
     </context>
 <context>
@@ -80,11 +80,14 @@
     <name>OptionsDialog</name>
     <message>
         <source>&amp;OK</source>
-        <translation>o da</translation>
+        <translation>&amp;o da</translation>
     </message>
     </context>
 <context>
     <name>OverviewPage</name>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
     </context>
 <context>
     <name>PaymentServer</name>
@@ -99,7 +102,7 @@
     <name>QRImageWidget</name>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>fi aworan pamo</translation>
+        <translation>fi aworan &amp;pamo</translation>
     </message>
     </context>
 <context>
@@ -110,7 +113,7 @@
     </message>
     <message>
         <source>1 &amp;year</source>
-        <translation>okan ati odun</translation>
+        <translation>okan ati &amp;odun</translation>
     </message>
     </context>
 <context>
@@ -120,7 +123,7 @@
     <name>ReceiveRequestDialog</name>
     <message>
         <source>&amp;Save Image...</source>
-        <translation>fi aworan pamo</translation>
+        <translation>fi aworan &amp;pamo</translation>
     </message>
     </context>
 <context>
@@ -135,9 +138,6 @@
     </context>
 <context>
     <name>SendCoinsEntry</name>
-    </context>
-<context>
-    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>

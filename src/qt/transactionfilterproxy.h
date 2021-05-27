@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -49,10 +49,10 @@ public:
     /** Set whether to show conflicted transactions. */
     void setShowInactive(bool showInactive);
 
-    int rowCount(const QModelIndex &parent = QModelIndex()) const;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 
 protected:
-    bool filterAcceptsRow(int source_row, const QModelIndex & source_parent) const;
+    bool filterAcceptsRow(int source_row, const QModelIndex & source_parent) const override;
 
 private:
     QDateTime dateFrom;

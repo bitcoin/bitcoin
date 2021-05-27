@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +10,7 @@
        that the following merkle tree algorithm has a serious flaw related to
        duplicate txids, resulting in a vulnerability (CVE-2012-2459).
 
-       The reason is that if the number of hashes in the list at a given time
+       The reason is that if the number of hashes in the list at a given level
        is odd, the last one is duplicated before computing the next level (which
        is unusual in Merkle trees). This results in certain sequences of
        transactions leading to the same merkle root. For example, these two

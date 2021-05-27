@@ -1,0 +1,10 @@
+--- old/qtbase/mkspecs/android-clang/qmake.conf
++++ new/qtbase/mkspecs/android-clang/qmake.conf
+@@ -47,7 +47,7 @@ ANDROID_STDCPP_PATH = $$ANDROID_SOURCES_CXX_STL_LIBDIR/libc++_shared.so
+ ANDROID_USE_LLVM = true
+ 
+ exists($$ANDROID_SOURCES_CXX_STL_LIBDIR/libc++.so): \
+-    ANDROID_CXX_STL_LIBS = -lc++
++    ANDROID_CXX_STL_LIBS = -lc++_shared
+ else: \
+     ANDROID_CXX_STL_LIBS = $$ANDROID_SOURCES_CXX_STL_LIBDIR/libc++.so.$$replace(ANDROID_PLATFORM, "android-", "")

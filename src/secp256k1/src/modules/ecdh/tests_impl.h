@@ -80,7 +80,7 @@ void test_ecdh_generator_basepoint(void) {
         /* compute "explicitly" */
         CHECK(secp256k1_ec_pubkey_serialize(ctx, point_ser, &point_ser_len, &point[1], SECP256K1_EC_UNCOMPRESSED) == 1);
         /* compare */
-        CHECK(memcmp(output_ecdh, point_ser, 65) == 0);
+        CHECK(secp256k1_memcmp_var(output_ecdh, point_ser, 65) == 0);
 
         /* compute using ECDH function with default hash function */
         CHECK(secp256k1_ecdh(ctx, output_ecdh, &point[0], s_b32, NULL, NULL) == 1);
@@ -90,7 +90,7 @@ void test_ecdh_generator_basepoint(void) {
         secp256k1_sha256_write(&sha, point_ser, point_ser_len);
         secp256k1_sha256_finalize(&sha, output_ser);
         /* compare */
-        CHECK(memcmp(output_ecdh, output_ser, 32) == 0);
+        CHECK(secp256k1_memcmp_var(output_ecdh, output_ser, 32) == 0);
     }
 }
 

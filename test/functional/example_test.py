@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2019 The Bitcoin Core developers
+# Copyright (c) 2017-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """An example functional test
@@ -15,18 +15,16 @@ from collections import defaultdict
 
 # Avoid wildcard * imports
 from test_framework.blocktools import (create_block, create_coinbase)
-from test_framework.messages import CInv
-from test_framework.mininode import (
+from test_framework.messages import CInv, MSG_BLOCK
+from test_framework.p2p import (
     P2PInterface,
-    mininode_lock,
     msg_block,
     msg_getdata,
+    p2p_lock,
 )
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    connect_nodes,
-    wait_until,
 )
 
 # P2PInterface is a class containing callbacks to be executed when a P2P
@@ -78,6 +76,9 @@ class ExampleTest(BitcoinTestFramework):
         """Override test parameters for your individual test.
 
         This method must be overridden and num_nodes must be explicitly set."""
+        # By default every test loads a pre-mined chain of 200 blocks from cache.
+        # Set setup_clean_chain to True to skip this and start from the Genesis
+        # block.
         self.setup_clean_chain = True
         self.num_nodes = 3
         # Use self.extra_args to change command-line arguments for the nodes
@@ -116,7 +117,7 @@ class ExampleTest(BitcoinTestFramework):
         # In this test, we're not connecting node2 to node0 or node1. Calls to
         # sync_all() should not include node2, since we're not expecting it to
         # sync.
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(0, 1)
         self.sync_all(self.nodes[0:2])
 
     # Use setup_nodes() to customize the node start behaviour (for example if
@@ -137,7 +138,7 @@ class ExampleTest(BitcoinTestFramework):
         """Main test logic"""
 
         # Create P2P connections will wait for a verack to make sure the connection is fully up
-        self.nodes[0].add_p2p_connection(BaseNode())
+        peer_messaging = self.nodes[0].add_p2p_connection(BaseNode())
 
         # Generating a block on one of the nodes will get us out of IBD
         blocks = [int(self.nodes[0].generate(nblocks=1)[0], 16)]
@@ -166,15 +167,15 @@ class ExampleTest(BitcoinTestFramework):
 
         height = self.nodes[0].getblockcount()
 
-        for i in range(10):
-            # Use the mininode and blocktools functionality to manually build a block
+        for _ in range(10):
+            # Use the blocktools functionality to manually build a block.
             # Calling the generate() rpc is easier, but this allows us to exactly
             # control the blocks and transactions.
             block = create_block(self.tip, create_coinbase(height+1), self.block_time)
             block.solve()
             block_message = msg_block(block)
             # Send message is used to send a P2P message to the node over our P2PInterface
-            self.nodes[0].p2p.send_message(block_message)
+            peer_messaging.send_message(block_message)
             self.tip = block.sha256
             blocks.append(self.tip)
             self.block_time += 1
@@ -184,7 +185,7 @@ class ExampleTest(BitcoinTestFramework):
         self.nodes[1].waitforblockheight(11)
 
         self.log.info("Connect node2 and node1")
-        connect_nodes(self.nodes[1], 2)
+        self.connect_nodes(1, 2)
 
         self.log.info("Wait for node2 to receive all the blocks from node1")
         self.sync_all()
@@ -192,26 +193,27 @@ class ExampleTest(BitcoinTestFramework):
         self.log.info("Add P2P connection to node2")
         self.nodes[0].disconnect_p2ps()
 
-        self.nodes[2].add_p2p_connection(BaseNode())
+        peer_receiving = self.nodes[2].add_p2p_connection(BaseNode())
 
         self.log.info("Test that node2 propagates all the blocks to us")
 
         getdata_request = msg_getdata()
         for block in blocks:
-            getdata_request.inv.append(CInv(2, block))
-        self.nodes[2].p2p.send_message(getdata_request)
+            getdata_request.inv.append(CInv(MSG_BLOCK, block))
+        peer_receiving.send_message(getdata_request)
 
         # wait_until() will loop until a predicate condition is met. Use it to test properties of the
         # P2PInterface objects.
-        wait_until(lambda: sorted(blocks) == sorted(list(self.nodes[2].p2p.block_receive_map.keys())), timeout=5, lock=mininode_lock)
+        peer_receiving.wait_until(lambda: sorted(blocks) == sorted(list(peer_receiving.block_receive_map.keys())), timeout=5)
 
         self.log.info("Check that each block was received only once")
         # The network thread uses a global lock on data access to the P2PConnection objects when sending and receiving
         # messages. The test thread should acquire the global lock before accessing any P2PConnection data to avoid locking
-        # and synchronization issues. Note wait_until() acquires this global lock when testing the predicate.
-        with mininode_lock:
-            for block in self.nodes[2].p2p.block_receive_map.values():
+        # and synchronization issues. Note p2p.wait_until() acquires this global lock internally when testing the predicate.
+        with p2p_lock:
+            for block in peer_receiving.block_receive_map.values():
                 assert_equal(block, 1)
+
 
 if __name__ == '__main__':
     ExampleTest().main()

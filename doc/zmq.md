@@ -1,6 +1,6 @@
 # Block and Transaction Broadcasting with ZeroMQ
 
-[ZeroMQ](http://zeromq.org/) is a lightweight wrapper around TCP
+[ZeroMQ](https://zeromq.org/) is a lightweight wrapper around TCP
 connections, inter-process communication, and shared-memory,
 providing various message-oriented semantics such as publish/subscribe,
 request/reply, and push/pull.
@@ -39,8 +39,9 @@ For version information, see [dependencies.md](dependencies.md).
 Typically, it is packaged by distributions as something like
 *libzmq3-dev*. The C++ wrapper for ZeroMQ is *not* needed.
 
-In order to run the example Python client scripts in contrib/ one must
-also install *python3-zmq*, though this is not necessary for daemon
+In order to run the example Python client scripts in the `contrib/zmq/`
+directory, one must also install [PyZMQ](https://github.com/zeromq/pyzmq)
+(generally with `pip install pyzmq`), though this is not necessary for daemon
 operation.
 
 ## Enabling
@@ -62,9 +63,11 @@ Currently, the following notifications are supported:
     -zmqpubhashblock=address
     -zmqpubrawblock=address
     -zmqpubrawtx=address
+    -zmqpubsequence=address
 
 The socket type is PUB and the address must be a valid ZeroMQ socket
 address. The same address can be used in more than one notification.
+The same notification can be specified more than once.
 
 The option to set the PUB socket's outbound message high water mark
 (SNDHWM) may be set individually for each notification:
@@ -73,12 +76,14 @@ The option to set the PUB socket's outbound message high water mark
     -zmqpubhashblockhwm=n
     -zmqpubrawblockhwm=n
     -zmqpubrawtxhwm=n
+    -zmqpubsequencehwm=address
 
 The high water mark value must be an integer greater than or equal to 0.
 
 For instance:
 
     $ bitcoind -zmqpubhashtx=tcp://127.0.0.1:28332 \
+               -zmqpubhashtx=tcp://192.168.1.2:28332 \
                -zmqpubrawtx=ipc:///tmp/bitcoind.tx.raw \
                -zmqpubhashtxhwm=10000
 
@@ -86,7 +91,15 @@ Each PUB notification has a topic and body, where the header
 corresponds to the notification type. For instance, for the
 notification `-zmqpubhashtx` the topic is `hashtx` (no null
 terminator) and the body is the transaction hash (32
-bytes).
+bytes) for all but `sequence` topic. For `sequence`, the body
+is structured as the following based on the type of message:
+
+    <32-byte hash>C :                 Blockhash connected
+    <32-byte hash>D :                 Blockhash disconnected
+    <32-byte hash>R<8-byte LE uint> : Transactionhash removed from mempool for non-block inclusion reason
+    <32-byte hash>A<8-byte LE uint> : Transactionhash added mempool
+
+Where the 8-byte uints correspond to the mempool sequence number.
 
 These options can also be provided in bitcoin.conf.
 
@@ -96,7 +109,21 @@ ZeroMQ endpoint specifiers for TCP (and others) are documented in the
 Client side, then, the ZeroMQ subscriber socket must have the
 ZMQ_SUBSCRIBE option set to one or either of these prefixes (for
 instance, just `hash`); without doing so will result in no messages
-arriving. Please see `contrib/zmq/zmq_sub.py` for a working example.
+arriving. Please see [`contrib/zmq/zmq_sub.py`](/contrib/zmq/zmq_sub.py) for a working example.
+
+The ZMQ_PUB socket's ZMQ_TCP_KEEPALIVE option is enabled. This means that
+the underlying SO_KEEPALIVE option is enabled when using a TCP transport.
+The effective TCP keepalive values are managed through the underlying
+operating system configuration and must be configured prior to connection establishment.
+
+For example, when running on GNU/Linux, one might use the following
+to lower the keepalive setting to 10 minutes:
+
+sudo sysctl -w net.ipv4.tcp_keepalive_time=600
+
+Setting the keepalive values appropriately for your operating environment may
+improve connectivity in situations where long-lived connections are silently
+dropped by network middle boxes.
 
 ## Remarks
 
@@ -109,13 +136,20 @@ No authentication or authorization is done on connecting clients; it
 is assumed that the ZeroMQ port is exposed only to trusted entities,
 using other means such as firewalling.
 
-Note that when the block chain tip changes, a reorganisation may occur
-and just the tip will be notified. It is up to the subscriber to
-retrieve the chain from the last known block to the new tip. Also note
-that no notification occurs if the tip was in the active chain - this
-is the case after calling invalidateblock RPC.
+Note that for `*block` topics, when the block chain tip changes,
+a reorganisation may occur and just the tip will be notified.
+It is up to the subscriber to retrieve the chain from the last known
+block to the new tip. Also note that no notification will occur if the tip
+was in the active chain--as would be the case after calling invalidateblock RPC.
+In contrast, the `sequence` topic publishes all block connections and
+disconnections.
 
 There are several possibilities that ZMQ notification can get lost
 during transmission depending on the communication type you are
 using. Bitcoind appends an up-counting sequence number to each
 notification which allows listeners to detect lost notifications.
+
+The `sequence` topic refers specifically to the mempool sequence
+number, which is also published along with all mempool events. This
+is a different sequence value than in ZMQ itself in order to allow a total
+ordering of mempool events to be constructed.

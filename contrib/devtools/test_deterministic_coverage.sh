@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2019 The Bitcoin Core developers
+# Copyright (c) 2019-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
@@ -16,13 +16,12 @@ GCOV_EXECUTABLE="gcov"
 NON_DETERMINISTIC_TESTS=(
     "blockfilter_index_tests/blockfilter_index_initial_sync"  # src/checkqueue.h: In CCheckQueue::Loop(): while (queue.empty()) { ... }
     "coinselector_tests/knapsack_solver_test"                 # coinselector_tests.cpp: if (equal_sets(setCoinsRet, setCoinsRet2))
-    "denialofservice_tests/DoS_mapOrphans"                    # denialofservice_tests.cpp: it = mapOrphanTransactions.lower_bound(InsecureRand256());
     "fs_tests/fsbridge_fstream"                               # deterministic test failure?
     "miner_tests/CreateNewBlock_validity"                     # validation.cpp: if (GetMainSignals().CallbacksPending() > 10)
     "scheduler_tests/manythreads"                             # scheduler.cpp: CScheduler::serviceQueue()
     "scheduler_tests/singlethreadedscheduler_ordered"         # scheduler.cpp: CScheduler::serviceQueue()
-    "tx_validationcache_tests/checkinputs_test"               # validation.cpp: if (GetMainSignals().CallbacksPending() > 10)
-    "tx_validationcache_tests/tx_mempool_block_doublespend"   # validation.cpp: if (GetMainSignals().CallbacksPending() > 10)
+    "txvalidationcache_tests/checkinputs_test"                # validation.cpp: if (GetMainSignals().CallbacksPending() > 10)
+    "txvalidationcache_tests/tx_mempool_block_doublespend"    # validation.cpp: if (GetMainSignals().CallbacksPending() > 10)
     "txindex_tests/txindex_initial_sync"                      # validation.cpp: if (GetMainSignals().CallbacksPending() > 10)
     "txvalidation_tests/tx_mempool_reject_coinbase"           # validation.cpp: if (GetMainSignals().CallbacksPending() > 10)
     "validation_block_tests/processnewblock_signals_ordering" # validation.cpp: if (GetMainSignals().CallbacksPending() > 10)

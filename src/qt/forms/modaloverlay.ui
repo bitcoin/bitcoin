@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>ModalOverlay</class>
- <widget class="ModalOverlay" name="ModalOverlay">
+ <widget class="QWidget" name="ModalOverlay">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -219,7 +219,7 @@ QLabel { color: rgb(40,40,40);  }</string>
            <item row="0" column="1">
             <widget class="QLabel" name="numberOfBlocksLeft">
              <property name="text">
-              <string>Unknown...</string>
+              <string>Unknown…</string>
              </property>
             </widget>
            </item>
@@ -245,7 +245,7 @@ QLabel { color: rgb(40,40,40);  }</string>
               </sizepolicy>
              </property>
              <property name="text">
-              <string>Unknown...</string>
+              <string>Unknown…</string>
              </property>
             </widget>
            </item>
@@ -271,16 +271,6 @@ QLabel { color: rgb(40,40,40);  }</string>
                </property>
               </widget>
              </item>
-             <item>
-              <widget class="QProgressBar" name="progressBar">
-               <property name="value">
-                <number>24</number>
-               </property>
-               <property name="format">
-                <string/>
-               </property>
-              </widget>
-             </item>
             </layout>
            </item>
            <item row="4" column="0">
@@ -299,7 +289,7 @@ QLabel { color: rgb(40,40,40);  }</string>
            <item row="4" column="1">
             <widget class="QLabel" name="progressIncreasePerH">
              <property name="text">
-              <string>calculating...</string>
+              <string>calculating…</string>
              </property>
             </widget>
            </item>
@@ -319,7 +309,7 @@ QLabel { color: rgb(40,40,40);  }</string>
            <item row="5" column="1">
             <widget class="QLabel" name="expectedTimeLeft">
              <property name="text">
-              <string>calculating...</string>
+              <string>calculating…</string>
              </property>
             </widget>
            </item>
@@ -351,6 +341,9 @@ QLabel { color: rgb(40,40,40);  }</string>
              <property name="text">
               <string>Hide</string>
              </property>
+             <property name="shortcut">
+              <string>Esc</string>
+             </property>
              <property name="focusPolicy">
               <enum>Qt::StrongFocus</enum>
              </property>
@@ -369,14 +362,6 @@ QLabel { color: rgb(40,40,40);  }</string>
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>ModalOverlay</class>
-   <extends>QWidget</extends>
-   <header>qt/modaloverlay.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

@@ -1,9 +1,9 @@
-// Copyright (c) 2018-2019 The Bitcoin Core developers
+// Copyright (c) 2018-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <test/data/blockfilters.json.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <blockfilter.h>
 #include <core_io.h>
@@ -42,14 +42,14 @@ BOOST_AUTO_TEST_CASE(gcsfilter_test)
 BOOST_AUTO_TEST_CASE(gcsfilter_default_constructor)
 {
     GCSFilter filter;
-    BOOST_CHECK_EQUAL(filter.GetN(), 0);
-    BOOST_CHECK_EQUAL(filter.GetEncoded().size(), 1);
+    BOOST_CHECK_EQUAL(filter.GetN(), 0U);
+    BOOST_CHECK_EQUAL(filter.GetEncoded().size(), 1U);
 
     const GCSFilter::Params& params = filter.GetParams();
-    BOOST_CHECK_EQUAL(params.m_siphash_k0, 0);
-    BOOST_CHECK_EQUAL(params.m_siphash_k1, 0);
+    BOOST_CHECK_EQUAL(params.m_siphash_k0, 0U);
+    BOOST_CHECK_EQUAL(params.m_siphash_k1, 0U);
     BOOST_CHECK_EQUAL(params.m_P, 0);
-    BOOST_CHECK_EQUAL(params.m_M, 1);
+    BOOST_CHECK_EQUAL(params.m_M, 1U);
 }
 
 BOOST_AUTO_TEST_CASE(blockfilter_basic_test)

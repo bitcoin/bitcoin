@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -43,15 +43,9 @@ public:
     //! such as the various parameters to scrypt
     std::vector<unsigned char> vchOtherDerivationParameters;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(vchCryptedKey);
-        READWRITE(vchSalt);
-        READWRITE(nDerivationMethod);
-        READWRITE(nDeriveIterations);
-        READWRITE(vchOtherDerivationParameters);
+    SERIALIZE_METHODS(CMasterKey, obj)
+    {
+        READWRITE(obj.vchCryptedKey, obj.vchSalt, obj.nDerivationMethod, obj.nDeriveIterations, obj.vchOtherDerivationParameters);
     }
 
     CMasterKey()

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,16 +17,12 @@
 # error "Bitcoin cannot be compiled without assertions."
 #endif
 
-// Assumption: We assume a C++11 (ISO/IEC 14882:2011) compiler (minimum requirement).
-// Example(s): We assume the presence of C++11 features everywhere :-)
-// Note:       MSVC does not report the expected __cplusplus value due to legacy
-//             reasons.
-#if !defined(_MSC_VER)
-// ISO Standard C++11 [cpp.predefined]p1:
-// "The name __cplusplus is defined to the value 201103L when compiling a C++
+// Assumption: We assume a C++17 (ISO/IEC 14882:2017) compiler (minimum requirement).
+// Example(s): We assume the presence of C++17 features everywhere :-)
+// ISO Standard C++17 [cpp.predefined]p1:
+// "The name __cplusplus is defined to the value 201703L when compiling a C++
 //  translation unit."
-static_assert(__cplusplus >= 201103L, "C++11 standard assumed");
-#endif
+static_assert(__cplusplus >= 201703L, "C++17 standard assumed");
 
 // Assumption: We assume the floating-point types to fulfill the requirements of
 //             IEC 559 (IEEE 754) standard.
@@ -40,16 +36,12 @@ static_assert(std::numeric_limits<double>::is_iec559, "IEEE 754 double assumed")
 // Example(s): Everywhere :-)
 static_assert(std::numeric_limits<unsigned char>::digits == 8, "8-bit byte assumed");
 
-// Assumption: We assume floating-point widths.
-// Example(s): Type punning in serialization code (ser_{float,double}_to_uint{32,64}).
-static_assert(sizeof(float) == 4, "32-bit float assumed");
-static_assert(sizeof(double) == 8, "64-bit double assumed");
-
 // Assumption: We assume integer widths.
 // Example(s): GetSizeOfCompactSize and WriteCompactSize in the serialization
 //             code.
 static_assert(sizeof(short) == 2, "16-bit short assumed");
 static_assert(sizeof(int) == 4, "32-bit int assumed");
+static_assert(sizeof(unsigned) == 4, "32-bit unsigned assumed");
 
 // Assumption: We assume size_t to be 32-bit or 64-bit.
 // Example(s): size_t assumed to be at least 32-bit in ecdsa_signature_parse_der_lax(...).

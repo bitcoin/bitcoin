@@ -1,0 +1,40 @@
+# Copyright (c) 2013-2019 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+LIBTEST_UTIL=libtest_util.a
+
+EXTRA_LIBRARIES += \
+    $(LIBTEST_UTIL)
+
+TEST_UTIL_H = \
+    test/util/blockfilter.h \
+    test/util/logging.h \
+    test/util/mining.h \
+    test/util/net.h \
+    test/util/script.h \
+    test/util/setup_common.h \
+    test/util/str.h \
+    test/util/transaction_utils.h \
+    test/util/validation.h \
+    test/util/wallet.h
+
+libtest_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(NATPMP_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libtest_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libtest_util_a_SOURCES = \
+  test/util/blockfilter.cpp \
+  test/util/logging.cpp \
+  test/util/mining.cpp \
+  test/util/net.cpp \
+  test/util/script.cpp \
+  test/util/setup_common.cpp \
+  test/util/str.cpp \
+  test/util/transaction_utils.cpp \
+  test/util/validation.cpp \
+  test/util/wallet.cpp \
+  $(TEST_UTIL_H)
+
+LIBTEST_UTIL += $(LIBBITCOIN_SERVER)
+LIBTEST_UTIL += $(LIBBITCOIN_COMMON)
+LIBTEST_UTIL += $(LIBBITCOIN_UTIL)
+LIBTEST_UTIL += $(LIBBITCOIN_CRYPTO_BASE)

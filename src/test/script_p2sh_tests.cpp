@@ -1,17 +1,17 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <consensus/tx_verify.h>
 #include <key.h>
-#include <validation.h>
 #include <policy/policy.h>
+#include <policy/settings.h>
 #include <script/script.h>
 #include <script/script_error.h>
-#include <policy/settings.h>
 #include <script/sign.h>
 #include <script/signingprovider.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
+#include <validation.h>
 
 #include <vector>
 
@@ -41,7 +41,7 @@ Verify(const CScript& scriptSig, const CScript& scriptPubKey, bool fStrict, Scri
     txTo.vin[0].scriptSig = scriptSig;
     txTo.vout[0].nValue = 1;
 
-    return VerifyScript(scriptSig, scriptPubKey, nullptr, fStrict ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE, MutableTransactionSignatureChecker(&txTo, 0, txFrom.vout[0].nValue), &err);
+    return VerifyScript(scriptSig, scriptPubKey, nullptr, fStrict ? SCRIPT_VERIFY_P2SH : SCRIPT_VERIFY_NONE, MutableTransactionSignatureChecker(&txTo, 0, txFrom.vout[0].nValue, MissingDataBehavior::ASSERT_FAIL), &err);
 }
 
 
@@ -209,20 +209,21 @@ BOOST_AUTO_TEST_CASE(is)
     p2sh << OP_HASH160 << ToByteVector(dummy) << OP_EQUAL;
     BOOST_CHECK(p2sh.IsPayToScriptHash());
 
-    // Not considered pay-to-script-hash if using one of the OP_PUSHDATA opcodes:
     std::vector<unsigned char> direct = {OP_HASH160, 20};
     direct.insert(direct.end(), 20, 0);
     direct.push_back(OP_EQUAL);
     BOOST_CHECK(CScript(direct.begin(), direct.end()).IsPayToScriptHash());
+
+    // Not considered pay-to-script-hash if using one of the OP_PUSHDATA opcodes:
     std::vector<unsigned char> pushdata1 = {OP_HASH160, OP_PUSHDATA1, 20};
     pushdata1.insert(pushdata1.end(), 20, 0);
     pushdata1.push_back(OP_EQUAL);
     BOOST_CHECK(!CScript(pushdata1.begin(), pushdata1.end()).IsPayToScriptHash());
-    std::vector<unsigned char> pushdata2 = {OP_HASH160, 20, 0};
+    std::vector<unsigned char> pushdata2 = {OP_HASH160, OP_PUSHDATA2, 20, 0};
     pushdata2.insert(pushdata2.end(), 20, 0);
     pushdata2.push_back(OP_EQUAL);
     BOOST_CHECK(!CScript(pushdata2.begin(), pushdata2.end()).IsPayToScriptHash());
-    std::vector<unsigned char> pushdata4 = {OP_HASH160, 20, 0, 0, 0};
+    std::vector<unsigned char> pushdata4 = {OP_HASH160, OP_PUSHDATA4, 20, 0, 0, 0};
     pushdata4.insert(pushdata4.end(), 20, 0);
     pushdata4.push_back(OP_EQUAL);
     BOOST_CHECK(!CScript(pushdata4.begin(), pushdata4.end()).IsPayToScriptHash());
@@ -342,7 +343,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txTo.vin[3].scriptSig << OP_11 << OP_11 << std::vector<unsigned char>(oneAndTwo.begin(), oneAndTwo.end());
     txTo.vin[4].scriptSig << std::vector<unsigned char>(fifteenSigops.begin(), fifteenSigops.end());
 
-    BOOST_CHECK(::AreInputsStandard(CTransaction(txTo), coins));
+    BOOST_CHECK(::AreInputsStandard(CTransaction(txTo), coins, false));
     // 22 P2SH sigops for all inputs (1 for vin[0], 6 for vin[3], 15 for vin[4]
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txTo), coins), 22U);
 
@@ -355,7 +356,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txToNonStd1.vin[0].prevout.hash = txFrom.GetHash();
     txToNonStd1.vin[0].scriptSig << std::vector<unsigned char>(sixteenSigops.begin(), sixteenSigops.end());
 
-    BOOST_CHECK(!::AreInputsStandard(CTransaction(txToNonStd1), coins));
+    BOOST_CHECK(!::AreInputsStandard(CTransaction(txToNonStd1), coins, false));
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txToNonStd1), coins), 16U);
 
     CMutableTransaction txToNonStd2;
@@ -367,7 +368,7 @@ BOOST_AUTO_TEST_CASE(AreInputsStandard)
     txToNonStd2.vin[0].prevout.hash = txFrom.GetHash();
     txToNonStd2.vin[0].scriptSig << std::vector<unsigned char>(twentySigops.begin(), twentySigops.end());
 
-    BOOST_CHECK(!::AreInputsStandard(CTransaction(txToNonStd2), coins));
+    BOOST_CHECK(!::AreInputsStandard(CTransaction(txToNonStd2), coins, false));
     BOOST_CHECK_EQUAL(GetP2SHSigOpCount(CTransaction(txToNonStd2), coins), 20U);
 }
 

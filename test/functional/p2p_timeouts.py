@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2016-2018 The Bitcoin Core developers
+# Copyright (c) 2016-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test various net timeouts.
@@ -24,13 +24,15 @@
 from time import sleep
 
 from test_framework.messages import msg_ping
-from test_framework.mininode import P2PInterface
+from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
+
 
 class TestP2PConn(P2PInterface):
     def on_version(self, message):
         # Don't send a verack in response
         pass
+
 
 class TimeoutsTest(BitcoinTestFramework):
     def set_test_params(self):
@@ -41,9 +43,13 @@ class TimeoutsTest(BitcoinTestFramework):
 
     def run_test(self):
         # Setup the p2p connections
-        no_verack_node = self.nodes[0].add_p2p_connection(TestP2PConn())
+        no_verack_node = self.nodes[0].add_p2p_connection(TestP2PConn(), wait_for_verack=False)
         no_version_node = self.nodes[0].add_p2p_connection(TestP2PConn(), send_version=False, wait_for_verack=False)
         no_send_node = self.nodes[0].add_p2p_connection(TestP2PConn(), send_version=False, wait_for_verack=False)
+
+        # Wait until we got the verack in response to the version. Though, don't wait for the other node to receive the
+        # verack, since we never sent one
+        no_verack_node.wait_for_verack()
 
         sleep(1)
 
@@ -51,8 +57,10 @@ class TimeoutsTest(BitcoinTestFramework):
         assert no_version_node.is_connected
         assert no_send_node.is_connected
 
-        no_verack_node.send_message(msg_ping())
-        no_version_node.send_message(msg_ping())
+        with self.nodes[0].assert_debug_log(['Unsupported message "ping" prior to verack from peer=0']):
+            no_verack_node.send_message(msg_ping())
+        with self.nodes[0].assert_debug_log(['non-version message before version handshake. Message "ping" from peer=1']):
+            no_version_node.send_message(msg_ping())
 
         sleep(1)
 
@@ -66,9 +74,9 @@ class TimeoutsTest(BitcoinTestFramework):
         no_version_node.send_message(msg_ping())
 
         expected_timeout_logs = [
-            "version handshake timeout from 0",
-            "socket no message in first 3 seconds, 1 0 from 1",
-            "socket no message in first 3 seconds, 0 0 from 2",
+            "version handshake timeout peer=0",
+            "socket no message in first 3 seconds, 1 0 peer=1",
+            "socket no message in first 3 seconds, 0 0 peer=2",
         ]
 
         with self.nodes[0].assert_debug_log(expected_msgs=expected_timeout_logs):
@@ -80,6 +88,7 @@ class TimeoutsTest(BitcoinTestFramework):
             assert not no_verack_node.is_connected
             assert not no_version_node.is_connected
             assert not no_send_node.is_connected
+
 
 if __name__ == '__main__':
     TimeoutsTest().main()

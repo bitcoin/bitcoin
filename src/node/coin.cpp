@@ -4,14 +4,18 @@
 
 #include <node/coin.h>
 
+#include <node/context.h>
 #include <txmempool.h>
 #include <validation.h>
 
-void FindCoins(std::map<COutPoint, Coin>& coins)
+void FindCoins(const NodeContext& node, std::map<COutPoint, Coin>& coins)
 {
-    LOCK2(cs_main, ::mempool.cs);
-    CCoinsViewCache& chain_view = ::ChainstateActive().CoinsTip();
-    CCoinsViewMemPool mempool_view(&chain_view, ::mempool);
+    assert(node.mempool);
+    assert(node.chainman);
+    LOCK2(cs_main, node.mempool->cs);
+    assert(std::addressof(::ChainstateActive()) == std::addressof(node.chainman->ActiveChainstate()));
+    CCoinsViewCache& chain_view = node.chainman->ActiveChainstate().CoinsTip();
+    CCoinsViewMemPool mempool_view(&chain_view, *node.mempool);
     for (auto& coin : coins) {
         if (!mempool_view.GetCoin(coin.first, coin.second)) {
             // Either the coin is not in the CCoinsViewCache or is spent. Clear it.

@@ -1,54 +1,45 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2018 The Bitcoin Core developers
+# Copyright (c) 2018-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 export LC_ALL=C.UTF-8
 
-# Temporarily disable errexit, because Travis macOS fails without error message
-set +o errexit
-cd "build/bitcoin-$HOST" || (echo "could not enter distdir build/bitcoin-$HOST"; exit 1)
-set -o errexit
-
-if [ -n "$QEMU_USER_CMD" ]; then
-  BEGIN_FOLD wrap-qemu
-  echo "Prepare to run functional tests for HOST=$HOST"
+if [[ $HOST = *-mingw32 ]]; then
   # Generate all binaries, so that they can be wrapped
   DOCKER_EXEC make $MAKEJOBS -C src/secp256k1 VERBOSE=1
   DOCKER_EXEC make $MAKEJOBS -C src/univalue VERBOSE=1
-  for b_name in {"${BASE_OUTDIR}/bin"/*,src/secp256k1/*tests,src/univalue/{no_nul,test_json,unitester,object}}; do
-    # shellcheck disable=SC2044
-    for b in $(find "${BASE_ROOT_DIR}" -executable -type f -name $(basename $b_name)); do
-      echo "Wrap $b ..."
-      DOCKER_EXEC mv "$b" "${b}_orig"
-      DOCKER_EXEC echo "\#\!/usr/bin/env bash" \> "$b"
-      DOCKER_EXEC echo "$QEMU_USER_CMD \\\"${b}_orig\\\" \\\"\\\$@\\\"" \>\> "$b"
-      DOCKER_EXEC chmod +x "$b"
-    done
-  done
-  END_FOLD
+  DOCKER_EXEC "${BASE_ROOT_DIR}/ci/test/wrap-wine.sh"
+fi
+
+if [ -n "$QEMU_USER_CMD" ]; then
+  # Generate all binaries, so that they can be wrapped
+  DOCKER_EXEC make $MAKEJOBS -C src/secp256k1 VERBOSE=1
+  DOCKER_EXEC make $MAKEJOBS -C src/univalue VERBOSE=1
+  DOCKER_EXEC "${BASE_ROOT_DIR}/ci/test/wrap-qemu.sh"
+fi
+
+if [ -n "$USE_VALGRIND" ]; then
+  DOCKER_EXEC "${BASE_ROOT_DIR}/ci/test/wrap-valgrind.sh"
 fi
 
 if [ "$RUN_UNIT_TESTS" = "true" ]; then
-  BEGIN_FOLD unit-tests
-  bash -c "while sleep 500; do echo .; done" &  # Print dots in case the unit tests take a long time to run
-  DOCKER_EXEC LD_LIBRARY_PATH=$BASE_BUILD_DIR/depends/$HOST/lib make $MAKEJOBS check VERBOSE=1
-  END_FOLD
+  DOCKER_EXEC ${TEST_RUNNER_ENV} DIR_UNIT_TEST_DATA=${DIR_UNIT_TEST_DATA} LD_LIBRARY_PATH=$DEPENDS_DIR/$HOST/lib make $MAKEJOBS check VERBOSE=1
+fi
+
+if [ "$RUN_UNIT_TESTS_SEQUENTIAL" = "true" ]; then
+  DOCKER_EXEC ${TEST_RUNNER_ENV} DIR_UNIT_TEST_DATA=${DIR_UNIT_TEST_DATA} LD_LIBRARY_PATH=$DEPENDS_DIR/$HOST/lib "${BASE_BUILD_DIR}/bitcoin-*/src/test/test_bitcoin*" --catch_system_errors=no -l test_suite
 fi
 
 if [ "$RUN_FUNCTIONAL_TESTS" = "true" ]; then
-  BEGIN_FOLD functional-tests
-  DOCKER_EXEC test/functional/test_runner.py --ci $MAKEJOBS --tmpdirprefix "${BASE_SCRATCH_DIR}/test_runner/" --ansi --combinedlogslen=4000 ${TEST_RUNNER_EXTRA} --quiet --failfast
-  END_FOLD
+  DOCKER_EXEC LD_LIBRARY_PATH=$DEPENDS_DIR/$HOST/lib ${TEST_RUNNER_ENV} test/functional/test_runner.py --ci $MAKEJOBS --tmpdirprefix "${BASE_SCRATCH_DIR}/test_runner/" --ansi --combinedlogslen=4000 --timeout-factor=${TEST_RUNNER_TIMEOUT_FACTOR} ${TEST_RUNNER_EXTRA} --quiet --failfast
+fi
+
+if [ "$RUN_SECURITY_TESTS" = "true" ]; then
+  DOCKER_EXEC make test-security-check
 fi
 
 if [ "$RUN_FUZZ_TESTS" = "true" ]; then
-  BEGIN_FOLD fuzz-tests
-  DOCKER_EXEC test/fuzz/test_runner.py -l DEBUG ${DIR_FUZZ_IN}
-  END_FOLD
+  DOCKER_EXEC LD_LIBRARY_PATH=$DEPENDS_DIR/$HOST/lib test/fuzz/test_runner.py ${FUZZ_TESTS_CONFIG} $MAKEJOBS -l DEBUG ${DIR_FUZZ_IN}
 fi
-
-set +o errexit
-cd ${BASE_BUILD_DIR} || (echo "could not enter travis build dir $BASE_BUILD_DIR"; exit 1)
-set -o errexit

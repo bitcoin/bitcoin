@@ -30,6 +30,10 @@
         <translation>Briše trenutno izabranu adresu sa liste</translation>
     </message>
     <message>
+        <source>Enter address or label to search</source>
+        <translation>Unesite adresu ili oznaku za pretragu</translation>
+    </message>
+    <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Izvoz podataka iz trenutne kartice u datoteku</translation>
     </message>
@@ -83,7 +87,7 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Zarezom odvojena datoteka (*.csv) </translation>
+        <translation>Zarezom odvojena datoteka (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -128,6 +132,10 @@
         <translation>Ponovo unesite pristupnu frazu</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>Prikaži lozinku</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Šifrujte novčanik</translation>
     </message>
@@ -166,6 +174,22 @@
     <message>
         <source>Wallet encrypted</source>
         <translation>Novčanik je šifrovan</translation>
+    </message>
+    <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Unesite lozinku u novčanik. &lt;br/&gt;Molimo, koristite lozinku koja ima &lt;b&gt; deset ili više nasumičnih znakova&lt;/b&gt;, ili &lt;b&gt;osam ili više reči&lt;/b&gt;.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Unesite u novčanik staru lozinku i novu lozinku.</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Novčanik će vam biti šifriran.</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Vaš novčanik je sada šifrovan.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -290,6 +314,10 @@
         <translation>Otvori &amp;URI...</translation>
     </message>
     <message>
+        <source>Wallet:</source>
+        <translation>Novčanik:</translation>
+    </message>
+    <message>
         <source>Click to disable network activity.</source>
         <translation>Odaberite za prekid aktivnosti na mreži.</translation>
     </message>
@@ -320,14 +348,6 @@
     <message>
         <source>Change the passphrase used for wallet encryption</source>
         <translation>Promenite pristupnu frazu za enkiptovanje novčanika</translation>
-    </message>
-    <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;Prozor za otklanjanje grešaka</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>Otvori konzolu za dijagnostiku i otklanjanje grešaka</translation>
     </message>
     <message>
         <source>&amp;Verify message...</source>
@@ -392,6 +412,10 @@
     <message>
         <source>Information</source>
         <translation>Informacije</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>Otvori novčanik</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -464,6 +488,10 @@
     </context>
 <context>
     <name>CreateWalletDialog</name>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>Onemogućite privatne ključeve za ovaj novčanik. Novčanici sa isključenim privatnim ključevima neće imati privatne ključeve i ne mogu imati HD seme ili uvezene privatne ključeve. Ovo je idealno za novčanike samo za gledanje.</translation>
+    </message>
     </context>
 <context>
     <name>EditAddressDialog</name>
@@ -517,6 +545,9 @@
     <name>OverviewPage</name>
     </context>
 <context>
+    <name>PSBTOperationsDialog</name>
+    </context>
+<context>
     <name>PaymentServer</name>
     </context>
 <context>
@@ -545,22 +576,14 @@
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>Address</source>
-        <translation>Adresa</translation>
+        <source>Amount:</source>
+        <translation>Iznos:</translation>
     </message>
     <message>
-        <source>Amount</source>
-        <translation>Kolicina</translation>
+        <source>Wallet:</source>
+        <translation>Novčanik:</translation>
     </message>
-    <message>
-        <source>Label</source>
-        <translation>Oznaka</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>Novčanik</translation>
-    </message>
-</context>
+    </context>
 <context>
     <name>RecentRequestsTableModel</name>
     <message>
@@ -570,6 +593,10 @@
     <message>
         <source>Label</source>
         <translation>Oznaka</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Poruka</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -607,9 +634,6 @@
     <name>SendCoinsEntry</name>
     </context>
 <context>
-    <name>SendConfirmationDialog</name>
-    </context>
-<context>
     <name>ShutdownWindow</name>
     </context>
 <context>
@@ -621,22 +645,122 @@
 <context>
     <name>TransactionDesc</name>
     <message>
+        <source>%1/unconfirmed</source>
+        <translation>%1/nepotvrdjeno</translation>
+    </message>
+    <message>
+        <source>%1 confirmations</source>
+        <translation>%1 potvrdjeno/ih</translation>
+    </message>
+    <message>
+        <source>Status</source>
+        <translation>Stanje/Status</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>Datum</translation>
+    </message>
+    <message>
+        <source>Source</source>
+        <translation>Izvor</translation>
+    </message>
+    <message>
+        <source>Generated</source>
+        <translation>Generisano</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>Od</translation>
     </message>
     <message>
         <source>unknown</source>
         <translation>nepoznato</translation>
     </message>
     <message>
+        <source>To</source>
+        <translation>Kome</translation>
+    </message>
+    <message>
+        <source>own address</source>
+        <translation>sopstvena adresa</translation>
+    </message>
+    <message>
+        <source>watch-only</source>
+        <translation>samo za gledanje</translation>
+    </message>
+    <message>
+        <source>label</source>
+        <translation>etiketa</translation>
+    </message>
+    <message>
+        <source>Credit</source>
+        <translation>Kredit</translation>
+    </message>
+    <message>
+        <source>not accepted</source>
+        <translation>nije prihvaceno</translation>
+    </message>
+    <message>
+        <source>Debit</source>
+        <translation>Zaduzenje</translation>
+    </message>
+    <message>
+        <source>Total debit</source>
+        <translation>Ukupno zaduzenje</translation>
+    </message>
+    <message>
+        <source>Total credit</source>
+        <translation>Totalni kredit</translation>
+    </message>
+    <message>
         <source>Transaction fee</source>
         <translation>Taksa transakcije</translation>
+    </message>
+    <message>
+        <source>Net amount</source>
+        <translation>Neto iznos</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>Poruka</translation>
+    </message>
+    <message>
+        <source>Comment</source>
+        <translation>Komentar</translation>
+    </message>
+    <message>
+        <source>Transaction ID</source>
+        <translation>ID Transakcije</translation>
+    </message>
+    <message>
+        <source>Merchant</source>
+        <translation>Trgovac</translation>
+    </message>
+    <message>
+        <source>Debug information</source>
+        <translation>Informacije debugovanja</translation>
+    </message>
+    <message>
+        <source>Transaction</source>
+        <translation>Transakcije</translation>
+    </message>
+    <message>
+        <source>Inputs</source>
+        <translation>Unosi</translation>
     </message>
     <message>
         <source>Amount</source>
         <translation>Kolicina</translation>
     </message>
-    </context>
+    <message>
+        <source>true</source>
+        <translation>tacno</translation>
+    </message>
+    <message>
+        <source>false</source>
+        <translation>netacno</translation>
+    </message>
+</context>
 <context>
     <name>TransactionDescDialog</name>
     </context>
@@ -647,8 +771,36 @@
         <translation>Datum</translation>
     </message>
     <message>
+        <source>Type</source>
+        <translation>Tip</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>Oznaka</translation>
+    </message>
+    <message>
+        <source>Received with</source>
+        <translation>Primljeno uz</translation>
+    </message>
+    <message>
+        <source>Received from</source>
+        <translation>Primljeno od</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation>Poslat</translation>
+    </message>
+    <message>
+        <source>Payment to yourself</source>
+        <translation>Placanje samom sebi</translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation>Iskopano</translation>
+    </message>
+    <message>
+        <source>watch-only</source>
+        <translation>samo za gledanje</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -658,12 +810,28 @@
 <context>
     <name>TransactionView</name>
     <message>
+        <source>Received with</source>
+        <translation>Primljeno uz</translation>
+    </message>
+    <message>
+        <source>Sent to</source>
+        <translation>Poslat</translation>
+    </message>
+    <message>
+        <source>Mined</source>
+        <translation>Iskopano</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>Zarezom odvojena datoteka (*.csv) </translation>
+        <translation>Zarezom odvojena datoteka (*.csv)</translation>
     </message>
     <message>
         <source>Date</source>
         <translation>Datum</translation>
+    </message>
+    <message>
+        <source>Type</source>
+        <translation>Tip</translation>
     </message>
     <message>
         <source>Label</source>
@@ -699,6 +867,10 @@
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>Izvoz podataka iz trenutne kartice u datoteku</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>Greska</translation>
     </message>
     </context>
 <context>

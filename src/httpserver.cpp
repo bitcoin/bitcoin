@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,15 +6,17 @@
 
 #include <chainparamsbase.h>
 #include <compat.h>
-#include <util/threadnames.h>
-#include <util/system.h>
-#include <util/strencodings.h>
 #include <netbase.h>
+#include <node/ui_interface.h>
 #include <rpc/protocol.h> // For HTTP status codes
 #include <shutdown.h>
 #include <sync.h>
-#include <ui_interface.h>
+#include <util/strencodings.h>
+#include <util/system.h>
+#include <util/threadnames.h>
+#include <util/translation.h>
 
+#include <deque>
 #include <memory>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,13 +32,6 @@
 #include <event2/keyvalq_struct.h>
 
 #include <support/events.h>
-
-#ifdef EVENT__HAVE_NETINET_IN_H
-#include <netinet/in.h>
-#ifdef _XOPEN_SOURCE_EXTENDED
-#include <arpa/inet.h>
-#endif
-#endif
 
 /** Maximum size of http request (request line + headers) */
 static const size_t MAX_HEADERS_SIZE = 8192;
@@ -68,12 +63,11 @@ template <typename WorkItem>
 class WorkQueue
 {
 private:
-    /** Mutex protects entire object */
     Mutex cs;
-    std::condition_variable cond;
-    std::deque<std::unique_ptr<WorkItem>> queue;
-    bool running;
-    size_t maxDepth;
+    std::condition_variable cond GUARDED_BY(cs);
+    std::deque<std::unique_ptr<WorkItem>> queue GUARDED_BY(cs);
+    bool running GUARDED_BY(cs);
+    const size_t maxDepth;
 
 public:
     explicit WorkQueue(size_t _maxDepth) : running(true),
@@ -171,10 +165,10 @@ static bool InitHTTPAllowList()
     rpc_allow_subnets.push_back(CSubNet(localv6));         // always allow IPv6 localhost
     for (const std::string& strAllow : gArgs.GetArgs("-rpcallowip")) {
         CSubNet subnet;
-        LookupSubNet(strAllow.c_str(), subnet);
+        LookupSubNet(strAllow, subnet);
         if (!subnet.IsValid()) {
             uiInterface.ThreadSafeMessageBox(
-                strprintf("Invalid -rpcallowip subnet specification: %s. Valid are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24).", strAllow),
+                strprintf(Untranslated("Invalid -rpcallowip subnet specification: %s. Valid are a single IP (e.g. 1.2.3.4), a network/netmask (e.g. 1.2.3.4/255.255.255.0) or a network/CIDR (e.g. 1.2.3.4/24)."), strAllow),
                 "", CClientUIInterface::MSG_ERROR);
             return false;
         }
@@ -188,7 +182,7 @@ static bool InitHTTPAllowList()
 }
 
 /** HTTP request method as string - use for logging only */
-static std::string RequestMethodString(HTTPRequest::RequestMethod m)
+std::string RequestMethodString(HTTPRequest::RequestMethod m)
 {
     switch (m) {
     case HTTPRequest::GET:
@@ -235,7 +229,7 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
     if (hreq->GetRequestMethod() == HTTPRequest::UNKNOWN) {
         LogPrint(BCLog::HTTP, "HTTP request from %s rejected: Unknown HTTP request method\n",
                  hreq->GetPeer().ToString());
-        hreq->WriteReply(HTTP_BADMETHOD);
+        hreq->WriteReply(HTTP_BAD_METHOD);
         return;
     }
 
@@ -267,10 +261,10 @@ static void http_request_cb(struct evhttp_request* req, void* arg)
             item.release(); /* if true, queue took ownership */
         else {
             LogPrintf("WARNING: request rejected because http work queue depth exceeded, it can be increased with the -rpcworkqueue= setting\n");
-            item->req->WriteReply(HTTP_INTERNAL, "Work queue depth exceeded");
+            item->req->WriteReply(HTTP_SERVICE_UNAVAILABLE, "Work queue depth exceeded");
         }
     } else {
-        hreq->WriteReply(HTTP_NOTFOUND);
+        hreq->WriteReply(HTTP_NOT_FOUND);
     }
 }
 
@@ -295,8 +289,8 @@ static bool ThreadHTTP(struct event_base* base)
 /** Bind HTTP server to specified addresses */
 static bool HTTPBindAddresses(struct evhttp* http)
 {
-    int http_port = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
-    std::vector<std::pair<std::string, uint16_t> > endpoints;
+    uint16_t http_port{static_cast<uint16_t>(gArgs.GetArg("-rpcport", BaseParams().RPCPort()))};
+    std::vector<std::pair<std::string, uint16_t>> endpoints;
 
     // Determine what addresses to bind to
     if (!(gArgs.IsArgSet("-rpcallowip") && gArgs.IsArgSet("-rpcbind"))) { // Default to loopback if not allowing external IPs
@@ -310,7 +304,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
         }
     } else if (gArgs.IsArgSet("-rpcbind")) { // Specific bind address
         for (const std::string& strRPCBind : gArgs.GetArgs("-rpcbind")) {
-            int port = http_port;
+            uint16_t port{http_port};
             std::string host;
             SplitHostPort(strRPCBind, port, host);
             endpoints.push_back(std::make_pair(host, port));
@@ -323,7 +317,7 @@ static bool HTTPBindAddresses(struct evhttp* http)
         evhttp_bound_socket *bind_handle = evhttp_bind_socket_with_handle(http, i->first.empty() ? nullptr : i->first.c_str(), i->second);
         if (bind_handle) {
             CNetAddr addr;
-            if (i->first.empty() || (LookupHost(i->first.c_str(), addr, false) && addr.IsBindAny())) {
+            if (i->first.empty() || (LookupHost(i->first, addr, false) && addr.IsBindAny())) {
                 LogPrintf("WARNING: the RPC server is not safe to expose to untrusted networks such as the public internet\n");
             }
             boundSockets.push_back(bind_handle);
@@ -419,7 +413,7 @@ bool UpdateHTTPServerLogging(bool enable) {
 #endif
 }
 
-static std::thread threadHTTP;
+static std::thread g_thread_http;
 static std::vector<std::thread> g_thread_http_workers;
 
 void StartHTTPServer()
@@ -427,7 +421,7 @@ void StartHTTPServer()
     LogPrint(BCLog::HTTP, "Starting HTTP server\n");
     int rpcThreads = std::max((long)gArgs.GetArg("-rpcthreads", DEFAULT_HTTP_THREADS), 1L);
     LogPrintf("HTTP: starting %d worker threads\n", rpcThreads);
-    threadHTTP = std::thread(ThreadHTTP, eventBase);
+    g_thread_http = std::thread(ThreadHTTP, eventBase);
 
     for (int i = 0; i < rpcThreads; i++) {
         g_thread_http_workers.emplace_back(HTTPWorkQueueRun, workQueue, i);
@@ -465,7 +459,7 @@ void StopHTTPServer()
     boundSockets.clear();
     if (eventBase) {
         LogPrint(BCLog::HTTP, "Waiting for HTTP event thread to exit\n");
-        threadHTTP.join();
+        if (g_thread_http.joinable()) g_thread_http.join();
     }
     if (eventHTTP) {
         evhttp_free(eventHTTP);
@@ -509,16 +503,16 @@ void HTTPEvent::trigger(struct timeval* tv)
     else
         evtimer_add(ev, tv); // trigger after timeval passed
 }
-HTTPRequest::HTTPRequest(struct evhttp_request* _req) : req(_req),
-                                                       replySent(false)
+HTTPRequest::HTTPRequest(struct evhttp_request* _req, bool _replySent) : req(_req), replySent(_replySent)
 {
 }
+
 HTTPRequest::~HTTPRequest()
 {
     if (!replySent) {
         // Keep track of whether reply was sent to avoid request leaks
         LogPrintf("%s: Unhandled request\n", __func__);
-        WriteReply(HTTP_INTERNAL, "Unhandled request");
+        WriteReply(HTTP_INTERNAL_SERVER_ERROR, "Unhandled request");
     }
     // evhttpd cleans up the request, as long as a reply was sent.
 }

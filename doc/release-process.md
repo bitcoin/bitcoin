@@ -5,7 +5,7 @@ Release Process
 
 ### Before every release candidate
 
-* Update translations (ping wumpus on IRC) see [translation_process.md](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md#synchronising-translations).
+* Update translations see [translation_process.md](https://github.com/bitcoin/bitcoin/blob/master/doc/translation_process.md#synchronising-translations).
 * Update manpages, see [gen-manpages.sh](https://github.com/bitcoin/bitcoin/blob/master/contrib/devtools/README.md#gen-manpagessh).
 * Update release candidate version in `configure.ac` (`CLIENT_VERSION_RC`).
 
@@ -18,20 +18,20 @@ Release Process
 ### Before every major release
 
 * On both the master branch and the new release branch:
-  - update `CLIENT_VERSION_MINOR` in [`configure.ac`](../configure.ac)
-  - update `CLIENT_VERSION_MINOR`, `PACKAGE_VERSION`, and `PACKAGE_STRING` in [`build_msvc/bitcoin_config.h`](/build_msvc/bitcoin_config.h)
+  - update `CLIENT_VERSION_MAJOR` in [`configure.ac`](../configure.ac)
+  - update `CLIENT_VERSION_MAJOR`, `PACKAGE_VERSION`, and `PACKAGE_STRING` in [`build_msvc/bitcoin_config.h`](/build_msvc/bitcoin_config.h)
 * On the new release branch in [`configure.ac`](../configure.ac) and [`build_msvc/bitcoin_config.h`](/build_msvc/bitcoin_config.h) (see [this commit](https://github.com/bitcoin/bitcoin/commit/742f7dd)):
-  - set `CLIENT_VERSION_REVISION` to `0`
+  - set `CLIENT_VERSION_MINOR` to `0`
+  - set `CLIENT_VERSION_BUILD` to `0`
   - set `CLIENT_VERSION_IS_RELEASE` to `true`
 
 #### Before branch-off
 
 * Update hardcoded [seeds](/contrib/seeds/README.md), see [this pull request](https://github.com/bitcoin/bitcoin/pull/7415) for an example.
-* Update [`src/chainparams.cpp`](/src/chainparams.cpp) m_assumed_blockchain_size and m_assumed_chain_state_size with the current size plus some overhead (see [this](#how-to-calculate-m_assumed_blockchain_size-and-m_assumed_chain_state_size) for information on how to calculate them).
-* Update `src/chainparams.cpp` chainTxData with statistics about the transaction count and rate. Use the output of the RPC `getchaintxstats`, see
-  [this pull request](https://github.com/bitcoin/bitcoin/pull/17002) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_last_block_hash>` with the `window_block_count` and `window_last_block_hash` from your output.
-* Update `src/chainparams.cpp` nMinimumChainWork with information from the getblockchaininfo rpc.
-* Update `src/chainparams.cpp` defaultAssumeValid with information from the getblockhash rpc.
+* Update [`src/chainparams.cpp`](/src/chainparams.cpp) m_assumed_blockchain_size and m_assumed_chain_state_size with the current size plus some overhead (see [this](#how-to-calculate-assumed-blockchain-and-chain-state-size) for information on how to calculate them).
+* Update [`src/chainparams.cpp`](/src/chainparams.cpp) chainTxData with statistics about the transaction count and rate. Use the output of the `getchaintxstats` RPC, see
+  [this pull request](https://github.com/bitcoin/bitcoin/pull/20263) for an example. Reviewers can verify the results by running `getchaintxstats <window_block_count> <window_final_block_hash>` with the `window_block_count` and `window_final_block_hash` from your output.
+* Update `src/chainparams.cpp` nMinimumChainWork and defaultAssumeValid (and the block height comment) with information from the `getblockheader` (and `getblockhash`) RPCs.
   - The selected value must not be orphaned so it may be useful to set the value two blocks back from the tip.
   - Testnet should be set some tens of thousands back from the tip due to reorgs there.
   - This update should be reviewed with a reindex-chainstate with assumevalid=0 to catch any defect
@@ -44,13 +44,21 @@ Release Process
 
 #### After branch-off (on the major release branch)
 
-- Update the versions and the link to the release notes draft in `doc/release-notes.md`.
+- Update the versions.
+- Create a pinned meta-issue for testing the release candidate (see [this issue](https://github.com/bitcoin/bitcoin/issues/17079) for an example) and provide a link to it in the release announcements where useful.
 
 #### Before final release
 
 - Merge the release notes from the wiki into the branch.
 - Ensure the "Needs release note" label is removed from all relevant pull requests and issues.
 
+#### Tagging a release (candidate)
+
+To tag the version (or release candidate) in git, use the `make-tag.py` script from [bitcoin-maintainer-tools](https://github.com/bitcoin-core/bitcoin-maintainer-tools). From the root of the repository run:
+
+    ../bitcoin-maintainer-tools/make-tag.py v(new version, e.g. 0.20.0)
+
+This will perform a few last-minute consistency checks in the build system files, and if they pass, create a signed tag.
 
 ## Building
 
@@ -72,20 +80,11 @@ Open a draft of the release notes for collaborative editing at https://github.co
 
 For the period during which the notes are being edited on the wiki, the version on the branch should be wiped and replaced with a link to the wiki which should be used for all announcements until `-final`.
 
-Write the release notes. `git shortlog` helps a lot, for example:
-
-    git shortlog --no-merges v(current version, e.g. 0.19.2)..v(new version, e.g. 0.20.0)
-
-(or ping @wumpus on IRC, he has specific tooling to generate the list of merged pulls
-and sort them into categories based on labels).
+Generate the change log. As this is a huge amount of work to do manually, there is the `list-pulls` script to do a pre-sorting step based on github PR metadata. See the [documentation in the README.md](https://github.com/bitcoin-core/bitcoin-maintainer-tools/blob/master/README.md#list-pulls).
 
 Generate list of authors:
 
     git log --format='- %aN' v(current version, e.g. 0.20.0)..v(new version, e.g. 0.20.1) | sort -fiu
-
-Tag the version (or release candidate) in git:
-
-    git tag -s v(new version, e.g. 0.20.0)
 
 ### Setup and perform Gitian builds
 
@@ -116,13 +115,11 @@ Ensure gitian-builder is up-to-date:
 
     pushd ./gitian-builder
     mkdir -p inputs
-    wget -P inputs https://bitcoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
-    echo 'a8c4e9cafba922f89de0df1f2152e7be286aba73f78505169bc351a7938dd911 inputs/osslsigncode-Backports-to-1.7.1.patch' | sha256sum -c
-    wget -P inputs https://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
-    echo 'f9a8cdb38b9c309326764ebc937cba1523a3a751a7ab05df3ecc99d18ae466c9 inputs/osslsigncode-1.7.1.tar.gz' | sha256sum -c
+    wget -O inputs/osslsigncode-2.0.tar.gz https://github.com/mtrojnar/osslsigncode/archive/2.0.tar.gz
+    echo '5a60e0a4b3e0b4d655317b2f12a810211c50242138322b16e7e01c6fbb89d92f inputs/osslsigncode-2.0.tar.gz' | sha256sum -c
     popd
 
-Create the macOS SDK tarball, see the [macOS build instructions](build-osx.md#deterministic-macos-dmg-notes) for details, and copy it into the inputs directory.
+Create the macOS SDK tarball, see the [macdeploy instructions](/contrib/macdeploy/README.md#deterministic-macos-dmg-notes) for details, and copy it into the inputs directory.
 
 ### Optional: Seed the Gitian sources cache and offline git repositories
 
@@ -220,7 +217,7 @@ Codesigner only: Commit the detached codesign payloads:
     rm -rf *
     tar xf signature-osx.tar.gz
     tar xf signature-win.tar.gz
-    git add -a
+    git add -A
     git commit -m "point to ${VERSION}"
     git tag -s v${VERSION} HEAD
     git push the current branch and new tag
@@ -269,7 +266,6 @@ The list of files should be:
 ```
 bitcoin-${VERSION}-aarch64-linux-gnu.tar.gz
 bitcoin-${VERSION}-arm-linux-gnueabihf.tar.gz
-bitcoin-${VERSION}-i686-pc-linux-gnu.tar.gz
 bitcoin-${VERSION}-riscv64-linux-gnu.tar.gz
 bitcoin-${VERSION}-x86_64-linux-gnu.tar.gz
 bitcoin-${VERSION}-osx64.tar.gz
@@ -309,15 +305,15 @@ bitcoin.org (see below for bitcoin.org update instructions).
   - First, check to see if the Bitcoin.org maintainers have prepared a
     release: https://github.com/bitcoin-dot-org/bitcoin.org/labels/Core
 
-      - If they have, it will have previously failed their Travis CI
+      - If they have, it will have previously failed their CI
         checks because the final release files weren't uploaded.
-        Trigger a Travis CI rebuild---if it passes, merge.
+        Trigger a CI rebuild---if it passes, merge.
 
   - If they have not prepared a release, follow the Bitcoin.org release
     instructions: https://github.com/bitcoin-dot-org/bitcoin.org/blob/master/docs/adding-events-release-notes-and-alerts.md#release-notes
 
   - After the pull request is merged, the website will automatically show the newest version within 15 minutes, as well
-    as update the OS download links. Ping @saivann/@harding (saivann/harding on Freenode) in case anything goes wrong
+    as update the OS download links.
 
 - Update other repositories and websites for new version
 
@@ -328,11 +324,26 @@ bitcoin.org (see below for bitcoin.org update instructions).
 
   - bitcoincore.org RPC documentation update
 
+      - Install [golang](https://golang.org/doc/install)
+
+      - Install the new Bitcoin Core release
+
+      - Run bitcoind on regtest
+
+      - Clone the [bitcoincore.org repository](https://github.com/bitcoin-core/bitcoincore.org)
+
+      - Run: `go run generate.go` while being in `contrib/doc-gen` folder, and with bitcoin-cli in PATH
+
+      - Add the generated files to git
+
   - Update packaging repo
 
-      - Notify BlueMatt so that he can start building [the PPAs](https://launchpad.net/~bitcoin/+archive/ubuntu/bitcoin)
+      - Push the flatpak to flathub, e.g. https://github.com/flathub/org.bitcoincore.bitcoin-qt/pull/2
 
-      - Create a new branch for the major release "0.xx" (used to build the snap package)
+      - Push the latest version to master (if applicable), e.g. https://github.com/bitcoin-core/packaging/pull/32
+
+      - Create a new branch for the major release "0.xx" from master (used to build the snap package) and request the
+        track (if applicable), e.g. https://forum.snapcraft.io/t/track-request-for-bitcoin-core-snap/10112/7
 
       - Notify MarcoFalke so that he can start building the snap package
 
@@ -356,8 +367,6 @@ bitcoin.org (see below for bitcoin.org update instructions).
 
       - Create a [new GitHub release](https://github.com/bitcoin/bitcoin/releases/new) with a link to the archived release notes
 
-      - Create a pinned meta-issue for testing the release candidate (see [this issue](https://github.com/bitcoin/bitcoin/issues/15555) for an example) and provide a link to it in the release announcements where useful
-
 - Announce the release:
 
   - bitcoin-dev and bitcoin-core-dev mailing list
@@ -372,7 +381,7 @@ bitcoin.org (see below for bitcoin.org update instructions).
 
 ### Additional information
 
-#### How to calculate `m_assumed_blockchain_size` and `m_assumed_chain_state_size`
+#### <a name="how-to-calculate-assumed-blockchain-and-chain-state-size"></a>How to calculate `m_assumed_blockchain_size` and `m_assumed_chain_state_size`
 
 Both variables are used as a guideline for how much space the user needs on their drive in total, not just strictly for the blockchain.
 Note that all values should be taken from a **fully synced** node and have an overhead of 5-10% added on top of its base value.

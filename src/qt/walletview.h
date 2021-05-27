@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,7 +9,6 @@
 
 #include <QStackedWidget>
 
-class BitcoinGUI;
 class ClientModel;
 class OverviewPage;
 class PlatformStyle;
@@ -39,7 +38,6 @@ public:
     explicit WalletView(const PlatformStyle *platformStyle, QWidget *parent);
     ~WalletView();
 
-    void setBitcoinGUI(BitcoinGUI *gui);
     /** Set the client model.
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
     */
@@ -68,7 +66,7 @@ private:
 
     TransactionView *transactionView;
 
-    QProgressDialog *progressDialog;
+    QProgressDialog* progressDialog{nullptr};
     const PlatformStyle *platformStyle;
 
 public Q_SLOTS:
@@ -85,6 +83,8 @@ public Q_SLOTS:
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
+    /** Load Partially Signed Bitcoin Transaction */
+    void gotoLoadPSBT(bool from_clipboard = false);
 
     /** Show incoming transaction notification for new transactions.
 
@@ -92,7 +92,7 @@ public Q_SLOTS:
     */
     void processNewTransaction(const QModelIndex& parent, int start, int /*end*/);
     /** Encrypt the wallet */
-    void encryptWallet(bool status);
+    void encryptWallet();
     /** Backup the wallet */
     void backupWallet();
     /** Change encrypted wallet passphrase */
@@ -115,8 +115,9 @@ public Q_SLOTS:
     void requestedSyncWarningInfo();
 
 Q_SIGNALS:
-    /** Signal that we want to show the main window */
-    void showNormalIfMinimized();
+    void setPrivacy(bool privacy);
+    void transactionClicked();
+    void coinsSent();
     /**  Fired when a message should be reported to the user */
     void message(const QString &title, const QString &message, unsigned int style);
     /** Encryption status of wallet changed */

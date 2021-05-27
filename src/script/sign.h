@@ -1,15 +1,17 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_SCRIPT_SIGN_H
 #define BITCOIN_SCRIPT_SIGN_H
 
+#include <coins.h>
 #include <hash.h>
 #include <pubkey.h>
 #include <script/interpreter.h>
 #include <script/keyorigin.h>
+#include <span.h>
 #include <streams.h>
 
 class CKey;
@@ -101,7 +103,7 @@ template<typename Stream>
 void DeserializeHDKeypaths(Stream& s, const std::vector<unsigned char>& key, std::map<CPubKey, KeyOriginInfo>& hd_keypaths)
 {
     // Make sure that the key is the size of pubkey + 1
-    if (key.size() != CPubKey::PUBLIC_KEY_SIZE + 1 && key.size() != CPubKey::COMPRESSED_PUBLIC_KEY_SIZE + 1) {
+    if (key.size() != CPubKey::SIZE + 1 && key.size() != CPubKey::COMPRESSED_SIZE + 1) {
         throw std::ios_base::failure("Size of key was not the expected size for the type BIP32 keypath");
     }
     // Read in the pubkey from key
@@ -167,5 +169,8 @@ bool IsSolvable(const SigningProvider& provider, const CScript& script);
 
 /** Check whether a scriptPubKey is known to be segwit. */
 bool IsSegWitOutput(const SigningProvider& provider, const CScript& script);
+
+/** Sign the CMutableTransaction */
+bool SignTransaction(CMutableTransaction& mtx, const SigningProvider* provider, const std::map<COutPoint, Coin>& coins, int sighash, std::map<int, std::string>& input_errors);
 
 #endif // BITCOIN_SCRIPT_SIGN_H

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,9 +10,9 @@
 #include <util/macros.h>
 
 #include <condition_variable>
-#include <thread>
 #include <mutex>
-
+#include <string>
+#include <thread>
 
 ////////////////////////////////////////////////
 //                                            //
@@ -48,12 +48,17 @@ LEAVE_CRITICAL_SECTION(mutex); // no RAII
 ///////////////////////////////
 
 #ifdef DEBUG_LOCKORDER
-void EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false);
+template <typename MutexType>
+void EnterCritical(const char* pszName, const char* pszFile, int nLine, MutexType* cs, bool fTry = false);
 void LeaveCritical();
+void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line);
 std::string LocksHeld();
-void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs) ASSERT_EXCLUSIVE_LOCK(cs);
-void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs);
+template <typename MutexType>
+void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) EXCLUSIVE_LOCKS_REQUIRED(cs);
+template <typename MutexType>
+void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) LOCKS_EXCLUDED(cs);
 void DeleteLock(void* cs);
+bool LockStackEmpty();
 
 /**
  * Call abort() if a potential lock order deadlock bug is detected, instead of
@@ -62,11 +67,16 @@ void DeleteLock(void* cs);
  */
 extern bool g_debug_lockorder_abort;
 #else
-void static inline EnterCritical(const char* pszName, const char* pszFile, int nLine, void* cs, bool fTry = false) {}
-void static inline LeaveCritical() {}
-void static inline AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs) ASSERT_EXCLUSIVE_LOCK(cs) {}
-void static inline AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, void* cs) {}
-void static inline DeleteLock(void* cs) {}
+template <typename MutexType>
+inline void EnterCritical(const char* pszName, const char* pszFile, int nLine, MutexType* cs, bool fTry = false) {}
+inline void LeaveCritical() {}
+inline void CheckLastCritical(void* cs, std::string& lockname, const char* guardname, const char* file, int line) {}
+template <typename MutexType>
+inline void AssertLockHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) EXCLUSIVE_LOCKS_REQUIRED(cs) {}
+template <typename MutexType>
+void AssertLockNotHeldInternal(const char* pszName, const char* pszFile, int nLine, MutexType* cs) LOCKS_EXCLUDED(cs) {}
+inline void DeleteLock(void* cs) {}
+inline bool LockStackEmpty() { return true; }
 #endif
 #define AssertLockHeld(cs) AssertLockHeldInternal(#cs, __FILE__, __LINE__, &cs)
 #define AssertLockNotHeld(cs) AssertLockNotHeldInternal(#cs, __FILE__, __LINE__, &cs)
@@ -99,6 +109,12 @@ public:
     }
 
     using UniqueLock = std::unique_lock<PARENT>;
+#ifdef __clang__
+    //! For negative capabilities in the Clang Thread Safety Analysis.
+    //! A negative requirement uses the EXCLUSIVE_LOCKS_REQUIRED attribute, in conjunction
+    //! with the ! operator, to indicate that a mutex should not be held.
+    const AnnotatedMixin& operator!() const { return *this; }
+#endif // __clang__
 };
 
 /**
@@ -106,7 +122,6 @@ public:
  * TODO: We should move away from using the recursive lock by default.
  */
 using RecursiveMutex = AnnotatedMixin<std::recursive_mutex>;
-typedef AnnotatedMixin<std::recursive_mutex> CCriticalSection;
 
 /** Wrapped mutex: supports waiting but not recursive locking */
 typedef AnnotatedMixin<std::mutex> Mutex;
@@ -122,7 +137,7 @@ class SCOPED_LOCKABLE UniqueLock : public Base
 private:
     void Enter(const char* pszName, const char* pszFile, int nLine)
     {
-        EnterCritical(pszName, pszFile, nLine, (void*)(Base::mutex()));
+        EnterCritical(pszName, pszFile, nLine, Base::mutex());
 #ifdef DEBUG_LOCKCONTENTION
         if (!Base::try_lock()) {
             PrintLockContention(pszName, pszFile, nLine);
@@ -135,7 +150,7 @@ private:
 
     bool TryEnter(const char* pszName, const char* pszFile, int nLine)
     {
-        EnterCritical(pszName, pszFile, nLine, (void*)(Base::mutex()), true);
+        EnterCritical(pszName, pszFile, nLine, Base::mutex(), true);
         Base::try_lock();
         if (!Base::owns_lock())
             LeaveCritical();
@@ -172,7 +187,44 @@ public:
     {
         return Base::owns_lock();
     }
+
+protected:
+    // needed for reverse_lock
+    UniqueLock() { }
+
+public:
+    /**
+     * An RAII-style reverse lock. Unlocks on construction and locks on destruction.
+     */
+    class reverse_lock {
+    public:
+        explicit reverse_lock(UniqueLock& _lock, const char* _guardname, const char* _file, int _line) : lock(_lock), file(_file), line(_line) {
+            CheckLastCritical((void*)lock.mutex(), lockname, _guardname, _file, _line);
+            lock.unlock();
+            LeaveCritical();
+            lock.swap(templock);
+        }
+
+        ~reverse_lock() {
+            templock.swap(lock);
+            EnterCritical(lockname.c_str(), file.c_str(), line, lock.mutex());
+            lock.lock();
+        }
+
+     private:
+        reverse_lock(reverse_lock const&);
+        reverse_lock& operator=(reverse_lock const&);
+
+        UniqueLock& lock;
+        UniqueLock templock;
+        std::string lockname;
+        const std::string file;
+        const int line;
+     };
+     friend class reverse_lock;
 };
+
+#define REVERSE_LOCK(g) typename std::decay<decltype(g)>::type::reverse_lock PASTE2(revlock, __COUNTER__)(g, #g, __FILE__, __LINE__)
 
 template<typename MutexArg>
 using DebugLock = UniqueLock<typename std::remove_reference<typename std::remove_pointer<MutexArg>::type>::type>;
@@ -186,14 +238,16 @@ using DebugLock = UniqueLock<typename std::remove_reference<typename std::remove
 
 #define ENTER_CRITICAL_SECTION(cs)                            \
     {                                                         \
-        EnterCritical(#cs, __FILE__, __LINE__, (void*)(&cs)); \
+        EnterCritical(#cs, __FILE__, __LINE__, &cs); \
         (cs).lock();                                          \
     }
 
-#define LEAVE_CRITICAL_SECTION(cs) \
-    {                              \
-        (cs).unlock();             \
-        LeaveCritical();           \
+#define LEAVE_CRITICAL_SECTION(cs)                                          \
+    {                                                                       \
+        std::string lockname;                                               \
+        CheckLastCritical((void*)(&cs), lockname, #cs, __FILE__, __LINE__); \
+        (cs).unlock();                                                      \
+        LeaveCritical();                                                    \
     }
 
 //! Run code while locking a mutex.
@@ -204,7 +258,22 @@ using DebugLock = UniqueLock<typename std::remove_reference<typename std::remove
 //!
 //!   int val = WITH_LOCK(cs, return shared_val);
 //!
-#define WITH_LOCK(cs, code) [&] { LOCK(cs); code; }()
+//! Note:
+//!
+//! Since the return type deduction follows that of decltype(auto), while the
+//! deduced type of:
+//!
+//!   WITH_LOCK(cs, return {int i = 1; return i;});
+//!
+//! is int, the deduced type of:
+//!
+//!   WITH_LOCK(cs, return {int j = 1; return (j);});
+//!
+//! is &int, a reference to a local variable
+//!
+//! The above is detectable at compile-time with the -Wreturn-local-addr flag in
+//! gcc and the -Wreturn-stack-address flag in clang, both enabled by default.
+#define WITH_LOCK(cs, code) [&]() -> decltype(auto) { LOCK(cs); code; }()
 
 class CSemaphore
 {
@@ -300,20 +369,6 @@ public:
     {
         return fHaveGrant;
     }
-};
-
-// Utility class for indicating to compiler thread analysis that a mutex is
-// locked (when it couldn't be determined otherwise).
-struct SCOPED_LOCKABLE LockAssertion
-{
-    template <typename Mutex>
-    explicit LockAssertion(Mutex& mutex) EXCLUSIVE_LOCK_FUNCTION(mutex)
-    {
-#ifdef DEBUG_LOCKORDER
-        AssertLockHeld(mutex);
-#endif
-    }
-    ~LockAssertion() UNLOCK_FUNCTION() {}
 };
 
 #endif // BITCOIN_SYNC_H

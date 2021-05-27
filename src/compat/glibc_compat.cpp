@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,26 +8,6 @@
 
 #include <cstddef>
 #include <cstdint>
-
-#if defined(HAVE_SYS_SELECT_H)
-#include <sys/select.h>
-#endif
-
-// Prior to GLIBC_2.14, memcpy was aliased to memmove.
-extern "C" void* memmove(void* a, const void* b, size_t c);
-extern "C" void* memcpy(void* a, const void* b, size_t c)
-{
-    return memmove(a, b, c);
-}
-
-extern "C" void __chk_fail(void) __attribute__((__noreturn__));
-extern "C" FDELT_TYPE __fdelt_warn(FDELT_TYPE a)
-{
-    if (a >= FD_SETSIZE)
-        __chk_fail();
-    return a / __NFDBITS;
-}
-extern "C" FDELT_TYPE __fdelt_chk(FDELT_TYPE) __attribute__((weak, alias("__fdelt_warn")));
 
 #if defined(__i386__) || defined(__arm__)
 
@@ -67,6 +47,12 @@ __asm(".symver log2f_old,log2f@GLIBC_2.2.5");
 __asm(".symver log2f_old,log2f@GLIBC_2.4");
 #elif defined(__aarch64__)
 __asm(".symver log2f_old,log2f@GLIBC_2.17");
+#elif defined(__powerpc64__)
+#  ifdef WORDS_BIGENDIAN
+__asm(".symver log2f_old,log2f@GLIBC_2.3");
+#  else
+__asm(".symver log2f_old,log2f@GLIBC_2.17");
+#  endif
 #elif defined(__riscv)
 __asm(".symver log2f_old,log2f@GLIBC_2.27");
 #endif

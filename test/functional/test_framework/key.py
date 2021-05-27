@@ -1,4 +1,4 @@
-# Copyright (c) 2019 Pieter Wuille
+# Copyright (c) 2019-2020 Pieter Wuille
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test-only secp256k1 elliptic curve implementation
@@ -6,29 +6,24 @@
 WARNING: This code is slow, uses bad randomness, does not properly protect
 keys, and is trivially vulnerable to side channel attacks. Do not use for
 anything but tests."""
+import csv
+import hashlib
+import os
 import random
+import unittest
 
-def modinv(a, n):
-    """Compute the modular inverse of a modulo n
+from .util import modinv
 
-    See https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm#Modular_integers.
-    """
-    t1, t2 = 0, 1
-    r1, r2 = n, a
-    while r2 != 0:
-        q = r1 // r2
-        t1, t2 = t2, t1 - q * t2
-        r1, r2 = r2, r1 - q * r2
-    if r1 > 1:
-        return None
-    if t1 < 0:
-        t1 += n
-    return t1
+def TaggedHash(tag, data):
+    ss = hashlib.sha256(tag.encode('utf-8')).digest()
+    ss += ss
+    ss += data
+    return hashlib.sha256(ss).digest()
 
 def jacobi_symbol(n, k):
     """Compute the Jacobi symbol of n modulo k
 
-    See http://en.wikipedia.org/wiki/Jacobi_symbol
+    See https://en.wikipedia.org/wiki/Jacobi_symbol
 
     For our application k is always prime, so this is the same as the Legendre symbol."""
     assert k > 0 and k & 1, "jacobi symbol is only defined for positive odd k"
@@ -83,6 +78,10 @@ class EllipticCurve:
         inv_3 = (inv_2 * inv) % self.p
         return ((inv_2 * x1) % self.p, (inv_3 * y1) % self.p, 1)
 
+    def has_even_y(self, p1):
+        """Whether the point p1 has an even Y coordinate when expressed in affine coordinates."""
+        return not (p1[2] == 0 or self.affine(p1)[1] & 1)
+
     def negate(self, p1):
         """Negate a Jacobian point tuple p1."""
         x1, y1, z1 = p1
@@ -101,13 +100,13 @@ class EllipticCurve:
         return jacobi_symbol(x_3 + self.a * x + self.b, self.p) != -1
 
     def lift_x(self, x):
-        """Given an X coordinate on the curve, return a corresponding affine point."""
+        """Given an X coordinate on the curve, return a corresponding affine point for which the Y coordinate is even."""
         x_3 = pow(x, 3, self.p)
         v = x_3 + self.a * x + self.b
         y = modsqrt(v, self.p)
         if y is None:
             return None
-        return (x, y, 1)
+        return (x, self.p - y if y & 1 else y, 1)
 
     def double(self, p1):
         """Double a Jacobian tuple p1
@@ -212,7 +211,8 @@ class EllipticCurve:
                     r = self.add(r, p)
         return r
 
-SECP256K1 = EllipticCurve(2**256 - 2**32 - 977, 0, 7)
+SECP256K1_FIELD_SIZE = 2**256 - 2**32 - 977
+SECP256K1 = EllipticCurve(SECP256K1_FIELD_SIZE, 0, 7)
 SECP256K1_G = (0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798, 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8, 1)
 SECP256K1_ORDER = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
 SECP256K1_ORDER_HALF = SECP256K1_ORDER // 2
@@ -236,9 +236,9 @@ class ECPubKey():
             x = int.from_bytes(data[1:33], 'big')
             if SECP256K1.is_x_coord(x):
                 p = SECP256K1.lift_x(x)
-                # if the oddness of the y co-ord isn't correct, find the other
-                # valid y
-                if (p[1] & 1) != (data[0] & 1):
+                # Make the Y coordinate odd if required (lift_x always produces
+                # a point with an even Y coordinate).
+                if data[0] & 1:
                     p = SECP256K1.negate(p)
                 self.p = p
                 self.valid = True
@@ -318,9 +318,13 @@ class ECPubKey():
         u1 = z*w % SECP256K1_ORDER
         u2 = r*w % SECP256K1_ORDER
         R = SECP256K1.affine(SECP256K1.mul([(SECP256K1_G, u1), (self.p, u2)]))
-        if R is None or R[0] != r:
+        if R is None or (R[0] % SECP256K1_ORDER) != r:
             return False
         return True
+
+def generate_privkey():
+    """Generate a valid random 32-byte private key."""
+    return random.randrange(1, SECP256K1_ORDER).to_bytes(32, 'big')
 
 class ECKey():
     """A secp256k1 private key"""
@@ -339,7 +343,7 @@ class ECKey():
 
     def generate(self, compressed=True):
         """Generate a random private key (compressed or uncompressed)."""
-        self.set(random.randrange(1, SECP256K1_ORDER).to_bytes(32, 'big'), compressed)
+        self.set(generate_privkey(), compressed)
 
     def get_bytes(self):
         """Retrieve the 32-byte representation of this key."""
@@ -384,3 +388,162 @@ class ECKey():
         rb = r.to_bytes((r.bit_length() + 8) // 8, 'big')
         sb = s.to_bytes((s.bit_length() + 8) // 8, 'big')
         return b'\x30' + bytes([4 + len(rb) + len(sb), 2, len(rb)]) + rb + bytes([2, len(sb)]) + sb
+
+def compute_xonly_pubkey(key):
+    """Compute an x-only (32 byte) public key from a (32 byte) private key.
+
+    This also returns whether the resulting public key was negated.
+    """
+
+    assert len(key) == 32
+    x = int.from_bytes(key, 'big')
+    if x == 0 or x >= SECP256K1_ORDER:
+        return (None, None)
+    P = SECP256K1.affine(SECP256K1.mul([(SECP256K1_G, x)]))
+    return (P[0].to_bytes(32, 'big'), not SECP256K1.has_even_y(P))
+
+def tweak_add_privkey(key, tweak):
+    """Tweak a private key (after negating it if needed)."""
+
+    assert len(key) == 32
+    assert len(tweak) == 32
+
+    x = int.from_bytes(key, 'big')
+    if x == 0 or x >= SECP256K1_ORDER:
+        return None
+    if not SECP256K1.has_even_y(SECP256K1.mul([(SECP256K1_G, x)])):
+       x = SECP256K1_ORDER - x
+    t = int.from_bytes(tweak, 'big')
+    if t >= SECP256K1_ORDER:
+        return None
+    x = (x + t) % SECP256K1_ORDER
+    if x == 0:
+        return None
+    return x.to_bytes(32, 'big')
+
+def tweak_add_pubkey(key, tweak):
+    """Tweak a public key and return whether the result had to be negated."""
+
+    assert len(key) == 32
+    assert len(tweak) == 32
+
+    x_coord = int.from_bytes(key, 'big')
+    if x_coord >= SECP256K1_FIELD_SIZE:
+        return None
+    P = SECP256K1.lift_x(x_coord)
+    if P is None:
+        return None
+    t = int.from_bytes(tweak, 'big')
+    if t >= SECP256K1_ORDER:
+        return None
+    Q = SECP256K1.affine(SECP256K1.mul([(SECP256K1_G, t), (P, 1)]))
+    if Q is None:
+        return None
+    return (Q[0].to_bytes(32, 'big'), not SECP256K1.has_even_y(Q))
+
+def verify_schnorr(key, sig, msg):
+    """Verify a Schnorr signature (see BIP 340).
+
+    - key is a 32-byte xonly pubkey (computed using compute_xonly_pubkey).
+    - sig is a 64-byte Schnorr signature
+    - msg is a 32-byte message
+    """
+    assert len(key) == 32
+    assert len(msg) == 32
+    assert len(sig) == 64
+
+    x_coord = int.from_bytes(key, 'big')
+    if x_coord == 0 or x_coord >= SECP256K1_FIELD_SIZE:
+        return False
+    P = SECP256K1.lift_x(x_coord)
+    if P is None:
+        return False
+    r = int.from_bytes(sig[0:32], 'big')
+    if r >= SECP256K1_FIELD_SIZE:
+        return False
+    s = int.from_bytes(sig[32:64], 'big')
+    if s >= SECP256K1_ORDER:
+        return False
+    e = int.from_bytes(TaggedHash("BIP0340/challenge", sig[0:32] + key + msg), 'big') % SECP256K1_ORDER
+    R = SECP256K1.mul([(SECP256K1_G, s), (P, SECP256K1_ORDER - e)])
+    if not SECP256K1.has_even_y(R):
+        return False
+    if ((r * R[2] * R[2]) % SECP256K1_FIELD_SIZE) != R[0]:
+        return False
+    return True
+
+def sign_schnorr(key, msg, aux=None, flip_p=False, flip_r=False):
+    """Create a Schnorr signature (see BIP 340)."""
+
+    if aux is None:
+        aux = bytes(32)
+
+    assert len(key) == 32
+    assert len(msg) == 32
+    assert len(aux) == 32
+
+    sec = int.from_bytes(key, 'big')
+    if sec == 0 or sec >= SECP256K1_ORDER:
+        return None
+    P = SECP256K1.affine(SECP256K1.mul([(SECP256K1_G, sec)]))
+    if SECP256K1.has_even_y(P) == flip_p:
+        sec = SECP256K1_ORDER - sec
+    t = (sec ^ int.from_bytes(TaggedHash("BIP0340/aux", aux), 'big')).to_bytes(32, 'big')
+    kp = int.from_bytes(TaggedHash("BIP0340/nonce", t + P[0].to_bytes(32, 'big') + msg), 'big') % SECP256K1_ORDER
+    assert kp != 0
+    R = SECP256K1.affine(SECP256K1.mul([(SECP256K1_G, kp)]))
+    k = kp if SECP256K1.has_even_y(R) != flip_r else SECP256K1_ORDER - kp
+    e = int.from_bytes(TaggedHash("BIP0340/challenge", R[0].to_bytes(32, 'big') + P[0].to_bytes(32, 'big') + msg), 'big') % SECP256K1_ORDER
+    return R[0].to_bytes(32, 'big') + ((k + e * sec) % SECP256K1_ORDER).to_bytes(32, 'big')
+
+class TestFrameworkKey(unittest.TestCase):
+    def test_schnorr(self):
+        """Test the Python Schnorr implementation."""
+        byte_arrays = [generate_privkey() for _ in range(3)] + [v.to_bytes(32, 'big') for v in [0, SECP256K1_ORDER - 1, SECP256K1_ORDER, 2**256 - 1]]
+        keys = {}
+        for privkey in byte_arrays:  # build array of key/pubkey pairs
+            pubkey, _ = compute_xonly_pubkey(privkey)
+            if pubkey is not None:
+                keys[privkey] = pubkey
+        for msg in byte_arrays:  # test every combination of message, signing key, verification key
+            for sign_privkey, _ in keys.items():
+                sig = sign_schnorr(sign_privkey, msg)
+                for verify_privkey, verify_pubkey in keys.items():
+                    if verify_privkey == sign_privkey:
+                        self.assertTrue(verify_schnorr(verify_pubkey, sig, msg))
+                        sig = list(sig)
+                        sig[random.randrange(64)] ^= (1 << (random.randrange(8)))  # damaging signature should break things
+                        sig = bytes(sig)
+                    self.assertFalse(verify_schnorr(verify_pubkey, sig, msg))
+
+    def test_schnorr_testvectors(self):
+        """Implement the BIP340 test vectors (read from bip340_test_vectors.csv)."""
+        num_tests = 0
+        vectors_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'bip340_test_vectors.csv')
+        with open(vectors_file, newline='', encoding='utf8') as csvfile:
+            reader = csv.reader(csvfile)
+            next(reader)
+            for row in reader:
+                (i_str, seckey_hex, pubkey_hex, aux_rand_hex, msg_hex, sig_hex, result_str, comment) = row
+                i = int(i_str)
+                pubkey = bytes.fromhex(pubkey_hex)
+                msg = bytes.fromhex(msg_hex)
+                sig = bytes.fromhex(sig_hex)
+                result = result_str == 'TRUE'
+                if seckey_hex != '':
+                    seckey = bytes.fromhex(seckey_hex)
+                    pubkey_actual = compute_xonly_pubkey(seckey)[0]
+                    self.assertEqual(pubkey.hex(), pubkey_actual.hex(), "BIP340 test vector %i (%s): pubkey mismatch" % (i, comment))
+                    aux_rand = bytes.fromhex(aux_rand_hex)
+                    try:
+                        sig_actual = sign_schnorr(seckey, msg, aux_rand)
+                        self.assertEqual(sig.hex(), sig_actual.hex(), "BIP340 test vector %i (%s): sig mismatch" % (i, comment))
+                    except RuntimeError as e:
+                        self.fail("BIP340 test vector %i (%s): signing raised exception %s" % (i, comment, e))
+                result_actual = verify_schnorr(pubkey, sig, msg)
+                if result:
+                    self.assertEqual(result, result_actual, "BIP340 test vector %i (%s): verification failed" % (i, comment))
+                else:
+                    self.assertEqual(result, result_actual, "BIP340 test vector %i (%s): verification succeeded unexpectedly" % (i, comment))
+                num_tests += 1
+        self.assertTrue(num_tests >= 15) # expect at least 15 test vectors

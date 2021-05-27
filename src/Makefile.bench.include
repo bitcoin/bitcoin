@@ -12,6 +12,7 @@ GENERATED_BENCH_FILES = $(RAW_BENCH_FILES:.raw=.raw.h)
 
 bench_bench_bitcoin_SOURCES = \
   $(RAW_BENCH_FILES) \
+  bench/addrman.cpp \
   bench/bench_bitcoin.cpp \
   bench/bench.cpp \
   bench/bench.h \
@@ -28,8 +29,12 @@ bench_bench_bitcoin_SOURCES = \
   bench/crypto_hash.cpp \
   bench/ccoins_caching.cpp \
   bench/gcs_filter.cpp \
+  bench/hashpadding.cpp \
   bench/merkle_root.cpp \
   bench/mempool_eviction.cpp \
+  bench/mempool_stress.cpp \
+  bench/nanobench.h \
+  bench/nanobench.cpp \
   bench/rpc_blockchain.cpp \
   bench/rpc_mempool.cpp \
   bench/util_time.cpp \
@@ -38,26 +43,20 @@ bench_bench_bitcoin_SOURCES = \
   bench/bech32.cpp \
   bench/lockedpool.cpp \
   bench/poly1305.cpp \
-  bench/prevector.cpp \
-  test/lib/transaction_utils.h \
-  test/lib/transaction_utils.cpp \
-  test/setup_common.h \
-  test/setup_common.cpp \
-  test/util.h \
-  test/util.cpp
+  bench/prevector.cpp
 
 nodist_bench_bench_bitcoin_SOURCES = $(GENERATED_BENCH_FILES)
 
-bench_bench_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CLFAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
+bench_bench_bitcoin_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS) -I$(builddir)/bench/
 bench_bench_bitcoin_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 bench_bench_bitcoin_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_WALLET) \
-  $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
+  $(LIBTEST_UTIL) \
   $(LIBLEVELDB) \
   $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
@@ -75,8 +74,8 @@ bench_bench_bitcoin_SOURCES += bench/coin_selection.cpp
 bench_bench_bitcoin_SOURCES += bench/wallet_balance.cpp
 endif
 
-bench_bench_bitcoin_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS)
-bench_bench_bitcoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+bench_bench_bitcoin_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(MINIUPNPC_LIBS) $(NATPMP_LIBS) $(SQLITE_LIBS)
+bench_bench_bitcoin_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS) $(PTHREAD_FLAGS)
 
 CLEAN_BITCOIN_BENCH = bench/*.gcda bench/*.gcno $(GENERATED_BENCH_FILES)
 

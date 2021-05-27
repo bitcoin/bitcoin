@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2019 The Bitcoin Core developers
+# Copyright (c) 2017-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Tests NODE_NETWORK_LIMITED.
@@ -8,14 +8,11 @@ Tests that a node configured with -prune=550 signals NODE_NETWORK_LIMITED correc
 and that it responds to getdata requests for blocks correctly:
     - send a block within 288 + 2 of the tip
     - disconnect peers who request blocks older than that."""
-from test_framework.messages import CInv, msg_getdata, msg_verack, NODE_NETWORK_LIMITED, NODE_WITNESS
-from test_framework.mininode import P2PInterface, mininode_lock
+from test_framework.messages import CInv, MSG_BLOCK, msg_getdata, msg_verack, NODE_NETWORK_LIMITED, NODE_WITNESS
+from test_framework.p2p import P2PInterface
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal,
-    disconnect_nodes,
-    connect_nodes,
-    wait_until,
 )
 
 
@@ -28,10 +25,10 @@ class P2PIgnoreInv(P2PInterface):
         self.firstAddrnServices = message.addrs[0].nServices
     def wait_for_addr(self, timeout=5):
         test_function = lambda: self.last_message.get("addr")
-        wait_until(test_function, timeout=timeout, lock=mininode_lock)
+        self.wait_until(test_function, timeout=timeout)
     def send_getdata_for_block(self, blockhash):
         getdata_request = msg_getdata()
-        getdata_request.inv.append(CInv(2, int(blockhash, 16)))
+        getdata_request.inv.append(CInv(MSG_BLOCK, int(blockhash, 16)))
         self.send_message(getdata_request)
 
 class NodeNetworkLimitedTest(BitcoinTestFramework):
@@ -41,12 +38,9 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         self.extra_args = [['-prune=550', '-addrmantest'], [], []]
 
     def disconnect_all(self):
-        disconnect_nodes(self.nodes[0], 1)
-        disconnect_nodes(self.nodes[1], 0)
-        disconnect_nodes(self.nodes[2], 1)
-        disconnect_nodes(self.nodes[2], 0)
-        disconnect_nodes(self.nodes[0], 2)
-        disconnect_nodes(self.nodes[1], 2)
+        self.disconnect_nodes(0, 1)
+        self.disconnect_nodes(0, 2)
+        self.disconnect_nodes(1, 2)
 
     def setup_network(self):
         self.add_nodes(self.num_nodes, self.extra_args)
@@ -64,7 +58,7 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         assert_equal(int(self.nodes[0].getnetworkinfo()['localservices'], 16), expected_services)
 
         self.log.info("Mine enough blocks to reach the NODE_NETWORK_LIMITED range.")
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(0, 1)
         blocks = self.nodes[1].generatetoaddress(292, self.nodes[1].get_deterministic_priv_key().address)
         self.sync_blocks([self.nodes[0], self.nodes[1]])
 
@@ -86,11 +80,10 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         assert_equal(node1.firstAddrnServices, expected_services)
 
         self.nodes[0].disconnect_p2ps()
-        node1.wait_for_disconnect()
 
         # connect unsynced node 2 with pruned NODE_NETWORK_LIMITED peer
         # because node 2 is in IBD and node 0 is a NODE_NETWORK_LIMITED peer, sync must not be possible
-        connect_nodes(self.nodes[0], 2)
+        self.connect_nodes(0, 2)
         try:
             self.sync_blocks([self.nodes[0], self.nodes[2]], timeout=5)
         except:
@@ -99,7 +92,7 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         assert_equal(self.nodes[2].getblockheader(self.nodes[2].getbestblockhash())['height'], 0)
 
         # now connect also to node 1 (non pruned)
-        connect_nodes(self.nodes[1], 2)
+        self.connect_nodes(1, 2)
 
         # sync must be possible
         self.sync_blocks()
@@ -111,7 +104,7 @@ class NodeNetworkLimitedTest(BitcoinTestFramework):
         self.nodes[0].generatetoaddress(10, self.nodes[0].get_deterministic_priv_key().address)
 
         # connect node1 (non pruned) with node0 (pruned) and check if the can sync
-        connect_nodes(self.nodes[0], 1)
+        self.connect_nodes(0, 1)
 
         # sync must be possible, node 1 is no longer in IBD and should therefore connect to node 0 (NODE_NETWORK_LIMITED)
         self.sync_blocks([self.nodes[0], self.nodes[1]])

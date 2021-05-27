@@ -1,4 +1,4 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+// Copyright (c) 2015-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -60,7 +60,7 @@ private:
     bool replySent;
 
 public:
-    explicit HTTPRequest(struct evhttp_request* req);
+    explicit HTTPRequest(struct evhttp_request* req, bool replySent = false);
     ~HTTPRequest();
 
     enum RequestMethod {

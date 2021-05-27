@@ -1,14 +1,14 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <policy/policy.h>
 #include <policy/fees.h>
+#include <policy/policy.h>
 #include <txmempool.h>
 #include <uint256.h>
 #include <util/time.h>
 
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 

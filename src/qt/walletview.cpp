@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,9 +6,9 @@
 
 #include <qt/addressbookpage.h>
 #include <qt/askpassphrasedialog.h>
-#include <qt/bitcoingui.h>
 #include <qt/clientmodel.h>
 #include <qt/guiutil.h>
+#include <qt/psbtoperationsdialog.h>
 #include <qt/optionsmodel.h>
 #include <qt/overviewpage.h>
 #include <qt/platformstyle.h>
@@ -20,10 +20,14 @@
 #include <qt/walletmodel.h>
 
 #include <interfaces/node.h>
-#include <ui_interface.h>
+#include <node/ui_interface.h>
+#include <psbt.h>
+#include <util/strencodings.h>
 
 #include <QAction>
 #include <QActionGroup>
+#include <QApplication>
+#include <QClipboard>
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QProgressDialog>
@@ -65,13 +69,15 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
 
+    connect(overviewPage, &OverviewPage::transactionClicked, this, &WalletView::transactionClicked);
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
-    connect(overviewPage, &OverviewPage::transactionClicked, transactionView, static_cast<void (TransactionView::*)(const QModelIndex&)>(&TransactionView::focusTransaction));
+    connect(overviewPage, &OverviewPage::transactionClicked, transactionView, qOverload<const QModelIndex&>(&TransactionView::focusTransaction));
 
     connect(overviewPage, &OverviewPage::outOfSyncWarningClicked, this, &WalletView::requestedSyncWarningInfo);
 
+    connect(sendCoinsPage, &SendCoinsDialog::coinsSent, this, &WalletView::coinsSent);
     // Highlight transaction after send
-    connect(sendCoinsPage, &SendCoinsDialog::coinsSent, transactionView, static_cast<void (TransactionView::*)(const uint256&)>(&TransactionView::focusTransaction));
+    connect(sendCoinsPage, &SendCoinsDialog::coinsSent, transactionView, qOverload<const uint256&>(&TransactionView::focusTransaction));
 
     // Clicking on "Export" allows to export the transaction list
     connect(exportButton, &QPushButton::clicked, transactionView, &TransactionView::exportClicked);
@@ -80,36 +86,12 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     connect(sendCoinsPage, &SendCoinsDialog::message, this, &WalletView::message);
     // Pass through messages from transactionView
     connect(transactionView, &TransactionView::message, this, &WalletView::message);
+
+    connect(this, &WalletView::setPrivacy, overviewPage, &OverviewPage::setPrivacy);
 }
 
 WalletView::~WalletView()
 {
-}
-
-void WalletView::setBitcoinGUI(BitcoinGUI *gui)
-{
-    if (gui)
-    {
-        // Clicking on a transaction on the overview page simply sends you to transaction history page
-        connect(overviewPage, &OverviewPage::transactionClicked, gui, &BitcoinGUI::gotoHistoryPage);
-
-        // Navigate to transaction history page after send
-        connect(sendCoinsPage, &SendCoinsDialog::coinsSent, gui, &BitcoinGUI::gotoHistoryPage);
-
-        // Receive and report messages
-        connect(this, &WalletView::message, [gui](const QString &title, const QString &message, unsigned int style) {
-            gui->message(title, message, style);
-        });
-
-        // Pass through encryption status changed signals
-        connect(this, &WalletView::encryptionStatusChanged, gui, &BitcoinGUI::updateWalletStatus);
-
-        // Pass through transaction notifications
-        connect(this, &WalletView::incomingTransaction, gui, &BitcoinGUI::incomingTransaction);
-
-        // Connect HD enabled state signal
-        connect(this, &WalletView::hdEnabledStatusChanged, gui, &BitcoinGUI::updateWalletStatus);
-    }
 }
 
 void WalletView::setClientModel(ClientModel *_clientModel)
@@ -118,6 +100,7 @@ void WalletView::setClientModel(ClientModel *_clientModel)
 
     overviewPage->setClientModel(_clientModel);
     sendCoinsPage->setClientModel(_clientModel);
+    if (walletModel) walletModel->setClientModel(_clientModel);
 }
 
 void WalletView::setWalletModel(WalletModel *_walletModel)
@@ -222,6 +205,44 @@ void WalletView::gotoVerifyMessageTab(QString addr)
         signVerifyMessageDialog->setAddress_VM(addr);
 }
 
+void WalletView::gotoLoadPSBT(bool from_clipboard)
+{
+    std::string data;
+
+    if (from_clipboard) {
+        std::string raw = QApplication::clipboard()->text().toStdString();
+        bool invalid;
+        data = DecodeBase64(raw, &invalid);
+        if (invalid) {
+            Q_EMIT message(tr("Error"), tr("Unable to decode PSBT from clipboard (invalid base64)"), CClientUIInterface::MSG_ERROR);
+            return;
+        }
+    } else {
+        QString filename = GUIUtil::getOpenFileName(this,
+            tr("Load Transaction Data"), QString(),
+            tr("Partially Signed Transaction (*.psbt)"), nullptr);
+        if (filename.isEmpty()) return;
+        if (GetFileSize(filename.toLocal8Bit().data(), MAX_FILE_SIZE_PSBT) == MAX_FILE_SIZE_PSBT) {
+            Q_EMIT message(tr("Error"), tr("PSBT file must be smaller than 100 MiB"), CClientUIInterface::MSG_ERROR);
+            return;
+        }
+        std::ifstream in(filename.toLocal8Bit().data(), std::ios::binary);
+        data = std::string(std::istreambuf_iterator<char>{in}, {});
+    }
+
+    std::string error;
+    PartiallySignedTransaction psbtx;
+    if (!DecodeRawPSBT(psbtx, data, error)) {
+        Q_EMIT message(tr("Error"), tr("Unable to decode PSBT") + "\n" + QString::fromStdString(error), CClientUIInterface::MSG_ERROR);
+        return;
+    }
+
+    PSBTOperationsDialog* dlg = new PSBTOperationsDialog(this, walletModel, clientModel);
+    dlg->openWithPSBT(psbtx);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->exec();
+}
+
 bool WalletView::handlePaymentRequest(const SendCoinsRecipient& recipient)
 {
     return sendCoinsPage->handlePaymentRequest(recipient);
@@ -237,11 +258,11 @@ void WalletView::updateEncryptionStatus()
     Q_EMIT encryptionStatusChanged();
 }
 
-void WalletView::encryptWallet(bool status)
+void WalletView::encryptWallet()
 {
     if(!walletModel)
         return;
-    AskPassphraseDialog dlg(status ? AskPassphraseDialog::Encrypt : AskPassphraseDialog::Decrypt, this);
+    AskPassphraseDialog dlg(AskPassphraseDialog::Encrypt, this);
     dlg.setModel(walletModel);
     dlg.exec();
 
@@ -252,7 +273,8 @@ void WalletView::backupWallet()
 {
     QString filename = GUIUtil::getSaveFileName(this,
         tr("Backup Wallet"), QString(),
-        tr("Wallet Data (*.dat)"), nullptr);
+        //: Name of the wallet data file format.
+        tr("Wallet Data") + QLatin1String(" (*.dat)"), nullptr);
 
     if (filename.isEmpty())
         return;

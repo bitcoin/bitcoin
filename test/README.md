@@ -145,7 +145,7 @@ levels using the logger included in the test_framework, e.g.
   `test_framework.log` and no logs are output to the console.
 - when run directly, *all* logs are written to `test_framework.log` and INFO
   level and above are output to the console.
-- when run on Travis, no logs are output to the console. However, if a test
+- when run by [our CI (Continuous Integration)](/ci/README.md), no logs are output to the console. However, if a test
   fails, the `test_framework.log` and bitcoind `debug.log`s will all be dumped
   to the console to help troubleshooting.
 
@@ -225,6 +225,10 @@ gdb /home/example/bitcoind <pid>
 Note: gdb attach step may require ptrace_scope to be modified, or `sudo` preceding the `gdb`.
 See this link for considerations: https://www.kernel.org/doc/Documentation/security/Yama.txt
 
+Often while debugging rpc calls from functional tests, the test might reach timeout before
+process can return a response. Use `--timeout-factor 0` to disable all rpc timeouts for that partcular
+functional test. Ex: `test/functional/wallet_hd.py --timeout-factor 0`.
+
 ##### Profiling
 
 An easy way to profile node performance during functional tests is provided
@@ -254,14 +258,22 @@ Use the `-v` option for verbose output.
 
 #### Dependencies
 
-The lint tests require codespell and flake8. To install: `pip3 install codespell flake8`.
+| Lint test | Dependency | Version [used by CI](../ci/lint/04_install.sh) | Installation
+|-----------|:----------:|:-------------------------------------------:|--------------
+| [`lint-python.sh`](lint/lint-python.sh) | [flake8](https://gitlab.com/pycqa/flake8) | [3.8.3](https://github.com/bitcoin/bitcoin/pull/19348) | `pip3 install flake8==3.8.3`
+| [`lint-python.sh`](lint/lint-python.sh) | [mypy](https://github.com/python/mypy) | [0.781](https://github.com/bitcoin/bitcoin/pull/19348) | `pip3 install mypy==0.781`
+| [`lint-shell.sh`](lint/lint-shell.sh) | [ShellCheck](https://github.com/koalaman/shellcheck) | [0.7.2](https://github.com/bitcoin/bitcoin/pull/21749) | [details...](https://github.com/koalaman/shellcheck#installing)
+| [`lint-shell.sh`](lint/lint-shell.sh) | [yq](https://github.com/kislyuk/yq) | default | `pip3 install yq`
+| [`lint-spelling.sh`](lint/lint-spelling.sh) | [codespell](https://github.com/codespell-project/codespell) | [2.0.0](https://github.com/bitcoin/bitcoin/pull/20817) | `pip3 install codespell==2.0.0`
+
+Please be aware that on Linux distributions all dependencies are usually available as packages, but could be outdated.
 
 #### Running the tests
 
 Individual tests can be run by directly calling the test script, e.g.:
 
 ```
-test/lint/lint-filenames.sh
+test/lint/lint-files.sh
 ```
 
 You can run all the shell-based lint tests by running:

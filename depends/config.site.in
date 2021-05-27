@@ -1,73 +1,93 @@
-depends_prefix="`dirname ${ac_site_file}`/.."
+# shellcheck shell=sh disable=SC2034 # Many variables set will be used in
+                                     # ./configure but shellcheck doesn't know
+                                     # that, hence: disable=SC2034
+
+true  # Dummy command because shellcheck treats all directives before first
+      # command as file-wide, and we only want to disable for one line.
+      #
+      # See: https://github.com/koalaman/shellcheck/wiki/Directive
+
+# shellcheck disable=SC2154
+depends_prefix="$(cd "$(dirname "$ac_site_file")/.." && pwd)"
 
 cross_compiling=maybe
-host_alias=@HOST@
-ac_tool_prefix=${host_alias}-
+host_alias="@HOST@"
+ac_tool_prefix="${host_alias}-"
 
-if test -z $with_boost; then
-  with_boost=$depends_prefix
+if test -z "$with_boost"; then
+  with_boost="$depends_prefix"
 fi
-if test -z $with_qt_plugindir; then
-  with_qt_plugindir=$depends_prefix/plugins
+if test -z "$with_qt_plugindir"; then
+  with_qt_plugindir="${depends_prefix}/plugins"
 fi
-if test -z $with_qt_translationdir; then
-  with_qt_translationdir=$depends_prefix/translations
+if test -z "$with_qt_translationdir"; then
+  with_qt_translationdir="${depends_prefix}/translations"
 fi
-if test -z $with_qt_bindir && test -z "@no_qt@"; then
-  with_qt_bindir=$depends_prefix/native/bin
+if test -z "$with_qt_bindir" && test -z "@no_qt@"; then
+  with_qt_bindir="${depends_prefix}/native/bin"
 fi
-if test -z $with_protoc_bindir && test -z "@no_qt@"; then
-  with_protoc_bindir=$depends_prefix/native/bin
+if test -z "$with_mpgen" && test -n "@multiprocess@"; then
+  with_mpgen="${depends_prefix}/native"
 fi
 
+if test -z "$with_qrencode" && test -n "@no_qr@"; then
+  with_qrencode=no
+fi
 
-if test -z $enable_wallet && test -n "@no_wallet@"; then
+if test -z "$enable_wallet" && test -n "@no_wallet@"; then
   enable_wallet=no
 fi
 
-if test -z $with_miniupnpc && test -n "@no_upnp@"; then
+if test -z "$with_bdb" && test -n "@no_bdb@"; then
+  with_bdb=no
+fi
+
+if test -z "$with_sqlite" && test -n "@no_sqlite@"; then
+  with_sqlite=no
+fi
+
+if test -z "$enable_multiprocess" && test -n "@multiprocess@"; then
+  enable_multiprocess=yes
+fi
+
+if test -z "$with_miniupnpc" && test -n "@no_upnp@"; then
   with_miniupnpc=no
 fi
 
-if test -z $with_gui && test -n "@no_qt@"; then
+if test -z "$with_natpmp" && test -n "@no_natpmp@"; then
+  with_natpmp=no
+fi
+
+if test -z "$with_gui" && test -n "@no_qt@"; then
   with_gui=no
 fi
 
-if test -z $enable_zmq && test -n "@no_zmq@"; then
+if test -n "@debug@" && test -z "@no_qt@" && test "x$with_gui" != xno; then
+  with_gui=qt5_debug
+fi
+
+if test -z "$enable_zmq" && test -n "@no_zmq@"; then
   enable_zmq=no
 fi
 
-if test -n $enable_bip70 && test -n "@enable_bip70@"; then
-  enable_bip70=yes
-fi
-
-if test x@host_os@ = xdarwin; then
+if test "@host_os@" = darwin; then
   BREW=no
   PORT=no
 fi
 
-if test x@host_os@ = xmingw32; then
-  if test -z $with_qt_incdir; then
-    with_qt_incdir=$depends_prefix/include
-  fi
-  if test -z $with_qt_libdir; then
-    with_qt_libdir=$depends_prefix/lib
-  fi
-fi
-
-PATH=$depends_prefix/native/bin:$PATH
-PKG_CONFIG="`which pkg-config` --static"
+PATH="${depends_prefix}/native/bin:${PATH}"
+PKG_CONFIG="$(which pkg-config) --static"
 
 # These two need to remain exported because pkg-config does not see them
 # otherwise. That means they must be unexported at the end of configure.ac to
 # avoid ruining the cache. Sigh.
-export PKG_CONFIG_PATH=$depends_prefix/share/pkgconfig:$depends_prefix/lib/pkgconfig
+export PKG_CONFIG_PATH="${depends_prefix}/share/pkgconfig:${depends_prefix}/lib/pkgconfig"
 if test -z "@allow_host_packages@"; then
-  export PKGCONFIG_LIBDIR=
+  export PKG_CONFIG_LIBDIR="${depends_prefix}/lib/pkgconfig"
 fi
 
-CPPFLAGS="-I$depends_prefix/include/ $CPPFLAGS"
-LDFLAGS="-L$depends_prefix/lib $LDFLAGS"
+CPPFLAGS="-I${depends_prefix}/include/ ${CPPFLAGS}"
+LDFLAGS="-L${depends_prefix}/lib ${LDFLAGS}"
 
 if test -n "@CC@" -a -z "${CC}"; then
   CC="@CC@"
@@ -75,21 +95,21 @@ fi
 if test -n "@CXX@" -a -z "${CXX}"; then
   CXX="@CXX@"
 fi
-PYTHONPATH=$depends_prefix/native/lib/python3/dist-packages:$PYTHONPATH
+PYTHONPATH="${depends_prefix}/native/lib/python3/dist-packages${PYTHONPATH:+${PATH_SEPARATOR}}${PYTHONPATH}"
 
 if test -n "@AR@"; then
-  AR=@AR@
-  ac_cv_path_ac_pt_AR=${AR}
+  AR="@AR@"
+  ac_cv_path_ac_pt_AR="${AR}"
 fi
 
 if test -n "@RANLIB@"; then
-  RANLIB=@RANLIB@
-  ac_cv_path_ac_pt_RANLIB=${RANLIB}
+  RANLIB="@RANLIB@"
+  ac_cv_path_ac_pt_RANLIB="${RANLIB}"
 fi
 
 if test -n "@NM@"; then
-  NM=@NM@
-  ac_cv_path_ac_pt_NM=${NM}
+  NM="@NM@"
+  ac_cv_path_ac_pt_NM="${NM}"
 fi
 
 if test -n "@debug@"; then
@@ -97,14 +117,14 @@ if test -n "@debug@"; then
 fi
 
 if test -n "@CFLAGS@"; then
-  CFLAGS="@CFLAGS@ $CFLAGS"
+  CFLAGS="@CFLAGS@ ${CFLAGS}"
 fi
 if test -n "@CXXFLAGS@"; then
-  CXXFLAGS="@CXXFLAGS@ $CXXFLAGS"
+  CXXFLAGS="@CXXFLAGS@ ${CXXFLAGS}"
 fi
 if test -n "@CPPFLAGS@"; then
-  CPPFLAGS="@CPPFLAGS@ $CPPFLAGS"
+  CPPFLAGS="@CPPFLAGS@ ${CPPFLAGS}"
 fi
 if test -n "@LDFLAGS@"; then
-  LDFLAGS="@LDFLAGS@ $LDFLAGS"
+  LDFLAGS="@LDFLAGS@ ${LDFLAGS}"
 fi

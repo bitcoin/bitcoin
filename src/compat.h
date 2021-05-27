@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,9 +11,6 @@
 #endif
 
 #ifdef WIN32
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN 1
-#endif
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -21,11 +18,7 @@
 #undef FD_SETSIZE // prevent redefinition compiler warning
 #endif
 #define FD_SETSIZE 1024 // max number of fds in fd_set
-
-#include <winsock2.h>     // Must be included before mswsock.h and windows.h
-
-#include <mswsock.h>
-#include <windows.h>
+#include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdint.h>
 #else
@@ -51,6 +44,7 @@ typedef unsigned int SOCKET;
 #define WSAEINVAL           EINVAL
 #define WSAEALREADY         EALREADY
 #define WSAEWOULDBLOCK      EWOULDBLOCK
+#define WSAEAGAIN           EAGAIN
 #define WSAEMSGSIZE         EMSGSIZE
 #define WSAEINTR            EINTR
 #define WSAEINPROGRESS      EINPROGRESS
@@ -58,6 +52,14 @@ typedef unsigned int SOCKET;
 #define WSAENOTSOCK         EBADF
 #define INVALID_SOCKET      (SOCKET)(~0)
 #define SOCKET_ERROR        -1
+#else
+#ifndef WSAEAGAIN
+#ifdef EAGAIN
+#define WSAEAGAIN EAGAIN
+#else
+#define WSAEAGAIN WSAEWOULDBLOCK
+#endif
+#endif
 #endif
 
 #ifdef WIN32
@@ -102,5 +104,15 @@ bool static inline IsSelectableSocket(const SOCKET& s) {
     return (s < FD_SETSIZE);
 #endif
 }
+
+// MSG_NOSIGNAL is not available on some platforms, if it doesn't exist define it as 0
+#if !defined(MSG_NOSIGNAL)
+#define MSG_NOSIGNAL 0
+#endif
+
+// MSG_DONTWAIT is not available on some platforms, if it doesn't exist define it as 0
+#if !defined(MSG_DONTWAIT)
+#define MSG_DONTWAIT 0
+#endif
 
 #endif // BITCOIN_COMPAT_H

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -38,15 +38,18 @@ class WalletFrame;
 class WalletModel;
 class HelpMessageDialog;
 class ModalOverlay;
+enum class SynchronizationState;
 
 namespace interfaces {
 class Handler;
 class Node;
+struct BlockAndHeaderTipInfo;
 }
 
 QT_BEGIN_NAMESPACE
 class QAction;
 class QComboBox;
+class QDateTime;
 class QMenu;
 class QProgressBar;
 class QProgressDialog;
@@ -74,9 +77,10 @@ public:
     /** Set the client model.
         The client model represents the part of the core that communicates with the P2P network, and is wallet-agnostic.
     */
-    void setClientModel(ClientModel *clientModel);
+    void setClientModel(ClientModel *clientModel = nullptr, interfaces::BlockAndHeaderTipInfo* tip_info = nullptr);
 #ifdef ENABLE_WALLET
     void setWalletController(WalletController* wallet_controller);
+    WalletController* getWalletController();
 #endif
 
 #ifdef ENABLE_WALLET
@@ -98,13 +102,15 @@ public:
     /** Disconnect core signals from GUI client */
     void unsubscribeFromCoreSignals();
 
+    bool isPrivacyModeActivated() const;
+
 protected:
-    void changeEvent(QEvent *e);
-    void closeEvent(QCloseEvent *event);
-    void showEvent(QShowEvent *event);
-    void dragEnterEvent(QDragEnterEvent *event);
-    void dropEvent(QDropEvent *event);
-    bool eventFilter(QObject *object, QEvent *event);
+    void changeEvent(QEvent *e) override;
+    void closeEvent(QCloseEvent *event) override;
+    void showEvent(QShowEvent *event) override;
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
+    bool eventFilter(QObject *object, QEvent *event) override;
 
 private:
     interfaces::Node& m_node;
@@ -135,6 +141,8 @@ private:
     QAction* usedReceivingAddressesAction = nullptr;
     QAction* signMessageAction = nullptr;
     QAction* verifyMessageAction = nullptr;
+    QAction* m_load_psbt_action = nullptr;
+    QAction* m_load_psbt_clipboard_action = nullptr;
     QAction* aboutAction = nullptr;
     QAction* receiveCoinsAction = nullptr;
     QAction* receiveCoinsMenuAction = nullptr;
@@ -151,8 +159,10 @@ private:
     QAction* m_open_wallet_action{nullptr};
     QMenu* m_open_wallet_menu{nullptr};
     QAction* m_close_wallet_action{nullptr};
+    QAction* m_close_all_wallets_action{nullptr};
     QAction* m_wallet_selector_label_action = nullptr;
     QAction* m_wallet_selector_action = nullptr;
+    QAction* m_mask_values_action{nullptr};
 
     QLabel *m_wallet_selector_label = nullptr;
     QComboBox* m_wallet_selector = nullptr;
@@ -205,6 +215,7 @@ Q_SIGNALS:
     void receivedURI(const QString &uri);
     /** Signal raised when RPC console shown */
     void consoleShown(RPCConsole* console);
+    void setPrivacy(bool privacy);
 
 public Q_SLOTS:
     /** Set number of connections shown in the UI */
@@ -212,16 +223,17 @@ public Q_SLOTS:
     /** Set network state shown in the UI */
     void setNetworkActive(bool networkActive);
     /** Set number of blocks and last block date shown in the UI */
-    void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers);
+    void setNumBlocks(int count, const QDateTime& blockDate, double nVerificationProgress, bool headers, SynchronizationState sync_state);
 
     /** Notify the user of an event from the core network or transaction handling code.
-       @param[in] title     the message box / notification title
-       @param[in] message   the displayed text
-       @param[in] style     modality and style definitions (icon and used buttons - buttons only for message boxes)
-                            @see CClientUIInterface::MessageBoxFlags
-       @param[in] ret       pointer to a bool that will be modified to whether Ok was clicked (modal only)
+       @param[in] title             the message box / notification title
+       @param[in] message           the displayed text
+       @param[in] style             modality and style definitions (icon and used buttons - buttons only for message boxes)
+                                    @see CClientUIInterface::MessageBoxFlags
+       @param[in] ret               pointer to a bool that will be modified to whether Ok was clicked (modal only)
+       @param[in] detailed_message  the text to be displayed in the details area
     */
-    void message(const QString& title, QString message, unsigned int style, bool* ret = nullptr);
+    void message(const QString& title, QString message, unsigned int style, bool* ret = nullptr, const QString& detailed_message = QString());
 
 #ifdef ENABLE_WALLET
     void setCurrentWallet(WalletModel* wallet_model);
@@ -270,6 +282,8 @@ public Q_SLOTS:
     void gotoSignMessageTab(QString addr = "");
     /** Show Sign/Verify Message dialog and switch to verify message tab */
     void gotoVerifyMessageTab(QString addr = "");
+    /** Load Partially Signed Bitcoin Transaction from file or clipboard */
+    void gotoLoadPSBT(bool from_clipboard = false);
 
     /** Show open dialog */
     void openClicked();
@@ -304,9 +318,6 @@ public Q_SLOTS:
     /** Show progress dialog e.g. for verifychain */
     void showProgress(const QString &title, int nProgress);
 
-    /** When hideTrayIcon setting is changed in OptionsModel hide or show the icon accordingly. */
-    void setTrayIconVisible(bool);
-
     void showModalOverlay();
 };
 
@@ -321,7 +332,7 @@ public:
 
 protected:
     /** So that it responds to left-button clicks */
-    void mousePressEvent(QMouseEvent *event);
+    void mousePressEvent(QMouseEvent *event) override;
 
 private:
     OptionsModel *optionsModel;

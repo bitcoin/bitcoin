@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2014-2019 The Bitcoin Core developers
+# Copyright (c) 2014-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test fee estimation code."""
@@ -13,7 +13,7 @@ from test_framework.util import (
     assert_equal,
     assert_greater_than,
     assert_greater_than_or_equal,
-    connect_nodes,
+    assert_raises_rpc_error,
     satoshi_round,
 )
 
@@ -99,8 +99,20 @@ def split_inputs(from_node, txins, txouts, initial_split=False):
     txouts.append({"txid": txid, "vout": 0, "amount": half_change})
     txouts.append({"txid": txid, "vout": 1, "amount": rem_change})
 
+def check_raw_estimates(node, fees_seen):
+    """Call estimaterawfee and verify that the estimates meet certain invariants."""
 
-def check_estimates(node, fees_seen):
+    delta = 1.0e-6  # account for rounding error
+    for i in range(1, 26):
+        for _, e in node.estimaterawfee(i).items():
+            feerate = float(e["feerate"])
+            assert_greater_than(feerate, 0)
+
+            if feerate + delta < min(fees_seen) or feerate - delta > max(fees_seen):
+                raise AssertionError("Estimated fee (%f) out of range (%f,%f)"
+                                     % (feerate, min(fees_seen), max(fees_seen)))
+
+def check_smart_estimates(node, fees_seen):
     """Call estimatesmartfee and verify that the estimates meet certain invariants."""
 
     delta = 1.0e-6  # account for rounding error
@@ -123,16 +135,19 @@ def check_estimates(node, fees_seen):
         else:
             assert_greater_than_or_equal(i + 1, e["blocks"])
 
+def check_estimates(node, fees_seen):
+    check_raw_estimates(node, fees_seen)
+    check_smart_estimates(node, fees_seen)
 
 class EstimateFeeTest(BitcoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 3
         # mine non-standard txs (e.g. txs with "dust" outputs)
-        # Force fSendTrickle to true (via whitelist)
+        # Force fSendTrickle to true (via whitelist.noban)
         self.extra_args = [
-            ["-acceptnonstdtxn", "-whitelist=127.0.0.1"],
-            ["-acceptnonstdtxn", "-whitelist=127.0.0.1", "-blockmaxweight=68000"],
-            ["-acceptnonstdtxn", "-whitelist=127.0.0.1", "-blockmaxweight=32000"],
+            ["-acceptnonstdtxn", "-whitelist=noban@127.0.0.1"],
+            ["-acceptnonstdtxn", "-whitelist=noban@127.0.0.1", "-blockmaxweight=68000"],
+            ["-acceptnonstdtxn", "-whitelist=noban@127.0.0.1", "-blockmaxweight=32000"],
         ]
 
     def skip_test_if_missing_module(self):
@@ -161,9 +176,9 @@ class EstimateFeeTest(BitcoinTestFramework):
         # We shuffle our confirmed txout set before each set of transactions
         # small_txpuzzle_randfee will use the transactions that have inputs already in the chain when possible
         # resorting to tx's that depend on the mempool when those run out
-        for i in range(numblocks):
+        for _ in range(numblocks):
             random.shuffle(self.confutxo)
-            for j in range(random.randrange(100 - 50, 100 + 50)):
+            for _ in range(random.randrange(100 - 50, 100 + 50)):
                 from_index = random.randint(1, 2)
                 (txhex, fee) = small_txpuzzle_randfee(self.nodes[from_index], self.confutxo,
                                                       self.memutxo, Decimal("0.005"), min_fee, min_fee)
@@ -217,9 +232,9 @@ class EstimateFeeTest(BitcoinTestFramework):
         # so the estimates would not be affected by the splitting transactions
         self.start_node(1)
         self.start_node(2)
-        connect_nodes(self.nodes[1], 0)
-        connect_nodes(self.nodes[0], 2)
-        connect_nodes(self.nodes[2], 1)
+        self.connect_nodes(1, 0)
+        self.connect_nodes(0, 2)
+        self.connect_nodes(2, 1)
 
         self.sync_all()
 
@@ -228,7 +243,7 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.confutxo = self.txouts  # Start with the set of confirmed txouts after splitting
         self.log.info("Will output estimates for 1/2/3/6/15/25 blocks")
 
-        for i in range(2):
+        for _ in range(2):
             self.log.info("Creating transactions and mining them with a block size that can't keep up")
             # Create transactions and mine 10 small blocks with node 2, but create txs faster than we can mine
             self.transact_and_mine(10, self.nodes[2])
@@ -247,6 +262,11 @@ class EstimateFeeTest(BitcoinTestFramework):
         self.sync_blocks(self.nodes[0:3], wait=.1)
         self.log.info("Final estimates after emptying mempools")
         check_estimates(self.nodes[1], self.fees_per_kb)
+
+        self.log.info("Testing that fee estimation is disabled in blocksonly.")
+        self.restart_node(0, ["-blocksonly"])
+        assert_raises_rpc_error(-32603, "Fee estimation disabled",
+                                self.nodes[0].estimatesmartfee, 2)
 
 
 if __name__ == '__main__':

@@ -1,19 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\common.init.vcxproj" />
   <Import Project="..\common.qt.init.vcxproj" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{51201D5E-D939-4854-AE9D-008F03FF518E}</ProjectGuid>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\test\setup_common.cpp" />
+    <ClCompile Include="..\..\src\test\util\setup_common.cpp" />
     <ClCompile Include="..\..\src\qt\test\addressbooktests.cpp" />
     <ClCompile Include="..\..\src\qt\test\apptests.cpp" />
-    <ClCompile Include="..\..\src\qt\test\compattests.cpp" />
     <ClCompile Include="..\..\src\qt\test\rpcnestedtests.cpp" />
     <ClCompile Include="..\..\src\qt\test\test_main.cpp" />
     <ClCompile Include="..\..\src\qt\test\uritests.cpp" />
@@ -22,7 +19,6 @@
     <ClCompile Include="..\..\src\wallet\test\wallet_test_fixture.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_addressbooktests.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_apptests.cpp" />
-    <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_compattests.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_rpcnestedtests.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_uritests.cpp" />
     <ClCompile Include="$(GeneratedFilesOutDir)\moc\moc_wallettests.cpp" />
@@ -66,29 +62,31 @@
     </ProjectReference>
   </ItemGroup>
 
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\libbitcoin_qt\$(GeneratedFilesOutDir)\..\;$(QtIncludeDir)\QtTest;$(QtIncludes);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>$(QtReleaseLibaries);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(QtLibraryDir)\Qt5Test.lib;$(QtReleaseLibraries);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/ignore:4206 /LTCG:OFF</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
 
-    <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\libbitcoin_qt\$(GeneratedFilesOutDir)\..\;$(QtIncludeDir)\QtTest;$(QtIncludes);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(QtDebugLibraries);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalOptions>/ignore:4206</AdditionalOptions>
     </Link>
   </ItemDefinitionGroup>
-
   <ItemGroup>
     <MocTestFiles Include="..\..\src\qt\test\addressbooktests.h" />
     <MocTestFiles Include="..\..\src\qt\test\apptests.h" />
-    <MocTestFiles Include="..\..\src\qt\test\compattests.h" />
-    <MocTestFiles Include="..\..\src\qt\test\paymentservertests.h" />
     <MocTestFiles Include="..\..\src\qt\test\rpcnestedtests.h" />
     <MocTestFiles Include="..\..\src\qt\test\uritests.h" />
     <MocTestFiles Include="..\..\src\qt\test\wallettests.h" />
@@ -106,8 +104,6 @@
     <RemoveDir Directories="$(GeneratedFilesOutDir)\moc\*" />
     <RemoveDir Directories="$(GeneratedFilesOutDir)\moc" />
   </Target>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <PropertyGroup>
     <BuildDependsOn>
        moccode;
@@ -120,4 +116,4 @@
         $(CleanDependsOn);
     </CleanDependsOn>
   </PropertyGroup>
- </Project>
+</Project>

@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018 The Bitcoin Core developers
+// Copyright (c) 2014-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -53,6 +53,13 @@ void static inline WriteLE64(unsigned char* ptr, uint64_t x)
     memcpy(ptr, (char*)&v, 8);
 }
 
+uint16_t static inline ReadBE16(const unsigned char* ptr)
+{
+    uint16_t x;
+    memcpy((char*)&x, ptr, 2);
+    return be16toh(x);
+}
+
 uint32_t static inline ReadBE32(const unsigned char* ptr)
 {
     uint32_t x;
@@ -82,12 +89,12 @@ void static inline WriteBE64(unsigned char* ptr, uint64_t x)
 /** Return the smallest number n such that (x >> n) == 0 (or 64 if the highest bit in x is set. */
 uint64_t static inline CountBits(uint64_t x)
 {
-#if HAVE_DECL___BUILTIN_CLZL
+#if HAVE_BUILTIN_CLZL
     if (sizeof(unsigned long) >= sizeof(uint64_t)) {
         return x ? 8 * sizeof(unsigned long) - __builtin_clzl(x) : 0;
     }
 #endif
-#if HAVE_DECL___BUILTIN_CLZLL
+#if HAVE_BUILTIN_CLZLL
     if (sizeof(unsigned long long) >= sizeof(uint64_t)) {
         return x ? 8 * sizeof(unsigned long long) - __builtin_clzll(x) : 0;
     }

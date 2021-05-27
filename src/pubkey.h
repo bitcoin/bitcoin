@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Copyright (c) 2017 The Zcash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -9,9 +9,10 @@
 
 #include <hash.h>
 #include <serialize.h>
+#include <span.h>
 #include <uint256.h>
 
-#include <stdexcept>
+#include <cstring>
 #include <vector>
 
 const unsigned int BIP32_EXTKEY_SIZE = 74;
@@ -33,17 +34,17 @@ public:
     /**
      * secp256k1:
      */
-    static constexpr unsigned int PUBLIC_KEY_SIZE             = 65;
-    static constexpr unsigned int COMPRESSED_PUBLIC_KEY_SIZE  = 33;
-    static constexpr unsigned int SIGNATURE_SIZE              = 72;
-    static constexpr unsigned int COMPACT_SIGNATURE_SIZE      = 65;
+    static constexpr unsigned int SIZE                   = 65;
+    static constexpr unsigned int COMPRESSED_SIZE        = 33;
+    static constexpr unsigned int SIGNATURE_SIZE         = 72;
+    static constexpr unsigned int COMPACT_SIGNATURE_SIZE = 65;
     /**
      * see www.keylength.com
      * script supports up to 75 for single byte push
      */
     static_assert(
-        PUBLIC_KEY_SIZE >= COMPRESSED_PUBLIC_KEY_SIZE,
-        "COMPRESSED_PUBLIC_KEY_SIZE is larger than PUBLIC_KEY_SIZE");
+        SIZE >= COMPRESSED_SIZE,
+        "COMPRESSED_SIZE is larger than SIZE");
 
 private:
 
@@ -51,15 +52,15 @@ private:
      * Just store the serialized data.
      * Its length can very cheaply be computed from the first byte.
      */
-    unsigned char vch[PUBLIC_KEY_SIZE];
+    unsigned char vch[SIZE];
 
     //! Compute the length of a pubkey with a given first byte.
     unsigned int static GetLen(unsigned char chHeader)
     {
         if (chHeader == 2 || chHeader == 3)
-            return COMPRESSED_PUBLIC_KEY_SIZE;
+            return COMPRESSED_SIZE;
         if (chHeader == 4 || chHeader == 6 || chHeader == 7)
-            return PUBLIC_KEY_SIZE;
+            return SIZE;
         return 0;
     }
 
@@ -100,7 +101,7 @@ public:
     }
 
     //! Construct a public key from a byte vector.
-    explicit CPubKey(const std::vector<unsigned char>& _vch)
+    explicit CPubKey(Span<const uint8_t> _vch)
     {
         Set(_vch.begin(), _vch.end());
     }
@@ -140,8 +141,11 @@ public:
     void Unserialize(Stream& s)
     {
         unsigned int len = ::ReadCompactSize(s);
-        if (len <= PUBLIC_KEY_SIZE) {
+        if (len <= SIZE) {
             s.read((char*)vch, len);
+            if (len != size()) {
+                Invalidate();
+            }
         } else {
             // invalid pubkey, skip available data
             char dummy;
@@ -154,19 +158,28 @@ public:
     //! Get the KeyID of this public key (hash of its serialization)
     CKeyID GetID() const
     {
-        return CKeyID(Hash160(vch, vch + size()));
+        return CKeyID(Hash160(MakeSpan(vch).first(size())));
     }
 
     //! Get the 256-bit hash of this public key.
     uint256 GetHash() const
     {
-        return Hash(vch, vch + size());
+        return Hash(MakeSpan(vch).first(size()));
     }
 
     /*
      * Check syntactic correctness.
      *
-     * Note that this is consensus critical as CheckSig() calls it!
+     * When setting a pubkey (Set()) or deserializing fails (its header bytes
+     * don't match the length of the data), the size is set to 0. Thus,
+     * by checking size, one can observe whether Set() or deserialization has
+     * failed.
+     *
+     * This does not check for more than that. In particular, it does not verify
+     * that the coordinates correspond to a point on the curve (see IsFullyValid()
+     * for that instead).
+     *
+     * Note that this is consensus critical as CheckECDSASignature() calls it!
      */
     bool IsValid() const
     {
@@ -179,7 +192,7 @@ public:
     //! Check whether this is a compressed public key.
     bool IsCompressed() const
     {
-        return size() == COMPRESSED_PUBLIC_KEY_SIZE;
+        return size() == COMPRESSED_SIZE;
     }
 
     /**
@@ -203,6 +216,27 @@ public:
     bool Derive(CPubKey& pubkeyChild, ChainCode &ccChild, unsigned int nChild, const ChainCode& cc) const;
 };
 
+class XOnlyPubKey
+{
+private:
+    uint256 m_keydata;
+
+public:
+    /** Construct an x-only pubkey from exactly 32 bytes. */
+    explicit XOnlyPubKey(Span<const unsigned char> bytes);
+
+    /** Verify a Schnorr signature against this public key.
+     *
+     * sigbytes must be exactly 64 bytes.
+     */
+    bool VerifySchnorr(const uint256& msg, Span<const unsigned char> sigbytes) const;
+    bool CheckPayToContract(const XOnlyPubKey& base, const uint256& hash, bool parity) const;
+
+    const unsigned char& operator[](int pos) const { return *(m_keydata.begin() + pos); }
+    const unsigned char* data() const { return m_keydata.begin(); }
+    size_t size() const { return m_keydata.size(); }
+};
+
 struct CExtPubKey {
     unsigned char nDepth;
     unsigned char vchFingerprint[4];
@@ -213,40 +247,20 @@ struct CExtPubKey {
     friend bool operator==(const CExtPubKey &a, const CExtPubKey &b)
     {
         return a.nDepth == b.nDepth &&
-            memcmp(&a.vchFingerprint[0], &b.vchFingerprint[0], sizeof(vchFingerprint)) == 0 &&
+            memcmp(a.vchFingerprint, b.vchFingerprint, sizeof(vchFingerprint)) == 0 &&
             a.nChild == b.nChild &&
             a.chaincode == b.chaincode &&
             a.pubkey == b.pubkey;
     }
 
+    friend bool operator!=(const CExtPubKey &a, const CExtPubKey &b)
+    {
+        return !(a == b);
+    }
+
     void Encode(unsigned char code[BIP32_EXTKEY_SIZE]) const;
     void Decode(const unsigned char code[BIP32_EXTKEY_SIZE]);
     bool Derive(CExtPubKey& out, unsigned int nChild) const;
-
-    void Serialize(CSizeComputer& s) const
-    {
-        // Optimized implementation for ::GetSerializeSize that avoids copying.
-        s.seek(BIP32_EXTKEY_SIZE + 1); // add one byte for the size (compact int)
-    }
-    template <typename Stream>
-    void Serialize(Stream& s) const
-    {
-        unsigned int len = BIP32_EXTKEY_SIZE;
-        ::WriteCompactSize(s, len);
-        unsigned char code[BIP32_EXTKEY_SIZE];
-        Encode(code);
-        s.write((const char *)&code[0], len);
-    }
-    template <typename Stream>
-    void Unserialize(Stream& s)
-    {
-        unsigned int len = ::ReadCompactSize(s);
-        unsigned char code[BIP32_EXTKEY_SIZE];
-        if (len != BIP32_EXTKEY_SIZE)
-            throw std::runtime_error("Invalid extended key size\n");
-        s.read((char *)&code[0], len);
-        Decode(code);
-    }
 };
 
 /** Users of this module must hold an ECCVerifyHandle. The constructor and

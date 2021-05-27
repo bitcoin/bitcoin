@@ -7,7 +7,7 @@
 #include <util/system.h>
 #include <util/time.h>
 
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 #include <vector>
@@ -571,8 +571,6 @@ BOOST_AUTO_TEST_CASE(MempoolSizeLimitTest)
     SetMockTime(42 + 8*CTxMemPool::ROLLING_FEE_HALFLIFE + CTxMemPool::ROLLING_FEE_HALFLIFE/2 + CTxMemPool::ROLLING_FEE_HALFLIFE/4);
     BOOST_CHECK_EQUAL(pool.GetMinFee(1).GetFeePerK(), 0);
     // ... unless it has gone all the way to 0 (after getting past 1000/2)
-
-    SetMockTime(0);
 }
 
 inline CTransactionRef make_tx(std::vector<CAmount>&& output_values, std::vector<CTransactionRef>&& inputs=std::vector<CTransactionRef>(), std::vector<uint32_t>&& input_indices=std::vector<uint32_t>())
@@ -749,6 +747,43 @@ BOOST_AUTO_TEST_CASE(MempoolAncestryTests)
     pool.GetTransactionAncestry(ty6->GetHash(), ancestors, descendants);
     BOOST_CHECK_EQUAL(ancestors, 9ULL);
     BOOST_CHECK_EQUAL(descendants, 6ULL);
+
+    /* Ancestors represented more than once ("diamond") */
+    //
+    // [ta].0 <- [tb].0 -----<------- [td].0
+    //            |                    |
+    //            \---1 <- [tc].0 --<--/
+    //
+    CTransactionRef ta, tb, tc, td;
+    ta = make_tx(/* output_values */ {10 * COIN});
+    tb = make_tx(/* output_values */ {5 * COIN, 3 * COIN}, /* inputs */  {ta});
+    tc = make_tx(/* output_values */ {2 * COIN}, /* inputs */ {tb}, /* input_indices */ {1});
+    td = make_tx(/* output_values */ {6 * COIN}, /* inputs */ {tb, tc}, /* input_indices */ {0, 0});
+    pool.clear();
+    pool.addUnchecked(entry.Fee(10000LL).FromTx(ta));
+    pool.addUnchecked(entry.Fee(10000LL).FromTx(tb));
+    pool.addUnchecked(entry.Fee(10000LL).FromTx(tc));
+    pool.addUnchecked(entry.Fee(10000LL).FromTx(td));
+
+    // Ancestors / descendants should be:
+    // transaction  ancestors           descendants
+    // ============ =================== ===========
+    // ta           1 (ta               4 (ta,tb,tc,td)
+    // tb           2 (ta,tb)           4 (ta,tb,tc,td)
+    // tc           3 (ta,tb,tc)        4 (ta,tb,tc,td)
+    // td           4 (ta,tb,tc,td)     4 (ta,tb,tc,td)
+    pool.GetTransactionAncestry(ta->GetHash(), ancestors, descendants);
+    BOOST_CHECK_EQUAL(ancestors, 1ULL);
+    BOOST_CHECK_EQUAL(descendants, 4ULL);
+    pool.GetTransactionAncestry(tb->GetHash(), ancestors, descendants);
+    BOOST_CHECK_EQUAL(ancestors, 2ULL);
+    BOOST_CHECK_EQUAL(descendants, 4ULL);
+    pool.GetTransactionAncestry(tc->GetHash(), ancestors, descendants);
+    BOOST_CHECK_EQUAL(ancestors, 3ULL);
+    BOOST_CHECK_EQUAL(descendants, 4ULL);
+    pool.GetTransactionAncestry(td->GetHash(), ancestors, descendants);
+    BOOST_CHECK_EQUAL(ancestors, 4ULL);
+    BOOST_CHECK_EQUAL(descendants, 4ULL);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

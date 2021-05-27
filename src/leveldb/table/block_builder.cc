@@ -28,36 +28,35 @@
 
 #include "table/block_builder.h"
 
-#include <algorithm>
 #include <assert.h>
+
+#include <algorithm>
+
 #include "leveldb/comparator.h"
-#include "leveldb/table_builder.h"
+#include "leveldb/options.h"
 #include "util/coding.h"
 
 namespace leveldb {
 
 BlockBuilder::BlockBuilder(const Options* options)
-    : options_(options),
-      restarts_(),
-      counter_(0),
-      finished_(false) {
+    : options_(options), restarts_(), counter_(0), finished_(false) {
   assert(options->block_restart_interval >= 1);
-  restarts_.push_back(0);       // First restart point is at offset 0
+  restarts_.push_back(0);  // First restart point is at offset 0
 }
 
 void BlockBuilder::Reset() {
   buffer_.clear();
   restarts_.clear();
-  restarts_.push_back(0);       // First restart point is at offset 0
+  restarts_.push_back(0);  // First restart point is at offset 0
   counter_ = 0;
   finished_ = false;
   last_key_.clear();
 }
 
 size_t BlockBuilder::CurrentSizeEstimate() const {
-  return (buffer_.size() +                        // Raw data buffer
-          restarts_.size() * sizeof(uint32_t) +   // Restart array
-          sizeof(uint32_t));                      // Restart array length
+  return (buffer_.size() +                       // Raw data buffer
+          restarts_.size() * sizeof(uint32_t) +  // Restart array
+          sizeof(uint32_t));                     // Restart array length
 }
 
 Slice BlockBuilder::Finish() {
@@ -74,7 +73,7 @@ void BlockBuilder::Add(const Slice& key, const Slice& value) {
   Slice last_key_piece(last_key_);
   assert(!finished_);
   assert(counter_ <= options_->block_restart_interval);
-  assert(buffer_.empty() // No values yet?
+  assert(buffer_.empty()  // No values yet?
          || options_->comparator->Compare(key, last_key_piece) > 0);
   size_t shared = 0;
   if (counter_ < options_->block_restart_interval) {

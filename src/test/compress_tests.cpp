@@ -1,9 +1,10 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <compressor.h>
-#include <test/setup_common.h>
+#include <script/standard.h>
+#include <test/util/setup_common.h>
 
 #include <stdint.h>
 
@@ -59,6 +60,78 @@ BOOST_AUTO_TEST_CASE(compress_amounts)
 
     for (uint64_t i = 0; i < 100000; i++)
         BOOST_CHECK(TestDecode(i));
+}
+
+BOOST_AUTO_TEST_CASE(compress_script_to_ckey_id)
+{
+    // case CKeyID
+    CKey key;
+    key.MakeNewKey(true);
+    CPubKey pubkey = key.GetPubKey();
+
+    CScript script = CScript() << OP_DUP << OP_HASH160 << ToByteVector(pubkey.GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
+    BOOST_CHECK_EQUAL(script.size(), 25U);
+
+    CompressedScript out;
+    bool done = CompressScript(script, out);
+    BOOST_CHECK_EQUAL(done, true);
+
+    // Check compressed script
+    BOOST_CHECK_EQUAL(out.size(), 21U);
+    BOOST_CHECK_EQUAL(out[0], 0x00);
+    BOOST_CHECK_EQUAL(memcmp(out.data() + 1, script.data() + 3, 20), 0); // compare the 20 relevant chars of the CKeyId in the script
+}
+
+BOOST_AUTO_TEST_CASE(compress_script_to_cscript_id)
+{
+    // case CScriptID
+    CScript script, redeemScript;
+    script << OP_HASH160 << ToByteVector(CScriptID(redeemScript)) << OP_EQUAL;
+    BOOST_CHECK_EQUAL(script.size(), 23U);
+
+    CompressedScript out;
+    bool done = CompressScript(script, out);
+    BOOST_CHECK_EQUAL(done, true);
+
+    // Check compressed script
+    BOOST_CHECK_EQUAL(out.size(), 21U);
+    BOOST_CHECK_EQUAL(out[0], 0x01);
+    BOOST_CHECK_EQUAL(memcmp(out.data() + 1, script.data() + 2, 20), 0); // compare the 20 relevant chars of the CScriptId in the script
+}
+
+BOOST_AUTO_TEST_CASE(compress_script_to_compressed_pubkey_id)
+{
+    CKey key;
+    key.MakeNewKey(true); // case compressed PubKeyID
+
+    CScript script = CScript() << ToByteVector(key.GetPubKey()) << OP_CHECKSIG; // COMPRESSED_PUBLIC_KEY_SIZE (33)
+    BOOST_CHECK_EQUAL(script.size(), 35U);
+
+    CompressedScript out;
+    bool done = CompressScript(script, out);
+    BOOST_CHECK_EQUAL(done, true);
+
+    // Check compressed script
+    BOOST_CHECK_EQUAL(out.size(), 33U);
+    BOOST_CHECK_EQUAL(memcmp(out.data(), script.data() + 1, 1), 0);
+    BOOST_CHECK_EQUAL(memcmp(out.data() + 1, script.data() + 2, 32), 0); // compare the 32 chars of the compressed CPubKey
+}
+
+BOOST_AUTO_TEST_CASE(compress_script_to_uncompressed_pubkey_id)
+{
+    CKey key;
+    key.MakeNewKey(false); // case uncompressed PubKeyID
+    CScript script =  CScript() << ToByteVector(key.GetPubKey()) << OP_CHECKSIG; // PUBLIC_KEY_SIZE (65)
+    BOOST_CHECK_EQUAL(script.size(), 67U);                   // 1 char code + 65 char pubkey + OP_CHECKSIG
+
+    CompressedScript out;
+    bool done = CompressScript(script, out);
+    BOOST_CHECK_EQUAL(done, true);
+
+    // Check compressed script
+    BOOST_CHECK_EQUAL(out.size(), 33U);
+    BOOST_CHECK_EQUAL(memcmp(out.data() + 1, script.data() + 2, 32), 0); // first 32 chars of CPubKey are copied into out[1:]
+    BOOST_CHECK_EQUAL(out[0], 0x04 | (script[65] & 0x01)); // least significant bit (lsb) of last char of pubkey is mapped into out[0]
 }
 
 BOOST_AUTO_TEST_SUITE_END()

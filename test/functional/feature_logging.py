@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2017-2018 The Bitcoin Core developers
+# Copyright (c) 2017-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test debug logging."""
@@ -16,7 +16,7 @@ class LoggingTest(BitcoinTestFramework):
         self.setup_clean_chain = True
 
     def relative_log_path(self, name):
-        return os.path.join(self.nodes[0].datadir, "regtest", name)
+        return os.path.join(self.nodes[0].datadir, self.chain, name)
 
     def run_test(self):
         # test default log file name
@@ -67,8 +67,7 @@ class LoggingTest(BitcoinTestFramework):
         assert not os.path.isfile(default_log_path)
 
         # just sanity check no crash here
-        self.stop_node(0)
-        self.start_node(0, ["-debuglogfile=%s" % os.devnull])
+        self.restart_node(0, ["-debuglogfile=%s" % os.devnull])
 
 
 if __name__ == '__main__':

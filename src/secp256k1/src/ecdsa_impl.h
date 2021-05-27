@@ -46,68 +46,73 @@ static const secp256k1_fe secp256k1_ecdsa_const_p_minus_order = SECP256K1_FE_CON
     0, 0, 0, 1, 0x45512319UL, 0x50B75FC4UL, 0x402DA172UL, 0x2FC9BAEEUL
 );
 
-static int secp256k1_der_read_len(const unsigned char **sigp, const unsigned char *sigend) {
-    int lenleft, b1;
-    size_t ret = 0;
+static int secp256k1_der_read_len(size_t *len, const unsigned char **sigp, const unsigned char *sigend) {
+    size_t lenleft;
+    unsigned char b1;
+    VERIFY_CHECK(len != NULL);
+    *len = 0;
     if (*sigp >= sigend) {
-        return -1;
+        return 0;
     }
     b1 = *((*sigp)++);
     if (b1 == 0xFF) {
         /* X.690-0207 8.1.3.5.c the value 0xFF shall not be used. */
-        return -1;
+        return 0;
     }
     if ((b1 & 0x80) == 0) {
         /* X.690-0207 8.1.3.4 short form length octets */
-        return b1;
+        *len = b1;
+        return 1;
     }
     if (b1 == 0x80) {
         /* Indefinite length is not allowed in DER. */
-        return -1;
+        return 0;
     }
     /* X.690-207 8.1.3.5 long form length octets */
-    lenleft = b1 & 0x7F;
-    if (lenleft > sigend - *sigp) {
-        return -1;
+    lenleft = b1 & 0x7F; /* lenleft is at least 1 */
+    if (lenleft > (size_t)(sigend - *sigp)) {
+        return 0;
     }
     if (**sigp == 0) {
         /* Not the shortest possible length encoding. */
-        return -1;
+        return 0;
     }
-    if ((size_t)lenleft > sizeof(size_t)) {
+    if (lenleft > sizeof(size_t)) {
         /* The resulting length would exceed the range of a size_t, so
          * certainly longer than the passed array size.
          */
-        return -1;
+        return 0;
     }
     while (lenleft > 0) {
-        ret = (ret << 8) | **sigp;
-        if (ret + lenleft > (size_t)(sigend - *sigp)) {
-            /* Result exceeds the length of the passed array. */
-            return -1;
-        }
+        *len = (*len << 8) | **sigp;
         (*sigp)++;
         lenleft--;
     }
-    if (ret < 128) {
-        /* Not the shortest possible length encoding. */
-        return -1;
+    if (*len > (size_t)(sigend - *sigp)) {
+        /* Result exceeds the length of the passed array. */
+        return 0;
     }
-    return ret;
+    if (*len < 128) {
+        /* Not the shortest possible length encoding. */
+        return 0;
+    }
+    return 1;
 }
 
 static int secp256k1_der_parse_integer(secp256k1_scalar *r, const unsigned char **sig, const unsigned char *sigend) {
     int overflow = 0;
     unsigned char ra[32] = {0};
-    int rlen;
+    size_t rlen;
 
     if (*sig == sigend || **sig != 0x02) {
         /* Not a primitive integer (X.690-0207 8.3.1). */
         return 0;
     }
     (*sig)++;
-    rlen = secp256k1_der_read_len(sig, sigend);
-    if (rlen <= 0 || (*sig) + rlen > sigend) {
+    if (secp256k1_der_read_len(&rlen, sig, sigend) == 0) {
+        return 0;
+    }
+    if (rlen == 0 || *sig + rlen > sigend) {
         /* Exceeds bounds or not at least length 1 (X.690-0207 8.3.1).  */
         return 0;
     }
@@ -123,8 +128,11 @@ static int secp256k1_der_parse_integer(secp256k1_scalar *r, const unsigned char 
         /* Negative. */
         overflow = 1;
     }
-    while (rlen > 0 && **sig == 0) {
-        /* Skip leading zero bytes */
+    /* There is at most one leading zero byte:
+     * if there were two leading zero bytes, we would have failed and returned 0
+     * because of excessive 0x00 padding already. */
+    if (rlen > 0 && **sig == 0) {
+        /* Skip leading zero byte */
         rlen--;
         (*sig)++;
     }
@@ -144,18 +152,16 @@ static int secp256k1_der_parse_integer(secp256k1_scalar *r, const unsigned char 
 
 static int secp256k1_ecdsa_sig_parse(secp256k1_scalar *rr, secp256k1_scalar *rs, const unsigned char *sig, size_t size) {
     const unsigned char *sigend = sig + size;
-    int rlen;
+    size_t rlen;
     if (sig == sigend || *(sig++) != 0x30) {
         /* The encoding doesn't start with a constructed sequence (X.690-0207 8.9.1). */
         return 0;
     }
-    rlen = secp256k1_der_read_len(&sig, sigend);
-    if (rlen < 0 || sig + rlen > sigend) {
-        /* Tuple exceeds bounds */
+    if (secp256k1_der_read_len(&rlen, &sig, sigend) == 0) {
         return 0;
     }
-    if (sig + rlen != sigend) {
-        /* Garbage after tuple. */
+    if (rlen != (size_t)(sigend - sig)) {
+        /* Tuple exceeds bounds or garage after tuple. */
         return 0;
     }
 
@@ -274,6 +280,7 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, sec
     secp256k1_ge r;
     secp256k1_scalar n;
     int overflow = 0;
+    int high;
 
     secp256k1_ecmult_gen(ctx, &rp, nonce);
     secp256k1_ge_set_gej(&r, &rp);
@@ -281,15 +288,11 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, sec
     secp256k1_fe_normalize(&r.y);
     secp256k1_fe_get_b32(b, &r.x);
     secp256k1_scalar_set_b32(sigr, b, &overflow);
-    /* These two conditions should be checked before calling */
-    VERIFY_CHECK(!secp256k1_scalar_is_zero(sigr));
-    VERIFY_CHECK(overflow == 0);
-
     if (recid) {
         /* The overflow condition is cryptographically unreachable as hitting it requires finding the discrete log
          * of some P where P.x >= order, and only 1 in about 2^127 points meet this criteria.
          */
-        *recid = (overflow ? 2 : 0) | (secp256k1_fe_is_odd(&r.y) ? 1 : 0);
+        *recid = (overflow << 1) | secp256k1_fe_is_odd(&r.y);
     }
     secp256k1_scalar_mul(&n, sigr, seckey);
     secp256k1_scalar_add(&n, &n, message);
@@ -298,16 +301,15 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, sec
     secp256k1_scalar_clear(&n);
     secp256k1_gej_clear(&rp);
     secp256k1_ge_clear(&r);
-    if (secp256k1_scalar_is_zero(sigs)) {
-        return 0;
+    high = secp256k1_scalar_is_high(sigs);
+    secp256k1_scalar_cond_negate(sigs, high);
+    if (recid) {
+            *recid ^= high;
     }
-    if (secp256k1_scalar_is_high(sigs)) {
-        secp256k1_scalar_negate(sigs, sigs);
-        if (recid) {
-            *recid ^= 1;
-        }
-    }
-    return 1;
+    /* P.x = order is on the curve, so technically sig->r could end up being zero, which would be an invalid signature.
+     * This is cryptographically unreachable as hitting it requires finding the discrete log of P.x = N.
+     */
+    return !secp256k1_scalar_is_zero(sigr) & !secp256k1_scalar_is_zero(sigs);
 }
 
 #endif /* SECP256K1_ECDSA_IMPL_H */

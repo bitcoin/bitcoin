@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018 The Bitcoin Core developers
+# Copyright (c) 2018-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Verify that starting bitcoin with -h works as expected."""
@@ -17,7 +17,7 @@ class HelpTest(BitcoinTestFramework):
         # Don't start the node
 
     def get_node_output(self, *, ret_code_expected):
-        ret_code = self.nodes[0].process.wait(timeout=5)
+        ret_code = self.nodes[0].process.wait(timeout=60)
         assert_equal(ret_code, ret_code_expected)
         self.nodes[0].stdout.seek(0)
         self.nodes[0].stderr.seek(0)

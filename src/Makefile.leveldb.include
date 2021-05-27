@@ -4,41 +4,43 @@
 
 LIBLEVELDB_INT = leveldb/libleveldb.a
 LIBMEMENV_INT  = leveldb/libmemenv.a
-LIBLEVELDB_SSE42_INT  = leveldb/libleveldb_sse42.a
 
 EXTRA_LIBRARIES += $(LIBLEVELDB_INT)
 EXTRA_LIBRARIES += $(LIBMEMENV_INT)
-EXTRA_LIBRARIES += $(LIBLEVELDB_SSE42_INT)
 
-LIBLEVELDB += $(LIBLEVELDB_INT)
+LIBLEVELDB += $(LIBLEVELDB_INT) $(LIBCRC32C)
 LIBMEMENV += $(LIBMEMENV_INT)
-LIBLEVELDB_SSE42 = $(LIBLEVELDB_SSE42_INT)
 
 LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/include
 LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/helpers/memenv
 
 LEVELDB_CPPFLAGS_INT =
 LEVELDB_CPPFLAGS_INT += -I$(srcdir)/leveldb
-LEVELDB_CPPFLAGS_INT += $(LEVELDB_TARGET_FLAGS)
-LEVELDB_CPPFLAGS_INT += -DLEVELDB_ATOMIC_PRESENT
+LEVELDB_CPPFLAGS_INT += -I$(srcdir)/crc32c/include
 LEVELDB_CPPFLAGS_INT += -D__STDC_LIMIT_MACROS
+LEVELDB_CPPFLAGS_INT += -DHAVE_SNAPPY=0 -DHAVE_CRC32C=1
+LEVELDB_CPPFLAGS_INT += -DHAVE_FDATASYNC=@HAVE_FDATASYNC@
+LEVELDB_CPPFLAGS_INT += -DHAVE_FULLFSYNC=@HAVE_FULLFSYNC@
+LEVELDB_CPPFLAGS_INT += -DHAVE_O_CLOEXEC=@HAVE_O_CLOEXEC@
+
+if WORDS_BIGENDIAN
+LEVELDB_CPPFLAGS_INT += -DLEVELDB_IS_BIG_ENDIAN=1
+else
+LEVELDB_CPPFLAGS_INT += -DLEVELDB_IS_BIG_ENDIAN=0
+endif
 
 if TARGET_WINDOWS
-LEVELDB_CPPFLAGS_INT += -DLEVELDB_PLATFORM_WINDOWS -D__USE_MINGW_ANSI_STDIO=1
+LEVELDB_CPPFLAGS_INT += -DLEVELDB_PLATFORM_WINDOWS -D_UNICODE -DUNICODE -D__USE_MINGW_ANSI_STDIO=1
 else
 LEVELDB_CPPFLAGS_INT += -DLEVELDB_PLATFORM_POSIX
 endif
 
 leveldb_libleveldb_a_CPPFLAGS = $(AM_CPPFLAGS) $(LEVELDB_CPPFLAGS_INT) $(LEVELDB_CPPFLAGS)
-leveldb_libleveldb_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+leveldb_libleveldb_a_CXXFLAGS = $(filter-out -Wconditional-uninitialized -Werror=conditional-uninitialized -Wsuggest-override -Werror=suggest-override, $(AM_CXXFLAGS)) $(PIE_FLAGS)
 
 leveldb_libleveldb_a_SOURCES=
-leveldb_libleveldb_a_SOURCES += leveldb/port/atomic_pointer.h
-leveldb_libleveldb_a_SOURCES += leveldb/port/port_example.h
-leveldb_libleveldb_a_SOURCES += leveldb/port/port_posix.h
-leveldb_libleveldb_a_SOURCES += leveldb/port/win/stdint.h
+leveldb_libleveldb_a_SOURCES += leveldb/port/port_stdcxx.h
 leveldb_libleveldb_a_SOURCES += leveldb/port/port.h
-leveldb_libleveldb_a_SOURCES += leveldb/port/port_win.h
 leveldb_libleveldb_a_SOURCES += leveldb/port/thread_annotations.h
 leveldb_libleveldb_a_SOURCES += leveldb/include/leveldb/db.h
 leveldb_libleveldb_a_SOURCES += leveldb/include/leveldb/options.h
@@ -47,6 +49,7 @@ leveldb_libleveldb_a_SOURCES += leveldb/include/leveldb/filter_policy.h
 leveldb_libleveldb_a_SOURCES += leveldb/include/leveldb/slice.h
 leveldb_libleveldb_a_SOURCES += leveldb/include/leveldb/table_builder.h
 leveldb_libleveldb_a_SOURCES += leveldb/include/leveldb/env.h
+leveldb_libleveldb_a_SOURCES += leveldb/include/leveldb/export.h
 leveldb_libleveldb_a_SOURCES += leveldb/include/leveldb/c.h
 leveldb_libleveldb_a_SOURCES += leveldb/include/leveldb/iterator.h
 leveldb_libleveldb_a_SOURCES += leveldb/include/leveldb/cache.h
@@ -78,6 +81,7 @@ leveldb_libleveldb_a_SOURCES += leveldb/table/format.h
 leveldb_libleveldb_a_SOURCES += leveldb/table/iterator_wrapper.h
 leveldb_libleveldb_a_SOURCES += leveldb/util/crc32c.h
 leveldb_libleveldb_a_SOURCES += leveldb/util/env_posix_test_helper.h
+leveldb_libleveldb_a_SOURCES += leveldb/util/env_windows_test_helper.h
 leveldb_libleveldb_a_SOURCES += leveldb/util/arena.h
 leveldb_libleveldb_a_SOURCES += leveldb/util/random.h
 leveldb_libleveldb_a_SOURCES += leveldb/util/posix_logger.h
@@ -87,7 +91,9 @@ leveldb_libleveldb_a_SOURCES += leveldb/util/coding.h
 leveldb_libleveldb_a_SOURCES += leveldb/util/testutil.h
 leveldb_libleveldb_a_SOURCES += leveldb/util/mutexlock.h
 leveldb_libleveldb_a_SOURCES += leveldb/util/logging.h
+leveldb_libleveldb_a_SOURCES += leveldb/util/no_destructor.h
 leveldb_libleveldb_a_SOURCES += leveldb/util/testharness.h
+leveldb_libleveldb_a_SOURCES += leveldb/util/windows_logger.h
 
 leveldb_libleveldb_a_SOURCES += leveldb/db/builder.cc
 leveldb_libleveldb_a_SOURCES += leveldb/db/c.cc
@@ -120,7 +126,6 @@ leveldb_libleveldb_a_SOURCES += leveldb/util/coding.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/comparator.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/crc32c.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/env.cc
-leveldb_libleveldb_a_SOURCES += leveldb/util/env_posix.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/filter_policy.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/hash.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/histogram.cc
@@ -129,21 +134,12 @@ leveldb_libleveldb_a_SOURCES += leveldb/util/options.cc
 leveldb_libleveldb_a_SOURCES += leveldb/util/status.cc
 
 if TARGET_WINDOWS
-leveldb_libleveldb_a_SOURCES += leveldb/util/env_win.cc
-leveldb_libleveldb_a_SOURCES += leveldb/port/port_win.cc
+leveldb_libleveldb_a_SOURCES += leveldb/util/env_windows.cc
 else
-leveldb_libleveldb_a_SOURCES += leveldb/port/port_posix.cc
+leveldb_libleveldb_a_SOURCES += leveldb/util/env_posix.cc
 endif
 
 leveldb_libmemenv_a_CPPFLAGS = $(leveldb_libleveldb_a_CPPFLAGS)
 leveldb_libmemenv_a_CXXFLAGS = $(leveldb_libleveldb_a_CXXFLAGS)
 leveldb_libmemenv_a_SOURCES =  leveldb/helpers/memenv/memenv.cc
 leveldb_libmemenv_a_SOURCES += leveldb/helpers/memenv/memenv.h
-
-leveldb_libleveldb_sse42_a_CPPFLAGS = $(leveldb_libleveldb_a_CPPFLAGS)
-leveldb_libleveldb_sse42_a_CXXFLAGS = $(leveldb_libleveldb_a_CXXFLAGS)
-if ENABLE_HWCRC32
-leveldb_libleveldb_sse42_a_CPPFLAGS += -DLEVELDB_PLATFORM_POSIX_SSE
-leveldb_libleveldb_sse42_a_CXXFLAGS += $(SSE42_CXXFLAGS)
-endif
-leveldb_libleveldb_sse42_a_SOURCES =  leveldb/port/port_posix_sse.cc

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2018 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,12 +17,7 @@
 #include <stdint.h>
 #include <QtDBus>
 #endif
-// Include ApplicationServices.h after QtDbus to avoid redefinition of check().
-// This affects at least OSX 10.6. See /usr/include/AssertMacros.h for details.
-// Note: This could also be worked around using:
-// #define __ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES 0
 #ifdef Q_OS_MAC
-#include <ApplicationServices/ApplicationServices.h>
 #include <qt/macnotificationhandler.h>
 #endif
 
@@ -71,7 +66,7 @@ Notificator::~Notificator()
 
 #ifdef USE_DBUS
 
-// Loosely based on http://www.qtcentre.org/archive/index.php/t-25879.html
+// Loosely based on https://www.qtcentre.org/archive/index.php/t-25879.html
 class FreedesktopImage
 {
 public:

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -8,6 +8,8 @@
 
 #include <fs.h>
 #include <tinyformat.h>
+#include <threadsafety.h>
+#include <util/string.h>
 
 #include <atomic>
 #include <cstdint>
@@ -20,12 +22,12 @@ static const bool DEFAULT_LOGTIMEMICROS = false;
 static const bool DEFAULT_LOGIPS        = false;
 static const bool DEFAULT_LOGTIMESTAMPS = true;
 static const bool DEFAULT_LOGTHREADNAMES = false;
+static const bool DEFAULT_LOGSOURCELOCATIONS = false;
 extern const char * const DEFAULT_DEBUGLOGFILE;
 
 extern bool fLogIPs;
 
-struct CLogCategoryActive
-{
+struct LogCategory {
     std::string category;
     bool active;
 };
@@ -39,7 +41,7 @@ namespace BCLog {
         HTTP        = (1 <<  3),
         BENCH       = (1 <<  4),
         ZMQ         = (1 <<  5),
-        DB          = (1 <<  6),
+        WALLETDB    = (1 <<  6),
         RPC         = (1 <<  7),
         ESTIMATEFEE = (1 <<  8),
         ADDRMAN     = (1 <<  9),
@@ -54,16 +56,20 @@ namespace BCLog {
         COINDB      = (1 << 18),
         QT          = (1 << 19),
         LEVELDB     = (1 << 20),
+        VALIDATION  = (1 << 21),
+        I2P         = (1 << 22),
+        IPC         = (1 << 23),
         ALL         = ~(uint32_t)0,
     };
 
     class Logger
     {
     private:
-        mutable std::mutex m_cs;                   // Can not use Mutex from sync.h because in debug mode it would cause a deadlock when a potential deadlock was detected
-        FILE* m_fileout = nullptr;                 // GUARDED_BY(m_cs)
-        std::list<std::string> m_msgs_before_open; // GUARDED_BY(m_cs)
-        bool m_buffering{true};                    //!< Buffer messages before logging can be started. GUARDED_BY(m_cs)
+        mutable StdMutex m_cs; // Can not use Mutex from sync.h because in debug mode it would cause a deadlock when a potential deadlock was detected
+
+        FILE* m_fileout GUARDED_BY(m_cs) = nullptr;
+        std::list<std::string> m_msgs_before_open GUARDED_BY(m_cs);
+        bool m_buffering GUARDED_BY(m_cs) = true; //!< Buffer messages before logging can be started.
 
         /**
          * m_started_new_line is a state variable that will suppress printing of
@@ -77,6 +83,9 @@ namespace BCLog {
 
         std::string LogTimestampStr(const std::string& str);
 
+        /** Slots that connect to the print signal */
+        std::list<std::function<void(const std::string&)>> m_print_callbacks GUARDED_BY(m_cs) {};
+
     public:
         bool m_print_to_console = false;
         bool m_print_to_file = false;
@@ -84,18 +93,34 @@ namespace BCLog {
         bool m_log_timestamps = DEFAULT_LOGTIMESTAMPS;
         bool m_log_time_micros = DEFAULT_LOGTIMEMICROS;
         bool m_log_threadnames = DEFAULT_LOGTHREADNAMES;
+        bool m_log_sourcelocations = DEFAULT_LOGSOURCELOCATIONS;
 
         fs::path m_file_path;
         std::atomic<bool> m_reopen_file{false};
 
         /** Send a string to the log output */
-        void LogPrintStr(const std::string& str);
+        void LogPrintStr(const std::string& str, const std::string& logging_function, const std::string& source_file, const int source_line);
 
         /** Returns whether logs will be written to any output */
         bool Enabled() const
         {
-            std::lock_guard<std::mutex> scoped_lock(m_cs);
-            return m_buffering || m_print_to_console || m_print_to_file;
+            StdLockGuard scoped_lock(m_cs);
+            return m_buffering || m_print_to_console || m_print_to_file || !m_print_callbacks.empty();
+        }
+
+        /** Connect a slot to the print signal and return the connection */
+        std::list<std::function<void(const std::string&)>>::iterator PushBackCallback(std::function<void(const std::string&)> fun)
+        {
+            StdLockGuard scoped_lock(m_cs);
+            m_print_callbacks.push_back(std::move(fun));
+            return --m_print_callbacks.end();
+        }
+
+        /** Delete a connection */
+        void DeleteCallback(std::list<std::function<void(const std::string&)>>::iterator it)
+        {
+            StdLockGuard scoped_lock(m_cs);
+            m_print_callbacks.erase(it);
         }
 
         /** Start logging (and flush all buffered messages) */
@@ -113,6 +138,13 @@ namespace BCLog {
         bool DisableCategory(const std::string& str);
 
         bool WillLogCategory(LogFlags category) const;
+        /** Returns a vector of the log categories */
+        std::vector<LogCategory> LogCategoriesList() const;
+        /** Returns a string with the log categories */
+        std::string LogCategoriesString() const
+        {
+            return Join(LogCategoriesList(), ", ", [&](const LogCategory& i) { return i.category; });
+        };
 
         bool DefaultShrinkDebugFile() const;
     };
@@ -127,12 +159,6 @@ static inline bool LogAcceptCategory(BCLog::LogFlags category)
     return LogInstance().WillLogCategory(category);
 }
 
-/** Returns a string with the log categories. */
-std::string ListLogCategories();
-
-/** Returns a vector of the active log categories. */
-std::vector<CLogCategoryActive> ListActiveLogCategories();
-
 /** Return true if str parses as a log category and set the flag */
 bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str);
 
@@ -141,7 +167,7 @@ bool GetLogCategory(BCLog::LogFlags& flag, const std::string& str);
 // peer can fill up a user's disk with debug.log entries.
 
 template <typename... Args>
-static inline void LogPrintf(const char* fmt, const Args&... args)
+static inline void LogPrintf_(const std::string& logging_function, const std::string& source_file, const int source_line, const char* fmt, const Args&... args)
 {
     if (LogInstance().Enabled()) {
         std::string log_msg;
@@ -151,16 +177,19 @@ static inline void LogPrintf(const char* fmt, const Args&... args)
             /* Original format string will have newline so don't add one here */
             log_msg = "Error \"" + std::string(fmterr.what()) + "\" while formatting log message: " + fmt;
         }
-        LogInstance().LogPrintStr(log_msg);
+        LogInstance().LogPrintStr(log_msg, logging_function, source_file, source_line);
     }
 }
 
-template <typename... Args>
-static inline void LogPrint(const BCLog::LogFlags& category, const Args&... args)
-{
-    if (LogAcceptCategory((category))) {
-        LogPrintf(args...);
-    }
-}
+#define LogPrintf(...) LogPrintf_(__func__, __FILE__, __LINE__, __VA_ARGS__)
+
+// Use a macro instead of a function for conditional logging to prevent
+// evaluating arguments when logging for the category is not enabled.
+#define LogPrint(category, ...)              \
+    do {                                     \
+        if (LogAcceptCategory((category))) { \
+            LogPrintf(__VA_ARGS__);          \
+        }                                    \
+    } while (0)
 
 #endif // BITCOIN_LOGGING_H

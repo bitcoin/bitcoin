@@ -1,24 +1,20 @@
-// Copyright (c) 2011-2019 The Bitcoin Core developers
+// Copyright (c) 2011-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <blockencodings.h>
-#include <consensus/merkle.h>
 #include <chainparams.h>
+#include <consensus/merkle.h>
 #include <pow.h>
 #include <streams.h>
 
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
 std::vector<std::pair<uint256, CTransactionRef>> extra_txn;
 
-struct RegtestingSetup : public TestingSetup {
-    RegtestingSetup() : TestingSetup(CBaseChainParams::REGTEST) {}
-};
-
-BOOST_FIXTURE_TEST_SUITE(blockencodings_tests, RegtestingSetup)
+BOOST_FIXTURE_TEST_SUITE(blockencodings_tests, RegTestingSetup)
 
 static CBlock BuildBlockTestCase() {
     CBlock block;
@@ -136,24 +132,7 @@ public:
         return base.GetShortID(txhash);
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(header);
-        READWRITE(nonce);
-        size_t shorttxids_size = shorttxids.size();
-        READWRITE(VARINT(shorttxids_size));
-        shorttxids.resize(shorttxids_size);
-        for (size_t i = 0; i < shorttxids.size(); i++) {
-            uint32_t lsb = shorttxids[i] & 0xffffffff;
-            uint16_t msb = (shorttxids[i] >> 32) & 0xffff;
-            READWRITE(lsb);
-            READWRITE(msb);
-            shorttxids[i] = (uint64_t(msb) << 32) | uint64_t(lsb);
-        }
-        READWRITE(prefilledtxn);
-    }
+    SERIALIZE_METHODS(TestHeaderAndShortIDs, obj) { READWRITE(obj.header, obj.nonce, Using<VectorFormatter<CustomUintFormatter<CBlockHeaderAndShortTxIDs::SHORTTXIDS_LENGTH>>>(obj.shorttxids), obj.prefilledtxn); }
 };
 
 BOOST_AUTO_TEST_CASE(NonCoinbasePreforwardRTTest)

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (c) 2017 The Bitcoin Core developers
+# Copyright (c) 2017-2019 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -16,7 +16,7 @@ LOCALNET_V4="192.168.0.0/16"
 #defines the IPv6 address space for which you wish to disable rate limiting
 LOCALNET_V6="fe80::/10"
 
-#delete existing rules
+#delete existing rules ('Error: Cannot delete qdisc with handle of zero.' means there weren't any.)
 tc qdisc del dev ${IF} root
 
 #add root class

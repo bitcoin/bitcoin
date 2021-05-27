@@ -1,11 +1,11 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <clientversion.h>
 #include <flatfile.h>
 #include <streams.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 #include <util/system.h>
 
 #include <boost/test/unit_test.hpp>
@@ -14,7 +14,7 @@ BOOST_FIXTURE_TEST_SUITE(flatfile_tests, BasicTestingSetup)
 
 BOOST_AUTO_TEST_CASE(flatfile_filename)
 {
-    const auto data_dir = GetDataDir();
+    const auto data_dir = m_args.GetDataDirBase();
 
     FlatFilePos pos(456, 789);
 
@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(flatfile_filename)
 
 BOOST_AUTO_TEST_CASE(flatfile_open)
 {
-    const auto data_dir = GetDataDir();
+    const auto data_dir = m_args.GetDataDirBase();
     FlatFileSeq seq(data_dir, "a", 16 * 1024);
 
     std::string line1("A purely peer-to-peer version of electronic cash would allow online "
@@ -88,27 +88,27 @@ BOOST_AUTO_TEST_CASE(flatfile_open)
 
 BOOST_AUTO_TEST_CASE(flatfile_allocate)
 {
-    const auto data_dir = GetDataDir();
+    const auto data_dir = m_args.GetDataDirBase();
     FlatFileSeq seq(data_dir, "a", 100);
 
     bool out_of_space;
 
-    BOOST_CHECK_EQUAL(seq.Allocate(FlatFilePos(0, 0), 1, out_of_space), 100);
-    BOOST_CHECK_EQUAL(fs::file_size(seq.FileName(FlatFilePos(0, 0))), 100);
+    BOOST_CHECK_EQUAL(seq.Allocate(FlatFilePos(0, 0), 1, out_of_space), 100U);
+    BOOST_CHECK_EQUAL(fs::file_size(seq.FileName(FlatFilePos(0, 0))), 100U);
     BOOST_CHECK(!out_of_space);
 
-    BOOST_CHECK_EQUAL(seq.Allocate(FlatFilePos(0, 99), 1, out_of_space), 0);
-    BOOST_CHECK_EQUAL(fs::file_size(seq.FileName(FlatFilePos(0, 99))), 100);
+    BOOST_CHECK_EQUAL(seq.Allocate(FlatFilePos(0, 99), 1, out_of_space), 0U);
+    BOOST_CHECK_EQUAL(fs::file_size(seq.FileName(FlatFilePos(0, 99))), 100U);
     BOOST_CHECK(!out_of_space);
 
-    BOOST_CHECK_EQUAL(seq.Allocate(FlatFilePos(0, 99), 2, out_of_space), 101);
-    BOOST_CHECK_EQUAL(fs::file_size(seq.FileName(FlatFilePos(0, 99))), 200);
+    BOOST_CHECK_EQUAL(seq.Allocate(FlatFilePos(0, 99), 2, out_of_space), 101U);
+    BOOST_CHECK_EQUAL(fs::file_size(seq.FileName(FlatFilePos(0, 99))), 200U);
     BOOST_CHECK(!out_of_space);
 }
 
 BOOST_AUTO_TEST_CASE(flatfile_flush)
 {
-    const auto data_dir = GetDataDir();
+    const auto data_dir = m_args.GetDataDirBase();
     FlatFileSeq seq(data_dir, "a", 100);
 
     bool out_of_space;
@@ -116,11 +116,11 @@ BOOST_AUTO_TEST_CASE(flatfile_flush)
 
     // Flush without finalize should not truncate file.
     seq.Flush(FlatFilePos(0, 1));
-    BOOST_CHECK_EQUAL(fs::file_size(seq.FileName(FlatFilePos(0, 1))), 100);
+    BOOST_CHECK_EQUAL(fs::file_size(seq.FileName(FlatFilePos(0, 1))), 100U);
 
     // Flush with finalize should truncate file.
     seq.Flush(FlatFilePos(0, 1), true);
-    BOOST_CHECK_EQUAL(fs::file_size(seq.FileName(FlatFilePos(0, 1))), 1);
+    BOOST_CHECK_EQUAL(fs::file_size(seq.FileName(FlatFilePos(0, 1))), 1U);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

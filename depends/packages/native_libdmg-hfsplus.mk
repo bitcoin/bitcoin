@@ -12,7 +12,7 @@ define $(package)_preprocess_cmds
 endef
 
 define $(package)_config_cmds
-  cmake -DCMAKE_INSTALL_PREFIX:PATH=$(build_prefix) ..
+  $($(package)_cmake) -DCMAKE_C_FLAGS="$$($(1)_cflags) -Wl,--build-id=none" -DCMAKE_SKIP_RPATH="ON" -DCMAKE_EXE_LINKER_FLAGS="-static" -DCMAKE_FIND_LIBRARY_SUFFIXES=".a" ..
 endef
 
 define $(package)_build_cmds

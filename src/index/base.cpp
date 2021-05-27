@@ -1,30 +1,30 @@
-// Copyright (c) 2017-2018 The Bitcoin Core developers
+// Copyright (c) 2017-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <chainparams.h>
 #include <index/base.h>
+#include <node/blockstorage.h>
+#include <node/ui_interface.h>
 #include <shutdown.h>
 #include <tinyformat.h>
-#include <ui_interface.h>
-#include <util/system.h>
-#include <validation.h>
+#include <util/thread.h>
+#include <util/translation.h>
+#include <validation.h> // For g_chainman
 #include <warnings.h>
 
-constexpr char DB_BEST_BLOCK = 'B';
+constexpr uint8_t DB_BEST_BLOCK{'B'};
 
 constexpr int64_t SYNC_LOG_INTERVAL = 30; // seconds
 constexpr int64_t SYNC_LOCATOR_WRITE_INTERVAL = 30; // seconds
 
-template<typename... Args>
+template <typename... Args>
 static void FatalError(const char* fmt, const Args&... args)
 {
     std::string strMessage = tfm::format(fmt, args...);
-    SetMiscWarning(strMessage);
+    SetMiscWarning(Untranslated(strMessage));
     LogPrintf("*** %s\n", strMessage);
-    uiInterface.ThreadSafeMessageBox(
-        "Error: A fatal internal error occurred, see debug.log for details",
-        "", CClientUIInterface::MSG_ERROR);
+    AbortError(_("A fatal internal error occurred, see debug.log for details"));
     StartShutdown();
 }
 
@@ -63,9 +63,44 @@ bool BaseIndex::Init()
     if (locator.IsNull()) {
         m_best_block_index = nullptr;
     } else {
-        m_best_block_index = FindForkInGlobalIndex(::ChainActive(), locator);
+        m_best_block_index = g_chainman.m_blockman.FindForkInGlobalIndex(::ChainActive(), locator);
     }
     m_synced = m_best_block_index.load() == ::ChainActive().Tip();
+    if (!m_synced) {
+        bool prune_violation = false;
+        if (!m_best_block_index) {
+            // index is not built yet
+            // make sure we have all block data back to the genesis
+            const CBlockIndex* block = ::ChainActive().Tip();
+            while (block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
+                block = block->pprev;
+            }
+            prune_violation = block != ::ChainActive().Genesis();
+        }
+        // in case the index has a best block set and is not fully synced
+        // check if we have the required blocks to continue building the index
+        else {
+            const CBlockIndex* block_to_test = m_best_block_index.load();
+            if (!ChainActive().Contains(block_to_test)) {
+                // if the bestblock is not part of the mainchain, find the fork
+                // and make sure we have all data down to the fork
+                block_to_test = ::ChainActive().FindFork(block_to_test);
+            }
+            const CBlockIndex* block = ::ChainActive().Tip();
+            prune_violation = true;
+            // check backwards from the tip if we have all block data until we reach the indexes bestblock
+            while (block_to_test && block->pprev && (block->pprev->nStatus & BLOCK_HAVE_DATA)) {
+                if (block_to_test == block) {
+                    prune_violation = false;
+                    break;
+                }
+                block = block->pprev;
+            }
+        }
+        if (prune_violation) {
+            return InitError(strprintf(Untranslated("%s best block of the index goes beyond pruned data. Please disable the index or reindex (which will download the whole blockchain again)"), GetName()));
+        }
+    }
     return true;
 }
 
@@ -178,6 +213,10 @@ bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_ti
     assert(current_tip->GetAncestor(new_tip->nHeight) == new_tip);
 
     // In the case of a reorg, ensure persisted block locator is not stale.
+    // Pruning has a minimum of 288 blocks-to-keep and getting the index
+    // out of sync may be possible but a users fault.
+    // In case we reorg beyond the pruned depth, ReadBlockFromDisk would
+    // throw and lead to a graceful shutdown
     m_best_block_index = new_tip;
     if (!Commit()) {
         // If commit fails, revert the best block index to avoid corruption.
@@ -188,8 +227,7 @@ bool BaseIndex::Rewind(const CBlockIndex* current_tip, const CBlockIndex* new_ti
     return true;
 }
 
-void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex,
-                               const std::vector<CTransactionRef>& txn_conflicted)
+void BaseIndex::BlockConnected(const std::shared_ptr<const CBlock>& block, const CBlockIndex* pindex)
 {
     if (!m_synced) {
         return;
@@ -241,7 +279,7 @@ void BaseIndex::ChainStateFlushed(const CBlockLocator& locator)
     const CBlockIndex* locator_tip_index;
     {
         LOCK(cs_main);
-        locator_tip_index = LookupBlockIndex(locator_tip_hash);
+        locator_tip_index = g_chainman.m_blockman.LookupBlockIndex(locator_tip_hash);
     }
 
     if (!locator_tip_index) {
@@ -270,7 +308,7 @@ void BaseIndex::ChainStateFlushed(const CBlockLocator& locator)
     Commit();
 }
 
-bool BaseIndex::BlockUntilSyncedToCurrentChain()
+bool BaseIndex::BlockUntilSyncedToCurrentChain() const
 {
     AssertLockNotHeld(cs_main);
 
@@ -299,18 +337,17 @@ void BaseIndex::Interrupt()
     m_interrupt();
 }
 
-void BaseIndex::Start()
+bool BaseIndex::Start()
 {
     // Need to register this ValidationInterface before running Init(), so that
     // callbacks are not missed if Init sets m_synced to true.
     RegisterValidationInterface(this);
     if (!Init()) {
-        FatalError("%s: %s failed to initialize", __func__, GetName());
-        return;
+        return false;
     }
 
-    m_thread_sync = std::thread(&TraceThread<std::function<void()>>, GetName(),
-                                std::bind(&BaseIndex::ThreadSync, this));
+    m_thread_sync = std::thread(&util::TraceThread, GetName(), [this] { ThreadSync(); });
+    return true;
 }
 
 void BaseIndex::Stop()
@@ -320,4 +357,13 @@ void BaseIndex::Stop()
     if (m_thread_sync.joinable()) {
         m_thread_sync.join();
     }
+}
+
+IndexSummary BaseIndex::GetSummary() const
+{
+    IndexSummary summary{};
+    summary.name = GetName();
+    summary.synced = m_synced;
+    summary.best_block_height = m_best_block_index ? m_best_block_index.load()->nHeight : 0;
+    return summary;
 }

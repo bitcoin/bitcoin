@@ -67,7 +67,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
-        <translation>これらは、あなたが知っている支払い送り先の Bitcoin アドレスです。コインを送る前に、必ず金額と送金先アドレスを確認してください。</translation>
+        <translation>これらは、あなたが知っている送信先の Bitcoin アドレスです。コインを送る前に必ず、金額と受取用アドレスを確認してください。</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -87,7 +87,7 @@
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
-        <translation>テキスト CSV (*.csv)</translation>
+        <translation>CSVファイル (*.csv)</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -110,7 +110,7 @@
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(ラベル無し)</translation>
+        <translation>（ラベル無し）</translation>
     </message>
 </context>
 <context>
@@ -129,7 +129,11 @@
     </message>
     <message>
         <source>Repeat new passphrase</source>
-        <translation>新しいパスフレーズをもう一度</translation>
+        <translation>新しいパスフレーズをもう一度入力</translation>
+    </message>
+    <message>
+        <source>Show passphrase</source>
+        <translation>パスフレーズを表示</translation>
     </message>
     <message>
         <source>Encrypt wallet</source>
@@ -161,7 +165,7 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>警告: もしもあなたのウォレットを暗号化してパスフレーズを忘れてしまったら、&lt;b&gt;あなたの Bitcoin はすべて失われます&lt;/b&gt;！</translation>
+        <translation>警告: ウォレットの暗号化後にパスフレーズを忘れてしまった場合、&lt;b&gt;あなたの Bitcoin はすべて失われます&lt;/b&gt;！</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
@@ -172,8 +176,33 @@
         <translation>ウォレットの暗号化の完了</translation>
     </message>
     <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>新しいウォレットのパスフレーズを入力してください。
+パスフレーズは、ランダムな10文字以上の文字か、８語以上の単語を使用してください。</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>ウォレット用の旧パスフレーズと新パスフレーズを入力してください。</translation>
+    </message>
+    <message>
+        <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
+        <translation>ウォレットを暗号化しても、コンピュータに感染したマルウェアなどによる Bitcoin の盗難を完全に防ぐことはできないことにご注意ください。</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>暗号化するウォレット</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>ウォレットは暗号化されようとしています。</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>ウォレットは暗号化されました。</translation>
+    </message>
+    <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
-        <translation>重要: 今までに作成されたウォレット ファイルのバックアップは、暗号化された新しいウォレット ファイルに置き換える必要があります。セキュリティ上の理由により、暗号化された新しいウォレットを使い始めると、暗号化されていないウォレット ファイルのバックアップはすぐに使えなくなります。</translation>
+        <translation>重要: 今までに作成されたウォレットファイルのバックアップは、暗号化された新しいウォレットファイルに置き換える必要があります。セキュリティ上の理由により、暗号化された新しいウォレットを使い始めると、暗号化されていないウォレットファイルのバックアップはすぐに使えなくなります。</translation>
     </message>
     <message>
         <source>Wallet encryption failed</source>
@@ -294,6 +323,14 @@
         <translation>URI を開く(&amp;U)...</translation>
     </message>
     <message>
+        <source>Create Wallet...</source>
+        <translation>ウォレットを作成...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>新しいウォレットを作成</translation>
+    </message>
+    <message>
         <source>Wallet:</source>
         <translation>ウォレット:</translation>
     </message>
@@ -334,14 +371,6 @@
         <translation>ウォレット暗号化用パスフレーズを変更する</translation>
     </message>
     <message>
-        <source>&amp;Debug window</source>
-        <translation>デバッグ ウインドウ(&amp;D)</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>デバッグ・診断コンソールを開く</translation>
-    </message>
-    <message>
         <source>&amp;Verify message...</source>
         <translation>メッセージの検証(&amp;V)...</translation>
     </message>
@@ -359,7 +388,7 @@
     </message>
     <message>
         <source>Show or hide the main Window</source>
-        <translation>メイン ウインドウを表示または非表示する</translation>
+        <translation>メインウィンドウを表示または非表示にする</translation>
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
@@ -367,7 +396,7 @@
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
-        <translation>Bitcoin アドレスでメッセージに署名して、アドレスを所有していることを証明する</translation>
+        <translation>Bitcoin アドレスでメッセージに署名することで、そのアドレスの所有権を証明する</translation>
     </message>
     <message>
         <source>Verify messages to ensure they were signed with specified Bitcoin addresses</source>
@@ -391,7 +420,7 @@
     </message>
     <message>
         <source>Request payments (generates QR codes and bitcoin: URIs)</source>
-        <translation>支払いをリクエストする (QRコードと bitcoin: URIを生成する)&lt;</translation>
+        <translation>支払いをリクエストする（QRコードと bitcoin:で始まるURIを生成する）</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -400,10 +429,6 @@
     <message>
         <source>Show the list of used receiving addresses and labels</source>
         <translation>受け取ったことがあるアドレスとラベルの一覧を表示する</translation>
-    </message>
-    <message>
-        <source>Open a bitcoin: URI or payment request</source>
-        <translation>bitcoin: URIや支払いリクエストを開く</translation>
     </message>
     <message>
         <source>&amp;Command-line options</source>
@@ -454,12 +479,32 @@
         <translation>ブロックは最新</translation>
     </message>
     <message>
+        <source>Load PSBT from clipboard...</source>
+        <translation>PSBTをクリップボードから読み込み</translation>
+    </message>
+    <message>
+        <source>Load Partially Signed Bitcoin Transaction from clipboard</source>
+        <translation>部分的に署名されたビットコインのトランザクションをクリップボードから読み込み</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>ノードウィンドウ</translation>
+    </message>
+    <message>
+        <source>Open node debugging and diagnostic console</source>
+        <translation>ノードのデバッグ・診断コンソールを開く</translation>
+    </message>
+    <message>
         <source>&amp;Sending addresses</source>
         <translation>送金先アドレス一覧(&amp;S)...</translation>
     </message>
     <message>
         <source>&amp;Receiving addresses</source>
         <translation>受取用アドレス一覧(&amp;R)...</translation>
+    </message>
+    <message>
+        <source>Open a bitcoin: URI</source>
+        <translation>bitcoin: URIを開く</translation>
     </message>
     <message>
         <source>Open Wallet</source>
@@ -478,8 +523,16 @@
         <translation>ウォレットを閉じる</translation>
     </message>
     <message>
+        <source>Close All Wallets...</source>
+        <translation>全てのウォレットを閉じる</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>全てのウォレットを閉じる</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
-        <translation>%1 のヘルプ メッセージを表示して、使用可能な XPChain のコマンドライン オプションの一覧を見る。</translation>
+        <translation>%1 のヘルプ メッセージを表示し、使用可能な Bitcoin のコマンドラインオプション一覧を見る。</translation>
     </message>
     <message>
         <source>default wallet</source>
@@ -491,7 +544,7 @@
     </message>
     <message>
         <source>&amp;Window</source>
-        <translation>ウインドウ (&amp;W)</translation>
+        <translation>ウィンドウ (&amp;W)</translation>
     </message>
     <message>
         <source>Minimize</source>
@@ -520,6 +573,10 @@
     <message>
         <source>Error: %1</source>
         <translation>エラー: %1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>警告: %1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -586,10 +643,10 @@
         <translation>ウォレットは&lt;b&gt;暗号化済み&lt;/b&gt;・&lt;b&gt;ロック状態&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. Bitcoin can no longer continue safely and will quit.</source>
-        <translation>致命的なエラーが発生しました。Bitcoin を安全に動作し続けることができないため終了します。</translation>
+        <source>Original message:</source>
+        <translation>オリジナルメッセージ：</translation>
     </message>
-</context>
+    </context>
 <context>
     <name>CoinControlDialog</name>
     <message>
@@ -690,7 +747,7 @@
     </message>
     <message>
         <source>Copy fee</source>
-        <translation>手数料をコピーす</translation>
+        <translation>手数料をコピー</translation>
     </message>
     <message>
         <source>Copy after fee</source>
@@ -726,11 +783,11 @@
     </message>
     <message>
         <source>Can vary +/- %1 satoshi(s) per input.</source>
-        <translation>ひとつの入力につき %1 satoshi 前後ずれることがあります。</translation>
+        <translation>インプット毎に %1 satoshi 前後変動する場合があります。</translation>
     </message>
     <message>
         <source>(no label)</source>
-        <translation>(ラベル無し)</translation>
+        <translation>（ラベル無し）</translation>
     </message>
     <message>
         <source>change from %1 (%2)</source>
@@ -738,15 +795,63 @@
     </message>
     <message>
         <source>(change)</source>
-        <translation>(おつり)</translation>
+        <translation>（おつり）</translation>
     </message>
 </context>
 <context>
     <name>CreateWalletActivity</name>
-    </context>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>ウォレット &lt;b&gt;%1&lt;/b&gt;を作成しています...</translation>
+    </message>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>ウォレットの作成に失敗しました</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>ウォレットを作成 - 警告</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
-    </context>
+    <message>
+        <source>Create Wallet</source>
+        <translation>ウォレットを作成する</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>ウォレット名</translation>
+    </message>
+    <message>
+        <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
+        <translation>ウォレットを暗号化。ウォレットは任意のパスフレーズによって暗号化されます。</translation>
+    </message>
+    <message>
+        <source>Encrypt Wallet</source>
+        <translation>ウォレットを暗号化する</translation>
+    </message>
+    <message>
+        <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>
+        <translation>このウォレットの秘密鍵を無効にします。秘密鍵が無効になっているウォレットには秘密鍵はなく、HDシードまたはインポートされた秘密鍵を持つこともできません。これはウォッチ限定のウォレットに最適です。</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>秘密鍵を無効化</translation>
+    </message>
+    <message>
+        <source>Make a blank wallet. Blank wallets do not initially have private keys or scripts. Private keys and addresses can be imported, or an HD seed can be set, at a later time.</source>
+        <translation>空ウォレットを作成。空ウォレットには、最初は秘密鍵やスクリプトがありません。後から秘密鍵やアドレスをインポート、またはHDシードを設定できます。</translation>
+    </message>
+    <message>
+        <source>Make Blank Wallet</source>
+        <translation>空ウォレットを作成</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>作成</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -806,7 +911,7 @@
     <name>FreespaceChecker</name>
     <message>
         <source>A new data directory will be created.</source>
-        <translation>新しいデータ ディレクトリが作成されます。</translation>
+        <translation>新しいデータディレクトリが作成されます。</translation>
     </message>
     <message>
         <source>name</source>
@@ -832,16 +937,12 @@
         <translation>バージョン</translation>
     </message>
     <message>
-        <source>(%1-bit)</source>
-        <translation>(%1 ビット)</translation>
-    </message>
-    <message>
         <source>About %1</source>
         <translation>%1 について</translation>
     </message>
     <message>
         <source>Command-line options</source>
-        <translation>コマンドライン オプション</translation>
+        <translation>コマンドラインオプション</translation>
     </message>
 </context>
 <context>
@@ -860,7 +961,11 @@
     </message>
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation>OKをクリックすると、%1 は %4 がリリースされた%3年最初の取引からの完全な %4 ブロックチェーン（%2GB）のダウンロードおよび処理を開始します。</translation>
+        <translation>OKをクリックすると、%1 は %4 がリリースされた%3年における最初の取引からの完全な %4 ブロックチェーン（%2GB）のダウンロードおよび処理を開始します。</translation>
+    </message>
+    <message>
+        <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
+        <translation>この設定を元に戻すには、ブロックチェーン全体を再ダウンロードする必要があります。先にチェーン全体をダウンロードしてから、剪定する方が高速です。一部の高度な機能を無効にします。</translation>
     </message>
     <message>
         <source>This initial synchronisation is very demanding, and may expose hardware problems with your computer that had previously gone unnoticed. Each time you run %1, it will continue downloading where it left off.</source>
@@ -872,15 +977,19 @@
     </message>
     <message>
         <source>Use the default data directory</source>
-        <translation>デフォルトのデータ ディレクトリを使用</translation>
+        <translation>デフォルトのデータディレクトリを使用</translation>
     </message>
     <message>
         <source>Use a custom data directory:</source>
-        <translation>カスタム データ ディレクトリを使用:</translation>
+        <translation>カスタムデータディレクトリを使用:</translation>
     </message>
     <message>
         <source>Bitcoin</source>
         <translation>Bitcoin</translation>
+    </message>
+    <message>
+        <source>Discard blocks after verification, except most recent %1 GB (prune)</source>
+        <translation>最新の%1 GBを除き、検証後にブロックを破棄する（剪定する）</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -914,7 +1023,11 @@
         <source>(of %n GB needed)</source>
         <translation><numerusform>(%n GB必要)</numerusform></translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation><numerusform>(完全なチェーンには%n GB必要です)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -927,7 +1040,7 @@
     </message>
     <message>
         <source>Attempting to spend bitcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>まだ表示されていない取引が関係する Bitcoin を使用しようとすると、ネットワークから認証を受けられません。</translation>
+        <translation>まだ表示されていない取引が関係する Bitcoin の使用を試みた場合、ネットワークから認証を受けられません。</translation>
     </message>
     <message>
         <source>Number of blocks left</source>
@@ -947,7 +1060,7 @@
     </message>
     <message>
         <source>Progress increase per hour</source>
-        <translation>一時間あたりの進捗増加</translation>
+        <translation>一時間毎の進捗増加</translation>
     </message>
     <message>
         <source>calculating...</source>
@@ -955,11 +1068,19 @@
     </message>
     <message>
         <source>Estimated time left until synced</source>
-        <translation>同期完了までの推定残り時間</translation>
+        <translation>同期完了までの推定時間</translation>
     </message>
     <message>
         <source>Hide</source>
         <translation>隠す</translation>
+    </message>
+    <message>
+        <source>Esc</source>
+        <translation>Esc</translation>
+    </message>
+    <message>
+        <source>%1 is currently syncing.  It will download headers and blocks from peers and validate them until reaching the tip of the block chain.</source>
+        <translation>%1は現在同期中です。ブロックチェーンの先端に到達するまで、ピアからヘッダーとブロックをダウンロードし検証します。</translation>
     </message>
     <message>
         <source>Unknown. Syncing Headers (%1, %2%)...</source>
@@ -969,28 +1090,24 @@
 <context>
     <name>OpenURIDialog</name>
     <message>
-        <source>Open URI</source>
-        <translation>URIを開く</translation>
-    </message>
-    <message>
-        <source>Open payment request from URI or file</source>
-        <translation>URIまたはファイルから支払いリクエストを開く</translation>
+        <source>Open bitcoin URI</source>
+        <translation>bitcoin URIを開く</translation>
     </message>
     <message>
         <source>URI:</source>
         <translation>URI:</translation>
     </message>
-    <message>
-        <source>Select payment request file</source>
-        <translation>支払いリクエストファイルを選択</translation>
-    </message>
-    <message>
-        <source>Select payment request file to open</source>
-        <translation>支払いリクエストファイルを選択</translation>
-    </message>
 </context>
 <context>
     <name>OpenWalletActivity</name>
+    <message>
+        <source>Open wallet failed</source>
+        <translation>ウォレットを開くことに失敗しました</translation>
+    </message>
+    <message>
+        <source>Open wallet warning</source>
+        <translation>ウォレットを開く - 警告</translation>
+    </message>
     <message>
         <source>default wallet</source>
         <translation>デフォルトウォレット</translation>
@@ -1033,10 +1150,6 @@
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
         <translation>指定されたデフォルト SOCKS5 プロキシが、このネットワークタイプ経由でピアに接続しているかどうか。</translation>
-    </message>
-    <message>
-        <source>Use separate SOCKS&amp;5 proxy to reach peers via Tor hidden services:</source>
-        <translation>Tor秘匿サービス経由でピアに接続するために専用の SOCKS5 プロキシを利用する(&amp;5):</translation>
     </message>
     <message>
         <source>Hide the icon from the system tray.</source>
@@ -1116,7 +1229,7 @@
     </message>
     <message>
         <source>&amp;Spend unconfirmed change</source>
-        <translation>未検証のお釣りを使用する(&amp;S)</translation>
+        <translation>未承認のお釣りを使用する(&amp;S)</translation>
     </message>
     <message>
         <source>Automatically open the Bitcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
@@ -1169,10 +1282,6 @@
     <message>
         <source>Tor</source>
         <translation>Tor</translation>
-    </message>
-    <message>
-        <source>Connect to the Bitcoin network through a separate SOCKS5 proxy for Tor hidden services.</source>
-        <translation>Tor秘匿サービスを利用するため、専用の SOCKS5 プロキシ経由で Bitcoin ネットワークに接続する。</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -1349,7 +1458,46 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>ウォッチ限定アドレスの現在の残高の総計</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    <message>
+        <source>Dialog</source>
+        <translation>ダイアログ</translation>
+    </message>
+    <message>
+        <source>Copy to Clipboard</source>
+        <translation>クリップボードにコピー</translation>
+    </message>
+    <message>
+        <source>Save...</source>
+        <translation>保存</translation>
+    </message>
+    <message>
+        <source>Close</source>
+        <translation>閉じる</translation>
+    </message>
+    <message>
+        <source>Signed transaction successfully. Transaction is ready to broadcast.</source>
+        <translation>トランザクションへの署名が成功しました。トランザクションのブロードキャストの準備ができています。</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>トランザクションデータの保存</translation>
+    </message>
+    <message>
+        <source>PSBT saved to disk.</source>
+        <translation>PSBTはディスクに保存されました。</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>合計</translation>
+    </message>
+    <message>
+        <source>or</source>
+        <translation>または</translation>
+    </message>
+    </context>
 <context>
     <name>PaymentServer</name>
     <message>
@@ -1369,16 +1517,16 @@
         <translation>'bitcoin://' は正しいURIではありません｡ 'bitcoin:'を使用してください｡</translation>
     </message>
     <message>
-        <source>You are using a BIP70 URL which will be unsupported in the future.</source>
-        <translation>将来サポートされなくなる予定のBIP70形式のURLをお使いです。</translation>
+        <source>Cannot process payment request because BIP70 is not supported.</source>
+        <translation>BIP70がサポートされていないため、支払いリクエストを処理することができません。</translation>
     </message>
     <message>
-        <source>Payment request fetch URL is invalid: %1</source>
-        <translation>支払いリクエストの取得先URLが無効です: %1</translation>
+        <source>Due to widespread security flaws in BIP70 it's strongly recommended that any merchant instructions to switch wallets be ignored.</source>
+        <translation>BIP70 に内在する広く知られたセキュリティ上の欠陥がるため、ウォレットを切り替えるというマーチャントからの指示については無視することが強く推奨されます。</translation>
     </message>
     <message>
-        <source>Cannot process payment request because BIP70 support was not compiled in.</source>
-        <translation>BIP70のサポートが組み込まれていないため、支払いリクエストを処理することができません。</translation>
+        <source>If you are receiving this error you should request the merchant provide a BIP21 compatible URI.</source>
+        <translation>このエラーが発生する場合は、販売者にBIP21互換URIの提供を依頼するべきです。</translation>
     </message>
     <message>
         <source>Invalid payment address %1</source>
@@ -1391,66 +1539,6 @@
     <message>
         <source>Payment request file handling</source>
         <translation>支払いリクエストファイルの処理</translation>
-    </message>
-    <message>
-        <source>Payment request file cannot be read! This can be caused by an invalid payment request file.</source>
-        <translation>支払いリクエストファイルを読み込めませんでした！ 無効な支払いリクエストファイルである可能性があります。</translation>
-    </message>
-    <message>
-        <source>Payment request rejected</source>
-        <translation>支払いリクエストの拒否</translation>
-    </message>
-    <message>
-        <source>Payment request network doesn't match client network.</source>
-        <translation>支払いリクエストのネットワークが現在のクライアントのネットワークと一致しません。</translation>
-    </message>
-    <message>
-        <source>Payment request expired.</source>
-        <translation>支払いリクエストが期限切れです。</translation>
-    </message>
-    <message>
-        <source>Payment request is not initialized.</source>
-        <translation>支払いリクエストが初期化されていません。</translation>
-    </message>
-    <message>
-        <source>Unverified payment requests to custom payment scripts are unsupported.</source>
-        <translation>カスタム支払いスクリプトに対する、未検証支払いリクエストはサポートされていません。</translation>
-    </message>
-    <message>
-        <source>Invalid payment request.</source>
-        <translation>無効な支払いリクエストです。</translation>
-    </message>
-    <message>
-        <source>Requested payment amount of %1 is too small (considered dust).</source>
-        <translation>リクエストされた支払い額 %1 は小さすぎます（ダストとみなされてしまいます)。</translation>
-    </message>
-    <message>
-        <source>Refund from %1</source>
-        <translation>%1 からのお釣り</translation>
-    </message>
-    <message>
-        <source>Payment request %1 is too large (%2 bytes, allowed %3 bytes).</source>
-        <translation>支払いリクエスト %1 は大きすぎます（サイズ: %2バイト / 最大処理可能サイズ: %3バイト）。</translation>
-    </message>
-    <message>
-        <source>Error communicating with %1: %2</source>
-        <translation>%1 との通信時にエラーが発生しました: %2</translation>
-    </message>
-    <message>
-        <source>Payment request cannot be parsed!</source>
-        <translation>支払いリクエストを解析できませんでした！</translation>
-    </message>
-    <message>
-        <source>Bad response from server %1</source>
-        <translation>%1 サーバーの応答が無効でした</translation>
-    </message>
-    <message>
-        <source>Network request error</source>
-        <translation>ネットワーク リクエストエラー</translation>
-    </message>
-    <message>
-        <source>Payment acknowledged</source>
-        <translation>支払いは承認されました</translation>
     </message>
 </context>
 <context>
@@ -1602,6 +1690,10 @@
         <translation>URIをQRコードへ変換している際にエラーが発生しました。</translation>
     </message>
     <message>
+        <source>QR code support not available.</source>
+        <translation>QRコードは利用できません。</translation>
+    </message>
+    <message>
         <source>Save QR Code</source>
         <translation>QRコードの保存</translation>
     </message>
@@ -1623,10 +1715,6 @@
     <message>
         <source>&amp;Information</source>
         <translation>情報(&amp;I)</translation>
-    </message>
-    <message>
-        <source>Debug window</source>
-        <translation>デバッグ ウインドウ</translation>
     </message>
     <message>
         <source>General</source>
@@ -1673,10 +1761,6 @@
         <translation>ブロック チェーン</translation>
     </message>
     <message>
-        <source>Current number of blocks</source>
-        <translation>現在のブロック数</translation>
-    </message>
-    <message>
         <source>Memory Pool</source>
         <translation>メモリ プール</translation>
     </message>
@@ -1721,10 +1805,6 @@
         <translation>詳しい情報を見たいピアを選択してください。</translation>
     </message>
     <message>
-        <source>Whitelisted</source>
-        <translation>ホワイトリスト登録済み</translation>
-    </message>
-    <message>
         <source>Direction</source>
         <translation>方向</translation>
     </message>
@@ -1745,8 +1825,20 @@
         <translation>同期済みブロック</translation>
     </message>
     <message>
+        <source>The mapped Autonomous System used for diversifying peer selection.</source>
+        <translation>ピア選択の多様化に使用できるマップ化された自律システム。</translation>
+    </message>
+    <message>
+        <source>Mapped AS</source>
+        <translation>マップ化された自律システム</translation>
+    </message>
+    <message>
         <source>User Agent</source>
         <translation>ユーザーエージェント</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>ノードウィンドウ</translation>
     </message>
     <message>
         <source>Open the %1 debug log file from the current data directory. This can take a few seconds for large log files.</source>
@@ -1763,10 +1855,6 @@
     <message>
         <source>Services</source>
         <translation>サービス</translation>
-    </message>
-    <message>
-        <source>Ban Score</source>
-        <translation>Banスコア</translation>
     </message>
     <message>
         <source>Connection Time</source>
@@ -1917,14 +2005,6 @@
         <translation>外向き</translation>
     </message>
     <message>
-        <source>Yes</source>
-        <translation>はい</translation>
-    </message>
-    <message>
-        <source>No</source>
-        <translation>いいえ</translation>
-    </message>
-    <message>
         <source>Unknown</source>
         <translation>不明</translation>
     </message>
@@ -1958,6 +2038,18 @@
     <message>
         <source>An optional amount to request. Leave this empty or zero to not request a specific amount.</source>
         <translation>リクエストする金額（任意）。特定の金額をリクエストしない場合は、この欄は空白のままかゼロにしてください。</translation>
+    </message>
+    <message>
+        <source>An optional label to associate with the new receiving address (used by you to identify an invoice).  It is also attached to the payment request.</source>
+        <translation>新しい受取用アドレスに紐付ける任意のラベル(インボイスの判別に使えます)。支払いリクエストにも添付されます。</translation>
+    </message>
+    <message>
+        <source>An optional message that is attached to the payment request and may be displayed to the sender.</source>
+        <translation>支払いリクエストに任意で添付できるメッセージで、送り主に表示されます。</translation>
+    </message>
+    <message>
+        <source>&amp;Create new receiving address</source>
+        <translation>新しい受取用アドレスを作成</translation>
     </message>
     <message>
         <source>Clear all fields of the form.</source>
@@ -2011,12 +2103,32 @@
         <source>Copy amount</source>
         <translation>金額をコピー</translation>
     </message>
-</context>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>ウォレットをアンロックできませんでした。</translation>
+    </message>
+    </context>
 <context>
     <name>ReceiveRequestDialog</name>
     <message>
-        <source>QR Code</source>
-        <translation>QRコード</translation>
+        <source>Address:</source>
+        <translation>アドレス：</translation>
+    </message>
+    <message>
+        <source>Amount:</source>
+        <translation>金額:</translation>
+    </message>
+    <message>
+        <source>Label:</source>
+        <translation>ラベル:</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>メッセージ:</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>ウォレット:</translation>
     </message>
     <message>
         <source>Copy &amp;URI</source>
@@ -2037,30 +2149,6 @@
     <message>
         <source>Payment information</source>
         <translation>支払い情報</translation>
-    </message>
-    <message>
-        <source>URI</source>
-        <translation>URI</translation>
-    </message>
-    <message>
-        <source>Address</source>
-        <translation>アドレス</translation>
-    </message>
-    <message>
-        <source>Amount</source>
-        <translation>金額</translation>
-    </message>
-    <message>
-        <source>Label</source>
-        <translation>ラベル</translation>
-    </message>
-    <message>
-        <source>Message</source>
-        <translation>メッセージ</translation>
-    </message>
-    <message>
-        <source>Wallet</source>
-        <translation>ウォレット</translation>
     </message>
 </context>
 <context>
@@ -2158,15 +2246,11 @@
     </message>
     <message>
         <source>Using the fallbackfee can result in sending a transaction that will take several hours or days (or never) to confirm. Consider choosing your fee manually or wait until you have validated the complete chain.</source>
-        <translation> 代替料金を利用することで、承認されるまでに数時間または数日 (ないし一生承認されない) トランザクションを送信してしまう可能性があります。手動にて手数料を選択するか、完全なブロックチェーンの検証が終わるまで待つことを検討しましょう</translation>
+        <translation>代替料金を利用することで、承認されるまでに数時間または数日 (ないし一生承認されない) トランザクションを送信してしまう可能性があります。手動にて手数料を選択するか、完全なブロックチェーンの検証が終わるまで待つことを検討しましょう</translation>
     </message>
     <message>
         <source>Warning: Fee estimation is currently not possible.</source>
         <translation>警告: 手数料推定機能は現在利用できません。</translation>
-    </message>
-    <message>
-        <source>collapse fee-settings</source>
-        <translation>手数料設定を折りたたむ</translation>
     </message>
     <message>
         <source>Specify a custom fee per kB (1,000 bytes) of the transaction's virtual size.
@@ -2211,6 +2295,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Dust:</source>
         <translation>ダスト:</translation>
+    </message>
+    <message>
+        <source>Hide transaction fee settings</source>
+        <translation>トランザクション手数料の設定を隠す</translation>
     </message>
     <message>
         <source>When there is less transaction volume than space in the blocks, miners as well as relaying nodes may enforce a minimum fee. Paying only this minimum fee is just fine, but be aware that this can result in a never confirming transaction once there is more demand for bitcoin transactions than the network can process.</source>
@@ -2281,12 +2369,36 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>%1 (%2 ブロック)</translation>
     </message>
     <message>
+        <source>Cr&amp;eate Unsigned</source>
+        <translation>未署名で作成</translation>
+    </message>
+    <message>
+        <source>Creates a Partially Signed Bitcoin Transaction (PSBT) for use with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>オフライン%1ウォレットまたはPSBTに対応したハードウェアウォレットと合わせて使用するためのPSBT(部分的に署名されたトランザクション)を作成します。</translation>
+    </message>
+    <message>
+        <source> from wallet '%1'</source>
+        <translation>ウォレット '%1' から</translation>
+    </message>
+    <message>
+        <source>%1 to '%2'</source>
+        <translation>%1 から '%2'</translation>
+    </message>
+    <message>
         <source>%1 to %2</source>
         <translation>%1 送金先: %2</translation>
     </message>
     <message>
+        <source>Do you want to draft this transaction?</source>
+        <translation>このトランザクションのひな形を作成しますか？</translation>
+    </message>
+    <message>
         <source>Are you sure you want to send?</source>
         <translation>送金してもよろしいですか？</translation>
+    </message>
+    <message>
+        <source>Save Transaction Data</source>
+        <translation>トランザクションデータの保存</translation>
     </message>
     <message>
         <source>or</source>
@@ -2313,8 +2425,24 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>合計</translation>
     </message>
     <message>
+        <source>To review recipient list click "Show Details..."</source>
+        <translation>受信者の一覧を確認するには "詳細を表示..." をクリック</translation>
+    </message>
+    <message>
         <source>Confirm send coins</source>
         <translation>送金の確認</translation>
+    </message>
+    <message>
+        <source>Confirm transaction proposal</source>
+        <translation>トランザクション提案を承認する</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>送金</translation>
+    </message>
+    <message>
+        <source>Watch-only balance:</source>
+        <translation>監視限定残高</translation>
     </message>
     <message>
         <source>The recipient address is not valid. Please recheck.</source>
@@ -2339,10 +2467,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Transaction creation failed!</source>
         <translation>取引の作成に失敗しました！</translation>
-    </message>
-    <message>
-        <source>The transaction was rejected with the following reason: %1</source>
-        <translation>取引は次の理由により拒否されました: %1</translation>
     </message>
     <message>
         <source>A fee higher than %1 is considered an absurdly high fee.</source>
@@ -2396,10 +2520,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>これまでに送金したことがあるアドレスから選択</translation>
     </message>
     <message>
-        <source>This is a normal payment.</source>
-        <translation>これは通常の支払いです。</translation>
-    </message>
-    <message>
         <source>The Bitcoin address to send the payment to</source>
         <translation>支払い先 Bitcoin アドレス</translation>
     </message>
@@ -2418,6 +2538,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Remove this entry</source>
         <translation>この項目を削除</translation>
+    </message>
+    <message>
+        <source>The amount to send in the selected unit</source>
+        <translation>送金する金額の単位を選択</translation>
     </message>
     <message>
         <source>The fee will be deducted from the amount being sent. The recipient will receive less bitcoins than you enter in the amount field. If multiple recipients are selected, the fee is split equally.</source>
@@ -2458,17 +2582,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Memo:</source>
         <translation>メモ:</translation>
-    </message>
-    <message>
-        <source>Enter a label for this address to add it to your address book</source>
-        <translation>アドレス帳に追加するには、このアドレスのラベルを入力します</translation>
-    </message>
-</context>
-<context>
-    <name>SendConfirmationDialog</name>
-    <message>
-        <source>Yes</source>
-        <translation>はい</translation>
     </message>
 </context>
 <context>
@@ -2557,6 +2670,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>メッセージの署名に使われた Bitcoin アドレス</translation>
     </message>
     <message>
+        <source>The signed message to verify</source>
+        <translation>検証したい署名済みメッセージ</translation>
+    </message>
+    <message>
+        <source>The signature given when the message was signed</source>
+        <translation>メッセージの署名時に生成された署名</translation>
+    </message>
+    <message>
         <source>Verify the message to ensure it was signed with the specified Bitcoin address</source>
         <translation>メッセージを検証して指定された Bitcoin アドレスで署名されたことを確認</translation>
     </message>
@@ -2587,6 +2708,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Wallet unlock was cancelled.</source>
         <translation>ウォレットのアンロックはキャンセルされました。</translation>
+    </message>
+    <message>
+        <source>No error</source>
+        <translation>エラーなし</translation>
     </message>
     <message>
         <source>Private key for the entered address is not available.</source>
@@ -2761,6 +2886,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Output index</source>
         <translation>アウトプット インデックス数</translation>
+    </message>
+    <message>
+        <source> (Certificate was not verified)</source>
+        <translation>(証明書は検証されませんでした)</translation>
     </message>
     <message>
         <source>Merchant</source>
@@ -3086,15 +3215,27 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>ウォレットを閉じる</translation>
     </message>
     <message>
+        <source>Are you sure you wish to close the wallet &lt;i&gt;%1&lt;/i&gt;?</source>
+        <translation>本当にウォレット&lt;i&gt;%1&lt;/i&gt;を閉じますか？</translation>
+    </message>
+    <message>
         <source>Closing the wallet for too long can result in having to resync the entire chain if pruning is enabled.</source>
         <translation>ブロックファイル剪定が有効の場合、長期間ウォレットを起動しないと全チェーンを再度同期させる必要があるかもしれません。</translation>
+    </message>
+    <message>
+        <source>Close all wallets</source>
+        <translation>全てのウォレットを閉じる</translation>
+    </message>
+    <message>
+        <source>Are you sure you wish to close all wallets?</source>
+        <translation>本当に全てのウォレットを閉じますか。</translation>
     </message>
 </context>
 <context>
     <name>WalletFrame</name>
     <message>
-        <source>No wallet has been loaded.</source>
-        <translation>ウォレットが読み込まれていません。</translation>
+        <source>Create a new wallet</source>
+        <translation>新しいウォレットを作成</translation>
     </message>
 </context>
 <context>
@@ -3116,6 +3257,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>手数料を上乗せしてもよろしいですか？</translation>
     </message>
     <message>
+        <source>Do you want to draft a transaction with fee increase?</source>
+        <translation>このトランザクションに手数料を上乗せしたひな形を作成しますか？</translation>
+    </message>
+    <message>
         <source>Current fee:</source>
         <translation>現在の手数料:</translation>
     </message>
@@ -3130,6 +3275,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Confirm fee bump</source>
         <translation>手数料上乗せの確認</translation>
+    </message>
+    <message>
+        <source>Can't draft transaction.</source>
+        <translation>トランザクションのひな型を作成できませんでした。</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>PSBTがコピーされました</translation>
     </message>
     <message>
         <source>Can't sign transaction.</source>
@@ -3153,6 +3306,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Export the data in the current tab to a file</source>
         <translation>現在のタブのデータをファイルにエクスポート</translation>
+    </message>
+    <message>
+        <source>Error</source>
+        <translation>エラー</translation>
     </message>
     <message>
         <source>Backup Wallet</source>
@@ -3198,14 +3355,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>剪定: 最後のウォレット同期ポイントが、剪定されたデータを越えています。-reindex を実行する必要があります (剪定されたノードの場合、ブロックチェーン全体を再ダウンロードします)</translation>
     </message>
     <message>
-        <source>Rescans are not possible in pruned mode. You will need to use -reindex which will download the whole blockchain again.</source>
-        <translation>剪定モードでは再スキャンを行うことはできません。-reindex オプションを指定し、ブロックチェーン全体を再ダウンロードする必要があります。</translation>
-    </message>
-    <message>
-        <source>Error: A fatal internal error occurred, see debug.log for details</source>
-        <translation>エラー: 致命的な内部エラーが発生しました。詳細は debug.log を参照してください</translation>
-    </message>
-    <message>
         <source>Pruning blockstore...</source>
         <translation>ブロック保存容量を剪定中...</translation>
     </message>
@@ -3216,10 +3365,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>The %s developers</source>
         <translation>%s の開発者</translation>
-    </message>
-    <message>
-        <source>Can't generate a change-address key. No keys in the internal keypool and can't generate any keys.</source>
-        <translation>おつりアドレスの鍵を作成することができません。内部のキープールに鍵が存在しないため、鍵を生成することができません。</translation>
     </message>
     <message>
         <source>Cannot obtain a lock on data directory %s. %s is probably already running.</source>
@@ -3270,14 +3415,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>警告: ピアと完全に合意が取れていないようです！ このノードもしくは他のノードのアップグレードが必要な可能性があります。</translation>
     </message>
     <message>
-        <source>%d of last 100 blocks have unexpected version</source>
-        <translation>直近の100ブロックの内、%d ブロックが予期しないバージョンを含んでいます</translation>
-    </message>
-    <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s が壊れています。復旧にも失敗しました</translation>
-    </message>
-    <message>
         <source>-maxmempool must be at least %d MB</source>
         <translation>-maxmempoolは最低でも %d MB必要です</translation>
     </message>
@@ -3300,6 +3437,14 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Corrupted block database detected</source>
         <translation>破損したブロック データベースが見つかりました</translation>
+    </message>
+    <message>
+        <source>Could not find asmap file %s</source>
+        <translation>Asmapファイル%sが見つかりませんでした</translation>
+    </message>
+    <message>
+        <source>Could not parse asmap file %s</source>
+        <translation>Asmapファイル%sを解析できませんでした</translation>
     </message>
     <message>
         <source>Do you want to rebuild the block database now?</source>
@@ -3356,6 +3501,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Initialization sanity check failed. %s is shutting down.</source>
         <translation>初期化時の健全性検査に失敗しました。%s を終了します。</translation>
+    </message>
+    <message>
+        <source>Invalid P2P permission: '%s'</source>
+        <translation>無効なP2Pアクセス権: '%s'</translation>
     </message>
     <message>
         <source>Invalid amount for -%s=&lt;amount&gt;: '%s'</source>
@@ -3466,6 +3615,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>非剪定モードに戻るためには -reindex オプションを指定してデータベースを再構築する必要があります。 ブロックチェーン全体の再ダウンロードが必要となります。</translation>
     </message>
     <message>
+        <source>Disk space is too low!</source>
+        <translation>ディスク容量不足!</translation>
+    </message>
+    <message>
         <source>Error reading from database, shutting down.</source>
         <translation>データベースの読み込みエラー。シャットダウンします。</translation>
     </message>
@@ -3496,6 +3649,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Need to specify a port with -whitebind: '%s'</source>
         <translation>-whitebind オプションでポートを指定する必要があります: '%s'</translation>
+    </message>
+    <message>
+        <source>Prune mode is incompatible with -blockfilterindex.</source>
+        <translation>剪定モードは -blockfilterindex オプションと互換性がありません。</translation>
     </message>
     <message>
         <source>Reducing -maxconnections from %d to %d, because of system limitations.</source>
@@ -3556,16 +3713,16 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>イニシャル鍵を生成できません</translation>
     </message>
     <message>
+        <source>Unknown -blockfilterindex value %s.</source>
+        <translation>不明な -blockfilterindex の値 %s。</translation>
+    </message>
+    <message>
         <source>Verifying wallet(s)...</source>
         <translation>ウォレットの確認中...</translation>
     </message>
     <message>
         <source>Warning: unknown new rules activated (versionbit %i)</source>
         <translation>警告: 未知の新しいルールが有効化されました (バージョンビット %i)</translation>
-    </message>
-    <message>
-        <source>Zapping all transactions from wallet...</source>
-        <translation>ウォレットから全取引を消去中...</translation>
     </message>
     <message>
         <source>-maxtxfee is set very high! Fees this large could be paid on a single transaction.</source>
@@ -3576,16 +3733,8 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
         <translation>これは、手数料推定機能が利用できない場合に支払う取引手数料です。</translation>
     </message>
     <message>
-        <source>This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit %s and cryptographic software written by Eric Young and UPnP software written by Thomas Bernard.</source>
-        <translation>この製品は、OpenSSLツールキット %s で使用するためにOpenSSLプロジェクトにより開発されたソフトウェアと、Eric Young氏により開発された暗号ソフトウェア、Thomas Bernard氏により開発されたUPnPソフトウェアを使用しています。</translation>
-    </message>
-    <message>
         <source>Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments.</source>
         <translation>ネットワークバージョン文字列の長さ（%i）が、最大の長さ（%i） を超えています。UAコメントの数や長さを削減してください。</translation>
-    </message>
-    <message>
-        <source>Warning: Wallet file corrupt, data salvaged! Original %s saved as %s in %s; if your balance or transactions are incorrect you should restore from a backup.</source>
-        <translation>警告: ウォレットファイルが破損していたため、データを復旧しました！ 復旧前の %s は %s として %s に保存されました。残高や取引が正しくない場合にはバックアップから復元してください。</translation>
     </message>
     <message>
         <source>%s is set very high!</source>
@@ -3630,10 +3779,6 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Insufficient funds</source>
         <translation>残高不足</translation>
-    </message>
-    <message>
-        <source>Cannot upgrade a non HD split wallet without upgrading to support pre split keypool. Please use -upgradewallet=169900 or -upgradewallet with no version specified.</source>
-        <translation>分割済みキープールをサポートするようにアップグレードしないと、非HD分割ウォレットをアップグレードすることはできません。 -upgradewallet=169900 オプションか、バージョン指定無しで -upgradewallet オプションを指定してください。</translation>
     </message>
     <message>
         <source>Fee estimation failed. Fallbackfee is disabled. Wait a few blocks or enable -fallbackfee.</source>

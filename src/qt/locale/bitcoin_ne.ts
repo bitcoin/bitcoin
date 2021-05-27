@@ -31,7 +31,7 @@
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
-        <translation>वर्तमान ट्याबको डाटालाई फाइलमा निर्यात गर्नुहोस् </translation>
+        <translation>वर्तमान ट्याबको डाटालाई फाइलमा निर्यात गर्नुहोस्</translation>
     </message>
     <message>
         <source>&amp;Export</source>
@@ -55,8 +55,7 @@
     </message>
     <message>
         <source>&amp;Copy Address</source>
-        <translation>ठेगाना कपी गर्नुहोस्
-</translation>
+        <translation>ठेगाना कपी गर्नुहोस्</translation>
     </message>
     </context>
 <context>
@@ -182,14 +181,6 @@
         <source>Change the passphrase used for wallet encryption</source>
         <translation>वालेट इन्क्रिप्सनमा प्रयोग हुने इन्क्रिप्सन पासफ्रेज परिवर्तन गर्नुहोस्</translation>
     </message>
-    <message>
-        <source>&amp;Debug window</source>
-        <translation>&amp;amp;डिबग विन्डो</translation>
-    </message>
-    <message>
-        <source>Open debugging and diagnostic console</source>
-        <translation>डिबगिङ र डायाग्नोस्टिक कन्सोल खोल्नुहोस्</translation>
-    </message>
     </context>
 <context>
     <name>CoinControlDialog</name>
@@ -199,8 +190,7 @@
     </message>
     <message>
         <source>Copy address</source>
-        <translation>ठेगाना कपी गर्नुहोस्
-</translation>
+        <translation>ठेगाना कपी गर्नुहोस्</translation>
     </message>
     </context>
 <context>
@@ -283,7 +273,10 @@
         <source>Current total balance in watch-only addresses</source>
         <translation>हेर्ने-मात्र ठेगानामा रहेको हालको जम्मा ब्यालेन्स</translation>
     </message>
-</context>
+    </context>
+<context>
+    <name>PSBTOperationsDialog</name>
+    </context>
 <context>
     <name>PaymentServer</name>
     </context>
@@ -328,10 +321,6 @@
     </context>
 <context>
     <name>ReceiveRequestDialog</name>
-    <message>
-        <source>Amount</source>
-        <translation>रकम</translation>
-    </message>
     </context>
 <context>
     <name>RecentRequestsTableModel</name>
@@ -361,9 +350,6 @@
         <source>A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the Bitcoin network.</source>
         <translation>बिटकोइनमा संलग्न गरिएको सन्देश: तपाईंको मध्यस्थको लागि कारोबारको साथमा भण्डारण गरिने URI । नोट: यो सन्देश बिटकोइन नेटवर्क मार्फत पठाइने छैन ।</translation>
     </message>
-    </context>
-<context>
-    <name>SendConfirmationDialog</name>
     </context>
 <context>
     <name>ShutdownWindow</name>
@@ -407,8 +393,7 @@
     <name>TransactionView</name>
     <message>
         <source>Copy address</source>
-        <translation>ठेगाना कपी गर्नुहोस्
-</translation>
+        <translation>ठेगाना कपी गर्नुहोस्</translation>
     </message>
     </context>
 <context>
@@ -427,8 +412,7 @@
     <name>WalletView</name>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;amp;निर्यात गर्नुहोस्
-</translation>
+        <translation>&amp;amp;निर्यात गर्नुहोस्</translation>
     </message>
     <message>
         <source>Export the data in the current tab to a file</source>
@@ -442,12 +426,20 @@
         <translation>ब्लक डाटाबेसमा भविष्यबाट आए जस्तो देखिने एउटा ब्लक हुन्छ । तपाईंको कम्प्युटरको मिति र समय गलत तरिकाले सेट गरिएकाले यस्तो हुन सक्छ । तपाईं आफ्नो कम्प्युटरको मिति र समय सही छ भनेर पक्का हुनुहुन्छ भने मात्र ब्लक डाटाबेस पुनर्निर्माण गर्नुहोस् ।</translation>
     </message>
     <message>
+        <source>This is a pre-release test build - use at your own risk - do not use for mining or merchant applications</source>
+        <translation>यो जारी गर्नु पूर्वको परीक्षण संस्करण हो - आफ्नै जोखिममा प्रयोग गर्नुहोस् - खनन वा व्यापारीक प्रयोगको लागि प्रयोग नगर्नुहोस</translation>
+    </message>
+    <message>
         <source>Unable to rewind the database to a pre-fork state. You will need to redownload the blockchain</source>
         <translation>प्रि-फर्क अवस्थामा डाटाबेस रिवाइन्ड गर्न सकिएन । तपाईंले फेरि ब्लकचेन डाउनलोड गर्नु पर्ने हुन्छ</translation>
     </message>
     <message>
-        <source>%s corrupt, salvage failed</source>
-        <translation>%s मा क्षति, बचाव विफल भयो</translation>
+        <source>Warning: The network does not appear to fully agree! Some miners appear to be experiencing issues.</source>
+        <translation>चेतावनी: नेटवर्क पूरै तरिकाले सहमत छैन जस्तो देखिन्छ! केही खननकर्ताहरूले समस्या भोगिरहेका छन् जस्तो देखिन्छ ।</translation>
+    </message>
+    <message>
+        <source>Warning: We do not appear to fully agree with our peers! You may need to upgrade, or other nodes may need to upgrade.</source>
+        <translation>चेतावनी: हामी हाम्रा सहकर्मीहरूसँग पूर्णतया सहमत छैनौं जस्तो देखिन्छ! तपाईंले अपग्रेड गर्नु पर्ने हुनसक्छ वा अरू नोडहरूले अपग्रेड गर्नु पर्ने हुनसक्छ ।</translation>
     </message>
     <message>
         <source>-maxmempool must be at least %d MB</source>

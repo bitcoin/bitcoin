@@ -1,10 +1,15 @@
+// Copyright (c) 2017-2020 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 #include <boost/test/unit_test.hpp>
 
 #include <stdlib.h>
 
 #include <chain.h>
 #include <rpc/blockchain.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
+#include <util/string.h>
 
 /* Equality between doubles is imprecise. Comparison should be done
  * with a small threshold of tolerance, rather than exact equality.
@@ -26,8 +31,8 @@ static CBlockIndex* CreateBlockIndexWithNbits(uint32_t nbits)
 static void RejectDifficultyMismatch(double difficulty, double expected_difficulty) {
      BOOST_CHECK_MESSAGE(
         DoubleEquals(difficulty, expected_difficulty, 0.00001),
-        "Difficulty was " + std::to_string(difficulty)
-            + " but was expected to be " + std::to_string(expected_difficulty));
+        "Difficulty was " + ToString(difficulty)
+            + " but was expected to be " + ToString(expected_difficulty));
 }
 
 /* Given a BlockIndex with the provided nbits,

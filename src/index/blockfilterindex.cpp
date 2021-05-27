@@ -1,4 +1,4 @@
-// Copyright (c) 2018 The Bitcoin Core developers
+// Copyright (c) 2018-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,8 +6,8 @@
 
 #include <dbwrapper.h>
 #include <index/blockfilterindex.h>
+#include <node/blockstorage.h>
 #include <util/system.h>
-#include <validation.h>
 
 /* The index database stores three items for each block: the disk location of the encoded filter,
  * its dSHA256 hash, and the header. Those belonging to blocks on the active chain are indexed by
@@ -24,13 +24,19 @@
  * as big-endian so that sequential reads of filters by height are fast.
  * Keys for the hash index have the type [DB_BLOCK_HASH, uint256].
  */
-constexpr char DB_BLOCK_HASH = 's';
-constexpr char DB_BLOCK_HEIGHT = 't';
-constexpr char DB_FILTER_POS = 'P';
+constexpr uint8_t DB_BLOCK_HASH{'s'};
+constexpr uint8_t DB_BLOCK_HEIGHT{'t'};
+constexpr uint8_t DB_FILTER_POS{'P'};
 
 constexpr unsigned int MAX_FLTR_FILE_SIZE = 0x1000000; // 16 MiB
 /** The pre-allocation chunk size for fltr?????.dat files */
 constexpr unsigned int FLTR_FILE_CHUNK_SIZE = 0x100000; // 1 MiB
+/** Maximum size of the cfheaders cache
+ *  We have a limit to prevent a bug in filling this cache
+ *  potentially turning into an OOM. At 2000 entries, this cache
+ *  is big enough for a 2,000,000 length block chain, which
+ *  we should be enough until ~2047. */
+constexpr size_t CF_HEADERS_CACHE_MAX_SZ{2000};
 
 namespace {
 
@@ -39,20 +45,12 @@ struct DBVal {
     uint256 header;
     FlatFilePos pos;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(hash);
-        READWRITE(header);
-        READWRITE(pos);
-    }
+    SERIALIZE_METHODS(DBVal, obj) { READWRITE(obj.hash, obj.header, obj.pos); }
 };
 
 struct DBHeightKey {
     int height;
 
-    DBHeightKey() : height(0) {}
     explicit DBHeightKey(int height_in) : height(height_in) {}
 
     template<typename Stream>
@@ -65,7 +63,7 @@ struct DBHeightKey {
     template<typename Stream>
     void Unserialize(Stream& s)
     {
-        char prefix = ser_readdata8(s);
+        const uint8_t prefix{ser_readdata8(s)};
         if (prefix != DB_BLOCK_HEIGHT) {
             throw std::ios_base::failure("Invalid format for block filter index DB height key");
         }
@@ -78,17 +76,14 @@ struct DBHashKey {
 
     explicit DBHashKey(const uint256& hash_in) : hash(hash_in) {}
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        char prefix = DB_BLOCK_HASH;
+    SERIALIZE_METHODS(DBHashKey, obj) {
+        uint8_t prefix{DB_BLOCK_HASH};
         READWRITE(prefix);
         if (prefix != DB_BLOCK_HASH) {
             throw std::ios_base::failure("Invalid format for block filter index DB hash key");
         }
 
-        READWRITE(hash);
+        READWRITE(obj.hash);
     }
 };
 
@@ -103,12 +98,12 @@ BlockFilterIndex::BlockFilterIndex(BlockFilterType filter_type,
     const std::string& filter_name = BlockFilterTypeName(filter_type);
     if (filter_name.empty()) throw std::invalid_argument("unknown filter_type");
 
-    fs::path path = GetDataDir() / "indexes" / "blockfilter" / filter_name;
+    fs::path path = gArgs.GetDataDirNet() / "indexes" / "blockfilter" / filter_name;
     fs::create_directories(path);
 
     m_name = filter_name + " block filter index";
-    m_db = MakeUnique<BaseIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe);
-    m_filter_fileseq = MakeUnique<FlatFileSeq>(std::move(path), "fltr", FLTR_FILE_CHUNK_SIZE);
+    m_db = std::make_unique<BaseIndex::DB>(path / "db", n_cache_size, f_memory, f_wipe);
+    m_filter_fileseq = std::make_unique<FlatFileSeq>(std::move(path), "fltr", FLTR_FILE_CHUNK_SIZE);
 }
 
 bool BlockFilterIndex::Init()
@@ -154,7 +149,7 @@ bool BlockFilterIndex::ReadFilterFromDisk(const FlatFilePos& pos, BlockFilter& f
     }
 
     uint256 block_hash;
-    std::vector<unsigned char> encoded_filter;
+    std::vector<uint8_t> encoded_filter;
     try {
         filein >> block_hash >> encoded_filter;
         filter = BlockFilter(GetFilterType(), block_hash, std::move(encoded_filter));
@@ -387,11 +382,30 @@ bool BlockFilterIndex::LookupFilter(const CBlockIndex* block_index, BlockFilter&
     return ReadFilterFromDisk(entry.pos, filter_out);
 }
 
-bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out) const
+bool BlockFilterIndex::LookupFilterHeader(const CBlockIndex* block_index, uint256& header_out)
 {
+    LOCK(m_cs_headers_cache);
+
+    bool is_checkpoint{block_index->nHeight % CFCHECKPT_INTERVAL == 0};
+
+    if (is_checkpoint) {
+        // Try to find the block in the headers cache if this is a checkpoint height.
+        auto header = m_headers_cache.find(block_index->GetBlockHash());
+        if (header != m_headers_cache.end()) {
+            header_out = header->second;
+            return true;
+        }
+    }
+
     DBVal entry;
     if (!LookupOne(*m_db, block_index, entry)) {
         return false;
+    }
+
+    if (is_checkpoint &&
+        m_headers_cache.size() < CF_HEADERS_CACHE_MAX_SZ) {
+        // Add to the headers cache if this is a checkpoint height.
+        m_headers_cache.emplace(block_index->GetBlockHash(), entry.header);
     }
 
     header_out = entry.header;

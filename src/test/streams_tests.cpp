@@ -1,9 +1,9 @@
-// Copyright (c) 2012-2019 The Bitcoin Core developers
+// Copyright (c) 2012-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <streams.h>
-#include <test/setup_common.h>
+#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
@@ -72,28 +72,28 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
     std::vector<unsigned char> vch = {1, 255, 3, 4, 5, 6};
 
     VectorReader reader(SER_NETWORK, INIT_PROTO_VERSION, vch, 0);
-    BOOST_CHECK_EQUAL(reader.size(), 6);
+    BOOST_CHECK_EQUAL(reader.size(), 6U);
     BOOST_CHECK(!reader.empty());
 
     // Read a single byte as an unsigned char.
     unsigned char a;
     reader >> a;
     BOOST_CHECK_EQUAL(a, 1);
-    BOOST_CHECK_EQUAL(reader.size(), 5);
+    BOOST_CHECK_EQUAL(reader.size(), 5U);
     BOOST_CHECK(!reader.empty());
 
     // Read a single byte as a signed char.
     signed char b;
     reader >> b;
     BOOST_CHECK_EQUAL(b, -1);
-    BOOST_CHECK_EQUAL(reader.size(), 4);
+    BOOST_CHECK_EQUAL(reader.size(), 4U);
     BOOST_CHECK(!reader.empty());
 
     // Read a 4 bytes as an unsigned int.
     unsigned int c;
     reader >> c;
-    BOOST_CHECK_EQUAL(c, 100992003); // 3,4,5,6 in little-endian base-256
-    BOOST_CHECK_EQUAL(reader.size(), 0);
+    BOOST_CHECK_EQUAL(c, 100992003U); // 3,4,5,6 in little-endian base-256
+    BOOST_CHECK_EQUAL(reader.size(), 0U);
     BOOST_CHECK(reader.empty());
 
     // Reading after end of byte vector throws an error.
@@ -104,12 +104,23 @@ BOOST_AUTO_TEST_CASE(streams_vector_reader)
     VectorReader new_reader(SER_NETWORK, INIT_PROTO_VERSION, vch, 0);
     new_reader >> d;
     BOOST_CHECK_EQUAL(d, 67370753); // 1,255,3,4 in little-endian base-256
-    BOOST_CHECK_EQUAL(new_reader.size(), 2);
+    BOOST_CHECK_EQUAL(new_reader.size(), 2U);
     BOOST_CHECK(!new_reader.empty());
 
     // Reading after end of byte vector throws an error even if the reader is
     // not totally empty.
     BOOST_CHECK_THROW(new_reader >> d, std::ios_base::failure);
+}
+
+BOOST_AUTO_TEST_CASE(streams_vector_reader_rvalue)
+{
+    std::vector<uint8_t> data{0x82, 0xa7, 0x31};
+    VectorReader reader(SER_NETWORK, INIT_PROTO_VERSION, data, /* pos= */ 0);
+    uint32_t varint = 0;
+    // Deserialize into r-value
+    reader >> VARINT(varint);
+    BOOST_CHECK_EQUAL(varint, 54321);
+    BOOST_CHECK(reader.empty());
 }
 
 BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
@@ -136,20 +147,20 @@ BOOST_AUTO_TEST_CASE(bitstream_reader_writer)
     BOOST_CHECK_EQUAL(serialized_int2, (uint16_t)0x1072); // NOTE: Serialized as LE
 
     BitStreamReader<CDataStream> bit_reader(data_copy);
-    BOOST_CHECK_EQUAL(bit_reader.Read(1), 0);
-    BOOST_CHECK_EQUAL(bit_reader.Read(2), 2);
-    BOOST_CHECK_EQUAL(bit_reader.Read(3), 6);
-    BOOST_CHECK_EQUAL(bit_reader.Read(4), 11);
-    BOOST_CHECK_EQUAL(bit_reader.Read(5), 1);
-    BOOST_CHECK_EQUAL(bit_reader.Read(6), 32);
-    BOOST_CHECK_EQUAL(bit_reader.Read(7), 7);
-    BOOST_CHECK_EQUAL(bit_reader.Read(16), 30497);
+    BOOST_CHECK_EQUAL(bit_reader.Read(1), 0U);
+    BOOST_CHECK_EQUAL(bit_reader.Read(2), 2U);
+    BOOST_CHECK_EQUAL(bit_reader.Read(3), 6U);
+    BOOST_CHECK_EQUAL(bit_reader.Read(4), 11U);
+    BOOST_CHECK_EQUAL(bit_reader.Read(5), 1U);
+    BOOST_CHECK_EQUAL(bit_reader.Read(6), 32U);
+    BOOST_CHECK_EQUAL(bit_reader.Read(7), 7U);
+    BOOST_CHECK_EQUAL(bit_reader.Read(16), 30497U);
     BOOST_CHECK_THROW(bit_reader.Read(8), std::ios_base::failure);
 }
 
 BOOST_AUTO_TEST_CASE(streams_serializedata_xor)
 {
-    std::vector<char> in;
+    std::vector<uint8_t> in;
     std::vector<char> expected_xor;
     std::vector<unsigned char> key;
     CDataStream ds(in, 0, 0);
@@ -236,7 +247,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     BOOST_CHECK_EQUAL(i, 1);
 
     // After reading bytes 0 and 1, we're positioned at 2.
-    BOOST_CHECK_EQUAL(bf.GetPos(), 2);
+    BOOST_CHECK_EQUAL(bf.GetPos(), 2U);
 
     // Rewind to offset 0, ok (within the 10 byte window).
     BOOST_CHECK(bf.SetPos(0));
@@ -263,18 +274,18 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     // The default argument removes the limit completely.
     BOOST_CHECK(bf.SetLimit());
     // The read position should still be at 3 (no change).
-    BOOST_CHECK_EQUAL(bf.GetPos(), 3);
+    BOOST_CHECK_EQUAL(bf.GetPos(), 3U);
 
     // Read from current offset, 3, forward until position 10.
     for (uint8_t j = 3; j < 10; ++j) {
         bf >> i;
         BOOST_CHECK_EQUAL(i, j);
     }
-    BOOST_CHECK_EQUAL(bf.GetPos(), 10);
+    BOOST_CHECK_EQUAL(bf.GetPos(), 10U);
 
     // We're guaranteed (just barely) to be able to rewind to zero.
     BOOST_CHECK(bf.SetPos(0));
-    BOOST_CHECK_EQUAL(bf.GetPos(), 0);
+    BOOST_CHECK_EQUAL(bf.GetPos(), 0U);
     bf >> i;
     BOOST_CHECK_EQUAL(i, 0);
 
@@ -284,12 +295,12 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     BOOST_CHECK(bf.SetPos(10));
     bf >> i;
     BOOST_CHECK_EQUAL(i, 10);
-    BOOST_CHECK_EQUAL(bf.GetPos(), 11);
+    BOOST_CHECK_EQUAL(bf.GetPos(), 11U);
 
     // Now it's only guaranteed that we can rewind to offset 1
     // (current read position, 11, minus rewind amount, 10).
     BOOST_CHECK(bf.SetPos(1));
-    BOOST_CHECK_EQUAL(bf.GetPos(), 1);
+    BOOST_CHECK_EQUAL(bf.GetPos(), 1U);
     bf >> i;
     BOOST_CHECK_EQUAL(i, 1);
 
@@ -303,7 +314,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
             BOOST_CHECK_EQUAL(a[j], 11 + j);
         }
     }
-    BOOST_CHECK_EQUAL(bf.GetPos(), 40);
+    BOOST_CHECK_EQUAL(bf.GetPos(), 40U);
 
     // We've read the entire file, the next read should throw.
     try {
@@ -317,11 +328,11 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
     BOOST_CHECK(bf.eof());
 
     // Still at offset 40, we can go back 10, to 30.
-    BOOST_CHECK_EQUAL(bf.GetPos(), 40);
+    BOOST_CHECK_EQUAL(bf.GetPos(), 40U);
     BOOST_CHECK(bf.SetPos(30));
     bf >> i;
     BOOST_CHECK_EQUAL(i, 30);
-    BOOST_CHECK_EQUAL(bf.GetPos(), 31);
+    BOOST_CHECK_EQUAL(bf.GetPos(), 31U);
 
     // We're too far to rewind to position zero.
     BOOST_CHECK(!bf.SetPos(0));
@@ -338,7 +349,7 @@ BOOST_AUTO_TEST_CASE(streams_buffered_file)
 BOOST_AUTO_TEST_CASE(streams_buffered_file_rand)
 {
     // Make this test deterministic.
-    SeedInsecureRand(true);
+    SeedInsecureRand(SeedRand::ZEROS);
 
     for (int rep = 0; rep < 50; ++rep) {
         FILE* file = fsbridge::fopen("streams_test_tmp", "w+b");

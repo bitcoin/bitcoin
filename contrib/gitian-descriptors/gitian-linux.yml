@@ -1,37 +1,45 @@
 ---
-name: "bitcoin-core-linux-0.20"
+name: "bitcoin-core-linux-22"
 enable_cache: true
 distro: "ubuntu"
 suites:
-- "bionic"
+- "focal"
 architectures:
 - "amd64"
 packages:
-- "curl"
-- "g++-aarch64-linux-gnu"
-- "g++-8-aarch64-linux-gnu"
-- "gcc-8-aarch64-linux-gnu"
-- "binutils-aarch64-linux-gnu"
-- "g++-arm-linux-gnueabihf"
-- "g++-8-arm-linux-gnueabihf"
-- "gcc-8-arm-linux-gnueabihf"
-- "binutils-arm-linux-gnueabihf"
-- "g++-riscv64-linux-gnu"
-- "g++-8-riscv64-linux-gnu"
-- "gcc-8-riscv64-linux-gnu"
-- "binutils-riscv64-linux-gnu"
-- "g++-8-multilib"
-- "gcc-8-multilib"
-- "binutils-gold"
-- "git"
-- "pkg-config"
+# Common dependencies.
 - "autoconf"
-- "libtool"
 - "automake"
-- "faketime"
+- "binutils"
+- "bison"
 - "bsdmainutils"
 - "ca-certificates"
+- "curl"
+- "faketime"
+- "g++-8"
+- "gcc-8"
+- "git"
+- "libtool"
+- "patch"
+- "pkg-config"
 - "python3"
+- "python3-pip"
+# Cross compilation HOSTS:
+#  - arm-linux-gnueabihf
+- "binutils-arm-linux-gnueabihf"
+- "g++-8-arm-linux-gnueabihf"
+#  - aarch64-linux-gnu
+- "binutils-aarch64-linux-gnu"
+- "g++-8-aarch64-linux-gnu"
+#  - powerpc64-linux-gnu
+- "binutils-powerpc64-linux-gnu"
+- "g++-8-powerpc64-linux-gnu"
+#  - powerpc64le-linux-gnu
+- "binutils-powerpc64le-linux-gnu"
+- "g++-8-powerpc64le-linux-gnu"
+#  - riscv64-linux-gnu
+- "binutils-riscv64-linux-gnu"
+- "g++-8-riscv64-linux-gnu"
 remotes:
 - "url": "https://github.com/bitcoin/bitcoin.git"
   "dir": "bitcoin"
@@ -40,18 +48,17 @@ script: |
   set -e -o pipefail
 
   WRAP_DIR=$HOME/wrapped
-  HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu riscv64-linux-gnu"
-  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
+  HOSTS="x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu powerpc64-linux-gnu powerpc64le-linux-gnu riscv64-linux-gnu"
+  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests --disable-fuzz-binary"
   FAKETIME_HOST_PROGS="gcc g++"
   FAKETIME_PROGS="date ar ranlib nm"
   HOST_CFLAGS="-O2 -g"
   HOST_CXXFLAGS="-O2 -g"
-  HOST_LDFLAGS=-static-libstdc++
+  HOST_LDFLAGS_BASE="-static-libstdc++ -Wl,-O2"
 
-  export QT_RCC_TEST=1
   export QT_RCC_SOURCE_DATE_OVERRIDE=1
   export TZ="UTC"
-  export BUILD_DIR=`pwd`
+  export BUILD_DIR="$PWD"
   mkdir -p ${WRAP_DIR}
   if test -n "$GBUILD_CACHE_ENABLED"; then
     export SOURCES_PATH=${GBUILD_COMMON_CACHE}
@@ -59,13 +66,14 @@ script: |
     mkdir -p ${BASE_CACHE} ${SOURCES_PATH}
   fi
 
+  # Use $LIB in LD_PRELOAD to avoid hardcoding the dir (See `man ld.so`)
   function create_global_faketime_wrappers {
   for prog in ${FAKETIME_PROGS}; do
     echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${prog}
     echo "REAL=\`which -a ${prog} | grep -v ${WRAP_DIR}/${prog} | head -1\`" >> ${WRAP_DIR}/${prog}
-    echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${prog}
+    echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${prog}
     echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${prog}
-    echo "\$REAL \$@" >> $WRAP_DIR/${prog}
+    echo "exec \"\$REAL\" \"\$@\"" >> $WRAP_DIR/${prog}
     chmod +x ${WRAP_DIR}/${prog}
   done
   }
@@ -77,14 +85,22 @@ script: |
         then
             echo '#!/usr/bin/env bash' > ${WRAP_DIR}/${i}-${prog}
             echo "REAL=\`which -a ${i}-${prog}-8 | grep -v ${WRAP_DIR}/${i}-${prog} | head -1\`" >> ${WRAP_DIR}/${i}-${prog}
-            echo 'export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/faketime/libfaketime.so.1' >> ${WRAP_DIR}/${i}-${prog}
+            echo "export LD_PRELOAD='/usr/\$LIB/faketime/libfaketime.so.1'" >> ${WRAP_DIR}/${i}-${prog}
             echo "export FAKETIME=\"$1\"" >> ${WRAP_DIR}/${i}-${prog}
-            echo "\$REAL \$@" >> $WRAP_DIR/${i}-${prog}
+            if [ "${i:0:11}" = "powerpc64le" ]; then
+                echo "exec \"\$REAL\" -mcpu=power8 -mtune=power9 \"\$@\"" >> $WRAP_DIR/${i}-${prog}
+            elif [ "${i:0:9}" = "powerpc64" ]; then
+                echo "exec \"\$REAL\" -mcpu=970 -mtune=power9 \"\$@\"" >> $WRAP_DIR/${i}-${prog}
+            else
+                echo "exec \"\$REAL\" \"\$@\"" >> $WRAP_DIR/${i}-${prog}
+            fi
             chmod +x ${WRAP_DIR}/${i}-${prog}
         fi
     done
   done
   }
+
+  pip3 install lief==0.11.4
 
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}
@@ -92,45 +108,11 @@ script: |
   create_per-host_faketime_wrappers "2000-01-01 12:00:00"
   export PATH=${WRAP_DIR}:${PATH}
 
-  EXTRA_INCLUDES_BASE=$WRAP_DIR/extra_includes
-  mkdir -p $EXTRA_INCLUDES_BASE
-
-  # x86 needs /usr/include/i386-linux-gnu/asm pointed to /usr/include/x86_64-linux-gnu/asm,
-  # but we can't write there. Instead, create a link here and force it to be included in the
-  # search paths by wrapping gcc/g++.
-
-  mkdir -p $EXTRA_INCLUDES_BASE/i686-pc-linux-gnu
-  rm -f $WRAP_DIR/extra_includes/i686-pc-linux-gnu/asm
-  ln -s /usr/include/x86_64-linux-gnu/asm $EXTRA_INCLUDES_BASE/i686-pc-linux-gnu/asm
-
-  for prog in gcc g++; do
-  rm -f ${WRAP_DIR}/${prog}
-  cat << EOF > ${WRAP_DIR}/${prog}
-  #!/usr/bin/env bash
-  REAL="`which -a ${prog}-8 | grep -v ${WRAP_DIR}/${prog} | head -1`"
-  for var in "\$@"
-  do
-    if [ "\$var" = "-m32" ]; then
-      export C_INCLUDE_PATH="$EXTRA_INCLUDES_BASE/i686-pc-linux-gnu"
-      export CPLUS_INCLUDE_PATH="$EXTRA_INCLUDES_BASE/i686-pc-linux-gnu"
-      break
-    fi
-  done
-  \$REAL \$@
-  EOF
-  chmod +x ${WRAP_DIR}/${prog}
-  done
-
   cd bitcoin
-  BASEPREFIX=`pwd`/depends
+  BASEPREFIX="${PWD}/depends"
   # Build dependencies for each host
   for i in $HOSTS; do
-    EXTRA_INCLUDES="$EXTRA_INCLUDES_BASE/$i"
-    if [ -d "$EXTRA_INCLUDES" ]; then
-      export HOST_ID_SALT="$EXTRA_INCLUDES"
-    fi
-    make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}"
-    unset HOST_ID_SALT
+    make ${MAKEOPTS} -C ${BASEPREFIX} HOST="${i}" CC=${i}-gcc-8 CXX=${i}-g++-8
   done
 
   # Faketime for binaries
@@ -139,38 +121,35 @@ script: |
   create_per-host_faketime_wrappers "${REFERENCE_DATETIME}"
   export PATH=${WRAP_DIR}:${PATH}
 
-  # Create the release tarball using (arbitrarily) the first host
-  ./autogen.sh
-  CONFIG_SITE=${BASEPREFIX}/`echo "${HOSTS}" | awk '{print $1;}'`/share/config.site ./configure --prefix=/
-  make dist
-  SOURCEDIST=`echo bitcoin-*.tar.gz`
-  DISTNAME=`echo ${SOURCEDIST} | sed 's/.tar.*//'`
-  # Correct tar file order
-  mkdir -p temp
-  pushd temp
-  tar -xf ../$SOURCEDIST
-  find bitcoin-* | sort | tar --mtime="$REFERENCE_DATETIME" --no-recursion --mode='u+rw,go+r-w,a+X' --owner=0 --group=0 -c -T - | gzip -9n > ../$SOURCEDIST
-  popd
+  # Define DISTNAME variable.
+  # shellcheck source=contrib/gitian-descriptors/assign_DISTNAME
+  source contrib/gitian-descriptors/assign_DISTNAME
 
-  # Workaround for tarball not building with the bare tag version (prep)
-  make -C src obj/build.h
+  GIT_ARCHIVE="${OUTDIR}/src/${DISTNAME}.tar.gz"
+
+  # Create the source tarball
+  mkdir -p "$(dirname "$GIT_ARCHIVE")"
+  git archive --prefix="${DISTNAME}/" --output="$GIT_ARCHIVE" HEAD
 
   ORIGPATH="$PATH"
-  # Extract the release tarball into a dir for each host and build
+  # Extract the git archive into a dir for each host and build
   for i in ${HOSTS}; do
     export PATH=${BASEPREFIX}/${i}/native/bin:${ORIGPATH}
+    if [ "${i}" = "powerpc64-linux-gnu" ]; then
+      # Workaround for https://bugs.launchpad.net/ubuntu/+source/gcc-8-cross-ports/+bug/1853740
+      # TODO: remove this when no longer needed
+      HOST_LDFLAGS="${HOST_LDFLAGS_BASE} -Wl,-z,noexecstack"
+    else
+      HOST_LDFLAGS="${HOST_LDFLAGS_BASE}"
+    fi
     mkdir -p distsrc-${i}
     cd distsrc-${i}
-    INSTALLPATH=`pwd`/installed/${DISTNAME}
+    INSTALLPATH="${PWD}/installed/${DISTNAME}"
     mkdir -p ${INSTALLPATH}
-    tar --strip-components=1 -xf ../$SOURCEDIST
+    tar --strip-components=1 -xf "${GIT_ARCHIVE}"
 
-    # Workaround for tarball not building with the bare tag version
-    echo '#!/bin/true' >share/genbuild.sh
-    mkdir src/obj
-    cp ../src/obj/build.h src/obj/
-
-    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}"
+    ./autogen.sh
+    CONFIG_SITE=${BASEPREFIX}/${i}/share/config.site ./configure --prefix=/ --disable-ccache --disable-maintainer-mode --disable-dependency-tracking ${CONFIGFLAGS} CFLAGS="${HOST_CFLAGS}" CXXFLAGS="${HOST_CXXFLAGS}" LDFLAGS="${HOST_LDFLAGS}" CC=${i}-gcc-8 CXX=${i}-g++-8
     make ${MAKEOPTS}
     make ${MAKEOPTS} -C src check-security
     make ${MAKEOPTS} -C src check-symbols
@@ -187,5 +166,3 @@ script: |
     cd ../../
     rm -rf distsrc-${i}
   done
-  mkdir -p $OUTDIR/src
-  mv $SOURCEDIST $OUTDIR/src

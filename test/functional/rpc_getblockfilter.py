@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2018 The Bitcoin Core developers
+# Copyright (c) 2018-2020 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the getblockfilter RPC."""
@@ -7,7 +7,6 @@
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_equal, assert_is_hex_string, assert_raises_rpc_error,
-    connect_nodes, disconnect_nodes, sync_blocks
     )
 
 FILTER_TYPES = ["basic"]
@@ -20,7 +19,7 @@ class GetBlockFilterTest(BitcoinTestFramework):
 
     def run_test(self):
         # Create two chains by disconnecting nodes 0 & 1, mining, then reconnecting
-        disconnect_nodes(self.nodes[0], 1)
+        self.disconnect_nodes(0, 1)
 
         self.nodes[0].generate(3)
         self.nodes[1].generate(4)
@@ -29,8 +28,8 @@ class GetBlockFilterTest(BitcoinTestFramework):
         chain0_hashes = [self.nodes[0].getblockhash(block_height) for block_height in range(4)]
 
         # Reorg node 0 to a new chain
-        connect_nodes(self.nodes[0], 1)
-        sync_blocks(self.nodes)
+        self.connect_nodes(0, 1)
+        self.sync_blocks()
 
         assert_equal(self.nodes[0].getblockcount(), 4)
         chain1_hashes = [self.nodes[0].getblockhash(block_height) for block_height in range(4)]
@@ -54,6 +53,12 @@ class GetBlockFilterTest(BitcoinTestFramework):
         # Test getblockfilter with undefined filter type
         genesis_hash = self.nodes[0].getblockhash(0)
         assert_raises_rpc_error(-5, "Unknown filtertype", self.nodes[0].getblockfilter, genesis_hash, "unknown")
+
+        # Test getblockfilter fails on node without compact block filter index
+        self.restart_node(0, extra_args=["-blockfilterindex=0"])
+        for filter_type in FILTER_TYPES:
+            assert_raises_rpc_error(-1, "Index is not enabled for filtertype {}".format(filter_type),
+                                    self.nodes[0].getblockfilter, genesis_hash, filter_type)
 
 if __name__ == '__main__':
     GetBlockFilterTest().main()

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+// Copyright (c) 2019-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,7 +6,7 @@
 #define BITCOIN_UTIL_TRANSLATION_H
 
 #include <tinyformat.h>
-
+#include <functional>
 
 /**
  * Bilingual messages:
@@ -16,7 +16,28 @@
 struct bilingual_str {
     std::string original;
     std::string translated;
+
+    bilingual_str& operator+=(const bilingual_str& rhs)
+    {
+        original += rhs.original;
+        translated += rhs.translated;
+        return *this;
+    }
+
+    bool empty() const
+    {
+        return original.empty();
+    }
 };
+
+inline bilingual_str operator+(bilingual_str lhs, const bilingual_str& rhs)
+{
+    lhs += rhs;
+    return lhs;
+}
+
+/** Mark a bilingual_str as untranslated */
+inline bilingual_str Untranslated(std::string original) { return {original, original}; }
 
 namespace tinyformat {
 template <typename... Args>

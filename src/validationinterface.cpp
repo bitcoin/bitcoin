@@ -1,85 +1,116 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <validationinterface.h>
 
+#include <chain.h>
+#include <consensus/validation.h>
+#include <logging.h>
 #include <primitives/block.h>
+#include <primitives/transaction.h>
 #include <scheduler.h>
-#include <txmempool.h>
 
 #include <future>
+#include <unordered_map>
 #include <utility>
 
-#include <boost/signals2/signal.hpp>
-
-struct ValidationInterfaceConnections {
-    boost::signals2::scoped_connection UpdatedBlockTip;
-    boost::signals2::scoped_connection TransactionAddedToMempool;
-    boost::signals2::scoped_connection BlockConnected;
-    boost::signals2::scoped_connection BlockDisconnected;
-    boost::signals2::scoped_connection TransactionRemovedFromMempool;
-    boost::signals2::scoped_connection ChainStateFlushed;
-    boost::signals2::scoped_connection BlockChecked;
-    boost::signals2::scoped_connection NewPoWValidBlock;
-};
-
+//! The MainSignalsInstance manages a list of shared_ptr<CValidationInterface>
+//! callbacks.
+//!
+//! A std::unordered_map is used to track what callbacks are currently
+//! registered, and a std::list is to used to store the callbacks that are
+//! currently registered as well as any callbacks that are just unregistered
+//! and about to be deleted when they are done executing.
 struct MainSignalsInstance {
-    boost::signals2::signal<void (const CBlockIndex *, const CBlockIndex *, bool fInitialDownload)> UpdatedBlockTip;
-    boost::signals2::signal<void (const CTransactionRef &)> TransactionAddedToMempool;
-    boost::signals2::signal<void (const std::shared_ptr<const CBlock> &, const CBlockIndex *pindex, const std::vector<CTransactionRef>&)> BlockConnected;
-    boost::signals2::signal<void (const std::shared_ptr<const CBlock> &)> BlockDisconnected;
-    boost::signals2::signal<void (const CTransactionRef &)> TransactionRemovedFromMempool;
-    boost::signals2::signal<void (const CBlockLocator &)> ChainStateFlushed;
-    boost::signals2::signal<void (const CBlock&, const CValidationState&)> BlockChecked;
-    boost::signals2::signal<void (const CBlockIndex *, const std::shared_ptr<const CBlock>&)> NewPoWValidBlock;
+private:
+    Mutex m_mutex;
+    //! List entries consist of a callback pointer and reference count. The
+    //! count is equal to the number of current executions of that entry, plus 1
+    //! if it's registered. It cannot be 0 because that would imply it is
+    //! unregistered and also not being executed (so shouldn't exist).
+    struct ListEntry { std::shared_ptr<CValidationInterface> callbacks; int count = 1; };
+    std::list<ListEntry> m_list GUARDED_BY(m_mutex);
+    std::unordered_map<CValidationInterface*, std::list<ListEntry>::iterator> m_map GUARDED_BY(m_mutex);
 
+public:
     // We are not allowed to assume the scheduler only runs in one thread,
     // but must ensure all callbacks happen in-order, so we end up creating
     // our own queue here :(
     SingleThreadedSchedulerClient m_schedulerClient;
-    std::unordered_map<CValidationInterface*, ValidationInterfaceConnections> m_connMainSignals;
 
     explicit MainSignalsInstance(CScheduler *pscheduler) : m_schedulerClient(pscheduler) {}
+
+    void Register(std::shared_ptr<CValidationInterface> callbacks)
+    {
+        LOCK(m_mutex);
+        auto inserted = m_map.emplace(callbacks.get(), m_list.end());
+        if (inserted.second) inserted.first->second = m_list.emplace(m_list.end());
+        inserted.first->second->callbacks = std::move(callbacks);
+    }
+
+    void Unregister(CValidationInterface* callbacks)
+    {
+        LOCK(m_mutex);
+        auto it = m_map.find(callbacks);
+        if (it != m_map.end()) {
+            if (!--it->second->count) m_list.erase(it->second);
+            m_map.erase(it);
+        }
+    }
+
+    //! Clear unregisters every previously registered callback, erasing every
+    //! map entry. After this call, the list may still contain callbacks that
+    //! are currently executing, but it will be cleared when they are done
+    //! executing.
+    void Clear()
+    {
+        LOCK(m_mutex);
+        for (const auto& entry : m_map) {
+            if (!--entry.second->count) m_list.erase(entry.second);
+        }
+        m_map.clear();
+    }
+
+    template<typename F> void Iterate(F&& f)
+    {
+        WAIT_LOCK(m_mutex, lock);
+        for (auto it = m_list.begin(); it != m_list.end();) {
+            ++it->count;
+            {
+                REVERSE_LOCK(lock);
+                f(*it->callbacks);
+            }
+            it = --it->count ? std::next(it) : m_list.erase(it);
+        }
+    }
 };
 
 static CMainSignals g_signals;
 
-// This map has to a separate global instead of a member of MainSignalsInstance,
-// because RegisterWithMempoolSignals is currently called before RegisterBackgroundSignalScheduler,
-// so MainSignalsInstance hasn't been created yet.
-static std::unordered_map<CTxMemPool*, boost::signals2::scoped_connection> g_connNotifyEntryRemoved;
-
-void CMainSignals::RegisterBackgroundSignalScheduler(CScheduler& scheduler) {
+void CMainSignals::RegisterBackgroundSignalScheduler(CScheduler& scheduler)
+{
     assert(!m_internals);
     m_internals.reset(new MainSignalsInstance(&scheduler));
 }
 
-void CMainSignals::UnregisterBackgroundSignalScheduler() {
+void CMainSignals::UnregisterBackgroundSignalScheduler()
+{
     m_internals.reset(nullptr);
 }
 
-void CMainSignals::FlushBackgroundCallbacks() {
+void CMainSignals::FlushBackgroundCallbacks()
+{
     if (m_internals) {
         m_internals->m_schedulerClient.EmptyQueue();
     }
 }
 
-size_t CMainSignals::CallbacksPending() {
+size_t CMainSignals::CallbacksPending()
+{
     if (!m_internals) return 0;
     return m_internals->m_schedulerClient.CallbacksPending();
-}
-
-void CMainSignals::RegisterWithMempoolSignals(CTxMemPool& pool) {
-    g_connNotifyEntryRemoved.emplace(std::piecewise_construct,
-        std::forward_as_tuple(&pool),
-        std::forward_as_tuple(pool.NotifyEntryRemoved.connect(std::bind(&CMainSignals::MempoolEntryRemoved, this, std::placeholders::_1, std::placeholders::_2)))
-    );
-}
-
-void CMainSignals::UnregisterWithMempoolSignals(CTxMemPool& pool) {
-    g_connNotifyEntryRemoved.erase(&pool);
 }
 
 CMainSignals& GetMainSignals()
@@ -87,36 +118,47 @@ CMainSignals& GetMainSignals()
     return g_signals;
 }
 
-void RegisterValidationInterface(CValidationInterface* pwalletIn) {
-    ValidationInterfaceConnections& conns = g_signals.m_internals->m_connMainSignals[pwalletIn];
-    conns.UpdatedBlockTip = g_signals.m_internals->UpdatedBlockTip.connect(std::bind(&CValidationInterface::UpdatedBlockTip, pwalletIn, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-    conns.TransactionAddedToMempool = g_signals.m_internals->TransactionAddedToMempool.connect(std::bind(&CValidationInterface::TransactionAddedToMempool, pwalletIn, std::placeholders::_1));
-    conns.BlockConnected = g_signals.m_internals->BlockConnected.connect(std::bind(&CValidationInterface::BlockConnected, pwalletIn, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-    conns.BlockDisconnected = g_signals.m_internals->BlockDisconnected.connect(std::bind(&CValidationInterface::BlockDisconnected, pwalletIn, std::placeholders::_1));
-    conns.TransactionRemovedFromMempool = g_signals.m_internals->TransactionRemovedFromMempool.connect(std::bind(&CValidationInterface::TransactionRemovedFromMempool, pwalletIn, std::placeholders::_1));
-    conns.ChainStateFlushed = g_signals.m_internals->ChainStateFlushed.connect(std::bind(&CValidationInterface::ChainStateFlushed, pwalletIn, std::placeholders::_1));
-    conns.BlockChecked = g_signals.m_internals->BlockChecked.connect(std::bind(&CValidationInterface::BlockChecked, pwalletIn, std::placeholders::_1, std::placeholders::_2));
-    conns.NewPoWValidBlock = g_signals.m_internals->NewPoWValidBlock.connect(std::bind(&CValidationInterface::NewPoWValidBlock, pwalletIn, std::placeholders::_1, std::placeholders::_2));
+void RegisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks)
+{
+    // Each connection captures the shared_ptr to ensure that each callback is
+    // executed before the subscriber is destroyed. For more details see #18338.
+    g_signals.m_internals->Register(std::move(callbacks));
 }
 
-void UnregisterValidationInterface(CValidationInterface* pwalletIn) {
+void RegisterValidationInterface(CValidationInterface* callbacks)
+{
+    // Create a shared_ptr with a no-op deleter - CValidationInterface lifecycle
+    // is managed by the caller.
+    RegisterSharedValidationInterface({callbacks, [](CValidationInterface*){}});
+}
+
+void UnregisterSharedValidationInterface(std::shared_ptr<CValidationInterface> callbacks)
+{
+    UnregisterValidationInterface(callbacks.get());
+}
+
+void UnregisterValidationInterface(CValidationInterface* callbacks)
+{
     if (g_signals.m_internals) {
-        g_signals.m_internals->m_connMainSignals.erase(pwalletIn);
+        g_signals.m_internals->Unregister(callbacks);
     }
 }
 
-void UnregisterAllValidationInterfaces() {
+void UnregisterAllValidationInterfaces()
+{
     if (!g_signals.m_internals) {
         return;
     }
-    g_signals.m_internals->m_connMainSignals.clear();
+    g_signals.m_internals->Clear();
 }
 
-void CallFunctionInValidationInterfaceQueue(std::function<void ()> func) {
+void CallFunctionInValidationInterfaceQueue(std::function<void()> func)
+{
     g_signals.m_internals->m_schedulerClient.AddToProcessQueue(std::move(func));
 }
 
-void SyncWithValidationInterfaceQueue() {
+void SyncWithValidationInterfaceQueue()
+{
     AssertLockNotHeld(cs_main);
     // Block until the validation queue drains
     std::promise<void> promise;
@@ -126,52 +168,89 @@ void SyncWithValidationInterfaceQueue() {
     promise.get_future().wait();
 }
 
-void CMainSignals::MempoolEntryRemoved(CTransactionRef ptx, MemPoolRemovalReason reason) {
-    if (reason != MemPoolRemovalReason::BLOCK && reason != MemPoolRemovalReason::CONFLICT) {
-        m_internals->m_schedulerClient.AddToProcessQueue([ptx, this] {
-            m_internals->TransactionRemovedFromMempool(ptx);
-        });
-    }
-}
+// Use a macro instead of a function for conditional logging to prevent
+// evaluating arguments when logging is not enabled.
+//
+// NOTE: The lambda captures all local variables by value.
+#define ENQUEUE_AND_LOG_EVENT(event, fmt, name, ...)           \
+    do {                                                       \
+        auto local_name = (name);                              \
+        LOG_EVENT("Enqueuing " fmt, local_name, __VA_ARGS__);  \
+        m_internals->m_schedulerClient.AddToProcessQueue([=] { \
+            LOG_EVENT(fmt, local_name, __VA_ARGS__);           \
+            event();                                           \
+        });                                                    \
+    } while (0)
+
+#define LOG_EVENT(fmt, ...) \
+    LogPrint(BCLog::VALIDATION, fmt "\n", __VA_ARGS__)
 
 void CMainSignals::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload) {
     // Dependencies exist that require UpdatedBlockTip events to be delivered in the order in which
     // the chain actually updates. One way to ensure this is for the caller to invoke this signal
     // in the same critical section where the chain is updated
 
-    m_internals->m_schedulerClient.AddToProcessQueue([pindexNew, pindexFork, fInitialDownload, this] {
-        m_internals->UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload);
-    });
+    auto event = [pindexNew, pindexFork, fInitialDownload, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.UpdatedBlockTip(pindexNew, pindexFork, fInitialDownload); });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: new block hash=%s fork block hash=%s (in IBD=%s)", __func__,
+                          pindexNew->GetBlockHash().ToString(),
+                          pindexFork ? pindexFork->GetBlockHash().ToString() : "null",
+                          fInitialDownload);
 }
 
-void CMainSignals::TransactionAddedToMempool(const CTransactionRef &ptx) {
-    m_internals->m_schedulerClient.AddToProcessQueue([ptx, this] {
-        m_internals->TransactionAddedToMempool(ptx);
-    });
+void CMainSignals::TransactionAddedToMempool(const CTransactionRef& tx, uint64_t mempool_sequence) {
+    auto event = [tx, mempool_sequence, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.TransactionAddedToMempool(tx, mempool_sequence); });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: txid=%s wtxid=%s", __func__,
+                          tx->GetHash().ToString(),
+                          tx->GetWitnessHash().ToString());
 }
 
-void CMainSignals::BlockConnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex, const std::shared_ptr<const std::vector<CTransactionRef>>& pvtxConflicted) {
-    m_internals->m_schedulerClient.AddToProcessQueue([pblock, pindex, pvtxConflicted, this] {
-        m_internals->BlockConnected(pblock, pindex, *pvtxConflicted);
-    });
+void CMainSignals::TransactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRemovalReason reason, uint64_t mempool_sequence) {
+    auto event = [tx, reason, mempool_sequence, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.TransactionRemovedFromMempool(tx, reason, mempool_sequence); });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: txid=%s wtxid=%s", __func__,
+                          tx->GetHash().ToString(),
+                          tx->GetWitnessHash().ToString());
 }
 
-void CMainSignals::BlockDisconnected(const std::shared_ptr<const CBlock> &pblock) {
-    m_internals->m_schedulerClient.AddToProcessQueue([pblock, this] {
-        m_internals->BlockDisconnected(pblock);
-    });
+void CMainSignals::BlockConnected(const std::shared_ptr<const CBlock> &pblock, const CBlockIndex *pindex) {
+    auto event = [pblock, pindex, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockConnected(pblock, pindex); });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: block hash=%s block height=%d", __func__,
+                          pblock->GetHash().ToString(),
+                          pindex->nHeight);
+}
+
+void CMainSignals::BlockDisconnected(const std::shared_ptr<const CBlock>& pblock, const CBlockIndex* pindex)
+{
+    auto event = [pblock, pindex, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockDisconnected(pblock, pindex); });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: block hash=%s block height=%d", __func__,
+                          pblock->GetHash().ToString(),
+                          pindex->nHeight);
 }
 
 void CMainSignals::ChainStateFlushed(const CBlockLocator &locator) {
-    m_internals->m_schedulerClient.AddToProcessQueue([locator, this] {
-        m_internals->ChainStateFlushed(locator);
-    });
+    auto event = [locator, this] {
+        m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.ChainStateFlushed(locator); });
+    };
+    ENQUEUE_AND_LOG_EVENT(event, "%s: block hash=%s", __func__,
+                          locator.IsNull() ? "null" : locator.vHave.front().ToString());
 }
 
-void CMainSignals::BlockChecked(const CBlock& block, const CValidationState& state) {
-    m_internals->BlockChecked(block, state);
+void CMainSignals::BlockChecked(const CBlock& block, const BlockValidationState& state) {
+    LOG_EVENT("%s: block hash=%s state=%s", __func__,
+              block.GetHash().ToString(), state.ToString());
+    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.BlockChecked(block, state); });
 }
 
 void CMainSignals::NewPoWValidBlock(const CBlockIndex *pindex, const std::shared_ptr<const CBlock> &block) {
-    m_internals->NewPoWValidBlock(pindex, block);
+    LOG_EVENT("%s: block hash=%s", __func__, block->GetHash().ToString());
+    m_internals->Iterate([&](CValidationInterface& callbacks) { callbacks.NewPoWValidBlock(pindex, block); });
 }

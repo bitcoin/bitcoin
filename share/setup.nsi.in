@@ -1,7 +1,13 @@
-Name "@PACKAGE_NAME@ (@WINDOWS_BITS@-bit)"
+Name "@PACKAGE_NAME@ (64-bit)"
 
 RequestExecutionLevel highest
 SetCompressor /SOLID lzma
+SetDateSave off
+Unicode true
+
+# Uncomment these lines when investigating reproducibility errors
+#SetCompress off
+#SetDatablockOptimize off
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
@@ -28,9 +34,7 @@ SetCompressor /SOLID lzma
 # Included files
 !include Sections.nsh
 !include MUI2.nsh
-!if "@WINDOWS_BITS@" == "64"
 !include x64.nsh
-!endif
 
 # Variables
 Var StartMenuGroup
@@ -48,24 +52,19 @@ Var StartMenuGroup
 !insertmacro MUI_LANGUAGE English
 
 # Installer attributes
-OutFile @abs_top_srcdir@/@PACKAGE_TARNAME@-@PACKAGE_VERSION@-win@WINDOWS_BITS@-setup.exe
-!if "@WINDOWS_BITS@" == "64"
 InstallDir $PROGRAMFILES64\Bitcoin
-!else
-InstallDir $PROGRAMFILES\Bitcoin
-!endif
 CRCCheck on
 XPStyle on
 BrandingText " "
 ShowInstDetails show
-VIProductVersion @CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_REVISION@.@CLIENT_VERSION_BUILD@
+VIProductVersion @CLIENT_VERSION_MAJOR@.@CLIENT_VERSION_MINOR@.@CLIENT_VERSION_BUILD@.0
 VIAddVersionKey ProductName "@PACKAGE_NAME@"
 VIAddVersionKey ProductVersion "@PACKAGE_VERSION@"
 VIAddVersionKey CompanyName "${COMPANY}"
 VIAddVersionKey CompanyWebsite "${URL}"
 VIAddVersionKey FileVersion "@PACKAGE_VERSION@"
-VIAddVersionKey FileDescription ""
-VIAddVersionKey LegalCopyright ""
+VIAddVersionKey FileDescription "Installer for @PACKAGE_NAME@"
+VIAddVersionKey LegalCopyright "Copyright (C) 2009-@COPYRIGHT_YEAR@ @COPYRIGHT_HOLDERS_FINAL@"
 InstallDirRegKey HKCU "${REGKEY}" Path
 ShowUninstDetails show
 
@@ -94,7 +93,7 @@ Section -post SEC0001
     !insertmacro MUI_STARTMENU_WRITE_BEGIN Application
     CreateDirectory $SMPROGRAMS\$StartMenuGroup
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\$(^Name).lnk" $INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\@PACKAGE_NAME@ (testnet, @WINDOWS_BITS@-bit).lnk" "$INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@" "-testnet" "$INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@" 1
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\@PACKAGE_NAME@ (testnet, 64-bit).lnk" "$INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@" "-testnet" "$INSTDIR\@BITCOIN_GUI_NAME@@EXEEXT@" 1
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Uninstall $(^Name).lnk" $INSTDIR\uninstall.exe
     !insertmacro MUI_STARTMENU_WRITE_END
     WriteRegStr HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" DisplayName "$(^Name)"
@@ -138,7 +137,7 @@ Section -un.post UNSEC0001
     DeleteRegKey HKCU "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Uninstall $(^Name).lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\$(^Name).lnk"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\@PACKAGE_NAME@ (testnet, @WINDOWS_BITS@-bit).lnk"
+    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\@PACKAGE_NAME@ (testnet, 64-bit).lnk"
     Delete /REBOOTOK "$SMSTARTUP\Bitcoin.lnk"
     Delete /REBOOTOK $INSTDIR\uninstall.exe
     Delete /REBOOTOK $INSTDIR\debug.log
@@ -160,7 +159,6 @@ SectionEnd
 # Installer functions
 Function .onInit
     InitPluginsDir
-!if "@WINDOWS_BITS@" == "64"
     ${If} ${RunningX64}
       ; disable registry redirection (enable access to 64-bit portion of registry)
       SetRegView 64
@@ -168,7 +166,6 @@ Function .onInit
       MessageBox MB_OK|MB_ICONSTOP "Cannot install 64-bit version on a 32-bit system."
       Abort
     ${EndIf}
-!endif
 FunctionEnd
 
 # Uninstaller functions

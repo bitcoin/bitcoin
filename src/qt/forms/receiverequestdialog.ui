@@ -6,68 +6,233 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>487</width>
-    <height>597</height>
+    <width>413</width>
+    <height>229</height>
    </rect>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout_3">
-   <item>
-    <widget class="QRImageWidget" name="lblQRCode">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+  <property name="windowTitle">
+   <string>Request payment to …</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout" columnstretch="0,1">
+   <property name="sizeConstraint">
+    <enum>QLayout::SetFixedSize</enum>
+   </property>
+   <item row="0" column="0" colspan="2" alignment="Qt::AlignHCenter">
+    <widget class="QRImageWidget" name="qr_code">
+     <property name="text">
+      <string notr="true">QR image</string>
      </property>
-     <property name="minimumSize">
-      <size>
-       <width>300</width>
-       <height>320</height>
-      </size>
+     <property name="textInteractionFlags">
+      <set>Qt::NoTextInteraction</set>
      </property>
-     <property name="toolTip">
-      <string>QR Code</string>
+    </widget>
+   </item>
+   <item row="1" column="0" colspan="2">
+    <widget class="QLabel" name="payment_header">
+     <property name="font">
+      <font>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Payment information</string>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::NoTextInteraction</set>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" alignment="Qt::AlignRight|Qt::AlignTop">
+    <widget class="QLabel" name="uri_tag">
+     <property name="font">
+      <font>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string notr="true">URI:</string>
      </property>
      <property name="textFormat">
       <enum>Qt::PlainText</enum>
      </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
+     <property name="textInteractionFlags">
+      <set>Qt::NoTextInteraction</set>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1" alignment="Qt::AlignTop">
+    <widget class="QLabel" name="uri_content">
+     <property name="text">
+      <string notr="true">bitcoin:BC1…</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::RichText</enum>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
      </property>
+     <property name="textInteractionFlags">
+      <set>Qt::TextSelectableByMouse</set>
+     </property>
     </widget>
    </item>
-   <item>
-    <widget class="QTextEdit" name="outUri">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
+   <item row="3" column="0" alignment="Qt::AlignRight|Qt::AlignTop">
+    <widget class="QLabel" name="address_tag">
+     <property name="font">
+      <font>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
      </property>
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>50</height>
-      </size>
+     <property name="text">
+      <string>Address:</string>
      </property>
-     <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
+     <property name="textInteractionFlags">
+      <set>Qt::NoTextInteraction</set>
      </property>
-     <property name="frameShadow">
-      <enum>QFrame::Plain</enum>
+    </widget>
+   </item>
+   <item row="3" column="1" alignment="Qt::AlignTop">
+    <widget class="QLabel" name="address_content">
+     <property name="text">
+      <string notr="true">bc1…</string>
      </property>
-     <property name="tabChangesFocus">
+     <property name="textFormat">
+      <enum>Qt::PlainText</enum>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::TextSelectableByMouse</set>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="0" alignment="Qt::AlignRight|Qt::AlignTop">
+    <widget class="QLabel" name="amount_tag">
+     <property name="font">
+      <font>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Amount:</string>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::NoTextInteraction</set>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1" alignment="Qt::AlignTop">
+    <widget class="QLabel" name="amount_content">
+     <property name="text">
+      <string notr="true">0.00000000 BTC</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::PlainText</enum>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::TextSelectableByMouse</set>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0" alignment="Qt::AlignRight|Qt::AlignTop">
+    <widget class="QLabel" name="label_tag">
+     <property name="font">
+      <font>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Label:</string>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::NoTextInteraction</set>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1" alignment="Qt::AlignTop">
+    <widget class="QLabel" name="label_content">
+     <property name="text">
+      <string notr="true">label content</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::PlainText</enum>
+     </property>
+     <property name="wordWrap">
       <bool>true</bool>
      </property>
      <property name="textInteractionFlags">
-      <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+      <set>Qt::TextSelectableByMouse</set>
      </property>
     </widget>
    </item>
-   <item>
+   <item row="6" column="0" alignment="Qt::AlignRight|Qt::AlignTop">
+    <widget class="QLabel" name="message_tag">
+     <property name="font">
+      <font>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Message:</string>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::NoTextInteraction</set>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1" alignment="Qt::AlignTop">
+    <widget class="QLabel" name="message_content">
+     <property name="text">
+      <string notr="true">message content</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::PlainText</enum>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::TextSelectableByMouse</set>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0" alignment="Qt::AlignRight|Qt::AlignTop">
+    <widget class="QLabel" name="wallet_tag">
+     <property name="font">
+      <font>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Wallet:</string>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::NoTextInteraction</set>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1" alignment="Qt::AlignTop">
+    <widget class="QLabel" name="wallet_content">
+     <property name="text">
+      <string notr="true">wallet name</string>
+     </property>
+     <property name="textFormat">
+      <enum>Qt::PlainText</enum>
+     </property>
+     <property name="wordWrap">
+      <bool>true</bool>
+     </property>
+     <property name="textInteractionFlags">
+      <set>Qt::TextSelectableByMouse</set>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QPushButton" name="btnCopyURI">
@@ -92,7 +257,7 @@
      <item>
       <widget class="QPushButton" name="btnSaveAs">
        <property name="text">
-        <string>&amp;Save Image...</string>
+        <string>&amp;Save Image…</string>
        </property>
        <property name="autoDefault">
         <bool>false</bool>
@@ -114,8 +279,11 @@
      </item>
      <item>
       <widget class="QDialogButtonBox" name="buttonBox">
+       <property name="focusPolicy">
+        <enum>Qt::StrongFocus</enum>
+       </property>
        <property name="standardButtons">
-        <set>QDialogButtonBox::Close</set>
+        <set>QDialogButtonBox::Ok</set>
        </property>
       </widget>
      </item>
@@ -130,24 +298,14 @@
    <header>qt/qrimagewidget.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>buttonBox</tabstop>
+  <tabstop>btnCopyURI</tabstop>
+  <tabstop>btnCopyAddress</tabstop>
+  <tabstop>btnSaveAs</tabstop>
+ </tabstops>
  <resources/>
  <connections>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>rejected()</signal>
-   <receiver>ReceiveRequestDialog</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>452</x>
-     <y>573</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>243</x>
-     <y>298</y>
-    </hint>
-   </hints>
-  </connection>
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
@@ -155,12 +313,12 @@
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>452</x>
-     <y>573</y>
+     <x>135</x>
+     <y>230</y>
     </hint>
     <hint type="destinationlabel">
-     <x>243</x>
-     <y>298</y>
+     <x>135</x>
+     <y>126</y>
     </hint>
    </hints>
   </connection>

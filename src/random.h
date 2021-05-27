@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,24 +35,22 @@
  *   that fast seeding includes, but additionally:
  *   - OS entropy (/dev/urandom, getrandom(), ...). The application will terminate if
  *     this entropy source fails.
- *   - Bytes from OpenSSL's RNG (which itself may be seeded from various sources)
  *   - Another high-precision timestamp (indirectly committing to a benchmark of all the
  *     previous sources).
  *   These entropy sources are slower, but designed to make sure the RNG state contains
  *   fresh data that is unpredictable to attackers.
  *
- * - RandAddSeedSleep() seeds everything that fast seeding includes, but additionally:
- *   - A high-precision timestamp before and after sleeping 1ms.
- *   - (On Windows) Once every 10 minutes, performance monitoring data from the OS.
- -   - Once every minute, strengthen the entropy for 10 ms using repeated SHA512.
- *   These just exploit the fact the system is idle to improve the quality of the RNG
- *   slightly.
+ * - RandAddPeriodic() seeds everything that fast seeding includes, but additionally:
+ *   - A high-precision timestamp
+ *   - Dynamic environment data (performance monitoring, ...)
+ *   - Strengthen the entropy for 10 ms using repeated SHA512.
+ *   This is run once every minute.
  *
  * On first use of the RNG (regardless of what function is called first), all entropy
  * sources used in the 'slow' seeder are included, but also:
  * - 256 bits from the hardware RNG (rdseed or rdrand) when available.
- * - (On Windows) Performance monitoring data from the OS.
- * - (On Windows) Through OpenSSL, the screen contents.
+ * - Dynamic environment data (performance monitoring, ...)
+ * - Static environment data
  * - Strengthen the entropy for 100 ms using repeated SHA512.
  *
  * When mixing in new entropy, H = SHA512(entropy || old_rng_state) is computed, and
@@ -69,8 +67,21 @@
  * Thread-safe.
  */
 void GetRandBytes(unsigned char* buf, int num) noexcept;
+/** Generate a uniform random integer in the range [0..range). Precondition: range > 0 */
 uint64_t GetRand(uint64_t nMax) noexcept;
-std::chrono::microseconds GetRandMicros(std::chrono::microseconds duration_max) noexcept;
+/** Generate a uniform random duration in the range [0..max). Precondition: max.count() > 0 */
+template <typename D>
+D GetRandomDuration(typename std::common_type<D>::type max) noexcept
+// Having the compiler infer the template argument from the function argument
+// is dangerous, because the desired return value generally has a different
+// type than the function argument. So std::common_type is used to force the
+// call site to specify the type of the return value.
+{
+    assert(max.count() > 0);
+    return D{GetRand(max.count())};
+};
+constexpr auto GetRandMicros = GetRandomDuration<std::chrono::microseconds>;
+constexpr auto GetRandMillis = GetRandomDuration<std::chrono::milliseconds>;
 int GetRandInt(int nMax) noexcept;
 uint256 GetRandHash() noexcept;
 
@@ -85,11 +96,19 @@ uint256 GetRandHash() noexcept;
 void GetStrongRandBytes(unsigned char* buf, int num) noexcept;
 
 /**
- * Sleep for 1ms, gather entropy from various sources, and feed them to the PRNG state.
+ * Gather entropy from various expensive sources, and feed them to the PRNG state.
  *
  * Thread-safe.
  */
-void RandAddSeedSleep();
+void RandAddPeriodic() noexcept;
+
+/**
+ * Gathers entropy from the low bits of the time at which events occur. Should
+ * be called with a uint32_t describing the event at the time an event occurs.
+ *
+ * Thread-safe.
+ */
+void RandAddEvent(const uint32_t event_info) noexcept;
 
 /**
  * Fast randomness source. This is seeded once with secure random data, but
@@ -97,7 +116,8 @@ void RandAddSeedSleep();
  *
  * This class is not thread-safe.
  */
-class FastRandomContext {
+class FastRandomContext
+{
 private:
     bool requires_seed;
     ChaCha20 rng;
@@ -149,7 +169,8 @@ public:
     }
 
     /** Generate a random (bits)-bit integer. */
-    uint64_t randbits(int bits) noexcept {
+    uint64_t randbits(int bits) noexcept
+    {
         if (bits == 0) {
             return 0;
         } else if (bits > 32) {
@@ -163,9 +184,12 @@ public:
         }
     }
 
-    /** Generate a random integer in the range [0..range). */
+    /** Generate a random integer in the range [0..range).
+     * Precondition: range > 0.
+     */
     uint64_t randrange(uint64_t range) noexcept
     {
+        assert(range);
         --range;
         int bits = CountBits(range);
         while (true) {
@@ -203,7 +227,7 @@ public:
  * debug mode detects and panics on. This is a known issue, see
  * https://stackoverflow.com/questions/22915325/avoiding-self-assignment-in-stdshuffle
  */
-template<typename I, typename R>
+template <typename I, typename R>
 void Shuffle(I first, I last, R&& rng)
 {
     while (first != last) {
@@ -226,7 +250,7 @@ static const int NUM_OS_RANDOM_BYTES = 32;
 /** Get 32 bytes of system entropy. Do not use this in application code: use
  * GetStrongRandBytes instead.
  */
-void GetOSRand(unsigned char *ent32);
+void GetOSRand(unsigned char* ent32);
 
 /** Check that OS randomness is available and returning the requested number
  * of bytes.

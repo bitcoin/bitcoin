@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2018 The Bitcoin Core developers
+// Copyright (c) 2016-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +10,6 @@
 #endif
 
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN 1
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -23,9 +22,12 @@
 #endif
 
 #include <algorithm>
+#ifdef ARENA_DEBUG
+#include <iomanip>
+#include <iostream>
+#endif
 
 LockedPoolManager* LockedPoolManager::_instance = nullptr;
-std::once_flag LockedPoolManager::init_flag;
 
 /*******************************************************************************/
 // Utilities
@@ -63,7 +65,7 @@ void* Arena::alloc(size_t size)
 
     // Pick a large enough free-chunk. Returns an iterator pointing to the first element that is not less than key.
     // This allocation strategy is best-fit. According to "Dynamic Storage Allocation: A Survey and Critical Review",
-    // Wilson et. al. 1995, http://www.scs.stanford.edu/14wi-cs140/sched/readings/wilson.pdf, best-fit and first-fit
+    // Wilson et. al. 1995, https://www.scs.stanford.edu/14wi-cs140/sched/readings/wilson.pdf, best-fit and first-fit
     // policies seem to work well in practice.
     auto size_ptr_it = size_to_free_chunk.lower_bound(size);
     if (size_ptr_it == size_to_free_chunk.end())
@@ -137,7 +139,7 @@ Arena::Stats Arena::stats() const
 }
 
 #ifdef ARENA_DEBUG
-static void printchunk(char* base, size_t sz, bool used) {
+static void printchunk(void* base, size_t sz, bool used) {
     std::cout <<
         "0x" << std::hex << std::setw(16) << std::setfill('0') << base <<
         " 0x" << std::hex << std::setw(16) << std::setfill('0') << sz <<
@@ -149,7 +151,7 @@ void Arena::walk() const
         printchunk(chunk.first, chunk.second, true);
     std::cout << std::endl;
     for (const auto& chunk: chunks_free)
-        printchunk(chunk.first, chunk.second, false);
+        printchunk(chunk.first, chunk.second->first, false);
     std::cout << std::endl;
 }
 #endif
@@ -249,6 +251,11 @@ void *PosixLockedPageAllocator::AllocateLocked(size_t len, bool *lockingSuccess)
     }
     if (addr) {
         *lockingSuccess = mlock(addr, len) == 0;
+#if defined(MADV_DONTDUMP) // Linux
+        madvise(addr, len, MADV_DONTDUMP);
+#elif defined(MADV_NOCORE) // FreeBSD
+        madvise(addr, len, MADV_NOCORE);
+#endif
     }
     return addr;
 }

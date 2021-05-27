@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+// Copyright (c) 2009-2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -62,6 +62,10 @@ enum RPCErrorCode
     RPC_CLIENT_NODE_NOT_CONNECTED   = -29, //!< Node to disconnect not found in connected nodes
     RPC_CLIENT_INVALID_IP_OR_SUBNET = -30, //!< Invalid IP/Subnet
     RPC_CLIENT_P2P_DISABLED         = -31, //!< No valid connection manager instance found
+    RPC_CLIENT_NODE_CAPACITY_REACHED= -34, //!< Max number of outbound or block-relay connections already open
+
+    //! Chain errors
+    RPC_CLIENT_MEMPOOL_DISABLED     = -33, //!< No mempool instance found
 
     //! Wallet errors
     RPC_WALLET_ERROR                = -4,  //!< Unspecified problem with wallet (key not found etc.)
@@ -75,6 +79,7 @@ enum RPCErrorCode
     RPC_WALLET_ALREADY_UNLOCKED     = -17, //!< Wallet is already unlocked
     RPC_WALLET_NOT_FOUND            = -18, //!< Invalid wallet specified
     RPC_WALLET_NOT_SPECIFIED        = -19, //!< No wallet specified (error when there are multiple wallets loaded)
+    RPC_WALLET_ALREADY_LOADED       = -35, //!< This same wallet is already loaded
 
     //! Backwards compatible aliases
     RPC_WALLET_INVALID_ACCOUNT_NAME = RPC_WALLET_INVALID_LABEL_NAME,

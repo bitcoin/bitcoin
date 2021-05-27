@@ -1,4 +1,4 @@
-// Copyright (c) 2013-2018 The Bitcoin Core developers
+// Copyright (c) 2013-2020 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,15 +6,16 @@
 #include <crypto/common.h>
 #include <crypto/hmac_sha512.h>
 
+#include <string>
 
 inline uint32_t ROTL32(uint32_t x, int8_t r)
 {
     return (x << r) | (x >> (32 - r));
 }
 
-unsigned int MurmurHash3(unsigned int nHashSeed, const std::vector<unsigned char>& vDataToHash)
+unsigned int MurmurHash3(unsigned int nHashSeed, Span<const unsigned char> vDataToHash)
 {
-    // The following is MurmurHash3 (x86_32), see http://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp
+    // The following is MurmurHash3 (x86_32), see https://code.google.com/p/smhasher/source/browse/trunk/MurmurHash3.cpp
     uint32_t h1 = nHashSeed;
     const uint32_t c1 = 0xcc9e2d51;
     const uint32_t c2 = 0x1b873593;
@@ -76,4 +77,20 @@ void BIP32Hash(const ChainCode &chainCode, unsigned int nChild, unsigned char he
     num[2] = (nChild >>  8) & 0xFF;
     num[3] = (nChild >>  0) & 0xFF;
     CHMAC_SHA512(chainCode.begin(), chainCode.size()).Write(&header, 1).Write(data, 32).Write(num, 4).Finalize(output);
+}
+
+uint256 SHA256Uint256(const uint256& input)
+{
+    uint256 result;
+    CSHA256().Write(input.begin(), 32).Finalize(result.begin());
+    return result;
+}
+
+CHashWriter TaggedHash(const std::string& tag)
+{
+    CHashWriter writer(SER_GETHASH, 0);
+    uint256 taghash;
+    CSHA256().Write((const unsigned char*)tag.data(), tag.size()).Finalize(taghash.begin());
+    writer << taghash << taghash;
+    return writer;
 }
