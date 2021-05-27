@@ -68,25 +68,24 @@ public:
         s >> *this;
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CDeterministicMNState, obj)
     {
-        READWRITE(nRegisteredHeight);
-        READWRITE(nLastPaidHeight);
-        READWRITE(nPoSePenalty);
-        READWRITE(nPoSeRevivedHeight);
-        READWRITE(nPoSeBanHeight);
-        READWRITE(nRevocationReason);
-        READWRITE(confirmedHash);
-        READWRITE(confirmedHashWithProRegTxHash);
-        READWRITE(keyIDOwner);
-        READWRITE(pubKeyOperator);
-        READWRITE(keyIDVoting);
-        READWRITE(addr);
-        READWRITE(scriptPayout);
-        READWRITE(scriptOperatorPayout);
+        READWRITE(
+                obj.nRegisteredHeight,
+                obj.nLastPaidHeight,
+                obj.nPoSePenalty,
+                obj.nPoSeRevivedHeight,
+                obj.nPoSeBanHeight,
+                obj.nRevocationReason,
+                obj.confirmedHash,
+                obj.confirmedHashWithProRegTxHash,
+                obj.keyIDOwner,
+                obj.pubKeyOperator,
+                obj.keyIDVoting,
+                obj.addr,
+                obj.scriptPayout,
+                obj.scriptOperatorPayout
+                );
     }
 
     void ResetOperatorFields()
@@ -182,13 +181,10 @@ public:
 #undef DMN_STATE_DIFF_LINE
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CDeterministicMNStateDiff, obj)
     {
-        READWRITE(VARINT(fields));
-#define DMN_STATE_DIFF_LINE(f) if (fields & Field_##f) READWRITE(state.f);
+        READWRITE(VARINT(obj.fields));
+#define DMN_STATE_DIFF_LINE(f) if (obj.fields & Field_##f) READWRITE(obj.state.f);
         DMN_STATE_DIFF_ALL_FIELDS
 #undef DMN_STATE_DIFF_LINE
     }
@@ -247,7 +243,7 @@ public:
     template<typename Stream>
     void Serialize(Stream& s) const
     {
-        NCONST_PTR(this)->SerializationOp(s, CSerActionSerialize(), false);
+        const_cast<CDeterministicMN*>(this)->SerializationOp(s, CSerActionSerialize(), false);
     }
 
     template<typename Stream>
@@ -338,7 +334,7 @@ public:
     template<typename Stream>
     void Serialize(Stream& s) const
     {
-        NCONST_PTR(this)->SerializationOpBase(s, CSerActionSerialize());
+        const_cast<CDeterministicMNList*>(this)->SerializationOpBase(s, CSerActionSerialize());
         // Serialize the map as a vector
         WriteCompactSize(s, mnMap.size());
         for (const auto& p : mnMap) {

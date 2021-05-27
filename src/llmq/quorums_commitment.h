@@ -114,14 +114,9 @@ public:
     CFinalCommitment commitment;
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CFinalCommitmentTxPayload, obj)
     {
-        READWRITE(nVersion);
-        READWRITE(nHeight);
-        READWRITE(commitment);
+        READWRITE(obj.nVersion, obj.nHeight, obj.commitment);
     }
 
     void ToJson(UniValue& obj) const

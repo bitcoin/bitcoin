@@ -94,14 +94,9 @@ public:
         {}
 
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(nSporkID);
-        READWRITE(nValue);
-        READWRITE(nTimeSigned);
-        READWRITE(vchSig);
+    SERIALIZE_METHODS(CSporkMessage, obj)
+    {
+        READWRITE(obj.nSporkID, obj.nValue, obj.nTimeSigned, obj.vchSig);
     }
 
     /**
@@ -176,27 +171,27 @@ public:
 
     CSporkManager();
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        std::string strVersion;
-        if(ser_action.ForRead()) {
-            READWRITE(strVersion);
-            if (strVersion != SERIALIZATION_VERSION_STRING) {
-                return;
-            }
-        } else {
-            strVersion = SERIALIZATION_VERSION_STRING;
-            READWRITE(strVersion);
-        }
-        // we don't serialize pubkey ids because pubkeys should be
+    template<typename Stream>
+    void Serialize(Stream &s) const
+    {
+        // We don't serialize pubkey ids because pubkeys should be
         // hardcoded or be set with cmdline or options, should
-        // not reuse pubkeys from previous dashd run
+        // not reuse pubkeys from previous dashd run.
+        // We don't serialize private key to prevent its leakage.
         LOCK(cs);
-        READWRITE(mapSporksByHash);
-        READWRITE(mapSporksActive);
-        // we don't serialize private key to prevent its leakage
+        s << SERIALIZATION_VERSION_STRING << mapSporksByHash << mapSporksActive;
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream &s)
+    {
+        LOCK(cs);
+        std::string strVersion;
+        s >> strVersion;
+        if (strVersion != SERIALIZATION_VERSION_STRING) {
+            return;
+        }
+        s >> mapSporksByHash >> mapSporksActive;
     }
 
     /**

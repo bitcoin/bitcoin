@@ -50,17 +50,17 @@ public:
     {
     }
 
-    ADD_SERIALIZE_METHODS
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CMasternodeMetaInfo, obj)
     {
-        LOCK(cs);
-        READWRITE(proTxHash);
-        READWRITE(nLastDsq);
-        READWRITE(nMixingTxCount);
-        READWRITE(mapGovernanceObjectsVotedOn);
-        READWRITE(lastOutboundAttempt);
-        READWRITE(lastOutboundSuccess);
+        LOCK(obj.cs);
+        READWRITE(
+                obj.proTxHash,
+                obj.nLastDsq,
+                obj.nMixingTxCount,
+                obj.mapGovernanceObjectsVotedOn,
+                obj.lastOutboundAttempt,
+                obj.lastOutboundSuccess
+                );
     }
 
     UniValue ToJson() const;
@@ -89,7 +89,7 @@ class CMasternodeMetaMan
 private:
     static const std::string SERIALIZATION_VERSION_STRING;
 
-    CCriticalSection cs;
+    mutable CCriticalSection cs;
 
     std::map<uint256, CMasternodeMetaInfoPtr> metaInfos;
     std::vector<uint256> vecDirtyGovernanceObjectHashes;
@@ -98,41 +98,33 @@ private:
     int64_t nDsqCount = 0;
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    template<typename Stream>
+    void Serialize(Stream &s) const
     {
         LOCK(cs);
-
-        std::string strVersion;
-        if(ser_action.ForRead()) {
-            Clear();
-            READWRITE(strVersion);
-            if (strVersion != SERIALIZATION_VERSION_STRING) {
-                return;
-            }
-        }
-        else {
-            strVersion = SERIALIZATION_VERSION_STRING;
-            READWRITE(strVersion);
-        }
-
         std::vector<CMasternodeMetaInfo> tmpMetaInfo;
-        if (ser_action.ForRead()) {
-            READWRITE(tmpMetaInfo);
-            metaInfos.clear();
-            for (auto& mm : tmpMetaInfo) {
-                metaInfos.emplace(mm.GetProTxHash(), std::make_shared<CMasternodeMetaInfo>(std::move(mm)));
-            }
-        } else {
-            for (auto& p : metaInfos) {
-                tmpMetaInfo.emplace_back(*p.second);
-            }
-            READWRITE(tmpMetaInfo);
+        for (auto& p : metaInfos) {
+            tmpMetaInfo.emplace_back(*p.second);
         }
+        s << SERIALIZATION_VERSION_STRING << tmpMetaInfo << nDsqCount;
+    }
 
-        READWRITE(nDsqCount);
+    template<typename Stream>
+    void Unserialize(Stream &s)
+    {
+        LOCK(cs);
+        Clear();
+        std::string strVersion;
+        s >> strVersion;
+        if (strVersion != SERIALIZATION_VERSION_STRING) {
+            return;
+        }
+        std::vector<CMasternodeMetaInfo> tmpMetaInfo;
+        s >> tmpMetaInfo >> nDsqCount;
+        metaInfos.clear();
+        for (auto& mm : tmpMetaInfo) {
+            metaInfos.emplace(mm.GetProTxHash(), std::make_shared<CMasternodeMetaInfo>(std::move(mm)));
+        }
     }
 
 public:

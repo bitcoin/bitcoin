@@ -117,21 +117,13 @@ public:
 
     std::string ToString() const;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CGovernanceVote, obj)
     {
-        READWRITE(masternodeOutpoint);
-        READWRITE(nParentHash);
-        READWRITE(nVoteOutcome);
-        READWRITE(nVoteSignal);
-        READWRITE(nTime);
+        READWRITE(obj.masternodeOutpoint, obj.nParentHash, obj.nVoteOutcome, obj.nVoteSignal, obj.nTime);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            READWRITE(obj.vchSig);
         }
-        if (ser_action.ForRead())
-            UpdateHash();
+        SER_READ(obj, obj.UpdateHash());
     }
 };
 

@@ -15,12 +15,9 @@ public:
 
     CHDAccount() : nExternalChainCounter(0), nInternalChainCounter(0) {}
 
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CHDAccount, obj)
     {
-        READWRITE(nExternalChainCounter);
-        READWRITE(nInternalChainCounter);
+        READWRITE(obj.nExternalChainCounter, obj.nInternalChainCounter);
     }
 };
 
@@ -56,18 +53,18 @@ public:
         mapAccounts(other.mapAccounts)
         {}
 
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CHDChain, obj)
     {
-        LOCK(cs);
-        READWRITE(this->nVersion);
-        READWRITE(id);
-        READWRITE(fCrypted);
-        READWRITE(vchSeed);
-        READWRITE(vchMnemonic);
-        READWRITE(vchMnemonicPassphrase);
-        READWRITE(mapAccounts);
+        LOCK(obj.cs);
+        READWRITE(
+                obj.nVersion,
+                obj.id,
+                obj.fCrypted,
+                obj.vchSeed,
+                obj.vchMnemonic,
+                obj.vchMnemonicPassphrase,
+                obj.mapAccounts
+                );
     }
 
     void swap(CHDChain& first, CHDChain& second) // nothrow
@@ -133,15 +130,9 @@ public:
 
     CHDPubKey() : nVersion(CHDPubKey::CURRENT_VERSION), nAccountIndex(0), nChangeIndex(0) {}
 
-    ADD_SERIALIZE_METHODS;
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CHDPubKey, obj)
     {
-        READWRITE(this->nVersion);
-        READWRITE(extPubKey);
-        READWRITE(hdchainID);
-        READWRITE(nAccountIndex);
-        READWRITE(nChangeIndex);
+        READWRITE(obj.nVersion, obj.extPubKey, obj.hdchainID, obj.nAccountIndex, obj.nChangeIndex);
     }
 
     std::string GetKeyPath() const;

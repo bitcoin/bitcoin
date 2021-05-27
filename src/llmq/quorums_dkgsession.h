@@ -125,16 +125,9 @@ public:
     CBLSSignature sig;
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CDKGJustification, obj)
     {
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(proTxHash);
-        READWRITE(contributions);
-        READWRITE(sig);
+        READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash, obj.contributions, obj.sig);
     }
 
     uint256 GetSignHash() const

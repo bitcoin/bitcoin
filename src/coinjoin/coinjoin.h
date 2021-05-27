@@ -96,18 +96,13 @@ public:
         nStatusUpdate(nStatusUpdate),
         nMessageID(nMessageID) {};
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CCoinJoinStatusUpdate, obj)
     {
-        READWRITE(nSessionID);
-        READWRITE(nState);
+        READWRITE(obj.nSessionID, obj.nState);
         if (s.GetVersion() <= 702015) {
-            READWRITE(nEntriesCount);
+            READWRITE(obj.nEntriesCount);
         }
-        READWRITE(nStatusUpdate);
-        READWRITE(nMessageID);
+        READWRITE(obj.nStatusUpdate, obj.nMessageID);
     }
 };
 
@@ -152,13 +147,9 @@ public:
         nDenom(nDenom),
         txCollateral(txCollateral){};
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CCoinJoinAccept, obj)
     {
-        READWRITE(nDenom);
-        READWRITE(txCollateral);
+        READWRITE(obj.nDenom, obj.txCollateral);
     }
 
     friend bool operator==(const CCoinJoinAccept& a, const CCoinJoinAccept& b)
@@ -193,14 +184,9 @@ public:
     {
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CCoinJoinEntry, obj)
     {
-        READWRITE(vecTxDSIn);
-        READWRITE(txCollateral);
-        READWRITE(vecTxOut);
+        READWRITE(obj.vecTxDSIn, obj.txCollateral, obj.vecTxOut);
     }
 
     bool AddScriptSig(const CTxIn& txin);
@@ -241,17 +227,11 @@ public:
     {
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CCoinJoinQueue, obj)
     {
-        READWRITE(nDenom);
-        READWRITE(masternodeOutpoint);
-        READWRITE(nTime);
-        READWRITE(fReady);
+        READWRITE(obj.nDenom, obj.masternodeOutpoint, obj.nTime, obj.fReady);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            READWRITE(obj.vchSig);
         }
     }
 
@@ -317,17 +297,13 @@ public:
     {
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CCoinJoinBroadcastTx, obj)
     {
-        READWRITE(tx);
-        READWRITE(masternodeOutpoint);
+        READWRITE(obj.tx, obj.masternodeOutpoint);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            READWRITE(obj.vchSig);
         }
-        READWRITE(sigTime);
+        READWRITE(obj.sigTime);
     }
 
     friend bool operator==(const CCoinJoinBroadcastTx& a, const CCoinJoinBroadcastTx& b)

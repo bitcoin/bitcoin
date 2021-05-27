@@ -15,12 +15,9 @@ struct CSpentIndexKey {
     uint256 txid;
     unsigned int outputIndex;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(txid);
-        READWRITE(outputIndex);
+    SERIALIZE_METHODS(CSpentIndexKey, obj)
+    {
+        READWRITE(obj.txid, obj.outputIndex);
     }
 
     CSpentIndexKey(uint256 t, unsigned int i) {
@@ -47,16 +44,9 @@ struct CSpentIndexValue {
     int addressType;
     uint160 addressHash;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(txid);
-        READWRITE(inputIndex);
-        READWRITE(blockHeight);
-        READWRITE(satoshis);
-        READWRITE(addressType);
-        READWRITE(addressHash);
+    SERIALIZE_METHODS(CSpentIndexValue, obj)
+    {
+        READWRITE(obj.txid, obj.inputIndex, obj.blockHeight, obj.satoshis, obj.addressType, obj.addressHash);
     }
 
     CSpentIndexValue(uint256 t, unsigned int i, int h, CAmount s, int type, uint160 a) {
@@ -211,13 +201,9 @@ struct CAddressUnspentValue {
     CScript script;
     int blockHeight;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(satoshis);
-        READWRITE(script);
-        READWRITE(blockHeight);
+    SERIALIZE_METHODS(CAddressUnspentValue, obj)
+    {
+        READWRITE(obj.satoshis, obj.script, obj.blockHeight);
     }
 
     CAddressUnspentValue(CAmount sats, CScript scriptPubKey, int height) {

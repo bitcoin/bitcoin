@@ -31,14 +31,9 @@ public:
     CBLSSignature sig;
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CChainLockSig, obj)
     {
-        READWRITE(nHeight);
-        READWRITE(blockHash);
-        READWRITE(sig);
+        READWRITE(obj.nHeight, obj.blockHash, obj.sig);
     }
 
     bool IsNull() const;

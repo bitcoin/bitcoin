@@ -46,19 +46,10 @@ public:
 
 public:
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CRecoveredSig, obj)
     {
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(id);
-        READWRITE(msgHash);
-        READWRITE(sig);
-        if (ser_action.ForRead()) {
-            UpdateHash();
-        }
+        READWRITE(obj.llmqType, obj.quorumHash, obj.id, obj.msgHash, obj.sig);
+        SER_READ(obj, obj.UpdateHash());
     }
 
     void UpdateHash()

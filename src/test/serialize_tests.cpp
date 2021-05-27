@@ -354,29 +354,32 @@ struct old_version
 {
     int field1;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(field1);
+    SERIALIZE_METHODS(old_version, obj)
+    {
+        READWRITE(obj.field1);
     }
-};\
+};
+
 struct new_version
 {
     int field1;
     int field2;
 
-    ADD_SERIALIZE_METHODS;
+    template<typename Stream>
+    void Serialize(Stream &s) const
+    {
+        s << field1 << field2;
+    }
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(field1);
-        if(ser_action.ForRead() && (s.size() == 0))
-        {
+    template<typename Stream>
+    void Unserialize(Stream &s)
+    {
+        s >> field1;
+        if (s.size() == 0) {
             field2 = 0;
             return;
         }
-        READWRITE(field2);
+        s >> field2;
     }
 };
 
