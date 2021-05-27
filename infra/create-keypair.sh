@@ -119,7 +119,7 @@ startEphemeralDaemon
 BLOCKSCRIPT="5121${PUBKEY}51ae"
 
 # 4. print out the results
-cat <<EOF
+cat <<EOF | jq --compact-output --monochrome-output
 {
     "privkey":     "${PRIVKEY}",
     "pubkey":      "${PUBKEY}",
