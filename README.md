@@ -8,6 +8,10 @@ https://bitcoincore.org/en/download/.
 
 Further information about Bitcoin Core is available in the [doc folder](/doc).
 
+<p align="center">
+  <img src="₿itcoin_core-2021.gif" alt="demo" />
+</p>
+
 What is Bitcoin?
 ----------------
 
