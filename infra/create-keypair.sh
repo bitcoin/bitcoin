@@ -71,7 +71,7 @@ MYDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 #   same directory containing this script.
 PATH_TO_BINARIES=$(realpath --quiet --canonicalize-existing "${MYDIR}/../target/bin" || echo "${MYDIR}")
 
-TMPDIR=$(mktemp --directory itcoin-temp-XXXX)
+TMPDIR=$(mktemp --tmpdir --directory itcoin-temp-XXXX)
 
 "${PATH_TO_BINARIES}"/bitcoind -daemon -datadir="${TMPDIR}" -regtest >/dev/null
 
