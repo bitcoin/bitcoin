@@ -65,6 +65,23 @@ std::string EncodeBase32(Span<const unsigned char> input, bool pad = true);
  */
 std::string EncodeBase32(const std::string& str, bool pad = true);
 
+
+/**
+ * Splits socket address string into host and port strings.
+ *
+ * @param[in] in        The socket address string to split.
+ * @param[out] portOut  Port-portion of the input, if found.
+ * @param[out] hostOut  Host-portion of the input, if found.
+ */
+void SplitHostPort(std::string in, std::string& portOut, std::string& hostOut);
+/**
+ * Splits socket address string into host string and port value.
+ * Sanitizes port value.
+ *
+ * @param[in] in        The socket address string to split.
+ * @param[out] portOut  Port-portion of the input, if found and parsable.
+ * @param[out] hostOut  Host-portion of the input, if found.
+ */
 void SplitHostPort(std::string in, uint16_t& portOut, std::string& hostOut);
 int64_t atoi64(const std::string& str);
 int atoi(const std::string& str);
