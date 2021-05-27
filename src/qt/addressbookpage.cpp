@@ -281,7 +281,9 @@ void AddressBookPage::on_exportButton_clicked()
     // CSV is currently the only supported format
     QString filename = GUIUtil::getSaveFileName(this,
         tr("Export Address List"), QString(),
-        tr("Comma separated file", "Name of CSV file format") + QLatin1String(" (*.csv)"), nullptr);
+        /*: Expanded name of the CSV file format.
+            See https://en.wikipedia.org/wiki/Comma-separated_values */
+        tr("Comma separated file") + QLatin1String(" (*.csv)"), nullptr);
 
     if (filename.isNull())
         return;
@@ -295,8 +297,9 @@ void AddressBookPage::on_exportButton_clicked()
 
     if(!writer.write()) {
         QMessageBox::critical(this, tr("Exporting Failed"),
-            //: %1 is a name of the file (e.g., "addrbook.csv") that the bitcoin addresses were exported to.
-            tr("There was an error trying to save the address list to %1. Please try again.", "An error message.").arg(filename));
+            /*: An error message. %1 is a stand-in argument for the name
+                of the file we attempted to save to. */
+            tr("There was an error trying to save the address list to %1. Please try again.").arg(filename));
     }
 }
 
