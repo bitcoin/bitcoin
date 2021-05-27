@@ -314,6 +314,7 @@ static bool rest_block(const std::any& context,
 
     case RetFormat::JSON: {
         // SYSCOIN
+        ChainstateManager& chainman = EnsureAnyChainman(context);
         UniValue objBlock = blockToJSON(block, tip, pblockindex, showTxDetails, &chainman);
         std::string strJSON = objBlock.write() + "\n";
         req->WriteHeader("Content-Type", "application/json");
