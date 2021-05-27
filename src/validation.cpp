@@ -482,7 +482,7 @@ public:
     /**
     * Multiple transaction acceptance. Transactions may or may not be interdependent,
     * but must not conflict with each other. Parents must come before children if any
-    * dependencies exist, otherwise a TX_MISSING_INPUTS error will be returned.
+    * dependencies exist.
     */
     PackageMempoolAcceptResult AcceptMultipleTransactions(const std::vector<CTransactionRef>& txns, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
@@ -1148,9 +1148,9 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
             return PackageMempoolAcceptResult(package_state, std::move(results));
         }
         // Make the coins created by this transaction available for subsequent transactions in the
-        // package to spend. Since we already checked conflicts in the package and RBFs are
-        // impossible, we don't need to track the coins spent. Note that this logic will need to be
-        // updated if RBFs in packages are allowed in the future.
+        // package to spend. Since we already checked conflicts in the package and we don't allow
+        // replacements, we don't need to track the coins spent. Note that this logic will need to be
+        // updated if package replace-by-fee is allowed in the future.
         assert(args.disallow_mempool_conflicts);
         m_viewmempool.PackageAddTransaction(ws.m_ptx);
     }
@@ -1227,7 +1227,6 @@ PackageMempoolAcceptResult ProcessNewPackage(CChainState& active_chainstate, CTx
     const PackageMempoolAcceptResult result = MemPoolAccept(pool, active_chainstate).AcceptMultipleTransactions(package, args);
 
     // Uncache coins pertaining to transactions that were not submitted to the mempool.
-    // Ensure the cache is still within its size limits.
     for (const COutPoint& hashTx : coins_to_uncache) {
         active_chainstate.CoinsTip().Uncache(hashTx);
     }
