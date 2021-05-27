@@ -7,7 +7,7 @@
 //
 // Licensed under the MIT License <http://opensource.org/licenses/MIT>.
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2019-2020 Martin Ankerl <martin.ankerl@gmail.com>
+// Copyright (c) 2019-2021 Martin Ankerl <martin.ankerl@gmail.com>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -32,8 +32,8 @@
 
 // see https://semver.org/
 #define ANKERL_NANOBENCH_VERSION_MAJOR 4 // incompatible API changes
-#define ANKERL_NANOBENCH_VERSION_MINOR 0 // backwards-compatible changes
-#define ANKERL_NANOBENCH_VERSION_PATCH 0 // backwards-compatible bug fixes
+#define ANKERL_NANOBENCH_VERSION_MINOR 3 // backwards-compatible changes
+#define ANKERL_NANOBENCH_VERSION_PATCH 4 // backwards-compatible bug fixes
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // public facing api - as minimal as possible
@@ -78,12 +78,20 @@
 
 #if defined(ANKERL_NANOBENCH_LOG_ENABLED)
 #    include <iostream>
-#    define ANKERL_NANOBENCH_LOG(x) std::cout << __FUNCTION__ << "@" << __LINE__ << ": " << x << std::endl
+#    define ANKERL_NANOBENCH_LOG(x)                                                 \
+        do {                                                                        \
+            std::cout << __FUNCTION__ << "@" << __LINE__ << ": " << x << std::endl; \
+        } while (0)
 #else
-#    define ANKERL_NANOBENCH_LOG(x)
+#    define ANKERL_NANOBENCH_LOG(x) \
+        do {                        \
+        } while (0)
 #endif
 
-#if defined(__linux__) && !defined(ANKERL_NANOBENCH_DISABLE_PERF_COUNTERS)
+#if defined(__linux__) && defined(PERF_EVENT_IOC_ID) && defined(PERF_COUNT_HW_REF_CPU_CYCLES) && defined(PERF_FLAG_FD_CLOEXEC) && \
+    !defined(ANKERL_NANOBENCH_DISABLE_PERF_COUNTERS)
+// only enable perf counters on kernel 3.14 which seems to have all the necessary defines. The three PERF_... defines are not in
+// kernel 2.6.32 (all others are).
 #    define ANKERL_NANOBENCH_PRIVATE_PERF_COUNTERS() 1
 #else
 #    define ANKERL_NANOBENCH_PRIVATE_PERF_COUNTERS() 0
@@ -173,7 +181,7 @@ class BigO;
  *    `contextswitches`, `instructions`, `branchinstructions`, and `branchmisses`. All the measuers (except `iterations`) are
  *    provided for a single iteration (so `elapsed` is the time a single iteration took). The following tags are available:
  *
- *    * `{{median(<name>>)}}` Calculate median of a measurement data set, e.g. `{{median(elapsed)}}`.
+ *    * `{{median(<name>)}}` Calculate median of a measurement data set, e.g. `{{median(elapsed)}}`.
  *
  *    * `{{average(<name>)}}` Average (mean) calculation.
  *
@@ -181,10 +189,11 @@ class BigO;
  *      metric for the variation of measurements. It is more robust to outliers than the
  *      [Mean absolute percentage error (M-APE)](https://en.wikipedia.org/wiki/Mean_absolute_percentage_error).
  *      @f[
- *       \mathrm{medianAbsolutePercentError}(e) = \mathrm{median}\{| \frac{e_i - \mathrm{median}\{e\}}{e_i}| \}
+ *       \mathrm{MdAPE}(e) = \mathrm{med}\{| \frac{e_i - \mathrm{med}\{e\}}{e_i}| \}
  *      @f]
- *      E.g. for *elapsed*: First, @f$ \mathrm{median}\{elapsed\} @f$ is calculated. This is used to calculate the absolute percentage
- *      error to this median for each measurement, as in  @f$ | \frac{e_i - \mathrm{median}\{e\}}{e_i}| @f$. All these results
+ *      E.g. for *elapsed*: First, @f$ \mathrm{med}\{e\} @f$ calculates the median by sorting and then taking the middle element
+ *      of all *elapsed* measurements. This is used to calculate the absolute percentage
+ *      error to this median for each measurement, as in  @f$ | \frac{e_i - \mathrm{med}\{e\}}{e_i}| @f$. All these results
  *      are sorted, and the middle value is chosen as the median absolute percent error.
  *
  *      This measurement is a bit hard to interpret, but it is very robust against outliers. E.g. a value of 5% means that half of the
@@ -207,7 +216,7 @@ class BigO;
  *
  *    * `{{#measurement}}` To access individual measurement results, open the begin tag for measurements.
  *
- *       * `{{elapsed}}` Average elapsed time per iteration, in seconds.
+ *       * `{{elapsed}}` Average elapsed wall clock time per iteration, in seconds.
  *
  *       * `{{iterations}}` Number of iterations in the measurement. The number of iterations will fluctuate due
  *         to some applied randomness, to enhance accuracy.
@@ -261,6 +270,7 @@ class BigO;
    * :cpp:func:`templates::csv() <ankerl::nanobench::templates::csv()>`
    * :cpp:func:`templates::json() <ankerl::nanobench::templates::json()>`
    * :cpp:func:`templates::htmlBoxplot() <ankerl::nanobench::templates::htmlBoxplot()>`
+   * :cpp:func:`templates::pyperf() <ankerl::nanobench::templates::pyperf()>`
 
    @endverbatim
  *
@@ -269,6 +279,7 @@ class BigO;
  * @param out Output for the generated output.
  */
 void render(char const* mustacheTemplate, Bench const& bench, std::ostream& out);
+void render(std::string const& mustacheTemplate, Bench const& bench, std::ostream& out);
 
 /**
  * Same as render(char const* mustacheTemplate, Bench const& bench, std::ostream& out), but for when
@@ -279,6 +290,7 @@ void render(char const* mustacheTemplate, Bench const& bench, std::ostream& out)
  * @param out Output for the generated output.
  */
 void render(char const* mustacheTemplate, std::vector<Result> const& results, std::ostream& out);
+void render(std::string const& mustacheTemplate, std::vector<Result> const& results, std::ostream& out);
 
 // Contains mustache-like templates
 namespace templates {
@@ -297,7 +309,7 @@ char const* csv() noexcept;
 /*!
   @brief HTML output that uses plotly to generate an interactive boxplot chart. See the tutorial for an example output.
 
-  The output uses only the elapsed time, and displays each epoch as a single dot.
+  The output uses only the elapsed wall clock time, and displays each epoch as a single dot.
   @verbatim embed:rst
   See the tutorial at :ref:`tutorial-template-html` for an example.
   @endverbatim
@@ -305,6 +317,14 @@ char const* csv() noexcept;
   @see ankerl::nanobench::render()
  */
 char const* htmlBoxplot() noexcept;
+
+/*!
+ @brief Output in pyperf  compatible JSON format, which can be used for more analyzations.
+ @verbatim embed:rst
+ See the tutorial at :ref:`tutorial-template-pyperf` for an example how to further analyze the output.
+ @endverbatim
+ */
+char const* pyperf() noexcept;
 
 /*!
   @brief Template to generate JSON data.
@@ -369,6 +389,8 @@ struct Config {
     uint64_t mEpochIterations{0}; // If not 0, run *exactly* these number of iterations per epoch.
     uint64_t mWarmup = 0;
     std::ostream* mOut = nullptr;
+    std::chrono::duration<double> mTimeUnit = std::chrono::nanoseconds{1};
+    std::string mTimeUnitName = "ns";
     bool mShowPerformanceCounters = true;
     bool mIsRelative = false;
 
@@ -504,6 +526,7 @@ public:
      */
     explicit Rng(uint64_t seed) noexcept;
     Rng(uint64_t x, uint64_t y) noexcept;
+    Rng(std::vector<uint64_t> const& data);
 
     /**
      * Creates a copy of the Rng, thus the copy provides exactly the same random sequence as the original.
@@ -557,6 +580,14 @@ public:
      */
     template <typename Container>
     void shuffle(Container& container) noexcept;
+
+    /**
+     * Extracts the full state of the generator, e.g. for serialization. For this RNG this is just 2 values, but to stay API compatible
+     * with future implementations that potentially use more state, we use a vector.
+     *
+     * @return Vector containing the full state:
+     */
+    std::vector<uint64_t> state() const;
 
 private:
     static constexpr uint64_t rotl(uint64_t x, unsigned k) noexcept;
@@ -665,6 +696,19 @@ public:
     Bench& unit(char const* unit);
     Bench& unit(std::string const& unit);
     ANKERL_NANOBENCH(NODISCARD) std::string const& unit() const noexcept;
+
+    /**
+     * @brief Sets the time unit to be used for the default output.
+     *
+     * Nanobench defaults to using ns (nanoseconds) as output in the markdown. For some benchmarks this is too coarse, so it is
+     * possible to configure this. E.g. use `timeUnit(1ms, "ms")` to show `ms/op` instead of `ns/op`.
+     *
+     * @param tu Time unit to display the results in, default is 1ns.
+     * @param tuName Name for the time unit, default is "ns"
+     */
+    Bench& timeUnit(std::chrono::duration<double> const& tu, std::string const& tuName);
+    ANKERL_NANOBENCH(NODISCARD) std::string const& timeUnitName() const noexcept;
+    ANKERL_NANOBENCH(NODISCARD) std::chrono::duration<double> const& timeUnit() const noexcept;
 
     /**
      * @brief Set the output stream where the resulting markdown table will be printed to.
@@ -916,6 +960,7 @@ public:
       @endverbatim
      */
     Bench& render(char const* templateContent, std::ostream& os);
+    Bench& render(std::string const& templateContent, std::ostream& os);
 
     Bench& config(Config const& benchmarkConfig);
     ANKERL_NANOBENCH(NODISCARD) Config const& config() const noexcept;
@@ -945,23 +990,24 @@ void doNotOptimizeAway(T const& val);
 
 #else
 
-// see folly's Benchmark.h
+// These assembly magic is directly from what Google Benchmark is doing. I have previously used what facebook's folly was doing, but
+// this seemd to have compilation problems in some cases. Google Benchmark seemed to be the most well tested anyways.
+// see https://github.com/google/benchmark/blob/master/include/benchmark/benchmark.h#L307
 template <typename T>
-constexpr bool doNotOptimizeNeedsIndirect() {
-    using Decayed = typename std::decay<T>::type;
-    return !ANKERL_NANOBENCH_IS_TRIVIALLY_COPYABLE(Decayed) || sizeof(Decayed) > sizeof(long) || std::is_pointer<Decayed>::value;
+void doNotOptimizeAway(T const& val) {
+    // NOLINTNEXTLINE(hicpp-no-assembler)
+    asm volatile("" : : "r,m"(val) : "memory");
 }
 
 template <typename T>
-typename std::enable_if<!doNotOptimizeNeedsIndirect<T>()>::type doNotOptimizeAway(T const& val) {
+void doNotOptimizeAway(T& val) {
+#    if defined(__clang__)
     // NOLINTNEXTLINE(hicpp-no-assembler)
-    asm volatile("" ::"r"(val));
-}
-
-template <typename T>
-typename std::enable_if<doNotOptimizeNeedsIndirect<T>()>::type doNotOptimizeAway(T const& val) {
+    asm volatile("" : "+r,m"(val) : : "memory");
+#    else
     // NOLINTNEXTLINE(hicpp-no-assembler)
-    asm volatile("" ::"m"(val) : "memory");
+    asm volatile("" : "+m,r"(val) : : "memory");
+#    endif
 }
 #endif
 
@@ -1067,7 +1113,7 @@ constexpr uint64_t(Rng::max)() {
     return (std::numeric_limits<uint64_t>::max)();
 }
 
-ANKERL_NANOBENCH_NO_SANITIZE("integer")
+ANKERL_NANOBENCH_NO_SANITIZE("integer", "undefined")
 uint64_t Rng::operator()() noexcept {
     auto x = mX;
 
@@ -1077,7 +1123,7 @@ uint64_t Rng::operator()() noexcept {
     return x;
 }
 
-ANKERL_NANOBENCH_NO_SANITIZE("integer")
+ANKERL_NANOBENCH_NO_SANITIZE("integer", "undefined")
 uint32_t Rng::bounded(uint32_t range) noexcept {
     uint64_t r32 = static_cast<uint32_t>(operator()());
     auto multiresult = r32 * range;
@@ -1103,6 +1149,7 @@ void Rng::shuffle(Container& container) noexcept {
     }
 }
 
+ANKERL_NANOBENCH_NO_SANITIZE("integer", "undefined")
 constexpr uint64_t Rng::rotl(uint64_t x, unsigned k) noexcept {
     return (x << k) | (x >> (64U - k));
 }
@@ -1306,6 +1353,30 @@ char const* htmlBoxplot() noexcept {
 </html>)DELIM";
 }
 
+char const* pyperf() noexcept {
+    return R"DELIM({
+    "benchmarks": [
+        {
+            "runs": [
+                {
+                    "values": [
+{{#measurement}}                        {{elapsed}}{{^-last}},
+{{/last}}{{/measurement}}
+                    ]
+                }
+            ]
+        }
+    ],
+    "metadata": {
+        "loops": {{sum(iterations)}},
+        "inner_loops": {{batch}},
+        "name": "{{title}}",
+        "unit": "second"
+    },
+    "version": "1.0"
+})DELIM";
+}
+
 char const* json() noexcept {
     return R"DELIM({
     "results": [
@@ -1410,6 +1481,7 @@ static std::vector<Node> parseMustacheTemplate(char const** tpl) {
 }
 
 static bool generateFirstLast(Node const& n, size_t idx, size_t size, std::ostream& out) {
+    ANKERL_NANOBENCH_LOG("n.type=" << static_cast<int>(n.type));
     bool matchFirst = n == "-first";
     bool matchLast = n == "-last";
     if (!matchFirst && !matchLast) {
@@ -1632,6 +1704,7 @@ namespace detail {
 
 char const* getEnv(char const* name);
 bool isEndlessRunning(std::string const& name);
+bool isWarningsEnabled();
 
 template <typename T>
 T parseFile(std::string const& filename);
@@ -1770,23 +1843,47 @@ void render(char const* mustacheTemplate, std::vector<Result> const& results, st
                 for (size_t i = 0; i < nbResults; ++i) {
                     generateResult(n.children, i, results, out);
                 }
+            } else if (n == "measurement") {
+                if (results.size() != 1) {
+                    throw std::runtime_error(
+                        "render: can only use section 'measurement' here if there is a single result, but there are " +
+                        detail::fmt::to_s(results.size()));
+                }
+                // when we only have a single result, we can immediately go into its measurement.
+                auto const& r = results.front();
+                for (size_t i = 0; i < r.size(); ++i) {
+                    generateResultMeasurement(n.children, i, r, out);
+                }
             } else {
-                throw std::runtime_error("unknown section '" + std::string(n.begin, n.end) + "'");
+                throw std::runtime_error("render: unknown section '" + std::string(n.begin, n.end) + "'");
             }
             break;
 
         case templates::Node::Type::tag:
-            // This just uses the last result's config.
-            if (!generateConfigTag(n, results.back().config(), out)) {
-                throw std::runtime_error("unknown tag '" + std::string(n.begin, n.end) + "'");
+            if (results.size() == 1) {
+                // result & config are both supported there
+                generateResultTag(n, results.front(), out);
+            } else {
+                // This just uses the last result's config.
+                if (!generateConfigTag(n, results.back().config(), out)) {
+                    throw std::runtime_error("unknown tag '" + std::string(n.begin, n.end) + "'");
+                }
             }
             break;
         }
     }
 }
 
+void render(std::string const& mustacheTemplate, std::vector<Result> const& results, std::ostream& out) {
+    render(mustacheTemplate.c_str(), results, out);
+}
+
 void render(char const* mustacheTemplate, const Bench& bench, std::ostream& out) {
     render(mustacheTemplate, bench.results(), out);
+}
+
+void render(std::string const& mustacheTemplate, const Bench& bench, std::ostream& out) {
+    render(mustacheTemplate.c_str(), bench.results(), out);
 }
 
 namespace detail {
@@ -1835,6 +1932,12 @@ char const* getEnv(char const* name) {
 bool isEndlessRunning(std::string const& name) {
     auto endless = getEnv("NANOBENCH_ENDLESS");
     return nullptr != endless && endless == name;
+}
+
+// True when environment variable NANOBENCH_SUPPRESS_WARNINGS is either not set at all, or set to "0"
+bool isWarningsEnabled() {
+    auto suppression = getEnv("NANOBENCH_SUPPRESS_WARNINGS");
+    return nullptr == suppression || suppression == std::string("0");
 }
 
 void gatherStabilityInformation(std::vector<std::string>& warnings, std::vector<std::string>& recommendations) {
@@ -1889,13 +1992,13 @@ void gatherStabilityInformation(std::vector<std::string>& warnings, std::vector<
         recommendations.emplace_back("Make sure you compile for Release");
     }
     if (recommendPyPerf) {
-        recommendations.emplace_back("Use 'pyperf system tune' before benchmarking. See https://github.com/vstinner/pyperf");
+        recommendations.emplace_back("Use 'pyperf system tune' before benchmarking. See https://github.com/psf/pyperf");
     }
 }
 
 void printStabilityInformationOnce(std::ostream* outStream) {
     static bool shouldPrint = true;
-    if (shouldPrint && outStream) {
+    if (shouldPrint && outStream && isWarningsEnabled()) {
         auto& os = *outStream;
         shouldPrint = false;
         std::vector<std::string> warnings;
@@ -1923,16 +2026,7 @@ uint64_t& singletonHeaderHash() noexcept {
     return sHeaderHash;
 }
 
-ANKERL_NANOBENCH_NO_SANITIZE("integer")
-inline uint64_t fnv1a(std::string const& str) noexcept {
-    auto val = UINT64_C(14695981039346656037);
-    for (auto c : str) {
-        val = (val ^ static_cast<uint8_t>(c)) * UINT64_C(1099511628211);
-    }
-    return val;
-}
-
-ANKERL_NANOBENCH_NO_SANITIZE("integer")
+ANKERL_NANOBENCH_NO_SANITIZE("integer", "undefined")
 inline uint64_t hash_combine(uint64_t seed, uint64_t val) {
     return seed ^ (val + UINT64_C(0x9e3779b9) + (seed << 6U) + (seed >> 2U));
 }
@@ -2010,7 +2104,7 @@ struct IterationLogic::Impl {
         return static_cast<uint64_t>(doubleNewIters + 0.5);
     }
 
-    ANKERL_NANOBENCH_NO_SANITIZE("integer") void upscale(std::chrono::nanoseconds elapsed) {
+    ANKERL_NANOBENCH_NO_SANITIZE("integer", "undefined") void upscale(std::chrono::nanoseconds elapsed) {
         if (elapsed * 10 < mTargetRuntimePerEpoch) {
             // we are far below the target runtime. Multiply iterations by 10 (with overflow check)
             if (mNumIters * 10 < mNumIters) {
@@ -2108,7 +2202,8 @@ struct IterationLogic::Impl {
                 columns.emplace_back(14, 0, "complexityN", "", mBench.complexityN());
             }
 
-            columns.emplace_back(22, 2, "ns/" + mBench.unit(), "", 1e9 * rMedian / mBench.batch());
+            columns.emplace_back(22, 2, mBench.timeUnitName() + "/" + mBench.unit(), "",
+                                 rMedian / (mBench.timeUnit().count() * mBench.batch()));
             columns.emplace_back(22, 2, mBench.unit() + "/s", "", rMedian <= 0.0 ? 0.0 : mBench.batch() / rMedian);
 
             double rErrorMedian = mResult.medianAbsolutePercentError(Result::Measure::elapsed);
@@ -2140,16 +2235,19 @@ struct IterationLogic::Impl {
                 }
             }
 
-            columns.emplace_back(12, 2, "total", "", mResult.sum(Result::Measure::elapsed));
+            columns.emplace_back(12, 2, "total", "", mResult.sumProduct(Result::Measure::iterations, Result::Measure::elapsed));
 
             // write everything
             auto& os = *mBench.output();
 
+            // combine all elements that are relevant for printing the header
             uint64_t hash = 0;
-            hash = hash_combine(fnv1a(mBench.unit()), hash);
-            hash = hash_combine(fnv1a(mBench.title()), hash);
-            hash = hash_combine(mBench.relative(), hash);
-            hash = hash_combine(mBench.performanceCounters(), hash);
+            hash = hash_combine(std::hash<std::string>{}(mBench.unit()), hash);
+            hash = hash_combine(std::hash<std::string>{}(mBench.title()), hash);
+            hash = hash_combine(std::hash<std::string>{}(mBench.timeUnitName()), hash);
+            hash = hash_combine(std::hash<double>{}(mBench.timeUnit().count()), hash);
+            hash = hash_combine(std::hash<bool>{}(mBench.relative()), hash);
+            hash = hash_combine(std::hash<bool>{}(mBench.performanceCounters()), hash);
 
             if (hash != singletonHeaderHash()) {
                 singletonHeaderHash() = hash;
@@ -2177,7 +2275,7 @@ struct IterationLogic::Impl {
                     os << col.value();
                 }
                 os << "| ";
-                auto showUnstable = rErrorMedian >= 0.05;
+                auto showUnstable = isWarningsEnabled() && rErrorMedian >= 0.05;
                 if (showUnstable) {
                     os << ":wavy_dash: ";
                 }
@@ -2305,7 +2403,7 @@ public:
     }
 
     template <typename Op>
-    ANKERL_NANOBENCH_NO_SANITIZE("integer")
+    ANKERL_NANOBENCH_NO_SANITIZE("integer", "undefined")
     void calibrate(Op&& op) {
         // clear current calibration data,
         for (auto& v : mCalibratedOverhead) {
@@ -2411,7 +2509,7 @@ bool LinuxPerformanceCounters::monitor(perf_hw_id hwId, LinuxPerformanceCounters
 }
 
 // overflow is ok, it's checked
-ANKERL_NANOBENCH_NO_SANITIZE("integer")
+ANKERL_NANOBENCH_NO_SANITIZE("integer", "undefined")
 void LinuxPerformanceCounters::updateResults(uint64_t numIters) {
     // clear old data
     for (auto& id_value : mIdToTarget) {
@@ -2963,6 +3061,20 @@ std::string const& Bench::unit() const noexcept {
     return mConfig.mUnit;
 }
 
+Bench& Bench::timeUnit(std::chrono::duration<double> const& tu, std::string const& tuName) {
+    mConfig.mTimeUnit = tu;
+    mConfig.mTimeUnitName = tuName;
+    return *this;
+}
+
+std::string const& Bench::timeUnitName() const noexcept {
+    return mConfig.mTimeUnitName;
+}
+
+std::chrono::duration<double> const& Bench::timeUnit() const noexcept {
+    return mConfig.mTimeUnit;
+}
+
 // If benchmarkTitle differs from currently set title, the stored results will be cleared.
 Bench& Bench::title(const char* benchmarkTitle) {
     if (benchmarkTitle != mConfig.mBenchmarkTitle) {
@@ -3083,6 +3195,11 @@ Bench& Bench::render(char const* templateContent, std::ostream& os) {
     return *this;
 }
 
+Bench& Bench::render(std::string const& templateContent, std::ostream& os) {
+    ::ankerl::nanobench::render(templateContent, *this, os);
+    return *this;
+}
+
 std::vector<BigO> Bench::complexityBigO() const {
     std::vector<BigO> bigOs;
     auto rangeMeasure = BigO::collectRangeMeasure(mResults);
@@ -3119,7 +3236,7 @@ Rng::Rng()
     } while (mX == 0 && mY == 0);
 }
 
-ANKERL_NANOBENCH_NO_SANITIZE("integer")
+ANKERL_NANOBENCH_NO_SANITIZE("integer", "undefined")
 uint64_t splitMix64(uint64_t& state) noexcept {
     uint64_t z = (state += UINT64_C(0x9e3779b97f4a7c15));
     z = (z ^ (z >> 30U)) * UINT64_C(0xbf58476d1ce4e5b9);
@@ -3143,6 +3260,24 @@ Rng::Rng(uint64_t x, uint64_t y) noexcept
 
 Rng Rng::copy() const noexcept {
     return Rng{mX, mY};
+}
+
+Rng::Rng(std::vector<uint64_t> const& data)
+    : mX(0)
+    , mY(0) {
+    if (data.size() != 2) {
+        throw std::runtime_error("ankerl::nanobench::Rng::Rng: needed exactly 2 entries in data, but got " +
+                                 detail::fmt::to_s(data.size()));
+    }
+    mX = data[0];
+    mY = data[1];
+}
+
+std::vector<uint64_t> Rng::state() const {
+    std::vector<uint64_t> data(2);
+    data[0] = mX;
+    data[1] = mY;
+    return data;
 }
 
 BigO::RangeMeasure BigO::collectRangeMeasure(std::vector<Result> const& results) {
