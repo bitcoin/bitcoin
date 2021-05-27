@@ -88,12 +88,20 @@ class MiniWallet:
             if out['scriptPubKey']['hex'] == self._scriptPubKey.hex():
                 self._utxos.append({'txid': tx['txid'], 'vout': out['n'], 'value': out['value']})
 
-    def sign_tx(self, tx):
+    def sign_tx(self, tx, fixed_length=True):
         """Sign tx that has been created by MiniWallet in P2PK mode"""
         assert self._priv_key is not None
         (sighash, err) = LegacySignatureHash(CScript(self._scriptPubKey), tx, 0, SIGHASH_ALL)
         assert err is None
-        tx.vin[0].scriptSig = CScript([self._priv_key.sign_ecdsa(sighash) + bytes(bytearray([SIGHASH_ALL]))])
+        # for exact fee calculation, create only signatures with fixed size by default (>49.89% probability):
+        # 65 bytes: high-R val (33 bytes) + low-S val (32 bytes)
+        # with the DER header/skeleton data of 6 bytes added, this leads to a target size of 71 bytes
+        der_sig = b''
+        while not len(der_sig) == 71:
+            der_sig = self._priv_key.sign_ecdsa(sighash)
+            if not fixed_length:
+                break
+        tx.vin[0].scriptSig = CScript([der_sig + bytes(bytearray([SIGHASH_ALL]))])
 
     def generate(self, num_blocks):
         """Generate blocks with coinbase outputs to the internal address, and append the outputs to the internal list"""
