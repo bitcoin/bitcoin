@@ -7,6 +7,9 @@ For an immediately usable, binary version of the Bitcoin Core software, see
 https://bitcoincore.org/en/download/.
 
 Further information about Bitcoin Core is available in the [doc folder](/doc).
+<p align="center">
+  <img src="₿itcoin_core-2021.gif" alt="demo" />
+</p>
 
 What is Bitcoin?
 ----------------
