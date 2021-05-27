@@ -603,24 +603,13 @@ std::string CNetAddr::ToStringIP() const
         return IPv6ToString(m_addr, m_scope_id);
     }
     case NET_ONION:
-        switch (m_addr.size()) {
-        case ADDR_TORV2_SIZE:
-            return EncodeBase32(m_addr) + ".onion";
-        case ADDR_TORV3_SIZE: {
-
-            uint8_t checksum[torv3::CHECKSUM_LEN];
-            torv3::Checksum(m_addr, checksum);
-
-            // TORv3 onion_address = base32(PUBKEY | CHECKSUM | VERSION) + ".onion"
-            prevector<torv3::TOTAL_LEN, uint8_t> address{m_addr.begin(), m_addr.end()};
-            address.insert(address.end(), checksum, checksum + torv3::CHECKSUM_LEN);
-            address.insert(address.end(), torv3::VERSION, torv3::VERSION + sizeof(torv3::VERSION));
-
-            return EncodeBase32(address) + ".onion";
-        }
-        default:
-            assert(false);
-        }
+        uint8_t checksum[torv3::CHECKSUM_LEN];
+        torv3::Checksum(m_addr, checksum);
+        // TORv3 onion_address = base32(PUBKEY | CHECKSUM | VERSION) + ".onion"
+        prevector<torv3::TOTAL_LEN, uint8_t> address{m_addr.begin(), m_addr.end()};
+        address.insert(address.end(), checksum, checksum + torv3::CHECKSUM_LEN);
+        address.insert(address.end(), torv3::VERSION, torv3::VERSION + sizeof(torv3::VERSION));
+        return EncodeBase32(address) + ".onion";
     case NET_I2P:
         return EncodeBase32(m_addr, false /* don't pad with = */) + ".b32.i2p";
     case NET_CJDNS:
