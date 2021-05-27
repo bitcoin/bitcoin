@@ -42,7 +42,7 @@ public:
     }
 
     template<typename T>
-    OverrideStream<Stream>& operator>>(T& obj)
+    OverrideStream<Stream>& operator>>(T&& obj)
     {
         // Unserialize from this stream
         ::Unserialize(*this, obj);

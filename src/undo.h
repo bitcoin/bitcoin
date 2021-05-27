@@ -28,7 +28,7 @@ struct TxInUndoFormatter
             // Required to maintain compatibility with older undo format.
             ::Serialize(s, (unsigned char)0);
         }
-        ::Serialize(s, Using<TxOutCompression>(REF(txout.out)));
+        ::Serialize(s, Using<TxOutCompression>(txout.out));
     }
 
     template<typename Stream>
@@ -44,7 +44,7 @@ struct TxInUndoFormatter
             unsigned int nVersionDummy;
             ::Unserialize(s, VARINT(nVersionDummy));
         }
-        ::Unserialize(s, Using<TxOutCompression>(REF(txout.out)));
+        ::Unserialize(s, Using<TxOutCompression>(txout.out));
     }
 };
 
