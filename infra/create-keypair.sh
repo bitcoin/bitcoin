@@ -25,6 +25,7 @@
 # Author: muxator <antonio.muci@bancaditalia.it>
 
 set -eu
+shopt -s inherit_errexit
 
 errecho() {
     # prints to stderr
