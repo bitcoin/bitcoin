@@ -686,6 +686,10 @@ private:
     //! last time Good was called (memory only)
     int64_t nLastGood GUARDED_BY(cs);
 
+    // SYSCOIN
+    //! discriminate entries based on port. Should be false on mainnet/testnet and can be true on regtest
+    bool discriminatePorts;
+    
     //! Holds addrs inserted into tried table that collide with existing entries. Test-before-evict discipline used to resolve these collisions.
     std::set<int> m_tried_collisions;
 
