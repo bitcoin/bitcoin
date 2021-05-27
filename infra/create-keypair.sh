@@ -66,6 +66,26 @@ startEphemeralDaemon() {
     "${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest createwallet mywallet >/dev/null
 } # startEphemeralDaemon()
 
+# Generates a public/private pair of keys and prints them on two different lines
+# on stdout. To use those values, see the example.
+#
+# This functions assumes that an ephemeral bitcoin daemon has already been
+# started via startEphemeralDaemon().
+#
+# EXAMPLE:
+#     {
+#       read -r PRIVKEY
+#       read -r PUBKEY
+#     } <<< "$(generateKeypair)"
+generateKeypair() {
+    local TMPADDR=$("${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest getnewaddress)
+    local PRIVKEY=$("${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest dumpprivkey "${TMPADDR}")
+    local PUBKEY=$("${PATH_TO_BINARIES}"/bitcoin-cli  -datadir="${TMPDIR}" -regtest getaddressinfo "${TMPADDR}" |  jq -r '.pubkey')
+
+    echo ${PRIVKEY}
+    echo ${PUBKEY}
+} # generateKeypair()
+
 # Automatically stop the container (wich will also self-remove at script exit
 # or if an error occours
 trap cleanup EXIT
@@ -90,9 +110,10 @@ TMPDIR=$(mktemp --tmpdir --directory itcoin-temp-XXXX)
 
 startEphemeralDaemon
 
-TMPADDR=$("${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest getnewaddress)
-PRIVKEY=$("${PATH_TO_BINARIES}"/bitcoin-cli -datadir="${TMPDIR}" -regtest dumpprivkey "${TMPADDR}")
-PUBKEY=$("${PATH_TO_BINARIES}"/bitcoin-cli  -datadir="${TMPDIR}" -regtest getaddressinfo "${TMPADDR}" |  jq -r '.pubkey')
+{
+  read -r PRIVKEY
+  read -r PUBKEY
+} <<< "$(generateKeypair)"
 
 # For reference on how the stack-based script language works, see https://en.bitcoin.it/wiki/Script
 BLOCKSCRIPT="5121${PUBKEY}51ae"
