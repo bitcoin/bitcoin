@@ -119,4 +119,10 @@ startEphemeralDaemon
 BLOCKSCRIPT="5121${PUBKEY}51ae"
 
 # 4. print out the results
-echo "{ \"privkey\": \"${PRIVKEY}\", \"pubkey\": \"${PUBKEY}\", \"blockscript\": \"${BLOCKSCRIPT}\" }"
+cat <<EOF
+{
+    "privkey":     "${PRIVKEY}",
+    "pubkey":      "${PUBKEY}",
+    "blockscript": "${BLOCKSCRIPT}"
+}
+EOF
