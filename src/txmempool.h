@@ -888,7 +888,8 @@ public:
  * CCoinsView that brings transactions from a mempool into view.
  * It does not check for spendings by memory pool transactions.
  * Instead, it provides access to all Coins which are either unspent in the
- * base CCoinsView, or are outputs from any mempool transaction!
+ * base CCoinsView, are outputs from any mempool transaction, or are
+ * tracked temporarily to allow transaction dependencies in package validation.
  * This allows transaction replacement to work as expected, as you want to
  * have all inputs "available" to check signatures, and any cycles in the
  * dependency graph are checked directly in AcceptToMemoryPool.
@@ -898,12 +899,19 @@ public:
  */
 class CCoinsViewMemPool : public CCoinsViewBacked
 {
+    /**
+    * Coins made available by transactions being validated. Tracking these allows for package
+    * validation, since we can access transaction outputs without submitting them to mempool.
+    */
+    std::unordered_map<COutPoint, Coin, SaltedOutpointHasher> m_temp_added;
 protected:
     const CTxMemPool& mempool;
 
 public:
     CCoinsViewMemPool(CCoinsView* baseIn, const CTxMemPool& mempoolIn);
     bool GetCoin(const COutPoint &outpoint, Coin &coin) const override;
+    /** Add the coins created by this transaction. */
+    void PackageAddTransaction(const CTransactionRef& tx);
 };
 
 /**

@@ -43,6 +43,7 @@
 #include <uint256.h>
 #include <undo.h>
 #include <util/check.h> // For NDEBUG compile time check
+#include <util/hasher.h>
 #include <util/moneystr.h>
 #include <util/rbf.h>
 #include <util/strencodings.h>
@@ -51,6 +52,7 @@
 #include <validationinterface.h>
 #include <warnings.h>
 
+#include <numeric>
 #include <optional>
 #include <string>
 
@@ -277,18 +279,13 @@ bool TestLockPointValidity(CChain& active_chain, const LockPoints* lp)
     return true;
 }
 
-bool CheckSequenceLocks(CChainState& active_chainstate,
-                        const CTxMemPool& pool,
+bool CheckSequenceLocks(CBlockIndex* tip,
+                        const CCoinsView& coins_view,
                         const CTransaction& tx,
                         int flags,
                         LockPoints* lp,
                         bool useExistingLockPoints)
 {
-    AssertLockHeld(cs_main);
-    AssertLockHeld(pool.cs);
-    assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
-
-    CBlockIndex* tip = active_chainstate.m_chain.Tip();
     assert(tip != nullptr);
 
     CBlockIndex index;
@@ -308,14 +305,12 @@ bool CheckSequenceLocks(CChainState& active_chainstate,
         lockPair.second = lp->time;
     }
     else {
-        // CoinsTip() contains the UTXO set for active_chainstate.m_chain.Tip()
-        CCoinsViewMemPool viewMemPool(&active_chainstate.CoinsTip(), pool);
         std::vector<int> prevheights;
         prevheights.resize(tx.vin.size());
         for (size_t txinIndex = 0; txinIndex < tx.vin.size(); txinIndex++) {
             const CTxIn& txin = tx.vin[txinIndex];
             Coin coin;
-            if (!viewMemPool.GetCoin(txin.prevout, coin)) {
+            if (!coins_view.GetCoin(txin.prevout, coin)) {
                 return error("%s: Missing input", __func__);
             }
             if (coin.nHeight == MEMPOOL_HEIGHT) {
@@ -529,10 +524,19 @@ public:
          */
         std::vector<COutPoint>& m_coins_to_uncache;
         const bool m_test_accept;
+        /** Disable BIP125 RBFing; disallow all conflicts with mempool transactions. */
+        const bool disallow_mempool_conflicts;
     };
     
     // Single transaction acceptance
     MempoolAcceptResult AcceptSingleTransaction(const CTransactionRef& ptx, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
+
+    /**
+    * Multiple transaction acceptance. Transactions may or may not be interdependent,
+    * but must not conflict with each other. Parents must come before children if any
+    * dependencies exist, otherwise a TX_MISSING_INPUTS error will be returned.
+    */
+    PackageMempoolAcceptResult AcceptMultipleTransactions(const std::vector<CTransactionRef>& txns, ATMPArgs& args) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 private:
     // All the intermediate state that gets passed between the various levels
@@ -696,7 +700,7 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
                     }
                 }
                 
-                if (fReplacementOptOut) {
+                if (fReplacementOptOut || args.disallow_mempool_conflicts) {
                     // if not RBF then allow first double spend to be relayed, ZDAG by default isn't RBF enabled because it shouldn't be replaceable and because of checks below
                     // neither are its ancestors, they will be locked in as soon as you have a ZDAG tx because ZDAG isn't compliant with RBF.
                     if(IsZTx){
@@ -762,10 +766,10 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // Only accept BIP68 sequence locked transactions that can be mined in the next
     // block; we don't want our mempool filled up with transactions that can't
     // be mined yet.
-    // Must keep pool.cs for this unless we change CheckSequenceLocks to take a
-    // CoinsViewCache instead of create its own
+    // Pass in m_view which has all of the relevant inputs cached. Note that, since m_view's
+    // backend was removed, it no longer pulls coins from the mempool.
     assert(std::addressof(::ChainstateActive()) == std::addressof(m_active_chainstate));
-    if (!CheckSequenceLocks(m_active_chainstate, m_pool, tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp))
+    if (!CheckSequenceLocks(m_active_chainstate.m_chain.Tip(), m_view, tx, STANDARD_LOCKTIME_VERIFY_FLAGS, &lp))
         return state.Invalid(TxValidationResult::TX_PREMATURE_SPEND, "non-BIP68-final");
 
     // SYSCOIN
@@ -1163,7 +1167,7 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
 
     Workspace ws(ptx);
 
-    if (!PreChecks(args, ws)) return MempoolAcceptResult(ws.m_state);
+    if (!PreChecks(args, ws)) return MempoolAcceptResult::Failure(ws.m_state);
 
     // Only compute the precomputed transaction data if we need to verify
     // scripts (ie, other policy checks pass). We perform the inexpensive
@@ -1171,20 +1175,121 @@ MempoolAcceptResult MemPoolAccept::AcceptSingleTransaction(const CTransactionRef
     // checks pass, to mitigate CPU exhaustion denial-of-service attacks.
     PrecomputedTransactionData txdata;
 
-    if (!PolicyScriptChecks(args, ws, txdata)) return MempoolAcceptResult(ws.m_state);
+    if (!PolicyScriptChecks(args, ws, txdata)) return MempoolAcceptResult::Failure(ws.m_state);
 
-    if (!ConsensusScriptChecks(args, ws, txdata)) return MempoolAcceptResult(ws.m_state);
+    if (!ConsensusScriptChecks(args, ws, txdata)) return MempoolAcceptResult::Failure(ws.m_state);
 
     // Tx was accepted, but not added
     if (args.m_test_accept) {
-        return MempoolAcceptResult(std::move(ws.m_replaced_transactions), ws.m_base_fees);
+        return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_base_fees);
     }
 
-    if (!Finalize(args, ws)) return MempoolAcceptResult(ws.m_state);
+    if (!Finalize(args, ws)) return MempoolAcceptResult::Failure(ws.m_state);
 
     GetMainSignals().TransactionAddedToMempool(ptx, m_pool.GetAndIncrementSequence());
 
-    return MempoolAcceptResult(std::move(ws.m_replaced_transactions), ws.m_base_fees);
+    return MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_base_fees);
+}
+
+PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::vector<CTransactionRef>& txns, ATMPArgs& args)
+{
+    AssertLockHeld(cs_main);
+
+    PackageValidationState package_state;
+    const unsigned int package_count = txns.size();
+
+    // These context-free package limits can be checked before taking the mempool lock.
+    if (package_count > MAX_PACKAGE_COUNT) {
+        package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-too-many-transactions");
+        return PackageMempoolAcceptResult(package_state, {});
+    }
+
+    const int64_t total_size = std::accumulate(txns.cbegin(), txns.cend(), 0,
+                               [](int64_t sum, const auto& tx) { return sum + GetVirtualTransactionSize(*tx); });
+    // If the package only contains 1 tx, it's better to report the policy violation on individual tx size.
+    if (package_count > 1 && total_size > MAX_PACKAGE_SIZE * 1000) {
+        package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-too-large");
+        return PackageMempoolAcceptResult(package_state, {});
+    }
+
+    // Construct workspaces and check package policies.
+    std::vector<Workspace> workspaces{};
+    workspaces.reserve(package_count);
+    {
+        std::unordered_set<uint256, SaltedTxidHasher> later_txids;
+        std::transform(txns.cbegin(), txns.cend(), std::inserter(later_txids, later_txids.end()),
+                       [](const auto& tx) { return tx->GetHash(); });
+        // Require the package to be sorted in order of dependency, i.e. parents appear before children.
+        // An unsorted package will fail anyway on missing-inputs, but it's better to quit earlier and
+        // fail on something less ambiguous (missing-inputs could also be an orphan or trying to
+        // spend nonexistent coins).
+        for (const auto& tx : txns) {
+            for (const auto& input : tx->vin) {
+                if (later_txids.find(input.prevout.hash) != later_txids.end()) {
+                    // The parent is a subsequent transaction in the package.
+                    package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-not-sorted");
+                    return PackageMempoolAcceptResult(package_state, {});
+                }
+            }
+            later_txids.erase(tx->GetHash());
+            workspaces.emplace_back(Workspace(tx));
+        }
+    }
+    std::map<const uint256, const MempoolAcceptResult> results;
+    {
+        // Don't allow any conflicting transactions, i.e. spending the same inputs, in a package.
+        std::unordered_set<COutPoint, SaltedOutpointHasher> inputs_seen;
+        for (const auto& tx : txns) {
+            for (const auto& input : tx->vin) {
+                if (inputs_seen.find(input.prevout) != inputs_seen.end()) {
+                    // This input is also present in another tx in the package.
+                    package_state.Invalid(PackageValidationResult::PCKG_POLICY, "conflict-in-package");
+                    return PackageMempoolAcceptResult(package_state, {});
+                }
+            }
+            // Batch-add all the inputs for a tx at a time. If we added them 1 at a time, we could
+            // catch duplicate inputs within a single tx.  This is a more severe, consensus error,
+            // and we want to report that from CheckTransaction instead.
+            std::transform(tx->vin.cbegin(), tx->vin.cend(), std::inserter(inputs_seen, inputs_seen.end()),
+                           [](const auto& input) { return input.prevout; });
+        }
+    }
+
+    LOCK(m_pool.cs);
+
+    // Do all PreChecks first and fail fast to avoid running expensive script checks when unnecessary.
+    for (Workspace& ws : workspaces) {
+        if (!PreChecks(args, ws)) {
+            package_state.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
+            // Exit early to avoid doing pointless work. Update the failed tx result; the rest are unfinished.
+            results.emplace(ws.m_ptx->GetWitnessHash(), MempoolAcceptResult::Failure(ws.m_state));
+            return PackageMempoolAcceptResult(package_state, std::move(results));
+        }
+        // Make the coins created by this transaction available for subsequent transactions in the
+        // package to spend. Since we already checked conflicts in the package and RBFs are
+        // impossible, we don't need to track the coins spent. Note that this logic will need to be
+        // updated if RBFs in packages are allowed in the future.
+        assert(args.disallow_mempool_conflicts);
+        m_viewmempool.PackageAddTransaction(ws.m_ptx);
+    }
+
+    for (Workspace& ws : workspaces) {
+        PrecomputedTransactionData txdata;
+        if (!PolicyScriptChecks(args, ws, txdata)) {
+            // Exit early to avoid doing pointless work. Update the failed tx result; the rest are unfinished.
+            package_state.Invalid(PackageValidationResult::PCKG_TX, "transaction failed");
+            results.emplace(ws.m_ptx->GetWitnessHash(), MempoolAcceptResult::Failure(ws.m_state));
+            return PackageMempoolAcceptResult(package_state, std::move(results));
+        }
+        if (args.m_test_accept) {
+            // When test_accept=true, transactions that pass PolicyScriptChecks are valid because there are
+            // no further mempool checks (passing PolicyScriptChecks implies passing ConsensusScriptChecks).
+            results.emplace(ws.m_ptx->GetWitnessHash(),
+                            MempoolAcceptResult::Success(std::move(ws.m_replaced_transactions), ws.m_base_fees));
+        }
+    }
+
+    return PackageMempoolAcceptResult(package_state, std::move(results));
 }
 
 } // anon namespace
@@ -1197,7 +1302,8 @@ static MempoolAcceptResult AcceptToMemoryPoolWithTime(const CChainParams& chainp
                                                       EXCLUSIVE_LOCKS_REQUIRED(cs_main)
 {
     std::vector<COutPoint> coins_to_uncache;
-    MemPoolAccept::ATMPArgs args { chainparams, nAcceptTime, bypass_limits, coins_to_uncache, test_accept };
+    MemPoolAccept::ATMPArgs args { chainparams, nAcceptTime, bypass_limits, coins_to_uncache,
+                                   test_accept, /* disallow_mempool_conflicts */ false };
 
     assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
     const MempoolAcceptResult result = MemPoolAccept(pool, active_chainstate).AcceptSingleTransaction(tx, args);
@@ -1230,6 +1336,29 @@ MempoolAcceptResult AcceptToMemoryPool(CChainState& active_chainstate, CTxMemPoo
 {
     assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
     return AcceptToMemoryPoolWithTime(Params(), pool, active_chainstate, tx, GetTime(), bypass_limits, test_accept);
+}
+
+PackageMempoolAcceptResult ProcessNewPackage(CChainState& active_chainstate, CTxMemPool& pool,
+                                                   const Package& package, bool test_accept)
+{
+    AssertLockHeld(cs_main);
+    assert(test_accept); // Only allow package accept dry-runs (testmempoolaccept RPC).
+    assert(!package.empty());
+    assert(std::all_of(package.cbegin(), package.cend(), [](const auto& tx){return tx != nullptr;}));
+
+    std::vector<COutPoint> coins_to_uncache;
+    const CChainParams& chainparams = Params();
+    MemPoolAccept::ATMPArgs args { chainparams, GetTime(), /* bypass_limits */ false, coins_to_uncache,
+                                   test_accept, /* disallow_mempool_conflicts */ true };
+    assert(std::addressof(::ChainstateActive()) == std::addressof(active_chainstate));
+    const PackageMempoolAcceptResult result = MemPoolAccept(pool, active_chainstate).AcceptMultipleTransactions(package, args);
+
+    // Uncache coins pertaining to transactions that were not submitted to the mempool.
+    // Ensure the cache is still within its size limits.
+    for (const COutPoint& hashTx : coins_to_uncache) {
+        active_chainstate.CoinsTip().Uncache(hashTx);
+    }
+    return result;
 }
 
 CTransactionRef GetTransaction(const CBlockIndex* const block_index, const CTxMemPool* const mempool, const uint256& hash, const Consensus::Params& consensusParams, uint256& hashBlock)

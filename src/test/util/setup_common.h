@@ -138,13 +138,15 @@ struct TestChain100Setup : public RegTestingSetup {
      * @param input_signing_key  The key to spend the input_transaction
      * @param output_destination Where to send the output
      * @param output_amount      How much to send
+     * @param submit             Whether or not to submit to mempool
      */
     CMutableTransaction CreateValidMempoolTransaction(CTransactionRef input_transaction,
                                                       int input_vout,
                                                       int input_height,
                                                       CKey input_signing_key,
                                                       CScript output_destination,
-                                                      CAmount output_amount = CAmount(1 * COIN));
+                                                      CAmount output_amount = CAmount(1 * COIN),
+                                                      bool submit = true);
 
     ~TestChain100Setup();
 

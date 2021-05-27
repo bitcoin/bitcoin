@@ -312,7 +312,8 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactio
                                                                      int input_height,
                                                                      CKey input_signing_key,
                                                                      CScript output_destination,
-                                                                     CAmount output_amount)
+                                                                     CAmount output_amount,
+                                                                     bool submit)
 {
     // Transaction we will submit to the mempool
     CMutableTransaction mempool_txn;
@@ -345,8 +346,8 @@ CMutableTransaction TestChain100Setup::CreateValidMempoolTransaction(CTransactio
     std::map<int, std::string> input_errors;
     assert(SignTransaction(mempool_txn, &keystore, input_coins, nHashType, input_errors));
 
-    // Add transaction to the mempool
-    {
+    // If submit=true, add transaction to the mempool.
+    if (submit) {
         LOCK(cs_main);
         const MempoolAcceptResult result = AcceptToMemoryPool(::ChainstateActive(), *m_node.mempool.get(), MakeTransactionRef(mempool_txn), /* bypass_limits */ false);
         assert(result.m_result_type == MempoolAcceptResult::ResultType::VALID);
