@@ -116,27 +116,30 @@ public:
     CKeyPool();
     CKeyPool(const CPubKey& vchPubKeyIn, bool fInternalIn);
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
+    template<typename Stream>
+    void Serialize(Stream& s) const
+    {
         int nVersion = s.GetVersion();
-        if (!(s.GetType() & SER_GETHASH))
-            READWRITE(nVersion);
-        READWRITE(nTime);
-        READWRITE(vchPubKey);
-        if (ser_action.ForRead()) {
-            try {
-                READWRITE(fInternal);
-            }
-            catch (std::ios_base::failure&) {
-                /* flag as external address if we can't read the internal boolean
-                   (this will be the case for any wallet before the HD chain split version) */
-                fInternal = false;
-            }
+        if (!(s.GetType() & SER_GETHASH)) {
+            s << nVersion;
         }
-        else {
-            READWRITE(fInternal);
+        s << nTime << vchPubKey << fInternal;
+    }
+
+    template<typename Stream>
+    void Unserialize(Stream& s)
+    {
+        int nVersion = s.GetVersion();
+        if (!(s.GetType() & SER_GETHASH)) {
+            s >> nVersion;
+        }
+        s >> nTime >> vchPubKey;
+        try {
+            s >> fInternal;
+        } catch (std::ios_base::failure&) {
+            /* flag as external address if we can't read the internal boolean
+               (this will be the case for any wallet before the HD chain split version) */
+            fInternal = false;
         }
     }
 };

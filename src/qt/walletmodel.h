@@ -70,34 +70,28 @@ public:
     static const int CURRENT_VERSION = 1;
     int nVersion;
 
-    ADD_SERIALIZE_METHODS;
+    SERIALIZE_METHODS(SendCoinsRecipient, obj)
+    {
+        std::string address_str, label_str, message_str, auth_merchant_str, sPaymentRequest;
+        PaymentRequestPlus paymentRequest;
 
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        std::string sAddress = address.toStdString();
-        std::string sLabel = label.toStdString();
-        std::string sMessage = message.toStdString();
-        std::string sPaymentRequest;
-        if (!ser_action.ForRead() && paymentRequest.IsInitialized())
+        SER_WRITE(obj, address_str = obj.address.toStdString());
+        SER_WRITE(obj, label_str = obj.label.toStdString());
+        SER_WRITE(obj, message_str = obj.message.toStdString());
+        SER_WRITE(obj, auth_merchant_str = obj.authenticatedMerchant.toStdString());
+        SER_WRITE(obj, paymentRequest = obj.paymentRequest);
+        if (paymentRequest.IsInitialized()) {
             paymentRequest.SerializeToString(&sPaymentRequest);
-        std::string sAuthenticatedMerchant = authenticatedMerchant.toStdString();
+        }
 
-        READWRITE(this->nVersion);
-        READWRITE(sAddress);
-        READWRITE(sLabel);
-        READWRITE(amount);
-        READWRITE(sMessage);
-        READWRITE(sPaymentRequest);
-        READWRITE(sAuthenticatedMerchant);
+        READWRITE(obj.nVersion, address_str, label_str, obj.amount, message_str, sPaymentRequest, auth_merchant_str);
 
-        if (ser_action.ForRead())
-        {
-            address = QString::fromStdString(sAddress);
-            label = QString::fromStdString(sLabel);
-            message = QString::fromStdString(sMessage);
-            if (!sPaymentRequest.empty())
-                paymentRequest.parse(QByteArray::fromRawData(sPaymentRequest.data(), sPaymentRequest.size()));
-            authenticatedMerchant = QString::fromStdString(sAuthenticatedMerchant);
+        SER_READ(obj, obj.address = QString::fromStdString(address_str));
+        SER_READ(obj, obj.label = QString::fromStdString(label_str));
+        SER_READ(obj, obj.message = QString::fromStdString(message_str));
+        SER_READ(obj, obj.authenticatedMerchant = QString::fromStdString(auth_merchant_str));
+        if (!sPaymentRequest.empty()) {
+            SER_READ(obj, obj.paymentRequest.parse(QByteArray::fromRawData(sPaymentRequest.data(), sPaymentRequest.size())));
         }
     }
 };
