@@ -853,6 +853,11 @@ bool AppInitParameterInteraction(const ArgsManager& args)
             return InitError(_("Prune mode is incompatible with -coinstatsindex."));
     }
 
+    // If -forcednsseed is set to true, ensure -dnsseed has not been set to false
+    if (args.GetBoolArg("-forcednsseed", DEFAULT_FORCEDNSSEED) && !args.GetBoolArg("-dnsseed", DEFAULT_DNSSEED)){
+        return InitError(_("Cannot set -forcednsseed to true when setting -dnsseed to false."));
+    }
+
     // -bind and -whitebind can't be set when not listening
     size_t nUserBind = args.GetArgs("-bind").size() + args.GetArgs("-whitebind").size();
     if (nUserBind != 0 && !args.GetBoolArg("-listen", DEFAULT_LISTEN)) {
