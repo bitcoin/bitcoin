@@ -26,10 +26,7 @@ static constexpr auto MAX_WAIT_FOR_IO = 1s;
 class Sock
 {
 public:
-    /**
-     * Default constructor, creates an empty object that does nothing when destroyed.
-     */
-    Sock();
+    Sock() = delete;
 
     /**
      * Take ownership of an existent socket.
