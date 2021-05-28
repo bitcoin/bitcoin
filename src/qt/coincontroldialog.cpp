@@ -590,6 +590,15 @@ void CoinControlDialog::updateLabels(CCoinControl& m_coin_control, WalletModel *
         label->setVisible(nChange < 0);
 }
 
+void CoinControlDialog::changeEvent(QEvent* e)
+{
+#ifdef Q_OS_MACOS
+    if (e->type() == QEvent::PaletteChange) {
+        updateView();
+    }
+#endif
+}
+
 void CoinControlDialog::updateView()
 {
     if (!model || !model->getOptionsModel() || !model->getAddressTableModel())
