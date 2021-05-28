@@ -24,8 +24,6 @@ static inline bool IOErrorIsPermanent(int err)
     return err != WSAEAGAIN && err != WSAEINTR && err != WSAEWOULDBLOCK && err != WSAEINPROGRESS;
 }
 
-Sock::Sock() : m_socket(INVALID_SOCKET) {}
-
 Sock::Sock(SOCKET s) : m_socket(s) {}
 
 Sock::Sock(Sock&& other)

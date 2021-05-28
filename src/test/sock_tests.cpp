@@ -56,14 +56,25 @@ BOOST_AUTO_TEST_CASE(move_constructor)
 
 BOOST_AUTO_TEST_CASE(move_assignment)
 {
-    const SOCKET s = CreateSocket();
-    Sock* sock1 = new Sock(s);
-    Sock* sock2 = new Sock();
+    const SOCKET s1 = CreateSocket();
+    const SOCKET s2 = CreateSocket();
+    Sock* sock1 = new Sock(s1);
+    Sock* sock2 = new Sock(s2);
+
+    BOOST_CHECK(!SocketIsClosed(s1));
+    BOOST_CHECK(!SocketIsClosed(s2));
+
     *sock2 = std::move(*sock1);
+    BOOST_CHECK(!SocketIsClosed(s1));
+    BOOST_CHECK(SocketIsClosed(s2));
+
     delete sock1;
-    BOOST_CHECK(!SocketIsClosed(s));
+    BOOST_CHECK(!SocketIsClosed(s1));
+    BOOST_CHECK(SocketIsClosed(s2));
+
     delete sock2;
-    BOOST_CHECK(SocketIsClosed(s));
+    BOOST_CHECK(SocketIsClosed(s1));
+    BOOST_CHECK(SocketIsClosed(s2));
 }
 
 #ifndef WIN32 // Windows does not have socketpair(2).
@@ -95,7 +106,7 @@ BOOST_AUTO_TEST_CASE(send_and_receive)
     SendAndRecvMessage(*sock0, *sock1);
 
     Sock* sock0moved = new Sock(std::move(*sock0));
-    Sock* sock1moved = new Sock();
+    Sock* sock1moved = new Sock(INVALID_SOCKET);
     *sock1moved = std::move(*sock1);
 
     delete sock0;
