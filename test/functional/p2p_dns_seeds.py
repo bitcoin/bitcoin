@@ -32,6 +32,24 @@ class P2PDNSSeeds(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(expected_msgs=["Loading addresses from DNS seed"], timeout=12):
             self.restart_node(0, [f"-connect={fakeaddr}", "-dnsseed=1"])
 
+        self.log.info("Check that running -forcednsseed and -dnsseed=0 throws an error.")
+        self.nodes[0].stop_node()
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg="Error: Cannot set -forcednsseed to true when setting -dnsseed to false.",
+            extra_args=["-forcednsseed=1", "-dnsseed=0"],
+        )
+
+        self.log.info("Check that running -forcednsseed and -connect throws an error.")
+        # -connect soft sets -dnsseed to false, so throws the same error
+        self.nodes[0].stop_node()
+        self.nodes[0].assert_start_raises_init_error(
+            expected_msg="Error: Cannot set -forcednsseed to true when setting -dnsseed to false.",
+            extra_args=["-forcednsseed=1", f"-connect={fakeaddr}"],
+        )
+
+        # Restore default bitcoind settings
+        self.restart_node(0)
+
     def existing_outbound_connections_test(self):
         # Make sure addrman is populated to enter the conditional where we
         # delay and potentially skip DNS seeding.
