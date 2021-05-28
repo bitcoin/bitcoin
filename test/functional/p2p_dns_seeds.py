@@ -16,6 +16,7 @@ class P2PDNSSeeds(BitcoinTestFramework):
 
     def run_test(self):
         self.existing_outbound_connections_test()
+        self.existing_block_relay_connections_test()
 
     def existing_outbound_connections_test(self):
         # Make sure addrman is populated to enter the conditional where we
@@ -28,6 +29,23 @@ class P2PDNSSeeds(BitcoinTestFramework):
         with self.nodes[0].assert_debug_log(expected_msgs=["P2P peers available. Skipped DNS seeding."], timeout=12):
             for i in range(2):
                 self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=i, connection_type="outbound-full-relay")
+
+    def existing_block_relay_connections_test(self):
+        # Make sure addrman is populated to enter the conditional where we
+        # delay and potentially skip DNS seeding. No-op when run after
+        # existing_outbound_connections_test.
+        self.nodes[0].addpeeraddress("192.0.0.8", 8333)
+
+        self.log.info("Check that we *do* query DNS seeds if we only have 2 block-relay-only connections")
+
+        self.restart_node(0)
+        with self.nodes[0].assert_debug_log(expected_msgs=["Loading addresses from DNS seed"], timeout=12):
+            # This mimics the "anchors" logic where nodes are likely to
+            # reconnect to block-relay-only connections on startup.
+            # Since we do not participate in addr relay with these connections,
+            # we still want to query the DNS seeds.
+            for i in range(2):
+                self.nodes[0].add_outbound_p2p_connection(P2PInterface(), p2p_idx=i, connection_type="block-relay-only")
 
 
 if __name__ == '__main__':
