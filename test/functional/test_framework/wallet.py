@@ -6,6 +6,7 @@
 
 from decimal import Decimal
 from enum import Enum
+from typing import Optional
 from test_framework.address import ADDRESS_BCRT1_P2WSH_OP_TRUE
 from test_framework.key import ECKey
 from test_framework.messages import (
@@ -105,12 +106,12 @@ class MiniWallet:
     def get_address(self):
         return self._address
 
-    def get_utxo(self, *, txid='', mark_as_spent=True):
+    def get_utxo(self, *, txid: Optional[str]='', mark_as_spent=True):
         """
         Returns a utxo and marks it as spent (pops it from the internal list)
 
         Args:
-        txid (string), optional: get the first utxo we find from a specific transaction
+        txid: get the first utxo we find from a specific transaction
 
         Note: Can be used to get the change output immediately after a send_self_transfer
         """
