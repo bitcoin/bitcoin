@@ -592,8 +592,9 @@ void CAddrMan::Connected_(const CService& addr)
     // update info
     const int64_t nUpdateInterval{20 * 60};
     const int64_t now{GetAdjustedTime()};
-    if (now - info.nTime > nUpdateInterval) {
-        info.nTime = now;
+    // TODO: change CAddress::nTime from uint32 to int64 before the Year 2106.
+    if (now - static_cast<int64_t>(info.nTime) > nUpdateInterval) {
+        info.nTime = static_cast<uint32_t>(now);
     }
 }
 
