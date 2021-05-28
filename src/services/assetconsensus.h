@@ -47,9 +47,6 @@ public:
 class CAssetDB : public CDBWrapper {
 public:
     explicit CAssetDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
-    bool ExistsNFTAsset(const uint64_t& nAsset) {
-        return Exists(nAsset);
-    }
     bool EraseAsset(const uint32_t& nBaseAsset) {
         return Erase(nBaseAsset);
     }   

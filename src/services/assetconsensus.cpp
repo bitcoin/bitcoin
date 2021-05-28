@@ -482,7 +482,8 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, const CTxU
     const uint32_t& nBaseAsset = GetBaseAssetID(tx.voutAssets[0].key);
     for (unsigned int i = 0; i < tx.voutAssets.size(); ++i) {
         outAmount += tx.GetAssetValueOut(tx.voutAssets[i].values);
-        if(tx.voutAssets[i].key != nBaseAsset) {
+        const uint32_t& nBaseAssetInternal = GetBaseAssetID(tx.voutAssets[i].key);
+        if(tx.voutAssets[i].key != nBaseAsset && nBaseAssetInternal == nBaseAsset) {
             vecNFTKeys.emplace_back(tx.voutAssets[i].key);
         }
     }
@@ -625,10 +626,11 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     std::vector<uint64_t> vecNFTKeys;
     CAssetsSet mapAssetNFTSet;
     for(auto &voutAsset: tx.voutAssets) {
-        if(voutAsset.key != nBaseAsset) {
+        const uint32_t& nBaseAssetInternal = GetBaseAssetID(voutAsset.key);
+        if(voutAsset.key != nBaseAsset && nBaseAssetInternal == nBaseAsset) {
             vecNFTKeys.emplace_back(voutAsset.key);
             auto result = mapAssetNFTSet.emplace(voutAsset.key);
-            const bool & mapAssetNFTNotFound = result.second; 
+            const bool & mapAssetNFTNotFound = result.second;
             // check that the NFTID doesn't already exist
             if (!mapAssetNFTNotFound || ExistsNFTAsset(voutAsset.key)) {
                 return FormatSyscoinErrorMessage(state, "asset-nft-duplicate", bSanityCheck);
@@ -1203,16 +1205,16 @@ bool CAssetNFTDB::Flush(const AssetMap &mapAssets) {
     CDBBatch batch(*this);
     for (const auto &key : mapAssets) {
 		if (key.second.second.IsNull()) {
-			erase++;
             // delete the asset guids used for NFT uniqueness
             for (const auto &keyNFT : key.second.first) {
+                erase++;
                 batch.Erase(keyNFT);
             }
 		}
 		else {
-			write++;
             // write the uint64 (asset ID for NFT uniqueness purposes)
             for (const auto &keyNFT : key.second.first) {
+                write++;
                 batch.Write(keyNFT, true);
             }
 		}
