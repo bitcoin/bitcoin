@@ -19,10 +19,10 @@ bool CheckPackage(const Package& txns, PackageValidationState& state)
         return state.Invalid(PackageValidationResult::PCKG_POLICY, "package-too-many-transactions");
     }
 
-    const int64_t total_size = std::accumulate(txns.cbegin(), txns.cend(), 0,
-                               [](int64_t sum, const auto& tx) { return sum + GetVirtualTransactionSize(*tx); });
+    const int64_t total_weight = std::accumulate(txns.cbegin(), txns.cend(), 0,
+                               [](int64_t sum, const auto& tx) { return sum + GetTransactionWeight(*tx); });
     // If the package only contains 1 tx, it's better to report the policy violation on individual tx size.
-    if (package_count > 1 && total_size > MAX_PACKAGE_SIZE * 1000) {
+    if (package_count > 1 && total_weight > MAX_PACKAGE_WEIGHT) {
         return state.Invalid(PackageValidationResult::PCKG_POLICY, "package-too-large");
     }
 
