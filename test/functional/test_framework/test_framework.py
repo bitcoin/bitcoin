@@ -782,7 +782,7 @@ class SyscoinTestFramework(metaclass=SyscoinTestMetaClass):
 
             os.rmdir(cache_path('wallets'))  # Remove empty wallets dir
             for entry in os.listdir(cache_path()):
-                if entry not in ['chainstate', 'blocks', 'indexes', 'ethereumminttx', 'ethereumtxroots', 'geth', 'dbblockindex', 'asset', 'llmq', 'evodb']:  # Only keep chainstate and blocks folder
+                if entry not in ['chainstate', 'blocks', 'indexes', 'ethereumminttx', 'ethereumtxroots', 'geth', 'dbblockindex', 'asset', 'assetnft', 'llmq', 'evodb']:  # Only keep chainstate and blocks folder
                     os.remove(cache_path(entry))
 
         for i in range(self.num_nodes):
