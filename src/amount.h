@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <limits>
 #include <unordered_map>
+#include <unordered_set>
 // SYSCOIN
 #include <uint256.h>
 /** Amount in satoshis (Can be negative) */
@@ -49,4 +50,5 @@ struct AssetMapOutput {
     }
 };
 typedef std::unordered_map<uint64_t, AssetMapOutput> CAssetsMap;
+typedef std::unordered_set<uint64_t> CAssetsSet;
 #endif //  SYSCOIN_AMOUNT_H

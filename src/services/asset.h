@@ -28,6 +28,7 @@ std::string stringFromSyscoinTx(const int &nVersion);
 std::string assetFromTx(const int &nVersion);
 static CAsset emptyAsset;
 bool GetAsset(const uint32_t &nBaseAsset,CAsset& txPos);
+bool ExistsNFTAsset(const uint64_t &nAsset);
 bool GetAssetPrecision(const uint32_t &nBaseAsset, uint8_t& nPrecision);
 bool GetAssetNotaryKeyID(const uint32_t &nBaseAsset, std::vector<unsigned char>& keyID);
 bool CheckTxInputsAssets(const CTransaction &tx, TxValidationState &state, const uint32_t &nBaseAsset, CAssetsMap mapAssetIn, const CAssetsMap &mapAssetOut);

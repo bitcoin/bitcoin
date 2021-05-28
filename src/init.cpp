@@ -331,6 +331,7 @@ void Shutdown(NodeContext& node)
         }
        
         passetdb.reset();
+        passetnftdb.reset();
         pethereumtxrootsdb.reset();
         pethereumtxmintdb.reset();
         pblockindexdb.reset();
@@ -1616,6 +1617,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 LogPrintf("Creating LLMQ and asset databases...\n");
                 fReindexGeth = fReindex || fReindexChainState; 
                 passetdb.reset();
+                passetnftdb.reset();
                 pethereumtxrootsdb.reset();
                 pethereumtxmintdb.reset();
                 pblockindexdb.reset();
@@ -1626,6 +1628,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 deterministicMNManager.reset(new CDeterministicMNManager());
                 llmq::InitLLMQSystem(false, *node.connman, *node.banman, *node.peerman, fReindexGeth);
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReindexGeth));    
+                passetnftdb.reset(new CAssetNFTDB(nCoinDBCache*16, false, fReindexGeth));    
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache, false, fReindexGeth));
                 pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, fReindexGeth));
                 pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, fReindexGeth));
@@ -1738,6 +1741,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                 if(coinsViewEmpty && !fReindexGeth) {
                     LogPrintf("coinsViewEmpty recreating LLMQ and asset databases\n");
                     passetdb.reset();
+                    passetnftdb.reset();
                     pethereumtxrootsdb.reset();
                     pethereumtxmintdb.reset();
                     pblockindexdb.reset();
@@ -1746,6 +1750,7 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
                     evoDb.reset(new CEvoDB(nEvoDbCache, false, coinsViewEmpty));
                     llmq::InitLLMQSystem(false, *node.connman, *node.banman, *node.peerman, coinsViewEmpty);
                     passetdb.reset(new CAssetDB(nCoinDBCache*16, false, coinsViewEmpty));    
+                    passetnftdb.reset(new CAssetNFTDB(nCoinDBCache*16, false, coinsViewEmpty));    
                     pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache, false, coinsViewEmpty));
                     pethereumtxmintdb.reset(new CEthereumMintedTxDB(nCoinDBCache, false, coinsViewEmpty));
                     pblockindexdb.reset(new CBlockIndexDB(nCoinDBCache, false, coinsViewEmpty));

@@ -72,6 +72,11 @@ bool GetAsset(const uint32_t &nBaseAsset,
         return false;
     return true;
 }
+bool ExistsNFTAsset(const uint64_t &nAsset) {
+    if (!passetnftdb || !passetnftdb->ExistsNFTAsset(nAsset))
+        return false;
+    return true;
+}
 bool GetAssetNotaryKeyID(const uint32_t &nBaseAsset,
         std::vector<unsigned char>& keyID) {
     if (!passetdb || !passetdb->ReadAssetNotaryKeyID(nBaseAsset, keyID))

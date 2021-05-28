@@ -19,6 +19,7 @@ class AssetNFTTest(SyscoinTestFramework):
     def run_test(self):
         self.nodes[0].generate(200)
         self.basic_assetnft()
+        self.basic_assetduplicatenft()
         self.basic_overflowassetnft()
         self.basic_multiassetnft()
         self.basic_zerovalassetnft()
@@ -47,6 +48,17 @@ class AssetNFTTest(SyscoinTestFramework):
         self.sync_blocks()
         out = self.nodes[1].listunspent(query_options={'assetGuid': nftGuid, 'minimumAmountAsset': 1.1})
         assert_equal(len(out), 1)
+
+    def basic_assetduplicatenft(self):
+        asset = self.nodes[0].assetnew('1', 'NFT', 'asset nft description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']
+        nftID = '1'
+        self.sync_mempools()
+        self.nodes[1].generate(3)
+        self.sync_blocks()
+        self.nodes[0].assetsend(asset, self.nodes[1].getnewaddress(), 1.1, 0, nftID)
+        self.nodes[0].generate(3)
+        self.sync_blocks()
+        assert_raises_rpc_error(-26, 'asset-nft-duplicate', self.nodes[0].assetsend, asset, self.nodes[1].getnewaddress(), 1.1, 0, nftID)
 
     def basic_overflowassetnft(self):
         asset = self.nodes[0].assetnew('1', 'NFT', 'asset nft description', '0x', 8, 10000, 127, '', {}, {})['asset_guid']

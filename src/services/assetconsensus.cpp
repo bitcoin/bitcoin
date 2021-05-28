@@ -14,6 +14,7 @@
 #include <util/rbf.h>
 #include <undo.h>
 std::unique_ptr<CAssetDB> passetdb;
+std::unique_ptr<CAssetNFTDB> passetnftdb;
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 RecursiveMutex cs_setethstatus;
@@ -477,11 +478,16 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, const CTxU
         }
     }
     CAmount outAmount = 0;
+    std::vector<uint64_t> vecNFTKeys;
+    const uint32_t& nBaseAsset = GetBaseAssetID(tx.voutAssets[0].key);
     for (unsigned int i = 0; i < tx.voutAssets.size(); ++i) {
         outAmount += tx.GetAssetValueOut(tx.voutAssets[i].values);
+        if(tx.voutAssets[i].key != nBaseAsset) {
+            vecNFTKeys.emplace_back(tx.voutAssets[i].key);
+        }
     }
-    const uint32_t& nBaseAsset = GetBaseAssetID(tx.voutAssets[0].key);
-    auto result = mapAssets.try_emplace(nBaseAsset,  std::move(emptyAsset)); 
+    
+    auto result = mapAssets.try_emplace(nBaseAsset,  std::make_pair(vecNFTKeys, std::move(emptyAsset))); 
     auto mapAsset = result.first;
     const bool& mapAssetNotFound = result.second;
     if(mapAssetNotFound) {
@@ -490,9 +496,9 @@ bool DisconnectAssetSend(const CTransaction &tx, const uint256& txid, const CTxU
             LogPrint(BCLog::SYS,"DisconnectAssetSend: Could not get asset %d\n",nBaseAsset);
             return false;               
         } 
-        mapAsset->second = std::move(dbAsset);                        
+        mapAsset->second.second = std::move(dbAsset);                        
     }
-    CAsset& storedAssetRef = mapAsset->second;
+    CAsset& storedAssetRef = mapAsset->second.second;
     const CAmount &nDiff = (outAmount - inAmount);
     storedAssetRef.nTotalSupply -= nDiff; 
     if(storedAssetRef.nTotalSupply <= 0) {
@@ -515,7 +521,8 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
     auto it = tx.voutAssets.begin();
     const uint64_t &nAsset = it->key;
     const uint32_t& nBaseAsset = GetBaseAssetID(nAsset);
-    auto result = mapAssets.try_emplace(nBaseAsset,  std::move(emptyAsset));
+    std::vector<uint64_t> vecNFTKeys;
+    auto result = mapAssets.try_emplace(nBaseAsset,  std::make_pair(vecNFTKeys, std::move(emptyAsset))); 
     auto mapAsset = result.first;
     const bool &mapAssetNotFound = result.second;
     if(mapAssetNotFound) {
@@ -523,9 +530,9 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
             LogPrint(BCLog::SYS,"DisconnectAssetUpdate: Could not get asset %d\n",nBaseAsset);
             return false;               
         } 
-        mapAsset->second = std::move(dbAsset);                    
+        mapAsset->second.second = std::move(dbAsset);                    
     }
-    CAsset& storedAssetRef = mapAsset->second;  
+    CAsset& storedAssetRef = mapAsset->second.second;  
     // undo data fields from last update
     // if fields changed then undo them using prev fields
     if(theAsset.nUpdateMask & ASSET_UPDATE_DATA) {
@@ -576,7 +583,8 @@ bool DisconnectAssetUpdate(const CTransaction &tx, const uint256& txid, AssetMap
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txid, AssetMap &mapAssets) {
     auto it = tx.voutAssets.begin();
     const uint32_t &nBaseAsset = GetBaseAssetID(it->key);
-    mapAssets.try_emplace(nBaseAsset,  std::move(emptyAsset));
+    std::vector<uint64_t> vecNFTKeys;
+    mapAssets.try_emplace(nBaseAsset,  std::make_pair(vecNFTKeys, std::move(emptyAsset))); 
     return true;  
 }
 
@@ -614,8 +622,21 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
     if (!itOut->second.bZeroVal) {
         return FormatSyscoinErrorMessage(state, "asset-output-zeroval", bSanityCheck);
     }
+    std::vector<uint64_t> vecNFTKeys;
+    CAssetsSet mapAssetNFTSet;
+    for(auto &voutAsset: tx.voutAssets) {
+        if(voutAsset.key != nBaseAsset) {
+            vecNFTKeys.emplace_back(voutAsset.key);
+            auto result = mapAssetNFTSet.emplace(voutAsset.key);
+            const bool & mapAssetNFTNotFound = result.second; 
+            // check that the NFTID doesn't already exist
+            if (!mapAssetNFTNotFound || ExistsNFTAsset(voutAsset.key)) {
+                return FormatSyscoinErrorMessage(state, "asset-nft-duplicate", bSanityCheck);
+            }
+        }
+    }
     CAsset dbAsset;
-    auto result = mapAssets.try_emplace(nBaseAsset,  std::move(emptyAsset));
+    auto result = mapAssets.try_emplace(nBaseAsset,  std::make_pair(vecNFTKeys, std::move(emptyAsset))); 
     auto mapAsset = result.first;
     const bool & mapAssetNotFound = result.second;    
     if (mapAssetNotFound) {
@@ -624,18 +645,18 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
                 return FormatSyscoinErrorMessage(state, "asset-non-existing", bSanityCheck);
             }
             else
-                mapAsset->second = std::move(theAsset);      
+                mapAsset->second.second = std::move(theAsset);      
         }
         else{
             if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
                 return FormatSyscoinErrorMessage(state, "asset-already-existing", bSanityCheck);
             }
-            mapAsset->second = std::move(dbAsset);      
+            mapAsset->second.second = std::move(dbAsset);      
         }
     } else if(tx.nVersion == SYSCOIN_TX_VERSION_ASSET_ACTIVATE) {
         return FormatSyscoinErrorMessage(state, "asset-already-existing", bSanityCheck);
     }
-    CAsset &storedAssetRef = mapAsset->second; 
+    CAsset &storedAssetRef = mapAsset->second.second; 
     switch (tx.nVersion) {
         case SYSCOIN_TX_VERSION_ASSET_ACTIVATE:
         {
@@ -920,7 +941,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
         break;
             
         case SYSCOIN_TX_VERSION_ASSET_SEND:
-        {
+        {        
             auto itIn = mapAssetIn.find(nBaseAsset);
             if(itIn == mapAssetIn.end()) {
                 return FormatSyscoinErrorMessage(state, "asset-input-notfound", bSanityCheck);           
@@ -939,7 +960,7 @@ bool CheckAssetInputs(const CTransaction &tx, const uint256& txHash, TxValidatio
             for(auto &itOutNFT: mapAssetOut) {
                 const uint32_t& nBaseAssetInternal = GetBaseAssetID(itOutNFT.first);
                 // skip first asset and ensure base asset matches base of first asset
-                if(itOutNFT.first != nBaseAsset && nBaseAssetInternal == nBaseAsset) {
+                if(itOutNFT.first != nBaseAsset && nBaseAssetInternal == nBaseAsset) { 
                     // NFT output cannot be zero-val
                     if (itOutNFT.second.bZeroVal) {
                         return FormatSyscoinErrorMessage(state, "asset-nft-output-zeroval", bSanityCheck);
@@ -1173,6 +1194,33 @@ bool CEthereumMintedTxDB::FlushErase(const EthereumMintTxMap &mapMintKeys) {
 }
 
 
+bool CAssetNFTDB::Flush(const AssetMap &mapAssets) {
+    if(mapAssets.empty()) {
+        return true;
+	}
+	int write = 0;
+	int erase = 0;
+    CDBBatch batch(*this);
+    for (const auto &key : mapAssets) {
+		if (key.second.second.IsNull()) {
+			erase++;
+            // delete the asset guids used for NFT uniqueness
+            for (const auto &keyNFT : key.second.first) {
+                batch.Erase(keyNFT);
+            }
+		}
+		else {
+			write++;
+            // write the uint64 (asset ID for NFT uniqueness purposes)
+            for (const auto &keyNFT : key.second.first) {
+                batch.Write(keyNFT, true);
+            }
+		}
+    }
+    LogPrint(BCLog::SYS, "Flushing %d NFT assets (erased %d, written %d)\n", mapAssets.size(), erase, write);
+    return WriteBatch(batch);
+}
+
 bool CAssetDB::Flush(const AssetMap &mapAssets) {
     if(mapAssets.empty()) {
         return true;
@@ -1181,21 +1229,29 @@ bool CAssetDB::Flush(const AssetMap &mapAssets) {
 	int erase = 0;
     CDBBatch batch(*this);
     for (const auto &key : mapAssets) {
-		if (key.second.IsNull()) {
+		if (key.second.second.IsNull()) {
 			erase++;
 			batch.Erase(key.first);
             // erase keyID field copy
             batch.Erase(std::make_pair(key.first, true));
+            // delete the asset guids used for NFT uniqueness
+            for (const auto &keyNFT : key.second.first) {
+                batch.Erase(keyNFT);
+            }
 		}
 		else {
 			write++;
             // int32 (guid) -> CAsset
-			batch.Write(key.first, key.second);
+			batch.Write(key.first, key.second.second);
+            // write the uint64 (asset ID for NFT uniqueness purposes)
+            for (const auto &keyNFT : key.second.first) {
+                batch.Write(keyNFT, true);
+            }
             // for optimization on lookups store the keyID separately
-            if(key.second.vchNotaryKeyID.empty()) {
+            if(key.second.second.vchNotaryKeyID.empty()) {
                 batch.Erase(std::make_pair(key.first, true));
             } else {
-                batch.Write(std::make_pair(key.first, true), key.second.vchNotaryKeyID);
+                batch.Write(std::make_pair(key.first, true), key.second.second.vchNotaryKeyID);
             }
 		}
     }
@@ -1211,6 +1267,9 @@ CEthereumMintedTxDB::CEthereumMintedTxDB(size_t nCacheSize, bool fMemory, bool f
 }
 
 CAssetDB::CAssetDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "asset", nCacheSize, fMemory, fWipe) {
+}
+
+CAssetNFTDB::CAssetNFTDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "assetnft", nCacheSize, fMemory, fWipe) {
 }
 
 CAssetOldDB::CAssetOldDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(gArgs.GetDataDirNet() / "assets", nCacheSize, fMemory, fWipe) {

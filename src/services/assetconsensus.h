@@ -47,6 +47,9 @@ public:
 class CAssetDB : public CDBWrapper {
 public:
     explicit CAssetDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    bool ExistsNFTAsset(const uint64_t& nAsset) {
+        return Exists(nAsset);
+    }
     bool EraseAsset(const uint32_t& nBaseAsset) {
         return Erase(nBaseAsset);
     }   
@@ -59,12 +62,23 @@ public:
     }  
     bool Flush(const AssetMap &mapAssets);
 };
+
+class CAssetNFTDB : public CDBWrapper {
+public:
+    explicit CAssetNFTDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
+    bool ExistsNFTAsset(const uint64_t& nAsset) {
+        return Exists(nAsset);
+    }
+    bool Flush(const AssetMap &mapAssets);
+};
+
 class CAssetOldDB : public CDBWrapper {
 public:
     explicit CAssetOldDB(size_t nCacheSize, bool fMemory = false, bool fWipe = false);
     bool Empty();
 };
 extern std::unique_ptr<CAssetDB> passetdb;
+extern std::unique_ptr<CAssetNFTDB> passetnftdb;
 extern std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 extern std::unique_ptr<CEthereumMintedTxDB> pethereumtxmintdb;
 bool DisconnectAssetActivate(const CTransaction &tx, const uint256& txHash, AssetMap &mapAssets);
