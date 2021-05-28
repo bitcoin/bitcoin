@@ -27,11 +27,6 @@ class Sock
 {
 public:
     /**
-     * Default constructor, creates an empty object that does nothing when destroyed.
-     */
-    Sock();
-
-    /**
      * Take ownership of an existent socket.
      */
     explicit Sock(SOCKET s);
