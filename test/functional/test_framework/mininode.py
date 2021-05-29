@@ -34,6 +34,7 @@ logger = logging.getLogger("TestFramework.mininode")
 
 MESSAGEMAP = {
     b"addr": msg_addr,
+    b"addrv2": msg_addrv2,
     b"block": msg_block,
     b"blocktxn": msg_blocktxn,
     b"cmpctblock": msg_cmpctblock,
@@ -48,6 +49,7 @@ MESSAGEMAP = {
     b"ping": msg_ping,
     b"pong": msg_pong,
     b"reject": msg_reject,
+    b"sendaddrv2": msg_sendaddrv2,
     b"sendcmpct": msg_sendcmpct,
     b"sendheaders": msg_sendheaders,
     b"tx": msg_tx,
@@ -290,7 +292,7 @@ class P2PInterface(P2PConnection):
 
     Individual testcases should subclass this and override the on_* methods
     if they want to alter message handling behaviour."""
-    def __init__(self):
+    def __init__(self, support_addrv2=False):
         super().__init__()
 
         # Track number of messages of each type received and the most recent
@@ -303,6 +305,8 @@ class P2PInterface(P2PConnection):
 
         # The network services received from the peer
         self.nServices = 0
+
+        self.support_addrv2 = support_addrv2
 
     def peer_connect(self, *args, services=NODE_NETWORK, send_version=True, **kwargs):
         super().peer_connect(*args, **kwargs)
@@ -345,6 +349,7 @@ class P2PInterface(P2PConnection):
         pass
 
     def on_addr(self, message): pass
+    def on_addrv2(self, message): pass
     def on_block(self, message): pass
     def on_blocktxn(self, message): pass
     def on_cmpctblock(self, message): pass
@@ -358,6 +363,7 @@ class P2PInterface(P2PConnection):
     def on_mempool(self, message): pass
     def on_pong(self, message): pass
     def on_reject(self, message): pass
+    def on_sendaddrv2(self, message): pass
     def on_sendcmpct(self, message): pass
     def on_sendheaders(self, message): pass
     def on_tx(self, message): pass
@@ -387,6 +393,8 @@ class P2PInterface(P2PConnection):
     def on_version(self, message):
         assert message.nVersion >= MIN_VERSION_SUPPORTED, "Version {} received. Test framework only supports versions greater than {}".format(message.nVersion, MIN_VERSION_SUPPORTED)
         self.send_message(msg_verack())
+        if self.support_addrv2:
+            self.send_message(msg_sendaddrv2())
         self.nServices = message.nServices
 
     # Connection helper methods

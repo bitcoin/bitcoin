@@ -472,6 +472,26 @@ bool CNetAddr::IsInternal() const
    return m_net == NET_INTERNAL;
 }
 
+bool CNetAddr::IsAddrV1Compatible() const
+{
+    switch (m_net) {
+    case NET_IPV4:
+    case NET_IPV6:
+    case NET_INTERNAL:
+        return true;
+    case NET_ONION:
+        return m_addr.size() == ADDR_TORV2_SIZE;
+    case NET_I2P:
+    case NET_CJDNS:
+        return false;
+    case NET_UNROUTABLE: // m_net is never and should not be set to NET_UNROUTABLE
+    case NET_MAX:        // m_net is never and should not be set to NET_MAX
+        assert(false);
+    } // no default case, so the compiler can warn about missing cases
+
+    assert(false);
+}
+
 enum Network CNetAddr::GetNetwork() const
 {
     if (IsInternal())
@@ -724,9 +744,12 @@ std::vector<unsigned char> CNetAddr::GetGroup(const std::vector<bool> &asmap) co
 
 std::vector<unsigned char> CNetAddr::GetAddrBytes() const
 {
-    uint8_t serialized[V1_SERIALIZATION_SIZE];
-    SerializeV1Array(serialized);
-    return {std::begin(serialized), std::end(serialized)};
+    if (IsAddrV1Compatible()) {
+        uint8_t serialized[V1_SERIALIZATION_SIZE];
+        SerializeV1Array(serialized);
+        return {std::begin(serialized), std::end(serialized)};
+    }
+    return std::vector<unsigned char>(m_addr.begin(), m_addr.end());
 }
 
 uint64_t CNetAddr::GetHash() const

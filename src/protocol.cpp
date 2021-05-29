@@ -18,6 +18,8 @@ namespace NetMsgType {
 const char *VERSION="version";
 const char *VERACK="verack";
 const char *ADDR="addr";
+const char *ADDRV2="addrv2";
+const char *SENDADDRV2="sendaddrv2";
 const char *INV="inv";
 const char *GETDATA="getdata";
 const char *MERKLEBLOCK="merkleblock";
@@ -86,6 +88,8 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::VERSION,
     NetMsgType::VERACK,
     NetMsgType::ADDR,
+    NetMsgType::ADDRV2,
+    NetMsgType::SENDADDRV2,
     NetMsgType::INV,
     NetMsgType::GETDATA,
     NetMsgType::MERKLEBLOCK,
@@ -223,6 +227,13 @@ CAddress::CAddress(CService ipIn, ServiceFlags nServicesIn) : CService(ipIn)
 {
     Init();
     nServices = nServicesIn;
+}
+
+CAddress::CAddress(CService ipIn, ServiceFlags nServicesIn, uint32_t nTimeIn) : CService(ipIn)
+{
+    Init();
+    nServices = nServicesIn;
+    nTime = nTimeIn;
 }
 
 void CAddress::Init()
