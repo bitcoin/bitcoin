@@ -48,7 +48,7 @@ static void PrevectorClear(benchmark::State& state)
 }
 
 template <typename T>
-void PrevectorResize(benchmark::State& state)
+static void PrevectorResize(benchmark::State& state)
 {
     prevector<28, T> t0;
     prevector<28, T> t1;

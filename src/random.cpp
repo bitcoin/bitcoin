@@ -180,7 +180,7 @@ static void RandAddSeedPerfmon()
 /** Fallback: get 32 bytes of system entropy from /dev/urandom. The most
  * compatible way to get cryptographic randomness on UNIX-ish platforms.
  */
-void GetDevURandom(unsigned char *ent32)
+static void GetDevURandom(unsigned char *ent32)
 {
     int f = open("/dev/urandom", O_RDONLY);
     if (f == -1) {

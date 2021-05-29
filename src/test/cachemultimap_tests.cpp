@@ -11,7 +11,7 @@
 
 BOOST_FIXTURE_TEST_SUITE(cachemultimap_tests, BasicTestingSetup)
 
-void DumpMap(const CacheMultiMap<int,int>& cmmap)
+static void DumpMap(const CacheMultiMap<int,int>& cmmap)
 {
     const CacheMultiMap<int,int>::list_t& listItems = cmmap.GetItemList();
     for(CacheMultiMap<int,int>::list_cit it = listItems.begin(); it != listItems.end(); ++it) {
@@ -20,7 +20,7 @@ void DumpMap(const CacheMultiMap<int,int>& cmmap)
     }
 }
 
-bool Compare(const CacheMultiMap<int,int>& cmmap1, const CacheMultiMap<int,int>& cmmap2)
+static bool Compare(const CacheMultiMap<int,int>& cmmap1, const CacheMultiMap<int,int>& cmmap2)
 {
     if(cmmap1.GetMaxSize() != cmmap2.GetMaxSize()) {
         std::cout << "Compare returning false: max size mismatch" << std::endl;
@@ -50,7 +50,7 @@ bool Compare(const CacheMultiMap<int,int>& cmmap1, const CacheMultiMap<int,int>&
     return true;
 }
 
-bool CheckExpected(const CacheMultiMap<int,int>& cmmap, int* expected, CacheMultiMap<int,int>::size_type nSize)
+static bool CheckExpected(const CacheMultiMap<int,int>& cmmap, int* expected, CacheMultiMap<int,int>::size_type nSize)
 {
     if(cmmap.GetSize() != nSize) {
         return false;

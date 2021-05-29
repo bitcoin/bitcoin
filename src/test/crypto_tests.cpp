@@ -26,7 +26,7 @@
 BOOST_FIXTURE_TEST_SUITE(crypto_tests, BasicTestingSetup)
 
 template<typename Hasher, typename In, typename Out>
-void TestVector(const Hasher &h, const In &in, const Out &out) {
+static void TestVector(const Hasher &h, const In &in, const Out &out) {
     Out hash;
     BOOST_CHECK(out.size() == h.OUTPUT_SIZE);
     hash.resize(out.size());
@@ -54,22 +54,22 @@ void TestVector(const Hasher &h, const In &in, const Out &out) {
     }
 }
 
-void TestSHA1(const std::string &in, const std::string &hexout) { TestVector(CSHA1(), in, ParseHex(hexout));}
-void TestSHA256(const std::string &in, const std::string &hexout) { TestVector(CSHA256(), in, ParseHex(hexout));}
-void TestSHA512(const std::string &in, const std::string &hexout) { TestVector(CSHA512(), in, ParseHex(hexout));}
-void TestRIPEMD160(const std::string &in, const std::string &hexout) { TestVector(CRIPEMD160(), in, ParseHex(hexout));}
+static void TestSHA1(const std::string &in, const std::string &hexout) { TestVector(CSHA1(), in, ParseHex(hexout));}
+static void TestSHA256(const std::string &in, const std::string &hexout) { TestVector(CSHA256(), in, ParseHex(hexout));}
+static void TestSHA512(const std::string &in, const std::string &hexout) { TestVector(CSHA512(), in, ParseHex(hexout));}
+static void TestRIPEMD160(const std::string &in, const std::string &hexout) { TestVector(CRIPEMD160(), in, ParseHex(hexout));}
 
-void TestHMACSHA256(const std::string &hexkey, const std::string &hexin, const std::string &hexout) {
+static void TestHMACSHA256(const std::string &hexkey, const std::string &hexin, const std::string &hexout) {
     std::vector<unsigned char> key = ParseHex(hexkey);
     TestVector(CHMAC_SHA256(key.data(), key.size()), ParseHex(hexin), ParseHex(hexout));
 }
 
-void TestHMACSHA512(const std::string &hexkey, const std::string &hexin, const std::string &hexout) {
+static void TestHMACSHA512(const std::string &hexkey, const std::string &hexin, const std::string &hexout) {
     std::vector<unsigned char> key = ParseHex(hexkey);
     TestVector(CHMAC_SHA512(key.data(), key.size()), ParseHex(hexin), ParseHex(hexout));
 }
 
-void TestAES128(const std::string &hexkey, const std::string &hexin, const std::string &hexout)
+static void TestAES128(const std::string &hexkey, const std::string &hexin, const std::string &hexout)
 {
     std::vector<unsigned char> key = ParseHex(hexkey);
     std::vector<unsigned char> in = ParseHex(hexin);
@@ -89,7 +89,7 @@ void TestAES128(const std::string &hexkey, const std::string &hexin, const std::
     BOOST_CHECK_EQUAL(HexStr(buf2), HexStr(in));
 }
 
-void TestAES256(const std::string &hexkey, const std::string &hexin, const std::string &hexout)
+static void TestAES256(const std::string &hexkey, const std::string &hexin, const std::string &hexout)
 {
     std::vector<unsigned char> key = ParseHex(hexkey);
     std::vector<unsigned char> in = ParseHex(hexin);
@@ -108,7 +108,7 @@ void TestAES256(const std::string &hexkey, const std::string &hexin, const std::
     BOOST_CHECK(buf == in);
 }
 
-void TestAES128CBC(const std::string &hexkey, const std::string &hexiv, bool pad, const std::string &hexin, const std::string &hexout)
+static void TestAES128CBC(const std::string &hexkey, const std::string &hexiv, bool pad, const std::string &hexin, const std::string &hexout)
 {
     std::vector<unsigned char> key = ParseHex(hexkey);
     std::vector<unsigned char> iv = ParseHex(hexiv);
@@ -149,7 +149,7 @@ void TestAES128CBC(const std::string &hexkey, const std::string &hexiv, bool pad
     }
 }
 
-void TestAES256CBC(const std::string &hexkey, const std::string &hexiv, bool pad, const std::string &hexin, const std::string &hexout)
+static void TestAES256CBC(const std::string &hexkey, const std::string &hexiv, bool pad, const std::string &hexin, const std::string &hexout)
 {
     std::vector<unsigned char> key = ParseHex(hexkey);
     std::vector<unsigned char> iv = ParseHex(hexiv);
@@ -190,7 +190,7 @@ void TestAES256CBC(const std::string &hexkey, const std::string &hexiv, bool pad
     }
 }
 
-void TestChaCha20(const std::string &hex_message, const std::string &hexkey, uint64_t nonce, uint64_t seek, const std::string& hexout)
+static void TestChaCha20(const std::string &hex_message, const std::string &hexkey, uint64_t nonce, uint64_t seek, const std::string& hexout)
 {
     std::vector<unsigned char> key = ParseHex(hexkey);
     std::vector<unsigned char> m = ParseHex(hex_message);
@@ -233,7 +233,7 @@ static void TestPoly1305(const std::string &hexmessage, const std::string &hexke
     BOOST_CHECK(tag == tagres);
 }
 
-std::string LongTestString(void) {
+static std::string LongTestString(void) {
     std::string ret;
     for (int i=0; i<200000; i++) {
         ret += (unsigned char)(i);

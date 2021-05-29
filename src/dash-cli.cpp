@@ -115,7 +115,7 @@ static int AppInitRPC(int argc, char* argv[])
         return EXIT_FAILURE;
     }
     try {
-        gArgs.ReadConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
+        gArgs.ReadConfigFiles();
     } catch (const std::exception& e) {
         fprintf(stderr,"Error reading configuration file: %s\n", e.what());
         return EXIT_FAILURE;
@@ -150,7 +150,7 @@ struct HTTPReply
     std::string body;
 };
 
-const char *http_errorstring(int code)
+static const char *http_errorstring(int code)
 {
     switch(code) {
 #if LIBEVENT_VERSION_NUMBER >= 0x02010300
@@ -400,7 +400,7 @@ static UniValue CallRPC(BaseRequestHandler *rh, const std::string& strMethod, co
     return reply;
 }
 
-int CommandLineRPC(int argc, char *argv[])
+static int CommandLineRPC(int argc, char *argv[])
 {
     std::string strPrint;
     int nRet = 0;

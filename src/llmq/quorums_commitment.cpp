@@ -8,6 +8,7 @@
 #include <evo/specialtx.h>
 
 #include <chainparams.h>
+#include <logging.h>
 #include <validation.h>
 
 namespace llmq
@@ -22,7 +23,7 @@ CFinalCommitment::CFinalCommitment(const Consensus::LLMQParams& params, const ui
 }
 
 #define LogPrintfFinalCommitment(...) do { \
-    LogPrintStr(strprintf("CFinalCommitment::%s -- %s", __func__, tinyformat::format(__VA_ARGS__))); \
+    g_logger->LogPrintStr(strprintf("CFinalCommitment::%s -- %s", __func__, tinyformat::format(__VA_ARGS__))); \
 } while(0)
 
 bool CFinalCommitment::Verify(const CBlockIndex* pQuorumIndex, bool checkSigs) const

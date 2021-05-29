@@ -12,7 +12,7 @@
 #include <boost/test/unit_test.hpp>
 
 /* Define a virtual block time, one block per 10 minutes after Nov 14 2014, 0:55:36am */
-int32_t TestTime(int nHeight) { return 1415926536 + 600 * nHeight; }
+static int32_t TestTime(int nHeight) { return 1415926536 + 600 * nHeight; }
 
 static const Consensus::Params paramsDummy = Consensus::Params();
 

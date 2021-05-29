@@ -40,7 +40,7 @@
  * Use the buttons <code>Namespaces</code>, <code>Classes</code> or <code>Files</code> at the top of the page to start navigating the code.
  */
 
-void WaitForShutdown()
+static void WaitForShutdown()
 {
     while (!ShutdownRequested())
     {
@@ -53,7 +53,7 @@ void WaitForShutdown()
 //
 // Start
 //
-bool AppInit(int argc, char* argv[])
+static bool AppInit(int argc, char* argv[])
 {
     bool fRet = false;
 
@@ -102,7 +102,7 @@ bool AppInit(int argc, char* argv[])
         }
         try
         {
-            gArgs.ReadConfigFile(gArgs.GetArg("-conf", BITCOIN_CONF_FILENAME));
+            gArgs.ReadConfigFiles();
         } catch (const std::exception& e) {
             fprintf(stderr,"Error reading configuration file: %s\n", e.what());
             return false;

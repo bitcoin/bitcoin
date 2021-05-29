@@ -1,4 +1,4 @@
-// Copyright (c) 2015 The Bitcoin Core developers
+// Copyright (c) 2015-2017 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -76,7 +76,6 @@ int main(int argc, char** argv)
     BLSInit();
     InitBLSTests();
     SetupEnvironment();
-    fPrintToDebugLog = false; // don't want to write to debug.log file
 
     int64_t evaluations = gArgs.GetArg("-evals", DEFAULT_BENCH_EVALUATIONS);
     std::string regex_filter = gArgs.GetArg("-filter", DEFAULT_BENCH_FILTER);

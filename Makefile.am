@@ -280,5 +280,6 @@ clean-docs:
 	rm -rf doc/doxygen
 
 clean-local: clean-docs
-	rm -rf coverage_percent.txt test_dash.coverage/ total.coverage/ test/tmp/ cache/ $(OSX_APP) src/qt/moc_*
+	rm -rf coverage_percent.txt test_dash.coverage/ total.coverage/ test/tmp/ cache/ $(OSX_APP)
 	rm -rf test/functional/__pycache__ test/functional/test_framework/__pycache__ test/cache
+

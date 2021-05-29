@@ -14,6 +14,9 @@ purposes. As such there are repository "maintainers" who are responsible for
 merging pull requests as well as a "lead maintainer" who is responsible for the
 release cycle, overall merging, moderation and appointment of maintainers.
 
+If you're looking for somewhere to start contributing, check out the
+[good first issue](https://github.com/dashpay/dash/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22)
+list.
 
 Contributor Workflow
 --------------------

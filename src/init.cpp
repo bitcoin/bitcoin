@@ -406,7 +406,7 @@ static void HandleSIGTERM(int)
 
 static void HandleSIGHUP(int)
 {
-    fReopenDebugLog = true;
+    g_logger->m_reopen_file = true;
 }
 #else
 static BOOL WINAPI consoleCtrlHandler(DWORD dwCtrlType)
@@ -428,12 +428,12 @@ static void registerSignalHandler(int signal, void(*handler)(int))
 }
 #endif
 
-void OnRPCStarted()
+static void OnRPCStarted()
 {
     uiInterface.NotifyBlockTip.connect(&RPCNotifyBlockChange);
 }
 
-void OnRPCStopped()
+static void OnRPCStopped()
 {
     uiInterface.NotifyBlockTip.disconnect(&RPCNotifyBlockChange);
     RPCNotifyBlockChange(false, nullptr);
@@ -483,6 +483,7 @@ void SetupServerArgs()
     gArgs.AddArg("-dbbatchsize", strprintf("Maximum database write batch size in bytes (default: %u)", nDefaultDbBatchSize), true, OptionsCategory::OPTIONS);
     gArgs.AddArg("-dbcache=<n>", strprintf("Set database cache size in megabytes (%d to %d, default: %d)", nMinDbCache, nMaxDbCache, nDefaultDbCache), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-debuglogfile=<file>", strprintf("Specify location of debug log file. Relative paths will be prefixed by a net-specific datadir location. (0 to disable; default: %s)", DEFAULT_DEBUGLOGFILE), false, OptionsCategory::OPTIONS);
+    gArgs.AddArg("-includeconf=<file>", "Specify additional configuration file, relative to the -datadir path (only useable from configuration file, not command line)", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-loadblock=<file>", "Imports blocks from external blk000??.dat file on startup", false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-maxmempool=<n>", strprintf("Keep the transaction memory pool below <n> megabytes (default: %u)", DEFAULT_MAX_MEMPOOL_SIZE), false, OptionsCategory::OPTIONS);
     gArgs.AddArg("-maxorphantxsize=<n>", strprintf("Maximum total size of all orphan transactions in megabytes (default: %u)", DEFAULT_MAX_ORPHAN_TRANSACTIONS_SIZE), false, OptionsCategory::OPTIONS);
@@ -731,7 +732,7 @@ struct CImportingNow
 // rev files since they'll be rewritten by the reindex anyway.  This ensures that vinfoBlockFile
 // is in sync with what's actually on disk by the time we start downloading, so that pruning
 // works correctly.
-void CleanupBlockRevFiles()
+static void CleanupBlockRevFiles()
 {
     std::map<std::string, fs::path> mapBlockFiles;
 
@@ -766,7 +767,7 @@ void CleanupBlockRevFiles()
     }
 }
 
-void ThreadImport(std::vector<fs::path> vImportFiles)
+static void ThreadImport(std::vector<fs::path> vImportFiles)
 {
     const CChainParams& chainparams = Params();
     RenameThread("dash-loadblk");
@@ -929,7 +930,7 @@ void PeriodicStats()
  *  Ensure that Dash Core is running in a usable environment with all
  *  necessary library support.
  */
-bool InitSanityCheck(void)
+static bool InitSanityCheck(void)
 {
     if(!ECC_InitSanityCheck()) {
         InitError("Elliptic curve cryptography sanity check failure. Aborting.");
@@ -951,7 +952,7 @@ bool InitSanityCheck(void)
     return true;
 }
 
-bool AppInitServers()
+static bool AppInitServers()
 {
     RPCServer::OnStarted(&OnRPCStarted);
     RPCServer::OnStopped(&OnRPCStopped);
@@ -1082,16 +1083,19 @@ static std::string ResolveErrMsg(const char * const optname, const std::string& 
  */
 void InitLogging()
 {
+    g_logger->m_print_to_file = !gArgs.IsArgNegated("-debuglogfile");
+    g_logger->m_file_path = AbsPathForConfigVal(gArgs.GetArg("-debuglogfile", DEFAULT_DEBUGLOGFILE));
+
     // Add newlines to the logfile to distinguish this execution from the last
     // one; called before console logging is set up, so this is only sent to
     // debug.log.
     LogPrintf("\n\n\n\n\n");
 
-    fPrintToConsole = gArgs.GetBoolArg("-printtoconsole", !gArgs.GetBoolArg("-daemon", false));
-    fPrintToDebugLog = !gArgs.IsArgNegated("-debuglogfile");
-    fLogTimestamps = gArgs.GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
-    fLogTimeMicros = gArgs.GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
-    fLogThreadNames = gArgs.GetBoolArg("-logthreadnames", DEFAULT_LOGTHREADNAMES);
+    g_logger->m_print_to_console = gArgs.GetBoolArg("-printtoconsole", !gArgs.GetBoolArg("-daemon", false));
+    g_logger->m_log_timestamps = gArgs.GetBoolArg("-logtimestamps", DEFAULT_LOGTIMESTAMPS);
+    g_logger->m_log_time_micros = gArgs.GetBoolArg("-logtimemicros", DEFAULT_LOGTIMEMICROS);
+    g_logger->m_log_thread_names = gArgs.GetBoolArg("-logthreadnames", DEFAULT_LOGTHREADNAMES);
+
     fLogIPs = gArgs.GetBoolArg("-logips", DEFAULT_LOGIPS);
 
     std::string version_string = FormatFullVersion();
@@ -1246,22 +1250,18 @@ bool AppInitParameterInteraction()
         if (std::none_of(categories.begin(), categories.end(),
             [](std::string cat){return cat == "0" || cat == "none";})) {
             for (const auto& cat : categories) {
-                uint64_t flag;
-                if (!GetLogCategory(&flag, &cat)) {
+                if (!g_logger->EnableCategory(cat)) {
                     InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debug", cat));
                 }
-                logCategories |= flag;
             }
         }
     }
 
     // Now remove the logging categories which were explicitly excluded
     for (const std::string& cat : gArgs.GetArgs("-debugexclude")) {
-        uint64_t flag;
-            if (!GetLogCategory(&flag, &cat)) {
-                InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat));
+        if (!g_logger->DisableCategory(cat)) {
+            InitWarning(strprintf(_("Unsupported logging category %s=%s."), "-debugexclude", cat));
         }
-        logCategories &= ~flag;
     }
 
     // Check for -debugnet
@@ -1699,18 +1699,19 @@ bool AppInitMain()
 #ifndef WIN32
     CreatePidFile(GetPidFile(), getpid());
 #endif
-    if (fPrintToDebugLog) {
-        if (gArgs.GetBoolArg("-shrinkdebugfile", logCategories == BCLog::NONE)) {
+    if (g_logger->m_print_to_file) {
+        if (gArgs.GetBoolArg("-shrinkdebugfile", g_logger->DefaultShrinkDebugFile())) {
             // Do this first since it both loads a bunch of debug.log into memory,
             // and because this needs to happen before any other debug.log printing
-            ShrinkDebugFile();
+            g_logger->ShrinkDebugFile();
         }
-        if (!OpenDebugLog()) {
-            return InitError(strprintf("Could not open debug log file %s", GetDebugLogPath().string()));
+        if (!g_logger->OpenDebugLog()) {
+            return InitError(strprintf("Could not open debug log file %s",
+                                       g_logger->m_file_path.string()));
         }
     }
 
-    if (!fLogTimestamps)
+    if (!g_logger->m_log_timestamps)
         LogPrintf("Startup time: %s\n", FormatISO8601DateTime(GetTime()));
     LogPrintf("Default data directory %s\n", GetDefaultDataDir().string());
     LogPrintf("Using data directory %s\n", GetDataDir().string());
