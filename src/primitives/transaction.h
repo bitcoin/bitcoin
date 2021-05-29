@@ -32,13 +32,7 @@ public:
     COutPoint(): n((uint32_t) -1) { }
     COutPoint(const uint256& hashIn, uint32_t nIn): hash(hashIn), n(nIn) { }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(hash);
-        READWRITE(n);
-    }
+    SERIALIZE_METHODS(COutPoint, obj) { READWRITE(obj.hash, obj.n); }
 
     void SetNull() { hash.SetNull(); n = (uint32_t) -1; }
     bool IsNull() const { return (hash.IsNull() && n == (uint32_t) -1); }
@@ -109,14 +103,7 @@ public:
     explicit CTxIn(COutPoint prevoutIn, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
     CTxIn(uint256 hashPrevTx, uint32_t nOut, CScript scriptSigIn=CScript(), uint32_t nSequenceIn=SEQUENCE_FINAL);
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(prevout);
-        READWRITE(scriptSig);
-        READWRITE(nSequence);
-    }
+    SERIALIZE_METHODS(CTxIn, obj) { READWRITE(obj.prevout, obj.scriptSig, obj.nSequence); }
 
     friend bool operator==(const CTxIn& a, const CTxIn& b)
     {
@@ -154,13 +141,7 @@ public:
 
     CTxOut(const CAmount& nValueIn, CScript scriptPubKeyIn);
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        READWRITE(nValue);
-        READWRITE(scriptPubKey);
-    }
+    SERIALIZE_METHODS(CTxOut, obj) { READWRITE(obj.nValue, obj.scriptPubKey); }
 
     void SetNull()
     {
@@ -297,21 +278,16 @@ struct CMutableTransaction
     CMutableTransaction();
     CMutableTransaction(const CTransaction& tx);
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        int32_t n32bitVersion = this->nVersion | (this->nType << 16);
+    SERIALIZE_METHODS(CMutableTransaction, obj)
+    {
+        int32_t n32bitVersion;
+        SER_WRITE(obj, n32bitVersion = obj.nVersion | (obj.nType << 16));
         READWRITE(n32bitVersion);
-        if (ser_action.ForRead()) {
-            this->nVersion = (int16_t) (n32bitVersion & 0xffff);
-            this->nType = (int16_t) ((n32bitVersion >> 16) & 0xffff);
-        }
-        READWRITE(vin);
-        READWRITE(vout);
-        READWRITE(nLockTime);
-        if (this->nVersion == 3 && this->nType != TRANSACTION_NORMAL) {
-            READWRITE(vExtraPayload);
+        SER_READ(obj, obj.nVersion = (int16_t) (n32bitVersion & 0xffff));
+        SER_READ(obj, obj.nType = (int16_t) ((n32bitVersion >> 16) & 0xffff));
+        READWRITE(obj.vin, obj.vout, obj.nLockTime);
+        if (obj.nVersion == 3 && obj.nType != TRANSACTION_NORMAL) {
+            READWRITE(obj.vExtraPayload);
         }
     }
 

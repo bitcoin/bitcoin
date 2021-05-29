@@ -127,10 +127,16 @@ def deser_vector(f, c):
     return r
 
 
-def ser_vector(l):
+# ser_function_name: Allow for an alternate serialization function on the
+# entries in the vector (we use this for serializing the vector of transactions
+# for a witness block).
+def ser_vector(l, ser_function_name=None):
     r = ser_compact_size(len(l))
     for i in l:
-        r += i.serialize()
+        if ser_function_name:
+            r += getattr(i, ser_function_name)()
+        else:
+            r += i.serialize()
     return r
 
 

@@ -79,23 +79,19 @@ public:
         nTime(GetTime()),
         fProcessed(false) {}
 
-    ADD_SERIALIZE_METHODS
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CQuorumDataRequest, obj)
     {
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(nDataMask);
-        READWRITE(proTxHash);
-        if (ser_action.ForRead()) {
+        bool fRead{false};
+        SER_READ(obj, fRead = true);
+        READWRITE(obj.llmqType, obj.quorumHash, obj.nDataMask, obj.proTxHash);
+        if (fRead) {
             try {
-                READWRITE(nError);
+                READWRITE(obj.nError);
             } catch (...) {
-                nError = UNDEFINED;
+                SER_READ(obj, obj.nError = UNDEFINED);
             }
-        } else if (nError != UNDEFINED) {
-            READWRITE(nError);
+        } else if (obj.nError != UNDEFINED) {
+            READWRITE(obj.nError);
         }
     }
 

@@ -310,15 +310,9 @@ struct stackframe_info {
     int lineno{-1};
     std::string function;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(stackframe_info, obj)
     {
-        READWRITE(pc);
-        READWRITE(filename);
-        READWRITE(lineno);
-        READWRITE(function);
+        READWRITE(obj.pc, obj.filename, obj.lineno, obj.function);
     }
 };
 
@@ -376,14 +370,9 @@ struct crash_info_header
     uint16_t version;
     std::string exeFileName;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(crash_info_header, obj)
     {
-        READWRITE(magic);
-        READWRITE(version);
-        READWRITE(exeFileName);
+        READWRITE(obj.magic, obj.version, obj.exeFileName);
     }
 };
 
@@ -393,14 +382,9 @@ struct crash_info
     std::vector<uint64_t> stackframes;
     std::vector<stackframe_info> stackframeInfos;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(crash_info, obj)
     {
-        READWRITE(crashDescription);
-        READWRITE(stackframes);
-        READWRITE(stackframeInfos);
+        READWRITE(obj.crashDescription, obj.stackframes, obj.stackframeInfos);
     }
 
     void ConvertAddresses(int64_t offset)

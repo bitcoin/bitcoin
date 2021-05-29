@@ -41,19 +41,7 @@ struct CoinEntry {
     char key;
     explicit CoinEntry(const COutPoint* ptr) : outpoint(const_cast<COutPoint*>(ptr)), key(DB_COIN)  {}
 
-    template<typename Stream>
-    void Serialize(Stream &s) const {
-        s << key;
-        s << outpoint->hash;
-        s << VARINT(outpoint->n);
-    }
-
-    template<typename Stream>
-    void Unserialize(Stream& s) {
-        s >> key;
-        s >> outpoint->hash;
-        s >> VARINT(outpoint->n);
-    }
+    SERIALIZE_METHODS(CoinEntry, obj) { READWRITE(obj.key, obj.outpoint->hash, VARINT(obj.outpoint->n)); }
 };
 
 }

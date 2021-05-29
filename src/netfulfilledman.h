@@ -22,19 +22,17 @@ private:
 
     //keep track of what node has/was asked for and when
     fulfilledreqmap_t mapFulfilledRequests;
-    CCriticalSection cs_mapFulfilledRequests;
+    mutable CCriticalSection cs_mapFulfilledRequests;
 
     void RemoveFulfilledRequest(const CService& addr, const std::string& strRequest);
 
 public:
     CNetFulfilledRequestManager() {}
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        LOCK(cs_mapFulfilledRequests);
-        READWRITE(mapFulfilledRequests);
+    SERIALIZE_METHODS(CNetFulfilledRequestManager, obj)
+    {
+        LOCK(obj.cs_mapFulfilledRequests);
+        READWRITE(obj.mapFulfilledRequests);
     }
 
     void AddFulfilledRequest(const CService& addr, const std::string& strRequest);

@@ -95,17 +95,16 @@ public:
     CDKGComplaint() = default;
     explicit CDKGComplaint(const Consensus::LLMQParams& params);
 
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CDKGComplaint, obj)
     {
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(proTxHash);
-        READWRITE(DYNBITSET(badMembers));
-        READWRITE(DYNBITSET(complainForMembers));
-        READWRITE(sig);
+        READWRITE(
+                obj.llmqType,
+                obj.quorumHash,
+                obj.proTxHash,
+                DYNBITSET(obj.badMembers),
+                DYNBITSET(obj.complainForMembers),
+                obj.sig
+                );
     }
 
     uint256 GetSignHash() const
@@ -126,16 +125,9 @@ public:
     CBLSSignature sig;
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CDKGJustification, obj)
     {
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(proTxHash);
-        READWRITE(contributions);
-        READWRITE(sig);
+        READWRITE(obj.llmqType, obj.quorumHash, obj.proTxHash, obj.contributions, obj.sig);
     }
 
     uint256 GetSignHash() const
@@ -174,19 +166,18 @@ public:
     }
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CDKGPrematureCommitment, obj)
     {
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(proTxHash);
-        READWRITE(DYNBITSET(validMembers));
-        READWRITE(quorumPublicKey);
-        READWRITE(quorumVvecHash);
-        READWRITE(quorumSig);
-        READWRITE(sig);
+        READWRITE(
+                obj.llmqType,
+                obj.quorumHash,
+                obj.proTxHash,
+                DYNBITSET(obj.validMembers),
+                obj.quorumPublicKey,
+                obj.quorumVvecHash,
+                obj.quorumSig,
+                obj.sig
+                );
     }
 
     uint256 GetSignHash() const

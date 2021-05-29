@@ -22,19 +22,11 @@ public:
     QDateTime date;
     SendCoinsRecipient recipient;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action) {
-        unsigned int nDate = date.toTime_t();
-
-        READWRITE(this->nVersion);
-        READWRITE(id);
-        READWRITE(nDate);
-        READWRITE(recipient);
-
-        if (ser_action.ForRead())
-            date = QDateTime::fromTime_t(nDate);
+    SERIALIZE_METHODS(RecentRequestEntry, obj) {
+        unsigned int date_timet;
+        SER_WRITE(obj, date_timet = obj.date.toTime_t());
+        READWRITE(obj.nVersion, obj.id, date_timet, obj.recipient);
+        SER_READ(obj, obj.date = QDateTime::fromTime_t(date_timet));
     }
 };
 

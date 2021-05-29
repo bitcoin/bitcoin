@@ -37,24 +37,23 @@ public:
     std::vector<unsigned char> vchSig;
 
 public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CProRegTx, obj)
     {
-        READWRITE(nVersion);
-        READWRITE(nType);
-        READWRITE(nMode);
-        READWRITE(collateralOutpoint);
-        READWRITE(addr);
-        READWRITE(keyIDOwner);
-        READWRITE(pubKeyOperator);
-        READWRITE(keyIDVoting);
-        READWRITE(nOperatorReward);
-        READWRITE(scriptPayout);
-        READWRITE(inputsHash);
+        READWRITE(
+                obj.nVersion,
+                obj.nType,
+                obj.nMode,
+                obj.collateralOutpoint,
+                obj.addr,
+                obj.keyIDOwner,
+                obj.pubKeyOperator,
+                obj.keyIDVoting,
+                obj.nOperatorReward,
+                obj.scriptPayout,
+                obj.inputsHash
+                );
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            READWRITE(obj.vchSig);
         }
     }
 
@@ -100,18 +99,11 @@ public:
     CBLSSignature sig;
 
 public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CProUpServTx, obj)
     {
-        READWRITE(nVersion);
-        READWRITE(proTxHash);
-        READWRITE(addr);
-        READWRITE(scriptOperatorPayout);
-        READWRITE(inputsHash);
+        READWRITE(obj.nVersion, obj.proTxHash, obj.addr, obj.scriptOperatorPayout, obj.inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(sig);
+            READWRITE(obj.sig);
         }
     }
 
@@ -149,20 +141,19 @@ public:
     std::vector<unsigned char> vchSig;
 
 public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CProUpRegTx, obj)
     {
-        READWRITE(nVersion);
-        READWRITE(proTxHash);
-        READWRITE(nMode);
-        READWRITE(pubKeyOperator);
-        READWRITE(keyIDVoting);
-        READWRITE(scriptPayout);
-        READWRITE(inputsHash);
+        READWRITE(
+                obj.nVersion,
+                obj.proTxHash,
+                obj.nMode,
+                obj.pubKeyOperator,
+                obj.keyIDVoting,
+                obj.scriptPayout,
+                obj.inputsHash
+                );
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            READWRITE(obj.vchSig);
         }
     }
 
@@ -207,17 +198,11 @@ public:
     CBLSSignature sig;
 
 public:
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CProUpRevTx, obj)
     {
-        READWRITE(nVersion);
-        READWRITE(proTxHash);
-        READWRITE(nReason);
-        READWRITE(inputsHash);
+        READWRITE(obj.nVersion, obj.proTxHash, obj.nReason, obj.inputsHash);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(sig);
+            READWRITE(obj.sig);
         }
     }
 

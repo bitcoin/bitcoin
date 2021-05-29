@@ -28,13 +28,9 @@ struct CacheItem
     K key;
     V value;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CacheItem, obj)
     {
-        READWRITE(key);
-        READWRITE(value);
+        READWRITE(obj.key, obj.value);
     }
 };
 
@@ -154,16 +150,10 @@ public:
         return *this;
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CacheMap, obj)
     {
-        READWRITE(nMaxSize);
-        READWRITE(listItems);
-        if(ser_action.ForRead()) {
-            RebuildIndex();
-        }
+        READWRITE(obj.nMaxSize, obj.listItems);
+        SER_READ(obj, obj.RebuildIndex());
     }
 
 private:

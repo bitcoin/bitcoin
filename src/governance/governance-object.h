@@ -61,18 +61,12 @@ struct vote_instance_t {
     {
     }
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(vote_instance_t, obj)
     {
-        int nOutcome = int(eOutcome);
-        READWRITE(nOutcome);
-        READWRITE(nTime);
-        READWRITE(nCreationTime);
-        if (ser_action.ForRead()) {
-            eOutcome = vote_outcome_enum_t(nOutcome);
-        }
+        int nOutcome;
+        SER_WRITE(obj, nOutcome = int(obj.eOutcome));
+        READWRITE(nOutcome, obj.nTime, obj.nCreationTime);
+        SER_READ(obj, obj.eOutcome = vote_outcome_enum_t(nOutcome));
     }
 };
 
@@ -81,12 +75,9 @@ typedef std::map<int, vote_instance_t> vote_instance_m_t;
 struct vote_rec_t {
     vote_instance_m_t mapInstances;
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(vote_rec_t, obj)
     {
-        READWRITE(mapInstances);
+        READWRITE(obj.mapInstances);
     }
 };
 
@@ -292,30 +283,26 @@ public:
 
     // SERIALIZER
 
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CGovernanceObject, obj)
     {
         // SERIALIZE DATA FOR SAVING/LOADING OR NETWORK FUNCTIONS
-        READWRITE(nHashParent);
-        READWRITE(nRevision);
-        READWRITE(nTime);
-        READWRITE(nCollateralHash);
-        READWRITE(vchData);
-        READWRITE(nObjectType);
-        READWRITE(masternodeOutpoint);
+        READWRITE(
+                obj.nHashParent,
+                obj.nRevision,
+                obj.nTime,
+                obj.nCollateralHash,
+                obj.vchData,
+                obj.nObjectType,
+                obj.masternodeOutpoint
+                );
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchSig);
+            READWRITE(obj.vchSig);
         }
         if (s.GetType() & SER_DISK) {
             // Only include these for the disk file format
             LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp Reading/writing votes from/to disk\n");
-            READWRITE(nDeletionTime);
-            READWRITE(fExpired);
-            READWRITE(mapCurrentMNVotes);
-            READWRITE(fileVotes);
-            LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp hash = %s, vote count = %d\n", GetHash().ToString(), fileVotes.GetVoteCount());
+            READWRITE(obj.nDeletionTime, obj.fExpired, obj.mapCurrentMNVotes, obj.fileVotes);
+            LogPrint(BCLog::GOBJECT, "CGovernanceObject::SerializationOp hash = %s, vote count = %d\n", obj.GetHash().ToString(), obj.fileVotes.GetVoteCount());
         }
 
         // AFTER DESERIALIZATION OCCURS, CACHED VARIABLES MUST BE CALCULATED MANUALLY

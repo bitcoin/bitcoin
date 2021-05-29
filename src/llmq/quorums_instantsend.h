@@ -26,14 +26,9 @@ public:
     CBLSLazySignature sig;
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CInstantSendLock, obj)
     {
-        READWRITE(inputs);
-        READWRITE(txid);
-        READWRITE(sig);
+        READWRITE(obj.inputs, obj.txid, obj.sig);
     }
 
     uint256 GetRequestId() const;

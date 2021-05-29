@@ -18,14 +18,9 @@ public:
     uint256 GetIV(size_t idx) const;
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CBLSIESEncryptedBlob, obj)
     {
-        READWRITE(ephemeralPubKey);
-        READWRITE(ivSeed);
-        READWRITE(data);
+        READWRITE(obj.ephemeralPubKey, obj.ivSeed, obj.data);
     }
 
 public:
@@ -98,14 +93,9 @@ public:
     bool Decrypt(size_t idx, const CBLSSecretKey& sk, Blob& blobRet) const;
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CBLSIESMultiRecipientBlobs, obj)
     {
-        READWRITE(ephemeralPubKey);
-        READWRITE(ivSeed);
-        READWRITE(blobs);
+        READWRITE(obj.ephemeralPubKey, obj.ivSeed, obj.blobs);
     }
 };
 

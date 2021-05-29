@@ -54,20 +54,19 @@ public:
     bool VerifySizes(const Consensus::LLMQParams& params) const;
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CFinalCommitment, obj)
     {
-        READWRITE(nVersion);
-        READWRITE(llmqType);
-        READWRITE(quorumHash);
-        READWRITE(DYNBITSET(signers));
-        READWRITE(DYNBITSET(validMembers));
-        READWRITE(quorumPublicKey);
-        READWRITE(quorumVvecHash);
-        READWRITE(quorumSig);
-        READWRITE(membersSig);
+        READWRITE(
+                obj.nVersion,
+                obj.llmqType,
+                obj.quorumHash,
+                DYNBITSET(obj.signers),
+                DYNBITSET(obj.validMembers),
+                obj.quorumPublicKey,
+                obj.quorumVvecHash,
+                obj.quorumSig,
+                obj.membersSig
+                );
     }
 
 public:
@@ -115,14 +114,9 @@ public:
     CFinalCommitment commitment;
 
 public:
-    ADD_SERIALIZE_METHODS
-
-    template<typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action)
+    SERIALIZE_METHODS(CFinalCommitmentTxPayload, obj)
     {
-        READWRITE(nVersion);
-        READWRITE(nHeight);
-        READWRITE(commitment);
+        READWRITE(obj.nVersion, obj.nHeight, obj.commitment);
     }
 
     void ToJson(UniValue& obj) const
