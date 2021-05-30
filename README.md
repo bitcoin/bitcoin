@@ -17,7 +17,7 @@ with no central authority: managing transactions and issuing money are carried
 out collectively by the network. Bitcoin Core is the name of open source
 software which enables the use of this currency.
 
-For more information read the original Bitcoin whitepaper.
+For more information read the original Bitcoin [whitepaper](https://bitcoin.org/bitcoin.pdf).
 
 License
 -------
