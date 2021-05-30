@@ -120,6 +120,9 @@ public:
         // release ASAP to avoid it where possible.
         vSeeds.emplace_back("seed01.widecoin.org");
         vSeeds.emplace_back("seed02.widecoin.org");
+        vSeeds.emplace_back("seed03.widecoin.org");
+        vSeeds.emplace_back("seed04.widecoin.org");
+        vSeeds.emplace_back("seed05.widecoin.org");
 
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,73);
