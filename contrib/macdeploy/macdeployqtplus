@@ -52,7 +52,7 @@ class FrameworkInfo(object):
             return False
     
     def __str__(self):
-        return f""" Framework name: {frameworkName}
+        return f""" Framework name: {self.frameworkName}
  Framework directory: {self.frameworkDirectory}
  Framework path: {self.frameworkPath}
  Binary name: {self.binaryName}
