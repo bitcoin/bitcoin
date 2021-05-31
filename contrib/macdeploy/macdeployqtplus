@@ -16,7 +16,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import plistlib
 import sys, re, os, shutil, stat, os.path
 from argparse import ArgumentParser
 from ds_store import DSStore
