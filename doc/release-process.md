@@ -373,9 +373,7 @@ bitcoin.org (see below for bitcoin.org update instructions).
 
   - Bitcoin Core announcements list https://bitcoincore.org/en/list/announcements/join/
 
-  - Update title of #bitcoin on Freenode IRC
-
-  - Optionally twitter, reddit /r/Bitcoin, ... but this will usually sort out itself
+  - Bitcoin Core Twitter https://twitter.com/bitcoincoreorg
 
   - Celebrate
 
