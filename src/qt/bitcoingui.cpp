@@ -47,6 +47,7 @@
 #include <QApplication>
 #include <QButtonGroup>
 #include <QComboBox>
+#include <QCursor>
 #include <QDateTime>
 #include <QDragEnterEvent>
 #include <QKeySequence>
@@ -211,8 +212,6 @@ BitcoinGUI::BitcoinGUI(interfaces::Node& node, const NetworkStyle* networkStyle,
     // Subscribe to notifications from core
     subscribeToCoreSignals();
 
-    // Jump to peers tab by clicking on connections icon
-    connect(labelConnectionsIcon, &GUIUtil::ClickableLabel::clicked, this, &BitcoinGUI::showPeers);
     connect(labelProxyIcon, &GUIUtil::ClickableLabel::clicked, [this] {
         openOptionsDialogWithTab(OptionsDialog::TAB_NETWORK);
     });
@@ -812,8 +811,11 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel, interfaces::BlockAndH
         }
 
         // Keep up to date with client
-        updateNetworkState();
+        setNetworkActive(m_node.getNetworkActive());
         setNumConnections(_clientModel->getNumConnections());
+        connect(labelConnectionsIcon, &GUIUtil::ClickableLabel::clicked, [this] {
+            GUIUtil::PopupMenu(m_network_context_menu, QCursor::pos());
+        });
         connect(_clientModel, &ClientModel::numConnectionsChanged, this, &BitcoinGUI::setNumConnections);
         connect(_clientModel, &ClientModel::networkActiveChanged, this, &BitcoinGUI::setNetworkActive);
 
@@ -1270,13 +1272,20 @@ void BitcoinGUI::updateNetworkState()
     nCountPrev = count;
     fNetworkActivePrev = fNetworkActive;
 
+    QString tooltip;
     if (fNetworkActive) {
-        labelConnectionsIcon->setToolTip(tr("%n active connection(s) to Dash network", "", count));
+        //: A substring of the tooltip.
+        tooltip = tr("%n active connection(s) to Dash network", "", count);
     } else {
-        labelConnectionsIcon->setToolTip(tr("Network activity disabled"));
+        tooltip = tr("Network activity disabled");
         icon = "connect_4";
         color = GUIUtil::ThemedColor::RED;
     }
+
+    // Don't word-wrap this (fixed-width) tooltip
+    tooltip = QLatin1String("<nobr>") + tooltip + QLatin1String("<br>") +
+              //: A substring of the tooltip. "More actions" are available via the context menu.
+              tr("Click for more actions.") + QLatin1String("</nobr>");
 
     if (fNetworkActive && count == 0) {
         startConnectingAnimation();
@@ -1285,6 +1294,7 @@ void BitcoinGUI::updateNetworkState()
         stopConnectingAnimation();
         labelConnectionsIcon->setPixmap(GUIUtil::getIcon(icon, color).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
     }
+    labelConnectionsIcon->setToolTip(tooltip);
 }
 
 void BitcoinGUI::setNumConnections(int count)
@@ -1292,9 +1302,24 @@ void BitcoinGUI::setNumConnections(int count)
     updateNetworkState();
 }
 
-void BitcoinGUI::setNetworkActive(bool networkActive)
+void BitcoinGUI::setNetworkActive(bool network_active)
 {
     updateNetworkState();
+    m_network_context_menu->clear();
+    m_network_context_menu->addAction(
+        //: A context menu item. The "Peers tab" is an element of the "Node window".
+        tr("Show Peers tab"),
+        [this] {
+            rpcConsole->setTabFocus(RPCConsole::TabTypes::PEERS);
+            showDebugWindow();
+        });
+    m_network_context_menu->addAction(
+        network_active ?
+            //: A context menu item.
+            tr("Disable network activity") :
+            //: A context menu item. The network activity was disabled previously.
+            tr("Enable network activity"),
+        [this, new_state = !network_active] { m_node.setNetworkActive(new_state); });
 }
 
 void BitcoinGUI::updateHeadersSyncProgressLabel()
