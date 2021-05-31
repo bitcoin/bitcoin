@@ -133,6 +133,9 @@ public:
     //! List locked coins.
     virtual void listLockedCoins(std::vector<COutPoint>& outputs) = 0;
 
+    //! Whether this address has been used.
+    virtual bool isUsedAddress(const CTxDestination& dst) = 0;
+
     //! Create transaction.
     virtual CTransactionRef createTransaction(const std::vector<CRecipient>& recipients,
         const CCoinControl& coin_control,
@@ -341,9 +344,10 @@ struct WalletAddress
     isminetype is_mine;
     std::string name;
     std::string purpose;
+    bool is_used;
 
-    WalletAddress(CTxDestination dest, isminetype is_mine, std::string name, std::string purpose)
-        : dest(std::move(dest)), is_mine(is_mine), name(std::move(name)), purpose(std::move(purpose))
+    WalletAddress(CTxDestination dest, isminetype is_mine, std::string name, std::string purpose, bool is_used)
+        : dest(std::move(dest)), is_mine(is_mine), name(std::move(name)), purpose(std::move(purpose)), is_used(is_used)
     {
     }
 };

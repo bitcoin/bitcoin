@@ -875,6 +875,22 @@ bool CWallet::IsSpentKey(const uint256& hash, unsigned int n) const
     return false;
 }
 
+void CWallet::SetUsedAddressState(WalletBatch& batch, const CTxOut& cout, uint256 hash)
+{
+    AssertLockHeld(cs_wallet);
+    CTxDestination dst;
+    if (ExtractDestination(cout.scriptPubKey, dst) && IsMine(dst)) {
+        AddDestData(batch, dst, "first_txid", hash.ToString());
+        NotifyAddressBookChanged(this, dst, m_address_book[dst].GetLabel(), IsMine(dst) != ISMINE_NO, "receive", CT_UPDATED );
+    }
+}
+
+bool CWallet::IsUsedAddress(const CTxDestination& dst) const
+{
+    AssertLockHeld(cs_wallet);
+    return GetDestData(dst, "first_txid", nullptr);
+}
+
 CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmation& confirm, const UpdateWalletTxFn& update_wtx, bool fFlushOnClose)
 {
     LOCK(cs_wallet);
@@ -890,6 +906,10 @@ CWalletTx* CWallet::AddToWallet(CTransactionRef tx, const CWalletTx::Confirmatio
         for (const CTxIn& txin : tx->vin) {
             const COutPoint& op = txin.prevout;
             SetSpentKeyState(batch, op.hash, op.n, true, tx_destinations);
+        }
+
+        for (const CTxOut& txout : tx->vout) {
+            SetUsedAddressState(batch, txout, hash);
         }
 
         MarkDestinationsDirty(tx_destinations);

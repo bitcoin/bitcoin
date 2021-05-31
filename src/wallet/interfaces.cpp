@@ -193,7 +193,7 @@ public:
         std::vector<WalletAddress> result;
         for (const auto& item : m_wallet->m_address_book) {
             if (item.second.IsChange()) continue;
-            result.emplace_back(item.first, m_wallet->IsMine(item.first), item.second.GetLabel(), item.second.purpose);
+            result.emplace_back(item.first, m_wallet->IsMine(item.first), item.second.GetLabel(), item.second.purpose, m_wallet->IsUsedAddress(item.first));
         }
         return result;
     }
@@ -230,6 +230,11 @@ public:
     {
         LOCK(m_wallet->cs_wallet);
         return m_wallet->ListLockedCoins(outputs);
+    }
+    bool isUsedAddress(const CTxDestination& dst) override
+    {
+        LOCK(m_wallet->cs_wallet);
+        return m_wallet->IsUsedAddress(dst);
     }
     CTransactionRef createTransaction(const std::vector<CRecipient>& recipients,
         const CCoinControl& coin_control,

@@ -456,6 +456,9 @@ public:
     void SetSpentKeyState(WalletBatch& batch, const uint256& hash, unsigned int n, bool used, std::set<CTxDestination>& tx_destinations) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     std::vector<OutputGroup> GroupOutputs(const std::vector<COutput>& outputs, const CoinSelectionParams& coin_sel_params, const CoinEligibilityFilter& filter, bool positive_only) const;
+    //! Whether this address has been used.
+    void SetUsedAddressState(WalletBatch& batch, const CTxOut& cout, uint256 hash) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
+    bool IsUsedAddress(const CTxDestination& dst) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 
     /** Display address on an external signer. Returns false if external signer support is not compiled */
     bool DisplayAddress(const CTxDestination& dest) EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);

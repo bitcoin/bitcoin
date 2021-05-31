@@ -130,10 +130,10 @@ void WalletModel::updateTransaction()
 }
 
 void WalletModel::updateAddressBook(const QString &address, const QString &label,
-        bool isMine, const QString &purpose, int status)
+        bool isMine, const QString &purpose, int status, bool is_used)
 {
     if(addressTableModel)
-        addressTableModel->updateEntry(address, label, isMine, purpose, status);
+        addressTableModel->updateEntry(address, label, isMine, purpose, status, is_used);
 }
 
 void WalletModel::updateWatchOnlyFlag(bool fHaveWatchonly)
@@ -371,7 +371,8 @@ static void NotifyAddressBookChanged(WalletModel *walletmodel,
                               Q_ARG(QString, strLabel),
                               Q_ARG(bool, isMine),
                               Q_ARG(QString, strPurpose),
-                              Q_ARG(int, status));
+                              Q_ARG(int, status),
+                              Q_ARG(bool, walletmodel->wallet().isUsedAddress(address)));
     assert(invoked);
 }
 
