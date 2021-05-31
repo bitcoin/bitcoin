@@ -16,6 +16,7 @@ make assumptions about execution order.
 from decimal import Decimal
 import io
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.blocktools import add_witness_commitment, create_block, create_coinbase, send_to_witness
 from test_framework.messages import BIP125_SEQUENCE_NUMBER, CTransaction
 from test_framework.test_framework import BitcoinTestFramework
@@ -265,7 +266,7 @@ def test_small_output_with_feerate_succeeds(self, rbf_node, dest_address):
     self.log.info('Testing small output with feerate bump succeeds')
 
     # Make sure additional inputs exist
-    rbf_node.generatetoaddress(101, rbf_node.getnewaddress())
+    rbf_node.generatetoaddress(COINBASE_MATURITY + 1, rbf_node.getnewaddress())
     rbfid = spend_one_input(rbf_node, dest_address)
     input_list = rbf_node.getrawtransaction(rbfid, 1)["vin"]
     assert_equal(len(input_list), 1)

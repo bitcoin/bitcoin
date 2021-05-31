@@ -8,7 +8,10 @@ Test re-org scenarios with a mempool that contains transactions
 that spend (directly or indirectly) coinbase transactions.
 """
 
-from test_framework.blocktools import create_raw_transaction
+from test_framework.blocktools import (
+    COINBASE_MATURITY,
+    create_raw_transaction,
+)
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
@@ -44,7 +47,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         # 3. Indirect (coinbase and child both in chain) : spend_103 and spend_103_1
         # Use invalidatblock to make all of the above coinbase spends invalid (immature coinbase),
         # and make sure the mempool code behaves correctly.
-        b = [self.nodes[0].getblockhash(n) for n in range(101, 105)]
+        b = [self.nodes[0].getblockhash(n) for n in range(COINBASE_MATURITY + 1, COINBASE_MATURITY + 5)]
         coinbase_txids = [self.nodes[0].getblock(h)['tx'][0] for h in b]
         spend_101_raw = create_raw_transaction(self.nodes[0], coinbase_txids[1], node1_address, amount=49.99)
         spend_102_raw = create_raw_transaction(self.nodes[0], coinbase_txids[2], node0_address, amount=49.99)

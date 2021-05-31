@@ -5,6 +5,7 @@
 """Test the importprunedfunds and removeprunedfunds RPCs."""
 from decimal import Decimal
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.address import key_to_p2wpkh
 from test_framework.key import ECKey
 from test_framework.test_framework import BitcoinTestFramework
@@ -24,7 +25,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
     def run_test(self):
         self.log.info("Mining blocks...")
-        self.nodes[0].generate(101)
+        self.nodes[0].generate(COINBASE_MATURITY + 1)
 
         self.sync_all()
 
@@ -46,7 +47,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         self.sync_all()
 
         # Node 1 sync test
-        assert_equal(self.nodes[1].getblockcount(), 101)
+        assert_equal(self.nodes[1].getblockcount(), COINBASE_MATURITY + 1)
 
         # Address Test - before import
         address_info = self.nodes[1].getaddressinfo(address1)

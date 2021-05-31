@@ -6,6 +6,7 @@
 from decimal import Decimal
 from itertools import product
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import (
     assert_array_result,
@@ -65,7 +66,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(walletinfo['balance'], 0)
 
         self.sync_all(self.nodes[0:3])
-        self.nodes[1].generate(101)
+        self.nodes[1].generate(COINBASE_MATURITY + 1)
         self.sync_all(self.nodes[0:3])
 
         assert_equal(self.nodes[0].getbalance(), 50)
@@ -158,7 +159,7 @@ class WalletTest(BitcoinTestFramework):
         assert_equal(len(self.nodes[1].listlockunspent()), 0)
 
         # Have node1 generate 100 blocks (so node0 can recover the fee)
-        self.nodes[1].generate(100)
+        self.nodes[1].generate(COINBASE_MATURITY)
         self.sync_all(self.nodes[0:3])
 
         # node0 should end up with 100 btc in block rewards plus fees, but
