@@ -4174,10 +4174,10 @@ static RPCHelpMan send()
             PartiallySignedTransaction psbtx(rawTx);
 
             // First fill transaction with our data without signing,
-            // so external signers are not asked sign more than once.
+            // so external signers are not asked to sign more than once.
             bool complete;
-            pwallet->FillPSBT(psbtx, complete, SIGHASH_DEFAULT, false, true);
-            const TransactionError err = pwallet->FillPSBT(psbtx, complete, SIGHASH_DEFAULT, true, false);
+            pwallet->FillPSBT(psbtx, complete, SIGHASH_DEFAULT, false /* sign */, true /* bip32derivs */);
+            const TransactionError err = pwallet->FillPSBT(psbtx, complete, SIGHASH_DEFAULT, true /* sign */, false /* bip32derivs */);
             if (err != TransactionError::OK) {
                 throw JSONRPCTransactionError(err);
             }
