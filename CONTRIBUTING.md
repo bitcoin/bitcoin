@@ -57,8 +57,8 @@ Communication Channels
 ----------------------
 
 Most communication about Bitcoin Core development happens on IRC, in the
-`#bitcoin-core-dev` channel on Freenode. The easiest way to participate on IRC is
-with the web client, [webchat.freenode.net](https://webchat.freenode.net/). Chat
+`#bitcoin-core-dev` channel on Libera Chat. The easiest way to participate on IRC is
+with the web client, [web.libera.chat](https://web.libera.chat/#bitcoin-core-dev). Chat
 history logs can be found
 on [http://www.erisian.com.au/bitcoin-core-dev/](http://www.erisian.com.au/bitcoin-core-dev/)
 and [http://gnusha.org/bitcoin-core-dev/](http://gnusha.org/bitcoin-core-dev/).
