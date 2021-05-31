@@ -172,6 +172,13 @@ bool Session::Accept(Connection& conn)
 
 bool Session::Connect(const CService& to, Connection& conn, bool& proxy_error)
 {
+    // Refuse connecting to arbitrary ports. We don't specify any destination port to the SAM proxy
+    // when connecting (SAM 3.1 does not use ports) and it forces/defaults it to I2P_SAM31_PORT.
+    if (to.GetPort() != I2P_SAM31_PORT) {
+        proxy_error = false;
+        return false;
+    }
+
     proxy_error = true;
 
     std::string session_id;
