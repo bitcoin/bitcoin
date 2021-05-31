@@ -12,6 +12,7 @@ the index.
 from decimal import Decimal
 
 from test_framework.blocktools import (
+    COINBASE_MATURITY,
     create_block,
     create_coinbase,
 )
@@ -68,7 +69,7 @@ class CoinStatsIndexTest(SyscoinTestFramework):
         index_hash_options = ['none', 'muhash']
 
         # Generate a normal transaction and mine it
-        node.generate(101)
+        node.generate(COINBASE_MATURITY + 1)
         address = self.nodes[0].get_deterministic_priv_key().address
         node.sendtoaddress(address=address, amount=10, subtractfeefromamount=True)
         node.generate(1)

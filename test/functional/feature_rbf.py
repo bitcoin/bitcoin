@@ -6,6 +6,7 @@
 
 from decimal import Decimal
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import COIN, COutPoint, CTransaction, CTxIn, CTxOut
 from test_framework.script import CScript, OP_DROP
 from test_framework.test_framework import SyscoinTestFramework
@@ -27,7 +28,7 @@ def make_utxo(node, amount, confirmed=True, scriptPubKey=DUMMY_P2WPKH_SCRIPT):
     """
     fee = 1*COIN
     while node.getbalance() < satoshi_round((amount + fee)/COIN):
-        node.generate(100)
+        node.generate(COINBASE_MATURITY)
 
     new_addr = node.getnewaddress()
     txid = node.sendtoaddress(new_addr, satoshi_round((amount+fee)/COIN))

@@ -16,6 +16,7 @@ variants.
   and test the values returned."""
 
 from test_framework.address import key_to_p2pkh
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.test_framework import SyscoinTestFramework
 from test_framework.descriptors import descsum_create
 from test_framework.util import (
@@ -73,7 +74,7 @@ class ImportDescriptorsTest(SyscoinTestFramework):
         assert_equal(wpriv.getwalletinfo()['keypoolsize'], 0)
 
         self.log.info('Mining coins')
-        w0.generatetoaddress(101, w0.getnewaddress())
+        w0.generatetoaddress(COINBASE_MATURITY + 1, w0.getnewaddress())
 
         # RPC importdescriptors -----------------------------------------------
 

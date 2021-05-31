@@ -31,7 +31,11 @@ Start three nodes:
 """
 import time
 
-from test_framework.blocktools import (create_block, create_coinbase)
+from test_framework.blocktools import (
+    COINBASE_MATURITY,
+    create_block,
+    create_coinbase,
+)
 from test_framework.key import ECKey
 from test_framework.messages import (
     CBlockHeader,
@@ -179,7 +183,8 @@ class AssumeValidTest(SyscoinTestFramework):
 
         # Send blocks to node0. Block 102 will be rejected.
         self.send_blocks_until_disconnected(p2p0)
-        self.assert_blockchain_height(self.nodes[0], 101)
+        self.wait_until(lambda: self.nodes[0].getblockcount() >= COINBASE_MATURITY + 1)
+        assert_equal(self.nodes[0].getblockcount(), COINBASE_MATURITY + 1)
 
         # Send all blocks to node1. All blocks will be accepted.
         for i in range(2202):
@@ -192,7 +197,8 @@ class AssumeValidTest(SyscoinTestFramework):
         self.send_blocks_until_disconnected(p2p2)
         # SYSCOIN
         self.bump_mocktime(5)
-        self.assert_blockchain_height(self.nodes[2], 101)
+        self.wait_until(lambda: self.nodes[2].getblockcount() >= COINBASE_MATURITY + 1)
+        assert_equal(self.nodes[2].getblockcount(), COINBASE_MATURITY + 1)
 
 
 if __name__ == '__main__':

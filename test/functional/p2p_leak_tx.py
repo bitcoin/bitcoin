@@ -4,6 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test that we don't leak txs to inbound peers that we haven't yet announced to"""
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import msg_getdata, CInv, MSG_TX
 from test_framework.p2p import p2p_lock, P2PDataStore
 from test_framework.test_framework import SyscoinTestFramework
@@ -27,7 +28,7 @@ class P2PLeakTxTest(SyscoinTestFramework):
         miniwallet = MiniWallet(gen_node)
         # Add enough mature utxos to the wallet, so that all txs spend confirmed coins
         miniwallet.generate(1)
-        gen_node.generate(100)
+        gen_node.generate(COINBASE_MATURITY)
 
         inbound_peer = self.nodes[0].add_p2p_connection(P2PNode())  # An "attacking" inbound peer
 

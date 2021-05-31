@@ -6,6 +6,7 @@
 
 import time
 
+from test_framework.blocktools import COINBASE_MATURITY
 from test_framework.messages import msg_tx
 from test_framework.p2p import P2PInterface, P2PTxInvStore
 from test_framework.test_framework import SyscoinTestFramework
@@ -23,7 +24,7 @@ class P2PBlocksOnly(SyscoinTestFramework):
         self.miniwallet = MiniWallet(self.nodes[0])
         # Add enough mature utxos to the wallet, so that all txs spend confirmed coins
         self.miniwallet.generate(2)
-        self.nodes[0].generate(100)
+        self.nodes[0].generate(COINBASE_MATURITY)
 
         self.blocksonly_mode_tests()
         self.blocks_relay_conn_tests()
