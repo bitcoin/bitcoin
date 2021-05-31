@@ -28,7 +28,7 @@ public:
         unsigned int date_timet;
         SER_WRITE(obj, date_timet = obj.date.toTime_t());
         READWRITE(obj.nVersion, obj.id, date_timet, obj.recipient);
-        SER_READ(obj, obj.date = QDateTime::fromTime_t(date_timet));
+        SER_READ(obj, obj.date = QDateTime::fromSecsSinceEpoch(date_timet));
     }
 };
 
