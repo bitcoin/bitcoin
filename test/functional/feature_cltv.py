@@ -37,7 +37,7 @@ CLTV_HEIGHT = 1351
 # Helper function to modify a transaction by
 # 1) prepending a given script to the scriptSig of vin 0 and
 # 2) (optionally) modify the nSequence of vin 0 and the tx's nLockTime
-def cltv_modify_tx(node, tx, prepend_scriptsig, nsequence=None, nlocktime=None):
+def cltv_modify_tx(tx, prepend_scriptsig, nsequence=None, nlocktime=None):
     assert_equal(len(tx.vin), 1)
     if nsequence is not None:
         tx.vin[0].nSequence = nsequence
@@ -48,7 +48,7 @@ def cltv_modify_tx(node, tx, prepend_scriptsig, nsequence=None, nlocktime=None):
     return tx
 
 
-def cltv_invalidate(node, tx, failure_reason):
+def cltv_invalidate(tx, failure_reason):
     # Modify the signature in vin 0 and nSequence/nLockTime of the tx to fail CLTV
     #
     # According to BIP65, OP_CHECKLOCKTIMEVERIFY can fail due the following reasons:
@@ -69,14 +69,14 @@ def cltv_invalidate(node, tx, failure_reason):
         [[CScriptNum(500),  OP_CHECKLOCKTIMEVERIFY, OP_DROP], 0xffffffff, 500],
     ][failure_reason]
 
-    return cltv_modify_tx(node, tx, prepend_scriptsig=scheme[0], nsequence=scheme[1], nlocktime=scheme[2])
+    return cltv_modify_tx(tx, prepend_scriptsig=scheme[0], nsequence=scheme[1], nlocktime=scheme[2])
 
 
-def cltv_validate(node, tx, height):
+def cltv_validate(tx, height):
     # Modify the signature in vin 0 and nSequence/nLockTime of the tx to pass CLTV
     scheme = [[CScriptNum(height), OP_CHECKLOCKTIMEVERIFY, OP_DROP], 0, height]
 
-    return cltv_modify_tx(node, tx, prepend_scriptsig=scheme[0], nsequence=scheme[1], nlocktime=scheme[2])
+    return cltv_modify_tx(tx, prepend_scriptsig=scheme[0], nsequence=scheme[1], nlocktime=scheme[2])
 
 
 class BIP65Test(BitcoinTestFramework):
@@ -114,7 +114,7 @@ class BIP65Test(BitcoinTestFramework):
         invalid_cltv_txs = []
         for i in range(5):
             spendtx = wallet.create_self_transfer(from_node=self.nodes[0])['tx']
-            spendtx = cltv_invalidate(self.nodes[0], spendtx, i)
+            spendtx = cltv_invalidate(spendtx, i)
             invalid_cltv_txs.append(spendtx)
 
         tip = self.nodes[0].getbestblockhash()
@@ -149,7 +149,7 @@ class BIP65Test(BitcoinTestFramework):
         # create and test one invalid tx per CLTV failure reason (5 in total)
         for i in range(5):
             spendtx = wallet.create_self_transfer(from_node=self.nodes[0])['tx']
-            spendtx = cltv_invalidate(self.nodes[0], spendtx, i)
+            spendtx = cltv_invalidate(spendtx, i)
 
             expected_cltv_reject_reason = [
                 "non-mandatory-script-verify-flag (Operation not valid with the current stack size)",
@@ -182,7 +182,7 @@ class BIP65Test(BitcoinTestFramework):
                 peer.sync_with_ping()
 
         self.log.info("Test that a version 4 block with a valid-according-to-CLTV transaction is accepted")
-        spendtx = cltv_validate(self.nodes[0], spendtx, CLTV_HEIGHT - 1)
+        spendtx = cltv_validate(spendtx, CLTV_HEIGHT - 1)
 
         block.vtx.pop(1)
         block.vtx.append(spendtx)
