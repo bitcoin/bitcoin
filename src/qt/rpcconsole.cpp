@@ -854,23 +854,29 @@ void RPCConsole::clear(bool keep_prompt)
             ).arg(fixedFontInfo.family(), QString("%1pt").arg(consoleFontSize))
         );
 
-    message(CMD_REPLY,
-            tr("Welcome to the %1 RPC console.").arg(PACKAGE_NAME) +
-                "<br>" +
-                tr("Use up and down arrows to navigate history, and %1 to clear screen.")
-                    .arg("<b>" + ui->clearButton->shortcut().toString(QKeySequence::NativeText) + "</b>") +
-                "<br>" +
-                tr("Use %1 and %2 to increase or decrease the font size.")
-                    .arg("<b>" + ui->fontBiggerButton->shortcut().toString(QKeySequence::NativeText) + "</b>")
-                    .arg("<b>" + ui->fontSmallerButton->shortcut().toString(QKeySequence::NativeText) + "</b>") +
-                "<br>" +
-                tr("Type %1 for an overview of available commands.").arg("<b>help</b>") +
-                "<br>" +
-                tr("For more information on using this console type %1.").arg("<b>help-console</b>") +
-                "<br><span class=\"secwarning\"><br>" +
-                tr("WARNING: Scammers have been active, telling users to type commands here, stealing their wallet contents. Do not use this console without fully understanding the ramifications of a command.") +
-                "</span>",
-            true);
+    static const QString welcome_message =
+        /*: RPC console welcome message.
+            Placeholders %7 and %8 are style tags for the warning content, and
+            they are not space separated from the rest of the text intentionally. */
+        tr("Welcome to the %1 RPC console.\n"
+           "Use up and down arrows to navigate history, and %2 to clear screen.\n"
+           "Use %3 and %4 to increase or decrease the font size.\n"
+           "Type %5 for an overview of available commands.\n"
+           "For more information on using this console, type %6.\n"
+           "\n"
+           "%7WARNING: Scammers have been active, telling users to type"
+           " commands here, stealing their wallet contents. Do not use this console"
+           " without fully understanding the ramifications of a command.%8")
+            .arg(PACKAGE_NAME,
+                 "<b>" + ui->clearButton->shortcut().toString(QKeySequence::NativeText) + "</b>",
+                 "<b>" + ui->fontBiggerButton->shortcut().toString(QKeySequence::NativeText) + "</b>",
+                 "<b>" + ui->fontSmallerButton->shortcut().toString(QKeySequence::NativeText) + "</b>",
+                 "<b>help</b>",
+                 "<b>help-console</b>",
+                 "<span class=\"secwarning\">",
+                 "<span>");
+
+    message(CMD_REPLY, welcome_message, true);
 }
 
 void RPCConsole::keyPressEvent(QKeyEvent *event)
