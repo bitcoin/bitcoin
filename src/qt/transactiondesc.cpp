@@ -14,6 +14,8 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QNetworkAccessManager>
+
+#include <vbk/vbk.hpp>
 // VBK
 
 
@@ -92,7 +94,7 @@ bool GetPaymentRequestMerchant(const std::string& pr, QString& merchant)
 ////////////////////////////
 // VBK
 
-QJsonObject TransactionDesc::objectFromString(const QString& in)
+QJsonObject objectFromString(const QString& in)
 {
     QJsonObject obj;
 
@@ -118,6 +120,83 @@ QJsonObject TransactionDesc::objectFromString(const QString& in)
     return obj;
 }
 
+QString TransactionDesc::FormatBFIStatus(TransactionRecord *rec)
+{
+    QString vbkMessage = "";
+    
+    try { 
+        ///////////////////////////////////////////////
+        // VBK NETWORK
+
+        std::string stdVbkEndPoint = gArgs.GetArg("bfiendpoint", "");// read from conf.
+        
+        QString vbkEndPoint = QString::fromStdString(stdVbkEndPoint);
+        QString url = vbkEndPoint;  
+        // if BFI end point does not contain arguments, append to end of URL.
+        if( !url.contains("%1") && !url.contains("%2") ) {
+            if( !url.endsWith('/') ) {
+                url = url + '/';
+            }
+            url = url + "%1/chains/transactions/%2";
+        }
+        url = url.arg(QString::number(VeriBlock::ALT_CHAIN_ID)).arg(rec->getTxHash());
+        
+        QEventLoop loop;
+        QNetworkAccessManager nam;
+        QNetworkRequest req;
+        req.setRawHeader("Content-Type", "application/json");
+        req.setRawHeader("Accept-Encoding", "gzip, deflate");
+        req.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/json"));
+        req.setRawHeader("User-Agent", "vBitcoin Daemon");
+        req.setUrl(QUrl(url));
+        QNetworkReply *reply = nam.get(req);
+        connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+
+        loop.exec();
+        QString dataLine = "";
+        QByteArray buffer = reply->readAll();
+        dataLine = buffer.constData();
+        QJsonObject o = objectFromString(dataLine.toUtf8().constData());
+        
+        // VBK NETWORK
+        ///////////////////////////////////////////////
+
+        if (reply->error()) {
+            if (vbkEndPoint.isEmpty()) {
+                vbkMessage = tr("BFI not setup yet, specify bfiendpoint=url in vbitcoin.conf");
+            }
+            else {
+                QString message = o.value("message").toString();
+                if (message.isEmpty()) {
+                    message = QString::number(static_cast<int>(reply->error()));
+                }
+                vbkMessage = tr("Received error from BFI endpoint: %1");
+                vbkMessage = vbkMessage.arg(message);
+            }
+        }
+        else {
+            int spFinality = o.value("spFinality").toInt();
+            bool isAttackInProgress = o.value("isAttackInProgress").toBool();
+            
+            if (isAttackInProgress) { 
+                vbkMessage = tr("Alternate Chain Detected, wait for Bitcoin Finality");
+            }
+            else {
+                if( spFinality >= 0 ) { 
+                    vbkMessage = tr("%1 blocks of Bitcoin Finality");
+                } else { 
+                    vbkMessage = tr("%1 blocks until Bitcoin Finality");
+                    spFinality = -spFinality;
+                }
+                vbkMessage = vbkMessage.arg(QString::number(spFinality));
+            }
+        }
+    } catch(...) { 
+    }
+
+    return vbkMessage;
+}
+
 
 // VBK
 ////////////////////////////
@@ -139,84 +218,11 @@ QString TransactionDesc::toHTML(interfaces::Node& node, interfaces::Wallet& wall
     CAmount nCredit = wtx.credit;
     CAmount nDebit = wtx.debit;
     CAmount nNet = nCredit - nDebit;
-    
-    
-    // VBK -->
-    
-    int spFinality = 0;
-    bool isAttackInProgress = false;
-    QString vbkMessage = "";
-    int nDepth = status.depth_in_main_chain;
-    
-    try { 
-        ///////////////////////////////////////////////
-        // VBK NETWORK
-
-        std::string stdVbkEndPoint = gArgs.GetArg("-bfiendpoint", "");// read from conf.
-        
-        QString vbkEndPoint = QString::fromStdString(stdVbkEndPoint);
-        QString url = vbkEndPoint;  
-        try { 
-            // if BFI end point does not contain an argument, append to end of URL.
-            if( !url.contains("%1") ) {
-                url = url + "%1";
-            }
-            url = url.arg(nDepth); // + numBlocks for live.
-        } catch(...) { }
-        
-        QEventLoop loop;
-        QNetworkAccessManager nam;
-        QNetworkRequest req;
-        req.setRawHeader("Content-Type", "application/json");
-        req.setRawHeader("Accept-Encoding", "gzip, deflate");
-        req.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("application/json"));
-        req.setRawHeader("User-Agent", "vBitcoin Daemon");
-        req.setUrl(QUrl(url));
-        QNetworkReply *reply = nam.get(req);
-        connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
-
-        loop.exec();
-        QString dataLine = "";
-        bool err = false;
-        
-        if (reply->error()) {            
-            err = true;
-            vbkMessage = "BFI not setup yet, specify -bfiendpoint=url in vbitcoin.conf";
-        } else {
-            QByteArray buffer = reply->readAll();
-            dataLine = buffer.constData();
-        }
-        
-        // VBK NETWORK
-        ///////////////////////////////////////////////
-    
-        // VBK
-        QJsonObject o = objectFromString(dataLine.toUtf8().constData());
-
-        spFinality = o.value("spFinality").toInt();
-        isAttackInProgress = o.value("isAttackInProgress").toBool();
-        
-        // VBK LOGIC
-        if(isAttackInProgress == true ) { 
-            vbkMessage = "Alternate Chain Detected, wait for Bitcoin Finality";
-        }
-        else {
-            if( !err ) { 
-                if( spFinality > 0 ) { 
-                    vbkMessage = "" + QString::number(spFinality) + tr(" blocks of Bitcoin Finality") ;
-                } else if( spFinality <= 0 ) { 
-                    vbkMessage = "" + QString::number(spFinality) + tr(" blocks until Bitcoin Finality") ;
-                }
-            }
-        }
-    } catch(...) { 
-    }           
-    // VBK <--
 
     strHTML += "<b>" + tr("Status") + ":</b> " + FormatTxStatus(wtx, status, inMempool, numBlocks);
     strHTML += "<br>";
     // VBK -->
-    strHTML += "<b>" + tr("BFI Status") + ":</b> " + vbkMessage;
+    strHTML += "<b>" + tr("BFI Status") + ":</b> " + FormatBFIStatus(rec);
     // VBK <--
     strHTML += "<br>";
 

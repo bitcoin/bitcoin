@@ -28,16 +28,15 @@ class TransactionDesc: public QObject
 
 public:
     static QString toHTML(interfaces::Node& node, interfaces::Wallet& wallet, TransactionRecord *rec, int unit);
-	// VBK
-	static QJsonObject objectFromString(const QString& in);
-	// VBK
-
 
 private:
     TransactionDesc() {}
 
-	
+
     static QString FormatTxStatus(const interfaces::WalletTx& wtx, const interfaces::WalletTxStatus& status, bool inMempool, int numBlocks);
+    // VBK
+    static QString FormatBFIStatus(TransactionRecord *rec);
+    // VBK
 };
 
 #endif // BITCOIN_QT_TRANSACTIONDESC_H

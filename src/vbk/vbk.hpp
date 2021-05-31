@@ -13,6 +13,7 @@ namespace VeriBlock {
 using KeystoneArray = std::array<uint256, 2>;
 
 const static int32_t POP_BLOCK_VERSION_BIT = 0x80000UL;
+const static int64_t ALT_CHAIN_ID = 0x3ae6ca;
 
 }  // namespace VeriBlock
 
