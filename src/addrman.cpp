@@ -36,7 +36,7 @@ int CAddrInfo::GetNewBucket(const uint256& nKey, const CNetAddr& src, const std:
 
 int CAddrInfo::GetBucketPosition(const uint256 &nKey, bool fNew, int nBucket) const
 {
-    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << (fNew ? 'N' : 'K') << nBucket << GetKey()).GetCheapHash();
+    uint64_t hash1 = (CHashWriter(SER_GETHASH, 0) << nKey << (fNew ? uint8_t{'N'} : uint8_t{'K'}) << nBucket << GetKey()).GetCheapHash();
     return hash1 % ADDRMAN_BUCKET_SIZE;
 }
 
@@ -668,7 +668,7 @@ std::vector<bool> CAddrMan::DecodeAsmap(fs::path path)
     int length = ftell(filestr);
     LogPrintf("Opened asmap file %s (%d bytes) from disk\n", path, length);
     fseek(filestr, 0, SEEK_SET);
-    char cur_byte;
+    uint8_t cur_byte;
     for (int i = 0; i < length; ++i) {
         file >> cur_byte;
         for (int bit = 0; bit < 8; ++bit) {

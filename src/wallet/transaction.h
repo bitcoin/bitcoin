@@ -204,8 +204,8 @@ public:
             mapValueCopy["timesmart"] = strprintf("%u", nTimeSmart);
         }
 
-        std::vector<char> dummy_vector1; //!< Used to be vMerkleBranch
-        std::vector<char> dummy_vector2; //!< Used to be vtxPrev
+        std::vector<uint8_t> dummy_vector1; //!< Used to be vMerkleBranch
+        std::vector<uint8_t> dummy_vector2; //!< Used to be vtxPrev
         bool dummy_bool = false; //!< Used to be fSpent
         uint256 serializedHash = isAbandoned() ? ABANDON_HASH : m_confirm.hashBlock;
         int serializedIndex = isAbandoned() || isConflicted() ? -1 : m_confirm.nIndex;

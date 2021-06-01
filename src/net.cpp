@@ -3554,7 +3554,7 @@ void CaptureMessage(const CAddress& addr, const std::string& msg_type, const Spa
     ser_writedata64(f, now.count());
     f.write(msg_type.data(), msg_type.length());
     for (auto i = msg_type.length(); i < CMessageHeader::COMMAND_SIZE; ++i) {
-        f << '\0';
+        f << uint8_t{'\0'};
     }
     uint32_t size = data.size();
     ser_writedata32(f, size);
