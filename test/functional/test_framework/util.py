@@ -481,6 +481,24 @@ def create_confirmed_utxos(fee, node, count):
     return utxos
 
 
+# Build a transaction that spends parent_txid:vout
+# Return amount sent
+def chain_transaction(node, parent_txids, vouts, value, fee, num_outputs):
+    send_value = satoshi_round((value - fee)/num_outputs)
+    inputs = []
+    for (txid, vout) in zip(parent_txids, vouts):
+        inputs.append({'txid' : txid, 'vout' : vout})
+    outputs = {}
+    for _ in range(num_outputs):
+        outputs[node.getnewaddress()] = send_value
+    rawtx = node.createrawtransaction(inputs, outputs, 0, True)
+    signedtx = node.signrawtransactionwithwallet(rawtx)
+    txid = node.sendrawtransaction(signedtx['hex'])
+    fulltx = node.getrawtransaction(txid, 1)
+    assert len(fulltx['vout']) == num_outputs  # make sure we didn't generate a change output
+    return (txid, send_value)
+
+
 # Create large OP_RETURN txouts that can be appended to a transaction
 # to make it large (helper for constructing large transactions).
 def gen_return_txouts():
