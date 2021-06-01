@@ -15,7 +15,7 @@ m4_define([libunivalue_version], [libunivalue_major_version().libunivalue_minor_
 
 
 AC_INIT([univalue], [1.0.3],
-        [http://github.com/jgarzik/univalue/])
+        [https://github.com/jgarzik/univalue/])
 
 dnl make the compilation flags quiet unless V=1 is used
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])

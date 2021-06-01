@@ -1889,7 +1889,7 @@ void gatherStabilityInformation(std::vector<std::string>& warnings, std::vector<
         recommendations.emplace_back("Make sure you compile for Release");
     }
     if (recommendPyPerf) {
-        recommendations.emplace_back("Use 'pyperf system tune' before benchmarking. See https://github.com/vstinner/pyperf");
+        recommendations.emplace_back("Use 'pyperf system tune' before benchmarking. See https://github.com/psf/pyperf");
     }
 }
 
