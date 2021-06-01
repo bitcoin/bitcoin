@@ -166,12 +166,7 @@ QString TransactionDesc::FormatBFIStatus(TransactionRecord *rec)
                 vbkMessage = tr("BFI not setup yet, specify bfiendpoint=url in vbitcoin.conf");
             }
             else {
-                QString message = o.value("message").toString();
-                if (message.isEmpty()) {
-                    message = QString::number(static_cast<int>(reply->error()));
-                }
-                vbkMessage = tr("Received error from BFI endpoint: %1");
-                vbkMessage = vbkMessage.arg(message);
+                vbkMessage = tr("Unconfirmed Bitcoin Finality");
             }
         }
         else {
@@ -184,6 +179,7 @@ QString TransactionDesc::FormatBFIStatus(TransactionRecord *rec)
             else {
                 if( spFinality >= 0 ) { 
                     vbkMessage = tr("%1 blocks of Bitcoin Finality");
+                    ++spFinality;
                 } else { 
                     vbkMessage = tr("%1 blocks until Bitcoin Finality");
                     spFinality = -spFinality;
