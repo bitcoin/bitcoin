@@ -384,9 +384,8 @@ static RPCHelpMan generateblock()
 
     // Add transactions
     block.vtx.insert(block.vtx.end(), txs.begin(), txs.end());
-     // SYSCOIN
-    CBlockIndex* prev_block = WITH_LOCK(::cs_main, return chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock));
-    RegenerateCommitments(block, prev_block, blocktemplate->vchCoinbaseCommitmentExtra);
+    // SYSCOIN
+    RegenerateCommitments(block, chainman, blocktemplate->vchCoinbaseCommitmentExtra);
 
     {
         LOCK(cs_main);
