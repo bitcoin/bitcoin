@@ -123,7 +123,7 @@ class MiniWallet:
         else:
             return self._utxos[index]
 
-    def send_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None):
+    def send_self_transfer(self, *, fee_rate=Decimal("0.003"), from_node, utxo_to_spend=None, submit_tx=True):
         """Create and send a tx with the specified fee_rate. Fee may be exact or at most one satoshi higher than needed."""
         tx = self.create_self_transfer(fee_rate=fee_rate, from_node=from_node, utxo_to_spend=utxo_to_spend)
         self.sendrawtransaction(from_node=from_node, tx_hex=tx['hex'])
@@ -154,6 +154,7 @@ class MiniWallet:
             tx.wit.vtxinwit[0].scriptWitness.stack = [CScript([OP_TRUE])]
         tx_hex = tx.serialize().hex()
 
+        tx_hex = tx.serialize().hex()
         tx_info = from_node.testmempoolaccept([tx_hex])[0]
         assert_equal(mempool_valid, tx_info['allowed'])
         if mempool_valid:
