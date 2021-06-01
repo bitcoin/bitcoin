@@ -7,6 +7,7 @@
 #include <boost/test/unit_test.hpp>
 #include <hash.h>
 #include <serialize.h>
+#include <span.h>
 #include <streams.h>
 #include <net.h>
 #include <netbase.h>
@@ -15,6 +16,7 @@
 #include <utilstrencodings.h>
 #include <version.h>
 
+#include <ios>
 #include <memory>
 
 class CAddrManSerializationMock : public CAddrMan
@@ -215,6 +217,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_REQUIRE(addr.IsIPv4());
 
     BOOST_CHECK(addr.IsBindAny());
+    BOOST_CHECK(addr.IsAddrV1Compatible());
     BOOST_CHECK_EQUAL(addr.ToString(), "0.0.0.0");
 
     // IPv4, INADDR_NONE
@@ -223,6 +226,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_REQUIRE(addr.IsIPv4());
 
     BOOST_CHECK(!addr.IsBindAny());
+    BOOST_CHECK(addr.IsAddrV1Compatible());
     BOOST_CHECK_EQUAL(addr.ToString(), "255.255.255.255");
 
     // IPv4, casual
@@ -231,6 +235,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_REQUIRE(addr.IsIPv4());
 
     BOOST_CHECK(!addr.IsBindAny());
+    BOOST_CHECK(addr.IsAddrV1Compatible());
     BOOST_CHECK_EQUAL(addr.ToString(), "12.34.56.78");
 
     // IPv6, in6addr_any
@@ -239,6 +244,7 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_REQUIRE(addr.IsIPv6());
 
     BOOST_CHECK(addr.IsBindAny());
+    BOOST_CHECK(addr.IsAddrV1Compatible());
     BOOST_CHECK_EQUAL(addr.ToString(), "::");
 
     // IPv6, casual
@@ -247,15 +253,43 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_REQUIRE(addr.IsIPv6());
 
     BOOST_CHECK(!addr.IsBindAny());
+    BOOST_CHECK(addr.IsAddrV1Compatible());
     BOOST_CHECK_EQUAL(addr.ToString(), "1122:3344:5566:7788:9900:aabb:ccdd:eeff");
 
     // TORv2
-    addr.SetSpecial("6hzph5hv6337r6p2.onion");
+    BOOST_REQUIRE(addr.SetSpecial("6hzph5hv6337r6p2.onion"));
     BOOST_REQUIRE(addr.IsValid());
     BOOST_REQUIRE(addr.IsTor());
 
     BOOST_CHECK(!addr.IsBindAny());
+    BOOST_CHECK(addr.IsAddrV1Compatible());
     BOOST_CHECK_EQUAL(addr.ToString(), "6hzph5hv6337r6p2.onion");
+
+    // TORv3
+    const char* torv3_addr = "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion";
+    BOOST_REQUIRE(addr.SetSpecial(torv3_addr));
+    BOOST_REQUIRE(addr.IsValid());
+    BOOST_REQUIRE(addr.IsTor());
+
+    BOOST_CHECK(!addr.IsBindAny());
+    BOOST_CHECK(!addr.IsAddrV1Compatible());
+    BOOST_CHECK_EQUAL(addr.ToString(), torv3_addr);
+
+    // TORv3, broken, with wrong checksum
+    BOOST_CHECK(!addr.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscsad.onion"));
+
+    // TORv3, broken, with wrong version
+    BOOST_CHECK(!addr.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscrye.onion"));
+
+    // TORv3, malicious
+    BOOST_CHECK(!addr.SetSpecial(std::string{
+        "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd\0wtf.onion", 66}));
+
+    // TOR, bogus length
+    BOOST_CHECK(!addr.SetSpecial(std::string{"mfrggzak.onion"}));
+
+    // TOR, invalid base32
+    BOOST_CHECK(!addr.SetSpecial(std::string{"mf*g zak.onion"}));
 
     // Internal
     addr.SetInternal("esffpp");
@@ -263,18 +297,295 @@ BOOST_AUTO_TEST_CASE(cnetaddr_basic)
     BOOST_REQUIRE(addr.IsInternal());
 
     BOOST_CHECK(!addr.IsBindAny());
+    BOOST_CHECK(addr.IsAddrV1Compatible());
     BOOST_CHECK_EQUAL(addr.ToString(), "esffpvrt3wpeaygy.internal");
+
+    // Totally bogus
+    BOOST_CHECK(!addr.SetSpecial("totally bogus"));
 }
 
-BOOST_AUTO_TEST_CASE(cnetaddr_serialize)
+BOOST_AUTO_TEST_CASE(cnetaddr_serialize_v1)
 {
     CNetAddr addr;
     CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+
+    s << addr;
+    BOOST_CHECK_EQUAL(HexStr(s), "00000000000000000000000000000000");
+    s.clear();
+
+    BOOST_REQUIRE(LookupHost("1.2.3.4", addr, false));
+    s << addr;
+    BOOST_CHECK_EQUAL(HexStr(s), "00000000000000000000ffff01020304");
+    s.clear();
+
+    BOOST_REQUIRE(LookupHost("1a1b:2a2b:3a3b:4a4b:5a5b:6a6b:7a7b:8a8b", addr, false));
+    s << addr;
+    BOOST_CHECK_EQUAL(HexStr(s), "1a1b2a2b3a3b4a4b5a5b6a6b7a7b8a8b");
+    s.clear();
+
+    BOOST_REQUIRE(addr.SetSpecial("6hzph5hv6337r6p2.onion"));
+    s << addr;
+    BOOST_CHECK_EQUAL(HexStr(s), "fd87d87eeb43f1f2f3f4f5f6f7f8f9fa");
+    s.clear();
+
+    BOOST_REQUIRE(addr.SetSpecial("pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion"));
+    s << addr;
+    BOOST_CHECK_EQUAL(HexStr(s), "00000000000000000000000000000000");
+    s.clear();
 
     addr.SetInternal("a");
     s << addr;
     BOOST_CHECK_EQUAL(HexStr(s), "fd6b88c08724ca978112ca1bbdcafac2");
     s.clear();
+}
+
+BOOST_AUTO_TEST_CASE(cnetaddr_serialize_v2)
+{
+    CNetAddr addr;
+    CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+    // Add ADDRV2_FORMAT to the version so that the CNetAddr
+    // serialize method produces an address in v2 format.
+    s.SetVersion(s.GetVersion() | ADDRV2_FORMAT);
+
+    s << addr;
+    BOOST_CHECK_EQUAL(HexStr(s), "021000000000000000000000000000000000");
+    s.clear();
+
+    BOOST_REQUIRE(LookupHost("1.2.3.4", addr, false));
+    s << addr;
+    BOOST_CHECK_EQUAL(HexStr(s), "010401020304");
+    s.clear();
+
+    BOOST_REQUIRE(LookupHost("1a1b:2a2b:3a3b:4a4b:5a5b:6a6b:7a7b:8a8b", addr, false));
+    s << addr;
+    BOOST_CHECK_EQUAL(HexStr(s), "02101a1b2a2b3a3b4a4b5a5b6a6b7a7b8a8b");
+    s.clear();
+
+    BOOST_REQUIRE(addr.SetSpecial("6hzph5hv6337r6p2.onion"));
+    s << addr;
+    BOOST_CHECK_EQUAL(HexStr(s), "030af1f2f3f4f5f6f7f8f9fa");
+    s.clear();
+
+    BOOST_REQUIRE(addr.SetSpecial("kpgvmscirrdqpekbqjsvw5teanhatztpp2gl6eee4zkowvwfxwenqaid.onion"));
+    s << addr;
+    BOOST_CHECK_EQUAL(HexStr(s), "042053cd5648488c4707914182655b7664034e09e66f7e8cbf1084e654eb56c5bd88");
+    s.clear();
+
+    BOOST_REQUIRE(addr.SetInternal("a"));
+    s << addr;
+    BOOST_CHECK_EQUAL(HexStr(s), "0210fd6b88c08724ca978112ca1bbdcafac2");
+    s.clear();
+}
+
+BOOST_AUTO_TEST_CASE(cnetaddr_unserialize_v2)
+{
+    CNetAddr addr;
+    CDataStream s(SER_NETWORK, PROTOCOL_VERSION);
+    // Add ADDRV2_FORMAT to the version so that the CNetAddr
+    // unserialize method expects an address in v2 format.
+    s.SetVersion(s.GetVersion() | ADDRV2_FORMAT);
+
+    // Valid IPv4.
+    s << MakeSpan(ParseHex("01"          // network type (IPv4)
+                           "04"          // address length
+                           "01020304")); // address
+    s >> addr;
+    BOOST_CHECK(addr.IsValid());
+    BOOST_CHECK(addr.IsIPv4());
+    BOOST_CHECK(addr.IsAddrV1Compatible());
+    BOOST_CHECK_EQUAL(addr.ToString(), "1.2.3.4");
+    BOOST_REQUIRE(s.empty());
+
+    // Invalid IPv4, valid length but address itself is shorter.
+    s << MakeSpan(ParseHex("01"      // network type (IPv4)
+                           "04"      // address length
+                           "0102")); // address
+    BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure, HasReason("end of data"));
+    BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
+    s.clear();
+
+    // Invalid IPv4, with bogus length.
+    s << MakeSpan(ParseHex("01"          // network type (IPv4)
+                           "05"          // address length
+                           "01020304")); // address
+    BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure,
+                          HasReason("BIP155 IPv4 address with length 5 (should be 4)"));
+    BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
+    s.clear();
+
+    // Invalid IPv4, with extreme length.
+    s << MakeSpan(ParseHex("01"          // network type (IPv4)
+                           "fd0102"      // address length (513 as CompactSize)
+                           "01020304")); // address
+    BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure,
+                          HasReason("Address too long: 513 > 512"));
+    BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
+    s.clear();
+
+    // Valid IPv6.
+    s << MakeSpan(ParseHex("02"                                  // network type (IPv6)
+                           "10"                                  // address length
+                           "0102030405060708090a0b0c0d0e0f10")); // address
+    s >> addr;
+    BOOST_CHECK(addr.IsValid());
+    BOOST_CHECK(addr.IsIPv6());
+    BOOST_CHECK(addr.IsAddrV1Compatible());
+    BOOST_CHECK_EQUAL(addr.ToString(), "102:304:506:708:90a:b0c:d0e:f10");
+    BOOST_REQUIRE(s.empty());
+
+    // Valid IPv6, contains embedded "internal".
+    s << MakeSpan(ParseHex(
+        "02"                                  // network type (IPv6)
+        "10"                                  // address length
+        "fd6b88c08724ca978112ca1bbdcafac2")); // address: 0xfd + sha256("bitcoin")[0:5] +
+                                              // sha256(name)[0:10]
+    s >> addr;
+    BOOST_CHECK(addr.IsInternal());
+    BOOST_CHECK(addr.IsAddrV1Compatible());
+    BOOST_CHECK_EQUAL(addr.ToString(), "zklycewkdo64v6wc.internal");
+    BOOST_REQUIRE(s.empty());
+
+    // Invalid IPv6, with bogus length.
+    s << MakeSpan(ParseHex("02"    // network type (IPv6)
+                           "04"    // address length
+                           "00")); // address
+    BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure,
+                          HasReason("BIP155 IPv6 address with length 4 (should be 16)"));
+    BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
+    s.clear();
+
+    // Invalid IPv6, contains embedded IPv4.
+    s << MakeSpan(ParseHex("02"                                  // network type (IPv6)
+                           "10"                                  // address length
+                           "00000000000000000000ffff01020304")); // address
+    s >> addr;
+    BOOST_CHECK(!addr.IsValid());
+    BOOST_REQUIRE(s.empty());
+
+    // Invalid IPv6, contains embedded TORv2.
+    s << MakeSpan(ParseHex("02"                                  // network type (IPv6)
+                           "10"                                  // address length
+                           "fd87d87eeb430102030405060708090a")); // address
+    s >> addr;
+    BOOST_CHECK(!addr.IsValid());
+    BOOST_REQUIRE(s.empty());
+
+    // Valid TORv2.
+    s << MakeSpan(ParseHex("03"                      // network type (TORv2)
+                           "0a"                      // address length
+                           "f1f2f3f4f5f6f7f8f9fa")); // address
+    s >> addr;
+    BOOST_CHECK(addr.IsValid());
+    BOOST_CHECK(addr.IsTor());
+    BOOST_CHECK(addr.IsAddrV1Compatible());
+    BOOST_CHECK_EQUAL(addr.ToString(), "6hzph5hv6337r6p2.onion");
+    BOOST_REQUIRE(s.empty());
+
+    // Invalid TORv2, with bogus length.
+    s << MakeSpan(ParseHex("03"    // network type (TORv2)
+                           "07"    // address length
+                           "00")); // address
+    BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure,
+                          HasReason("BIP155 TORv2 address with length 7 (should be 10)"));
+    BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
+    s.clear();
+
+    // Valid TORv3.
+    s << MakeSpan(ParseHex("04"                               // network type (TORv3)
+                           "20"                               // address length
+                           "79bcc625184b05194975c28b66b66b04" // address
+                           "69f7f6556fb1ac3189a79b40dda32f1f"
+                           ));
+    s >> addr;
+    BOOST_CHECK(addr.IsValid());
+    BOOST_CHECK(addr.IsTor());
+    BOOST_CHECK(!addr.IsAddrV1Compatible());
+    BOOST_CHECK_EQUAL(addr.ToString(),
+                      "pg6mmjiyjmcrsslvykfwnntlaru7p5svn6y2ymmju6nubxndf4pscryd.onion");
+    BOOST_REQUIRE(s.empty());
+
+    // Invalid TORv3, with bogus length.
+    s << MakeSpan(ParseHex("04" // network type (TORv3)
+                           "00" // address length
+                           "00" // address
+                           ));
+    BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure,
+                          HasReason("BIP155 TORv3 address with length 0 (should be 32)"));
+    BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
+    s.clear();
+
+    // Valid I2P.
+    s << MakeSpan(ParseHex("05"                               // network type (I2P)
+                           "20"                               // address length
+                           "a2894dabaec08c0051a481a6dac88b64" // address
+                           "f98232ae42d4b6fd2fa81952dfe36a87"));
+    s >> addr;
+    BOOST_CHECK(addr.IsValid());
+    BOOST_CHECK(addr.IsI2P());
+    BOOST_CHECK(!addr.IsAddrV1Compatible());
+    BOOST_CHECK_EQUAL(addr.ToString(),
+                      "ukeu3k5oycgaauneqgtnvselmt4yemvoilkln7jpvamvfx7dnkdq.b32.i2p");
+    BOOST_REQUIRE(s.empty());
+
+    // Invalid I2P, with bogus length.
+    s << MakeSpan(ParseHex("05" // network type (I2P)
+                           "03" // address length
+                           "00" // address
+                           ));
+    BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure,
+                          HasReason("BIP155 I2P address with length 3 (should be 32)"));
+    BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
+    s.clear();
+
+    // Valid CJDNS.
+    s << MakeSpan(ParseHex("06"                               // network type (CJDNS)
+                           "10"                               // address length
+                           "fc000001000200030004000500060007" // address
+                           ));
+    s >> addr;
+    BOOST_CHECK(addr.IsValid());
+    BOOST_CHECK(addr.IsCJDNS());
+    BOOST_CHECK(!addr.IsAddrV1Compatible());
+    BOOST_CHECK_EQUAL(addr.ToString(), "fc00:1:2:3:4:5:6:7");
+    BOOST_REQUIRE(s.empty());
+
+    // Invalid CJDNS, with bogus length.
+    s << MakeSpan(ParseHex("06" // network type (CJDNS)
+                           "01" // address length
+                           "00" // address
+                           ));
+    BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure,
+                          HasReason("BIP155 CJDNS address with length 1 (should be 16)"));
+    BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
+    s.clear();
+
+    // Unknown, with extreme length.
+    s << MakeSpan(ParseHex("aa"             // network type (unknown)
+                           "fe00000002"     // address length (CompactSize's MAX_SIZE)
+                           "01020304050607" // address
+                           ));
+    BOOST_CHECK_EXCEPTION(s >> addr, std::ios_base::failure,
+                          HasReason("Address too long: 33554432 > 512"));
+    BOOST_REQUIRE(!s.empty()); // The stream is not consumed on invalid input.
+    s.clear();
+
+    // Unknown, with reasonable length.
+    s << MakeSpan(ParseHex("aa"       // network type (unknown)
+                           "04"       // address length
+                           "01020304" // address
+                           ));
+    s >> addr;
+    BOOST_CHECK(!addr.IsValid());
+    BOOST_REQUIRE(s.empty());
+
+    // Unknown, with zero length.
+    s << MakeSpan(ParseHex("aa" // network type (unknown)
+                           "00" // address length
+                           ""   // address
+                           ));
+    s >> addr;
+    BOOST_CHECK(!addr.IsValid());
+    BOOST_REQUIRE(s.empty());
 }
 
 // prior to PR #14728, this test triggers an undefined behavior

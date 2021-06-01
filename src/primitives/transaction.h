@@ -10,6 +10,7 @@
 #include <script/script.h>
 #include <serialize.h>
 #include <uint256.h>
+#include <tuple>
 
 /** Transaction types */
 enum {
