@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(util_FormatParseISO8601DateTime)
     BOOST_CHECK_EQUAL(ParseISO8601DateTime("1960-01-01T00:00:00Z"), 0);
     BOOST_CHECK_EQUAL(ParseISO8601DateTime("2011-09-30T23:36:17Z"), 1317425777);
 
-    auto time = GetSystemTimeInSeconds();
+    auto time = GetTimeSeconds();
     BOOST_CHECK_EQUAL(ParseISO8601DateTime(FormatISO8601DateTime(time)), time);
 }
 

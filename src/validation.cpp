@@ -6396,10 +6396,10 @@ void DoGethMaintenance() {
         if(!StartRelayerNode(relayerDescriptorURL, relayerPID, rpcport, wsport, ethrpcport))
             LogPrintf("%s: Failed to start Relayer\n", __func__); 
         nRandomResetSec = GetRandInt(600);
-        nLastGethHeaderTime = GetSystemTimeInSeconds();
+        nLastGethHeaderTime = GetTimeSeconds();
     // if not syncing chain restart geth/relayer if its been long enough since last blocks from relayer
     } else if(!ibd || fReindexGeth){
-        const int64_t nTimeSeconds = (int64_t)GetSystemTimeInSeconds();
+        const int64_t nTimeSeconds = (int64_t)GetTimeSeconds();
         // it's been >= 10 minutes (+ some minutes for randomization up to another 10 min) since an Ethereum block so clean data dir and resync
         if(fReindexGeth || (nTimeSeconds - nLastGethHeaderTime) > (600 + nRandomResetSec)) {
             fReindexGeth = false;

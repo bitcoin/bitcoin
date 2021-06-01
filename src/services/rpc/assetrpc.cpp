@@ -692,8 +692,8 @@ static RPCHelpMan syscoinsetethstatus()
     const UniValue &params = request.params;
     UniValue ret(UniValue::VOBJ);
     UniValue retArray(UniValue::VARR);
-    static uint64_t nLastExecTime = GetSystemTimeInSeconds();
-    if(!fRegTest && GetSystemTimeInSeconds() - nLastExecTime <= 60){
+    static uint64_t nLastExecTime = GetTimeSeconds();
+    if(!fRegTest && GetTimeSeconds() - nLastExecTime <= 60){
         LogPrint(BCLog::SYS, "Please wait at least 1 minute between status calls\n");
         ret.__pushKV("missing_blocks", retArray);
         return ret;
@@ -726,7 +726,7 @@ static RPCHelpMan syscoinsetethstatus()
     }
     LogPrint(BCLog::SYS, "syscoinsetethstatus old height %d new height %d\n", nGethOldHeight, fGethCurrentHeight);
     ret.__pushKV("missing_blocks", retArray);
-    nLastExecTime = GetSystemTimeInSeconds();
+    nLastExecTime = GetTimeSeconds();
     return ret;
 },
     };
@@ -769,7 +769,7 @@ static RPCHelpMan syscoinsetethheaders()
     EthereumTxRootMap txRootMap;       
     const UniValue &headerArray = params[0].get_array();
     if(headerArray.size() > 0) {
-        nLastGethHeaderTime = GetSystemTimeInSeconds();
+        nLastGethHeaderTime = GetTimeSeconds();
     }
     for(size_t i =0;i<headerArray.size();i++){
         EthereumTxRoot txRoot;

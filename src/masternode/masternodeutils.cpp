@@ -40,7 +40,7 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
         // we're not disconnecting LLMQ connections
         if (connman.IsMasternodeQuorumNode(pnode)) return;
         // we're not disconnecting masternode probes for at least a few seconds
-        if (pnode->m_masternode_probe_connection && GetSystemTimeInSeconds() - pnode->nTimeConnected < 5) return;
+        if (pnode->m_masternode_probe_connection && GetTimeSeconds() - pnode->nTimeConnected < 5) return;
 
         if (fLogIPs) {
             LogPrint(BCLog::NET, "Closing Masternode connection: peer=%d, addr=%s\n", pnode->GetId(), pnode->addr.ToString());
