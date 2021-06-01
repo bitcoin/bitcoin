@@ -124,7 +124,7 @@ int64_t GetTimeMicros()
     return int64_t{GetSystemTime<std::chrono::microseconds>().count()};
 }
 
-int64_t GetTimeSeconds()
+int64_t GetSystemTimeInSeconds()
 {
     return int64_t{GetSystemTime<std::chrono::seconds>().count()};
 }
