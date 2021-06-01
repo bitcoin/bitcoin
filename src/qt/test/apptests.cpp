@@ -40,7 +40,7 @@ void TestRpcCommand(RPCConsole* console)
     QTest::keyClicks(lineEdit, "getblockchaininfo");
     QTest::keyClick(lineEdit, Qt::Key_Return);
     QVERIFY(mw_spy.wait(1000));
-    QCOMPARE(mw_spy.count(), 2);
+    QCOMPARE(mw_spy.count(), 4);
     QString output = messagesWidget->toPlainText();
     UniValue value;
     value.read(output.right(output.size() - output.lastIndexOf(QChar::ObjectReplacementCharacter) - 1).toStdString());
