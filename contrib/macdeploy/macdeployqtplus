@@ -350,115 +350,20 @@ def deployFrameworksForAppBundle(applicationBundle: ApplicationBundleInfo, strip
         return deployFrameworks(frameworks, applicationBundle.path, applicationBundle.binaryPath, strip, verbose)
 
 def deployPlugins(appBundleInfo: ApplicationBundleInfo, deploymentInfo: DeploymentInfo, strip: bool, verbose: int):
-    # Lookup available plugins, exclude unneeded
     plugins = []
     if deploymentInfo.pluginPath is None:
         return
     for dirpath, dirnames, filenames in os.walk(deploymentInfo.pluginPath):
         pluginDirectory = os.path.relpath(dirpath, deploymentInfo.pluginPath)
-        if pluginDirectory == "designer":
-            # Skip designer plugins
+
+        if pluginDirectory not in ['styles', 'platforms']:
             continue
-        elif pluginDirectory == "printsupport":
-            # Skip printsupport plugins
-            continue
-        elif pluginDirectory == "imageformats":
-            # Skip imageformats plugins
-            continue
-        elif pluginDirectory == "sqldrivers":
-            # Deploy the sql plugins only if QtSql is in use
-            if not deploymentInfo.usesFramework("QtSql"):
-                continue
-        elif pluginDirectory == "script":
-            # Deploy the script plugins only if QtScript is in use
-            if not deploymentInfo.usesFramework("QtScript"):
-                continue
-        elif pluginDirectory == "qmltooling" or pluginDirectory == "qml1tooling":
-            # Deploy the qml plugins only if QtDeclarative is in use
-            if not deploymentInfo.usesFramework("QtDeclarative"):
-                continue
-        elif pluginDirectory == "bearer":
-            # Deploy the bearer plugins only if QtNetwork is in use
-            if not deploymentInfo.usesFramework("QtNetwork"):
-                continue
-        elif pluginDirectory == "position":
-            # Deploy the position plugins only if QtPositioning is in use
-            if not deploymentInfo.usesFramework("QtPositioning"):
-                continue
-        elif pluginDirectory == "sensors" or pluginDirectory == "sensorgestures":
-            # Deploy the sensor plugins only if QtSensors is in use
-            if not deploymentInfo.usesFramework("QtSensors"):
-                continue
-        elif pluginDirectory == "audio" or pluginDirectory == "playlistformats":
-            # Deploy the audio plugins only if QtMultimedia is in use
-            if not deploymentInfo.usesFramework("QtMultimedia"):
-                continue
-        elif pluginDirectory == "mediaservice":
-            # Deploy the mediaservice plugins only if QtMultimediaWidgets is in use
-            if not deploymentInfo.usesFramework("QtMultimediaWidgets"):
-                continue
-        elif pluginDirectory == "canbus":
-            # Deploy the canbus plugins only if QtSerialBus is in use
-            if not deploymentInfo.usesFramework("QtSerialBus"):
-                continue
-        elif pluginDirectory == "webview":
-            # Deploy the webview plugins only if QtWebView is in use
-            if not deploymentInfo.usesFramework("QtWebView"):
-                continue
-        elif pluginDirectory == "gamepads":
-            # Deploy the webview plugins only if QtGamepad is in use
-            if not deploymentInfo.usesFramework("QtGamepad"):
-                continue
-        elif pluginDirectory == "geoservices":
-            # Deploy the webview plugins only if QtLocation is in use
-            if not deploymentInfo.usesFramework("QtLocation"):
-                continue
-        elif pluginDirectory == "texttospeech":
-            # Deploy the texttospeech plugins only if QtTextToSpeech is in use
-            if not deploymentInfo.usesFramework("QtTextToSpeech"):
-                continue
-        elif pluginDirectory == "virtualkeyboard":
-            # Deploy the virtualkeyboard plugins only if QtVirtualKeyboard is in use
-            if not deploymentInfo.usesFramework("QtVirtualKeyboard"):
-                continue
-        elif pluginDirectory == "sceneparsers":
-            # Deploy the virtualkeyboard plugins only if Qt3DCore is in use
-            if not deploymentInfo.usesFramework("Qt3DCore"):
-                continue
-        elif pluginDirectory == "renderplugins":
-            # Deploy the renderplugins plugins only if Qt3DCore is in use
-            if not deploymentInfo.usesFramework("Qt3DCore"):
-                continue
-        elif pluginDirectory == "geometryloaders":
-            # Deploy the geometryloaders plugins only if Qt3DCore is in use
-            if not deploymentInfo.usesFramework("Qt3DCore"):
-                continue
 
         for pluginName in filenames:
             pluginPath = os.path.join(pluginDirectory, pluginName)
-            if pluginName.endswith("_debug.dylib"):
-                # Skip debug plugins
+
+            if pluginName.split('.')[0] not in ['libqminimal', 'libqcocoa', 'libqmacstyle']:
                 continue
-            elif pluginPath == "imageformats/libqsvg.dylib" or pluginPath == "iconengines/libqsvgicon.dylib":
-                # Deploy the svg plugins only if QtSvg is in use
-                if not deploymentInfo.usesFramework("QtSvg"):
-                    continue
-            elif pluginPath == "accessible/libqtaccessiblecompatwidgets.dylib":
-                # Deploy accessibility for Qt3Support only if the Qt3Support is in use
-                if not deploymentInfo.usesFramework("Qt3Support"):
-                    continue
-            elif pluginPath == "graphicssystems/libqglgraphicssystem.dylib":
-                # Deploy the opengl graphicssystem plugin only if QtOpenGL is in use
-                if not deploymentInfo.usesFramework("QtOpenGL"):
-                    continue
-            elif pluginPath == "accessible/libqtaccessiblequick.dylib":
-                # Deploy the accessible qtquick plugin only if QtQuick is in use
-                if not deploymentInfo.usesFramework("QtQuick"):
-                    continue
-            elif pluginPath == "platforminputcontexts/libqtvirtualkeyboardplugin.dylib":
-                # Deploy the virtualkeyboardplugin plugin only if QtVirtualKeyboard is in use
-                if not deploymentInfo.usesFramework("QtVirtualKeyboard"):
-                    continue
 
             plugins.append((pluginDirectory, pluginName))
     
