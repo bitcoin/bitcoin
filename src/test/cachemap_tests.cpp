@@ -2,11 +2,11 @@
 
 #include <cachemap.h>
 #include <streams.h>
-#include <test/util/setup_common.h>
+#include <version.h>
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(cachemap_tests, BasicTestingSetup)
+BOOST_AUTO_TEST_SUITE(cachemap_tests)
 
 static bool Compare(const CacheMap<int,int>& cmap1, const CacheMap<int,int>& cmap2)
 {

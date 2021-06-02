@@ -5,8 +5,6 @@
 #include <policy/policy.h>
 #include <script/interpreter.h>
 
-#include <test/util/setup_common.h>
-
 #include <boost/test/unit_test.hpp>
 
 #include <array>
@@ -14,7 +12,7 @@
 using valtype = std::vector<uint8_t>;
 using stacktype = std::vector<valtype>;
 
-BOOST_FIXTURE_TEST_SUITE(dip0020opcodes_tests, BasicTestingSetup)
+BOOST_AUTO_TEST_SUITE(dip0020opcodes_tests)
 
 std::array<uint32_t, 2> flagset{{0, STANDARD_SCRIPT_VERIFY_FLAGS}};
 

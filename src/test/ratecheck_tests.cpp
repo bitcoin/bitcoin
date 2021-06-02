@@ -2,11 +2,12 @@
 
 #include <governance/governance.h>
 
-#include <test/util/setup_common.h>
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(ratecheck_tests, BasicTestingSetup)
+#include <cmath>
+
+BOOST_AUTO_TEST_SUITE(ratecheck_tests)
 
 BOOST_AUTO_TEST_CASE(ratecheck_test)
 {

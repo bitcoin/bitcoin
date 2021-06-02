@@ -7,12 +7,11 @@
 #include <clientversion.h>
 #include <random.h>
 #include <streams.h>
-#include <test/util/setup_common.h>
 #include <util/irange.h>
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_FIXTURE_TEST_SUITE(bls_tests, BasicTestingSetup)
+BOOST_AUTO_TEST_SUITE(bls_tests)
 
 void FuncSign(const bool legacy_scheme)
 {
