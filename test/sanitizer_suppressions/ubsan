@@ -98,7 +98,6 @@ implicit-unsigned-integer-truncation:crypto/
 implicit-unsigned-integer-truncation:leveldb/
 # std::variant warning fixed in https://github.com/gcc-mirror/gcc/commit/074436cf8cdd2a9ce75cadd36deb8301f00e55b9
 implicit-unsigned-integer-truncation:std::__detail::__variant::_Variant_storage
-shift-base:nanobench.h
 shift-base:*/include/c++/
 shift-base:arith_uint256.cpp
 shift-base:crypto/
