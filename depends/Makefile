@@ -1,4 +1,6 @@
 .NOTPARALLEL :
+# Disable builtin rules and suffixes.
+MAKEFLAGS += --no-builtin-rules
 
 # Pattern rule to print variables, e.g. make print-top_srcdir
 print-%: FORCE
