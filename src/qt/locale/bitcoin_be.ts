@@ -149,7 +149,7 @@
     </message>
     <message>
         <source>Decrypt wallet</source>
-        <translation>Рачшыфраваць гаманец</translation>
+        <translation>Раcшыфраваць гаманец</translation>
     </message>
     <message>
         <source>Change passphrase</source>

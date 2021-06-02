@@ -941,7 +941,7 @@
     </message>
     <message>
         <source>When you click OK, %1 will begin to download and process the full %4 block chain (%2GB) starting with the earliest transactions in %3 when %4 initially launched.</source>
-        <translation>בעת לחיצה על אישור, %1 יחל בהורדה ועיבוד מלאים של שרשרת המקטעים %4 (%2 ג״ב) החל מההעברות הראשונות ב־%3 עם ההשקה הראשונית של %4.</translation>
+        <translation>בעת לחיצה על אישור, %1 יחל בהורדה ועיבוד מלאים של שרשרת המקטעים %4 (%2 ג׳יגה-בייט) החל מההעברות הראשונות ב־%3 עם ההשקה הראשונית של %4.</translation>
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain. It is faster to download the full chain first and prune it later. Disables some advanced features.</source>
@@ -969,7 +969,7 @@
     </message>
     <message>
         <source>Discard blocks after verification, except most recent %1 GB (prune)</source>
-        <translation>התעלם בלוקים לאחר ווריפיקציה, למעט %1 GB המאוחרים ביותר (המקוצצים)</translation>
+        <translation>התעלם בלוקים לאחר ווריפיקציה, למעט %1 ג׳יגה-בייט המאוחרים ביותר (המקוצצים)</translation>
     </message>
     <message>
         <source>At least %1 GB of data will be stored in this directory, and it will grow over time.</source>
@@ -997,13 +997,17 @@
     </message>
     <message numerus="yes">
         <source>%n GB of free space available</source>
-        <translation><numerusform>ג״ב של מקום פנוי זמין</numerusform><numerusform>%n ג״ב של מקום פנוי זמינים</numerusform><numerusform>%n ג״ב של מקום פנוי זמינים</numerusform><numerusform>%n ג״ב של מקום פנוי זמינים</numerusform></translation>
+        <translation><numerusform>ג״ב של מקום פנוי זמין</numerusform><numerusform>%n ג״ב של מקום פנוי זמינים</numerusform><numerusform>%n ג״ב של מקום פנוי זמינים</numerusform><numerusform>%n ג׳יגה-בייט של מקום פנוי זמינים</numerusform></translation>
     </message>
     <message numerus="yes">
         <source>(of %n GB needed)</source>
-        <translation><numerusform>(מתוך %n ג״ב נדרשים)</numerusform><numerusform>(מתוך %n ג״ב נדרשים)</numerusform><numerusform>(מתוך %n ג״ב נדרשים)</numerusform><numerusform>(מתוך %n ג״ב נדרשים)</numerusform></translation>
+        <translation><numerusform>(מתוך %n ג׳יגה-בייט נדרשים)</numerusform><numerusform>(מתוך %n ג׳יגה-בייט נדרשים)</numerusform><numerusform>(מתוך %n ג׳יגה-בייט נדרשים)</numerusform><numerusform>(מתוך %n ג׳יגה-בייט נדרשים)</numerusform></translation>
     </message>
-    </context>
+    <message numerus="yes">
+        <source>(%n GB needed for full chain)</source>
+        <translation><numerusform>(ג׳יגה-בייט %n נדרש לשרשרת המלאה)</numerusform><numerusform>(%n ג׳יגה-בייט נדרשים לשרשרת המלאה)</numerusform><numerusform>(%n ג׳יגה-בייט נדרשים לשרשרת המלאה)</numerusform><numerusform>(%n ג׳יגה-בייט נדרשים לשרשרת המלאה)</numerusform></translation>
+    </message>
+</context>
 <context>
     <name>ModalOverlay</name>
     <message>
@@ -1177,7 +1181,7 @@
     </message>
     <message>
         <source>GB</source>
-        <translation>ג״ב</translation>
+        <translation>ג'יגה בייט</translation>
     </message>
     <message>
         <source>Reverting this setting requires re-downloading the entire blockchain.</source>
@@ -1593,7 +1597,7 @@
     </message>
     <message>
         <source>%1 GB</source>
-        <translation>%1 ג״ב</translation>
+        <translation>%1 ג'יגה בייט</translation>
     </message>
     <message>
         <source>Error: Specified data directory "%1" does not exist.</source>
@@ -2364,6 +2368,10 @@ Note:  Since the fee is calculated on a per-byte basis, a fee of "100 satoshis p
     <message>
         <source>Are you sure you want to send?</source>
         <translation>לשלוח?</translation>
+    </message>
+    <message>
+        <source>Please, review your transaction proposal. This will produce a Partially Signed Bitcoin Transaction (PSBT) which you can copy and then sign with e.g. an offline %1 wallet, or a PSBT-compatible hardware wallet.</source>
+        <translation>נא לסקור את העיסקה המוצעת. הדבר יצור עיסקת ביטקוין חתומה חלקית (PSBT) אותה ניתן להעתיק ואז לחתום עם למשל ארנק לא מקוון %1, או עם ארנק חומרה תואם-PSBT.</translation>
     </message>
     <message>
         <source>or</source>

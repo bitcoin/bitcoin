@@ -145,19 +145,19 @@
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
-        <translation>การดำเนินการนี้ต้องการกระเป๋าสตางค์กระเป๋าสตางค์ของคุณเพื่อปลดล็อกกระเป๋าสตางค์</translation>
+        <translation>การดำเนินการนี้ต้องการกระเป๋าสตางค์กระเป๋าสตางค์ของคุณเพื่อปลดล็อกกระเป๋าเงิน</translation>
     </message>
     <message>
         <source>Unlock wallet</source>
-        <translation>ปลดล็อค กระเป๋าสตางค์ </translation>
+        <translation>ปลดล็อค กระเป๋าเงิน </translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>การดำเนินการนี้ ต้องการ รหัสผ่าน กระเป๋าสตางค์ ของคุณ เพื่อ ถอดรหัส กระเป๋าสตางค์</translation>
+        <translation>การดำเนินการนี้ ต้องการ รหัสผ่าน กระเป๋าสตางค์ ของคุณ เพื่อ ถอดรหัส กระเป๋าเงิน</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
-        <translation>ถอดรหัส กระเป๋าสตางค์</translation>
+        <translation>ถอดรหัส กระเป๋าเงิน</translation>
     </message>
     <message>
         <source>Change passphrase</source>
@@ -170,6 +170,30 @@
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
         <translation>คุณแน่ใจหรือว่าต้องการเข้ารหัสกระเป๋าเงินของคุณ?</translation>
+    </message>
+    <message>
+        <source>Wallet encrypted</source>
+        <translation>เข้ารหัสบัญชีเรียบร้อย</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>บัญชีของคุณกำลังถูกเข้ารหัส</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>บัญชีของคุณถูกเข้ารหัสเรียบร้อยแล้ว</translation>
+    </message>
+    <message>
+        <source>Wallet encryption failed</source>
+        <translation>การเข้ารหัสกระเป๋าสตางค์ล้มเหลว</translation>
+    </message>
+    <message>
+        <source>Wallet unlock failed</source>
+        <translation>Wallet unlock failed</translation>
+    </message>
+    <message>
+        <source>Wallet decryption failed</source>
+        <translation>การถอดรหัสกระเป๋าสตางค์ล้มเหลว</translation>
     </message>
     </context>
 <context>
@@ -260,6 +284,26 @@
     <message>
         <source>Create Wallet...</source>
         <translation>สร้าง Wallet</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>สร้างกระเป๋าสตางค์</translation>
+    </message>
+    <message>
+        <source>Wallet:</source>
+        <translation>กระเป๋าสตางค์:</translation>
+    </message>
+    <message>
+        <source>Click to disable network activity.</source>
+        <translation>คลิกเพื่อปิดใช้งานกิจกรรมเครือข่าย</translation>
+    </message>
+    <message>
+        <source>Click to enable network activity again.</source>
+        <translation>คลิกเพื่อเปิดใช้งานกิจกรรมเครือข่ายอีกครั้ง</translation>
+    </message>
+    <message>
+        <source>Syncing Headers (%1%)...</source>
+        <translation>กำลังซิงค์ส่วนหัว (%1%)...</translation>
     </message>
     <message>
         <source>Reindexing blocks on disk...</source>
@@ -386,12 +430,60 @@
         <translation>ทันสมัย</translation>
     </message>
     <message>
+        <source>Node window</source>
+        <translation>หน้าต่างโหนด</translation>
+    </message>
+    <message>
+        <source>&amp;Sending addresses</source>
+        <translation>&amp;ที่อยู่การส่ง</translation>
+    </message>
+    <message>
+        <source>&amp;Receiving addresses</source>
+        <translation>&amp;ที่อยู่การรับ</translation>
+    </message>
+    <message>
+        <source>Open Wallet</source>
+        <translation>เปิดกระเป๋าสตางค์</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>เปิดกระเป๋าสตางค์</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>ปิดกระเป๋าสตางค์...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>ปิดกระเป๋าสตางค์</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>แสดง %1 ข้อความช่วยเหลือ เพื่อแสดงรายการ ตัวเลือกที่เป็นไปได้สำหรับ Bitcoin command-line</translation>
     </message>
     <message>
+        <source>default wallet</source>
+        <translation>กระเป๋าสตางค์เริ่มต้น</translation>
+    </message>
+    <message>
+        <source>No wallets available</source>
+        <translation>ไม่มีกระเป๋าสตางค์</translation>
+    </message>
+    <message>
         <source>&amp;Window</source>
         <translation>&amp;วันโดว์</translation>
+    </message>
+    <message>
+        <source>Minimize</source>
+        <translation>ย่อ</translation>
+    </message>
+    <message>
+        <source>Zoom</source>
+        <translation>ซูม</translation>
+    </message>
+    <message>
+        <source>Main Window</source>
+        <translation>หน้าต่างหลัก</translation>
     </message>
     <message>
         <source>%1 client</source>
@@ -400,6 +492,14 @@
     <message>
         <source>Catching up...</source>
         <translation>กำลังตามให้ทัน...</translation>
+    </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>ข้อผิดพลาด: %1</translation>
+    </message>
+    <message>
+        <source>Warning: %1</source>
+        <translation>คำเตือน: %1</translation>
     </message>
     <message>
         <source>Date: %1
@@ -411,6 +511,12 @@
         <source>Amount: %1
 </source>
         <translation>จำนวน: %1
+</translation>
+    </message>
+    <message>
+        <source>Wallet: %1
+</source>
+        <translation>กระเป๋าสตางค์: %1
 </translation>
     </message>
     <message>
@@ -542,15 +648,39 @@
         <source>(no label)</source>
         <translation>(ไม่มีฉลาก)</translation>
     </message>
-    </context>
+    <message>
+        <source>change from %1 (%2)</source>
+        <translation>เปลี่ยนจาก %1 (%2)</translation>
+    </message>
+    <message>
+        <source>(change)</source>
+        <translation>(เปลี่ยน)</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletActivity</name>
+    <message>
+        <source>Creating Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>กำลังสร้างกระเป๋าสตางค์ &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
     </context>
 <context>
     <name>CreateWalletDialog</name>
     <message>
+        <source>Create Wallet</source>
+        <translation>สร้างกระเป๋าสตางค์</translation>
+    </message>
+    <message>
+        <source>Wallet Name</source>
+        <translation>ชื่อกระเป๋าสตางค์</translation>
+    </message>
+    <message>
         <source>Encrypt Wallet</source>
         <translation>เข้ารหัสกระเป๋าเงิน</translation>
+    </message>
+    <message>
+        <source>Disable Private Keys</source>
+        <translation>ปิดใช้งานกุญแจส่วนตัว</translation>
     </message>
     <message>
         <source>Make Blank Wallet</source>
@@ -582,6 +712,22 @@
     <message>
         <source>&amp;Address</source>
         <translation>&amp;ที่เก็บ</translation>
+    </message>
+    <message>
+        <source>New sending address</source>
+        <translation>ที่อยู่การส่งใหม่</translation>
+    </message>
+    <message>
+        <source>Edit receiving address</source>
+        <translation>แก้ไขที่อยู่การรับ</translation>
+    </message>
+    <message>
+        <source>Edit sending address</source>
+        <translation>แก้ไขที่อยู่การส่ง</translation>
+    </message>
+    <message>
+        <source>Could not unlock wallet.</source>
+        <translation>ไม่สามารถปลดล็อคกระเป๋าสตางค์</translation>
     </message>
     </context>
 <context>
@@ -679,6 +825,18 @@
         <source>Form</source>
         <translation>รูป</translation>
     </message>
+    <message>
+        <source>Progress</source>
+        <translation>ความคืบหน้า</translation>
+    </message>
+    <message>
+        <source>calculating...</source>
+        <translation>กำลังคำนวณ...</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>ซ่อน</translation>
+    </message>
     </context>
 <context>
     <name>OpenURIDialog</name>
@@ -689,7 +847,15 @@
 </context>
 <context>
     <name>OpenWalletActivity</name>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>กระเป๋าสตางค์เริ่มต้น</translation>
+    </message>
+    <message>
+        <source>Opening Wallet &lt;b&gt;%1&lt;/b&gt;...</source>
+        <translation>กำลังเปิดกระเป๋าสตางค์ &lt;b&gt;%1&lt;/b&gt;...</translation>
+    </message>
+</context>
 <context>
     <name>OptionsDialog</name>
     <message>
@@ -721,12 +887,20 @@
         <translation>IP แอดเดส ของ proxy (เช่น IPv4: 127.0.0.1 / IPv6: ::1)</translation>
     </message>
     <message>
+        <source>&amp;Hide tray icon</source>
+        <translation>&amp;ซ่อนไอคอนถาด</translation>
+    </message>
+    <message>
         <source>Minimize instead of exit the application when the window is closed. When this option is enabled, the application will be closed only after selecting Exit in the menu.</source>
         <translation>มินิไมซ์แอพ แทนการออกจากแอพพลิเคชั่น เมื่อวินโดว์ได้รับการปิด เมื่อเลือกตัวเลือกนี้ แอพพลิเคชั่น จะถูกปิด ก็ต่อเมื่อ มีการเลือกเมนู Exit/ออกจากระบบ เท่านั้น</translation>
     </message>
     <message>
         <source>Third party URLs (e.g. a block explorer) that appear in the transactions tab as context menu items. %s in the URL is replaced by transaction hash. Multiple URLs are separated by vertical bar |.</source>
         <translation>URL แบบอื่น (ยกตัวอย่าง เอ็กพลอเลอร์บล็อก) ที่อยู่ใน เมนูรายการ ลำดับ %s ใน URL จะถูกเปลี่ยนด้วย รายการแฮช URL ที่เป็นแบบหลายๆอัน จะถูกแยก โดย เครื่องหมายเส้นบาร์ตั้ง |</translation>
+    </message>
+    <message>
+        <source>Open Configuration File</source>
+        <translation>เปิดไฟล์การกำหนดค่า</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -821,6 +995,22 @@
         <translation>แสดงเทรย์ไอคอน หลังมืนิไมส์วินโดว์ เท่านั้น</translation>
     </message>
     <message>
+        <source>User Interface &amp;language:</source>
+        <translation>&amp;ภาษาส่วนติดต่อผู้ใช้:</translation>
+    </message>
+    <message>
+        <source>&amp;OK</source>
+        <translation>&amp;ตกลง</translation>
+    </message>
+    <message>
+        <source>&amp;Cancel</source>
+        <translation>&amp;ยกเลิก</translation>
+    </message>
+    <message>
+        <source>Configuration options</source>
+        <translation>ตัวเลือกการกำหนดค่า</translation>
+    </message>
+    <message>
         <source>Error</source>
         <translation>ข้อผิดพลาด</translation>
     </message>
@@ -830,6 +1020,10 @@
     <message>
         <source>Form</source>
         <translation>รูป</translation>
+    </message>
+    <message>
+        <source>Balances</source>
+        <translation>ยอดดุล</translation>
     </message>
     </context>
 <context>
@@ -848,12 +1042,40 @@
         <source>%1 and %2</source>
         <translation>%1 และ %2</translation>
     </message>
+    <message>
+        <source>Error: %1</source>
+        <translation>ข้อผิดพลาด: %1</translation>
+    </message>
     </context>
 <context>
     <name>QRImageWidget</name>
+    <message>
+        <source>Save QR Code</source>
+        <translation>บันทึกรหัส QR</translation>
+    </message>
     </context>
 <context>
     <name>RPCConsole</name>
+    <message>
+        <source>Wallet: </source>
+        <translation>กระเป๋าสตางค์: </translation>
+    </message>
+    <message>
+        <source>Direction</source>
+        <translation>ทิศทาง</translation>
+    </message>
+    <message>
+        <source>Node window</source>
+        <translation>หน้าต่างโหนด</translation>
+    </message>
+    <message>
+        <source>&amp;Open</source>
+        <translation>&amp;เปิด</translation>
+    </message>
+    <message>
+        <source>&amp;Console</source>
+        <translation>&amp;คอนโซล</translation>
+    </message>
     </context>
 <context>
     <name>ReceiveCoinsDialog</name>
@@ -862,8 +1084,32 @@
         <translation>&amp;ชื่อ:</translation>
     </message>
     <message>
+        <source>&amp;Message:</source>
+        <translation>&amp;ข้อความ:</translation>
+    </message>
+    <message>
+        <source>Clear</source>
+        <translation>ล้าง</translation>
+    </message>
+    <message>
+        <source>Show</source>
+        <translation>แสดง</translation>
+    </message>
+    <message>
+        <source>Remove</source>
+        <translation>เอาออก</translation>
+    </message>
+    <message>
+        <source>Copy URI</source>
+        <translation>คัดลอก URI</translation>
+    </message>
+    <message>
         <source>Copy label</source>
         <translation>คัดลอกป้ายกำกับ</translation>
+    </message>
+    <message>
+        <source>Copy message</source>
+        <translation>คัดลอกข้อความ</translation>
     </message>
     <message>
         <source>Copy amount</source>
@@ -872,6 +1118,14 @@
 </context>
 <context>
     <name>ReceiveRequestDialog</name>
+    <message>
+        <source>Copy &amp;URI</source>
+        <translation>&amp;คัดลอก URI</translation>
+    </message>
+    <message>
+        <source>Copy &amp;Address</source>
+        <translation>&amp;คัดลอกที่อยู่</translation>
+    </message>
     <message>
         <source>Address</source>
         <translation>ที่อยู่</translation>
@@ -883,6 +1137,10 @@
     <message>
         <source>Label</source>
         <translation>ฉลาก, ป้าย,</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>ข้อความ</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -898,6 +1156,10 @@
     <message>
         <source>Label</source>
         <translation>ฉลาก, ป้าย,</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>ข้อความ</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -935,12 +1197,40 @@
         <translation>เงินทอน:</translation>
     </message>
     <message>
+        <source>Choose...</source>
+        <translation>เลือก...</translation>
+    </message>
+    <message>
+        <source>Hide</source>
+        <translation>ซ่อน</translation>
+    </message>
+    <message>
+        <source>Recommended:</source>
+        <translation>แนะนำ:</translation>
+    </message>
+    <message>
+        <source>Custom:</source>
+        <translation>กำหนดเอง:</translation>
+    </message>
+    <message>
         <source>Dust:</source>
         <translation>เศษ:</translation>
     </message>
     <message>
         <source>Copy amount</source>
         <translation>คัดลอกจำนวนเงิน</translation>
+    </message>
+    <message>
+        <source> from wallet '%1'</source>
+        <translation>จากกระเป๋าสตางค์ '%1'</translation>
+    </message>
+    <message>
+        <source>Send</source>
+        <translation>ส่ง</translation>
+    </message>
+    <message>
+        <source>PSBT copied</source>
+        <translation>คัดลอก PSBT แล้ว</translation>
     </message>
     <message>
         <source>(no label)</source>
@@ -953,12 +1243,52 @@
         <source>&amp;Label:</source>
         <translation>&amp;ชื่อ:</translation>
     </message>
+    <message>
+        <source>Alt+A</source>
+        <translation>Alt+A</translation>
+    </message>
+    <message>
+        <source>Paste address from clipboard</source>
+        <translation>วางที่อยู่จากคลิปบอร์ด</translation>
+    </message>
+    <message>
+        <source>Alt+P</source>
+        <translation>Alt+P</translation>
+    </message>
+    <message>
+        <source>Message:</source>
+        <translation>ข้อความ:</translation>
+    </message>
     </context>
 <context>
     <name>ShutdownWindow</name>
     </context>
 <context>
     <name>SignVerifyMessageDialog</name>
+    <message>
+        <source>Alt+A</source>
+        <translation>Alt+A</translation>
+    </message>
+    <message>
+        <source>Paste address from clipboard</source>
+        <translation>วางที่อยู่จากคลิปบอร์ด</translation>
+    </message>
+    <message>
+        <source>Alt+P</source>
+        <translation>Alt+P</translation>
+    </message>
+    <message>
+        <source>Signature</source>
+        <translation>ลายเซ็น</translation>
+    </message>
+    <message>
+        <source>Sign &amp;Message</source>
+        <translation>&amp;เซ็นข้อความ</translation>
+    </message>
+    <message>
+        <source>No error</source>
+        <translation>ไม่มีข้อผิดพลาด</translation>
+    </message>
     </context>
 <context>
     <name>TrafficGraphWidget</name>
@@ -966,8 +1296,28 @@
 <context>
     <name>TransactionDesc</name>
     <message>
+        <source>Status</source>
+        <translation>สถานะ</translation>
+    </message>
+    <message>
         <source>Date</source>
         <translation>วันที่</translation>
+    </message>
+    <message>
+        <source>From</source>
+        <translation>จาก</translation>
+    </message>
+    <message>
+        <source>To</source>
+        <translation>ถึง</translation>
+    </message>
+    <message>
+        <source>Message</source>
+        <translation>ข้อความ</translation>
+    </message>
+    <message>
+        <source>Comment</source>
+        <translation>ความคิดเห็น</translation>
     </message>
     <message>
         <source>Amount</source>
@@ -984,6 +1334,10 @@
         <translation>วันที่</translation>
     </message>
     <message>
+        <source>Type</source>
+        <translation>ชนิด</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>ฉลาก, ป้าย,</translation>
     </message>
@@ -994,6 +1348,30 @@
     </context>
 <context>
     <name>TransactionView</name>
+    <message>
+        <source>All</source>
+        <translation>ทั้งหมด</translation>
+    </message>
+    <message>
+        <source>Today</source>
+        <translation>วันนี้</translation>
+    </message>
+    <message>
+        <source>This week</source>
+        <translation>สัปดาห์นี้</translation>
+    </message>
+    <message>
+        <source>This month</source>
+        <translation>เดือนนี้</translation>
+    </message>
+    <message>
+        <source>Last month</source>
+        <translation>เดือนที่แล้ว</translation>
+    </message>
+    <message>
+        <source>This year</source>
+        <translation>ปีนี้</translation>
+    </message>
     <message>
         <source>Copy address</source>
         <translation>คัดลอกที่อยู่</translation>
@@ -1011,6 +1389,10 @@
         <translation>คัดลอก ID ธุรกรรม</translation>
     </message>
     <message>
+        <source>Edit label</source>
+        <translation>แก้ไขป้ายชื่อ</translation>
+    </message>
+    <message>
         <source>Comma separated file (*.csv)</source>
         <translation>ไฟล์ที่คั่นด้วยจุลภาค (* .csv)</translation>
     </message>
@@ -1023,12 +1405,20 @@
         <translation>วันที่</translation>
     </message>
     <message>
+        <source>Type</source>
+        <translation>ชนิด</translation>
+    </message>
+    <message>
         <source>Label</source>
         <translation>ฉลาก, ป้าย,</translation>
     </message>
     <message>
         <source>Address</source>
         <translation>ที่อยู่</translation>
+    </message>
+    <message>
+        <source>ID</source>
+        <translation>ID</translation>
     </message>
     <message>
         <source>Exporting Failed</source>
@@ -1040,6 +1430,10 @@
     </context>
 <context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>ปิดกระเป๋าสตางค์</translation>
+    </message>
     </context>
 <context>
     <name>WalletFrame</name>
@@ -1050,7 +1444,15 @@
         <source>Send Coins</source>
         <translation>ส่งเหรียญ</translation>
     </message>
-    </context>
+    <message>
+        <source>PSBT copied</source>
+        <translation>คัดลอก PSBT แล้ว</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>กระเป๋าสตางค์เริ่มต้น</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>
@@ -1061,8 +1463,44 @@
         <source>Export the data in the current tab to a file</source>
         <translation>ส่งออกข้อมูลที่อยู่ในแถบนี้ไปในไฟล์</translation>
     </message>
-    </context>
+    <message>
+        <source>Backup Wallet</source>
+        <translation>สำรองข้อมูลกระเป๋าสตางค์</translation>
+    </message>
+    <message>
+        <source>Wallet Data (*.dat)</source>
+        <translation>ข้อมูลกระเป๋าสตางค์ (*.dat)</translation>
+    </message>
+    <message>
+        <source>Backup Failed</source>
+        <translation>การสำรองข้อมูลล้มเหลว</translation>
+    </message>
+    <message>
+        <source>Cancel</source>
+        <translation>ยกเลิก</translation>
+    </message>
+</context>
 <context>
     <name>bitcoin-core</name>
+    <message>
+        <source>Importing...</source>
+        <translation>กำลังนำเข้า...</translation>
+    </message>
+    <message>
+        <source>Unable to generate keys</source>
+        <translation>ไม่สามารถสร้างกุญแจ</translation>
+    </message>
+    <message>
+        <source>Upgrading UTXO database</source>
+        <translation>กำลังอัปเกรดฐานข้อมูล UTXO</translation>
+    </message>
+    <message>
+        <source>Loading wallet...</source>
+        <translation>กำลังโหลดกระเป๋าสตางค์...</translation>
+    </message>
+    <message>
+        <source>Cannot downgrade wallet</source>
+        <translation>ไม่สามารถดาวน์เกรดกระเป๋าสตางค์</translation>
+    </message>
     </context>
 </TS>

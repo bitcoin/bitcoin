@@ -15,7 +15,7 @@
     </message>
     <message>
         <source>Copy the currently selected address to the system clipboard</source>
-        <translation>Copiar o endereço selecionado para a área de transferência do sistema</translation>
+        <translation>Copiar o endereço selecionado para a área de transferência</translation>
     </message>
     <message>
         <source>&amp;Copy</source>
@@ -55,15 +55,15 @@
     </message>
     <message>
         <source>C&amp;hoose</source>
-        <translation>Escol&amp;her</translation>
+        <translation>Escolher</translation>
     </message>
     <message>
         <source>Sending addresses</source>
-        <translation>Endereços de envio</translation>
+        <translation>Endereço de envio</translation>
     </message>
     <message>
         <source>Receiving addresses</source>
-        <translation>Endereços de receção</translation>
+        <translation>Endereço de recepção</translation>
     </message>
     <message>
         <source>These are your Bitcoin addresses for sending payments. Always check the amount and the receiving address before sending coins.</source>
@@ -71,7 +71,7 @@
     </message>
     <message>
         <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
-        <translation>Estes são os endereços Bitcoin para receiver pagamentos. Use o botão "Criar novo endereço para receiver" para crier novo endereço.</translation>
+        <translation>Estes são seus endereços de Bitcoin para receber pagamentos. Use o botão 'Criar novo endereço de recebimento' na guia de recebimento para criar novos endereços.</translation>
     </message>
     <message>
         <source>&amp;Copy Address</source>
@@ -79,7 +79,7 @@
     </message>
     <message>
         <source>Copy &amp;Label</source>
-        <translation>Copiar &amp;Etiqueta</translation>
+        <translation>Copiar Etiqueta</translation>
     </message>
     <message>
         <source>&amp;Edit</source>
@@ -87,7 +87,7 @@
     </message>
     <message>
         <source>Export Address List</source>
-        <translation>Exportar Lista de Endereços</translation>
+        <translation>Exportar Lista de Endereço</translation>
     </message>
     <message>
         <source>Comma separated file (*.csv)</source>
@@ -141,7 +141,7 @@
     </message>
     <message>
         <source>Encrypt wallet</source>
-        <translation>Encriptar carteira</translation>
+        <translation>Criptografar carteira</translation>
     </message>
     <message>
         <source>This operation needs your wallet passphrase to unlock the wallet.</source>
@@ -153,11 +153,11 @@
     </message>
     <message>
         <source>This operation needs your wallet passphrase to decrypt the wallet.</source>
-        <translation>Esta operação precisa da sua frase de segurança da carteira para desencriptar a mesma.</translation>
+        <translation>Esta operação precisa da senha da carteira para descriptografar a carteira.</translation>
     </message>
     <message>
         <source>Decrypt wallet</source>
-        <translation>Desencriptar carteira</translation>
+        <translation>Descriptografar carteira</translation>
     </message>
     <message>
         <source>Change passphrase</source>
@@ -169,11 +169,11 @@
     </message>
     <message>
         <source>Warning: If you encrypt your wallet and lose your passphrase, you will &lt;b&gt;LOSE ALL OF YOUR BITCOINS&lt;/b&gt;!</source>
-        <translation>Aviso: se encriptar a sua carteira e perder a sua frase de segurnça, &lt;b&gt;PERDERÁ TODOS OS SEUS BITCOINS&lt;/b&gt;!</translation>
+        <translation>Aviso: se criptografar a sua carteira e perder a sua frase de segurança, &lt;b&gt;PERDERÁ TODOS OS SEUS BITCOINS&lt;/b&gt;!</translation>
     </message>
     <message>
         <source>Are you sure you wish to encrypt your wallet?</source>
-        <translation>Tem a certeza que deseja encriptar a sua carteira?</translation>
+        <translation>Tem a certeza que deseja criptografar a sua carteira?</translation>
     </message>
     <message>
         <source>Wallet encrypted</source>
@@ -189,19 +189,19 @@
     </message>
     <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
-        <translation>Lembra se que encrostar a sua carteira não o pode defender na totalidade os seus bitcoins de serem roubados por um malware que possa infectar o seu computador.</translation>
+        <translation>Lembre-se de que criptografar sua carteira não pode proteger totalmente seus bitcoins de serem roubados por malware que infecta seu computador.</translation>
     </message>
     <message>
         <source>Wallet to be encrypted</source>
-        <translation>Carteira a ser encriptada</translation>
+        <translation>Carteira a ser criptografada</translation>
     </message>
     <message>
         <source>Your wallet is about to be encrypted. </source>
-        <translation>A sua carteira vai agora ser encriptada.</translation>
+        <translation>Sua carteira está prestes a ser criptografada.</translation>
     </message>
     <message>
         <source>Your wallet is now encrypted. </source>
-        <translation>A sua carteira está agora encriptada</translation>
+        <translation>A sua carteira foi criptografada.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -395,7 +395,7 @@
     </message>
     <message>
         <source>Encrypt the private keys that belong to your wallet</source>
-        <translation>Encriptar as chaves privadas que pertencem à sua carteira</translation>
+        <translation>Criptografar as chaves privadas que pertencem à sua carteira</translation>
     </message>
     <message>
         <source>Sign messages with your Bitcoin addresses to prove you own them</source>
@@ -812,11 +812,11 @@
     </message>
     <message>
         <source>Encrypt the wallet. The wallet will be encrypted with a passphrase of your choice.</source>
-        <translation>Encriptar carteira. A carteira vai ser encriptada com uma password de sua escolha.</translation>
+        <translation>Criptografar carteira. A carteira será criptografada com uma palavra-passe da sua escolha.</translation>
     </message>
     <message>
         <source>Encrypt Wallet</source>
-        <translation>Encriptar Carteira</translation>
+        <translation>Criptografar Carteira</translation>
     </message>
     <message>
         <source>Disable private keys for this wallet. Wallets with private keys disabled will have no private keys and cannot have an HD seed or imported private keys. This is ideal for watch-only wallets.</source>

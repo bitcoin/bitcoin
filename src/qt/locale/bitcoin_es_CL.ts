@@ -71,6 +71,10 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Estas son sus direcciones de Bitcoin para enviar pagos. Siempre verifique el monto y la dirección de recepción antes de enviar monedas.</translation>
     </message>
     <message>
+        <source>These are your Bitcoin addresses for receiving payments. Use the 'Create new receiving address' button in the receive tab to create new addresses.</source>
+        <translation>Estas son sus direcciones de Bitcoin para recibir pagos. Utilice el botón de "Crear una nueva dirección de recibo" en la pestaña de recibos para crear nuevas direcciones.</translation>
+    </message>
+    <message>
         <source>&amp;Copy Address</source>
         <translation>Copiar dirección</translation>
     </message>
@@ -133,6 +137,10 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Repetir nueva contraseña</translation>
     </message>
     <message>
+        <source>Show passphrase</source>
+        <translation>Mostrar contraseña</translation>
+    </message>
+    <message>
         <source>Encrypt wallet</source>
         <translation>Encriptar la billetera</translation>
     </message>
@@ -173,8 +181,28 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Billetera encriptada</translation>
     </message>
     <message>
+        <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
+        <translation>Introducir la nueva contraseña para la billetera. Por favor usa una contraseña de diez o mas caracteres aleatorios, o ocho o mas palabras.</translation>
+    </message>
+    <message>
+        <source>Enter the old passphrase and new passphrase for the wallet.</source>
+        <translation>Introducir la vieja contraseña y la nueva contraseña para la billetera.</translation>
+    </message>
+    <message>
         <source>Remember that encrypting your wallet cannot fully protect your bitcoins from being stolen by malware infecting your computer.</source>
         <translation>Recuerda que codificando tu billetera no garantiza mantener a salvo tus bitcoins en caso de tener virus en el computador.</translation>
+    </message>
+    <message>
+        <source>Wallet to be encrypted</source>
+        <translation>Billetera para ser encriptada</translation>
+    </message>
+    <message>
+        <source>Your wallet is about to be encrypted. </source>
+        <translation>Tu billetera esta por ser encriptada</translation>
+    </message>
+    <message>
+        <source>Your wallet is now encrypted. </source>
+        <translation>Su billetera ahora esta encriptada.</translation>
     </message>
     <message>
         <source>IMPORTANT: Any previous backups you have made of your wallet file should be replaced with the newly generated, encrypted wallet file. For security reasons, previous backups of the unencrypted wallet file will become useless as soon as you start using the new, encrypted wallet.</source>
@@ -297,6 +325,14 @@ Exportar los datos en la pestaña actual a un archivo</translation>
     <message>
         <source>Open &amp;URI...</source>
         <translation>Abrir &amp;URL...</translation>
+    </message>
+    <message>
+        <source>Create Wallet...</source>
+        <translation>Crear Billetera...</translation>
+    </message>
+    <message>
+        <source>Create a new wallet</source>
+        <translation>Crear una nueva billetera</translation>
     </message>
     <message>
         <source>Wallet:</source>
@@ -447,8 +483,28 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>A hoy</translation>
     </message>
     <message>
+        <source>Open Wallet</source>
+        <translation>Abrir billetera</translation>
+    </message>
+    <message>
+        <source>Open a wallet</source>
+        <translation>Abrir una billetera</translation>
+    </message>
+    <message>
+        <source>Close Wallet...</source>
+        <translation>Cerrar billetera...</translation>
+    </message>
+    <message>
+        <source>Close wallet</source>
+        <translation>Cerrar billetera</translation>
+    </message>
+    <message>
         <source>Show the %1 help message to get a list with possible Bitcoin command-line options</source>
         <translation>Muestre el mensaje de ayuda %1 para obtener una lista con posibles opciones de línea de comandos de Bitcoin</translation>
+    </message>
+    <message>
+        <source>default wallet</source>
+        <translation>billetera predeterminada</translation>
     </message>
     <message>
         <source>&amp;Window</source>
@@ -700,10 +756,26 @@ Exportar los datos en la pestaña actual a un archivo</translation>
 </context>
 <context>
     <name>CreateWalletActivity</name>
-    </context>
+    <message>
+        <source>Create wallet failed</source>
+        <translation>Crear billetera falló</translation>
+    </message>
+    <message>
+        <source>Create wallet warning</source>
+        <translation>Advertencia de crear billetera</translation>
+    </message>
+</context>
 <context>
     <name>CreateWalletDialog</name>
-    </context>
+    <message>
+        <source>Create Wallet</source>
+        <translation>Crear Billetera</translation>
+    </message>
+    <message>
+        <source>Create</source>
+        <translation>Crear</translation>
+    </message>
+</context>
 <context>
     <name>EditAddressDialog</name>
     <message>
@@ -920,6 +992,10 @@ Exportar los datos en la pestaña actual a un archivo</translation>
 </context>
 <context>
     <name>OpenWalletActivity</name>
+    <message>
+        <source>default wallet</source>
+        <translation>billetera predeterminada</translation>
+    </message>
     </context>
 <context>
     <name>OptionsDialog</name>
@@ -1737,6 +1813,10 @@ Exportar los datos en la pestaña actual a un archivo</translation>
         <translation>Un monto opcional para solicitar. Deje esto vacío o en cero para no solicitar una cantidad específica.</translation>
     </message>
     <message>
+        <source>&amp;Create new receiving address</source>
+        <translation>&amp;Crear una nueva dirección de recibo</translation>
+    </message>
+    <message>
         <source>Clear all fields of the form.</source>
         <translation>Borre todos los campos del formulario.</translation>
     </message>
@@ -2025,6 +2105,10 @@ Tarifa de copia</translation>
     <message>
         <source>Transaction fee</source>
         <translation>Comisión de transacción</translation>
+    </message>
+    <message>
+        <source>Total Amount</source>
+        <translation>Monto total</translation>
     </message>
     <message>
         <source>Confirm send coins</source>
@@ -2712,6 +2796,10 @@ Tarifa de copia</translation>
 </context>
 <context>
     <name>WalletController</name>
+    <message>
+        <source>Close wallet</source>
+        <translation>Cerrar billetera</translation>
+    </message>
     </context>
 <context>
     <name>WalletFrame</name>
@@ -2762,7 +2850,11 @@ Tarifa de copia</translation>
         <source>Could not commit transaction</source>
         <translation>No se pudo confirmar la transacción</translation>
     </message>
-    </context>
+    <message>
+        <source>default wallet</source>
+        <translation>billetera predeterminada</translation>
+    </message>
+</context>
 <context>
     <name>WalletView</name>
     <message>

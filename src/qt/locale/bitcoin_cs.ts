@@ -3,11 +3,11 @@
     <name>AddressBookPage</name>
     <message>
         <source>Right-click to edit address or label</source>
-        <translation>Pravým tlačítkem myši můžeš upravit označení adresy</translation>
+        <translation>Pravým tlačítkem myši můžeš upravit adresu nebo štítek</translation>
     </message>
     <message>
         <source>Create a new address</source>
-        <translation>Vytvoř novou adresu</translation>
+        <translation>Vytvořit novou adresu</translation>
     </message>
     <message>
         <source>&amp;New</source>
@@ -39,7 +39,7 @@
     </message>
     <message>
         <source>&amp;Export</source>
-        <translation>&amp;Export</translation>
+        <translation>&amp;Vývozní</translation>
     </message>
     <message>
         <source>&amp;Delete</source>

@@ -181,7 +181,7 @@
     </message>
     <message>
         <source>Enter the new passphrase for the wallet.&lt;br/&gt;Please use a passphrase of &lt;b&gt;ten or more random characters&lt;/b&gt;, or &lt;b&gt;eight or more words&lt;/b&gt;.</source>
-        <translation>Syötä uusi salasanalause lompakolle &lt;br/&gt;Ole hyvä ja käytä salasanalausetta, jossa on &lt;b&gt;kymmenen tai enemmän sattumanvaraisia merkkjä tai &lt;b&gt;kahdeksan tai enemmän sanoja&lt;/b&gt; .</translation>
+        <translation>Syötä uusi salasanalause lompakolle. &lt;br/&gt;Käytäthän salasanalausetta, jossa on &lt;b&gt;vähintään kymmenen sattumanvaraista merkkiä tai &lt;b&gt;ainakin kahdeksan sanaa&lt;/b&gt; .</translation>
     </message>
     <message>
         <source>Enter the old passphrase and new passphrase for the wallet.</source>
@@ -339,11 +339,11 @@
     </message>
     <message>
         <source>Click to disable network activity.</source>
-        <translation>Paina poistaaksesi verkkoyhteysilmaisin käytöstä.</translation>
+        <translation>Paina poistaaksesi verkkoyhteys käytöstä.</translation>
     </message>
     <message>
         <source>Network activity disabled.</source>
-        <translation>Verkkoyhteysmittari pois käytöstä</translation>
+        <translation>Verkkoyhteydet pois käytöstä</translation>
     </message>
     <message>
         <source>Click to enable network activity again.</source>
@@ -459,7 +459,7 @@
     </message>
     <message>
         <source>Last received block was generated %1 ago.</source>
-        <translation>Viimeisin vastaanotettu lohko tuotettu %1.</translation>
+        <translation>Viimeisin vastaanotettu lohko tuotettu %1 sitten.</translation>
     </message>
     <message>
         <source>Transactions after this will not yet be visible.</source>
@@ -615,7 +615,7 @@
     </message>
     <message>
         <source>HD key generation is &lt;b&gt;disabled&lt;/b&gt;</source>
-        <translation>HD avaimen generointi on &lt;/b&gt;pois päältä&lt;/b&gt;</translation>
+        <translation>HD-avaimen luonti on &lt;/b&gt;pois päältä&lt;/b&gt;</translation>
     </message>
     <message>
         <source>Private key &lt;b&gt;disabled&lt;/b&gt;</source>
@@ -1132,7 +1132,7 @@
     </message>
     <message>
         <source>IP address of the proxy (e.g. IPv4: 127.0.0.1 / IPv6: ::1)</source>
-        <translation>IP osoite proxille (esim. IPv4: 127.0.0.1 / IPv6: ::1)</translation>
+        <translation>Välityspalvelimen IP-osoite (esim. IPv4: 127.0.0.1 tai IPv6: ::1)</translation>
     </message>
     <message>
         <source>Shows if the supplied default SOCKS5 proxy is used to reach peers via this network type.</source>
@@ -1164,7 +1164,7 @@
     </message>
     <message>
         <source>Open Configuration File</source>
-        <translation>Avaa asetustiedosto.</translation>
+        <translation>Avaa asetustiedosto</translation>
     </message>
     <message>
         <source>Reset all client options to default.</source>
@@ -1248,7 +1248,7 @@
     </message>
     <message>
         <source>Proxy &amp;IP:</source>
-        <translation>Proxyn &amp;IP:</translation>
+        <translation>Välityspalvelimen &amp;IP:</translation>
     </message>
     <message>
         <source>&amp;Port:</source>
@@ -1256,7 +1256,7 @@
     </message>
     <message>
         <source>Port of the proxy (e.g. 9050)</source>
-        <translation>Proxyn Portti (esim. 9050)</translation>
+        <translation>Välityspalvelimen Portti (esim. 9050)</translation>
     </message>
     <message>
         <source>Used for reaching peers via:</source>
@@ -1376,7 +1376,7 @@
     </message>
     <message>
         <source>The supplied proxy address is invalid.</source>
-        <translation>Antamasi proxy-osoite on virheellinen.</translation>
+        <translation>Antamasi välityspalvelimen osoite on virheellinen.</translation>
     </message>
 </context>
 <context>
@@ -2262,7 +2262,7 @@ Huom: Koska siirtomaksu lasketaan tavujen mukaan, niin määrittelemällä 500 t
     </message>
     <message>
         <source>Send to multiple recipients at once</source>
-        <translation>Lähetä usealla vastaanottajalle samanaikaisesti</translation>
+        <translation>Lähetä usealle vastaanottajalle kerralla</translation>
     </message>
     <message>
         <source>Add &amp;Recipient</source>
