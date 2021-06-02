@@ -39,13 +39,21 @@ int64_t UpdateTime(CBlockHeader* pblock, const Consensus::Params& consensusParam
     return nNewTime - nOldTime;
 }
 
-void RegenerateCommitments(CBlock& block, CBlockIndex* prev_block)
+void RegenerateCommitments(CBlock& block, ChainstateManager& chainman)
 {
     CMutableTransaction tx{*block.vtx.at(0)};
     tx.vout.erase(tx.vout.begin() + GetWitnessCommitmentIndex(block));
     block.vtx.at(0) = MakeTransactionRef(tx);
 
-    WITH_LOCK(::cs_main, assert(g_chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock) == prev_block));
+    CBlockIndex* prev_block;
+    {
+        // TODO: Temporary scope to check correctness of refactored code.
+        // Should be removed manually after merge of
+        // https://github.com/bitcoin/bitcoin/pull/20158
+        LOCK(::cs_main);
+        assert(std::addressof(g_chainman.m_blockman) == std::addressof(chainman.m_blockman));
+        prev_block = chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock);
+    }
     GenerateCoinbaseCommitment(block, prev_block, Params().GetConsensus());
 
     block.hashMerkleRoot = BlockMerkleRoot(block);

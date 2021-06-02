@@ -37,7 +37,7 @@ static void AssembleBlock(benchmark::Bench& bench)
         LOCK(::cs_main); // Required for ::AcceptToMemoryPool.
 
         for (const auto& txr : txs) {
-            const MempoolAcceptResult res = ::AcceptToMemoryPool(::ChainstateActive(), *test_setup->m_node.mempool, txr, false /* bypass_limits */);
+            const MempoolAcceptResult res = ::AcceptToMemoryPool(test_setup->m_node.chainman->ActiveChainstate(), *test_setup->m_node.mempool, txr, false /* bypass_limits */);
             assert(res.m_result_type == MempoolAcceptResult::ResultType::VALID);
         }
     }
