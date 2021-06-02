@@ -81,9 +81,26 @@ The first step is to install the mingw-w64 cross-compilation tool chain:
 
     sudo apt install g++-mingw-w64-x86-64
 
-Ubuntu Bionic 18.04 <sup>[1](#footnote1)</sup>:
+Next, set the default `mingw32 g++` compiler option to POSIX<sup>[1](#footnote1)</sup>:
 
-    sudo update-alternatives --config x86_64-w64-mingw32-g++ # Set the default mingw32 g++ compiler option to posix.
+```
+sudo update-alternatives --config x86_64-w64-mingw32-g++
+```
+
+After running the above command, you should see output similar to that below.
+Choose the option that ends with `posix`.
+
+```
+There are 2 choices for the alternative x86_64-w64-mingw32-g++ (providing /usr/bin/x86_64-w64-mingw32-g++).
+
+  Selection    Path                                   Priority   Status
+------------------------------------------------------------
+  0            /usr/bin/x86_64-w64-mingw32-g++-win32   60        auto mode
+* 1            /usr/bin/x86_64-w64-mingw32-g++-posix   30        manual mode
+  2            /usr/bin/x86_64-w64-mingw32-g++-win32   60        manual mode
+
+Press <enter> to keep the current choice[*], or type selection number:
+```
 
 Once the toolchain is installed the build steps are common:
 
