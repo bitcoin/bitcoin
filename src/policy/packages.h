@@ -33,4 +33,12 @@ using Package = std::vector<CTransactionRef>;
 
 class PackageValidationState : public ValidationState<PackageValidationResult> {};
 
+/** Context-free package policy checks:
+ * 1. The number of transactions cannot exceed MAX_PACKAGE_COUNT.
+ * 2. The total virtual size cannot exceed MAX_PACKAGE_SIZE.
+ * 3. If any dependencies exist between transactions, parents must appear before children.
+ * 4. Transactions cannot conflict, i.e., spend the same inputs.
+ */
+bool CheckPackage(const Package& txns, PackageValidationState& state);
+
 #endif // BITCOIN_POLICY_PACKAGES_H

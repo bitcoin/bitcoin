@@ -1083,65 +1083,15 @@ PackageMempoolAcceptResult MemPoolAccept::AcceptMultipleTransactions(const std::
 {
     AssertLockHeld(cs_main);
 
+    // These context-free package limits can be done before taking the mempool lock.
     PackageValidationState package_state;
-    const unsigned int package_count = txns.size();
+    if (!CheckPackage(txns, package_state)) return PackageMempoolAcceptResult(package_state, {});
 
-    // These context-free package limits can be checked before taking the mempool lock.
-    if (package_count > MAX_PACKAGE_COUNT) {
-        package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-too-many-transactions");
-        return PackageMempoolAcceptResult(package_state, {});
-    }
-
-    const int64_t total_size = std::accumulate(txns.cbegin(), txns.cend(), 0,
-                               [](int64_t sum, const auto& tx) { return sum + GetVirtualTransactionSize(*tx); });
-    // If the package only contains 1 tx, it's better to report the policy violation on individual tx size.
-    if (package_count > 1 && total_size > MAX_PACKAGE_SIZE * 1000) {
-        package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-too-large");
-        return PackageMempoolAcceptResult(package_state, {});
-    }
-
-    // Construct workspaces and check package policies.
     std::vector<Workspace> workspaces{};
-    workspaces.reserve(package_count);
-    {
-        std::unordered_set<uint256, SaltedTxidHasher> later_txids;
-        std::transform(txns.cbegin(), txns.cend(), std::inserter(later_txids, later_txids.end()),
-                       [](const auto& tx) { return tx->GetHash(); });
-        // Require the package to be sorted in order of dependency, i.e. parents appear before children.
-        // An unsorted package will fail anyway on missing-inputs, but it's better to quit earlier and
-        // fail on something less ambiguous (missing-inputs could also be an orphan or trying to
-        // spend nonexistent coins).
-        for (const auto& tx : txns) {
-            for (const auto& input : tx->vin) {
-                if (later_txids.find(input.prevout.hash) != later_txids.end()) {
-                    // The parent is a subsequent transaction in the package.
-                    package_state.Invalid(PackageValidationResult::PCKG_POLICY, "package-not-sorted");
-                    return PackageMempoolAcceptResult(package_state, {});
-                }
-            }
-            later_txids.erase(tx->GetHash());
-            workspaces.emplace_back(Workspace(tx));
-        }
-    }
+    workspaces.reserve(txns.size());
+    std::transform(txns.cbegin(), txns.cend(), std::back_inserter(workspaces),
+                   [](const auto& tx) { return Workspace(tx); });
     std::map<const uint256, const MempoolAcceptResult> results;
-    {
-        // Don't allow any conflicting transactions, i.e. spending the same inputs, in a package.
-        std::unordered_set<COutPoint, SaltedOutpointHasher> inputs_seen;
-        for (const auto& tx : txns) {
-            for (const auto& input : tx->vin) {
-                if (inputs_seen.find(input.prevout) != inputs_seen.end()) {
-                    // This input is also present in another tx in the package.
-                    package_state.Invalid(PackageValidationResult::PCKG_POLICY, "conflict-in-package");
-                    return PackageMempoolAcceptResult(package_state, {});
-                }
-            }
-            // Batch-add all the inputs for a tx at a time. If we added them 1 at a time, we could
-            // catch duplicate inputs within a single tx.  This is a more severe, consensus error,
-            // and we want to report that from CheckTransaction instead.
-            std::transform(tx->vin.cbegin(), tx->vin.cend(), std::inserter(inputs_seen, inputs_seen.end()),
-                           [](const auto& input) { return input.prevout; });
-        }
-    }
 
     LOCK(m_pool.cs);
 
